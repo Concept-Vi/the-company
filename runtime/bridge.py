@@ -16,11 +16,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from contracts.shapes import NodeInstance, Edge, Graph   # noqa: E402
 from store.fs_store import FsStore                        # noqa: E402
 from runtime import scheduler                             # noqa: E402
-from nodes import constant, uppercase, llm                 # noqa: E402
+from runtime.registry import NodeRegistry                 # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CANVAS = os.path.join(ROOT, "canvas", "index.html")
-NODE_TYPES = {"constant": constant, "uppercase": uppercase, "llm": llm}
+REGISTRY = NodeRegistry().discover([os.path.join(ROOT, "nodes")])   # node-types DISCOVERED (E4)
 CONTENT_KINDS = ("constant", "document", "code", "file", "image", "source")
 
 STORE = FsStore("/tmp/company-bridge-store")
@@ -73,15 +73,13 @@ class H(BaseHTTPRequestHandler):
         elif self.path == "/api/graph":
             self._send(200, json.dumps(graph_state()))
         elif self.path == "/api/object_info":
-            info = {t: {"ports_in": getattr(m, "PORTS_IN", {}), "ports_out": getattr(m, "PORTS_OUT", {})}
-                    for t, m in NODE_TYPES.items()}
-            self._send(200, json.dumps(info))
+            self._send(200, json.dumps(REGISTRY.object_info()))   # served from the live registry (C5/E4)
         else:
             self._send(404, "{}")
 
     def do_POST(self):
         if self.path == "/api/run":
-            result = scheduler.run(GRAPH, STORE, NODE_TYPES)
+            result = scheduler.run(GRAPH, STORE, REGISTRY)
             self._send(200, json.dumps(graph_state(result)))
         elif self.path == "/api/set":         # change a node's config (proves change-propagation)
             ln = int(self.headers.get("Content-Length", 0))
