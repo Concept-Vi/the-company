@@ -19,12 +19,16 @@ from __future__ import annotations
 from contracts.node_record import Graph, ExecNode
 
 
-def _addr(graph_id: str, node_id: str) -> str:
-    """The logical run-address of a node's output: `run://<graph.id>/<node>`."""
-    return f"run://{graph_id}/{node_id}"
+def _addr(graph_id: str, node_id: str, branch: str = "main") -> str:
+    """The logical run-address of a node's output.
+
+    `run://<graph.id>/<node>` on the default branch; `…@<branch>` otherwise.
+    Main stays branchless so existing addresses/tests are unchanged (schema-additive).
+    """
+    return f"run://{graph_id}/{node_id}" if branch == "main" else f"run://{graph_id}/{node_id}@{branch}"
 
 
-def compile(graph: Graph) -> list[ExecNode]:
+def compile(graph: Graph, branch: str = "main") -> list[ExecNode]:
     """Compile a workflow `Graph` into a list of `ExecNode`s.
 
     For each node: drop position/size/render_state/layer (stripped by
@@ -44,7 +48,7 @@ def compile(graph: Graph) -> list[ExecNode]:
     for inst in graph.nodes:
         # Declared output ports if available, else a default "out".
         out_ports = list(inst.outputs.keys()) or ["out"]
-        addr = _addr(graph.id, inst.id)
+        addr = _addr(graph.id, inst.id, branch)
         exec_node = ExecNode(
             id=inst.id,
             type=inst.type,
@@ -68,7 +72,7 @@ def compile(graph: Graph) -> list[ExecNode]:
             )
         # The wire becomes an address reference: the target reads from the
         # source node's logical output address.
-        by_id[edge.to_node].inputs[edge.to_port] = _addr(graph.id, edge.from_node)
+        by_id[edge.to_node].inputs[edge.to_port] = _addr(graph.id, edge.from_node, branch)
 
     return execs
 
