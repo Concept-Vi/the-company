@@ -22,7 +22,7 @@ Start at `Company Build Hub.md`. Contracts = `contracts/` notes (C1–C8). Engin
 | a new **node-type** (process/content/presentation) | `nodes/<name>/` | declare the C2 contract; drop it in; it self-registers |
 | a new **model / provider** | `fabric/` | add a config entry (generated from the registry) |
 | a new **storage backend** | `store/` | implement the Resolver Protocol (C4); add a backfill |
-| a new **context-variable** (for the RHM) | `runtime/context_variables/` | register a ContextVariable (C6) |
+| a new **context-variable** (for the RHM) | `runtime/context_variables.py` (one file for now; a dir if it grows) | register a ContextVariable (C6) |
 | a new **canvas surface / component** | `canvas/` | add a component; node rendering stays generic |
 | a genuinely **new operation** (rare) | `mcp/` | add one verb (C7) — only for a new *kind* of operation |
 | a new **contract** | `contracts/` | a new `Cn`; CONFIRM (it widens the system) |

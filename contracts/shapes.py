@@ -1,28 +1,7 @@
-"""Skeleton shapes (C1/C3, dataclass form).
+"""Compat shim — shapes moved to typed contracts in E1.
 
-Stdlib dataclasses for the walking skeleton; these become the Pydantic-validated
-contracts in stage E1/E4. See contracts/AGENTS.md (schema-additive; the spine).
+Kept so existing imports (`from contracts.shapes import NodeInstance, Edge, Graph`)
+keep working — schema-additive, never break what exists. Prefer importing from
+contracts.node_record directly in new code.
 """
-from dataclasses import dataclass, field
-
-
-@dataclass
-class NodeInstance:           # C3, face 1 (execution-relevant subset)
-    id: str
-    type: str                 # -> a registered node-type (C2)
-    config: dict = field(default_factory=dict)
-
-
-@dataclass
-class Edge:                   # a wire = a binding between two ports
-    from_node: str
-    from_port: str
-    to_node: str
-    to_port: str
-
-
-@dataclass
-class Graph:
-    id: str
-    nodes: list               # list[NodeInstance]
-    edges: list               # list[Edge]
+from contracts.node_record import NodeInstance, Edge, Graph, ExecNode  # noqa: F401

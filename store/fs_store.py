@@ -1,13 +1,15 @@
-"""FilesystemResolver — the addressed store (C4, skeleton form).
+"""FilesystemResolver — the addressed store (C1/C4). Implements contracts.resolver.Resolver.
 
-Stdlib-only so the walking skeleton has zero install risk. Content-addressed objects
-(immutable), mutable refs (run://), provenance, and a memo index. Pydantic-typed
-contracts arrive in stage E1; this proves the mechanism.
-See store/AGENTS.md for the constitution (never mutate cas:// content; ext4 only).
+Stdlib + pydantic. Content-addressed immutable objects, mutable refs, typed provenance,
+lineage walk, and the memo index. See store/AGENTS.md (never mutate cas://; ext4 only).
 """
+from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from typing import Any
+
+from contracts.address import Provenance
 
 
 class FsStore:
@@ -18,44 +20,62 @@ class FsStore:
 
     @staticmethod
     def _hash(b: bytes) -> str:
-        return "b2:" + hashlib.blake2b(b, digest_size=16).hexdigest()
+        return "cas://b2:" + hashlib.blake2b(b, digest_size=16).hexdigest()
 
     @staticmethod
     def _safe(addr: str) -> str:
-        return addr.replace(":", "_").replace("/", "__")
+        return addr.replace("://", "__").replace(":", "_").replace("/", "_")
 
     # --- immutable content (cas://) ---
-    def put_content(self, data) -> str:
+    def put_content(self, data: Any) -> str:
         b = json.dumps(data, sort_keys=True).encode()
         cas = self._hash(b)
         p = self.root / "objects" / self._safe(cas)
-        if not p.exists():            # immutable: write once, never mutate
+        if not p.exists():                      # write-once; never mutate
             p.write_bytes(b)
         return cas
 
-    def get_content(self, cas: str):
+    def get_content(self, cas: str) -> Any:
         return json.loads((self.root / "objects" / self._safe(cas)).read_bytes())
 
     def exists(self, cas: str) -> bool:
         return (self.root / "objects" / self._safe(cas)).exists()
 
     # --- mutable pointer (run://) ---
-    def set_ref(self, logical: str, cas: str):
+    def set_ref(self, logical: str, cas: str) -> None:
         (self.root / "refs" / self._safe(logical)).write_text(cas)
 
-    def head(self, logical: str):
+    def head(self, logical: str) -> str | None:
         p = self.root / "refs" / self._safe(logical)
         return p.read_text() if p.exists() else None
 
-    # --- provenance + memo ---
-    def write_provenance(self, prov: dict):
-        (self.root / "meta" / (self._safe(prov["produced_by"]) + ".json")).write_text(
-            json.dumps(prov, indent=2)
-        )
+    # --- provenance + lineage ---
+    def write_provenance(self, prov: Provenance) -> None:
+        (self.root / "meta" / (self._safe(prov.address) + ".json")).write_text(
+            prov.model_dump_json(indent=2))
 
-    def memo_get(self, sig: str):
+    def provenance(self, address: str) -> Provenance | None:
+        p = self.root / "meta" / (self._safe(address) + ".json")
+        return Provenance.model_validate_json(p.read_text()) if p.exists() else None
+
+    def lineage(self, address: str) -> list[str]:
+        """Walk provenance inputs back toward source (breadth-first, de-duped, cycle-safe)."""
+        order, seen, queue = [], set(), [address]
+        while queue:
+            a = queue.pop(0)
+            if a in seen:
+                continue
+            seen.add(a)
+            order.append(a)
+            prov = self.provenance(a)
+            if prov:
+                queue.extend(i for i in prov.inputs if i not in seen)
+        return order
+
+    # --- memo (the gate) ---
+    def memo_get(self, sig: str) -> str | None:
         p = self.root / "memo" / self._safe(sig)
         return p.read_text() if p.exists() else None
 
-    def memo_set(self, sig: str, cas: str):
+    def memo_set(self, sig: str, cas: str) -> None:
         (self.root / "memo" / self._safe(sig)).write_text(cas)
