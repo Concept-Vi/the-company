@@ -95,10 +95,10 @@ def propose_node(name: str, spec: str) -> dict:
 
 
 @mcp.tool()
-def apply_node(name: str, code: str, confirmed: bool = False) -> str:
-    """Write a proposed node into the library + auto-discover it. CONFIRM-gated (code_build):
-    pass confirmed=true to apply; otherwise it is surfaced for the operator, not applied."""
-    return SUITE.apply_node(name, code, confirmed=confirmed)
+def apply_node(surfaced_id: str) -> str:
+    """Apply a proposed node by its surfaced id — succeeds ONLY if the OPERATOR has approved it
+    (resolved=='approve'). The agent cannot self-approve (approval is not on this face)."""
+    return SUITE.apply_node(surfaced_id)
 
 
 @mcp.tool()
@@ -107,11 +107,8 @@ def list_surfaced() -> list:
     return SUITE.list_surfaced()
 
 
-@mcp.tool()
-def resolve_surfaced(id: str, choice: str) -> str:
-    """Resolve a surfaced decision (e.g. approve a code-build)."""
-    SUITE.resolve_surfaced(id, choice)
-    return "ok"
+# NOTE: resolve_surfaced (operator approval) is deliberately NOT exposed on this face — only the
+# UI/operator channel may approve a CONFIRM, so the proposing agent cannot self-approve its code-build.
 
 
 if __name__ == "__main__":

@@ -16,9 +16,10 @@ POLICY = {
     "promote": SURFACE, "spend": SURFACE,
     # CONFIRM — irreversible / expensive / external
     "destructive": CONFIRM, "code_build": CONFIRM, "register_type": CONFIRM,
-    "external": CONFIRM, "source_data": CONFIRM,
+    "external": CONFIRM, "source_data": CONFIRM, "frozen_contract": CONFIRM,
 }
-LOCKED = {"source_data", "external"}    # never graduate to AUTO, no matter the earned trust
+# never graduate to AUTO, no matter the earned trust (D4/D7 forever-confirm)
+LOCKED = {"source_data", "external", "frozen_contract"}
 
 
 class GovernanceError(RuntimeError):
@@ -63,9 +64,18 @@ class Inbox:
     def list(self) -> list:
         return self.store.list_surfaced()
 
+    def get(self, sid: str) -> dict | None:
+        return self.store.get_surfaced(sid)
+
     def resolve(self, sid: str, choice: str) -> None:
+        """OPERATOR-only: approve/reject a surfaced decision. (Must NOT be reachable by the
+        agent it gates — kept off the MCP face; only the UI/operator channel calls this.)"""
         d = self.store.get_surfaced(sid)
         if not d:
             raise KeyError(sid)
         d["resolved"] = choice
         self.store.save_surfaced(d)
+
+    def is_approved(self, sid: str) -> bool:
+        d = self.store.get_surfaced(sid)
+        return bool(d and d.get("resolved") == "approve")

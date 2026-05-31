@@ -28,7 +28,8 @@ def main():
     check("CONFIRM for code_build / destructive / external",
           all(gov.posture(c) == gov.CONFIRM for c in ("code_build", "destructive", "external")))
     check("unknown class defaults to CONFIRM (safest)", gov.posture("???") == gov.CONFIRM)
-    check("source_data + external are locked-to-confirm forever", gov.LOCKED == {"source_data", "external"})
+    check("source_data + external + frozen_contract locked-to-confirm forever (D4/D7)",
+          gov.LOCKED == {"source_data", "external", "frozen_contract"})
 
     store = FsStore(tempfile.mkdtemp())
     inbox = gov.Inbox(store)

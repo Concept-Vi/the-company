@@ -1,9 +1,12 @@
 """SELF-GROWTH — the system writes itself a new capability from a request, and runs it.
 
-The "direct its growth" half of the first purpose: build-dispatch. The brain writes a new
-node module; governance gates the apply (code_build = CONFIRM); on confirm it's written +
-auto-discovered; then it RUNS. Proven end-to-end. Live (real model). Writes to a TEMP nodes
-dir (not the repo) so the proof has no side effects.
+The "direct its growth" half of the first purpose: build-dispatch, GOVERNED correctly:
+  - the agent PROPOSES (brain writes a node) -> surfaced as a CONFIRM decision (not applied);
+  - the agent CANNOT self-approve (apply without operator approval fails loud);
+  - path-traversal names are rejected (no write outside the node library);
+  - the OPERATOR approves (a channel the agent doesn't have) -> apply writes + auto-discovers;
+  - the self-written capability RUNS correctly.
+Live (real model). Writes to a TEMP nodes dir (not the repo), so the proof has no side effects.
 Run: .venv/bin/python tests/self_growth.py
 """
 import os
@@ -17,7 +20,7 @@ from contracts.node_record import NodeInstance, Edge, Graph
 from store.fs_store import FsStore
 from runtime.registry import NodeRegistry
 from runtime.suite import Suite
-from runtime import governance as gov
+from runtime import governance as gov, scheduler
 from fabric import config as fcfg
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -42,23 +45,33 @@ def main():
     reg = NodeRegistry().discover([BASE_NODES])
     suite = Suite(FsStore(tempfile.mkdtemp()), reg, nodes_dir=tmp_nodes)
 
-    # 1: the system PROPOSES a new node (the brain writes it)
-    prop = suite.propose_node("reverse", "return the input string reversed (e.g. 'abc' -> 'cba')")
-    check("brain wrote a node module (has run() + ports)",
-          "def run" in prop["code"] and "PORTS_OUT" in prop["code"])
-
-    # 2: applying is CONFIRM-gated (code_build) — without confirmation it fails loud + surfaces
-    gated = False
+    # path-traversal names are rejected up front (no model call, no write)
+    traversed = False
     try:
-        suite.apply_node("reverse", prop["code"], confirmed=False)
-    except gov.GovernanceError:
-        gated = True
-    check("apply is CONFIRM-gated (surfaced, not silently applied)",
-          gated and "reverse" not in reg.types and len(suite.list_surfaced()) >= 1)
+        suite.propose_node("../runtime/scheduler", "malicious")
+    except ValueError:
+        traversed = True
+    check("path-traversal node name rejected (can't escape the library / clobber modules)",
+          traversed and not os.path.exists(os.path.join(ROOT, "runtime", "scheduler.py.tmp")))
 
-    # 3: on confirmation, the system writes the node into itself + auto-discovers it
-    suite.apply_node("reverse", prop["code"], confirmed=True)
-    check("on confirm: new capability written + auto-discovered", "reverse" in reg.types)
+    # 1: the agent PROPOSES — brain writes the node, surfaced (NOT applied)
+    prop = suite.propose_node("reverse", "return the input string reversed (e.g. 'abc' -> 'cba')")
+    check("brain wrote a node + it was surfaced for the operator (not applied)",
+          "def run" in prop["code"] and "reverse" not in reg.types and prop["id"])
+
+    # 2: the agent CANNOT self-approve — apply without operator approval fails loud
+    blocked = False
+    try:
+        suite.apply_node(prop["id"])
+    except gov.GovernanceError:
+        blocked = True
+    check("agent cannot self-approve: apply before operator approval fails loud",
+          blocked and "reverse" not in reg.types)
+
+    # 3: the OPERATOR approves (a channel the agent doesn't have on the MCP face)
+    suite.resolve_surfaced(prop["id"], "approve")
+    suite.apply_node(prop["id"])
+    check("after OPERATOR approval: new capability written + auto-discovered", "reverse" in reg.types)
 
     # 4: the self-written capability RUNS correctly
     store2 = FsStore(tempfile.mkdtemp())
@@ -66,14 +79,13 @@ def main():
         NodeInstance(id="c", type="constant", config={"value": "hello"}),
         NodeInstance(id="r", type="reverse"),
     ], edges=[Edge(from_node="c", from_port="value", to_node="r", to_port="text")])
-    from runtime import scheduler
     res = scheduler.run(g, store2, reg)
     out = store2.get_content(store2.head("run://sg/r")) if store2.head("run://sg/r") else None
     check("the self-written node RUNS correctly ('hello' -> 'olleh')",
           "r" in res["ran"] and out == "olleh")
-    print(f"      (system wrote node 'reverse'; ran it: 'hello' -> {out!r})")
+    print(f"      (agent proposed 'reverse'; operator approved; it ran: 'hello' -> {out!r})")
 
-    print("\n" + ("✅ SELF-GROWTH PROVEN — the system grew its own capability from a request"
+    print("\n" + ("✅ SELF-GROWTH PROVEN — system grows its own capability from a request, governed"
                   if ok else "❌ SELF-GROWTH FAILED"))
     return 0 if ok else 1
 

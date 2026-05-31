@@ -10,7 +10,7 @@ import os
 
 from contracts.node_record import NodeInstance, Edge, Graph
 from runtime import scheduler
-from runtime.governance import guard, Inbox
+from runtime.governance import Inbox, GovernanceError
 from runtime.registry import NodeRegistry
 from store.fs_store import FsStore
 
@@ -111,9 +111,17 @@ class Suite:
         return {n["id"]: n["output"] for n in st["nodes"]}
 
     # --- self-growth: build-dispatch (the "direct its growth" half of the first purpose) ---
+    @staticmethod
+    def _safe_node_name(name: str) -> str:
+        if not isinstance(name, str) or not name.isidentifier() or name.startswith("_"):
+            raise ValueError(f"unsafe node name {name!r} — must be a plain identifier (no paths, no '_'-prefix)")
+        return name
+
     def propose_node(self, name: str, spec: str, model: str | None = None) -> dict:
-        """Ask the brain to WRITE a new node module for `name` doing `spec`. Returns {name, code}.
-        Proposing is harmless (a model call); APPLYING is the governed (CONFIRM) act."""
+        """The agent asks the brain to WRITE a new node module, then SURFACES it as a CONFIRM
+        decision for the operator. It is NOT applied here. Returns {id, name, code}.
+        (Proposing is safe — a model call + a surfaced gate; applying needs operator approval.)"""
+        self._safe_node_name(name)                          # reject path-traversal up front
         from fabric import client, transport, config as fcfg
         sys_p = ("You write ONE Python node module for the 'company' composition engine. "
                  "Output ONLY raw Python — no prose, no markdown fences.")
@@ -126,25 +134,36 @@ class Suite:
             "Use PORTS_IN={'text':'Text'} and PORTS_OUT={'text':'Text'} unless the spec needs otherwise. "
             "Output ONLY the code.")
         t = transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL)
-        code = client.complete(t, [{"role": "system", "content": sys_p},
-                                   {"role": "user", "content": user_p}],
-                               model=model or fcfg.DEFAULT_BRAIN)
-        return {"name": name, "code": _strip_fences(code)}
+        code = _strip_fences(client.complete(
+            t, [{"role": "system", "content": sys_p}, {"role": "user", "content": user_p}],
+            model=model or fcfg.DEFAULT_BRAIN))
+        sid = self.inbox.surface("code_build", {"name": name, "code": code}, default="reject")
+        return {"id": sid, "name": name, "code": code}
 
-    def apply_node(self, name: str, code: str, confirmed: bool = False) -> str:
-        """Write a proposed node into nodes/ and re-discover it. CONFIRM-gated (code_build, D7)."""
-        def _write():
-            path = os.path.join(self.nodes_dir, name + ".py")
-            with open(path, "w", encoding="utf-8") as f:
-                f.write(code if code.endswith("\n") else code + "\n")
-            self.registry.discover([self.nodes_dir])     # re-discover -> the new capability is live
-            return path
-        return guard("code_build", _write, confirmed=confirmed, inbox=self.inbox,
-                     payload={"name": name, "code": code[:400]})
+    def apply_node(self, surfaced_id: str) -> str:
+        """Apply a proposed node — ONLY if the OPERATOR approved its surfaced decision.
+        Authorization is READ from the inbox (resolved=='approve'), never a caller flag, so the
+        agent that proposed it cannot self-approve. Writes atomically + re-discovers. (code_build, D7)."""
+        d = self.inbox.get(surfaced_id)
+        if not d:
+            raise KeyError(f"no surfaced decision {surfaced_id!r}")
+        if not self.inbox.is_approved(surfaced_id):
+            raise GovernanceError(
+                f"code_build {surfaced_id!r} not approved — operator must resolve it 'approve' first (CONFIRM)")
+        name = self._safe_node_name(d["payload"]["name"])   # re-validate at apply
+        code = d["payload"]["code"]
+        path = os.path.join(self.nodes_dir, name + ".py")
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.write(code if code.endswith("\n") else code + "\n")
+        os.replace(tmp, path)                               # atomic; no partial file
+        self.registry.discover([self.nodes_dir])            # re-discover -> capability is live
+        return path
 
     # --- surfaced-decision inbox (D4/D7) ---
     def list_surfaced(self) -> list:
         return self.inbox.list()
 
     def resolve_surfaced(self, sid: str, choice: str) -> None:
+        """OPERATOR-only (UI channel) — NOT exposed on the MCP face, so the agent can't self-approve."""
         self.inbox.resolve(sid, choice)
