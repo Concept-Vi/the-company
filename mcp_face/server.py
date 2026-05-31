@@ -86,5 +86,33 @@ def get_results(graph: str) -> dict:
     return SUITE.results(graph)
 
 
+# --- self-growth: build-dispatch + the surfaced-decision inbox (D7/D4) ---
+@mcp.tool()
+def propose_node(name: str, spec: str) -> dict:
+    """Build-dispatch: ask the brain to WRITE a new node-type module. Returns {name, code}.
+    Proposing is safe; APPLYING is CONFIRM-gated (see apply_node)."""
+    return SUITE.propose_node(name, spec)
+
+
+@mcp.tool()
+def apply_node(name: str, code: str, confirmed: bool = False) -> str:
+    """Write a proposed node into the library + auto-discover it. CONFIRM-gated (code_build):
+    pass confirmed=true to apply; otherwise it is surfaced for the operator, not applied."""
+    return SUITE.apply_node(name, code, confirmed=confirmed)
+
+
+@mcp.tool()
+def list_surfaced() -> list:
+    """Decisions the system surfaced for the operator (each carries a default + resolution)."""
+    return SUITE.list_surfaced()
+
+
+@mcp.tool()
+def resolve_surfaced(id: str, choice: str) -> str:
+    """Resolve a surfaced decision (e.g. approve a code-build)."""
+    SUITE.resolve_surfaced(id, choice)
+    return "ok"
+
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")

@@ -15,7 +15,7 @@ from contracts.address import Provenance
 class FsStore:
     def __init__(self, root):
         self.root = Path(root)
-        for d in ("objects", "refs", "meta", "memo", "graphs"):
+        for d in ("objects", "refs", "meta", "memo", "graphs", "surfaced"):
             (self.root / d).mkdir(parents=True, exist_ok=True)
 
     @staticmethod
@@ -92,3 +92,19 @@ class FsStore:
 
     def list_graphs(self) -> list[str]:
         return sorted(p.stem for p in (self.root / "graphs").glob("*.json"))
+
+    # --- surfaced-decision inbox (S7/D4): non-blocking gates, shared across faces ---
+    def save_surfaced(self, decision: dict) -> None:
+        import json as _j
+        (self.root / "surfaced" / (self._safe(decision["id"]) + ".json")).write_text(
+            _j.dumps(decision, indent=2))
+
+    def list_surfaced(self) -> list[dict]:
+        import json as _j
+        return [_j.loads(p.read_text())
+                for p in sorted((self.root / "surfaced").glob("*.json"))]
+
+    def get_surfaced(self, sid: str) -> dict | None:
+        import json as _j
+        p = self.root / "surfaced" / (self._safe(sid) + ".json")
+        return _j.loads(p.read_text()) if p.exists() else None

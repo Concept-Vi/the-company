@@ -6,19 +6,34 @@ separate processes. Operations are the C7 generic verbs — generic over node-ty
 (they consult the registry), never one-per-type.
 """
 from __future__ import annotations
+import os
 
 from contracts.node_record import NodeInstance, Edge, Graph
 from runtime import scheduler
+from runtime.governance import guard, Inbox
 from runtime.registry import NodeRegistry
 from store.fs_store import FsStore
 
 CONTENT_KINDS = ("constant", "document", "code", "file", "image", "source", "portal")
 
 
+def _strip_fences(code: str) -> str:
+    c = code.strip()
+    if c.startswith("```"):
+        inner = c[3:]
+        c = inner.split("```", 1)[0] if "```" in inner else inner.strip("`")
+        if c.lstrip().startswith("python"):
+            c = c.lstrip()[len("python"):]
+    return c.strip()
+
+
 class Suite:
-    def __init__(self, store: FsStore, registry: NodeRegistry):
+    def __init__(self, store: FsStore, registry: NodeRegistry, nodes_dir: str | None = None):
         self.store = store
         self.registry = registry
+        self.inbox = Inbox(store)
+        self.nodes_dir = nodes_dir or os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "nodes")
 
     # --- introspection (reads) ---
     def list_types(self) -> list[str]:
@@ -94,3 +109,42 @@ class Suite:
     def results(self, graph_id: str) -> dict:
         st = self.state(graph_id)
         return {n["id"]: n["output"] for n in st["nodes"]}
+
+    # --- self-growth: build-dispatch (the "direct its growth" half of the first purpose) ---
+    def propose_node(self, name: str, spec: str, model: str | None = None) -> dict:
+        """Ask the brain to WRITE a new node module for `name` doing `spec`. Returns {name, code}.
+        Proposing is harmless (a model call); APPLYING is the governed (CONFIRM) act."""
+        from fabric import client, transport, config as fcfg
+        sys_p = ("You write ONE Python node module for the 'company' composition engine. "
+                 "Output ONLY raw Python — no prose, no markdown fences.")
+        user_p = (
+            "Contract: a module with VERSION='1', KIND ('process'|'content'), PORTS_IN dict, "
+            "PORTS_OUT dict, and def run(inputs: dict, config: dict) returning the output value.\n\n"
+            "Example:\nVERSION='1'\nKIND='process'\nPORTS_IN={'text':'Text'}\nPORTS_OUT={'text':'Text'}\n"
+            "def run(inputs, config):\n    return str(inputs.get('text','')).upper()\n\n"
+            f"Write a node named '{name}' that: {spec}\n"
+            "Use PORTS_IN={'text':'Text'} and PORTS_OUT={'text':'Text'} unless the spec needs otherwise. "
+            "Output ONLY the code.")
+        t = transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL)
+        code = client.complete(t, [{"role": "system", "content": sys_p},
+                                   {"role": "user", "content": user_p}],
+                               model=model or fcfg.DEFAULT_BRAIN)
+        return {"name": name, "code": _strip_fences(code)}
+
+    def apply_node(self, name: str, code: str, confirmed: bool = False) -> str:
+        """Write a proposed node into nodes/ and re-discover it. CONFIRM-gated (code_build, D7)."""
+        def _write():
+            path = os.path.join(self.nodes_dir, name + ".py")
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(code if code.endswith("\n") else code + "\n")
+            self.registry.discover([self.nodes_dir])     # re-discover -> the new capability is live
+            return path
+        return guard("code_build", _write, confirmed=confirmed, inbox=self.inbox,
+                     payload={"name": name, "code": code[:400]})
+
+    # --- surfaced-decision inbox (D4/D7) ---
+    def list_surfaced(self) -> list:
+        return self.inbox.list()
+
+    def resolve_surfaced(self, sid: str, choice: str) -> None:
+        self.inbox.resolve(sid, choice)
