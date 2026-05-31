@@ -16,7 +16,7 @@ The build target: an **interface-driven composition suite** — a canvas where A
 | `store/` | the addressed store + resolver (address → bytes; fs first → Supabase) | C1, C4, S2 |
 | `runtime/` | the reactive scheduler + memo gate + compile + context-variable resolution | S1, C5, C6 |
 | `fabric/` | model-fabric binding: LiteLLM + llama-swap + adapters + reliability guards | S6 |
-| `mcp/` | the agent face — FastMCP server exposing the generic verb tools | C7 |
+| `mcp_face/` | the agent face — FastMCP generic-verb tools (dir is `mcp_face`, not `mcp`, to avoid colliding with the `mcp` SDK) | C7 |
 | `nodes/` | the node library (process · content · presentation types) | C2 |
 | `canvas/` | the frontend — tldraw + React + Tauri (the interface track) | S5, D3, interface.md |
 | `docs/` | pointer to the build-prep vault (the source of truth) | — |

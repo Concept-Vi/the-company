@@ -1,0 +1,52 @@
+{
+  "id": "demo",
+  "nodes": [
+    {
+      "id": "prompt",
+      "type": "constant",
+      "config": {
+        "value": "In one sentence, what is a composition engine?"
+      },
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "size": {
+        "w": 268.0,
+        "h": 120.0
+      },
+      "render_state": "collapsed",
+      "layer": "main",
+      "status": "idle",
+      "outputs": {}
+    },
+    {
+      "id": "brain",
+      "type": "llm",
+      "config": {
+        "model": "deepseek-v4-pro:cloud",
+        "system": "Answer in one concise sentence."
+      },
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "size": {
+        "w": 268.0,
+        "h": 120.0
+      },
+      "render_state": "collapsed",
+      "layer": "main",
+      "status": "idle",
+      "outputs": {}
+    }
+  ],
+  "edges": [
+    {
+      "from_node": "prompt",
+      "from_port": "value",
+      "to_node": "brain",
+      "to_port": "prompt"
+    }
+  ]
+}

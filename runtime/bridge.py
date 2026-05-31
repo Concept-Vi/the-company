@@ -1,11 +1,12 @@
-"""The bridge (C8, skeleton form) — the runtime hosts the canvas's connection.
+"""runtime/bridge.py — the UI face (C8, skeleton form). Thin HTTP over the shared Suite.
 
-Stdlib http.server only (zero install). Minimal version of the two channels:
-action (POST /api/run) + state (GET /api/graph). Full pycrdt/Yjs sync is the
-I1 hardening; the runtime is authoritative either way. See contracts/C8.
+Serves the operator console + state/action. Same brain (runtime.suite.Suite) and same
+substrate (the store at fcfg.STORE_DIR) as the MCP face — so the agent and the UI operate
+ONE system. Stdlib http only. See contracts/C8.
 
-Run: python3 runtime/bridge.py   then open http://localhost:8770
+Run: python3 runtime/bridge.py [port]   then open http://localhost:8770
 """
+from __future__ import annotations
 import json
 import os
 import sys
@@ -13,48 +14,29 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from contracts.shapes import NodeInstance, Edge, Graph   # noqa: E402
-from store.fs_store import FsStore                        # noqa: E402
-from runtime import scheduler                             # noqa: E402
-from runtime.registry import NodeRegistry                 # noqa: E402
+from contracts.node_record import NodeInstance, Edge, Graph
+from store.fs_store import FsStore
+from runtime.registry import NodeRegistry
+from runtime.suite import Suite
+from fabric import config as fcfg
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CANVAS = os.path.join(ROOT, "canvas", "index.html")
-REGISTRY = NodeRegistry().discover([os.path.join(ROOT, "nodes")])   # node-types DISCOVERED (E4)
-CONTENT_KINDS = ("constant", "document", "code", "file", "image", "source")
-
-STORE = FsStore("/tmp/company-bridge-store")
-GRAPH = Graph(
-    id="demo",
-    nodes=[
-        NodeInstance(id="prompt", type="constant",
-                     config={"value": "In one sentence, what is a composition engine?"}),
-        NodeInstance(id="brain", type="llm",
-                     config={"model": "deepseek-v4-pro:cloud",
-                             "system": "Answer in one concise sentence."}),
-    ],
-    edges=[Edge(from_node="prompt", from_port="value", to_node="brain", to_port="prompt")],
-)
+SUITE = Suite(FsStore(fcfg.STORE_DIR),
+              NodeRegistry().discover([os.path.join(ROOT, "nodes")]))
+DEMO = "demo"
 
 
-def graph_state(result=None):
-    nodes = []
-    for n in GRAPH.nodes:
-        logical = f"run://{GRAPH.id}/{n.id}"
-        cas = STORE.head(logical)
-        status = "idle"
-        if result:
-            status = "ran" if n.id in result["ran"] else ("cached" if n.id in result["skipped"] else "idle")
-        nodes.append({
-            "id": n.id, "type": n.type, "config": n.config,
-            "kind": "content" if n.type in CONTENT_KINDS else "process",
-            "status": status,
-            "address": logical,
-            "content_hash": cas,
-            "output": STORE.get_content(cas) if cas else None,
-        })
-    edges = [{"from": e.from_node, "to": e.to_node} for e in GRAPH.edges]
-    return {"id": GRAPH.id, "nodes": nodes, "edges": edges}
+def seed_demo():
+    """First-run demo graph: a live AI composition (prompt -> brain)."""
+    if DEMO not in SUITE.list_graphs():
+        SUITE.save_graph(Graph(id=DEMO, nodes=[
+            NodeInstance(id="prompt", type="constant",
+                         config={"value": "In one sentence, what is a composition engine?"}),
+            NodeInstance(id="brain", type="llm",
+                         config={"model": "deepseek-v4-pro:cloud",
+                                 "system": "Answer in one concise sentence."}),
+        ], edges=[Edge(from_node="prompt", from_port="value", to_node="brain", to_port="prompt")]))
 
 
 class H(BaseHTTPRequestHandler):
@@ -71,23 +53,21 @@ class H(BaseHTTPRequestHandler):
             with open(CANVAS, "rb") as f:
                 self._send(200, f.read(), "text/html; charset=utf-8")
         elif self.path == "/api/graph":
-            self._send(200, json.dumps(graph_state()))
+            self._send(200, json.dumps(SUITE.state(DEMO)))
         elif self.path == "/api/object_info":
-            self._send(200, json.dumps(REGISTRY.object_info()))   # served from the live registry (C5/E4)
+            self._send(200, json.dumps(SUITE.object_info()))
         else:
             self._send(404, "{}")
 
     def do_POST(self):
         if self.path == "/api/run":
-            result = scheduler.run(GRAPH, STORE, REGISTRY)
-            self._send(200, json.dumps(graph_state(result)))
-        elif self.path == "/api/set":         # change a node's config (proves change-propagation)
+            result = SUITE.run(DEMO)
+            self._send(200, json.dumps(SUITE.state(DEMO, result)))
+        elif self.path == "/api/set":
             ln = int(self.headers.get("Content-Length", 0))
             body = json.loads(self.rfile.read(ln) or "{}")
-            for n in GRAPH.nodes:
-                if n.id == body.get("node"):
-                    n.config.update(body.get("config", {}))
-            self._send(200, json.dumps(graph_state()))
+            SUITE.set_config(DEMO, body.get("node"), body.get("config", {}))
+            self._send(200, json.dumps(SUITE.state(DEMO)))
         else:
             self._send(404, "{}")
 
@@ -96,6 +76,7 @@ class H(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    seed_demo()
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8770
-    print(f"[bridge] runtime hosting canvas at http://localhost:{port}", flush=True)
+    print(f"[bridge] UI face over the shared Suite at http://localhost:{port}", flush=True)
     ThreadingHTTPServer(("127.0.0.1", port), H).serve_forever()

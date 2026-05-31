@@ -15,7 +15,7 @@ from contracts.address import Provenance
 class FsStore:
     def __init__(self, root):
         self.root = Path(root)
-        for d in ("objects", "refs", "meta", "memo"):
+        for d in ("objects", "refs", "meta", "memo", "graphs"):
             (self.root / d).mkdir(parents=True, exist_ok=True)
 
     @staticmethod
@@ -79,3 +79,16 @@ class FsStore:
 
     def memo_set(self, sig: str, cas: str) -> None:
         (self.root / "memo" / self._safe(sig)).write_text(cas)
+
+    # --- graphs registry (S3): canvases live in the substrate, shared across faces ---
+    def save_graph(self, graph) -> None:
+        (self.root / "graphs" / (self._safe(graph.id) + ".json")).write_text(
+            graph.model_dump_json(indent=2))
+
+    def load_graph(self, gid: str):
+        from contracts.node_record import Graph
+        p = self.root / "graphs" / (self._safe(gid) + ".json")
+        return Graph.model_validate_json(p.read_text()) if p.exists() else None
+
+    def list_graphs(self) -> list[str]:
+        return sorted(p.stem for p in (self.root / "graphs").glob("*.json"))

@@ -1,0 +1,49 @@
+{
+  "id": "e5test",
+  "nodes": [
+    {
+      "id": "c",
+      "type": "constant",
+      "config": {
+        "value": "hi"
+      },
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "size": {
+        "w": 268.0,
+        "h": 120.0
+      },
+      "render_state": "collapsed",
+      "layer": "main",
+      "status": "idle",
+      "outputs": {}
+    },
+    {
+      "id": "u",
+      "type": "uppercase",
+      "config": {},
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "size": {
+        "w": 268.0,
+        "h": 120.0
+      },
+      "render_state": "collapsed",
+      "layer": "main",
+      "status": "idle",
+      "outputs": {}
+    }
+  ],
+  "edges": [
+    {
+      "from_node": "c",
+      "from_port": "value",
+      "to_node": "u",
+      "to_port": "text"
+    }
+  ]
+}

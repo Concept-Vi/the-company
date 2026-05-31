@@ -12,7 +12,7 @@ The orientation an agent loads first, and the seed of the **linked code-knowledg
      ▼                                                                  │
   fabric/  ── the models (LiteLLM + llama-swap + guards) ───────────────┘
   store/   ── where everything lives, by address (C1/C4)   [under runtime + canvas]
-  mcp/     ── the agent face: generic verbs over all of it (C7)
+  mcp_face/── the agent face: generic verbs over all of it (C7); shares the Suite with the UI
   nodes/   ── the node library (process · content · presentation), each one C2
   contracts/ ── the spine: the shapes all of the above compose against (C1–C8)
 ```
@@ -24,7 +24,7 @@ The orientation an agent loads first, and the seed of the **linked code-knowledg
 | `store/` | addressed store + resolver | `store/AGENTS.md` | C1, C4 |
 | `runtime/` | reactive scheduler + memo + compile + context | `runtime/AGENTS.md` | S1, C5, C6 |
 | `fabric/` | model binding + guards | `fabric/AGENTS.md` | S6 |
-| `mcp/` | agent face (generic verbs) | `mcp/AGENTS.md` | C7 |
+| `mcp_face/` | agent face (generic verbs) | `mcp_face/AGENTS.md` | C7 |
 | `nodes/` | the node library | `nodes/AGENTS.md` | C2 |
 | `canvas/` | the frontend (discovered through use) | `canvas/AGENTS.md` | S5, D3 |
 

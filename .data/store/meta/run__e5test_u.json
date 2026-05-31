@@ -1,0 +1,12 @@
+{
+  "address": "run://e5test/u",
+  "content_hash": "cas://b2:6bbc90e36f44ac9bceea2ec12ca9e15f",
+  "type": "uppercase",
+  "produced_by": "run://e5test/u",
+  "inputs": [
+    "run://e5test/c"
+  ],
+  "agent": "uppercase@memo",
+  "created_at": null,
+  "schema_ver": 1
+}

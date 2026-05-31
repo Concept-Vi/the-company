@@ -7,6 +7,10 @@ direct fallback. Everything is configurable (D2). NO Gemini — enforced, fail l
 from __future__ import annotations
 import os
 
+# Shared addressed store (ext4, not /mnt/c). Both faces (UI bridge + MCP) use this one
+# path, so they operate the SAME substrate — one brain, two faces.
+STORE_DIR = os.environ.get("COMPANY_STORE", os.path.expanduser("~/company/.data/store"))
+
 # The fabric calls ONE OpenAI-compatible endpoint. Point at the LiteLLM proxy when up,
 # else ollama's own /v1 directly. Override via env.
 LITELLM_PROXY = os.environ.get("COMPANY_LITELLM_URL", "http://localhost:4100/v1")
