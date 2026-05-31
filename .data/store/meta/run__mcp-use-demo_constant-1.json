@@ -1,0 +1,10 @@
+{
+  "address": "run://mcp-use-demo/constant-1",
+  "content_hash": "cas://b2:23a69278de0f27ef7953d310cf978014",
+  "type": "constant",
+  "produced_by": "run://mcp-use-demo/constant-1",
+  "inputs": [],
+  "agent": "constant@memo",
+  "created_at": null,
+  "schema_ver": 1
+}

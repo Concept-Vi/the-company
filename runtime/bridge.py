@@ -50,6 +50,10 @@ class H(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b)
 
+    def _body(self):
+        ln = int(self.headers.get("Content-Length", 0))
+        return json.loads(self.rfile.read(ln) or "{}")
+
     def do_GET(self):
         if self.path in ("/", "/index.html"):
             with open(CANVAS, "rb") as f:
@@ -58,20 +62,38 @@ class H(BaseHTTPRequestHandler):
             self._send(200, json.dumps(SUITE.state(DEMO)))
         elif self.path == "/api/object_info":
             self._send(200, json.dumps(SUITE.object_info()))
+        elif self.path == "/api/types":
+            self._send(200, json.dumps(sorted(SUITE.list_types())))
+        elif self.path == "/api/surfaced":
+            self._send(200, json.dumps(SUITE.list_surfaced()))
         else:
             self._send(404, "{}")
 
     def do_POST(self):
-        if self.path == "/api/run":
-            result = SUITE.run(DEMO)
-            self._send(200, json.dumps(SUITE.state(DEMO, result)))
-        elif self.path == "/api/set":
-            ln = int(self.headers.get("Content-Length", 0))
-            body = json.loads(self.rfile.read(ln) or "{}")
-            SUITE.set_config(DEMO, body.get("node"), body.get("config", {}))
-            self._send(200, json.dumps(SUITE.state(DEMO)))
-        else:
-            self._send(404, "{}")
+        try:
+            if self.path == "/api/run":
+                result = SUITE.run(DEMO)
+                self._send(200, json.dumps(SUITE.state(DEMO, result)))
+            elif self.path == "/api/set":
+                b = self._body()
+                SUITE.set_config(DEMO, b.get("node"), b.get("config", {}))
+                self._send(200, json.dumps(SUITE.state(DEMO)))
+            # --- build-dispatch (self-growth), operable from the operator's UI ---
+            elif self.path == "/api/propose":          # agent/operator dispatches a build
+                b = self._body()
+                self._send(200, json.dumps(SUITE.propose_node(b["name"], b["spec"])))
+            elif self.path == "/api/resolve":           # OPERATOR approves/rejects (UI channel)
+                b = self._body()
+                SUITE.resolve_surfaced(b["id"], b["choice"])
+                self._send(200, json.dumps({"ok": True, "surfaced": SUITE.list_surfaced()}))
+            elif self.path == "/api/apply":             # apply (only succeeds if operator approved)
+                b = self._body()
+                path = SUITE.apply_node(b["id"])
+                self._send(200, json.dumps({"ok": True, "path": path, "types": sorted(SUITE.list_types())}))
+            else:
+                self._send(404, "{}")
+        except Exception as e:                          # fail loud to the UI
+            self._send(400, json.dumps({"error": f"{type(e).__name__}: {e}"}))
 
     def log_message(self, *a):
         pass

@@ -1,0 +1,10 @@
+{
+  "id": "s1-code_build",
+  "action": "code_build",
+  "payload": {
+    "name": "wordcount",
+    "code": "VERSION='1'\nKIND='process'\nPORTS_IN={'text':'Text'}\nPORTS_OUT={'text':'Text'}\ndef run(inputs, config):\n    return str(len(inputs.get('text','').split()))"
+  },
+  "default": "reject",
+  "resolved": "approve"
+}

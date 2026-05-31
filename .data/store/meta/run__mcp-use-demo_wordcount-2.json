@@ -1,0 +1,12 @@
+{
+  "address": "run://mcp-use-demo/wordcount-2",
+  "content_hash": "cas://b2:f2a5402f297918ac5f7dd374365cdf3c",
+  "type": "wordcount",
+  "produced_by": "run://mcp-use-demo/wordcount-2",
+  "inputs": [
+    "run://mcp-use-demo/constant-1"
+  ],
+  "agent": "wordcount@memo",
+  "created_at": null,
+  "schema_ver": 1
+}
