@@ -81,9 +81,10 @@ class Suite:
             if result:
                 status = ("ran" if n.id in result["ran"]
                           else "cached" if n.id in result["skipped"] else "idle")
+            nt = self.registry.types.get(n.type)
             nodes.append({
                 "id": n.id, "type": n.type, "config": n.config,
-                "kind": "content" if n.type in CONTENT_KINDS else "process",
+                "kind": nt.kind if nt else ("content" if n.type in CONTENT_KINDS else "process"),
                 "status": status, "address": logical, "content_hash": cas,
                 "output": self.store.get_content(cas) if cas else None,
             })

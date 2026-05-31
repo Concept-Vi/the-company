@@ -1,0 +1,10 @@
+{
+  "address": "run://first-purpose-test/q",
+  "content_hash": "cas://b2:07926cd7f07d5b1eac18748f74c9cdee",
+  "type": "constant",
+  "produced_by": "run://first-purpose-test/q",
+  "inputs": [],
+  "agent": "constant@deterministic",
+  "created_at": null,
+  "schema_ver": 1
+}

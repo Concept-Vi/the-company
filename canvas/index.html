@@ -173,17 +173,19 @@ function render(state){
       +'<div class="addr">'+ (n.address?('<b>'+n.address+'</b>'):'') + (n.content_hash?('<br>'+n.content_hash):'') +'</div>'
       +'</div>';
   });
-  // wire — between the first edge's endpoints
-  const wire=document.getElementById('wire');
-  const e0 = (state.edges && state.edges[0]) || {};
-  const a = pos[e0.from], b = pos[e0.to];
-  if(a && b){
-    const x1=a.x+NODE_W, y1=a.y+38, x2=b.x, y2=b.y+38, mx=(x1+x2)/2;
-    wire.setAttribute('d',`M ${x1} ${y1} C ${mx} ${y1} ${mx} ${y2} ${x2} ${y2}`);
-  } else { wire.setAttribute('d',''); }
+  // wires — one per edge
+  const svg=document.querySelector('svg.wires');
+  svg.innerHTML='';
   const anyRan = state.nodes.some(n=>n.status==='ran');
-  wire.classList.toggle('live', anyRan);
-  if(anyRan) setTimeout(()=>wire.classList.remove('live'), 900);
+  (state.edges||[]).forEach(e=>{
+    const a=pos[e.from], b=pos[e.to]; if(!a||!b) return;
+    const x1=a.x+NODE_W, y1=a.y+38, x2=b.x, y2=b.y+38, mx=(x1+x2)/2;
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('class','wire'+(anyRan?' live':''));
+    p.setAttribute('d',`M ${x1} ${y1} C ${mx} ${y1} ${mx} ${y2} ${x2} ${y2}`);
+    svg.appendChild(p);
+  });
+  if(anyRan) setTimeout(()=>svg.querySelectorAll('.wire').forEach(w=>w.classList.remove('live')), 900);
 }
 
 function escapeHtml(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}

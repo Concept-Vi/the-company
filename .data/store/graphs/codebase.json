@@ -1,0 +1,74 @@
+{
+  "id": "codebase",
+  "nodes": [
+    {
+      "id": "question",
+      "type": "constant",
+      "config": {
+        "value": "What does the scheduler's memo gate do, and which file is it in?"
+      },
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "size": {
+        "w": 268.0,
+        "h": 120.0
+      },
+      "render_state": "collapsed",
+      "layer": "main",
+      "status": "idle",
+      "outputs": {}
+    },
+    {
+      "id": "code",
+      "type": "codebase",
+      "config": {},
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "size": {
+        "w": 268.0,
+        "h": 120.0
+      },
+      "render_state": "collapsed",
+      "layer": "main",
+      "status": "idle",
+      "outputs": {}
+    },
+    {
+      "id": "answer",
+      "type": "ask",
+      "config": {
+        "model": "deepseek-v4-pro:cloud"
+      },
+      "position": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "size": {
+        "w": 268.0,
+        "h": 120.0
+      },
+      "render_state": "collapsed",
+      "layer": "main",
+      "status": "idle",
+      "outputs": {}
+    }
+  ],
+  "edges": [
+    {
+      "from_node": "question",
+      "from_port": "value",
+      "to_node": "answer",
+      "to_port": "question"
+    },
+    {
+      "from_node": "code",
+      "from_port": "context",
+      "to_node": "answer",
+      "to_port": "context"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "address": "run://first-purpose-test/code",
+  "content_hash": "cas://b2:1931fd418523f486e8e01f233eec4644",
+  "type": "codebase",
+  "produced_by": "run://first-purpose-test/code",
+  "inputs": [],
+  "agent": "codebase@deterministic",
+  "created_at": null,
+  "schema_ver": 1
+}

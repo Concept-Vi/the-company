@@ -1,0 +1,10 @@
+{
+  "address": "run://codebase/code",
+  "content_hash": "cas://b2:1931fd418523f486e8e01f233eec4644",
+  "type": "codebase",
+  "produced_by": "run://codebase/code",
+  "inputs": [],
+  "agent": "codebase@memo",
+  "created_at": null,
+  "schema_ver": 1
+}

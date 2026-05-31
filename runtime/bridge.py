@@ -24,19 +24,21 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CANVAS = os.path.join(ROOT, "canvas", "index.html")
 SUITE = Suite(FsStore(fcfg.STORE_DIR),
               NodeRegistry().discover([os.path.join(ROOT, "nodes")]))
-DEMO = "demo"
+DEMO = "codebase"
 
 
 def seed_demo():
-    """First-run demo graph: a live AI composition (prompt -> brain)."""
+    """First-run graph = the FIRST PURPOSE: the system answering about its own codebase."""
     if DEMO not in SUITE.list_graphs():
         SUITE.save_graph(Graph(id=DEMO, nodes=[
-            NodeInstance(id="prompt", type="constant",
-                         config={"value": "In one sentence, what is a composition engine?"}),
-            NodeInstance(id="brain", type="llm",
-                         config={"model": "deepseek-v4-pro:cloud",
-                                 "system": "Answer in one concise sentence."}),
-        ], edges=[Edge(from_node="prompt", from_port="value", to_node="brain", to_port="prompt")]))
+            NodeInstance(id="question", type="constant",
+                         config={"value": "What does the scheduler's memo gate do, and which file is it in?"}),
+            NodeInstance(id="code", type="codebase", config={}),
+            NodeInstance(id="answer", type="ask", config={"model": "deepseek-v4-pro:cloud"}),
+        ], edges=[
+            Edge(from_node="question", from_port="value", to_node="answer", to_port="question"),
+            Edge(from_node="code", from_port="context", to_node="answer", to_port="context"),
+        ]))
 
 
 class H(BaseHTTPRequestHandler):
