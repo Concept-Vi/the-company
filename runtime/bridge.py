@@ -16,20 +16,24 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from contracts.shapes import NodeInstance, Edge, Graph   # noqa: E402
 from store.fs_store import FsStore                        # noqa: E402
 from runtime import scheduler                             # noqa: E402
-from nodes import constant, uppercase                     # noqa: E402
+from nodes import constant, uppercase, llm                 # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CANVAS = os.path.join(ROOT, "canvas", "index.html")
-NODE_TYPES = {"constant": constant, "uppercase": uppercase}
+NODE_TYPES = {"constant": constant, "uppercase": uppercase, "llm": llm}
+CONTENT_KINDS = ("constant", "document", "code", "file", "image", "source")
 
 STORE = FsStore("/tmp/company-bridge-store")
 GRAPH = Graph(
     id="demo",
     nodes=[
-        NodeInstance(id="src", type="constant", config={"value": "hello"}),
-        NodeInstance(id="up", type="uppercase"),
+        NodeInstance(id="prompt", type="constant",
+                     config={"value": "In one sentence, what is a composition engine?"}),
+        NodeInstance(id="brain", type="llm",
+                     config={"model": "deepseek-v4-pro:cloud",
+                             "system": "Answer in one concise sentence."}),
     ],
-    edges=[Edge(from_node="src", from_port="value", to_node="up", to_port="text")],
+    edges=[Edge(from_node="prompt", from_port="value", to_node="brain", to_port="prompt")],
 )
 
 
@@ -43,6 +47,7 @@ def graph_state(result=None):
             status = "ran" if n.id in result["ran"] else ("cached" if n.id in result["skipped"] else "idle")
         nodes.append({
             "id": n.id, "type": n.type, "config": n.config,
+            "kind": "content" if n.type in CONTENT_KINDS else "process",
             "status": status,
             "address": logical,
             "content_hash": cas,
