@@ -1,0 +1,43 @@
+# LiteLLM proxy config — the company's unified model endpoint (S6).
+# Generated clean (NOT the stale ~/claude-gateway). Runs in .litellm-venv (py3.12) on :4100.
+# The fabric transport (stdlib) calls this over HTTP — one OpenAI-compatible endpoint.
+# Latest litellm 1.83.7.  *** NO GEMINI — by deliberate omission. ***
+#
+# Eventually GENERATED from the registry (S6/C7) so "everything configurable" is registry-driven.
+# This hand-authored seed proves the proxy + the swappable-brain path.
+
+model_list:
+  # --- the right-hand-man's default brain alias (D2: ollama-cloud, swappable) ---
+  - model_name: brain
+    litellm_params:
+      model: ollama_chat/deepseek-v4-pro:cloud
+      api_base: http://localhost:11434
+
+  # --- ollama-cloud models (live now) ---
+  - model_name: deepseek-v4-pro
+    litellm_params: { model: ollama_chat/deepseek-v4-pro:cloud, api_base: http://localhost:11434 }
+  - model_name: deepseek-v4-flash
+    litellm_params: { model: ollama_chat/deepseek-v4-flash:cloud, api_base: http://localhost:11434 }
+  - model_name: qwen3.5-397b
+    litellm_params: { model: ollama_chat/qwen3.5:397b-cloud, api_base: http://localhost:11434 }
+  # kimi / glm exist but return empty content via the proxy — the fabric guards catch it;
+  # included so they're swappable, not because they're reliable.
+  - model_name: kimi-k2.6
+    litellm_params: { model: ollama_chat/kimi-k2.6:cloud, api_base: http://localhost:11434 }
+  - model_name: glm-5.1
+    litellm_params: { model: ollama_chat/glm-5.1:cloud, api_base: http://localhost:11434 }
+
+  # --- local fabric (when the vLLM service is up on :8000) ---
+  - model_name: local-4b
+    litellm_params:
+      model: openai/cyankiwi/Qwen3.5-4B-AWQ-4bit
+      api_base: http://localhost:8000/v1
+      api_key: none
+
+litellm_settings:
+  drop_params: true            # safe cross-provider swapping
+  # pair drop_params with the fabric's supports_response_schema probe so a dropped
+  # response_format fails loud, not silently (see fabric/AGENTS.md).
+
+general_settings:
+  master_key: sk-company-local   # local-only; the proxy binds 127.0.0.1
