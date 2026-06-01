@@ -487,6 +487,31 @@ class Suite:
     def chat_history(self, limit: int = 40) -> list:
         return self.store.chat_history(limit)
 
+    def react(self, graph_id: str) -> dict:
+        """watch-and-react mode: a brief AMBIENT comment on the latest activity — unprompted, but
+        only in that mode (real mode-gated behavior) and only when something is worth remarking."""
+        if self.get_mode() != "watch-and-react":
+            return {"comment": ""}                         # mode-gated: silent otherwise
+        recent = self.store.recent_events(1)
+        if not recent:
+            return {"comment": ""}
+        from fabric import client, transport
+        cfg = self.rhm_config()
+        last = recent[0]
+        sys_p = ("You are the right-hand-man in watch-and-react mode, watching over the operator's shoulder. "
+                 "Given the latest activity, offer ONE short, useful observation or suggestion about it "
+                 "(e.g. a node left unwired, an obvious next step, a result worth noting). Only if there is "
+                 "truly nothing useful to say, reply with exactly: NOTHING. Keep it to one sentence.")
+        user = f"Latest activity: {last['kind']} — {last['summary']}.\n{self._chat_context(graph_id)[:700]}"
+        out = client.complete(transport.openai_transport(base_url=cfg["base_url"]),
+                              [{"role": "system", "content": sys_p},
+                               {"role": "user", "content": user}], model=cfg["model"]).strip()
+        if not out or out.upper().startswith("NOTHING"):
+            return {"comment": ""}
+        self.store.append_chat({"role": "assistant", "text": out, "grade": "working", "ambient": True})
+        self._emit("react", f"(watching) {out[:44]}")
+        return {"comment": out}
+
     # --- the inbox: chief-of-staff triage (F1-F2) + the decision-compiler UP (C2-C3) ---
     def inbox_lanes(self) -> dict:
         """Three lanes (context-05): live escalations (pending, need the operator), resolved-for-you

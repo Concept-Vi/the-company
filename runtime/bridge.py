@@ -114,6 +114,8 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/coa":                 # decision-compiler UP — value-framing
                 b = self._body()
                 self._send(200, json.dumps(SUITE.coa(b["id"])))
+            elif self.path == "/api/react":               # watch-and-react ambient comment
+                self._send(200, json.dumps(SUITE.react(DEMO)))
             # --- build-dispatch (self-growth), operable from the operator's UI ---
             elif self.path == "/api/propose":          # agent/operator dispatches a build
                 b = self._body()

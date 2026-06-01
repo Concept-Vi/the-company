@@ -35,6 +35,7 @@ const api = {
     fetch('/api/rhm-config', { method: 'POST', headers: J, body: JSON.stringify(updates) }).then(r => r.json()),
   inbox: () => fetch('/api/inbox').then(r => r.json()),
   coa: (id: string) => fetch('/api/coa', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(r => r.json()),
+  react: () => fetch('/api/react', { method: 'POST' }).then(r => r.json()),
 }
 
 const MODES = ['listening', 'text-only', 'background', 'focus', 'walkthrough', 'watch-and-react', 'decide-for-me', 'off']
@@ -212,7 +213,10 @@ function Hud() {
     return null
   })
 
-  async function reload() { const g = await loadGraph(editor); setEdges(g.edges || []); await poll() }
+  async function reload() { const g = await loadGraph(editor); setEdges(g.edges || []); await poll(); await maybeReact() }
+  async function maybeReact() {   // watch-and-react: backend-gated, comments only in that mode
+    try { const r = await api.react(); if (r.comment) setChat(await api.chatHistory()) } catch { /* */ }
+  }
   async function addNode(type: string) { setNotice('+ ' + type); await api.addNode(type); await reload() }
   async function wireSelected() {
     const sel = (editor.getSelectedShapes().filter(s => s.type === 'node') as NodeShape[])
@@ -285,7 +289,7 @@ function Hud() {
 
   async function doRun() {
     setRunning(true); setGrowMsg('resolving… presence of data at each address fires the next node')
-    try { const st = await api.run(); await refresh(editor, st); setGrowMsg('run complete.'); await poll() }
+    try { const st = await api.run(); await refresh(editor, st); setGrowMsg('run complete.'); await poll(); await maybeReact() }
     finally { setRunning(false) }
   }
   async function dispatch() {
