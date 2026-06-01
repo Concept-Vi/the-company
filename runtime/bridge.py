@@ -66,6 +66,10 @@ class H(BaseHTTPRequestHandler):
             self._send(200, json.dumps(sorted(SUITE.list_types())))
         elif self.path == "/api/surfaced":
             self._send(200, json.dumps(SUITE.list_surfaced()))
+        elif self.path == "/api/events":
+            self._send(200, json.dumps(SUITE.events(60)))
+        elif self.path == "/api/now":
+            self._send(200, json.dumps(SUITE.now(DEMO)))
         else:
             self._send(404, "{}")
 

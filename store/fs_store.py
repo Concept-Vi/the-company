@@ -93,6 +93,37 @@ class FsStore:
     def list_graphs(self) -> list[str]:
         return sorted(p.stem for p in (self.root / "graphs").glob("*.json"))
 
+    # --- event log (I2): append-only captured trajectory, persists across sessions ---
+    def append_event(self, event: dict) -> dict:
+        import json as _j
+        from datetime import datetime, timezone
+        path = self.root / "events.jsonl"
+        seq = 0
+        if path.exists():
+            # last line's seq + 1 (append-only; order is preserved by the file itself)
+            with path.open("rb") as f:
+                try:
+                    f.seek(-2, 2)
+                    while f.read(1) != b"\n":
+                        f.seek(-2, 1)
+                except OSError:
+                    f.seek(0)
+                last = f.readline().decode().strip()
+            if last:
+                seq = _j.loads(last).get("seq", 0) + 1
+        rec = {"seq": seq, "ts": datetime.now(timezone.utc).isoformat(), **event}
+        with path.open("a", encoding="utf-8") as f:
+            f.write(_j.dumps(rec) + "\n")
+        return rec
+
+    def recent_events(self, limit: int = 50) -> list[dict]:
+        import json as _j
+        path = self.root / "events.jsonl"
+        if not path.exists():
+            return []
+        lines = [l for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+        return [_j.loads(l) for l in reversed(lines[-limit:])]   # newest-first
+
     # --- surfaced-decision inbox (S7/D4): non-blocking gates, shared across faces ---
     def save_surfaced(self, decision: dict) -> None:
         import json as _j

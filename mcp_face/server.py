@@ -114,6 +114,18 @@ def list_surfaced() -> list:
     return SUITE.list_surfaced()
 
 
+@mcp.tool()
+def get_events(limit: int = 60) -> list:
+    """The captured trajectory — recent actions (run · create · connect · grow · approve), newest-first."""
+    return SUITE.events(limit)
+
+
+@mcp.tool()
+def now(graph: str) -> dict:
+    """The now-view + presence snapshot for `graph` — node counts, pending approvals, presence, last event."""
+    return SUITE.now(graph)
+
+
 # NOTE: resolve_surfaced (operator approval) is deliberately NOT exposed on this face — only the
 # UI/operator channel may approve a CONFIRM, so the proposing agent cannot self-approve its code-build.
 

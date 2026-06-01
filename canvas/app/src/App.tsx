@@ -23,6 +23,17 @@ const api = {
     fetch('/api/connect', { method: 'POST', headers: J, body: JSON.stringify(e) }).then(r => r.json()),
   del: (node: string) =>
     fetch('/api/delete-node', { method: 'POST', headers: J, body: JSON.stringify({ node }) }).then(r => r.json()),
+  now: () => fetch('/api/now').then(r => r.json()),
+  events: () => fetch('/api/events').then(r => r.json()),
+}
+
+function relTime(iso?: string) {
+  if (!iso) return ''
+  const d = (Date.now() - new Date(iso).getTime()) / 1000
+  if (d < 1) return 'now'
+  if (d < 60) return `${Math.floor(d)}s`
+  if (d < 3600) return `${Math.floor(d / 60)}m`
+  return `${Math.floor(d / 3600)}h`
 }
 
 // ---------------------------------------------------------------- the node shape (one generic kind)
@@ -154,19 +165,27 @@ function Hud() {
   const [notice, setNotice] = useState('')
   const [gid, setGid] = useState('codebase')
   const [layerView, setLayerView] = useState(0)   // 0 all · 1 origin only · 2 system only
+  const [now, setNow] = useState<any>(null)
+  const [events, setEvents] = useState<any[]>([])
 
-  // load once
+  async function poll() {
+    try { setNow(await api.now()); setEvents(await api.events()) } catch { /* bridge transient */ }
+  }
+
+  // load once + a heartbeat so the surfaces stay live (now-view · presence · event log)
   useState(() => {
     ;(window as any).__editor = editor   // automation/debug handle
     ;(async () => {
       const g = await loadGraph(editor); setEdges(g.edges || []); setGid(g.id)
       setTypes(await api.types())
       setOinfo(await api.objectInfo())
+      await poll()
     })()
+    setInterval(poll, 2500)              // single-mount app; heartbeat is the presence pulse
     return null
   })
 
-  async function reload() { const g = await loadGraph(editor); setEdges(g.edges || []) }
+  async function reload() { const g = await loadGraph(editor); setEdges(g.edges || []); await poll() }
   async function addNode(type: string) { setNotice('+ ' + type); await api.addNode(type); await reload() }
   async function wireSelected() {
     const sel = (editor.getSelectedShapes().filter(s => s.type === 'node') as NodeShape[])
@@ -210,7 +229,7 @@ function Hud() {
 
   async function doRun() {
     setRunning(true); setGrowMsg('resolving… presence of data at each address fires the next node')
-    try { const st = await api.run(); await refresh(editor, st); setGrowMsg('run complete.') }
+    try { const st = await api.run(); await refresh(editor, st); setGrowMsg('run complete.'); await poll() }
     finally { setRunning(false) }
   }
   async function dispatch() {
@@ -218,12 +237,13 @@ function Hud() {
     setGrowMsg(`dispatching… the brain is writing the ${gname} node…`); setSurf(null)
     const r = await api.propose(gname, gspec)
     if (r.error) { setGrowMsg(''); setSurf({ error: r.error }) } else setSurf(r)
+    await poll()
   }
   async function approveApply() {
     await api.resolve(surf.id, 'approve')
     const r = await api.apply(surf.id)
     if (r.error) { setSurf({ ...surf, error: r.error }) }
-    else { setSurf(null); setGrowMsg(`✓ approved + applied → ${surf.name} is now a live node-type.`); setTypes(r.types) }
+    else { setSurf(null); setGrowMsg(`✓ approved + applied → ${surf.name} is now a live node-type.`); setTypes(r.types); await poll() }
   }
 
   return (
@@ -231,6 +251,11 @@ function Hud() {
       <Edges edges={edges} />
       <div className="hud toolbar">
         <span className="title">the&nbsp;<em>company</em></span>
+        {now && (
+          <span className={'presence ' + (running ? 'busy' : now.surfaced_pending ? 'warn' : 'ok')}>
+            <span className="pdot" />{running ? 'running…' : now.presence}
+          </span>
+        )}
         <button className="b" onClick={doRun} disabled={running}>{running ? 'running…' : '▶ run'}</button>
         <button className="b ghost" onClick={wireSelected}>＋ wire</button>
         <button className="b ghost" onClick={portalSelected}>⊕ portal</button>
@@ -280,6 +305,23 @@ function Hud() {
         {!surf && <div className="muted" style={{ marginTop: 8 }}>{growMsg}</div>}
         <div className="muted" style={{ marginTop: 12, borderTop: '1px solid var(--line)', paddingTop: 9 }}>
           live node-types ({types.length}): {types.map(t => <span key={t} className="tg">{t}</span>)}
+        </div>
+      </div>
+
+      <div className="hud activity">
+        <div className="act-head">
+          <span className="act-title">now</span>
+          {now && <span className="muted">{now.graph} · {now.nodes_resolved}/{now.nodes_total} resolved{now.surfaced_pending ? ` · ${now.surfaced_pending} awaiting you` : ''}</span>}
+        </div>
+        <div className="ev-list">
+          {events.length === 0 && <div className="muted">no activity yet — run something.</div>}
+          {events.map((e, i) => (
+            <div key={e.seq ?? i} className={'ev ev-' + e.kind}>
+              <span className="ev-k">{e.kind}</span>
+              <span className="ev-s">{e.summary}</span>
+              <span className="ev-t">{relTime(e.ts)}</span>
+            </div>
+          ))}
         </div>
       </div>
 

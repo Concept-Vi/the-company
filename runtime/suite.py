@@ -43,6 +43,13 @@ class Suite:
         self.nodes_dir = nodes_dir or os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "nodes")
 
+    def _emit(self, kind: str, summary: str, **meta) -> None:
+        """Append one event to the captured trajectory (I2). Never breaks the action it records."""
+        try:
+            self.store.append_event({"kind": kind, "summary": summary, **meta})
+        except Exception:
+            pass
+
     # --- introspection (reads) ---
     def list_types(self) -> list[str]:
         return sorted(self.registry.types)
@@ -68,6 +75,7 @@ class Suite:
         nid = node_id or f"{type}-{len(g.nodes) + 1}"
         g.nodes.append(NodeInstance(id=nid, type=type, config=config or {}))
         self.store.save_graph(g)
+        self._emit("create", f"+ {type} node ({nid})", graph=graph_id, node=nid, type=type)
         return nid
 
     def connect(self, graph_id: str, from_node: str, from_port: str,
@@ -86,12 +94,15 @@ class Suite:
         g.edges.append(Edge(from_node=from_node, from_port=from_port,
                             to_node=to_node, to_port=to_port))
         self.store.save_graph(g)
+        self._emit("connect", f"wired {from_node}.{from_port} → {to_node}.{to_port}",
+                   graph=graph_id, from_node=from_node, to_node=to_node)
 
     def delete_node(self, graph_id: str, node_id: str) -> None:
         g = self._load(graph_id)
         g.nodes = [n for n in g.nodes if n.id != node_id]
         g.edges = [e for e in g.edges if e.from_node != node_id and e.to_node != node_id]
         self.store.save_graph(g)
+        self._emit("delete", f"removed node {node_id}", graph=graph_id, node=node_id)
 
     def set_config(self, graph_id: str, node_id: str, config: dict) -> None:
         g = self._load(graph_id)
@@ -107,8 +118,13 @@ class Suite:
 
     # --- run + read ---
     def run(self, graph_id: str, branch: str = "main", pause=None, force=None) -> dict:
-        return scheduler.run(self._load(graph_id), self.store, self.registry,
-                             branch=branch, pause=pause, force=force)
+        r = scheduler.run(self._load(graph_id), self.store, self.registry,
+                          branch=branch, pause=pause, force=force)
+        self._emit("run", f"ran {len(r['ran'])}, cached {len(r['skipped'])}"
+                   + (f", stuck {len(r['stuck'])}" if r.get("stuck") else ""),
+                   graph=graph_id, ran=sorted(r["ran"]), cached=sorted(r["skipped"]),
+                   stuck=sorted(r.get("stuck", [])))
+        return r
 
     def state(self, graph_id: str, result: dict | None = None, branch: str = "main") -> dict:
         g = self._load(graph_id)
@@ -141,6 +157,34 @@ class Suite:
         st = self.state(graph_id)
         return {n["id"]: n["output"] for n in st["nodes"]}
 
+    # --- the operator surfaces (I2): now-view · presence · event log ---
+    def events(self, limit: int = 60) -> list:
+        return self.store.recent_events(limit)
+
+    def now(self, graph_id: str) -> dict:
+        """The now-view + presence snapshot — derived live from state, the inbox, and the log."""
+        st = self.state(graph_id)
+        nodes = st["nodes"]
+        resolved = [n for n in nodes if n["content_hash"]]
+        pending = [d for d in self.inbox.list() if d.get("resolved") is None]
+        recent = self.store.recent_events(1)
+        if pending:
+            presence = "awaiting your approval"
+        elif nodes and len(resolved) == len(nodes):
+            presence = "ready · all resolved"
+        elif nodes:
+            presence = "ready · work unresolved"
+        else:
+            presence = "empty"
+        return {
+            "graph": st["id"],
+            "nodes_total": len(nodes),
+            "nodes_resolved": len(resolved),
+            "surfaced_pending": len(pending),
+            "presence": presence,
+            "last_event": recent[0] if recent else None,
+        }
+
     # --- self-growth: build-dispatch (the "direct its growth" half of the first purpose) ---
     @staticmethod
     def _safe_node_name(name: str) -> str:
@@ -169,6 +213,7 @@ class Suite:
             t, [{"role": "system", "content": sys_p}, {"role": "user", "content": user_p}],
             model=model or fcfg.DEFAULT_BRAIN)))
         sid = self.inbox.surface("code_build", {"name": name, "code": code}, default="reject")
+        self._emit("grow", f"brain wrote a '{name}' node — surfaced for approval", node_name=name, surfaced=sid)
         return {"id": sid, "name": name, "code": code}
 
     def apply_node(self, surfaced_id: str) -> str:
@@ -189,6 +234,7 @@ class Suite:
             f.write(code if code.endswith("\n") else code + "\n")
         os.replace(tmp, path)                               # atomic; no partial file
         self.registry.discover([self.nodes_dir])            # re-discover -> capability is live
+        self._emit("apply", f"approved + applied '{name}' — now a live node-type", node_name=name)
         return path
 
     # --- surfaced-decision inbox (D4/D7) ---
@@ -198,3 +244,4 @@ class Suite:
     def resolve_surfaced(self, sid: str, choice: str) -> None:
         """OPERATOR-only (UI channel) — NOT exposed on the MCP face, so the agent can't self-approve."""
         self.inbox.resolve(sid, choice)
+        self._emit("resolve", f"operator {choice}d {sid}", surfaced=sid, choice=choice)
