@@ -2,7 +2,19 @@ import {
   Tldraw, Editor, ShapeUtil, HTMLContainer, Rectangle2d, T,
   createShapeId, useEditor, useValue, type TLBaseShape,
 } from 'tldraw'
-import { useState } from 'react'
+import { useState, Component } from 'react'
+
+// Per-panel error boundary — a malformed/throwing panel definition renders a CONTAINED card,
+// never white-screening the canvas (the operator's only control surface). Recovery is bridge-side.
+class PanelErrorBoundary extends Component<{ name: string; children: any }, { err: boolean }> {
+  constructor(p: any) { super(p); this.state = { err: false } }
+  static getDerivedStateFromError() { return { err: true } }
+  render() {
+    return this.state.err
+      ? <div className="op-panel op-err">⚠ panel “{this.props.name}” failed to render — revert it from the grow panel (↩).</div>
+      : this.props.children
+  }
+}
 
 // ---------------------------------------------------------------- api (proxied to the bridge)
 const J = { 'Content-Type': 'application/json' }
@@ -38,6 +50,7 @@ const api = {
   react: () => fetch('/api/react', { method: 'POST' }).then(r => r.json()),
   lastChange: () => fetch('/api/last-change').then(r => r.json()),
   revert: (sha: string) => fetch('/api/revert', { method: 'POST', headers: J, body: JSON.stringify({ sha }) }).then(r => r.json()),
+  panels: () => fetch('/api/panels').then(r => r.json()),
 }
 
 const MODES = ['listening', 'text-only', 'background', 'focus', 'walkthrough', 'watch-and-react', 'decide-for-me', 'off']
@@ -49,6 +62,28 @@ function relTime(iso?: string) {
   if (d < 60) return `${Math.floor(d)}s`
   if (d < 3600) return `${Math.floor(d / 60)}m`
   return `${Math.floor(d / 3600)}h`
+}
+
+// A brain-authored declarative panel, rendered generically. Render-prone work lives HERE (inside a
+// component) so a malformed definition throws during PanelView's render and is caught by the
+// PanelErrorBoundary wrapping it — never the parent Hud (which would white-screen the canvas).
+function PanelView({ p, value, onSet }: { p: any; value: (f: any) => string; onSet: (f: any, v: string) => void }) {
+  return (
+    <div className="op-panel">
+      <div className="op-title">{p.title}</div>
+      {(p.fields || []).map((f: any) => (
+        <div className="op-field" key={f.key}>
+          <span className="op-label">{f.label || f.target}</span>
+          {f.type === 'select'
+            ? <select value={value(f)} onChange={e => onSet(f, e.target.value)}>
+                {(f.options || []).map((o: string) => <option key={o} value={o}>{o}</option>)}
+              </select>
+            : <input defaultValue={value(f)} onBlur={e => onSet(f, e.target.value)} />}
+        </div>
+      ))}
+      {(!p.fields || !p.fields.length) && <div className="muted">no fields</div>}
+    </div>
+  )
 }
 
 // ---------------------------------------------------------------- the node shape (one generic kind)
@@ -191,9 +226,10 @@ function Hud() {
   const [drill, setDrill] = useState(false)
   const [reason, setReason] = useState('')
   const [lastChange, setLastChange] = useState<any>(null)
+  const [panels, setPanels] = useState<any[]>([])
 
   async function poll() {
-    try { setNow(await api.now()); setEvents(await api.events()); setInbox(await api.inbox()); setLastChange(await api.lastChange()) } catch { /* bridge transient */ }
+    try { setNow(await api.now()); setEvents(await api.events()); setInbox(await api.inbox()); setLastChange(await api.lastChange()); setPanels(await api.panels()) } catch { /* bridge transient */ }
   }
   async function openCoa(id: string) {
     setGrowMsg('compiling the decision into a value-choice…')
@@ -257,6 +293,11 @@ function Hud() {
         const d = all.find((x: any) => x.id === r.action.surfaced)
         if (d) setSurf({ id: d.id, name: d.payload.name, code: d.payload.code })   // → operator approves in GROW panel
       }
+      if (r.action?.did === 'panel') {            // update the interface through the interface
+        const all = await fetch('/api/surfaced').then(x => x.json())
+        const d = all.find((x: any) => x.id === r.action.surfaced)
+        if (d) setSurf({ id: d.id, name: d.payload.name, code: JSON.stringify(d.payload.panel, null, 2), isPanel: true })
+      }
     }
     catch { setChat(c => [...c, { role: 'assistant', text: '(could not reach the brain)' }]) }
     finally { setChatBusy(false) }
@@ -301,6 +342,16 @@ function Hud() {
     const r = await api.propose(gname, gspec)
     if (r.error) { setGrowMsg(''); setSurf({ error: r.error }) } else setSurf(r)
     await poll()
+  }
+  function fieldValue(f: any) {
+    if (f.target === 'mode') return now?.mode || 'listening'
+    if (f.target === 'model') return cfg?.model || ''
+    if (f.target === 'persona') return cfg?.persona || ''
+    return ''
+  }
+  async function setField(f: any, v: string) {
+    if (f.target === 'mode') await changeMode(v)
+    else { const c = await api.setRhmConfig({ [f.target]: v }); setCfg(c); setNotice(f.target + ' → ' + v) }
   }
   async function revertLast() {
     if (!lastChange?.sha) return
@@ -407,6 +458,14 @@ function Hud() {
             <button className="b ghost sm" style={{ marginLeft: 8 }} onClick={revertLast} title="git revert — bounded, recoverable">⟲ revert</button>
           </div>
         )}
+      </div>
+
+      <div className="hud op-panels">
+        {panels.map(p => (
+          <PanelErrorBoundary key={p.id} name={p.id}>
+            <PanelView p={p} value={fieldValue} onSet={setField} />
+          </PanelErrorBoundary>
+        ))}
       </div>
 
       <div className="hud activity">

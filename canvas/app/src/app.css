@@ -101,6 +101,16 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 .coa{font-family:"Fraunces",serif;color:var(--ink);font-size:12.5px;line-height:1.45;white-space:pre-wrap;
   background:var(--bg);border:1px solid var(--sig-dim);border-radius:3px;padding:9px;margin:6px 0}
 button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
+/* operator panels — brain-authored declarative panels, added through the interface */
+.op-panels{left:184px;top:64px;display:flex;flex-direction:column;gap:8px;width:212px}
+.op-panel{background:rgba(16,20,19,.96);border:1px solid var(--sig-dim);border-radius:6px;padding:11px 12px}
+.op-panel.op-err{border-color:var(--err);color:var(--err);font-size:10.5px}
+.op-title{font-family:"Fraunces",serif;color:var(--sig);font-weight:600;font-size:12.5px;margin-bottom:7px}
+.op-field{display:flex;flex-direction:column;gap:3px;margin:6px 0}
+.op-label{color:var(--dim);font-size:9px;letter-spacing:.1em;text-transform:uppercase}
+.op-field select,.op-field input{background:var(--bg);border:1px solid var(--line);color:var(--ink);
+  border-radius:3px;padding:6px;font-family:inherit;font-size:11px}
+.op-field select:focus,.op-field input:focus{outline:none;border-color:var(--sig)}
 .surf .reason{width:100%;margin:6px 0;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:6px;font-family:inherit;font-size:10.5px}
 .surf .reason:focus{outline:none;border-color:var(--sig)}
 .rhm-log{flex:1;overflow:auto;margin:9px 0;display:flex;flex-direction:column;gap:9px}

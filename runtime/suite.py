@@ -42,6 +42,7 @@ class Suite:
         self.inbox = Inbox(store)
         self.nodes_dir = nodes_dir or os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "nodes")
+        self.panels_dir = os.path.join(os.path.dirname(self.nodes_dir), "panels")  # UI extension point
 
     def _emit(self, kind: str, summary: str, **meta) -> None:
         """Append one event to the captured trajectory (I2). Never breaks the action it records."""
@@ -321,7 +322,7 @@ class Suite:
 
     # The RHM signals intent with a trailing `ACTION:` line; the dispatcher enforces a
     # WHITELIST so the conversational surface can never reach apply/delete/file-write (E6).
-    RHM_VERBS = ("run", "propose", "build", "consult", "show")
+    RHM_VERBS = ("run", "propose", "build", "consult", "show", "panel")
 
     def consult(self, query: str) -> dict:
         """The RHM reads the system's OWN code+design (the first-purpose Q&A, as a callable) and
@@ -368,6 +369,9 @@ class Suite:
         if verb == "show":
             targets = [t for t in rest.replace(",", " ").split() if t]
             return shown, {"verb": "show", "targets": targets}
+        if verb == "panel":
+            name, _, spec = rest.partition("::")
+            return shown, {"verb": "panel", "name": name.strip(), "spec": spec.strip()}
         return shown, {"verb": verb}
 
     def _dispatch_rhm_action(self, action: dict, graph_id: str) -> dict:
@@ -396,6 +400,14 @@ class Suite:
             if not targets:
                 return {"did": "none", "refused": "show: no matching nodes on the canvas"}
             return {"did": "show", "targets": targets}
+        if verb == "panel":
+            # update the interface through the interface: author a DECLARATIVE panel → surfaced
+            # (CONFIRM, operator approves → git-committed). Not arbitrary code; not self-applied.
+            name, spec = action.get("name"), action.get("spec")
+            if name and spec:
+                p = self.propose_panel(name, spec)
+                return {"did": "panel", "surfaced": p["id"], "name": name}
+            return {"did": "none", "refused": "panel needs '<name> :: <spec>'"}
         if verb == "build":
             # symmetric agency / NL→graph: compose a pipeline on the canvas. Only create_node +
             # connect (AUTO, reversible — exactly what the operator can do), never apply/delete.
@@ -455,6 +467,9 @@ class Suite:
             "Use consult for any question about how THIS system is built/designed that isn't in the live "
             "state above (e.g. 'how does the memo gate work', 'what are the contracts'). "
             "  ACTION: show <node-id(s)>           (move the operator's view to node(s) — to SHOW them)\n"
+            "  ACTION: panel <name> :: <spec>      (add a settings/control PANEL to the interface)\n"
+            "Use panel when the operator asks to add a UI panel/settings to the application; you author a "
+            "declarative panel (fields editing real config: mode/model/persona), surfaced for approval. "
             "Use show whenever the operator asks you to show/take them to/point at something — name the "
             "node ids from the live state. show only moves their view; it changes nothing. "
             "build's <json> is a list of steps, each either a node "
@@ -648,6 +663,88 @@ class Suite:
                               capture_output=True, text=True).stdout.strip()
         self._emit("revert", f"rolled back self-change {sha[:8]}", reverted=sha, commit=head)
         return {"reverted": sha, "head": head}
+
+    # --- UI extension point (slice 14): brain-authored DECLARATIVE panels added through the UI ---
+    # Bounded by construction: the brain authors a panel DEFINITION (a generic renderer displays it),
+    # NOT arbitrary interface code. Additive + git-reversible. Fields edit only real config.
+    PANEL_TARGETS = ("mode", "model", "persona")
+    PANEL_FIELD_TYPES = ("select", "text")
+
+    def list_panels(self) -> list:
+        import json as _j
+        if not os.path.isdir(self.panels_dir):
+            return []
+        out = []
+        for fn in sorted(os.listdir(self.panels_dir)):
+            if fn.endswith(".json"):
+                try:
+                    out.append(_j.loads(open(os.path.join(self.panels_dir, fn), encoding="utf-8").read()))
+                except Exception:
+                    pass            # a malformed file never breaks the list; the renderer contains per-panel
+        return out
+
+    def propose_panel(self, name: str, spec: str, model: str | None = None) -> dict:
+        """The brain AUTHORS a declarative panel definition (it chooses the fields + wiring), surfaced
+        as a ui_panel CONFIRM. NOT arbitrary code — a definition a generic renderer displays."""
+        self._safe_node_name(name)
+        import json as _j
+        from fabric import client, transport, config as fcfg
+        sys_p = ('You author ONE declarative UI panel definition for the operator interface. Output ONLY '
+                 'JSON, no prose. Shape: {"title": str, "fields": [{"key": str, "label": str, '
+                 '"type": "select"|"text", "target": "mode"|"model"|"persona", "options": [str] (select only)}]}. '
+                 'Each field\'s target is the REAL config it edits: mode (presence mode), model (the RHM model), '
+                 'persona (the RHM voice). Choose the fields that fit the request.')
+        user = (f"Panel name: {name}. Request: {spec}. The 8 modes are: listening, text-only, background, "
+                "focus, walkthrough, watch-and-react, decide-for-me, off.")
+        raw = client.complete(transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL),
+                              [{"role": "system", "content": sys_p}, {"role": "user", "content": user}],
+                              model=model or fcfg.DEFAULT_BRAIN)
+        try:
+            deftn = _j.loads(_strip_fences(raw))
+        except Exception as e:
+            deftn = {"title": name, "fields": [], "_parse_error": str(e)}
+        sid = self.inbox.surface("ui_panel", {"name": name, "panel": deftn}, default="reject")
+        self._emit("grow", f"brain authored a '{name}' UI panel — surfaced for approval",
+                   node_name=name, surfaced=sid)
+        return {"id": sid, "name": name, "panel": deftn}
+
+    def apply_panel(self, surfaced_id: str) -> str:
+        """Apply a proposed panel — only if OPERATOR-approved. VALIDATES the def to declarative
+        fields with allowed types/targets (never arbitrary code), writes panels/<name>.json
+        additively + git-commits (reversible)."""
+        d = self.inbox.get(surfaced_id)
+        if not d:
+            raise KeyError(f"no surfaced decision {surfaced_id!r}")
+        if not self.inbox.is_approved(surfaced_id):
+            raise GovernanceError(f"ui_panel {surfaced_id!r} not approved — operator must approve (CONFIRM)")
+        name = self._safe_node_name(d["payload"]["name"])
+        deftn = d["payload"]["panel"]
+        fields = []
+        for f in (deftn.get("fields") or []):
+            if f.get("type") in self.PANEL_FIELD_TYPES and f.get("target") in self.PANEL_TARGETS:
+                fields.append({"key": str(f.get("key", f.get("target"))), "label": str(f.get("label", "")),
+                               "type": f["type"], "target": f["target"],
+                               "options": [str(o) for o in f.get("options", [])] if f["type"] == "select" else []})
+        clean = {"id": name, "title": str(deftn.get("title", name)), "fields": fields}
+        import json as _j
+        os.makedirs(self.panels_dir, exist_ok=True)
+        path = os.path.join(self.panels_dir, name + ".json")
+        tmp = path + ".tmp"
+        open(tmp, "w", encoding="utf-8").write(_j.dumps(clean, indent=2))
+        os.replace(tmp, path)
+        sha = self._git_self_commit([path], f"add UI panel '{name}'")
+        self._emit("apply", f"approved + applied '{name}' UI panel" + (f" · {sha[:8]}" if sha else ""),
+                   node_name=name, commit=sha)
+        return path
+
+    def apply_surfaced(self, surfaced_id: str) -> dict:
+        """Dispatch apply by the decision's class — ui_panel → panel, else code_build → node-type."""
+        d = self.inbox.get(surfaced_id)
+        if not d:
+            raise KeyError(f"no surfaced decision {surfaced_id!r}")
+        if d.get("action") == "ui_panel":
+            return {"applied": self.apply_panel(surfaced_id), "kind": "ui_panel"}
+        return {"applied": self.apply_node(surfaced_id), "kind": "code_build"}
 
     # --- surfaced-decision inbox (D4/D7) ---
     def list_surfaced(self) -> list:

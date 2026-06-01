@@ -78,6 +78,8 @@ class H(BaseHTTPRequestHandler):
             self._send(200, json.dumps(SUITE.inbox_lanes()))
         elif self.path == "/api/last-change":
             self._send(200, json.dumps(SUITE.last_self_change() or {}))
+        elif self.path == "/api/panels":
+            self._send(200, json.dumps(SUITE.list_panels()))
         else:
             self._send(404, "{}")
 
@@ -134,8 +136,9 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.decision_view(b["id"])))
             elif self.path == "/api/apply":             # apply (only succeeds if operator approved)
                 b = self._body()
-                path = SUITE.apply_node(b["id"])
-                self._send(200, json.dumps({"ok": True, "path": path, "types": sorted(SUITE.list_types())}))
+                r = SUITE.apply_surfaced(b["id"])       # dispatches: ui_panel → panel, else node-type
+                self._send(200, json.dumps({"ok": True, "path": r["applied"], "kind": r["kind"],
+                                            "types": sorted(SUITE.list_types())}))
             else:
                 self._send(404, "{}")
         except Exception as e:                          # fail loud to the UI
