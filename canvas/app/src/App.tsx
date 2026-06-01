@@ -30,6 +30,9 @@ const api = {
   chatHistory: () => fetch('/api/chat').then(r => r.json()),
   setMode: (mode: string) =>
     fetch('/api/mode', { method: 'POST', headers: J, body: JSON.stringify({ mode }) }).then(r => r.json()),
+  rhmConfig: () => fetch('/api/rhm-config').then(r => r.json()),
+  setRhmConfig: (updates: any) =>
+    fetch('/api/rhm-config', { method: 'POST', headers: J, body: JSON.stringify(updates) }).then(r => r.json()),
 }
 
 const MODES = ['listening', 'text-only', 'background', 'focus', 'walkthrough', 'watch-and-react', 'decide-for-me', 'off']
@@ -177,6 +180,8 @@ function Hud() {
   const [chat, setChat] = useState<any[]>([])
   const [chatMsg, setChatMsg] = useState('')
   const [chatBusy, setChatBusy] = useState(false)
+  const [cfg, setCfg] = useState<any>({ model: '', persona: '' })
+  const [cfgOpen, setCfgOpen] = useState(false)
 
   async function poll() {
     try { setNow(await api.now()); setEvents(await api.events()) } catch { /* bridge transient */ }
@@ -190,6 +195,7 @@ function Hud() {
       setTypes(await api.types())
       setOinfo(await api.objectInfo())
       setChat(await api.chatHistory())
+      setCfg(await api.rhmConfig())
       await poll()
     })()
     setInterval(poll, 2500)              // single-mount app; heartbeat is the presence pulse
@@ -233,6 +239,10 @@ function Hud() {
     finally { setChatBusy(false) }
   }
   async function changeMode(m: string) { setNotice('presence → ' + m); await api.setMode(m); await poll() }
+  async function applyCfg() {
+    const c = await api.setRhmConfig({ model: cfg.model, persona: cfg.persona })
+    setCfg(c); setCfgOpen(false); setNotice('RHM config → ' + (c.model || 'default')); await poll()
+  }
   function cycleLayers() {
     const next = (layerView + 1) % 3
     setLayerView(next)
@@ -361,7 +371,19 @@ function Hud() {
       </div>
 
       <div className="hud rhm">
-        <div className="rhm-head">right-hand-man <span className="muted">· the company's voice about itself</span></div>
+        <div className="rhm-head">
+          right-hand-man <span className="muted">· {cfg.model || 'default model'}</span>
+          <span className="cfg-gear" title="configure model + persona" onClick={() => setCfgOpen(o => !o)}>⚙</span>
+        </div>
+        {cfgOpen && (
+          <div className="rhm-cfg">
+            <input placeholder="model (e.g. deepseek-v4-flash:cloud)" value={cfg.model || ''}
+              onChange={e => setCfg({ ...cfg, model: e.target.value })} />
+            <input placeholder="persona / voice (optional)" value={cfg.persona || ''}
+              onChange={e => setCfg({ ...cfg, persona: e.target.value })} />
+            <button className="b" onClick={applyCfg}>apply config</button>
+          </div>
+        )}
         <div className="rhm-log">
           {chat.length === 0 && <div className="muted">ask about the system — it answers from live state, and says so when it can't see something.</div>}
           {chat.map((t, i) => (

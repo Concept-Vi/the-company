@@ -204,28 +204,55 @@ class Suite:
         "off": "",
     }
 
-    def get_mode(self) -> str:
+    def _rhm_cfg(self) -> dict:
+        """The RHM's config node (system graph) — holds mode + model + base_url + persona."""
         g = self.store.load_graph(self.SYSTEM_GRAPH)
         if g:
             for n in g.nodes:
                 if n.id == self.MODE_NODE:
-                    return n.config.get("mode", self.DEFAULT_MODE)
-        return self.DEFAULT_MODE
+                    return dict(n.config)
+        return {}
+
+    def _ensure_rhm_node(self) -> None:
+        g = self.store.load_graph(self.SYSTEM_GRAPH)
+        if not g or not any(n.id == self.MODE_NODE for n in g.nodes):
+            self.create_node(self.SYSTEM_GRAPH, "rhm_mode",
+                             config={"mode": self.DEFAULT_MODE}, node_id=self.MODE_NODE)
+
+    def get_mode(self) -> str:
+        return self._rhm_cfg().get("mode", self.DEFAULT_MODE)
 
     def set_mode(self, mode: str) -> str:
         if mode not in self.MODES:
             raise ValueError(f"unknown mode {mode!r} — one of {self.MODES}")
-        g = self.store.load_graph(self.SYSTEM_GRAPH)
-        exists = bool(g) and any(n.id == self.MODE_NODE for n in g.nodes)
-        if exists:                                            # editing a parameter (same verb)
-            self.set_config(self.SYSTEM_GRAPH, self.MODE_NODE, {"mode": mode})
-        else:                                                 # the mode IS a node (same verb)
-            self.create_node(self.SYSTEM_GRAPH, "rhm_mode", config={"mode": mode}, node_id=self.MODE_NODE)
+        self._ensure_rhm_node()
+        self.set_config(self.SYSTEM_GRAPH, self.MODE_NODE, {"mode": mode})   # editing a parameter (same verb)
         self._emit("mode", f"presence → {mode}")
         return mode
 
     def _mode_directive(self, mode: str) -> str:
         return self.MODE_DIRECTIVES.get(mode, "")
+
+    # --- RHM configs (E1-E2): model/provider + persona, all configurable + persistent ---
+    def rhm_config(self) -> dict:
+        from fabric import config as fcfg
+        c = self._rhm_cfg()
+        return {"mode": c.get("mode", self.DEFAULT_MODE),
+                "model": c.get("model") or fcfg.DEFAULT_BRAIN,
+                "base_url": c.get("base_url") or fcfg.DEFAULT_BASE_URL,
+                "persona": c.get("persona", "")}
+
+    def set_rhm_config(self, updates: dict) -> dict:
+        allowed = {k: v for k, v in (updates or {}).items()
+                   if k in ("model", "base_url", "persona", "mode")}
+        if "mode" in allowed and allowed["mode"] not in self.MODES:
+            raise ValueError(f"unknown mode {allowed['mode']!r}")
+        if not allowed:
+            return self.rhm_config()
+        self._ensure_rhm_node()
+        self.set_config(self.SYSTEM_GRAPH, self.MODE_NODE, allowed)
+        self._emit("config", "RHM config → " + ", ".join(f"{k}={v}" for k, v in allowed.items()))
+        return self.rhm_config()
 
     # --- the right-hand-man: the coherent voice of the Company about ITSELF (I2) ---
     def _chat_context(self, graph_id: str) -> str:
@@ -296,13 +323,16 @@ class Suite:
             self.store.append_chat({"role": "assistant", "text": off})
             self._emit("chat", f"you: {message[:40]} (RHM off)")
             return {"reply": off, "action": None, "mode": mode, "history": self.store.chat_history(40)}
-        from fabric import client, transport, config as fcfg
+        from fabric import client, transport
+        cfg = self.rhm_config()
+        persona = cfg["persona"]
         sys_p = (
             "You are the right-hand-man — the coherent voice of the Company, speaking to its operator "
             "about the system ITSELF. Answer ONLY from the LIVE SYSTEM STATE below; it is ground truth. "
             "If something is not in that state, say you cannot see it — NEVER invent counts, names, or "
             "facts. Be concise and concrete.\n\n"
-            f"CURRENT MODE — {mode}: {self._mode_directive(mode)}\n\n"
+            + (f"VOICE / PERSONA (hold this consistently): {persona}\n\n" if persona else "")
+            + f"CURRENT MODE — {mode}: {self._mode_directive(mode)}\n\n"
             "You can ACT on the system, but only through governed verbs. When the operator asks you to do "
             "something you're capable of, append EXACTLY ONE final line:\n"
             "  ACTION: run                         (recompute the current graph)\n"
@@ -314,14 +344,15 @@ class Suite:
         for t in self.store.chat_history(20):
             msgs.append({"role": t["role"], "content": t["text"]})
         msgs.append({"role": "user", "content": message})
-        raw = client.complete(transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL),
-                              msgs, model=fcfg.DEFAULT_BRAIN)
+        raw = client.complete(transport.openai_transport(base_url=cfg["base_url"]),
+                              msgs, model=cfg["model"])      # model + provider are configurable (E1)
         reply, action = self._parse_rhm_action(raw)
         outcome = self._dispatch_rhm_action(action, graph_id) if action else None
         self.store.append_chat({"role": "user", "text": message})
         self.store.append_chat({"role": "assistant", "text": reply, "action": outcome})
         self._emit("chat", f"you: {message[:48]}")
-        return {"reply": reply, "action": outcome, "mode": mode, "history": self.store.chat_history(40)}
+        return {"reply": reply, "action": outcome, "mode": mode,
+                "model": cfg["model"], "history": self.store.chat_history(40)}
 
     def chat_history(self, limit: int = 40) -> list:
         return self.store.chat_history(limit)
