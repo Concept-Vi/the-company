@@ -28,9 +28,15 @@ def check(label, cond):
 
 store_dir = tempfile.mkdtemp(prefix="polr-test-")
 try:
+    import subprocess
+    repo = os.path.join(store_dir, "repo")                      # a git temp repo so apply_panel can commit (F2)
+    nd = os.path.join(repo, "nodes"); os.makedirs(nd)
+    subprocess.run(["git", "init", repo], capture_output=True, check=True)
+    subprocess.run(["git", "-C", repo, "config", "user.email", "t@t"], capture_output=True)
+    subprocess.run(["git", "-C", repo, "config", "user.name", "t"], capture_output=True)
     store = FsStore(os.path.join(store_dir, "store"))
     reg = NodeRegistry(); reg.discover([NODES])
-    suite = Suite(store, reg, nodes_dir=NODES)
+    suite = Suite(store, reg, nodes_dir=nd)   # repo_root = the git temp repo; panels_dir = repo/panels
 
     # capability registry — the source of truth fed to the brain
     cap = suite.capabilities()
@@ -47,8 +53,7 @@ try:
                                      "options": ["gpt-4", "claude-3-opus"]}]}     # the hallucinated guess
     sid = suite.inbox.surface("ui_panel", {"name": "polr_models", "panel": bad}, default="reject", resolved=None)
     suite.resolve_surfaced(sid, "approve")
-    suite.panels_dir = os.path.join(store_dir, "panels")     # don't touch the real repo
-    path = suite.apply_panel(sid)
+    path = suite.apply_panel(sid)                            # writes to repo/panels + git-commits
     import json
     applied = json.loads(open(path).read())
     model_opts = applied["fields"][0]["options"]

@@ -1,13 +1,13 @@
 {
   "address": "run://first-purpose-test/answer",
-  "content_hash": "cas://b2:700e4cf8ff2b5cf979408b6f13d7cf05",
+  "content_hash": "cas://b2:6f671fdf16c3e455d6cde000d480a61d",
   "type": "ask",
   "produced_by": "run://first-purpose-test/answer",
   "inputs": [
     "run://first-purpose-test/q",
     "run://first-purpose-test/code"
   ],
-  "agent": "ask@deterministic",
+  "agent": "ask@memo",
   "created_at": null,
   "schema_ver": 1
 }

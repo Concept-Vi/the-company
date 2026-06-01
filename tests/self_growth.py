@@ -41,7 +41,12 @@ def main():
         print("  [FAIL] ollama not reachable — cannot run the live self-growth test")
         return 1
 
-    tmp_nodes = tempfile.mkdtemp()
+    import subprocess
+    repo = tempfile.mkdtemp()                                  # a git repo so self-apply can commit (F2)
+    subprocess.run(["git", "init", repo], capture_output=True, check=True)
+    subprocess.run(["git", "-C", repo, "config", "user.email", "t@t"], capture_output=True)
+    subprocess.run(["git", "-C", repo, "config", "user.name", "t"], capture_output=True)
+    tmp_nodes = os.path.join(repo, "nodes"); os.makedirs(tmp_nodes)
     reg = NodeRegistry().discover([BASE_NODES])
     suite = Suite(FsStore(tempfile.mkdtemp()), reg, nodes_dir=tmp_nodes)
 

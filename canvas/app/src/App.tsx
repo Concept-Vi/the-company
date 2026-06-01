@@ -2,7 +2,7 @@ import {
   Tldraw, Editor, ShapeUtil, HTMLContainer, Rectangle2d, T,
   createShapeId, useEditor, useValue, type TLBaseShape,
 } from 'tldraw'
-import { useState, useRef, Component } from 'react'
+import { useState, useRef, Component, lazy, Suspense } from 'react'
 
 // Per-panel error boundary — a malformed/throwing panel definition renders a CONTAINED card,
 // never white-screening the canvas (the operator's only control surface). Recovery is bridge-side.
@@ -67,10 +67,14 @@ function relTime(iso?: string) {
   return `${Math.floor(d / 3600)}h`
 }
 
-// Self-coded extensions — brain-authored .tsx components, build-gated before promotion here,
-// loaded additively. Each is wrapped in PanelErrorBoundary so a runtime throw is contained.
-// New files appear via Vite HMR re-evaluating the glob. (Operator-only; git-reversible.)
-const extensionMods = import.meta.glob('./extensions/*.tsx', { eager: true })
+// Self-coded extensions — brain-authored .tsx, build-gated before promotion. LAZY-loaded (not eager):
+// React.lazy defers each module's evaluation to RENDER time, inside its PanelErrorBoundary — so even a
+// module-scope throw is caught and contained (a card), never white-screening the canvas (red-team B2).
+const extensionLoaders = import.meta.glob('./extensions/*.tsx')   // path -> () => Promise<module> (lazy)
+const extensions = Object.entries(extensionLoaders).map(([path, loader]) => ({
+  name: (path.split('/').pop() || 'ext').replace('.tsx', ''),
+  Comp: lazy(loader as () => Promise<{ default: any }>),
+}))
 
 // A brain-authored declarative panel, rendered generically. Render-prone work lives HERE (inside a
 // component) so a malformed definition throws during PanelView's render and is caught by the
@@ -505,16 +509,14 @@ function Hud() {
             <PanelView p={p} value={fieldValue} onSet={setField} />
           </PanelErrorBoundary>
         ))}
-        {Object.entries(extensionMods).map(([path, mod]) => {
-          const C = (mod as any).default
-          const name = (path.split('/').pop() || 'ext').replace('.tsx', '')
-          if (!C) return null
-          return (
-            <PanelErrorBoundary key={path} name={name}>
-              <div className="op-panel op-ext"><div className="op-title">⌁ {name}</div><C /></div>
-            </PanelErrorBoundary>
-          )
-        })}
+        {extensions.map(({ name, Comp }) => (
+          <PanelErrorBoundary key={name} name={name}>
+            <div className="op-panel op-ext">
+              <div className="op-title">⌁ {name}</div>
+              <Suspense fallback={<div className="muted">loading…</div>}><Comp /></Suspense>
+            </div>
+          </PanelErrorBoundary>
+        ))}
       </div>
 
       <div className="hud activity">

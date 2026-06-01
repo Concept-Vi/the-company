@@ -1,0 +1,42 @@
+{"seq": 0, "ts": "2026-06-01T14:13:38.485877+00:00", "kind": "create", "summary": "+ constant node (c)", "graph": "e5test", "node": "c", "type": "constant"}
+{"seq": 1, "ts": "2026-06-01T14:13:38.486692+00:00", "kind": "create", "summary": "+ uppercase node (u)", "graph": "e5test", "node": "u", "type": "uppercase"}
+{"seq": 2, "ts": "2026-06-01T14:13:38.486930+00:00", "kind": "connect", "summary": "wired c.value \u2192 u.text", "graph": "e5test", "from_node": "c", "to_node": "u"}
+{"seq": 3, "ts": "2026-06-01T14:13:38.816014+00:00", "kind": "run", "summary": "ran 0, cached 2", "graph": "e5test", "ran": [], "cached": ["c", "u"], "stuck": []}
+{"seq": 4, "ts": "2026-06-01T14:13:41.662388+00:00", "kind": "create", "summary": "+ codebase node (code)", "graph": "first-purpose-test", "node": "code", "type": "codebase"}
+{"seq": 5, "ts": "2026-06-01T14:13:41.662742+00:00", "kind": "create", "summary": "+ constant node (q)", "graph": "first-purpose-test", "node": "q", "type": "constant"}
+{"seq": 6, "ts": "2026-06-01T14:13:41.662995+00:00", "kind": "create", "summary": "+ ask node (answer)", "graph": "first-purpose-test", "node": "answer", "type": "ask"}
+{"seq": 7, "ts": "2026-06-01T14:13:41.663234+00:00", "kind": "connect", "summary": "wired q.value \u2192 answer.question", "graph": "first-purpose-test", "from_node": "q", "to_node": "answer"}
+{"seq": 8, "ts": "2026-06-01T14:13:41.663465+00:00", "kind": "connect", "summary": "wired code.context \u2192 answer.context", "graph": "first-purpose-test", "from_node": "code", "to_node": "answer"}
+{"seq": 9, "ts": "2026-06-01T14:13:54.697094+00:00", "kind": "run", "summary": "ran 2, cached 1", "graph": "first-purpose-test", "ran": ["answer", "code"], "cached": ["q"], "stuck": []}
+{"seq": 10, "ts": "2026-06-01T14:13:55.692087+00:00", "kind": "create", "summary": "+ constant node (constant-1)", "graph": "mcp-use-demo", "node": "constant-1", "type": "constant"}
+{"seq": 11, "ts": "2026-06-01T14:13:55.694664+00:00", "kind": "create", "summary": "+ wordcount node (wordcount-2)", "graph": "mcp-use-demo", "node": "wordcount-2", "type": "wordcount"}
+{"seq": 12, "ts": "2026-06-01T14:13:55.696882+00:00", "kind": "connect", "summary": "wired constant-1.value \u2192 wordcount-2.text", "graph": "mcp-use-demo", "from_node": "constant-1", "to_node": "wordcount-2"}
+{"seq": 13, "ts": "2026-06-01T14:13:55.700130+00:00", "kind": "run", "summary": "ran 0, cached 2", "graph": "mcp-use-demo", "ran": [], "cached": ["constant-1", "wordcount-2"], "stuck": []}
+{"seq": 14, "ts": "2026-06-01T14:23:41.130304+00:00", "kind": "create", "summary": "+ constant node (c)", "graph": "e5test", "node": "c", "type": "constant"}
+{"seq": 15, "ts": "2026-06-01T14:23:41.130701+00:00", "kind": "create", "summary": "+ uppercase node (u)", "graph": "e5test", "node": "u", "type": "uppercase"}
+{"seq": 16, "ts": "2026-06-01T14:23:41.131253+00:00", "kind": "connect", "summary": "wired c.value \u2192 u.text", "graph": "e5test", "from_node": "c", "to_node": "u"}
+{"seq": 17, "ts": "2026-06-01T14:23:41.373501+00:00", "kind": "run", "summary": "ran 0, cached 2", "graph": "e5test", "ran": [], "cached": ["c", "u"], "stuck": []}
+{"seq": 18, "ts": "2026-06-01T14:23:44.274932+00:00", "kind": "create", "summary": "+ codebase node (code)", "graph": "first-purpose-test", "node": "code", "type": "codebase"}
+{"seq": 19, "ts": "2026-06-01T14:23:44.275265+00:00", "kind": "create", "summary": "+ constant node (q)", "graph": "first-purpose-test", "node": "q", "type": "constant"}
+{"seq": 20, "ts": "2026-06-01T14:23:44.275510+00:00", "kind": "create", "summary": "+ ask node (answer)", "graph": "first-purpose-test", "node": "answer", "type": "ask"}
+{"seq": 21, "ts": "2026-06-01T14:23:44.275738+00:00", "kind": "connect", "summary": "wired q.value \u2192 answer.question", "graph": "first-purpose-test", "from_node": "q", "to_node": "answer"}
+{"seq": 22, "ts": "2026-06-01T14:23:44.275971+00:00", "kind": "connect", "summary": "wired code.context \u2192 answer.context", "graph": "first-purpose-test", "from_node": "code", "to_node": "answer"}
+{"seq": 23, "ts": "2026-06-01T14:23:44.279532+00:00", "kind": "run", "summary": "ran 1, cached 2", "graph": "first-purpose-test", "ran": ["code"], "cached": ["answer", "q"], "stuck": []}
+{"seq": 24, "ts": "2026-06-01T14:23:45.260785+00:00", "kind": "create", "summary": "+ constant node (constant-1)", "graph": "mcp-use-demo", "node": "constant-1", "type": "constant"}
+{"seq": 25, "ts": "2026-06-01T14:23:45.263191+00:00", "kind": "create", "summary": "+ wordcount node (wordcount-2)", "graph": "mcp-use-demo", "node": "wordcount-2", "type": "wordcount"}
+{"seq": 26, "ts": "2026-06-01T14:23:45.265551+00:00", "kind": "connect", "summary": "wired constant-1.value \u2192 wordcount-2.text", "graph": "mcp-use-demo", "from_node": "constant-1", "to_node": "wordcount-2"}
+{"seq": 27, "ts": "2026-06-01T14:23:45.267972+00:00", "kind": "run", "summary": "ran 0, cached 2", "graph": "mcp-use-demo", "ran": [], "cached": ["constant-1", "wordcount-2"], "stuck": []}
+{"seq": 28, "ts": "2026-06-01T14:26:06.256041+00:00", "kind": "create", "summary": "+ constant node (c)", "graph": "e5test", "node": "c", "type": "constant"}
+{"seq": 29, "ts": "2026-06-01T14:26:06.256423+00:00", "kind": "create", "summary": "+ uppercase node (u)", "graph": "e5test", "node": "u", "type": "uppercase"}
+{"seq": 30, "ts": "2026-06-01T14:26:06.257002+00:00", "kind": "connect", "summary": "wired c.value \u2192 u.text", "graph": "e5test", "from_node": "c", "to_node": "u"}
+{"seq": 31, "ts": "2026-06-01T14:26:06.495850+00:00", "kind": "run", "summary": "ran 0, cached 2", "graph": "e5test", "ran": [], "cached": ["c", "u"], "stuck": []}
+{"seq": 32, "ts": "2026-06-01T14:26:09.358953+00:00", "kind": "create", "summary": "+ codebase node (code)", "graph": "first-purpose-test", "node": "code", "type": "codebase"}
+{"seq": 33, "ts": "2026-06-01T14:26:09.359332+00:00", "kind": "create", "summary": "+ constant node (q)", "graph": "first-purpose-test", "node": "q", "type": "constant"}
+{"seq": 34, "ts": "2026-06-01T14:26:09.359954+00:00", "kind": "create", "summary": "+ ask node (answer)", "graph": "first-purpose-test", "node": "answer", "type": "ask"}
+{"seq": 35, "ts": "2026-06-01T14:26:09.360268+00:00", "kind": "connect", "summary": "wired q.value \u2192 answer.question", "graph": "first-purpose-test", "from_node": "q", "to_node": "answer"}
+{"seq": 36, "ts": "2026-06-01T14:26:09.360554+00:00", "kind": "connect", "summary": "wired code.context \u2192 answer.context", "graph": "first-purpose-test", "from_node": "code", "to_node": "answer"}
+{"seq": 37, "ts": "2026-06-01T14:26:09.363944+00:00", "kind": "run", "summary": "ran 1, cached 2", "graph": "first-purpose-test", "ran": ["code"], "cached": ["answer", "q"], "stuck": []}
+{"seq": 38, "ts": "2026-06-01T14:26:10.356157+00:00", "kind": "create", "summary": "+ constant node (constant-1)", "graph": "mcp-use-demo", "node": "constant-1", "type": "constant"}
+{"seq": 39, "ts": "2026-06-01T14:26:10.358678+00:00", "kind": "create", "summary": "+ wordcount node (wordcount-2)", "graph": "mcp-use-demo", "node": "wordcount-2", "type": "wordcount"}
+{"seq": 40, "ts": "2026-06-01T14:26:10.360982+00:00", "kind": "connect", "summary": "wired constant-1.value \u2192 wordcount-2.text", "graph": "mcp-use-demo", "from_node": "constant-1", "to_node": "wordcount-2"}
+{"seq": 41, "ts": "2026-06-01T14:26:10.363536+00:00", "kind": "run", "summary": "ran 0, cached 2", "graph": "mcp-use-demo", "ran": [], "cached": ["constant-1", "wordcount-2"], "stuck": []}

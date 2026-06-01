@@ -4,7 +4,7 @@
   "type": "constant",
   "produced_by": "run://first-purpose-test/q",
   "inputs": [],
-  "agent": "constant@deterministic",
+  "agent": "constant@memo",
   "created_at": null,
   "schema_ver": 1
 }

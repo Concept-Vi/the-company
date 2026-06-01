@@ -60,9 +60,16 @@ class Suite:
         if self._models_cache is None:
             from fabric import transport, config as fcfg
             try:
-                self._models_cache = transport.list_models(fcfg.DEFAULT_BASE_URL) or [fcfg.DEFAULT_BRAIN]
-            except Exception:
-                self._models_cache = [fcfg.DEFAULT_BRAIN]
+                models = transport.list_models(fcfg.DEFAULT_BASE_URL)
+            except Exception as e:
+                models = None
+                self._emit("warning", f"model registry unreachable ({type(e).__name__}) — "
+                           f"falling back to [{fcfg.DEFAULT_BRAIN}]; the source-of-truth list is degraded")
+            if not models:                                    # surface the degraded fallback, never silent (F6)
+                if models is not None:
+                    self._emit("warning", "model registry returned empty — falling back to the default brain")
+                models = [fcfg.DEFAULT_BRAIN]
+            self._models_cache = models
         return self._models_cache
 
     def capabilities(self) -> dict:
@@ -142,6 +149,7 @@ class Suite:
             " (auto-maintained by Suite.refresh_self_description on every apply — do not hand-edit)\n"
             f"- **node-types** ({len(cap['node_types'])}): {', '.join(cap['node_types'])}\n"
             f"- **RHM verbs**: {', '.join(cap['rhm_verbs'])}\n"
+            f"- **modes**: {', '.join(cap['modes'])}\n"
             f"- **panels**: {', '.join(cap['panels']) or '(none)'}\n"
             f"- **models** (from the fabric registry): {', '.join(cap['models'])}\n")
         suites = self._acceptance_suites()
@@ -152,21 +160,31 @@ class Suite:
     # back-compat alias (older callers / external agents may know this name)
     refresh_map = refresh_self_description
 
+    def _doc_block(self, filename: str, marker: str) -> str:
+        """The text INSIDE a file's <!--MARKER--> block (lowercased) — so drift is checked against the
+        maintained registry block, NOT the whole prose file (red-team F3: prose substrings → false negatives)."""
+        import re
+        path = os.path.join(self._repo_root, filename)
+        if not os.path.exists(path):
+            return ""
+        m = re.search(rf"<!--{marker}:START-->(.*?)<!--{marker}:END-->",
+                      open(path, encoding="utf-8").read(), re.S)
+        return (m.group(1) if m else "").lower()
+
     def doc_drift(self) -> dict:
         """What the system has that the SELF-DESCRIPTION files don't yet reflect — so they can't
         silently rot (Tim: 'updates to the system → updates to whatever relevant files like this').
-        Covers MAP.md (registry) + STATE.md (suite index). A failing check is the enforcement."""
-        repo = self._repo_root
-        map_text = (open(os.path.join(repo, "MAP.md"), encoding="utf-8").read().lower()
-                    if os.path.exists(os.path.join(repo, "MAP.md")) else "")
-        state_text = (open(os.path.join(repo, "STATE.md"), encoding="utf-8").read()
-                      if os.path.exists(os.path.join(repo, "STATE.md")) else "")
+        Checked INSIDE the maintained blocks (not whole-file substrings), covering every capability
+        category (node-types, verbs, modes, panels) + the suite index. A failing check is the enforcement."""
+        reg = self._doc_block("MAP.md", "REGISTRY")
+        suites_block = self._doc_block("STATE.md", "SUITES")
+        cap = self.capabilities()
         return {
-            "map_node_types": [t for t in self.registry.types if t.lower() not in map_text],
-            "map_rhm_verbs": [v for v in self.RHM_VERBS if v.lower() not in map_text],
-            "map_surfaces": [s for s in ("panels", "extensions", "self-cod", "registry", "right-hand-man")
-                             if s not in map_text],
-            "state_missing_suites": [s for s in self._acceptance_suites() if s not in state_text],
+            "map_node_types": [t for t in cap["node_types"] if t.lower() not in reg],
+            "map_rhm_verbs": [v for v in cap["rhm_verbs"] if v.lower() not in reg],
+            "map_modes": [m for m in cap["modes"] if m.lower() not in reg],
+            "map_panels": [p for p in cap["panels"] if p.lower() not in reg],
+            "state_missing_suites": [s for s in self._acceptance_suites() if s.lower() not in suites_block],
         }
 
     map_drift = doc_drift  # back-compat alias
@@ -382,6 +400,13 @@ class Suite:
         WORKING-grade inference and must never masquerade as ground truth (prevents model-collapse)."""
         return "gold" if role == "user" else "working"
 
+    @staticmethod
+    def _provenance_source(role: str) -> str:
+        """The SOURCE of a turn — operator (Tim) vs twin (the system). Grade alone is role-derived
+        and launderable; the source travels with the turn so the twin's own output can never count
+        as training signal even if its text is resubmitted as a 'user' turn (red-team F4)."""
+        return "operator" if role == "user" else "twin"
+
     def _model_of_tim_digest(self, max_chars: int = 2600) -> str:
         """A COMPACT extract of the EXPLICIT model of Tim (principle headers + their statements) for
         the twin's context. The full text is drillable via the model_of_tim node. '' if unavailable."""
@@ -403,8 +428,16 @@ class Suite:
         return digest[:max_chars]
 
     def training_signal(self) -> list:
-        """Only GOLD turns (Tim's actual words) train the twin — never the twin's own echoes."""
-        return [t for t in self.store.chat_history(999) if t.get("grade") == "gold"]
+        """Only operator-sourced GOLD turns train the twin — NEVER the twin's own output, even if it
+        was laundered back in as a 'user' turn. Two guards (red-team F4): source must be 'operator'
+        (not 'twin'), and the text must not echo any twin/assistant turn in history (echo-guard)."""
+        history = self.store.chat_history(999)
+        twin_texts = {(t.get("text") or "").strip()
+                      for t in history if t.get("role") == "assistant" or t.get("source") == "twin"}
+        return [t for t in history
+                if t.get("grade") == "gold"
+                and t.get("source", "operator") != "twin"
+                and (t.get("text") or "").strip() not in twin_texts]
 
     # --- the right-hand-man: the coherent voice of the Company about ITSELF (I2) ---
     def _chat_context(self, graph_id: str, focus: dict | None = None) -> str:
@@ -574,9 +607,9 @@ class Suite:
         gate (E6 invariant) — proposing/running route through the normal verbs."""
         mode = self.get_mode()
         if mode == "off":                                     # the dial disables the RHM entirely
-            self.store.append_chat({"role": "user", "text": message, "grade": "gold"})
+            self.store.append_chat({"role": "user", "text": message, "grade": "gold", "source": "operator"})
             off = "The right-hand-man is off. Switch a mode on the presence dial to wake me."
-            self.store.append_chat({"role": "assistant", "text": off, "grade": "working"})
+            self.store.append_chat({"role": "assistant", "text": off, "grade": "working", "source": "twin"})
             self._emit("chat", f"you: {message[:40]} (RHM off)")
             return {"reply": off, "action": None, "mode": mode, "history": self.store.chat_history(40)}
         from fabric import client, transport
@@ -631,9 +664,9 @@ class Suite:
             reply = (reply + "\n\n❓ That needs something not in the registry, so I'm asking rather than "
                      "guessing: " + outcome["needs"] + " — surfaced for you in the inbox.").strip()
         # provenance grading (B3): Tim's words are gold (train the twin); the twin's are working
-        self.store.append_chat({"role": "user", "text": message, "grade": self._provenance_grade("user")})
+        self.store.append_chat({"role": "user", "text": message, "grade": self._provenance_grade("user"), "source": self._provenance_source("user")})
         self.store.append_chat({"role": "assistant", "text": reply, "action": outcome,
-                                "grade": self._provenance_grade("assistant")})
+                                "grade": self._provenance_grade("assistant"), "source": self._provenance_source("assistant")})
         self._emit("chat", f"you: {message[:48]}")
         return {"reply": reply, "action": outcome, "mode": mode,
                 "model": cfg["model"], "history": self.store.chat_history(40)}
@@ -662,7 +695,7 @@ class Suite:
                                {"role": "user", "content": user}], model=cfg["model"]).strip()
         if not out or out.upper().startswith("NOTHING"):
             return {"comment": ""}
-        self.store.append_chat({"role": "assistant", "text": out, "grade": "working", "ambient": True})
+        self.store.append_chat({"role": "assistant", "text": out, "grade": "working", "ambient": True, "source": "twin"})
         self._emit("react", f"(watching) {out[:44]}")
         return {"comment": out}
 
@@ -756,10 +789,10 @@ class Suite:
         with open(tmp, "w", encoding="utf-8") as f:
             f.write(code if code.endswith("\n") else code + "\n")
         os.replace(tmp, path)                               # atomic; no partial file
-        self.registry.discover([self.nodes_dir])            # re-discover -> capability is live
-        sha = self._git_self_commit([path], f"add node-type '{name}'")   # git = the rollback safety net
-        self._emit("apply", f"approved + applied '{name}' — now a live node-type"
-                   + (f" · {sha[:8]}" if sha else ""), node_name=name, commit=sha)
+        sha = self._commit_or_rollback(path, f"add node-type '{name}'")  # fail loud if not git-revertible
+        self.registry.discover([self.nodes_dir])            # committed -> NOW make it live
+        self._emit("apply", f"approved + applied '{name}' — now a live node-type · {sha[:8]}",
+                   node_name=name, commit=sha)
         self.refresh_map()
         return path
 
@@ -781,6 +814,21 @@ class Suite:
             return out.stdout.strip()
         except Exception:
             return None
+
+    def _commit_or_rollback(self, path: str, msg: str) -> str:
+        """Commit a just-written self-change; if the commit FAILS, roll the file back and raise —
+        never leave a live self-change without its revert safety net (red-team F2: fail loud, not
+        silent success). Returns the sha on success."""
+        sha = self._git_self_commit([path], msg)
+        if not sha:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+            raise RuntimeError(
+                f"git commit failed for {os.path.basename(path)} — rolled back the write and refused "
+                "to apply: a self-change must be git-revertible (the safety net), or it does not go live.")
+        return sha
 
     def last_self_change(self) -> dict | None:
         """The most recent self-applied change (for one-click rollback + audit)."""
@@ -833,8 +881,9 @@ class Suite:
             if fn.endswith(".json"):
                 try:
                     out.append(_j.loads(open(os.path.join(self.panels_dir, fn), encoding="utf-8").read()))
-                except Exception:
-                    pass            # a malformed file never breaks the list; the renderer contains per-panel
+                except Exception as e:
+                    # a malformed file doesn't break the list — but SURFACE it, never drop silently (F6)
+                    self._emit("warning", f"panel file {fn} is malformed and was skipped: {e}")
         return out
 
     def propose_panel(self, name: str, spec: str, model: str | None = None) -> dict:
@@ -864,7 +913,9 @@ class Suite:
         try:
             deftn = _j.loads(_strip_fences(raw))
         except Exception as e:
-            deftn = {"title": name, "fields": [], "_parse_error": str(e)}
+            # don't surface a success-shaped empty panel (F6) — ASK, the model didn't produce a valid def
+            q = f"the '{name}' panel definition didn't parse as JSON ({e}); the model output was malformed"
+            return {"needs": q, "id": self._ask_operator(q, f"panel '{name}': {spec}")}
         sid = self.inbox.surface("ui_panel", {"name": name, "panel": deftn}, default="reject")
         self._emit("grow", f"brain authored a '{name}' UI panel — surfaced for approval",
                    node_name=name, surfaced=sid)
@@ -881,7 +932,7 @@ class Suite:
             raise GovernanceError(f"ui_panel {surfaced_id!r} not approved — operator must approve (CONFIRM)")
         name = self._safe_node_name(d["payload"]["name"])
         deftn = d["payload"]["panel"]
-        fields = []
+        fields, dropped = [], []
         for f in (deftn.get("fields") or []):
             if f.get("type") in self.PANEL_FIELD_TYPES and f.get("target") in self.PANEL_TARGETS:
                 # registered-target options come from the REGISTRY (authoritative) — never the brain's
@@ -891,6 +942,11 @@ class Suite:
                     else ([str(o) for o in f.get("options", [])] if f["type"] == "select" else [])
                 fields.append({"key": str(f.get("key", f.get("target"))), "label": str(f.get("label", "")),
                                "type": f["type"], "target": f["target"], "options": opts})
+            else:
+                dropped.append(f"{f.get('key', '?')}({f.get('type')}/{f.get('target')})")
+        if dropped:                                          # surface dropped fields, never silent (F6)
+            self._emit("warning", f"panel '{name}': dropped {len(dropped)} field(s) with unsupported "
+                       f"type/target: {', '.join(dropped)}")
         clean = {"id": name, "title": str(deftn.get("title", name)), "fields": fields}
         import json as _j
         os.makedirs(self.panels_dir, exist_ok=True)
@@ -898,9 +954,8 @@ class Suite:
         tmp = path + ".tmp"
         open(tmp, "w", encoding="utf-8").write(_j.dumps(clean, indent=2))
         os.replace(tmp, path)
-        sha = self._git_self_commit([path], f"add UI panel '{name}'")
-        self._emit("apply", f"approved + applied '{name}' UI panel" + (f" · {sha[:8]}" if sha else ""),
-                   node_name=name, commit=sha)
+        sha = self._commit_or_rollback(path, f"add UI panel '{name}'")
+        self._emit("apply", f"approved + applied '{name}' UI panel · {sha[:8]}", node_name=name, commit=sha)
         self.refresh_map()
         return path
 
@@ -947,18 +1002,13 @@ class Suite:
         return {"id": sid, "name": name, "code": code}
 
     def _gate_extension(self, code: str) -> str | None:
-        """Build-gate: returns an error string if the code would break the build, else None.
-        (1) import-allowlist (only 'react' — keeps unresolved-module breaks out, which transpile
-        can't see); (2) fast syntax check via canvas/app/syntax-gate.cjs (ts.transpileModule)."""
-        import re
+        """Build-gate: returns an error string if the candidate would break the build or do something
+        forbidden, else None. AST-checked via canvas/app/syntax-gate.cjs (red-team B1): syntax +
+        import-allowlist (react only) + no dynamic import() + no require() + no external-URL literals.
+        Runs on a TEMP file OUTSIDE the live tree."""
         import subprocess
-        for mod in re.findall(r"""import\s+[^;]*?\bfrom\s+['"]([^'"]+)['"]""", code):
-            if mod != "react" and not mod.startswith("react/"):
-                return f"extensions may only import from 'react' (found import from '{mod}')"
-        if re.search(r"""^\s*import\s+['"]""", code, re.M) or "require(" in code:
-            return "extensions may not use bare imports or require()"
-        appdir = os.path.join(self._repo_root, "canvas", "app")
         import tempfile
+        appdir = os.path.join(self._repo_root, "canvas", "app")
         fd, tmp = tempfile.mkstemp(suffix=".tsx")
         try:
             with os.fdopen(fd, "w") as f:
@@ -966,7 +1016,7 @@ class Suite:
             r = subprocess.run(["node", "syntax-gate.cjs", tmp], cwd=appdir,
                                capture_output=True, text=True, timeout=60)
             if r.returncode != 0:
-                return "syntax error: " + (r.stderr.strip() or r.stdout.strip())[:400]
+                return "build-gate rejected: " + (r.stderr.strip() or r.stdout.strip())[:400]
         finally:
             os.unlink(tmp)
         return None
@@ -992,9 +1042,9 @@ class Suite:
         with open(tmp, "w", encoding="utf-8") as f:
             f.write(code if code.endswith("\n") else code + "\n")
         os.replace(tmp, path)                                 # promote (gate passed) — now Vite loads it
-        sha = self._git_self_commit([path], f"add extension '{name}'")
-        self._emit("apply", f"approved + applied '{name}' extension (gate passed)"
-                   + (f" · {sha[:8]}" if sha else ""), node_name=name, commit=sha)
+        sha = self._commit_or_rollback(path, f"add extension '{name}'")   # fail loud if not git-revertible
+        self._emit("apply", f"approved + applied '{name}' extension (gate passed) · {sha[:8]}",
+                   node_name=name, commit=sha)
         self.refresh_map()
         return {"applied": path, "rejected": False, "commit": sha}
 

