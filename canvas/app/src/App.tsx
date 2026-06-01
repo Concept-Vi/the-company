@@ -12,8 +12,8 @@ const api = {
   run: () => fetch('/api/run', { method: 'POST' }).then(r => r.json()),
   propose: (name: string, spec: string) =>
     fetch('/api/propose', { method: 'POST', headers: J, body: JSON.stringify({ name, spec }) }).then(r => r.json()),
-  resolve: (id: string, choice: string) =>
-    fetch('/api/resolve', { method: 'POST', headers: J, body: JSON.stringify({ id, choice }) }).then(r => r.json()),
+  resolve: (id: string, choice: string, reason = '') =>
+    fetch('/api/resolve', { method: 'POST', headers: J, body: JSON.stringify({ id, choice, reason }) }).then(r => r.json()),
   apply: (id: string) =>
     fetch('/api/apply', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(r => r.json()),
   objectInfo: () => fetch('/api/object_info').then(r => r.json()),
@@ -186,6 +186,7 @@ function Hud() {
   const [cfgOpen, setCfgOpen] = useState(false)
   const [inbox, setInbox] = useState<any>({ live_escalations: [], resolved_for_you: [], counts: { escalations: 0, resolved: 0 } })
   const [drill, setDrill] = useState(false)
+  const [reason, setReason] = useState('')
 
   async function poll() {
     try { setNow(await api.now()); setEvents(await api.events()); setInbox(await api.inbox()) } catch { /* bridge transient */ }
@@ -372,8 +373,10 @@ function Hud() {
                   {drill && <pre>{surf.code}</pre>}
                 </>
               : <pre>{surf.code}</pre>}
+            <input className="reason" placeholder="why? (captured into the trajectory)" value={reason}
+              onChange={e => setReason(e.target.value)} />
             <button className="b" onClick={approveApply}>✓ approve &amp; apply</button>
-            <button className="b ghost" onClick={() => { api.resolve(surf.id, 'reject'); setSurf(null); setGrowMsg('rejected.'); poll() }}>✕ reject</button>
+            <button className="b ghost" onClick={() => { api.resolve(surf.id, 'reject', reason); setSurf(null); setReason(''); setGrowMsg('rejected — reason captured into the path.'); poll() }}>✕ reject</button>
           </div>
         )}
         {!surf && <div className="muted" style={{ marginTop: 8 }}>{growMsg}</div>}

@@ -538,7 +538,21 @@ class Suite:
     def list_surfaced(self) -> list:
         return self.inbox.list()
 
-    def resolve_surfaced(self, sid: str, choice: str) -> None:
-        """OPERATOR-only (UI channel) — NOT exposed on the MCP face, so the agent can't self-approve."""
-        self.inbox.resolve(sid, choice)
-        self._emit("resolve", f"operator {choice}d {sid}", surfaced=sid, choice=choice)
+    def resolve_surfaced(self, sid: str, choice: str, reason: str = "") -> None:
+        """OPERATOR-only (UI channel) — NOT exposed on the MCP face, so the agent can't self-approve.
+        Captures the operator's reason (the WHY) into the trajectory — the generalising signal (I1)."""
+        self.inbox.resolve(sid, choice, reason)
+        self._emit("resolve", f"operator {choice}d {sid}" + (f" — {reason}" if reason else ""),
+                   surfaced=sid, choice=choice, reason=reason)
+
+    def decision_view(self, sid: str) -> dict:
+        """A decision as a VIEW derived from the event log (I2): its full trajectory — proposed →
+        framed → resolved (with the why) — reconstructed in order. Auditable + replayable."""
+        d = self.inbox.get(sid)
+        evs = sorted((e for e in self.store.recent_events(999) if e.get("surfaced") == sid),
+                     key=lambda e: e.get("seq", 0))                # chronological path, not endpoint
+        return {"id": sid, "decision": d, "trajectory": evs}
+
+    def replay(self, limit: int = 200) -> list:
+        """The whole captured path, oldest-first — the trajectory that trains the twin (I1)."""
+        return list(reversed(self.store.recent_events(limit)))

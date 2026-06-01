@@ -67,13 +67,16 @@ class Inbox:
     def get(self, sid: str) -> dict | None:
         return self.store.get_surfaced(sid)
 
-    def resolve(self, sid: str, choice: str) -> None:
+    def resolve(self, sid: str, choice: str, reason: str = "") -> None:
         """OPERATOR-only: approve/reject a surfaced decision. (Must NOT be reachable by the
-        agent it gates — kept off the MCP face; only the UI/operator channel calls this.)"""
+        agent it gates — kept off the MCP face; only the UI/operator channel calls this.)
+        `reason` captures the WHY — the trajectory that generalises, not just the endpoint (I1)."""
         d = self.store.get_surfaced(sid)
         if not d:
             raise KeyError(sid)
         d["resolved"] = choice
+        if reason:
+            d["reason"] = reason
         self.store.save_surfaced(d)
 
     def is_approved(self, sid: str) -> bool:
