@@ -5,3 +5,5 @@ node_modules/
 .DS_Store
 store-data/
 .litellm-venv/
+canvas/app/node_modules/
+canvas/app/dist/

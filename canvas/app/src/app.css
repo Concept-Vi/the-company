@@ -1,0 +1,61 @@
+:root{
+  --bg:#0a0c0b; --panel:#101413; --line:#1f2a27; --ink:#e8efe9;
+  --dim:#6f807a; --sig:#5fe3b0; --sig-dim:#2f6b59; --warn:#e8b339; --err:#e8736b;
+}
+*{box-sizing:border-box}
+html,body,#root{margin:0;height:100%;background:var(--bg);font-family:"IBM Plex Mono",ui-monospace,monospace}
+/* dark instrument theme over tldraw */
+.tl-background{background-color:var(--bg) !important}
+
+/* node card (rendered inside a tldraw shape) */
+.node-card{width:100%;height:100%;border:1px solid var(--line);border-radius:4px;background:var(--panel);
+  color:var(--ink);overflow:hidden;box-shadow:0 14px 34px -22px #000;display:flex;flex-direction:column;font-size:12px}
+.node-card.ran{border-color:var(--sig-dim)}
+.node-card.cached{border-color:#5a4a1f}
+.node-bar{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--line)}
+.node-dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.ran .node-dot{background:var(--sig);box-shadow:0 0 10px var(--sig)}
+.cached .node-dot{background:var(--warn)}
+.node-type{font-weight:600}
+.node-kind{margin-left:auto;color:var(--dim);font-size:9px;letter-spacing:.16em;text-transform:uppercase}
+.node-body{padding:8px 10px;flex:1;overflow:hidden}
+.node-out{font-family:"Fraunces",serif;color:var(--sig);font-size:15px;line-height:1.25;
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.node-out.empty{font-family:inherit;color:var(--dim);font-size:11px}
+.node-addr{padding:5px 10px;border-top:1px solid var(--line);color:var(--dim);font-size:9px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* HUD: toolbar, inspector, grow, workshop */
+.hud{position:absolute;z-index:300;color:var(--ink)}
+.toolbar{top:12px;left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;
+  background:rgba(16,20,19,.92);border:1px solid var(--line);border-radius:6px;padding:8px 12px}
+.toolbar .title{font-family:"Fraunces",serif;font-weight:900;font-size:16px;margin-right:6px}
+.toolbar .title em{color:var(--sig);font-style:italic}
+button.b{font-family:inherit;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--bg);background:var(--sig);border:none;border-radius:3px;padding:8px 14px;cursor:pointer}
+button.b:hover{box-shadow:0 0 18px -4px var(--sig)}
+button.b.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
+
+.panel{top:64px;right:12px;width:330px;background:rgba(16,20,19,.96);border:1px solid var(--line);
+  border-radius:6px;padding:13px;max-height:calc(100vh - 90px);overflow:auto}
+.panel h3{font-family:"Fraunces",serif;font-weight:600;font-size:14px;color:var(--sig);margin:0 0 9px}
+.panel .row{display:flex;justify-content:space-between;gap:10px;margin:4px 0;font-size:11px}
+.panel .k{color:var(--dim)}
+.panel input{width:100%;margin:5px 0;background:var(--bg);border:1px solid var(--line);color:var(--ink);
+  font-family:inherit;font-size:12px;padding:8px;border-radius:3px}
+.panel input:focus{outline:none;border-color:var(--sig)}
+.panel pre{max-height:160px;overflow:auto;background:var(--bg);border:1px solid var(--line);padding:8px;
+  font-size:10.5px;white-space:pre-wrap;border-radius:3px;color:var(--ink)}
+.surf{border:1px dashed var(--warn);border-radius:3px;padding:9px;margin-top:8px}
+.surf .shd{color:var(--warn);font-size:10px;letter-spacing:.06em;margin-bottom:6px}
+.muted{color:var(--dim);font-size:11px;line-height:1.6}
+.sig{color:var(--sig)} .err{color:var(--err)}
+.tg{color:var(--sig);margin-right:5px}
+
+/* full-screen workshop */
+.workshop{position:fixed;inset:40px;z-index:500;background:var(--panel);border:1px solid var(--sig-dim);
+  border-radius:8px;padding:24px;overflow:auto;box-shadow:0 40px 120px -40px #000}
+.workshop h2{font-family:"Fraunces",serif;color:var(--sig);margin:0 0 4px}
+.workshop .close{position:absolute;top:16px;right:20px;cursor:pointer;color:var(--dim);font-size:20px}
+.workshop .full{font-family:"Fraunces",serif;font-size:19px;line-height:1.5;color:var(--ink);white-space:pre-wrap;margin-top:16px}
