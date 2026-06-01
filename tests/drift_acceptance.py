@@ -29,9 +29,11 @@ store = FsStore(os.path.join(tempfile.mkdtemp(prefix="drift-"), "store"))
 reg = NodeRegistry(); reg.discover([NODES])
 suite = Suite(store, reg, nodes_dir=NODES)   # nodes_dir = real → repo_root = real → reads the real MAP.md
 
-drift = suite.map_drift()
-check(f"every registered node-type is in MAP.md (drift: {drift['node_types']})", not drift["node_types"])
-check(f"every RHM verb is in MAP.md (drift: {drift['rhm_verbs']})", not drift["rhm_verbs"])
-check(f"every core subsystem is in MAP.md (drift: {drift['surfaces']})", not drift["surfaces"])
+drift = suite.doc_drift()
+check(f"every registered node-type is in MAP.md (drift: {drift['map_node_types']})", not drift["map_node_types"])
+check(f"every RHM verb is in MAP.md (drift: {drift['map_rhm_verbs']})", not drift["map_rhm_verbs"])
+check(f"every core subsystem is in MAP.md (drift: {drift['map_surfaces']})", not drift["map_surfaces"])
+check(f"every acceptance suite is reflected in STATE.md (drift: {drift['state_missing_suites']})",
+      not drift["state_missing_suites"])
 
-print(f"\nALL {PASS} CHECKS PASS — the map describes the system; drift would fail loud")
+print(f"\nALL {PASS} CHECKS PASS — MAP.md + STATE.md describe the system; drift would fail loud")

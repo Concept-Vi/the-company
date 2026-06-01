@@ -31,7 +31,7 @@ Start at `Company Build Hub.md`. Contracts = `contracts/` notes (C1–C8). Engin
 | a genuinely **new operation** (rare) | `mcp_face/` + `runtime/suite.py` | add one verb (C7) — only for a new *kind* of operation |
 | a new **contract** | `contracts/` | a new `Cn`; CONFIRM (it widens the system) |
 
-After adding a capability, `MAP.md`'s registry block auto-updates (`Suite.refresh_map`); `tests/drift_acceptance.py` fails loud if the map ever falls behind.
+**Every change updates the self-description** (this file · `MAP.md` · `STATE.md` · the module's `AGENTS.md`) — it is part of the change, not optional. The *factual* blocks (MAP's live registry, STATE's suite index) regenerate themselves via `Suite.refresh_self_description()` (run on every apply); the *prose* (STATE's "what's built / what can't be done yet", a module's constitution) you update **by integration** — change what the new piece makes untrue, keep the rest coherent. `tests/drift_acceptance.py` **fails loud** if a registered capability or an acceptance suite isn't reflected — so drift is caught, never silent.
 
 > If "where does this go?" isn't obvious from this table + the module constitutions, that's a bug in the repo's self-description — flag it.
 

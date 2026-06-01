@@ -3,7 +3,15 @@
 The current status of **company** (the Vi composition suite), self-contained so a fresh AI can enter the repo, read `AGENTS.md` (the rules) + `MAP.md` (the structure + the live registry) + this (the status), and act correctly without re-deriving anything or tripping a boundary. Maintained by integration — keep it *current and true*, not append-only. As of 2026-06-01.
 
 > [!important] How "done" is proven here
-> **`tests/*.py` ARE the convergence record** — each acceptance suite proves a capability by execution. Run them: `for t in tests/*.py; do ./.venv/bin/python "$t"; done` (33 suites, all pass). Beyond tests, the standard is **prove by USE**: operate the live system (browser canvas + the bridge API), don't just assert. Never claim something works without fresh evidence.
+> **`tests/*.py` ARE the convergence record** — each acceptance suite proves a capability by execution. Run them all: `for t in tests/*.py; do ./.venv/bin/python "$t"; done`. Beyond tests, the standard is **prove by USE**: operate the live system (browser canvas + the bridge API), don't just assert. Never claim something works without fresh evidence.
+
+### Acceptance suites (the convergence record)
+<!--SUITES:START--> (auto-maintained by Suite.refresh_self_description — do not hand-edit)
+- 33 acceptance suites: agency_acceptance, compose_acceptance, configs_acceptance, consult_acceptance, copresence_acceptance, drift_acceptance, e1_acceptance, e2_review_fixes, e2_runtime, e3_fabric, e3_integration, e4_registry, e5_suite, e6_governance, events_acceptance, extension_acceptance, first_purpose, inbox_acceptance, layers_acceptance, mcp_use, modes_acceptance, panel_acceptance, polr_acceptance, portal_acceptance, react_acceptance, rhm_acceptance, rhm_action_acceptance, self_growth, selfmod_acceptance, show_acceptance, trajectory_acceptance, twin_acceptance, walking_skeleton
+<!--SUITES:END-->
+
+> [!warning] Keeping this file current is part of every change
+> When you add/change a capability you MUST update the self-description: the factual blocks here + in `MAP.md` regenerate via `Suite.refresh_self_description()` (run on every apply); the **prose** above (What is built · What CANNOT be done · gotchas) you update **by integration** — change what the new piece makes untrue, keep the rest. `tests/drift_acceptance.py` **fails loud** if a registered capability or an acceptance suite isn't reflected here or in the map.
 
 ## What this is (one paragraph)
 A reactive, content-addressed composition engine (nodes wired into graphs; a node fires when its input *addresses* resolve; memo gate = "re-run only what changed"). Two faces over one shared brain (`runtime/suite.py` — the `Suite`): a **UI bridge** (`runtime/bridge.py`, the React+tldraw canvas in `canvas/app/`) and an **MCP agent face** (`mcp_face/server.py`). Models come through `fabric/` (OpenAI-compatible; ollama/LiteLLM; **no Gemini**). The first real use is the system on **its own codebase**. It now also has a **right-hand-man (RHM)** — a conversational organ — and can **modify itself** (governed).
@@ -34,7 +42,7 @@ A reactive, content-addressed composition engine (nodes wired into graphs; a nod
 Build against the contracts · schema-additive never schema-breaking · **fail loud** (no silent fallbacks) · ext4 storage · **no Gemini** · stage-gated (CONFIRM the irreversible) · **author from the registry, never invent — if it isn't registered, ASK** · self-modification is additive + git-reversible. These bind external agents AND the system's own self-coding brain.
 
 ## Gotchas (save yourself the rediscovery)
-- After adding a capability, `MAP.md`'s registry block auto-updates (`Suite.refresh_map`); `tests/drift_acceptance.py` fails if the map falls behind.
+- After adding a capability, the factual blocks of `MAP.md` + `STATE.md` auto-update (`Suite.refresh_self_description`, run on every apply); `tests/drift_acceptance.py` fails loud if either falls behind. Update the **prose** by integration.
 - `pkill`/detached spawns can exit 144 in this shell — noise, not failure; use background runs for servers.
 - The extension build-gate is `canvas/app/syntax-gate.cjs` (fast `ts.transpileModule`). First call loads `typescript.js` cold (slow once); warm ~200ms.
 - Specs/design notes live in the operator's vault (Windows-side, may be unreachable from an agent) — this repo is self-describing on purpose; trust `AGENTS.md`/`MAP.md`/`STATE.md` + the tests.

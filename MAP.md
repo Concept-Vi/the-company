@@ -31,7 +31,7 @@ The orientation an agent loads first, and the seed of the **linked code-knowledg
 | `canvas/` | the frontend + the extensions runtime | `canvas/AGENTS.md` | S5, D3 |
 
 ## Live registry — the system's current capabilities
-<!--REGISTRY:START--> (auto-maintained by Suite.refresh_map on every apply — do not hand-edit)
+<!--REGISTRY:START--> (auto-maintained by Suite.refresh_self_description on every apply — do not hand-edit)
 - **node-types** (12): ask, codebase, constant, join, llm, model_of_tim, pair, portal, rhm_mode, titlecase, uppercase, wordcount
 - **RHM verbs**: run, propose, build, consult, show, panel, extend
 - **panels**: polr_models

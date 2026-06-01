@@ -114,37 +114,62 @@ class Suite:
         self._emit("ask", f"the system needs input: {question[:60]}", surfaced=sid)
         return sid
 
-    def refresh_map(self) -> None:
-        """The reflective fold: regenerate the auto-maintained registry block of MAP.md from the
-        LIVE registry, so the map maintains itself and never drifts for capabilities (Tim's
-        'maintains'). Called on every apply/revert. Fails silently only if the markers are absent."""
+    def _acceptance_suites(self) -> list:
+        import glob
+        return sorted(os.path.basename(p)[:-3]
+                      for p in glob.glob(os.path.join(self._repo_root, "tests", "*.py")))
+
+    def _write_doc_block(self, filename: str, marker: str, body: str) -> None:
+        """Replace the <!--MARKER:START-->…<!--MARKER:END--> block of a self-description file
+        with freshly-generated content. The factual parts of the docs thus maintain themselves."""
         import re
-        path = os.path.join(self._repo_root, "MAP.md")
+        path = os.path.join(self._repo_root, filename)
         if not os.path.exists(path):
             return
-        cap = self.capabilities()
-        block = ("<!--REGISTRY:START--> (auto-maintained by Suite.refresh_map on every apply — do not hand-edit)\n"
-                 f"- **node-types** ({len(cap['node_types'])}): {', '.join(cap['node_types'])}\n"
-                 f"- **RHM verbs**: {', '.join(cap['rhm_verbs'])}\n"
-                 f"- **panels**: {', '.join(cap['panels']) or '(none)'}\n"
-                 f"- **models** (from the fabric registry): {', '.join(cap['models'])}\n"
-                 "<!--REGISTRY:END-->")
+        full = f"<!--{marker}:START-->{body}<!--{marker}:END-->"
         text = open(path, encoding="utf-8").read()
-        new = re.sub(r"<!--REGISTRY:START-->.*?<!--REGISTRY:END-->", lambda _m: block, text, flags=re.S)
+        new = re.sub(rf"<!--{marker}:START-->.*?<!--{marker}:END-->", lambda _m: full, text, flags=re.S)
         if new != text:
             open(path, "w", encoding="utf-8").write(new)
 
-    def map_drift(self) -> dict:
-        """What's REGISTERED but missing from MAP.md — so the map can't silently rot (Tim's
-        'maintains'). A failing drift-check is the reflective fold's enforcement: the system
-        notices when the map no longer describes itself. Fail loud, never silent."""
-        map_path = os.path.join(self._repo_root, "MAP.md")
-        text = open(map_path, encoding="utf-8").read().lower() if os.path.exists(map_path) else ""
-        node_types = [t for t in self.registry.types if t.lower() not in text]
-        verbs = [v for v in self.RHM_VERBS if v.lower() not in text]
-        surfaces = [s for s in ("panels", "extensions", "self-cod", "registry", "right-hand-man")
-                    if s not in text]
-        return {"node_types": node_types, "rhm_verbs": verbs, "surfaces": surfaces}
+    def refresh_self_description(self) -> None:
+        """The reflective fold: regenerate the auto-maintained factual blocks of the orientation files
+        — MAP.md (the live registry) + STATE.md (the acceptance-suite index) — from the system itself,
+        so the self-description stays current as the app grows (Tim's 'maintains'). Called on every
+        apply/revert. The PROSE is integration-maintained; doc_drift fails loud if anything falls behind."""
+        cap = self.capabilities()
+        self._write_doc_block("MAP.md", "REGISTRY",
+            " (auto-maintained by Suite.refresh_self_description on every apply — do not hand-edit)\n"
+            f"- **node-types** ({len(cap['node_types'])}): {', '.join(cap['node_types'])}\n"
+            f"- **RHM verbs**: {', '.join(cap['rhm_verbs'])}\n"
+            f"- **panels**: {', '.join(cap['panels']) or '(none)'}\n"
+            f"- **models** (from the fabric registry): {', '.join(cap['models'])}\n")
+        suites = self._acceptance_suites()
+        self._write_doc_block("STATE.md", "SUITES",
+            " (auto-maintained by Suite.refresh_self_description — do not hand-edit)\n"
+            f"- {len(suites)} acceptance suites: {', '.join(suites)}\n")
+
+    # back-compat alias (older callers / external agents may know this name)
+    refresh_map = refresh_self_description
+
+    def doc_drift(self) -> dict:
+        """What the system has that the SELF-DESCRIPTION files don't yet reflect — so they can't
+        silently rot (Tim: 'updates to the system → updates to whatever relevant files like this').
+        Covers MAP.md (registry) + STATE.md (suite index). A failing check is the enforcement."""
+        repo = self._repo_root
+        map_text = (open(os.path.join(repo, "MAP.md"), encoding="utf-8").read().lower()
+                    if os.path.exists(os.path.join(repo, "MAP.md")) else "")
+        state_text = (open(os.path.join(repo, "STATE.md"), encoding="utf-8").read()
+                      if os.path.exists(os.path.join(repo, "STATE.md")) else "")
+        return {
+            "map_node_types": [t for t in self.registry.types if t.lower() not in map_text],
+            "map_rhm_verbs": [v for v in self.RHM_VERBS if v.lower() not in map_text],
+            "map_surfaces": [s for s in ("panels", "extensions", "self-cod", "registry", "right-hand-man")
+                             if s not in map_text],
+            "state_missing_suites": [s for s in self._acceptance_suites() if s not in state_text],
+        }
+
+    map_drift = doc_drift  # back-compat alias
 
     # --- introspection (reads) ---
     def list_types(self) -> list[str]:
