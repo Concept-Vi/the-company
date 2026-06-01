@@ -2,7 +2,7 @@ import {
   Tldraw, Editor, ShapeUtil, HTMLContainer, Rectangle2d, T,
   createShapeId, useEditor, useValue, type TLBaseShape,
 } from 'tldraw'
-import { useState, Component } from 'react'
+import { useState, useRef, Component } from 'react'
 
 // Per-panel error boundary — a malformed/throwing panel definition renders a CONTAINED card,
 // never white-screening the canvas (the operator's only control surface). Recovery is bridge-side.
@@ -51,6 +51,9 @@ const api = {
   lastChange: () => fetch('/api/last-change').then(r => r.json()),
   revert: (sha: string) => fetch('/api/revert', { method: 'POST', headers: J, body: JSON.stringify({ sha }) }).then(r => r.json()),
   panels: () => fetch('/api/panels').then(r => r.json()),
+  voice: () => fetch('/api/voice').then(r => r.json()),
+  stt: (blob: Blob) => fetch('/api/stt', { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: blob }).then(r => r.json()),
+  tts: (text: string) => fetch('/api/tts', { method: 'POST', headers: J, body: JSON.stringify({ text }) }).then(r => r.blob()),
 }
 
 const MODES = ['listening', 'text-only', 'background', 'focus', 'walkthrough', 'watch-and-react', 'decide-for-me', 'off']
@@ -232,6 +235,8 @@ function Hud() {
   const [reason, setReason] = useState('')
   const [lastChange, setLastChange] = useState<any>(null)
   const [panels, setPanels] = useState<any[]>([])
+  const [recording, setRecording] = useState(false)
+  const recorderRef = useRef<MediaRecorder | null>(null)
 
   async function poll() {
     try { setNow(await api.now()); setEvents(await api.events()); setInbox(await api.inbox()); setLastChange(await api.lastChange()); setPanels(await api.panels()) } catch { /* bridge transient */ }
@@ -278,8 +283,8 @@ function Hud() {
     for (const s of sel) await api.del(s.props.nodeId)
     if (sel.length) { setNotice(`deleted ${sel.length} node(s)`); await reload() }
   }
-  async function sendChat() {
-    const m = chatMsg.trim()
+  async function sendChat(override?: string) {
+    const m = (override ?? chatMsg).trim()
     if (!m || chatBusy) return
     setChatMsg(''); setChatBusy(true)
     setChat(c => [...c, { role: 'user', text: m }])
@@ -287,6 +292,7 @@ function Hud() {
       // co-presence: the RHM sees what the operator has selected on the canvas right now
       const selected = (editor.getSelectedShapes().filter(s => s.type === 'node') as NodeShape[]).map(s => s.props.nodeId)
       const r = await api.chat(m, { selected }); setChat(r.history); await poll()
+      if (now?.mode === 'listening' && r.reply) speakReply(r.reply)   // voice out: speak the reply
       // the decision-compiler DOWN: an action the RHM took routes through the gate
       if (r.action?.did === 'run' || r.action?.did === 'build') { await reload() }
       if (r.action?.did === 'show') {           // attention-direction: move the operator's view
@@ -352,6 +358,29 @@ function Hud() {
     const r = await api.propose(gname, gspec)
     if (r.error) { setGrowMsg(''); setSurf({ error: r.error }) } else setSurf(r)
     await poll()
+  }
+  // voice out — speak the RHM's reply (local Kokoro via the bridge)
+  async function speakReply(text: string) {
+    try { const blob = await api.tts(text); new Audio(URL.createObjectURL(blob)).play() } catch { /* */ }
+  }
+  // voice in — push-to-talk: record → STT → send as a chat turn (which then speaks its reply)
+  async function recordToggle() {
+    if (recording) { recorderRef.current?.stop(); return }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const rec = new MediaRecorder(stream)
+      const chunks: BlobPart[] = []
+      rec.ondataavailable = e => chunks.push(e.data)
+      rec.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop()); setRecording(false); setNotice('transcribing…')
+        try {
+          const r = await api.stt(new Blob(chunks, { type: 'audio/webm' }))
+          if (r.text) { setNotice('you said: ' + r.text); await sendChat(r.text) }
+          else setNotice('(no speech detected)')
+        } catch (e: any) { setNotice('STT error: ' + (e?.message || e)) }
+      }
+      recorderRef.current = rec; rec.start(); setRecording(true); setNotice('listening… (click again to stop)')
+    } catch { setNotice('mic unavailable — grant microphone permission') }
   }
   function fieldValue(f: any) {
     if (f.target === 'mode') return now?.mode || 'listening'
@@ -536,7 +565,9 @@ function Hud() {
           <input placeholder="ask the company about itself…" value={chatMsg}
             onChange={e => setChatMsg(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') sendChat() }} />
-          <button className="b" onClick={sendChat} disabled={chatBusy}>{chatBusy ? '…' : '→'}</button>
+          <button className={'b ghost mic' + (recording ? ' rec' : '')} onClick={recordToggle}
+            title="push-to-talk (voice in; speaks back in listening mode)">{recording ? '■' : '🎙'}</button>
+          <button className="b" onClick={() => sendChat()} disabled={chatBusy}>{chatBusy ? '…' : '→'}</button>
         </div>
       </div>
 

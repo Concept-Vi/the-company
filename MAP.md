@@ -14,6 +14,7 @@ The orientation an agent loads first, and the seed of the **linked code-knowledg
   store/   ── where everything lives, by address (C1/C4) + events + chat + surfaced + panels
   mcp_face/── the agent face: generic verbs over all of it (C7); shares the Suite with the UI
   nodes/   ── the node library (process · content · presentation), each one C2
+  voice/   ── two-way voice: STT (swappable provider; AssemblyAI/local) + TTS (local Kokoro, .voice-venv)
   panels/  ── brain-authored DECLARATIVE UI panels (JSON defs; the 'others' tier of self-mod)
   contracts/ ── the spine: the shapes all of the above compose against (C1–C8)
   canvas/app/src/extensions/ ── brain-authored ARBITRARY UI components (operator-only; build-gated)
@@ -28,6 +29,7 @@ The orientation an agent loads first, and the seed of the **linked code-knowledg
 | `fabric/` | model binding + guards + `list_models` (the model registry) | `fabric/AGENTS.md` | S6 |
 | `mcp_face/` | agent face (generic verbs) | `mcp_face/AGENTS.md` | C7 |
 | `nodes/` | the node library (incl. `portal`, `rhm_mode`, `model_of_tim`) | `nodes/AGENTS.md` | C2 |
+| `voice/` | two-way voice — STT provider + local TTS | `voice/AGENTS.md` | — |
 | `canvas/` | the frontend + the extensions runtime | `canvas/AGENTS.md` | S5, D3 |
 
 ## Live registry — the system's current capabilities

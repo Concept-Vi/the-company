@@ -126,6 +126,8 @@ button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
   border-radius:3px;padding:8px;font-family:inherit;font-size:11px}
 .rhm-input input:focus{outline:none;border-color:var(--sig)}
 .rhm-input button{padding:8px 13px}
+.rhm-input .mic{padding:8px 10px}
+.rhm-input .mic.rec{border-color:var(--err);color:var(--err);animation:pulse 1s ease-in-out infinite}
 .panel h3{font-family:"Fraunces",serif;font-weight:600;font-size:14px;color:var(--sig);margin:0 0 9px}
 .panel .row{display:flex;justify-content:space-between;gap:10px;margin:4px 0;font-size:11px}
 .panel .k{color:var(--dim)}

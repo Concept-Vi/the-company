@@ -5,5 +5,8 @@ node_modules/
 .DS_Store
 store-data/
 .litellm-venv/
+.voice-venv/
+.secrets
 canvas/app/node_modules/
 canvas/app/dist/
+voice/models/

@@ -22,6 +22,7 @@ from fabric import config as fcfg
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CANVAS = os.path.join(ROOT, "canvas", "index.html")
+TTS_URL = os.environ.get("COMPANY_TTS_URL", "http://127.0.0.1:4123")   # local Kokoro service
 SUITE = Suite(FsStore(fcfg.STORE_DIR),
               NodeRegistry().discover([os.path.join(ROOT, "nodes")]))
 DEMO = "codebase"
@@ -82,11 +83,35 @@ class H(BaseHTTPRequestHandler):
             self._send(200, json.dumps(SUITE.list_panels()))
         elif self.path == "/api/capabilities":
             self._send(200, json.dumps(SUITE.capabilities()))
+        elif self.path == "/api/voice":                   # voice status: STT providers + TTS up?
+            from voice import stt as voice_stt
+            tts_up = False
+            try:
+                import urllib.request as _u
+                _u.urlopen(TTS_URL + "/health", timeout=2); tts_up = True
+            except Exception:
+                pass
+            self._send(200, json.dumps({"stt": voice_stt.available(),
+                                        "stt_default": voice_stt.DEFAULT_PROVIDER, "tts_up": tts_up}))
         else:
             self._send(404, "{}")
 
     def do_POST(self):
         try:
+            if self.path == "/api/stt":                   # raw audio bytes in → transcript out
+                from voice import stt as voice_stt
+                ln = int(self.headers.get("Content-Length", 0))
+                audio = self.rfile.read(ln)
+                self._send(200, json.dumps(voice_stt.transcribe(audio)))
+                return
+            if self.path == "/api/tts":                   # text in → wav out (proxied to Kokoro)
+                import urllib.request as _u
+                body = self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}"
+                req = _u.Request(TTS_URL + "/tts", data=body,
+                                 headers={"Content-Type": "application/json"})
+                with _u.urlopen(req, timeout=60) as r:
+                    self._send(200, r.read(), "audio/wav")
+                return
             if self.path == "/api/run":
                 result = SUITE.run(DEMO)
                 self._send(200, json.dumps(SUITE.state(DEMO, result)))
