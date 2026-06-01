@@ -12,6 +12,17 @@ html,body,#root{margin:0;height:100%;background:var(--bg);font-family:"IBM Plex 
   color:var(--ink);overflow:hidden;box-shadow:0 14px 34px -22px #000;display:flex;flex-direction:column;font-size:12px}
 .node-card.ran{border-color:var(--sig-dim)}
 .node-card.cached{border-color:#5a4a1f}
+/* portal — a live window onto another address (transclusion, not a copy) */
+.node-card.portal{border-style:dashed;border-color:#4a6fa5;background:
+  linear-gradient(180deg, rgba(74,111,165,.10), var(--panel))}
+.node-card.portal .node-dot{background:#6f9bd8;box-shadow:0 0 10px #4a6fa5}
+.node-card.portal .node-type{color:#9dc0f0}
+.node-ref{padding:4px 10px;color:#6f9bd8;font-size:9px;border-bottom:1px solid var(--line);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* provenance layers — authored (origin) vs system-derived (a role wrote it) */
+.node-card.layer-system{border-left:3px solid var(--warn)}
+.layers-dim .node-card.layer-system{opacity:.16;filter:saturate(.3)}
+.layers-dim-authored .node-card.layer-authored{opacity:.16;filter:saturate(.3)}
 .node-bar{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--line)}
 .node-dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
 .ran .node-dot{background:var(--sig);box-shadow:0 0 10px var(--sig)}

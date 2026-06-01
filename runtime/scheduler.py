@@ -51,6 +51,14 @@ def run(graph, store, node_types, branch: str = "main",
         for nid, ex in by_id.items():
             if nid in processed or nid in pause:
                 continue
+            # Reference-resolved node-types (e.g. portal) are NOT computed and NOT fired —
+            # their output is a live window onto another address, read at view-time
+            # (Suite.state). Mark processed so the run terminates; write no ref of our own.
+            if getattr(node_types[ex.type], "RESOLVE", "compute") == "reference":
+                processed.add(nid)
+                progress = True
+                continue
+
             # READY only when every DECLARED input port is wired AND resolved.
             declared = set(getattr(node_types[ex.type], "PORTS_IN", {}).keys())
             if not declared <= set(ex.inputs.keys()):     # a required port is unwired -> wait

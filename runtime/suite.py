@@ -17,6 +17,14 @@ from store.fs_store import FsStore
 CONTENT_KINDS = ("constant", "document", "code", "file", "image", "source", "portal")
 
 
+def _tag_system_origin(code: str) -> str:
+    """Tag a brain-written node module with its provenance layer. Idempotent — the canvas
+    reads ORIGIN to show "what a role changed" (context-13 layers)."""
+    if "ORIGIN" in code:
+        return code
+    return "ORIGIN = 'system'  # brain-written (self-grown) — provenance layer\n" + code
+
+
 def _strip_fences(code: str) -> str:
     c = code.strip()
     if c.startswith("```"):
@@ -107,7 +115,13 @@ class Suite:
         nodes = []
         for n in g.nodes:
             logical = f"run://{g.id}/{n.id}" if branch == "main" else f"run://{g.id}/{n.id}@{branch}"
-            cas = self.store.head(logical)
+            mod = self.registry.get(n.type)
+            if getattr(mod, "RESOLVE", "compute") == "reference":
+                # live window: resolve the referenced address NOW (window, not a copy)
+                ref = n.config.get("ref") or ""
+                cas = self.store.head(ref) if ref else None
+            else:
+                cas = self.store.head(logical)
             status = "idle"
             if result:
                 status = ("ran" if n.id in result["ran"]
@@ -116,6 +130,7 @@ class Suite:
             nodes.append({
                 "id": n.id, "type": n.type, "config": n.config,
                 "kind": nt.kind if nt else ("content" if n.type in CONTENT_KINDS else "process"),
+                "layer": getattr(mod, "ORIGIN", "authored"),   # provenance layer (authored vs system)
                 "status": status, "address": logical, "content_hash": cas,
                 "output": self.store.get_content(cas) if cas else None,
             })
@@ -150,9 +165,9 @@ class Suite:
             "Use PORTS_IN={'text':'Text'} and PORTS_OUT={'text':'Text'} unless the spec needs otherwise. "
             "Output ONLY the code.")
         t = transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL)
-        code = _strip_fences(client.complete(
+        code = _tag_system_origin(_strip_fences(client.complete(
             t, [{"role": "system", "content": sys_p}, {"role": "user", "content": user_p}],
-            model=model or fcfg.DEFAULT_BRAIN))
+            model=model or fcfg.DEFAULT_BRAIN)))
         sid = self.inbox.surface("code_build", {"name": name, "code": code}, default="reject")
         return {"id": sid, "name": name, "code": code}
 

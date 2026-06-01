@@ -17,8 +17,8 @@ const api = {
   apply: (id: string) =>
     fetch('/api/apply', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(r => r.json()),
   objectInfo: () => fetch('/api/object_info').then(r => r.json()),
-  addNode: (type: string) =>
-    fetch('/api/node', { method: 'POST', headers: J, body: JSON.stringify({ type }) }).then(r => r.json()),
+  addNode: (type: string, config: any = {}) =>
+    fetch('/api/node', { method: 'POST', headers: J, body: JSON.stringify({ type, config }) }).then(r => r.json()),
   connect: (e: any) =>
     fetch('/api/connect', { method: 'POST', headers: J, body: JSON.stringify(e) }).then(r => r.json()),
   del: (node: string) =>
@@ -28,7 +28,7 @@ const api = {
 // ---------------------------------------------------------------- the node shape (one generic kind)
 type NodeShape = TLBaseShape<'node', {
   w: number; h: number; nodeId: string; nodeType: string; kind: string
-  status: string; output: string; address: string
+  status: string; output: string; address: string; ref: string; layer: string
 }>
 
 const shapeIdFor = (nodeId: string) => createShapeId('n-' + nodeId)
@@ -37,10 +37,10 @@ class NodeShapeUtil extends ShapeUtil<NodeShape> {
   static override type = 'node' as const
   static override props = {
     w: T.number, h: T.number, nodeId: T.string, nodeType: T.string, kind: T.string,
-    status: T.string, output: T.string, address: T.string,
+    status: T.string, output: T.string, address: T.string, ref: T.string, layer: T.string,
   }
   getDefaultProps(): NodeShape['props'] {
-    return { w: 240, h: 130, nodeId: '', nodeType: '', kind: 'process', status: 'idle', output: '', address: '' }
+    return { w: 240, h: 130, nodeId: '', nodeType: '', kind: 'process', status: 'idle', output: '', address: '', ref: '', layer: 'authored' }
   }
   getGeometry(shape: NodeShape) {
     return new Rectangle2d({ width: shape.props.w, height: shape.props.h, isFilled: true })
@@ -54,19 +54,21 @@ class NodeShapeUtil extends ShapeUtil<NodeShape> {
     const p = shape.props
     const expanded = zoom > 0.5
     const hasOut = p.output != null && String(p.output) !== ''
+    const isPortal = p.nodeType === 'portal'
     return (
       <HTMLContainer>
-        <div className={'node-card ' + p.status}>
+        <div className={`node-card ${p.status} layer-${p.layer}` + (isPortal ? ' portal' : '')}>
           <div className="node-bar">
             <span className="node-dot" />
-            <span className="node-type">{p.nodeType}</span>
-            <span className="node-kind">{p.kind}</span>
+            <span className="node-type">{isPortal ? '⊕ portal' : p.nodeType}</span>
+            <span className="node-kind">{p.layer === 'system' ? 'system' : p.kind}</span>
           </div>
+          {isPortal && <div className="node-ref">live view → {p.ref}</div>}
           {expanded && (
             <div className="node-body">
               {hasOut
                 ? <div className="node-out">{String(p.output)}</div>
-                : <div className="node-out empty">no output — not yet resolved</div>}
+                : <div className="node-out empty">{isPortal ? 'window onto an unresolved address' : 'no output — not yet resolved'}</div>}
             </div>
           )}
           {expanded && <div className="node-addr">{p.address}{p.status !== 'idle' ? ` · ${p.status}` : ''}</div>}
@@ -90,6 +92,7 @@ async function loadGraph(editor: Editor) {
       props: {
         w: 240, h: 130, nodeId: n.id, nodeType: n.type, kind: n.kind || 'process',
         status: n.status || 'idle', output: n.output == null ? '' : String(n.output), address: n.address || '',
+        ref: (n.config && n.config.ref) || '', layer: n.layer || 'authored',
       },
     })
   })
@@ -104,7 +107,7 @@ async function refresh(editor: Editor, state?: any) {
     if (editor.getShape(id)) {
       editor.updateShape<NodeShape>({
         id, type: 'node',
-        props: { status: n.status || 'idle', output: n.output == null ? '' : String(n.output) },
+        props: { status: n.status || 'idle', output: n.output == null ? '' : String(n.output), layer: n.layer || 'authored' },
       })
     }
   })
@@ -149,12 +152,14 @@ function Hud() {
   const [workshop, setWorkshop] = useState<any>(null)
   const [oinfo, setOinfo] = useState<any>({})
   const [notice, setNotice] = useState('')
+  const [gid, setGid] = useState('codebase')
+  const [layerView, setLayerView] = useState(0)   // 0 all · 1 origin only · 2 system only
 
   // load once
   useState(() => {
     ;(window as any).__editor = editor   // automation/debug handle
     ;(async () => {
-      const g = await loadGraph(editor); setEdges(g.edges || [])
+      const g = await loadGraph(editor); setEdges(g.edges || []); setGid(g.id)
       setTypes(await api.types())
       setOinfo(await api.objectInfo())
     })()
@@ -178,6 +183,24 @@ function Hud() {
     const sel = (editor.getSelectedShapes().filter(s => s.type === 'node') as NodeShape[])
     for (const s of sel) await api.del(s.props.nodeId)
     if (sel.length) { setNotice(`deleted ${sel.length} node(s)`); await reload() }
+  }
+  function cycleLayers() {
+    const next = (layerView + 1) % 3
+    setLayerView(next)
+    const b = document.body.classList
+    b.remove('layers-dim', 'layers-dim-authored')
+    if (next === 1) { b.add('layers-dim'); setNotice('layers · origin only (system-derived dimmed)') }
+    else if (next === 2) { b.add('layers-dim-authored'); setNotice('layers · system-derived only (origin dimmed)') }
+    else setNotice('layers · all')
+  }
+  async function portalSelected() {
+    const sel = (editor.getSelectedShapes().filter(s => s.type === 'node') as NodeShape[])
+    if (sel.length !== 1) { setNotice('select one node to open a live portal onto it'); return }
+    const src = sel[0]
+    if (src.props.nodeType === 'portal') { setNotice('that is already a portal'); return }
+    const ref = `run://${gid}/${src.props.nodeId}`
+    await api.addNode('portal', { ref })
+    setNotice(`portal → ${ref} (one artefact, live view)`); await reload()
   }
 
   const selected = useValue('sel', () => {
@@ -210,7 +233,9 @@ function Hud() {
         <span className="title">the&nbsp;<em>company</em></span>
         <button className="b" onClick={doRun} disabled={running}>{running ? 'running…' : '▶ run'}</button>
         <button className="b ghost" onClick={wireSelected}>＋ wire</button>
+        <button className="b ghost" onClick={portalSelected}>⊕ portal</button>
         <button className="b ghost" onClick={deleteSelected}>🗑 delete</button>
+        <button className="b ghost" onClick={cycleLayers}>◐ layers: {['all', 'origin', 'system'][layerView]}</button>
         <button className="b ghost" onClick={reload}>reload</button>
         {notice && <span className="notice">{notice}</span>}
       </div>
@@ -275,7 +300,7 @@ export default function App() {
     <div style={{ position: 'fixed', inset: 0 }}>
       <Tldraw
         shapeUtils={[NodeShapeUtil]}
-        persistenceKey="company-canvas"
+        persistenceKey="company-canvas-v2"
         components={{ StylePanel: null, ActionsMenu: null, QuickActions: null }}
       >
         <Hud />
