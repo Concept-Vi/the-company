@@ -100,6 +100,10 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/chat":                # right-hand-man — grounded conversation
                 b = self._body()
                 self._send(200, json.dumps(SUITE.chat(b["message"], DEMO)))
+            elif self.path == "/api/mode":                # the presence dial — set the RHM mode
+                b = self._body()
+                SUITE.set_mode(b["mode"])
+                self._send(200, json.dumps(SUITE.now(DEMO)))
             # --- build-dispatch (self-growth), operable from the operator's UI ---
             elif self.path == "/api/propose":          # agent/operator dispatches a build
                 b = self._body()

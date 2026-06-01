@@ -176,14 +176,56 @@ class Suite:
             presence = "ready · work unresolved"
         else:
             presence = "empty"
+        mode = self.get_mode()
         return {
             "graph": st["id"],
             "nodes_total": len(nodes),
             "nodes_resolved": len(resolved),
             "surfaced_pending": len(pending),
-            "presence": presence,
+            "presence": "off" if mode == "off" else presence,
+            "mode": mode,
             "last_event": recent[0] if recent else None,
         }
+
+    # --- modes / the presence dial: the mode IS a node (context-05, D1-D3) ---
+    MODES = ("listening", "text-only", "background", "focus",
+             "walkthrough", "watch-and-react", "decide-for-me", "off")
+    DEFAULT_MODE = "listening"
+    SYSTEM_GRAPH = "system"
+    MODE_NODE = "rhm"
+    MODE_DIRECTIVES = {
+        "listening": "Conversational and present; respond fully.",
+        "text-only": "Respond in text, concisely, only to what is addressed.",
+        "background": "Be minimal — surface only what genuinely needs the operator; otherwise a one-line acknowledgement.",
+        "focus": "The operator is in deep work. Be extremely brief (one or two lines); do not elaborate unless asked.",
+        "walkthrough": "Actively guide: narrate what you are doing and direct the operator's attention step by step.",
+        "watch-and-react": "Observe; comment only when relevant, and briefly.",
+        "decide-for-me": "Act on what you confidently can — prefer taking a governed action (propose a node, run the graph) over asking. You still cannot self-approve; proposals are surfaced for approval.",
+        "off": "",
+    }
+
+    def get_mode(self) -> str:
+        g = self.store.load_graph(self.SYSTEM_GRAPH)
+        if g:
+            for n in g.nodes:
+                if n.id == self.MODE_NODE:
+                    return n.config.get("mode", self.DEFAULT_MODE)
+        return self.DEFAULT_MODE
+
+    def set_mode(self, mode: str) -> str:
+        if mode not in self.MODES:
+            raise ValueError(f"unknown mode {mode!r} — one of {self.MODES}")
+        g = self.store.load_graph(self.SYSTEM_GRAPH)
+        exists = bool(g) and any(n.id == self.MODE_NODE for n in g.nodes)
+        if exists:                                            # editing a parameter (same verb)
+            self.set_config(self.SYSTEM_GRAPH, self.MODE_NODE, {"mode": mode})
+        else:                                                 # the mode IS a node (same verb)
+            self.create_node(self.SYSTEM_GRAPH, "rhm_mode", config={"mode": mode}, node_id=self.MODE_NODE)
+        self._emit("mode", f"presence → {mode}")
+        return mode
+
+    def _mode_directive(self, mode: str) -> str:
+        return self.MODE_DIRECTIVES.get(mode, "")
 
     # --- the right-hand-man: the coherent voice of the Company about ITSELF (I2) ---
     def _chat_context(self, graph_id: str) -> str:
@@ -247,12 +289,20 @@ class Suite:
         """Grounded conversation with the operator. Answers from compact ground truth; never
         confabulates system facts. Suggests actions but performs none that skip the surfaced
         gate (E6 invariant) — proposing/running route through the normal verbs."""
+        mode = self.get_mode()
+        if mode == "off":                                     # the dial disables the RHM entirely
+            self.store.append_chat({"role": "user", "text": message})
+            off = "The right-hand-man is off. Switch a mode on the presence dial to wake me."
+            self.store.append_chat({"role": "assistant", "text": off})
+            self._emit("chat", f"you: {message[:40]} (RHM off)")
+            return {"reply": off, "action": None, "mode": mode, "history": self.store.chat_history(40)}
         from fabric import client, transport, config as fcfg
         sys_p = (
             "You are the right-hand-man — the coherent voice of the Company, speaking to its operator "
             "about the system ITSELF. Answer ONLY from the LIVE SYSTEM STATE below; it is ground truth. "
             "If something is not in that state, say you cannot see it — NEVER invent counts, names, or "
             "facts. Be concise and concrete.\n\n"
+            f"CURRENT MODE — {mode}: {self._mode_directive(mode)}\n\n"
             "You can ACT on the system, but only through governed verbs. When the operator asks you to do "
             "something you're capable of, append EXACTLY ONE final line:\n"
             "  ACTION: run                         (recompute the current graph)\n"
@@ -271,7 +321,7 @@ class Suite:
         self.store.append_chat({"role": "user", "text": message})
         self.store.append_chat({"role": "assistant", "text": reply, "action": outcome})
         self._emit("chat", f"you: {message[:48]}")
-        return {"reply": reply, "action": outcome, "history": self.store.chat_history(40)}
+        return {"reply": reply, "action": outcome, "mode": mode, "history": self.store.chat_history(40)}
 
     def chat_history(self, limit: int = 40) -> list:
         return self.store.chat_history(limit)

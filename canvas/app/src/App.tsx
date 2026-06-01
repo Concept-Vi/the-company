@@ -28,7 +28,11 @@ const api = {
   chat: (message: string) =>
     fetch('/api/chat', { method: 'POST', headers: J, body: JSON.stringify({ message }) }).then(r => r.json()),
   chatHistory: () => fetch('/api/chat').then(r => r.json()),
+  setMode: (mode: string) =>
+    fetch('/api/mode', { method: 'POST', headers: J, body: JSON.stringify({ mode }) }).then(r => r.json()),
 }
+
+const MODES = ['listening', 'text-only', 'background', 'focus', 'walkthrough', 'watch-and-react', 'decide-for-me', 'off']
 
 function relTime(iso?: string) {
   if (!iso) return ''
@@ -228,6 +232,7 @@ function Hud() {
     catch { setChat(c => [...c, { role: 'assistant', text: '(could not reach the brain)' }]) }
     finally { setChatBusy(false) }
   }
+  async function changeMode(m: string) { setNotice('presence → ' + m); await api.setMode(m); await poll() }
   function cycleLayers() {
     const next = (layerView + 1) % 3
     setLayerView(next)
@@ -277,9 +282,14 @@ function Hud() {
       <div className="hud toolbar">
         <span className="title">the&nbsp;<em>company</em></span>
         {now && (
-          <span className={'presence ' + (running || chatBusy ? 'busy' : now.surfaced_pending ? 'warn' : 'ok')}>
+          <span className={'presence ' + (now.mode === 'off' ? 'off' : running || chatBusy ? 'busy' : now.surfaced_pending ? 'warn' : 'ok')}>
             <span className="pdot" />{running ? 'running…' : chatBusy ? 'thinking…' : now.presence}
           </span>
+        )}
+        {now && (
+          <select className="mode-sel" value={now.mode || 'listening'} onChange={e => changeMode(e.target.value)} title="presence dial — the RHM's mode">
+            {MODES.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
         )}
         <button className="b" onClick={doRun} disabled={running}>{running ? 'running…' : '▶ run'}</button>
         <button className="b ghost" onClick={wireSelected}>＋ wire</button>
