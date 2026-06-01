@@ -74,8 +74,12 @@ def run(graph, store, node_types, branch: str = "main",
             sig = _memo_sig(ex, version, input_map)
             oaddr = out_addr[nid]
 
+            # VOLATILE nodes read EXTERNAL state (filesystem, network) — their output is NOT a pure
+            # function of (type, version, config, inputs), so the memo gate would wrongly cache a
+            # stale first-run output forever (red-team F1). Never memo-skip them; always re-run.
+            volatile = getattr(mod, "VOLATILE", False)
             cached = store.memo_get(sig)
-            if nid not in force and cached and store.exists(cached):       # MEMO GATE
+            if nid not in force and not volatile and cached and store.exists(cached):   # MEMO GATE
                 cas = cached
                 agent = f"{ex.type}@memo"
                 skipped.add(nid)

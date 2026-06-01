@@ -10,6 +10,7 @@ import os
 
 VERSION = "1"
 KIND = "content"
+VOLATILE = True          # reads the live filesystem → never memo-cache (output isn't pure; red-team F1)
 PORTS_IN: dict = {}
 PORTS_OUT = {"context": "Text"}
 

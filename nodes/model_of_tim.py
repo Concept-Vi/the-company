@@ -8,6 +8,7 @@ import os
 
 VERSION = "1"
 KIND = "content"
+VOLATILE = True          # reads an external file → never memo-cache (red-team F1)
 PORTS_IN: dict = {}
 PORTS_OUT = {"principles": "Text"}
 
