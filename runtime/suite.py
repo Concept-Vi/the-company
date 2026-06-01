@@ -255,15 +255,19 @@ class Suite:
         return self.rhm_config()
 
     # --- the right-hand-man: the coherent voice of the Company about ITSELF (I2) ---
-    def _chat_context(self, graph_id: str) -> str:
-        """Compact GROUND TRUTH — live system state, not the codebase (context-05 rung 1)."""
+    def _chat_context(self, graph_id: str, focus: dict | None = None) -> str:
+        """Compact GROUND TRUTH — live system state, not the codebase (context-05 rung 1).
+        With `focus` (the operator's current canvas selection), the RHM gains CO-PRESENCE:
+        the focused nodes' full detail (output/config) — the shared perceptual field where
+        'context is a consequence of what I'm doing' (two planes, one state)."""
         nowv = self.now(graph_id)
         st = self.state(graph_id)
+        by = {n["id"]: n for n in st["nodes"]}
         nodes = "; ".join(
             f"{n['id']}({n['type']}, {'resolved' if n['content_hash'] else 'unresolved'})"
             for n in st["nodes"]) or "(none)"
         evs = "; ".join(f"{e['kind']}: {e['summary']}" for e in self.store.recent_events(6)) or "(none)"
-        return (
+        ctx = (
             "LIVE SYSTEM STATE (ground truth — answer only from this):\n"
             f"- graph: {nowv['graph']} · {nowv['nodes_total']} nodes, {nowv['nodes_resolved']} resolved"
             f" · {nowv['surfaced_pending']} awaiting approval · presence: {nowv['presence']}\n"
@@ -271,6 +275,18 @@ class Suite:
             f"- available node-types: {', '.join(self.list_types())}\n"
             f"- recent activity: {evs}\n"
         )
+        selected = [s for s in (focus or {}).get("selected", []) if s in by]
+        if selected:
+            lines = []
+            for nid in selected:
+                n = by[nid]
+                out = n.get("output")
+                detail = (str(out)[:280] if out is not None else "(unresolved)")
+                cfg = n.get("config") or {}
+                lines.append(f"  · {nid} ({n['type']}, {n['status']}) — config={cfg} — output: {detail}")
+            ctx += ("\nOPERATOR'S CURRENT FOCUS (co-presence — they have these selected on the canvas RIGHT "
+                    "NOW; you may reference their full detail, including values):\n" + "\n".join(lines) + "\n")
+        return ctx
 
     # The RHM signals intent with a trailing `ACTION:` line; the dispatcher enforces a
     # WHITELIST so the conversational surface can never reach apply/delete/file-write (E6).
@@ -312,7 +328,7 @@ class Suite:
                 "refused": f"verb {verb!r} is not permitted from the RHM — only {self.RHM_VERBS} "
                            "(apply/delete/file-write are operator-gated)"}
 
-    def chat(self, message: str, graph_id: str) -> dict:
+    def chat(self, message: str, graph_id: str, focus: dict | None = None) -> dict:
         """Grounded conversation with the operator. Answers from compact ground truth; never
         confabulates system facts. Suggests actions but performs none that skip the surfaced
         gate (E6 invariant) — proposing/running route through the normal verbs."""
@@ -340,7 +356,7 @@ class Suite:
             "Proposing only DRAFTS a node — the operator must approve it before it goes live. You CANNOT "
             "apply, delete, or write files yourself. Never append an ACTION line unless asked to act."
         )
-        msgs = [{"role": "system", "content": sys_p + "\n\n" + self._chat_context(graph_id)}]
+        msgs = [{"role": "system", "content": sys_p + "\n\n" + self._chat_context(graph_id, focus)}]
         for t in self.store.chat_history(20):
             msgs.append({"role": t["role"], "content": t["text"]})
         msgs.append({"role": "user", "content": message})

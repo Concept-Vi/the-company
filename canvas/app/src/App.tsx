@@ -25,8 +25,8 @@ const api = {
     fetch('/api/delete-node', { method: 'POST', headers: J, body: JSON.stringify({ node }) }).then(r => r.json()),
   now: () => fetch('/api/now').then(r => r.json()),
   events: () => fetch('/api/events').then(r => r.json()),
-  chat: (message: string) =>
-    fetch('/api/chat', { method: 'POST', headers: J, body: JSON.stringify({ message }) }).then(r => r.json()),
+  chat: (message: string, focus?: any) =>
+    fetch('/api/chat', { method: 'POST', headers: J, body: JSON.stringify({ message, focus }) }).then(r => r.json()),
   chatHistory: () => fetch('/api/chat').then(r => r.json()),
   setMode: (mode: string) =>
     fetch('/api/mode', { method: 'POST', headers: J, body: JSON.stringify({ mode }) }).then(r => r.json()),
@@ -226,7 +226,9 @@ function Hud() {
     setChatMsg(''); setChatBusy(true)
     setChat(c => [...c, { role: 'user', text: m }])
     try {
-      const r = await api.chat(m); setChat(r.history); await poll()
+      // co-presence: the RHM sees what the operator has selected on the canvas right now
+      const selected = (editor.getSelectedShapes().filter(s => s.type === 'node') as NodeShape[]).map(s => s.props.nodeId)
+      const r = await api.chat(m, { selected }); setChat(r.history); await poll()
       // the decision-compiler DOWN: an action the RHM took routes through the gate
       if (r.action?.did === 'run') { await reload() }
       if (r.action?.did === 'propose') {

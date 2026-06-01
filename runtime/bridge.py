@@ -101,7 +101,7 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.state(DEMO)))
             elif self.path == "/api/chat":                # right-hand-man — grounded conversation
                 b = self._body()
-                self._send(200, json.dumps(SUITE.chat(b["message"], DEMO)))
+                self._send(200, json.dumps(SUITE.chat(b["message"], DEMO, focus=b.get("focus"))))
             elif self.path == "/api/mode":                # the presence dial — set the RHM mode
                 b = self._body()
                 SUITE.set_mode(b["mode"])
