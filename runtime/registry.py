@@ -45,6 +45,13 @@ class NodeRegistry:
                 self.register_module(name, mod)
         return self
 
+    def rediscover(self, dirs: list[str]) -> "NodeRegistry":
+        """Rebuild from the filesystem (clear + discover) — so a removed file (e.g. after a
+        git revert of a self-applied node) actually un-registers. discover() only adds."""
+        self._modules.clear()
+        self.types.clear()
+        return self.discover(dirs)
+
     def register_module(self, name: str, mod) -> None:
         self._modules[name] = mod
         self.types[name] = NodeType(

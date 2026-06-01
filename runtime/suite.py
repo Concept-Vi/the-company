@@ -598,8 +598,56 @@ class Suite:
             f.write(code if code.endswith("\n") else code + "\n")
         os.replace(tmp, path)                               # atomic; no partial file
         self.registry.discover([self.nodes_dir])            # re-discover -> capability is live
-        self._emit("apply", f"approved + applied '{name}' — now a live node-type", node_name=name)
+        sha = self._git_self_commit([path], f"add node-type '{name}'")   # git = the rollback safety net
+        self._emit("apply", f"approved + applied '{name}' — now a live node-type"
+                   + (f" · {sha[:8]}" if sha else ""), node_name=name, commit=sha)
         return path
+
+    # --- self-modification safety net (slice 13): additive + git-reversible ---
+    @property
+    def _repo_root(self) -> str:
+        return os.path.dirname(self.nodes_dir)
+
+    def _git_self_commit(self, paths: list[str], msg: str) -> str | None:
+        """Commit a self-authored change so it is ALWAYS one `git revert` away (the real safety
+        net — not the operator gate). Path-scoped; tagged [self-apply]. None if commit fails."""
+        import subprocess
+        try:
+            subprocess.run(["git", "-C", self._repo_root, "add", *paths], check=True, capture_output=True)
+            subprocess.run(["git", "-C", self._repo_root, "commit", "-m", f"[self-apply] {msg}"],
+                           check=True, capture_output=True)
+            out = subprocess.run(["git", "-C", self._repo_root, "rev-parse", "HEAD"],
+                                 check=True, capture_output=True, text=True)
+            return out.stdout.strip()
+        except Exception:
+            return None
+
+    def last_self_change(self) -> dict | None:
+        """The most recent self-applied change (for one-click rollback + audit)."""
+        import subprocess
+        try:
+            out = subprocess.run(["git", "-C", self._repo_root, "log", "--grep=[self-apply]",
+                                  "--fixed-strings", "-1", "--format=%H%x00%s"],
+                                 check=True, capture_output=True, text=True).stdout.strip()
+        except Exception:
+            return None
+        if not out:
+            return None
+        sha, _, subject = out.partition("\x00")
+        return {"sha": sha, "subject": subject}
+
+    def revert_self_change(self, sha: str) -> dict:
+        """RECOVERY: roll back a self-applied change via git (itself reversible). OPERATOR-only.
+        Re-discovers so the capability change reflects immediately. The property that makes
+        self-modification acceptable — a bad self-edit is bounded, never bricking."""
+        import subprocess
+        subprocess.run(["git", "-C", self._repo_root, "revert", "--no-edit", sha],
+                       check=True, capture_output=True)
+        self.registry.rediscover([self.nodes_dir])          # rebuild from FS so a removed file un-registers
+        head = subprocess.run(["git", "-C", self._repo_root, "rev-parse", "HEAD"],
+                              capture_output=True, text=True).stdout.strip()
+        self._emit("revert", f"rolled back self-change {sha[:8]}", reverted=sha, commit=head)
+        return {"reverted": sha, "head": head}
 
     # --- surfaced-decision inbox (D4/D7) ---
     def list_surfaced(self) -> list:

@@ -76,6 +76,8 @@ class H(BaseHTTPRequestHandler):
             self._send(200, json.dumps(SUITE.rhm_config()))
         elif self.path == "/api/inbox":
             self._send(200, json.dumps(SUITE.inbox_lanes()))
+        elif self.path == "/api/last-change":
+            self._send(200, json.dumps(SUITE.last_self_change() or {}))
         else:
             self._send(404, "{}")
 
@@ -116,6 +118,9 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.coa(b["id"])))
             elif self.path == "/api/react":               # watch-and-react ambient comment
                 self._send(200, json.dumps(SUITE.react(DEMO)))
+            elif self.path == "/api/revert":              # OPERATOR-only rollback of a self-change
+                b = self._body()
+                self._send(200, json.dumps(SUITE.revert_self_change(b["sha"])))
             # --- build-dispatch (self-growth), operable from the operator's UI ---
             elif self.path == "/api/propose":          # agent/operator dispatches a build
                 b = self._body()

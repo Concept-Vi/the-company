@@ -36,6 +36,8 @@ const api = {
   inbox: () => fetch('/api/inbox').then(r => r.json()),
   coa: (id: string) => fetch('/api/coa', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(r => r.json()),
   react: () => fetch('/api/react', { method: 'POST' }).then(r => r.json()),
+  lastChange: () => fetch('/api/last-change').then(r => r.json()),
+  revert: (sha: string) => fetch('/api/revert', { method: 'POST', headers: J, body: JSON.stringify({ sha }) }).then(r => r.json()),
 }
 
 const MODES = ['listening', 'text-only', 'background', 'focus', 'walkthrough', 'watch-and-react', 'decide-for-me', 'off']
@@ -188,9 +190,10 @@ function Hud() {
   const [inbox, setInbox] = useState<any>({ live_escalations: [], resolved_for_you: [], counts: { escalations: 0, resolved: 0 } })
   const [drill, setDrill] = useState(false)
   const [reason, setReason] = useState('')
+  const [lastChange, setLastChange] = useState<any>(null)
 
   async function poll() {
-    try { setNow(await api.now()); setEvents(await api.events()); setInbox(await api.inbox()) } catch { /* bridge transient */ }
+    try { setNow(await api.now()); setEvents(await api.events()); setInbox(await api.inbox()); setLastChange(await api.lastChange()) } catch { /* bridge transient */ }
   }
   async function openCoa(id: string) {
     setGrowMsg('compiling the decision into a value-choice…')
@@ -299,6 +302,13 @@ function Hud() {
     if (r.error) { setGrowMsg(''); setSurf({ error: r.error }) } else setSurf(r)
     await poll()
   }
+  async function revertLast() {
+    if (!lastChange?.sha) return
+    setGrowMsg('rolling back the last self-change…')
+    const r = await api.revert(lastChange.sha)
+    setTypes(await api.types()); await reload()
+    setGrowMsg('↩ reverted — the change is undone (git ' + (r.head || '').slice(0, 8) + '). bounded, recoverable.')
+  }
   async function approveApply() {
     await api.resolve(surf.id, 'approve')
     const r = await api.apply(surf.id)
@@ -391,6 +401,12 @@ function Hud() {
         <div className="muted" style={{ marginTop: 12, borderTop: '1px solid var(--line)', paddingTop: 9 }}>
           live node-types ({types.length}): {types.map(t => <span key={t} className="tg">{t}</span>)}
         </div>
+        {lastChange?.sha && (
+          <div className="muted" style={{ marginTop: 8 }}>
+            last self-change: <span className="sig">{(lastChange.subject || '').replace('[self-apply] ', '')}</span>
+            <button className="b ghost sm" style={{ marginLeft: 8 }} onClick={revertLast} title="git revert — bounded, recoverable">⟲ revert</button>
+          </div>
+        )}
       </div>
 
       <div className="hud activity">
