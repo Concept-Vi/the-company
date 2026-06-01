@@ -322,7 +322,7 @@ class Suite:
 
     # The RHM signals intent with a trailing `ACTION:` line; the dispatcher enforces a
     # WHITELIST so the conversational surface can never reach apply/delete/file-write (E6).
-    RHM_VERBS = ("run", "propose", "build", "consult", "show", "panel")
+    RHM_VERBS = ("run", "propose", "build", "consult", "show", "panel", "extend")
 
     def consult(self, query: str) -> dict:
         """The RHM reads the system's OWN code+design (the first-purpose Q&A, as a callable) and
@@ -372,6 +372,9 @@ class Suite:
         if verb == "panel":
             name, _, spec = rest.partition("::")
             return shown, {"verb": "panel", "name": name.strip(), "spec": spec.strip()}
+        if verb == "extend":
+            name, _, spec = rest.partition("::")
+            return shown, {"verb": "extend", "name": name.strip(), "spec": spec.strip()}
         return shown, {"verb": verb}
 
     def _dispatch_rhm_action(self, action: dict, graph_id: str) -> dict:
@@ -408,6 +411,12 @@ class Suite:
                 p = self.propose_panel(name, spec)
                 return {"did": "panel", "surfaced": p["id"], "name": name}
             return {"did": "none", "refused": "panel needs '<name> :: <spec>'"}
+        if verb == "extend":
+            name, spec = action.get("name"), action.get("spec")
+            if name and spec:
+                p = self.propose_extension(name, spec)       # arbitrary code → build-gate → operator approves
+                return {"did": "extend", "surfaced": p["id"], "name": name}
+            return {"did": "none", "refused": "extend needs '<name> :: <spec>'"}
         if verb == "build":
             # symmetric agency / NL→graph: compose a pipeline on the canvas. Only create_node +
             # connect (AUTO, reversible — exactly what the operator can do), never apply/delete.
@@ -467,7 +476,8 @@ class Suite:
             "Use consult for any question about how THIS system is built/designed that isn't in the live "
             "state above (e.g. 'how does the memo gate work', 'what are the contracts'). "
             "  ACTION: show <node-id(s)>           (move the operator's view to node(s) — to SHOW them)\n"
-            "  ACTION: panel <name> :: <spec>      (add a settings/control PANEL to the interface)\n"
+            "  ACTION: panel <name> :: <spec>      (add a declarative settings/control PANEL)\n"
+            "  ACTION: extend <name> :: <spec>     (write a NEW interface component in code — build-gated)\n"
             "Use panel when the operator asks to add a UI panel/settings to the application; you author a "
             "declarative panel (fields editing real config: mode/model/persona), surfaced for approval. "
             "Use show whenever the operator asks you to show/take them to/point at something — name the "
@@ -738,13 +748,93 @@ class Suite:
         return path
 
     def apply_surfaced(self, surfaced_id: str) -> dict:
-        """Dispatch apply by the decision's class — ui_panel → panel, else code_build → node-type."""
+        """Dispatch apply by the decision's class — ui_panel → panel, ui_extension → code-gated
+        extension, else code_build → node-type."""
         d = self.inbox.get(surfaced_id)
         if not d:
             raise KeyError(f"no surfaced decision {surfaced_id!r}")
         if d.get("action") == "ui_panel":
             return {"applied": self.apply_panel(surfaced_id), "kind": "ui_panel"}
+        if d.get("action") == "ui_extension":
+            r = self.apply_extension(surfaced_id)
+            r["kind"] = "ui_extension"
+            return r
         return {"applied": self.apply_node(surfaced_id), "kind": "code_build"}
+
+    # --- the self-coding subsystem (slice 15): arbitrary brain-authored extensions, BUILD-GATED ---
+    # The object of safety is the LOOP, not the code: a broken change is caught by the build-gate
+    # and NEVER goes live; runtime throws are contained by the error boundary; every promote is a
+    # git commit (revert recovers). Operator-only. Reliability of the code is the MODEL's.
+    def propose_extension(self, name: str, spec: str, model: str | None = None) -> dict:
+        """The brain authors a real .tsx React component (arbitrary UI), surfaced as ui_extension
+        CONFIRM (operator-only). Constrained: import only from 'react' (so the build-gate can keep
+        unresolved-module breaks out); may call fetch('/api/...')."""
+        self._safe_node_name(name)
+        from fabric import client, transport, config as fcfg
+        sys_p = ("You write ONE React component (TSX) that extends the operator interface. Output ONLY the "
+                 "code — no prose, no markdown fences. Contract: `export default function " + name +
+                 "() { ... }`. You MAY `import { useState, useEffect } from 'react'` — but import from NO "
+                 "other module. You MAY call fetch('/api/...') against the bridge (e.g. /api/now, /api/run, "
+                 "/api/chat) to read or act on the system. Keep it self-contained and small.")
+        code = _strip_fences(client.complete(
+            transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL),
+            [{"role": "system", "content": sys_p}, {"role": "user", "content": f"Build: {spec}"}],
+            model=model or fcfg.DEFAULT_BRAIN))
+        sid = self.inbox.surface("ui_extension", {"name": name, "code": code}, default="reject")
+        self._emit("grow", f"brain authored a '{name}' UI extension — surfaced for approval",
+                   node_name=name, surfaced=sid)
+        return {"id": sid, "name": name, "code": code}
+
+    def _gate_extension(self, code: str) -> str | None:
+        """Build-gate: returns an error string if the code would break the build, else None.
+        (1) import-allowlist (only 'react' — keeps unresolved-module breaks out, which transpile
+        can't see); (2) fast syntax check via canvas/app/syntax-gate.cjs (ts.transpileModule)."""
+        import re
+        import subprocess
+        for mod in re.findall(r"""import\s+[^;]*?\bfrom\s+['"]([^'"]+)['"]""", code):
+            if mod != "react" and not mod.startswith("react/"):
+                return f"extensions may only import from 'react' (found import from '{mod}')"
+        if re.search(r"""^\s*import\s+['"]""", code, re.M) or "require(" in code:
+            return "extensions may not use bare imports or require()"
+        appdir = os.path.join(self._repo_root, "canvas", "app")
+        import tempfile
+        fd, tmp = tempfile.mkstemp(suffix=".tsx")
+        try:
+            with os.fdopen(fd, "w") as f:
+                f.write(code)
+            r = subprocess.run(["node", "syntax-gate.cjs", tmp], cwd=appdir,
+                               capture_output=True, text=True, timeout=60)
+            if r.returncode != 0:
+                return "syntax error: " + (r.stderr.strip() or r.stdout.strip())[:400]
+        finally:
+            os.unlink(tmp)
+        return None
+
+    def apply_extension(self, surfaced_id: str) -> dict:
+        """Operator-approved. Build-GATE the candidate OUTSIDE the live tree; promote into
+        src/extensions/ + git-commit ONLY on pass. A failed gate NEVER writes to the live tree."""
+        d = self.inbox.get(surfaced_id)
+        if not d:
+            raise KeyError(f"no surfaced decision {surfaced_id!r}")
+        if not self.inbox.is_approved(surfaced_id):
+            raise GovernanceError(f"ui_extension {surfaced_id!r} not approved — operator must approve (CONFIRM)")
+        name = self._safe_node_name(d["payload"]["name"])
+        code = d["payload"]["code"]
+        err = self._gate_extension(code)                      # gate runs on a temp file, NOT in src
+        if err:
+            self._emit("reject", f"extension '{name}' REJECTED by build-gate (never went live)", node_name=name)
+            return {"applied": None, "rejected": True, "error": err}
+        extdir = os.path.join(self._repo_root, "canvas", "app", "src", "extensions")
+        os.makedirs(extdir, exist_ok=True)
+        path = os.path.join(extdir, name + ".tsx")
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.write(code if code.endswith("\n") else code + "\n")
+        os.replace(tmp, path)                                 # promote (gate passed) — now Vite loads it
+        sha = self._git_self_commit([path], f"add extension '{name}'")
+        self._emit("apply", f"approved + applied '{name}' extension (gate passed)"
+                   + (f" · {sha[:8]}" if sha else ""), node_name=name, commit=sha)
+        return {"applied": path, "rejected": False, "commit": sha}
 
     # --- surfaced-decision inbox (D4/D7) ---
     def list_surfaced(self) -> list:

@@ -54,8 +54,19 @@ class Inbox:
         self.store = store
         self._n = 0
 
+    def _next_index(self) -> int:
+        """Next id index, computed from PERSISTED decisions (not just an in-memory counter) so a
+        process restart can never reuse an id and overwrite an unresolved decision (gate integrity)."""
+        import re
+        mx = self._n
+        for d in self.store.list_surfaced():
+            m = re.match(r"s(\d+)-", d.get("id", ""))
+            if m:
+                mx = max(mx, int(m.group(1)))
+        return mx + 1
+
     def surface(self, action_class: str, payload: dict, default: str, resolved=None) -> str:
-        self._n += 1
+        self._n = self._next_index()
         sid = f"s{self._n}-{action_class}"
         self.store.save_surfaced({"id": sid, "action": action_class, "payload": payload,
                                   "default": default, "resolved": resolved})

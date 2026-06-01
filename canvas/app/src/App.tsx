@@ -64,6 +64,11 @@ function relTime(iso?: string) {
   return `${Math.floor(d / 3600)}h`
 }
 
+// Self-coded extensions — brain-authored .tsx components, build-gated before promotion here,
+// loaded additively. Each is wrapped in PanelErrorBoundary so a runtime throw is contained.
+// New files appear via Vite HMR re-evaluating the glob. (Operator-only; git-reversible.)
+const extensionMods = import.meta.glob('./extensions/*.tsx', { eager: true })
+
 // A brain-authored declarative panel, rendered generically. Render-prone work lives HERE (inside a
 // component) so a malformed definition throws during PanelView's render and is caught by the
 // PanelErrorBoundary wrapping it — never the parent Hud (which would white-screen the canvas).
@@ -298,6 +303,11 @@ function Hud() {
         const d = all.find((x: any) => x.id === r.action.surfaced)
         if (d) setSurf({ id: d.id, name: d.payload.name, code: JSON.stringify(d.payload.panel, null, 2), isPanel: true })
       }
+      if (r.action?.did === 'extend') {           // arbitrary code → build-gated on approve
+        const all = await fetch('/api/surfaced').then(x => x.json())
+        const d = all.find((x: any) => x.id === r.action.surfaced)
+        if (d) setSurf({ id: d.id, name: d.payload.name, code: d.payload.code, isExt: true })
+      }
     }
     catch { setChat(c => [...c, { role: 'assistant', text: '(could not reach the brain)' }]) }
     finally { setChatBusy(false) }
@@ -466,6 +476,16 @@ function Hud() {
             <PanelView p={p} value={fieldValue} onSet={setField} />
           </PanelErrorBoundary>
         ))}
+        {Object.entries(extensionMods).map(([path, mod]) => {
+          const C = (mod as any).default
+          const name = (path.split('/').pop() || 'ext').replace('.tsx', '')
+          if (!C) return null
+          return (
+            <PanelErrorBoundary key={path} name={name}>
+              <div className="op-panel op-ext"><div className="op-title">⌁ {name}</div><C /></div>
+            </PanelErrorBoundary>
+          )
+        })}
       </div>
 
       <div className="hud activity">

@@ -136,8 +136,9 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.decision_view(b["id"])))
             elif self.path == "/api/apply":             # apply (only succeeds if operator approved)
                 b = self._body()
-                r = SUITE.apply_surfaced(b["id"])       # dispatches: ui_panel → panel, else node-type
-                self._send(200, json.dumps({"ok": True, "path": r["applied"], "kind": r["kind"],
+                r = SUITE.apply_surfaced(b["id"])       # dispatches by class; build-gate may reject
+                self._send(200, json.dumps({"ok": not r.get("rejected"), "path": r.get("applied"),
+                                            "kind": r["kind"], "error": r.get("error"),
                                             "types": sorted(SUITE.list_types())}))
             else:
                 self._send(404, "{}")
