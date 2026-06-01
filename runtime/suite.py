@@ -321,7 +321,23 @@ class Suite:
 
     # The RHM signals intent with a trailing `ACTION:` line; the dispatcher enforces a
     # WHITELIST so the conversational surface can never reach apply/delete/file-write (E6).
-    RHM_VERBS = ("run", "propose", "build")
+    RHM_VERBS = ("run", "propose", "build", "consult")
+
+    def consult(self, query: str) -> dict:
+        """The RHM reads the system's OWN code+design (the first-purpose Q&A, as a callable) and
+        answers — so it knows how it is built. Grounded in the source; cites the file; abstains if
+        the answer isn't there. A read (AUTO)."""
+        from nodes import codebase as cb
+        from fabric import client, transport
+        cfg = self.rhm_config()
+        src = cb.run({}, {})                              # repo source; AGENTS.md points at the vault design
+        sys_p = ("You answer questions about THIS system's own design and code, STRICTLY from the SOURCE "
+                 "below. Cite the relevant file. If the answer is not in the source, say so plainly. Concise.")
+        ans = client.complete(transport.openai_transport(base_url=cfg["base_url"]),
+                              [{"role": "system", "content": sys_p},
+                               {"role": "user", "content": f"SOURCE:\n{src[:150000]}\n\nQUESTION: {query}"}],
+                              model=cfg["model"])
+        return {"answer": ans}
 
     @staticmethod
     def _parse_rhm_action(reply: str):
@@ -347,6 +363,8 @@ class Suite:
             except Exception:
                 steps = None
             return shown, {"verb": "build", "steps": steps}
+        if verb == "consult":
+            return shown, {"verb": "consult", "query": rest.strip()}
         return shown, {"verb": verb}
 
     def _dispatch_rhm_action(self, action: dict, graph_id: str) -> dict:
@@ -362,6 +380,11 @@ class Suite:
                 p = self.propose_node(name, spec)        # surfaces for OPERATOR approval (CONFIRM)
                 return {"did": "propose", "surfaced": p["id"], "name": name}
             return {"did": "none", "refused": "propose needs '<name> :: <spec>'"}
+        if verb == "consult":
+            q = action.get("query") or ""
+            if not q:
+                return {"did": "none", "refused": "consult needs a query"}
+            return {"did": "consult", "answer": self.consult(q)["answer"]}
         if verb == "build":
             # symmetric agency / NL→graph: compose a pipeline on the canvas. Only create_node +
             # connect (AUTO, reversible — exactly what the operator can do), never apply/delete.
@@ -417,6 +440,9 @@ class Suite:
             "  ACTION: run                         (recompute the current graph)\n"
             "  ACTION: propose <name> :: <spec>    (draft a NEW node-type for the operator to approve)\n"
             "  ACTION: build <json>                (compose a pipeline on the canvas from EXISTING types)\n"
+            "  ACTION: consult <question>          (read the system's OWN code+design and answer it)\n"
+            "Use consult for any question about how THIS system is built/designed that isn't in the live "
+            "state above (e.g. 'how does the memo gate work', 'what are the contracts'). "
             "build's <json> is a list of steps, each either a node "
             '{"as":"a","type":"<existing type>","config":{...}} or a wire {"wire":"a.port -> b.port"} '
             "(reference nodes by their 'as' name). Use build to turn a described pipeline into real nodes "
@@ -434,6 +460,8 @@ class Suite:
                               msgs, model=cfg["model"])      # model + provider are configurable (E1)
         reply, action = self._parse_rhm_action(raw)
         outcome = self._dispatch_rhm_action(action, graph_id) if action else None
+        if outcome and outcome.get("did") == "consult":   # fold the looked-up answer into the turn
+            reply = (reply + "\n\n📖 " + outcome["answer"]).strip()
         # provenance grading (B3): Tim's words are gold (train the twin); the twin's are working
         self.store.append_chat({"role": "user", "text": message, "grade": self._provenance_grade("user")})
         self.store.append_chat({"role": "assistant", "text": reply, "action": outcome,
