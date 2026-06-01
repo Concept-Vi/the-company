@@ -215,7 +215,16 @@ function Hud() {
     if (!m || chatBusy) return
     setChatMsg(''); setChatBusy(true)
     setChat(c => [...c, { role: 'user', text: m }])
-    try { const r = await api.chat(m); setChat(r.history); await poll() }
+    try {
+      const r = await api.chat(m); setChat(r.history); await poll()
+      // the decision-compiler DOWN: an action the RHM took routes through the gate
+      if (r.action?.did === 'run') { await reload() }
+      if (r.action?.did === 'propose') {
+        const all = await fetch('/api/surfaced').then(x => x.json())
+        const d = all.find((x: any) => x.id === r.action.surfaced)
+        if (d) setSurf({ id: d.id, name: d.payload.name, code: d.payload.code })   // → operator approves in GROW panel
+      }
+    }
     catch { setChat(c => [...c, { role: 'assistant', text: '(could not reach the brain)' }]) }
     finally { setChatBusy(false) }
   }

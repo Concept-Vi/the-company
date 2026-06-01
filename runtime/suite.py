@@ -203,6 +203,46 @@ class Suite:
             f"- recent activity: {evs}\n"
         )
 
+    # The RHM signals intent with a trailing `ACTION:` line; the dispatcher enforces a
+    # WHITELIST so the conversational surface can never reach apply/delete/file-write (E6).
+    RHM_VERBS = ("run", "propose")
+
+    @staticmethod
+    def _parse_rhm_action(reply: str):
+        """Split a reply into (shown_text, action|None). Action lines:
+        `ACTION: run` · `ACTION: propose <name> :: <spec>`."""
+        lines = reply.rstrip().splitlines()
+        if not lines:
+            return reply, None
+        last = lines[-1].strip()
+        if not last.upper().startswith("ACTION:"):
+            return reply, None
+        body = last[len("ACTION:"):].strip()
+        shown = "\n".join(lines[:-1]).rstrip()
+        verb, _, rest = body.partition(" ")
+        verb = verb.lower()
+        if verb == "propose":
+            name, _, spec = rest.partition("::")
+            return shown, {"verb": "propose", "name": name.strip(), "spec": spec.strip()}
+        return shown, {"verb": verb}
+
+    def _dispatch_rhm_action(self, action: dict, graph_id: str) -> dict:
+        """Execute ONLY whitelisted verbs. Anything else is refused with no effect — this is the
+        no-bypass guarantee: the RHM cannot apply/delete/write, only propose (surfaces) or run (AUTO)."""
+        verb = (action or {}).get("verb")
+        if verb == "run":
+            r = self.run(graph_id)
+            return {"did": "run", "ran": sorted(r["ran"]), "cached": sorted(r["skipped"])}
+        if verb == "propose":
+            name, spec = action.get("name"), action.get("spec")
+            if name and spec:
+                p = self.propose_node(name, spec)        # surfaces for OPERATOR approval (CONFIRM)
+                return {"did": "propose", "surfaced": p["id"], "name": name}
+            return {"did": "none", "refused": "propose needs '<name> :: <spec>'"}
+        return {"did": "none",
+                "refused": f"verb {verb!r} is not permitted from the RHM — only {self.RHM_VERBS} "
+                           "(apply/delete/file-write are operator-gated)"}
+
     def chat(self, message: str, graph_id: str) -> dict:
         """Grounded conversation with the operator. Answers from compact ground truth; never
         confabulates system facts. Suggests actions but performs none that skip the surfaced
@@ -212,19 +252,26 @@ class Suite:
             "You are the right-hand-man — the coherent voice of the Company, speaking to its operator "
             "about the system ITSELF. Answer ONLY from the LIVE SYSTEM STATE below; it is ground truth. "
             "If something is not in that state, say you cannot see it — NEVER invent counts, names, or "
-            "facts. Be concise and concrete. You may suggest actions (grow a node, run the graph) but you "
-            "never perform irreversible actions yourself; those are surfaced for the operator's approval."
+            "facts. Be concise and concrete.\n\n"
+            "You can ACT on the system, but only through governed verbs. When the operator asks you to do "
+            "something you're capable of, append EXACTLY ONE final line:\n"
+            "  ACTION: run                         (recompute the current graph)\n"
+            "  ACTION: propose <name> :: <spec>    (draft a new node for the operator to approve)\n"
+            "Proposing only DRAFTS a node — the operator must approve it before it goes live. You CANNOT "
+            "apply, delete, or write files yourself. Never append an ACTION line unless asked to act."
         )
         msgs = [{"role": "system", "content": sys_p + "\n\n" + self._chat_context(graph_id)}]
         for t in self.store.chat_history(20):
             msgs.append({"role": t["role"], "content": t["text"]})
         msgs.append({"role": "user", "content": message})
-        reply = client.complete(transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL),
-                                 msgs, model=fcfg.DEFAULT_BRAIN)
+        raw = client.complete(transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL),
+                              msgs, model=fcfg.DEFAULT_BRAIN)
+        reply, action = self._parse_rhm_action(raw)
+        outcome = self._dispatch_rhm_action(action, graph_id) if action else None
         self.store.append_chat({"role": "user", "text": message})
-        self.store.append_chat({"role": "assistant", "text": reply})
+        self.store.append_chat({"role": "assistant", "text": reply, "action": outcome})
         self._emit("chat", f"you: {message[:48]}")
-        return {"reply": reply, "history": self.store.chat_history(40)}
+        return {"reply": reply, "action": outcome, "history": self.store.chat_history(40)}
 
     def chat_history(self, limit: int = 40) -> list:
         return self.store.chat_history(limit)
