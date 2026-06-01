@@ -254,6 +254,37 @@ class Suite:
         self._emit("config", "RHM config → " + ", ".join(f"{k}={v}" for k, v in allowed.items()))
         return self.rhm_config()
 
+    # --- the twin (B1, B3): the explicit model-of-Tim + provenance grading ---
+    @staticmethod
+    def _provenance_grade(role: str) -> str:
+        """Tim's own words are GOLD (the only thing that trains the twin); the twin's output is
+        WORKING-grade inference and must never masquerade as ground truth (prevents model-collapse)."""
+        return "gold" if role == "user" else "working"
+
+    def _model_of_tim_digest(self, max_chars: int = 2600) -> str:
+        """A COMPACT extract of the EXPLICIT model of Tim (principle headers + their statements) for
+        the twin's context. The full text is drillable via the model_of_tim node. '' if unavailable."""
+        import os
+        from nodes import model_of_tim as mot
+        path = os.environ.get("COMPANY_MODEL_OF_TIM", mot.DEFAULT_PATH)
+        try:
+            text = open(path, encoding="utf-8").read()
+        except Exception:
+            return ""
+        lines, out = text.splitlines(), []
+        for i, ln in enumerate(lines):
+            s = ln.strip()
+            if s.startswith("## "):                                   # a principle/law title
+                out.append("• " + s[3:].strip())
+            elif s.startswith("**") and "**" in s[2:]:                # its bold one-line statement
+                out.append("  " + s.strip("*").split("**")[0].strip())
+        digest = "\n".join(out)
+        return digest[:max_chars]
+
+    def training_signal(self) -> list:
+        """Only GOLD turns (Tim's actual words) train the twin — never the twin's own echoes."""
+        return [t for t in self.store.chat_history(999) if t.get("grade") == "gold"]
+
     # --- the right-hand-man: the coherent voice of the Company about ITSELF (I2) ---
     def _chat_context(self, graph_id: str, focus: dict | None = None) -> str:
         """Compact GROUND TRUTH — live system state, not the codebase (context-05 rung 1).
@@ -362,9 +393,9 @@ class Suite:
         gate (E6 invariant) — proposing/running route through the normal verbs."""
         mode = self.get_mode()
         if mode == "off":                                     # the dial disables the RHM entirely
-            self.store.append_chat({"role": "user", "text": message})
+            self.store.append_chat({"role": "user", "text": message, "grade": "gold"})
             off = "The right-hand-man is off. Switch a mode on the presence dial to wake me."
-            self.store.append_chat({"role": "assistant", "text": off})
+            self.store.append_chat({"role": "assistant", "text": off, "grade": "working"})
             self._emit("chat", f"you: {message[:40]} (RHM off)")
             return {"reply": off, "action": None, "mode": mode, "history": self.store.chat_history(40)}
         from fabric import client, transport
@@ -376,6 +407,10 @@ class Suite:
             "If something is not in that state, say you cannot see it — NEVER invent counts, names, or "
             "facts. Be concise and concrete.\n\n"
             + (f"VOICE / PERSONA (hold this consistently): {persona}\n\n" if persona else "")
+            + ("THE EXPLICIT MODEL OF TIM (the principles the Company holds itself to — reason from these "
+               "for judgment/value questions, but mark such answers as YOUR inference (working-grade), "
+               "never as Tim's actual words; when genuinely uncertain, say so and defer to Tim):\n"
+               f"{self._model_of_tim_digest()}\n\n" if self._model_of_tim_digest() else "")
             + f"CURRENT MODE — {mode}: {self._mode_directive(mode)}\n\n"
             "You can ACT on the system, but only through governed verbs. When the operator asks you to do "
             "something you're capable of, append EXACTLY ONE final line:\n"
@@ -399,8 +434,10 @@ class Suite:
                               msgs, model=cfg["model"])      # model + provider are configurable (E1)
         reply, action = self._parse_rhm_action(raw)
         outcome = self._dispatch_rhm_action(action, graph_id) if action else None
-        self.store.append_chat({"role": "user", "text": message})
-        self.store.append_chat({"role": "assistant", "text": reply, "action": outcome})
+        # provenance grading (B3): Tim's words are gold (train the twin); the twin's are working
+        self.store.append_chat({"role": "user", "text": message, "grade": self._provenance_grade("user")})
+        self.store.append_chat({"role": "assistant", "text": reply, "action": outcome,
+                                "grade": self._provenance_grade("assistant")})
         self._emit("chat", f"you: {message[:48]}")
         return {"reply": reply, "action": outcome, "mode": mode,
                 "model": cfg["model"], "history": self.store.chat_history(40)}

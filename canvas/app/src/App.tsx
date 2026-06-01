@@ -417,7 +417,10 @@ function Hud() {
           {chat.length === 0 && <div className="muted">ask about the system — it answers from live state, and says so when it can't see something.</div>}
           {chat.map((t, i) => (
             <div key={i} className={'msg ' + t.role}>
-              <span className="who">{t.role === 'user' ? 'you' : 'vi'}</span>
+              <span className="who">{t.role === 'user'
+                ? <>you<span className="grade gold" title="gold — Tim's own words (trains the twin)">◆</span></>
+                : <>vi<span className="grade working" title="working-grade — the twin's inference, not ground truth">◇</span></>}
+              </span>
               <span className="txt">{t.text}</span>
             </div>
           ))}

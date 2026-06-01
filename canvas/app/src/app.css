@@ -103,7 +103,9 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
 .rhm-log{flex:1;overflow:auto;margin:9px 0;display:flex;flex-direction:column;gap:9px}
 .msg{display:flex;gap:8px;font-size:11.5px;line-height:1.42}
-.msg .who{flex:none;width:24px;font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);padding-top:3px}
+.msg .who{flex:none;width:30px;font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);padding-top:3px;display:flex;align-items:center;gap:2px}
+.grade{font-size:7px}
+.grade.gold{color:var(--sig)} .grade.working{color:var(--warn)}
 .msg .txt{flex:1;white-space:pre-wrap;word-break:break-word}
 .msg.user .txt{color:var(--ink)}
 .msg.assistant .txt{color:var(--sig);font-family:"Fraunces",serif;font-size:13.5px;line-height:1.3}
