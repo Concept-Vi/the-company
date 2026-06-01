@@ -1,0 +1,34 @@
+{
+  "id": "settings",
+  "title": "settings",
+  "fields": [
+    {
+      "key": "presence_mode",
+      "label": "Presence Mode",
+      "type": "select",
+      "target": "mode",
+      "options": [
+        "listening",
+        "text-only",
+        "background",
+        "focus",
+        "walkthrough",
+        "watch-and-react",
+        "decide-for-me",
+        "off"
+      ]
+    },
+    {
+      "key": "model",
+      "label": "Model",
+      "type": "select",
+      "target": "model",
+      "options": [
+        "gpt-4",
+        "gpt-3.5-turbo",
+        "claude-3-5-sonnet",
+        "claude-3-opus"
+      ]
+    }
+  ]
+}
