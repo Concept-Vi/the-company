@@ -241,6 +241,10 @@ function Hud() {
       const r = await api.chat(m, { selected }); setChat(r.history); await poll()
       // the decision-compiler DOWN: an action the RHM took routes through the gate
       if (r.action?.did === 'run' || r.action?.did === 'build') { await reload() }
+      if (r.action?.did === 'show') {           // attention-direction: move the operator's view
+        const ids = r.action.targets.map((nid: string) => shapeIdFor(nid)).filter((id: any) => editor.getShape(id))
+        if (ids.length) { editor.select(...ids); editor.zoomToSelection({ animation: { duration: 450 } }) }
+      }
       if (r.action?.did === 'propose') {
         const all = await fetch('/api/surfaced').then(x => x.json())
         const d = all.find((x: any) => x.id === r.action.surfaced)

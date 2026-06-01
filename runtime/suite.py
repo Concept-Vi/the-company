@@ -321,7 +321,7 @@ class Suite:
 
     # The RHM signals intent with a trailing `ACTION:` line; the dispatcher enforces a
     # WHITELIST so the conversational surface can never reach apply/delete/file-write (E6).
-    RHM_VERBS = ("run", "propose", "build", "consult")
+    RHM_VERBS = ("run", "propose", "build", "consult", "show")
 
     def consult(self, query: str) -> dict:
         """The RHM reads the system's OWN code+design (the first-purpose Q&A, as a callable) and
@@ -365,6 +365,9 @@ class Suite:
             return shown, {"verb": "build", "steps": steps}
         if verb == "consult":
             return shown, {"verb": "consult", "query": rest.strip()}
+        if verb == "show":
+            targets = [t for t in rest.replace(",", " ").split() if t]
+            return shown, {"verb": "show", "targets": targets}
         return shown, {"verb": verb}
 
     def _dispatch_rhm_action(self, action: dict, graph_id: str) -> dict:
@@ -385,6 +388,14 @@ class Suite:
             if not q:
                 return {"did": "none", "refused": "consult needs a query"}
             return {"did": "consult", "answer": self.consult(q)["answer"]}
+        if verb == "show":
+            # attention-direction (magic-camera): a VIEW directive — moves the operator's view,
+            # mutates nothing. Resolve targets against the live graph so we never point at nothing.
+            ids = {n.id for n in self._load(graph_id).nodes}
+            targets = [t for t in action.get("targets", []) if t in ids]
+            if not targets:
+                return {"did": "none", "refused": "show: no matching nodes on the canvas"}
+            return {"did": "show", "targets": targets}
         if verb == "build":
             # symmetric agency / NL→graph: compose a pipeline on the canvas. Only create_node +
             # connect (AUTO, reversible — exactly what the operator can do), never apply/delete.
@@ -443,6 +454,9 @@ class Suite:
             "  ACTION: consult <question>          (read the system's OWN code+design and answer it)\n"
             "Use consult for any question about how THIS system is built/designed that isn't in the live "
             "state above (e.g. 'how does the memo gate work', 'what are the contracts'). "
+            "  ACTION: show <node-id(s)>           (move the operator's view to node(s) — to SHOW them)\n"
+            "Use show whenever the operator asks you to show/take them to/point at something — name the "
+            "node ids from the live state. show only moves their view; it changes nothing. "
             "build's <json> is a list of steps, each either a node "
             '{"as":"a","type":"<existing type>","config":{...}} or a wire {"wire":"a.port -> b.port"} '
             "(reference nodes by their 'as' name). Use build to turn a described pipeline into real nodes "
