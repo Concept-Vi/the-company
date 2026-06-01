@@ -757,6 +757,12 @@ class Suite:
             "PORTS_OUT dict, and def run(inputs: dict, config: dict) returning the output value.\n\n"
             "Example:\nVERSION='1'\nKIND='process'\nPORTS_IN={'text':'Text'}\nPORTS_OUT={'text':'Text'}\n"
             "def run(inputs, config):\n    return str(inputs.get('text','')).upper()\n\n"
+            "LIVE-STATE RULE: the scheduler memo-caches a node's output by the hash of its inputs, so a "
+            "node that READS MUTABLE TRUTH whose inputs don't change every run (the repo on disk, a model "
+            "of someone, a clock, a corpus index, anything that drifts under a fixed address) MUST declare "
+            "VOLATILE=True at module top-level, or it will serve a STALE frozen result forever. A pure "
+            "transform of its inputs (uppercase, join, wordcount) must NOT set it. When unsure: does the "
+            "same input ever need to produce a fresh output? If yes -> VOLATILE=True.\n\n"
             f"Write a node named '{name}' that: {spec}\n"
             "Use PORTS_IN={'text':'Text'} and PORTS_OUT={'text':'Text'} unless the spec needs otherwise. "
             "Output ONLY the code.")

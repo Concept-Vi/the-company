@@ -48,7 +48,7 @@ Engine verbs: `create_node · connect · delete_node · set_config · run · sta
 ## Self-modification — update the app through its interface (governed, additive, git-reversible)
 - **node-types** (`propose_node`→`apply_node`): the brain writes a `nodes/*.py`, operator approves, git-committed, auto-discovered.
 - **declarative panels** (`propose_panel`→`apply_panel`): JSON field-defs in `panels/`, fields edit real config; the 'others' tier.
-- **arbitrary code extensions** (`propose_extension`→`apply_extension`): a real `.tsx`, **build-GATED** (`_gate_extension`: import-allowlist + `canvas/app/syntax-gate.cjs`) OUTSIDE the live tree, promoted only on pass, loaded via `import.meta.glob` in an error boundary; operator-only.
+- **arbitrary code extensions** (`propose_extension`→`apply_extension`): a real `.tsx`, **build-GATED** (`_gate_extension` → `canvas/app/syntax-gate.cjs`, an **AST checker**: rejects non-`react` import/export specifiers, dynamic `import()`, `require()`, and external-URL literals — *not* a regex allowlist) OUTSIDE the live tree, promoted only on pass, then **lazy-loaded** (`import.meta.glob` → `lazy()`+`Suspense`) each inside an **error boundary** so a bad one degrades to a single dead panel, never a white screen; operator-only.
 - every self-apply is a `[self-apply]` git commit → **revert recovers** (`revert_self_change`).
 
 ## The path-of-least-resistance law (why the above is shaped this way)

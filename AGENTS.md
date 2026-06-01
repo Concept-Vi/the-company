@@ -20,7 +20,7 @@ Start at `Company Build Hub.md`. Contracts = `contracts/` notes (C1–C8). Engin
 ## Where things go (one obvious answer each)
 | Want to add… | Go to | Read its AGENTS.md, then |
 |---|---|---|
-| a new **node-type** (process/content/presentation) | `nodes/<name>.py` | declare VERSION/KIND/PORTS + `run`; drop it in; it self-registers (auto-discovered) |
+| a new **node-type** (process/content/presentation) | `nodes/<name>.py` | declare VERSION/KIND/PORTS + `run`; drop it in; it self-registers (auto-discovered). If it reads **mutable truth** (repo, index, model-of-someone, clock) → also `VOLATILE=True` or the memo gate freezes it |
 | a new **model / provider** | `fabric/config.py` | repoint `DEFAULT_BASE_URL` / register; `transport.list_models` exposes them |
 | a new **storage backend** | `store/` | implement the Resolver Protocol (C4); add a backfill |
 | a new **RHM action verb** | `runtime/suite.py` | add to `RHM_VERBS` + `_parse_rhm_action` + `_dispatch_rhm_action`; whitelist-gated |
