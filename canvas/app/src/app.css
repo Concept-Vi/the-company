@@ -37,6 +37,13 @@ button.b:hover{box-shadow:0 0 18px -4px var(--sig)}
 button.b.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
 button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 
+.notice{margin-left:8px;color:var(--dim);font-size:10px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.palette{top:64px;left:12px;width:158px;background:rgba(16,20,19,.96);border:1px solid var(--line);
+  border-radius:6px;padding:11px;max-height:calc(100vh - 90px);overflow:auto}
+.pchip{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:6px 8px;margin:4px 0;
+  background:var(--bg);border:1px solid var(--line);border-radius:3px;cursor:pointer;font-size:11px;color:var(--ink)}
+.pchip:hover{border-color:var(--sig);color:var(--sig)}
+.pchip .pk{color:var(--dim);font-size:8px;letter-spacing:.14em;text-transform:uppercase}
 .panel{top:64px;right:12px;width:330px;background:rgba(16,20,19,.96);border:1px solid var(--line);
   border-radius:6px;padding:13px;max-height:calc(100vh - 90px);overflow:auto}
 .panel h3{font-family:"Fraunces",serif;font-weight:600;font-size:14px;color:var(--sig);margin:0 0 9px}

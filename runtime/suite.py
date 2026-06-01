@@ -65,8 +65,24 @@ class Suite:
     def connect(self, graph_id: str, from_node: str, from_port: str,
                 to_node: str, to_port: str) -> None:
         g = self._load(graph_id)
+        byid = {n.id: n for n in g.nodes}
+        if from_node not in byid or to_node not in byid:
+            raise KeyError(f"connect: unknown node ({from_node!r} -> {to_node!r})")
+        ft = self.registry.types.get(byid[from_node].type)
+        tt = self.registry.types.get(byid[to_node].type)
+        out_t = ft.ports.outputs.get(from_port) if ft else None
+        in_t = tt.ports.inputs.get(to_port) if tt else None
+        if out_t and in_t and "Any" not in (out_t, in_t) and out_t != in_t:   # type-check, fail loud
+            raise ValueError(
+                f"type mismatch: {from_node}.{from_port}:{out_t} → {to_node}.{to_port}:{in_t}")
         g.edges.append(Edge(from_node=from_node, from_port=from_port,
                             to_node=to_node, to_port=to_port))
+        self.store.save_graph(g)
+
+    def delete_node(self, graph_id: str, node_id: str) -> None:
+        g = self._load(graph_id)
+        g.nodes = [n for n in g.nodes if n.id != node_id]
+        g.edges = [e for e in g.edges if e.from_node != node_id and e.to_node != node_id]
         self.store.save_graph(g)
 
     def set_config(self, graph_id: str, node_id: str, config: dict) -> None:

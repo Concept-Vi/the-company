@@ -61,6 +61,13 @@ def connect(graph: str, from_node: str, from_port: str, to_node: str, to_port: s
 
 
 @mcp.tool()
+def delete_node(graph: str, node: str) -> str:
+    """Remove `node` from `graph` along with any edges touching it."""
+    SUITE.delete_node(graph, node)
+    return "ok"
+
+
+@mcp.tool()
 def set_config(graph: str, node: str, config: dict) -> str:
     """Update a node's config in `graph`."""
     SUITE.set_config(graph, node, dict(config))

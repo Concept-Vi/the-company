@@ -78,6 +78,19 @@ class H(BaseHTTPRequestHandler):
                 b = self._body()
                 SUITE.set_config(DEMO, b.get("node"), b.get("config", {}))
                 self._send(200, json.dumps(SUITE.state(DEMO)))
+            # --- on-canvas composition ---
+            elif self.path == "/api/node":              # add a node from the palette
+                b = self._body()
+                nid = SUITE.create_node(DEMO, b["type"], b.get("config", {}))
+                self._send(200, json.dumps({"id": nid, "state": SUITE.state(DEMO)}))
+            elif self.path == "/api/connect":           # wire two nodes (type-checked)
+                b = self._body()
+                SUITE.connect(DEMO, b["from_node"], b["from_port"], b["to_node"], b["to_port"])
+                self._send(200, json.dumps(SUITE.state(DEMO)))
+            elif self.path == "/api/delete-node":
+                b = self._body()
+                SUITE.delete_node(DEMO, b["node"])
+                self._send(200, json.dumps(SUITE.state(DEMO)))
             # --- build-dispatch (self-growth), operable from the operator's UI ---
             elif self.path == "/api/propose":          # agent/operator dispatches a build
                 b = self._body()

@@ -16,6 +16,13 @@ const api = {
     fetch('/api/resolve', { method: 'POST', headers: J, body: JSON.stringify({ id, choice }) }).then(r => r.json()),
   apply: (id: string) =>
     fetch('/api/apply', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(r => r.json()),
+  objectInfo: () => fetch('/api/object_info').then(r => r.json()),
+  addNode: (type: string) =>
+    fetch('/api/node', { method: 'POST', headers: J, body: JSON.stringify({ type }) }).then(r => r.json()),
+  connect: (e: any) =>
+    fetch('/api/connect', { method: 'POST', headers: J, body: JSON.stringify(e) }).then(r => r.json()),
+  del: (node: string) =>
+    fetch('/api/delete-node', { method: 'POST', headers: J, body: JSON.stringify({ node }) }).then(r => r.json()),
 }
 
 // ---------------------------------------------------------------- the node shape (one generic kind)
@@ -140,15 +147,38 @@ function Hud() {
   const [surf, setSurf] = useState<any>(null)
   const [growMsg, setGrowMsg] = useState('the brain writes it · you approve · it goes live.')
   const [workshop, setWorkshop] = useState<any>(null)
+  const [oinfo, setOinfo] = useState<any>({})
+  const [notice, setNotice] = useState('')
 
   // load once
   useState(() => {
+    ;(window as any).__editor = editor   // automation/debug handle
     ;(async () => {
       const g = await loadGraph(editor); setEdges(g.edges || [])
       setTypes(await api.types())
+      setOinfo(await api.objectInfo())
     })()
     return null
   })
+
+  async function reload() { const g = await loadGraph(editor); setEdges(g.edges || []) }
+  async function addNode(type: string) { setNotice('+ ' + type); await api.addNode(type); await reload() }
+  async function wireSelected() {
+    const sel = (editor.getSelectedShapes().filter(s => s.type === 'node') as NodeShape[])
+    if (sel.length !== 2) { setNotice('select exactly two nodes to wire (left → right)'); return }
+    const [a, b] = [...sel].sort((p, q) => p.x - q.x)
+    const outs = Object.keys(oinfo[a.props.nodeType]?.ports?.outputs || {})
+    const ins = Object.keys(oinfo[b.props.nodeType]?.ports?.inputs || {})
+    if (!outs.length || !ins.length) { setNotice('those node-types have no compatible ports'); return }
+    const r = await api.connect({ from_node: a.props.nodeId, from_port: outs[0], to_node: b.props.nodeId, to_port: ins[0] })
+    if (r.error) setNotice('✕ ' + r.error)
+    else { setNotice(`wired ${a.props.nodeId}.${outs[0]} → ${b.props.nodeId}.${ins[0]}`); await reload() }
+  }
+  async function deleteSelected() {
+    const sel = (editor.getSelectedShapes().filter(s => s.type === 'node') as NodeShape[])
+    for (const s of sel) await api.del(s.props.nodeId)
+    if (sel.length) { setNotice(`deleted ${sel.length} node(s)`); await reload() }
+  }
 
   const selected = useValue('sel', () => {
     const s = editor.getOnlySelectedShape()
@@ -179,7 +209,20 @@ function Hud() {
       <div className="hud toolbar">
         <span className="title">the&nbsp;<em>company</em></span>
         <button className="b" onClick={doRun} disabled={running}>{running ? 'running…' : '▶ run'}</button>
-        <button className="b ghost" onClick={async () => { const g = await loadGraph(editor); setEdges(g.edges || []) }}>reload</button>
+        <button className="b ghost" onClick={wireSelected}>＋ wire</button>
+        <button className="b ghost" onClick={deleteSelected}>🗑 delete</button>
+        <button className="b ghost" onClick={reload}>reload</button>
+        {notice && <span className="notice">{notice}</span>}
+      </div>
+
+      <div className="hud palette">
+        <h3>palette</h3>
+        <div className="muted" style={{ marginBottom: 8 }}>click to add · select 2 + “wire”</div>
+        {Object.keys(oinfo).sort().map(t => (
+          <div key={t} className="pchip" onClick={() => addNode(t)}>
+            <span>+ {t}</span><span className="pk">{oinfo[t]?.kind || ''}</span>
+          </div>
+        ))}
       </div>
 
       <div className="hud panel">
