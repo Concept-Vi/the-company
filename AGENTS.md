@@ -1,6 +1,6 @@
 # AGENTS.md — read this first
 
-You are an AI agent working on **company** — the Vi composition suite. There are **no human developers**; this codebase is built and grown entirely by AI. It is therefore designed to be **navigable and extensible by you**. Read this, then read `MAP.md`, then the `AGENTS.md` of whatever module you're working in.
+You are an AI agent working on **company** — the Vi composition suite. There are **no human developers**; this codebase is built and grown entirely by AI. It is therefore designed to be **navigable and extensible by you**. Orientation order: **this** (the rules) → `MAP.md` (the structure + the live registry of what exists) → `STATE.md` (the current status: what's built + proven, what cannot be done yet, how to run + verify, the gotchas) → the `AGENTS.md` of whatever module you're working in. After those four you should be able to act correctly without re-deriving anything.
 
 ## Source of truth
 The **specs live in the vault**, not in code comments:
