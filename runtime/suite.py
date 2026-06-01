@@ -408,6 +408,43 @@ class Suite:
     def chat_history(self, limit: int = 40) -> list:
         return self.store.chat_history(limit)
 
+    # --- the inbox: chief-of-staff triage (F1-F2) + the decision-compiler UP (C2-C3) ---
+    def inbox_lanes(self) -> dict:
+        """Three lanes (context-05): live escalations (pending, need the operator), resolved-for-you
+        (already handled — audit), and batched walkthroughs (pending grouped by theme)."""
+        items = self.inbox.list()
+        escalations = [d for d in items if d.get("resolved") is None]
+        resolved = [d for d in items if d.get("resolved") is not None]
+        batched: dict = {}
+        for d in escalations:
+            batched.setdefault(d["action"], []).append(d["id"])
+        return {
+            "live_escalations": escalations,                       # the irreducible — brought as COA
+            "resolved_for_you": resolved,                          # logged for audit; needn't be worked
+            "batched": {k: v for k, v in batched.items() if len(v) > 1},  # themes to handle in one sitting
+            "counts": {"escalations": len(escalations), "resolved": len(resolved)},
+        }
+
+    def coa(self, surfaced_id: str) -> dict:
+        """Decision-compiler UP: translate a raw technical decision into a Commander-altitude
+        value-choice — what it means, 2-3 options with trade-offs, + a recommendation. The raw
+        payload stays DRILLABLE (F2); the operator decides on value, never the raw fork (C2)."""
+        d = self.inbox.get(surfaced_id)
+        if not d:
+            raise KeyError(f"no surfaced decision {surfaced_id!r}")
+        from fabric import client, transport
+        cfg = self.rhm_config()
+        sys_p = (
+            "You are the right-hand-man's decision-compiler. Translate a raw technical decision into a "
+            "COMMANDER-ALTITUDE value choice for the operator: (1) what it means for the system in plain "
+            "terms, (2) 2-3 options with their trade-offs, (3) a clear RECOMMENDATION with a one-line why. "
+            "Never make raw code the choice — the operator decides on value, not implementation. Be concise.")
+        user = f"Decision class: {d['action']}. Default if ignored: {d.get('default')}. Payload: {d['payload']}"
+        framing = client.complete(transport.openai_transport(base_url=cfg["base_url"]),
+                                  [{"role": "system", "content": sys_p},
+                                   {"role": "user", "content": user}], model=cfg["model"])
+        return {"id": surfaced_id, "class": d["action"], "framing": framing, "raw": d["payload"]}
+
     # --- self-growth: build-dispatch (the "direct its growth" half of the first purpose) ---
     @staticmethod
     def _safe_node_name(name: str) -> str:

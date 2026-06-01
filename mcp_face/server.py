@@ -133,6 +133,12 @@ def chat(message: str, graph: str) -> dict:
     return SUITE.chat(message, graph)
 
 
+@mcp.tool()
+def inbox() -> dict:
+    """The chief-of-staff inbox triaged into lanes: live escalations, resolved-for-you, batched."""
+    return SUITE.inbox_lanes()
+
+
 # NOTE: resolve_surfaced (operator approval) is deliberately NOT exposed on this face — only the
 # UI/operator channel may approve a CONFIRM, so the proposing agent cannot self-approve its code-build.
 

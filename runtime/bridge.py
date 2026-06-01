@@ -74,6 +74,8 @@ class H(BaseHTTPRequestHandler):
             self._send(200, json.dumps(SUITE.chat_history(40)))
         elif self.path == "/api/rhm-config":
             self._send(200, json.dumps(SUITE.rhm_config()))
+        elif self.path == "/api/inbox":
+            self._send(200, json.dumps(SUITE.inbox_lanes()))
         else:
             self._send(404, "{}")
 
@@ -109,6 +111,9 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/rhm-config":          # configure model/provider + persona
                 b = self._body()
                 self._send(200, json.dumps(SUITE.set_rhm_config(b)))
+            elif self.path == "/api/coa":                 # decision-compiler UP — value-framing
+                b = self._body()
+                self._send(200, json.dumps(SUITE.coa(b["id"])))
             # --- build-dispatch (self-growth), operable from the operator's UI ---
             elif self.path == "/api/propose":          # agent/operator dispatches a build
                 b = self._body()

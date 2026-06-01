@@ -33,6 +33,8 @@ const api = {
   rhmConfig: () => fetch('/api/rhm-config').then(r => r.json()),
   setRhmConfig: (updates: any) =>
     fetch('/api/rhm-config', { method: 'POST', headers: J, body: JSON.stringify(updates) }).then(r => r.json()),
+  inbox: () => fetch('/api/inbox').then(r => r.json()),
+  coa: (id: string) => fetch('/api/coa', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(r => r.json()),
 }
 
 const MODES = ['listening', 'text-only', 'background', 'focus', 'walkthrough', 'watch-and-react', 'decide-for-me', 'off']
@@ -182,9 +184,16 @@ function Hud() {
   const [chatBusy, setChatBusy] = useState(false)
   const [cfg, setCfg] = useState<any>({ model: '', persona: '' })
   const [cfgOpen, setCfgOpen] = useState(false)
+  const [inbox, setInbox] = useState<any>({ live_escalations: [], resolved_for_you: [], counts: { escalations: 0, resolved: 0 } })
+  const [drill, setDrill] = useState(false)
 
   async function poll() {
-    try { setNow(await api.now()); setEvents(await api.events()) } catch { /* bridge transient */ }
+    try { setNow(await api.now()); setEvents(await api.events()); setInbox(await api.inbox()) } catch { /* bridge transient */ }
+  }
+  async function openCoa(id: string) {
+    setGrowMsg('compiling the decision into a value-choice…')
+    const c = await api.coa(id)            // decision-compiler UP
+    setSurf({ id: c.id, name: c.raw?.name, code: c.raw?.code, coa: c.framing }); setDrill(false)
   }
 
   // load once + a heartbeat so the surfaces stay live (now-view · presence · event log)
@@ -336,6 +345,18 @@ function Hud() {
           </>
         ) : <div className="muted">select a node to inspect it. pan/zoom the canvas; zoom in for detail (semantic zoom).</div>}
 
+        <h3 style={{ marginTop: 18 }}>inbox · chief-of-staff triage</h3>
+        <div className="ibx-head">
+          <span className="sig">{inbox.counts?.escalations || 0} awaiting you</span>
+          <span className="muted"> · {inbox.counts?.resolved || 0} resolved-for-you</span>
+        </div>
+        {(inbox.live_escalations || []).map((d: any) => (
+          <div key={d.id} className="ibx-item" onClick={() => openCoa(d.id)}>
+            ⚠ {d.action} · {d.payload?.name || d.id} <span className="muted">— compile ↗</span>
+          </div>
+        ))}
+        {(inbox.counts?.escalations || 0) === 0 && <div className="muted">nothing awaiting you.</div>}
+
         <h3 style={{ marginTop: 18 }}>grow · teach a new node</h3>
         <input placeholder="node name (e.g. wordcount)" value={gname} onChange={e => setGname(e.target.value)} />
         <input placeholder="what it should do" value={gspec} onChange={e => setGspec(e.target.value)} />
@@ -344,9 +365,15 @@ function Hud() {
         {surf && !surf.error && (
           <div className="surf">
             <div className="shd">⚠ surfaced for your approval · {surf.id}</div>
-            <pre>{surf.code}</pre>
+            {surf.coa
+              ? <>
+                  <div className="coa">{surf.coa}</div>
+                  <button className="b ghost sm" onClick={() => setDrill(d => !d)}>{drill ? '⌃ hide raw draft' : '⌄ drill to the raw draft'}</button>
+                  {drill && <pre>{surf.code}</pre>}
+                </>
+              : <pre>{surf.code}</pre>}
             <button className="b" onClick={approveApply}>✓ approve &amp; apply</button>
-            <button className="b ghost" onClick={() => { api.resolve(surf.id, 'reject'); setSurf(null); setGrowMsg('rejected.') }}>✕ reject</button>
+            <button className="b ghost" onClick={() => { api.resolve(surf.id, 'reject'); setSurf(null); setGrowMsg('rejected.'); poll() }}>✕ reject</button>
           </div>
         )}
         {!surf && <div className="muted" style={{ marginTop: 8 }}>{growMsg}</div>}
