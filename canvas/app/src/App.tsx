@@ -230,7 +230,7 @@ function Hud() {
       const selected = (editor.getSelectedShapes().filter(s => s.type === 'node') as NodeShape[]).map(s => s.props.nodeId)
       const r = await api.chat(m, { selected }); setChat(r.history); await poll()
       // the decision-compiler DOWN: an action the RHM took routes through the gate
-      if (r.action?.did === 'run') { await reload() }
+      if (r.action?.did === 'run' || r.action?.did === 'build') { await reload() }
       if (r.action?.did === 'propose') {
         const all = await fetch('/api/surfaced').then(x => x.json())
         const d = all.find((x: any) => x.id === r.action.surfaced)

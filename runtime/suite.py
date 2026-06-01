@@ -290,12 +290,13 @@ class Suite:
 
     # The RHM signals intent with a trailing `ACTION:` line; the dispatcher enforces a
     # WHITELIST so the conversational surface can never reach apply/delete/file-write (E6).
-    RHM_VERBS = ("run", "propose")
+    RHM_VERBS = ("run", "propose", "build")
 
     @staticmethod
     def _parse_rhm_action(reply: str):
         """Split a reply into (shown_text, action|None). Action lines:
-        `ACTION: run` · `ACTION: propose <name> :: <spec>`."""
+        `ACTION: run` · `ACTION: propose <name> :: <spec>` · `ACTION: build <json pipeline>`."""
+        import json as _j
         lines = reply.rstrip().splitlines()
         if not lines:
             return reply, None
@@ -309,6 +310,12 @@ class Suite:
         if verb == "propose":
             name, _, spec = rest.partition("::")
             return shown, {"verb": "propose", "name": name.strip(), "spec": spec.strip()}
+        if verb == "build":
+            try:
+                steps = _j.loads(rest)
+            except Exception:
+                steps = None
+            return shown, {"verb": "build", "steps": steps}
         return shown, {"verb": verb}
 
     def _dispatch_rhm_action(self, action: dict, graph_id: str) -> dict:
@@ -324,6 +331,27 @@ class Suite:
                 p = self.propose_node(name, spec)        # surfaces for OPERATOR approval (CONFIRM)
                 return {"did": "propose", "surfaced": p["id"], "name": name}
             return {"did": "none", "refused": "propose needs '<name> :: <spec>'"}
+        if verb == "build":
+            # symmetric agency / NL→graph: compose a pipeline on the canvas. Only create_node +
+            # connect (AUTO, reversible — exactly what the operator can do), never apply/delete.
+            steps = action.get("steps")
+            if not isinstance(steps, list):
+                return {"did": "none", "refused": "build needs a JSON list of steps"}
+            local, made, edges = {}, [], []
+            try:
+                for step in steps:
+                    if "type" in step:
+                        nid = self.create_node(graph_id, step["type"], config=step.get("config", {}))
+                        local[step.get("as", nid)] = nid
+                        made.append(nid)
+                    elif "wire" in step:
+                        lhs, _, rhs = step["wire"].partition("->")
+                        fa, _, fp = lhs.strip().partition("."); ta, _, tp = rhs.strip().partition(".")
+                        self.connect(graph_id, local.get(fa, fa), fp, local.get(ta, ta), tp)
+                        edges.append(step["wire"])
+            except Exception as e:                        # bad type/port → fail the build loudly, no half-claim
+                return {"did": "build", "error": f"{type(e).__name__}: {e}", "nodes": made, "edges": edges}
+            return {"did": "build", "nodes": made, "edges": edges}
         return {"did": "none",
                 "refused": f"verb {verb!r} is not permitted from the RHM — only {self.RHM_VERBS} "
                            "(apply/delete/file-write are operator-gated)"}
@@ -352,9 +380,16 @@ class Suite:
             "You can ACT on the system, but only through governed verbs. When the operator asks you to do "
             "something you're capable of, append EXACTLY ONE final line:\n"
             "  ACTION: run                         (recompute the current graph)\n"
-            "  ACTION: propose <name> :: <spec>    (draft a new node for the operator to approve)\n"
-            "Proposing only DRAFTS a node — the operator must approve it before it goes live. You CANNOT "
-            "apply, delete, or write files yourself. Never append an ACTION line unless asked to act."
+            "  ACTION: propose <name> :: <spec>    (draft a NEW node-type for the operator to approve)\n"
+            "  ACTION: build <json>                (compose a pipeline on the canvas from EXISTING types)\n"
+            "build's <json> is a list of steps, each either a node "
+            '{"as":"a","type":"<existing type>","config":{...}} or a wire {"wire":"a.port -> b.port"} '
+            "(reference nodes by their 'as' name). Use build to turn a described pipeline into real nodes "
+            "wired on the canvas. Use the available node-types listed in the state; if a needed type does "
+            "not exist, propose it first.\n"
+            "Proposing only DRAFTS a node-type (operator must approve before it goes live). build only adds/"
+            "wires nodes (reversible, like the operator does). You CANNOT apply, delete, or write files "
+            "yourself. Never append an ACTION line unless asked to act."
         )
         msgs = [{"role": "system", "content": sys_p + "\n\n" + self._chat_context(graph_id, focus)}]
         for t in self.store.chat_history(20):
