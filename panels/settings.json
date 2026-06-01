@@ -24,10 +24,20 @@
       "type": "select",
       "target": "model",
       "options": [
-        "gpt-4",
-        "gpt-3.5-turbo",
-        "claude-3-5-sonnet",
-        "claude-3-opus"
+        "huihui_ai/qwen3-vl-abliterated:30b-a3b",
+        "gemma4-26b-a4b-q3km:latest",
+        "qwen3.6-35b-a3b-q3km:latest",
+        "qwen3.6-27b-q3km:latest",
+        "nomic-embed-text:latest",
+        "gemma4:31b-cloud",
+        "nemotron-3-super:cloud",
+        "deepseek-v4-flash:cloud",
+        "deepseek-v4-pro:cloud",
+        "kimi-k2.6:cloud",
+        "glm-5.1:cloud",
+        "glm-5:cloud",
+        "qwen3.5:397b-cloud",
+        "kimi-k2.5:cloud"
       ]
     }
   ]

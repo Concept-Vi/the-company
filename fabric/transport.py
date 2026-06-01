@@ -12,6 +12,19 @@ import urllib.request
 from fabric.config import DEFAULT_BASE_URL, forbid_gemini
 
 
+def list_models(base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama", timeout: int = 8) -> list:
+    """The REAL registered models at this endpoint (OpenAI /v1/models). Source of truth so the
+    self-coding brain never invents model names — it picks from what actually exists. NO Gemini."""
+    req = urllib.request.Request(
+        base_url.rstrip("/") + "/models",
+        headers={"Authorization": f"Bearer {api_key}"},
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        data = json.loads(r.read())
+    ids = [m.get("id") for m in (data.get("data") or []) if m.get("id")]
+    return [m for m in ids if "gemini" not in m.lower()]
+
+
 def openai_transport(base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama", timeout: int = 120):
     """Build a transport bound to an OpenAI-compatible endpoint."""
     def transport(model: str, messages: list, **opts) -> str:

@@ -51,6 +51,101 @@ class Suite:
         except Exception:
             pass
 
+    # --- the capability registry: the source of truth the brain authors FROM (never invents) ---
+    _models_cache: list | None = None
+
+    def available_models(self) -> list:
+        """The REAL models registered at the fabric endpoint — so the brain picks from what exists
+        instead of inventing names. Cached; falls back to the configured brain if the endpoint is down."""
+        if self._models_cache is None:
+            from fabric import transport, config as fcfg
+            try:
+                self._models_cache = transport.list_models(fcfg.DEFAULT_BASE_URL) or [fcfg.DEFAULT_BRAIN]
+            except Exception:
+                self._models_cache = [fcfg.DEFAULT_BRAIN]
+        return self._models_cache
+
+    def capabilities(self) -> dict:
+        """One snapshot of WHAT EXISTS — fed into every authoring prompt + every registered select,
+        so the correct values are the easy path and nothing is guessed. The reflective fold."""
+        return {
+            "node_types": sorted(self.registry.types),
+            "models": self.available_models(),
+            "modes": list(self.MODES),
+            "rhm_verbs": list(self.RHM_VERBS),
+            "panels": [p.get("id") for p in self.list_panels()],
+            "panel_field_targets": list(self.PANEL_TARGETS),
+            "api_verbs": ["/api/run", "/api/now", "/api/chat", "/api/graph", "/api/types",
+                          "/api/object_info", "/api/events", "/api/inbox", "/api/panels"],
+        }
+
+    def _authoring_preamble(self) -> str:
+        """Put the registry on the brain's easy path so the correct values are effortless and nothing
+        is invented — and make ASKING the easy path when something needed isn't registered."""
+        cap = self.capabilities()
+        return ("REGISTERED VALUES — author using ONLY these; do NOT invent anything not listed:\n"
+                f"- models: {cap['models']}\n- modes: {cap['modes']}\n- node-types: {cap['node_types']}\n"
+                f"- api verbs (for fetch): {cap['api_verbs']}\n"
+                "If doing this correctly REQUIRES a value or capability NOT in these lists, do NOT make one "
+                "up — output EXACTLY one line and nothing else: NEEDS: <what you need, and why>.")
+
+    @staticmethod
+    def _slug(name: str) -> str:
+        """Normalize the brain's natural name ('Model Selector' → 'model_selector') so the correct
+        path is easy. But a PATH-like name (/, .., \\) is a traversal attempt, not a name — reject it
+        rather than silently sanitizing an attack into a node. (_safe_node_name guards again after.)"""
+        import re
+        if name and ("/" in name or "\\" in name or ".." in name):
+            raise ValueError(f"unsafe name {name!r} — looks like a path, not a name")
+        s = re.sub(r"[^a-z0-9]+", "_", (name or "").lower()).strip("_")
+        if not s or s[0].isdigit():
+            s = "x_" + s
+        return s
+
+    @staticmethod
+    def _needs(text: str):
+        t = (text or "").strip()
+        return t[len("NEEDS:"):].strip() if t.upper().startswith("NEEDS:") else None
+
+    def _ask_operator(self, question: str, context: str = "") -> str:
+        """The brain hit unregistered ground → ASK the operator (surfaced question) instead of
+        fabricating. Confabulation is as bad as failing (Tim) — this makes asking the easy path."""
+        sid = self.inbox.surface("question", {"question": question, "context": context}, default="reject")
+        self._emit("ask", f"the system needs input: {question[:60]}", surfaced=sid)
+        return sid
+
+    def refresh_map(self) -> None:
+        """The reflective fold: regenerate the auto-maintained registry block of MAP.md from the
+        LIVE registry, so the map maintains itself and never drifts for capabilities (Tim's
+        'maintains'). Called on every apply/revert. Fails silently only if the markers are absent."""
+        import re
+        path = os.path.join(self._repo_root, "MAP.md")
+        if not os.path.exists(path):
+            return
+        cap = self.capabilities()
+        block = ("<!--REGISTRY:START--> (auto-maintained by Suite.refresh_map on every apply — do not hand-edit)\n"
+                 f"- **node-types** ({len(cap['node_types'])}): {', '.join(cap['node_types'])}\n"
+                 f"- **RHM verbs**: {', '.join(cap['rhm_verbs'])}\n"
+                 f"- **panels**: {', '.join(cap['panels']) or '(none)'}\n"
+                 f"- **models** (from the fabric registry): {', '.join(cap['models'])}\n"
+                 "<!--REGISTRY:END-->")
+        text = open(path, encoding="utf-8").read()
+        new = re.sub(r"<!--REGISTRY:START-->.*?<!--REGISTRY:END-->", lambda _m: block, text, flags=re.S)
+        if new != text:
+            open(path, "w", encoding="utf-8").write(new)
+
+    def map_drift(self) -> dict:
+        """What's REGISTERED but missing from MAP.md — so the map can't silently rot (Tim's
+        'maintains'). A failing drift-check is the reflective fold's enforcement: the system
+        notices when the map no longer describes itself. Fail loud, never silent."""
+        map_path = os.path.join(self._repo_root, "MAP.md")
+        text = open(map_path, encoding="utf-8").read().lower() if os.path.exists(map_path) else ""
+        node_types = [t for t in self.registry.types if t.lower() not in text]
+        verbs = [v for v in self.RHM_VERBS if v.lower() not in text]
+        surfaces = [s for s in ("panels", "extensions", "self-cod", "registry", "right-hand-man")
+                    if s not in text]
+        return {"node_types": node_types, "rhm_verbs": verbs, "surfaces": surfaces}
+
     # --- introspection (reads) ---
     def list_types(self) -> list[str]:
         return sorted(self.registry.types)
@@ -336,7 +431,7 @@ class Suite:
                  "below. Cite the relevant file. If the answer is not in the source, say so plainly. Concise.")
         ans = client.complete(transport.openai_transport(base_url=cfg["base_url"]),
                               [{"role": "system", "content": sys_p},
-                               {"role": "user", "content": f"SOURCE:\n{src[:150000]}\n\nQUESTION: {query}"}],
+                               {"role": "user", "content": f"SOURCE:\n{src[:380000]}\n\nQUESTION: {query}"}],
                               model=cfg["model"])
         return {"answer": ans}
 
@@ -388,6 +483,8 @@ class Suite:
             name, spec = action.get("name"), action.get("spec")
             if name and spec:
                 p = self.propose_node(name, spec)        # surfaces for OPERATOR approval (CONFIRM)
+                if p.get("needs"):
+                    return {"did": "ask", "surfaced": p["id"], "needs": p["needs"]}
                 return {"did": "propose", "surfaced": p["id"], "name": name}
             return {"did": "none", "refused": "propose needs '<name> :: <spec>'"}
         if verb == "consult":
@@ -409,12 +506,16 @@ class Suite:
             name, spec = action.get("name"), action.get("spec")
             if name and spec:
                 p = self.propose_panel(name, spec)
+                if p.get("needs"):
+                    return {"did": "ask", "surfaced": p["id"], "needs": p["needs"]}
                 return {"did": "panel", "surfaced": p["id"], "name": name}
             return {"did": "none", "refused": "panel needs '<name> :: <spec>'"}
         if verb == "extend":
             name, spec = action.get("name"), action.get("spec")
             if name and spec:
                 p = self.propose_extension(name, spec)       # arbitrary code → build-gate → operator approves
+                if p.get("needs"):
+                    return {"did": "ask", "surfaced": p["id"], "needs": p["needs"]}
                 return {"did": "extend", "surfaced": p["id"], "name": name}
             return {"did": "none", "refused": "extend needs '<name> :: <spec>'"}
         if verb == "build":
@@ -501,6 +602,9 @@ class Suite:
         outcome = self._dispatch_rhm_action(action, graph_id) if action else None
         if outcome and outcome.get("did") == "consult":   # fold the looked-up answer into the turn
             reply = (reply + "\n\n📖 " + outcome["answer"]).strip()
+        if outcome and outcome.get("did") == "ask":        # asked instead of fabricating (PoLR)
+            reply = (reply + "\n\n❓ That needs something not in the registry, so I'm asking rather than "
+                     "guessing: " + outcome["needs"] + " — surfaced for you in the inbox.").strip()
         # provenance grading (B3): Tim's words are gold (train the twin); the twin's are working
         self.store.append_chat({"role": "user", "text": message, "grade": self._provenance_grade("user")})
         self.store.append_chat({"role": "assistant", "text": reply, "action": outcome,
@@ -585,7 +689,8 @@ class Suite:
         """The agent asks the brain to WRITE a new node module, then SURFACES it as a CONFIRM
         decision for the operator. It is NOT applied here. Returns {id, name, code}.
         (Proposing is safe — a model call + a surfaced gate; applying needs operator approval.)"""
-        self._safe_node_name(name)                          # reject path-traversal up front
+        name = self._slug(name)                             # natural name -> safe identifier (PoLR)
+        self._safe_node_name(name)                          # reject path-traversal after
         from fabric import client, transport, config as fcfg
         sys_p = ("You write ONE Python node module for the 'company' composition engine. "
                  "Output ONLY raw Python — no prose, no markdown fences.")
@@ -598,9 +703,13 @@ class Suite:
             "Use PORTS_IN={'text':'Text'} and PORTS_OUT={'text':'Text'} unless the spec needs otherwise. "
             "Output ONLY the code.")
         t = transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL)
-        code = _tag_system_origin(_strip_fences(client.complete(
-            t, [{"role": "system", "content": sys_p}, {"role": "user", "content": user_p}],
-            model=model or fcfg.DEFAULT_BRAIN)))
+        raw = _strip_fences(client.complete(
+            t, [{"role": "system", "content": sys_p + "\n\n" + self._authoring_preamble()},
+                {"role": "user", "content": user_p}], model=model or fcfg.DEFAULT_BRAIN))
+        need = self._needs(raw)
+        if need:
+            return {"needs": need, "id": self._ask_operator(need, f"while building node '{name}': {spec}")}
+        code = _tag_system_origin(raw)
         sid = self.inbox.surface("code_build", {"name": name, "code": code}, default="reject")
         self._emit("grow", f"brain wrote a '{name}' node — surfaced for approval", node_name=name, surfaced=sid)
         return {"id": sid, "name": name, "code": code}
@@ -626,6 +735,7 @@ class Suite:
         sha = self._git_self_commit([path], f"add node-type '{name}'")   # git = the rollback safety net
         self._emit("apply", f"approved + applied '{name}' — now a live node-type"
                    + (f" · {sha[:8]}" if sha else ""), node_name=name, commit=sha)
+        self.refresh_map()
         return path
 
     # --- self-modification safety net (slice 13): additive + git-reversible ---
@@ -672,6 +782,7 @@ class Suite:
         head = subprocess.run(["git", "-C", self._repo_root, "rev-parse", "HEAD"],
                               capture_output=True, text=True).stdout.strip()
         self._emit("revert", f"rolled back self-change {sha[:8]}", reverted=sha, commit=head)
+        self.refresh_map()
         return {"reverted": sha, "head": head}
 
     # --- UI extension point (slice 14): brain-authored DECLARATIVE panels added through the UI ---
@@ -679,6 +790,14 @@ class Suite:
     # NOT arbitrary interface code. Additive + git-reversible. Fields edit only real config.
     PANEL_TARGETS = ("mode", "model", "persona")
     PANEL_FIELD_TYPES = ("select", "text")
+
+    def _registered_options(self, target: str) -> list:
+        """The authoritative options for a registered target — from the registry, never invented."""
+        if target == "mode":
+            return list(self.MODES)
+        if target == "model":
+            return self.available_models()
+        return []                                            # persona = free text
 
     def list_panels(self) -> list:
         import json as _j
@@ -696,6 +815,7 @@ class Suite:
     def propose_panel(self, name: str, spec: str, model: str | None = None) -> dict:
         """The brain AUTHORS a declarative panel definition (it chooses the fields + wiring), surfaced
         as a ui_panel CONFIRM. NOT arbitrary code — a definition a generic renderer displays."""
+        name = self._slug(name)
         self._safe_node_name(name)
         import json as _j
         from fabric import client, transport, config as fcfg
@@ -704,11 +824,18 @@ class Suite:
                  '"type": "select"|"text", "target": "mode"|"model"|"persona", "options": [str] (select only)}]}. '
                  'Each field\'s target is the REAL config it edits: mode (presence mode), model (the RHM model), '
                  'persona (the RHM voice). Choose the fields that fit the request.')
-        user = (f"Panel name: {name}. Request: {spec}. The 8 modes are: listening, text-only, background, "
-                "focus, walkthrough, watch-and-react, decide-for-me, off.")
+        cap = self.capabilities()
+        user = (f"Panel name: {name}. Request: {spec}.\nUse ONLY these REGISTERED values — do not invent any:\n"
+                f"- modes (for target 'mode'): {cap['modes']}\n"
+                f"- models (for target 'model'): {cap['models']}\n"
+                "For select fields you may omit 'options' — the system fills them from the registry.")
         raw = client.complete(transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL),
-                              [{"role": "system", "content": sys_p}, {"role": "user", "content": user}],
+                              [{"role": "system", "content": sys_p + "\n\n" + self._authoring_preamble()},
+                               {"role": "user", "content": user}],
                               model=model or fcfg.DEFAULT_BRAIN)
+        need = self._needs(raw)
+        if need:
+            return {"needs": need, "id": self._ask_operator(need, f"while building panel '{name}': {spec}")}
         try:
             deftn = _j.loads(_strip_fences(raw))
         except Exception as e:
@@ -732,9 +859,13 @@ class Suite:
         fields = []
         for f in (deftn.get("fields") or []):
             if f.get("type") in self.PANEL_FIELD_TYPES and f.get("target") in self.PANEL_TARGETS:
+                # registered-target options come from the REGISTRY (authoritative) — never the brain's
+                # guess. So a 'model' picker always lists the REAL models, not invented names.
+                reg_opts = self._registered_options(f["target"])
+                opts = reg_opts if (f["type"] == "select" and reg_opts) \
+                    else ([str(o) for o in f.get("options", [])] if f["type"] == "select" else [])
                 fields.append({"key": str(f.get("key", f.get("target"))), "label": str(f.get("label", "")),
-                               "type": f["type"], "target": f["target"],
-                               "options": [str(o) for o in f.get("options", [])] if f["type"] == "select" else []})
+                               "type": f["type"], "target": f["target"], "options": opts})
         clean = {"id": name, "title": str(deftn.get("title", name)), "fields": fields}
         import json as _j
         os.makedirs(self.panels_dir, exist_ok=True)
@@ -745,6 +876,7 @@ class Suite:
         sha = self._git_self_commit([path], f"add UI panel '{name}'")
         self._emit("apply", f"approved + applied '{name}' UI panel" + (f" · {sha[:8]}" if sha else ""),
                    node_name=name, commit=sha)
+        self.refresh_map()
         return path
 
     def apply_surfaced(self, surfaced_id: str) -> dict:
@@ -769,17 +901,21 @@ class Suite:
         """The brain authors a real .tsx React component (arbitrary UI), surfaced as ui_extension
         CONFIRM (operator-only). Constrained: import only from 'react' (so the build-gate can keep
         unresolved-module breaks out); may call fetch('/api/...')."""
+        name = self._slug(name)
         self._safe_node_name(name)
         from fabric import client, transport, config as fcfg
         sys_p = ("You write ONE React component (TSX) that extends the operator interface. Output ONLY the "
                  "code — no prose, no markdown fences. Contract: `export default function " + name +
                  "() { ... }`. You MAY `import { useState, useEffect } from 'react'` — but import from NO "
-                 "other module. You MAY call fetch('/api/...') against the bridge (e.g. /api/now, /api/run, "
-                 "/api/chat) to read or act on the system. Keep it self-contained and small.")
+                 "other module. You MAY call fetch('/api/...') against the bridge to read or act on the "
+                 "system.\n\n" + self._authoring_preamble())
         code = _strip_fences(client.complete(
             transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL),
             [{"role": "system", "content": sys_p}, {"role": "user", "content": f"Build: {spec}"}],
             model=model or fcfg.DEFAULT_BRAIN))
+        need = self._needs(code)
+        if need:                                              # asked instead of fabricating
+            return {"needs": need, "id": self._ask_operator(need, f"while building extension '{name}': {spec}")}
         sid = self.inbox.surface("ui_extension", {"name": name, "code": code}, default="reject")
         self._emit("grow", f"brain authored a '{name}' UI extension — surfaced for approval",
                    node_name=name, surfaced=sid)
@@ -834,6 +970,7 @@ class Suite:
         sha = self._git_self_commit([path], f"add extension '{name}'")
         self._emit("apply", f"approved + applied '{name}' extension (gate passed)"
                    + (f" · {sha[:8]}" if sha else ""), node_name=name, commit=sha)
+        self.refresh_map()
         return {"applied": path, "rejected": False, "commit": sha}
 
     # --- surfaced-decision inbox (D4/D7) ---

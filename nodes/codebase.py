@@ -21,7 +21,7 @@ DEFAULT_GLOBS = ["AGENTS.md", "MAP.md", "README.md",
 def run(inputs: dict, config: dict):
     root = config.get("root") or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # ~/company
     globs = config.get("globs", DEFAULT_GLOBS)
-    max_chars = int(config.get("max_chars", 160000))
+    max_chars = int(config.get("max_chars", 400000))   # bumped as the repo grew (was 160k); past this, retrieval
     parts, total = [], 0
     for g in globs:
         for p in sorted(glob.glob(os.path.join(root, g))):

@@ -80,6 +80,8 @@ class H(BaseHTTPRequestHandler):
             self._send(200, json.dumps(SUITE.last_self_change() or {}))
         elif self.path == "/api/panels":
             self._send(200, json.dumps(SUITE.list_panels()))
+        elif self.path == "/api/capabilities":
+            self._send(200, json.dumps(SUITE.capabilities()))
         else:
             self._send(404, "{}")
 

@@ -139,6 +139,13 @@ def inbox() -> dict:
     return SUITE.inbox_lanes()
 
 
+@mcp.tool()
+def capabilities() -> dict:
+    """The source of truth for WHAT EXISTS — real models, node-types, RHM verbs, panels, api verbs.
+    Author from these; never invent. If you need something not here, ask the operator (don't fabricate)."""
+    return SUITE.capabilities()
+
+
 # NOTE: resolve_surfaced (operator approval) is deliberately NOT exposed on this face — only the
 # UI/operator channel may approve a CONFIRM, so the proposing agent cannot self-approve its code-build.
 

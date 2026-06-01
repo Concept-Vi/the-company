@@ -1,35 +1,58 @@
 # MAP.md — the loadable map
 
-The orientation an agent loads first, and the seed of the **linked code-knowledge** that becomes Tim's click-and-talk surface (the system, navigable as a graph — by agent and by Tim). As the code grows, this map is maintained *by the system about itself* (the reflective fold).
+The orientation an agent loads first, and the seed of the **linked code-knowledge** that becomes Tim's click-and-talk surface. As the code grows, this map is maintained *by the system about itself* (the reflective fold) — and a **drift-check fails loud** (`Suite.map_drift`, `tests/drift_acceptance.py`) when a registered node-type / RHM verb / subsystem isn't reflected here, so it can't silently rot.
 
 ## The one picture
 ```
-  canvas/  ── the surface you operate (tldraw/React/Tauri) ─────────────┐
-     │  composes / sees / works-with                                    │
-     ▼                                                                  │  (the bridge, C8 / contracts/)
-  runtime/ ── reactive scheduler + memo gate + compile + context  ──────┤
-     │  calls                                                           │
-     ▼                                                                  │
-  fabric/  ── the models (LiteLLM + llama-swap + guards) ───────────────┘
-  store/   ── where everything lives, by address (C1/C4)   [under runtime + canvas]
+  canvas/  ── the surface you operate (React + tldraw) ───────────────────┐
+     │  composes / sees / works-with / is EXTENDED through                │
+     ▼                                                                    │  (the bridge, C8 / contracts/)
+  runtime/ ── scheduler + memo + compile + the Suite (the brain) ─────────┤
+     │  calls                                                             │
+     ▼                                                                    │
+  fabric/  ── the models (ollama/LiteLLM, OpenAI-compatible) + guards ────┘
+  store/   ── where everything lives, by address (C1/C4) + events + chat + surfaced + panels
   mcp_face/── the agent face: generic verbs over all of it (C7); shares the Suite with the UI
   nodes/   ── the node library (process · content · presentation), each one C2
+  panels/  ── brain-authored DECLARATIVE UI panels (JSON defs; the 'others' tier of self-mod)
   contracts/ ── the spine: the shapes all of the above compose against (C1–C8)
+  canvas/app/src/extensions/ ── brain-authored ARBITRARY UI components (operator-only; build-gated)
 ```
 
 ## Module map (each links to its constitution + governing contracts)
 | Module | One-line | Constitution | Governs |
 |---|---|---|---|
 | `contracts/` | the pinned shapes (the seams) | `contracts/AGENTS.md` | C1–C8 |
-| `store/` | addressed store + resolver | `store/AGENTS.md` | C1, C4 |
-| `runtime/` | reactive scheduler + memo + compile + context | `runtime/AGENTS.md` | S1, C5, C6 |
-| `fabric/` | model binding + guards | `fabric/AGENTS.md` | S6 |
+| `store/` | addressed store + resolver + events/chat/surfaced/panels | `store/AGENTS.md` | C1, C4 |
+| `runtime/` | scheduler + memo + compile + the **Suite** (engine + RHM + self-mod) | `runtime/AGENTS.md` | S1, C5, C6, S7 |
+| `fabric/` | model binding + guards + `list_models` (the model registry) | `fabric/AGENTS.md` | S6 |
 | `mcp_face/` | agent face (generic verbs) | `mcp_face/AGENTS.md` | C7 |
-| `nodes/` | the node library | `nodes/AGENTS.md` | C2 |
-| `canvas/` | the frontend (discovered through use) | `canvas/AGENTS.md` | S5, D3 |
+| `nodes/` | the node library (incl. `portal`, `rhm_mode`, `model_of_tim`) | `nodes/AGENTS.md` | C2 |
+| `canvas/` | the frontend + the extensions runtime | `canvas/AGENTS.md` | S5, D3 |
 
-## How a run flows (so you can trace any change)
-`canvas` (place+wire nodes) → `compile` (runtime: workflow → execution graph) → `scheduler` (runtime: a node fires when its input **addresses** resolve in `store`) → AI nodes call `fabric` → results persist to `store` (content-addressed + provenance) → status/output flow back through the bridge → `canvas` re-renders. The `mcp` face can drive every step; the right-hand-man's context is resolved by `runtime/context_variables`.
+## Live registry — the system's current capabilities
+<!--REGISTRY:START--> (auto-maintained by Suite.refresh_map on every apply — do not hand-edit)
+- **node-types** (12): ask, codebase, constant, join, llm, model_of_tim, pair, portal, rhm_mode, titlecase, uppercase, wordcount
+- **RHM verbs**: run, propose, build, consult, show, panel, extend
+- **panels**: polr_models
+- **models** (from the fabric registry): huihui_ai/qwen3-vl-abliterated:30b-a3b, gemma4-26b-a4b-q3km:latest, qwen3.6-35b-a3b-q3km:latest, qwen3.6-27b-q3km:latest, nomic-embed-text:latest, gemma4:31b-cloud, nemotron-3-super:cloud, deepseek-v4-flash:cloud, deepseek-v4-pro:cloud, kimi-k2.6:cloud, glm-5.1:cloud, glm-5:cloud, qwen3.5:397b-cloud, kimi-k2.5:cloud
+<!--REGISTRY:END-->
+
+## The Suite is the brain (runtime/suite.py) — one object, two faces (UI bridge + MCP)
+Engine verbs: `create_node · connect · delete_node · set_config · run · state · results`. Introspection: `list_types · object_info · capabilities`. Surfaces: `now · events · inbox_lanes · coa`.
+**The right-hand-man (RHM)** — the conversational voice (`chat`): grounded in live ground truth, abstains rather than confabulate, reasons from the explicit model-of-Tim (`nodes/model_of_tim.py` ← `foundation/system/principles.md`), grades turns gold/working. It ACTS only through a **whitelist of governed verbs** (`RHM_VERBS = run · propose · build · consult · show · panel · extend`); apply/delete/file-write are unreachable from it. Modes are nodes (`rhm_mode`, the presence dial); model/provider/persona are config; co-presence reads the operator's selection.
+
+## Self-modification — update the app through its interface (governed, additive, git-reversible)
+- **node-types** (`propose_node`→`apply_node`): the brain writes a `nodes/*.py`, operator approves, git-committed, auto-discovered.
+- **declarative panels** (`propose_panel`→`apply_panel`): JSON field-defs in `panels/`, fields edit real config; the 'others' tier.
+- **arbitrary code extensions** (`propose_extension`→`apply_extension`): a real `.tsx`, **build-GATED** (`_gate_extension`: import-allowlist + `canvas/app/syntax-gate.cjs`) OUTSIDE the live tree, promoted only on pass, loaded via `import.meta.glob` in an error boundary; operator-only.
+- every self-apply is a `[self-apply]` git commit → **revert recovers** (`revert_self_change`).
+
+## The path-of-least-resistance law (why the above is shaped this way)
+Make the **correct action the AI's easiest path** — for BOTH the external agent (reads these AGENTS.md/MAP.md) AND the system's own self-coding brain (reads the authoring prompts). So: **the registry is the source of truth** (`capabilities()` — real models/node-types/verbs/panels feed every authoring prompt; registered select-options come from the registry, never a guess), **making things up is a failure** (= confabulation), and **when needed info isn't registered the brain ASKS** (`NEEDS:` → a surfaced `question`) rather than inventing.
+
+## How a run flows
+`canvas` (place+wire) → `compile` → `scheduler` (a node fires when its input **addresses** resolve in `store`) → AI nodes call `fabric` → results persist (content-addressed + provenance) → status/output back through the bridge → `canvas` re-renders. The MCP face drives every step; the RHM's context is the compact live state + model-of-Tim + the operator's selection.
 
 ## Self-growth (the point)
-Once the kernel runs, **the system's first real use is its own codebase** — this map + the code, indexed and linked, so Tim clicks and talks here and directs changes, which are dispatched back into these modules. The interface is grown by being used on this. See the vault: `Self-hosting first use — codebase as first source.md`.
+The system's first real use is its **own codebase** — this map + the code, indexed and linked, so Tim clicks and talks here and directs changes that dispatch back into these modules (governed). The interface is grown by being used on this. Vault: `Self-hosting first use — codebase as first source.md`, `RHM — Completion Criteria.md`, `Self-Coding Subsystem — Completion Criteria.md`.
