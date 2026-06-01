@@ -124,6 +124,23 @@ class FsStore:
         lines = [l for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
         return [_j.loads(l) for l in reversed(lines[-limit:])]   # newest-first
 
+    # --- right-hand-man chat log (I2): append-only, chronological, persists ---
+    def append_chat(self, turn: dict) -> dict:
+        import json as _j
+        from datetime import datetime, timezone
+        rec = {"ts": datetime.now(timezone.utc).isoformat(), **turn}
+        with (self.root / "chat.jsonl").open("a", encoding="utf-8") as f:
+            f.write(_j.dumps(rec) + "\n")
+        return rec
+
+    def chat_history(self, limit: int = 40) -> list[dict]:
+        import json as _j
+        path = self.root / "chat.jsonl"
+        if not path.exists():
+            return []
+        lines = [l for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+        return [_j.loads(l) for l in lines[-limit:]]   # oldest-first (chronological)
+
     # --- surfaced-decision inbox (S7/D4): non-blocking gates, shared across faces ---
     def save_surfaced(self, decision: dict) -> None:
         import json as _j

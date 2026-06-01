@@ -25,6 +25,9 @@ const api = {
     fetch('/api/delete-node', { method: 'POST', headers: J, body: JSON.stringify({ node }) }).then(r => r.json()),
   now: () => fetch('/api/now').then(r => r.json()),
   events: () => fetch('/api/events').then(r => r.json()),
+  chat: (message: string) =>
+    fetch('/api/chat', { method: 'POST', headers: J, body: JSON.stringify({ message }) }).then(r => r.json()),
+  chatHistory: () => fetch('/api/chat').then(r => r.json()),
 }
 
 function relTime(iso?: string) {
@@ -167,6 +170,9 @@ function Hud() {
   const [layerView, setLayerView] = useState(0)   // 0 all · 1 origin only · 2 system only
   const [now, setNow] = useState<any>(null)
   const [events, setEvents] = useState<any[]>([])
+  const [chat, setChat] = useState<any[]>([])
+  const [chatMsg, setChatMsg] = useState('')
+  const [chatBusy, setChatBusy] = useState(false)
 
   async function poll() {
     try { setNow(await api.now()); setEvents(await api.events()) } catch { /* bridge transient */ }
@@ -179,6 +185,7 @@ function Hud() {
       const g = await loadGraph(editor); setEdges(g.edges || []); setGid(g.id)
       setTypes(await api.types())
       setOinfo(await api.objectInfo())
+      setChat(await api.chatHistory())
       await poll()
     })()
     setInterval(poll, 2500)              // single-mount app; heartbeat is the presence pulse
@@ -202,6 +209,15 @@ function Hud() {
     const sel = (editor.getSelectedShapes().filter(s => s.type === 'node') as NodeShape[])
     for (const s of sel) await api.del(s.props.nodeId)
     if (sel.length) { setNotice(`deleted ${sel.length} node(s)`); await reload() }
+  }
+  async function sendChat() {
+    const m = chatMsg.trim()
+    if (!m || chatBusy) return
+    setChatMsg(''); setChatBusy(true)
+    setChat(c => [...c, { role: 'user', text: m }])
+    try { const r = await api.chat(m); setChat(r.history); await poll() }
+    catch { setChat(c => [...c, { role: 'assistant', text: '(could not reach the brain)' }]) }
+    finally { setChatBusy(false) }
   }
   function cycleLayers() {
     const next = (layerView + 1) % 3
@@ -252,8 +268,8 @@ function Hud() {
       <div className="hud toolbar">
         <span className="title">the&nbsp;<em>company</em></span>
         {now && (
-          <span className={'presence ' + (running ? 'busy' : now.surfaced_pending ? 'warn' : 'ok')}>
-            <span className="pdot" />{running ? 'running…' : now.presence}
+          <span className={'presence ' + (running || chatBusy ? 'busy' : now.surfaced_pending ? 'warn' : 'ok')}>
+            <span className="pdot" />{running ? 'running…' : chatBusy ? 'thinking…' : now.presence}
           </span>
         )}
         <button className="b" onClick={doRun} disabled={running}>{running ? 'running…' : '▶ run'}</button>
@@ -322,6 +338,26 @@ function Hud() {
               <span className="ev-t">{relTime(e.ts)}</span>
             </div>
           ))}
+        </div>
+      </div>
+
+      <div className="hud rhm">
+        <div className="rhm-head">right-hand-man <span className="muted">· the company's voice about itself</span></div>
+        <div className="rhm-log">
+          {chat.length === 0 && <div className="muted">ask about the system — it answers from live state, and says so when it can't see something.</div>}
+          {chat.map((t, i) => (
+            <div key={i} className={'msg ' + t.role}>
+              <span className="who">{t.role === 'user' ? 'you' : 'vi'}</span>
+              <span className="txt">{t.text}</span>
+            </div>
+          ))}
+          {chatBusy && <div className="msg assistant"><span className="who">vi</span><span className="txt muted">thinking…</span></div>}
+        </div>
+        <div className="rhm-input">
+          <input placeholder="ask the company about itself…" value={chatMsg}
+            onChange={e => setChatMsg(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') sendChat() }} />
+          <button className="b" onClick={sendChat} disabled={chatBusy}>{chatBusy ? '…' : '→'}</button>
         </div>
       </div>
 

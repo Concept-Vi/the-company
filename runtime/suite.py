@@ -185,6 +185,50 @@ class Suite:
             "last_event": recent[0] if recent else None,
         }
 
+    # --- the right-hand-man: the coherent voice of the Company about ITSELF (I2) ---
+    def _chat_context(self, graph_id: str) -> str:
+        """Compact GROUND TRUTH — live system state, not the codebase (context-05 rung 1)."""
+        nowv = self.now(graph_id)
+        st = self.state(graph_id)
+        nodes = "; ".join(
+            f"{n['id']}({n['type']}, {'resolved' if n['content_hash'] else 'unresolved'})"
+            for n in st["nodes"]) or "(none)"
+        evs = "; ".join(f"{e['kind']}: {e['summary']}" for e in self.store.recent_events(6)) or "(none)"
+        return (
+            "LIVE SYSTEM STATE (ground truth — answer only from this):\n"
+            f"- graph: {nowv['graph']} · {nowv['nodes_total']} nodes, {nowv['nodes_resolved']} resolved"
+            f" · {nowv['surfaced_pending']} awaiting approval · presence: {nowv['presence']}\n"
+            f"- nodes: {nodes}\n"
+            f"- available node-types: {', '.join(self.list_types())}\n"
+            f"- recent activity: {evs}\n"
+        )
+
+    def chat(self, message: str, graph_id: str) -> dict:
+        """Grounded conversation with the operator. Answers from compact ground truth; never
+        confabulates system facts. Suggests actions but performs none that skip the surfaced
+        gate (E6 invariant) — proposing/running route through the normal verbs."""
+        from fabric import client, transport, config as fcfg
+        sys_p = (
+            "You are the right-hand-man — the coherent voice of the Company, speaking to its operator "
+            "about the system ITSELF. Answer ONLY from the LIVE SYSTEM STATE below; it is ground truth. "
+            "If something is not in that state, say you cannot see it — NEVER invent counts, names, or "
+            "facts. Be concise and concrete. You may suggest actions (grow a node, run the graph) but you "
+            "never perform irreversible actions yourself; those are surfaced for the operator's approval."
+        )
+        msgs = [{"role": "system", "content": sys_p + "\n\n" + self._chat_context(graph_id)}]
+        for t in self.store.chat_history(20):
+            msgs.append({"role": t["role"], "content": t["text"]})
+        msgs.append({"role": "user", "content": message})
+        reply = client.complete(transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL),
+                                 msgs, model=fcfg.DEFAULT_BRAIN)
+        self.store.append_chat({"role": "user", "text": message})
+        self.store.append_chat({"role": "assistant", "text": reply})
+        self._emit("chat", f"you: {message[:48]}")
+        return {"reply": reply, "history": self.store.chat_history(40)}
+
+    def chat_history(self, limit: int = 40) -> list:
+        return self.store.chat_history(limit)
+
     # --- self-growth: build-dispatch (the "direct its growth" half of the first purpose) ---
     @staticmethod
     def _safe_node_name(name: str) -> str:

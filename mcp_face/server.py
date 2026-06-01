@@ -126,6 +126,13 @@ def now(graph: str) -> dict:
     return SUITE.now(graph)
 
 
+@mcp.tool()
+def chat(message: str, graph: str) -> dict:
+    """Converse with the right-hand-man — the coherent voice of the Company about itself. Answers
+    from live ground truth; suggests actions but performs none that skip the surfaced gate."""
+    return SUITE.chat(message, graph)
+
+
 # NOTE: resolve_surfaced (operator approval) is deliberately NOT exposed on this face — only the
 # UI/operator channel may approve a CONFIRM, so the proposing agent cannot self-approve its code-build.
 

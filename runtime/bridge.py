@@ -70,6 +70,8 @@ class H(BaseHTTPRequestHandler):
             self._send(200, json.dumps(SUITE.events(60)))
         elif self.path == "/api/now":
             self._send(200, json.dumps(SUITE.now(DEMO)))
+        elif self.path == "/api/chat":
+            self._send(200, json.dumps(SUITE.chat_history(40)))
         else:
             self._send(404, "{}")
 
@@ -95,6 +97,9 @@ class H(BaseHTTPRequestHandler):
                 b = self._body()
                 SUITE.delete_node(DEMO, b["node"])
                 self._send(200, json.dumps(SUITE.state(DEMO)))
+            elif self.path == "/api/chat":                # right-hand-man — grounded conversation
+                b = self._body()
+                self._send(200, json.dumps(SUITE.chat(b["message"], DEMO)))
             # --- build-dispatch (self-growth), operable from the operator's UI ---
             elif self.path == "/api/propose":          # agent/operator dispatches a build
                 b = self._body()
