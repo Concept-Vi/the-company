@@ -10,7 +10,9 @@ from __future__ import annotations
 import json
 import os
 import sys
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from urllib.parse import urlparse, parse_qs
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -43,6 +45,8 @@ def seed_demo():
 
 
 class H(BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"   # keep-alive so /api/stream (SSE) can hold the socket open
+
     def _send(self, code, body, ctype="application/json"):
         b = body.encode() if isinstance(body, str) else body
         self.send_response(code)
@@ -55,48 +59,107 @@ class H(BaseHTTPRequestHandler):
         ln = int(self.headers.get("Content-Length", 0))
         return json.loads(self.rfile.read(ln) or "{}")
 
+    def _qs(self, parsed):
+        """A flat {key: value} from the query string (first value per key)."""
+        return {k: v[0] for k, v in parse_qs(parsed.query).items()}
+
     def do_GET(self):
-        if self.path in ("/", "/index.html"):
-            with open(CANVAS, "rb") as f:
-                self._send(200, f.read(), "text/html; charset=utf-8")
-        elif self.path == "/api/graph":
-            self._send(200, json.dumps(SUITE.state(DEMO)))
-        elif self.path == "/api/object_info":
-            self._send(200, json.dumps(SUITE.object_info()))
-        elif self.path == "/api/types":
-            self._send(200, json.dumps(sorted(SUITE.list_types())))
-        elif self.path == "/api/surfaced":
-            self._send(200, json.dumps(SUITE.list_surfaced()))
-        elif self.path == "/api/events":
-            self._send(200, json.dumps(SUITE.events(60)))
-        elif self.path == "/api/now":
-            self._send(200, json.dumps(SUITE.now(DEMO)))
-        elif self.path == "/api/chat":
-            self._send(200, json.dumps(SUITE.chat_history(40)))
-        elif self.path == "/api/rhm-config":
-            self._send(200, json.dumps(SUITE.rhm_config()))
-        elif self.path == "/api/inbox":
-            self._send(200, json.dumps(SUITE.inbox_lanes()))
-        elif self.path == "/api/last-change":
-            self._send(200, json.dumps(SUITE.last_self_change() or {}))
-        elif self.path == "/api/panels":
-            self._send(200, json.dumps(SUITE.list_panels()))
-        elif self.path == "/api/capabilities":
-            self._send(200, json.dumps(SUITE.capabilities()))
-        elif self.path == "/api/voice":                   # voice status: STT providers + TTS up?
-            from voice import stt as voice_stt
-            tts_up = False
-            try:
-                import urllib.request as _u
-                _u.urlopen(TTS_URL + "/health", timeout=2); tts_up = True
-            except Exception:
-                pass
-            self._send(200, json.dumps({"stt": voice_stt.available(),
-                                        "stt_default": voice_stt.DEFAULT_PROVIDER, "tts_up": tts_up}))
-        else:
-            self._send(404, "{}")
+        parsed = urlparse(self.path)
+        path = parsed.path                                 # path WITHOUT the query (exact matches hold)
+        q = self._qs(parsed)
+        gid = q.get("graph_id", DEMO)                      # graph-scoped reads default to DEMO (C4)
+        if path == "/api/stream":                          # SSE — own handler, NEVER _send (G)
+            self._stream(q)
+            return
+        try:
+            if path in ("/", "/index.html"):
+                with open(CANVAS, "rb") as f:
+                    self._send(200, f.read(), "text/html; charset=utf-8")
+            elif path == "/api/graph":
+                self._send(200, json.dumps(SUITE.state(gid)))
+            elif path == "/api/graphs":                    # C4: list every graph in the substrate
+                self._send(200, json.dumps(SUITE.list_graphs()))
+            elif path == "/api/object_info":
+                self._send(200, json.dumps(SUITE.object_info()))
+            elif path == "/api/types":
+                self._send(200, json.dumps(sorted(SUITE.list_types())))
+            elif path == "/api/models":                    # B: per-kind/per-endpoint live model list
+                self._send(200, json.dumps(SUITE.models_at(
+                    kind=q.get("kind", "chat"), base_url=q.get("base_url"))))
+            elif path == "/api/surfaced":
+                self._send(200, json.dumps(SUITE.list_surfaced()))
+            elif path == "/api/events":
+                self._send(200, json.dumps(SUITE.events(60)))
+            elif path == "/api/now":
+                self._send(200, json.dumps(SUITE.now(gid)))
+            elif path == "/api/chat":
+                self._send(200, json.dumps(SUITE.chat_history(40)))
+            elif path == "/api/rhm-config":
+                self._send(200, json.dumps(SUITE.rhm_config()))
+            elif path == "/api/inbox":
+                self._send(200, json.dumps(SUITE.inbox_lanes()))
+            elif path == "/api/last-change":
+                self._send(200, json.dumps(SUITE.last_self_change() or {}))
+            elif path == "/api/panels":
+                self._send(200, json.dumps(SUITE.list_panels()))
+            elif path == "/api/capabilities":
+                self._send(200, json.dumps(SUITE.capabilities()))
+            elif path == "/api/voice":                     # voice status: STT providers + TTS up?
+                from voice import stt as voice_stt
+                tts_up = False
+                try:
+                    import urllib.request as _u
+                    _u.urlopen(TTS_URL + "/health", timeout=2); tts_up = True
+                except Exception:
+                    pass
+                self._send(200, json.dumps({"stt": voice_stt.available(),
+                                            "stt_default": voice_stt.DEFAULT_PROVIDER, "tts_up": tts_up}))
+            else:
+                self._send(404, "{}")
+        except Exception as e:                             # fail loud to the UI (parity with do_POST)
+            self._send(400, json.dumps({"error": f"{type(e).__name__}: {e}"}))
+
+    def _stream(self, q):
+        """GET /api/stream — Server-Sent Events (G). Tails the SHARED events.jsonl (so it captures
+        BOTH faces, not an in-memory queue), pushing each new event as `id: <seq>\\ndata: <json>\\n\\n`.
+        Cursor = ?since= or the Last-Event-ID reconnect header (default -1 = from the start). Heartbeat
+        every ~15s so idle proxies don't drop the socket. NOT routed through _send (which sets
+        Content-Length + closes). Fail loud: only client-disconnect is swallowed, never a real error."""
+        since = q.get("since")
+        if since is None:
+            since = self.headers.get("Last-Event-ID", "-1")   # gapless reconnect
+        try:
+            cursor = int(since)
+        except (TypeError, ValueError):
+            cursor = -1
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.end_headers()
+        last_beat = time.monotonic()
+        try:
+            while True:
+                for ev in SUITE.events_since(cursor):
+                    self.wfile.write(
+                        f"id: {ev['seq']}\ndata: {json.dumps(ev)}\n\n".encode())
+                    self.wfile.flush()
+                    cursor = ev["seq"]
+                if time.monotonic() - last_beat >= 15:
+                    self.wfile.write(b": keepalive\n\n")
+                    self.wfile.flush()
+                    last_beat = time.monotonic()
+                time.sleep(0.4)
+        except (BrokenPipeError, ConnectionResetError):
+            return                                          # client closed — done, not an error
 
     def do_POST(self):
+        # HTTP/1.1 keeps sockets alive (needed for the GET /api/stream SSE). But a POST handler that
+        # doesn't drain its request body (e.g. /api/react, the 404 branch) would leave bytes that the
+        # next request on a reused connection mis-parses → garbled 400s in a browser (which pools
+        # connections; curl uses a fresh socket per call, so it's invisible there). Force-close POST
+        # sockets — GET (incl. the stream) still keeps alive.
+        self.close_connection = True
         try:
             if self.path == "/api/stt":                   # raw audio bytes in → transcript out
                 from voice import stt as voice_stt
@@ -113,28 +176,41 @@ class H(BaseHTTPRequestHandler):
                     self._send(200, r.read(), "audio/wav")
                 return
             if self.path == "/api/run":
-                result = SUITE.run(DEMO)
-                self._send(200, json.dumps(SUITE.state(DEMO, result)))
+                b = self._body()
+                gid = b.get("graph_id", DEMO)
+                result = SUITE.run(gid, force=b.get("force"))   # D4: force re-run bypasses the memo gate
+                self._send(200, json.dumps(SUITE.state(gid, result)))
             elif self.path == "/api/set":
                 b = self._body()
-                SUITE.set_config(DEMO, b.get("node"), b.get("config", {}))
-                self._send(200, json.dumps(SUITE.state(DEMO)))
+                gid = b.get("graph_id", DEMO)
+                SUITE.set_config(gid, b.get("node"), b.get("config", {}))
+                self._send(200, json.dumps(SUITE.state(gid)))
+            elif self.path == "/api/move":              # C5: drag-end → write the sibling position/size
+                b = self._body()
+                gid = b.get("graph_id", DEMO)
+                SUITE.set_position(gid, b["node"], b["x"], b["y"], b.get("w"), b.get("h"))
+                self._send(200, json.dumps(SUITE.state(gid)))
             # --- on-canvas composition ---
             elif self.path == "/api/node":              # add a node from the palette
                 b = self._body()
-                nid = SUITE.create_node(DEMO, b["type"], b.get("config", {}))
-                self._send(200, json.dumps({"id": nid, "state": SUITE.state(DEMO)}))
+                gid = b.get("graph_id", DEMO)
+                nid = SUITE.create_node(gid, b["type"], b.get("config", {}),
+                                        position=b.get("position"))
+                self._send(200, json.dumps({"id": nid, "state": SUITE.state(gid)}))
             elif self.path == "/api/connect":           # wire two nodes (type-checked)
                 b = self._body()
-                SUITE.connect(DEMO, b["from_node"], b["from_port"], b["to_node"], b["to_port"])
-                self._send(200, json.dumps(SUITE.state(DEMO)))
+                gid = b.get("graph_id", DEMO)
+                SUITE.connect(gid, b["from_node"], b["from_port"], b["to_node"], b["to_port"])
+                self._send(200, json.dumps(SUITE.state(gid)))
             elif self.path == "/api/delete-node":
                 b = self._body()
-                SUITE.delete_node(DEMO, b["node"])
-                self._send(200, json.dumps(SUITE.state(DEMO)))
+                gid = b.get("graph_id", DEMO)
+                SUITE.delete_node(gid, b["node"])
+                self._send(200, json.dumps(SUITE.state(gid)))
             elif self.path == "/api/chat":                # right-hand-man — grounded conversation
                 b = self._body()
-                self._send(200, json.dumps(SUITE.chat(b["message"], DEMO, focus=b.get("focus"))))
+                gid = b.get("graph_id", DEMO)
+                self._send(200, json.dumps(SUITE.chat(b["message"], gid, focus=b.get("focus"))))
             elif self.path == "/api/mode":                # the presence dial — set the RHM mode
                 b = self._body()
                 SUITE.set_mode(b["mode"])

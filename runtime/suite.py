@@ -8,7 +8,7 @@ separate processes. Operations are the C7 generic verbs — generic over node-ty
 from __future__ import annotations
 import os
 
-from contracts.node_record import NodeInstance, Edge, Graph
+from contracts.node_record import NodeInstance, Edge, Graph, XY, WH
 from runtime import scheduler
 from runtime.governance import Inbox, GovernanceError
 from runtime.registry import NodeRegistry
@@ -72,6 +72,26 @@ class Suite:
             self._models_cache = models
         return self._models_cache
 
+    def models_at(self, kind: str = "chat", base_url: str | None = None) -> list:
+        """List the REAL models registered at a GIVEN endpoint (B) — so the UI can fill chat-model
+        AND embed-model dropdowns from what is ACTUALLY running, not a hand-typed list. BYPASSES the
+        chat-only available_models() cache (which only ever hits DEFAULT_BASE_URL → would fill an
+        embed dropdown with chat models, the B3 bug). forbid_gemini is preserved (transport.list_models
+        filters it). Fail loud: if the embed endpoint isn't configured by the fabric, raise rather than
+        silently fall back to the chat endpoint (a silent fallback is the exact rot the laws forbid)."""
+        from fabric import transport, config as fcfg
+        if base_url is None:
+            if kind == "embed":
+                base_url = getattr(fcfg, "DEFAULT_EMBED_URL", None)
+                if not base_url:
+                    raise RuntimeError(
+                        "no embedding endpoint configured (fabric.config.DEFAULT_EMBED_URL absent) — "
+                        "cannot list embed models without inventing a fallback (fail loud, no silent "
+                        "fallback to the chat endpoint). Configure the embed endpoint first.")
+            else:
+                base_url = fcfg.DEFAULT_BASE_URL
+        return transport.list_models(base_url)               # live, uncached; Gemini filtered in transport
+
     def capabilities(self) -> dict:
         """One snapshot of WHAT EXISTS — fed into every authoring prompt + every registered select,
         so the correct values are the easy path and nothing is guessed. The reflective fold."""
@@ -82,8 +102,9 @@ class Suite:
             "rhm_verbs": list(self.RHM_VERBS),
             "panels": [p.get("id") for p in self.list_panels()],
             "panel_field_targets": list(self.PANEL_TARGETS),
-            "api_verbs": ["/api/run", "/api/now", "/api/chat", "/api/graph", "/api/types",
-                          "/api/object_info", "/api/events", "/api/inbox", "/api/panels"],
+            "api_verbs": ["/api/run", "/api/now", "/api/chat", "/api/graph", "/api/graphs",
+                          "/api/types", "/api/object_info", "/api/events", "/api/inbox",
+                          "/api/panels", "/api/models", "/api/stream", "/api/move"],
         }
 
     def _authoring_preamble(self) -> str:
@@ -206,13 +227,29 @@ class Suite:
     def _load(self, graph_id: str) -> Graph:
         return self.store.load_graph(graph_id) or Graph(id=graph_id)
 
+    @staticmethod
+    def _schema_defaults(schema: dict) -> dict:
+        """Flatten a node-type's nested config_schema {key:{...,default}} → {key:default} (A).
+        Guarded so it survives a still-flat CONFIG ({key:value}, mid-migration) and skips entries
+        with no/None default — so a freshly-added node is seeded with its type's defaults (not blank
+        and inert) WITHOUT clobbering a run()-fallback (None default) or fabricating keys."""
+        out = {}
+        for k, v in (schema or {}).items():
+            if isinstance(v, dict) and "default" in v and v["default"] is not None:
+                out[k] = v["default"]
+        return out
+
     def create_node(self, graph_id: str, type: str, config: dict | None = None,
-                    node_id: str | None = None) -> str:
+                    node_id: str | None = None, position: dict | None = None) -> str:
         if type not in self.registry:
             raise KeyError(f"unknown node-type {type!r} (have: {self.list_types()})")
         g = self._load(graph_id)
         nid = node_id or f"{type}-{len(g.nodes) + 1}"
-        g.nodes.append(NodeInstance(id=nid, type=type, config=config or {}))
+        nt = self.registry.types.get(type)
+        seeded = self._schema_defaults(nt.config_schema if nt else {})   # type defaults first…
+        seeded.update(config or {})                                      # …caller config WINS (merge)
+        pos = XY(**position) if position else XY()                       # optional initial placement (C5)
+        g.nodes.append(NodeInstance(id=nid, type=type, config=seeded, position=pos))
         self.store.save_graph(g)
         self._emit("create", f"+ {type} node ({nid})", graph=graph_id, node=nid, type=type)
         return nid
@@ -252,6 +289,24 @@ class Suite:
                 return
         raise KeyError(f"no node {node_id!r} in graph {graph_id!r}")
 
+    def set_position(self, graph_id: str, node_id: str, x: float, y: float,
+                     w: float | None = None, h: float | None = None) -> None:
+        """Write a node's SIBLING position (and optional size) — NOT its config (C5). The canvas
+        reflects, never owns: a drag-end round-trips here so the backend stays the source of truth
+        for layout. A clone of set_config but targeting position/size, the NodeInstance fields that
+        already round-trip to disk. Raises KeyError if the node is absent (fail loud)."""
+        g = self._load(graph_id)
+        for n in g.nodes:
+            if n.id == node_id:
+                n.position = XY(x=x, y=y)
+                if w is not None and h is not None:
+                    n.size = WH(w=w, h=h)
+                self.store.save_graph(g)
+                self._emit("move", f"moved {node_id} → ({x:.0f},{y:.0f})",
+                           graph=graph_id, node=node_id)
+                return
+        raise KeyError(f"no node {node_id!r} in graph {graph_id!r}")
+
     def save_graph(self, graph: Graph) -> None:
         self.store.save_graph(graph)
 
@@ -277,10 +332,15 @@ class Suite:
                 cas = self.store.head(ref) if ref else None
             else:
                 cas = self.store.head(logical)
-            status = "idle"
             if result:
                 status = ("ran" if n.id in result["ran"]
                           else "cached" if n.id in result["skipped"] else "idle")
+            else:
+                # D5-be (persisted run-status, in-territory): with no fresh run result, DERIVE status
+                # from the store — a node whose output address resolves has a cached result, so report
+                # 'cached' instead of resetting to 'idle' on reload. Fail-loud-legible: the surface
+                # never claims "nothing happened" for a node that actually holds a result.
+                status = "cached" if cas else "idle"
             nt = self.registry.types.get(n.type)
             nodes.append({
                 "id": n.id, "type": n.type, "config": n.config,
@@ -288,9 +348,14 @@ class Suite:
                 "layer": getattr(mod, "ORIGIN", "authored"),   # provenance layer (authored vs system)
                 "status": status, "address": logical, "content_hash": cas,
                 "output": self.store.get_content(cas) if cas else None,
+                "position": n.position.model_dump(),           # C5: layout is backend-authoritative
+                "size": n.size.model_dump(),
             })
         return {"id": g.id, "nodes": nodes,
-                "edges": [{"from": e.from_node, "to": e.to_node} for e in g.edges]}
+                # C2/C3: carry per-port identity so the UI draws per-port wires + feeds multi-input
+                # nodes correctly. {from,to} kept for back-compat; from_port/to_port are additive.
+                "edges": [{"from": e.from_node, "to": e.to_node,
+                           "from_port": e.from_port, "to_port": e.to_port} for e in g.edges]}
 
     def results(self, graph_id: str) -> dict:
         st = self.state(graph_id)
@@ -299,6 +364,11 @@ class Suite:
     # --- the operator surfaces (I2): now-view · presence · event log ---
     def events(self, limit: int = 60) -> list:
         return self.store.recent_events(limit)
+
+    def events_since(self, seq: int) -> list:
+        """Events with seq > given, oldest-first — the SSE cursor read (G). Thin pass-through to the
+        store's file-tail (mirrors events()); captures BOTH faces since it tails the shared log."""
+        return self.store.events_since(seq)
 
     def now(self, graph_id: str) -> dict:
         """The now-view + presence snapshot — derived live from state, the inbox, and the log."""

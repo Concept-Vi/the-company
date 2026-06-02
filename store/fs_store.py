@@ -82,8 +82,21 @@ class FsStore:
 
     # --- graphs registry (S3): canvases live in the substrate, shared across faces ---
     def save_graph(self, graph) -> None:
-        (self.root / "graphs" / (self._safe(graph.id) + ".json")).write_text(
-            graph.model_dump_json(indent=2))
+        # ATOMIC (C5): /api/move makes this a high-frequency path on the threading server; a naked
+        # write_text could tear graphs/<id>.json against the running bridge's reads. tmp + os.replace
+        # (same-filesystem rename is atomic) means a reader sees the old file or the new — never a
+        # half-written one. Mirrors the apply_* paths' tmp+replace pattern.
+        import os as _os
+        import threading as _t
+        path = self.root / "graphs" / (self._safe(graph.id) + ".json")
+        # Unique tmp PER WRITE (pid+thread): two concurrent same-graph writers (two /api/move, or a
+        # move racing an MCP-face create_node/connect on the threading server) must not share one tmp
+        # name — a fixed name lets their write_texts interleave into invalid JSON that os.replace then
+        # makes the LIVE file (durable corruption). Unique tmp + atomic replace = last-writer-wins, each
+        # file always whole. (Traded import-minimalism for write-concurrency correctness.)
+        tmp = path.with_name(f"{path.name}.{_os.getpid()}.{_t.get_ident()}.tmp")
+        tmp.write_text(graph.model_dump_json(indent=2))
+        tmp.replace(path)
 
     def load_graph(self, gid: str):
         from contracts.node_record import Graph
@@ -123,6 +136,23 @@ class FsStore:
             return []
         lines = [l for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
         return [_j.loads(l) for l in reversed(lines[-limit:])]   # newest-first
+
+    def events_since(self, seq: int) -> list[dict]:
+        """Events with seq > given, OLDEST-first — the SSE stream cursor (G). Sibling of
+        recent_events (which is newest-first last-N). Tails the shared file, so it captures BOTH
+        faces' events (bridge + MCP), not an in-memory queue. A fresh client passes -1 to get all."""
+        import json as _j
+        path = self.root / "events.jsonl"
+        if not path.exists():
+            return []
+        out = []
+        for l in path.read_text(encoding="utf-8").splitlines():
+            if not l.strip():
+                continue
+            rec = _j.loads(l)
+            if rec.get("seq", -1) > seq:
+                out.append(rec)
+        return out
 
     # --- right-hand-man chat log (I2): append-only, chronological, persists ---
     def append_chat(self, turn: dict) -> dict:
