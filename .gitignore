@@ -15,3 +15,8 @@ voice/models/
 .obsidian/workspace-mobile.json
 .obsidian/cache
 .obsidian/graph.json
+
+# runtime store — written by the live system, never code
+.data/
+# build scratch
+.build/
