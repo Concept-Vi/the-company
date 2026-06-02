@@ -17,6 +17,11 @@ POLICY = {
     # CONFIRM — irreversible / expensive / external
     "destructive": CONFIRM, "code_build": CONFIRM, "register_type": CONFIRM,
     "external": CONFIRM, "source_data": CONFIRM, "frozen_contract": CONFIRM,
+    # CONFIRM — UI self-mod + the review queue. They already routed to CONFIRM via the
+    # unknown-class default (posture() → CONFIRM); declaring them here changes NO behavior,
+    # it makes the intent explicit + single-source (G1). `review` = a surfaced item the
+    # operator walks/decides; only Tim resolves it (no-bypass), so CONFIRM is its posture.
+    "ui_panel": CONFIRM, "ui_extension": CONFIRM, "review": CONFIRM,
 }
 # never graduate to AUTO, no matter the earned trust (D4/D7 forever-confirm)
 LOCKED = {"source_data", "external", "frozen_contract"}
@@ -65,12 +70,46 @@ class Inbox:
                 mx = max(mx, int(m.group(1)))
         return mx + 1
 
-    def surface(self, action_class: str, payload: dict, default: str, resolved=None) -> str:
+    def surface(self, action_class: str, payload: dict, default: str, resolved=None,
+                status: str | None = None, origin: str | None = None) -> str:
         self._n = self._next_index()
         sid = f"s{self._n}-{action_class}"
-        self.store.save_surfaced({"id": sid, "action": action_class, "payload": payload,
-                                  "default": default, "resolved": resolved})
+        rec = {"id": sid, "action": action_class, "payload": payload,
+               "default": default, "resolved": resolved}
+        # SEPARATE lifecycle field (A): inbox→presented→responded→resolved|requeue. NEVER
+        # overload `resolved` (inbox_lanes/now/is_approved key on `resolved is None`); the
+        # status tracks the walk WITHOUT touching the live/escalation predicate. Additive +
+        # optional, so every existing surfaced item (no status) reads exactly as before.
+        if status is not None:
+            rec["status"] = status
+        if origin is not None:                       # responsive (came from a build need) | generative (an idea)
+            rec["origin"] = origin
+        self.store.save_surfaced(rec)
         return sid
+
+    # --- the review queue (A): a review item is the SAME inbox, a new decision class ---
+    REVIEW_STATUSES = ("inbox", "presented", "responded", "resolved", "requeue")
+
+    def surface_review(self, item: dict, origin: str = "responsive") -> str:
+        """Surface a `review` decision into the SAME inbox/surfaced store (no parallel queue).
+        Carries a SEPARATE `status` (starts `inbox`) + `origin` (responsive|generative). `resolved`
+        stays None so it lands in `live_escalations` until Tim resolves it — only `resolve_surfaced`
+        ever writes `resolved`, so a presented/responded item is still a live escalation (A)."""
+        if origin not in ("responsive", "generative"):
+            raise ValueError(f"unknown review origin {origin!r} — responsive|generative")
+        return self.surface("review", dict(item), default="reject",
+                            resolved=None, status="inbox", origin=origin)
+
+    def set_status(self, sid: str, status: str) -> None:
+        """Advance a surfaced item's lifecycle status WITHOUT touching `resolved` (A). Fail loud
+        on an unknown status or a missing item — never silently no-op."""
+        if status not in self.REVIEW_STATUSES:
+            raise ValueError(f"unknown review status {status!r} — one of {self.REVIEW_STATUSES}")
+        d = self.store.get_surfaced(sid)
+        if not d:
+            raise KeyError(sid)
+        d["status"] = status
+        self.store.save_surfaced(d)
 
     def list(self) -> list:
         return self.store.list_surfaced()

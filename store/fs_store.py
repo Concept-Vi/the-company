@@ -103,6 +103,32 @@ class FsStore:
         p = self.root / "graphs" / (self._safe(gid) + ".json")
         return Graph.model_validate_json(p.read_text()) if p.exists() else None
 
+    # --- review-session state (B): server-authoritative, ATOMIC (clones save_graph, NOT save_surfaced) ---
+    def save_session(self, session: dict) -> None:
+        """Persist a review-session record (cursor + item ids + mode + graph id) atomically. The walk is
+        server-authoritative: Next/respond mutate this on the threading bridge, so a naked write_text could
+        tear the file against a concurrent read. tmp + os.replace (same-fs rename is atomic) → a reader sees
+        the old file or the new, never a half-written one — the SAME guarantee save_graph gives (fs_store:84),
+        which save_surfaced does NOT (fs_store:175). Unique tmp PER WRITE (pid+thread) so concurrent writers
+        never share a tmp name (last-writer-wins, each file whole)."""
+        import json as _j
+        import os as _os
+        import threading as _t
+        (self.root / "sessions").mkdir(parents=True, exist_ok=True)
+        path = self.root / "sessions" / (self._safe(session["id"]) + ".json")
+        tmp = path.with_name(f"{path.name}.{_os.getpid()}.{_t.get_ident()}.tmp")
+        tmp.write_text(_j.dumps(session, indent=2))
+        tmp.replace(path)
+
+    def load_session(self, sid: str) -> dict | None:
+        import json as _j
+        p = self.root / "sessions" / (self._safe(sid) + ".json")
+        return _j.loads(p.read_text()) if p.exists() else None
+
+    def list_sessions(self) -> list[str]:
+        d = self.root / "sessions"
+        return sorted(p.stem for p in d.glob("*.json")) if d.exists() else []
+
     def list_graphs(self) -> list[str]:
         return sorted(p.stem for p in (self.root / "graphs").glob("*.json"))
 

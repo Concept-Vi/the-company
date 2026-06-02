@@ -10,7 +10,7 @@ import os
 
 from contracts.node_record import NodeInstance, Edge, Graph, XY, WH
 from runtime import scheduler
-from runtime.governance import Inbox, GovernanceError
+from runtime.governance import Inbox, GovernanceError, guard
 from runtime.registry import NodeRegistry
 from store.fs_store import FsStore
 
@@ -104,7 +104,10 @@ class Suite:
             "panel_field_targets": list(self.PANEL_TARGETS),
             "api_verbs": ["/api/run", "/api/now", "/api/chat", "/api/graph", "/api/graphs",
                           "/api/types", "/api/object_info", "/api/events", "/api/inbox",
-                          "/api/panels", "/api/models", "/api/stream", "/api/move"],
+                          "/api/panels", "/api/models", "/api/stream", "/api/move",
+                          "/api/ui_info", "/api/surface-review", "/api/capture-idea",
+                          "/api/review/start", "/api/review/current", "/api/review/next",
+                          "/api/review/status"],
         }
 
     def _authoring_preamble(self) -> str:
@@ -243,16 +246,18 @@ class Suite:
                     node_id: str | None = None, position: dict | None = None) -> str:
         if type not in self.registry:
             raise KeyError(f"unknown node-type {type!r} (have: {self.list_types()})")
-        g = self._load(graph_id)
-        nid = node_id or f"{type}-{len(g.nodes) + 1}"
-        nt = self.registry.types.get(type)
-        seeded = self._schema_defaults(nt.config_schema if nt else {})   # type defaults first…
-        seeded.update(config or {})                                      # …caller config WINS (merge)
-        pos = XY(**position) if position else XY()                       # optional initial placement (C5)
-        g.nodes.append(NodeInstance(id=nid, type=type, config=seeded, position=pos))
-        self.store.save_graph(g)
-        self._emit("create", f"+ {type} node ({nid})", graph=graph_id, node=nid, type=type)
-        return nid
+        def _do():                                                       # G1: AUTO → guard runs it straight through
+            g = self._load(graph_id)
+            nid = node_id or f"{type}-{len(g.nodes) + 1}"
+            nt = self.registry.types.get(type)
+            seeded = self._schema_defaults(nt.config_schema if nt else {})   # type defaults first…
+            seeded.update(config or {})                                      # …caller config WINS (merge)
+            pos = XY(**position) if position else XY()                       # optional initial placement (C5)
+            g.nodes.append(NodeInstance(id=nid, type=type, config=seeded, position=pos))
+            self.store.save_graph(g)
+            self._emit("create", f"+ {type} node ({nid})", graph=graph_id, node=nid, type=type)
+            return nid
+        return guard("compose", do=_do)                                  # AUTO → identical behavior; POLICY is the router
 
     def connect(self, graph_id: str, from_node: str, from_port: str,
                 to_node: str, to_port: str) -> None:
@@ -281,13 +286,15 @@ class Suite:
         self._emit("delete", f"removed node {node_id}", graph=graph_id, node=node_id)
 
     def set_config(self, graph_id: str, node_id: str, config: dict) -> None:
-        g = self._load(graph_id)
-        for n in g.nodes:
-            if n.id == node_id:
-                n.config.update(config)
-                self.store.save_graph(g)
-                return
-        raise KeyError(f"no node {node_id!r} in graph {graph_id!r}")
+        def _do():                                                       # G1: AUTO → guard runs it straight through
+            g = self._load(graph_id)
+            for n in g.nodes:
+                if n.id == node_id:
+                    n.config.update(config)
+                    self.store.save_graph(g)
+                    return
+            raise KeyError(f"no node {node_id!r} in graph {graph_id!r}")
+        return guard("configure", do=_do)                               # AUTO → identical; POLICY is the router
 
     def set_position(self, graph_id: str, node_id: str, x: float, y: float,
                      w: float | None = None, h: float | None = None) -> None:
@@ -312,13 +319,15 @@ class Suite:
 
     # --- run + read ---
     def run(self, graph_id: str, branch: str = "main", pause=None, force=None) -> dict:
-        r = scheduler.run(self._load(graph_id), self.store, self.registry,
-                          branch=branch, pause=pause, force=force)
-        self._emit("run", f"ran {len(r['ran'])}, cached {len(r['skipped'])}"
-                   + (f", stuck {len(r['stuck'])}" if r.get("stuck") else ""),
-                   graph=graph_id, ran=sorted(r["ran"]), cached=sorted(r["skipped"]),
-                   stuck=sorted(r.get("stuck", [])))
-        return r
+        def _do():                                                       # G1: AUTO → guard runs it straight through
+            r = scheduler.run(self._load(graph_id), self.store, self.registry,
+                              branch=branch, pause=pause, force=force)
+            self._emit("run", f"ran {len(r['ran'])}, cached {len(r['skipped'])}"
+                       + (f", stuck {len(r['stuck'])}" if r.get("stuck") else ""),
+                       graph=graph_id, ran=sorted(r["ran"]), cached=sorted(r["skipped"]),
+                       stuck=sorted(r.get("stuck", [])))
+            return r
+        return guard("run", do=_do)                                     # AUTO → identical; POLICY is the router
 
     def state(self, graph_id: str, result: dict | None = None, branch: str = "main") -> dict:
         g = self._load(graph_id)
@@ -828,6 +837,239 @@ class Suite:
         self._emit("ask", f"a result was surfaced for your decision: {node_id}", surfaced=sid)
         return {"id": sid, "node": node_id, "name": f"output · {node_id}"}
 
+    # --- A: the review queue (one inbox, all sources; SEPARATE status lifecycle) ---
+    def surface_review(self, item: dict, origin: str = "responsive") -> dict:
+        """Surface a `review` decision into the SAME surfaced/inbox store (no parallel queue, A).
+        `origin`: 'responsive' (a need raised by the build loop / a result) or 'generative' (an idea
+        Tim threw in). The item carries a SEPARATE `status` (starts 'inbox') so the walk-lifecycle never
+        overloads `resolved` — the predicate `resolved is None` keeps it a live escalation until Tim
+        resolves it. Fail loud on a non-dict item. (E1's build loop calls this in place of WALKTHROUGH.md.)"""
+        if not isinstance(item, dict):
+            raise TypeError(f"surface_review needs a dict item, got {type(item).__name__}")
+        sid = self.inbox.surface_review(item, origin=origin)
+        # emit 'ask' so the SSE inbox-refresh lights up (same kind surface_output uses).
+        self._emit("ask", f"a review item was surfaced ({origin}): {item.get('title', item.get('name', sid))}",
+                   surfaced=sid, origin=origin)
+        return {"id": sid, "origin": origin, "status": "inbox"}
+
+    def idea_capture(self, text: str) -> dict:
+        """A4 — capture a fleeting idea as a GENERATIVE review item (the idea-capture organ). It lands
+        in the same queue; the operator triages it later. Fail loud on empty text (no silent no-op)."""
+        t = (text or "").strip()
+        if not t:
+            raise ValueError("idea_capture needs non-empty text (fail loud)")
+        return self.surface_review({"title": t[:80], "idea": t, "kind": "idea"}, origin="generative")
+
+    # --- B: the walkthrough engine — a review session IS a Graph, run by the existing scheduler ---
+    # No bespoke iterator + no scheduler change: a review-item = a STEP node whose readiness waits on a
+    # human-writable `go` input (the scheduler already waits on an unwired/unresolved declared port,
+    # scheduler.py:62-67). Each step has its OWN unresolved go-gate, so a fixpoint run() can't overrun
+    # one step into the next (guide B). `next()` OPENS the current gate by writing the go-address.
+    #
+    # CARRIER node-type: any registered process node with a single declared input port works purely as a
+    # resolution gate (the body is irrelevant — we read state, not the step's output). `uppercase` has
+    # PORTS_IN={'text':'Text'}. Named once so swapping to a dedicated step/gate type later is one line.
+    # CROSS-LANE SEAM (B-backend ↔ SCHED): SCHED owns nodes/gate.py + per-port emit for B5 BRANCHING;
+    # this linear pacing deliberately does NOT depend on it (territory + don't couple to an unbuilt lane).
+    STEP_CARRIER = "uppercase"
+    GATE_CARRIER = "constant"     # the per-step go-SOURCE: a node whose output we write directly via next()
+
+    @staticmethod
+    def _session_graph_id(session_id: str) -> str:
+        return f"review-{session_id}"
+
+    def _go_addr(self, session_id: str, position: int) -> str:
+        """The go-gate address for step `position` — the source node's logical output (compile.py form)."""
+        return f"run://{self._session_graph_id(session_id)}/go{position}"
+
+    def start_session(self, item_ids: list, mode: str = "walkthrough") -> dict:
+        """Compile a review-session into a Graph the existing scheduler runs, operator-paced (B).
+        For each item i: a go-SOURCE node `go{i}` (constant, unwired → never auto-fires → its address
+        stays unresolved = the gate) wired into a STEP node `step{i}` (carrier) on its `text` port. The
+        step thus waits until next() writes `go{i}`'s address. Persists the session record atomically
+        (save_session) + the graph. The session is server-authoritative; the canvas reflects it."""
+        items = list(item_ids or [])
+        if not items:
+            raise ValueError("start_session needs at least one item id (fail loud)")
+        if mode not in self.MODES:
+            raise ValueError(f"unknown session mode {mode!r} — one of {self.MODES}")
+        import time as _t
+        session_id = f"{int(_t.time())}-{len(items)}"
+        gid = self._session_graph_id(session_id)
+        nodes, edges = [], []
+        for i, _item in enumerate(items):
+            # go-SOURCE `go{i}` (constant, PORTS_IN={}) wired into STEP `step{i}` (carrier) on `text`.
+            # The step waits until go{i}'s OUTPUT ADDRESS resolves (scheduler readiness, scheduler.py:62-67).
+            nodes.append(NodeInstance(id=f"go{i}", type=self.GATE_CARRIER, config={"value": ""}))
+            nodes.append(NodeInstance(id=f"step{i}", type=self.STEP_CARRIER, config={}))
+            edges.append(Edge(from_node=f"go{i}", from_port="value", to_node=f"step{i}", to_port="text"))
+        g = Graph(id=gid, nodes=nodes, edges=edges)
+        self.store.save_graph(g)
+        # THE GATE INVARIANT (load-bearing — do not break): a `constant` go-source has PORTS_IN={} so it
+        # WOULD auto-fire on a plain run() and open EVERY gate at once. What actually holds the gates closed
+        # is that next() runs the session graph with ALL `go*` nodes in `pause` (so none auto-fire), and
+        # opens ONLY the current step's gate by WRITING that go-source's output address directly
+        # (set_ref+put_content). => The session graph MUST NEVER be run un-paused over its go-sources; the
+        # human-paced "go" signal is the hand-written address, not the source firing. (Removing the pause
+        # silently breaks pacing — every step would fire on the first Next; no test would catch it.)
+        session = {"id": session_id, "graph": gid, "mode": mode, "items": items,
+                   "cursor": 0, "opened": [], "done": False}
+        self.store.save_session(session)
+        self._emit("review.start", f"review session {session_id} started — {len(items)} item(s), mode={mode}",
+                   session=session_id, items=items, mode=mode)
+        return self.present_current(session_id)
+
+    def _load_session(self, session_id: str) -> dict:
+        s = self.store.load_session(session_id)
+        if not s:
+            raise KeyError(f"no review session {session_id!r}")
+        return s
+
+    def present_current(self, session_id: str) -> dict:
+        """B: the node at the cursor — the next unresolved go-gate — with its `coa` framing + `ui://`
+        target. Fail-safe: if `coa` errors (LLM down), present the RAW payload, NEVER block the walk (D)."""
+        s = self._load_session(session_id)
+        cur = s["cursor"]
+        if s.get("done") or cur >= len(s["items"]):
+            return {"session": session_id, "done": True, "cursor": cur, "total": len(s["items"])}
+        item_id = s["items"][cur]
+        framing, raw = None, None
+        try:
+            c = self.coa(item_id)                          # decision-compiler UP (D1, reuse)
+            framing, raw = c.get("framing"), c.get("raw")
+        except Exception as e:                             # FAIL-SAFE: raw payload, never block (guide D)
+            d = self.inbox.get(item_id)
+            raw = d.get("payload") if d else None
+            framing = None
+            self._emit("warning", f"coa failed for {item_id} ({type(e).__name__}) — presenting raw payload")
+        # mark presented (lifecycle status only — never touches `resolved`, so it stays a live escalation).
+        try:
+            self.inbox.set_status(item_id, "presented")
+        except (KeyError, ValueError):
+            pass
+        return {"session": session_id, "cursor": cur, "total": len(s["items"]),
+                "item": item_id, "framing": framing, "raw": raw,
+                "ui_target": f"ui://review/{item_id}",      # the step's present target (C1 addressing)
+                "done": False}
+
+    def respond(self, session_id: str, choice: str, reason: str = "") -> dict:
+        """B→D: record the operator's verdict for the CURRENT step, tagged with the session + position
+        (the reuse of resolve_surfaced — no parallel record path). Does NOT advance; `next()` does (B)."""
+        s = self._load_session(session_id)
+        cur = s["cursor"]
+        if cur >= len(s["items"]):
+            raise ValueError(f"session {session_id!r} has no current item to respond to (fail loud)")
+        item_id = s["items"][cur]
+        return self.resolve_surfaced(item_id, choice, reason, session_id=session_id, position=cur)
+
+    def next(self, session_id: str) -> dict:
+        """B: the Next page-turn. WRITES the current step's go-address (so the scheduler fires that step;
+        the cascade stalls at the NEXT step's still-unresolved gate), advances the cursor, emits
+        `review.advance`, returns the next presentation. Idempotent past the end (done)."""
+        s = self._load_session(session_id)
+        cur = s["cursor"]
+        if cur >= len(s["items"]):
+            s["done"] = True
+            self.store.save_session(s)
+            return {"session": session_id, "done": True, "cursor": cur, "total": len(s["items"])}
+        # OPEN this step's gate: write the go-source's logical output address directly (set_ref+put_content
+        # — we don't FIRE the source, we resolve its address by hand; that's the human-paced "go" signal).
+        go = self._go_addr(session_id, cur)
+        cas = self.store.put_content(f"go:{session_id}:{cur}")
+        self.store.set_ref(go, cas)
+        s.setdefault("opened", []).append(cur)
+        # run the session graph: only the now-opened step(s) become ready; later steps wait on their gates.
+        # Pause every go-source so a PORTS_IN={} constant can't auto-fire and open all gates at once.
+        gid = s["graph"]
+        g = self.store.load_graph(gid)
+        pause = [n.id for n in g.nodes if n.id.startswith("go")] if g else []
+        self.run(gid, pause=pause)                          # AUTO via guard; fires the opened step(s)
+        s["cursor"] = cur + 1
+        if s["cursor"] >= len(s["items"]):
+            s["done"] = True
+        self.store.save_session(s)
+        self._emit("review.advance", f"review session {session_id} → step {s['cursor']}",
+                   session=session_id, cursor=s["cursor"], total=len(s["items"]))
+        if s["done"]:
+            return {"session": session_id, "done": True, "cursor": s["cursor"], "total": len(s["items"])}
+        return self.present_current(session_id)
+
+    def session_status(self, session_id: str) -> dict:
+        """B: the session's live status — cursor, total, mode, which steps are opened, done."""
+        s = self._load_session(session_id)
+        return {"session": session_id, "cursor": s["cursor"], "total": len(s["items"]),
+                "mode": s.get("mode"), "items": s["items"], "opened": s.get("opened", []),
+                "done": bool(s.get("done"))}
+
+    # --- E: the channel back — the system acts, provably from a recorded verdict (the derived-from gate) ---
+    def review_verdicts(self, since: int = -1) -> list:
+        """E: the recorded verdicts the build loop reads from the STORE (not from Claude Code). Reads
+        events_since(cursor) filtered to kind=='resolve' & choice=='approve' (the resolve event carries
+        seq·surfaced·choice·reason). Cross-session/crash-safe by construction (it tails the shared log)."""
+        return [e for e in self.store.events_since(since)
+                if e.get("kind") == "resolve" and e.get("choice") == "approve"]
+
+    def commit_criterion(self, criterion_id: str, sid: str, derived_from: int) -> dict:
+        """E: write a criterion as a GOVERNED action whose authorization is READ FROM THE SUBSTRATE —
+        REQUIRES `derived_from` = a resolve event's unique `seq`, and verifies the THREE-PART BIND:
+        that event is kind=resolve · choice=approve · surfaced==sid, else raise GovernanceError (mirrors
+        apply_node→is_approved). Bound to the event `seq` (unique), NOT `sid` (repeats on re-resolve).
+        Emits the write WITH `derived_from` for audit. (The loop that CALLS this is lane X.)"""
+        if not isinstance(derived_from, int):
+            raise GovernanceError(f"commit_criterion requires derived_from = a resolve event seq (int), "
+                                  f"got {type(derived_from).__name__} — refused (no ungoverned criterion write)")
+        ev = next((e for e in self.store.events_since(-1) if e.get("seq") == derived_from), None)
+        if ev is None:
+            raise GovernanceError(f"commit_criterion: no event with seq={derived_from} — cannot derive a "
+                                  f"criterion from a verdict that doesn't exist (fail loud)")
+        if not (ev.get("kind") == "resolve" and ev.get("choice") == "approve" and ev.get("surfaced") == sid):
+            raise GovernanceError(
+                f"commit_criterion: event seq={derived_from} does not satisfy the three-part bind "
+                f"(kind=resolve·choice=approve·surfaced=={sid!r}) — got "
+                f"kind={ev.get('kind')!r} choice={ev.get('choice')!r} surfaced={ev.get('surfaced')!r}. Refused.")
+        self._emit("criterion.commit", f"criterion {criterion_id} committed (derived from verdict seq={derived_from})",
+                   criterion=criterion_id, surfaced=sid, derived_from=derived_from)
+        return {"criterion": criterion_id, "surfaced": sid, "derived_from": derived_from, "committed": True}
+
+    # --- C1: the UI-component registry serialization (sibling of object_info) ---
+    # Seeds the known chrome regions (DOM-resolved via data-ui-ref handles the UI lane adds) + the node
+    # canvas (camera-resolved). ref = the <ref> in ui://<kind>/<ref>; dom_handle = the data-ui-ref value.
+    # (ref, kind, title, dom_handle|camera_ref, caps-dict). caps keys are the Capabilities fields.
+    UI_REGISTRY = [
+        ("toolbar",   "chrome", "Toolbar",      {"dom_handle": "toolbar"},
+         {"pointable": True, "spotlit": True}),
+        ("inspector", "chrome", "Inspector",    {"dom_handle": "inspector"},
+         {"pointable": True, "spotlit": True, "openable": True}),
+        ("inbox",     "chrome", "Inbox",        {"dom_handle": "inbox"},
+         {"pointable": True, "spotlit": True, "openable": True}),
+        ("activity",  "chrome", "Activity log", {"dom_handle": "activity"},
+         {"pointable": True, "spotlit": True, "openable": True, "drivenReadOnly": True}),
+        ("chat",      "chrome", "RHM chat",     {"dom_handle": "chat"},
+         {"pointable": True, "spotlit": True, "openable": True}),
+        ("workshop",  "chrome", "Workshop",     {"dom_handle": "workshop"},
+         {"pointable": True, "spotlit": True, "openable": True}),
+        # the node canvas itself (camera_ref="*" = the whole canvas; individual nodes are addressed live
+        # as ui://canvas/<node-id> by show's canvas branch — reuse of the existing camera path).
+        ("*", "canvas", "Node canvas", {"camera_ref": "*"},
+         {"pointable": True, "spotlit": True, "presentable": True}),
+    ]
+
+    def build_ui_info(self) -> dict:
+        """C1: serialize the UI-component registry for the frontend (a SIBLING of object_info — which is
+        NodeType-hardwired, so this is its own build, not a reuse). Built against
+        contracts.ui_info.UiComponentEntry/Capabilities + build_ui_info (the CONTRACTS lane provides them).
+        FUNCTION-LOCAL import so suite.py loads even before that contract lands; fails loud only when
+        ui_info is actually called. The UI lane adds the matching data-ui-ref handles to the DOM."""
+        from contracts.ui_info import UiComponentEntry, Capabilities, build_ui_info as _build
+        entries = []
+        for ref, kind, title, handle, caps in self.UI_REGISTRY:
+            entries.append(UiComponentEntry(ref=ref, kind=kind, title=title,
+                                            capabilities=Capabilities(**caps), **handle))
+        return _build(entries)
+
+    def ui_info(self) -> dict:
+        return self.build_ui_info()
+
     # --- self-growth: build-dispatch (the "direct its growth" half of the first purpose) ---
     @staticmethod
     def _safe_node_name(name: str) -> str:
@@ -877,22 +1119,24 @@ class Suite:
         d = self.inbox.get(surfaced_id)
         if not d:
             raise KeyError(f"no surfaced decision {surfaced_id!r}")
-        if not self.inbox.is_approved(surfaced_id):
-            raise GovernanceError(
-                f"code_build {surfaced_id!r} not approved — operator must resolve it 'approve' first (CONFIRM)")
-        name = self._safe_node_name(d["payload"]["name"])   # re-validate at apply
-        code = d["payload"]["code"]
-        path = os.path.join(self.nodes_dir, name + ".py")
-        tmp = path + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            f.write(code if code.endswith("\n") else code + "\n")
-        os.replace(tmp, path)                               # atomic; no partial file
-        sha = self._commit_or_rollback(path, f"add node-type '{name}'")  # fail loud if not git-revertible
-        self.registry.discover([self.nodes_dir])            # committed -> NOW make it live
-        self._emit("apply", f"approved + applied '{name}' — now a live node-type · {sha[:8]}",
-                   node_name=name, commit=sha)
-        self.refresh_map()
-        return path
+        def _do():                                          # the consequential body — runs ONLY if approved
+            name = self._safe_node_name(d["payload"]["name"])   # re-validate at apply
+            code = d["payload"]["code"]
+            path = os.path.join(self.nodes_dir, name + ".py")
+            tmp = path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                f.write(code if code.endswith("\n") else code + "\n")
+            os.replace(tmp, path)                           # atomic; no partial file
+            sha = self._commit_or_rollback(path, f"add node-type '{name}'")  # fail loud if not git-revertible
+            self.registry.discover([self.nodes_dir])        # committed -> NOW make it live
+            self._emit("apply", f"approved + applied '{name}' — now a live node-type · {sha[:8]}",
+                       node_name=name, commit=sha)
+            self.refresh_map()
+            return path
+        # G1: POLICY is the single router. code_build → CONFIRM → runs only if the OPERATOR approved
+        # the surfaced item (authorization READ from the substrate, never a caller flag). inbox=None so
+        # the blocked path just raises GovernanceError — it must NOT re-surface (the item already exists).
+        return guard("code_build", do=_do, confirmed=self.inbox.is_approved(surfaced_id))
 
     # --- self-modification safety net (slice 13): additive + git-reversible ---
     @property
@@ -1026,36 +1270,38 @@ class Suite:
         d = self.inbox.get(surfaced_id)
         if not d:
             raise KeyError(f"no surfaced decision {surfaced_id!r}")
-        if not self.inbox.is_approved(surfaced_id):
-            raise GovernanceError(f"ui_panel {surfaced_id!r} not approved — operator must approve (CONFIRM)")
-        name = self._safe_node_name(d["payload"]["name"])
-        deftn = d["payload"]["panel"]
-        fields, dropped = [], []
-        for f in (deftn.get("fields") or []):
-            if f.get("type") in self.PANEL_FIELD_TYPES and f.get("target") in self.PANEL_TARGETS:
-                # registered-target options come from the REGISTRY (authoritative) — never the brain's
-                # guess. So a 'model' picker always lists the REAL models, not invented names.
-                reg_opts = self._registered_options(f["target"])
-                opts = reg_opts if (f["type"] == "select" and reg_opts) \
-                    else ([str(o) for o in f.get("options", [])] if f["type"] == "select" else [])
-                fields.append({"key": str(f.get("key", f.get("target"))), "label": str(f.get("label", "")),
-                               "type": f["type"], "target": f["target"], "options": opts})
-            else:
-                dropped.append(f"{f.get('key', '?')}({f.get('type')}/{f.get('target')})")
-        if dropped:                                          # surface dropped fields, never silent (F6)
-            self._emit("warning", f"panel '{name}': dropped {len(dropped)} field(s) with unsupported "
-                       f"type/target: {', '.join(dropped)}")
-        clean = {"id": name, "title": str(deftn.get("title", name)), "fields": fields}
-        import json as _j
-        os.makedirs(self.panels_dir, exist_ok=True)
-        path = os.path.join(self.panels_dir, name + ".json")
-        tmp = path + ".tmp"
-        open(tmp, "w", encoding="utf-8").write(_j.dumps(clean, indent=2))
-        os.replace(tmp, path)
-        sha = self._commit_or_rollback(path, f"add UI panel '{name}'")
-        self._emit("apply", f"approved + applied '{name}' UI panel · {sha[:8]}", node_name=name, commit=sha)
-        self.refresh_map()
-        return path
+        def _do():                                           # the consequential body — runs ONLY if approved
+            name = self._safe_node_name(d["payload"]["name"])
+            deftn = d["payload"]["panel"]
+            fields, dropped = [], []
+            for f in (deftn.get("fields") or []):
+                if f.get("type") in self.PANEL_FIELD_TYPES and f.get("target") in self.PANEL_TARGETS:
+                    # registered-target options come from the REGISTRY (authoritative) — never the brain's
+                    # guess. So a 'model' picker always lists the REAL models, not invented names.
+                    reg_opts = self._registered_options(f["target"])
+                    opts = reg_opts if (f["type"] == "select" and reg_opts) \
+                        else ([str(o) for o in f.get("options", [])] if f["type"] == "select" else [])
+                    fields.append({"key": str(f.get("key", f.get("target"))), "label": str(f.get("label", "")),
+                                   "type": f["type"], "target": f["target"], "options": opts})
+                else:
+                    dropped.append(f"{f.get('key', '?')}({f.get('type')}/{f.get('target')})")
+            if dropped:                                      # surface dropped fields, never silent (F6)
+                self._emit("warning", f"panel '{name}': dropped {len(dropped)} field(s) with unsupported "
+                           f"type/target: {', '.join(dropped)}")
+            clean = {"id": name, "title": str(deftn.get("title", name)), "fields": fields}
+            import json as _j
+            os.makedirs(self.panels_dir, exist_ok=True)
+            path = os.path.join(self.panels_dir, name + ".json")
+            tmp = path + ".tmp"
+            open(tmp, "w", encoding="utf-8").write(_j.dumps(clean, indent=2))
+            os.replace(tmp, path)
+            sha = self._commit_or_rollback(path, f"add UI panel '{name}'")
+            self._emit("apply", f"approved + applied '{name}' UI panel · {sha[:8]}", node_name=name, commit=sha)
+            self.refresh_map()
+            return path
+        # G1: ui_panel → CONFIRM (now explicit in POLICY) → runs only if operator-approved. inbox=None
+        # → the blocked path raises GovernanceError without re-surfacing (item already exists).
+        return guard("ui_panel", do=_do, confirmed=self.inbox.is_approved(surfaced_id))
 
     def apply_surfaced(self, surfaced_id: str) -> dict:
         """Dispatch apply by the decision's class — ui_panel → panel, ui_extension → code-gated
@@ -1125,37 +1371,81 @@ class Suite:
         d = self.inbox.get(surfaced_id)
         if not d:
             raise KeyError(f"no surfaced decision {surfaced_id!r}")
-        if not self.inbox.is_approved(surfaced_id):
-            raise GovernanceError(f"ui_extension {surfaced_id!r} not approved — operator must approve (CONFIRM)")
-        name = self._safe_node_name(d["payload"]["name"])
-        code = d["payload"]["code"]
-        err = self._gate_extension(code)                      # gate runs on a temp file, NOT in src
-        if err:
-            self._emit("reject", f"extension '{name}' REJECTED by build-gate (never went live)", node_name=name)
-            return {"applied": None, "rejected": True, "error": err}
-        extdir = os.path.join(self._repo_root, "canvas", "app", "src", "extensions")
-        os.makedirs(extdir, exist_ok=True)
-        path = os.path.join(extdir, name + ".tsx")
-        tmp = path + ".tmp"
-        with open(tmp, "w", encoding="utf-8") as f:
-            f.write(code if code.endswith("\n") else code + "\n")
-        os.replace(tmp, path)                                 # promote (gate passed) — now Vite loads it
-        sha = self._commit_or_rollback(path, f"add extension '{name}'")   # fail loud if not git-revertible
-        self._emit("apply", f"approved + applied '{name}' extension (gate passed) · {sha[:8]}",
-                   node_name=name, commit=sha)
-        self.refresh_map()
-        return {"applied": path, "rejected": False, "commit": sha}
+        def _do():                                            # the consequential body — runs ONLY if approved
+            name = self._safe_node_name(d["payload"]["name"])
+            code = d["payload"]["code"]
+            err = self._gate_extension(code)                  # gate runs on a temp file, NOT in src
+            if err:
+                self._emit("reject", f"extension '{name}' REJECTED by build-gate (never went live)", node_name=name)
+                return {"applied": None, "rejected": True, "error": err}
+            extdir = os.path.join(self._repo_root, "canvas", "app", "src", "extensions")
+            os.makedirs(extdir, exist_ok=True)
+            path = os.path.join(extdir, name + ".tsx")
+            tmp = path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                f.write(code if code.endswith("\n") else code + "\n")
+            os.replace(tmp, path)                             # promote (gate passed) — now Vite loads it
+            sha = self._commit_or_rollback(path, f"add extension '{name}'")   # fail loud if not git-revertible
+            self._emit("apply", f"approved + applied '{name}' extension (gate passed) · {sha[:8]}",
+                       node_name=name, commit=sha)
+            self.refresh_map()
+            return {"applied": path, "rejected": False, "commit": sha}
+        # G1: ui_extension → CONFIRM (now explicit in POLICY) → runs only if operator-approved. inbox=None
+        # → the blocked path raises GovernanceError without re-surfacing (item already exists).
+        return guard("ui_extension", do=_do, confirmed=self.inbox.is_approved(surfaced_id))
 
     # --- surfaced-decision inbox (D4/D7) ---
     def list_surfaced(self) -> list:
         return self.inbox.list()
 
-    def resolve_surfaced(self, sid: str, choice: str, reason: str = "") -> None:
+    # the operator's response vocabulary (D): approve/reject/decide RESOLVE; comment annotates without
+    # resolving; skip defers — back to the inbox, NOT resolved (a skipped item still needs Tim).
+    RESOLVING_VERBS = ("approve", "reject", "decide")
+
+    def resolve_surfaced(self, sid: str, choice: str, reason: str = "",
+                         session_id: str | None = None, position: int | None = None) -> dict:
         """OPERATOR-only (UI channel) — NOT exposed on the MCP face, so the agent can't self-approve.
-        Captures the operator's reason (the WHY) into the trajectory — the generalising signal (I1)."""
+        Captures the WHY (the generalising signal, I1) and — additively (D) — the session id + position
+        the response came from, plus the comment/skip/decide vocabulary:
+          • approve/reject/decide → RESOLVE (writes `resolved`; status → resolved).
+          • comment → annotate only (records the reason; status → responded; NOT resolved).
+          • skip → defer (status back to 'inbox'; NOT resolved — a skipped item still needs Tim).
+        Returns the verbose verdict. Existing two-arg callers are unchanged (the new args default)."""
+        d = self.inbox.get(sid)
+        if not d:
+            raise KeyError(f"no surfaced decision {sid!r}")
+        # session-position tagging (record on the surfaced item + the resolve event for audit/replay).
+        if session_id is not None:
+            d.setdefault("session_id", session_id)
+            if position is not None:
+                d["position"] = position
+            self.store.save_surfaced(d)
+
+        if choice == "skip":
+            self.inbox.set_status(sid, "inbox")            # defer — still a live escalation; NOT resolved
+            self._emit("review.skip", f"operator skipped {sid}" + (f" — {reason}" if reason else ""),
+                       surfaced=sid, choice="skip", reason=reason, session=session_id, position=position)
+            return {"id": sid, "choice": "skip", "status": "inbox", "resolved": False}
+        if choice == "comment":
+            if reason:                                     # annotate the WHY without resolving
+                d["reason"] = reason
+                self.store.save_surfaced(d)
+            self.inbox.set_status(sid, "responded")
+            self._emit("review.comment", f"operator commented on {sid}" + (f" — {reason}" if reason else ""),
+                       surfaced=sid, choice="comment", reason=reason, session=session_id, position=position)
+            return {"id": sid, "choice": "comment", "status": "responded", "resolved": False}
+
+        # approve / reject / decide (or any other verb) → RESOLVE. resolve() writes `resolved` + reason;
+        # mark the lifecycle status resolved (additive) and emit the resolve event (seq·surfaced·choice·
+        # reason — the verdict E reads, suite.py resolve event).
         self.inbox.resolve(sid, choice, reason)
+        try:
+            self.inbox.set_status(sid, "resolved")
+        except KeyError:
+            pass
         self._emit("resolve", f"operator {choice}d {sid}" + (f" — {reason}" if reason else ""),
-                   surfaced=sid, choice=choice, reason=reason)
+                   surfaced=sid, choice=choice, reason=reason, session=session_id, position=position)
+        return {"id": sid, "choice": choice, "status": "resolved", "resolved": True}
 
     def decision_view(self, sid: str) -> dict:
         """A decision as a VIEW derived from the event log (I2): its full trajectory — proposed →
@@ -1164,6 +1454,16 @@ class Suite:
         evs = sorted((e for e in self.store.recent_events(999) if e.get("surfaced") == sid),
                      key=lambda e: e.get("seq", 0))                # chronological path, not endpoint
         return {"id": sid, "decision": d, "trajectory": evs}
+
+    def session_view(self, session_id: str) -> dict:
+        """D: the full trajectory of a review SESSION — every event tagged with this session id, in
+        order. Clones decision_view but WIDENS past the 999-event window: reads from the start via
+        events_since(-1) (the file-tail) and filters on `session`, so a long walk is never truncated."""
+        evs = [e for e in self.store.events_since(-1) if e.get("session") == session_id]
+        evs.sort(key=lambda e: e.get("seq", 0))
+        g = self.store.load_graph(self._session_graph_id(session_id))
+        return {"session": session_id, "trajectory": evs,
+                "graph": g.model_dump(mode="json") if g else None}
 
     def replay(self, limit: int = 200) -> list:
         """The whole captured path, oldest-first — the trajectory that trains the twin (I1)."""

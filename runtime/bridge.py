@@ -104,6 +104,12 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.list_panels()))
             elif path == "/api/capabilities":
                 self._send(200, json.dumps(SUITE.capabilities()))
+            elif path == "/api/ui_info":                   # C1: the UI-component registry (sibling of object_info)
+                self._send(200, json.dumps(SUITE.ui_info()))
+            elif path == "/api/review/current":            # B: the node at the cursor + its framing + ui:// target
+                self._send(200, json.dumps(SUITE.present_current(q["session"])))
+            elif path == "/api/review/status":             # B: the session's live status
+                self._send(200, json.dumps(SUITE.session_status(q["session"])))
             elif path == "/api/voice":                     # voice status: STT providers + TTS up?
                 from voice import stt as voice_stt
                 tts_up = False
@@ -225,6 +231,20 @@ class H(BaseHTTPRequestHandler):
                 b = self._body()
                 gid = b.get("graph_id", DEMO)
                 self._send(200, json.dumps(SUITE.surface_output(gid, b["node"])))
+            elif self.path == "/api/surface-review":       # A: surface a review item into the one queue
+                b = self._body()
+                self._send(200, json.dumps(SUITE.surface_review(
+                    b["item"], origin=b.get("origin", "responsive"))))
+            elif self.path == "/api/capture-idea":         # A4: capture a fleeting idea (generative review item)
+                b = self._body()
+                self._send(200, json.dumps(SUITE.idea_capture(b["text"])))
+            elif self.path == "/api/review/start":         # B: start a review session (NOT graph-scoped — makes its own)
+                b = self._body()
+                self._send(200, json.dumps(SUITE.start_session(
+                    b["item_ids"], mode=b.get("mode", "walkthrough"))))
+            elif self.path == "/api/review/next":          # B: Next — open the gate, fire the step, advance
+                b = self._body()
+                self._send(200, json.dumps(SUITE.next(b["session"])))
             elif self.path == "/api/react":               # watch-and-react ambient comment
                 self._send(200, json.dumps(SUITE.react(DEMO)))
             elif self.path == "/api/revert":              # OPERATOR-only rollback of a self-change
@@ -234,10 +254,13 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/propose":          # agent/operator dispatches a build
                 b = self._body()
                 self._send(200, json.dumps(SUITE.propose_node(b["name"], b["spec"])))
-            elif self.path == "/api/resolve":           # OPERATOR approves/rejects (UI channel)
+            elif self.path == "/api/resolve":           # OPERATOR approves/rejects/comments/skips (UI channel)
                 b = self._body()
-                SUITE.resolve_surfaced(b["id"], b["choice"], b.get("reason", ""))
-                self._send(200, json.dumps({"ok": True, "surfaced": SUITE.list_surfaced()}))
+                # D: additive session tagging + the comment/skip/decide vocabulary; existing callers
+                # (id+choice+reason) are unchanged. Operator-only — never on the MCP face (no-bypass).
+                v = SUITE.resolve_surfaced(b["id"], b["choice"], b.get("reason", ""),
+                                           session_id=b.get("session"), position=b.get("position"))
+                self._send(200, json.dumps({"ok": True, "verdict": v, "surfaced": SUITE.list_surfaced()}))
             elif self.path == "/api/decision":           # a decision as a view over the log (audit)
                 b = self._body()
                 self._send(200, json.dumps(SUITE.decision_view(b["id"])))
