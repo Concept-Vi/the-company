@@ -2,7 +2,7 @@ import {
   Tldraw, Editor, ShapeUtil, HTMLContainer, Rectangle2d, T,
   createShapeId, useEditor, useValue, stopEventPropagation, type TLBaseShape,
 } from 'tldraw'
-import { useState, useRef, Component, lazy, Suspense } from 'react'
+import { useState, useRef, useEffect, Component, lazy, Suspense } from 'react'
 
 // Per-panel error boundary — a malformed/throwing panel definition renders a CONTAINED card,
 // never white-screening the canvas (the operator's only control surface). Recovery is bridge-side.
@@ -68,6 +68,22 @@ const api = {
   voice: () => fetch('/api/voice').then(r => r.json()),
   stt: (blob: Blob) => fetch('/api/stt', { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: blob }).then(r => r.json()),
   tts: (text: string) => fetch('/api/tts', { method: 'POST', headers: J, body: JSON.stringify({ text }) }).then(r => r.blob()),
+  // C1: the UI-component registry (sibling of object_info) — the source of truth for what's addressable.
+  uiInfo: () => fetch('/api/ui_info').then(r => r.json()),
+  // B: the walkthrough/review session lifecycle. start makes its OWN session-graph (not graph-scoped);
+  // current = the node at the cursor + its coa framing + its ui:// target; next opens the gate + advances.
+  reviewStart: (item_ids: string[], mode = 'walkthrough') =>
+    fetch('/api/review/start', { method: 'POST', headers: J, body: JSON.stringify({ item_ids, mode }) }).then(r => r.json()),
+  reviewCurrent: (session: string) =>
+    fetch('/api/review/current?session=' + encodeURIComponent(session)).then(r => r.json()),
+  reviewNext: (session: string) =>
+    fetch('/api/review/next', { method: 'POST', headers: J, body: JSON.stringify({ session }) }).then(r => r.json()),
+  reviewStatus: (session: string) =>
+    fetch('/api/review/status?session=' + encodeURIComponent(session)).then(r => r.json()),
+  // D: the per-step verdict — operator-only. Session+position tag the verdict to its walk step (additive;
+  // legacy id+choice+reason callers unchanged). Reflects-never-owns: the verdict goes THROUGH the gate.
+  resolveStep: (id: string, choice: string, reason: string, session: string, position: number) =>
+    fetch('/api/resolve', { method: 'POST', headers: J, body: JSON.stringify({ id, choice, reason, session, position }) }).then(r => r.json()),
 }
 
 const MODES = ['listening', 'text-only', 'background', 'focus', 'walkthrough', 'watch-and-react', 'decide-for-me', 'off']
@@ -87,6 +103,10 @@ let CONNECT: (from_node: string, from_port: string, to_node: string, to_port: st
 let DRAG_CONN: { from_node: string; from_port: string } | null = null
 // D4: a per-node force-rerun affordance on the card bypasses the memo gate for just that node.
 let FORCE_RUN: (node_id: string) => void = () => {}
+// C1: the UI-component registry (from /api/ui_info) — READ truth, the source of what's addressable. The
+// resolver validates ui:// targets against it (registry-is-truth: an unknown ref fails loud, never a
+// silent no-op). Set ONCE on load (mirrors OINFO). ref -> {ref,kind,title,capabilities,domHandle,cameraRef}.
+let UI_INFO: Record<string, any> = {}
 
 // A2/B2: transform a node-type's config_schema ({key:{type,label,default,options_from?,options?,...}})
 // into the flat field-defs PanelView renders. enum -> select; everything else -> input. options come from
@@ -443,6 +463,24 @@ function Hud() {
   // C5: per-node debounce timers for drag-end → /api/move (one write per settle, not per pointermove).
   const moveTimers = useRef<Record<string, any>>({})
   const streamSeq = useRef<number>(-1)              // G2: highest seq the client has seen (EventSource cursor)
+  // B-frontend: the active review session — null when no walk is running. Holds the LIVE current step
+  // ({session,cursor,total,item,framing,raw,ui_target,done}). The card renders from this; the SSE
+  // review.advance event refreshes it; reflects-never-owns (the backend session is authoritative).
+  const [session, setSession] = useState<any>(null)
+  const sessionRef = useRef<any>(null)              // mirror for the openStream closure (set once, never re-bound)
+  const [wtReason, setWtReason] = useState('')      // the step's reject/comment WHY (captured into the verdict)
+  const [voiceOn, setVoiceOn] = useState(true)      // F3: voice|text toggle — voice-first, falls back to text
+  const [wtSpoke, setWtSpoke] = useState('')        // last voice status line for the card (speaking/heard/fell back)
+  const spokenFor = useRef<string>('')              // F1: which (session:cursor) we've already spoken — speak ONCE per step
+  // CONCURRENCY GUARD: /api/review/next and /api/resolve framing take ~20s; an operator who clicks, sees
+  // nothing, and clicks again would issue CONCURRENT requests that desync the backend cursor (Next) or
+  // record two verdicts (respond). wtBusy DISABLES Next + every respond control while a request is in
+  // flight (the visible/UX half). wtBusyRef is the LOAD-BEARING half: a rapid double-click can fire two
+  // handlers before React commits the disabled re-render, so we gate on the ref synchronously at entry —
+  // one click = one request, guaranteed. Cleared in `finally` so an error re-enables (never a dead end).
+  const [wtBusy, setWtBusy] = useState(false)
+  const wtBusyRef = useRef(false)
+  sessionRef.current = session
 
   // Merge events by SEQ into the current list — an event already present (same seq) is never duplicated,
   // regardless of source (initial /api/events backlog · the SSE ?since= backlog · reconnect replay · a
@@ -489,6 +527,7 @@ function Hud() {
       // B2: live model lists FIRST (the source of truth) so config_schema dropdowns resolve immediately.
       try { MODEL_OPTIONS = { chat_models: await api.models('chat'), embed_models: await api.models('embed') } } catch { /* */ }
       OINFO = await api.objectInfo(); setOinfo(OINFO)      // C1: ports/schema reachable by the shape + Edges
+      try { UI_INFO = await api.uiInfo() } catch { /* the registry is the source of truth for ui:// targets */ }   // C1: UI-component registry
       const g = await loadGraph(editor); setEdges(g.edges || []); setGid(g.id); syncConfig(g)
       setTypes(await api.types())
       setChat(await api.chatHistory())
@@ -496,6 +535,17 @@ function Hud() {
       const evs = await api.events(); mergeEvents(setEvents, evs)
       streamSeq.current = evs.reduce((m: number, e: any) => Math.max(m, e.seq ?? -1), -1)  // cursor = last seen
       setNow(await api.now()); setInbox(await api.inbox()); setLastChange(await api.lastChange()); setPanels(await api.panels())
+      // S7c (same-device resume): a persisted session id rehydrates the walk at the SAME cursor on reload /
+      // SSE-drop. The backend session is server-authoritative; we just re-read present_current. (True
+      // cross-device phone resume needs the backend to expose the active session id — a lane-Q surface.)
+      try {
+        const sid = localStorage.getItem('company-review-session')
+        if (sid) {
+          const s = await api.reviewCurrent(sid)
+          if (s && !s.error) setSession(s)
+          else localStorage.removeItem('company-review-session')   // stale/closed — don't resurface a dead walk
+        }
+      } catch { /* */ }
       openStream()                                        // G2: replaces setInterval(poll, 2500)
     })()
     // C5: drag-end write-back. The {source:'user'} filter narrows to operator gestures; the LOAD-BEARING
@@ -542,6 +592,12 @@ function Hud() {
         try { setInbox(await api.inbox()); setNow(await api.now()); setLastChange(await api.lastChange()); setPanels(await api.panels()) } catch { /* */ }
       } else if (k === 'chat' || k === 'react') {
         try { setChat(await api.chatHistory()) } catch { /* */ }
+      } else if (k === 'review.advance' || k === 'review.start') {
+        // B-frontend: the walk advanced server-side (this event used to fall into `else`). Refresh the card
+        // from present_current IF it's OUR session — reflects-never-owns (the backend session is truth).
+        if (ev.session && sessionRef.current && ev.session === sessionRef.current.session) {
+          await refreshSession(ev.session)
+        }
       } else {
         try { setNow(await api.now()) } catch { /* */ }
       }
@@ -614,12 +670,17 @@ function Hud() {
       // co-presence: the RHM sees what the operator has selected on the canvas right now
       const selected = (editor.getSelectedShapes().filter(s => s.type === 'node') as NodeShape[]).map(s => s.props.nodeId)
       const r = await api.chat(m, { selected }); setChat(r.history); await poll()
-      if (now?.mode === 'listening' && r.reply) speakReply(r.reply)   // voice out: speak the reply
+      if (now?.mode === 'listening' && r.reply) speakReply(r.reply).catch(() => { /* TTS hiccup is harmless here */ })   // voice out: speak the reply
       // the decision-compiler DOWN: an action the RHM took routes through the gate
       if (r.action?.did === 'run' || r.action?.did === 'build') { await reload() }
-      if (r.action?.did === 'show') {           // attention-direction: move the operator's view
-        const ids = r.action.targets.map((nid: string) => shapeIdFor(nid)).filter((id: any) => editor.getShape(id))
-        if (ids.length) { editor.select(...ids); editor.zoomToSelection({ animation: { duration: 450 } }) }
+      if (r.action?.did === 'show') {           // attention-direction: move the operator's view (THE KEYSTONE)
+        // C3/S2: route EVERY target through resolveUiTarget — node-ids drive the camera (the existing path),
+        // ui://<kind>/<ref> strings (once lane X passes them through) drive the camera OR scroll+spotlight a
+        // chrome panel. One sink for both forms; this is what makes `show` ui://-aware (not node-only).
+        const targets: string[] = r.action.targets || []
+        const canvasIds = targets.filter(t => !t.startsWith('ui://')).map((nid: string) => shapeIdFor(nid)).filter((id: any) => editor.getShape(id))
+        if (canvasIds.length) { editor.select(...canvasIds); editor.zoomToSelection({ animation: { duration: 450 } }) }
+        targets.forEach(t => { if (t.startsWith('ui://')) resolveUiTarget(t) })   // chrome/panel/canvas-by-address
       }
       if (r.action?.did === 'propose') {
         const all = await fetch('/api/surfaced').then(x => x.json())
@@ -664,10 +725,153 @@ function Hud() {
     setNotice(`portal → ${ref} (one artefact, live view)`); await reload()
   }
 
+  // C2/C3 — THE KEYSTONE (frontend half): resolveUiTarget moves the operator's view to ANY addressable UI
+  // thing. It is the SINGLE sink for both attention-direction entry points (the chat `show` action AND the
+  // walkthrough card's per-step drive). It accepts two forms for backward-compat while lane X lands:
+  //   • a bare node-id          → treat as ui://canvas/<id> (today's `show` targets are node-ids)
+  //   • ui://<kind>/<ref>       → canvas → editor.select+zoomToSelection (the EXISTING show path, App.tsx);
+  //                               chrome|field|panel|ext → querySelector('[data-ui-ref]')+scrollIntoView+
+  //                               a transient .ui-spotlight ring (the net-new DOM-present path).
+  // registry-is-truth: a ui:// ref is validated against UI_INFO (from /api/ui_info) — an UNKNOWN ref fails
+  // loud with a notice, never a silent no-op. The verdict/edit never flows here — this only MOVES the view.
+  function resolveUiTarget(target?: string): boolean {
+    if (!target) return false
+    // form 1: bare node-id (legacy show targets) → canvas camera, the existing path
+    if (!target.startsWith('ui://')) return driveCanvas(target)
+    const m = target.match(/^ui:\/\/([^/]+)\/(.+)$/)
+    if (!m) { setNotice('✕ malformed ui:// target: ' + target); return false }
+    const kind = m[1], ref = m[2]
+    if (kind === 'canvas') {
+      if (ref === '*') { editor.zoomToFit({ animation: { duration: 450 } }); setNotice('→ canvas'); return true }
+      return driveCanvas(ref)
+    }
+    // chrome | field | panel | ext → a DOM target. Validate against the registry (fail loud if unknown).
+    if (UI_INFO[ref] == null && Object.keys(UI_INFO).length) {
+      setNotice('✕ no registered UI target for ' + ref + ' (registry is truth)'); return false
+    }
+    // openable (e.g. workshop) must be OPEN before we can scroll to it — honor the capability from the registry.
+    if (UI_INFO[ref]?.capabilities?.openable && ref === 'workshop' && !workshop && selectedRef.current) {
+      setWorkshop(selectedRef.current)   // open the workshop onto the current selection so the target exists in the DOM
+    }
+    // defer one frame so a just-opened region is mounted before we query for it (fail loud if still absent).
+    setTimeout(() => {
+      const el = document.querySelector('[data-ui-ref="' + ref + '"]') as HTMLElement | null
+      if (!el) { setNotice('✕ UI target not in the DOM right now: ' + ref); return }
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      el.classList.add('ui-spotlight')
+      setNotice('→ ' + (UI_INFO[ref]?.title || ref))
+      setTimeout(() => el.classList.remove('ui-spotlight'), 2400)   // transient ring — additive, no layout reflow
+    }, 30)
+    return true
+  }
+  // the canvas camera path — reused by both ui://canvas/<id> and a bare node-id. select+zoomToSelection is
+  // the EXISTING show path (preserved). A node-id with no shape fails loud (we never point at nothing).
+  function driveCanvas(nodeId: string): boolean {
+    const id = shapeIdFor(nodeId)
+    if (!editor.getShape(id)) { setNotice('✕ no node ' + nodeId + ' on the canvas'); return false }
+    editor.select(id); editor.zoomToSelection({ animation: { duration: 450 } })
+    setNotice('→ ' + nodeId); return true
+  }
+  // a ref the resolver can read the current selection from (for openable canvas-present), without a re-render dep.
+  const selectedRef = useRef<NodeShape['props'] | null>(null)
+
+  // B-frontend: start a walk over a set of review item ids (the inbox affordance — the operator-driven entry
+  // point for S1; the RHM-offered walk, lane X, will call the same start path). Persists the session id in
+  // localStorage so a page reload / SSE-drop resumes at the same cursor (S7c, same-device).
+  async function startWalk(itemIds: string[]) {
+    if (!itemIds.length) { setNotice('no review items to walk'); return }
+    if (wtBusyRef.current) return                  // CONCURRENCY GUARD: start framing also takes ~20s while session is still null (button not yet hidden) — a 2nd click would start TWO sessions. Drop it.
+    wtBusyRef.current = true; setWtBusy(true)
+    setNotice('starting walk over ' + itemIds.length + ' item(s)…')
+    try {
+      const s = await api.reviewStart(itemIds, 'walkthrough')
+      if (s?.error) { setNotice('✕ ' + s.error); return }
+      try { localStorage.setItem('company-review-session', s.session) } catch { /* */ }
+      setSession(s); setWtReason(''); setWtSpoke('')
+    } catch (e: any) { setNotice('✕ could not start the walk: ' + (e?.message || e)) }
+    finally { wtBusyRef.current = false; setWtBusy(false) }   // re-enable on success OR error
+  }
+  // refresh the card from the server-authoritative present_current (driven by the review.advance SSE event,
+  // and on resume). reflects-never-owns: the backend session is truth; we re-read it, never invent the step.
+  async function refreshSession(sid: string) {
+    try {
+      const s = await api.reviewCurrent(sid)
+      if (s?.error) { setNotice('✕ session: ' + s.error); endWalk(); return }
+      setSession(s); setWtReason('')
+    } catch { /* bridge transient — the next event re-pulls */ }
+  }
+  function endWalk() {
+    setSession(null); sessionRef.current = null; spokenFor.current = ''
+    try { localStorage.removeItem('company-review-session') } catch { /* */ }
+  }
+  // D-frontend: respond to the current step — operator-only, tagged with the session id + cursor position.
+  // approve/reject/comment/skip/decide. The verdict goes THROUGH /api/resolve (reflects-never-owns); a
+  // reject/comment carries the WHY (training signal + actionable edit, E2). respond RECORDS; Next ADVANCES.
+  async function respondStep(choice: string) {
+    if (!session?.item) return
+    if (wtBusyRef.current) return                  // CONCURRENCY GUARD: a request is already in flight — drop the extra click (one click = one verdict)
+    wtBusyRef.current = true; setWtBusy(true)       // ref gates synchronously (pre-render); state disables the controls visibly
+    const why = (choice === 'reject' || choice === 'comment') ? wtReason : ''
+    setNotice('verdict: ' + choice + ' · ' + session.item)
+    try {
+      const r = await api.resolveStep(session.item, choice, why, session.session, session.cursor)
+      if (r?.error || r?.ok === false) { setNotice('✕ ' + (r.error || 'resolve refused')); return }
+      setSession((cur: any) => cur ? { ...cur, _responded: choice } : cur)   // mark the step responded (UI hint)
+      await poll()   // refresh the inbox so the resolved item drops out of live_escalations
+    } catch (e: any) { setNotice('✕ resolve failed: ' + (e?.message || e)) }
+    finally { wtBusyRef.current = false; setWtBusy(false) }   // re-enable on success OR error — never a dead end
+  }
+  // B-frontend: Next — write the current step's go-gate (backend) → the scheduler fires it → the session
+  // advances to the next unresolved step (or done). The review.advance SSE event ALSO refreshes the card;
+  // we apply the returned step directly for instant feedback (idempotent with the event refresh).
+  async function nextStep() {
+    if (!session?.session) return
+    if (wtBusyRef.current) return                  // CONCURRENCY GUARD: framing takes ~20s — a 2nd click would issue a CONCURRENT /api/review/next that desyncs the cursor. Drop it.
+    wtBusyRef.current = true; setWtBusy(true)
+    setNotice('next →')
+    try {
+      const s = await api.reviewNext(session.session)
+      if (s?.error) { setNotice('✕ ' + s.error); return }
+      if (s.done) { setSession({ ...session, ...s, done: true, item: null, framing: null }) }
+      else { setSession(s); setWtReason('') }
+    } catch (e: any) { setNotice('✕ next failed: ' + (e?.message || e)) }
+    finally { wtBusyRef.current = false; setWtBusy(false) }   // re-enable on success OR error
+  }
+
+  // B+C — the per-step VIEW DRIVE: when the walk lands on a new step, MOVE the view to the thing the item
+  // concerns. The target is the RAW item's ui_target (ui://chrome/toolbar, ui://canvas/*, …) — NOT the
+  // top-level meta ui://review/<id> (that meta address isn't in the registry). Deps are the STEP only (not
+  // voiceOn) so toggling voice mid-step does NOT re-zoom/re-spotlight a view the operator didn't ask to move.
+  useEffect(() => {
+    if (!session || session.done || !session.item) return
+    const tgt = session.raw?.ui_target
+    if (tgt) resolveUiTarget(tgt)   // registry-validated; fail-loud if unknown
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.session, session?.cursor, session?.item])
+
+  // F — the per-step NARRATION: SPEAK the step's framing, voice-FIRST (not gated to listening mode; gated on
+  // the voice|text toggle). Speak ONCE per (session:cursor) step (spokenFor guard) so a re-render/refresh
+  // doesn't re-narrate; any voice failure falls back to text (F4 — never a dead end).
+  useEffect(() => {
+    if (!session || session.done || !session.item) return
+    const stepKey = session.session + ':' + session.cursor
+    if (spokenFor.current === stepKey) return
+    spokenFor.current = stepKey
+    const text = session.framing || (session.raw?.payload?.note) || ('Review item ' + session.item)
+    if (voiceOn) {
+      setWtSpoke('speaking…')
+      speakReply(text)
+        .then(() => setWtSpoke('🔊 spoke the framing'))
+        .catch(() => setWtSpoke('voice unavailable — read it on screen'))   // F4: never a dead end
+    } else setWtSpoke('text mode')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.session, session?.cursor, session?.item, voiceOn])
+
   const selected = useValue('sel', () => {
     const s = editor.getOnlySelectedShape()
     return s && s.type === 'node' ? (s as NodeShape).props : null
   }, [editor])
+  selectedRef.current = selected
 
   // D4: run the graph; `force` (a node-id list) bypasses the memo gate for just those nodes. D5: the run
   // result reports ran/cached per node — refresh() writes those statuses onto the cards (legible rerun).
@@ -690,9 +894,12 @@ function Hud() {
     if (r.error) { setGrowMsg(''); setSurf({ error: r.error }) } else setSurf(r)
     await poll()
   }
-  // voice out — speak the RHM's reply (local Kokoro via the bridge)
+  // voice out — speak text (local Kokoro via the bridge). Used by the RHM reply (listening mode) AND the
+  // walkthrough per-step narration (F1, voice-first). Throws on failure so callers that need a fallback
+  // (the walk, F4) can catch and degrade to text; the chat caller wraps it so a TTS hiccup is harmless.
   async function speakReply(text: string) {
-    try { const blob = await api.tts(text); new Audio(URL.createObjectURL(blob)).play() } catch { /* */ }
+    const blob = await api.tts(text)
+    await new Audio(URL.createObjectURL(blob)).play()
   }
   // voice in — push-to-talk: record → STT → send as a chat turn (which then speaks its reply)
   async function recordToggle() {
@@ -706,9 +913,26 @@ function Hud() {
         stream.getTracks().forEach(t => t.stop()); setRecording(false); setNotice('transcribing…')
         try {
           const r = await api.stt(new Blob(chunks, { type: 'audio/webm' }))
-          if (r.text) { setNotice('you said: ' + r.text); await sendChat(r.text) }
+          if (r.text) {
+            setNotice('you said: ' + r.text)
+            // F2: when a walk is active, the mic routes to the session RESPOND path (not sendChat). A simple
+            // keyword map turns speech into a verdict (approve/reject/skip/comment/decide); anything else
+            // becomes a comment carrying the transcript as the WHY (never a dead end — F4). Outside a walk,
+            // it's a normal chat turn (which speaks its reply).
+            if (sessionRef.current && !sessionRef.current.done) {
+              const t = r.text.toLowerCase()
+              const choice = /\bapprove|accept|yes|approved\b/.test(t) ? 'approve'
+                : /\breject|decline|no\b/.test(t) ? 'reject'
+                : /\bskip|pass|later\b/.test(t) ? 'skip'
+                : /\bdecide|you decide|defer to you\b/.test(t) ? 'decide'
+                : 'comment'
+              if (choice === 'reject' || choice === 'comment') setWtReason(r.text)   // capture the spoken WHY
+              setWtSpoke('🎙 heard: "' + r.text + '" → ' + choice)
+              await respondStep(choice)
+            } else await sendChat(r.text)
+          }
           else setNotice('(no speech detected)')
-        } catch (e: any) { setNotice('STT error: ' + (e?.message || e)) }
+        } catch (e: any) { setNotice('STT error — type instead: ' + (e?.message || e)) }   // F4: fall back to text
       }
       recorderRef.current = rec; rec.start(); setRecording(true); setNotice('listening… (click again to stop)')
     } catch { setNotice('mic unavailable — grant microphone permission') }
@@ -740,7 +964,64 @@ function Hud() {
   return (
     <>
       <Edges edges={edges} />
-      <div className="hud toolbar">
+      {/* B-frontend: the WALKTHROUGH CARD — the visible review organ. Shown only while a session is active.
+         Wrapped in PanelErrorBoundary so a bad item degrades to a contained card, never white-screens (LAW).
+         Renders present_current's framed item; the per-step effect already drove the view to its ui:// target
+         + spoke it. respond → /api/resolve (operator-only verdict); Next → /api/review/next; "N of M" progress. */}
+      {session && (
+        <PanelErrorBoundary name="walkthrough">
+          <div className="hud walkthrough" data-ui-ref="walkthrough">
+            <div className="wt-head">
+              <span className="wt-title">walkthrough</span>
+              <span className="wt-mode">
+                <button className={voiceOn ? 'on' : ''} onClick={() => setVoiceOn(true)} title="voice-first: speak each step">🔊 voice</button>
+                <button className={!voiceOn ? 'on' : ''} onClick={() => setVoiceOn(false)} title="text only">text</button>
+              </span>
+              <span className="wt-prog">{session.done ? 'complete' : `${(session.cursor ?? 0) + 1} of ${session.total}`}</span>
+              <span className="close" style={{ cursor: 'pointer', color: 'var(--dim)' }} title="leave the walk (the session stays server-side)"
+                onClick={endWalk}>✕</span>
+            </div>
+            {session.done ? (
+              <div className="wt-done">✓ walk complete — {session.total} item(s) reviewed. Verdicts are recorded; the
+                build loop reads them on its next fire (approved→done · new-ask→a new criterion · rejected→requeued · skipped→still pending).
+                <div style={{ marginTop: 10 }}><button className="b ghost" onClick={endWalk}>close</button></div>
+              </div>
+            ) : (
+              <>
+                {/* S7b: framing is fail-safe — if the coa LLM errored the backend returns the raw payload; we
+                   still show SOMETHING (the note / the item id), the walk never blocks. */}
+                <div className="wt-frame">{session.framing || (session.raw?.payload?.note) || ('Review item: ' + session.item + ' (no framing returned — raw payload below)')}</div>
+                {session.raw?.ui_target && <div className="wt-target">concerns: {session.raw.ui_target}
+                  <button className="b ghost sm" style={{ marginLeft: 8 }} title="move the view to this thing again"
+                    onClick={() => resolveUiTarget(session.raw.ui_target)}>↪ show again</button></div>}
+                <input className="wt-reason" placeholder="why? (captured into the verdict — required for reject/comment)"
+                  value={wtReason} onChange={e => setWtReason(e.target.value)} />
+                {/* CONCURRENCY GUARD: every respond control is disabled while a request is in flight (wtBusy)
+                   — one click = one verdict; the .wt-busy class dims them so the lock is visible during the ~20s wait. */}
+                <div className={'wt-respond' + (wtBusy ? ' wt-busy' : '')}>
+                  <button className="b verdict approve" disabled={wtBusy} onClick={() => respondStep('approve')} title="approve this item">✓ approve</button>
+                  <button className="b ghost verdict reject" disabled={wtBusy} onClick={() => respondStep('reject')} title="reject (give a reason)">✕ reject</button>
+                  <button className="b ghost verdict" disabled={wtBusy} onClick={() => respondStep('comment')} title="comment — capture a note, stays pending">✎ comment</button>
+                  <button className="b ghost verdict" disabled={wtBusy} onClick={() => respondStep('skip')} title="skip — still needs you later">⤼ skip</button>
+                  <button className="b ghost verdict" disabled={wtBusy} onClick={() => respondStep('decide')} title="let the system decide (deterministic, by consequence)">⚖ decide</button>
+                </div>
+                <div className="wt-foot">
+                  {wtBusy
+                    ? <span className="wt-resolved">⏳ working… (framing can take a moment)</span>
+                    : session._responded
+                      ? <span className="wt-resolved">✓ responded: {session._responded}</span>
+                      : <span className="muted">respond, then advance</span>}
+                  {/* Next disabled while a /api/review/next (or any respond) request is pending — a 2nd click
+                     mid-flight would issue a concurrent next that desyncs the backend cursor. */}
+                  <button className="b" style={{ marginLeft: 'auto' }} disabled={wtBusy} onClick={nextStep} title="advance to the next step">{wtBusy ? '…' : 'next →'}</button>
+                  {wtSpoke && <span className="wt-spoke">{wtSpoke}</span>}
+                </div>
+              </>
+            )}
+          </div>
+        </PanelErrorBoundary>
+      )}
+      <div className="hud toolbar" data-ui-ref="toolbar">
         <span className="title">the&nbsp;<em>company</em></span>
         {now && (
           <span className={'presence ' + (now.mode === 'off' ? 'off' : running || chatBusy ? 'busy' : now.surfaced_pending ? 'warn' : 'ok')}>
@@ -771,7 +1052,7 @@ function Hud() {
         ))}
       </div>
 
-      <div className="hud panel">
+      <div className="hud panel" data-ui-ref="inspector">
         {selected ? (
           <>
             <h3>{selected.nodeType} · {selected.nodeId}</h3>
@@ -817,17 +1098,25 @@ function Hud() {
           </>
         ) : <div className="muted">select a node to inspect it. pan/zoom the canvas; zoom in for detail (semantic zoom).</div>}
 
-        <h3 style={{ marginTop: 18 }}>inbox · chief-of-staff triage</h3>
-        <div className="ibx-head">
-          <span className="sig">{inbox.counts?.escalations || 0} awaiting you</span>
-          <span className="muted"> · {inbox.counts?.resolved || 0} resolved-for-you</span>
-        </div>
-        {(inbox.live_escalations || []).map((d: any) => (
-          <div key={d.id} className="ibx-item" onClick={() => openCoa(d.id)}>
-            ⚠ {d.action} · {d.payload?.name || d.id} <span className="muted">— compile ↗</span>
+        <div data-ui-ref="inbox">
+          <h3 style={{ marginTop: 18 }}>inbox · chief-of-staff triage</h3>
+          <div className="ibx-head">
+            <span className="sig">{inbox.counts?.escalations || 0} awaiting you</span>
+            <span className="muted"> · {inbox.counts?.resolved || 0} resolved-for-you</span>
+            {/* B-frontend: the operator entry point for S1 — walk ALL live escalations through the organ.
+               The RHM-offered walk (lane X) calls the same startWalk path; this makes S1 testable now. */}
+            {(inbox.live_escalations || []).length > 0 && !session && (
+              <button className="b sm" style={{ marginLeft: 'auto' }} disabled={wtBusy} title="walk all awaiting items through the review organ"
+                onClick={() => startWalk((inbox.live_escalations || []).map((d: any) => d.id))}>{wtBusy ? 'starting…' : '▷ walk these'}</button>
+            )}
           </div>
-        ))}
-        {(inbox.counts?.escalations || 0) === 0 && <div className="muted">nothing awaiting you.</div>}
+          {(inbox.live_escalations || []).map((d: any) => (
+            <div key={d.id} className="ibx-item" onClick={() => openCoa(d.id)}>
+              ⚠ {d.action} · {d.payload?.name || d.id} <span className="muted">— compile ↗</span>
+            </div>
+          ))}
+          {(inbox.counts?.escalations || 0) === 0 && <div className="muted">nothing awaiting you.</div>}
+        </div>
 
         <h3 style={{ marginTop: 18 }}>grow · teach a new node</h3>
         <input placeholder="node name (e.g. wordcount)" value={gname} onChange={e => setGname(e.target.value)} />
@@ -878,7 +1167,7 @@ function Hud() {
         ))}
       </div>
 
-      <div className="hud activity">
+      <div className="hud activity" data-ui-ref="activity">
         <div className="act-head">
           <span className="act-title">now</span>
           {now && <span className="muted">{now.graph} · {now.nodes_resolved}/{now.nodes_total} resolved{now.surfaced_pending ? ` · ${now.surfaced_pending} awaiting you` : ''}</span>}
@@ -895,7 +1184,7 @@ function Hud() {
         </div>
       </div>
 
-      <div className="hud rhm">
+      <div className="hud rhm" data-ui-ref="chat">
         <div className="rhm-head">
           right-hand-man <span className="muted">· {cfg.model || 'default model'}</span>
           <span className="cfg-gear" title="configure model + persona" onClick={() => setCfgOpen(o => !o)}>⚙</span>
@@ -933,7 +1222,7 @@ function Hud() {
       </div>
 
       {workshop && (
-        <div className="workshop">
+        <div className="workshop" data-ui-ref="workshop">
           <span className="close" onClick={() => setWorkshop(null)}>✕</span>
           <h2>{workshop.nodeType} · {workshop.nodeId}</h2>
           <div className="muted">{workshop.address}</div>
