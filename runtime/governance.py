@@ -12,6 +12,15 @@ AUTO, SURFACE, CONFIRM = "auto", "surface", "confirm"
 POLICY = {
     # AUTO — cheap, reversible, internal
     "inspect": AUTO, "compose": AUTO, "configure": AUTO, "run": AUTO, "write_own_layer": AUTO,
+    # AUTO — the decision→implementation wire (Group W). A DECLARED-SCOPE, reversible (git-committed,
+    # build-gated, scope-diffed) autonomous build is the ONE class the wire may auto-dispatch: the
+    # operator's approve of the declared-scope build-intent IS the authorization, so the dispatch
+    # proceeds without a second gate. The pre-dispatch gate keys on posture==AUTO, so ONLY this class
+    # auto-runs; ANY CONFIRM/SURFACE/LOCKED declared class surfaces for the operator instead (never
+    # auto-acts — a CONFIRM class like 'destructive' that is absent from LOCKED can no longer slip
+    # through a LOCKED-membership check). The CLOSE still routes through guard("code_build") (CONFIRM),
+    # so an unverified build can never silently reach `implemented`.
+    "decision_build": AUTO,
     # SURFACE — meaningful but recoverable (proceeds on default + deadline)
     "promote": SURFACE, "spend": SURFACE,
     # CONFIRM — irreversible / expensive / external
@@ -88,7 +97,12 @@ class Inbox:
         return sid
 
     # --- the review queue (A): a review item is the SAME inbox, a new decision class ---
-    REVIEW_STATUSES = ("inbox", "presented", "responded", "resolved", "requeue")
+    # `implemented` (W4) is the code-written terminal of the decision→implementation wire: it lives
+    # on the SEPARATE `status` lane (NOT the operator `resolved` field), so a build can close without
+    # breaking operator-only resolve. set_status RAISES on an unknown value, so it MUST be listed here
+    # before the wire can write it. The wire only writes it through a guard()ed close on the
+    # verification verdict — an unverified build that reaches the close raises (W4).
+    REVIEW_STATUSES = ("inbox", "presented", "responded", "resolved", "requeue", "implemented")
 
     def surface_review(self, item: dict, origin: str = "responsive") -> str:
         """Surface a `review` decision into the SAME inbox/surfaced store (no parallel queue).

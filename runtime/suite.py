@@ -50,6 +50,14 @@ class Suite:
         import threading as _t
         self._session_locks_guard = _t.Lock()
         self._session_locks: dict = {}
+        # WIRE exactly-once: the dispatch CHECK (read the event log for a prior decision.dispatch) →
+        # CLAIM (emit decision.dispatch) is a read-modify-write critical section. The bridge is a
+        # ThreadingHTTPServer over ONE Suite, so two concurrent dispatch_decision calls on the same
+        # approved seq would BOTH clear the check before either claims → double-launch. A per-seq
+        # in-process lock serializes that section (mirrors the per-session lock pattern above); the
+        # durable decision.dispatch event remains the cross-process/restart guarantee.
+        self._dispatch_locks_guard = _t.Lock()
+        self._dispatch_locks: dict = {}
 
     def _session_lock(self, session_id: str):
         """One reentrant-safe lock per session, created on demand (threadsafe)."""
@@ -59,6 +67,18 @@ class Suite:
             if lk is None:
                 lk = _t.Lock()
                 self._session_locks[session_id] = lk
+            return lk
+
+    def _dispatch_lock(self, derived_from: int):
+        """One lock per resolve `seq`, created on demand (threadsafe) — serializes the
+        exactly-once CHECK→CLAIM critical section in dispatch_decision so a true race
+        (two threads, one Suite) cannot double-launch the same approved decision."""
+        import threading as _t
+        with self._dispatch_locks_guard:
+            lk = self._dispatch_locks.get(derived_from)
+            if lk is None:
+                lk = _t.Lock()
+                self._dispatch_locks[derived_from] = lk
             return lk
 
     def _emit(self, kind: str, summary: str, **meta) -> None:
@@ -1170,6 +1190,264 @@ class Suite:
                    surfaced=new_sid, requeued_from=sid, derived_from=derived_from, verdict=ev.get("choice"))
         return {"requeued_from": sid, "new_item": new_sid, "verdict": ev.get("choice"),
                 "derived_from": derived_from}
+
+    # ============================================================================================
+    # The Decision→Implementation Wire (Group W) — recorded decision → governed dispatch to Claude
+    # Code → verify → result back → terminal status. No new gate, no confidence value, no second
+    # queue: it REUSES the derived_from three-part bind (commit_criterion), the append-only event
+    # log (exactly-once + visibility), POLICY (auto-vs-surface), and the separate `status` lane
+    # (closes without writing the operator `resolved` field). Kept OFF the MCP face (not in
+    # RHM_VERBS) — the RHM proposes/surfaces; it never dispatches a build of its own authority.
+    # ============================================================================================
+
+    def _verify_resolve_bind(self, sid: str, derived_from: int, *, require_approve: bool = True):
+        """The shared three-part-bind verifier (factored from commit_criterion, suite.py:1114).
+        REQUIRES `derived_from` = a resolve event's unique `seq`; verifies kind=resolve · surfaced==sid
+        · (choice==approve when require_approve). Returns the bound event, or raises GovernanceError
+        (fail loud). The bind is per-unique-seq (not per-sid), the anti-double-action guarantee."""
+        # bool is a subclass of int (isinstance(True, int) is True) and True == 1, so a plain
+        # isinstance check would let derived_from=True bind to seq 1 — a truthy caller FLAG
+        # authorizing the first item's build. Reject bool explicitly: a seq is a genuine int.
+        if type(derived_from) is not int:
+            raise GovernanceError(
+                f"dispatch requires derived_from = a resolve event seq (a genuine int, not bool), got "
+                f"{type(derived_from).__name__} — refused (no ungoverned dispatch; authorization is the "
+                f"substrate seq-bind, never a caller flag)")
+        ev = next((e for e in self.store.events_since(-1) if e.get("seq") == derived_from), None)
+        if ev is None:
+            raise GovernanceError(
+                f"dispatch: no event with seq={derived_from} — cannot derive a build from a verdict that "
+                f"doesn't exist (fail loud)")
+        ok = ev.get("kind") == "resolve" and ev.get("surfaced") == sid
+        if require_approve:
+            ok = ok and ev.get("choice") == "approve"
+        if not ok:
+            raise GovernanceError(
+                f"dispatch: event seq={derived_from} does not satisfy the three-part bind "
+                f"(kind=resolve·surfaced=={sid!r}" + ("·choice=approve" if require_approve else "") +
+                f") — got kind={ev.get('kind')!r} choice={ev.get('choice')!r} "
+                f"surfaced={ev.get('surfaced')!r}. Refused.")
+        return ev
+
+    def surface_build_intent(self, spec: str, scope: list[str] | None = None,
+                             consequence_class: str = "decision_build", why: str = "") -> dict:
+        """W4 PRODUCER: mint a build-intent item — a decision that, once the operator approves it,
+        AUTHORIZES an autonomous build of a DECLARED scope. It is distinguished from a plain
+        criterion/review by `intent="build"` (the discriminator §W2 — `action` is the governance
+        class, so the intent rides the payload) and carries its declared `scope` (the paths it may
+        touch) + `consequence_class` (the POLICY class the pre-dispatch gate keys on). The operator's
+        `approve` is therefore approve OF THIS SCOPE (legible consent), not a bare agree.
+
+        Surfaced through the SAME inbox (no parallel queue). `resolved` stays None → a live escalation
+        until the operator resolves it via /api/resolve (operator-only preserved). Returns {id, ...}.
+
+        Scope entries are normalized (blank entries dropped). An EMPTY declared scope is NOT a soft
+        allow-all: the dispatch-time scope-diff treats empty scope as DENY-ALL (_in_any_scope returns
+        False for every path), so a build with no declared scope can NEVER close `implemented` — every
+        changed path reads as an overrun and surfaces back. This is the durable enforcement (the
+        vacuous-enforcement hole closed at the gate that runs, not only at surface time)."""
+        scope = [s for s in (scope or []) if isinstance(s, str) and s.strip()]
+        payload = {"intent": "build", "spec": spec, "scope": scope,
+                   "consequence_class": consequence_class, "why": why or spec}
+        # action="review" so it walks the same review lifecycle/UI; the build-intent discriminator is
+        # payload["intent"]=="build" (action is the governance class, which surface_review hardcodes).
+        sid = self.inbox.surface("review", payload, default="reject", resolved=None,
+                                 status="inbox", origin="responsive")
+        self._emit("decision.intent",
+                   f"build-intent surfaced ({consequence_class}, scope={scope or '∅'}) — awaiting operator approval",
+                   surfaced=sid, intent="build", consequence_class=consequence_class, scope=scope)
+        return {"id": sid, "intent": "build", "scope": scope, "consequence_class": consequence_class}
+
+    @staticmethod
+    def is_build_intent(decision: dict) -> bool:
+        """The loop's discriminator (§W2): distinguish a 'go build this' decision from a 'mark a
+        criterion done' approve. True only when the payload carries intent=='build'."""
+        return bool(decision) and (decision.get("payload") or {}).get("intent") == "build"
+
+    def _already_dispatched(self, derived_from: int) -> bool:
+        """EXACTLY-ONCE (Round 2 Hole 1): the durable claim lives in the append-only crash-safe event
+        log, NOT a cursor/lock. A prior `decision.dispatch` keyed on this resolve `seq` means this work
+        already launched — refuse the second (checked BEFORE we emit our own claim, so emit-then-check
+        can't find its own emission)."""
+        return any(e.get("kind") == "decision.dispatch" and e.get("derived_from") == derived_from
+                   for e in self.store.events_since(-1))
+
+    def dispatch_decision(self, sid: str, derived_from: int, *, launcher=None,
+                          verifier=None, repo: str | None = None) -> dict:
+        """W2·W4·W1·W3·W5 — the governed dispatch verb. Run an implementation job ONLY when bound to
+        a real operator approve via `derived_from` = the resolve event's unique `seq`, and ONLY once.
+
+        Sequence (CHECK → CLAIM → GATE → LAUNCH → VERIFY → CLOSE-or-SURFACE):
+          1. verify the three-part bind (kind=resolve·surfaced==sid·choice=approve) — else GovernanceError.
+          2. require it IS a build-intent item (the discriminator) — else refuse.
+          3. EXACTLY-ONCE: refuse if a `decision.dispatch` already exists for this `seq` (fail loud).
+          4. W4 PRE-DISPATCH gate on the DECLARED consequence class, keyed on POLICY POSTURE: ONLY an
+             AUTO-posture class auto-dispatches. CONFIRM/SURFACE/LOCKED all surface for the operator
+             (refuse to auto-run — surfacing a result after the act is too late). decision_build is
+             SURFACE → surfaces by default (the safe default); only an AUTO-classed build auto-runs.
+          5. emit `decision.dispatch` (the durable exactly-once claim) BEFORE launching — so a crash
+             after launch refuses re-launch on restart.
+          6. launch (W1, runtime/implement.launch — injectable for tests).
+          7. verify by USE (W3, injectable). On FAIL → surface_review directly with the reason; the
+             item does NOT close (no `implemented`). Do NOT reuse requeue_from_verdict (it needs
+             choice!=approve; a build follows an approve).
+          8. W4 scope-diff: changed paths outside the declared scope → surface back, do NOT close.
+          9. CLOSE (guarded): write status='implemented' through guard("code_build",…,
+             confirmed=verify_passed) — an unverified close RAISES (mirrors apply_node). Code NEVER
+             writes `resolved` (operator-only).
+        """
+        from runtime import implement as _impl
+        repo = repo or self._repo_root
+        d = self.inbox.get(sid)
+        if not d:
+            raise KeyError(f"no surfaced decision {sid!r}")
+
+        # 1 + 2 — the bind, then the discriminator (a forged/mismatched/non-build item refuses).
+        self._verify_resolve_bind(sid, derived_from, require_approve=True)
+        if not self.is_build_intent(d):
+            raise GovernanceError(
+                f"dispatch_decision: {sid!r} is not a build-intent item (payload.intent != 'build') — "
+                f"refusing to auto-build from a non-build approve (the discriminator §W2). Mint it via "
+                f"surface_build_intent.")
+
+        payload = d.get("payload") or {}
+        declared = payload.get("consequence_class", "decision_build")
+        scope = list(payload.get("scope") or [])
+
+        # 4 — W4 PRE-DISPATCH gate on the DECLARED class (deterministic, no confidence, no LOCKED-set
+        # special-case). ONLY an AUTO-posture declared class may auto-dispatch; CONFIRM/SURFACE/LOCKED
+        # all surface for the operator (do NOT auto-run). This keys on POLICY posture, so a CONFIRM
+        # class absent from the hardcoded LOCKED set (e.g. 'destructive') can no longer slip through.
+        # (decision_build is SURFACE → surfaces by default = the safe default; an AUTO-classed build is
+        # the only thing that auto-runs.)
+        if posture(declared) != AUTO:
+            raise GovernanceError(
+                f"dispatch_decision: declared consequence class {declared!r} has posture "
+                f"{posture(declared)!r} (not AUTO) — it does NOT auto-dispatch; it surfaces for the "
+                f"operator (CONFIRM/SURFACE/LOCKED never auto-run; surfacing a result after the act is "
+                f"too late). The operator launches a non-AUTO build; refused.")
+
+        # 3 + 5 — EXACTLY-ONCE check→claim, ATOMIC under a per-seq lock. The bridge is a
+        # ThreadingHTTPServer over one Suite; without the lock two concurrent fires both clear the
+        # check before either claims → double-launch. The lock serializes check→emit; the durable
+        # decision.dispatch event is the cross-process/restart guarantee.
+        with self._dispatch_lock(derived_from):
+            if self._already_dispatched(derived_from):
+                raise GovernanceError(
+                    f"dispatch_decision: a decision.dispatch already exists for resolve seq={derived_from} — "
+                    f"this build already launched; refusing a second (exactly-once, fail loud).")
+            # emit the durable exactly-once claim BEFORE launch (and inside the lock).
+            self._emit("decision.dispatch",
+                       f"dispatching build for {sid} (class={declared}, scope={scope or '∅'}, "
+                       f"derived from verdict seq={derived_from})",
+                       surfaced=sid, derived_from=derived_from, consequence_class=declared, scope=scope)
+            self.inbox.set_status(sid, "presented")
+
+        # 6 — launch (W1). Loud on a bad round-trip (LaunchError) — caller (W7/loop) re-queues loud.
+        launch = launcher or _impl.launch
+        try:
+            result = launch(d, repo=repo)
+        except _impl.LaunchError as e:
+            # loud re-queue as a responsive review item — never a silent no-op (W7).
+            req = dict(payload); req.update({"requeued_from": sid, "why": f"dispatch failed: {e}",
+                                             "derived_from": derived_from, "intent": "build"})
+            new_sid = self.inbox.surface_review(req, origin="responsive")
+            self._emit("decision.verify",
+                       f"dispatch for {sid} FAILED to launch → re-queued {new_sid} — {e}",
+                       surfaced=new_sid, requeued_from=sid, derived_from=derived_from, verify_passed=False)
+            return {"surfaced": sid, "dispatched": True, "launched": False, "verified": False,
+                    "requeued": new_sid, "error": str(e)}
+
+        # store the result summary on the item (W5) — visible after the fact.
+        d["build_result"] = {"success": result.get("success"), "summary": result.get("summary", "")[:2000],
+                             "changed_files": result.get("changed_files", []),
+                             "permission_mode": result.get("permission_mode")}
+        self.store.save_surfaced(d)
+
+        # 7 — VERIFY by use (W3). Default verifier: the launch reported success AND it actually changed
+        # something (a `plan`-mode run changes nothing → not a real implementation). Injectable so the
+        # loop can run the affected scenario/test/endpoint.
+        def _default_verify(res: dict) -> tuple[bool, str]:
+            if not res.get("success"):
+                return False, f"claude -p reported failure (exit={res.get('exit_code')})"
+            if not res.get("changed_files"):
+                return (False, "no files changed (a plan-mode/no-op run is not an implementation — "
+                               "graduate COMPANY_WIRE_PERMISSION to acceptEdits for a real build)")
+            return True, "verified: success + non-empty change set"
+        verify = verifier or _default_verify
+        verify_passed, verify_reason = verify(result)
+
+        if not verify_passed:
+            # route the failure back as a NEW responsive review item — call surface_review DIRECTLY
+            # (NOT requeue_from_verdict; a build follows an approve, there is no reject seq). No close.
+            fail_item = dict(payload)
+            fail_item.update({"requeued_from": sid, "why": f"verification failed: {verify_reason}",
+                              "derived_from": derived_from, "intent": "build",
+                              "build_result": d.get("build_result")})
+            new_sid = self.inbox.surface_review(fail_item, origin="responsive")
+            self._emit("decision.verify",
+                       f"build for {sid} did NOT verify ({verify_reason}) → re-queued {new_sid}; not closed",
+                       surfaced=new_sid, requeued_from=sid, derived_from=derived_from,
+                       verify_passed=False)
+            return {"surfaced": sid, "dispatched": True, "launched": True, "verified": False,
+                    "requeued": new_sid, "reason": verify_reason}
+
+        # 8 — W4 SCOPE-DIFF (fail loud): changed paths outside the declared scope → surface back, no
+        # close. Runs ALWAYS (no `if scope:` skip) — _within_scope treats an empty scope as DENY-ALL,
+        # so a build with no/empty declared scope can NEVER close (vacuous-enforcement hole closed).
+        changed = result.get("changed_files", [])
+        if True:
+            overrun = [p for p in changed if not self._in_any_scope(p, scope)]
+            if overrun:
+                over_item = dict(payload)
+                over_item.update({"requeued_from": sid, "intent": "build", "derived_from": derived_from,
+                                  "why": f"scope overrun: changed {overrun} outside declared scope {scope}",
+                                  "overrun": overrun, "build_result": d.get("build_result")})
+                new_sid = self.inbox.surface_review(over_item, origin="responsive")
+                self._emit("decision.verify",
+                           f"build for {sid} OVERRAN declared scope ({overrun}) → re-queued {new_sid}; not closed",
+                           surfaced=new_sid, requeued_from=sid, derived_from=derived_from,
+                           verify_passed=False, overrun=overrun)
+                return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
+                        "closed": False, "requeued": new_sid, "overrun": overrun}
+
+        # 9 — CLOSE, guarded on the verification verdict (W4 Hole 4). guard("code_build", …,
+        # confirmed=verify_passed): code_build is CONFIRM-posture, so an unverified close (confirmed
+        # False) RAISES instead of silently writing `implemented` (mirrors apply_node suite.py:1279).
+        # inbox=None so the blocked path just raises (it must NOT re-surface). Code writes ONLY the
+        # `status` lane — never the operator `resolved` field.
+        def _close():
+            self.inbox.set_status(sid, "implemented")
+            self._emit("decision.implemented",
+                       f"build for {sid} verified + within scope → status=implemented "
+                       f"(changed {len(changed)} files; derived from seq={derived_from})",
+                       surfaced=sid, derived_from=derived_from, verify_passed=True, changed_files=changed)
+            return True
+        guard("code_build", do=_close, confirmed=verify_passed, inbox=None)
+        return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
+                "closed": True, "status": "implemented", "changed_files": changed,
+                "derived_from": derived_from}
+
+    @staticmethod
+    def _in_any_scope(path: str, scope: list[str]) -> bool:
+        """A changed path is authorized iff it falls under AT LEAST ONE declared scope entry. An
+        EMPTY scope is DENY-ALL (returns False for every path) — never allow-all — so a build with
+        no declared scope can never pass the overrun check (closes the vacuous-enforcement hole)."""
+        return any(Suite._within_scope(path, s) for s in (scope or []))
+
+    @staticmethod
+    def _within_scope(path: str, scope_entry: str) -> bool:
+        """A changed path is in scope if it equals or is under a declared scope entry (a file or a
+        dir prefix). Both sides are NORMALIZED with os.path.normpath, which collapses '..' — so a
+        traversal path like 'runtime/../nodes/evil.py' resolves to 'nodes/evil.py' and CANNOT match
+        'runtime/' (the guard can't be fooled by '..'). An absolute path (e.g. '/etc/passwd') never
+        matches a repo-relative scope entry. 'runtime/' still covers 'runtime/implement.py'."""
+        import os as _os
+        p = _os.path.normpath(path.strip().lstrip("./"))
+        s = _os.path.normpath(scope_entry.strip().lstrip("./").rstrip("/"))
+        if not s or s == ".":
+            return False                                     # empty/degenerate scope entry → deny
+        return p == s or p.startswith(s + _os.sep)
 
     # --- C1: the UI-component registry serialization (sibling of object_info) ---
     # Seeds the known chrome regions (DOM-resolved via data-ui-ref handles the UI lane adds) + the node
