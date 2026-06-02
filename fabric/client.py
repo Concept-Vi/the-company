@@ -71,3 +71,48 @@ def complete(transport: Callable, messages: list, model: str,
             sleep(0.5 * (attempt + 1)); continue
 
     raise last or FabricError("no attempts made")
+
+
+def complete_embeddings(transport: Callable, inputs: list, model: str,
+                        dim: int | None = None, retries: int = 3,
+                        sleep: Callable = time.sleep) -> list:
+    """SIBLING of complete() for embeddings — vector guards, NOT text/JSON guards.
+
+    complete()'s empty/JSON-parse/schema guards are text-shaped and meaningless on a float
+    list (they'd break or false-pass). So this is a separate guarded path with the SAME
+    "every call guarded, fail loud — never return partial/empty" guarantee.
+
+    transport: `(model, inputs: list[str]) -> list[list[float]]` (openai_embeddings_transport).
+    Guards (each failure → backoff + retry; retries exhausted → raise FabricError):
+      - transport/network error
+      - empty result (no vectors)
+      - count mismatch: len(vectors) != len(inputs)  (a vector must come back per input)
+      - dim mismatch (only if `dim` given): each vector length must == dim
+    Returns list[list[float]] (one vector per input), aligned to `inputs`. Never partial/empty.
+    """
+    last: FabricError | None = None
+    n = len(inputs)
+    for attempt in range(retries):
+        try:
+            vectors = transport(model, inputs)
+        except Exception as e:                                   # transport/network
+            last = FabricError(f"embeddings transport error: {e!r}")
+            sleep(0.5 * (attempt + 1)); continue
+
+        if not vectors:                                          # empty (fail loud)
+            last = FabricError("empty embeddings response from model")
+            sleep(0.5 * (attempt + 1)); continue
+
+        if len(vectors) != n:                                    # one vector per input
+            last = FabricError(f"embeddings count mismatch: got {len(vectors)} vectors for {n} inputs")
+            sleep(0.5 * (attempt + 1)); continue
+
+        if dim is not None:                                      # dim contract, if asserted
+            bad = next((i for i, v in enumerate(vectors) if len(v) != dim), None)
+            if bad is not None:
+                last = FabricError(f"embeddings dim mismatch at {bad}: got {len(vectors[bad])}, expected {dim}")
+                sleep(0.5 * (attempt + 1)); continue
+
+        return vectors
+
+    raise last or FabricError("no attempts made")

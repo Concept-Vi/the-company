@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import urllib.request
 
-from fabric.config import DEFAULT_BASE_URL, forbid_gemini
+from fabric.config import DEFAULT_BASE_URL, DEFAULT_EMBED_URL, forbid_gemini
 
 
 def list_models(base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama", timeout: int = 8) -> list:
@@ -44,4 +44,26 @@ def openai_transport(base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama", 
             data = json.loads(r.read())
         # OpenAI shape: choices[0].message.content
         return (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
+    return transport
+
+
+def openai_embeddings_transport(base_url: str = DEFAULT_EMBED_URL, api_key: str = "none", timeout: int = 60):
+    """Build an EMBEDDINGS transport bound to an OpenAI-compatible /v1/embeddings endpoint.
+
+    A SIBLING of openai_transport (a vector response is not a chat response). The contract is
+    `(model, inputs: list[str]) -> list[list[float]]` — fabric.client.complete_embeddings wraps
+    it with vector guards (NOT the text-shaped guards of complete()). Repointable by base_url
+    (BGE-M3 @ :8001 is the only live, dim-grounded one). NO Gemini (enforced first, fail loud)."""
+    def transport(model: str, inputs: list) -> list:
+        forbid_gemini(model)                                   # hard constraint, fail loud, FIRST
+        body = {"model": model, "input": inputs}               # OpenAI /v1/embeddings shape
+        req = urllib.request.Request(
+            base_url.rstrip("/") + "/embeddings",
+            data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"},
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            data = json.loads(r.read())
+        # OpenAI shape: {"data":[{"embedding":[...],"index":i},...]} -> the bare vectors
+        return [d["embedding"] for d in (data.get("data") or [])]
     return transport

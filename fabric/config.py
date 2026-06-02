@@ -20,6 +20,12 @@ DEFAULT_BASE_URL = os.environ.get("COMPANY_FABRIC_URL", OLLAMA_DIRECT)
 # The right-hand-man's default brain (D2): ollama-cloud, swappable.
 DEFAULT_BRAIN = os.environ.get("COMPANY_BRAIN", "deepseek-v4-pro:cloud")
 
+# Embeddings have their OWN endpoint — they are NOT in litellm.config.yaml and DEFAULT_BASE_URL
+# is ollama :11434 (chat). BGE-M3 @ :8001 is the only LIVE, dim-grounded embedder (1024-dim dense).
+# Other embedders' dims are NOT doc-grounded — resolve at runtime, never hardcode them here.
+DEFAULT_EMBED_URL = os.environ.get("COMPANY_EMBED_URL", "http://localhost:8001/v1")
+DEFAULT_EMBED_MODEL = os.environ.get("COMPANY_EMBED_MODEL", "BAAI/bge-m3")
+
 FORBIDDEN = ("gemini",)   # hard constraint
 
 
