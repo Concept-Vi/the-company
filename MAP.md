@@ -1,6 +1,19 @@
-# MAP.md — the loadable map
+---
+type: map
+module: root
+aliases: ["Company Map", "Map of the Company", "MAP"]
+tags: [company, map, moc, knowledge-space]
+governs: []
+relates-to: ["[[Company — read first]]", "[[Company State]]", "[[Vault Conventions]]"]
+status: living
+---
+
+# MAP.md — the loadable map (Map of Contents)
 
 The orientation an agent loads first, and the seed of the **linked code-knowledge** that becomes Tim's click-and-talk surface. As the code grows, this map is maintained *by the system about itself* (the reflective fold) — and a **drift-check fails loud** (`Suite.map_drift`, `tests/drift_acceptance.py`) when a registered node-type / RHM verb / subsystem isn't reflected here, so it can't silently rot.
+
+> [!info] This file is the vault home. The repo is **also an Obsidian vault** — see [[Vault Conventions]]. Orientation order: [[Company — read first]] → **here** → [[Company State]] → the module's constitution.
+> The **why** under all of it: [[Concepts and Principles]].
 
 ## The one picture
 ```
@@ -20,17 +33,38 @@ The orientation an agent loads first, and the seed of the **linked code-knowledg
   canvas/app/src/extensions/ ── brain-authored ARBITRARY UI components (operator-only; build-gated)
 ```
 
+```mermaid
+flowchart TD
+    canvas["canvas/ — the surface"] -->|bridge C8| runtime["runtime/ — scheduler + Suite (brain)"]
+    mcp["mcp_face/ — agent face C7"] --> runtime
+    runtime -->|runs| nodes["nodes/ — the library C2"]
+    runtime -->|calls| fabric["fabric/ — models S6"]
+    nodes -->|AI nodes use| fabric
+    runtime -->|reads/writes| store["store/ — addressed C1/C4"]
+    nodes -->|content addresses| store
+    contracts["contracts/ — the spine C1–C8"] -.governs.-> runtime
+    contracts -.governs.-> store
+    contracts -.governs.-> nodes
+    voice["voice/ — STT+TTS"] --> runtime
+    panels["panels/ — declarative UI"] --> canvas
+```
+
 ## Module map (each links to its constitution + governing contracts)
 | Module | One-line | Constitution | Governs |
 |---|---|---|---|
-| `contracts/` | the pinned shapes (the seams) | `contracts/AGENTS.md` | C1–C8 |
-| `store/` | addressed store + resolver + events/chat/surfaced/panels | `store/AGENTS.md` | C1, C4 |
-| `runtime/` | scheduler + memo + compile + the **Suite** (engine + RHM + self-mod) | `runtime/AGENTS.md` | S1, C5, C6, S7 |
-| `fabric/` | model binding + guards + `list_models` (the model registry) | `fabric/AGENTS.md` | S6 |
-| `mcp_face/` | agent face (generic verbs) | `mcp_face/AGENTS.md` | C7 |
-| `nodes/` | the node library (incl. `portal`, `rhm_mode`, `model_of_tim`) | `nodes/AGENTS.md` | C2 |
-| `voice/` | two-way voice — STT provider + local TTS | `voice/AGENTS.md` | — |
-| `canvas/` | the frontend + the extensions runtime | `canvas/AGENTS.md` | S5, D3 |
+| `contracts/` | the pinned shapes (the seams) | [[contracts — constitution]] | C1–C8 |
+| `store/` | addressed store + resolver + events/chat/surfaced/panels | [[store — constitution]] | C1, C4 |
+| `runtime/` | scheduler + memo + compile + the **Suite** (engine + RHM + self-mod) | [[runtime — constitution]] | S1, C5, C6, S7 |
+| `fabric/` | model binding + guards + `list_models` (the model registry) | [[fabric — constitution]] | S6 |
+| `mcp_face/` | agent face (generic verbs) | [[mcp_face — constitution]] | C7 |
+| `nodes/` | the node library (incl. `portal`, `rhm_mode`, `model_of_tim`) | [[nodes — constitution]] | C2 |
+| `voice/` | two-way voice — STT provider + local TTS | [[voice — constitution]] | — |
+| `canvas/` | the frontend + the extensions runtime | [[canvas — constitution]] | S5, D3 |
+| `panels/` | brain-authored declarative UI panels (JSON) | [[panels — constitution]] | — |
+| `tests/` | acceptance suites (the proofs) | [[tests — constitution]] | — |
+| `docs/` | meta-docs about the repo-as-knowledge-space | [[docs — constitution]] | — |
+
+> [!note] Constitution links use **aliases**, not filenames (every file is `AGENTS.md`). The alias `"<module> — constitution"` lives in each note's frontmatter — see [[Vault Conventions]]. Links to `panels/ · tests/` etc. resolve once [[Vault Conventions|the convention]] is applied to those folders.
 
 ## Live registry — the system's current capabilities
 <!--REGISTRY:START--> (auto-maintained by Suite.refresh_self_description on every apply — do not hand-edit)

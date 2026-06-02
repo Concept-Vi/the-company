@@ -1,8 +1,38 @@
+---
+type: constitution
+module: store
+aliases: ["store — constitution"]
+tags: [company, constitution, store]
+governs: [C1, C4]
+relates-to: ["[[Company Map]]", "[[contracts — constitution]]", "[[runtime — constitution]]"]
+status: living
+---
+
 # store/ — module constitution
 
 **Is:** the addressed store + the resolver — turns an address into bytes and back. Implements C1 (grammar/provenance) + C4 (Resolver Protocol). Filesystem-first; Supabase later.
 **Guarantees:** content at `cas://` is **immutable** — never mutated, never lost (an "update" is a new object + a moved pointer). Reads live truth. The store lives on **ext4 (`~/...`), never `/mnt/c`**. Every write records provenance (`inputs[]` → lineage to source). **Chat turns carry provenance too** — every `append_chat` records `source` (`operator` = Tim, `twin` = the model) and `grade` (`gold`/`working`); the twin's training signal is filtered to operator-gold so the model **never learns from its own output, even laundered back as a role-flipped 'user' turn** (the echo-guard against model-collapse). Any new chat-persist path MUST tag `source`, or the echo-guard silently fails open.
 **Where new things go:** a new backend = a new `*_resolver.py` implementing the Protocol.
 **To extend:** implement `Resolver` (read/write/head/exists/provenance); select by config; provide a one-time backfill. The graph never changes — that's the whole point of the indirection.
-**Seam:** speaks C1 grammar; implements C4; called by `runtime/`.
+**Seam:** speaks C1 grammar; implements C4; called by [[runtime — constitution]].
 **Never:** mutate `cas://` content · put a backend type above the Protocol · store the DB under `/mnt/c` · lose old versions · write a chat turn without a `source` tag (breaks the twin echo-guard).
+
+## What's in here
+
+The **addressed store and its resolver** — the one piece that turns an address into bytes
+and back, so the rest of the system holds *addresses*, never content. Everything durable
+flows through here: the events the runtime emits, the chat turns (with their provenance
+tags), the surfaced results, and the panels' persisted state — each written by address and
+read by address through the same Resolver Protocol. The backend behind the address is
+swappable (filesystem-first, Supabase later) precisely because the address never changes.
+See [[Company Map]] for where the store sits in the whole picture.
+
+## Relates to
+
+- **Called by** [[runtime — constitution]] — everything that persists, and everything read
+  back, goes through the store by address; the runtime never touches a backend directly.
+- **Governed by** [[contracts — constitution]] — C1 (the address grammar + provenance) and
+  C4 (the Resolver Protocol) are the shapes every backend here obeys.
+
+## Read next
+[[Company Map]] (where the store sits in the whole picture) · [[runtime — constitution]] (what reads and writes through it) · [[Concepts and Principles]] (immutability, addressing, provenance).

@@ -10,3 +10,8 @@ store-data/
 canvas/app/node_modules/
 canvas/app/dist/
 voice/models/
+# Obsidian: track shared settings, ignore per-user workspace/cache state
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+.obsidian/graph.json

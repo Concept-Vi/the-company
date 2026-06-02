@@ -1,6 +1,16 @@
+---
+type: state
+module: root
+aliases: ["Company State", "STATE"]
+tags: [company, state, status]
+governs: []
+relates-to: ["[[Company — read first]]", "[[Company Map]]"]
+status: living
+---
+
 # STATE.md — where the build is (read after AGENTS.md + MAP.md)
 
-The current status of **company** (the Vi composition suite), self-contained so a fresh AI can enter the repo, read `AGENTS.md` (the rules) + `MAP.md` (the structure + the live registry) + this (the status), and act correctly without re-deriving anything or tripping a boundary. Maintained by integration — keep it *current and true*, not append-only. As of 2026-06-01.
+The current status of **company** (the Vi composition suite), self-contained so a fresh AI can enter the repo, read [[Company — read first]] (the rules) + [[Company Map]] (the structure + the live registry) + this (the status), and act correctly without re-deriving anything or tripping a boundary. Maintained by integration — keep it *current and true*, not append-only. As of 2026-06-01.
 
 > [!important] How "done" is proven here
 > **`tests/*.py` ARE the convergence record** — each acceptance suite proves a capability by execution. Run them all: `for t in tests/*.py; do ./.venv/bin/python "$t"; done`. Beyond tests, the standard is **prove by USE**: operate the live system (browser canvas + the bridge API), don't just assert. Never claim something works without fresh evidence.

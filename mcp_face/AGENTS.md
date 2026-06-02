@@ -1,3 +1,13 @@
+---
+type: constitution
+module: mcp_face
+aliases: ["mcp_face — constitution"]
+tags: [company, constitution, mcp_face, agent-face]
+governs: [C7]
+relates-to: ["[[Company Map]]", "[[runtime — constitution]]", "[[contracts — constitution]]"]
+status: living
+---
+
 # mcp_face/ — module constitution
 
 > Dir is `mcp_face`, **not** `mcp`, to avoid shadowing the installed `mcp` SDK package.
@@ -6,5 +16,26 @@
 **Guarantees:** verbs are **generic over node-type** — there is **no tool-per-node-type**; tools consult the registries to act on any type. `ToolAnnotations` (readonly/destructive/idempotent) are honest and feed governance (S7/D4). One brain, two faces (this + the canvas).
 **Where new things go:** adding a node-type/model/source adds **zero tools**. A genuinely **new kind of operation** = one new verb (rare).
 **To extend:** only add a verb for an operation the system never had; otherwise nothing here changes when the system grows.
-**Seam:** implements C7; reads the registries (C2/S3); calls runtime; governed by S7.
+**Seam:** implements C7; reads the registries (C2/S3); calls [[runtime — constitution]]; governed by S7.
 **Never:** add a tool per node-type · leave a destructive verb unannotated · duplicate logic that belongs in the internal API.
+
+## What's in here
+
+The agent face — the **generic verbs** (C7) exposed over a FastMCP stdio server. It is how
+an **AI operates the system**: drive any node-type, query the registries, run graphs, read
+state — all through type-generic tools, never a tool-per-type. It shares the **one
+`runtime.suite.Suite`** the canvas UI bridge uses — one brain, two faces. The live verb set
+is the single source of truth in [[Company Map]] (do not duplicate it here; that's the rule
+in [[Vault Conventions]]).
+
+## Relates to
+
+- **Calls / shares** [[runtime — constitution]] — the *same* `Suite` the UI bridge calls.
+  One brain, two faces: this one is the AI's, the canvas is the operator's.
+- **Governed by** [[contracts — constitution]] — the C7 verb contract is the shape every
+  tool here obeys.
+- Note: operator-only actions (apply / approve) are deliberately **NOT reachable** from this
+  face — the AI proposes; the operator disposes.
+
+## Read next
+[[Company Map]] (the live verb set + the whole picture) · [[runtime — constitution]] (the shared brain behind both faces) · [[Concepts and Principles]] (C7 and the generic-verb idea).

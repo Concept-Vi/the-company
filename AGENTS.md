@@ -1,3 +1,13 @@
+---
+type: constitution
+module: root
+aliases: ["Company — read first", "AGENTS", "Company Constitution"]
+tags: [company, constitution, root, orientation]
+governs: []
+relates-to: ["[[Company Map]]", "[[Company State]]", "[[Vault Conventions]]"]
+status: living
+---
+
 # AGENTS.md — read this first
 
 You are an AI agent working on **company** — the Vi composition suite. There are **no human developers**; this codebase is built and grown entirely by AI. It is therefore designed to be **navigable and extensible by you**. Orientation order: **this** (the rules) → `MAP.md` (the structure + the live registry of what exists) → `STATE.md` (the current status: what's built + proven, what cannot be done yet, how to run + verify, the gotchas) → the `AGENTS.md` of whatever module you're working in. After those four you should be able to act correctly without re-deriving anything.
@@ -36,4 +46,6 @@ Start at `Company Build Hub.md`. Contracts = `contracts/` notes (C1–C8). Engin
 > If "where does this go?" isn't obvious from this table + the module constitutions, that's a bug in the repo's self-description — flag it.
 
 ## The convention
-Every module has an `AGENTS.md` (its **constitution**): what it is · what it must guarantee · where new things go · how to extend · its seam · what would violate it. **Read a module's constitution before editing it.** `MAP.md` is the loadable map of the whole thing.
+**Every folder** has an `AGENTS.md` (its **constitution**): what it is · what it must guarantee · where new things go · how to extend · its seam · what would violate it. **Read a folder's constitution before editing it.** `MAP.md` is the loadable map of the whole thing.
+
+This repo is **also an Obsidian vault** — the same markdown is a navigable knowledge graph (frontmatter + `[[wikilinks]]` + a folder-note per folder). The full convention is [[Vault Conventions]]; the vault home is [[Company Map]]. When you add or change a folder, decorate its constitution to that convention as part of the change — the knowledge face is not optional documentation, it is how the next agent (and the operator) navigates.
