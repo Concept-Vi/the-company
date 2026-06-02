@@ -192,6 +192,138 @@ function PanelView({ p, value, onSet }: { p: any; value: (f: any) => string; onS
   )
 }
 
+// WIRE-UI: a surfaced item is a BUILD-INTENT iff payload.intent === "build" (the wire's discriminator,
+// runtime/suite.py is_build_intent). The wire surfaces FOUR shapes through this ONE flag — the initial
+// intent, a launch/verify FAILURE re-queue, a SCOPE-OVERRUN re-queue, and (when the backend lane lands)
+// the explicit surfaced-for-review — all distinguished by `status` + the presence of build_result / why /
+// overrun, NOT a new field per shape. reflects-never-owns: we read these off the surfaced item the backend
+// owns; we invent nothing.
+function isBuildIntent(d: any): boolean {
+  return !!d && (d.payload?.intent === 'build')
+}
+// WIRE-UI: map the backend's REAL status lane (governance.py REVIEW_STATUSES: inbox · presented ·
+// responded · resolved · requeue · implemented) to an operator-legible build phase. There is NO
+// `dispatched` status — dispatch sets `presented` (suite.py:1344) — so we read `presented` as
+// "dispatched · running" (the autonomous `claude -p` build is in flight). Author-from-registry: every
+// label here corresponds to a status the backend can actually emit.
+function buildPhase(d: any): { label: string; cls: string } {
+  const st = d.status || 'inbox'
+  const r = d.payload?.build_result
+  if (st === 'implemented') return { label: 'implemented ✓', cls: 'bi-done' }
+  if (st === 'presented') return { label: 'dispatched · running…', cls: 'bi-running' }
+  // a re-queued failure/overrun is distinguished by having RUN: a build_result, an overrun, or a
+  // requeued_from back-reference. NOT by `why` — every build-intent carries a `why` from
+  // surface_build_intent (suite.py:1251 `why or spec`), so keying on `why` would mislabel a fresh
+  // awaiting intent as surfaced-back (caught in the by-use pass).
+  if (r || d.payload?.overrun || d.payload?.requeued_from) return { label: 'surfaced back — needs you', cls: 'bi-back' }
+  return { label: 'awaiting approval', cls: 'bi-inbox' }
+}
+
+// WIRE-UI · DEMONSTRATE-FIRST (operator steer): the operator is NOT a developer and will never read
+// code — so a build's review must headline the WORKING OUTCOME, demonstrated, not a changed-files diff.
+// deriveOutcome reads the build_result and produces (a) a plain-language "what you can now do" line and
+// (b) — when the change is something we can drive the canvas to SHOW — a demonstrable node-type. A new
+// node-type is the canonical demonstrable: a build whose changed files added a `nodes/<name>.py` makes a
+// new node-type live, which we can place + run on the canvas so the operator JUDGES THE OUTCOME BY SEEING
+// IT. When nothing is canvas-demonstrable we fall back to the plain-language summary (never a diff as the
+// headline). reflects-never-owns: derived purely from the build_result the backend owns.
+function deriveOutcome(d: any, liveTypes: string[]): { line: string; demoType: string | null } {
+  const p = d.payload || {}
+  const r = p.build_result
+  const changed: string[] = (r?.changed_files) || []
+  // a new node-type = a freshly-added nodes/<name>.py whose stem is now a LIVE registered type.
+  const nodeFile = changed.find((f: string) => /(^|\/)nodes\/[^/]+\.py$/.test(f))
+  const nodeType = nodeFile ? (nodeFile.split('/').pop() || '').replace('.py', '') : null
+  const demoType = nodeType && liveTypes.includes(nodeType) ? nodeType : null
+  if (demoType) return { line: `The “${demoType}” node is ready — place it on the canvas to see it work.`, demoType }
+  // not canvas-demonstrable → a plain-language "what you can now do", taken from the build's own summary
+  // (the brain's natural-language description of what it did), never the file list.
+  if (r?.success && r?.summary) return { line: r.summary.split('\n')[0].slice(0, 240), demoType: null }
+  if (r?.success) return { line: 'The build completed — review the outcome below.', demoType: null }
+  return { line: '', demoType: null }
+}
+
+// WIRE-UI · DEMONSTRATE-FIRST: the build-intent review card. The HEADLINE is the working outcome in plain
+// language + a "▷ show me" that drives the canvas to demonstrate the built thing actually doing its thing
+// (a new node placed + runnable). The changed-files list is SECONDARY/for-the-record — collapsed behind a
+// disclosure, never the headline (the operator judges the OUTCOME, not edits). Scope/class/phase frame it;
+// a surfaced-back build shows its actionable WHY. Clicking the head compiles it via coa() (same as any
+// inbox item). Pure presentation: every field is read from the surfaced item; PanelErrorBoundary-wrapped.
+function BuildIntentCard({ d, onOpen, onDemonstrate, liveTypes }:
+  { d: any; onOpen: (id: string) => void; onDemonstrate: (nodeType: string) => void; liveTypes: string[] }) {
+  const [showRecord, setShowRecord] = useState(false)
+  const p = d.payload || {}
+  const phase = buildPhase(d)
+  const result = p.build_result
+  const changed: string[] = (result?.changed_files) || p.overrun || []
+  const outcome = deriveOutcome(d, liveTypes)
+  return (
+    <div className={'bi-card ' + phase.cls} data-ui-ref={'build-intent'}>
+      <div className="bi-head" onClick={() => onOpen(d.id)} title="compile this decision to a value-choice ↗">
+        <span className="bi-tag">⚙ build-intent</span>
+        <span className={'bi-phase ' + phase.cls}>{phase.label}</span>
+      </div>
+      <div className="bi-meta">
+        <span className="bi-class" title="declared consequence class — its governance posture decides whether it auto-runs or surfaces">
+          {p.consequence_class || 'decision_build'}</span>
+        <span className="bi-scope" title="the declared scope — paths a verified build is allowed to touch (empty = deny-all)">
+          scope: {(p.scope && p.scope.length) ? p.scope.join(', ') : '∅ (deny-all)'}</span>
+      </div>
+      {/* the INTENT (what was asked) — shown for an awaiting/running build (no terminal phase yet). */}
+      {(phase.cls === 'bi-inbox' || phase.cls === 'bi-running') && (p.spec || p.why) && <div className="bi-spec">{p.spec || p.why}</div>}
+      {/* DEMONSTRATE-FIRST · gated on the backend LIFECYCLE PHASE, NOT the subprocess exit code. Only a
+          CLOSED build (status==='implemented' → bi-done) headlines the working outcome + offers the "show
+          me" demonstration. This is the load-bearing discriminator: a build can have build_result.success
+          ===true and STILL be surfaced-back (a scope-overrun ran + changed files = success true; a
+          verify-fail-no-op = success true, no changes) — those are NOT done, must not wear the "done"
+          headline, and must not offer a (bogus) demo. status===implemented is the backend's only
+          closed-and-done signal (author-from-registry). */}
+      {phase.cls === 'bi-done' && (
+        <div className="bi-outcome">
+          <div className="bi-outcome-head">✓ done — here is what you can now do</div>
+          {outcome.line && <div className="bi-outcome-line">{outcome.line}</div>}
+          {outcome.demoType && (
+            <button className="b sm bi-demo" title={`place a ${outcome.demoType} node on the canvas and see it run`}
+              onClick={() => onDemonstrate(outcome.demoType!)}>▷ show me “{outcome.demoType}” working</button>
+          )}
+        </div>
+      )}
+      {/* SURFACED BACK (bi-back: scope-overrun / verify-fail / crashed — with OR without a build_result):
+          lead with the plain-language reason it needs the operator, never a diff, never a demo. Overrun-
+          aware wording (an overrun build DID run but went out of bounds vs one that didn't complete). The
+          `why` is the actionable reason and is ALWAYS present on a bi-back item (suite.py / resurface_crashed
+          set it for fail/overrun/crash). */}
+      {phase.cls === 'bi-back' && (
+        <div className="bi-outcome bi-outcome-bad">
+          <div className="bi-outcome-head bad">{p.overrun ? '⚠ the build went outside its declared scope — it needs you' : '✕ the build did not complete — it needs you'}</div>
+          {p.why && <div className="bi-outcome-line">{p.why}</div>}
+        </div>
+      )}
+      {/* SECONDARY / FOR-THE-RECORD: the changed-files list + raw summary, COLLAPSED by default. The
+          operator never has to read edits to review; this is the audit trail, available on demand. */}
+      {result && (changed.length > 0 || result.summary) && (
+        <div className="bi-record">
+          <div className="bi-record-toggle" onClick={() => setShowRecord(s => !s)}
+            title="the technical record — changed files + the build's own log (for reference, not the review)">
+            {showRecord ? '⌄' : '⌃'} for the record {p.overrun ? `· ⚠ ${changed.length} file(s) outside scope` : changed.length ? `· ${changed.length} file(s) changed` : ''}
+          </div>
+          {showRecord && (
+            <>
+              {changed.length > 0 && (
+                <div className="bi-files">
+                  {changed.map((f: string) => <div key={f} className={'bi-file' + (p.overrun ? ' over' : '')}>{f}</div>)}
+                </div>
+              )}
+              {result.summary && <pre className="bi-summary">{result.summary}</pre>}
+              {result.permission_mode && <div className="bi-perm" title="the claude -p permission mode this build ran under">ran under: {result.permission_mode}</div>}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // A2/A4: the editable node inspector form. Generic for EVERY node-type — fields come from the type's
 // config_schema (the single source); values from the node's live config. enum/options → a <select>
 // (model dropdowns fill from the live registry via options_from); everything else → an <input>. An edit
@@ -634,7 +766,16 @@ function Hud() {
         try { setNow(await api.now()) } catch { /* */ }
       } else if (k === 'mode' || k === 'config') {
         try { setNow(await api.now()); setCfg(await api.rhmConfig()) } catch { /* */ }
-      } else if (k === 'ask' || k === 'reject' || k === 'resolve' || k === 'apply' || k === 'grow' || k === 'revert') {
+      } else if (k === 'ask' || k === 'reject' || k === 'resolve' || k === 'apply' || k === 'grow' || k === 'revert' || k.startsWith('decision.')) {
+        // WIRE-UI: the decision→implementation wire emits `decision.*` events (intent · dispatch ·
+        // implemented · verify · deferred · crashed · surfaced_for_review). NONE of them carry a
+        // companion `ask` (unlike surface_review), so without this branch a surfaced build-intent, a
+        // dispatch start, or an `implemented` close would fall into the final `else` (setNow only) and
+        // the inbox/build-intent surface would go STALE until an unrelated event. startsWith('decision.')
+        // (not an enumerated list) so the NEW `decision.surfaced_for_review` kind is handled the moment
+        // the backend lane emits it — author-from-registry: we react to the kind family, invent nothing.
+        // The deferred queue reads from the activity log (decision.deferred is event-only, no inbox item),
+        // and the events already auto-merged at the top of onmessage — so this just refreshes the inbox+now.
         try { setInbox(await api.inbox()); setNow(await api.now()); setLastChange(await api.lastChange()); setPanels(await api.panels()) } catch { /* */ }
       } else if (k === 'chat' || k === 'react') {
         try { setChat(await api.chatHistory()) } catch { /* */ }
@@ -1303,12 +1444,35 @@ function Hud() {
                 onClick={() => startWalk((inbox.live_escalations || []).map((d: any) => d.id))}>{wtBusy ? 'starting…' : '▷ walk these'}</button>
             )}
           </div>
-          {/* U12: group live escalations by ACTION into visual lanes (so a large queue isn't one flat list).
-             The grouping mirrors the backend's `batched` keying; here we group ALL escalations (not only
-             >1) so every item lands under a labelled lane. A `(test)` heuristic distinguishes test-pollution
-             items so they're visible-but-separable, never silently mixed in. */}
+          {/* WIRE-UI: the decision→implementation wire's build-intents get their OWN lane, rendered as
+             rich cards (scope · consequence_class · phase · the implemented result/diff) so the operator
+             can SEE a build end to end — never a bare uuid (a build-intent payload has no `name`). They
+             still live in `live_escalations` (code never writes `resolved`, only the `status` lane), so
+             we split them out here BEFORE the generic action-grouping below. */}
           {(() => {
             const esc: any[] = inbox.live_escalations || []
+            const builds = esc.filter(isBuildIntent)
+            if (!builds.length) return null
+            return (
+              <div className="ibx-lane ibx-builds">
+                <div className="ibx-lane-head">decision → build <span className="muted">· {builds.length}</span></div>
+                {builds.map((d: any) => (
+                  <PanelErrorBoundary key={d.id} name={'build-intent ' + d.id}>
+                    {/* DEMONSTRATE-FIRST: onDemonstrate places the built node-type on the canvas (addNode
+                       puts it in the viewport + flashes it = "see it present + runnable"); liveTypes is the
+                       registry truth that gates the "show me" affordance to a node-type that actually went live. */}
+                    <BuildIntentCard d={d} onOpen={openCoa} onDemonstrate={(t: string) => { void addNode(t) }} liveTypes={types} />
+                  </PanelErrorBoundary>
+                ))}
+              </div>
+            )
+          })()}
+          {/* U12: group the REMAINING (non-build-intent) live escalations by ACTION into visual lanes (so a
+             large queue isn't one flat list). The grouping mirrors the backend's `batched` keying; here we
+             group ALL of them (not only >1) so every item lands under a labelled lane. A `(test)` heuristic
+             distinguishes test-pollution items so they're visible-but-separable, never silently mixed in. */}
+          {(() => {
+            const esc: any[] = (inbox.live_escalations || []).filter((d: any) => !isBuildIntent(d))
             const isTest = (d: any) => /test|fixture|pollut|sample|demo/i.test(((d.payload?.name || '') + ' ' + (d.id || '')))
             const lanes: Record<string, any[]> = {}
             esc.forEach(d => { const k = (isTest(d) ? 'test · ' : '') + (d.action || 'decision'); (lanes[k] = lanes[k] || []).push(d) })
@@ -1324,6 +1488,33 @@ function Hud() {
             ))
           })()}
           {(inbox.counts?.escalations || 0) === 0 && <div className="muted">nothing awaiting you.</div>}
+          {/* WIRE-UI: the W7 DEFERRED QUEUE — when the dispatch loop hits its concurrency cap it emits a
+             `decision.deferred` event (event-only; NO inbox item) per held build, so the operator SEES what
+             was held rather than it silently disappearing (fail-loud). We read it from the activity log,
+             newest first, deduped by the resolve seq the deferral is keyed on (a later pass re-defers the
+             same seq until it dispatches — we show the latest state, not every re-defer). A deferral clears
+             from view once that seq dispatches (a decision.dispatch for the same derived_from supersedes it). */}
+          {(() => {
+            const dispatchedSeqs = new Set(
+              (events || []).filter((e: any) => e.kind === 'decision.dispatch').map((e: any) => e.derived_from))
+            const seen = new Set<number>()
+            const deferred = (events || [])
+              .filter((e: any) => e.kind === 'decision.deferred')
+              .filter((e: any) => !dispatchedSeqs.has(e.derived_from))   // already dispatched a later pass → not still deferred
+              .filter((e: any) => { const s = e.derived_from; if (seen.has(s)) return false; seen.add(s); return true })
+            if (!deferred.length) return null
+            return (
+              <div className="ibx-lane ibx-deferred" data-ui-ref="deferred-queue">
+                <div className="ibx-lane-head">⏸ deferred (cap reached) <span className="muted">· {deferred.length}</span></div>
+                {deferred.map((e: any) => (
+                  <div key={e.seq} className="ibx-item ibx-defer-item" onClick={() => e.surfaced && openCoa(e.surfaced)}
+                    title="held this pass because the dispatch concurrency cap was reached; a later pass will dispatch it">
+                    held · {e.surfaced || ('seq ' + e.derived_from)} <span className="muted">— cap {e.cap}, re-offered next pass</span>
+                  </div>
+                ))}
+              </div>
+            )
+          })()}
           {/* U12: resolved-for-you as its own collapsible group (audit lane — needn't be worked). */}
           {(inbox.resolved_for_you || []).length > 0 && (
             <div className="ibx-lane ibx-resolved">
