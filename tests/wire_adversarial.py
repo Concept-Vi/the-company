@@ -325,6 +325,46 @@ def attack_unverified_close():
            verdict, ev)
 
 
+# ===========================================================================================
+# ATTACK 9 — the surface-for-review item must be a DEAD END to the dispatcher.
+# `implemented` now ALSO surfaces a review item. If that item were a build-intent (intent=build +
+# decision_build/AUTO), the operator's "looks good" approve would satisfy drive_dispatchable's
+# _is_dispatchable under a NEW seq and trigger a REBUILD (exactly-once is keyed on the OLD seq).
+# Attack: dispatch+close, then APPROVE the surfaced review item and run the watcher — assert zero
+# new dispatches + zero new builds.
+# ===========================================================================================
+def attack_review_item_rebuild():
+    s = fresh_suite()
+    intent = s.surface_build_intent("build then surface for review", scope=["runtime/"],
+                                    consequence_class="decision_build")
+    sid = intent["id"]
+    seq = approve_seq(s, sid)
+    out = s.dispatch_decision(sid, seq, launcher=good_launch(["runtime/x.py"]),
+                              verifier=lambda r: (True, "ok"))
+    review_sid = out.get("review_surfaced")
+    review = s.inbox.get(review_sid) if review_sid else None
+    is_build = bool(review) and s.is_build_intent(review)
+    dispatch_before = sum(1 for e in s.store.events_since(-1) if e.get("kind") == "decision.dispatch")
+    # the operator APPROVES the review ("looks good") and the unattended watcher runs.
+    rev_seq = approve_seq(s, review_sid)
+    drive = impl.drive_dispatchable(s, cursor=-1, launcher=good_launch(["runtime/x.py"]),
+                                    verifier=lambda r: (True, "ok"))
+    dispatch_after = sum(1 for e in s.store.events_since(-1) if e.get("kind") == "decision.dispatch")
+    rebuilt = dispatch_after > dispatch_before or any(
+        d.get("surfaced") == review_sid for d in drive.get("dispatched", []))
+    ev = (f"review item kind={review['payload'].get('kind') if review else None!r}, "
+          f"is_build_intent={is_build}; after approving the review + watcher pass: "
+          f"decision.dispatch {dispatch_before}->{dispatch_after}, "
+          f"watcher dispatched={[d.get('surfaced') for d in drive.get('dispatched', [])]}; "
+          f"surfaced_for_review event present="
+          f"{'decision.surfaced_for_review' in [e.get('kind') for e in s.store.events_since(-1)]}")
+    # SURVIVED iff the review item is NOT a build-intent AND approving it produced no new build.
+    verdict = "SURVIVED" if (not is_build and not rebuilt) else "BROKEN"
+    record("9. Surface-for-review item cannot be re-approved into a REBUILD (dispatcher-inert)",
+           "dispatch+close → approve the surfaced review item → drive_dispatchable; count new dispatches",
+           verdict, ev)
+
+
 if __name__ == "__main__":
     print("\n############ ADVERSARIAL WIRE RED-TEAM ############\n")
     attack_concurrency()
@@ -335,6 +375,7 @@ if __name__ == "__main__":
     attack_operator_only_resolve()
     attack_misc_refusals()
     attack_unverified_close()
+    attack_review_item_rebuild()
 
     print("\n############ SUMMARY ############")
     broken = [r for r in RESULTS if r[2] == "BROKEN"]

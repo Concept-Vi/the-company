@@ -7,8 +7,10 @@ backend mechanisms hold so that run can start.
 
 S8 parts covered here (deterministic):
   1. Happy path: build-intent surfaced → operator approve → dispatch (injected build) → verify →
-     status=implemented; events narrate dispatch→implemented; operator `resolved` written ONLY by
-     resolve_surfaced (operator-only preserved).
+     status=implemented AND surfaced-for-review (a decision.surfaced_for_review event + a dispatcher-
+     inert `build_result_review` item carrying the diff); events narrate dispatch→implemented; operator
+     `resolved` written ONLY by resolve_surfaced (operator-only preserved). `implemented` is NOT a
+     silent terminal — AI-operated is not review-free; approving the review item never rebuilds.
   2. Governed refusals (no confidence value, all deterministic):
        - forged/missing seq · bind mismatch (wrong sid / wrong choice) · non-build-intent approve ·
          already-dispatched (exactly-once) · LOCKED declared class never auto-dispatches.
@@ -102,6 +104,10 @@ raises("launch fails loud on a bad round-trip (LaunchError)",
 # instruction carries the declared scope so a well-behaved run stays in it.
 instr = impl.build_instruction({"payload": {"spec": "add a thing", "scope": ["runtime/x.py"]}})
 check("build_instruction injects the declared scope", "runtime/x.py" in instr and "ONLY" in instr)
+# the instruction carries the STANDARDS (AI-operated but REVIEWED) — not a self-review instruction.
+check("build_instruction carries the standards: reviewed-not-review-free + UI/UX bar + self-description",
+      all(s in instr for s in ("REVIEWED", "self-description", "UI/UX bar"))
+      and "separate review pass" in instr.lower())
 
 
 print("\n=== W4 source — changed_delta is correct on a DIRTY tree (real content snapshots) ===")
@@ -130,7 +136,7 @@ check("changed_delta CATCHES a build that edits an already-dirty file (content-h
       "dirty.py" in delta2)
 
 
-print("\n=== S8.1 — happy path: approve → dispatch → verify → implemented ===")
+print("\n=== S8.1 — happy path: approve → dispatch → verify → implemented AND surfaced-for-review ===")
 s = fresh_suite()
 intent = s.surface_build_intent("add a reversible thing", scope=["runtime/"],
                                 consequence_class="decision_build")
@@ -147,6 +153,28 @@ check("operator `resolved` field was written ONLY by the operator approve (not b
 kinds = [e.get("kind") for e in s.store.events_since(-1)]
 check("events narrate dispatch→implemented (W5)",
       "decision.dispatch" in kinds and "decision.implemented" in kinds)
+# THE CONCEPTUAL CORRECTION — `implemented` is NOT a silent terminal: it ALSO surfaces a review item.
+check("a decision.surfaced_for_review event was emitted (implemented ≠ silent close)",
+      "decision.surfaced_for_review" in kinds)
+review_sid = out.get("review_surfaced")
+check("the close returned the surfaced review item's id", bool(review_sid))
+review = s.inbox.get(review_sid)
+check("the review item carries the changed-files diff + result summary + derived_from + review_of",
+      review["payload"].get("changed_files") == ["runtime/implement.py"]
+      and review["payload"].get("review_of") == sid
+      and review["payload"].get("derived_from") == seq
+      and "summary" in review["payload"])
+check("the review item is a live escalation (resolved=None) for the OPERATOR to resolve",
+      review.get("resolved") is None and review.get("status") == "inbox")
+# CRITICAL: the success-review item must NOT be a build-intent — else approving it (the operator's
+# 'looks good') would satisfy the dispatcher under a NEW seq and trigger a REBUILD (exactly-once is
+# keyed on the OLD seq). It is a distinct, dispatcher-inert `build_result_review`.
+check("the surfaced review item is NOT a build-intent (approving it reviews, never rebuilds)",
+      s.is_build_intent(review) is False and review["payload"].get("kind") == "build_result_review")
+# exactly-once intact: surfacing the review is part of the ONE dispatch, not a second decision.dispatch.
+ndispatch = sum(1 for e in s.store.events_since(-1)
+                if e.get("kind") == "decision.dispatch" and e.get("derived_from") == seq)
+check("surfacing the review did NOT emit a second decision.dispatch (exactly-once intact)", ndispatch == 1)
 
 
 print("\n=== S8.2 — governed refusals (deterministic, no confidence) ===")
@@ -230,4 +258,6 @@ raises("guard('code_build', confirmed=False) RAISES (unverified close cannot wri
 
 print(f"\nALL {PASS} CHECKS PASS — the Decision→Implementation Wire backend (Group W) holds "
       f"its mechanisms: bind · discriminator · exactly-once · LOCKED pre-gate · verify-or-requeue · "
-      f"scope-diff · guarded close. (Operator-only resolve preserved; no confidence value anywhere.)")
+      f"scope-diff · guarded close that ALSO surfaces-for-review (implemented ≠ silent terminal; the "
+      f"review item is dispatcher-inert so approving it never rebuilds). (Operator-only resolve "
+      f"preserved; no confidence value anywhere.)")

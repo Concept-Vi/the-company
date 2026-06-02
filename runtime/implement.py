@@ -98,10 +98,28 @@ def baseline_snapshot(repo: str = REPO_ROOT, runner=None) -> dict:
     return _content_snapshot(repo, _git_dirty_paths(repo, run))
 
 
+# The STANDARDS the dispatched build must meet. This is NOT a self-review instruction — self-review is
+# the weakest kind, and a headless `claude -p` can't drive a browser to check a surface anyway. It
+# carries the BAR the work must meet; the reviewing is a SEPARATE stage (a review pass + the operator
+# via the RHM organ). AI-operated is NOT review-free.
+STANDARDS_BLOCK = (
+    "\n\nThis is part of an AI-operated but REVIEWED system — it is NOT review-free. Build to this bar:\n"
+    "- Any operator-facing surface this change touches or exposes MUST be brought to the product UI/UX "
+    "bar as part of the change (a backend-only change still updates the surface that exposes it).\n"
+    "- Update the self-description as part of the change: AGENTS.md / MAP.md / STATE.md and the touched "
+    "module's AGENTS.md — keep them current and true (the factual blocks regenerate via "
+    "Suite.refresh_self_description; the prose you update by integration).\n"
+    "- Do NOT review your own work as the final word — a SEPARATE review pass + the operator (via the "
+    "RHM walkthrough organ) will review the result. Implement to the bar; the review is a later stage.")
+
+
 def build_instruction(decision: dict) -> str:
     """Build the work instruction from the recorded decision (its payload). The decision IS the
     authorization (W2) and carries the declared scope (W4) — the instruction tells Claude Code
-    WHAT to build and WHERE it is allowed to touch, so a well-behaved run stays in scope."""
+    WHAT to build and WHERE it is allowed to touch, so a well-behaved run stays in scope. It ALSO
+    carries the STANDARDS_BLOCK: the bar the work must meet (UI/UX bar for operator-facing surfaces,
+    self-description updated as part of the change, a SEPARATE review pass + the operator will review).
+    It does NOT ask the build to review itself — reviewing is a separate stage (AI-operated ≠ review-free)."""
     payload = decision.get("payload", {}) if isinstance(decision, dict) else {}
     spec = payload.get("spec") or payload.get("instruction") or payload.get("why") or ""
     scope = payload.get("scope") or payload.get("target_scope") or []
@@ -111,7 +129,7 @@ def build_instruction(decision: dict) -> str:
                       "exactly this scope): " + ", ".join(scope) +
                       ". Do NOT touch anything outside that scope.")
     return (f"Implement the following approved change in the 'company' repo. "
-            f"Read AGENTS.md / MAP.md / STATE.md first.\n\n{spec}{scope_line}")
+            f"Read AGENTS.md / MAP.md / STATE.md first.\n\n{spec}{scope_line}{STANDARDS_BLOCK}")
 
 
 def _default_runner(instruction: str, *, repo: str, permission_mode: str, timeout_s: int) -> dict:

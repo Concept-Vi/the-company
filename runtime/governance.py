@@ -12,14 +12,18 @@ AUTO, SURFACE, CONFIRM = "auto", "surface", "confirm"
 POLICY = {
     # AUTO — cheap, reversible, internal
     "inspect": AUTO, "compose": AUTO, "configure": AUTO, "run": AUTO, "write_own_layer": AUTO,
-    # AUTO — the decision→implementation wire (Group W). A DECLARED-SCOPE, reversible (git-committed,
-    # build-gated, scope-diffed) autonomous build is the ONE class the wire may auto-dispatch: the
-    # operator's approve of the declared-scope build-intent IS the authorization, so the dispatch
-    # proceeds without a second gate. The pre-dispatch gate keys on posture==AUTO, so ONLY this class
-    # auto-runs; ANY CONFIRM/SURFACE/LOCKED declared class surfaces for the operator instead (never
-    # auto-acts — a CONFIRM class like 'destructive' that is absent from LOCKED can no longer slip
-    # through a LOCKED-membership check). The CLOSE still routes through guard("code_build") (CONFIRM),
-    # so an unverified build can never silently reach `implemented`.
+    # AUTO — the decision→implementation wire (Group W). AUTO here means auto-DISPATCH on the
+    # operator's approve (no second gate BEFORE building) — it does NOT mean auto-CLOSE without review.
+    # A DECLARED-SCOPE, reversible (git-committed, build-gated, scope-diffed) build is the ONE class the
+    # wire may auto-dispatch: the operator's approve of the declared-scope build-intent IS the
+    # authorization, so the dispatch proceeds without a second gate. The pre-dispatch gate keys on
+    # posture==AUTO, so ONLY this class auto-runs; ANY CONFIRM/SURFACE/LOCKED declared class surfaces
+    # for the operator instead (never auto-acts — a CONFIRM class like 'destructive' that is absent from
+    # LOCKED can no longer slip through a LOCKED-membership check). After the build, EVERY implemented
+    # result is SURFACED FOR REVIEW (a `decision.surfaced_for_review` event + a review inbox item) —
+    # AI-operated is NOT review-free; `implemented` means "done AND surfaced for review", never a silent
+    # terminal. The CLOSE routes through guard("code_build") (CONFIRM), so an unverified build can never
+    # reach `implemented`, and the review item is ALWAYS surfaced in the same guarded close.
     "decision_build": AUTO,
     # SURFACE — meaningful but recoverable (proceeds on default + deadline)
     "promote": SURFACE, "spend": SURFACE,

@@ -1283,8 +1283,9 @@ class Suite:
           3. EXACTLY-ONCE: refuse if a `decision.dispatch` already exists for this `seq` (fail loud).
           4. W4 PRE-DISPATCH gate on the DECLARED consequence class, keyed on POLICY POSTURE: ONLY an
              AUTO-posture class auto-dispatches. CONFIRM/SURFACE/LOCKED all surface for the operator
-             (refuse to auto-run — surfacing a result after the act is too late). decision_build is
-             SURFACE → surfaces by default (the safe default); only an AUTO-classed build auto-runs.
+             BEFORE building (refuse to auto-run a non-AUTO build). AUTO means auto-DISPATCH on the
+             operator's approve (no second gate before building) — it does NOT mean auto-CLOSE without
+             review. decision_build is the AUTO class; CONFIRM/SURFACE/LOCKED classes surface here.
           5. emit `decision.dispatch` (the durable exactly-once claim) BEFORE launching — so a crash
              after launch refuses re-launch on restart.
           6. launch (W1, runtime/implement.launch — injectable for tests).
@@ -1292,9 +1293,13 @@ class Suite:
              item does NOT close (no `implemented`). Do NOT reuse requeue_from_verdict (it needs
              choice!=approve; a build follows an approve).
           8. W4 scope-diff: changed paths outside the declared scope → surface back, do NOT close.
-          9. CLOSE (guarded): write status='implemented' through guard("code_build",…,
-             confirmed=verify_passed) — an unverified close RAISES (mirrors apply_node). Code NEVER
-             writes `resolved` (operator-only).
+          9. CLOSE + SURFACE-FOR-REVIEW (guarded): write status='implemented' AND surface a review item
+             through guard("code_build",…, confirmed=verify_passed) — an unverified close RAISES
+             (mirrors apply_node). `implemented` means "done AND surfaced for review", NEVER a silent
+             terminal — AI-operated is NOT review-free. The review (a distinct `build_result_review`
+             item, inert to the dispatcher) reuses the existing surface_review inbox + a
+             `decision.surfaced_for_review` event; it is part of THIS single dispatch, not a second one.
+             Code NEVER writes `resolved` (operator-only) — it writes the `status` lane + surfaces.
         """
         from runtime import implement as _impl
         repo = repo or self._repo_root
@@ -1411,22 +1416,63 @@ class Suite:
                 return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
                         "closed": False, "requeued": new_sid, "overrun": overrun}
 
-        # 9 — CLOSE, guarded on the verification verdict (W4 Hole 4). guard("code_build", …,
-        # confirmed=verify_passed): code_build is CONFIRM-posture, so an unverified close (confirmed
-        # False) RAISES instead of silently writing `implemented` (mirrors apply_node suite.py:1279).
-        # inbox=None so the blocked path just raises (it must NOT re-surface). Code writes ONLY the
-        # `status` lane — never the operator `resolved` field.
+        # 9 — CLOSE + SURFACE-FOR-REVIEW (the conceptual correction). guarded on the verification
+        # verdict (W4 Hole 4). guard("code_build", …, confirmed=verify_passed): code_build is
+        # CONFIRM-posture, so an unverified close (confirmed False) RAISES instead of silently writing
+        # `implemented` (mirrors apply_node). inbox=None so the blocked path just raises (it must NOT
+        # re-surface). Code writes ONLY the `status` lane — never the operator `resolved` field.
+        #
+        # AI-operated is NOT review-free: `implemented` means "done AND surfaced for review", NEVER a
+        # silent terminal. So the SAME guarded close ALSO surfaces a review item (via the existing
+        # `surface_review` inbox + a `decision.surfaced_for_review` event) carrying the result summary,
+        # the changed-files manifest (git ground truth = the diff), and `derived_from` — so the operator
+        # SEES it in the RHM walkthrough. This is part of the ONE dispatch (the decision.dispatch claim
+        # already made it exactly-once); surfacing the review is NOT a second dispatch.
+        #
+        # The review item is DELIBERATELY NOT a build-intent (no `intent="build"`). The failure/overrun
+        # re-queue paths above keep `intent="build"` on purpose — they are RETRIES the operator may
+        # re-approve. A SUCCESS review must not be re-approvable into a REBUILD: if it carried
+        # intent="build"+decision_build(AUTO), the operator's "looks good" approve would satisfy
+        # drive_dispatchable._is_dispatchable (approve + build-intent + posture==AUTO) under a NEW seq,
+        # and exactly-once (keyed on the OLD seq) would not stop it. So the review payload is a distinct
+        # `build_result_review` kind — inert to the dispatcher.
+        review_holder = {}
         def _close():
             self.inbox.set_status(sid, "implemented")
             self._emit("decision.implemented",
                        f"build for {sid} verified + within scope → status=implemented "
                        f"(changed {len(changed)} files; derived from seq={derived_from})",
                        surfaced=sid, derived_from=derived_from, verify_passed=True, changed_files=changed)
+            # surface the result for the MANDATORY review (reversible/AUTO builds are non-blocking —
+            # the change is made + git-reversible — but the review is ALWAYS surfaced). Reuses the
+            # existing surface_review inbox + event log; no parallel review system. surface_review
+            # emits "ask" too, so the live SSE inbox-refresh lights up for the operator.
+            br = d.get("build_result") or {}
+            review_payload = {
+                "kind": "build_result_review",          # NOT a build-intent → inert to the dispatcher
+                "title": f"Review implemented build: {sid}",
+                "review_of": sid,
+                "derived_from": derived_from,
+                "summary": br.get("summary", ""),
+                "changed_files": changed,                # git ground truth = the diff manifest
+                "consequence_class": declared,
+                "scope": scope,
+                "why": (f"a build for {sid} was implemented (verified + in scope) and is surfaced for "
+                        f"MANDATORY review — AI-operated is NOT review-free. The change is "
+                        f"git-reversible; review it in the RHM walkthrough."),
+            }
+            rev = self.surface_review(review_payload, origin="responsive")
+            review_holder["id"] = rev["id"]
+            self._emit("decision.surfaced_for_review",
+                       f"build for {sid} surfaced for review → {rev['id']} "
+                       f"(changed {len(changed)} files; review is mandatory, not silent close)",
+                       surfaced=rev["id"], review_of=sid, derived_from=derived_from,
+                       changed_files=changed)
             return True
         guard("code_build", do=_close, confirmed=verify_passed, inbox=None)
         return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
                 "closed": True, "status": "implemented", "changed_files": changed,
-                "derived_from": derived_from}
+                "derived_from": derived_from, "review_surfaced": review_holder.get("id")}
 
     @staticmethod
     def _in_any_scope(path: str, scope: list[str]) -> bool:

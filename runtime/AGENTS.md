@@ -30,22 +30,37 @@ RHM, the self-modification path, and **the decision→implementation wire** — 
 
 **The decision→implementation wire** (`implement.py` + `dispatch_decision`/`surface_build_intent`,
 Group W) closes the circuit *recorded decision → governed dispatch to Claude Code → verify → result
-back → terminal status*, with no human re-prompt in the middle. It **reuses** existing seams, never a
+back → status=`implemented` **AND surfaced for review*** (AI-operated is NOT review-free), with no
+human re-prompt in the middle. It **reuses** existing seams, never a
 parallel system: the `derived_from` three-part bind (the dispatch is authorized by the operator's
 approve, read from the substrate — `_verify_resolve_bind`, factored from `commit_criterion`); the
 append-only event log for **exactly-once** (a `decision.dispatch` event keyed on the resolve `seq`
 refuses a second launch — the CHECK→CLAIM section is held under a per-seq in-process lock so a true
 thread race over the one Suite can't double-launch, and the durable event is the cross-process/restart
-guarantee) and for visibility (`decision.dispatch`/`implemented`/`verify`); POLICY POSTURE for the
+guarantee) and for visibility (`decision.dispatch`/`implemented`/`verify`/`surfaced_for_review`); POLICY POSTURE for the
 auto-vs-surface routing; and the **separate `status` lane** (`implemented`) so a build closes WITHOUT
 code ever writing the operator `resolved` field. A **declared** consequence class set at surface time
 gates auto-vs-surface *before* dispatch on its **posture**: ONLY an `AUTO`-posture class auto-dispatches
-(`decision_build` is the one such class — the operator's declared-scope approve IS its authorization);
+(`decision_build` is the one such class — the operator's declared-scope approve IS its authorization).
+`AUTO` means auto-**DISPATCH** on the approve (no second gate *before* building) — it does **NOT** mean
+auto-**CLOSE** without review;
 ANY `CONFIRM`/`SURFACE`/`LOCKED` declared class surfaces for the operator instead (a CONFIRM class like
 `destructive`, absent from the LOCKED set, can no longer slip through). The close is `guard("code_build")`-ed
 (CONFIRM) on the verification verdict so an unverified close RAISES; a post-build scope-diff (git ground
 truth; an EMPTY declared scope is DENY-ALL, never allow-all; paths normalized so `..` can't fool the
-guard) surfaces a wandering build back instead of closing it. It is kept **off the MCP face** (not in `RHM_VERBS`) — the RHM
+guard) surfaces a wandering build back instead of closing it. **AI-operated is NOT review-free (root
+AGENTS.md rule 9):** the SAME guarded close that writes `implemented` ALSO surfaces a review item — a
+`decision.surfaced_for_review` event + a `build_result_review` inbox item (the existing `surface_review`,
+no parallel review system) carrying the result summary + the changed-files diff + `derived_from`, so the
+operator sees it in the RHM organ. `implemented` means "done AND surfaced for review", never a silent
+terminal; reversible/AUTO builds are non-blocking (the change is made + git-reversible) but ALWAYS
+surfaced. The review item is **not** a build-intent (inert to the dispatcher) — approving it reviews, it
+never triggers a rebuild. Surfacing the review is part of the ONE dispatch (the `decision.dispatch` claim
+is the exactly-once key), never a second dispatch. The build instruction (`build_instruction`) carries
+the STANDARDS the work must meet (the product UI/UX bar for any operator-facing surface; the
+self-description updated as part of the change; a separate review pass + the operator will review) — it
+is **not** asked to self-review (self-review is the weakest kind, and a headless `claude -p` can't drive
+a browser); reviewing is a separate stage. It is kept **off the MCP face** (not in `RHM_VERBS`) — the RHM
 proposes/surfaces, it never dispatches a build of its own authority. The unattended trigger (the watcher
 / loop that *calls* `dispatch_decision` from a resolve event) is the WIRE-LOOP seam, built separately. The live capability list lives in [[Company Map]] — traverse there
 rather than re-listing it here (the rule in [[Vault Conventions]]).
