@@ -31,6 +31,14 @@ class FsStore:
         b = json.dumps(data, sort_keys=True).encode()
         cas = self._hash(b)
         p = self.root / "objects" / self._safe(cas)
+        # CAS object paths are always FILES. If the target exists as a DIRECTORY, the store is corrupt
+        # (a stray/colliding path) — `p.write_bytes` would raise IsADirectoryError mid-write and surface
+        # as a torn HTTP 400 with no diagnosis. Detect it first and FAIL LOUD with a clean, actionable
+        # message (never a half-written write, never a bare OS errno). Write-once otherwise.
+        if p.is_dir():
+            raise IsADirectoryError(
+                f"CAS object path {p} is a directory, not a file — the object store is corrupt at "
+                f"this address (a stray/colliding directory). Remove it; CAS objects are write-once files.")
         if not p.exists():                      # write-once; never mutate
             p.write_bytes(b)
         return cas

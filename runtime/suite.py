@@ -10,7 +10,7 @@ import os
 
 from contracts.node_record import NodeInstance, Edge, Graph, XY, WH
 from runtime import scheduler
-from runtime.governance import Inbox, GovernanceError, guard
+from runtime.governance import Inbox, GovernanceError, guard, posture, AUTO
 from runtime.registry import NodeRegistry
 from store.fs_store import FsStore
 
@@ -43,6 +43,23 @@ class Suite:
         self.nodes_dir = nodes_dir or os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "nodes")
         self.panels_dir = os.path.join(os.path.dirname(self.nodes_dir), "panels")  # UI extension point
+        # The bridge is a ThreadingHTTPServer → concurrent POST /api/review/next run in separate threads of
+        # ONE process over this one Suite. The session-cursor advance is a read-modify-write (load→run→save)
+        # with no lock → concurrent calls dropped advances (lost update). A per-session in-process lock
+        # serializes that critical section. Guarded so a CAS re-read still protects across processes/restart.
+        import threading as _t
+        self._session_locks_guard = _t.Lock()
+        self._session_locks: dict = {}
+
+    def _session_lock(self, session_id: str):
+        """One reentrant-safe lock per session, created on demand (threadsafe)."""
+        import threading as _t
+        with self._session_locks_guard:
+            lk = self._session_locks.get(session_id)
+            if lk is None:
+                lk = _t.Lock()
+                self._session_locks[session_id] = lk
+            return lk
 
     def _emit(self, kind: str, summary: str, **meta) -> None:
         """Append one event to the captured trajectory (I2). Never breaks the action it records."""
@@ -418,7 +435,7 @@ class Suite:
         "focus": "The operator is in deep work. Be extremely brief (one or two lines); do not elaborate unless asked.",
         "walkthrough": "Actively guide: narrate what you are doing and direct the operator's attention step by step.",
         "watch-and-react": "Observe; comment only when relevant, and briefly.",
-        "decide-for-me": "Act on what you confidently can — prefer taking a governed action (propose a node, run the graph) over asking. You still cannot self-approve; proposals are surfaced for approval.",
+        "decide-for-me": "Act on what the governance posture lets you act on (the AUTO/reversible classes — propose a node, run the graph) rather than asking; surface the rest for the operator. The routing is deterministic (the action's posture decides), not a judgement call. You still cannot self-approve; anything that needs approval is surfaced.",
         "off": "",
     }
 
@@ -556,6 +573,17 @@ class Suite:
     # WHITELIST so the conversational surface can never reach apply/delete/file-write (E6).
     RHM_VERBS = ("run", "propose", "build", "consult", "show", "panel", "extend")
 
+    # G3: each RHM verb's GOVERNANCE action-class — the deterministic input to autonomous_dispatch in
+    # decide-for-me mode. AUTO classes (run/compose/inspect) → the verb runs; CONFIRM classes
+    # (register_type/ui_panel/ui_extension) → surfaced for the operator (the verb body is NOT run, so
+    # there is exactly ONE surface, posture-routed). Classes are the SAME ones governance.POLICY routes;
+    # no parallel mechanism. (Mirrors what the verb already does per-mode; in decide-for-me the routing
+    # is made explicit + single-source through posture, with no confidence anywhere.)
+    RHM_VERB_CLASS = {
+        "run": "run", "build": "compose", "show": "inspect", "consult": "inspect",
+        "propose": "register_type", "panel": "ui_panel", "extend": "ui_extension",
+    }
+
     def consult(self, query: str) -> dict:
         """The RHM reads the system's OWN code+design (the first-purpose Q&A, as a callable) and
         answers — so it knows how it is built. Grounded in the source; cites the file; abstains if
@@ -631,11 +659,32 @@ class Suite:
             return {"did": "consult", "answer": self.consult(q)["answer"]}
         if verb == "show":
             # attention-direction (magic-camera): a VIEW directive — moves the operator's view,
-            # mutates nothing. Resolve targets against the live graph so we never point at nothing.
+            # mutates NOTHING (view-only — preserved). Three target forms, all validated so we never
+            # point at nothing; validated targets pass through UNCHANGED for the UI lane's resolver:
+            #   • bare node-id            → live node on the canvas (existing behavior, kept)
+            #   • ui://canvas/<id|*>      → camera path (a node-id, or '*' = the whole canvas)
+            #   • ui://<chrome|field|panel|ext>/<ref> → a UI-component in the registry (build_ui_info)
             ids = {n.id for n in self._load(graph_id).nodes}
-            targets = [t for t in action.get("targets", []) if t in ids]
+            reg = None                                          # the ui:// registry, lazily built once
+            targets = []
+            for t in action.get("targets", []):
+                if t.startswith("ui://"):
+                    kind, _, ref = t[len("ui://"):].partition("/")
+                    if kind == "canvas":
+                        # camera-resolved: a live node-id, or '*' = the whole canvas (registry entry)
+                        if ref == "*" or ref in ids:
+                            targets.append(t)
+                    else:
+                        # registry-resolved (chrome/field/panel/ext): the ref must be a known component.
+                        # build_ui_info() is keyed by ref; kind is carried for the frontend's dispatch.
+                        if reg is None:
+                            reg = self.build_ui_info()
+                        if ref in reg:
+                            targets.append(t)
+                elif t in ids:
+                    targets.append(t)                           # bare node-id (kept)
             if not targets:
-                return {"did": "none", "refused": "show: no matching nodes on the canvas"}
+                return {"did": "none", "refused": "show: no matching target (node-id or ui:// component)"}
             return {"did": "show", "targets": targets}
         if verb == "panel":
             # update the interface through the interface: author a DECLARATIVE panel → surfaced
@@ -680,6 +729,37 @@ class Suite:
                 "refused": f"verb {verb!r} is not permitted from the RHM — only {self.RHM_VERBS} "
                            "(apply/delete/file-write are operator-gated)"}
 
+    # --- G3: the decide-for-me deterministic dispatcher (NO confidence — posture decides) ---
+    def autonomous_dispatch(self, action_class: str, do, payload: dict | None = None) -> dict:
+        """G3: route an intended action by GOVERNANCE POSTURE alone — the deterministic decide-for-me
+        router. `posture(action_class)` (governance.py POLICY) is the ONLY input: there is no
+        confidence value, no score, no judgement call. It routes the ACT-vs-SURFACE decision; the
+        `do` callable performs it.
+
+          posture == AUTO  → guard(action_class, do)  → ACT (reversible/cheap/internal; run it now)
+          else (SURFACE/CONFIRM, incl. every unknown class → CONFIRM, and every LOCKED class which
+                posture() can NEVER return AUTO for) → run `do()` — but for an action whose posture is
+                CONFIRM, `do` is a GOVERNED verb body whose own action is to SURFACE a consumable draft
+                for the operator (propose→code_build, panel→ui_panel, extend→ui_extension; each surfaces
+                the GENERATED payload that apply_node/apply_panel/apply_extension consume on approve). So
+                the surface is the verb's real, applyable draft — NOT a generic intent-record that
+                nothing could later build (that would be silent success — AGENTS.md rule 4).
+
+        WHY running `do()` on CONFIRM does NOT bypass governance: this router is only ever called with
+        RHM verbs (run/propose/build/consult/show/panel/extend — the RHM_VERBS whitelist). NONE of them
+        apply/delete/write; the CONFIRM ones SURFACE (never apply). apply still requires the operator's
+        `is_approved`. So no-self-approve is preserved STRUCTURALLY by the whitelist: no raw-mutation verb
+        can reach this path, so `do()` here can only ever surface or run a reversible AUTO op — never
+        approve, apply, or mutate real source. A LOCKED class → posture() CONFIRM → the else branch,
+        never AUTO (D4/D7 forever-confirm).
+
+        Returns the verb's own outcome dict, tagged `routed_posture` (auto|surface|confirm) for audit."""
+        p = posture(action_class)
+        out = guard(action_class, do) if p == AUTO else do()
+        out = dict(out) if isinstance(out, dict) else {"result": out}
+        out["routed_posture"] = p                              # deterministic record: which posture routed it
+        return out
+
     def chat(self, message: str, graph_id: str, focus: dict | None = None) -> dict:
         """Grounded conversation with the operator. Answers from compact ground truth; never
         confabulates system facts. Suggests actions but performs none that skip the surfaced
@@ -713,13 +793,15 @@ class Suite:
             "  ACTION: consult <question>          (read the system's OWN code+design and answer it)\n"
             "Use consult for any question about how THIS system is built/designed that isn't in the live "
             "state above (e.g. 'how does the memo gate work', 'what are the contracts'). "
-            "  ACTION: show <node-id(s)>           (move the operator's view to node(s) — to SHOW them)\n"
+            "  ACTION: show <target(s)>            (move the operator's view to node(s)/UI region — to SHOW them)\n"
             "  ACTION: panel <name> :: <spec>      (add a declarative settings/control PANEL)\n"
             "  ACTION: extend <name> :: <spec>     (write a NEW interface component in code — build-gated)\n"
             "Use panel when the operator asks to add a UI panel/settings to the application; you author a "
             "declarative panel (fields editing real config: mode/model/persona), surfaced for approval. "
-            "Use show whenever the operator asks you to show/take them to/point at something — name the "
-            "node ids from the live state. show only moves their view; it changes nothing. "
+            "Use show whenever the operator asks you to show/take them to/point at something. A target is "
+            "either a node-id from the live state, or a UI region as ui://<kind>/<ref> from the UI registry "
+            "(e.g. ui://chrome/inbox, ui://chrome/activity, ui://canvas/<node-id>). show only moves their "
+            "view; it changes nothing. "
             "build's <json> is a list of steps, each either a node "
             '{"as":"a","type":"<existing type>","config":{...}} or a wire {"wire":"a.port -> b.port"} '
             "(reference nodes by their 'as' name). Use build to turn a described pipeline into real nodes "
@@ -736,7 +818,18 @@ class Suite:
         raw = client.complete(transport.openai_transport(base_url=cfg["base_url"]),
                               msgs, model=cfg["model"])      # model + provider are configurable (E1)
         reply, action = self._parse_rhm_action(raw)
-        outcome = self._dispatch_rhm_action(action, graph_id) if action else None
+        if action and mode == "decide-for-me":
+            # G3 wiring: in decide-for-me the ACT-vs-SURFACE decision is routed DETERMINISTICALLY by the
+            # verb's governance action-class (no confidence) through autonomous_dispatch. The verb BODY
+            # performs it either way — AUTO verbs run; CONFIRM verbs run their body whose action is to
+            # SURFACE a consumable, applyable draft (propose→code_build, panel→ui_panel, extend→ui_extension).
+            # So the outcome is the verb's own dict (did=run/propose/panel/extend/...), plus routed_posture.
+            # Every OTHER mode keeps the exact per-verb dispatch below (untouched — mode-gated).
+            cls = self.RHM_VERB_CLASS.get(action.get("verb"), "register_type")   # unknown verb → safest (CONFIRM)
+            outcome = self.autonomous_dispatch(cls, do=lambda: self._dispatch_rhm_action(action, graph_id),
+                                               payload=action)
+        else:
+            outcome = self._dispatch_rhm_action(action, graph_id) if action else None
         if outcome and outcome.get("did") == "consult":   # fold the looked-up answer into the turn
             reply = (reply + "\n\n📖 " + outcome["answer"]).strip()
         if outcome and outcome.get("did") == "ask":        # asked instead of fabricating (PoLR)
@@ -965,33 +1058,42 @@ class Suite:
     def next(self, session_id: str) -> dict:
         """B: the Next page-turn. WRITES the current step's go-address (so the scheduler fires that step;
         the cascade stalls at the NEXT step's still-unresolved gate), advances the cursor, emits
-        `review.advance`, returns the next presentation. Idempotent past the end (done)."""
-        s = self._load_session(session_id)
-        cur = s["cursor"]
-        if cur >= len(s["items"]):
-            s["done"] = True
-            self.store.save_session(s)
-            return {"session": session_id, "done": True, "cursor": cur, "total": len(s["items"])}
-        # OPEN this step's gate: write the go-source's logical output address directly (set_ref+put_content
-        # — we don't FIRE the source, we resolve its address by hand; that's the human-paced "go" signal).
-        go = self._go_addr(session_id, cur)
-        cas = self.store.put_content(f"go:{session_id}:{cur}")
-        self.store.set_ref(go, cas)
-        s.setdefault("opened", []).append(cur)
-        # run the session graph: only the now-opened step(s) become ready; later steps wait on their gates.
-        # Pause every go-source so a PORTS_IN={} constant can't auto-fire and open all gates at once.
-        gid = s["graph"]
-        g = self.store.load_graph(gid)
-        pause = [n.id for n in g.nodes if n.id.startswith("go")] if g else []
-        self.run(gid, pause=pause)                          # AUTO via guard; fires the opened step(s)
-        s["cursor"] = cur + 1
-        if s["cursor"] >= len(s["items"]):
-            s["done"] = True
-        self.store.save_session(s)
-        self._emit("review.advance", f"review session {session_id} → step {s['cursor']}",
-                   session=session_id, cursor=s["cursor"], total=len(s["items"]))
-        if s["done"]:
-            return {"session": session_id, "done": True, "cursor": s["cursor"], "total": len(s["items"])}
+        `review.advance`, returns the next presentation. Idempotent past the end (done).
+
+        ATOMIC cursor advance (concurrency): the load→run→save is a read-modify-write; under the threading
+        bridge two concurrent next() calls would both read cursor=N and one advance is LOST. We take the
+        per-session lock AND re-load the session FRESH inside it (compare-and-set against the substrate),
+        so each next() advances by exactly one distinct step — N concurrent calls = N distinct advances."""
+        with self._session_lock(session_id):
+            s = self._load_session(session_id)             # re-read INSIDE the lock — the authoritative cursor
+            cur = s["cursor"]
+            if cur >= len(s["items"]):
+                if not s.get("done"):
+                    s["done"] = True
+                    self.store.save_session(s)
+                return {"session": session_id, "done": True, "cursor": cur, "total": len(s["items"])}
+            # OPEN this step's gate: write the go-source's logical output address directly (set_ref+
+            # put_content — we don't FIRE the source, we resolve its address by hand; the human "go" signal).
+            go = self._go_addr(session_id, cur)
+            cas = self.store.put_content(f"go:{session_id}:{cur}")
+            self.store.set_ref(go, cas)
+            if cur not in s.setdefault("opened", []):
+                s["opened"].append(cur)
+            # run the session graph: only the now-opened step(s) become ready; later steps wait on gates.
+            # Pause every go-source so a PORTS_IN={} constant can't auto-fire and open all gates at once.
+            gid = s["graph"]
+            g = self.store.load_graph(gid)
+            pause = [n.id for n in g.nodes if n.id.startswith("go")] if g else []
+            self.run(gid, pause=pause)                      # AUTO via guard; fires the opened step(s)
+            s["cursor"] = cur + 1
+            if s["cursor"] >= len(s["items"]):
+                s["done"] = True
+            self.store.save_session(s)                      # commit the advance BEFORE releasing the lock
+            cursor_now, done_now, total = s["cursor"], s["done"], len(s["items"])
+        self._emit("review.advance", f"review session {session_id} → step {cursor_now}",
+                   session=session_id, cursor=cursor_now, total=total)
+        if done_now:
+            return {"session": session_id, "done": True, "cursor": cursor_now, "total": total}
         return self.present_current(session_id)
 
     def session_status(self, session_id: str) -> dict:
@@ -1030,6 +1132,44 @@ class Suite:
         self._emit("criterion.commit", f"criterion {criterion_id} committed (derived from verdict seq={derived_from})",
                    criterion=criterion_id, surfaced=sid, derived_from=derived_from)
         return {"criterion": criterion_id, "surfaced": sid, "derived_from": derived_from, "committed": True}
+
+    def resolve_verdicts_since(self, since: int = -1) -> list:
+        """E3: ALL resolve verdicts since the cursor — approve AND reject/needs-change/decide — so the
+        build loop can route each. `review_verdicts` (above) is the APPROVE-only slice the commit path
+        reads; this is its sibling that also surfaces the negative verdicts the REQUEUE path needs (they
+        are invisible to review_verdicts by design). Same shared event log → same crash/cross-session
+        safety. Each event carries seq·surfaced·choice·reason (suite.py resolve event)."""
+        return [e for e in self.store.events_since(since) if e.get("kind") == "resolve"]
+
+    def requeue_from_verdict(self, sid: str, derived_from: int, note: str = "") -> dict:
+        """E3: turn a NEGATIVE verdict (reject / needs-change / actionable-WHY) into a NEW review item —
+        the reuse-not-parallel requeue path (it surfaces through the SAME inbox via `surface_review`, no
+        second queue). GOVERNED like commit_criterion: REQUIRES `derived_from` = the resolve event's
+        unique `seq`, and verifies the bind (kind=resolve · surfaced==sid · choice != approve) so a
+        requeue can only be derived from a real, non-approving verdict. The WHY (reason/note) rides along
+        — the actionable signal that generalises (I1). The new item starts `inbox`/responsive (it came
+        from a build need). Operator-only resolve is untouched: this WRITES a derived item, it never
+        resolves anything."""
+        if not isinstance(derived_from, int):
+            raise GovernanceError(f"requeue_from_verdict requires derived_from = a resolve event seq (int), "
+                                  f"got {type(derived_from).__name__} — refused (no ungoverned requeue)")
+        ev = next((e for e in self.store.events_since(-1) if e.get("seq") == derived_from), None)
+        if ev is None:
+            raise GovernanceError(f"requeue_from_verdict: no event with seq={derived_from} — cannot requeue "
+                                  f"from a verdict that doesn't exist (fail loud)")
+        if not (ev.get("kind") == "resolve" and ev.get("surfaced") == sid and ev.get("choice") != "approve"):
+            raise GovernanceError(
+                f"requeue_from_verdict: event seq={derived_from} is not a non-approving resolve of {sid!r} "
+                f"(kind=resolve · surfaced=={sid!r} · choice!=approve) — got kind={ev.get('kind')!r} "
+                f"choice={ev.get('choice')!r} surfaced={ev.get('surfaced')!r}. Refused.")
+        item = {"requeued_from": sid, "verdict": ev.get("choice"),
+                "why": note or ev.get("reason", ""), "derived_from": derived_from}
+        new_sid = self.inbox.surface_review(item, origin="responsive")
+        self._emit("review.requeue",
+                   f"requeued {sid} ({ev.get('choice')}) → {new_sid} (derived from verdict seq={derived_from})",
+                   surfaced=new_sid, requeued_from=sid, derived_from=derived_from, verdict=ev.get("choice"))
+        return {"requeued_from": sid, "new_item": new_sid, "verdict": ev.get("choice"),
+                "derived_from": derived_from}
 
     # --- C1: the UI-component registry serialization (sibling of object_info) ---
     # Seeds the known chrome regions (DOM-resolved via data-ui-ref handles the UI lane adds) + the node
@@ -1435,9 +1575,21 @@ class Suite:
                        surfaced=sid, choice="comment", reason=reason, session=session_id, position=position)
             return {"id": sid, "choice": "comment", "status": "responded", "resolved": False}
 
-        # approve / reject / decide (or any other verb) → RESOLVE. resolve() writes `resolved` + reason;
-        # mark the lifecycle status resolved (additive) and emit the resolve event (seq·surfaced·choice·
-        # reason — the verdict E reads, suite.py resolve event).
+        # approve / reject / decide (or any other verb) → RESOLVE (TERMINAL). resolve() writes `resolved` +
+        # reason; mark the lifecycle status resolved (additive) and emit the resolve event (seq·surfaced·
+        # choice·reason — the verdict E reads, suite.py resolve event).
+        #
+        # IDEMPOTENT-PER-ITEM (integrity, fail-loud): a recorded decision CANNOT be contradicted. Once an
+        # item has a TERMINAL verdict (resolved == approve|reject|decide), a SECOND terminal resolve REFUSES
+        # — else one item could be both committed-as-approved AND requeued-as-rejected (the three-part bind
+        # is per-verdict-seq, so it can't catch the contradiction). skip→inbox and comment→responded never
+        # write `resolved`, so they stay non-terminal + re-presentable; only these three are terminal.
+        prior = d.get("resolved")
+        if prior in self.RESOLVING_VERBS:
+            raise GovernanceError(
+                f"surfaced {sid!r} already has a terminal verdict ({prior!r}) — a recorded decision "
+                f"cannot be contradicted; refusing the second {choice!r} (one item → one final verdict). "
+                f"Re-open it with skip/comment first if it genuinely needs revisiting.")
         self.inbox.resolve(sid, choice, reason)
         try:
             self.inbox.set_status(sid, "resolved")
