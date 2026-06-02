@@ -87,6 +87,21 @@ const api = {
 }
 
 const MODES = ['listening', 'text-only', 'background', 'focus', 'walkthrough', 'watch-and-react', 'decide-for-me', 'off']
+// U11: short, legible descriptions of each presence mode (a newcomer can tell them apart). These mirror
+// the backend's MODE_DIRECTIVES (runtime/suite.py) faithfully — condensed for a tooltip. NOTE: the
+// directives are NOT exposed via /api today (capabilities() returns mode NAMES only), so these are a
+// client-side presentation of backend truth, not authored-from-registry; flagged in the lane report
+// (surfacing MODE_DIRECTIVES via capabilities() would let the UI read them — a backend-lane follow-up).
+const MODE_DESC: Record<string, string> = {
+  'listening': 'Conversational and present; responds fully (voice in/out).',
+  'text-only': 'Responds in text, concisely, only to what is addressed.',
+  'background': 'Minimal — surfaces only what genuinely needs you; otherwise a one-line ack.',
+  'focus': 'You are in deep work — extremely brief (a line or two), no elaboration unless asked.',
+  'walkthrough': 'Actively guides — narrates each step and directs your attention.',
+  'watch-and-react': 'Observes over your shoulder; comments only when relevant, briefly.',
+  'decide-for-me': 'Acts on the reversible/AUTO classes itself (deterministic by consequence); still cannot self-approve — anything needing approval is surfaced.',
+  'off': 'The right-hand-man is silent — no responses, no ambient comments.',
+}
 
 // ---------------------------------------------------------------- module-scoped shared registries
 // The node SHAPE (rendered inside tldraw) cannot reach Hud-local React state, so the data it needs to
@@ -256,7 +271,11 @@ class NodeShapeUtil extends ShapeUtil<NodeShape> {
     const inputs = Object.keys(ports.inputs || {})
     const outputs = Object.keys(ports.outputs || {})
     // D5: legible cached-vs-ran — a cache hit must SAY so (fail-loud against "nothing happened").
-    const statusLabel = p.status === 'ran' ? 'ran' : p.status === 'cached' ? 'cached ↺' : p.status
+    // U2: a stuck node says so distinctly (not the neutral "idle/no output"); the reason is generic and
+    // honest — the scheduler's "stuck" means an input address never resolved (no per-node error string).
+    const statusLabel = p.status === 'ran' ? 'ran' : p.status === 'cached' ? 'cached ↺'
+      : p.status === 'stuck' ? 'stuck — an input never resolved' : p.status
+    const isStuck = p.status === 'stuck'
 
     // A nub. An OUTPUT nub starts a connect gesture: stopPropagation (so tldraw doesn't read it as a
     // node-drag/select) + setPointerCapture (so we keep the pointer through the drag). Because capture
@@ -309,9 +328,12 @@ class NodeShapeUtil extends ShapeUtil<NodeShape> {
           {isPortal && <div className="node-ref">live view → {p.ref}</div>}
           {expanded && (
             <div className="node-body">
-              {hasOut
-                ? <div className="node-out">{String(p.output)}</div>
-                : <div className="node-out empty">{isPortal ? 'window onto an unresolved address' : 'no output — not yet resolved'}</div>}
+              {/* U2: a stuck node is visibly FAILED with a reason — never the neutral "not yet resolved". */}
+              {isStuck
+                ? <div className="node-out stuck">⚠ stuck — an input address never resolved (wire its inputs, or run upstream first)</div>
+                : hasOut
+                  ? <div className="node-out">{String(p.output)}</div>
+                  : <div className="node-out empty">{isPortal ? 'window onto an unresolved address' : 'no output — not yet resolved'}</div>}
             </div>
           )}
           {expanded && (
@@ -432,6 +454,20 @@ function Hud() {
   const editor = useEditor()
   const [edges, setEdges] = useState<{ from: string; from_port?: string; to: string; to_port?: string }[]>([])
   const [running, setRunning] = useState(false)
+  // U4: a legible run-error surface. A real api.run()/refresh() rejection (network, a node that RAISED
+  // and failed the whole run) sets this; the toolbar shows it with a retry, and it always clears `running`
+  // (no dead-end latch, no uncaught rejection). null = no error.
+  const [runError, setRunError] = useState<string | null>(null)
+  // U2: the most-recent run's STUCK node ids. The scheduler reports "stuck" (an input address that never
+  // resolved) ONLY on the emitted `run` event — the per-node /api/graph status is only ran|cached|idle and
+  // would OVERWRITE any stuck paint on the next loadGraph. So we hold stuck here (from the run event /
+  // run result) and re-apply it onto the shapes AFTER each loadGraph; a node clears the moment it next runs.
+  const stuckNodes = useRef<Set<string>>(new Set())
+  // U3: when a run is in flight, the wall-clock start (ms) so the toolbar can show elapsed during the
+  // ~20-27s waits. The backend emits NO per-node progress signal (one `run` event AFTER the whole run
+  // returns), so "which exact node is computing now" is not derivable in this lane — see report notes.
+  const [runStartedAt, setRunStartedAt] = useState<number | null>(null)
+  const [runElapsed, setRunElapsed] = useState(0)
   const [types, setTypes] = useState<string[]>([])
   const [gname, setGname] = useState('')
   const [gspec, setGspec] = useState('')
@@ -449,7 +485,12 @@ function Hud() {
   const [chatBusy, setChatBusy] = useState(false)
   const [cfg, setCfg] = useState<any>({ model: '', persona: '' })
   const [cfgOpen, setCfgOpen] = useState(false)
-  const [inbox, setInbox] = useState<any>({ live_escalations: [], resolved_for_you: [], counts: { escalations: 0, resolved: 0 } })
+  // U12: the /api/inbox payload is { live_escalations:[…], resolved_for_you:[…], batched:{action:[ids]},
+  // counts:{escalations,resolved} } (suite.inbox_lanes). `batched` is a SUBSET-grouping of live_escalations
+  // (same items, grouped by action, only themes with >1) — NOT a third disjoint lane. We render the two
+  // real lanes (live grouped by action as visual sub-groups; resolved-for-you as a collapsible group).
+  const [inbox, setInbox] = useState<any>({ live_escalations: [], resolved_for_you: [], batched: {}, counts: { escalations: 0, resolved: 0 } })
+  const [showResolved, setShowResolved] = useState(false)   // U12: resolved-for-you collapsed by default (it needn't be worked)
   const [drill, setDrill] = useState(false)
   const [reason, setReason] = useState('')
   const [lastChange, setLastChange] = useState<any>(null)
@@ -529,6 +570,7 @@ function Hud() {
       OINFO = await api.objectInfo(); setOinfo(OINFO)      // C1: ports/schema reachable by the shape + Edges
       try { UI_INFO = await api.uiInfo() } catch { /* the registry is the source of truth for ui:// targets */ }   // C1: UI-component registry
       const g = await loadGraph(editor); setEdges(g.edges || []); setGid(g.id); syncConfig(g)
+      if ((g.nodes || []).length) setTimeout(fitGraph, 120)   // U6: chrome-aware fit on first load (defer so shapes are laid out)
       setTypes(await api.types())
       setChat(await api.chatHistory())
       setCfg(await api.rhmConfig())
@@ -584,7 +626,11 @@ function Hud() {
       const k = ev.kind
       // structural changes → reload the graph (positions/edges/nodes/status)
       if (k === 'run' || k === 'create' || k === 'connect' || k === 'delete' || k === 'move') {
+        // U2: a `run` event carries the scheduler's stuck/ran arrays directly — fold it in BEFORE the
+        // repaint so the stuck overlay survives the loadGraph that follows (which only knows ran|cached|idle).
+        if (k === 'run') applyStuckFromEvents([ev])
         const g = await loadGraph(editor); setEdges(g.edges || []); syncConfig(g)
+        paintStuck()   // U2: re-apply stuck after loadGraph reset statuses to ran|cached|idle
         try { setNow(await api.now()) } catch { /* */ }
       } else if (k === 'mode' || k === 'config') {
         try { setNow(await api.now()); setCfg(await api.rhmConfig()) } catch { /* */ }
@@ -605,11 +651,63 @@ function Hud() {
     es.onerror = () => { /* EventSource auto-reconnects; Last-Event-ID gives gapless resume */ }
   }
 
-  async function reload() { const g = await loadGraph(editor); setEdges(g.edges || []); syncConfig(g); await poll(); await maybeReact() }
+  async function reload() { const g = await loadGraph(editor); setEdges(g.edges || []); syncConfig(g); paintStuck(); await poll(); await maybeReact() }
+  // U6: fit the graph but PAD for the fixed chrome so no node tucks under the palette/inspector/toolbar/
+  // activity/rhm. zoomToBounds(bounds, {inset}) only insets SYMMETRICALLY — our panels are asymmetric — so
+  // instead we EXPAND the content bounds by each panel's screen extent (converted to page units via zoom)
+  // and fit THAT padded box. Pure view (owns no node data). Panel rects mirror app.css fixed positions.
+  function fitGraph() {
+    const shapes = editor.getCurrentPageShapes().filter(s => s.type === 'node')
+    if (!shapes.length) { editor.zoomToFit({ animation: { duration: 300 } }); return }
+    // union of all node page-bounds
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    shapes.forEach(s => {
+      const b = editor.getShapePageBounds(s.id); if (!b) return
+      minX = Math.min(minX, b.minX); minY = Math.min(minY, b.minY)
+      maxX = Math.max(maxX, b.maxX); maxY = Math.max(maxY, b.maxY)
+    })
+    if (!isFinite(minX)) { editor.zoomToFit({ animation: { duration: 300 } }); return }
+    // panel screen extents (px) from app.css: palette ~158 + 12 left; inspector ~330 + 12 right; toolbar
+    // ~56 top; activity/rhm ~240 bottom. Convert to page units at the CURRENT zoom (approximation that
+    // keeps the chrome clear; the fit re-zooms, so a generous pad is the safe direction).
+    const z = editor.getZoomLevel() || 1
+    const padL = (158 + 24) / z, padR = (330 + 24) / z, padT = (56 + 16) / z, padB = (240 + 16) / z
+    const bounds = { x: minX - padL, y: minY - padT, w: (maxX - minX) + padL + padR, h: (maxY - minY) + padT + padB }
+    editor.zoomToBounds(bounds, { targetZoom: 1, animation: { duration: 300 } })
+  }
   async function maybeReact() {   // watch-and-react: backend-gated, comments only in that mode
     try { const r = await api.react(); if (r.comment) setChat(await api.chatHistory()) } catch { /* */ }
   }
-  async function addNode(type: string) { setNotice('+ ' + type); await api.addNode(type); await reload() }
+  // U5: a palette add seeds its position into the VISIBLE viewport (the operator is looking here) instead
+  // of the backend default (0,0) — which sat UNDER the top-left palette/toolbar. This is operator-intent
+  // placement (the canvas reporting where the operator placed it, exactly like the drag→/api/move write-
+  // back), NOT an invented layout: the position rides to the backend, which stays the source of truth.
+  // Then pan+flash to the returned node id so "here's your node" feedback is unmistakable.
+  async function addNode(type: string) {
+    setNotice('+ ' + type)
+    // centre of the current viewport, nudged by a small per-add jitter so repeated adds don't stack exactly.
+    const vp = editor.getViewportPageBounds()
+    const jitter = ((editor.getCurrentPageShapes().filter(s => s.type === 'node').length) % 5) * 26
+    const x = Math.round(vp.midX - 120 + jitter)   // 120 = half a node's width (w:240)
+    const y = Math.round(vp.midY - NODE_H / 2 + jitter)
+    const r = await fetch('/api/node', { method: 'POST', headers: J, body: JSON.stringify({ type, config: {}, position: { x, y } }) }).then(x => x.json())
+    await reload()
+    // pan+flash to the new node (pure view — owns no data). The shape exists after reload()'s loadGraph.
+    const nid = r?.id
+    if (nid) {
+      const sid = shapeIdFor(nid)
+      if (editor.getShape(sid)) {
+        editor.select(sid)
+        editor.zoomToSelection({ animation: { duration: 350 } })
+        // a transient flash ring on the new card (additive; removed after the pulse — no layout reflow).
+        setTimeout(() => {
+          const el = document.querySelector(`[data-shape-id="${sid}"] .node-card`) as HTMLElement | null
+          if (el) { el.classList.add('node-flash'); setTimeout(() => el.classList.remove('node-flash'), 1400) }
+        }, 60)
+      }
+      setNotice(`+ ${type} · ${nid} (added in view)`)
+    }
+  }
   async function wireSelected() {
     const sel = (editor.getSelectedShapes().filter(s => s.type === 'node') as NodeShape[])
     if (sel.length !== 2) { setNotice('select exactly two nodes to wire (left → right)'); return }
@@ -658,8 +756,16 @@ function Hud() {
   }
   async function deleteSelected() {
     const sel = (editor.getSelectedShapes().filter(s => s.type === 'node') as NodeShape[])
+    if (!sel.length) { setNotice('select node(s) to delete'); return }
+    // U10: guard the only real destructive path — a single click must not irreversibly delete. Confirm
+    // first (names the nodes so the operator knows exactly what goes). A key-delete just reappears on the
+    // next loadGraph since the backend is truth; THIS is the path that actually removes from the backend.
+    const names = sel.map(s => s.props.nodeId).join(', ')
+    if (!window.confirm(`Delete ${sel.length} node(s)?\n\n${names}\n\nThis removes them from the graph.`)) {
+      setNotice('delete cancelled'); return
+    }
     for (const s of sel) await api.del(s.props.nodeId)
-    if (sel.length) { setNotice(`deleted ${sel.length} node(s)`); await reload() }
+    setNotice(`deleted ${sel.length} node(s)`); await reload()
   }
   async function sendChat(override?: string) {
     const m = (override ?? chatMsg).trim()
@@ -867,25 +973,86 @@ function Hud() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.session, session?.cursor, session?.item, voiceOn])
 
+  // U3: tick an elapsed counter while a run is in flight, so the operator sees progress during the
+  // ~20-27s resolutions (not a frozen "running…"). Cleared when the run ends (runStartedAt → null).
+  // Also toggle a body class so CSS can PULSE the not-yet-resolved node cards (best-effort per-node
+  // progress: the backend emits no per-node signal, so we pulse all pending nodes rather than fake a
+  // single "computing" node — see report notes; faking one would violate fail-loud honesty).
+  useEffect(() => {
+    if (runStartedAt == null) { document.body.classList.remove('canvas-running'); return }
+    document.body.classList.add('canvas-running')
+    const t = setInterval(() => setRunElapsed(Math.floor((Date.now() - runStartedAt) / 1000)), 250)
+    return () => { clearInterval(t); document.body.classList.remove('canvas-running') }
+  }, [runStartedAt])
+
   const selected = useValue('sel', () => {
     const s = editor.getOnlySelectedShape()
     return s && s.type === 'node' ? (s as NodeShape).props : null
   }, [editor])
+
+  // U7: selecting a node must surface its inspector even if the operator has scrolled the right rail down
+  // to the inbox/grow. The inspector is the top of the shared scroll column (.panel); on a new selection
+  // we scroll it back into view so the "I selected something" feedback is never silently off-screen.
+  useEffect(() => {
+    if (!selected) return
+    const insp = document.querySelector('[data-ui-ref="inspector"]') as HTMLElement | null
+    if (insp) insp.scrollTo ? insp.scrollTo({ top: 0, behavior: 'smooth' }) : (insp.scrollTop = 0)
+  }, [selected?.nodeId])
   selectedRef.current = selected
 
   // D4: run the graph; `force` (a node-id list) bypasses the memo gate for just those nodes. D5: the run
   // result reports ran/cached per node — refresh() writes those statuses onto the cards (legible rerun).
   async function doRun(force?: string[]) {
-    setRunning(true)
+    setRunning(true); setRunError(null)
+    setRunStartedAt(Date.now()); setRunElapsed(0)   // U3: start the elapsed clock for the in-flight run
     setGrowMsg(force ? `force re-running ${force.join(', ')} (past the memo cache)…`
                      : 'resolving… presence of data at each address fires the next node')
     try {
       const st = await api.run(force); await refresh(editor, st)
       const ran = (st.nodes || []).filter((n: any) => n.status === 'ran').length
       const cached = (st.nodes || []).filter((n: any) => n.status === 'cached').length
-      setGrowMsg(`run complete · ${ran} ran · ${cached} cached.`); await poll(); await maybeReact()
+      // U2: the run RESULT (state) carries only ran|cached|idle — the STUCK list lives on the emitted
+      // `run` event. Pull the freshest events and read the latest run event's stuck array, then re-apply
+      // the stuck paint onto the shapes (loadGraph/refresh would otherwise leave them looking merely idle).
+      try { const evs = await api.events(); applyStuckFromEvents(evs) } catch { /* the SSE run event also carries it */ }
+      const stuckN = stuckNodes.current.size
+      setGrowMsg(`run complete · ${ran} ran · ${cached} cached` + (stuckN ? ` · ${stuckN} stuck` : '') + '.')
+      await poll(); await maybeReact()
     }
-    finally { setRunning(false) }
+    catch (e: any) {
+      // U4 (fail loud, no dead end): a REAL rejection — network down, or a node that RAISED and failed the
+      // whole run (the scheduler has no per-node "errored" bucket; a raising node fails api.run() outright).
+      // Surface it legibly with a retry; never an uncaught promise rejection, never a silent swallow.
+      const msg = e?.message || String(e)
+      setRunError(msg); setGrowMsg('✕ run failed — ' + msg); setNotice('✕ run failed: ' + msg)
+    }
+    finally { setRunning(false); setRunStartedAt(null) }   // ALWAYS clears running — the latch can never persist
+  }
+  // U2: read the latest `run` event's stuck/ran arrays and update stuckNodes, then repaint the shapes.
+  // A node that just RAN is no longer stuck (clear it); a node reported stuck gets the stuck paint. The
+  // run event shape is {kind:'run', ran:[...], cached:[...], stuck:[...]} (suite._emit meta). Idempotent.
+  function applyStuckFromEvents(evs: any[]) {
+    const runEv = (evs || []).filter((e: any) => e && e.kind === 'run').sort((a, b) => (b.seq ?? 0) - (a.seq ?? 0))[0]
+    if (!runEv) return
+    const stuck: string[] = Array.isArray(runEv.stuck) ? runEv.stuck : []
+    const ran: string[] = Array.isArray(runEv.ran) ? runEv.ran : []
+    const next = new Set(stuck)
+    ran.forEach(id => next.delete(id))   // anything that ran this pass is, by definition, no longer stuck
+    stuckNodes.current = next
+    paintStuck()
+  }
+  // U2: write the stuck status onto the tldraw shapes (a client-only overlay status; the backend status
+  // stays ran|cached|idle — reflects-never-owns: we don't invent a backend truth, we annotate from the
+  // run event the backend DID emit). Re-applied after every loadGraph so a refresh can't erase it.
+  function paintStuck() {
+    editor.getCurrentPageShapes().forEach(s => {
+      if (s.type !== 'node') return
+      const nid = (s as NodeShape).props.nodeId
+      const isStuck = stuckNodes.current.has(nid)
+      const cur = (s as NodeShape).props.status
+      if (isStuck && cur !== 'stuck') editor.updateShape<NodeShape>({ id: s.id, type: 'node', props: { status: 'stuck' } })
+      else if (!isStuck && cur === 'stuck') editor.updateShape<NodeShape>({ id: s.id, type: 'node', props: { status: 'idle' } })
+    })
   }
   async function dispatch() {
     if (!gname || !gspec) { setGrowMsg('enter a name + what it should do.'); return }
@@ -1025,19 +1192,40 @@ function Hud() {
         <span className="title">the&nbsp;<em>company</em></span>
         {now && (
           <span className={'presence ' + (now.mode === 'off' ? 'off' : running || chatBusy ? 'busy' : now.surfaced_pending ? 'warn' : 'ok')}>
-            <span className="pdot" />{running ? 'running…' : chatBusy ? 'thinking…' : now.presence}
+            <span className="pdot" />{running ? `running… ${runElapsed}s` : chatBusy ? 'thinking…' : now.presence}
+          </span>
+        )}
+        {/* U4: a legible, recoverable run-error surface — shows the failure + a retry, right where RUN is.
+           Clears on the next successful run (doRun sets runError=null at entry). */}
+        {runError && !running && (
+          <span className="run-err" title={runError}>
+            ✕ run failed
+            <button className="b sm" style={{ marginLeft: 6 }} onClick={() => doRun()} title="retry the run">↻ retry</button>
+            <button className="b ghost sm" style={{ marginLeft: 4 }} onClick={() => setRunError(null)} title="dismiss">✕</button>
           </span>
         )}
         {now && (
-          <select className="mode-sel" value={now.mode || 'listening'} onChange={e => changeMode(e.target.value)} title="presence dial — the RHM's mode">
-            {MODES.map(m => <option key={m} value={m}>{m}</option>)}
+          // U11: the dropdown's title shows the CURRENT mode's description; each option carries its own
+          // description as a title so hovering an option (where the browser shows it) explains it too.
+          <select className="mode-sel" value={now.mode || 'listening'} onChange={e => changeMode(e.target.value)}
+            title={'presence dial · ' + (now.mode || 'listening') + ' — ' + (MODE_DESC[now.mode || 'listening'] || '')}>
+            {MODES.map(m => <option key={m} value={m} title={MODE_DESC[m] || ''}>{m}</option>)}
           </select>
         )}
-        <button className="b" onClick={doRun} disabled={running}>{running ? 'running…' : '▶ run'}</button>
+        {/* U11: an always-visible one-line description of the active mode (tooltips alone are not legible enough). */}
+        {now && <span className="mode-desc" title={MODE_DESC[now.mode || 'listening'] || ''}>{MODE_DESC[now.mode || 'listening'] || ''}</span>}
+        {/* U1 (load-bearing fix): wrap in an arrow so React's MouseEvent is NOT passed as `force`.
+           Passing the event made `force.join(', ')` (doRun, line ~880) throw a synchronous TypeError
+           BEFORE the try{, so `finally{ setRunning(false) }` never ran and api.run() never fired →
+           button latched until reload. `() => doRun()` → force is undefined → the normal-run branch
+           POSTs /api/run. The other callers (force-rerun) pass real string[] arrays and are unchanged. */}
+        <button className="b" onClick={() => doRun()} disabled={running}>{running ? 'running…' : '▶ run'}</button>
         <button className="b ghost" onClick={wireSelected}>＋ wire</button>
         <button className="b ghost" onClick={portalSelected}>⊕ portal</button>
         <button className="b ghost" onClick={deleteSelected}>🗑 delete</button>
         <button className="b ghost" onClick={cycleLayers}>◐ layers: {['all', 'origin', 'system'][layerView]}</button>
+        {/* U6: fit the graph with padding for the fixed panels so nothing tucks under the chrome */}
+        <button className="b ghost" onClick={fitGraph} title="zoom to fit — padded so no node hides under the panels">⊡ fit</button>
         <button className="b ghost" onClick={reload}>reload</button>
         {notice && <span className="notice">{notice}</span>}
       </div>
@@ -1060,7 +1248,10 @@ function Hud() {
             <div className="row">
               <span className="k">status</span>
               <span>
-                {selected.status === 'cached' ? 'cached ↺' : selected.status}
+                {/* U2: stuck reads as a legible failure in the inspector too, not a bare word. */}
+                {selected.status === 'cached' ? 'cached ↺'
+                  : selected.status === 'stuck' ? <span className="err">stuck — an input never resolved</span>
+                  : selected.status}
                 {/* D4/D5: force this node past the memo cache, right from the inspector */}
                 <button className="b ghost sm" style={{ marginLeft: 8 }} title="force re-run (bypass memo cache)"
                   onClick={() => doRun([selected.nodeId])}>↻ force</button>
@@ -1101,7 +1292,9 @@ function Hud() {
         <div data-ui-ref="inbox">
           <h3 style={{ marginTop: 18 }}>inbox · chief-of-staff triage</h3>
           <div className="ibx-head">
-            <span className="sig">{inbox.counts?.escalations || 0} awaiting you</span>
+            {/* U11: qualify the count so it is never mistaken for unresolved GRAPH NODES — these are
+               decisions/approvals the chief-of-staff has escalated to you. */}
+            <span className="sig" title="decisions/approvals escalated to you — not graph nodes">{inbox.counts?.escalations || 0} decision(s) awaiting you</span>
             <span className="muted"> · {inbox.counts?.resolved || 0} resolved-for-you</span>
             {/* B-frontend: the operator entry point for S1 — walk ALL live escalations through the organ.
                The RHM-offered walk (lane X) calls the same startWalk path; this makes S1 testable now. */}
@@ -1110,12 +1303,40 @@ function Hud() {
                 onClick={() => startWalk((inbox.live_escalations || []).map((d: any) => d.id))}>{wtBusy ? 'starting…' : '▷ walk these'}</button>
             )}
           </div>
-          {(inbox.live_escalations || []).map((d: any) => (
-            <div key={d.id} className="ibx-item" onClick={() => openCoa(d.id)}>
-              ⚠ {d.action} · {d.payload?.name || d.id} <span className="muted">— compile ↗</span>
-            </div>
-          ))}
+          {/* U12: group live escalations by ACTION into visual lanes (so a large queue isn't one flat list).
+             The grouping mirrors the backend's `batched` keying; here we group ALL escalations (not only
+             >1) so every item lands under a labelled lane. A `(test)` heuristic distinguishes test-pollution
+             items so they're visible-but-separable, never silently mixed in. */}
+          {(() => {
+            const esc: any[] = inbox.live_escalations || []
+            const isTest = (d: any) => /test|fixture|pollut|sample|demo/i.test(((d.payload?.name || '') + ' ' + (d.id || '')))
+            const lanes: Record<string, any[]> = {}
+            esc.forEach(d => { const k = (isTest(d) ? 'test · ' : '') + (d.action || 'decision'); (lanes[k] = lanes[k] || []).push(d) })
+            return Object.entries(lanes).map(([lane, items]) => (
+              <div key={lane} className={'ibx-lane' + (/^test · /.test(lane) ? ' ibx-test' : '')}>
+                <div className="ibx-lane-head">{lane} <span className="muted">· {items.length}</span></div>
+                {items.map((d: any) => (
+                  <div key={d.id} className="ibx-item" onClick={() => openCoa(d.id)}>
+                    ⚠ {d.payload?.name || d.id} <span className="muted">— compile ↗</span>
+                  </div>
+                ))}
+              </div>
+            ))
+          })()}
           {(inbox.counts?.escalations || 0) === 0 && <div className="muted">nothing awaiting you.</div>}
+          {/* U12: resolved-for-you as its own collapsible group (audit lane — needn't be worked). */}
+          {(inbox.resolved_for_you || []).length > 0 && (
+            <div className="ibx-lane ibx-resolved">
+              <div className="ibx-lane-head" style={{ cursor: 'pointer' }} onClick={() => setShowResolved(s => !s)}>
+                {showResolved ? '⌄' : '⌃'} resolved-for-you <span className="muted">· {(inbox.resolved_for_you || []).length} (audit)</span>
+              </div>
+              {showResolved && (inbox.resolved_for_you || []).map((d: any) => (
+                <div key={d.id} className="ibx-item ibx-done" onClick={() => openCoa(d.id)}>
+                  ✓ {d.action} · {d.payload?.name || d.id}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <h3 style={{ marginTop: 18 }}>grow · teach a new node</h3>
