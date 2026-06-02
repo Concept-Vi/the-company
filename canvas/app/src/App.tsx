@@ -57,6 +57,10 @@ const api = {
     fetch('/api/rhm-config', { method: 'POST', headers: J, body: JSON.stringify(updates) }).then(r => r.json()),
   inbox: () => fetch('/api/inbox').then(r => r.json()),
   coa: (id: string) => fetch('/api/coa', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(r => r.json()),
+  // F2: route a node's RESULT to the decision surface — backend reads the output from live state
+  // (client sends only the node id; canvas reflects-never-owns), surfaces it on the EXISTING inbox path.
+  surfaceOutput: (node: string) =>
+    fetch('/api/surface-output', { method: 'POST', headers: J, body: JSON.stringify({ node }) }).then(r => r.json()),
   react: () => fetch('/api/react', { method: 'POST' }).then(r => r.json()),
   lastChange: () => fetch('/api/last-change').then(r => r.json()),
   revert: (sha: string) => fetch('/api/revert', { method: 'POST', headers: J, body: JSON.stringify({ sha }) }).then(r => r.json()),
@@ -576,6 +580,26 @@ function Hud() {
     if (g?.error) { setNotice('✕ ' + g.error); return }
     setEdges(g.edges || []); syncConfig(g); await refresh(editor, g)
   }
+  // F2: route the selected node's OUTPUT to the decision surface (inbox/COA). Composes the existing
+  // surfaced path — the backend reads the output from live state, surfaces it as a 'result' decision;
+  // it then shows up in the inbox panel (live_escalations) and drills via the same coa() compiler.
+  // poll() gives instant local feedback regardless of the SSE stream.
+  async function surfaceOutput(nodeId: string) {
+    setNotice('surfacing output of ' + nodeId + ' → inbox')
+    const r = await api.surfaceOutput(nodeId)
+    if (r?.error) { setNotice('✕ ' + r.error); return }
+    setNotice(`→ inbox · ${r.name} (drill from the inbox to decide)`); await poll()
+  }
+  // F3: choose "build from this output" — prefill the GROW panel's spec with the node's output and
+  // focus it, then let the EXISTING propose → surfaced → approve&apply chain run untouched (no new
+  // propose path). The operator names it + edits the spec, then dispatches as usual.
+  function buildFromOutput(nodeId: string, output: string) {
+    setGname('')
+    setGspec(output || '')
+    setSurf(null)
+    setGrowMsg(`build a node from ${nodeId}'s output — name it, refine the spec, then dispatch.`)
+    setNotice('build-from-output → grow panel (edit + dispatch)')
+  }
   async function deleteSelected() {
     const sel = (editor.getSelectedShapes().filter(s => s.type === 'node') as NodeShape[])
     for (const s of sel) await api.del(s.props.nodeId)
@@ -776,7 +800,20 @@ function Hud() {
             </div>
             <div className="row" style={{ marginTop: 8 }}><span className="k">output</span></div>
             <pre>{selected.output || '— not yet resolved —'}</pre>
-            {selected.output && <button className="b ghost" onClick={() => setWorkshop(selected)}>open workshop ⤢</button>}
+            {selected.output && (
+              <div className="out-actions">
+                <button className="b ghost" onClick={() => setWorkshop(selected)}>open workshop ⤢</button>
+                {/* F3: rerun from the output (force past the memo gate) — composes the existing /api/run force verb */}
+                <button className="b ghost" title="force re-run this node (bypass the memo cache)"
+                  onClick={() => doRun([selected.nodeId])}>↻ rerun</button>
+                {/* F2: route this result to the decision surface (inbox/COA) — the sanctioned operator path */}
+                <button className="b ghost" title="surface this output as a decision in the inbox"
+                  onClick={() => surfaceOutput(selected.nodeId)}>→ inbox</button>
+                {/* F3: build a new node from this output — prefills + reuses the grow→propose→approve chain */}
+                <button className="b ghost" title="build a node from this output (edit + dispatch in grow)"
+                  onClick={() => buildFromOutput(selected.nodeId, selected.output)}>⊕ build from output</button>
+              </div>
+            )}
           </>
         ) : <div className="muted">select a node to inspect it. pan/zoom the canvas; zoom in for detail (semantic zoom).</div>}
 

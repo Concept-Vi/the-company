@@ -806,6 +806,28 @@ class Suite:
                                    {"role": "user", "content": user}], model=cfg["model"])
         return {"id": surfaced_id, "class": d["action"], "framing": framing, "raw": d["payload"]}
 
+    def surface_output(self, graph_id: str, node_id: str) -> dict:
+        """F2: route a node's RESULT to the decision surface. Composes the EXISTING surfaced/inbox
+        path (no new mechanism): read the node's output from live state (the backend is truth — the
+        client passes only {node, graph_id}, never the output itself; canvas reflects-never-owns),
+        then surface it as a 'result' decision so it lands in `live_escalations` and is drillable via
+        `coa` like any other surfaced item. Fail loud if the node is absent or has no output yet."""
+        st = self.state(graph_id)
+        node = next((n for n in st["nodes"] if n["id"] == node_id), None)
+        if node is None:
+            raise KeyError(f"no node {node_id!r} in graph {graph_id!r}")
+        out = node.get("output")
+        if out is None or str(out) == "":
+            raise ValueError(f"node {node_id!r} has no output to surface yet — run it first (fail loud)")
+        sid = self.inbox.surface("result",
+                                 {"name": f"output · {node_id}", "node": node_id,
+                                  "graph_id": graph_id, "output": str(out)},
+                                 default="reject")
+        # emit as 'ask' so the live SSE inbox-refresh path (App.tsx kinds: ask|reject|resolve|…) lights
+        # up; the operator's button also poll()s for instant local feedback regardless of the stream.
+        self._emit("ask", f"a result was surfaced for your decision: {node_id}", surfaced=sid)
+        return {"id": sid, "node": node_id, "name": f"output · {node_id}"}
+
     # --- self-growth: build-dispatch (the "direct its growth" half of the first purpose) ---
     @staticmethod
     def _safe_node_name(name: str) -> str:

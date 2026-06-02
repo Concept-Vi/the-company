@@ -221,6 +221,10 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/coa":                 # decision-compiler UP — value-framing
                 b = self._body()
                 self._send(200, json.dumps(SUITE.coa(b["id"])))
+            elif self.path == "/api/surface-output":      # F2: route a node's result to the inbox/COA
+                b = self._body()
+                gid = b.get("graph_id", DEMO)
+                self._send(200, json.dumps(SUITE.surface_output(gid, b["node"])))
             elif self.path == "/api/react":               # watch-and-react ambient comment
                 self._send(200, json.dumps(SUITE.react(DEMO)))
             elif self.path == "/api/revert":              # OPERATOR-only rollback of a self-change
