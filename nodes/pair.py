@@ -8,6 +8,8 @@ VERSION = "1"
 PORTS_IN = {"a": "Any", "b": "Any"}
 PORTS_OUT = {"pair": "Text"}
 
+CONFIG: dict = {}   # no editable fields — run() reads no config keys
+
 
 def run(inputs: dict, config: dict):
     return f"{inputs.get('a')}>{inputs.get('b')}"

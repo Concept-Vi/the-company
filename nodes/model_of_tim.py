@@ -15,6 +15,11 @@ PORTS_OUT = {"principles": "Text"}
 DEFAULT_PATH = os.environ.get("COMPANY_MODEL_OF_TIM",
                               os.path.expanduser("~/foundation/system/principles.md"))
 
+# The single editable field run() reads: the path to the explicit model-of-Tim.
+CONFIG = {
+    "path": {"type": "string", "label": "Principles path", "default": DEFAULT_PATH},
+}
+
 
 def run(inputs: dict, config: dict):
     path = config.get("path") or DEFAULT_PATH

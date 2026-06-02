@@ -18,6 +18,14 @@ DEFAULT_GLOBS = ["AGENTS.md", "MAP.md", "README.md",
                  "contracts/*.py", "runtime/*.py", "store/*.py",
                  "fabric/*.py", "nodes/*.py", "mcp_face/*.py"]
 
+# Editable fields the inspector renders. root="" falls through to run()'s computed repo-root
+# (config.get("root") or <__file__-derived>), so the default stays single-sourced without baking a path.
+CONFIG = {
+    "root":      {"type": "string", "label": "Repo root",        "default": ""},
+    "globs":     {"type": "text",   "label": "Globs",            "default": DEFAULT_GLOBS},
+    "max_chars": {"type": "number", "label": "Max chars",        "default": 400000, "min": 1},
+}
+
 
 def run(inputs: dict, config: dict):
     root = config.get("root") or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # ~/company

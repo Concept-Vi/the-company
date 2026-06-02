@@ -9,7 +9,15 @@ VERSION = '1'
 KIND = 'content'
 PORTS_IN = {}
 PORTS_OUT = {'mode': 'Text'}
-CONFIG = {'mode': 'listening'}
+CONFIG = {                     # the presence dial (migrated flat→nested for the inspector).
+    'mode': {                  # static enum (the 8 modes = suite.py MODES), NOT options_from — that's for live model lists only
+        'type': 'enum',
+        'label': 'Mode',
+        'default': 'listening',
+        'options': ['listening', 'text-only', 'background', 'focus',
+                    'walkthrough', 'watch-and-react', 'decide-for-me', 'off'],
+    },
+}
 
 
 def run(inputs, config):

@@ -7,6 +7,11 @@ VERSION = "1"
 PORTS_IN = {"a": "Any", "b": "Any"}
 PORTS_OUT = {"joined": "Text"}
 
+# The single editable field run() reads: the separator between joined inputs.
+CONFIG = {
+    "sep": {"type": "string", "label": "Separator", "default": "|"},
+}
+
 
 def run(inputs: dict, config: dict):
     parts = [str(inputs[k]) for k in sorted(inputs)]

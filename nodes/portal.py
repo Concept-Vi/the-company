@@ -13,7 +13,9 @@ KIND = 'content'
 RESOLVE = 'reference'          # scheduler skips; output resolved live from config.ref
 PORTS_IN = {}
 PORTS_OUT = {'view': 'Any'}    # addressable as a view; not wired by dataflow
-CONFIG = {'ref': ''}           # the address this portal is a window onto
+CONFIG = {                     # the address this portal is a window onto (migrated flat→nested for the inspector)
+    'ref': {'type': 'string', 'label': 'Reference address', 'default': ''},
+}
 
 
 def run(inputs, config):

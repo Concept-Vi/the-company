@@ -7,6 +7,8 @@ VERSION = "1"
 PORTS_IN = {"text": "Text"}
 PORTS_OUT = {"text": "Text"}
 
+CONFIG: dict = {}   # no editable fields — pure transform, reads no config keys
+
 
 def run(inputs: dict, config: dict):
     return str(inputs.get("text", "")).upper()
