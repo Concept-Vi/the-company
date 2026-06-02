@@ -5,12 +5,19 @@ Grammar:
   cas://<algo>:<hash>                                 immutable content
   blob://<algo>:<hash>                                large binary (addressed, not inlined)
   vec://<source-address>#emb=<model>                  an embedding of a source
+  ui://<kind>/<ref>                                    a UI component (chrome/field/canvas/panel/ext)
 Schema-additive: add optional fields + bump schema_ver; never break an existing one.
+
+Note on `ui://`: this scheme is a *label* in the address grammar only. Unlike
+run/cas/blob/vec (which the store resolves), `ui://` is resolved elsewhere — its
+target lives in the UI-component registry (`contracts.ui_info`), not the store.
+Adding it here is purely additive: it widens the legal scheme set, it does not
+touch any record shape (e.g. `Provenance`), so no `schema_ver` changes.
 """
 from __future__ import annotations
 from pydantic import BaseModel, Field
 
-SCHEMES = ("run", "cas", "blob", "vec")
+SCHEMES = ("run", "cas", "blob", "vec", "ui")
 
 
 class Provenance(BaseModel):
