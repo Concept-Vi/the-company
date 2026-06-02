@@ -68,7 +68,7 @@ flowchart TD
 
 ## Live registry — the system's current capabilities
 <!--REGISTRY:START--> (auto-maintained by Suite.refresh_self_description on every apply — do not hand-edit)
-- **node-types** (15): ask, codebase, constant, embed, join, llm, model_of_tim, pair, portal, retrieve, rhm_mode, similarity, titlecase, uppercase, wordcount
+- **node-types** (16): ask, codebase, constant, embed, gate, join, llm, model_of_tim, pair, portal, retrieve, rhm_mode, similarity, titlecase, uppercase, wordcount
 - **RHM verbs**: run, propose, build, consult, show, panel, extend
 - **modes**: listening, text-only, background, focus, walkthrough, watch-and-react, decide-for-me, off
 - **panels**: settings

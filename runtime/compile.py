@@ -20,7 +20,7 @@ from contracts.node_record import Graph, ExecNode
 
 
 def _addr(graph_id: str, node_id: str, branch: str = "main") -> str:
-    """The logical run-address of a node's output.
+    """The logical run-address of a node's output (the node-level base address).
 
     `run://<graph.id>/<node>` on the default branch; `…@<branch>` otherwise.
     Main stays branchless so existing addresses/tests are unchanged (schema-additive).
@@ -28,16 +28,41 @@ def _addr(graph_id: str, node_id: str, branch: str = "main") -> str:
     return f"run://{graph_id}/{node_id}" if branch == "main" else f"run://{graph_id}/{node_id}@{branch}"
 
 
-def compile(graph: Graph, branch: str = "main") -> list[ExecNode]:
+def _declared_out_ports(inst, node_types) -> list[str]:
+    """The output ports this node DECLARES.
+
+    Source of truth = the node-type's `PORTS_OUT` (C2), the same registry the
+    scheduler reads — NOT `inst.outputs`, which is empty at compile time on a
+    freshly-built graph ("filled by runtime", C3). When `node_types` isn't
+    supplied (the compile self-check), fall back to `inst.outputs.keys()` so the
+    existing behaviour is byte-identical.
+    """
+    if node_types is not None and inst.type in node_types:
+        ports = list(getattr(node_types[inst.type], "PORTS_OUT", {}).keys())
+        if ports:
+            return ports
+    return list(inst.outputs.keys())
+
+
+def compile(graph: Graph, branch: str = "main", node_types=None) -> list[ExecNode]:
     """Compile a workflow `Graph` into a list of `ExecNode`s.
 
     For each node: drop position/size/render_state/layer (stripped by
-    construction — `ExecNode` has no such fields), carry `config`, and set
-    `outputs[port] = run://<graph.id>/<node.id>` per the node's declared output
-    ports (its `outputs` keys) if any, else a single default port `"out"`.
+    construction — `ExecNode` has no such fields), carry `config`, and give each
+    declared output port its OWN address:
+      - a **single-output** node keeps the bare node-level form, under the
+        uniform port key `"out"`: `outputs = {"out": run://<graph>/<node>}`
+        (unchanged — the self-check + every single-output test still hold).
+      - a **multi-output** node (>= 2 declared ports) gets a per-port fragment
+        address each: `outputs = {p: run://<graph>/<node>#<p>}`. Each port is a
+        DISTINCT store key, so writing one branch leaves the others unresolved
+        (branch-not-taken = address simply never written). Schema-additive.
 
     For each edge: turn the wire into an ADDRESS reference — the target node's
-    `inputs[to_port]` points at the source node's logical address.
+    `inputs[to_port]` points at the SOURCE PORT's address (read straight off the
+    source ExecNode's `outputs`, so compile and the scheduler agree by
+    construction). `from_port` selects which port-address feeds downstream; the
+    `"out"` fallback keeps single-output edges resolving to the bare address.
 
     Fail loud (rule 4): an edge referencing a node not in the graph raises.
     """
@@ -46,15 +71,21 @@ def compile(graph: Graph, branch: str = "main") -> list[ExecNode]:
     execs: list[ExecNode] = []
     by_id: dict[str, ExecNode] = {}
     for inst in graph.nodes:
-        # Declared output ports if available, else a default "out".
-        out_ports = list(inst.outputs.keys()) or ["out"]
-        addr = _addr(graph.id, inst.id, branch)
+        base = _addr(graph.id, inst.id, branch)
+        declared = _declared_out_ports(inst, node_types)
+        if len(declared) >= 2:
+            # Multi-output: per-port fragment address, each a distinct store key.
+            outputs = {port: f"{base}#{port}" for port in declared}
+        else:
+            # Single-output (incl. the default fallback): the bare node address
+            # under the uniform "out" key — unchanged from the original form.
+            outputs = {"out": base}
         exec_node = ExecNode(
             id=inst.id,
             type=inst.type,
             config=inst.config,
             inputs={},
-            outputs={port: addr for port in out_ports},
+            outputs=outputs,
         )
         execs.append(exec_node)
         by_id[inst.id] = exec_node
@@ -70,9 +101,14 @@ def compile(graph: Graph, branch: str = "main") -> list[ExecNode]:
                 f"compile: edge to unknown node {edge.to_node!r} "
                 f"(graph {graph.id!r}) — dangling wire"
             )
-        # The wire becomes an address reference: the target reads from the
-        # source node's logical output address.
-        by_id[edge.to_node].inputs[edge.to_port] = _addr(graph.id, edge.from_node, branch)
+        # The wire becomes an address reference, read straight off the source
+        # ExecNode's computed outputs so compile and the scheduler agree by
+        # construction. `from_port` selects the source port; single-output nodes
+        # carry only "out", so the .get("out") fallback resolves them to the
+        # bare node address (e.g. constant's "value" port -> run://demo/src).
+        src_out = by_id[edge.from_node].outputs
+        src_addr = src_out.get(edge.from_port) or src_out.get("out") or next(iter(src_out.values()))
+        by_id[edge.to_node].inputs[edge.to_port] = src_addr
 
     return execs
 

@@ -39,10 +39,13 @@ def run(graph, store, node_types, branch: str = "main",
     pause = set(pause or [])
     force = set(force or [])
 
-    execs = _compile(graph, branch=branch)            # compile is in the run path
+    execs = _compile(graph, branch=branch, node_types=node_types)   # compile is in the run path
     by_id = {e.id: e for e in execs}
-    out_addr = {e.id: (e.outputs.get("out") or next(iter(e.outputs.values())))
-                for e in execs}
+    # Per-port output addresses (B5): the FULL {port: address} map per node, not
+    # collapsed to one. A single-output node carries {"out": <bare addr>}; a
+    # multi-output node carries {port: <addr>#<port>} — each a distinct store key,
+    # so a branch not taken is simply an address never written.
+    out_ports = {e.id: dict(e.outputs) for e in execs}
 
     ran, skipped, processed = set(), set(), set()
     progress = True
@@ -72,30 +75,89 @@ def run(graph, store, node_types, branch: str = "main",
             mod = node_types[ex.type]
             version = getattr(mod, "VERSION", "1")
             sig = _memo_sig(ex, version, input_map)
-            oaddr = out_addr[nid]
+            ports = out_ports[nid]
+            multi = len(ports) > 1
 
             # VOLATILE nodes read EXTERNAL state (filesystem, network) — their output is NOT a pure
             # function of (type, version, config, inputs), so the memo gate would wrongly cache a
             # stale first-run output forever (red-team F1). Never memo-skip them; always re-run.
+            # The memo cas is the RAW run() return (a single-key/multi-key dict for a multi-output
+            # node, a bare value for a single-output node); a hit re-expands it per-port below, so
+            # selective emission is preserved across cache hits.
             volatile = getattr(mod, "VOLATILE", False)
             cached = store.memo_get(sig)
             if nid not in force and not volatile and cached and store.exists(cached):   # MEMO GATE
                 cas = cached
+                result = store.get_content(cas)
                 agent = f"{ex.type}@memo"
                 skipped.add(nid)
             else:
-                cas = store.put_content(mod.run(inputs, ex.config))
+                result = mod.run(inputs, ex.config)
+                cas = store.put_content(result)
                 store.memo_set(sig, cas)
                 agent = f"{ex.type}@deterministic"
                 ran.add(nid)
-            store.set_ref(oaddr, cas)
-            store.write_provenance(Provenance(          # every write records lineage (store invariant)
-                address=oaddr, content_hash=cas, type=ex.type,
-                produced_by=oaddr, inputs=in_addrs, agent=agent))
+
+            # Map the run() return onto per-port WRITES. A multi-output node returns a
+            # {port: value} dict and we write set_ref ONLY for the ports present (selective
+            # emission — a gate that returns {"pass": v} leaves "fail" unwritten, pruning that
+            # branch). A single-output node returns a bare value -> the lone "out" port
+            # (back-compat: a non-dict return is the one declared port). Fail loud on an
+            # unknown port (rule 4): the scheduler stays generic, the node owns its ports.
+            if multi:
+                if not isinstance(result, dict):
+                    raise ValueError(
+                        f"scheduler: multi-output node {nid!r} ({ex.type!r}) must return a "
+                        f"{{port: value}} dict, got {type(result).__name__}"
+                    )
+                emit = result
+                unknown = set(emit) - set(ports)
+                if unknown:
+                    raise ValueError(
+                        f"scheduler: node {nid!r} ({ex.type!r}) emitted unknown port(s) "
+                        f"{sorted(unknown)} — declared ports are {sorted(ports)}"
+                    )
+            else:
+                emit = {"out": result}
+
+            for port, value in emit.items():
+                oaddr = ports[port]
+                pcas = store.put_content(value) if multi else cas   # single: value IS the memo cas
+                store.set_ref(oaddr, pcas)
+                store.write_provenance(Provenance(   # every write records lineage (store invariant)
+                    address=oaddr, content_hash=pcas, type=ex.type,
+                    produced_by=oaddr, inputs=in_addrs, agent=agent))
 
             processed.add(nid)
             progress = True
 
-    stuck = [nid for nid in by_id if nid not in processed and nid not in pause]
-    return {"ran": ran, "skipped": skipped, "stuck": stuck,
+    # Distinguish a PRUNED branch from a genuinely STUCK node. A node never reached
+    # is "stuck" UNLESS one of its inputs points at a port-address a multi-output node
+    # that DID run deliberately left unwritten (a gate's not-taken branch) — or it is
+    # downstream of such a node (transitive). That is pruning, not a failure: the branch
+    # was correctly never taken. Gate on owner-ran + multi-output (NOT mere "processed",
+    # so a reference-resolved portal that writes nothing is not mistaken for a prune).
+    # Addresses a multi-output node that COMPLETED (ran OR memo-skipped) OWNS but never
+    # wrote = deliberately-pruned ports. `ran | skipped` is essential: on resume / a second
+    # pass the gate is a memo HIT (in `skipped`, not `ran`), yet its not-taken branch is
+    # still deliberately unwritten and must stay pruned, not flip to stuck. Reference-resolved
+    # portals enter `processed` WITHOUT `ran`/`skipped`, so they're never mistaken for prunes.
+    pruned_addrs = {a for nid in (ran | skipped) for a in out_ports[nid].values()
+                    if len(out_ports[nid]) > 1 and not store.head(a)}
+    unreached = [nid for nid in by_id if nid not in processed and nid not in pause]
+    pruned, stuck = [], []
+    changed = True
+    while changed:                                   # transitive closure over the not-taken branch
+        changed = False
+        for nid in unreached:
+            if nid in pruned:
+                continue
+            in_addrs = list(by_id[nid].inputs.values())
+            # downstream of a pruned address, OR of another pruned node's (unwritten) ports
+            feeds_pruned = {a for pid in pruned for a in out_ports[pid].values()}
+            if any(a in pruned_addrs or a in feeds_pruned for a in in_addrs):
+                pruned.append(nid)
+                changed = True
+    stuck = [nid for nid in unreached if nid not in pruned]
+    return {"ran": ran, "skipped": skipped, "stuck": stuck, "pruned": pruned,
             "held": sorted(pause), "compiled": len(execs)}
