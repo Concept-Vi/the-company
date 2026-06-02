@@ -181,3 +181,167 @@ def launch(decision: dict, *, repo: str = REPO_ROOT, permission_mode: str | None
     result.setdefault("changed_files", changed_delta(repo=repo, before=before, runner=diff_runner))
     result["permission_mode"] = mode
     return result
+
+
+# =============================================================================================
+# §W6 — the UNATTENDED trigger (the watcher increment). §W7 — the concurrency cap + loud defer.
+# =============================================================================================
+# This is the CALLER, not the verb. The governed dispatch (`suite.dispatch_decision`) is DONE in
+# suite.py (committed): seq-bind authorization, exactly-once via the per-seq lock + decision.dispatch
+# event, the posture==AUTO pre-gate, the deny-all empty scope, the guarded close. This watcher reads
+# DISPATCHABLE approvals from the substrate and drives them with NO human re-prompt — closing the
+# circuit. It NEVER resolves (operator-only): it READS verdicts + WRITES dispatches/statuses only.
+#
+# Exactly-once does NOT rest on this cursor — the `decision.dispatch` event keyed on the resolve `seq`
+# is the durable guarantee (suite.py:_already_dispatched). The cursor is a COARSE guard only, so a
+# crash/re-fire never double-launches (dispatch_decision refuses a second). A dispatch that crashed
+# mid-flight (the claim event emitted, but no terminal event) is therefore NOT silently lost — it is
+# re-SURFACED loud (a dead end is a silent failure; this law forbids it), never silently re-launched.
+
+# the terminal-event kinds dispatch_decision emits for a resolve seq (suite.py): a successful close
+# (`decision.implemented`) or any non-closing outcome (`decision.verify` — verify-fail / scope-overrun
+# / launch-fail re-queue). A `decision.dispatch` claim with NEITHER terminal = mid-flight or crashed.
+_TERMINAL_KINDS = ("decision.implemented", "decision.verify")
+
+
+def _is_dispatchable(suite, ev) -> bool:
+    """A resolve verdict is auto-dispatchable iff (deterministic — no confidence): the operator
+    APPROVED it, the item is a BUILD-INTENT (the §W2 discriminator), and its DECLARED consequence
+    class has posture==AUTO (the only class that auto-runs; CONFIRM/SURFACE/LOCKED surface for the
+    operator). Mirrors dispatch_decision's own gates so the watcher pre-filters identically — but
+    dispatch_decision still enforces them (no-bypass: the substrate is the authority, not this read)."""
+    from runtime.governance import posture, AUTO
+    if ev.get("kind") != "resolve" or ev.get("choice") != "approve":
+        return False
+    sid = ev.get("surfaced")
+    item = suite.inbox.get(sid) if sid else None
+    if not item or not suite.is_build_intent(item):
+        return False
+    declared = (item.get("payload") or {}).get("consequence_class", "decision_build")
+    return posture(declared) == AUTO
+
+
+def resurface_crashed(suite) -> list[str]:
+    """§W7 (the WIRE-BE worker's flag): a dispatch that emitted its `decision.dispatch` claim but
+    reached NO terminal event (`decision.implemented`/`decision.verify` for that same `derived_from`)
+    launched and then died mid-flight (process crash, timeout that wasn't caught, host restart).
+    dispatch_decision CORRECTLY refuses to re-launch it (exactly-once — the claim event is durable),
+    so it must be RE-SURFACED loud, never silently dropped (no silent dead end — Tim's law). One new
+    responsive review item per crashed dispatch, idempotently (a `decision.crashed` marker keyed on
+    the seq means we already re-surfaced it — so this is itself exactly-once and re-running is safe).
+    Returns the list of new review-item ids surfaced this pass (empty when nothing crashed)."""
+    events = suite.store.events_since(-1)
+    dispatched, terminated, already = {}, set(), set()
+    for e in events:
+        df = e.get("derived_from")
+        if df is None:
+            continue
+        k = e.get("kind")
+        if k == "decision.dispatch":
+            dispatched[df] = e               # the claim — carries surfaced sid + scope + class
+        elif k in _TERMINAL_KINDS:
+            terminated.add(df)
+        elif k == "decision.crashed":
+            already.add(df)                  # already re-surfaced this crashed dispatch
+    crashed = [df for df in dispatched if df not in terminated and df not in already]
+    new_items = []
+    for df in sorted(crashed):
+        claim = dispatched[df]
+        orig_sid = claim.get("surfaced")
+        orig = suite.inbox.get(orig_sid) or {}
+        payload = dict(orig.get("payload") or {})
+        payload.update({
+            "requeued_from": orig_sid, "intent": "build", "derived_from": df,
+            "why": (f"dispatch crashed mid-flight: a build was claimed (decision.dispatch, "
+                    f"seq={df}) but reached NO terminal status (no implemented/verify event). "
+                    f"It will NOT auto-re-launch (exactly-once); re-surfaced for the operator."),
+            "crashed_dispatch": True,
+        })
+        new_sid = suite.inbox.surface_review(payload, origin="responsive")
+        # a durable marker so a later pass does not re-surface the same crash again (exactly-once
+        # for the re-surface itself — keyed on the crashed dispatch's derived_from).
+        suite._emit("decision.crashed",
+                    f"crashed/mid-flight dispatch (seq={df}, item={orig_sid}) re-surfaced loud → {new_sid} "
+                    f"(no terminal event found; not re-launched — exactly-once)",
+                    surfaced=new_sid, requeued_from=orig_sid, derived_from=df, crashed=True)
+        new_items.append(new_sid)
+    return new_items
+
+
+def drive_dispatchable(suite, *, cursor: int = -1, launcher=None, verifier=None,
+                       cap: int | None = None, repo: str | None = None) -> dict:
+    """§W6 — the unattended trigger. ONE bounded watcher pass: read every resolve verdict since the
+    cursor, dispatch the auto-dispatchable build-intent approves (up to the §W7 CONCURRENCY_CAP), and
+    surface — loud — anything deferred or crashed. NO human re-prompt anywhere: the operator's
+    /api/resolve wrote the verdict; this READS it and drives the governed verb. The watcher NEVER
+    calls resolve/resolve_surfaced (operator-only resolve preserved) — it writes dispatches + the
+    `status` lane only, all through dispatch_decision (which writes status, never `resolved`).
+
+    Sequence:
+      0. RE-SURFACE crashed mid-flight dispatches (loud; never a silent dead end).
+      1. read resolve_verdicts_since(cursor) — ALL verdicts (approve + negative) in seq order.
+      2. select the auto-dispatchable approves (build-intent + posture==AUTO); the rest are NOT this
+         watcher's job (negative verdicts route via requeue elsewhere; non-AUTO classes surface).
+      3. enforce the cap: dispatch the first `cap`; DEFER the remainder — surface each deferred one
+         loud (event + a returned list), NEVER silently truncate (Tim's no-silent-failure law). The
+         deferred verdicts are re-read next pass (the cursor only advances past CONSUMED seqs).
+      4. advance the cursor to the max seq we CONSUMED (dispatched or terminally handled), so a
+         deferred verdict is re-offered next pass. Exactly-once is the event log, not the cursor —
+         so even a coarse/duplicated cursor can never double-launch.
+
+    cap/launcher/verifier/repo are injectable (tests + a future standalone daemon supply them); the
+    DEFAULT cap is implement.CONCURRENCY_CAP and the default launcher/verifier are dispatch_decision's
+    own (the real `claude -p` round-trip + the change-set verifier). A single dispatch that fails to
+    LAUNCH is already a loud re-queue inside dispatch_decision (it returns requeued, never raises for
+    a LaunchError) — counted here as handled, not crashed.
+
+    Returns: {dispatched:[...], deferred:[...], crashed_resurfaced:[...], cursor:<new>, cap:<n>}.
+    """
+    cap = CONCURRENCY_CAP if cap is None else cap
+    if cap < 0:
+        raise ValueError(f"concurrency cap must be >= 0, got {cap} (fail loud — no unbounded launch)")
+
+    # 0 — crashed mid-flight first, so a crashed item is re-surfaced BEFORE we consider new work.
+    crashed_resurfaced = resurface_crashed(suite)
+
+    # 1 — every resolve verdict newer than the cursor, in seq order (oldest-first from events_since).
+    verdicts = [e for e in suite.resolve_verdicts_since(cursor)]
+    verdicts.sort(key=lambda e: e.get("seq", 0))
+
+    dispatched, deferred = [], []
+    new_cursor = cursor
+    launched = 0
+    for ev in verdicts:
+        seq = ev.get("seq")
+        sid = ev.get("surfaced")
+        if not _is_dispatchable(suite, ev):
+            # NOT this watcher's responsibility (negative verdict, non-build-intent, or a non-AUTO
+            # class that must surface for the operator). It is CONSUMED — advancing past it is safe:
+            # the operator/another path owns it, and dispatch is event-guarded regardless.
+            new_cursor = max(new_cursor, seq)
+            continue
+        # already dispatched? (a re-fire over the same approve, or a restart) — the event log is the
+        # guarantee; skip without burning a launch slot, and consume the cursor past it.
+        if suite._already_dispatched(seq):
+            new_cursor = max(new_cursor, seq)
+            continue
+        if launched >= cap:
+            # §W7 — CAP reached. DEFER loud: do NOT dispatch, do NOT advance the cursor past it (so it
+            # is re-offered next pass), surface what we deferred (event + return value). No silent
+            # truncation. (We keep scanning to ENUMERATE every deferred verdict for the loud surface.)
+            deferred.append({"surfaced": sid, "seq": seq})
+            suite._emit("decision.deferred",
+                        f"build-intent approve (item={sid}, seq={seq}) DEFERRED — concurrency cap "
+                        f"{cap} reached this pass; will dispatch a later pass (no silent truncation)",
+                        surfaced=sid, derived_from=seq, cap=cap, deferred=True)
+            continue
+        # under the cap → DISPATCH (the governed verb does bind-check + exactly-once + gate + launch +
+        # verify + close-or-surface). A LaunchError is turned into a loud re-queue INSIDE the verb (it
+        # returns {requeued,...,launched:False}), so this call does not raise for a crashed launch.
+        out = suite.dispatch_decision(sid, seq, launcher=launcher, verifier=verifier, repo=repo)
+        dispatched.append({"surfaced": sid, "seq": seq, "result": out})
+        launched += 1
+        new_cursor = max(new_cursor, seq)
+
+    return {"dispatched": dispatched, "deferred": deferred,
+            "crashed_resurfaced": crashed_resurfaced, "cursor": new_cursor, "cap": cap}
