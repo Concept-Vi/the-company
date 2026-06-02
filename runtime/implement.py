@@ -98,19 +98,37 @@ def baseline_snapshot(repo: str = REPO_ROOT, runner=None) -> dict:
     return _content_snapshot(repo, _git_dirty_paths(repo, run))
 
 
+# The self-description files a build is ALWAYS allowed to touch (H8): H7 INSTRUCTS the build to update
+# them as part of the change, so they legitimately appear in `changed_files` and must NOT read as a
+# scope overrun. The factual blocks regenerate via Suite.refresh_self_description (the system's own
+# write, not the build's), the prose the build updates by integration — either way these are upkeep,
+# not out-of-scope wandering. The touched module's own AGENTS.md is covered by the declared scope dir.
+SELF_DESCRIPTION_FILES = ("AGENTS.md", "MAP.md", "STATE.md")
+
+
 # The STANDARDS the dispatched build must meet. This is NOT a self-review instruction — self-review is
 # the weakest kind, and a headless `claude -p` can't drive a browser to check a surface anyway. It
-# carries the BAR the work must meet; the reviewing is a SEPARATE stage (a review pass + the operator
-# via the RHM organ). AI-operated is NOT review-free.
+# carries the BAR the work must meet (H7 — the FULL standard, so the builder INTEGRATES, not just
+# writes code); the reviewing is a SEPARATE stage (a review pass + the operator via the RHM organ).
+# AI-operated is NOT review-free. The wire's verify (H1/H2) ENFORCES the last two bullets after the
+# build (affected acceptance suites + drift must be GREEN, or the build does not close), so this is the
+# bar AND the gate, not a hope.
 STANDARDS_BLOCK = (
     "\n\nThis is part of an AI-operated but REVIEWED system — it is NOT review-free. Build to this bar:\n"
-    "- Any operator-facing surface this change touches or exposes MUST be brought to the product UI/UX "
-    "bar as part of the change (a backend-only change still updates the surface that exposes it).\n"
+    "- Any operator-facing surface this change touches or exposes MUST be built ON THE DESIGN SYSTEM "
+    "(its components + design tokens — NEVER hardcoded values or bespoke one-offs) and brought to the "
+    "product UI/UX bar as part of the change (a backend-only change still updates the surface that "
+    "exposes it). A surface change CANNOT auto-close — it surfaces for a design review.\n"
     "- Update the self-description as part of the change: AGENTS.md / MAP.md / STATE.md and the touched "
     "module's AGENTS.md — keep them current and true (the factual blocks regenerate via "
-    "Suite.refresh_self_description; the prose you update by integration).\n"
-    "- Do NOT review your own work as the final word — a SEPARATE review pass + the operator (via the "
-    "RHM walkthrough organ) will review the result. Implement to the bar; the review is a later stage.")
+    "Suite.refresh_self_description; the prose you update by integration). This is checked: the build "
+    "does NOT close if the drift-check goes red.\n"
+    "- Keep the tests + the drift-check GREEN: a build that breaks ANY affected acceptance suite (or "
+    "leaves drift red) does NOT close — it surfaces back with the failing suite as the reason. So make "
+    "the relevant `tests/*.py` pass and refresh the self-description as part of the change.\n"
+    "- Do NOT review your own work as the final word — a SEPARATE review pass + a design-critic + the "
+    "operator (via the RHM walkthrough organ) will review the result. Implement to the bar; the review "
+    "is a later stage.")
 
 
 def build_instruction(decision: dict) -> str:
@@ -287,7 +305,8 @@ def resurface_crashed(suite) -> list[str]:
 
 
 def drive_dispatchable(suite, *, cursor: int = -1, launcher=None, verifier=None,
-                       cap: int | None = None, repo: str | None = None) -> dict:
+                       suite_runner=None, critic=None, cap: int | None = None,
+                       repo: str | None = None) -> dict:
     """§W6 — the unattended trigger. ONE bounded watcher pass: read every resolve verdict since the
     cursor, dispatch the auto-dispatchable build-intent approves (up to the §W7 CONCURRENCY_CAP), and
     surface — loud — anything deferred or crashed. NO human re-prompt anywhere: the operator's
@@ -356,7 +375,8 @@ def drive_dispatchable(suite, *, cursor: int = -1, launcher=None, verifier=None,
         # under the cap → DISPATCH (the governed verb does bind-check + exactly-once + gate + launch +
         # verify + close-or-surface). A LaunchError is turned into a loud re-queue INSIDE the verb (it
         # returns {requeued,...,launched:False}), so this call does not raise for a crashed launch.
-        out = suite.dispatch_decision(sid, seq, launcher=launcher, verifier=verifier, repo=repo)
+        out = suite.dispatch_decision(sid, seq, launcher=launcher, verifier=verifier,
+                                      suite_runner=suite_runner, critic=critic, repo=repo)
         dispatched.append({"surfaced": sid, "seq": seq, "result": out})
         launched += 1
         new_cursor = max(new_cursor, seq)

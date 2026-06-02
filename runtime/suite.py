@@ -1272,8 +1272,205 @@ class Suite:
         return any(e.get("kind") == "decision.dispatch" and e.get("derived_from") == derived_from
                    for e in self.store.events_since(-1))
 
+    # ============================================================================================
+    # WIRE-HARDEN (H1–H8) — the wire's definition-of-done == the HUMAN BUILD LOOP's discipline.
+    # ------------------------------------------------------------------------------------------
+    # The wire is an autonomous build engine; its old "verified" was essentially "claude -p exited
+    # and a file changed" — far weaker than the loop, which runs the suites + drift + a separate
+    # review. That gap let the reverse incident through (a node-type built but the self-description
+    # NOT refreshed → drift went red, silently). These helpers make the wire's verify REAL,
+    # fail-loud, and surface-back-on-miss: the build re-discovers into the LIVE system (H3),
+    # regenerates the factual self-description (H2), runs the affected acceptance suites + drift
+    # (H1/H2), runs an adversarial CRITIC (H5), and refuses to auto-close anything that touches an
+    # operator-facing surface (H4 — form can't be machine-verified until the design system exists).
+    # ANY miss → fail loud → surface back, never a silent close (H6). All steps are INJECTABLE so
+    # tests prove them deterministically without burning a real `claude -p` or a slow suite run.
+    # ============================================================================================
+
+    # the self-description files a build may always touch (H8) — H7 instructs the build to update them,
+    # so they are upkeep, not out-of-scope wandering. The overrun check (H8) treats these as in-scope.
+    _SELF_DESC_FILES = ("AGENTS.md", "MAP.md", "STATE.md")
+    # operator-facing surface (H4): a build that changes anything under these CANNOT auto-close — its
+    # FORM is unverifiable until the design system + design-critic/design-lint are wired. It surfaces.
+    _SURFACE_PREFIXES = ("canvas/",)
+
+    def _affected_suites(self, changed_files: list[str], scope: list[str]) -> list[str]:
+        """H1 — which acceptance suites COULD this build break. The deterministic gate (no confidence):
+        a change under `runtime/` or `store/` etc. can break the suites that exercise that module, and
+        a node-type change can break node/registry/drift suites — so we always include `drift_acceptance`
+        (H2) + the wire suites (this verify path itself), and add any suite whose name shares a module
+        token with a changed/scoped path. The default verifier runs THESE (not all tests/*.py — several
+        burn live models / are slow); the task allows 'at least the suites the change could affect + drift'.
+        A node-type build (`nodes/`) → node/registry/drift/wire suites must stay green."""
+        all_suites = set(self._acceptance_suites())
+        affected = set()
+        # ALWAYS: drift (the reverse incident) + the wire's own suites (this path must keep holding).
+        for must in ("drift_acceptance", "wire_acceptance", "wire_loop_acceptance", "wire_adversarial"):
+            if must in all_suites:
+                affected.add(must)
+        # module tokens touched by the change (changed paths + declared scope dirs).
+        tokens = set()
+        for p in list(changed_files or []) + list(scope or []):
+            head = (p or "").strip().lstrip("./").split("/")[0]
+            if head and head.endswith(".py"):           # a top-level file like 'MAP.md' has no module token
+                continue
+            if head:
+                tokens.add(head.lower())
+        # a node-type change can break the registry/drift/compose proofs — pull those in by token too.
+        for s in all_suites:
+            sl = s.lower()
+            if any(tok and tok in sl for tok in tokens):
+                affected.add(s)
+            # a nodes/ change is a registry change — the registry/type suites guard it.
+            if "nodes" in tokens and any(k in sl for k in ("registry", "e4", "compose", "walking", "polr")):
+                affected.add(s)
+        return sorted(affected)
+
+    def _run_suites(self, suites: list[str], *, runner=None) -> tuple[bool, str]:
+        """H1 — run the given acceptance suites as the loop does (`./.venv/bin/python tests/<s>.py`) and
+        return (all_green, reason). FAIL LOUD: a non-zero exit = that suite broke → not green. `runner`
+        is INJECTABLE (tests supply a deterministic pass/fail map so no slow/real suite is burned); the
+        DEFAULT runner is the real subprocess so a live build is gated for real. A suite that ERRORS to
+        run (missing interpreter, crash) is treated as RED (a build that breaks the harness is not done)."""
+        if not suites:
+            return True, "no affected suites to run"
+        run = runner or self._default_suite_runner
+        failed = []
+        for s in suites:
+            try:
+                ok, detail = run(s)
+            except Exception as e:                          # a runner crash is a RED suite, never a silent pass
+                ok, detail = False, f"runner crashed on {s}: {type(e).__name__}: {e}"
+            if not ok:
+                failed.append(f"{s} ({detail})" if detail else s)
+        if failed:
+            return False, "acceptance suite(s) FAILED: " + "; ".join(failed)
+        return True, f"all {len(suites)} affected suite(s) green: {', '.join(suites)}"
+
+    def _default_suite_runner(self, suite: str) -> tuple[bool, str]:
+        """The REAL suite runner (default): spawn the suite as the convergence record prescribes. A
+        non-zero exit = RED (fail loud). Uses the repo's venv python if present, else the running one."""
+        import subprocess, sys as _sys
+        venv_py = os.path.join(self._repo_root, ".venv", "bin", "python")
+        py = venv_py if os.path.exists(venv_py) else _sys.executable
+        path = os.path.join(self._repo_root, "tests", suite + ".py")
+        if not os.path.exists(path):
+            return False, f"suite file missing: {path}"
+        proc = subprocess.run([py, path], cwd=self._repo_root, capture_output=True, text=True,
+                              timeout=600)
+        if proc.returncode != 0:
+            tail = (proc.stdout or "")[-400:] + (proc.stderr or "")[-400:]
+            return False, f"exit={proc.returncode}; tail={tail!r}"
+        return True, "exit=0"
+
+    def _make_live_and_refresh(self) -> tuple[bool, str]:
+        """H3 + H2a — re-discover into the RUNNING system so a new node-type is LIVE (in self.registry,
+        not just on disk), THEN regenerate the factual self-description blocks FROM the now-current
+        registry. This is the exact fix for the reverse incident: rediscover → refresh BEFORE the drift
+        check, so MAP/STATE reflect the new capability and drift reads GREEN. Uses rediscover() (clear +
+        discover) so a removed/renamed node un-registers too (the wire can do anything, unlike apply_node
+        which only adds). FAIL LOUD: a syntactically broken node makes exec_module raise during
+        rediscover — that is a legitimate verify MISS (the build broke the registry), returned as a
+        reason, never crashing dispatch_decision."""
+        try:
+            self.registry.rediscover([self.nodes_dir])
+        except Exception as e:
+            return False, (f"re-discovery FAILED ({type(e).__name__}: {e}) — the build left the node "
+                           f"registry un-loadable (a broken node-type). Not live; surfaced back.")
+        try:
+            self.refresh_self_description()                 # H2a: factual MAP/STATE blocks, from the live registry
+        except Exception as e:
+            return False, f"self-description refresh FAILED ({type(e).__name__}: {e}) — surfaced back."
+        return True, "re-discovered into the live registry + refreshed the factual self-description"
+
+    def _touches_surface(self, changed_files: list[str]) -> list[str]:
+        """H4 — did the build change an operator-facing surface (anything under canvas/)? Such a change
+        CANNOT auto-close: its FORM (design-system components + tokens, coherent layout — AGENTS.md
+        rule 9) is the product bar, and there is NO design system wired to machine-check it yet. So a
+        surface-touching build surfaces for review instead of closing. Returns the offending paths."""
+        out = []
+        for p in (changed_files or []):
+            q = (p or "").strip().lstrip("./")
+            if any(q == pre.rstrip("/") or q.startswith(pre) for pre in self._SURFACE_PREFIXES):
+                out.append(p)
+        return out
+
+    def _design_critic(self, changed_files: list[str]) -> tuple[bool, str]:
+        """H4 FORM slot (fail-safe seam) — where a design-critic AGENT + a design-lint will plug in
+        once the design system exists. Until then FORM is UNVERIFIABLE for any operator-facing surface,
+        so this returns (False, reason) for a surface-touching build → the build CANNOT claim 'done' and
+        surfaces for review. A pure-backend build (no surface change) has no form to grade → (True, …),
+        so it may proceed through H1/H2. This is the path-of-least-resistance default: the correct
+        action (don't auto-close an unverifiable surface) is the easy one. NAMED hook, not a comment:
+        replace the body with `design_critic_agent(changed_files)` + `design_lint(changed_files)` when
+        the design system is wired (off-token / bespoke-element → fail loud, same shape as here)."""
+        surface = self._touches_surface(changed_files)
+        if surface:
+            return (False, f"FORM unverifiable: this build changed operator-facing surface(s) {surface} "
+                           f"but no design system / design-critic is wired yet — FORM is half of done "
+                           f"(AGENTS.md rule 9), so it CANNOT auto-close. Surfaced for design review.")
+        return True, "no operator-facing surface touched → no FORM gate (backend build may proceed)"
+
+    def _critic_recheck(self, decision: dict, result: dict, *, critic=None) -> tuple[bool, str]:
+        """H5 — an ADVERSARIAL re-check, SEPARATE from the builder's self-report (the builder defaults
+        to function + grades itself generously — exactly why correctness gets its own adversary). A
+        first-class part of the verify, not optional. The DEFAULT critic is deterministic + structural
+        (no confidence value): a consequential build must actually have changed something and reported
+        success; a launch that claims success with an empty change-set is a no-op masquerading as done.
+        INJECTABLE so a stronger critic (or a test) can supply its own verdict."""
+        run = critic or self._default_critic
+        return run(decision, result)
+
+    @staticmethod
+    def _default_critic(decision: dict, result: dict) -> tuple[bool, str]:
+        """The default adversarial critic (deterministic): re-derive the verdict from the result rather
+        than trust the builder's narration. A 'success' with no change-set is not an implementation; a
+        reported failure is a failure regardless of narration."""
+        if not result.get("success"):
+            return False, f"critic: builder reported failure (exit={result.get('exit_code')})"
+        if not result.get("changed_files"):
+            return False, "critic: success claimed with an EMPTY change-set — a no-op is not a build"
+        return True, "critic: build is consequential (success + non-empty change-set)"
+
+    def _wire_verify(self, decision: dict, result: dict, scope: list[str], *,
+                     suite_runner=None, critic=None) -> tuple[bool, str]:
+        """The wire's DEFINITION-OF-DONE — the loop's discipline, as ONE fail-loud gate (H1·H2b·H4·H5).
+        Order matters (the reverse-incident fix): the build is ALREADY made LIVE + the factual
+        self-description ALREADY refreshed (H3/H2a, hoisted to run unconditionally in dispatch_decision
+        BEFORE any verifier — so a loop's injected scenario verifier can't lose the refresh). This gate
+        then runs the affected suites + drift (H1/H2b) against the now-current state, the adversarial
+        critic (H5), and the FORM gate (H4). ANY miss → (False, reason) → the caller surfaces back,
+        never closes (H6). All steps injectable for deterministic tests. Returns (passed, reason)."""
+        changed = result.get("changed_files", [])
+        # NOTE: H3 + H2a (make-it-live + refresh-self-description) is hoisted OUT of here to run
+        # UNCONDITIONALLY in dispatch_decision BEFORE the verifier branch — so even a loop that injects
+        # its own scenario `verifier` (which bypasses this heavy default) cannot silently lose the
+        # refresh (the exact reverse-incident class this lane kills). By the time _wire_verify runs, the
+        # registry is already live + the self-description already refreshed. We re-assert it here ONLY
+        # as a defensive no-op is unnecessary (it already ran); we go straight to the gates below.
+        # H1 + H2b — the affected acceptance suites + drift must be GREEN (this is where the reverse
+        # incident would now be CAUGHT: drift_acceptance is always in the affected set and runs AFTER
+        # the refresh, so a build that didn't leave drift green does not close).
+        suites = self._affected_suites(changed, scope)
+        ok, why = self._run_suites(suites, runner=suite_runner)
+        if not ok:
+            return False, why
+        # H5 — the adversarial critic, separate from the builder's self-report.
+        ok, why = self._critic_recheck(decision, result, critic=critic)
+        if not ok:
+            return False, why
+        # NOTE: H4 (the FORM gate — a surface-touching build cannot auto-close) is NOT here. It is a
+        # STRUCTURAL gate, like the refresh + the scope-diff, so it runs UNCONDITIONALLY in
+        # dispatch_decision — NOT only on this default path. Otherwise a loop that injects its own
+        # scenario `verifier` (which bypasses this heavy default) could close a surface build with an
+        # unverifiable FORM. The partition: structural gates (refresh · FORM · scope-diff) =
+        # unconditional; verification-QUALITY (the affected suites + the critic) = replaceable by an
+        # injected verifier. So _wire_verify proves only suites + critic.
+        return True, ("wire verify PASSED: live+refreshed · affected suites + drift green · critic ok — "
+                      + why)
+
     def dispatch_decision(self, sid: str, derived_from: int, *, launcher=None,
-                          verifier=None, repo: str | None = None) -> dict:
+                          verifier=None, suite_runner=None, critic=None, repo: str | None = None) -> dict:
         """W2·W4·W1·W3·W5 — the governed dispatch verb. Run an implementation job ONLY when bound to
         a real operator approve via `derived_from` = the resolve event's unique `seq`, and ONLY once.
 
@@ -1369,22 +1566,38 @@ class Suite:
                              "permission_mode": result.get("permission_mode")}
         self.store.save_surfaced(d)
 
-        # 7 — VERIFY by use (W3). Default verifier: the launch reported success AND it actually changed
-        # something (a `plan`-mode run changes nothing → not a real implementation). Injectable so the
-        # loop can run the affected scenario/test/endpoint.
-        def _default_verify(res: dict) -> tuple[bool, str]:
-            if not res.get("success"):
-                return False, f"claude -p reported failure (exit={res.get('exit_code')})"
-            if not res.get("changed_files"):
-                return (False, "no files changed (a plan-mode/no-op run is not an implementation — "
-                               "graduate COMPANY_WIRE_PERMISSION to acceptEdits for a real build)")
-            return True, "verified: success + non-empty change set"
-        verify = verifier or _default_verify
-        verify_passed, verify_reason = verify(result)
+        # 6b — WIRE-HARDEN H3 + H2a, UNCONDITIONAL (the reverse-incident fix): re-discover into the LIVE
+        # system (a new node-type becomes live in self.registry, not just on disk) + regenerate the
+        # factual self-description blocks (MAP/STATE) FROM the now-current registry — BEFORE any verify,
+        # so the drift check reads the refreshed truth. Run here (not only inside _wire_verify) so even a
+        # loop that injects its OWN scenario `verifier` (which bypasses the heavy default) can NEVER
+        # silently lose the refresh — the exact class of bug (a node built but the self-description not
+        # refreshed → drift red) this lane exists to kill. Spawns NOTHING (no fork-bomb risk) and is
+        # idempotent on an unchanged registry (_write_doc_block no-ops when content matches). A broken
+        # node makes rediscover raise → returned here as a MISS reason → surfaces back (a build that
+        # breaks the registry is not done), never a silent close (H6).
+        live_ok, live_reason = self._make_live_and_refresh()
+
+        # 7 — VERIFY by use (W3 + WIRE-HARDEN H1·H2b·H5 — verification QUALITY). The wire's
+        # definition-of-done is now the HUMAN BUILD LOOP's discipline: run the affected acceptance suites
+        # + drift (against the now-refreshed state) + an adversarial critic. This is the DEFAULT verify.
+        # An INJECTED `verifier` is the fast deterministic bypass the loop/tests use (a specific scenario
+        # check) — it runs INSTEAD of the heavy default so existing suites stay fast + green, exactly as
+        # before WIRE-HARDEN. Either way a miss surfaces back, never a silent close (H6). (The STRUCTURAL
+        # gates — refresh, FORM, scope-diff — are UNCONDITIONAL, below + above; they are NOT replaceable
+        # by an injected verifier, so a loop's scenario verifier can never close a surface build.)
+        if not live_ok:
+            verify_passed, verify_reason = False, live_reason     # broken-registry build → surface back
+        elif verifier is not None:
+            verify_passed, verify_reason = verifier(result)
+        else:
+            verify_passed, verify_reason = self._wire_verify(
+                d, result, scope, suite_runner=suite_runner, critic=critic)
 
         if not verify_passed:
-            # route the failure back as a NEW responsive review item — call surface_review DIRECTLY
-            # (NOT requeue_from_verdict; a build follows an approve, there is no reject seq). No close.
+            # H6 — a verification miss (test fail / drift red / critic veto / broken registry / launch)
+            # surfaces back as a RETRY-able build-intent (the operator may re-approve after a fix). Call
+            # surface_review DIRECTLY (NOT requeue_from_verdict; a build follows an approve, no reject seq).
             fail_item = dict(payload)
             fail_item.update({"requeued_from": sid, "why": f"verification failed: {verify_reason}",
                               "derived_from": derived_from, "intent": "build",
@@ -1397,12 +1610,45 @@ class Suite:
             return {"surfaced": sid, "dispatched": True, "launched": True, "verified": False,
                     "requeued": new_sid, "reason": verify_reason}
 
+        # 7b — H4 FORM GATE (UNCONDITIONAL — a structural gate, like the scope-diff, NOT inside the
+        # replaceable verifier). A build that touched an operator-facing surface (canvas/) CANNOT
+        # auto-close: its FORM (design-system components+tokens, coherent layout — AGENTS.md rule 9) is
+        # the product bar, and there is NO design system / design-critic wired to machine-check it yet.
+        # So it surfaces for review REGARDLESS of how verify_passed was reached (incl. an injected
+        # scenario verifier — the WIRE-LOOP path). The surfaced item is DELIBERATELY DISPATCHER-INERT
+        # (a `build_form_review`, NOT a build-intent): re-approving it must NOT re-dispatch into a
+        # can't-verify-form loop (it would satisfy _is_dispatchable under a NEW seq, and exactly-once is
+        # keyed on the OLD seq). _design_critic is the NAMED hook where design_critic_agent + design_lint
+        # plug in once the design system exists; until then it is fail-safe (surface, never close).
+        form_ok, form_reason = self._design_critic(result.get("changed_files", []))
+        if not form_ok:
+            form_item = {"kind": "build_form_review", "review_of": sid, "derived_from": derived_from,
+                         "why": f"not auto-closed: {form_reason}", "scope": scope,
+                         "consequence_class": declared, "build_result": d.get("build_result"),
+                         "changed_files": result.get("changed_files", [])}
+            new_sid = self.inbox.surface_review(form_item, origin="responsive")
+            self._emit("decision.verify",
+                       f"build for {sid} touched an operator-facing surface → cannot auto-close (FORM "
+                       f"unverifiable) → surfaced {new_sid} for design review; not closed",
+                       surfaced=new_sid, review_of=sid, derived_from=derived_from, verify_passed=False)
+            return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
+                    "closed": False, "requeued": new_sid, "reason": form_reason,
+                    "form_unverifiable": True}
+
         # 8 — W4 SCOPE-DIFF (fail loud): changed paths outside the declared scope → surface back, no
         # close. Runs ALWAYS (no `if scope:` skip) — _within_scope treats an empty scope as DENY-ALL,
         # so a build with no/empty declared scope can NEVER close (vacuous-enforcement hole closed).
+        # H8 — the self-description files (AGENTS.md / MAP.md / STATE.md) are ALWAYS allowed: H7 INSTRUCTS
+        # the build to update them as part of the change, and the close itself regenerates the factual
+        # blocks (the system's write, not the build's). So they are upkeep, NOT out-of-scope wandering —
+        # the overrun check must not flag them, or every well-behaved build would surface as a false
+        # overrun. (The regen's writes aren't in `changed_files` anyway — that was snapshotted inside
+        # launch() before the close ran — but the BUILD's own H7 prose edits to these files ARE, and
+        # those are legitimate.) The declared scope still binds every OTHER path.
         changed = result.get("changed_files", [])
         if True:
-            overrun = [p for p in changed if not self._in_any_scope(p, scope)]
+            overrun = [p for p in changed
+                       if not self._is_self_description(p) and not self._in_any_scope(p, scope)]
             if overrun:
                 over_item = dict(payload)
                 over_item.update({"requeued_from": sid, "intent": "build", "derived_from": derived_from,
@@ -1473,6 +1719,18 @@ class Suite:
         return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
                 "closed": True, "status": "implemented", "changed_files": changed,
                 "derived_from": derived_from, "review_surfaced": review_holder.get("id")}
+
+    @classmethod
+    def _is_self_description(cls, path: str) -> bool:
+        """H8 — is this changed path a ROOT self-description file (AGENTS.md / MAP.md / STATE.md)? H7
+        instructs the build to update the self-description as part of the change, and the close itself
+        regenerates the factual blocks — so a change to one of these is the SYSTEM's upkeep, never an
+        out-of-scope edit. The overrun check (H8) treats it as in-scope without it being declared.
+        Matched at the REPO ROOT only (normalized): a module's own AGENTS.md (e.g. 'nodes/AGENTS.md')
+        is covered by that module's declared scope dir, not by this blanket allow."""
+        import os as _os
+        p = _os.path.normpath((path or "").strip().lstrip("./"))
+        return p in cls._SELF_DESC_FILES
 
     @staticmethod
     def _in_any_scope(path: str, scope: list[str]) -> bool:
