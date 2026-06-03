@@ -559,13 +559,28 @@ class Suite:
         return {"mode": c.get("mode", self.DEFAULT_MODE),
                 "model": c.get("model") or fcfg.DEFAULT_BRAIN,
                 "base_url": c.get("base_url") or fcfg.DEFAULT_BASE_URL,
-                "persona": c.get("persona", "")}
+                "persona": c.get("persona", ""),
+                # voice-trial lane H: surface the per-mode voice toggle in the config the FE reads.
+                # Default 'on' so a node with no field is voice-enabled (schema-additive).
+                "voice_enabled": c.get("voice_enabled", "on")}
+
+    def voice_enabled(self) -> bool:
+        """Lane H — is voice on for the current presence? Reads the rhm node's `voice_enabled`
+        CONFIG (the per-mode voice toggle), defaulting to True when absent (schema-additive: an old
+        node with no field is voice-on). The conversation loop / a voice-gated path consults THIS
+        rather than assuming voice; 'off' here means the mode runs text-only even with engines up.
+        Also gated by the presence dial: mode 'off' (the RHM disabled) is never voice-on."""
+        if self.get_mode() == "off":
+            return False
+        return str(self._rhm_cfg().get("voice_enabled", "on")).lower() != "off"
 
     def set_rhm_config(self, updates: dict) -> dict:
         allowed = {k: v for k, v in (updates or {}).items()
-                   if k in ("model", "base_url", "persona", "mode")}
+                   if k in ("model", "base_url", "persona", "mode", "voice_enabled")}
         if "mode" in allowed and allowed["mode"] not in self.MODES:
             raise ValueError(f"unknown mode {allowed['mode']!r}")
+        if "voice_enabled" in allowed and str(allowed["voice_enabled"]).lower() not in ("on", "off"):
+            raise ValueError(f"voice_enabled must be 'on' or 'off', got {allowed['voice_enabled']!r}")
         if not allowed:
             return self.rhm_config()
         self._ensure_rhm_node()
@@ -954,6 +969,183 @@ class Suite:
         self.store.append_chat({"role": "assistant", "text": out, "grade": "working", "ambient": True, "source": "twin"})
         self._emit("react", f"(watching) {out[:44]}")
         return {"comment": out}
+
+    # ============================================================================================
+    # The Voice Trial — recording (Group E) + debrief (Group F). REUSE-DON'T-PARALLEL: every
+    # artifact rides an EXISTING seam — the append-only event log (durable claims via
+    # _emit_durable), the content-addressed store (put_content/set_ref at trial://<session>/
+    # transcript), the session store (save_session/load_session), the inbox (surface_review), and
+    # the walkthrough organ (start_session/present_current/next/respond). No second event log, no
+    # second store, no second brain. Each spoken session is recorded so the debrief can read it
+    # back FAITHFULLY (no confabulation — the debrief item carries the REAL transcript).
+    # ============================================================================================
+
+    TRIAL_KINDS = ("trial.turn", "trial.feedback", "trial.reflection")
+
+    @staticmethod
+    def _trial_transcript_addr(session_id: str) -> str:
+        """The CAS-pointer (run://-style mutable ref) for a trial session's full transcript — the
+        address the debrief reads back. Namespaced trial:// so it can never collide with a node's
+        run:// output address or a review session's go-gate addresses."""
+        return f"trial://{session_id}/transcript"
+
+    def _trial_turn_events(self, session_id: str) -> list:
+        """Every recorded trial event (turn/feedback/reflection) for ONE session, OLDEST-first —
+        the single source the transcript is DERIVED from (so events + CAS never disagree). Reads
+        events_since(-1) (the whole file-tail) filtered to the trial kinds + this session id."""
+        return [e for e in self.store.events_since(-1)
+                if e.get("kind") in self.TRIAL_KINDS and e.get("trial_session") == session_id]
+
+    def _rebuild_trial_transcript(self, session_id: str) -> dict:
+        """Re-derive the FULL transcript for a session FROM its recorded events, write it to CAS,
+        and (re)point the trial://<session>/transcript ref at the new content. Re-derived on every
+        turn so the three artifacts (events · CAS transcript · session record) agree BY
+        CONSTRUCTION — there is no parallel transcript write that could drift from the event log.
+        Returns {address, cas, turns:[...]} (the materialised transcript)."""
+        turns = []
+        for ev in self._trial_turn_events(session_id):
+            turns.append({"kind": ev.get("kind"), "seq": ev.get("seq"), "ts": ev.get("ts"),
+                          "role": ev.get("role"), "character": ev.get("character"),
+                          "text": ev.get("text", "")})
+        transcript = {"session": session_id, "turns": turns, "n": len(turns)}
+        cas = self.store.put_content(transcript)
+        addr = self._trial_transcript_addr(session_id)
+        self.store.set_ref(addr, cas)
+        return {"address": addr, "cas": cas, "transcript": transcript}
+
+    def _trial_session_record(self, session_id: str, character: str | None = None) -> dict:
+        """Load this trial session's record, or seed a fresh one. The record carries the cast
+        member and the running turn/feedback/reflection counts so the debrief can list sessions
+        without re-scanning the whole event log. Namespaced id so it never collides with a review
+        session record (_load_session expects review keys: graph/cursor/items)."""
+        s = self.store.load_session(session_id)
+        if not s:
+            s = {"id": session_id, "kind": "trial", "character": character,
+                 "turns": 0, "feedback": 0, "reflections": 0, "done": False}
+        if character and not s.get("character"):
+            s["character"] = character
+        return s
+
+    def trial_record_turn(self, session_id: str, role: str, text: str,
+                          character: str | None = None) -> dict:
+        """Record ONE spoken turn of a trial conversation (role='operator'|'character'). Emits a
+        DURABLE trial.turn event (_emit_durable — the record IS the behavior here; a silently
+        dropped turn would make the debrief misrepresent the session, so loss must FAIL LOUD, not
+        be swallowed like lenient telemetry), re-materialises the CAS transcript from the events,
+        and advances the trial session record. Fail loud on empty text (no silent no-op)."""
+        sid = (session_id or "").strip()
+        if not sid:
+            raise ValueError("trial_record_turn needs a session id (fail loud)")
+        if not (text or "").strip():
+            raise ValueError("trial_record_turn needs non-empty text (fail loud)")
+        self._emit_durable("trial.turn", f"[{character or role}] {text[:60]}",
+                           trial_session=sid, role=role, character=character, text=text)
+        s = self._trial_session_record(sid, character)
+        s["turns"] = s.get("turns", 0) + 1
+        self.store.save_session(s)
+        built = self._rebuild_trial_transcript(sid)
+        return {"session": sid, "role": role, "turns": s["turns"],
+                "transcript_addr": built["address"], "transcript_cas": built["cas"]}
+
+    def trial_record_feedback(self, session_id: str, text: str,
+                              character: str | None = None) -> dict:
+        """Record Tim's SPOKEN feedback during a trial session (his verdict-in-flight on a voice/
+        character). DURABLE (_emit_durable) + folded into the same transcript so the debrief reads
+        his feedback alongside the turns. Fail loud on empty text."""
+        sid = (session_id or "").strip()
+        if not sid:
+            raise ValueError("trial_record_feedback needs a session id (fail loud)")
+        if not (text or "").strip():
+            raise ValueError("trial_record_feedback needs non-empty text (fail loud)")
+        self._emit_durable("trial.feedback", f"feedback: {text[:60]}",
+                           trial_session=sid, role="operator", character=character, text=text)
+        s = self._trial_session_record(sid, character)
+        s["feedback"] = s.get("feedback", 0) + 1
+        self.store.save_session(s)
+        built = self._rebuild_trial_transcript(sid)
+        return {"session": sid, "feedback": s["feedback"], "transcript_addr": built["address"]}
+
+    def trial_record_reflection(self, session_id: str, text: str,
+                                character: str | None = None) -> dict:
+        """Record the CHARACTER's own reflection-note on the exchange (the cast member's read of
+        how it went). DURABLE + in the same transcript. Fail loud on empty text."""
+        sid = (session_id or "").strip()
+        if not sid:
+            raise ValueError("trial_record_reflection needs a session id (fail loud)")
+        if not (text or "").strip():
+            raise ValueError("trial_record_reflection needs non-empty text (fail loud)")
+        self._emit_durable("trial.reflection", f"[{character}] reflects: {text[:50]}",
+                           trial_session=sid, role="character", character=character, text=text)
+        s = self._trial_session_record(sid, character)
+        s["reflections"] = s.get("reflections", 0) + 1
+        self.store.save_session(s)
+        built = self._rebuild_trial_transcript(sid)
+        return {"session": sid, "reflections": s["reflections"], "transcript_addr": built["address"]}
+
+    def trial_transcript(self, session_id: str) -> dict:
+        """Read back a trial session's FULL transcript from CAS (the debrief's ground truth). Reads
+        the trial://<session>/transcript ref → CAS content. Fail loud if the session was never
+        recorded (no ref) — the debrief MUST NOT confabulate from an absent transcript."""
+        addr = self._trial_transcript_addr(session_id)
+        cas = self.store.head(addr)
+        if not cas:
+            raise KeyError(
+                f"no recorded transcript for trial session {session_id!r} (no ref at {addr}) — "
+                f"record turns first; the debrief reads only real transcripts (fail loud).")
+        return self.store.get_content(cas)
+
+    def trial_sessions(self) -> list:
+        """Every recorded trial session record (the cast walked, with counts) — what the debrief
+        loads as its review set. Reads the session store + filters to kind=='trial' so it never
+        picks up a review session record."""
+        out = []
+        for sid in self.store.list_sessions():
+            s = self.store.load_session(sid)
+            if s and s.get("kind") == "trial":
+                out.append(s)
+        return out
+
+    def start_debrief(self, session_ids: list, host_persona: str | None = None,
+                      mode: str = "walkthrough") -> dict:
+        """Group F — the trial DEBRIEF, built ON the walkthrough organ (specialise, don't rebuild).
+        A debrief is a review session whose items are the recorded trial sessions; a host character
+        walks Tim back through each, conversationally, and his verdicts are captured via the SAME
+        resolve_surfaced path the walkthrough uses.
+
+        CRITICAL (the parallel-path trap): start_session / present_current / respond all key on
+        INBOX item ids (coa→inbox.get, resolve_surfaced→inbox.get raise KeyError on a non-surfaced
+        id). So we CANNOT feed raw trial-session ids into start_session. We first SURFACE each trial
+        session as a review item — carrying the REAL transcript pulled from CAS — and collect the
+        returned surfaced ids; coa() dumps the whole payload into the framing prompt, so embedding
+        the transcript is what lets the host read it back FAITHFULLY instead of confabulating from a
+        bare character name. THEN we hand those surfaced ids to start_session.
+
+        The debrief-host persona is set GLOBALLY via set_rhm_config (coa reads rhm_config().persona;
+        there is no per-session persona slot) — deliberate for the trial: one host voice frames all
+        five. Returns start_session's first presentation (the host's framing of the first session)."""
+        ids = list(session_ids or [])
+        if not ids:
+            raise ValueError("start_debrief needs at least one trial session id (fail loud)")
+        if host_persona:
+            self.set_rhm_config({"persona": host_persona})   # the debrief-host voice (global, deliberate)
+        surfaced = []
+        for sid in ids:
+            transcript = self.trial_transcript(sid)          # FAIL LOUD if a session was never recorded
+            rec = self._trial_session_record(sid)
+            item = {"title": f"debrief · {rec.get('character') or sid}",
+                    "kind": "trial_debrief", "trial_session": sid,
+                    "character": rec.get("character"),
+                    "turns": rec.get("turns", 0), "feedback": rec.get("feedback", 0),
+                    "reflections": rec.get("reflections", 0),
+                    "transcript": transcript}              # the REAL transcript — coa frames from THIS
+            r = self.surface_review(item, origin="generative")  # a debrief = Tim revisiting his own trial
+            surfaced.append(r["id"])
+        self._emit("trial.debrief.start",
+                   f"debrief started — {len(surfaced)} trial session(s) to walk",
+                   sessions=ids, surfaced=surfaced)
+        return self.start_session(surfaced, mode=mode)
+
+    # ============================================================================================
 
     # --- the inbox: chief-of-staff triage (F1-F2) + the decision-compiler UP (C2-C3) ---
     def inbox_lanes(self) -> dict:
