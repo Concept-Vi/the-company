@@ -17,6 +17,33 @@ class FsStore:
         self.root = Path(root)
         for d in ("objects", "refs", "meta", "memo", "graphs", "surfaced"):
             (self.root / d).mkdir(parents=True, exist_ok=True)
+        # --- store-level concurrency locks (T1-SEQ / T1-RACE) ---
+        # The bridge is a ThreadingHTTPServer over ONE Suite, so read-modify-write paths in the store
+        # are run UNSERIALIZED across threads → lost updates + colliding sequence numbers. The locks
+        # live HERE (in the store) — not in the Suite — because BOTH the Suite (resolve_surfaced,
+        # build_result writes) AND governance.Inbox (set_status, resolve) mutate surfaced items; a lock
+        # held only by the Suite would not serialize governance's writes against the Suite's. The store
+        # is the one object every writer reaches, so serializing here is the only place that covers all
+        # callers. Re-entrant locks so a method that calls another locked store method can't self-deadlock.
+        import threading as _t
+        self._event_lock = _t.RLock()       # T1-SEQ: append_event seq = read-last → +1 → append (atomic)
+        self._surfaced_lock = _t.RLock()     # T1-RACE: surfaced read-modify-write across both faces
+        self._graph_locks_guard = _t.Lock()  # guards the per-graph lock map below
+        self._graph_locks: dict = {}         # T1-RACE: one lock per graph id (load→mutate→save serialized)
+
+    def graph_lock(self, gid: str):
+        """One re-entrant lock per graph id, created on demand (threadsafe). The Suite's whole-graph
+        load→mutate→save_graph mutations (create_node/connect/delete_node/set_config/set_position) hold
+        this around the WHOLE read-modify-write so two concurrent mutations on the same graph can't both
+        load version V and last-writer-wins (lost update). Re-entrant so a mutation that nests another
+        locked call on the same graph does not self-deadlock."""
+        import threading as _t
+        with self._graph_locks_guard:
+            lk = self._graph_locks.get(gid)
+            if lk is None:
+                lk = _t.RLock()
+                self._graph_locks[gid] = lk
+            return lk
 
     @staticmethod
     def _hash(b: bytes) -> str:
@@ -116,9 +143,10 @@ class FsStore:
         """Persist a review-session record (cursor + item ids + mode + graph id) atomically. The walk is
         server-authoritative: Next/respond mutate this on the threading bridge, so a naked write_text could
         tear the file against a concurrent read. tmp + os.replace (same-fs rename is atomic) → a reader sees
-        the old file or the new, never a half-written one — the SAME guarantee save_graph gives (fs_store:84),
-        which save_surfaced does NOT (fs_store:175). Unique tmp PER WRITE (pid+thread) so concurrent writers
-        never share a tmp name (last-writer-wins, each file whole)."""
+        the old file or the new, never a half-written one — the SAME guarantee save_graph gives. (save_surfaced
+        now also gives this guarantee — tmp+replace under the surfaced lock, T1-RACE — so this is no longer the
+        only atomic surfaced-shaped write.) Unique tmp PER WRITE (pid+thread) so concurrent writers never share
+        a tmp name (last-writer-wins, each file whole)."""
         import json as _j
         import os as _os
         import threading as _t
@@ -145,23 +173,31 @@ class FsStore:
         import json as _j
         from datetime import datetime, timezone
         path = self.root / "events.jsonl"
-        seq = 0
-        if path.exists():
-            # last line's seq + 1 (append-only; order is preserved by the file itself)
-            with path.open("rb") as f:
-                try:
-                    f.seek(-2, 2)
-                    while f.read(1) != b"\n":
-                        f.seek(-2, 1)
-                except OSError:
-                    f.seek(0)
-                last = f.readline().decode().strip()
-            if last:
-                seq = _j.loads(last).get("seq", 0) + 1
-        rec = {"seq": seq, "ts": datetime.now(timezone.utc).isoformat(), **event}
-        with path.open("a", encoding="utf-8") as f:
-            f.write(_j.dumps(rec) + "\n")
-        return rec
+        # T1-SEQ — the WHOLE read-last-seq → +1 → append is ONE atomic critical section under the
+        # store-level event lock. Unserialized (the prior code), two concurrent emits on the
+        # ThreadingHTTPServer both read seq=N and both write N+1 → a DUPLICATED seq. That breaks two
+        # invariants: (a) the wire's three-part bind locates its authorizing event by seq==derived_from
+        # (a duplicate could bind to the WRONG event); (b) the SSE cursor `id:<seq>` (bridge.py) assumes
+        # monotonic-unique. The lock makes seq atomic + monotonic + unique. (RLock so a nested store
+        # call cannot self-deadlock.)
+        with self._event_lock:
+            seq = 0
+            if path.exists():
+                # last line's seq + 1 (append-only; order is preserved by the file itself)
+                with path.open("rb") as f:
+                    try:
+                        f.seek(-2, 2)
+                        while f.read(1) != b"\n":
+                            f.seek(-2, 1)
+                    except OSError:
+                        f.seek(0)
+                    last = f.readline().decode().strip()
+                if last:
+                    seq = _j.loads(last).get("seq", 0) + 1
+            rec = {"seq": seq, "ts": datetime.now(timezone.utc).isoformat(), **event}
+            with path.open("a", encoding="utf-8") as f:
+                f.write(_j.dumps(rec) + "\n")
+            return rec
 
     def recent_events(self, limit: int = 50) -> list[dict]:
         import json as _j
@@ -206,10 +242,31 @@ class FsStore:
         return [_j.loads(l) for l in lines[-limit:]]   # oldest-first (chronological)
 
     # --- surfaced-decision inbox (S7/D4): non-blocking gates, shared across faces ---
+    def surfaced_lock(self):
+        """T1-RACE — the store-level lock a CALLER holds around a surfaced read-modify-write
+        (get_surfaced → mutate → save_surfaced) so two concurrent RMWs on the same item can't both
+        read version V and last-writer-wins (lost update). Lives in the store because BOTH the Suite
+        (resolve_surfaced, build_result writes) and governance.Inbox (set_status, resolve) mutate
+        surfaced items — a Suite-only lock wouldn't serialize governance's writes. Re-entrant: a caller
+        holding it can call save_surfaced (which re-acquires) without self-deadlock."""
+        return self._surfaced_lock
+
     def save_surfaced(self, decision: dict) -> None:
         import json as _j
-        (self.root / "surfaced" / (self._safe(decision["id"]) + ".json")).write_text(
-            _j.dumps(decision, indent=2))
+        import os as _os
+        import threading as _t
+        # ATOMIC (T1-RACE): tmp + os.replace (same-filesystem rename is atomic) so a reader sees the
+        # whole old file or the whole new one — never a half-written one against a concurrent read. The
+        # naked write_text here (the prior code) could tear the file. Unique tmp PER WRITE (pid+thread)
+        # so two concurrent writers never share a tmp name (each file stays whole). Held under the
+        # surfaced lock so the WRITE is also serialized against other writers; callers that need the
+        # READ serialized too hold surfaced_lock() across their whole get→mutate→save (RLock = no
+        # self-deadlock when this re-acquires).
+        path = self.root / "surfaced" / (self._safe(decision["id"]) + ".json")
+        with self._surfaced_lock:
+            tmp = path.with_name(f"{path.name}.{_os.getpid()}.{_t.get_ident()}.tmp")
+            tmp.write_text(_j.dumps(decision, indent=2))
+            tmp.replace(path)
 
     def list_surfaced(self) -> list[dict]:
         import json as _j

@@ -238,6 +238,22 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/capture-idea":         # A4: capture a fleeting idea (generative review item)
                 b = self._body()
                 self._send(200, json.dumps(SUITE.idea_capture(b["text"])))
+            elif self.path == "/api/build-intent":          # T0-WIRE: the REAL production entry seam for the
+                # decision→implementation wire. The operator (this is the OPERATOR face, not the agent
+                # face) mints a build-intent — a declared-scope decision that, once they APPROVE it via
+                # /api/resolve (operator-only), the WIRE-LOOP dispatches to `claude -p`. This route only
+                # SURFACES the intent (resolved=None); it does NOT dispatch (dispatch is dispatch_decision,
+                # off this face). So the wire's "off the agent face / operator-only approve" gates hold:
+                # this is the missing FRONT DOOR (the closure + UI already existed but nothing in
+                # production could populate the builds lane). Fail loud on a missing spec (no silent no-op).
+                b = self._body()
+                spec = b.get("spec")
+                if not spec or not str(spec).strip():
+                    raise ValueError("/api/build-intent needs a non-empty 'spec' (fail loud)")
+                self._send(200, json.dumps(SUITE.surface_build_intent(
+                    str(spec).strip(), scope=b.get("scope"),
+                    consequence_class=b.get("consequence_class", "decision_build"),
+                    why=b.get("why", ""))))
             elif self.path == "/api/review/start":         # B: start a review session (NOT graph-scoped — makes its own)
                 b = self._body()
                 self._send(200, json.dumps(SUITE.start_session(
