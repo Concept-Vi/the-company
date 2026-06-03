@@ -76,11 +76,28 @@ python /home/tim/company/voice/engines/cosyvoice.py 4126
 ```
 - License **Apache-2.0**. Style steered by `COMPANY_COSYVOICE_INSTRUCT` (or per-request `voice` = the persona voice_description); the wrapper appends `<|endofprompt|>` if missing.
 - If `sox` errors: `sudo apt-get install sox libsox-dev`.
+- **VERIFIED 2026-06-04 (voice-trial setup) — install BLOCKER, document-and-move-on:** the clone done
+  (`git clone --recursive`, Matcha-TTS submodule present, `cosyvoice/cli/cosyvoice.py` present), 3.10
+  venv created at `~/.voice-venvs/cosyvoice`. BUT `pip install -r requirements.txt` FAILS: the pinned
+  `openai-whisper==20231117` sdist errors in `Getting requirements to build wheel` (its legacy
+  `setup.py` doesn't run under modern setuptools/build-isolation). A retry that relaxed that pin and
+  dropped `tensorrt`/`deepspeed` did not finish in a 540 s box. The wrapper module
+  `voice/engines/cosyvoice.py` imports fine; `from cosyvoice.cli.cosyvoice import AutoModel` does NOT
+  yet (repo deps incomplete — first missing was `tqdm`). **To finish (no time-box, post-restart):**
+  `~/.voice-venvs/cosyvoice/bin/pip install -r ~/CosyVoice/requirements.txt` with a buildable
+  `openai-whisper` (drop the `==20231117` pin or `--no-build-isolation`), and keep `deepspeed`/`tensorrt`
+  for real generation. `cosyvoice.cli.cosyvoice` may import `deepspeed` at module load, so those are
+  not safe to drop for generation — only for a bare import smoke-test.
 
 ## xtts — `:4127` (`voice/engines/xtts.py`)
 ```bash
 python3.12 -m venv ~/.voice-venvs/xtts
-~/.voice-venvs/xtts/bin/pip install coqui-tts soundfile
+# VERIFIED 2026-06-04 (voice-trial setup): the LATEST coqui-tts (0.27.5) is BROKEN — it pins
+# transformers>=4.57 but its tortoise layer imports `isin_mps_friendly`, removed before 4.57, so
+# `from TTS.api import TTS` raises ImportError on a clean venv. Also coqui-tts does NOT depend on
+# torch (you must add it). The combination that IMPORTS CLEANLY (import-checked, model not loaded):
+~/.voice-venvs/xtts/bin/pip install 'coqui-tts==0.25.3' 'transformers<4.50' soundfile
+~/.voice-venvs/xtts/bin/pip install torch torchaudio          # CUDA build (runs on GPU post-restart)
 export COQUI_TOS_AGREED=1                                         # accept the (non-commercial) TOS non-interactively
 export COMPANY_VOICE_REF=/abs/path/to/refined-australian.wav     # REQUIRED speaker clip
 ~/.voice-venvs/xtts/bin/python /home/tim/company/voice/engines/xtts.py 4127
@@ -101,14 +118,22 @@ python3.12 -m venv ~/.voice-venvs/qwen3tts
 
 ---
 
-## Local ears (faster-whisper + Silero VAD) — the existing `.voice-venv` (`/home/tim/company/.voice-venv`, 3.12)
-Implemented in `voice/stt.py`; install the two libs into the SHARED voice venv (the loop runs there):
+## Local ears (faster-whisper + Silero VAD) — INSTALLED + VERIFIED 2026-06-04
+Implemented in `voice/stt.py`. Installed into **TWO** venvs (no conflict between them):
+1. **`/home/tim/company/.voice-venv`** (3.12) — where the LOOP runs in-process, so the loop's local STT works. (kokoro-onnx/onnxruntime + faster-whisper/ctranslate2 + silero coexist fine — verified.)
+2. **`/home/tim/.voice-venvs/ears`** (3.12) — a dedicated ears venv (does NOT pollute the production `~/vllm-env`).
 ```bash
-/home/tim/company/.voice-venv/bin/pip install faster-whisper silero-vad soundfile numpy
+# IMPORTANT (verified gotcha): install torch+torchaudio FROM THE CPU INDEX TOGETHER first, else
+# silero-vad pulls a CUDA torchaudio that version-mismatches the CPU torch and fails to load
+# (OSError: libcudart.so.13). faster-whisper runs on GPU regardless of torch build (it uses
+# ctranslate2), so CPU torch keeps the ears venv light AND still GPU-capable post-restart.
+pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+pip install faster-whisper silero-vad soundfile numpy
 ```
 - faster-whisper model `large-v3-turbo`, `int8_float16` on CUDA (overridable: `COMPANY_WHISPER_MODEL` / `COMPANY_WHISPER_DEVICE` / `COMPANY_WHISPER_COMPUTE` / `COMPANY_WHISPER_LANG`). Pure `int8` is the CPU path.
 - Silero VAD via the `silero-vad` package (`load_silero_vad`, `get_speech_timestamps`) — used by `loop.utterance_ended` (endpointing) and `loop.barge_in`.
 - `voice/stt.available()` reports `{"whisper_local": True}` only when `faster_whisper` is importable in that interpreter.
+- **VERIFIED end-to-end on CPU (int8):** Kokoro synthesized "Hello, this is a refined Australian voice test." → `stt.transcribe(wav, provider="local")` returned the text EXACTLY; Silero VAD detected the speech region. `large-v3-turbo` model downloaded. (Post-restart the same path runs on GPU with `int8_float16`.)
 
 ## The loop (`voice/loop.py`)
 Runs in the SHARED `.voice-venv` (3.12). Reaches the brain over HTTP at `COMPANY_BRIDGE_URL` (default `http://127.0.0.1:8770`, the bridge — the ONE Suite). No extra install beyond faster-whisper + silero above. It does NOT capture the mic/speaker (browser hardware — lane G wires that).

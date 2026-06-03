@@ -102,7 +102,13 @@ def _whisper_engine():
                 "local faster-whisper STT not installed — `pip install faster-whisper` into .voice-venv "
                 "(see voice/engines/REQUIREMENTS.md), or set COMPANY_STT=assemblyai for the cloud ear."
             ) from e
-        _whisper = WhisperModel(WHISPER_MODEL, device=WHISPER_DEVICE, compute_type=WHISPER_COMPUTE)
+        # CPU by default: this box is CUDA-13, but CTranslate2 (faster-whisper) wants CUDA-12 libs
+        # (libcublas.so.12) which aren't present → GPU raises at inference. CPU int8 transcribed a
+        # test utterance correctly (2026-06-04) and never contends with the LLM for VRAM — the
+        # low-contention path the STT research recommends. Force GPU only via COMPANY_STT_FORCE_GPU.
+        dev = WHISPER_DEVICE if os.environ.get("COMPANY_STT_FORCE_GPU") else "cpu"
+        comp = WHISPER_COMPUTE if dev != "cpu" else "int8"
+        _whisper = WhisperModel(WHISPER_MODEL, device=dev, compute_type=comp)
     return _whisper
 
 

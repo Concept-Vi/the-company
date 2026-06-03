@@ -1,0 +1,82 @@
+{
+  "_doc": "Voice-trial manifest — the concrete persona -> engine -> voice mappings for the by-ear trial. Derived from voice/personas.py (the source of truth for the persona records) and voice/engines/REQUIREMENTS.md (the install/port/voice-semantics reference). This file is the trial CONFIG: which character runs on which engine on which port, what 'voice' arg that engine expects, and whether it needs the shared reference clip. It does NOT duplicate the brain/voice_description text (that lives in personas.py and is loaded at runtime via loop.select_persona / loop._voice_arg_for); it records the trial WIRING so the launcher/verify can iterate the five.",
+  "_generated": "2026-06-04 (voice-trial branch, pre-restart setup)",
+  "voice_base": "A refined, educated Australian woman in her early forties. Clear and articulate — NOT broad, country, or ocker. Warm, mid-low pitch; unhurried, composed pace. Dry, understated wit with a sense of refinement and a little mystery. (Same base under all five; only the shading on top changes. Verbatim from personas.VOICE_BASE.)",
+  "company_voice_ref_plan": {
+    "what": "COMPANY_VOICE_REF is a real wav of the refined-mature-Australian-female base voice. It does NOT exist yet — no clip was fabricated. The three clone engines (chatterbox, xtts, cosyvoice) FAIL LOUD without it.",
+    "post_restart_source": "Generate it from Qwen3-VoiceDesign (engine qwen3tts, :4128) — no clip needed; it DESIGNS the voice from personas.VOICE_BASE. See voice/ops/make_reference_clip.sh. Use that one wav as COMPANY_VOICE_REF for all three clone engines so every character voices the SAME designed identity.",
+    "target_path": "/home/tim/company/voice/ref/company_voice_ref.wav"
+  },
+  "engine_ports": {
+    "kokoro": 4123,
+    "chatterbox": 4124,
+    "orpheus": 4125,
+    "cosyvoice": 4126,
+    "xtts": 4127,
+    "qwen3tts": 4128
+  },
+  "voice_arg_semantics": {
+    "qwen3tts": "voice = a voice DESCRIPTION (instruct). VoiceDesign builds the voice from text. NO ref clip.",
+    "cosyvoice": "voice = a voice DESCRIPTION/instruction (steers style) PLUS a ref clip (COMPANY_VOICE_REF). Needs both.",
+    "orpheus": "voice = a NAMED voice from the bank (tara/leah/jess/leo/dan/mia/zac/zoe). NO ref clip.",
+    "chatterbox": "voice = a ref-clip path (or None -> COMPANY_VOICE_REF). Needs the clip.",
+    "xtts": "voice = a speaker-clip path (or None -> COMPANY_VOICE_REF). Needs the clip. NON-COMMERCIAL weights — trial only."
+  },
+  "personas": [
+    {
+      "id": "viv",
+      "name": "Viv",
+      "shading": "composed & dry",
+      "engine": "chatterbox",
+      "port": 4124,
+      "voice_arg": null,
+      "voice_arg_kind": "ref_clip",
+      "needs_ref_clip": true,
+      "notes": "Warm-realness benchmark; keep COMPANY_CHATTERBOX_EXAGGERATION LOW (0.5 default, lower for the composed register). voice=null -> uses COMPANY_VOICE_REF."
+    },
+    {
+      "id": "tess",
+      "name": "Tess",
+      "shading": "warm & playful",
+      "engine": "cosyvoice",
+      "port": 4126,
+      "voice_arg": "persona.voice_description",
+      "voice_arg_kind": "description+ref_clip",
+      "needs_ref_clip": true,
+      "notes": "Instruct-coachable + clones the ref clip. loop.py sends the voice_description as the instruct; the wrapper appends <|endofprompt|>. Needs COMPANY_VOICE_REF too."
+    },
+    {
+      "id": "sable",
+      "name": "Sable",
+      "shading": "cool & enigmatic",
+      "engine": "qwen3tts",
+      "port": 4128,
+      "voice_arg": "persona.voice_description",
+      "voice_arg_kind": "description",
+      "needs_ref_clip": false,
+      "notes": "TRIAL STARTER. VoiceDesign — describe + lock + re-tune. No clip needed. Model already in HF cache. This is the engine to bring up first post-restart."
+    },
+    {
+      "id": "pip",
+      "name": "Pip",
+      "shading": "bright & a bit wacky",
+      "engine": "orpheus",
+      "port": 4125,
+      "voice_arg": "tara",
+      "voice_arg_kind": "named_voice",
+      "needs_ref_clip": false,
+      "notes": "Cued emotion via inline tags (<laugh>, <chuckle>). Named voice 'tara' (warmest). Heaviest VRAM (vLLM + Llama-3B) — mind co-residency with the chat brain on the 16GB card."
+    },
+    {
+      "id": "wren",
+      "name": "Wren",
+      "shading": "the curious co-explorer",
+      "engine": "xtts",
+      "port": 4127,
+      "voice_arg": null,
+      "voice_arg_kind": "ref_clip",
+      "needs_ref_clip": true,
+      "notes": "Realism ceiling — most alive read. voice=null -> COMPANY_VOICE_REF. XTTS accepts numeric speed. NON-COMMERCIAL license — by-ear comparison only, never a production path."
+    }
+  ]
+}

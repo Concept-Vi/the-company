@@ -1,0 +1,18 @@
+[Unit]
+Description=Company voice engine — XTTS-v2 (Coqui, NON-COMMERCIAL) on port 4127
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/tim/company
+EnvironmentFile=%h/company/voice/ops/voice.env
+# COQUI_TOS_AGREED=1 is in voice.env so the model loads non-interactively.
+ExecStart=%h/.voice-venvs/xtts/bin/python /home/tim/company/voice/engines/xtts.py 4127
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=600
+
+[Install]
+WantedBy=default.target

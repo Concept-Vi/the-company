@@ -1,0 +1,18 @@
+[Unit]
+Description=Company voice engine — Orpheus-TTS (vLLM) on port 4125
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/tim/company
+EnvironmentFile=%h/company/voice/ops/voice.env
+ExecStart=%h/.voice-venvs/orpheus/bin/python /home/tim/company/voice/engines/orpheus.py 4125
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+# Heaviest: vLLM + a Llama-3B backbone cold-start on the GPU.
+TimeoutStartSec=900
+
+[Install]
+WantedBy=default.target
