@@ -137,3 +137,14 @@ pip install faster-whisper silero-vad soundfile numpy
 
 ## The loop (`voice/loop.py`)
 Runs in the SHARED `.voice-venv` (3.12). Reaches the brain over HTTP at `COMPANY_BRIDGE_URL` (default `http://127.0.0.1:8770`, the bridge — the ONE Suite). No extra install beyond faster-whisper + silero above. It does NOT capture the mic/speaker (browser hardware — lane G wires that).
+
+---
+
+## Optional accelerators (performance, NOT required) — added 2026-06-04
+- **TensorRT (dropped from CosyVoice's install; add back if CosyVoice is slow).** TensorRT is NVIDIA's optional GPU inference *accelerator* — it recompiles a model to run faster on this exact card. **Not required**: CosyVoice (and any engine) runs fine without it, just not as fast. It was cut from the CosyVoice install because it's multi-GB, finicky about matching the exact CUDA/GPU version, and a frequent install-breaker on WSL/CUDA-13 (likely part of why the earlier install dragged and didn't finish). **If CosyVoice ends up the chosen voice and feels slow, add it back as a one-off tuning step (post-restart, on the settled setup):**
+  ```bash
+  ~/.voice-venvs/cosyvoice/bin/pip install tensorrt   # match the installed CUDA version
+  # then confirm CosyVoice still loads + generates
+  ```
+  Contrast: `deepspeed` was KEPT in the install — CosyVoice imports it at load time, so unlike TensorRT it is **not** optional.
+- General principle: the same applies to any engine — if one becomes your pick and latency matters, accelerators (TensorRT, flash-attn, etc.) are a *tuning* pass to do once on the chosen setup, not part of the first install.
