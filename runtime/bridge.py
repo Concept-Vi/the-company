@@ -24,7 +24,32 @@ from fabric import config as fcfg
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CANVAS = os.path.join(ROOT, "canvas", "index.html")
-TTS_URL = os.environ.get("COMPANY_TTS_URL", "http://127.0.0.1:4123")   # local Kokoro service
+TTS_URL = os.environ.get("COMPANY_TTS_URL", "http://127.0.0.1:4123")   # local Kokoro service (default engine)
+
+# voice-trial lane B — multi-engine TTS routing. The voice-module builder writes each engine as an
+# HTTP service mirroring tts_service.py's contract (POST /tts {text,voice?,speed?}->wav · GET
+# /voices · GET /health) on its OWN port. This map is the ONE source of truth for the port routing
+# (used by BOTH /api/tts routing AND /api/voice status). The DEFAULT engine "kokoro" routes to
+# TTS_URL (so COMPANY_TTS_URL still overrides the default — we do NOT hardcode kokoro to 4123 here,
+# which would silently break that override). An absent `engine` field → kokoro (unchanged
+# behaviour). An UNKNOWN engine → fail loud (no silent fallback to kokoro).
+ENGINE_PORTS = {"chatterbox": 4124, "orpheus": 4125, "cosyvoice": 4126,
+                "xtts": 4127, "qwen3tts": 4128}
+
+
+def _tts_base_url(engine: str | None) -> str:
+    """The base URL for a TTS engine. kokoro / None → TTS_URL (env-overridable default). A mapped
+    engine → its 127.0.0.1:<port>. An unknown engine → ValueError (fail loud, names the known set —
+    NEVER a silent fallback to kokoro, which would mask a typo and ship the wrong voice)."""
+    if not engine or engine == "kokoro":
+        return TTS_URL
+    if engine not in ENGINE_PORTS:
+        raise ValueError(
+            f"unknown TTS engine {engine!r} — known: {['kokoro'] + sorted(ENGINE_PORTS)}. "
+            f"Refusing to fall back to kokoro silently (fail loud).")
+    return f"http://127.0.0.1:{ENGINE_PORTS[engine]}"
+
+
 SUITE = Suite(FsStore(fcfg.STORE_DIR),
               NodeRegistry().discover([os.path.join(ROOT, "nodes")]))
 DEMO = "codebase"
@@ -110,16 +135,39 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.present_current(q["session"])))
             elif path == "/api/review/status":             # B: the session's live status
                 self._send(200, json.dumps(SUITE.session_status(q["session"])))
-            elif path == "/api/voice":                     # voice status: STT providers + TTS up?
+            elif path == "/api/voice":                     # voice status: STT providers + per-engine TTS
                 from voice import stt as voice_stt
-                tts_up = False
-                try:
-                    import urllib.request as _u
-                    _u.urlopen(TTS_URL + "/health", timeout=2); tts_up = True
-                except Exception:
-                    pass
-                self._send(200, json.dumps({"stt": voice_stt.available(),
-                                            "stt_default": voice_stt.DEFAULT_PROVIDER, "tts_up": tts_up}))
+                import urllib.request as _u
+
+                def _probe(name, base):
+                    """STATUS probe (lane B): is this engine's service up, and what voices does it
+                    report? A status read NEVER raises on a down engine (unlike /api/tts which fails
+                    loud) — it reports up:false so the picker can grey it out. Liveness is checked via
+                    `GET /voices` (which is IN the shared engine contract — POST /tts + GET /voices)
+                    rather than /health (NOT in the contract — the five new engines need not implement
+                    it; only Kokoro happens to). One call → up AND the voice list together; Kokoro has
+                    /voices too, so this is uniform across every engine."""
+                    info = {"engine": name, "url": base, "up": False, "voices": []}
+                    try:
+                        with _u.urlopen(base + "/voices", timeout=3) as r:
+                            v = json.loads(r.read() or b"{}")
+                        info["up"] = True
+                        info["voices"] = v.get("voices", [])
+                        if v.get("default"):
+                            info["default"] = v["default"]
+                    except Exception:
+                        pass                                # unreachable / not-yet-serving → up:false
+                    return info
+
+                engines = [_probe("kokoro", TTS_URL)] + [
+                    _probe(name, f"http://127.0.0.1:{port}")
+                    for name, port in sorted(ENGINE_PORTS.items())]
+                self._send(200, json.dumps({
+                    "stt": voice_stt.available(),
+                    "stt_default": voice_stt.DEFAULT_PROVIDER,
+                    "tts_up": engines[0]["up"],            # back-compat: the default (kokoro) up?
+                    "engines": engines,                    # lane B: per-engine availability + voices
+                    "voice_enabled": SUITE.voice_enabled()}))  # lane H: the per-mode voice toggle state
             else:
                 self._send(404, "{}")
         except Exception as e:                             # fail loud to the UI (parity with do_POST)
@@ -173,13 +221,29 @@ class H(BaseHTTPRequestHandler):
                 audio = self.rfile.read(ln)
                 self._send(200, json.dumps(voice_stt.transcribe(audio)))
                 return
-            if self.path == "/api/tts":                   # text in → wav out (proxied to Kokoro)
+            if self.path == "/api/tts":                   # text in → wav out (routed by engine)
+                # lane B: parse the body to read the optional `engine` field, route to that engine's
+                # service (kokoro/absent → TTS_URL; others → ENGINE_PORTS), and forward ONLY the
+                # downstream contract {text,voice?,speed?} (engine stripped — the engine's /tts must
+                # not need to know its own name). Fail loud naming the engine+port if it's down (no
+                # silent failure — AGENTS.md rule 4). DEFAULT (no engine) is byte-identical to before.
+                import urllib.error as _ue
                 import urllib.request as _u
-                body = self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}"
-                req = _u.Request(TTS_URL + "/tts", data=body,
+                raw = self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}"
+                payload = json.loads(raw or b"{}")
+                engine = payload.get("engine")            # None/kokoro → default; unknown → fail loud
+                base = _tts_base_url(engine)              # raises ValueError on an unknown engine
+                fwd = {k: v for k, v in payload.items() if k != "engine"}
+                req = _u.Request(base + "/tts", data=json.dumps(fwd).encode(),
                                  headers={"Content-Type": "application/json"})
-                with _u.urlopen(req, timeout=60) as r:
-                    self._send(200, r.read(), "audio/wav")
+                try:
+                    with _u.urlopen(req, timeout=60) as r:
+                        self._send(200, r.read(), "audio/wav")
+                except (_ue.URLError, ConnectionError, OSError) as e:
+                    port = base.rsplit(":", 1)[-1]
+                    raise RuntimeError(
+                        f"{engine or 'kokoro'} TTS service at {base} (port {port}) unreachable: "
+                        f"{type(e).__name__}: {e} — start the engine's service (fail loud).")
                 return
             if self.path == "/api/run":
                 b = self._body()
@@ -238,10 +302,38 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/capture-idea":         # A4: capture a fleeting idea (generative review item)
                 b = self._body()
                 self._send(200, json.dumps(SUITE.idea_capture(b["text"])))
+            elif self.path == "/api/build-intent":          # T0-WIRE: the REAL production entry seam for the
+                # decision→implementation wire. The operator (this is the OPERATOR face, not the agent
+                # face) mints a build-intent — a declared-scope decision that, once they APPROVE it via
+                # /api/resolve (operator-only), the WIRE-LOOP dispatches to `claude -p`. This route only
+                # SURFACES the intent (resolved=None); it does NOT dispatch (dispatch is dispatch_decision,
+                # off this face). So the wire's "off the agent face / operator-only approve" gates hold:
+                # this is the missing FRONT DOOR (the closure + UI already existed but nothing in
+                # production could populate the builds lane). Fail loud on a missing spec (no silent no-op).
+                b = self._body()
+                spec = b.get("spec")
+                if not spec or not str(spec).strip():
+                    raise ValueError("/api/build-intent needs a non-empty 'spec' (fail loud)")
+                self._send(200, json.dumps(SUITE.surface_build_intent(
+                    str(spec).strip(), scope=b.get("scope"),
+                    consequence_class=b.get("consequence_class", "decision_build"),
+                    why=b.get("why", ""))))
             elif self.path == "/api/review/start":         # B: start a review session (NOT graph-scoped — makes its own)
                 b = self._body()
                 self._send(200, json.dumps(SUITE.start_session(
                     b["item_ids"], mode=b.get("mode", "walkthrough"))))
+            elif self.path == "/api/debrief/start":         # voice-trial lane F: walk Tim back through the
+                # recorded trial sessions. start_debrief SURFACES each recorded session as a review item
+                # (carrying its real CAS transcript) then drives the SAME walkthrough organ — so the
+                # debrief is read/advanced via the EXISTING /api/review/{current,next,status} routes;
+                # only this START is net-new. Verdicts are captured via /api/resolve (operator-only),
+                # exactly like a review session. Fail loud on missing session_ids (no silent no-op).
+                b = self._body()
+                sids = b.get("session_ids")
+                if not sids:
+                    raise ValueError("/api/debrief/start needs a non-empty 'session_ids' list (fail loud)")
+                self._send(200, json.dumps(SUITE.start_debrief(
+                    sids, host_persona=b.get("host_persona"), mode=b.get("mode", "walkthrough"))))
             elif self.path == "/api/review/next":          # B: Next — open the gate, fire the step, advance
                 b = self._body()
                 self._send(200, json.dumps(SUITE.next(b["session"])))

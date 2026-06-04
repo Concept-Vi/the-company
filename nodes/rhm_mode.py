@@ -17,6 +17,20 @@ CONFIG = {                     # the presence dial (migrated flat→nested for t
         'options': ['listening', 'text-only', 'background', 'focus',
                     'walkthrough', 'watch-and-react', 'decide-for-me', 'off'],
     },
+    # Per-mode voice toggle (voice-trial lane H). Schema-additive: an existing rhm node with no
+    # `voice_enabled` reads as 'on' (the default), so behaviour is unchanged. Modelled as an enum
+    # (on/off) rather than a raw bool because the inspector renders enum + string (the only widget
+    # types any node CONFIG uses today); a bool widget does not exist yet, so on/off keeps the
+    # toggle renderable without inventing a widget the canvas can't draw. The accessor + gate live
+    # in suite.py (Suite.voice_enabled); the conversation loop / chat gate consult it.
+    # NOTE (flagged): this CONFIG field is GLOBAL on the single rhm node, not literally per-mode.
+    # See suite.py voice_enabled() + the build report for the per-mode-vs-global decision.
+    'voice_enabled': {
+        'type': 'enum',
+        'label': 'Voice',
+        'default': 'on',
+        'options': ['on', 'off'],
+    },
 }
 
 

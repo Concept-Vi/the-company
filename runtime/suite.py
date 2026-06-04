@@ -82,11 +82,26 @@ class Suite:
             return lk
 
     def _emit(self, kind: str, summary: str, **meta) -> None:
-        """Append one event to the captured trajectory (I2). Never breaks the action it records."""
+        """Append one TELEMETRY event to the captured trajectory (I2). Lenient by design: a telemetry
+        emit must never break the action it records, so a store hiccup is swallowed here. This is the
+        RIGHT posture for narration/visibility events — but it is the WRONG posture for a DURABLE CLAIM
+        whose absence changes behavior (e.g. the exactly-once decision.dispatch claim): for those use
+        _emit_durable, which fails loud (T1-EMIT). Never route a safety-critical claim through _emit."""
         try:
             self.store.append_event({"kind": kind, "summary": summary, **meta})
         except Exception:
             pass
+
+    def _emit_durable(self, kind: str, summary: str, **meta) -> dict:
+        """Append a DURABLE CLAIM event — FAIL LOUD (T1-EMIT). Unlike _emit (lenient telemetry), this
+        does NOT swallow a failure: it returns the written record, and lets any append_event exception
+        PROPAGATE. The exactly-once dispatch guarantee rides on the `decision.dispatch` claim being
+        actually written — if that write silently failed (the old try/except: pass), _already_dispatched
+        would return False on a retry → DOUBLE-LAUNCH of a real `claude -p` build. So the claim write
+        must raise on failure (the caller is inside the dispatch lock, BEFORE launch — a raise here means
+        nothing launches, exactly the safe outcome). Direct enforcement of rule 4 (fail loud) on the
+        safety-critical path. Use ONLY for writes whose loss changes behavior; narration stays on _emit."""
+        return self.store.append_event({"kind": kind, "summary": summary, **meta})
 
     # --- the capability registry: the source of truth the brain authors FROM (never invents) ---
     _models_cache: list | None = None
@@ -136,6 +151,12 @@ class Suite:
             "node_types": sorted(self.registry.types),
             "models": self.available_models(),
             "modes": list(self.MODES),
+            # T3-MODE (backend half): expose the mode DIRECTIVES (the prose behind each mode) so the FE
+            # reads them from the registry instead of hand-copying MODE_DIRECTIVES into a parallel
+            # MODE_DESC (the PoLR violation: registry is the one source of truth). The FE deletes its
+            # copy and reads capabilities().mode_directives. (be-half → at most needs-tim until the FE
+            # consumes it.) Additive map {mode: directive}; an older FE that ignores it is unaffected.
+            "mode_directives": dict(self.MODE_DIRECTIVES),
             "rhm_verbs": list(self.RHM_VERBS),
             "panels": [p.get("id") for p in self.list_panels()],
             "panel_field_targets": list(self.PANEL_TARGETS),
@@ -143,6 +164,7 @@ class Suite:
                           "/api/types", "/api/object_info", "/api/events", "/api/inbox",
                           "/api/panels", "/api/models", "/api/stream", "/api/move",
                           "/api/ui_info", "/api/surface-review", "/api/capture-idea",
+                          "/api/build-intent",
                           "/api/review/start", "/api/review/current", "/api/review/next",
                           "/api/review/status"],
         }
@@ -267,6 +289,18 @@ class Suite:
     def _load(self, graph_id: str) -> Graph:
         return self.store.load_graph(graph_id) or Graph(id=graph_id)
 
+    def _last_run_stuck(self, graph_id: str) -> list:
+        """T3-STATUS — the `stuck` node-ids from the MOST RECENT `run` event for `graph_id` (the run
+        emit records `stuck=[...]` with `graph=<id>`). Backend-authoritative source for the persisted
+        (no-fresh-result) status path, so `stuck` survives a reload without a client-side overlay. Reads
+        events newest-first; the first matching run event wins. Empty when the graph never ran / no
+        stuck nodes. Tolerant: a malformed/absent field reads as no-stuck (never raises in a status read)."""
+        for ev in self.store.recent_events(200):
+            if ev.get("kind") == "run" and ev.get("graph") == graph_id:
+                st = ev.get("stuck")
+                return list(st) if isinstance(st, list) else []
+        return []
+
     @staticmethod
     def _schema_defaults(schema: dict) -> dict:
         """Flatten a node-type's nested config_schema {key:{...,default}} → {key:default} (A).
@@ -284,53 +318,63 @@ class Suite:
         if type not in self.registry:
             raise KeyError(f"unknown node-type {type!r} (have: {self.list_types()})")
         def _do():                                                       # G1: AUTO → guard runs it straight through
-            g = self._load(graph_id)
-            nid = node_id or f"{type}-{len(g.nodes) + 1}"
-            nt = self.registry.types.get(type)
-            seeded = self._schema_defaults(nt.config_schema if nt else {})   # type defaults first…
-            seeded.update(config or {})                                      # …caller config WINS (merge)
-            pos = XY(**position) if position else XY()                       # optional initial placement (C5)
-            g.nodes.append(NodeInstance(id=nid, type=type, config=seeded, position=pos))
-            self.store.save_graph(g)
-            self._emit("create", f"+ {type} node ({nid})", graph=graph_id, node=nid, type=type)
-            return nid
+            # T1-RACE: hold the per-graph lock around the WHOLE load→mutate→save so a concurrent
+            # mutation on the same graph (another create/move/connect on the threading server, or the
+            # MCP face racing a UI move) can't load the same version and last-writer-wins (lost update).
+            with self.store.graph_lock(graph_id):
+                g = self._load(graph_id)
+                nid = node_id or f"{type}-{len(g.nodes) + 1}"
+                nt = self.registry.types.get(type)
+                seeded = self._schema_defaults(nt.config_schema if nt else {})   # type defaults first…
+                seeded.update(config or {})                                      # …caller config WINS (merge)
+                pos = XY(**position) if position else XY()                       # optional initial placement (C5)
+                g.nodes.append(NodeInstance(id=nid, type=type, config=seeded, position=pos))
+                self.store.save_graph(g)
+                self._emit("create", f"+ {type} node ({nid})", graph=graph_id, node=nid, type=type)
+                return nid
         return guard("compose", do=_do)                                  # AUTO → identical behavior; POLICY is the router
 
     def connect(self, graph_id: str, from_node: str, from_port: str,
                 to_node: str, to_port: str) -> None:
-        g = self._load(graph_id)
-        byid = {n.id: n for n in g.nodes}
-        if from_node not in byid or to_node not in byid:
-            raise KeyError(f"connect: unknown node ({from_node!r} -> {to_node!r})")
-        ft = self.registry.types.get(byid[from_node].type)
-        tt = self.registry.types.get(byid[to_node].type)
-        out_t = ft.ports.outputs.get(from_port) if ft else None
-        in_t = tt.ports.inputs.get(to_port) if tt else None
-        if out_t and in_t and "Any" not in (out_t, in_t) and out_t != in_t:   # type-check, fail loud
-            raise ValueError(
-                f"type mismatch: {from_node}.{from_port}:{out_t} → {to_node}.{to_port}:{in_t}")
-        g.edges.append(Edge(from_node=from_node, from_port=from_port,
-                            to_node=to_node, to_port=to_port))
-        self.store.save_graph(g)
-        self._emit("connect", f"wired {from_node}.{from_port} → {to_node}.{to_port}",
-                   graph=graph_id, from_node=from_node, to_node=to_node)
+        # T1-RACE: per-graph lock around the whole load→mutate→save (lost-update across both faces).
+        with self.store.graph_lock(graph_id):
+            g = self._load(graph_id)
+            byid = {n.id: n for n in g.nodes}
+            if from_node not in byid or to_node not in byid:
+                raise KeyError(f"connect: unknown node ({from_node!r} -> {to_node!r})")
+            ft = self.registry.types.get(byid[from_node].type)
+            tt = self.registry.types.get(byid[to_node].type)
+            out_t = ft.ports.outputs.get(from_port) if ft else None
+            in_t = tt.ports.inputs.get(to_port) if tt else None
+            if out_t and in_t and "Any" not in (out_t, in_t) and out_t != in_t:   # type-check, fail loud
+                raise ValueError(
+                    f"type mismatch: {from_node}.{from_port}:{out_t} → {to_node}.{to_port}:{in_t}")
+            g.edges.append(Edge(from_node=from_node, from_port=from_port,
+                                to_node=to_node, to_port=to_port))
+            self.store.save_graph(g)
+            self._emit("connect", f"wired {from_node}.{from_port} → {to_node}.{to_port}",
+                       graph=graph_id, from_node=from_node, to_node=to_node)
 
     def delete_node(self, graph_id: str, node_id: str) -> None:
-        g = self._load(graph_id)
-        g.nodes = [n for n in g.nodes if n.id != node_id]
-        g.edges = [e for e in g.edges if e.from_node != node_id and e.to_node != node_id]
-        self.store.save_graph(g)
-        self._emit("delete", f"removed node {node_id}", graph=graph_id, node=node_id)
+        # T1-RACE: per-graph lock around the whole load→mutate→save (lost-update across both faces).
+        with self.store.graph_lock(graph_id):
+            g = self._load(graph_id)
+            g.nodes = [n for n in g.nodes if n.id != node_id]
+            g.edges = [e for e in g.edges if e.from_node != node_id and e.to_node != node_id]
+            self.store.save_graph(g)
+            self._emit("delete", f"removed node {node_id}", graph=graph_id, node=node_id)
 
     def set_config(self, graph_id: str, node_id: str, config: dict) -> None:
         def _do():                                                       # G1: AUTO → guard runs it straight through
-            g = self._load(graph_id)
-            for n in g.nodes:
-                if n.id == node_id:
-                    n.config.update(config)
-                    self.store.save_graph(g)
-                    return
-            raise KeyError(f"no node {node_id!r} in graph {graph_id!r}")
+            # T1-RACE: per-graph lock around the whole load→mutate→save (lost-update across both faces).
+            with self.store.graph_lock(graph_id):
+                g = self._load(graph_id)
+                for n in g.nodes:
+                    if n.id == node_id:
+                        n.config.update(config)
+                        self.store.save_graph(g)
+                        return
+                raise KeyError(f"no node {node_id!r} in graph {graph_id!r}")
         return guard("configure", do=_do)                               # AUTO → identical; POLICY is the router
 
     def set_position(self, graph_id: str, node_id: str, x: float, y: float,
@@ -339,17 +383,21 @@ class Suite:
         reflects, never owns: a drag-end round-trips here so the backend stays the source of truth
         for layout. A clone of set_config but targeting position/size, the NodeInstance fields that
         already round-trip to disk. Raises KeyError if the node is absent (fail loud)."""
-        g = self._load(graph_id)
-        for n in g.nodes:
-            if n.id == node_id:
-                n.position = XY(x=x, y=y)
-                if w is not None and h is not None:
-                    n.size = WH(w=w, h=h)
-                self.store.save_graph(g)
-                self._emit("move", f"moved {node_id} → ({x:.0f},{y:.0f})",
-                           graph=graph_id, node=node_id)
-                return
-        raise KeyError(f"no node {node_id!r} in graph {graph_id!r}")
+        # T1-RACE: per-graph lock around the whole load→mutate→save. /api/move is the highest-frequency
+        # mutation path; without the lock two concurrent moves on DISTINCT nodes both load version V →
+        # last-writer-wins → the other node's move silently lost (the exact bug T1-RACE names).
+        with self.store.graph_lock(graph_id):
+            g = self._load(graph_id)
+            for n in g.nodes:
+                if n.id == node_id:
+                    n.position = XY(x=x, y=y)
+                    if w is not None and h is not None:
+                        n.size = WH(w=w, h=h)
+                    self.store.save_graph(g)
+                    self._emit("move", f"moved {node_id} → ({x:.0f},{y:.0f})",
+                               graph=graph_id, node=node_id)
+                    return
+            raise KeyError(f"no node {node_id!r} in graph {graph_id!r}")
 
     def save_graph(self, graph: Graph) -> None:
         self.store.save_graph(graph)
@@ -379,14 +427,30 @@ class Suite:
             else:
                 cas = self.store.head(logical)
             if result:
-                status = ("ran" if n.id in result["ran"]
+                # T3-STATUS: `stuck` is a REAL backend node status (one source of truth), not a
+                # client-only overlay. The scheduler already reports which nodes could not fire because
+                # an input never resolved (scheduler result['stuck']); surface it here so the FE reads
+                # it from the backend instead of maintaining a parallel client-side `stuck` re-applied
+                # from events after every reload. Checked BEFORE ran/cached/idle so a stuck node is
+                # never mislabeled idle. (be-half → at most needs-tim until the FE drops its overlay.)
+                status = ("stuck" if n.id in result.get("stuck", [])
+                          else "ran" if n.id in result["ran"]
                           else "cached" if n.id in result["skipped"] else "idle")
             else:
                 # D5-be (persisted run-status, in-territory): with no fresh run result, DERIVE status
                 # from the store — a node whose output address resolves has a cached result, so report
                 # 'cached' instead of resetting to 'idle' on reload. Fail-loud-legible: the surface
-                # never claims "nothing happened" for a node that actually holds a result.
-                status = "cached" if cas else "idle"
+                # never claims "nothing happened" for a node that actually holds a result. T3-STATUS:
+                # `stuck` is run-relative (an input that never resolved on the LAST run), so without a
+                # fresh result we derive from the most recent run event for THIS graph that listed the
+                # node as stuck — keeping `stuck` backend-authoritative across a reload (what the FE used
+                # to re-derive client-side). A node that since resolved (cas present) is never stuck.
+                if cas:
+                    status = "cached"
+                elif n.id in self._last_run_stuck(g.id):
+                    status = "stuck"
+                else:
+                    status = "idle"
             nt = self.registry.types.get(n.type)
             nodes.append({
                 "id": n.id, "type": n.type, "config": n.config,
@@ -495,13 +559,28 @@ class Suite:
         return {"mode": c.get("mode", self.DEFAULT_MODE),
                 "model": c.get("model") or fcfg.DEFAULT_BRAIN,
                 "base_url": c.get("base_url") or fcfg.DEFAULT_BASE_URL,
-                "persona": c.get("persona", "")}
+                "persona": c.get("persona", ""),
+                # voice-trial lane H: surface the per-mode voice toggle in the config the FE reads.
+                # Default 'on' so a node with no field is voice-enabled (schema-additive).
+                "voice_enabled": c.get("voice_enabled", "on")}
+
+    def voice_enabled(self) -> bool:
+        """Lane H — is voice on for the current presence? Reads the rhm node's `voice_enabled`
+        CONFIG (the per-mode voice toggle), defaulting to True when absent (schema-additive: an old
+        node with no field is voice-on). The conversation loop / a voice-gated path consults THIS
+        rather than assuming voice; 'off' here means the mode runs text-only even with engines up.
+        Also gated by the presence dial: mode 'off' (the RHM disabled) is never voice-on."""
+        if self.get_mode() == "off":
+            return False
+        return str(self._rhm_cfg().get("voice_enabled", "on")).lower() != "off"
 
     def set_rhm_config(self, updates: dict) -> dict:
         allowed = {k: v for k, v in (updates or {}).items()
-                   if k in ("model", "base_url", "persona", "mode")}
+                   if k in ("model", "base_url", "persona", "mode", "voice_enabled")}
         if "mode" in allowed and allowed["mode"] not in self.MODES:
             raise ValueError(f"unknown mode {allowed['mode']!r}")
+        if "voice_enabled" in allowed and str(allowed["voice_enabled"]).lower() not in ("on", "off"):
+            raise ValueError(f"voice_enabled must be 'on' or 'off', got {allowed['voice_enabled']!r}")
         if not allowed:
             return self.rhm_config()
         self._ensure_rhm_node()
@@ -891,13 +970,198 @@ class Suite:
         self._emit("react", f"(watching) {out[:44]}")
         return {"comment": out}
 
+    # ============================================================================================
+    # The Voice Trial — recording (Group E) + debrief (Group F). REUSE-DON'T-PARALLEL: every
+    # artifact rides an EXISTING seam — the append-only event log (durable claims via
+    # _emit_durable), the content-addressed store (put_content/set_ref at trial://<session>/
+    # transcript), the session store (save_session/load_session), the inbox (surface_review), and
+    # the walkthrough organ (start_session/present_current/next/respond). No second event log, no
+    # second store, no second brain. Each spoken session is recorded so the debrief can read it
+    # back FAITHFULLY (no confabulation — the debrief item carries the REAL transcript).
+    # ============================================================================================
+
+    TRIAL_KINDS = ("trial.turn", "trial.feedback", "trial.reflection")
+
+    @staticmethod
+    def _trial_transcript_addr(session_id: str) -> str:
+        """The CAS-pointer (run://-style mutable ref) for a trial session's full transcript — the
+        address the debrief reads back. Namespaced trial:// so it can never collide with a node's
+        run:// output address or a review session's go-gate addresses."""
+        return f"trial://{session_id}/transcript"
+
+    def _trial_turn_events(self, session_id: str) -> list:
+        """Every recorded trial event (turn/feedback/reflection) for ONE session, OLDEST-first —
+        the single source the transcript is DERIVED from (so events + CAS never disagree). Reads
+        events_since(-1) (the whole file-tail) filtered to the trial kinds + this session id."""
+        return [e for e in self.store.events_since(-1)
+                if e.get("kind") in self.TRIAL_KINDS and e.get("trial_session") == session_id]
+
+    def _rebuild_trial_transcript(self, session_id: str) -> dict:
+        """Re-derive the FULL transcript for a session FROM its recorded events, write it to CAS,
+        and (re)point the trial://<session>/transcript ref at the new content. Re-derived on every
+        turn so the three artifacts (events · CAS transcript · session record) agree BY
+        CONSTRUCTION — there is no parallel transcript write that could drift from the event log.
+        Returns {address, cas, turns:[...]} (the materialised transcript)."""
+        turns = []
+        for ev in self._trial_turn_events(session_id):
+            turns.append({"kind": ev.get("kind"), "seq": ev.get("seq"), "ts": ev.get("ts"),
+                          "role": ev.get("role"), "character": ev.get("character"),
+                          "text": ev.get("text", "")})
+        transcript = {"session": session_id, "turns": turns, "n": len(turns)}
+        cas = self.store.put_content(transcript)
+        addr = self._trial_transcript_addr(session_id)
+        self.store.set_ref(addr, cas)
+        return {"address": addr, "cas": cas, "transcript": transcript}
+
+    def _trial_session_record(self, session_id: str, character: str | None = None) -> dict:
+        """Load this trial session's record, or seed a fresh one. The record carries the cast
+        member and the running turn/feedback/reflection counts so the debrief can list sessions
+        without re-scanning the whole event log. Namespaced id so it never collides with a review
+        session record (_load_session expects review keys: graph/cursor/items)."""
+        s = self.store.load_session(session_id)
+        if not s:
+            s = {"id": session_id, "kind": "trial", "character": character,
+                 "turns": 0, "feedback": 0, "reflections": 0, "done": False}
+        if character and not s.get("character"):
+            s["character"] = character
+        return s
+
+    def trial_record_turn(self, session_id: str, role: str, text: str,
+                          character: str | None = None) -> dict:
+        """Record ONE spoken turn of a trial conversation (role='operator'|'character'). Emits a
+        DURABLE trial.turn event (_emit_durable — the record IS the behavior here; a silently
+        dropped turn would make the debrief misrepresent the session, so loss must FAIL LOUD, not
+        be swallowed like lenient telemetry), re-materialises the CAS transcript from the events,
+        and advances the trial session record. Fail loud on empty text (no silent no-op)."""
+        sid = (session_id or "").strip()
+        if not sid:
+            raise ValueError("trial_record_turn needs a session id (fail loud)")
+        if not (text or "").strip():
+            raise ValueError("trial_record_turn needs non-empty text (fail loud)")
+        self._emit_durable("trial.turn", f"[{character or role}] {text[:60]}",
+                           trial_session=sid, role=role, character=character, text=text)
+        s = self._trial_session_record(sid, character)
+        s["turns"] = s.get("turns", 0) + 1
+        self.store.save_session(s)
+        built = self._rebuild_trial_transcript(sid)
+        return {"session": sid, "role": role, "turns": s["turns"],
+                "transcript_addr": built["address"], "transcript_cas": built["cas"]}
+
+    def trial_record_feedback(self, session_id: str, text: str,
+                              character: str | None = None) -> dict:
+        """Record Tim's SPOKEN feedback during a trial session (his verdict-in-flight on a voice/
+        character). DURABLE (_emit_durable) + folded into the same transcript so the debrief reads
+        his feedback alongside the turns. Fail loud on empty text."""
+        sid = (session_id or "").strip()
+        if not sid:
+            raise ValueError("trial_record_feedback needs a session id (fail loud)")
+        if not (text or "").strip():
+            raise ValueError("trial_record_feedback needs non-empty text (fail loud)")
+        self._emit_durable("trial.feedback", f"feedback: {text[:60]}",
+                           trial_session=sid, role="operator", character=character, text=text)
+        s = self._trial_session_record(sid, character)
+        s["feedback"] = s.get("feedback", 0) + 1
+        self.store.save_session(s)
+        built = self._rebuild_trial_transcript(sid)
+        return {"session": sid, "feedback": s["feedback"], "transcript_addr": built["address"]}
+
+    def trial_record_reflection(self, session_id: str, text: str,
+                                character: str | None = None) -> dict:
+        """Record the CHARACTER's own reflection-note on the exchange (the cast member's read of
+        how it went). DURABLE + in the same transcript. Fail loud on empty text."""
+        sid = (session_id or "").strip()
+        if not sid:
+            raise ValueError("trial_record_reflection needs a session id (fail loud)")
+        if not (text or "").strip():
+            raise ValueError("trial_record_reflection needs non-empty text (fail loud)")
+        self._emit_durable("trial.reflection", f"[{character}] reflects: {text[:50]}",
+                           trial_session=sid, role="character", character=character, text=text)
+        s = self._trial_session_record(sid, character)
+        s["reflections"] = s.get("reflections", 0) + 1
+        self.store.save_session(s)
+        built = self._rebuild_trial_transcript(sid)
+        return {"session": sid, "reflections": s["reflections"], "transcript_addr": built["address"]}
+
+    def trial_transcript(self, session_id: str) -> dict:
+        """Read back a trial session's FULL transcript from CAS (the debrief's ground truth). Reads
+        the trial://<session>/transcript ref → CAS content. Fail loud if the session was never
+        recorded (no ref) — the debrief MUST NOT confabulate from an absent transcript."""
+        addr = self._trial_transcript_addr(session_id)
+        cas = self.store.head(addr)
+        if not cas:
+            raise KeyError(
+                f"no recorded transcript for trial session {session_id!r} (no ref at {addr}) — "
+                f"record turns first; the debrief reads only real transcripts (fail loud).")
+        return self.store.get_content(cas)
+
+    def trial_sessions(self) -> list:
+        """Every recorded trial session record (the cast walked, with counts) — what the debrief
+        loads as its review set. Reads the session store + filters to kind=='trial' so it never
+        picks up a review session record."""
+        out = []
+        for sid in self.store.list_sessions():
+            s = self.store.load_session(sid)
+            if s and s.get("kind") == "trial":
+                out.append(s)
+        return out
+
+    def start_debrief(self, session_ids: list, host_persona: str | None = None,
+                      mode: str = "walkthrough") -> dict:
+        """Group F — the trial DEBRIEF, built ON the walkthrough organ (specialise, don't rebuild).
+        A debrief is a review session whose items are the recorded trial sessions; a host character
+        walks Tim back through each, conversationally, and his verdicts are captured via the SAME
+        resolve_surfaced path the walkthrough uses.
+
+        CRITICAL (the parallel-path trap): start_session / present_current / respond all key on
+        INBOX item ids (coa→inbox.get, resolve_surfaced→inbox.get raise KeyError on a non-surfaced
+        id). So we CANNOT feed raw trial-session ids into start_session. We first SURFACE each trial
+        session as a review item — carrying the REAL transcript pulled from CAS — and collect the
+        returned surfaced ids; coa() dumps the whole payload into the framing prompt, so embedding
+        the transcript is what lets the host read it back FAITHFULLY instead of confabulating from a
+        bare character name. THEN we hand those surfaced ids to start_session.
+
+        The debrief-host persona is set GLOBALLY via set_rhm_config (coa reads rhm_config().persona;
+        there is no per-session persona slot) — deliberate for the trial: one host voice frames all
+        five. Returns start_session's first presentation (the host's framing of the first session)."""
+        ids = list(session_ids or [])
+        if not ids:
+            raise ValueError("start_debrief needs at least one trial session id (fail loud)")
+        if host_persona:
+            self.set_rhm_config({"persona": host_persona})   # the debrief-host voice (global, deliberate)
+        surfaced = []
+        for sid in ids:
+            transcript = self.trial_transcript(sid)          # FAIL LOUD if a session was never recorded
+            rec = self._trial_session_record(sid)
+            item = {"title": f"debrief · {rec.get('character') or sid}",
+                    "kind": "trial_debrief", "trial_session": sid,
+                    "character": rec.get("character"),
+                    "turns": rec.get("turns", 0), "feedback": rec.get("feedback", 0),
+                    "reflections": rec.get("reflections", 0),
+                    "transcript": transcript}              # the REAL transcript — coa frames from THIS
+            r = self.surface_review(item, origin="generative")  # a debrief = Tim revisiting his own trial
+            surfaced.append(r["id"])
+        self._emit("trial.debrief.start",
+                   f"debrief started — {len(surfaced)} trial session(s) to walk",
+                   sessions=ids, surfaced=surfaced)
+        return self.start_session(surfaced, mode=mode)
+
+    # ============================================================================================
+
     # --- the inbox: chief-of-staff triage (F1-F2) + the decision-compiler UP (C2-C3) ---
     def inbox_lanes(self) -> dict:
         """Three lanes (context-05): live escalations (pending, need the operator), resolved-for-you
-        (already handled — audit), and batched walkthroughs (pending grouped by theme)."""
+        (already handled — audit), and batched walkthroughs (pending grouped by theme).
+
+        T3-HYGIENE (filter-at-source): items tagged `test_origin` at creation (a run under
+        COMPANY_TEST_RUN) are EXCLUDED from the operator's lanes — that pollution is what buried the
+        real items. The exclusion is NOT silent: `counts.test_origin_excluded` reports how many were
+        filtered, so a test run can still see/verify them and nothing is hidden by sleight of hand
+        (fail-loud-legible). A real operator run sets no flag → no items tagged → identical to before."""
         items = self.inbox.list()
-        escalations = [d for d in items if d.get("resolved") is None]
-        resolved = [d for d in items if d.get("resolved") is not None]
+        real = [d for d in items if not d.get("test_origin")]
+        excluded = len(items) - len(real)
+        escalations = [d for d in real if d.get("resolved") is None]
+        resolved = [d for d in real if d.get("resolved") is not None]
         batched: dict = {}
         for d in escalations:
             batched.setdefault(d["action"], []).append(d["id"])
@@ -905,7 +1169,8 @@ class Suite:
             "live_escalations": escalations,                       # the irreducible — brought as COA
             "resolved_for_you": resolved,                          # logged for audit; needn't be worked
             "batched": {k: v for k, v in batched.items() if len(v) > 1},  # themes to handle in one sitting
-            "counts": {"escalations": len(escalations), "resolved": len(resolved)},
+            "counts": {"escalations": len(escalations), "resolved": len(resolved),
+                       "test_origin_excluded": excluded},
         }
 
     def coa(self, surfaced_id: str) -> dict:
@@ -1038,6 +1303,27 @@ class Suite:
             raise KeyError(f"no review session {session_id!r}")
         return s
 
+    def _registry_ui_target(self, payload: dict) -> str:
+        """T0-KEYSTONE (backend half) — derive a REGISTRY-VALID `ui://` target for a review item's
+        payload, so the walkthrough's view-drive (FE `resolveUiTarget(session.raw.ui_target)`) actually
+        moves the operator's view to the thing the step concerns. The FE validates the ref against the
+        live UI registry (`/api/ui_info` → build_ui_info) and FAILS LOUD on an unknown ref — so this
+        MUST emit a ref the registry knows. The registry (UI_REGISTRY) contains:
+          • ui://canvas/<node-id>  (camera path — the FE only drives if that node is on the loaded graph)
+          • ui://canvas/*          (the whole canvas)
+          • ui://chrome/{toolbar,inspector,inbox,activity,chat,workshop}  (DOM-resolved chrome regions)
+        Mapping (deterministic, never invents): if the payload references a specific NODE (a result
+        surfaced from a node, or a build_result_review tied to a node) → ui://canvas/<node-id> (point at
+        the node). Otherwise the item is about the review queue itself → ui://chrome/inbox (a node-less
+        build/idea/review item — the safe, always-registered target). Registry-is-truth: every branch
+        returns a ref present in UI_REGISTRY (no fabrication). This stamps INTO the payload (what `raw`
+        carries) — the additive field the FE reads — WITHOUT removing the top-level ui://review/<id>."""
+        p = payload or {}
+        node = p.get("node")                               # surface_output result items carry the node id
+        if isinstance(node, str) and node.strip():
+            return f"ui://canvas/{node.strip()}"
+        return "ui://chrome/inbox"                          # node-less items → the inbox chrome region
+
     def present_current(self, session_id: str) -> dict:
         """B: the node at the cursor — the next unresolved go-gate — with its `coa` framing + `ui://`
         target. Fail-safe: if `coa` errors (LLM down), present the RAW payload, NEVER block the walk (D)."""
@@ -1055,6 +1341,17 @@ class Suite:
             raw = d.get("payload") if d else None
             framing = None
             self._emit("warning", f"coa failed for {item_id} ({type(e).__name__}) — presenting raw payload")
+        # T0-KEYSTONE (backend half): STAMP a registry-valid `ui_target` INTO the payload the FE reads as
+        # `session.raw.ui_target`. Before this fix nothing wrote a payload-level ui_target, so the FE's
+        # per-step view-drive (resolveUiTarget(session.raw?.ui_target)) was ~always undefined → the
+        # keystone "the RHM moves your view to the thing it asks about" silently no-op'd. We stamp it
+        # onto the presented `raw` (additively — never removing the top-level ui://review/<id>). It is
+        # NOT persisted back to the surfaced item (this is a presentation projection — reflects-never-
+        # owns), only carried on the response the walkthrough card reads. (FE proof is a separate lane —
+        # this is the backend half; at most needs-tim until the FE drive is verified by use.)
+        if isinstance(raw, dict) and "ui_target" not in raw:
+            raw = dict(raw)
+            raw["ui_target"] = self._registry_ui_target(raw)
         # mark presented (lifecycle status only — never touches `resolved`, so it stays a live escalation).
         try:
             self.inbox.set_status(item_id, "presented")
@@ -1538,11 +1835,18 @@ class Suite:
                 raise GovernanceError(
                     f"dispatch_decision: a decision.dispatch already exists for resolve seq={derived_from} — "
                     f"this build already launched; refusing a second (exactly-once, fail loud).")
-            # emit the durable exactly-once claim BEFORE launch (and inside the lock).
-            self._emit("decision.dispatch",
-                       f"dispatching build for {sid} (class={declared}, scope={scope or '∅'}, "
-                       f"derived from verdict seq={derived_from})",
-                       surfaced=sid, derived_from=derived_from, consequence_class=declared, scope=scope)
+            # emit the durable exactly-once claim BEFORE launch (and inside the lock). T1-EMIT: this is
+            # the SAFETY-CRITICAL claim the exactly-once guarantee rides on — it MUST fail loud. Routed
+            # through _emit_durable (raises on an append failure) NOT _emit (which swallows). A swallowed
+            # claim-write would let _already_dispatched return False on a retry → DOUBLE-LAUNCH of a real
+            # `claude -p`. Because this raises BEFORE launch (below) + inside the lock, a failed claim
+            # means NOTHING launches — the safe outcome — and the caller (drive_dispatchable) sees the
+            # raise rather than a phantom success.
+            self._emit_durable("decision.dispatch",
+                               f"dispatching build for {sid} (class={declared}, scope={scope or '∅'}, "
+                               f"derived from verdict seq={derived_from})",
+                               surfaced=sid, derived_from=derived_from,
+                               consequence_class=declared, scope=scope)
             self.inbox.set_status(sid, "presented")
 
         # 6 — launch (W1). Loud on a bad round-trip (LaunchError) — caller (W7/loop) re-queues loud.
@@ -1560,11 +1864,15 @@ class Suite:
             return {"surfaced": sid, "dispatched": True, "launched": False, "verified": False,
                     "requeued": new_sid, "error": str(e)}
 
-        # store the result summary on the item (W5) — visible after the fact.
-        d["build_result"] = {"success": result.get("success"), "summary": result.get("summary", "")[:2000],
-                             "changed_files": result.get("changed_files", []),
-                             "permission_mode": result.get("permission_mode")}
-        self.store.save_surfaced(d)
+        # store the result summary on the item (W5) — visible after the fact. T1-RACE: re-read under the
+        # surfaced lock and mutate the FRESH copy, so a concurrent set_status (presented→…) write can't
+        # lose-update the build_result (or vice-versa). The lock is the store-level one both writers reach.
+        with self.store.surfaced_lock():
+            d = self.inbox.get(sid) or d
+            d["build_result"] = {"success": result.get("success"), "summary": result.get("summary", "")[:2000],
+                                 "changed_files": result.get("changed_files", []),
+                                 "permission_mode": result.get("permission_mode")}
+            self.store.save_surfaced(d)
 
         # 6b — WIRE-HARDEN H3 + H2a, UNCONDITIONAL (the reverse-incident fix): re-discover into the LIVE
         # system (a new node-type becomes live in self.registry, not just on disk) + regenerate the
@@ -2137,11 +2445,15 @@ class Suite:
         if not d:
             raise KeyError(f"no surfaced decision {sid!r}")
         # session-position tagging (record on the surfaced item + the resolve event for audit/replay).
+        # T1-RACE: re-read under the surfaced lock and mutate the fresh copy so a concurrent set_status
+        # write can't lose-update the session tag (and the tag can't clobber a status advance).
         if session_id is not None:
-            d.setdefault("session_id", session_id)
-            if position is not None:
-                d["position"] = position
-            self.store.save_surfaced(d)
+            with self.store.surfaced_lock():
+                d = self.inbox.get(sid) or d
+                d.setdefault("session_id", session_id)
+                if position is not None:
+                    d["position"] = position
+                self.store.save_surfaced(d)
 
         if choice == "skip":
             self.inbox.set_status(sid, "inbox")            # defer — still a live escalation; NOT resolved

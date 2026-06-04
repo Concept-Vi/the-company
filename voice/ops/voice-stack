@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# voice-stack — manage the Company voice trial stack (5 TTS engines + ears + the Kokoro base).
+# Mirrors ~/.local/bin/vllm-stack. Engines run as `systemd --user` services (one per engine, ports
+# 4124-4128) from their per-engine venvs under ~/.voice-venvs/. Kokoro (:4123) is the existing base
+# TTS; the ears (faster-whisper + Silero) run IN-PROCESS inside the loop's .voice-venv (not a service).
+#
+# Usage:
+#   voice-stack install            symlink the unit files into ~/.config/systemd/user + daemon-reload
+#   voice-stack start [engine]     start all engine services (or just one)
+#   voice-stack stop  [engine]     stop all (or one)
+#   voice-stack restart [engine]   restart all (or one)
+#   voice-stack status             systemd status of each engine + GPU
+#   voice-stack health             ping /health on every engine port (4123-4128) + ears import check
+#   voice-stack logs <engine>      follow journalctl for one engine
+#   voice-stack ports              which port runs which engine
+#   voice-stack enable-boot        start engines at user login
+#   voice-stack disable-boot       don't start automatically
+#
+# engine ∈ {chatterbox, orpheus, cosyvoice, xtts, qwen3tts}
+set -euo pipefail
+
+REPO=/home/tim/company
+ENV_FILE="$REPO/voice/ops/voice.env"
+UNIT_SRC="$REPO/voice/ops/systemd"
+UNIT_DST="$HOME/.config/systemd/user"
+LOOP_VENV="$REPO/.voice-venv"
+ENGINES=(chatterbox orpheus cosyvoice xtts qwen3tts)
+declare -A PORTS=( [kokoro]=4123 [chatterbox]=4124 [orpheus]=4125 [cosyvoice]=4126 [xtts]=4127 [qwen3tts]=4128 )
+
+svc() { echo "company-voice-$1.service"; }
+
+cmd_install() {
+  mkdir -p "$UNIT_DST"
+  for e in "${ENGINES[@]}"; do
+    ln -sf "$UNIT_SRC/$(svc "$e")" "$UNIT_DST/$(svc "$e")"
+    echo "linked $(svc "$e")"
+  done
+  systemctl --user daemon-reload
+  echo "daemon-reloaded. Now: voice-stack start"
+}
+
+units_for() {  # echo the service name(s) for an optional engine arg
+  if [ -n "${1:-}" ]; then
+    svc "$1"
+  else
+    for e in "${ENGINES[@]}"; do svc "$e"; done
+  fi
+}
+
+case "${1:-}" in
+  install) cmd_install ;;
+  start)   systemctl --user start  $(units_for "${2:-}"); echo "Started. Engines load models on first run — watch: voice-stack logs <engine>" ;;
+  stop)    systemctl --user stop   $(units_for "${2:-}"); echo "Stopped." ;;
+  restart) systemctl --user restart $(units_for "${2:-}"); echo "Restarted." ;;
+  status)
+    for e in "${ENGINES[@]}"; do
+      echo "=== $e (:${PORTS[$e]}) ==="
+      systemctl --user --no-pager status "$(svc "$e")" 2>&1 | head -4 || true
+      echo
+    done
+    echo "=== GPU ==="
+    /usr/lib/wsl/lib/nvidia-smi 2>/dev/null | grep MiB | head -1 || echo "(nvidia-smi unavailable)"
+    ;;
+  health)
+    for name in kokoro "${ENGINES[@]}"; do
+      port="${PORTS[$name]}"
+      printf '%-11s (%s): ' "$name" "$port"
+      if curl -sf -m 3 "http://127.0.0.1:$port/health" >/dev/null 2>&1; then echo "✓ up"; else echo "✗ down"; fi
+    done
+    printf '%-11s       : ' "ears"
+    if "$LOOP_VENV/bin/python" -c "import faster_whisper, silero_vad" >/dev/null 2>&1; then
+      echo "✓ faster-whisper + silero-vad importable in loop venv"
+    else
+      echo "✗ NOT importable in $LOOP_VENV (pip install faster-whisper silero-vad)"
+    fi
+    ;;
+  logs)
+    e="${2:-}"; [ -z "$e" ] && { echo "logs <${ENGINES[*]}>"; exit 1; }
+    journalctl --user -u "$(svc "$e")" -f ;;
+  ports)
+    echo "Voice engine ports:"
+    echo "  4123  kokoro       (base TTS — already running; not managed here)"
+    echo "  4124  chatterbox   (clone; needs COMPANY_VOICE_REF)"
+    echo "  4125  orpheus      (named voices; vLLM — heaviest VRAM)"
+    echo "  4126  cosyvoice    (instruct+clone; needs COMPANY_VOICE_REF)"
+    echo "  4127  xtts         (clone; NON-COMMERCIAL; needs COMPANY_VOICE_REF)"
+    echo "  4128  qwen3tts     (VoiceDesign — TRIAL STARTER, no clip)"
+    echo "  ears               (faster-whisper + Silero VAD — in-process in $LOOP_VENV)"
+    ;;
+  enable-boot)  systemctl --user enable  $(units_for); echo "Enabled at login." ;;
+  disable-boot) systemctl --user disable $(units_for); echo "Disabled." ;;
+  *)
+    echo "voice-stack {install|start|stop|restart|status|health|logs|ports|enable-boot|disable-boot} [engine]"
+    echo "env: $ENV_FILE"
+    exit 1 ;;
+esac

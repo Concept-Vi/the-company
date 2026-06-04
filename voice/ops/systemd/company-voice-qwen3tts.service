@@ -1,0 +1,18 @@
+[Unit]
+Description=Company voice engine — Qwen3-TTS VoiceDesign on port 4128 (TRIAL STARTER)
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/tim/company
+EnvironmentFile=%h/company/voice/ops/voice.env
+ExecStart=%h/.voice-venvs/qwen3tts/bin/python /home/tim/company/voice/engines/qwen3tts.py 4128
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+# Model already in HF cache; GPU load only.
+TimeoutStartSec=600
+
+[Install]
+WantedBy=default.target

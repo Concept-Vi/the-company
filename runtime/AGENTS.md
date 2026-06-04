@@ -60,10 +60,15 @@ is the exactly-once key), never a second dispatch. The build instruction (`build
 the STANDARDS the work must meet (the product UI/UX bar for any operator-facing surface; the
 self-description updated as part of the change; a separate review pass + the operator will review) — it
 is **not** asked to self-review (self-review is the weakest kind, and a headless `claude -p` can't drive
-a browser); reviewing is a separate stage. It is kept **off the MCP face** (not in `RHM_VERBS`) — the RHM
-proposes/surfaces, it never dispatches a build of its own authority. The unattended trigger (the watcher
-/ loop that *calls* `dispatch_decision` from a resolve event) is the WIRE-LOOP seam, built separately. The live capability list lives in [[Company Map]] — traverse there
-rather than re-listing it here (the rule in [[Vault Conventions]]).
+a browser); reviewing is a separate stage. *Dispatch* is kept **off the MCP face** (not in `RHM_VERBS`) —
+the RHM proposes/surfaces, it never dispatches a build of its own authority. The **production entry seam**
+(T0-WIRE) is `POST /api/build-intent` on the OPERATOR face (`bridge.py` → `surface_build_intent`): it only
+SURFACES a build-intent (`resolved=None`) for the operator to approve via `/api/resolve` (operator-only);
+the WIRE-LOOP then dispatches it. Surfacing-only on the operator face is consistent with "the RHM
+proposes/surfaces, never dispatches" — only `dispatch_decision` stays off-face. The exactly-once
+`decision.dispatch` claim is written via `_emit_durable` (FAIL LOUD — T1-EMIT), distinct from the lenient
+telemetry `_emit`, so a swallowed claim can never silently allow a double-launch. The live capability list
+lives in [[Company Map]] — traverse there rather than re-listing it here (the rule in [[Vault Conventions]]).
 
 ## Relates to
 

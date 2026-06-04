@@ -16,6 +16,8 @@ voice/models/
 .obsidian/cache
 .obsidian/graph.json
 
+# stray runtime debug log written at repo root
+mcp_registration_debug.log
 # runtime store — written by the live system, never code
 .data/
 # build scratch

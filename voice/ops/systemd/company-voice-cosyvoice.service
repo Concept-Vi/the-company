@@ -1,0 +1,19 @@
+[Unit]
+Description=Company voice engine — CosyVoice2 on port 4126
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/tim/company
+EnvironmentFile=%h/company/voice/ops/voice.env
+# NOTE: cosyvoice runs from its own 3.10 venv (its deps pin python 3.10). If you used a
+# conda env instead of ~/.voice-venvs/cosyvoice, point ExecStart at that env's python.
+ExecStart=%h/.voice-venvs/cosyvoice/bin/python /home/tim/company/voice/engines/cosyvoice.py 4126
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=600
+
+[Install]
+WantedBy=default.target

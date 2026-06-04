@@ -89,6 +89,17 @@ class Inbox:
         sid = f"s{self._n}-{action_class}"
         rec = {"id": sid, "action": action_class, "payload": payload,
                "default": default, "resolved": resolved}
+        # T3-HYGIENE (tag-at-source): the OPERATOR inbox was ~90% test/adversarial pollution because
+        # test- and red-team-created surfaced items were indistinguishable from real ones, and the FE
+        # filter pattern-matched titles (brittle, missed most). The DURABLE fix is a tag set AT CREATION:
+        # when a run sets COMPANY_TEST_RUN, every item this surfaces carries `test_origin=True`, so the
+        # inbox lanes / FE filter exclude it by a real field instead of a fragile title regex. A real
+        # operator run never sets the flag, so real items are never tagged. Additive + optional: an
+        # untagged item reads exactly as before. (Cross-lane: the TESTS lane / adversarial harness sets
+        # COMPANY_TEST_RUN; the FE filters on `test_origin`; the verifier drives a clean operator run.)
+        import os as _os
+        if _os.environ.get("COMPANY_TEST_RUN"):
+            rec["test_origin"] = True
         # SEPARATE lifecycle field (A): inbox→presented→responded→resolved|requeue. NEVER
         # overload `resolved` (inbox_lanes/now/is_approved key on `resolved is None`); the
         # status tracks the walk WITHOUT touching the live/escalation predicate. Additive +
@@ -123,11 +134,15 @@ class Inbox:
         on an unknown status or a missing item — never silently no-op."""
         if status not in self.REVIEW_STATUSES:
             raise ValueError(f"unknown review status {status!r} — one of {self.REVIEW_STATUSES}")
-        d = self.store.get_surfaced(sid)
-        if not d:
-            raise KeyError(sid)
-        d["status"] = status
-        self.store.save_surfaced(d)
+        # T1-RACE: serialize the whole get→mutate→save against every other surfaced writer (the
+        # Suite's resolve/build_result writes, Inbox.resolve) so a status advance can't lose-update a
+        # concurrently-written field (e.g. `resolved`). The store-level lock is the one both reach.
+        with self.store.surfaced_lock():
+            d = self.store.get_surfaced(sid)
+            if not d:
+                raise KeyError(sid)
+            d["status"] = status
+            self.store.save_surfaced(d)
 
     def list(self) -> list:
         return self.store.list_surfaced()
@@ -139,13 +154,16 @@ class Inbox:
         """OPERATOR-only: approve/reject a surfaced decision. (Must NOT be reachable by the
         agent it gates — kept off the MCP face; only the UI/operator channel calls this.)
         `reason` captures the WHY — the trajectory that generalises, not just the endpoint (I1)."""
-        d = self.store.get_surfaced(sid)
-        if not d:
-            raise KeyError(sid)
-        d["resolved"] = choice
-        if reason:
-            d["reason"] = reason
-        self.store.save_surfaced(d)
+        # T1-RACE: serialize the whole get→mutate→save (resolved is the operator-only field; a
+        # concurrent set_status must not lose-update it, nor it the status). Store-level lock.
+        with self.store.surfaced_lock():
+            d = self.store.get_surfaced(sid)
+            if not d:
+                raise KeyError(sid)
+            d["resolved"] = choice
+            if reason:
+                d["reason"] = reason
+            self.store.save_surfaced(d)
 
     def is_approved(self, sid: str) -> bool:
         d = self.store.get_surfaced(sid)

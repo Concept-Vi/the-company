@@ -30,7 +30,8 @@ kind, with the ones worth knowing:
 - **content** — `constant`; `codebase` (reads the whole repo — **`VOLATILE`**); `portal`
   (a reference into another graph/address).
 - **live-state / special** — `model_of_tim` (the explicit model-of-Tim the RHM reasons
-  from — **`VOLATILE`**); `rhm_mode` (the presence dial — a *mode is a node*).
+  from — **`VOLATILE`**); `rhm_mode` (the presence dial — a *mode is a node*; also carries
+  the voice-trial **`voice_enabled`** on/off toggle, read by `Suite.voice_enabled()`).
 
 ## Relates to
 
