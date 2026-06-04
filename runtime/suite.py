@@ -1385,7 +1385,12 @@ class Suite:
             "not exist, propose it first.\n"
             "Proposing only DRAFTS a node-type (operator must approve before it goes live). build only adds/"
             "wires nodes (reversible, like the operator does). You CANNOT apply, delete, or write files "
-            "yourself. Never append an ACTION line unless asked to act."
+            "yourself. Never append an ACTION line unless asked to act.\n"
+            "CRITICAL — DESCRIBING AN ACTION DOES NOTHING. The ONLY way to actually perform one is to emit its "
+            "`ACTION:` line in THIS reply. Do NOT write 'I'll consult', 'consulting now', 'let me build', or "
+            "'showing the inbox' and stop — that performs NOTHING and the operator gets no result. If you intend "
+            "to act, emit the `ACTION:` line now, in the same reply. (If a previous attempt seemed to return "
+            "nothing, that was a bug that is now fixed — emit the ACTION again rather than giving up.)"
         )
         msgs = [{"role": "system", "content": sys_p + "\n\n" + self._chat_context(graph_id, focus)}]
         for t in self.store.chat_history(20):
