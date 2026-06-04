@@ -93,6 +93,23 @@ try:
     check("#4: changed_files names the file the change actually touched",
           any("audit_gamma.py" in f for f in gamma_rec["changed_files"]))
 
+    # ========== ADVERSARIAL (body-mention): a non-self-apply commit that MENTIONS [self-apply] ==========
+    # `git log --grep=[self-apply] --fixed-strings` matches the whole MESSAGE (subject AND body). But a
+    # genuine self-apply is SUBJECT-prefixed `[self-apply]` (what _git_self_commit writes). A plain
+    # feature/doc commit whose BODY merely mentions the string is NOT a self-change and must NOT pollute
+    # the ledger (it would make last_self_change point at a non-self-apply commit). Classify by SUBJECT.
+    open(os.path.join(nodes, "decoy.py"), "w").write(_node_code("decoy"))
+    git(repo, "add", "-A")
+    git(repo, "commit", "-m", "ordinary feature commit\n\nthis body talks about [self-apply] commits but is NOT one")
+    decoy_sha = git(repo, "rev-parse", "HEAD")
+    log_decoy = suite.self_change_log(limit=20)
+    check("body-only [self-apply] mention is NOT in the ledger (subject-classified, not body-matched)",
+          decoy_sha not in {e["sha"] for e in log_decoy})
+    check("last_self_change does NOT return the body-mention decoy (it is not a self-apply)",
+          (suite.last_self_change() or {}).get("sha") != decoy_sha)
+    check("last_self_change still returns the true tip self-apply (gamma) past the decoy",
+          (suite.last_self_change() or {}).get("sha") == sha_c)
+
     # ========== FINDING #2: revert-recursion — a revert is distinguished, not mistaken for a change ==========
     # last_self_change BEFORE any revert = the true tip change (gamma)
     check("last_self_change is the true last CHANGE (gamma) before any revert",

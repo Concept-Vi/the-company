@@ -2224,17 +2224,31 @@ class Suite:
             return []
         return [ln.strip() for ln in out.splitlines() if ln.strip()]
 
+    SELF_APPLY_PREFIX = "[self-apply]"
+
     def _self_change_records(self, limit: int = 50) -> list[dict]:
         """The shared reader behind the audit log + last_self_change (Finding #1/#2/#4). Reads the
         `[self-apply]` commits newest-first and tags each: {sha, subject, ts (committer ISO date),
         is_revert (Finding #2), changed_files (Finding #4)}. Reverts are INCLUDED but MARKED — the log
         shows the full undo history; `last_self_change` filters them out. Empty list on any git failure
-        (a read, not a mutation — degrade to empty, never raise here)."""
+        (a read, not a mutation — degrade to empty, never raise here).
+
+        CLASSIFY BY SUBJECT, not by message body: `--grep` matches the whole message (subject AND
+        body), but a genuine self-apply is SUBJECT-prefixed `[self-apply]` (exactly what
+        `_git_self_commit` writes), and a revert is subject `Revert "[self-apply] ...`. A plain commit
+        whose BODY merely MENTIONS the string (e.g. a feature/doc commit describing self-apply work) is
+        NOT a self-change and must NOT pollute the ledger — it would make `last_self_change` point at a
+        non-self-apply commit. So `--grep` stays as the cheap coarse net (it never drops a genuine or a
+        revert — both contain the string), and we KEEP a record only if its SUBJECT is a genuine
+        self-apply OR a revert-of-one; everything else (body-only mention) is dropped. To request more
+        than `limit` genuine records, the coarse net is widened (×4 + 20) before the subject filter, so
+        body-mentions interleaved in history don't starve the requested count."""
         import subprocess
+        n = max(1, int(limit))
         try:
             out = subprocess.run(
                 ["git", "-C", self._repo_root, "log", "--grep=[self-apply]", "--fixed-strings",
-                 "-n", str(max(1, int(limit))), "--format=%H%x00%cI%x00%s"],
+                 "-n", str(n * 4 + 20), "--format=%H%x00%cI%x00%s"],
                 check=True, capture_output=True, text=True).stdout.strip()
         except Exception:
             return []
@@ -2244,11 +2258,17 @@ class Suite:
                 continue
             sha, _, rest = line.partition("\x00")
             ts, _, subject = rest.partition("\x00")
+            is_revert = self._is_revert_subject(subject)
+            is_genuine = (subject or "").startswith(self.SELF_APPLY_PREFIX)
+            if not (is_genuine or is_revert):       # body-only mention → NOT a self-change, drop it
+                continue
             records.append({
                 "sha": sha, "subject": subject, "ts": ts,
-                "is_revert": self._is_revert_subject(subject),
+                "is_revert": is_revert,
                 "changed_files": self._self_change_changed_files(sha),
             })
+            if len(records) >= n:
+                break
         return records
 
     def self_change_log(self, limit: int = 50) -> list[dict]:
