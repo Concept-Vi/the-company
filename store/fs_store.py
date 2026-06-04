@@ -78,7 +78,20 @@ class FsStore:
 
     # --- mutable pointer (run://) ---
     def set_ref(self, logical: str, cas: str) -> None:
-        (self.root / "refs" / self._safe(logical)).write_text(cas)
+        # ATOMIC (T1-RACE): set_ref is the scheduler's hot-path output write (every node fire writes its
+        # ref here). A naked write_text TRUNCATES the target before re-filling it, so during that window a
+        # concurrent head() on the threading bridge can read "" — which the scheduler readiness check
+        # (`all(store.head(a) for a in ex.inputs.values())`, scheduler.py) treats as UNRESOLVED (the node
+        # silently waits a pass) and get_content("") raises. tmp + os.replace (same-filesystem rename is
+        # atomic) means a reader sees the WHOLE old cas or the WHOLE new one — never a torn/empty ref.
+        # Mirrors save_graph/save_surfaced/save_session exactly. Unique tmp PER WRITE (pid+thread) so two
+        # concurrent set_refs on the same logical never share a tmp name (last-writer-wins, each whole).
+        import os as _os
+        import threading as _t
+        path = self.root / "refs" / self._safe(logical)
+        tmp = path.with_name(f"{path.name}.{_os.getpid()}.{_t.get_ident()}.tmp")
+        tmp.write_text(cas)
+        tmp.replace(path)
 
     def head(self, logical: str) -> str | None:
         p = self.root / "refs" / self._safe(logical)

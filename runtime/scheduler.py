@@ -48,6 +48,13 @@ def run(graph, store, node_types, branch: str = "main",
     out_ports = {e.id: dict(e.outputs) for e in execs}
 
     ran, skipped, processed = set(), set(), set()
+    # PER-NODE ERROR ISOLATION: one node's run() raising must NOT abort the whole run (the other ready
+    # nodes still resolve). `failed` is a {nid: "ErrType: message"} map — a DICT (not a list) so the WHY
+    # is carried legibly (fail-loud, rule 4), and drop-in with how ran/skipped/stuck are consumed (`in`,
+    # len, sorted all work over keys). A failed node writes NO output ref (its downstream inputs never
+    # resolve → that downstream stays unresolved → classified stuck below, which is correct). The result
+    # SURFACES `failed` so the caller (Suite.run / state) can report it — containment, not swallowing.
+    failed: dict = {}
     progress = True
     while len(processed) < len(execs) and progress:
         progress = False
@@ -92,7 +99,21 @@ def run(graph, store, node_types, branch: str = "main",
                 agent = f"{ex.type}@memo"
                 skipped.add(nid)
             else:
-                result = mod.run(inputs, ex.config)
+                try:
+                    result = mod.run(inputs, ex.config)
+                except Exception as e:
+                    # CONTAINMENT (not swallowing): mark THIS node failed with its error captured, write
+                    # NO output ref (skip put_content/memo_set/the per-port write block via `continue`),
+                    # and CONTINUE resolving the other ready nodes — one bad node must not abort the run.
+                    # `processed.add(nid)` keeps it OUT of `unreached` so the stuck/pruned logic below never
+                    # misclassifies it as stuck (it appears ONLY in `failed`). Its downstream stays
+                    # unresolved (inputs never resolve) — correct. NO failure is cached (memo_set skipped),
+                    # so a re-run retries it. We do NOT emit here — the scheduler stays pure; surfacing the
+                    # failure is the Suite's job (it reads result["failed"]). Fail-loud, rule 4.
+                    failed[nid] = f"{type(e).__name__}: {e}"
+                    processed.add(nid)
+                    progress = True
+                    continue
                 cas = store.put_content(result)
                 store.memo_set(sig, cas)
                 agent = f"{ex.type}@deterministic"
@@ -160,4 +181,4 @@ def run(graph, store, node_types, branch: str = "main",
                 changed = True
     stuck = [nid for nid in unreached if nid not in pruned]
     return {"ran": ran, "skipped": skipped, "stuck": stuck, "pruned": pruned,
-            "held": sorted(pause), "compiled": len(execs)}
+            "failed": failed, "held": sorted(pause), "compiled": len(execs)}
