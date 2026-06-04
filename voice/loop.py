@@ -56,11 +56,32 @@ def _post(url: str, payload, timeout: int = 120, raw_bytes: bool = False):
 
 # --- the three steps ---
 
-def listen(audio: bytes, provider: str = "local") -> dict:
-    """STT step. In-process (same venv) so no extra hop. Default provider 'local' = faster-whisper.
-    Returns voice.stt.transcribe's shape: {"text":..., "provider":...}. Fails loud if the local ear
-    isn't installed (the RuntimeError from stt._whisper_engine), per fail-loud."""
-    return voice_stt.transcribe(audio, provider=provider)
+def default_ear(bridge_url: str | None = None) -> str:
+    """The SELECTED ear, read from the bridge's GET /api/rhm-config .stt (the ONE source of which ear
+    is active — the config slot the suite lane added). The loop runs in .voice-venv (3.12) and cannot
+    import the 3.14 Suite, so it asks the bridge (same as it reaches the brain). Fail-soft to the stt
+    module's STT_DEFAULT only if the bridge can't be reached / has no slot yet (NOT a hardcoded 'local'
+    — that was bug 2, selection split bridge-vs-loop)."""
+    base = bridge_url or BRIDGE_URL
+    try:
+        req = urllib.request.Request(base + "/api/rhm-config")
+        with urllib.request.urlopen(req, timeout=5) as r:
+            cfg = json.loads(r.read() or b"{}")
+        ear = cfg.get("stt")
+        if ear:
+            return ear
+    except Exception:
+        pass
+    return getattr(voice_stt, "STT_DEFAULT", None) or voice_stt.active_ear()
+
+
+def listen(audio: bytes, provider: str | None = None, bridge_url: str | None = None) -> dict:
+    """STT step. In-process (same venv) so no extra hop. The ear defaults to the SELECTED provider
+    (bridge /api/rhm-config .stt via default_ear), not a literal 'local' — one source of selection.
+    Returns voice.stt.transcribe's shape: {"text":..., "provider":...}. Fails loud if the chosen ear
+    is down / not installed (the RuntimeError from transcribe), per fail-loud (no silent fallback)."""
+    ear = provider or default_ear(bridge_url)
+    return voice_stt.transcribe(audio, provider=ear)
 
 
 def think(message: str, graph_id: str = "codebase", focus: dict | None = None,
@@ -107,7 +128,7 @@ def select_persona(persona_id: str, bridge_url: str | None = None) -> dict:
 # --- one turn, and the hooks ---
 
 def loop_turn(audio: bytes, persona_id: str, *, graph_id: str = "codebase",
-              stt_provider: str = "local", bridge_url: str | None = None,
+              stt_provider: str | None = None, bridge_url: str | None = None,
               on_transcript=None, on_reply=None) -> dict:
     """ONE full turn of the circuit for a given character:
         audio (a finished utterance) → transcript → brain reply → wav in that character's voice.
@@ -116,7 +137,7 @@ def loop_turn(audio: bytes, persona_id: str, *, graph_id: str = "codebase",
     Endpointing (knowing the utterance finished) is the CALLER's job via the turn-detection hooks below;
     by the time loop_turn is called, `audio` is a complete thought."""
     p = voice_personas.get_persona(persona_id)              # fail loud on unknown character
-    heard = listen(audio, provider=stt_provider)
+    heard = listen(audio, provider=stt_provider, bridge_url=bridge_url)
     transcript = heard.get("text", "")
     if on_transcript:
         on_transcript(transcript)
