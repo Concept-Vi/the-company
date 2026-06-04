@@ -63,6 +63,7 @@ flowchart TD
 | `panels/` | brain-authored declarative UI panels (JSON) | [[panels — constitution]] | — |
 | `tests/` | acceptance suites (the proofs) | [[tests — constitution]] | — |
 | `docs/` | meta-docs about the repo-as-knowledge-space | [[docs — constitution]] | — |
+| `ops/` | the service **command center** — see + run the runtime (`company` console + `services.json`); first of more | [[ops — constitution]] | — |
 
 > [!note] Constitution links use **aliases**, not filenames (every file is `AGENTS.md`). The alias `"<module> — constitution"` lives in each note's frontmatter — see [[Vault Conventions]]. Links to `panels/ · tests/` etc. resolve once [[Vault Conventions|the convention]] is applied to those folders.
 
