@@ -17,7 +17,7 @@ The current status of **company** (the Vi composition suite), self-contained so 
 
 ### Acceptance suites (the convergence record)
 <!--SUITES:START--> (auto-maintained by Suite.refresh_self_description — do not hand-edit)
-- 39 acceptance suites: agency_acceptance, compose_acceptance, configs_acceptance, consult_acceptance, copresence_acceptance, drift_acceptance, e1_acceptance, e2_review_fixes, e2_runtime, e3_fabric, e3_integration, e4_registry, e5_suite, e6_governance, events_acceptance, extension_acceptance, first_purpose, hardening_acceptance, inbox_acceptance, layers_acceptance, mcp_use, modes_acceptance, panel_acceptance, polr_acceptance, portal_acceptance, react_acceptance, rhm_acceptance, rhm_action_acceptance, self_growth, selfmod_acceptance, show_acceptance, trajectory_acceptance, twin_acceptance, volatile_acceptance, walking_skeleton, wire_acceptance, wire_adversarial, wire_harden_acceptance, wire_loop_acceptance
+- 40 acceptance suites: agency_acceptance, compose_acceptance, configs_acceptance, consult_acceptance, copresence_acceptance, decision_lineage_acceptance, drift_acceptance, e1_acceptance, e2_review_fixes, e2_runtime, e3_fabric, e3_integration, e4_registry, e5_suite, e6_governance, events_acceptance, extension_acceptance, first_purpose, hardening_acceptance, inbox_acceptance, layers_acceptance, mcp_use, modes_acceptance, panel_acceptance, polr_acceptance, portal_acceptance, react_acceptance, rhm_acceptance, rhm_action_acceptance, self_growth, selfmod_acceptance, show_acceptance, trajectory_acceptance, twin_acceptance, volatile_acceptance, walking_skeleton, wire_acceptance, wire_adversarial, wire_harden_acceptance, wire_loop_acceptance
 <!--SUITES:END-->
 
 > [!warning] Keeping this file current is part of every change

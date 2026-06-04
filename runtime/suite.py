@@ -2187,9 +2187,12 @@ class Suite:
 
     def decision_view(self, sid: str) -> dict:
         """A decision as a VIEW derived from the event log (I2): its full trajectory — proposed →
-        framed → resolved (with the why) — reconstructed in order. Auditable + replayable."""
+        framed → resolved (with the why) — reconstructed in order. Auditable + replayable.
+        Reads the WHOLE event tail (events_since(-1)) and filters on `surfaced`, mirroring
+        session_view: an audit must NOT silently truncate (fail-loud). A long-lived decision whose
+        lineage spans more than the old 999-event window is now returned WHOLE, not clipped."""
         d = self.inbox.get(sid)
-        evs = sorted((e for e in self.store.recent_events(999) if e.get("surfaced") == sid),
+        evs = sorted((e for e in self.store.events_since(-1) if e.get("surfaced") == sid),
                      key=lambda e: e.get("seq", 0))                # chronological path, not endpoint
         return {"id": sid, "decision": d, "trajectory": evs}
 
