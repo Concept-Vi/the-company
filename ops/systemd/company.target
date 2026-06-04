@@ -1,0 +1,9 @@
+[Unit]
+Description=The Company — all local services (canvas, bridge, brain, voice)
+Documentation=file:///home/tim/company/ops/STARTUP.md
+# The single place everything starts from:  systemctl --user start company.target
+# Members are wired via each service's WantedBy=company.target (new) or add-wants (existing).
+After=network.target
+
+[Install]
+WantedBy=default.target

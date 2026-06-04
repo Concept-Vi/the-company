@@ -1,0 +1,19 @@
+[Unit]
+Description=Company TTS — Kokoro voice service (:4123)
+After=network.target
+PartOf=company.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/tim/company
+# HF Xet backend stalls on this network — force classic HTTP for any model fetch
+Environment=HF_HUB_DISABLE_XET=1
+ExecStart=/home/tim/company/.voice-venv/bin/python voice/tts_service.py 4123
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=company-tts-kokoro
+
+[Install]
+WantedBy=company.target

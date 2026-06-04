@@ -1,0 +1,19 @@
+[Unit]
+Description=Company canvas — the operable surface (vite dev server on :5173)
+After=network.target
+PartOf=company.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/tim/company/canvas/app
+# node lives under linuxbrew; vite needs it on PATH
+Environment=PATH=/home/linuxbrew/.linuxbrew/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/tim/company/canvas/app/node_modules/.bin/vite --host 127.0.0.1 --port 5173
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=company-canvas
+
+[Install]
+WantedBy=company.target

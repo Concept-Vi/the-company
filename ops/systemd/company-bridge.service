@@ -1,0 +1,17 @@
+[Unit]
+Description=Company bridge — UI face of the Suite (HTTP API on :8770)
+After=network.target
+PartOf=company.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/tim/company
+ExecStart=/home/tim/company/.venv/bin/python runtime/bridge.py 8770
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=company-bridge
+
+[Install]
+WantedBy=company.target
