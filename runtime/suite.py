@@ -36,6 +36,46 @@ def _strip_fences(code: str) -> str:
 
 
 class Suite:
+    # The STATE-TYPE REGISTRY (Possibility Space Block 19) — node "state" is a REGISTERED, single-source
+    # set, NOT a hardcoded enum. `state()` reads its status-id strings from HERE (one source), and
+    # `capabilities().node_states` exposes the set so the surface renders the vocabulary from the
+    # registry (registry-is-truth) instead of hardcoding it. Each entry:
+    #   id          — the status string `state()` reports for a node
+    #   label       — short human label for the surface
+    #   means       — what the status means (the surface shows this; descriptive, not executable)
+    #   applies_to  — which RESOLVE-MODE this status can apply to ('compute' = executing nodes;
+    #                 'reference' = reference-resolved nodes i.e. portals). This SCOPES the vocabulary:
+    #                 executing nodes keep idle/ran/cached/stuck; reference nodes get live/empty.
+    #   derived_when— the condition under which `state()` derives this status (descriptive metadata for
+    #                 the surface; the derivation logic lives in `state()`, this is not an interpreter).
+    # Step A: the four EXISTING statuses are lifted here UNCHANGED (compute-scoped) — their derivation in
+    # state() is byte-for-byte as before, proven by the existing suites staying green.
+    # Step B: two ADDITIVE states for reference-resolved nodes (portals): `live` (ref resolves to content)
+    # and `empty` (ref is None/dangling/unresolved) — so a portal stops mis-reporting idle/cached on
+    # reload. Executing nodes are UNAFFECTED (scoped by applies_to).
+    NODE_STATES = (
+        {"id": "idle", "label": "Idle", "applies_to": ("compute",),
+         "means": "has never produced a result and holds none",
+         "derived_when": "no fresh run result and the node's output address does not resolve"},
+        {"id": "ran", "label": "Ran", "applies_to": ("compute",),
+         "means": "fired on the most recent run and produced a fresh result",
+         "derived_when": "the node id is in the run result's `ran` set"},
+        {"id": "cached", "label": "Cached", "applies_to": ("compute",),
+         "means": "output already existed, so the memo gate skipped re-running it (the GPU/clock guard)",
+         "derived_when": "the node id is in the run result's `skipped` set, OR (on reload) its output "
+                         "address resolves to a stored result"},
+        {"id": "stuck", "label": "Stuck", "applies_to": ("compute",),
+         "means": "could not fire because a required input never resolved (not a pruned branch)",
+         "derived_when": "the node id is in the run result's `stuck` set, OR (on reload) the most recent "
+                         "run event for the graph listed it stuck and it still holds no result"},
+        {"id": "live", "label": "Live", "applies_to": ("reference",),
+         "means": "a live window onto its reference address, currently resolving to content",
+         "derived_when": "RESOLVE='reference' and head(config.ref) resolves to a stored content hash"},
+        {"id": "empty", "label": "Empty", "applies_to": ("reference",),
+         "means": "a live window whose reference is unset, dangling, or not yet resolvable",
+         "derived_when": "RESOLVE='reference' and config.ref is empty/None or head(ref) does not resolve"},
+    )
+
     def __init__(self, store: FsStore, registry: NodeRegistry, nodes_dir: str | None = None):
         self.store = store
         self.registry = registry
@@ -158,6 +198,11 @@ class Suite:
             # {mode: directive}; an older FE that ignores it is unaffected.
             "mode_directives": dict(self.MODE_DIRECTIVES),
             "rhm_verbs": list(self.RHM_VERBS),
+            # The STATE-TYPE REGISTRY exposed (registry-is-truth): WHAT node-states exist + their meaning
+            # + which resolve-mode each applies to, so the surface renders the status vocabulary from
+            # here instead of hardcoding idle/ran/cached/stuck/live/empty. Additive key; an older FE that
+            # ignores it is unaffected (the four executing statuses derive exactly as before).
+            "node_states": [dict(s, applies_to=list(s["applies_to"])) for s in self.NODE_STATES],
             "panels": [p.get("id") for p in self.list_panels()],
             "panel_field_targets": list(self.PANEL_TARGETS),
             "api_verbs": ["/api/run", "/api/now", "/api/chat", "/api/graph", "/api/graphs",
@@ -421,36 +466,46 @@ class Suite:
             logical = f"run://{g.id}/{n.id}" if branch == "main" else f"run://{g.id}/{n.id}@{branch}"
             mod = self.registry.get(n.type)
             if getattr(mod, "RESOLVE", "compute") == "reference":
-                # live window: resolve the referenced address NOW (window, not a copy)
+                # REFERENCE-RESOLVED (portals): a live window onto another address, never computed and
+                # never fired (the scheduler SKIPS it). Resolve config.ref NOW (window, not a copy) and
+                # derive its state from the STATE-TYPE REGISTRY's reference-scoped vocabulary
+                # (NODE_STATES, applies_to='reference') — `live` if the ref resolves to content, `empty`
+                # otherwise. This is hoisted ABOVE the result/reload split on purpose: a portal never
+                # legitimately gets a run-status (it has no run), so routing it through ONE branch makes
+                # the fresh-result path and the reload path AGREE by construction — which is exactly why
+                # the old idle↔cached flip-on-reload (idle on the result path, cached on reload) is gone.
+                # Executing nodes (RESOLVE='compute') are UNAFFECTED — they fall through to the original
+                # four-status derivation below, byte-for-byte (Step A, no behaviour change).
                 ref = n.config.get("ref") or ""
                 cas = self.store.head(ref) if ref else None
+                status = "live" if cas else "empty"
             else:
                 cas = self.store.head(logical)
-            if result:
-                # T3-STATUS: `stuck` is a REAL backend node status (one source of truth), not a
-                # client-only overlay. The scheduler already reports which nodes could not fire because
-                # an input never resolved (scheduler result['stuck']); surface it here so the FE reads
-                # it from the backend instead of maintaining a parallel client-side `stuck` re-applied
-                # from events after every reload. Checked BEFORE ran/cached/idle so a stuck node is
-                # never mislabeled idle. (be-half → at most needs-tim until the FE drops its overlay.)
-                status = ("stuck" if n.id in result.get("stuck", [])
-                          else "ran" if n.id in result["ran"]
-                          else "cached" if n.id in result["skipped"] else "idle")
-            else:
-                # D5-be (persisted run-status, in-territory): with no fresh run result, DERIVE status
-                # from the store — a node whose output address resolves has a cached result, so report
-                # 'cached' instead of resetting to 'idle' on reload. Fail-loud-legible: the surface
-                # never claims "nothing happened" for a node that actually holds a result. T3-STATUS:
-                # `stuck` is run-relative (an input that never resolved on the LAST run), so without a
-                # fresh result we derive from the most recent run event for THIS graph that listed the
-                # node as stuck — keeping `stuck` backend-authoritative across a reload (what the FE used
-                # to re-derive client-side). A node that since resolved (cas present) is never stuck.
-                if cas:
-                    status = "cached"
-                elif n.id in self._last_run_stuck(g.id):
-                    status = "stuck"
+                if result:
+                    # T3-STATUS: `stuck` is a REAL backend node status (one source of truth), not a
+                    # client-only overlay. The scheduler already reports which nodes could not fire because
+                    # an input never resolved (scheduler result['stuck']); surface it here so the FE reads
+                    # it from the backend instead of maintaining a parallel client-side `stuck` re-applied
+                    # from events after every reload. Checked BEFORE ran/cached/idle so a stuck node is
+                    # never mislabeled idle. (be-half → at most needs-tim until the FE drops its overlay.)
+                    status = ("stuck" if n.id in result.get("stuck", [])
+                              else "ran" if n.id in result["ran"]
+                              else "cached" if n.id in result["skipped"] else "idle")
                 else:
-                    status = "idle"
+                    # D5-be (persisted run-status, in-territory): with no fresh run result, DERIVE status
+                    # from the store — a node whose output address resolves has a cached result, so report
+                    # 'cached' instead of resetting to 'idle' on reload. Fail-loud-legible: the surface
+                    # never claims "nothing happened" for a node that actually holds a result. T3-STATUS:
+                    # `stuck` is run-relative (an input that never resolved on the LAST run), so without a
+                    # fresh result we derive from the most recent run event for THIS graph that listed the
+                    # node as stuck — keeping `stuck` backend-authoritative across a reload (what the FE used
+                    # to re-derive client-side). A node that since resolved (cas present) is never stuck.
+                    if cas:
+                        status = "cached"
+                    elif n.id in self._last_run_stuck(g.id):
+                        status = "stuck"
+                    else:
+                        status = "idle"
             nt = self.registry.types.get(n.type)
             nodes.append({
                 "id": n.id, "type": n.type, "config": n.config,
