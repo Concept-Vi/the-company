@@ -136,6 +136,10 @@ class Suite:
             "node_types": sorted(self.registry.types),
             "models": self.available_models(),
             "modes": list(self.MODES),
+            # registry-is-truth: the per-mode behaviour text lives in ONE place (MODE_DIRECTIVES) and is
+            # served here so the surface reads it rather than keeping a parallel hardcoded copy. The modes
+            # themselves are already registered above; this exposes their directive alongside the name.
+            "mode_directives": dict(self.MODE_DIRECTIVES),
             "rhm_verbs": list(self.RHM_VERBS),
             "panels": [p.get("id") for p in self.list_panels()],
             "panel_field_targets": list(self.PANEL_TARGETS),
