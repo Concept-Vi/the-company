@@ -26,6 +26,16 @@ DEFAULT_BRAIN = os.environ.get("COMPANY_BRAIN", "deepseek-v4-pro:cloud")
 DEFAULT_EMBED_URL = os.environ.get("COMPANY_EMBED_URL", "http://localhost:8001/v1")
 DEFAULT_EMBED_MODEL = os.environ.get("COMPANY_EMBED_MODEL", "BAAI/bge-m3")
 
+# Timeouts (D2 configurable; was an orphaned literal in transport.py). Levers SPLIT, not co-bumped
+# (worst-case wall-clock = retries × timeout): a longer TIMEOUT fixes slow-but-succeeding cloud calls;
+# jittered RETRY (client.py) fixes transient hard failures. CLOUD ceiling is for batch/cloud-brain nodes.
+DEFAULT_TIMEOUT = int(os.environ.get("COMPANY_FABRIC_TIMEOUT", "180"))
+DEFAULT_CLOUD_TIMEOUT = int(os.environ.get("COMPANY_CLOUD_TIMEOUT", "300"))
+
+# Embedder dim contract (rule 4): BGE-M3 = 1024-dim. Config-driven, not a node literal — a
+# wrong-length vector FAILS LOUD, never flows through as a bad cosine.
+DEFAULT_EMBED_DIM = int(os.environ.get("COMPANY_EMBED_DIM", "1024"))
+
 FORBIDDEN = ("gemini",)   # hard constraint
 
 

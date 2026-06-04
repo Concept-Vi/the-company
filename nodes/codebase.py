@@ -23,14 +23,14 @@ DEFAULT_GLOBS = ["AGENTS.md", "MAP.md", "README.md",
 CONFIG = {
     "root":      {"type": "string", "label": "Repo root",        "default": ""},
     "globs":     {"type": "text",   "label": "Globs",            "default": DEFAULT_GLOBS},
-    "max_chars": {"type": "number", "label": "Max chars",        "default": 400000, "min": 1},
+    "max_chars": {"type": "number", "label": "Max chars",        "default": 600000, "min": 1},
 }
 
 
 def run(inputs: dict, config: dict):
     root = config.get("root") or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # ~/company
     globs = config.get("globs", DEFAULT_GLOBS)
-    max_chars = int(config.get("max_chars", 400000))   # bumped as the repo grew (was 160k); past this, retrieval
+    max_chars = int(config.get("max_chars", 600000))   # STOPGAP bump (160k→400k→600k as the repo grew). The REAL
     parts, total = [], 0
     for g in globs:
         for p in sorted(glob.glob(os.path.join(root, g))):

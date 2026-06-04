@@ -20,6 +20,8 @@ CONFIG = {
     "max_tokens":  {"type": "number", "label": "Max tokens",    "default": None, "min": 1},
     "top_p":       {"type": "number", "label": "Top-p",         "default": None, "min": 0, "max": 1, "step": 0.05},
     "retries":     {"type": "number", "label": "Retries",       "default": 3,    "min": 0, "max": 10},
+    # Single-call ceiling. Default = cloud timeout (batch node can wait out a slow cloud queue).
+    "timeout":     {"type": "number", "label": "Timeout (s)",   "default": fcfg.DEFAULT_CLOUD_TIMEOUT, "min": 1},
 }
 
 
@@ -30,7 +32,8 @@ def run(inputs: dict, config: dict):
     system = config.get("system")
     messages = ([{"role": "system", "content": system}] if system else []) + \
                [{"role": "user", "content": str(inputs.get("prompt", ""))}]
-    t = transport.openai_transport(base_url=base_url)
+    timeout = config.get("timeout", fcfg.DEFAULT_CLOUD_TIMEOUT)
+    t = transport.openai_transport(base_url=base_url, timeout=timeout)
     passthru = {k: config[k] for k in ("temperature", "max_tokens", "top_p") if k in config}
     return client.complete(t, messages, model=model,
                            retries=config.get("retries", 3), **passthru)

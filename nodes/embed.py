@@ -13,7 +13,7 @@ type-check passes Vector↔Vector and rejects Vector↔Text, which is correct.)
 # Module-level: CONFIG defaults reference these constants (CONFIG is evaluated at import).
 # fabric.config imports only `os`, so this is safe during node discovery. One source — never
 # hardcode the model literal here (that would duplicate the constant + violate one-source).
-from fabric.config import DEFAULT_EMBED_URL, DEFAULT_EMBED_MODEL
+from fabric.config import DEFAULT_EMBED_URL, DEFAULT_EMBED_MODEL, DEFAULT_EMBED_DIM
 
 VERSION = "1"
 KIND = "process"
@@ -29,6 +29,9 @@ CONFIG = {
                  "options_from": "embed_models"},
     "base_url": {"type": "string", "label": "Endpoint", "default": DEFAULT_EMBED_URL},
     "retries":  {"type": "number", "label": "Retries", "default": 3, "min": 0, "max": 10},
+    # Expected vector dim — ENFORCED (rule 4): wrong-length vector FAILS LOUD, not a bad cosine.
+    # Config-driven (DEFAULT_EMBED_DIM, BGE-M3=1024), not a run() literal; settable per embedder.
+    "dim":      {"type": "number", "label": "Expected dim", "default": DEFAULT_EMBED_DIM, "min": 1},
 }
 
 
@@ -37,7 +40,9 @@ def run(inputs: dict, config: dict):
     model = config.get("model", fcfg.DEFAULT_EMBED_MODEL)
     base_url = config.get("base_url", fcfg.DEFAULT_EMBED_URL)
     retries = config.get("retries", 3)
+    dim = config.get("dim", fcfg.DEFAULT_EMBED_DIM)
     t = transport.openai_embeddings_transport(base_url=base_url)
-    # complete_embeddings returns one vector per input; we send a single text → take [0].
-    # A JSON-serializable list[float] (the Vector). Fail-loud is inside complete_embeddings.
-    return client.complete_embeddings(t, [str(inputs.get("text", ""))], model=model, retries=retries)[0]
+    # One vector per input; single text → [0]. Passing dim= ENFORCES the dim contract inside
+    # complete_embeddings (wrong-length → FabricError, never a silent bad cosine).
+    return client.complete_embeddings(t, [str(inputs.get("text", ""))], model=model,
+                                      dim=dim, retries=retries)[0]

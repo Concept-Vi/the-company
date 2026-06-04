@@ -19,6 +19,8 @@ CONFIG = {
     "system":   {"type": "text",   "label": "System prompt", "default": _SYSTEM},
     "base_url": {"type": "string", "label": "Endpoint",      "default": fcfg.DEFAULT_BASE_URL},
     "retries":  {"type": "number", "label": "Retries",       "default": 3, "min": 0, "max": 10},
+    # Single-call ceiling. Default = cloud timeout (batch node over large context can wait out a queue).
+    "timeout":  {"type": "number", "label": "Timeout (s)",   "default": fcfg.DEFAULT_CLOUD_TIMEOUT, "min": 1},
 }
 
 
@@ -32,5 +34,6 @@ def run(inputs: dict, config: dict):
         {"role": "system", "content": system},
         {"role": "user", "content": f"QUESTION:\n{question}\n\nCODEBASE:\n{context}"},
     ]
-    t = transport.openai_transport(base_url=config.get("base_url", fcfg.DEFAULT_BASE_URL))
+    timeout = config.get("timeout", fcfg.DEFAULT_CLOUD_TIMEOUT)
+    t = transport.openai_transport(base_url=config.get("base_url", fcfg.DEFAULT_BASE_URL), timeout=timeout)
     return client.complete(t, messages, model=model, retries=config.get("retries", 3))

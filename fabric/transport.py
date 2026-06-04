@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import urllib.request
 
-from fabric.config import DEFAULT_BASE_URL, DEFAULT_EMBED_URL, forbid_gemini
+from fabric.config import DEFAULT_BASE_URL, DEFAULT_EMBED_URL, DEFAULT_TIMEOUT, forbid_gemini
 
 
 def list_models(base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama", timeout: int = 8) -> list:
@@ -25,8 +25,12 @@ def list_models(base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama", timeo
     return [m for m in ids if "gemini" not in m.lower()]
 
 
-def openai_transport(base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama", timeout: int = 120):
-    """Build a transport bound to an OpenAI-compatible endpoint."""
+def openai_transport(base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama", timeout: int = DEFAULT_TIMEOUT):
+    """Build a transport bound to an OpenAI-compatible endpoint.
+
+    `timeout` defaults from config (DEFAULT_TIMEOUT — not a bare literal; D2). The single-call
+    ceiling: long enough a slow-but-progressing cloud call succeeds vs being killed + re-queued.
+    A batch caller may override with DEFAULT_CLOUD_TIMEOUT."""
     def transport(model: str, messages: list, **opts) -> str:
         forbid_gemini(model)                                   # hard constraint, fail loud
         body = {"model": model, "messages": messages, "stream": False}
@@ -47,13 +51,16 @@ def openai_transport(base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama", 
     return transport
 
 
-def openai_embeddings_transport(base_url: str = DEFAULT_EMBED_URL, api_key: str = "none", timeout: int = 60):
+def openai_embeddings_transport(base_url: str = DEFAULT_EMBED_URL, api_key: str = "none", timeout: int = DEFAULT_TIMEOUT):
     """Build an EMBEDDINGS transport bound to an OpenAI-compatible /v1/embeddings endpoint.
 
     A SIBLING of openai_transport (a vector response is not a chat response). The contract is
     `(model, inputs: list[str]) -> list[list[float]]` — fabric.client.complete_embeddings wraps
     it with vector guards (NOT the text-shaped guards of complete()). Repointable by base_url
-    (BGE-M3 @ :8001 is the only live, dim-grounded one). NO Gemini (enforced first, fail loud)."""
+    (BGE-M3 @ :8001 is the only live, dim-grounded one). NO Gemini (enforced first, fail loud).
+
+    `timeout` defaults from config (DEFAULT_TIMEOUT — config-driven). Endpoint is LOCAL (:8001),
+    not high-variance cloud, so it stays MODERATE — deliberately not the cloud ceiling."""
     def transport(model: str, inputs: list) -> list:
         forbid_gemini(model)                                   # hard constraint, fail loud, FIRST
         body = {"model": model, "input": inputs}               # OpenAI /v1/embeddings shape
