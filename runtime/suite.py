@@ -2202,27 +2202,98 @@ class Suite:
                 "to apply: a self-change must be git-revertible (the safety net), or it does not go live.")
         return sha
 
-    def last_self_change(self) -> dict | None:
-        """The most recent self-applied change (for one-click rollback + audit)."""
+    @staticmethod
+    def _is_revert_subject(subject: str) -> bool:
+        """A `git revert` of a self-apply produces subject `Revert "[self-apply] ..."` — which STILL
+        contains `[self-apply]`, so `--grep=[self-apply]` matches the REVERT itself. So an undo is NOT
+        a change: distinguish it by subject prefix. (Finding #2: prevents 'revert the revert' — and a
+        revert's --invert-grep can't be expressed alongside the positive grep, so we tag in Python.)"""
+        return (subject or "").startswith('Revert "[self-apply]')
+
+    def _self_change_changed_files(self, sha: str) -> list[str]:
+        """The files a self-apply commit touched — git ground truth (`git show --name-only`), so the
+        record surfaces WHICH files it changed (Finding #4; mirrors the wire's `changed_files` manifest
+        and the very call selfmod_acceptance asserts at HEAD). Tolerant: an unreadable commit reads as
+        no files (a manifest read must never break the audit log it feeds)."""
         import subprocess
         try:
-            out = subprocess.run(["git", "-C", self._repo_root, "log", "--grep=[self-apply]",
-                                  "--fixed-strings", "-1", "--format=%H%x00%s"],
-                                 check=True, capture_output=True, text=True).stdout.strip()
+            out = subprocess.run(
+                ["git", "-C", self._repo_root, "show", "--name-only", "--format=", sha],
+                check=True, capture_output=True, text=True).stdout
         except Exception:
-            return None
-        if not out:
-            return None
-        sha, _, subject = out.partition("\x00")
-        return {"sha": sha, "subject": subject}
+            return []
+        return [ln.strip() for ln in out.splitlines() if ln.strip()]
+
+    def _self_change_records(self, limit: int = 50) -> list[dict]:
+        """The shared reader behind the audit log + last_self_change (Finding #1/#2/#4). Reads the
+        `[self-apply]` commits newest-first and tags each: {sha, subject, ts (committer ISO date),
+        is_revert (Finding #2), changed_files (Finding #4)}. Reverts are INCLUDED but MARKED — the log
+        shows the full undo history; `last_self_change` filters them out. Empty list on any git failure
+        (a read, not a mutation — degrade to empty, never raise here)."""
+        import subprocess
+        try:
+            out = subprocess.run(
+                ["git", "-C", self._repo_root, "log", "--grep=[self-apply]", "--fixed-strings",
+                 "-n", str(max(1, int(limit))), "--format=%H%x00%cI%x00%s"],
+                check=True, capture_output=True, text=True).stdout.strip()
+        except Exception:
+            return []
+        records = []
+        for line in out.splitlines():
+            if not line:
+                continue
+            sha, _, rest = line.partition("\x00")
+            ts, _, subject = rest.partition("\x00")
+            records.append({
+                "sha": sha, "subject": subject, "ts": ts,
+                "is_revert": self._is_revert_subject(subject),
+                "changed_files": self._self_change_changed_files(sha),
+            })
+        return records
+
+    def self_change_log(self, limit: int = 50) -> list[dict]:
+        """The multi-entry self-modification audit ledger (Finding #1): the `[self-apply]` commit
+        history newest-first, each entry carrying sha · subject · timestamp · changed_files (Finding
+        #4) · is_revert (Finding #2 — a revert is surfaced DISTINCTLY, not hidden and not mistaken for
+        a change). Reachable through a real face (`GET /api/self-change-log`). Was: only the single
+        latest (last_self_change) existed — no ledger."""
+        return self._self_change_records(limit)
+
+    def last_self_change(self) -> dict | None:
+        """The most recent self-applied CHANGE (for one-click rollback + audit) — EXCLUDING reverts
+        (Finding #2). A `git revert` of a self-apply still matches `--grep=[self-apply]`, so the naive
+        `-1` returned the revert itself → the UI offered to 'revert the revert' and couldn't tell an
+        undo from a change. Now it scans the tagged log and returns the first NON-revert record, so it
+        reflects the true last *change*. Keeps the {sha, subject} keys callers/the bridge read, and adds
+        ts + changed_files (additive)."""
+        for rec in self._self_change_records(50):
+            if not rec["is_revert"]:
+                return rec
+        return None
 
     def revert_self_change(self, sha: str) -> dict:
         """RECOVERY: roll back a self-applied change via git (itself reversible). OPERATOR-only.
         Re-discovers so the capability change reflects immediately. The property that makes
-        self-modification acceptable — a bad self-edit is bounded, never bricking."""
+        self-modification acceptable — a bad self-edit is bounded, never bricking.
+
+        Finding #3 — CONFLICT-AWARE: reverting a NON-TIP commit can conflict (e.g. a later commit
+        touched the same file). The old `check=True` raised mid-revert, leaving the repo in a dirty,
+        half-reverted state. Now: run the revert WITHOUT check, and on a non-zero exit (conflict or
+        other failure) `git revert --abort` to leave the repo CLEAN, then raise a LEGIBLE fail-loud
+        error naming the sha — never a silent swallow, never a repo left mid-revert."""
         import subprocess
-        subprocess.run(["git", "-C", self._repo_root, "revert", "--no-edit", sha],
-                       check=True, capture_output=True)
+        proc = subprocess.run(["git", "-C", self._repo_root, "revert", "--no-edit", sha],
+                              capture_output=True, text=True)
+        if proc.returncode != 0:
+            # leave the repo CLEAN — abort the half-applied revert (best-effort; a fresh repo with
+            # nothing to abort just no-ops). Then fail loud with a legible reason (no silent swallow).
+            subprocess.run(["git", "-C", self._repo_root, "revert", "--abort"],
+                           capture_output=True, text=True)
+            detail = (proc.stderr.strip() or proc.stdout.strip())[:400]
+            raise RuntimeError(
+                f"revert of self-change {sha[:8]} FAILED (likely a conflict — a later commit touched "
+                f"the same files, so this non-tip revert cannot apply cleanly). Aborted the revert; the "
+                f"repo is left CLEAN at its prior HEAD (no mid-revert state). git said: {detail}")
         self.registry.rediscover([self.nodes_dir])          # rebuild from FS so a removed file un-registers
         head = subprocess.run(["git", "-C", self._repo_root, "rev-parse", "HEAD"],
                               capture_output=True, text=True).stdout.strip()

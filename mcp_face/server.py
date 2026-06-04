@@ -115,6 +115,15 @@ def list_surfaced() -> list:
 
 
 @mcp.tool()
+def self_change_log(limit: int = 50) -> list:
+    """The self-modification AUDIT LEDGER — the [self-apply] commit history newest-first, each entry
+    with sha · subject · timestamp · changed_files (which files it touched) · is_revert (a revert is
+    surfaced distinctly, never mistaken for a change). For one-click rollback + audit of the system's
+    own self-edits; revert is operator-only (off this face)."""
+    return SUITE.self_change_log(limit)
+
+
+@mcp.tool()
 def get_events(limit: int = 60) -> list:
     """The captured trajectory — recent actions (run · create · connect · grow · approve), newest-first."""
     return SUITE.events(limit)

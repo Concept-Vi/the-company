@@ -125,6 +125,8 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.inbox_lanes()))
             elif path == "/api/last-change":
                 self._send(200, json.dumps(SUITE.last_self_change() or {}))
+            elif path == "/api/self-change-log":           # the self-modification AUDIT LEDGER (Finding #1)
+                self._send(200, json.dumps(SUITE.self_change_log(int(q.get("limit", 50)))))
             elif path == "/api/panels":
                 self._send(200, json.dumps(SUITE.list_panels()))
             elif path == "/api/capabilities":
