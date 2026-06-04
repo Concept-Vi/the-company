@@ -151,11 +151,11 @@ class Suite:
             "node_types": sorted(self.registry.types),
             "models": self.available_models(),
             "modes": list(self.MODES),
-            # T3-MODE (backend half): expose the mode DIRECTIVES (the prose behind each mode) so the FE
-            # reads them from the registry instead of hand-copying MODE_DIRECTIVES into a parallel
-            # MODE_DESC (the PoLR violation: registry is the one source of truth). The FE deletes its
-            # copy and reads capabilities().mode_directives. (be-half → at most needs-tim until the FE
-            # consumes it.) Additive map {mode: directive}; an older FE that ignores it is unaffected.
+            # T3-MODE (COMPLETE): expose the mode DIRECTIVES (the prose behind each mode) from the one
+            # source (MODE_DIRECTIVES) so the surface reads them instead of hand-copying. Backend half
+            # (this line) + FE half (App.tsx deletes its MODE_DESC copy and reads capabilities().
+            # mode_directives) are now BOTH merged — registry-is-truth, PoLR honoured. Additive map
+            # {mode: directive}; an older FE that ignores it is unaffected.
             "mode_directives": dict(self.MODE_DIRECTIVES),
             "rhm_verbs": list(self.RHM_VERBS),
             "panels": [p.get("id") for p in self.list_panels()],
@@ -2495,9 +2495,12 @@ class Suite:
 
     def decision_view(self, sid: str) -> dict:
         """A decision as a VIEW derived from the event log (I2): its full trajectory — proposed →
-        framed → resolved (with the why) — reconstructed in order. Auditable + replayable."""
+        framed → resolved (with the why) — reconstructed in order. Auditable + replayable.
+        Reads the WHOLE event tail (events_since(-1)) and filters on `surfaced`, mirroring
+        session_view: an audit must NOT silently truncate (fail-loud). A long-lived decision whose
+        lineage spans more than the old 999-event window is now returned WHOLE, not clipped."""
         d = self.inbox.get(sid)
-        evs = sorted((e for e in self.store.recent_events(999) if e.get("surfaced") == sid),
+        evs = sorted((e for e in self.store.events_since(-1) if e.get("surfaced") == sid),
                      key=lambda e: e.get("seq", 0))                # chronological path, not endpoint
         return {"id": sid, "decision": d, "trajectory": evs}
 

@@ -39,6 +39,10 @@ const api = {
   apply: (id: string) =>
     fetch('/api/apply', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(r => r.json()),
   objectInfo: () => fetch('/api/object_info').then(r => r.json()),
+  // registry-is-truth: WHAT EXISTS (node-types, models, modes, mode_directives, verbs, panels). The
+  // presence-mode descriptions are read from capabilities().mode_directives — one backend source, no
+  // parallel hardcoded copy on the surface.
+  capabilities: () => fetch('/api/capabilities').then(r => r.json()),
   addNode: (type: string, config: any = {}) =>
     fetch('/api/node', { method: 'POST', headers: J, body: JSON.stringify({ type, config }) }).then(r => r.json()),
   connect: (e: any) =>
@@ -87,21 +91,10 @@ const api = {
 }
 
 const MODES = ['listening', 'text-only', 'background', 'focus', 'walkthrough', 'watch-and-react', 'decide-for-me', 'off']
-// U11: short, legible descriptions of each presence mode (a newcomer can tell them apart). These mirror
-// the backend's MODE_DIRECTIVES (runtime/suite.py) faithfully — condensed for a tooltip. NOTE: the
-// directives are NOT exposed via /api today (capabilities() returns mode NAMES only), so these are a
-// client-side presentation of backend truth, not authored-from-registry; flagged in the lane report
-// (surfacing MODE_DIRECTIVES via capabilities() would let the UI read them — a backend-lane follow-up).
-const MODE_DESC: Record<string, string> = {
-  'listening': 'Conversational and present; responds fully (voice in/out).',
-  'text-only': 'Responds in text, concisely, only to what is addressed.',
-  'background': 'Minimal — surfaces only what genuinely needs you; otherwise a one-line ack.',
-  'focus': 'You are in deep work — extremely brief (a line or two), no elaboration unless asked.',
-  'walkthrough': 'Actively guides — narrates each step and directs your attention.',
-  'watch-and-react': 'Observes over your shoulder; comments only when relevant, briefly.',
-  'decide-for-me': 'Acts on the reversible/AUTO classes itself (deterministic by consequence); still cannot self-approve — anything needing approval is surfaced.',
-  'off': 'The right-hand-man is silent — no responses, no ambient comments.',
-}
+// U11: the per-mode descriptions (so a newcomer can tell them apart in the dropdown). registry-is-truth:
+// these come from capabilities().mode_directives (backend MODE_DIRECTIVES in runtime/suite.py is the ONE
+// source) — read into Hud state at boot, NOT a parallel hardcoded copy. A mode missing from the snapshot
+// renders an empty string (safe fallback), never a stale guess.
 
 // ---------------------------------------------------------------- module-scoped shared registries
 // The node SHAPE (rendered inside tldraw) cannot reach Hud-local React state, so the data it needs to
@@ -607,6 +600,9 @@ function Hud() {
   const [growMsg, setGrowMsg] = useState('the brain writes it · you approve · it goes live.')
   const [workshop, setWorkshop] = useState<any>(null)
   const [oinfo, setOinfo] = useState<any>({})
+  // registry-is-truth: per-mode descriptions read from capabilities().mode_directives (backend is the one
+  // source). Default {} → every lookup falls back to '' until the snapshot loads (safe, never a stale guess).
+  const [modeDesc, setModeDesc] = useState<Record<string, string>>({})
   const [notice, setNotice] = useState('')
   const [gid, setGid] = useState('codebase')
   const [layerView, setLayerView] = useState(0)   // 0 all · 1 origin only · 2 system only
@@ -701,6 +697,9 @@ function Hud() {
       try { MODEL_OPTIONS = { chat_models: await api.models('chat'), embed_models: await api.models('embed') } } catch { /* */ }
       OINFO = await api.objectInfo(); setOinfo(OINFO)      // C1: ports/schema reachable by the shape + Edges
       try { UI_INFO = await api.uiInfo() } catch { /* the registry is the source of truth for ui:// targets */ }   // C1: UI-component registry
+      // registry-is-truth: pull the per-mode directives from capabilities() (backend MODE_DIRECTIVES is the
+      // ONE source) so the presence dropdown shows backend truth, not a parallel hardcoded copy.
+      try { const caps = await api.capabilities(); setModeDesc(caps?.mode_directives || {}) } catch { /* dropdown still lists modes; descriptions empty until reachable */ }
       const g = await loadGraph(editor); setEdges(g.edges || []); setGid(g.id); syncConfig(g)
       if ((g.nodes || []).length) setTimeout(fitGraph, 120)   // U6: chrome-aware fit on first load (defer so shapes are laid out)
       setTypes(await api.types())
@@ -1349,12 +1348,12 @@ function Hud() {
           // U11: the dropdown's title shows the CURRENT mode's description; each option carries its own
           // description as a title so hovering an option (where the browser shows it) explains it too.
           <select className="mode-sel" value={now.mode || 'listening'} onChange={e => changeMode(e.target.value)}
-            title={'presence dial · ' + (now.mode || 'listening') + ' — ' + (MODE_DESC[now.mode || 'listening'] || '')}>
-            {MODES.map(m => <option key={m} value={m} title={MODE_DESC[m] || ''}>{m}</option>)}
+            title={'presence dial · ' + (now.mode || 'listening') + ' — ' + (modeDesc[now.mode || 'listening'] || '')}>
+            {MODES.map(m => <option key={m} value={m} title={modeDesc[m] || ''}>{m}</option>)}
           </select>
         )}
         {/* U11: an always-visible one-line description of the active mode (tooltips alone are not legible enough). */}
-        {now && <span className="mode-desc" title={MODE_DESC[now.mode || 'listening'] || ''}>{MODE_DESC[now.mode || 'listening'] || ''}</span>}
+        {now && <span className="mode-desc" title={modeDesc[now.mode || 'listening'] || ''}>{modeDesc[now.mode || 'listening'] || ''}</span>}
         {/* U1 (load-bearing fix): wrap in an arrow so React's MouseEvent is NOT passed as `force`.
            Passing the event made `force.join(', ')` (doRun, line ~880) throw a synchronous TypeError
            BEFORE the try{, so `finally{ setRunning(false) }` never ran and api.run() never fired →
