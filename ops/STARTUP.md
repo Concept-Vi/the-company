@@ -3,14 +3,26 @@
 > **The single command:** `systemctl --user start company.target`
 > Everything the Company needs comes up from here, each set to restart-on-failure, and auto-starts at boot (user-linger is enabled). Built 2026-06-04 to replace the scatter of hand-started processes.
 
-## The one command (and the others)
+## The command center — `company`
+One console to **see what's running and start/stop/restart it**. It reads the self-describing registry (`ops/services.json`) and drives systemd underneath. Callable from anywhere (symlinked into `~/.local/bin`).
 | Do | Command |
 |---|---|
-| Start the whole Company | `systemctl --user start company.target` |
-| Stop the whole Company | `systemctl --user stop company.target` |
-| See everything + its state | `systemctl --user list-dependencies company.target` |
-| Restart one piece | `systemctl --user restart company-bridge.service` |
-| Tail one piece's logs | `journalctl --user -u company-bridge -f` |
+| **See everything + its state** | `company` (or `company status`) |
+| Start the core set (autostart) | `company up` |
+| Start one / a group / all | `company up bridge` · `company up voice` · `company up all` |
+| Stop one / a group | `company down bridge` · `company down models` |
+| Restart one | `company restart bridge` |
+| Tail a service's logs | `company logs bridge -f` |
+| What it can do | `company help` |
+
+`company status` shows each service grouped (core · brain · voice · models · reach), its live state (▶ running · ◐ active-no-port-yet · ✖ failed · · stopped), and **drift** (e.g. "RUNNING (unmanaged)" when something is up by hand instead of under systemd). Add a service = add an entry to `ops/services.json`.
+
+### Underneath: systemd (the muscle — still usable directly)
+| Do | Command |
+|---|---|
+| Start/stop the whole core target | `systemctl --user start\|stop company.target` |
+| Dependency tree | `systemctl --user list-dependencies company.target` |
+| Direct unit control | `systemctl --user restart company-bridge.service` |
 
 ## What starts, and where
 | Service | Port | What it is | Unit |

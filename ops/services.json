@@ -1,0 +1,27 @@
+{
+  "_doc": "The Company's service registry — the single self-describing source of truth for what runs on this machine. The AI reads this to know the whole landscape; the `company` command (ops/company) operates it. Adding a service = adding an entry here. It's OK if some entries are imperfect (ports/units) — better than the scatter it replaces. systemd is the muscle underneath; this is the map + the console.",
+  "groups": {
+    "core":   "The live interactive Company — the surface + its API (the always-on heart)",
+    "brain":  "Language model(s) that answer",
+    "voice":  "Speech in and out",
+    "models": "On-demand models — started per task, VRAM-budgeted, usually dormant",
+    "reach":  "Network + always-on system services (the body's connection to the world)"
+  },
+  "services": {
+    "canvas":       {"group": "core",   "title": "Operable surface (vite dev server)",            "port": 5173,  "manage": {"type": "user-unit",   "unit": "company-canvas.service"},     "health": "/",            "autostart": true},
+    "bridge":       {"group": "core",   "title": "Suite UI face / HTTP API",                      "port": 8770,  "manage": {"type": "user-unit",   "unit": "company-bridge.service"},     "health": "/api/now",     "autostart": true},
+    "chat-4b":      {"group": "brain",  "title": "Qwen3.5-4B-AWQ chat (vLLM) — the RHM brain",    "port": 8000,  "manage": {"type": "user-unit",   "unit": "vllm-chat.service"},          "health": "/v1/models",   "autostart": true, "note": "running-config drift vs serve.sh — see STARTUP.md"},
+    "tts-kokoro":   {"group": "voice",  "title": "Kokoro TTS (voice out)",                        "port": 4123,  "manage": {"type": "user-unit",   "unit": "company-tts-kokoro.service"}, "health": "/health",      "autostart": true},
+    "stt-whisper":  {"group": "voice",  "title": "Whisper.cpp STT (voice in)",                    "port": 2022,  "manage": {"type": "user-unit",   "unit": "voicemode-whisper.service"},                            "autostart": true},
+    "embed-bge":    {"group": "models", "title": "BGE-M3 embeddings (vLLM)",                      "port": 8001,  "manage": {"type": "user-unit",   "unit": "vllm-embed.service"},         "health": "/v1/models"},
+    "embed-jina-v4":{"group": "models", "title": "jina-embeddings-v4 multimodal (vLLM)",          "port": 8002,  "manage": {"type": "user-unit",   "unit": "vllm-jina-v4.service"},       "health": "/v1/models"},
+    "embed-jina-v5":{"group": "models", "title": "jina-embeddings-v5 (vLLM)",                                    "manage": {"type": "user-unit",   "unit": "vllm-jina-v5.service"}},
+    "chat-2b":      {"group": "models", "title": "vLLM 2B chat variant",                                        "manage": {"type": "user-unit",   "unit": "vllm-2b.service"}},
+    "chat-08b":     {"group": "models", "title": "vLLM 0.8B chat variant",                                      "manage": {"type": "user-unit",   "unit": "vllm-08b.service"}},
+    "llama-swap":   {"group": "models", "title": "llama-swap (model hot-swapper)",                              "manage": {"type": "user-unit",   "unit": "llama-swap.service"}},
+    "litellm":      {"group": "models", "title": "LiteLLM proxy (OpenAI-compat gateway)",         "port": 4100,  "manage": {"type": "user-unit",   "unit": "litellm-proxy.service"},      "health": "/health"},
+    "ollama":       {"group": "reach",  "title": "Ollama runtime",                                "port": 11434, "manage": {"type": "system-unit", "unit": "ollama.service"},             "health": "/api/tags"},
+    "tailscale":    {"group": "reach",  "title": "Tailscale (tailnet + HTTPS serve to phone)",                  "manage": {"type": "system-unit", "unit": "tailscaled.service"}},
+    "openclaw-gw":  {"group": "reach",  "title": "OpenClaw gateway (Stage 2 — usually dormant)",                "manage": {"type": "user-unit",   "unit": "openclaw-gateway.service"}}
+  }
+}
