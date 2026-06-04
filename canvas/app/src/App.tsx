@@ -49,6 +49,13 @@ function Hud() {
       {/* Edges paints over the whole viewport (pointer-events:none); kept outside the grid so it overlays
          the canvas in tldraw's container — the wire ↔ port screen-space math is unchanged. */}
       <Edges edges={ctrl.edges} />
+      {/* F5: the SHELL-LEVEL catch-all. fe-map §5 traced the white-screen to an UNWRAPPED Hud shell —
+         `App()` wrapped only <Tldraw>, no top-level boundary, so any render-throw inside the chrome killed
+         the operator's only control surface. This boundary is the backstop UNDER the per-panel ones: a throw
+         a panel-boundary doesn't catch (e.g. layout-level) now renders a contained card over the LIVE canvas
+         (the tldraw board behind the grid keeps running) instead of a blank document. The chat path itself no
+         longer throws (api.ts jr + the sendChat guard), so this is defense-in-depth, not the primary fix. */}
+    <PanelErrorBoundary name="surface">
       {/* The top-level layout shell — one grid container, not absolute-px islands. The `canvas` cell is
          transparent + pointer-events:none so the tldraw board underneath stays interactive. */}
       <div className="app-shell">
@@ -62,7 +69,13 @@ function Hud() {
           </PanelErrorBoundary>
           <OpPanels />
           <Activity />
-          <RhmChat />
+          {/* F5: the rhm-chat panel was the unprotected white-screen gap (fe-map §5) — the most-exercised
+             surface had the LEAST protection. A per-panel boundary contains a chat render-throw to a card,
+             keeping the toolbar/RUN/canvas alive (better FORM than blanking the whole shell). Extends the
+             existing per-panel boundary discipline (PRESERVE-LIST item 1). */}
+          <PanelErrorBoundary name="chat">
+            <RhmChat />
+          </PanelErrorBoundary>
         </div>
         {/* the right rail — Inspector + Inbox + Grow stacked in ONE scroll column (the .panel rail, as
            before). data-ui-ref="inspector" is on this scroll container (the resolveUiTarget keystone +
@@ -75,6 +88,7 @@ function Hud() {
       </div>
       {/* Workshop is a full-viewport modal (position:fixed) — outside the grid so it covers everything. */}
       <Workshop />
+    </PanelErrorBoundary>
     </AppContext.Provider>
   )
 }

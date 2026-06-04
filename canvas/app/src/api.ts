@@ -4,76 +4,99 @@ import { getMODEL_OPTIONS } from './registryStore'
 
 // ---------------------------------------------------------------- api (proxied to the bridge)
 const J = { 'Content-Type': 'application/json' }
+
+// F5 · the error path. IS (fe-map §5, traced): a backend 400 (e.g. the literal first thing an operator
+// hits — model unreachable → bridge.py:371 `_send(400, {"error":…})`) was read with a bare `r => r.json()`
+// (no `r.ok`). `fetch` only REJECTS on a network failure; an HTTP-400 with body `{error:"…"}` RESOLVES to
+// that object. So `api.chat` resolved to `{error}`, `sendChat` did `setChat({error}.history)` =
+// `setChat(undefined)`, and RhmChat's `chat.length` threw at render → with the shell unwrapped, white-screen.
+//
+// THE FIX — normalize, don't throw. `jr` (json-or-error) checks `r.ok`; on a non-2xx it RETURNS a normalized
+// `{error}` (parsing the body's `{error}`, falling back to "<status> <statusText>" for a non-JSON 500). This
+// is deliberately a RETURNED error, not a throw: the existing callers (connect/set/surfaceOutput/connect…)
+// already branch on `if (r.error) setNotice(...)` on a RESOLVED object — making `jr` throw would turn those
+// into uncaught rejections in event handlers (new white-screens). Returning `{error}` instead makes EVERY
+// caller more robust for free, and the named call-site guards (sendChat) surface it as a visible state.
+// `tts` is intentionally NOT routed through `jr` — it returns a Blob, not JSON.
+async function jr(r: Response): Promise<any> {
+  if (r.ok) return r.json()
+  // try to read the backend's structured `{error}` body; fall back to the HTTP status for a non-JSON body.
+  let body: any = null
+  try { body = await r.json() } catch { /* non-JSON error body (e.g. a proxy 502 HTML page) */ }
+  const msg = (body && body.error) ? body.error : `${r.status} ${r.statusText || 'request failed'}`
+  return { error: msg }
+}
+
 export const api = {
-  graph: () => fetch('/api/graph').then(r => r.json()),
-  types: () => fetch('/api/types').then(r => r.json()),
+  graph: () => fetch('/api/graph').then(jr),
+  types: () => fetch('/api/types').then(jr),
   // D4: run optionally FORCES a set of node ids past the memo gate (bypass cache). No body = normal run.
   run: (force?: string[]) =>
-    fetch('/api/run', { method: 'POST', headers: J, body: JSON.stringify(force ? { force } : {}) }).then(r => r.json()),
+    fetch('/api/run', { method: 'POST', headers: J, body: JSON.stringify(force ? { force } : {}) }).then(jr),
   // A2: write a node's config (merge-not-replace, backend set_config). Returns fresh graph state.
   set: (node: string, config: any) =>
-    fetch('/api/set', { method: 'POST', headers: J, body: JSON.stringify({ node, config }) }).then(r => r.json()),
+    fetch('/api/set', { method: 'POST', headers: J, body: JSON.stringify({ node, config }) }).then(jr),
   // B2: live model registry for a kind (chat|embed) — the source of truth, never a hardcoded list.
-  models: (kind: string) => fetch('/api/models?kind=' + encodeURIComponent(kind)).then(r => r.json()),
+  models: (kind: string) => fetch('/api/models?kind=' + encodeURIComponent(kind)).then(jr),
   // C5: write a node's position back (sibling of config) after a drag — debounced, backend is truth.
   move: (node: string, x: number, y: number) =>
-    fetch('/api/move', { method: 'POST', headers: J, body: JSON.stringify({ node, x, y }) }).then(r => r.json()),
+    fetch('/api/move', { method: 'POST', headers: J, body: JSON.stringify({ node, x, y }) }).then(jr),
   propose: (name: string, spec: string) =>
-    fetch('/api/propose', { method: 'POST', headers: J, body: JSON.stringify({ name, spec }) }).then(r => r.json()),
+    fetch('/api/propose', { method: 'POST', headers: J, body: JSON.stringify({ name, spec }) }).then(jr),
   resolve: (id: string, choice: string, reason = '') =>
-    fetch('/api/resolve', { method: 'POST', headers: J, body: JSON.stringify({ id, choice, reason }) }).then(r => r.json()),
+    fetch('/api/resolve', { method: 'POST', headers: J, body: JSON.stringify({ id, choice, reason }) }).then(jr),
   apply: (id: string) =>
-    fetch('/api/apply', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(r => r.json()),
-  objectInfo: () => fetch('/api/object_info').then(r => r.json()),
+    fetch('/api/apply', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(jr),
+  objectInfo: () => fetch('/api/object_info').then(jr),
   // registry-is-truth: WHAT EXISTS (node-types, models, modes, mode_directives, verbs, panels). The
   // presence-mode descriptions are read from capabilities().mode_directives — one backend source, no
   // parallel hardcoded copy on the surface.
-  capabilities: () => fetch('/api/capabilities').then(r => r.json()),
+  capabilities: () => fetch('/api/capabilities').then(jr),
   addNode: (type: string, config: any = {}) =>
-    fetch('/api/node', { method: 'POST', headers: J, body: JSON.stringify({ type, config }) }).then(r => r.json()),
+    fetch('/api/node', { method: 'POST', headers: J, body: JSON.stringify({ type, config }) }).then(jr),
   connect: (e: any) =>
-    fetch('/api/connect', { method: 'POST', headers: J, body: JSON.stringify(e) }).then(r => r.json()),
+    fetch('/api/connect', { method: 'POST', headers: J, body: JSON.stringify(e) }).then(jr),
   del: (node: string) =>
-    fetch('/api/delete-node', { method: 'POST', headers: J, body: JSON.stringify({ node }) }).then(r => r.json()),
-  now: () => fetch('/api/now').then(r => r.json()),
-  events: () => fetch('/api/events').then(r => r.json()),
+    fetch('/api/delete-node', { method: 'POST', headers: J, body: JSON.stringify({ node }) }).then(jr),
+  now: () => fetch('/api/now').then(jr),
+  events: () => fetch('/api/events').then(jr),
   chat: (message: string, focus?: any) =>
-    fetch('/api/chat', { method: 'POST', headers: J, body: JSON.stringify({ message, focus }) }).then(r => r.json()),
-  chatHistory: () => fetch('/api/chat').then(r => r.json()),
+    fetch('/api/chat', { method: 'POST', headers: J, body: JSON.stringify({ message, focus }) }).then(jr),
+  chatHistory: () => fetch('/api/chat').then(jr),
   setMode: (mode: string) =>
-    fetch('/api/mode', { method: 'POST', headers: J, body: JSON.stringify({ mode }) }).then(r => r.json()),
-  rhmConfig: () => fetch('/api/rhm-config').then(r => r.json()),
+    fetch('/api/mode', { method: 'POST', headers: J, body: JSON.stringify({ mode }) }).then(jr),
+  rhmConfig: () => fetch('/api/rhm-config').then(jr),
   setRhmConfig: (updates: any) =>
-    fetch('/api/rhm-config', { method: 'POST', headers: J, body: JSON.stringify(updates) }).then(r => r.json()),
-  inbox: () => fetch('/api/inbox').then(r => r.json()),
-  coa: (id: string) => fetch('/api/coa', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(r => r.json()),
+    fetch('/api/rhm-config', { method: 'POST', headers: J, body: JSON.stringify(updates) }).then(jr),
+  inbox: () => fetch('/api/inbox').then(jr),
+  coa: (id: string) => fetch('/api/coa', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(jr),
   // F2: route a node's RESULT to the decision surface — backend reads the output from live state
   // (client sends only the node id; canvas reflects-never-owns), surfaces it on the EXISTING inbox path.
   surfaceOutput: (node: string) =>
-    fetch('/api/surface-output', { method: 'POST', headers: J, body: JSON.stringify({ node }) }).then(r => r.json()),
-  react: () => fetch('/api/react', { method: 'POST' }).then(r => r.json()),
-  lastChange: () => fetch('/api/last-change').then(r => r.json()),
-  revert: (sha: string) => fetch('/api/revert', { method: 'POST', headers: J, body: JSON.stringify({ sha }) }).then(r => r.json()),
-  panels: () => fetch('/api/panels').then(r => r.json()),
-  voice: () => fetch('/api/voice').then(r => r.json()),
-  stt: (blob: Blob) => fetch('/api/stt', { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: blob }).then(r => r.json()),
+    fetch('/api/surface-output', { method: 'POST', headers: J, body: JSON.stringify({ node }) }).then(jr),
+  react: () => fetch('/api/react', { method: 'POST' }).then(jr),
+  lastChange: () => fetch('/api/last-change').then(jr),
+  revert: (sha: string) => fetch('/api/revert', { method: 'POST', headers: J, body: JSON.stringify({ sha }) }).then(jr),
+  panels: () => fetch('/api/panels').then(jr),
+  voice: () => fetch('/api/voice').then(jr),
+  stt: (blob: Blob) => fetch('/api/stt', { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: blob }).then(jr),
   tts: (text: string) => fetch('/api/tts', { method: 'POST', headers: J, body: JSON.stringify({ text }) }).then(r => r.blob()),
   // C1: the UI-component registry (sibling of object_info) — the source of truth for what's addressable.
-  uiInfo: () => fetch('/api/ui_info').then(r => r.json()),
+  uiInfo: () => fetch('/api/ui_info').then(jr),
   // B: the walkthrough/review session lifecycle. start makes its OWN session-graph (not graph-scoped);
   // current = the node at the cursor + its coa framing + its ui:// target; next opens the gate + advances.
   reviewStart: (item_ids: string[], mode = 'walkthrough') =>
-    fetch('/api/review/start', { method: 'POST', headers: J, body: JSON.stringify({ item_ids, mode }) }).then(r => r.json()),
+    fetch('/api/review/start', { method: 'POST', headers: J, body: JSON.stringify({ item_ids, mode }) }).then(jr),
   reviewCurrent: (session: string) =>
-    fetch('/api/review/current?session=' + encodeURIComponent(session)).then(r => r.json()),
+    fetch('/api/review/current?session=' + encodeURIComponent(session)).then(jr),
   reviewNext: (session: string) =>
-    fetch('/api/review/next', { method: 'POST', headers: J, body: JSON.stringify({ session }) }).then(r => r.json()),
+    fetch('/api/review/next', { method: 'POST', headers: J, body: JSON.stringify({ session }) }).then(jr),
   reviewStatus: (session: string) =>
-    fetch('/api/review/status?session=' + encodeURIComponent(session)).then(r => r.json()),
+    fetch('/api/review/status?session=' + encodeURIComponent(session)).then(jr),
   // D: the per-step verdict — operator-only. Session+position tag the verdict to its walk step (additive;
   // legacy id+choice+reason callers unchanged). Reflects-never-owns: the verdict goes THROUGH the gate.
   resolveStep: (id: string, choice: string, reason: string, session: string, position: number) =>
-    fetch('/api/resolve', { method: 'POST', headers: J, body: JSON.stringify({ id, choice, reason, session, position }) }).then(r => r.json()),
+    fetch('/api/resolve', { method: 'POST', headers: J, body: JSON.stringify({ id, choice, reason, session, position }) }).then(jr),
 }
 export { J }
 

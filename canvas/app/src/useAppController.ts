@@ -140,7 +140,9 @@ export function useAppController(editor: Editor) {
       const g = await loadGraph(editor); setEdges(g.edges || []); setGid(g.id); syncConfig(g)
       if ((g.nodes || []).length) setTimeout(fitGraph, 120)   // U6: chrome-aware fit on first load
       setTypes(await api.types())
-      setChat(await api.chatHistory())
+      // F5: chatHistory now resolves to `{error}` on a non-ok GET — never feed a non-array into `chat`
+      // (RhmChat reads `chat.length`/`chat.map`). Defensive guard; the array path is unchanged.
+      { const h = await api.chatHistory(); if (Array.isArray(h)) setChat(h) }
       setCfg(await api.rhmConfig())
       const evs = await api.events(); mergeEvents(setEvents, evs)
       streamSeq.current = evs.reduce((m: number, e: any) => Math.max(m, e.seq ?? -1), -1)  // cursor = last seen
@@ -205,7 +207,8 @@ export function useAppController(editor: Editor) {
         // backend lane emits it — author-from-registry. Events already auto-merged at the top of onmessage.
         try { setInbox(await api.inbox()); setNow(await api.now()); setLastChange(await api.lastChange()); setPanels(await api.panels()) } catch { /* */ }
       } else if (k === 'chat' || k === 'react') {
-        try { setChat(await api.chatHistory()) } catch { /* */ }
+        // F5: SSE-driven refresh — guard against a non-array (`{error}`) ever reaching the chat log.
+        try { const h = await api.chatHistory(); if (Array.isArray(h)) setChat(h) } catch { /* */ }
       } else if (k === 'review.advance' || k === 'review.start') {
         // B-frontend: the walk advanced server-side. Refresh the card from present_current IF it's OUR
         // session — reflects-never-owns (the backend session is truth).
@@ -238,7 +241,7 @@ export function useAppController(editor: Editor) {
     editor.zoomToBounds(bounds, { targetZoom: 1, animation: { duration: 300 } })
   }
   async function maybeReact() {   // watch-and-react: backend-gated, comments only in that mode
-    try { const r = await api.react(); if (r.comment) setChat(await api.chatHistory()) } catch { /* */ }
+    try { const r = await api.react(); if (r.comment) { const h = await api.chatHistory(); if (Array.isArray(h)) setChat(h) } } catch { /* */ }
   }
   // U5: a palette add seeds its position into the VISIBLE viewport. Operator-intent placement (the canvas
   // reporting where the operator placed it), NOT an invented layout: the position rides to the backend.
@@ -323,7 +326,17 @@ export function useAppController(editor: Editor) {
     try {
       // co-presence: the RHM sees what the operator has selected on the canvas right now
       const selected = (editor.getSelectedShapes().filter(s => s.type === 'node') as NodeShape[]).map(s => s.props.nodeId)
-      const r = await api.chat(m, { selected }); setChat(r.history); await poll()
+      const r = await api.chat(m, { selected })
+      // F5 · the named bug. On a backend 400 (model unreachable — the literal first thing an operator hits)
+      // api.chat now resolves to a normalized `{error}` (api.ts jr). BEFORE F5 this did `setChat(r.history)`
+      // = `setChat(undefined)` → RhmChat `chat.length` threw at render → white-screen. Now: surface the
+      // backend's error text as a VISIBLE assistant message (fail-loud, rule 4 — never a silent swallow) and
+      // return WITHOUT touching the chat array. `finally` clears chatBusy. No throw, no undefined setChat.
+      if (r.error) { setChat(c => [...c, { role: 'assistant', text: '⚠ ' + r.error }]); return }
+      // defensive (advisor): only replace the log with a real array. A future non-ok GET would resolve to
+      // `{error}` (no `.history`); never `setChat(undefined)`.
+      if (Array.isArray(r.history)) setChat(r.history)
+      await poll()
       if (now?.mode === 'listening' && r.reply) speakReply(r.reply).catch(() => { /* TTS hiccup is harmless here */ })   // voice out
       // the decision-compiler DOWN: an action the RHM took routes through the gate
       if (r.action?.did === 'run' || r.action?.did === 'build') { await reload() }
