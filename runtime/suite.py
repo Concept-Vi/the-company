@@ -2278,21 +2278,80 @@ class Suite:
                 out.append(p)
         return out
 
+    # F9 — where the corpus FORM lint lives. `design/_system/check.py` is a fixed part of THIS codebase
+    # (it ships beside suite.py), NOT in the build's _repo_root sandbox — so it is located off suite.py's
+    # own location, while the CHANGED files are resolved against _repo_root (the build's tree).
+    def _design_lint_corpus(self) -> str:
+        """The in-repo corpus design-lint script (design/_system/check.py). suite.py lives in
+        runtime/, the corpus in design/_system/ — both under the same source root, so derive it from
+        THIS file's location (the sandbox _repo_root has no corpus)."""
+        return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "design", "_system", "check.py")
+
     def _design_critic(self, changed_files: list[str]) -> tuple[bool, str]:
-        """H4 FORM slot (fail-safe seam) — where a design-critic AGENT + a design-lint will plug in
-        once the design system exists. Until then FORM is UNVERIFIABLE for any operator-facing surface,
-        so this returns (False, reason) for a surface-touching build → the build CANNOT claim 'done' and
-        surfaces for review. A pure-backend build (no surface change) has no form to grade → (True, …),
-        so it may proceed through H1/H2. This is the path-of-least-resistance default: the correct
-        action (don't auto-close an unverifiable surface) is the easy one. NAMED hook, not a comment:
-        replace the body with `design_critic_agent(changed_files)` + `design_lint(changed_files)` when
-        the design system is wired (off-token / bespoke-element → fail loud, same shape as here)."""
+        """F9 — the LIVE in-repo FORM gate (graduated from the stub, review-executability V-1).
+
+        THE MACHINE HALF of FORM lives here: it runs the corpus design-lint (design/_system/check.py
+        --target <changed canvas file> --fail-on) over the surface files this build CHANGED.
+          • A clean, token-only surface change → lint exits 0 → (True, …): the UI self-build may
+            AUTO-CLOSE (no second manual gate — approval already happened at the build-intent guard).
+          • A surface change introducing an off-token literal (raw hex/rgba instead of var(--x)) or a
+            bespoke element → lint exits non-zero → (False, reason): the build is GATED, surfaces back.
+          • FAIL-SAFE: if the lint cannot run AT ALL — corpus missing, interpreter/script error, a
+            changed file that doesn't resolve to a real file on disk, ANY exception — this returns
+            (False, reason). Unverifiable is NOT-passed; it NEVER silently returns True (rule 4).
+        A pure-backend build (no canvas/ change) has no form to grade → (True, …); it proceeds.
+
+        THE HUMAN-JUDGMENT HALF (the design-critic AGENT — browser + screenshots, the design rubric
+        its only lens) is NOT run in-process: a headless dispatch can't drive a browser, and the
+        implementer can't grade its own form (AGENTS.md rule 9). The loop dispatches that agent
+        SEPARATELY at verify time. Subjective taste it can't machine-settle → flagged for Tim, never
+        green-painted. This method is the deterministic in-repo gate; the agent is the loop's stage."""
         surface = self._touches_surface(changed_files)
-        if surface:
-            return (False, f"FORM unverifiable: this build changed operator-facing surface(s) {surface} "
-                           f"but no design system / design-critic is wired yet — FORM is half of done "
-                           f"(AGENTS.md rule 9), so it CANNOT auto-close. Surfaced for design review.")
-        return True, "no operator-facing surface touched → no FORM gate (backend build may proceed)"
+        if not surface:
+            return True, "no operator-facing surface touched → no FORM gate (backend build may proceed)"
+
+        script = self._design_lint_corpus()
+        if not os.path.exists(script):
+            # FAIL-SAFE: the corpus lint is absent → FORM is unverifiable → not-passed (never silent True).
+            return (False, f"FORM unverifiable (fail-safe): the corpus design-lint {script} is missing — "
+                           f"cannot machine-check the surface change {surface}. Surfaced for design review.")
+
+        # Lint only the surface files THIS build changed (a clean change must not be gated by pre-existing
+        # dirt elsewhere). Resolve each against _repo_root (the build's tree); skip any that don't exist
+        # on disk — if NONE resolve, the lint has nothing real to check → fail-safe.
+        import subprocess, sys as _sys
+        targets = []
+        for p in surface:
+            q = (p or "").strip().lstrip("./")
+            full = os.path.join(self._repo_root, q)
+            if os.path.exists(full) and full.endswith((".tsx", ".css")):
+                targets.append(full)
+        if not targets:
+            return (False, f"FORM unverifiable (fail-safe): surface change {surface} resolved to no real "
+                           f".tsx/.css file under {self._repo_root} — nothing to lint. Surfaced for review.")
+
+        py = _sys.executable
+        offenders = []
+        for full in targets:
+            try:
+                proc = subprocess.run([py, script, "--target", full, "--fail-on"],
+                                      capture_output=True, text=True, timeout=120)
+            except Exception as e:
+                # FAIL-SAFE: the lint could not run (interpreter/script crash, timeout) → not-passed.
+                return (False, f"FORM unverifiable (fail-safe): the corpus design-lint failed to run on "
+                               f"{full} ({type(e).__name__}: {e}) — cannot confirm FORM. Surfaced for review.")
+            if proc.returncode != 0:
+                tail = (proc.stdout or "")[-300:] + (proc.stderr or "")[-300:]
+                offenders.append(f"{os.path.relpath(full, self._repo_root)} (exit={proc.returncode}: {tail.strip()})")
+        if offenders:
+            return (False, f"FORM gate FAILED (design-lint): off-token/bespoke finding(s) in the changed "
+                           f"surface — {'; '.join(offenders)}. The surface must use corpus tokens "
+                           f"(var(--x)) + components (AGENTS.md rule 9), so it CANNOT auto-close.")
+        return (True, f"FORM gate PASSED (design-lint clean on changed surface: "
+                      f"{', '.join(os.path.relpath(t, self._repo_root) for t in targets)}) — "
+                      f"token-only; the in-repo machine half is satisfied (the human design-critic agent "
+                      f"runs separately at verify time).")
 
     def _critic_recheck(self, decision: dict, result: dict, *, critic=None) -> tuple[bool, str]:
         """H5 — an ADVERSARIAL re-check, SEPARATE from the builder's self-report (the builder defaults
@@ -2514,16 +2573,19 @@ class Suite:
             return {"surfaced": sid, "dispatched": True, "launched": True, "verified": False,
                     "requeued": new_sid, "reason": verify_reason}
 
-        # 7b — H4 FORM GATE (UNCONDITIONAL — a structural gate, like the scope-diff, NOT inside the
-        # replaceable verifier). A build that touched an operator-facing surface (canvas/) CANNOT
-        # auto-close: its FORM (design-system components+tokens, coherent layout — AGENTS.md rule 9) is
-        # the product bar, and there is NO design system / design-critic wired to machine-check it yet.
-        # So it surfaces for review REGARDLESS of how verify_passed was reached (incl. an injected
-        # scenario verifier — the WIRE-LOOP path). The surfaced item is DELIBERATELY DISPATCHER-INERT
-        # (a `build_form_review`, NOT a build-intent): re-approving it must NOT re-dispatch into a
-        # can't-verify-form loop (it would satisfy _is_dispatchable under a NEW seq, and exactly-once is
-        # keyed on the OLD seq). _design_critic is the NAMED hook where design_critic_agent + design_lint
-        # plug in once the design system exists; until then it is fail-safe (surface, never close).
+        # 7b — H4/F9 FORM GATE (UNCONDITIONAL — a structural gate, like the scope-diff, NOT inside the
+        # replaceable verifier). A build that touched an operator-facing surface (canvas/) is run through
+        # the LIVE machine FORM gate (_design_critic, graduated by F9): the corpus design-lint
+        # (design/_system/check.py --fail-on) over the CHANGED surface files. A clean token-only surface
+        # PASSES → the UI self-build AUTO-CLOSES (approval already happened at the build-intent guard; F9
+        # adds no second manual gate). An off-token/bespoke change, or an unrunnable lint (fail-safe),
+        # FAILS → it surfaces for review REGARDLESS of how verify_passed was reached (incl. an injected
+        # scenario verifier — the WIRE-LOOP path; the gate runs unconditionally here, NOT in the
+        # bypassable verifier). The surfaced item is DELIBERATELY DISPATCHER-INERT (a `build_form_review`,
+        # NOT a build-intent): re-approving it must NOT re-dispatch into a can't-verify-form loop (it
+        # would satisfy _is_dispatchable under a NEW seq, and exactly-once is keyed on the OLD seq).
+        # _design_critic is the in-repo MACHINE half; the human-judgment design-critic AGENT (browser +
+        # screenshots) is dispatched SEPARATELY by the loop at verify time (it can't run headless here).
         form_ok, form_reason = self._design_critic(result.get("changed_files", []))
         if not form_ok:
             form_item = {"kind": "build_form_review", "review_of": sid, "derived_from": derived_from,
