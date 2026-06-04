@@ -310,3 +310,41 @@ button.b:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
 .workshop h2{font-family:"Fraunces",serif;color:var(--sig);margin:0 0 4px}
 .workshop .close{position:absolute;top:16px;right:20px;cursor:pointer;color:var(--dim);font-size:20px}
 .workshop .full{font-family:"Fraunces",serif;font-size:19px;line-height:1.5;color:var(--ink);white-space:pre-wrap;margin-top:16px}
+
+/* ============================================================================================
+   F0 · THE LAYOUT SHELL — one top-level grid, NOT 7 fixed-px absolute islands.
+   The shell is layered OVER the tldraw board (which fills the viewport behind it via App()'s fixed
+   container). Grid areas follow design/design-system.css's `.app` model (top · rail · canvas · panel ·
+   foot). The shell itself is pointer-events:none so the canvas underneath stays fully interactive;
+   each CHROME cell re-enables pointer-events on its own content. This replaces the absolute-px islands
+   with a real layout container. (F1 = full token adoption · F2 = responsive breakpoints + dock/collapse.)
+   ============================================================================================ */
+.app-shell{position:absolute;inset:0;z-index:300;pointer-events:none;
+  display:grid;
+  grid-template-rows:auto 1fr;
+  grid-template-columns:158px 1fr 330px;
+  grid-template-areas:
+    "top  top    top"
+    "rail canvas panel";
+  gap:12px;padding:12px}
+.as-top{grid-area:top;display:flex;justify-content:center;align-items:flex-start;pointer-events:none}
+.as-rail{grid-area:rail;min-height:0;pointer-events:auto}
+.as-canvas{grid-area:canvas;position:relative;min-height:0;pointer-events:none}   /* passthrough to the board */
+.as-panel{grid-area:panel;min-height:0;pointer-events:auto}
+
+/* The carved regions flow INTO their grid cells instead of being absolute-positioned islands. We override
+   only the OUTER positioning each region had in app.css above — the internal look (backgrounds, borders,
+   typography) is untouched (F1 re-expresses those in corpus tokens; F0 keeps them). */
+.app-shell .hud{position:static;z-index:auto}
+.app-shell .toolbar{left:auto;transform:none;pointer-events:auto;max-width:100%;flex-wrap:wrap}
+.app-shell .palette{top:auto;left:auto;width:100%;height:100%;max-height:100%}
+.app-shell .panel{top:auto;right:auto;width:100%;height:100%;max-height:100%}
+
+/* Canvas-overlay chrome (walkthrough card · op-panels · activity · rhm-chat) lives in the canvas cell and
+   re-enables pointer-events on itself. They keep their in-corner placement via absolute positioning RELATIVE
+   to the canvas cell (as-canvas is position:relative), so they sit over the board where they did before —
+   but now anchored to the layout cell, not the viewport. */
+.as-canvas .walkthrough{position:absolute;top:0;left:50%;transform:translateX(-50%);width:560px;max-width:calc(100% - 32px);pointer-events:auto}
+.as-canvas .op-panels{position:absolute;top:0;left:14px;width:212px;display:flex;flex-direction:column;gap:8px;pointer-events:auto}
+.as-canvas .activity{position:absolute;left:0;bottom:0;width:300px;pointer-events:auto}
+.as-canvas .rhm{position:absolute;right:0;bottom:0;width:340px;height:312px;pointer-events:auto}
