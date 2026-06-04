@@ -1,0 +1,239 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>P4 · B4 · Presence dial — 8 modes · desktop</title>
+<link rel="stylesheet" href="../design-system.css">
+<!--
+  ============================================================
+  PANEL  P4 · B4 · Presence dial — the 8 modes · desktop  (STAGING PROBE, not canonical)
+  AREA   B (right-hand-man) · JOURNEY J9 (set posture) → re-tunes every organ
+  JOURNEY-MOMENT  J9 step 1 "B4 presence dial (the 8 modes) → behaviour of every organ shifts".
+        surfaces-when: operator-directed; one dial that re-tunes loudness/autonomy across the
+        whole surface (User Journeys & UX.md J9 lines 68-71).
+  ============================================================
+  REPRESENTS[] (feature-id · what it surfaces · code ref — from the Feature & Function Inventory):
+    · RHM-modes — the 8 presence modes; the mode IS a node (rhm_mode on the `system` graph,
+                  node id "rhm"); each carries a real DIRECTIVE (the prose that governs how loud the
+                  RHM is). set_mode validates against the 8-tuple and re-emits "presence → <mode>".
+                                              runtime/suite.py:510-555 (MODES + MODE_DIRECTIVES + set_mode)
+  LANDMARK ADDRESS (from _system/addresses.json — NOT invented):
+    · ui://toolbar/presence  → region toolbar · pointable·openable · represents RHM-modes · suite.py:510
+                  (the dial is the OPENED state of the real toolbar presence control.)
+  ------------------------------------------------------------
+  GROUNDING NOTES — only real behaviour, no fiction:
+    · The EIGHT modes are exactly suite.py:511-512 / MAP.md:73 (registry truth):
+      listening · text-only · background · focus · walkthrough · watch-and-react · decide-for-me · off.
+      DEFAULT_MODE = "listening" (suite.py:513).
+    · The one-line description under each mode is the REAL directive prose, verbatim/condensed from
+      suite.py MODE_DIRECTIVES (515-524) — mirrored in App.tsx MODE_DESC:95-104. (See the panel's
+      "fed from the registry" note: capabilities() now returns mode_directives — suite.py:147 region —
+      so the correct end-state is registry-fed, not a hand-copied FE map. Depicted that way here.)
+    · decide-for-me is DETERMINISTIC BY GOVERNANCE POSTURE, not a confidence judgement: it acts on the
+      AUTO/reversible classes and surfaces the rest; it still CANNOT self-approve (suite.py:522, 817-845;
+      governance.py:12-48). Shown as a posture-routing strip, not an "AI decides" toggle.
+    · `off` = the RHM is silent (no responses, no ambient comments) — App.tsx:103. Shown as the quiet end.
+    · This is a DESIGN of the real `<select className="mode-sel">` dropdown that exists today
+      (App.tsx:1351) — same feature, recognise-by-sight form (a dial), not new behaviour. No invented
+      modes, no scheduling/auto-switch.
+    · No node status dots here (idle/ran/cached/stuck) — this is presence/chrome, not a node surface.
+  ============================================================
+-->
+<style>
+.top{grid-area:top;display:flex;align-items:center;gap:16px;padding:0 16px;background:linear-gradient(180deg,var(--s1),var(--s0));border-bottom:1px solid var(--line);min-width:0}
+.brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:17px;letter-spacing:-.3px;white-space:nowrap}
+.brand em{font-style:normal;color:var(--acc)}
+.brand .tag{font-size:10.5px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:7px}
+/* the toolbar presence control in its OPENED state (ui://toolbar/presence) */
+.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--acc);border-radius:99px;background:var(--s2);font-size:11.5px;color:var(--tx);white-space:nowrap;cursor:pointer;box-shadow:0 0 0 3px var(--acc-glow)}
+.presence .dot{width:7px;height:7px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.presence .ch{color:var(--tx-3);font-size:10px}
+.verbs{margin-left:auto;display:flex;gap:6px;flex:none}
+.verbs .btn{padding:7px 11px}
+
+.rail{grid-area:rail;background:var(--s0);border-right:1px solid var(--line);padding:13px 11px;overflow:auto}
+.rail .railhd{font-size:9.5px;text-transform:uppercase;letter-spacing:1.3px;color:var(--tx-3);font-weight:600;margin:0 2px 9px}
+.rail h4{font-size:10px;text-transform:uppercase;letter-spacing:1.1px;color:var(--tx-2);margin:15px 3px 7px;font-weight:600;display:flex;align-items:center;gap:7px}
+.kdot{width:8px;height:8px;border-radius:2px;flex:none}
+.chip{display:flex;align-items:center;gap:9px;padding:6px 9px;border-radius:var(--r);background:var(--s1);border:1px solid var(--line);font-size:12px;margin-bottom:5px}
+.chip .mono-chip{width:19px;height:19px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:11px;color:var(--ink-accent);flex:none}
+
+.canvas{grid-area:canvas;position:relative;overflow:hidden;background-image:radial-gradient(var(--line) .9px,transparent .9px);background-size:26px 26px;display:grid;place-items:center}
+/* the dim "the dial governs everything" note in the canvas */
+.dimnote{max-width:430px;text-align:center;color:var(--tx-3);font-size:12.5px;line-height:1.7}
+.dimnote .display{font-size:16px;color:var(--tx-2);display:block;margin-bottom:6px}
+.dimnote .play{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:6px 12px;border:1px dashed var(--line-2);border-radius:99px;font-family:'IBM Plex Mono';font-size:11px;color:var(--acc)}
+
+.foot{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--s0);border-top:1px solid var(--line);font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';overflow:hidden;white-space:nowrap}
+.foot .live{color:var(--acc);display:inline-flex;align-items:center;gap:5px}
+.foot .live i{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+
+/* ── THE DIAL — the right panel, the 8 modes laid out so you recognise the posture by sight ── */
+.panel{grid-area:panel;background:var(--s0);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);padding:10px 12px 0}
+.tab{padding:8px 12px;font-size:12px;color:var(--tx-3);border-bottom:2px solid transparent;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+.tab.on{color:var(--tx);border-bottom-color:var(--acc)}
+.pbody{padding:14px;overflow:auto;flex:1;min-height:0}
+
+.dialhd{display:flex;align-items:baseline;gap:9px;margin:0 2px 4px}
+.dialhd .nm{font-family:'Bricolage Grotesque';font-weight:800;font-size:17px;letter-spacing:-.3px}
+.dialhd .now{margin-left:auto;font-family:'IBM Plex Mono';font-size:10px;color:var(--acc)}
+.dialsub{font-size:11px;color:var(--tx-3);margin:0 2px 12px;line-height:1.5}
+.dialsub b{color:var(--tx-2);font-weight:500}
+
+/* the registry-fed note: the directive text is read from capabilities().mode_directives */
+.regfed{display:flex;align-items:center;gap:7px;margin:0 2px 14px;padding:6px 9px;border:1px dashed var(--line-2);border-radius:var(--r);
+  font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3);background:var(--s1)}
+.regfed b{color:var(--kind-model);font-weight:500}
+
+/* a louder→quieter spine so the dial reads as a POSTURE continuum (recognise by sight) */
+.spine{display:flex;align-items:center;gap:7px;margin:0 2px 12px;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);text-transform:uppercase;letter-spacing:.8px}
+.spine .bar{flex:1;height:3px;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--cache) 55%,var(--tx-3))}
+
+.mode{border:1px solid var(--line);border-radius:var(--r-lg);background:linear-gradient(180deg,var(--s2),var(--s1));margin-bottom:8px;overflow:hidden;cursor:pointer}
+.mode .mhead{display:flex;align-items:center;gap:10px;padding:10px 12px}
+.mode .glyph{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:14px;flex:none;background:var(--s3);border:1px solid var(--line-2);color:var(--tx-2)}
+.mode .mname{font-family:'IBM Plex Mono';font-size:12.5px;color:var(--tx);font-weight:500}
+.mode .vol{margin-left:auto;display:flex;gap:3px;align-items:flex-end;height:14px}
+.mode .vol i{width:3px;border-radius:2px;background:var(--tx-3)}
+.mode .desc{padding:0 12px 11px 48px;font-size:11px;color:var(--tx-2);line-height:1.5}
+/* the SELECTED mode — focus is active in this snapshot (the operator is in deep work) */
+.mode.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc-glow)}
+.mode.on .glyph{background:var(--kind-process-bg);border-color:var(--acc);color:var(--acc)}
+.mode.on .mname{color:var(--acc)}
+/* the loudest modes carry a warm "more present" accent on their glyph */
+.mode.loud .glyph{color:var(--await);border-color:rgba(230,171,92,.4)}
+/* decide-for-me gets a governance strip because it ACTS (deterministic by posture) */
+.gov{display:flex;align-items:center;gap:6px;margin:7px 12px 0 48px;padding:6px 9px;border:1px solid var(--line);border-radius:var(--r);background:var(--s0);font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);line-height:1.5;flex-wrap:wrap}
+.gov .t{padding:1px 6px;border-radius:99px;font-size:8.5px;letter-spacing:.4px}
+.gov .auto{color:var(--ink-accent);background:var(--ok)} .gov .surface{color:var(--ink-await);background:var(--await)} .gov .locked{color:var(--tx);background:var(--s3);border:1px solid var(--line-2)}
+.gov .no{color:var(--fail)}
+/* off = quiet end */
+.mode.off{opacity:.7}.mode.off .glyph{color:var(--tx-3)}
+</style></head>
+<body><div class="app">
+
+  <header class="top">
+    <span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
+    <!-- ui://toolbar/presence in its OPENED state — the dial below is this control expanded -->
+    <span class="presence" data-ui-ref="ui://toolbar/presence"><span class="dot"></span>focus<span class="ch">· dial open ▾</span></span>
+    <div class="verbs">
+      <button class="btn">◐ layers</button>
+      <button class="btn">＋ wire</button>
+      <button class="btn">↻ force</button>
+      <button class="btn run">▶ run <span class="k">⏎</span></button>
+    </div>
+  </header>
+
+  <nav class="rail collapsible">
+    <div class="railhd">Node palette</div>
+    <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">L</span><span class="label">llm</span></div>
+    <h4><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span></h4>
+    <!-- rhm_mode IS a content node — the presence dial as a node (suite.py: MODE_NODE on system graph) -->
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">◑</span><span class="label">rhm_mode</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">C</span><span class="label">constant</span></div>
+  </nav>
+
+  <main class="canvas">
+    <div class="dimnote">
+      <span class="display">One dial re-tunes every organ.</span>
+      Presence is a node (<span class="mono">rhm_mode</span> on the <span class="mono">system</span> graph). Turning it
+      changes how loud the inbox, the right-hand-man, build-review and the walkthrough are — and whether
+      the system acts or asks. Posture, not a setting buried in menus.
+      <span class="play">◑ the mode you pick governs the loudness + autonomy of the whole surface</span>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <span class="live"><i></i>live</span>
+    <span>presence → focus · the dial wrote rhm_mode on the system graph</span>
+    <span style="margin-left:auto">company · event-stream connected</span>
+  </footer>
+
+  <!-- ── THE DIAL ── -->
+  <aside class="panel">
+    <div class="tabs"><span class="tab">⊙ Inspector</span><span class="tab">✦ Inbox</span><span class="tab on">◑ Presence</span></div>
+    <div class="pbody" data-ui-ref="ui://toolbar/presence">
+
+      <div class="dialhd"><span class="nm">Presence dial</span><span class="now">● focus</span></div>
+      <p class="dialsub">Eight postures. The mode <b>is a node</b> — turning the dial writes <b>rhm_mode</b> on the
+        <span class="mono">system</span> graph. Default is <b>listening</b>.</p>
+
+      <div class="regfed">↻ directives read from <b>capabilities().mode_directives</b> — the registry is the source of truth</div>
+
+      <div class="spine"><span>more present</span><span class="bar"></span><span>quieter</span></div>
+
+      <!-- listening (default) — loud, voice in/out -->
+      <div class="mode loud">
+        <div class="mhead"><span class="glyph">◉</span><span class="mname">listening</span>
+          <span class="vol"><i style="height:14px"></i><i style="height:11px"></i><i style="height:8px"></i></span></div>
+        <div class="desc">Conversational and present; responds fully (voice in/out).</div>
+      </div>
+
+      <!-- text-only -->
+      <div class="mode">
+        <div class="mhead"><span class="glyph">⌨</span><span class="mname">text-only</span>
+          <span class="vol"><i style="height:11px"></i><i style="height:8px"></i><i style="height:5px"></i></span></div>
+        <div class="desc">Responds in text, concisely, only to what is addressed.</div>
+      </div>
+
+      <!-- background -->
+      <div class="mode">
+        <div class="mhead"><span class="glyph">◌</span><span class="mname">background</span>
+          <span class="vol"><i style="height:8px"></i><i style="height:5px"></i><i style="height:3px"></i></span></div>
+        <div class="desc">Minimal — surfaces only what genuinely needs you; otherwise a one-line ack.</div>
+      </div>
+
+      <!-- focus (SELECTED in this snapshot) -->
+      <div class="mode on">
+        <div class="mhead"><span class="glyph">◎</span><span class="mname">focus</span>
+          <span class="vol"><i style="height:6px;background:var(--acc)"></i><i style="height:4px;background:var(--acc)"></i><i style="height:3px;background:var(--acc)"></i></span></div>
+        <div class="desc">You are in deep work — extremely brief (a line or two), no elaboration unless asked.</div>
+      </div>
+
+      <!-- walkthrough — loud (actively guides) -->
+      <div class="mode loud">
+        <div class="mhead"><span class="glyph">➤</span><span class="mname">walkthrough</span>
+          <span class="vol"><i style="height:14px"></i><i style="height:12px"></i><i style="height:9px"></i></span></div>
+        <div class="desc">Actively guides — narrates each step and directs your attention.</div>
+      </div>
+
+      <!-- watch-and-react -->
+      <div class="mode">
+        <div class="mhead"><span class="glyph">👁</span><span class="mname">watch-and-react</span>
+          <span class="vol"><i style="height:7px"></i><i style="height:5px"></i><i style="height:4px"></i></span></div>
+        <div class="desc">Observes over your shoulder; comments only when relevant, briefly.</div>
+      </div>
+
+      <!-- decide-for-me — ACTS (deterministic by governance posture), carries a governance strip -->
+      <div class="mode loud">
+        <div class="mhead"><span class="glyph">⚡</span><span class="mname">decide-for-me</span>
+          <span class="vol"><i style="height:12px"></i><i style="height:10px"></i><i style="height:13px"></i></span></div>
+        <div class="desc">Acts on the reversible / AUTO classes itself (deterministic by consequence); still cannot self-approve — anything needing approval is surfaced.</div>
+        <div class="gov">
+          routes by governance posture, NOT confidence:
+          <span class="t auto">AUTO → acts</span>
+          <span class="t surface">SURFACE/CONFIRM → asks you</span>
+          <span class="t locked">LOCKED → never</span>
+          <span class="no">✕ cannot self-approve</span>
+        </div>
+      </div>
+
+      <!-- off — silent -->
+      <div class="mode off">
+        <div class="mhead"><span class="glyph">○</span><span class="mname">off</span>
+          <span class="vol"><i style="height:3px"></i></span></div>
+        <div class="desc">The right-hand-man is silent — no responses, no ambient comments.</div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- mobile tab-bar (hidden on desktop; present so the responsive system resolves) -->
+  <nav class="tabbar">
+    <a><span class="ic">▦</span>Canvas</a>
+    <a><span class="ic">✦</span>Inbox</a>
+    <a class="on"><span class="ic">◑</span>RHM</a>
+    <a><span class="ic">▶</span>Run</a>
+  </nav>
+</div></body></html>

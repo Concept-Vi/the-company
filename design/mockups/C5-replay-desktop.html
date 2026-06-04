@@ -1,0 +1,345 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>C5 · Replay / decision trajectory audit (desktop)</title>
+<link rel="stylesheet" href="../design-system.css">
+<!--
+  id: C5  ·  area: C (Inbox + decisions / chief-of-staff)  ·  platform: desktop only (register: platforms=["desktop"])
+  status: DRAFT probe (panel-staging) — proposed-over-real-substrate, labelled proposed-vs-existing inline.
+
+  represents: [
+    "INB-replay"  — replay / decision-view / trajectory audit. THE REAL FUNCTIONS (note: register code-ref
+                     suite.py:2304 is STALE — 2304 is inside propose_panel/apply_panel; see observation O1):
+                       • decision_view(sid)  (runtime/suite.py:2496) → {id, decision, trajectory:[events]}.
+                         Trajectory = recent_events(999) FILTERED to e["surfaced"]==sid, sorted by seq
+                         (chronological PATH, not the endpoint). "proposed → framed → resolved (+ the why)."
+                       • session_view(session_id) (suite.py:2504) → every event tagged with that `session`,
+                         sorted by seq, + the session graph. WIDENS past 999 (reads events_since(-1)).
+                       • replay(limit=200) (suite.py:2514) → the WHOLE captured path, oldest-first
+                         (reversed recent_events) — "the trajectory that trains the twin (I1)."
+                       • the CAUSAL bind (the audit's spine, unique to C5): a recorded verdict authorises the
+                         system's own act, provably, via `derived_from` = a resolve event's unique seq:
+                           resolve(seq=N · choice=approve · surfaced=sid)
+                             → decision.dispatch(derived_from=N)   (suite.py:1500 _verify_resolve_bind / 1564 _already_dispatched)
+                             → criterion.commit(derived_from=N)    (suite.py:1431) OR
+                               review.requeue / requeue_from_verdict(derived_from=N, requeued_from=sid, verdict=choice) (suite.py:1461)
+                         Bound to the event SEQ (unique), never the sid (sid repeats on re-resolve). This three-part
+                         causal chain across event kinds IS the "decision trajectory audit"; nothing else in the corpus shows it.
+    "EVT-log"     — the activity event log: an APPEND-ONLY, crash-safe, cross-session events.jsonl
+                     (store/fs_store.py:172 append_event; recent_events newest-first :202; events_since oldest-first :210).
+                     Read at the suite as events(limit=60) (suite.py:475) and replay(limit) (suite.py:2521).
+                     EVERY event record is EXACTLY: {seq:int (atomic·monotonic·unique, T1-SEQ), ts:isoUTC, kind:str, summary:str, ...meta}.
+                     Real meta fields seen on actual emits (whitelist — nothing else is shown):
+                       surfaced · choice · reason · session · position · derived_from · requeued_from · verdict · commit · node_name · graph · ran · cached.
+                     Real event KINDS only (enumerated by grep over _emit/_emit_durable, 2026-06-04):
+                       resolve · decision.dispatch · criterion.commit · review.requeue · review.comment · review.skip · review.advance · review.start ·
+                       decision.intent · decision.surfaced_for_review · decision.implemented · decision.verify ·
+                       run · create · connect · delete · move · config · apply · reject · grow · revert · mode · react · ask · chat · warning ·
+                       trial.turn · trial.feedback · trial.reflection · trial.debrief.start.
+  ]
+
+  ADDRESSING (honest — updated 2026-06-05: ui://activity/replay is now REGISTERED):
+    The forensic trajectory region now has a registered address — ui://activity/replay (represents INB-replay,
+    code runtime/suite.py:replay) — so the raw-stream lens (lens 3) carries it as a live data-ui-ref.
+    Registered addresses carried in this draft:
+      • ui://activity         (EVT-now · suite.py:now) — the activity/event-log region (the live stream).
+      • ui://activity/replay  (INB-replay · suite.py:replay) — the raw forensic replay register (lens 3, oldest-first).
+      • ui://inbox/coa        (INB-coa · suite.py:coa) — the decision side (the audited item belongs to the inbox/decision surface).
+    STILL PROPOSED (no address yet, flagged in prose not invented in-attribute):
+      ui://inbox/decision  (a decision-as-view-over-the-log surface).
+    /api/decision (bridge.py → decision_view) is a WIRED backend endpoint with NO ui:// address — evidence a dedicated decision-view address is still warranted (O2).
+
+  journey-moment: register journeys=[] — C5 is in NO sequence, and that is correct; do not borrow one.
+    surfaces-when: OPERATOR-DIRECTED, on-demand FORENSIC audit — "how did we get here / show me the path / what authorised that build."
+    It is NOT a triage step (that is J5: C1→C4→C2). It is the after-the-fact accountability surface over the captured trajectory.
+
+  GROUNDING NOTES (only real behaviour — proposed items are LABELLED [proposed]):
+  • Three legible REGISTERS over ONE append-only log (not a kitchen sink):
+      (1) CAUSAL LINEAGE — the derived_from chain for one decision (the C5-unique spine).
+      (2) PER-DECISION TRAJECTORY — decision_view(sid): every event where surfaced==sid, in seq order.
+      (3) RAW STREAM — replay()/events.jsonl oldest-first, the whole captured path (the twin's training set).
+  • Events are NOT nodes: they are NOT coloured with the node-kind palette (--kind-process/content). Event-kind accents
+    reuse only signal tokens (--acc/--await/--fail/--cache/--tx-*). Node statuses idle/ran/cached/stuck do not appear (no node dots).
+  • The audit is READ-ONLY by construction: the log is append-only; resolve_surfaced is OPERATOR-only and idempotent-per-item
+    (a terminal verdict approve/reject/decide cannot be contradicted — suite.py:2480). C5 shows the record; it does not let you rewrite it.
+  • WINDOW HONESTY [real limit, depicted]: decision_view reads recent_events(999) → a very long-lived decision's lineage can
+    truncate at the 999-event window; session_view reads events_since(-1) (full tail) and does not. Shown as a labelled "audit window" note (O3).
+  • All seq/ts/derived_from values below are ILLUSTRATIVE of the real shapes, not captured data.
+-->
+<style>
+.top{grid-area:top;display:flex;align-items:center;gap:18px;padding:0 18px;background:linear-gradient(180deg,var(--s1),var(--s0));border-bottom:1px solid var(--line)}
+.brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:18px;letter-spacing:-.3px}
+.brand em{font-style:normal;color:var(--acc)}
+.brand .tag{font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:8px}
+.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--line-2);border-radius:99px;background:var(--s2);font-size:12px;color:var(--tx-2)}
+.presence .dot{width:7px;height:7px;border-radius:99px;background:var(--cache);box-shadow:0 0 0 3px rgba(107,138,168,.14)}
+.verbs{margin-left:auto;display:flex;gap:7px}
+
+.rail{grid-area:rail;background:var(--s0);border-right:1px solid var(--line);padding:14px 12px;overflow:auto}
+.rail h4{font-size:10px;text-transform:uppercase;letter-spacing:1.3px;color:var(--tx-3);margin:14px 4px 8px;font-weight:600;display:flex;align-items:center;gap:7px}
+.rail h4:first-child{margin-top:2px}
+.chip{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:var(--r);background:var(--s1);border:1px solid var(--line);font-size:12.5px;margin-bottom:5px;color:var(--tx-2)}
+.chip.on{border-color:var(--acc-dim);color:var(--tx)}
+.chip .mono-chip{width:20px;height:20px;border-radius:5px;display:grid;place-items:center;font-family:'IBM Plex Mono';font-weight:600;font-size:10px;color:var(--tx-2);background:var(--s3);border:1px solid var(--line)}
+
+.foot{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--s0);border-top:1px solid var(--line);font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono'}
+.foot .live{color:var(--acc)}
+
+/* C5 is a FORENSIC surface — it takes the canvas grid-area as a full audit board (canvas waits; attention is on the trajectory) */
+.audit{grid-area:canvas;overflow:auto;padding:18px 20px 26px;background-image:radial-gradient(var(--line) .8px,transparent .8px);background-size:30px 30px}
+.audit-head{display:flex;align-items:baseline;gap:12px;margin:0 2px 4px}
+.audit-head .h{font-family:'Bricolage Grotesque';font-weight:800;font-size:21px;letter-spacing:-.4px;color:var(--tx)}
+.audit-head .sub{font-size:12px;color:var(--tx-3)}
+.audit-head .mode{margin-left:auto;font-family:'IBM Plex Mono';font-size:10px;color:var(--cache);border:1px solid var(--line-2);border-radius:99px;padding:3px 10px;background:var(--s1)}
+.window-note{display:flex;align-items:center;gap:8px;margin:8px 2px 16px;padding:6px 10px;border:1px dashed var(--line-2);border-radius:var(--r);font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3);background:var(--s1)}
+.window-note b{color:var(--cache);font-weight:500}
+
+/* a register card (one of the three lenses) */
+.reg{border:1px solid var(--line);border-radius:var(--r-lg);background:linear-gradient(180deg,var(--s1),var(--s0));margin-bottom:16px;overflow:hidden}
+.reg-head{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line);background:var(--s1)}
+.reg-head .n{font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3);border:1px solid var(--line-2);border-radius:5px;padding:2px 7px}
+.reg-head .t{font-family:'Bricolage Grotesque';font-weight:700;font-size:14px;color:var(--tx);letter-spacing:-.1px}
+.reg-head .fn{margin-left:auto;font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3)}
+.reg-body{padding:13px 14px}
+.reg-lead{font-size:11.5px;color:var(--tx-2);line-height:1.5;margin-bottom:13px}
+.reg-lead code{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--acc);background:var(--s2);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+
+/* ── REGISTER 1 · the derived_from CAUSAL LINEAGE (the spine) ── */
+.lineage{display:flex;flex-direction:column;gap:0}
+.lin-step{display:grid;grid-template-columns:118px 1fr;gap:14px;position:relative;padding-bottom:18px}
+.lin-step:last-child{padding-bottom:0}
+.lin-rail{position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:5px;padding-top:3px}
+.lin-rail .seq{font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-2)}
+.lin-rail .ts{font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3)}
+/* the vertical causal thread + the node on it */
+.lin-step::before{content:"";position:absolute;left:135px;top:6px;bottom:-12px;width:2px;background:var(--acc-dim)}
+.lin-step:last-child::before{display:none}
+.lin-knot{position:absolute;left:130px;top:4px;width:12px;height:12px;border-radius:99px;background:var(--s0);border:2px solid var(--acc);z-index:2}
+.lin-card{margin-left:14px;border:1px solid var(--line);border-radius:var(--r);background:var(--s2);padding:9px 12px}
+.lin-card .row1{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.kind{font-family:'IBM Plex Mono';font-size:10px;border-radius:5px;padding:2px 8px;border:1px solid var(--line)}
+.kind.resolve{color:var(--ink-accent);background:var(--acc);border-color:transparent;font-weight:600}
+.kind.dispatch{color:var(--tx);background:var(--s3);border-color:var(--line-2)}
+.kind.commit{color:var(--ok);background:var(--s3);border-color:var(--acc-dim)}
+.kind.requeue{color:var(--await);background:var(--s3);border-color:var(--line-2)}
+.kind.implemented{color:var(--cache);background:var(--s3);border-color:var(--line-2)}
+.kind.verify{color:var(--cache);background:var(--s3);border-color:var(--line-2)}
+.lin-card .why{font-size:11.5px;color:var(--tx-2);margin-top:6px;line-height:1.45}
+.lin-card .meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.fld{font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-2);background:var(--s0);border:1px solid var(--line);border-radius:4px;padding:2px 6px}
+.fld b{color:var(--acc);font-weight:500}
+.fld.bind{border-color:var(--acc-dim)} .fld.bind b{color:var(--ok)}
+.bind-tag{font-family:'IBM Plex Mono';font-size:9px;color:var(--ok);display:inline-flex;align-items:center;gap:4px}
+.choice-pill{font-family:'IBM Plex Mono';font-size:9.5px;text-transform:uppercase;letter-spacing:.6px;border-radius:99px;padding:2px 8px}
+.choice-pill.approve{color:var(--ink-accent);background:var(--ok)} .choice-pill.reject{color:#1a0a08;background:var(--fail)} .choice-pill.decide{color:var(--ink-accent);background:var(--cache)}
+
+/* ── REGISTER 2 · per-decision trajectory (decision_view) ── */
+.subject{display:flex;align-items:center;gap:10px;padding:8px 11px;border:1px solid var(--line-2);border-radius:var(--r);background:var(--s2);margin-bottom:12px}
+.subject .sid{font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3)}
+.subject .verdict{margin-left:auto;font-family:'IBM Plex Mono';font-size:9.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-accent);background:var(--ok);border-radius:99px;padding:2px 8px}
+.traj{display:flex;flex-direction:column;gap:1px}
+.trow{display:grid;grid-template-columns:54px 132px 110px 1fr;gap:12px;align-items:baseline;padding:7px 9px;border-radius:6px;font-size:11.5px}
+.trow:nth-child(odd){background:var(--s1)}
+.trow .seq{font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3)}
+.trow .ts{font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3)}
+.trow .k{font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-2)}
+.trow .k.hi{color:var(--acc)}
+.trow .sm{color:var(--tx-2);line-height:1.4}
+.trow .sm em{font-style:normal;color:var(--tx-3);font-family:'IBM Plex Mono';font-size:10px}
+
+/* ── REGISTER 3 · the raw oldest-first stream (replay / events.jsonl) ── */
+.stream{font-family:'IBM Plex Mono';font-size:10.5px;line-height:1.7;background:var(--s0);border:1px solid var(--line);border-radius:var(--r);padding:11px 13px;max-height:228px;overflow:auto}
+.sline{display:flex;gap:11px;align-items:baseline;white-space:nowrap}
+.sline .sq{color:var(--tx-3);width:34px;flex:none;text-align:right}
+.sline .tm{color:var(--tx-3);width:62px;flex:none}
+.sline .kd{flex:none;width:170px;overflow:hidden;text-overflow:ellipsis}
+.sline .kd.resolve{color:var(--acc)} .sline .kd.dispatch{color:var(--tx)} .sline .kd.commit{color:var(--ok)}
+.sline .kd.requeue{color:var(--await)} .sline .kd.run{color:var(--cache)} .sline .kd.warning{color:var(--fail)}
+.sline .kd.other{color:var(--tx-2)}
+.sline .sm{color:var(--tx-3);overflow:hidden;text-overflow:ellipsis}
+.stream-foot{font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3);margin-top:9px;padding-top:8px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center}
+
+/* proposed-vs-existing legend chip */
+.proposed{font-family:'IBM Plex Mono';font-size:9px;color:var(--await);border:1px dashed var(--line-2);border-radius:99px;padding:1px 7px;margin-left:6px}
+
+/* the panel reuses the C-area right panel: here it lists OTHER auditable decisions/sessions to pivot to */
+.panel{grid-area:panel;background:var(--s0);border-left:1px solid var(--line);padding:14px;overflow:auto}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:-14px -14px 14px;padding:10px 12px 0}
+.tab{padding:8px 13px;font-size:12.5px;color:var(--tx-3);border-bottom:2px solid transparent;font-weight:500}
+.tab.on{color:var(--tx);border-bottom-color:var(--acc)}
+.panel h4{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--tx-3);margin:4px 2px 9px;font-weight:600}
+.audrow{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--s1);margin-bottom:6px;cursor:pointer}
+.audrow.on{border-color:var(--acc-dim);background:var(--s2)}
+.audrow .v{font-family:'IBM Plex Mono';font-size:9px;text-transform:uppercase;letter-spacing:.6px;padding:2px 6px;border-radius:99px;flex:none}
+.audrow .v.approve{color:var(--ink-accent);background:var(--ok)} .audrow .v.decide{color:var(--ink-accent);background:var(--cache)} .audrow .v.reject{color:#1a0a08;background:var(--fail)}
+.audrow .t{font-size:11.5px;color:var(--tx-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.audrow .sid{margin-left:auto;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);flex:none}
+.panel .sess{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--tx-2);display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--s1);margin-bottom:6px}
+.panel .sess .c{margin-left:auto;color:var(--tx-3)}
+</style></head>
+<body><div class="app">
+  <header class="top"><span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
+    <!-- presence here is QUIET (cache-tone): the audit is forensic, not an escalation awaiting you -->
+    <span class="presence"><span class="dot"></span>reviewing the record ▾</span>
+    <div class="verbs"><button class="btn">◐ layers</button><button class="btn">↻ replay</button><button class="btn">▶ run <span class="k">⏎</span></button></div>
+  </header>
+
+  <nav class="rail collapsible">
+    <h4>Audit lenses</h4>
+    <div class="chip on"><span class="mono-chip">⛓</span><span class="label">Causal lineage</span></div>
+    <div class="chip on"><span class="mono-chip">↳</span><span class="label">Decision trajectory</span></div>
+    <div class="chip on"><span class="mono-chip">≣</span><span class="label">Raw stream</span></div>
+    <h4>Scope</h4>
+    <div class="chip"><span class="mono-chip">◦</span><span class="label">One decision</span></div>
+    <div class="chip"><span class="mono-chip">◇</span><span class="label">A session</span></div>
+    <div class="chip"><span class="mono-chip">∞</span><span class="label">Whole path</span></div>
+  </nav>
+
+  <!-- THE AUDIT BOARD — takes the canvas grid-area. The live activity region is ui://activity; the raw
+       forensic replay register (lens 3) carries the now-registered ui://activity/replay; the audited
+       decision belongs to ui://inbox/coa. -->
+  <main class="audit" data-ui-ref="ui://activity">
+    <div class="audit-head">
+      <span class="h">Decision trajectory audit</span>
+      <span class="sub">how did we get here — the captured path, reconstructed from the append-only log</span>
+      <span class="mode">operator-directed · forensic</span>
+    </div>
+    <!-- O3: the real window difference, depicted honestly as a labelled limit, not hidden -->
+    <div class="window-note" title="decision_view reads recent_events(999) — a windowed read; session_view reads events_since(-1), the full tail (suite.py:2496 vs 2504). The audit states its window rather than implying unbounded history.">
+      ⚠ audit window: <b>last 999 events</b> for a single decision (decision_view · recent_events(999)). Session &amp; whole-path lenses read the full tail (events_since(-1)) — no truncation.
+    </div>
+
+    <!-- ════ REGISTER 1 · the derived_from CAUSAL LINEAGE — the C5-unique spine ════ -->
+    <section class="reg">
+      <div class="reg-head"><span class="n">lens 1</span><span class="t">Causal lineage — how a verdict authorised the system's own acts</span>
+        <span class="fn">the three-part bind · seq → derived_from · suite.py:1500/1431/1461</span></div>
+      <div class="reg-body">
+        <div class="reg-lead">A recorded verdict authorises every act the system took FROM it — provably — by <code>derived_from</code> = the resolve event's unique <code>seq</code> (never the sid; sid repeats on re-resolve). The chain is verified at each hop: <code>kind=resolve · choice=approve · surfaced==sid</code> → dispatch → commit/requeue. This is the audit nothing else in the corpus shows.</div>
+
+        <div class="lineage">
+          <!-- step 1: the operator's terminal verdict (resolve) — the ROOT the chain derives from -->
+          <div class="lin-step">
+            <div class="lin-rail"><span class="seq">seq 412</span><span class="ts">14:02:09Z</span></div>
+            <div class="lin-knot"></div>
+            <div class="lin-card">
+              <div class="row1"><span class="kind resolve">resolve</span><span class="choice-pill approve">approve</span><span class="bind-tag">⛓ the root · others bind to seq 412</span></div>
+              <div class="why">operator approved <span style="color:var(--tx)">s31-build_result_review</span> — “the ‘sentiment’ node, demonstrated, is correct; ship it.”</div>
+              <div class="meta"><span class="fld">surfaced=<b>s31-build_result_review</b></span><span class="fld">choice=<b>approve</b></span><span class="fld">reason=<b>“demonstrated correct”</b></span><span class="fld">session=<b>walk-0418</b></span><span class="fld">position=<b>3</b></span></div>
+            </div>
+          </div>
+
+          <!-- step 2: the system's act — dispatch — derived_from the verdict seq (exactly-once on this seq) -->
+          <div class="lin-step">
+            <div class="lin-rail"><span class="seq">seq 413</span><span class="ts">14:02:10Z</span></div>
+            <div class="lin-knot"></div>
+            <div class="lin-card">
+              <div class="row1"><span class="kind dispatch">decision.dispatch</span><span class="bind-tag">⛓ derived from seq 412</span></div>
+              <div class="why">the wire launched the build — <em>only</em> because seq 412 satisfied the bind. A second dispatch on seq 412 is refused (exactly-once, <code style="font-family:'IBM Plex Mono';font-size:10px">_already_dispatched</code>).</div>
+              <div class="meta"><span class="fld bind">derived_from=<b>412</b></span><span class="fld">surfaced=<b>s31-build_result_review</b></span></div>
+            </div>
+          </div>
+
+          <!-- step 3: lifecycle — implemented (wire posts the build-closed review) -->
+          <div class="lin-step">
+            <div class="lin-rail"><span class="seq">seq 421</span><span class="ts">14:08:55Z</span></div>
+            <div class="lin-knot"></div>
+            <div class="lin-card">
+              <div class="row1"><span class="kind implemented">decision.implemented</span></div>
+              <div class="why">build closed — implemented + self-verified; surfaced back demonstrate-first (its full card is C3).</div>
+              <div class="meta"><span class="fld">surfaced=<b>s31-build_result_review</b></span><span class="fld">commit=<b>4af1c0e2</b></span><span class="fld">node_name=<b>sentiment</b></span></div>
+            </div>
+          </div>
+
+          <!-- step 4: criterion.commit — derived_from the SAME verdict seq (the governed write) -->
+          <div class="lin-step">
+            <div class="lin-rail"><span class="seq">seq 422</span><span class="ts">14:08:56Z</span></div>
+            <div class="lin-knot"></div>
+            <div class="lin-card">
+              <div class="row1"><span class="kind commit">criterion.commit</span><span class="bind-tag">⛓ derived from seq 412</span></div>
+              <div class="why">criterion <code style="font-family:'IBM Plex Mono';font-size:10px">node-sentiment-live</code> committed — bound to the same verdict seq (no ungoverned criterion write).</div>
+              <div class="meta"><span class="fld bind">derived_from=<b>412</b></span><span class="fld">surfaced=<b>s31-build_result_review</b></span><span class="fld">commit=<b>4af1c0e2</b></span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- the alternate branch made legible: a NON-approving verdict requeues instead of dispatching -->
+        <div style="margin-top:16px;padding:10px 12px;border:1px dashed var(--line-2);border-radius:var(--r);background:var(--s1)">
+          <div style="font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3);margin-bottom:7px">the other branch — when the verdict is NOT approve, the wire REQUEUES (never dispatches):</div>
+          <div class="lin-card" style="margin-left:0;border-color:var(--line-2)">
+            <div class="row1"><span class="kind requeue">review.requeue</span><span class="choice-pill reject">reject</span><span class="bind-tag" style="color:var(--await)">⛓ derived from a reject seq</span></div>
+            <div class="why">a reject/needs-change verdict on seq <b>N</b> → <code style="font-family:'IBM Plex Mono';font-size:10px">requeue_from_verdict</code> mints a fresh surfaced item, carrying the why; verified <code style="font-family:'IBM Plex Mono';font-size:10px">kind=resolve · surfaced==sid · choice≠approve</code>.</div>
+            <div class="meta"><span class="fld bind" style="border-color:var(--line-2)">derived_from=<b>N</b></span><span class="fld">requeued_from=<b>s27-…</b></span><span class="fld">verdict=<b>reject</b></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════ REGISTER 2 · per-decision TRAJECTORY (decision_view) ════ -->
+    <section class="reg">
+      <div class="reg-head"><span class="n">lens 2</span><span class="t">Decision trajectory — proposed → framed → resolved (+ the why)</span>
+        <span class="fn">decision_view(sid) · events where surfaced==sid · suite.py:2496</span></div>
+      <div class="reg-body">
+        <div class="subject" data-ui-ref="ui://inbox/coa">
+          <span class="sid">s31-build_result_review</span>
+          <span style="font-size:12px;color:var(--tx)">“the ‘sentiment’ node — built, demonstrated, shipped”</span>
+          <span class="verdict">resolved · approve</span>
+        </div>
+        <!-- every event with surfaced==s31, in seq order — the chronological PATH, not the endpoint -->
+        <div class="traj">
+          <div class="trow"><span class="seq">405</span><span class="ts">13:55:02Z</span><span class="k">decision.intent</span><span class="sm">build-intent captured — “a node that scores sentiment.” <em>origin: idea s28</em></span></div>
+          <div class="trow"><span class="seq">408</span><span class="ts">13:58:40Z</span><span class="k">decision.surfaced_for_review</span><span class="sm">framed as a value-choice (COA) and surfaced to the inbox</span></div>
+          <div class="trow"><span class="seq">410</span><span class="ts">14:01:33Z</span><span class="k">review.comment</span><span class="sm">operator commented — “show me it on a real thread first.” <em>choice=comment · NOT resolved</em></span></div>
+          <div class="trow"><span class="seq">412</span><span class="ts">14:02:09Z</span><span class="k hi">resolve</span><span class="sm">operator <b style="color:var(--acc);font-weight:500">approved</b> — “demonstrated correct; ship it.” <em>choice=approve · TERMINAL</em></span></div>
+          <div class="trow"><span class="seq">413</span><span class="ts">14:02:10Z</span><span class="k hi">decision.dispatch</span><span class="sm">wire launched the build <em>derived_from=412</em></span></div>
+          <div class="trow"><span class="seq">421</span><span class="ts">14:08:55Z</span><span class="k">decision.implemented</span><span class="sm">implemented + verified · commit 4af1c0e2</span></div>
+          <div class="trow"><span class="seq">422</span><span class="ts">14:08:56Z</span><span class="k">criterion.commit</span><span class="sm">criterion committed <em>derived_from=412</em></span></div>
+        </div>
+        <div style="font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3);margin-top:11px">read-only · the log is append-only and a terminal verdict cannot be contradicted (idempotent-per-item, suite.py:2480) — this surface shows the record, it does not rewrite it.</div>
+      </div>
+    </section>
+
+    <!-- ════ REGISTER 3 · the RAW oldest-first STREAM (replay / events.jsonl) ════ -->
+    <section class="reg" data-ui-ref="ui://activity/replay">
+      <div class="reg-head"><span class="n">lens 3</span><span class="t">Raw stream — the whole captured path, oldest-first</span>
+        <span class="fn">replay(limit) · reversed(recent_events) · suite.py:2514 · store events.jsonl</span></div>
+      <div class="reg-body">
+        <div class="reg-lead" style="margin-bottom:11px">The unfiltered append-only log — every event across BOTH faces (bridge + MCP), since it tails the shared file. This is the trajectory that trains the twin (I1). Each line is the real record shape: <code>seq · ts · kind · summary</code> (+ meta).</div>
+        <div class="stream">
+          <div class="sline"><span class="sq">404</span><span class="tm">13:54:01</span><span class="kd run">run</span><span class="sm">ran 2, cached 3 · graph main</span></div>
+          <div class="sline"><span class="sq">405</span><span class="tm">13:55:02</span><span class="kd other">decision.intent</span><span class="sm">build-intent — score sentiment</span></div>
+          <div class="sline"><span class="sq">406</span><span class="tm">13:56:10</span><span class="kd other">mode</span><span class="sm">presence → decide-for-me</span></div>
+          <div class="sline"><span class="sq">408</span><span class="tm">13:58:40</span><span class="kd other">decision.surfaced_for_review</span><span class="sm">COA surfaced · s31</span></div>
+          <div class="sline"><span class="sq">410</span><span class="tm">14:01:33</span><span class="kd other">review.comment</span><span class="sm">operator: “show me it first”</span></div>
+          <div class="sline"><span class="sq">412</span><span class="tm">14:02:09</span><span class="kd resolve">resolve</span><span class="sm">approve · s31 · “demonstrated correct”</span></div>
+          <div class="sline"><span class="sq">413</span><span class="tm">14:02:10</span><span class="kd dispatch">decision.dispatch</span><span class="sm">derived_from=412</span></div>
+          <div class="sline"><span class="sq">414</span><span class="tm">14:03:00</span><span class="kd other">decision.verify</span><span class="sm">affected suites + drift + critic</span></div>
+          <div class="sline"><span class="sq">421</span><span class="tm">14:08:55</span><span class="kd other">decision.implemented</span><span class="sm">commit 4af1c0e2 · node sentiment</span></div>
+          <div class="sline"><span class="sq">422</span><span class="tm">14:08:56</span><span class="kd commit">criterion.commit</span><span class="sm">derived_from=412</span></div>
+          <div class="sline"><span class="sq">423</span><span class="tm">14:09:30</span><span class="kd run">run</span><span class="sm">ran 1, cached 4 · graph main</span></div>
+        </div>
+        <div class="stream-foot"><span class="live">● live</span><span>SSE cursor id:&lt;seq&gt; (bridge.py:128) — append-only, monotonic-unique</span><span style="margin-left:auto">oldest → newest</span></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot"><span class="live">● live</span><span>event-stream connected</span><span style="margin-left:auto">company · audit · read-only over the append-only log</span></footer>
+
+  <!-- the right panel: PIVOT to other auditable decisions/sessions (the audit's index) -->
+  <aside class="panel" data-ui-ref="ui://inbox/coa">
+    <div class="tabs"><span class="tab">⊙ Inspector</span><span class="tab">✦ Inbox</span><span class="tab on">⛓ Audit</span></div>
+
+    <h4>Audit a decision <span class="proposed">surfaces /api/decision · ui:// address [proposed]</span></h4>
+    <!-- each pivots to its decision_view(sid). The verdict tag = the terminal resolved value (approve/decide/reject). -->
+    <div class="audrow on"><span class="v approve">appr</span><span class="t">“sentiment” node — built &amp; shipped</span><span class="sid">s31</span></div>
+    <div class="audrow"><span class="v decide">dec</span><span class="t">route-by-tone — escalate negatives</span><span class="sid">s14</span></div>
+    <div class="audrow"><span class="v reject">rej</span><span class="t">auto-summarise threads — sent back</span><span class="sid">s27</span></div>
+    <div class="audrow"><span class="v approve">appr</span><span class="t">add `wordcount` node — accepted</span><span class="sid">s19</span></div>
+
+    <h4 style="margin-top:18px">Audit a session <span class="proposed">session_view · full tail</span></h4>
+    <!-- session_view(session_id): every event tagged with this session, full tail (no 999 window) -->
+    <div class="sess">◇ walk-0418 <span class="c">9 events</span></div>
+    <div class="sess">◇ walk-0411 <span class="c">14 events</span></div>
+
+    <h4 style="margin-top:18px">Whole path</h4>
+    <div class="sess">∞ replay(200) <span class="c">the twin's set</span></div>
+  </aside>
+</div></body></html>

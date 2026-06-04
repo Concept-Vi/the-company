@@ -1,0 +1,1347 @@
+{
+  "_what": "THE REGISTER — the completeness + quality contract for the design corpus. The autonomous mockup loop works through this recursively/iteratively and checks itself against it: every feature must be covered by >=1 view; every view must exist in each of its platform variants; every spine sequence must have a storyboard; every produced mockup must pass the quality_bar. Source of truth = the Feature & Function Inventory (real, file:line-grounded). Supersedes manifest.json as the production index.  [SINGLE REGISTRY — manifest.json was merged in here and retired to _archive/ on 2026-06-04; areas + journeys.surfaces_when folded in. All _system scripts + the gallery read THIS file.]",
+  "_traceability": "Each view's `represents[]` links it to the real thing it depicts: {feature: <id from the Feature & Function Inventory>, label, code: <file:line | /api/endpoint | Suite.verb | node-type>}. The `coverage` map below is the REVERSE index (feature-id → [view-ids]) so un-mocked features are visible as gaps. feature-ids + both directions are POPULATED BY THE RUNNING AUDIT; until then represents=[] means un-grounded. See conventions.md › Traceability.",
+  "design_system": "design-system.css",
+  "ground_truth": "Feature & Function Inventory (from the real app).md",
+  "journeys_doc": "User Journeys & UX.md",
+  "quality_bar": [
+    "GROUNDED — depicts only real features (no fiction). 2 node kinds (process/content) only; node statuses idle/ran/cached/stuck only; nothing shown that the app doesn't do. Build-required items (no FE yet) are LABELLED as proposed, not as existing.",
+    "LINKED — represents[] lists the real features it shows, each with a code ref; the view is reachable in coverage{}.",
+    "ON-SYSTEM — links ../design-system.css; uses tokens + component classes; never bespoke inline styling that belongs in the system.",
+    "RESPONSIVE — reflows; resize works. Native mobile variant exists where platforms includes 'mobile' (sheets/tab-bar/thumb, not a shrunk desktop).",
+    "JOURNEY-MOMENT — the mockup states which journey-step it is + when it surfaces; designed for that moment, not a loose screen.",
+    "UX — attention-protecting, recognise-by-sight, RHM-as-thread, frontstage/backstage honoured.",
+    "SELF-DESCRIBING — opens with a metadata comment block listing its represents[] (feature-ids + code)."
+  ],
+  "status_flow": "planned -> drafting -> drafted -> quality-passed -> approved(Tim). A view-variant counts DONE for the loop at quality-passed.",
+  "areas": {
+    "A": "The operating surface (canvas)",
+    "B": "Right-hand-man + review/walkthrough organ",
+    "C": "Inbox + decisions (chief-of-staff)",
+    "D": "Self-build / the wire (act on outputs)",
+    "E": "Models + embeddings",
+    "F": "Frame, settings, system",
+    "G": "Responsive system"
+  },
+  "features": [
+    {
+      "id": "ENG-resolve",
+      "area": "engine",
+      "label": "reactive resolution (fires when input addresses resolve)",
+      "code": "scheduler.py:37"
+    },
+    {
+      "id": "ENG-memo",
+      "area": "engine",
+      "label": "memo gate — ran vs cached",
+      "code": "scheduler.py:26"
+    },
+    {
+      "id": "ENG-volatile",
+      "area": "engine",
+      "label": "VOLATILE bypass",
+      "code": "runtime/scheduler.py:run"
+    },
+    {
+      "id": "ENG-force",
+      "area": "engine",
+      "label": "force re-run",
+      "code": "runtime/scheduler.py:run / runtime/bridge.py:do_POST"
+    },
+    {
+      "id": "ENG-branch",
+      "area": "engine",
+      "label": "per-port branching + pruning (gate)",
+      "code": "runtime/scheduler.py:run"
+    },
+    {
+      "id": "ENG-stuck",
+      "area": "engine",
+      "label": "stuck detection (distinct from pruned)",
+      "code": "suite.py:_last_run_stuck"
+    },
+    {
+      "id": "ENG-branches-pause",
+      "area": "engine",
+      "label": "branches / pause (engine-only, no FE)",
+      "code": "runtime/scheduler.py:run",
+      "build_required": true
+    },
+    {
+      "id": "NODE-kinds",
+      "area": "nodes",
+      "label": "2 live kinds: process, content",
+      "code": "registry.py:18"
+    },
+    {
+      "id": "NODE-types",
+      "area": "nodes",
+      "label": "the 16 node types",
+      "code": "nodes/*.py"
+    },
+    {
+      "id": "NODE-config",
+      "area": "nodes",
+      "label": "per-node config_schema → inspector form",
+      "code": "node_type.py / App.tsx:134"
+    },
+    {
+      "id": "NODE-ports",
+      "area": "nodes",
+      "label": "typed ports Text/Any/Vector/Number",
+      "code": "suite.py:349"
+    },
+    {
+      "id": "NODE-portal",
+      "area": "nodes",
+      "label": "portal — live transclusion",
+      "code": "nodes/portal.py"
+    },
+    {
+      "id": "NODE-layer",
+      "area": "nodes",
+      "label": "provenance layer (authored/system)",
+      "code": "runtime/suite.py:state"
+    },
+    {
+      "id": "CAN-compose",
+      "area": "canvas",
+      "label": "create/connect/delete/set_config/set_position",
+      "code": "runtime/suite.py:set_config"
+    },
+    {
+      "id": "CAN-drag",
+      "area": "canvas",
+      "label": "drag-to-connect port nubs",
+      "code": "canvas/app/src/App.tsx:DRAG_CONN"
+    },
+    {
+      "id": "CAN-zoom",
+      "area": "canvas",
+      "label": "semantic zoom",
+      "code": "canvas/app/src/App.tsx:zoom"
+    },
+    {
+      "id": "CAN-layers",
+      "area": "canvas",
+      "label": "layer view all/origin/system",
+      "code": "canvas/app/src/App.tsx:cycleLayers"
+    },
+    {
+      "id": "CAN-multigraph",
+      "area": "canvas",
+      "label": "multiple named graphs",
+      "code": "suite.py:285",
+      "build_required": true
+    },
+    {
+      "id": "RUN-run",
+      "area": "run",
+      "label": "run / state / results",
+      "code": "runtime/suite.py:run"
+    },
+    {
+      "id": "RUN-status",
+      "area": "run",
+      "label": "node status dots idle/ran/cached/stuck",
+      "code": "runtime/suite.py:state"
+    },
+    {
+      "id": "RHM-chat",
+      "area": "rhm",
+      "label": "grounded chat, abstains",
+      "code": "runtime/suite.py:chat"
+    },
+    {
+      "id": "RHM-verbs",
+      "area": "rhm",
+      "label": "7 action verbs (run/propose/build/consult/show/panel/extend)",
+      "code": "runtime/suite.py:RHM_VERBS"
+    },
+    {
+      "id": "RHM-modes",
+      "area": "rhm",
+      "label": "8 presence modes (the dial)",
+      "code": "runtime/suite.py:set_mode"
+    },
+    {
+      "id": "RHM-decide",
+      "area": "rhm",
+      "label": "decide-for-me autonomous routing",
+      "code": "runtime/suite.py:chat"
+    },
+    {
+      "id": "RHM-react",
+      "area": "rhm",
+      "label": "watch-and-react ambient comment",
+      "code": "runtime/suite.py:react"
+    },
+    {
+      "id": "RHM-config",
+      "area": "rhm",
+      "label": "model/provider/persona config",
+      "code": "runtime/suite.py:set_rhm_config"
+    },
+    {
+      "id": "RHM-copresence",
+      "area": "rhm",
+      "label": "co-presence (sees your selection)",
+      "code": "suite.py:_chat_context"
+    },
+    {
+      "id": "RHM-twin",
+      "area": "rhm",
+      "label": "twin / model-of-Tim grading (gold/working, cold-start)",
+      "code": "runtime/suite.py:training_signal"
+    },
+    {
+      "id": "WALK-session",
+      "area": "walk",
+      "label": "review session as a graph",
+      "code": "runtime/suite.py:session_view"
+    },
+    {
+      "id": "WALK-present",
+      "area": "walk",
+      "label": "present_current + ui_target framing",
+      "code": "runtime/suite.py:present_current"
+    },
+    {
+      "id": "WALK-next",
+      "area": "walk",
+      "label": "next page-turn (open gate→fire→advance)",
+      "code": "runtime/suite.py:next"
+    },
+    {
+      "id": "WALK-uiresolve",
+      "area": "walk",
+      "label": "ui:// resolver + UI registry (drive the view)",
+      "code": "runtime/suite.py:_registry_ui_target"
+    },
+    {
+      "id": "INB-lanes",
+      "area": "inbox",
+      "label": "3-lane inbox + test-origin exclusion",
+      "code": "runtime/suite.py:inbox_lanes"
+    },
+    {
+      "id": "INB-coa",
+      "area": "inbox",
+      "label": "COA value-choice (decision-compiler up)",
+      "code": "runtime/suite.py:coa"
+    },
+    {
+      "id": "INB-surface",
+      "area": "inbox",
+      "label": "surface a node output to the inbox",
+      "code": "runtime/suite.py:surface_review"
+    },
+    {
+      "id": "INB-idea",
+      "area": "inbox",
+      "label": "idea capture (generative)",
+      "code": "runtime/suite.py:idea_capture"
+    },
+    {
+      "id": "INB-resolve",
+      "area": "inbox",
+      "label": "resolve vocab (approve/reject/decide/comment/skip, operator-only, idempotent)",
+      "code": "runtime/suite.py:resolve_surfaced"
+    },
+    {
+      "id": "INB-replay",
+      "area": "inbox",
+      "label": "replay / decision-view / trajectory audit",
+      "code": "runtime/suite.py:replay"
+    },
+    {
+      "id": "WIRE-intent",
+      "area": "wire",
+      "label": "surface_build_intent (entry — no FE yet)",
+      "code": "runtime/suite.py:surface_build_intent / runtime/bridge.py:do_POST",
+      "build_required": true
+    },
+    {
+      "id": "WIRE-dispatch",
+      "area": "wire",
+      "label": "dispatch_decision (internal, governed)",
+      "code": "runtime/suite.py:dispatch_decision"
+    },
+    {
+      "id": "WIRE-review",
+      "area": "wire",
+      "label": "demonstrate-first build_result_review card",
+      "code": "App.tsx:252"
+    },
+    {
+      "id": "WIRE-states",
+      "area": "wire",
+      "label": "failure/lifecycle states (verify-fail/scope-overrun/FORM-review/launch-fail/cap-deferred/crashed)",
+      "code": "suite.py:1713 / implement.py:260"
+    },
+    {
+      "id": "SM-node",
+      "area": "selfmod",
+      "label": "propose/apply node-type",
+      "code": "runtime/suite.py:apply_node"
+    },
+    {
+      "id": "SM-panel",
+      "area": "selfmod",
+      "label": "propose/apply declarative panel",
+      "code": "runtime/suite.py:apply_panel"
+    },
+    {
+      "id": "SM-extension",
+      "area": "selfmod",
+      "label": "propose/apply arbitrary extension (build-gated)",
+      "code": "runtime/suite.py:apply_extension"
+    },
+    {
+      "id": "SM-revert",
+      "area": "selfmod",
+      "label": "revert / last-self-change audit",
+      "code": "runtime/suite.py:revert_self_change"
+    },
+    {
+      "id": "MOD-registry",
+      "area": "models",
+      "label": "live model registry (chat + embed, registry-fed)",
+      "code": "runtime/suite.py:available_models"
+    },
+    {
+      "id": "MOD-embed",
+      "area": "models",
+      "label": "embedding chain embed→similarity→retrieve",
+      "code": "nodes/embed.py"
+    },
+    {
+      "id": "GOV-tiers",
+      "area": "gov",
+      "label": "consequence tiers AUTO/SURFACE/CONFIRM/LOCKED",
+      "code": "runtime/governance.py:posture"
+    },
+    {
+      "id": "GOV-resolve",
+      "area": "gov",
+      "label": "operator-only resolve (agent can't self-approve)",
+      "code": "runtime/governance.py:resolve"
+    },
+    {
+      "id": "VOICE",
+      "area": "voice",
+      "label": "two-way voice (TTS Kokoro / STT) + listening loop",
+      "code": "voice/ + App.tsx:1214"
+    },
+    {
+      "id": "EVT-stream",
+      "area": "events",
+      "label": "SSE live stream (pushed, not polled)",
+      "code": "runtime/bridge.py:_stream"
+    },
+    {
+      "id": "EVT-now",
+      "area": "events",
+      "label": "now-view + presence",
+      "code": "runtime/suite.py:now"
+    },
+    {
+      "id": "EVT-log",
+      "area": "events",
+      "label": "activity event log",
+      "code": "runtime/suite.py:events"
+    },
+    {
+      "id": "WS-workshop",
+      "area": "workshop",
+      "label": "workshop region (full-detail node surface)",
+      "code": "runtime/suite.py:ui_info"
+    },
+    {
+      "id": "INTRO-cap",
+      "area": "intro",
+      "label": "capabilities() source-of-truth + object_info",
+      "code": "suite.py:capabilities"
+    },
+    {
+      "id": "FRM-divergence",
+      "area": "frame",
+      "label": "legacy skeleton served at / (must resolve to React app)",
+      "code": "runtime/bridge.py:do_GET",
+      "build_required": true
+    }
+  ],
+  "views": [
+    {
+      "id": "A1",
+      "area": "A",
+      "title": "Canvas — empty / first-run",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "EVT-now",
+        "CAN-compose",
+        "NODE-types"
+      ],
+      "journeys": [
+        "J1"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "A2",
+      "area": "A",
+      "title": "Canvas — running chain (kind-coded)",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "NODE-kinds",
+        "RUN-status",
+        "ENG-resolve",
+        "NODE-ports",
+        "CAN-zoom"
+      ],
+      "journeys": [
+        "J1"
+      ],
+      "status": "redo-pre-audit",
+      "note": "existing pre-audit files carry fiction (4 kinds, await); regenerate grounded."
+    },
+    {
+      "id": "A3",
+      "area": "A",
+      "title": "Node selected → inspector",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "NODE-config",
+        "RUN-status",
+        "ENG-force"
+      ],
+      "journeys": [
+        "J1"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "A4",
+      "area": "A",
+      "title": "Node config — field kinds",
+      "platforms": [
+        "desktop"
+      ],
+      "represents": [
+        "NODE-config",
+        "MOD-registry"
+      ],
+      "journeys": [
+        "J1"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "A5",
+      "area": "A",
+      "title": "Run in progress — ran/cached/stuck",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "RUN-run",
+        "RUN-status",
+        "ENG-memo",
+        "ENG-stuck"
+      ],
+      "journeys": [
+        "J1"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "A6",
+      "area": "A",
+      "title": "Force-rerun + cache legibility",
+      "platforms": [
+        "desktop"
+      ],
+      "represents": [
+        "ENG-force",
+        "ENG-memo"
+      ],
+      "journeys": [
+        "J1"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "A7",
+      "area": "A",
+      "title": "Ports + drag-to-connect",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "CAN-drag",
+        "NODE-ports"
+      ],
+      "journeys": [
+        "J1"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "A8",
+      "area": "A",
+      "title": "Semantic zoom — far vs near",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "CAN-zoom"
+      ],
+      "journeys": [
+        "J1"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "A9",
+      "area": "A",
+      "title": "Layers / provenance",
+      "platforms": [
+        "desktop"
+      ],
+      "represents": [
+        "CAN-layers",
+        "NODE-layer"
+      ],
+      "journeys": [],
+      "status": "planned"
+    },
+    {
+      "id": "A10",
+      "area": "A",
+      "title": "Graph picker — multiple graphs",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "CAN-multigraph"
+      ],
+      "journeys": [
+        "J9"
+      ],
+      "status": "planned",
+      "build_required": true
+    },
+    {
+      "id": "A11",
+      "area": "A",
+      "title": "Portals — live transclusion",
+      "platforms": [
+        "desktop"
+      ],
+      "represents": [
+        "NODE-portal"
+      ],
+      "journeys": [],
+      "status": "quality-passed",
+      "note": "The window/transclusion treatment is a design proposal over the REAL portal node (resolves live from config.ref). EXISTS/PROPOSED labelled in-panel."
+    },
+    {
+      "id": "A12",
+      "area": "A",
+      "title": "Workshop — full-detail node surface",
+      "platforms": [
+        "desktop"
+      ],
+      "represents": [
+        "WS-workshop"
+      ],
+      "journeys": [],
+      "status": "quality-passed",
+      "note": "Proposes a FULLER workshop surface; the real overlay renders 4 fields (nodeType/id · address · output · close). EXISTS/PROPOSED split labelled in-panel."
+    },
+    {
+      "id": "B1",
+      "area": "B",
+      "title": "RHM chat panel",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "RHM-chat",
+        "RHM-verbs",
+        "RHM-config"
+      ],
+      "journeys": [
+        "J7"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "B2",
+      "area": "B",
+      "title": "Voice / listening mode",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "VOICE"
+      ],
+      "journeys": [
+        "J4",
+        "J7"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "B3",
+      "area": "B",
+      "title": "Walkthrough — RHM drives the view",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "WALK-present",
+        "WALK-next",
+        "WALK-uiresolve",
+        "RHM-copresence"
+      ],
+      "journeys": [
+        "J4"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "B4",
+      "area": "B",
+      "title": "Presence dial — 8 modes",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "RHM-modes"
+      ],
+      "journeys": [
+        "J9"
+      ],
+      "status": "quality-passed",
+      "note": "The dial is a design treatment of the real 8-mode mechanism (current FE is a dropdown). Modes + directives are real (suite.py:set_mode / MODE_DIRECTIVES)."
+    },
+    {
+      "id": "B5",
+      "area": "B",
+      "title": "Co-presence — RHM sees selection",
+      "platforms": [
+        "desktop"
+      ],
+      "represents": [
+        "RHM-copresence"
+      ],
+      "journeys": [
+        "J4"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "B6",
+      "area": "B",
+      "title": "The twin — model-of-Tim + provenance grading",
+      "platforms": [
+        "desktop"
+      ],
+      "represents": [
+        "RHM-twin"
+      ],
+      "journeys": [],
+      "status": "quality-passed",
+      "note": "Grading = provenance/trust (gold=operator · working=twin), NOT output-scoring; there is NO confidence anywhere (suite.py law). Twin prediction is future (corpus-pending). Title was 'twin / model-of-Tim grading' — read as scoring+confidence, which the app does not do."
+    },
+    {
+      "id": "B7",
+      "area": "B",
+      "title": "decide-for-me autonomous routing",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "RHM-decide",
+        "GOV-tiers"
+      ],
+      "journeys": [
+        "J4"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "B8",
+      "area": "B",
+      "title": "watch-and-react ambient comment",
+      "platforms": [
+        "desktop"
+      ],
+      "represents": [
+        "RHM-react"
+      ],
+      "journeys": [],
+      "status": "planned"
+    },
+    {
+      "id": "C1",
+      "area": "C",
+      "title": "Inbox — three lanes, clean",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "INB-lanes",
+        "EVT-now"
+      ],
+      "journeys": [
+        "J5",
+        "J7"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "C2",
+      "area": "C",
+      "title": "Decision → value-choice (COA)",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "INB-coa",
+        "INB-resolve",
+        "GOV-resolve"
+      ],
+      "journeys": [
+        "J5"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "C3",
+      "area": "C",
+      "title": "Demonstrate-first build-review card",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "WIRE-review",
+        "INB-resolve"
+      ],
+      "journeys": [
+        "J3",
+        "J7"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "C4",
+      "area": "C",
+      "title": "Drill a decision to ground",
+      "platforms": [
+        "desktop"
+      ],
+      "represents": [
+        "INB-coa",
+        "INB-replay"
+      ],
+      "journeys": [
+        "J5"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "C5",
+      "area": "C",
+      "title": "Replay / decision trajectory audit",
+      "platforms": [
+        "desktop"
+      ],
+      "represents": [
+        "INB-replay",
+        "EVT-log"
+      ],
+      "journeys": [],
+      "status": "quality-passed",
+      "note": "Grounded in the real event log + derived_from causal chain; audit-window note in-panel."
+    },
+    {
+      "id": "D1",
+      "area": "D",
+      "title": "Trigger a build (build-intent entry)",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "WIRE-intent"
+      ],
+      "journeys": [
+        "J3"
+      ],
+      "status": "planned",
+      "build_required": true
+    },
+    {
+      "id": "D2",
+      "area": "D",
+      "title": "Build flow: approve→dispatch→implemented→review",
+      "platforms": [
+        "desktop"
+      ],
+      "represents": [
+        "WIRE-dispatch",
+        "WIRE-review",
+        "GOV-tiers"
+      ],
+      "journeys": [
+        "J3"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "D3",
+      "area": "D",
+      "title": "Act-on-output menu",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "INB-surface",
+        "ENG-force",
+        "RHM-verbs"
+      ],
+      "journeys": [
+        "J1"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "D4",
+      "area": "D",
+      "title": "Idea-capture organ",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "INB-idea"
+      ],
+      "journeys": [
+        "J6"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "D5",
+      "area": "D",
+      "title": "Grow node / panel / extension (propose→approve)",
+      "platforms": [
+        "desktop"
+      ],
+      "represents": [
+        "SM-node",
+        "SM-panel",
+        "SM-extension"
+      ],
+      "journeys": [
+        "J8"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "D6",
+      "area": "D",
+      "title": "Wire failure & lifecycle states",
+      "platforms": [
+        "desktop"
+      ],
+      "represents": [
+        "WIRE-states"
+      ],
+      "journeys": [
+        "J3"
+      ],
+      "status": "quality-passed",
+      "note": "Lifecycle states grounded in the real dispatch outcomes; a dedicated wire-states operator surface is proposed (states surface into the real inbox today)."
+    },
+    {
+      "id": "D7",
+      "area": "D",
+      "title": "Self-mod — revert latest change",
+      "platforms": [
+        "desktop"
+      ],
+      "represents": [
+        "SM-revert"
+      ],
+      "journeys": [
+        "J8"
+      ],
+      "status": "quality-passed",
+      "note": "Only revert-the-single-latest is built (last_self_change → revert_self_change, immediate, operator-only). Multi-entry rollback + audit-log are PROPOSED, not in the app. Title was 'revert / rollback / audit' — over-promised an audit surface that doesn't exist yet."
+    },
+    {
+      "id": "E1",
+      "area": "E",
+      "title": "Live model fleet — chat + embedding",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "MOD-registry"
+      ],
+      "journeys": [
+        "J2"
+      ],
+      "status": "quality-passed",
+      "note": "Fleet SURFACE is build-required (no FE fleet screen exists yet) — grounded in the REAL model registry data; the screen is a proposed operator surface. EXISTS/PROPOSED labelled in-panel."
+    },
+    {
+      "id": "E2",
+      "area": "E",
+      "title": "Embedding chain embed→similarity→retrieve",
+      "platforms": [
+        "desktop"
+      ],
+      "represents": [
+        "MOD-embed",
+        "NODE-ports"
+      ],
+      "journeys": [
+        "J2"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "E3",
+      "area": "E",
+      "title": "Retrieval result — ranked, usable",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "MOD-embed"
+      ],
+      "journeys": [
+        "J2"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "F1",
+      "area": "F",
+      "title": "Top bar / cockpit",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "RHM-modes",
+        "RUN-run",
+        "INTRO-cap"
+      ],
+      "journeys": [],
+      "status": "planned"
+    },
+    {
+      "id": "F2",
+      "area": "F",
+      "title": "Settings — consolidated",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "RHM-config",
+        "SM-panel"
+      ],
+      "journeys": [
+        "J9"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "F3",
+      "area": "F",
+      "title": "Palette / node library (by kind)",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "NODE-kinds",
+        "NODE-types",
+        "INTRO-cap"
+      ],
+      "journeys": [
+        "J1"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "F4",
+      "area": "F",
+      "title": "Activity / now + live event stream",
+      "platforms": [
+        "desktop",
+        "mobile"
+      ],
+      "represents": [
+        "EVT-stream",
+        "EVT-now",
+        "EVT-log"
+      ],
+      "journeys": [],
+      "status": "quality-passed",
+      "note": "Now-view + event kinds are real; the per-row op/agent 'face' badge is INFERRED/proposed (append_event stores no face field). Labelled in-panel."
+    },
+    {
+      "id": "F5",
+      "area": "F",
+      "title": "Bridge/connection + voice status",
+      "platforms": [
+        "desktop"
+      ],
+      "represents": [
+        "VOICE",
+        "EVT-stream"
+      ],
+      "journeys": [],
+      "status": "planned"
+    },
+    {
+      "id": "G1",
+      "area": "G",
+      "title": "Desktop→tablet→mobile reflow",
+      "platforms": [
+        "responsive"
+      ],
+      "represents": [
+        "NODE-kinds"
+      ],
+      "journeys": [
+        "J7"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "G2",
+      "area": "G",
+      "title": "Mobile navigation model",
+      "platforms": [
+        "mobile"
+      ],
+      "represents": [],
+      "journeys": [
+        "J7"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "G3",
+      "area": "G",
+      "title": "Mobile canvas interaction (touch)",
+      "platforms": [
+        "mobile"
+      ],
+      "represents": [
+        "CAN-drag",
+        "CAN-zoom"
+      ],
+      "journeys": [
+        "J7"
+      ],
+      "status": "planned"
+    }
+  ],
+  "sequences": [
+    {
+      "id": "J1",
+      "goal": "Compose & run a process",
+      "steps": [
+        "A1",
+        "F3",
+        "A3",
+        "A4",
+        "A7",
+        "A5",
+        "A6",
+        "D3"
+      ],
+      "spine": true,
+      "storyboard_status": "planned",
+      "surfaces_when": "always-available; operator-driven"
+    },
+    {
+      "id": "J2",
+      "goal": "Leverage models & embeddings",
+      "steps": [
+        "E1",
+        "A7",
+        "E2",
+        "E3"
+      ],
+      "spine": false,
+      "storyboard_status": "planned",
+      "surfaces_when": "operator-driven"
+    },
+    {
+      "id": "J3",
+      "goal": "Direct a self-build (the wire)",
+      "steps": [
+        "D1",
+        "C1",
+        "C2",
+        "D2",
+        "C3",
+        "D6"
+      ],
+      "spine": true,
+      "storyboard_status": "planned",
+      "surfaces_when": "review demands attention on build-complete; else backstage"
+    },
+    {
+      "id": "J4",
+      "goal": "Be walked through a decision",
+      "steps": [
+        "B3",
+        "B7",
+        "B2",
+        "B5"
+      ],
+      "spine": true,
+      "storyboard_status": "planned",
+      "surfaces_when": "governed by presence mode; decide-for-me escalates only real forks"
+    },
+    {
+      "id": "J5",
+      "goal": "Triage the inbox",
+      "steps": [
+        "C1",
+        "C4",
+        "C2"
+      ],
+      "spine": false,
+      "storyboard_status": "planned",
+      "surfaces_when": "lanes encode urgency; often first-checked on mobile"
+    },
+    {
+      "id": "J6",
+      "goal": "Capture an idea mid-flow",
+      "steps": [
+        "D4"
+      ],
+      "spine": false,
+      "storyboard_status": "planned",
+      "surfaces_when": "on-demand, zero-friction, never breaks flow"
+    },
+    {
+      "id": "J7",
+      "goal": "Operate from mobile",
+      "steps": [
+        "C1",
+        "C3",
+        "B1",
+        "B2",
+        "A5"
+      ],
+      "spine": true,
+      "storyboard_status": "planned",
+      "surfaces_when": "mobile-native; often the entry point"
+    },
+    {
+      "id": "J8",
+      "goal": "Grow the system",
+      "steps": [
+        "D5",
+        "D7"
+      ],
+      "spine": false,
+      "storyboard_status": "planned",
+      "surfaces_when": "operator-directed"
+    },
+    {
+      "id": "J9",
+      "goal": "Set posture (presence + context)",
+      "steps": [
+        "B4",
+        "A10"
+      ],
+      "spine": false,
+      "storyboard_status": "planned",
+      "surfaces_when": "operator-directed; re-tunes every organ"
+    }
+  ],
+  "coverage": {
+    "_comment": "feature-id → [view-ids]; auto-derivable from views[].represents. The loop checks: every feature here has >=1 view. Any [] is an un-mocked capability (a gap to add a view for)."
+  },
+  "produced": {
+    "_comment": "wave-1 view-variants that are written, rendered, and quality-passed (grounded·linked·on-system·journey·no-fiction). Verified by eyeball against quality_bar.",
+    "wave1": [
+      {
+        "view": "A1",
+        "variant": "desktop",
+        "status": "quality-passed",
+        "file": "mockups/A1-canvas-empty-desktop.html",
+        "thumb": "mockups/A1-canvas-empty-desktop.jpeg"
+      },
+      {
+        "view": "A2",
+        "variant": "desktop",
+        "status": "quality-passed",
+        "file": "mockups/A2-canvas-desktop.html",
+        "thumb": "mockups/A2-canvas-desktop.jpeg",
+        "note": "regenerated grounded — replaces the pre-audit fiction"
+      },
+      {
+        "view": "A2",
+        "variant": "mobile",
+        "status": "quality-passed",
+        "file": "mockups/A2-canvas-mobile.html",
+        "thumb": "mockups/A2-canvas-mobile.jpeg",
+        "note": "regenerated grounded; native mobile"
+      },
+      {
+        "view": "A3",
+        "variant": "desktop",
+        "status": "quality-passed",
+        "file": "mockups/A3-inspector-desktop.html",
+        "thumb": "mockups/A3-inspector-desktop.jpeg"
+      },
+      {
+        "view": "C1",
+        "variant": "desktop",
+        "status": "quality-passed",
+        "file": "mockups/C1-inbox-desktop.html",
+        "thumb": "mockups/C1-inbox-desktop.jpeg"
+      },
+      {
+        "view": "C3",
+        "variant": "desktop",
+        "status": "quality-passed",
+        "file": "mockups/C3-build-review-desktop.html",
+        "thumb": "mockups/C3-build-review-desktop.jpeg"
+      },
+      {
+        "view": "B3",
+        "variant": "desktop",
+        "status": "quality-passed",
+        "file": "mockups/B3-walkthrough-desktop.html",
+        "thumb": "mockups/B3-walkthrough-desktop.jpeg"
+      },
+      {
+        "view": "B6",
+        "variant": "desktop",
+        "status": "quality-passed",
+        "file": "mockups/B6-twin-desktop.html",
+        "thumb": "mockups/B6-twin-desktop.jpeg",
+        "note": "design-critic pass 2026-06-05: grounded (gold/working provenance, no confidence-score, cold-start abstention), on-system, coherent, navigable. ui://twin placed."
+      },
+      {
+        "view": "C5",
+        "variant": "desktop",
+        "status": "quality-passed",
+        "file": "mockups/C5-replay-desktop.html",
+        "thumb": "mockups/C5-replay-desktop.jpeg",
+        "note": "design-critic pass 2026-06-05: grounded (real event kinds, derived_from causal bind, audit-window honesty), on-system, coherent, navigable. ui://activity/replay placed (lens 3)."
+      },
+      {
+        "view": "D7",
+        "variant": "desktop",
+        "status": "quality-passed",
+        "file": "mockups/D7-selfmod-desktop.html",
+        "thumb": "mockups/D7-selfmod-desktop.jpeg",
+        "note": "design-critic pass 2026-06-05: grounded (one real revert; multi-entry ledger labelled proposed), on-system, coherent, navigable. ui://workshop/self-changes placed."
+      },
+      {
+        "view": "A11",
+        "variant": "desktop",
+        "status": "quality-passed",
+        "file": "mockups/A11-portals-desktop.html",
+        "thumb": "mockups/A11-portals-desktop.jpeg",
+        "note": "design-critic pass 2026-06-05: grounded (EXISTS/PROPOSED split on the real portal node), on-system, coherent, navigable. ui://canvas/portal-window placed on the live-window frames; stale address-gap note repaired."
+      },
+      {
+        "view": "A12",
+        "variant": "desktop",
+        "status": "quality-passed",
+        "file": "mockups/A12-workshop-desktop.html",
+        "thumb": "mockups/A12-workshop-desktop.jpeg",
+        "note": "design-critic pass 2026-06-05: grounded (ask's real fields only; fuller-workshop labelled proposed over the real 4-field overlay), on-system, coherent, navigable."
+      },
+      {
+        "view": "F4",
+        "variant": "desktop",
+        "status": "quality-passed",
+        "file": "mockups/F4-activity-desktop.html",
+        "thumb": "mockups/F4-activity-desktop.jpeg",
+        "note": "design-critic pass 2026-06-05: grounded (now-view + real event kinds; per-row face badge labelled inferred/proposed), on-system, coherent, navigable."
+      },
+      {
+        "view": "B4",
+        "variant": "desktop",
+        "status": "quality-passed",
+        "file": "mockups/B4-presence-dial-desktop.html",
+        "thumb": "mockups/B4-presence-dial-desktop.jpeg",
+        "note": "design-critic pass 2026-06-05: grounded (8 real modes + MODE_DIRECTIVES; dial-treatment of the real mechanism labelled), on-system, coherent, navigable."
+      },
+      {
+        "view": "B4",
+        "variant": "mobile",
+        "status": "quality-passed",
+        "file": "mockups/B4-presence-dial-mobile.html",
+        "thumb": "mockups/B4-presence-dial-mobile.jpeg",
+        "note": "design-critic pass 2026-06-05: native mobile (sheet + tab-bar), grounded, on-system, coherent, navigable."
+      },
+      {
+        "view": "E1",
+        "variant": "desktop",
+        "status": "quality-passed",
+        "file": "mockups/E1-fleet-desktop.html",
+        "thumb": "mockups/E1-fleet-desktop.jpeg",
+        "note": "design-critic pass 2026-06-05: grounded (real model registry, Gemini-filtered, chat/embed split honest), on-system, coherent, navigable. ui://models placed. Fixed: long model name (huihui_ai/...) was forcing a horizontal scrollbar — added min-width:0 + overflow-wrap:anywhere on the fleet rows; re-verified clean."
+      },
+      {
+        "view": "D6",
+        "variant": "desktop",
+        "status": "quality-passed",
+        "file": "mockups/D6-wire-states-desktop.html",
+        "thumb": "mockups/D6-wire-states-desktop.jpeg",
+        "note": "design-critic pass 2026-06-05: grounded (six real dispatch returns; dedicated wire-states surface labelled proposed), on-system, coherent, navigable."
+      }
+    ],
+    "covers_spine_journeys": [
+      "J1 (A1·A2·A3)",
+      "J3 (C3)",
+      "J4 (B3)",
+      "J5/J7 (C1·A2-mobile)"
+    ],
+    "remaining": "the rest of the ~41 views × variants + the spine storyboards (J1·J3·J4·J7) — next waves."
+  }
+}

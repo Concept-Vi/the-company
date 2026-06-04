@@ -1,0 +1,302 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>D7 · Self-mod revert / rollback / audit (desktop) · DRAFT</title>
+<link rel="stylesheet" href="../design-system.css">
+<!--
+  id: D7   (PANEL DRAFT — Q3 staging · probe)
+  represents: [
+    "SM-revert" — revert / last-self-change audit. (runtime/suite.py:2205-2231)
+       The REAL, BUILT surface is THIN: a SINGLE most-recent self-change + a one-click revert.
+         • last_self_change() → suite.py:2205 — `git log --grep=[self-apply] --fixed-strings -1 --format=%H%x00%s`
+           returns ONLY the most recent {sha, subject}. Singular by construction (`-1`). NO list method exists.
+         • revert_self_change(sha) → suite.py:2219 — `git revert --no-edit <sha>`, then registry.rediscover(),
+           emits a `revert` event, refresh_map(). OPERATOR-only. Itself reversible. NO confirm / NO preview today.
+         • the safety net: EVERY self-apply (node/panel/extension) is a git commit tagged `[self-apply]`
+           (_commit_or_rollback:2196 · _git_self_commit:2178). A failed commit rolls the write back + raises (F2).
+       BRIDGE: GET /api/last-change → bridge.py:127 (last_self_change() or {}) · POST /api/revert {sha} → bridge.py:344.
+       LIVE UI TODAY: a single muted line "last self-change: <subject> [⟲ revert]" inside the Workshop/grow panel
+         (App.tsx:1558-1562). That is the entire built D7 face. There is NO audit list, NO per-entry diff,
+         NO reverted-state marking, NO arbitrary-older-entry revert in the UI.
+  ]
+  journey-moment: "J8 · Grow the system · steps D5→D7 · operator-directed (non-spine).
+                   D5 proposes/applies a self-change (node/panel/extension); D7 is where the operator AUDITS
+                   what the system changed about itself and can ROLL BACK — the property that makes self-mod
+                   acceptable: a bad self-edit is bounded, never bricking." (register.json sequences J8)
+
+  ADDRESS NOTE (honest — no fiction): there is NO registered ui:// address for SM-revert / D7.
+    This panel CARRIES the two closest REAL registered addresses and flags the rest:
+      • ui://workshop  (WS-workshop) — the real DOM home of the built last-self-change line + revert button.
+      • ui://activity  (EVT-now)     — where the `apply` / `grow` / `revert` events actually emit.
+    FLAG: D7 needs its own address registered (candidate: ui://workshop/self-changes) — NOT minted here.
+
+  EXISTING vs PROPOSED is the visible spine of this draft (AGENTS.md rule 9 · "label proposed prominently"):
+    ● EXISTS  = built + traced to code above.
+    ◌ PROPOSED = drawn OVER the real git substrate; data is already there (every self-apply is a tagged commit),
+                 the gap is a missing method (self_change_log) + endpoint + UI — NOT missing data. Each is badged.
+
+  GROUNDING NOTES (only real behaviour):
+    • The single "latest" row reflects last_self_change() EXACTLY — {sha, subject}; subject has the literal
+      "[self-apply] " prefix stripped for display (App.tsx:1560 .replace). Its ⟲ revert is the ONE built control.
+    • Revert is immediate (no confirm) in the real code — depicted as such, with a tooltip stating it is itself
+      git-reversible. Adding a confirm/preview would be a NEW behaviour → marked ◌ proposed where shown.
+    • The older rows are ◌ PROPOSED: `git log --grep=[self-apply]` (drop the `-1`) WOULD list them — the commits
+      exist — but no self_change_log() / endpoint / UI surfaces them yet. Honestly labelled, not portrayed as built.
+    • Per-row changed-files: the build-review path carries changed_files (suite.py:9-CLOSE), but the self-apply
+      path does NOT surface them. Shown only inside a ◌ PROPOSED block.
+    • Reverting a NON-tip older commit can git-conflict; revert_self_change runs `check=True` so it RAISES
+      (fail-loud) with NO UI handling today — flagged on the proposed rows, not hidden.
+-->
+<style>
+.top{grid-area:top;display:flex;align-items:center;gap:18px;padding:0 18px;background:linear-gradient(180deg,var(--s1),var(--s0));border-bottom:1px solid var(--line)}
+.brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:18px;letter-spacing:-.3px}
+.brand em{font-style:normal;color:var(--acc)}
+.brand .tag{font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:8px}
+.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--line-2);border-radius:99px;background:var(--s2);font-size:12px;color:var(--tx-2)}
+.presence .dot{width:7px;height:7px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.verbs{margin-left:auto;display:flex;gap:7px}
+
+.rail{grid-area:rail;background:var(--s0);border-right:1px solid var(--line);padding:14px 12px;overflow:auto}
+.rail h4{font-size:10px;text-transform:uppercase;letter-spacing:1.3px;color:var(--tx-3);margin:14px 4px 8px;font-weight:600;display:flex;align-items:center;gap:7px}
+.rail h4:first-child{margin-top:2px}
+.kdot{width:8px;height:8px;border-radius:2px}
+.chip{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:var(--r);background:var(--s1);border:1px solid var(--line);font-size:12.5px;margin-bottom:5px}
+.chip .mono-chip{width:20px;height:20px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:11px;color:var(--ink-accent)}
+
+/* the canvas waits; the operator's eyes are on the audit panel at right */
+.canvas{grid-area:canvas;position:relative;overflow:hidden;background-image:radial-gradient(var(--line) .9px,transparent .9px);background-size:26px 26px;display:grid;place-items:center}
+.dim-note{max-width:440px;text-align:center;color:var(--tx-3);font-size:12.5px;line-height:1.7}
+.dim-note .display{font-size:16px;color:var(--tx-2);display:block;margin-bottom:6px}
+.dim-note .play{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:6px 12px;border:1px dashed var(--line-2);border-radius:99px;font-family:'IBM Plex Mono';font-size:11px;color:var(--fail)}
+
+.foot{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--s0);border-top:1px solid var(--line);font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono'}
+.foot .live{color:var(--acc)}
+
+/* the audit surface = the panel, widened into a focused review column (same chrome as C3) */
+.app{grid-template-columns:232px 1fr 460px}
+.panel{grid-area:panel;background:var(--s0);border-left:1px solid var(--line);padding:14px;overflow:auto}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:-14px -14px 14px;padding:10px 12px 0}
+.tab{padding:8px 13px;font-size:12.5px;color:var(--tx-3);border-bottom:2px solid transparent;font-weight:500;display:flex;align-items:center;gap:7px}
+.tab.on{color:var(--tx);border-bottom-color:var(--acc)}
+
+.ws-head{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--tx-3);font-weight:600;display:flex;align-items:center;gap:8px;margin:4px 2px 6px}
+.ws-head .muted{color:var(--tx-3);font-family:'IBM Plex Mono';font-weight:400;letter-spacing:0}
+.ws-sub{font-size:11px;color:var(--tx-3);line-height:1.55;margin:0 2px 14px;font-family:'IBM Plex Sans'}
+
+/* ── the EXISTS / PROPOSED legend — the visible spine of this draft ── */
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin:0 2px 13px;padding:9px 11px;border:1px solid var(--line);border-radius:var(--r);background:var(--s1)}
+.legend span{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-2)}
+.dot-live{width:8px;height:8px;border-radius:99px;background:var(--ok);box-shadow:0 0 0 3px var(--acc-glow)}
+.ring-prop{width:8px;height:8px;border-radius:99px;border:1.5px solid var(--await);background:transparent}
+
+/* a per-block badge — the honest existing-vs-proposed device */
+.badge-live,.badge-prop{font-family:'IBM Plex Mono';font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;border-radius:99px;padding:2px 8px;display:inline-flex;align-items:center;gap:5px}
+.badge-live{color:var(--ink-accent);background:var(--ok)}
+.badge-prop{color:var(--await);border:1px solid var(--await);background:rgba(230,171,92,.08)}
+
+/* ── BUILT block: the single most-recent self-change + the one real revert control ── */
+.real-block{border:1px solid var(--acc-dim);border-radius:var(--r-lg);background:linear-gradient(180deg,var(--s2),var(--s1));box-shadow:0 0 0 1px var(--acc-glow);overflow:hidden;margin:0 2px 8px}
+.real-head{display:flex;align-items:center;gap:9px;padding:10px 13px;border-bottom:1px solid var(--line)}
+.real-head .lbl{font-family:'IBM Plex Mono';font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--ok);font-weight:600}
+.real-head .badge-live{margin-left:auto}
+.chrow{display:flex;align-items:flex-start;gap:11px;padding:13px}
+.chrow .led{width:9px;height:9px;border-radius:99px;background:var(--ok);box-shadow:0 0 0 3px var(--acc-glow);margin-top:4px;flex:none}
+.chrow .body{flex:1;min-width:0}
+.chrow .subj{font-family:'Bricolage Grotesque';font-weight:700;font-size:15px;color:var(--tx);line-height:1.34;letter-spacing:-.2px}
+.chrow .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:7px}
+.chrow .sha,.chrow .tag-sa{font-family:'IBM Plex Mono';font-size:9.5px;color:var(--cache);background:var(--s0);border:1px solid var(--line);border-radius:4px;padding:2px 6px}
+.chrow .tag-sa{color:var(--tx-3)}
+.revert-btn{margin-top:12px;display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border-radius:var(--r);border:1px solid var(--fail);background:rgba(236,106,94,.08);color:var(--fail);font-family:'IBM Plex Sans';font-size:13px;font-weight:600;cursor:pointer}
+.revert-note{margin:0 13px 13px;font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3);line-height:1.6;border-top:1px dashed var(--line);padding-top:9px}
+.revert-note b{color:var(--tx-2);font-weight:500}
+
+/* ── PROPOSED block: the multi-entry audit ledger over the real git substrate ── */
+.prop-block{border:1px dashed var(--await);border-radius:var(--r-lg);background:rgba(230,171,92,.04);overflow:hidden;margin:14px 2px 8px}
+.prop-head{display:flex;align-items:center;gap:9px;padding:10px 13px;border-bottom:1px dashed var(--line)}
+.prop-head .lbl{font-family:'IBM Plex Mono';font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--await);font-weight:600}
+.prop-head .badge-prop{margin-left:auto}
+.prop-why{padding:9px 13px;font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3);line-height:1.65;border-bottom:1px dashed var(--line);background:rgba(0,0,0,.12)}
+.prop-why code{color:var(--cache)}
+.ledger{padding:6px 0}
+.led-row{display:flex;align-items:flex-start;gap:11px;padding:11px 13px;border-bottom:1px solid var(--line)}
+.led-row:last-child{border-bottom:none}
+.led-row .led{width:8px;height:8px;border-radius:99px;border:1.5px solid var(--tx-3);background:transparent;margin-top:4px;flex:none}
+.led-row.reverted{opacity:.6}
+.led-row.reverted .led{border-color:var(--fail);background:var(--fail)}
+.led-row .body{flex:1;min-width:0}
+.led-row .subj{font-size:12.5px;color:var(--tx-2);line-height:1.4}
+.led-row .subj s{color:var(--tx-3)}
+.led-row .meta{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px;align-items:center}
+.led-row .sha{font-family:'IBM Plex Mono';font-size:9px;color:var(--cache);background:var(--s0);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+.led-row .when{font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3)}
+.led-row .files{font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3)}
+.led-row .rv-mark{font-family:'IBM Plex Mono';font-size:8.5px;color:var(--fail);text-transform:uppercase;letter-spacing:.6px}
+.led-row .rb{margin-left:auto;align-self:center;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3);border:1px solid var(--line);border-radius:var(--r);padding:5px 9px;background:var(--s1);cursor:pointer;white-space:nowrap}
+.led-row .rb.dis{opacity:.4}
+.conflict-note{padding:9px 13px;font-family:'IBM Plex Mono';font-size:9px;color:var(--await);line-height:1.6;border-top:1px dashed var(--line);background:rgba(230,171,92,.05)}
+
+/* ── PROPOSED block: per-entry changed-files (data not surfaced on self-apply path today) ── */
+.diff-block{border:1px dashed var(--await);border-radius:var(--r);background:rgba(230,171,92,.04);margin:0 2px 8px;overflow:hidden}
+.diff-head{display:flex;align-items:center;gap:8px;padding:9px 12px;font-family:'IBM Plex Mono';font-size:10px;color:var(--await);border-bottom:1px dashed var(--line)}
+.diff-head .badge-prop{margin-left:auto}
+.diff-files{padding:8px 12px;display:flex;flex-direction:column;gap:3px}
+.diff-file{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--tx-2);display:flex;align-items:center;gap:8px}
+.diff-file .g{width:14px}
+.diff-file.add .g{color:var(--ok)} .diff-file.mod .g{color:var(--await)} .diff-file.del .g{color:var(--fail)}
+.diff-foot{padding:7px 12px;border-top:1px dashed var(--line);font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3)}
+
+/* the address + provenance strip */
+.addr-strip{margin:14px 2px 0;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);line-height:1.7;border-top:1px solid var(--line);padding-top:10px}
+.addr-strip code{color:var(--cache);background:var(--s0);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+.addr-strip .flag{color:var(--await)}
+
+/* the activity log echo — where the revert event lands (real EVT-now) */
+.evt-strip{margin:11px 2px 0;border:1px solid var(--line);border-radius:var(--r);background:var(--s1);overflow:hidden}
+.evt-h{font-family:'IBM Plex Mono';font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--tx-3);padding:8px 11px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:7px}
+.evt{display:flex;align-items:center;gap:9px;padding:7px 11px;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-2);border-bottom:1px solid var(--line)}
+.evt:last-child{border-bottom:none}
+.evt .k{text-transform:uppercase;letter-spacing:.6px;font-size:8.5px;border-radius:99px;padding:1px 7px}
+.evt .k.revert{color:var(--fail);border:1px solid var(--fail)}
+.evt .k.apply{color:var(--ink-accent);background:var(--ok)}
+.evt .k.grow{color:var(--kind-process);border:1px solid var(--acc-dim)}
+</style></head>
+<body><div class="app">
+  <header class="top" data-ui-ref="ui://toolbar"><span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
+    <span class="presence" data-ui-ref="ui://toolbar/presence"><span class="dot"></span>workshop · present ▾</span>
+    <div class="verbs"><button class="btn">◐ layers</button><button class="btn">＋ wire</button><button class="btn">↻ force</button><button class="btn run" data-ui-ref="ui://toolbar/run">▶ run <span class="k">⏎</span></button></div>
+  </header>
+
+  <nav class="rail">
+    <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">L</span><span class="label">llm</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">E</span><span class="label">embed</span></div>
+    <h4><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">C</span><span class="label">constant</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">▦</span><span class="label">codebase</span></div>
+  </nav>
+
+  <main class="canvas" data-ui-ref="ui://canvas">
+    <div class="dim-note">
+      <span class="display">The system changed itself.</span>
+      Every self-apply (a new node-type, a panel, an extension) is a git commit tagged <code>[self-apply]</code> —
+      so a bad self-edit is bounded, never bricking. Audit + roll back what it did on the right.
+      <span class="play">⟲ revert is itself a commit — recoverable, never destructive</span>
+    </div>
+  </main>
+
+  <footer class="foot"><span class="live">● live</span><span>self-mod is additive + git-reversible</span><span style="margin-left:auto">company · event-stream connected</span></footer>
+
+  <!-- THE AUDIT SURFACE — the Workshop panel (real DOM home of the built last-self-change line). No registered D7 address. -->
+  <aside class="panel" data-ui-ref="ui://workshop">
+    <div class="tabs"><span class="tab">⊙ Inspector</span><span class="tab">✦ Inbox</span><span class="tab on">⌁ Workshop</span></div>
+
+    <div class="ws-head">self-modification · revert &amp; audit <span class="muted">· D7 → J8 grow the system</span></div>
+    <div class="ws-sub">What the system changed about <em>itself</em> — and how to roll it back. The safety net is git, not the operator gate: every self-apply is a revertible commit.</div>
+
+    <div class="legend">
+      <span><span class="dot-live"></span>EXISTS — built &amp; traced to code</span>
+      <span><span class="ring-prop"></span>PROPOSED — drawn over the real git substrate</span>
+    </div>
+
+    <!-- ════════ EXISTS · the single most-recent self-change + the ONE real revert control ════════ -->
+    <div class="real-block" data-ui-ref="ui://workshop/self-changes">
+      <div class="real-head">
+        <span class="lbl">latest self-change</span>
+        <span class="badge-live"><span class="dot-live"></span>exists</span>
+      </div>
+      <div class="chrow">
+        <span class="led" title="live"></span>
+        <div class="body">
+          <!-- subject = last_self_change().subject with the literal "[self-apply] " prefix stripped (App.tsx:1560) -->
+          <div class="subj">add node-type 'sentiment'</div>
+          <div class="meta">
+            <span class="sha" title="commit sha from git log -1">7af3c2e</span>
+            <span class="tag-sa" title="every self-apply is tagged so git log --grep finds it">[self-apply]</span>
+          </div>
+          <!-- the ONE built control: POST /api/revert {sha} → revert_self_change → git revert --no-edit → rediscover -->
+          <button class="revert-btn" title="git revert this commit — bounded, recoverable; the revert is itself a commit"><span>⟲</span> revert</button>
+        </div>
+      </div>
+      <div class="revert-note">
+        <b>Built behaviour:</b> reverting is <b>immediate — no confirm, no preview</b> (the revert is itself git-reversible).
+        It runs <code>git revert --no-edit</code>, re-discovers the node registry (a removed file un-registers), and emits a <code>revert</code> event.
+        <b>Operator-only.</b> · Source: <code>last_self_change()</code> suite.py:2205 · <code>revert_self_change()</code> suite.py:2219 · <code>/api/last-change</code>, <code>/api/revert</code> bridge.py:127,344 · App.tsx:1558.
+      </div>
+    </div>
+
+    <!-- ════════ PROPOSED · the multi-entry audit ledger (the title says "audit"; only the LATEST is surfaced today) ════════ -->
+    <div class="prop-block">
+      <div class="prop-head">
+        <span class="lbl">full self-change ledger</span>
+        <span class="badge-prop"><span class="ring-prop"></span>proposed</span>
+      </div>
+      <div class="prop-why">
+        The DATA already exists — every self-apply is a <code>[self-apply]</code> commit, and <code>git log --grep=[self-apply]</code>
+        (without the <code>-1</code>) would list them ALL. The gap is a missing <code>self_change_log()</code> method + endpoint + this UI,
+        NOT missing data. <code>last_self_change()</code> returns only the single most-recent row.
+      </div>
+      <div class="ledger">
+        <div class="led-row reverted">
+          <span class="led" title="reverted"></span>
+          <div class="body">
+            <div class="subj"><s>apply panel 'tone-router'</s></div>
+            <div class="meta">
+              <span class="sha">3b9e110</span><span class="when">~2h ago</span>
+              <span class="rv-mark">⟲ reverted by 9c4d0a2</span>
+            </div>
+          </div>
+          <button class="rb dis" title="already reverted">⟲ revert</button>
+        </div>
+        <div class="led-row">
+          <span class="led"></span>
+          <div class="body">
+            <div class="subj">add node-type 'sentiment'</div>
+            <div class="meta"><span class="sha">7af3c2e</span><span class="when">~30m ago · tip</span><span class="files">node · 1 file</span></div>
+          </div>
+          <button class="rb" title="git revert this commit">⟲ revert</button>
+        </div>
+        <div class="led-row">
+          <span class="led"></span>
+          <div class="body">
+            <div class="subj">add extension 'token-usage-panel'</div>
+            <div class="meta"><span class="sha">c1f88ad</span><span class="when">yesterday</span><span class="files">extension · 1 file</span></div>
+          </div>
+          <button class="rb" title="reverting a non-tip commit may git-conflict">⟲ revert</button>
+        </div>
+      </div>
+      <div class="conflict-note">
+        ⚠ <b>Open question — older-entry revert:</b> the backend <code>revert_self_change(sha)</code> accepts ANY sha, but reverting a
+        non-tip commit can <code>git</code>-conflict; the call runs <code>check=True</code> so it RAISES (fail-loud) with NO UI handling today.
+        A ledger that offers per-row revert needs a conflict-aware path. (suite.py:2219-2231)
+      </div>
+    </div>
+
+    <!-- ════════ PROPOSED · per-entry changed-files (self-apply path doesn't surface a diff today) ════════ -->
+    <div class="diff-block">
+      <div class="diff-head">
+        <span>what 'sentiment' changed · for the record</span>
+        <span class="badge-prop"><span class="ring-prop"></span>proposed</span>
+      </div>
+      <div class="diff-files">
+        <div class="diff-file add"><span class="g">＋</span>runtime/nodes/sentiment.py</div>
+      </div>
+      <div class="diff-foot">
+        The build-review path carries <code>changed_files</code>, but the <em>self-apply</em> path commits a path-scoped change without surfacing
+        its diff. Per-entry files here would come from <code>git show --stat &lt;sha&gt;</code> — proposed, not built.
+      </div>
+    </div>
+
+    <!-- the real activity-log echo — where the revert/apply/grow events actually land (EVT-now) -->
+    <div class="evt-strip" data-ui-ref="ui://activity">
+      <div class="evt-h">⊹ activity · self-mod events <span style="margin-left:auto;color:var(--ok)">● live (real)</span></div>
+      <div class="evt"><span class="k revert">revert</span><span>rolled back self-change 3b9e110</span></div>
+      <div class="evt"><span class="k apply">apply</span><span>approved + applied 'sentiment' — now a live node-type · 7af3c2e</span></div>
+      <div class="evt"><span class="k grow">grow</span><span>brain wrote a 'sentiment' node — surfaced for approval</span></div>
+    </div>
+
+    <div class="addr-strip">
+      addresses carried (REAL, registered): <code>ui://workshop</code> (WS-workshop) · <code>ui://activity</code> (EVT-now) · <code>ui://toolbar</code> · <code>ui://canvas</code><br>
+      <span class="flag">⚑ FLAG:</span> SM-revert / D7 has NO registered ui:// address. Candidate to register: <code>ui://workshop/self-changes</code> — NOT minted in this draft.
+    </div>
+  </aside>
+</div></body></html>

@@ -1,0 +1,23 @@
+{
+  "_what": "THE MECHANISMS REGISTRY — the corpus-analysis mechanisms that read the design corpus and emit findings the keeper/lead acts on. This is the Layer-0 structural FLOOR (exact, free, deterministic — no models): each mechanism reads some part of the registries/mockups, emits findings, and routes them (repair the corpus, or surface to a build track). A local-model layer AUGMENTS these later (semantic judgement on top of structure) — every entry carries a `model_augmentation` note saying what that layer adds. Extend-by-registration: add a mechanism = add an entry keyed by `id` to `mechanisms` below; no surgery. Mirrors how addresses.json / tokens.json are extended. Fields per entry: id · layer(structural|semantic) · reads · emits · routes_on · tool · model_augmentation.",
+  "mechanisms": {
+    "code-ref-validator": {
+      "id": "code-ref-validator",
+      "layer": "structural",
+      "reads": "every code: ref in register.json + addresses.json",
+      "emits": "drift findings",
+      "routes_on": "drift -> repair(corpus) | surface(build-track)",
+      "tool": "_system/refcheck.py",
+      "model_augmentation": "today: line exists + sits near a def; LATER (free local-AI): a model reads the code at the ref + the represents[] claim and judges whether the symbol actually IMPLEMENTS what the corpus says it does (semantic match, not just structural)"
+    },
+    "code-symbol-registry": {
+      "id": "code-symbol-registry",
+      "layer": "structural",
+      "reads": "every code: ref in register.json (features[].code) + addresses.json (addresses.*.code)",
+      "emits": "the code:// reverse index (symbol -> who references it) — _system/code-symbols.json, keyed by code://<file-stem>/<symbol>, with file · symbol · kind · resolves · referenced_by[]",
+      "routes_on": "resolves:false -> drift(repair corpus) | referenced_by 2+ -> shared symbol (a change there ripples; surface) | id-collision -> surface",
+      "tool": "_system/symbols.py",
+      "model_augmentation": "a model annotates each symbol with what it actually does + flags where a symbol is referenced by features whose represents-claim it doesn't match (semantic, on top of this structural reverse map). The REVERSE complement of code-ref-validator: that one is forward (ref -> does it resolve), this one is the symbol -> who-references-it index — the code:// branch of the Block 17-18 universal coordinate, giving the future local-AI layer one canonical symbol list to do semantic checks against."
+    }
+  }
+}

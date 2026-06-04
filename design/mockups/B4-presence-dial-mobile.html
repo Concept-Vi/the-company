@@ -1,0 +1,141 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>P4 · B4 · Presence dial — 8 modes · mobile</title>
+<link rel="stylesheet" href="../design-system.css">
+<!--
+  ============================================================
+  PANEL  P4 · B4 · Presence dial — the 8 modes · MOBILE (native sheet)  (STAGING PROBE, not canonical)
+  AREA   B (right-hand-man) · JOURNEY J9 (set posture); J7 (operate from mobile — posture is set on the go)
+  JOURNEY-MOMENT  J9 step 1 on the phone — a bottom SHEET, thumb-reach, not a shrunk desktop dropdown.
+        surfaces-when: operator-directed; tapping the presence pill in the mobile top bar raises the dial
+        as a bottom sheet (User Journeys & UX.md J7 lines 58-61, J9 68-71; mobile form law line 20).
+  ============================================================
+  REPRESENTS[] (feature-id · code ref):
+    · RHM-modes — 8 presence modes; mode IS a node (rhm_mode on system graph); set_mode validates the
+                  8-tuple + re-emits "presence → <mode>".         runtime/suite.py:510-555
+  LANDMARK ADDRESS (_system/addresses.json — not invented):
+    · ui://toolbar/presence (RHM-modes, suite.py:510) — the mobile presence pill + the sheet it raises.
+    · ui://tabbar (G2, design-system.css .tabbar) — the native bottom nav, real CSS component.
+  ------------------------------------------------------------
+  GROUNDING NOTES — no fiction:
+    · Same 8 real modes + verbatim/condensed real directive prose as the desktop panel
+      (suite.py MODE_DIRECTIVES:515-524 / App.tsx MODE_DESC:95-104). DEFAULT_MODE listening (suite.py:513).
+    · Native mobile form: a bottom SHEET (.sheet display:block <700px — design-system.css:108) +
+      the bottom tab-bar (.tabbar — design-system.css:110-112). Not a desktop column shrunk. (Mobile-native
+      is a quality_bar + conventions.md rule 3 requirement.)
+    · decide-for-me deterministic-by-governance, cannot self-approve (suite.py:522,817-845 / governance.py:12-48).
+    · No node status dots — presence/chrome, not a node surface.
+  ============================================================
+-->
+<style>
+/* force the mobile breakpoint for this standalone probe (it is the native mobile variant) */
+body{display:flex;justify-content:center;background:var(--bg)}
+.phone{width:390px;height:844px;position:relative;overflow:hidden;background:var(--bg);border-left:1px solid var(--line);border-right:1px solid var(--line);display:flex;flex-direction:column}
+
+/* mobile top bar */
+.mtop{height:50px;flex:none;display:flex;align-items:center;gap:10px;padding:0 14px;background:linear-gradient(180deg,var(--s1),var(--s0));border-bottom:1px solid var(--line)}
+.brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:15px;letter-spacing:-.3px}
+.brand em{font-style:normal;color:var(--acc)}
+.mpresence{margin-left:auto;display:flex;align-items:center;gap:7px;padding:5px 10px;border:1px solid var(--acc);border-radius:99px;background:var(--s2);font-size:11px;color:var(--tx);box-shadow:0 0 0 3px var(--acc-glow)}
+.mpresence .dot{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+
+/* canvas behind the sheet, dimmed */
+.mcanvas{flex:1;position:relative;background-image:radial-gradient(var(--line) .9px,transparent .9px);background-size:24px 24px;overflow:hidden}
+.scrim{position:absolute;inset:0;background:rgba(5,7,10,.55);backdrop-filter:blur(1px)}
+
+/* the bottom SHEET (native) */
+.sheet2{position:absolute;left:0;right:0;bottom:58px;background:var(--s0);border-top:1px solid var(--line-2);border-radius:18px 18px 0 0;box-shadow:0 -22px 50px -20px #000;padding:8px 14px 16px;max-height:78%;overflow:auto}
+.grab{width:38px;height:4px;border-radius:99px;background:var(--line-2);margin:6px auto 12px}
+.shead{display:flex;align-items:baseline;gap:8px;margin:0 2px 4px}
+.shead .nm{font-family:'Bricolage Grotesque';font-weight:800;font-size:16px;letter-spacing:-.3px}
+.shead .now{margin-left:auto;font-family:'IBM Plex Mono';font-size:10px;color:var(--acc)}
+.ssub{font-size:10.5px;color:var(--tx-3);margin:0 2px 11px;line-height:1.5}
+.ssub b{color:var(--tx-2);font-weight:500}
+.regfed{display:flex;align-items:center;gap:6px;margin:0 2px 12px;padding:5px 8px;border:1px dashed var(--line-2);border-radius:var(--r);font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);background:var(--s1)}
+.regfed b{color:var(--kind-model);font-weight:500}
+
+/* mode rows — thumb-sized targets */
+.mode{border:1px solid var(--line);border-radius:var(--r-lg);background:linear-gradient(180deg,var(--s2),var(--s1));margin-bottom:7px;overflow:hidden}
+.mode .mhead{display:flex;align-items:center;gap:10px;padding:11px 12px}
+.mode .glyph{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:15px;flex:none;background:var(--s3);border:1px solid var(--line-2);color:var(--tx-2)}
+.mode .mname{font-family:'IBM Plex Mono';font-size:13px;color:var(--tx);font-weight:500}
+.mode .vol{margin-left:auto;display:flex;gap:3px;align-items:flex-end;height:15px}
+.mode .vol i{width:3px;border-radius:2px;background:var(--tx-3)}
+.mode .desc{padding:0 12px 11px 52px;font-size:11px;color:var(--tx-2);line-height:1.5}
+.mode.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc-glow)}
+.mode.on .glyph{background:var(--kind-process-bg);border-color:var(--acc);color:var(--acc)}
+.mode.on .mname{color:var(--acc)}
+.mode.loud .glyph{color:var(--await);border-color:rgba(230,171,92,.4)}
+.gov{display:flex;align-items:center;gap:5px;margin:6px 12px 0 52px;padding:6px 8px;border:1px solid var(--line);border-radius:var(--r);background:var(--s0);font-family:'IBM Plex Mono';font-size:8.5px;color:var(--tx-3);line-height:1.5;flex-wrap:wrap}
+.gov .t{padding:1px 6px;border-radius:99px;font-size:8px}
+.gov .auto{color:var(--ink-accent);background:var(--ok)} .gov .surface{color:var(--ink-await);background:var(--await)} .gov .locked{color:var(--tx);background:var(--s3);border:1px solid var(--line-2)}
+.gov .no{color:var(--fail)}
+.mode.off{opacity:.7}.mode.off .glyph{color:var(--tx-3)}
+
+/* native bottom tab-bar (the real .tabbar component, shown explicitly here) */
+.mtabbar{height:58px;flex:none;display:flex;align-items:stretch;background:var(--s0);border-top:1px solid var(--line)}
+.mtabbar a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--tx-3);font-size:10px;text-decoration:none}
+.mtabbar a.on{color:var(--acc)} .mtabbar a .ic{font-size:18px}
+</style></head>
+<body>
+<div class="phone">
+  <header class="mtop">
+    <span class="brand">the&nbsp;<em>company</em></span>
+    <!-- ui://toolbar/presence — the mobile pill that raised the sheet -->
+    <span class="mpresence" data-ui-ref="ui://toolbar/presence"><span class="dot"></span>focus ▾</span>
+  </header>
+
+  <main class="mcanvas">
+    <div class="scrim"></div>
+
+    <!-- THE DIAL AS A BOTTOM SHEET (native) -->
+    <section class="sheet2" data-ui-ref="ui://toolbar/presence">
+      <div class="grab"></div>
+      <div class="shead"><span class="nm">Presence</span><span class="now">● focus</span></div>
+      <p class="ssub">Eight postures. The mode <b>is a node</b> (<span class="mono">rhm_mode</span>). Tap to set; default <b>listening</b>.</p>
+      <div class="regfed">↻ directives from <b>capabilities().mode_directives</b> — registry is truth</div>
+
+      <div class="mode loud"><div class="mhead"><span class="glyph">◉</span><span class="mname">listening</span>
+        <span class="vol"><i style="height:15px"></i><i style="height:11px"></i><i style="height:8px"></i></span></div>
+        <div class="desc">Conversational and present; responds fully (voice in/out).</div></div>
+
+      <div class="mode"><div class="mhead"><span class="glyph">⌨</span><span class="mname">text-only</span>
+        <span class="vol"><i style="height:11px"></i><i style="height:8px"></i><i style="height:5px"></i></span></div>
+        <div class="desc">Responds in text, concisely, only to what is addressed.</div></div>
+
+      <div class="mode"><div class="mhead"><span class="glyph">◌</span><span class="mname">background</span>
+        <span class="vol"><i style="height:8px"></i><i style="height:5px"></i><i style="height:3px"></i></span></div>
+        <div class="desc">Minimal — surfaces only what genuinely needs you; otherwise a one-line ack.</div></div>
+
+      <div class="mode on"><div class="mhead"><span class="glyph">◎</span><span class="mname">focus</span>
+        <span class="vol"><i style="height:6px;background:var(--acc)"></i><i style="height:4px;background:var(--acc)"></i><i style="height:3px;background:var(--acc)"></i></span></div>
+        <div class="desc">You are in deep work — extremely brief (a line or two), no elaboration unless asked.</div></div>
+
+      <div class="mode loud"><div class="mhead"><span class="glyph">➤</span><span class="mname">walkthrough</span>
+        <span class="vol"><i style="height:15px"></i><i style="height:12px"></i><i style="height:9px"></i></span></div>
+        <div class="desc">Actively guides — narrates each step and directs your attention.</div></div>
+
+      <div class="mode"><div class="mhead"><span class="glyph">👁</span><span class="mname">watch-and-react</span>
+        <span class="vol"><i style="height:7px"></i><i style="height:5px"></i><i style="height:4px"></i></span></div>
+        <div class="desc">Observes over your shoulder; comments only when relevant, briefly.</div></div>
+
+      <div class="mode loud"><div class="mhead"><span class="glyph">⚡</span><span class="mname">decide-for-me</span>
+        <span class="vol"><i style="height:12px"></i><i style="height:10px"></i><i style="height:13px"></i></span></div>
+        <div class="desc">Acts on the reversible / AUTO classes itself (deterministic by consequence); still cannot self-approve — anything needing approval is surfaced.</div>
+        <div class="gov">routes by posture, not confidence:
+          <span class="t auto">AUTO→acts</span><span class="t surface">SURFACE/CONFIRM→asks</span><span class="t locked">LOCKED→never</span><span class="no">✕ no self-approve</span></div></div>
+
+      <div class="mode off"><div class="mhead"><span class="glyph">○</span><span class="mname">off</span>
+        <span class="vol"><i style="height:3px"></i></span></div>
+        <div class="desc">The right-hand-man is silent — no responses, no ambient comments.</div></div>
+    </section>
+  </main>
+
+  <nav class="mtabbar" data-ui-ref="ui://tabbar">
+    <a><span class="ic">▦</span>Canvas</a>
+    <a><span class="ic">✦</span>Inbox</a>
+    <a class="on"><span class="ic">◑</span>RHM</a>
+    <a><span class="ic">▶</span>Run</a>
+  </nav>
+</div>
+</body></html>
