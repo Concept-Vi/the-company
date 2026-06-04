@@ -78,7 +78,31 @@ check("corpus list-cap 'driven-read-only' normalized → drivenReadOnly bool (ui
       portal.get("capabilities", {}).get("drivenReadOnly") is True)
 
 # ── 2. ORPHAN CHECK — every used data-ui-ref is registered (used ⊆ registered; run:// excluded) ──────
-_REF = re.compile(r'data-ui-ref=["\']([^"\']+)["\']')
+# The scanner MUST see BOTH JSX forms a .tsx source carries:
+#   • the plain quoted-string attribute      data-ui-ref="ui://inbox/build-review"   (mockups + most app)
+#   • the JSX brace-expression attribute      data-ui-ref={'build-intent'} / {"x"}    (a JSX literal value)
+# The original regex was quote-anchored (data-ui-ref=["']…["']) and STRUCTURALLY BLIND to the brace form —
+# the false-green that let the unregistered build-intent orphan through (adversarial DISPROOF of S1). The
+# optional `\{?…\}?` brackets the quotes so a `={'…'}` / `={"…"}` literal is captured too; the inner
+# [^"']+ still stops at the closing quote, so it does NOT false-match the resolver's
+# querySelector('[data-ui-ref="' + ref + '"]') (the char after the opening quote there is a quote → no body).
+_REF = re.compile(r'data-ui-ref=\{?["\']([^"\']+)["\']\}?')
+
+# REGRESSION GUARD (the blind spot that DISPROVED S1, and that also affects F4): assert the scanner
+# captures all four carrier forms — including the JSX brace form it used to miss — so converting the live
+# build-intent ref to the quoted full-string below can NEVER silently re-hide the brace blind spot.
+_scanner_cases = {
+    'data-ui-ref="ui://inbox/build-review"': 'ui://inbox/build-review',   # plain double-quoted
+    "data-ui-ref='inbox'": 'inbox',                                       # plain single-quoted
+    "data-ui-ref={'build-intent'}": 'build-intent',                       # JSX brace + single
+    'data-ui-ref={"build-intent"}': 'build-intent',                       # JSX brace + double
+}
+for _src, _want in _scanner_cases.items():
+    check(f"scanner captures {_src!r} → {_want!r} (brace-form blind spot closed; guards F4)",
+          _REF.findall(_src) == [_want])
+# and it must NOT mis-capture the live resolver's querySelector template (no body between the quotes).
+check("scanner does NOT false-match the resolver querySelector template (no spurious ref captured)",
+      _REF.findall("document.querySelector('[data-ui-ref=\"' + ref + '\"]')") == [])
 
 
 def collect_refs(root_dir, exts):

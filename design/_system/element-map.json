@@ -639,15 +639,16 @@
       "run://system/model_of_tim"
     ],
     "unused": [
-      "ui://chat/input"
+      "ui://chat/input",
+      "ui://inbox/build-intent"
     ]
   },
   "summary": {
     "screens": 17,
     "addressed_elements": 79,
     "distinct_addresses_used": 25,
-    "registered_addresses": 24,
+    "registered_addresses": 25,
     "unregistered_orphans": 2,
-    "unused_orphans": 1
+    "unused_orphans": 2
   }
 }

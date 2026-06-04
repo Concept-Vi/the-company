@@ -101,6 +101,16 @@
       "represents": "WIRE-review",
       "code": "runtime/suite.py:review_verdicts"
     },
+    "ui://inbox/build-intent": {
+      "region": "inbox",
+      "capabilities": [
+        "pointable",
+        "presentable",
+        "spotlit"
+      ],
+      "represents": "WIRE-intent",
+      "code": "runtime/suite.py:surface_build_intent"
+    },
     "ui://inbox/coa": {
       "region": "inbox",
       "capabilities": [

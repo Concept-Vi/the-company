@@ -17,7 +17,7 @@ export function BuildIntentCard({ d, onOpen, onDemonstrate, liveTypes }:
   const changed: string[] = (result?.changed_files) || p.overrun || []
   const outcome = deriveOutcome(d, liveTypes)
   return (
-    <div className={'bi-card ' + phase.cls} data-ui-ref={'build-intent'}>
+    <div className={'bi-card ' + phase.cls} data-ui-ref="ui://inbox/build-intent">
       <div className="bi-head" onClick={() => onOpen(d.id)} title="compile this decision to a value-choice ↗">
         <span className="bi-tag">⚙ build-intent</span>
         <span className={'bi-phase ' + phase.cls}>{phase.label}</span>
