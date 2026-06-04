@@ -21,6 +21,9 @@ design/
       element-map.json    ← GENERATED: element ⇄ address ⇄ feature ⇄ code + bidirectional orphans
       check.py            ← structural coherence pass (free, no models): hardcoded→token candidates,
                             coverage gaps, address orphans, hygiene → check-report.json  (run: python3 check.py)
+                            ALSO a design-LINT (additive): python3 check.py --target canvas/app/src --fail-on
+                            scans app source for off-token literals/bespoke elements + EXITS NON-ZERO to gate a
+                            build (FORM gate, AGENTS rule 9; flags single occurrences, not just recurrence).
       refcheck.py         ← code-ref drift validator (free, no models): reads every code: ref in
                             register.json (features[].code) + addresses.json (addresses.*.code), resolves
                             each against the real source under ~/company (READ-ONLY), reports where a ref
