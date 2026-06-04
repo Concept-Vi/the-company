@@ -21,14 +21,22 @@ html,body,#root{margin:0;height:100%;background:var(--bg);font-family:"IBM Plex 
 /* node card (rendered inside a tldraw shape) */
 .node-card{position:relative;width:100%;height:100%;border:1px solid var(--line);border-radius:4px;background:var(--panel);
   color:var(--ink);box-shadow:var(--shadow);display:flex;flex-direction:column;font-size:12px}
-.node-card.ran{border-color:var(--sig-dim)}
+/* F3: per-status node colour is NO LONGER hardcoded per class. The status DOT colour is driven inline from
+   the served registry token (capabilities().node_states[state].render.token) — one source (rule 3). These
+   rules give the CARD-level emphasis (border / type accent) that the small dot alone can't carry; they
+   reference the SAME corpus tokens the served render bindings point at, so they stay in agreement:
+   ran=--ok, cached=--cache, stuck/failed=--fail, live=--acc. (idle/empty intentionally neutral.) */
+.node-card.ran{border-color:var(--ok)}
 .node-card.cached{border-color:var(--cache)}
-/* U2: a stuck/failed node is visibly, distinctly FAILED — a red border + red dot + a reason in the body,
-   never the neutral "no output — not yet resolved" treatment a never-run node gets. */
-.node-card.stuck{border-color:var(--err);box-shadow:0 0 0 1px var(--err),var(--shadow)}
-.node-card.stuck .node-dot{background:var(--err);box-shadow:0 0 10px var(--err)}
-.node-card.stuck .node-type{color:var(--err)}
-.node-out.stuck{font-family:inherit;color:var(--err);font-size:10.5px;line-height:1.35;-webkit-line-clamp:3}
+/* U2/F3: a stuck OR failed node is visibly, distinctly FAILED — a red border + a reason in the body, never
+   the neutral "no output — not yet resolved" treatment a never-run node gets. */
+.node-card.stuck,.node-card.failed{border-color:var(--fail);box-shadow:0 0 0 1px var(--fail),var(--shadow)}
+.node-card.stuck .node-type,.node-card.failed .node-type{color:var(--fail)}
+.node-out.stuck,.node-out.failed{font-family:inherit;color:var(--fail);font-size:10.5px;line-height:1.35;-webkit-line-clamp:3}
+/* F3: a LIVE reference window glows on the accent (it is resolving content right now); an EMPTY one is
+   neutral/dim (its reference is unset or dangling) — keyed off the backend-DERIVED reference state. */
+.node-card.live{border-color:var(--acc)}
+.node-card.empty{border-color:var(--line-2)}
 /* U3: while a run is in flight, the not-yet-resolved cards PULSE (best-effort per-node progress — the
    backend emits no per-node signal, so we pulse all pending rather than fake one "computing" node). A
    card that already ran/cached/stuck this session is excluded (it isn't computing). */
@@ -42,7 +50,6 @@ body.canvas-running .node-card.idle .node-dot{background:var(--kind-content);box
 /* portal — a live window onto another address (transclusion, not a copy) */
 .node-card.portal{border-style:dashed;border-color:var(--line-2);background:
   linear-gradient(180deg, var(--kind-content-bg), var(--panel))}
-.node-card.portal .node-dot{background:var(--kind-content);box-shadow:0 0 10px var(--line-2)}
 .node-card.portal .node-type{color:var(--kind-content)}
 .node-ref{padding:4px 10px;color:var(--kind-content);font-size:9px;border-bottom:1px solid var(--line);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -51,9 +58,12 @@ body.canvas-running .node-card.idle .node-dot{background:var(--kind-content);box
 .layers-dim .node-card.layer-system{opacity:.16;filter:saturate(.3)}
 .layers-dim-authored .node-card.layer-authored{opacity:.16;filter:saturate(.3)}
 .node-bar{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--line)}
+/* F3: the status DOT — its colour is set INLINE from the served render token (the one source of status
+   colour). The base background here only shows if the registry hasn't loaded yet (no silent wrong-colour
+   fallback to a hardcoded status palette). `.ring` = the render.shape='ring' reference-node form (live/empty):
+   a hollow ring (vs the solid compute dot), so compute-vs-reference reads BY SIGHT, not by colour alone. */
 .node-dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
-.ran .node-dot{background:var(--sig);box-shadow:0 0 10px var(--sig)}
-.cached .node-dot{background:var(--warn)}
+.node-dot.ring{background:transparent !important;border:1.5px solid currentColor;box-shadow:none !important}
 .node-type{font-weight:600}
 .node-kind{margin-left:auto;color:var(--dim);font-size:9px;letter-spacing:.16em;text-transform:uppercase}
 .node-body{padding:8px 10px;flex:1;overflow:hidden}

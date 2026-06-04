@@ -7,12 +7,15 @@ import {
   createShapeId, useEditor, useValue, stopEventPropagation, type TLBaseShape,
 } from 'tldraw'
 import { api } from './api'
-import { getOINFO, CONNECT, DRAG_CONN, setDragConn, FORCE_RUN } from './registryStore'
+import { getOINFO, getNODE_STATES, CONNECT, DRAG_CONN, setDragConn, FORCE_RUN } from './registryStore'
 
 // ---------------------------------------------------------------- the node shape (one generic kind)
+// F3: `error` carries the run-error string for a backend-`failed` node (suite.py state() puts it on
+// node["error"]). It must be a shape prop so the card (rendered inside tldraw) + the inspector (reads
+// shape.props as `selected`) can BOTH surface it — a failed node is no longer a silent `idle`.
 export type NodeShape = TLBaseShape<'node', {
   w: number; h: number; nodeId: string; nodeType: string; kind: string
-  status: string; output: string; address: string; ref: string; layer: string
+  status: string; output: string; address: string; ref: string; layer: string; error: string
 }>
 
 export const shapeIdFor = (nodeId: string) => createShapeId('n-' + nodeId)
@@ -28,10 +31,10 @@ export class NodeShapeUtil extends ShapeUtil<NodeShape> {
   static override type = 'node' as const
   static override props = {
     w: T.number, h: T.number, nodeId: T.string, nodeType: T.string, kind: T.string,
-    status: T.string, output: T.string, address: T.string, ref: T.string, layer: T.string,
+    status: T.string, output: T.string, address: T.string, ref: T.string, layer: T.string, error: T.string,
   }
   getDefaultProps(): NodeShape['props'] {
-    return { w: 240, h: 130, nodeId: '', nodeType: '', kind: 'process', status: 'idle', output: '', address: '', ref: '', layer: 'authored' }
+    return { w: 240, h: 130, nodeId: '', nodeType: '', kind: 'process', status: 'idle', output: '', address: '', ref: '', layer: 'authored', error: '' }
   }
   getGeometry(shape: NodeShape) {
     return new Rectangle2d({ width: shape.props.w, height: shape.props.h, isFilled: true })
@@ -50,12 +53,38 @@ export class NodeShapeUtil extends ShapeUtil<NodeShape> {
     const ports = getOINFO()[p.nodeType]?.ports || { inputs: {}, outputs: {} }
     const inputs = Object.keys(ports.inputs || {})
     const outputs = Object.keys(ports.outputs || {})
-    // D5: legible cached-vs-ran — a cache hit must SAY so (fail-loud against "nothing happened").
-    // U2: a stuck node says so distinctly (not the neutral "idle/no output"); the reason is generic and
-    // honest — the scheduler's "stuck" means an input address never resolved (no per-node error string).
-    const statusLabel = p.status === 'ran' ? 'ran' : p.status === 'cached' ? 'cached ↺'
-      : p.status === 'stuck' ? 'stuck — an input never resolved' : p.status
+    // F3: drive status BY SIGHT from the served registry (capabilities().node_states), NOT a hardcoded
+    // ternary. `def.label` is the human word ('Ran'/'Cached'/'Failed'…); `def.render.token` is the corpus
+    // design-token that colours the dot (the ONE source of status colour — register a state engine-side and
+    // it paints here, rule 3); `def.render.shape` ('dot'|'ring') distinguishes compute vs reference nodes.
+    // Read DIRECTLY in render (same pattern as getOINFO() above), NOT via tldraw useValue: NODE_STATES is a
+    // plain module store, not a tldraw signal, so useValue wouldn't track it — it would cache the first (empty,
+    // pre-capabilities) read forever. Direct-read re-evaluates every render, so the post-capabilities loadGraph
+    // re-render (props change) picks up the now-populated registry and the dot self-heals to its render token.
+    const def = getNODE_STATES()[p.status]
+    // FAILED carries an error string (suite.py state() → node.error). It MUST be legible — a node that
+    // RAISED is not 'idle'; surfacing it is fail-loud (rule 4). LIVE/EMPTY are the reference/portal states
+    // DERIVED backend-side (RESOLVE='reference': live=ref resolves, empty=ref unset/dangling) — F3 keys the
+    // portal body off THESE, not the old isPortal+hasOut guess.
     const isStuck = p.status === 'stuck'
+    const isFailed = p.status === 'failed'
+    const isLive = p.status === 'live'
+    const isEmpty = p.status === 'empty'
+    // the label shown on the addr line: registry word, with the same legible suffixes the operator relied on.
+    const statusWord = def?.label ? def.label.toLowerCase() : p.status
+    const statusLabel = p.status === 'cached' ? `${statusWord} ↺`
+      : isStuck ? 'stuck — an input never resolved'
+      : isFailed ? `failed — ${p.error || 'the node raised an error'}`
+      : statusWord
+    // the dot's colour = the served render token (var(--…)). No fallback to a hardcoded colour: that would
+    // re-hardcode the vocabulary F3 exists to centralise (rule 3/4). Absent a token, the CSS base colour shows.
+    const dotShapeCls = def?.render?.shape === 'ring' ? 'ring' : ''
+    const dotStyle: any = {}
+    if (def?.render?.token) {
+      const c = `var(${def.render.token})`
+      if (dotShapeCls) { dotStyle.color = c; dotStyle.borderColor = c }   // ring: token drives the border (currentColor) — hollow
+      else { dotStyle.background = c; dotStyle.boxShadow = `0 0 10px ${c}` } // dot: token fills the solid dot
+    }
 
     // A nub. An OUTPUT nub starts a connect gesture: stopPropagation (so tldraw doesn't read it as a
     // node-drag/select) + setPointerCapture (so we keep the pointer through the drag). Because capture
@@ -99,21 +128,29 @@ export class NodeShapeUtil extends ShapeUtil<NodeShape> {
     }
     return (
       <HTMLContainer>
+        {/* F3: status rides in the card class (`failed`/`live`/`empty` now too, not just ran/cached/stuck) so
+            the CSS by-sight treatment keys off it; the dot's colour comes from the registry render token. */}
         <div className={`node-card ${p.status} layer-${p.layer}` + (isPortal ? ' portal' : '')}>
           <div className="node-bar">
-            <span className="node-dot" />
+            <span className={`node-dot ${dotShapeCls}`} style={dotStyle} title={def?.label || p.status} />
             <span className="node-type">{isPortal ? '⊕ portal' : p.nodeType}</span>
             <span className="node-kind">{p.layer === 'system' ? 'system' : p.kind}</span>
           </div>
-          {isPortal && <div className="node-ref">live view → {p.ref}</div>}
+          {isPortal && <div className="node-ref">{isEmpty ? 'window onto an unresolved address' : 'live view → ' + p.ref}</div>}
           {expanded && (
             <div className="node-body">
-              {/* U2: a stuck node is visibly FAILED with a reason — never the neutral "not yet resolved". */}
-              {isStuck
-                ? <div className="node-out stuck">⚠ stuck — an input address never resolved (wire its inputs, or run upstream first)</div>
-                : hasOut
-                  ? <div className="node-out">{String(p.output)}</div>
-                  : <div className="node-out empty">{isPortal ? 'window onto an unresolved address' : 'no output — not yet resolved'}</div>}
+              {/* F3: status-driven body. FAILED shows the ERROR STRING (it raised) — the most legible-by-sight
+                  failure; STUCK explains the never-resolved input; LIVE/EMPTY come from the DERIVED reference
+                  state (not the old isPortal+hasOut guess); otherwise show output, or the empty placeholder. */}
+              {isFailed
+                ? <div className="node-out failed">✕ failed — {p.error || 'the node raised an error during run'}</div>
+                : isStuck
+                  ? <div className="node-out stuck">⚠ stuck — an input address never resolved (wire its inputs, or run upstream first)</div>
+                  : isEmpty
+                    ? <div className="node-out empty">{isPortal ? 'window onto an unresolved address' : 'empty — no result at this address'}</div>
+                    : (isLive || hasOut)
+                      ? <div className="node-out">{String(p.output)}</div>
+                      : <div className="node-out empty">{isPortal ? 'window onto an unresolved address' : 'no output — not yet resolved'}</div>}
             </div>
           )}
           {expanded && (
@@ -156,6 +193,7 @@ export async function loadGraph(editor: Editor) {
       w: 240, h: NODE_H, nodeId: n.id, nodeType: n.type, kind: n.kind || 'process',
       status: n.status || 'idle', output: n.output == null ? '' : String(n.output), address: n.address || '',
       ref: (n.config && n.config.ref) || '', layer: n.layer || 'authored',
+      error: n.error == null ? '' : String(n.error),   // F3: carry the failed-node error string (else '')
     }
     if (editor.getShape(id)) {
       editor.updateShape<NodeShape>({ id, type: 'node', x: pos.x, y: pos.y, props })   // position from backend
@@ -182,7 +220,7 @@ export async function refresh(editor: Editor, state?: any) {
       editor.updateShape<NodeShape>({
         id, type: 'node',
         ...(pos ? { x: pos.x, y: pos.y } : {}),
-        props: { status: n.status || 'idle', output: n.output == null ? '' : String(n.output), layer: n.layer || 'authored' },
+        props: { status: n.status || 'idle', output: n.output == null ? '' : String(n.output), layer: n.layer || 'authored', error: n.error == null ? '' : String(n.error) },
       })
     }
   })

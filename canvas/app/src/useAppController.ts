@@ -40,6 +40,9 @@ export function useAppController(editor: Editor) {
   const [growMsg, setGrowMsg] = useState('the brain writes it · you approve · it goes live.')
   const [workshop, setWorkshop] = useState<any>(null)
   const [oinfo, setOinfo] = useState<any>({})
+  // F3: the served node_states index (id -> {label, render{token,icon,shape}…}) mirrored into React state so
+  // the Inspector (a context-reading region) paints status BY SIGHT from the registry, same as the shape does.
+  const [nodeStates, setNodeStates] = useState<Record<string, any>>({})
   // registry-is-truth: per-mode descriptions read from capabilities().mode_directives (backend is the one
   // source). Default {} → every lookup falls back to '' until the snapshot loads (safe, never a stale guess).
   const [modeDesc, setModeDesc] = useState<Record<string, string>>({})
@@ -136,7 +139,17 @@ export function useAppController(editor: Editor) {
       setOinfo(oi)
       // registry-is-truth: pull the per-mode directives from capabilities() (backend MODE_DIRECTIVES is the
       // ONE source) so the presence dropdown shows backend truth, not a parallel hardcoded copy.
-      try { const caps = await api.capabilities(); setModeDesc(caps?.mode_directives || {}) } catch { /* */ }
+      // F3: ALSO index capabilities().node_states (7 states, each carrying label + S5's render{token,icon,shape})
+      // into the store so the shape + inspector paint status BY SIGHT from the registry — a new state registered
+      // engine-side then paints everywhere with zero FE edits (one-source, rule 3). Array -> {id: def} map.
+      try {
+        const caps = await api.capabilities(); setModeDesc(caps?.mode_directives || {})
+        const ns = Array.isArray(caps?.node_states) ? caps.node_states : []
+        const nsIndex: Record<string, any> = {}
+        for (const s of ns) if (s && s.id) nsIndex[s.id] = s
+        registryStore.set({ NODE_STATES: nsIndex })   // shape-reachable half (NodeShape reads via getNODE_STATES)
+        setNodeStates(nsIndex)                         // React half (the Inspector region reads via context)
+      } catch { /* */ }
       const g = await loadGraph(editor); setEdges(g.edges || []); setGid(g.id); syncConfig(g)
       if ((g.nodes || []).length) setTimeout(fitGraph, 120)   // U6: chrome-aware fit on first load
       setTypes(await api.types())
@@ -662,7 +675,7 @@ export function useAppController(editor: Editor) {
   return {
     // state values (read by the region components)
     edges, running, runError, runStartedAt, runElapsed, types, gname, gspec, surf, growMsg, workshop,
-    oinfo, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
+    oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
     showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn,
     wtSpoke, wtBusy, selected,
     // refs the components read for the inspector form

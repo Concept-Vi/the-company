@@ -7,7 +7,14 @@ import { NodeConfigForm } from '../components/NodeConfigForm'
 import { useApp } from '../AppContext'
 
 export function Inspector() {
-  const { selected, configTick, configByNode, setWorkshop, doRun, surfaceOutput, buildFromOutput, setNodeConfig } = useApp()
+  const { selected, nodeStates, configTick, configByNode, setWorkshop, doRun, surfaceOutput, buildFromOutput, setNodeConfig } = useApp()
+  // F3: drive the inspector status BY SIGHT from the served registry (capabilities().node_states), same source
+  // as the canvas card — no parallel hardcoded ternary. `def.label` is the word; `def.render.token` colours the
+  // chip (the ONE source of status colour, rule 3). FAILED surfaces its error string (fail-loud, rule 4);
+  // STUCK keeps its legible reason. LIVE/EMPTY are the backend-derived reference states.
+  const def = selected ? nodeStates[selected.status] : undefined
+  const word = def?.label ? def.label.toLowerCase() : selected?.status
+  const chipStyle: any = def?.render?.token ? { color: `var(${def.render.token})` } : {}
   return (
     <>
       {selected ? (
@@ -17,10 +24,13 @@ export function Inspector() {
           <div className="row">
             <span className="k">status</span>
             <span>
-              {/* U2: stuck reads as a legible failure in the inspector too, not a bare word. */}
-              {selected.status === 'cached' ? 'cached ↺'
-                : selected.status === 'stuck' ? <span className="err">stuck — an input never resolved</span>
-                : selected.status}
+              {selected.status === 'failed'
+                ? <span className="err" style={chipStyle}>✕ failed — {selected.error || 'the node raised an error'}</span>
+                : selected.status === 'stuck'
+                  ? <span className="err" style={chipStyle}>stuck — an input never resolved</span>
+                  : selected.status === 'cached'
+                    ? <span style={chipStyle}>{word} ↺</span>
+                    : <span style={chipStyle}>{word}</span>}
               {/* D4/D5: force this node past the memo cache, right from the inspector */}
               <button className="b ghost sm" style={{ marginLeft: 8 }} title="force re-run (bypass memo cache)"
                 onClick={() => doRun([selected.nodeId])}>↻ force</button>

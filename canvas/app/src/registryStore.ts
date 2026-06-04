@@ -16,6 +16,16 @@
 // the live commit — adding a dep would break that guarantee). The globals were already a hand-rolled
 // external store; this just gives them a subscribe/snapshot so React can read them reactively.
 
+// F3: one served node-state, as it rides in capabilities().node_states (suite.py NODE_STATES + S5's render).
+// `render.token` is a corpus design-token NAME (e.g. '--fail') — the by-sight colour signal, the ONE source
+// for status colour. `render.shape` ('dot'|'ring') distinguishes compute vs reference nodes (border-radius).
+// `render.icon` is provisional (S5: no corpus icon registry yet) — kept for forward-compat, not depended on.
+export type NodeStateRender = { token: string; icon?: string; shape?: string }
+export type NodeStateDef = {
+  id: string; label: string; means?: string; applies_to?: string[]; derived_when?: string
+  render?: NodeStateRender
+}
+
 export type RegistryState = {
   // type -> { ports:{inputs,outputs}, config_schema, kind } — the C1 object_info registry (drives ports + the generic inspector form).
   OINFO: Record<string, any>
@@ -23,6 +33,9 @@ export type RegistryState = {
   MODEL_OPTIONS: Record<string, string[]>
   // the UI-component registry (/api/ui_info) — the source of what's addressable; the resolver validates ui:// targets against it.
   UI_INFO: Record<string, any>
+  // F3: stateId -> NodeStateDef, indexed from capabilities().node_states. The shape + inspector read label +
+  // render FROM HERE (registry-is-truth, rule 3): register a state engine-side → it paints everywhere, no FE edit.
+  NODE_STATES: Record<string, NodeStateDef>
 }
 
 // C1: a drag from an output nub to an input nub COMMITS through this hook (the controller installs it). The
@@ -42,7 +55,7 @@ export function setDragConn(v: typeof DRAG_CONN) { DRAG_CONN = v }
 export let FORCE_RUN: (node_id: string) => void = () => {}
 export function setForceRun(fn: typeof FORCE_RUN) { FORCE_RUN = fn }
 
-let state: RegistryState = { OINFO: {}, MODEL_OPTIONS: {}, UI_INFO: {} }
+let state: RegistryState = { OINFO: {}, MODEL_OPTIONS: {}, UI_INFO: {}, NODE_STATES: {} }
 const listeners = new Set<() => void>()
 
 function emit() { for (const l of listeners) l() }
@@ -63,3 +76,6 @@ export const registryStore = {
 export function getOINFO(): Record<string, any> { return state.OINFO }
 export function getMODEL_OPTIONS(): Record<string, string[]> { return state.MODEL_OPTIONS }
 export function getUI_INFO(): Record<string, any> { return state.UI_INFO }
+// F3: imperative read for the node shape (renders inside tldraw, outside React context). Returns the live
+// node_states index — the shape reads label + render.token/shape from it to paint status by sight.
+export function getNODE_STATES(): Record<string, NodeStateDef> { return state.NODE_STATES }
