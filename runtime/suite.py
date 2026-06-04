@@ -979,8 +979,11 @@ class Suite:
     # is no second copy to fall out of sync (AGENTS.md rule 3, one-source).
     #
     # MODE SETS (per the Change-Maps §suite, mode-primary / context-refines):
-    #   run    → {focus, background, listening, text-only, walkthrough, watch-and-react, decide-for-me}
+    #   run    → {focus, background, listening, text-only, decide-for-me}
     #            pred = graph_nonempty (no point recomputing an empty graph)
+    #            NOT walkthrough / watch-and-react: those are GUIDE / OBSERVE modes (show+consult only) —
+    #            they do not RECOMPUTE the graph (spec-aligned). (whether walkthrough should offer run is
+    #            a Tim mode-design call — flagged needs_tim; shipping the spec-aligned version now.)
     #   show   → all modes BUT 'off'
     #   consult→ {walkthrough, watch-and-react, listening, text-only, decide-for-me}
     #   build/propose/panel/extend → {listening, text-only, decide-for-me}
@@ -992,8 +995,7 @@ class Suite:
     # rhm_completion_acceptance asserts exactly).
     # ════════════════════════════════════════════════════════════════════════════════════════════
     _M_BUILDISH = frozenset({"listening", "text-only", "decide-for-me"})
-    _M_RUN = frozenset({"focus", "background", "listening", "text-only",
-                        "walkthrough", "watch-and-react", "decide-for-me"})
+    _M_RUN = frozenset({"focus", "background", "listening", "text-only", "decide-for-me"})
     _M_CONSULT = frozenset({"walkthrough", "watch-and-react", "listening", "text-only", "decide-for-me"})
     _M_ALL_BUT_OFF = frozenset(MODES) - {"off"}
 
@@ -1659,11 +1661,27 @@ class Suite:
         # the EXISTING _json_obj_to_action (it JSON-decodes the `arguments` string) → the EXISTING
         # _dispatch_rhm_action (the ONE whitelist — a forbidden verb is refused end-to-end, E6 holds).
         # In decide-for-me each call routes per its governance posture via autonomous_dispatch.
+        # MODE-DISCIPLINE GATE (defense-in-depth ATOP the whitelist): the affordance set is a REAL gate
+        # at dispatch, not merely a hint to the model. A forged/confused tool_call for a verb that is
+        # whitelisted but NOT OFFERED in this mode×context (e.g. `build` in watch-and-react) must NOT
+        # execute. We re-validate each call against the SAME available_verbs(mode, actx) that built the
+        # tools array — so the OFFER and the DISPATCH agree by construction. A not-offered verb is
+        # refused here (did=='none', a legible note folded into the reply) and never reaches the
+        # dispatcher. This is purely additive: the dispatcher's whitelist still refuses non-RHM_VERBS
+        # (E6), the catastrophic apply/delete/file-write wall is untouched, decide-for-me routing is
+        # unchanged for OFFERED verbs, and a verb that IS offered dispatches exactly as before.
+        offered = set(self.available_verbs(mode, actx))
         outcomes = []
         for tc in (msg.get("tool_calls") or []):
             fn = tc.get("function") or {}
             verb = fn.get("name")
             if not verb:
+                continue
+            if verb not in offered:
+                # not offered in THIS mode → refuse without dispatching (mode-discipline gate). Legible
+                # reason; same {did:none, refused} shape _confirmation_for folds into the reply.
+                outcomes.append({"did": "none",
+                                 "refused": f"{verb} not available in mode {mode}"})
                 continue
             action = self._json_obj_to_action({"name": verb, "arguments": fn.get("arguments")}, verb)
             if mode == "decide-for-me":
@@ -2595,11 +2613,15 @@ class Suite:
                 f"operator (CONFIRM/SURFACE/LOCKED never auto-run; surfacing a result after the act is "
                 f"too late). The operator launches a non-AUTO build; refused.")
 
-        # 3 + 5 — EXACTLY-ONCE check→claim, ATOMIC under a per-seq lock. The bridge is a
-        # ThreadingHTTPServer over one Suite; without the lock two concurrent fires both clear the
-        # check before either claims → double-launch. The lock serializes check→emit; the durable
-        # decision.dispatch event is the cross-process/restart guarantee.
-        with self._dispatch_lock(derived_from):
+        # 3 + 5 — EXACTLY-ONCE check→claim, ATOMIC under TWO nested locks. The bridge is a
+        # ThreadingHTTPServer over one Suite; without a lock two concurrent fires both clear the check
+        # before either claims → double-launch. The thread lock (_dispatch_lock) serializes in-PROCESS
+        # threads; nested INSIDE it the store's cross-PROCESS graph_lock (keyed dispatch-claim:<seq>,
+        # backed by fcntl.flock — the primitive the store lane built) serializes across SEPARATE
+        # PROCESSES too (Tim runs multiple sessions). So the check→emit critical section is atomic
+        # whether the race is two threads or two processes; the durable decision.dispatch event remains
+        # the restart guarantee. Re-entrant, so a nested locked call on the same key won't self-deadlock.
+        with self._dispatch_lock(derived_from), self.store.graph_lock(f"dispatch-claim:{derived_from}"):
             if self._already_dispatched(derived_from):
                 raise GovernanceError(
                     f"dispatch_decision: a decision.dispatch already exists for resolve seq={derived_from} — "

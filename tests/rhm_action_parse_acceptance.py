@@ -107,10 +107,16 @@ try:
     check("(c) listening (EMPTY graph) drops `run` (predicate context-refines)",
           "run" not in av_listen_empty and "build" in av_listen_empty)
 
-    # watch-and-react: NO build/propose/panel/extend (it observes); show + consult + run are offered
+    # watch-and-react: an OBSERVE mode — show + consult ONLY. NO build cluster (it doesn't compose) AND
+    # NO run (it observes/comments, it does NOT recompute the graph — spec said show+consult only).
     av_watch = suite.available_verbs("watch-and-react", full_ctx)
-    check("(c) watch-and-react offers show/consult/run, NOT build/propose/panel/extend",
-          set(av_watch) == {"run", "consult", "show"})
+    check("(c) watch-and-react offers ONLY show+consult (no build cluster, NO run — observe mode)",
+          set(av_watch) == {"consult", "show"})
+
+    # walkthrough: a GUIDE mode — show + consult ONLY (same rationale: it guides/consults, doesn't recompute).
+    av_walk = suite.available_verbs("walkthrough", full_ctx)
+    check("(c) walkthrough offers ONLY show+consult (guide mode — NO run)",
+          set(av_walk) == {"consult", "show"})
 
     # focus: minimal — run + show only (no consult, no build cluster)
     av_focus = suite.available_verbs("focus", full_ctx)
@@ -209,7 +215,64 @@ try:
     check("(e) node c STILL exists after the refused delete through chat()", any(n.id == "c" for n in suite._load(g).nodes))
     check("(e) the refusal is surfaced in the reply (no silent no-op)", bool(r_fdel["reply"].strip()))
 
+    # ============================================================================================
+    # (f) MODE-DISCIPLINE AT DISPATCH (defense-in-depth ATOP the whitelist). A WHITELISTED verb that is
+    #     NOT OFFERED in the current mode (e.g. `build` in watch-and-react) must NOT execute. The
+    #     affordance set is a REAL gate at dispatch — a forged/confused tool_call for a not-in-mode verb
+    #     is refused (did=="none") and NO node is created. The whitelist (E6) still refuses non-RHM_VERBS;
+    #     this adds the mode layer. We drive it through the FULL chat() path (the surface the model uses).
+    # ============================================================================================
+    gm = "mode-discipline"
+    suite.create_node(gm, "constant", config={"value": "x"}, node_id="k")   # non-empty graph (so `run` would be ctx-OK)
+    suite.set_rhm_config({"model": "minimax-m3:cloud", "mode": "watch-and-react"})
+    suite._model_supports_tools = lambda model, base_url=None: True
+
+    # build is a whitelisted RHM verb but NOT offered in watch-and-react → must be refused at dispatch.
+    BUILD_FORGED = [{"as": "n", "type": "constant", "config": {"value": "forged"}}]
+    nodes_before = len(suite._load(gm).nodes)
+    def _stub_build(*a, **k):
+        return {"role": "assistant", "content": "", "tool_calls": [tool_call("build", {"steps": BUILD_FORGED})]}
+    fclient.complete_with_tools = _stub_build
+    try:
+        r_modebuild = suite.chat("build me a node", gm)
+    finally:
+        fclient.complete_with_tools = _orig
+    check("(f) forged `build` in watch-and-react via chat() is REFUSED at dispatch (did==none)",
+          (r_modebuild["action"] or {}).get("did") == "none")
+    check("(f) the refusal names the mode-discipline reason (legible)",
+          "watch-and-react" in str((r_modebuild["action"] or {}).get("refused", "")) and
+          "build" in str((r_modebuild["action"] or {}).get("refused", "")))
+    check("(f) NO node was created by the refused not-in-mode build (graph unchanged)",
+          len(suite._load(gm).nodes) == nodes_before)
+    check("(f) the refusal is folded into the reply (no silent no-op)", bool(r_modebuild["reply"].strip()))
+
+    # CONTRAST: a verb that IS offered in this mode (show) still DISPATCHES normally — the gate narrows,
+    # it does not break offered verbs. `show k` targets the live node → did=="show".
+    def _stub_show(*a, **k):
+        return {"role": "assistant", "content": "", "tool_calls": [tool_call("show", {"targets": ["k"]})]}
+    fclient.complete_with_tools = _stub_show
+    try:
+        r_modeshow = suite.chat("show me node k", gm)
+    finally:
+        fclient.complete_with_tools = _orig
+    check("(f) an OFFERED verb (show) in watch-and-react still DISPATCHES normally",
+          (r_modeshow["action"] or {}).get("did") == "show")
+
+    # E6 STILL HOLDS through the mode-gate: a catastrophic forged `delete` in watch-and-react is refused
+    # (it is neither offered in mode NOR whitelisted) and node k survives.
+    def _stub_del2(*a, **k):
+        return {"role": "assistant", "content": "", "tool_calls": [tool_call("delete", {"node": "k"})]}
+    fclient.complete_with_tools = _stub_del2
+    try:
+        r_modedel = suite.chat("delete node k", gm)
+    finally:
+        fclient.complete_with_tools = _orig
+    check("(f) E6: forged `delete` in watch-and-react STILL refused (did==none)",
+          (r_modedel["action"] or {}).get("did") == "none")
+    check("(f) E6: node k survives the forged delete", any(n.id == "k" for n in suite._load(gm).nodes))
+
     print(f"\nALL {PASS} CHECKS PASS — RHM acts via NATIVE tool-calling; whitelist holds end-to-end; "
-          "capability-gate fails loud; affordances correct per mode; empty-content tool_call → non-blank reply")
+          "capability-gate fails loud; affordances correct per mode; empty-content tool_call → non-blank reply; "
+          "mode-discipline enforced at dispatch")
 finally:
     shutil.rmtree(store_dir, ignore_errors=True)
