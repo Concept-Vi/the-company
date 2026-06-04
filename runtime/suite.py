@@ -702,12 +702,55 @@ class Suite:
             f"{n['id']}({n['type']}, {'resolved' if n['content_hash'] else 'unresolved'})"
             for n in st["nodes"]) or "(none)"
         evs = "; ".join(f"{e['kind']}: {e['summary']}" for e in self.store.recent_events(6)) or "(none)"
+
+        # --- WHOLE-INTERFACE grounding (Tim: "everything it needs to be aware of in the whole
+        # interface") — every value below comes from the LIVE registry/state, never fabricated. The
+        # model reads are fail-loud-LEGIBLE (rule 4): a down endpoint renders a marker + emits a
+        # warning, never a silent omission and never a crash (a raise here would break every turn).
+        try:
+            chat_models = self.available_models()             # chat — cached; warns on a down endpoint
+        except Exception as e:                                 # defensive: never let grounding crash a turn
+            self._emit("warning", f"chat model registry unreachable in RHM context ({type(e).__name__})")
+            chat_models = None
+        try:
+            embed_models = self.models_at("embed")            # embed — its OWN endpoint; may be down
+        except Exception as e:
+            self._emit("warning", f"embed model registry unreachable in RHM context ({type(e).__name__})")
+            embed_models = None
+        chat_s = ", ".join(chat_models) if chat_models else "(endpoint unreachable)"
+        embed_s = ", ".join(embed_models) if embed_models else "(endpoint unreachable)"
+
+        mode = nowv["mode"]
+        modes_s = ", ".join(self.MODES)
+        verbs_s = "; ".join(f"{v} ({self.RHM_VERB_DESC.get(v, '')})" for v in self.RHM_VERBS)
+        lanes = self.inbox_lanes()
+        n_esc = lanes["counts"]["escalations"]
+        # count AND what's awaiting — so the RHM can answer "what's awaiting", not just "how many".
+        esc_titles = []
+        for d in lanes["live_escalations"][:6]:
+            pl = d.get("payload") or {}
+            esc_titles.append(str(pl.get("title") or pl.get("name") or d.get("action") or d.get("id"))[:48])
+        awaiting_s = ("; ".join(esc_titles) + ("…" if n_esc > 6 else "")) if esc_titles else "(nothing)"
+        all_graphs = self.list_graphs()                       # keep COMPACT: count + the current graph
+        others = [x for x in all_graphs if x != nowv["graph"]]
+        graphs_s = (f"{len(all_graphs)} total — current: {nowv['graph']}"
+                    + (f"; others incl. {', '.join(others[:5])}" + ("…" if len(others) > 5 else "") if others else ""))
+        panels_s = ", ".join(p.get("id", "?") for p in self.list_panels()) or "(none)"
+
         ctx = (
             "LIVE SYSTEM STATE (ground truth — answer only from this):\n"
             f"- graph: {nowv['graph']} · {nowv['nodes_total']} nodes, {nowv['nodes_resolved']} resolved"
+            f", {len(self._last_run_stuck(nowv['graph']))} stuck"
             f" · {nowv['surfaced_pending']} awaiting approval · presence: {nowv['presence']}\n"
             f"- nodes: {nodes}\n"
             f"- available node-types: {', '.join(self.list_types())}\n"
+            f"- chat models: {chat_s}\n"
+            f"- embed models: {embed_s}\n"
+            f"- presence modes: {modes_s} (current: {mode})\n"
+            f"- RHM verbs you can perform: {verbs_s}\n"
+            f"- inbox: {n_esc} item(s) awaiting you — {awaiting_s}\n"
+            f"- graphs (multigraph): {graphs_s}\n"
+            f"- panels: {panels_s}\n"
             f"- recent activity: {evs}\n"
         )
         selected = [s for s in (focus or {}).get("selected", []) if s in by]
@@ -726,6 +769,18 @@ class Suite:
     # The RHM signals intent with a trailing `ACTION:` line; the dispatcher enforces a
     # WHITELIST so the conversational surface can never reach apply/delete/file-write (E6).
     RHM_VERBS = ("run", "propose", "build", "consult", "show", "panel", "extend")
+
+    # one-line gloss per verb — single-source, so the grounding context can tell the RHM its OWN
+    # capabilities (what each verb does) without re-typing the prose already in the chat system prompt.
+    RHM_VERB_DESC = {
+        "run": "recompute the current graph",
+        "propose": "draft a new node-type for approval",
+        "build": "compose a pipeline on the canvas",
+        "consult": "read the system's own code+design",
+        "show": "move the operator's view to node(s)/UI",
+        "panel": "add a declarative settings panel",
+        "extend": "write a new UI component (build-gated)",
+    }
 
     # G3: each RHM verb's GOVERNANCE action-class — the deterministic input to autonomous_dispatch in
     # decide-for-me mode. AUTO classes (run/compose/inspect) → the verb runs; CONFIRM classes
@@ -754,42 +809,163 @@ class Suite:
                               model=cfg["model"])
         return {"answer": ans}
 
+    # --- model-/provider-AGNOSTIC action extraction -------------------------------------------
+    # The requirement (Tim): the RHM must ACT regardless of which model/provider is selected, and a
+    # NEW model must "just work". Real models DON'T emit the canonical `ACTION: verb args` line — each
+    # provider emits its OWN native tool-call shape. So the parser is a small set of SHAPE handlers,
+    # tried in order, each recognising one common verb-invocation shape and normalising it to the SAME
+    # `{"verb":..., ...}` dict the dispatcher already takes. Extend by ADDING a handler — never by
+    # special-casing one model. The parser is shape-recognition ONLY: it does NOT whitelist (that would
+    # be a second whitelist that drifts from the dispatcher's — AGENTS.md rule 3). The ONE whitelist
+    # lives in `_dispatch_rhm_action` (RHM_VERBS), so a forbidden verb extracted here is REFUSED there
+    # (the E6 no-bypass guarantee, proven end-to-end in rhm_action_parse_acceptance.py).
+
+    # provider delimiters some models prepend to a tool-call (e.g. minimax's `]<]minimax[>[`). They are
+    # noise around the real wrapper — stripped wherever they appear so the XML/JSON handler can match.
+    _PROVIDER_DELIMS = (r"\]<\]\s*[a-zA-Z0-9_.\-]+\s*\[>\[", r"<\|tool_calls?_begin\|>", r"<\|tool_call_end\|>")
+
     @staticmethod
-    def _parse_rhm_action(reply: str):
-        """Split a reply into (shown_text, action|None). Action lines:
-        `ACTION: run` · `ACTION: propose <name> :: <spec>` · `ACTION: build <json pipeline>`."""
+    def _normalise_rhm_action(verb: str, raw_args: str):
+        """The ONE place a (verb, raw-args) pair becomes the dispatcher dict — so the SAME intent in
+        any shape (ACTION: line, <invoke>, JSON, fenced) yields the IDENTICAL action. raw_args is the
+        verb's argument text (for build: the JSON pipeline; for consult/show: the query/targets; for
+        propose/panel/extend: `<name> :: <spec>`)."""
         import json as _j
-        lines = reply.rstrip().splitlines()
-        if not lines:
-            return reply, None
-        last = lines[-1].strip()
-        if not last.upper().startswith("ACTION:"):
-            return reply, None
-        body = last[len("ACTION:"):].strip()
-        shown = "\n".join(lines[:-1]).rstrip()
-        verb, _, rest = body.partition(" ")
-        verb = verb.lower()
-        if verb == "propose":
+        verb = (verb or "").strip().lower()
+        rest = (raw_args or "").strip()
+        if verb in ("propose", "panel", "extend"):
             name, _, spec = rest.partition("::")
-            return shown, {"verb": "propose", "name": name.strip(), "spec": spec.strip()}
+            return {"verb": verb, "name": name.strip(), "spec": spec.strip()}
         if verb == "build":
             try:
-                steps = _j.loads(rest)
+                steps = _j.loads(rest) if rest else None
             except Exception:
                 steps = None
-            return shown, {"verb": "build", "steps": steps}
+            return {"verb": "build", "steps": steps}
         if verb == "consult":
-            return shown, {"verb": "consult", "query": rest.strip()}
+            return {"verb": "consult", "query": rest}
         if verb == "show":
-            targets = [t for t in rest.replace(",", " ").split() if t]
-            return shown, {"verb": "show", "targets": targets}
-        if verb == "panel":
-            name, _, spec = rest.partition("::")
-            return shown, {"verb": "panel", "name": name.strip(), "spec": spec.strip()}
-        if verb == "extend":
-            name, _, spec = rest.partition("::")
-            return shown, {"verb": "extend", "name": name.strip(), "spec": spec.strip()}
-        return shown, {"verb": verb}
+            return {"verb": "show", "targets": [t for t in rest.replace(",", " ").split() if t]}
+        if verb == "run":
+            return {"verb": "run"}
+        return {"verb": verb}                                  # unknown → passes through; dispatcher refuses it
+
+    @classmethod
+    def _strip_provider_delims(cls, text: str) -> str:
+        import re
+        for pat in cls._PROVIDER_DELIMS:
+            text = re.sub(pat, "", text)
+        return text
+
+    @classmethod
+    def _parse_rhm_action(cls, reply: str):
+        """Split a reply into (shown_text, action|None), recognising a verb-invocation in ANY common
+        shape. Handlers tried in order; the first that matches wins. ALSO strips the recognised wrapper
+        (provider delimiter / `<invoke>` / `<tool_call>` / fenced json) from the SHOWN reply so raw
+        tool-call tokens NEVER leak to the operator."""
+        import re, json as _j
+        if not reply or not reply.strip():
+            return reply, None
+
+        # --- handler 1: native XML tool-call — Anthropic/XML `<invoke name="VERB">args</invoke>`,
+        #     optionally inside `<tool_call>...</tool_call>`, optionally after a provider delimiter
+        #     (minimax `]<]minimax[>[`). Strip the WHOLE wrapper (delims + tool_call + invoke) from
+        #     the shown text. Args = the inner text of the <invoke> element.
+        invoke_re = re.compile(r"<invoke\s+name\s*=\s*[\"']?([a-zA-Z_]+)[\"']?\s*>(.*?)</invoke\s*>",
+                               re.IGNORECASE | re.DOTALL)
+        m = invoke_re.search(reply)
+        if m:
+            verb, args = m.group(1), m.group(2)
+            shown = reply
+            # remove the invoke element, any surrounding <tool_call>…</tool_call>, and provider delims
+            shown = re.sub(r"<tool_call\s*>\s*", "", shown, flags=re.IGNORECASE)
+            shown = re.sub(r"\s*</tool_call\s*>", "", shown, flags=re.IGNORECASE)
+            shown = invoke_re.sub("", shown)
+            shown = cls._strip_provider_delims(shown).strip()
+            return shown, cls._normalise_rhm_action(verb, args)
+
+        # --- handler 2: a fenced ```json {...}``` action block carrying an explicit verb/name/tool.
+        fence_re = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
+        for fm in fence_re.finditer(reply):
+            try:
+                obj = _j.loads(fm.group(1))
+            except Exception:
+                continue
+            if not isinstance(obj, dict):
+                continue
+            verb = obj.get("verb") or obj.get("name") or obj.get("tool")
+            if not verb:
+                continue
+            shown = fence_re.sub("", reply).strip()
+            return shown, cls._json_obj_to_action(obj, verb)
+
+        # --- handler 3: a bare JSON tool-call object {"name"/"tool":"VERB","arguments":{...}} or
+        #     {"verb":"VERB",...} on its own (no fence). Scan lines for a JSON object that names a verb.
+        for ln in reply.splitlines():
+            s = ln.strip()
+            if not (s.startswith("{") and s.endswith("}")):
+                continue
+            try:
+                obj = _j.loads(s)
+            except Exception:
+                continue
+            if not isinstance(obj, dict):
+                continue
+            # `verb`/`tool` unambiguously name a tool-call. A bare `name`, however, is ALSO how the
+            # RHM shows an example config ({"name":"uppercase","type":...}) — so accept `name` as the
+            # verb ONLY when the real tool-call envelope (arguments/args/input) is also present.
+            # Otherwise this handler would eat a benign object out of the shown reply (silent loss).
+            verb = obj.get("verb") or obj.get("tool")
+            if not verb and obj.get("name") and any(k in obj for k in ("arguments", "args", "input")):
+                verb = obj.get("name")
+            if not verb:
+                continue
+            shown = reply.replace(ln, "").strip()
+            return shown, cls._json_obj_to_action(obj, verb)
+
+        # --- handler 4: the canonical `ACTION: verb args` line — found ANYWHERE in the reply (a real
+        #     trailing directive), NOT only the strict last line; but anchored to the START of a line
+        #     so prose that merely MENTIONS "ACTION:" mid-sentence does not over-trigger.
+        action_re = re.compile(r"^[ \t]*ACTION:\s*(.+)$", re.MULTILINE | re.IGNORECASE)
+        am = action_re.search(reply)
+        if am:
+            body = am.group(1).strip()
+            shown = (reply[:am.start()] + reply[am.end():]).strip()
+            verb, _, rest = body.partition(" ")
+            return shown, cls._normalise_rhm_action(verb, rest)
+
+        return reply, None
+
+    @classmethod
+    def _json_obj_to_action(cls, obj: dict, verb: str):
+        """Normalise a JSON tool-call object → the dispatcher dict. The args may be a nested
+        `arguments`/`args`/`input` dict (OpenAI/Anthropic style) OR fields on the object itself
+        (the fenced `{"verb":..,"targets":..}` style). Either way it routes through the ONE
+        normaliser, so the same intent yields the same action across shapes."""
+        import json as _j
+        verb = (verb or "").strip().lower()
+        a = obj.get("arguments") or obj.get("args") or obj.get("input") or {}
+        if isinstance(a, str):                                 # arguments serialised as a JSON string
+            try:
+                a = _j.loads(a)
+            except Exception:
+                a = {}
+        merged = {**({k: v for k, v in obj.items() if k not in ("verb", "name", "tool")}), **(a if isinstance(a, dict) else {})}
+        if verb == "build":
+            steps = merged.get("steps") or merged.get("pipeline") or merged.get("json")
+            return {"verb": "build", "steps": steps if isinstance(steps, list) else None}
+        if verb == "consult":
+            return {"verb": "consult", "query": str(merged.get("query") or merged.get("question") or "").strip()}
+        if verb == "show":
+            t = merged.get("targets") or merged.get("target") or []
+            t = [t] if isinstance(t, str) else list(t or [])
+            return {"verb": "show", "targets": [str(x) for x in t]}
+        if verb in ("propose", "panel", "extend"):
+            return {"verb": verb, "name": str(merged.get("name") or "").strip(),
+                    "spec": str(merged.get("spec") or merged.get("description") or "").strip()}
+        if verb == "run":
+            return {"verb": "run"}
+        return {"verb": verb}
 
     def _dispatch_rhm_action(self, action: dict, graph_id: str) -> dict:
         """Execute ONLY whitelisted verbs. Anything else is refused with no effect — this is the
