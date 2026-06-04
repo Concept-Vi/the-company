@@ -25,6 +25,53 @@ def _tag_system_origin(code: str) -> str:
     return "ORIGIN = 'system'  # brain-written (self-grown) — provenance layer\n" + code
 
 
+def _load_corpus_element_addresses() -> list[tuple]:
+    """S1 — project the 24+ element-level addresses from the design corpus (design/_system/addresses.json)
+    into live UI_REGISTRY rows, so the live registry carries ELEMENT addresses (ui://inbox/build-review),
+    not just the 7 region handles. ONE SOURCE (rule 8): the rows are READ from the corpus, never
+    hand-transcribed/invented — addresses.json is the design-time superset the mockups carry.
+
+    Each row is the registry's 6-tuple shape `(ref, kind, title, handle, caps, union-extras)`:
+      • ref          — the FULL canonical corpus string `ui://<region>/<element>` (region-first grammar).
+                       It is the DICT KEY in build_ui_info AND the value the corpus/mockup carries as
+                       data-ui-ref (full-string carrier, the baked-in decision) — so an orphan check
+                       (every used data-ui-ref is registered) passes by construction for the corpus form.
+      • kind         — DERIVED by UnionAddressRecord.from_corpus (region 'canvas' → 'canvas', else
+                       'chrome' = the DOM-resolved default). The live resolver dispatches on kind.
+      • handle       — for kind=canvas → camera_ref='*' (the whole canvas, reusing the existing camera
+                       path); else dom_handle = the FULL ui:// string (the corpus full-string carrier).
+      • caps         — the corpus list-capabilities NORMALIZED to the canonical bool-object via
+                       UnionAddressRecord (driven/driven-read-only → drivenReadOnly; unknown → fail loud).
+      • union-extras — the S0 union-record join fields (region/represents/code) — carried for the
+                       element rows because the corpus join IS known for them (unlike the 7 live regions).
+
+    PRESERVE: this is ADDITIVE. The 7 hand-authored bare-ref rows (UI_REGISTRY below) keep their bare keys
+    ('inbox' → ui://chrome/inbox), so show's handle_map, _registry_ui_target, and the walkthrough drive
+    keep resolving exactly as before — they read those bare entries, which are untouched. The element rows
+    use DISTINCT full-string keys (no collision with the bare keys; build_ui_info's duplicate-ref guard
+    stays satisfied). FAIL LOUD (rule 4): a missing/malformed corpus file raises — the registry never
+    silently ships region-only.
+    """
+    import json as _json
+    from contracts.ui_info import UnionAddressRecord
+    here = os.path.dirname(os.path.abspath(__file__))
+    repo_root = os.path.dirname(here)
+    path = os.path.join(repo_root, "design", "_system", "addresses.json")
+    with open(path, encoding="utf-8") as f:
+        data = _json.load(f)
+    addresses = data.get("addresses", data)   # tolerate {addresses:{...}} or a bare map
+    rows: list[tuple] = []
+    for addr, rec in addresses.items():
+        ur = UnionAddressRecord.from_corpus(addr, rec)   # validates grammar + normalizes caps (fail loud)
+        if ur.kind == "canvas":
+            handle = {"camera_ref": "*"}                  # reuse the whole-canvas camera path
+        else:
+            handle = {"dom_handle": addr}                 # full-string carrier (the baked-in decision)
+        extras = {"region": ur.region, "represents": ur.represents, "code": ur.code}
+        rows.append((addr, ur.kind, (ur.title or addr), handle, dict(ur.capabilities), extras))
+    return rows
+
+
 def _strip_fences(code: str) -> str:
     c = code.strip()
     if c.startswith("```"):
@@ -2369,7 +2416,13 @@ class Suite:
         # ThreadingHTTPServer over one Suite; without the lock two concurrent fires both clear the
         # check before either claims → double-launch. The lock serializes check→emit; the durable
         # decision.dispatch event is the cross-process/restart guarantee.
-        with self._dispatch_lock(derived_from):
+        # S4: RLock OUTER (in-process per-seq, the existing thread guard) → fcntl OS lock INNER (the
+        # cross-PROCESS companion via the store). This is the documented lock order, identical to
+        # graph_lock's RLock-outer/fcntl-inner. The threading RLock stops two THREADS of one face from
+        # double-claiming; the fcntl lock stops two FACES (bridge + MCP, or a face + the wire) from both
+        # clearing the exactly-once check and double-launching `claude -p`. The durable decision.dispatch
+        # event stays the cross-RESTART guarantee; fcntl adds the CONCURRENT (two-faces-now) guarantee.
+        with self._dispatch_lock(derived_from), self.store.dispatch_lock(derived_from):
             if self._already_dispatched(derived_from):
                 raise GovernanceError(
                     f"dispatch_decision: a decision.dispatch already exists for resolve seq={derived_from} — "
@@ -2637,11 +2690,27 @@ class Suite:
          {"pointable": True, "spotlit": True, "openable": True}),
         ("workshop",  "chrome", "Workshop",     {"dom_handle": "workshop"},
          {"pointable": True, "spotlit": True, "openable": True}),
+        # S1: the two app-carried bare handles that had a DOM data-ui-ref but were NOT served (fe-map §8
+        # internal inconsistency — the FE pointed at them, the registry didn't know them). Registering them
+        # as bare-key chrome regions (the same shape as the 6 above) closes the orphan: every app
+        # data-ui-ref now has a registry entry. walkthrough = the per-step review card region
+        # (regions/Walkthrough.tsx); deferred-queue = the inbox deferred lane (regions/Inbox.tsx).
+        ("walkthrough",    "chrome", "Walkthrough",    {"dom_handle": "walkthrough"},
+         {"pointable": True, "spotlit": True, "presentable": True}),
+        ("deferred-queue", "chrome", "Deferred queue", {"dom_handle": "deferred-queue"},
+         {"pointable": True, "spotlit": True, "openable": True}),
         # the node canvas itself (camera_ref="*" = the whole canvas; individual nodes are addressed live
         # as ui://canvas/<node-id> by show's canvas branch — reuse of the existing camera path).
         ("*", "canvas", "Node canvas", {"camera_ref": "*"},
          {"pointable": True, "spotlit": True, "presentable": True}),
     ]
+    # S1: GROW the registry to the 24+ ELEMENT-level addresses from the design corpus (additive — the 7
+    # bare-ref region rows above are UNCHANGED, so every existing consumer keeps resolving). The element
+    # rows are keyed by their FULL canonical string (ui://inbox/build-review), read from the corpus (never
+    # invented — rule 8). See _load_corpus_element_addresses for the projection + the preserve rationale.
+    # Built at class-definition time so /api/ui_info serves them with no per-call cost; fail-loud if the
+    # corpus file is missing/malformed (the registry never silently ships region-only).
+    UI_REGISTRY = UI_REGISTRY + _load_corpus_element_addresses()
 
     def build_ui_info(self) -> dict:
         """C1: serialize the UI-component registry for the frontend (a SIBLING of object_info — which is

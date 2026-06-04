@@ -6,6 +6,8 @@ lineage walk, and the memo index. See store/AGENTS.md (never mutate cas://; ext4
 from __future__ import annotations
 import hashlib
 import json
+import os
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -15,7 +17,7 @@ from contracts.address import Provenance
 class FsStore:
     def __init__(self, root):
         self.root = Path(root)
-        for d in ("objects", "refs", "meta", "memo", "graphs", "surfaced"):
+        for d in ("objects", "refs", "meta", "memo", "graphs", "surfaced", "locks"):
             (self.root / d).mkdir(parents=True, exist_ok=True)
         # --- store-level concurrency locks (T1-SEQ / T1-RACE) ---
         # The bridge is a ThreadingHTTPServer over ONE Suite, so read-modify-write paths in the store
@@ -30,20 +32,136 @@ class FsStore:
         self._surfaced_lock = _t.RLock()     # T1-RACE: surfaced read-modify-write across both faces
         self._graph_locks_guard = _t.Lock()  # guards the per-graph lock map below
         self._graph_locks: dict = {}         # T1-RACE: one lock per graph id (load→mutate→save serialized)
+        # --- S4: cross-PROCESS advisory file locks (fcntl) ---
+        # The threading locks above serialize threads WITHIN ONE process. The bridge and the MCP face are
+        # TWO separate processes on ONE STORE_DIR (bridge.py + mcp_face/server.py both Suite(FsStore(
+        # STORE_DIR))), and threading.RLock CANNOT cross that boundary (seams-engine Seam 8b, CONFIRMED).
+        # So an OS-level advisory lock (fcntl.flock) is ADDED ON TOP — one lock FILE per resource (per
+        # graph id; one for the dispatch claim), never a single global lock (a global one would serialize
+        # the whole night + invite the deadlock the spec warns about). LOCK ORDER (documented, applied
+        # identically everywhere): the in-process threading RLock is the OUTER lock; the fcntl OS lock is
+        # the INNER lock, taken ONLY at the OUTERMOST in-process acquire (depth-counted below) and released
+        # on the outermost exit. A nested same-resource acquire reuses the already-held OS lock — it does
+        # NOT re-flock (fcntl flock on a 2nd fresh fd for a lock THIS process already holds would BLOCK on
+        # itself = self-deadlock; depth-counting sidesteps it). Because the threading RLock guarantees only
+        # ONE thread of THIS process is ever inside the critical section, the single shared fd + depth count
+        # is race-free. fcntl is POSIX-only (the deploy target is WSL/Linux ext4 — store/AGENTS.md).
+        self._os_lock_guard = _t.Lock()      # guards the os-lock fd/depth maps below
+        self._os_lock_fds: dict = {}         # resource-key → open fd holding flock(LOCK_EX) while depth>0
+        self._os_lock_depth: dict = {}       # resource-key → re-entrant depth (this process/thread)
 
     def graph_lock(self, gid: str):
         """One re-entrant lock per graph id, created on demand (threadsafe). The Suite's whole-graph
         load→mutate→save_graph mutations (create_node/connect/delete_node/set_config/set_position) hold
         this around the WHOLE read-modify-write so two concurrent mutations on the same graph can't both
         load version V and last-writer-wins (lost update). Re-entrant so a mutation that nests another
-        locked call on the same graph does not self-deadlock."""
+        locked call on the same graph does not self-deadlock.
+
+        S4: returns a COMPOUND context manager — the in-process RLock (thread mutual-exclusion) wrapping
+        the per-resource fcntl OS lock (cross-PROCESS mutual-exclusion). LOCK ORDER: RLock outer, fcntl
+        inner. Existing callers `with self.store.graph_lock(gid):` get cross-process safety for free —
+        no call-site change (S4 PRESERVES the existing in-process guarantee, adds the cross-process one)."""
         import threading as _t
         with self._graph_locks_guard:
             lk = self._graph_locks.get(gid)
             if lk is None:
                 lk = _t.RLock()
                 self._graph_locks[gid] = lk
-            return lk
+        return self._compound_lock(lk, f"graph__{self._safe(gid)}")
+
+    def dispatch_lock(self, key):
+        """S4 — cross-process advisory lock for the wire's exactly-once dispatch CHECK→CLAIM (keyed on
+        the resolve seq). The Suite already holds a per-seq THREADING lock around the check→emit critical
+        section (suite.py _dispatch_lock); this is the OS-level companion so two FACES (bridge + MCP, or a
+        face + the wire) can't both clear the exactly-once check and double-launch `claude -p`. The durable
+        decision.dispatch event remains the cross-RESTART guarantee; this fcntl lock adds the CONCURRENT
+        (two-faces-at-once) guarantee the durable event alone does not cover. The Suite wraps its existing
+        per-seq RLock as the OUTER lock; pass that RLock here so the compound lock keeps the same RLock-outer
+        / fcntl-inner order as graph_lock (one consistent order = no deadlock)."""
+        return self._os_lock_cm(f"dispatch__{self._safe(str(key))}")
+
+    @contextmanager
+    def _compound_lock(self, rlock, resource_key: str):
+        """RLock (outer, thread mutual-exclusion + re-entrancy) → fcntl OS lock (inner, cross-process).
+        The OS lock is taken only at the OUTERMOST RLock acquire (the depth-count in _os_lock_cm does that)
+        — a nested same-thread acquire reuses the held RLock and the held OS lock. This is THE documented
+        lock order, applied identically at every graph mutation site."""
+        with rlock:
+            with self._os_lock_cm(resource_key):
+                yield
+
+    @contextmanager
+    def _os_lock_cm(self, resource_key: str):
+        """Acquire/release a per-resource fcntl advisory file lock, RE-ENTRANT within this process via a
+        depth count. Only the OUTERMOST acquire opens the fd + flock(LOCK_EX) (a blocking exclusive lock);
+        inner acquires just bump the depth and reuse the held fd. The outermost release flock(LOCK_UN) +
+        closes the fd. Guarded by a threading.Lock so the fd/depth maps are mutated atomically. POSIX-only
+        (fcntl); the deploy target is Linux/WSL ext4. The lock FILE is its own file under locks/ — never
+        the data file (so an flock on the lock file never interferes with the atomic tmp+replace writes)."""
+        import fcntl
+        # ENTER — outermost opens + flocks; inner bumps depth. The flock() (which BLOCKS) is taken OUTSIDE
+        # the guard so a real cross-process wait does not freeze every other resource's lock bookkeeping.
+        need_acquire = False
+        with self._os_lock_guard:
+            depth = self._os_lock_depth.get(resource_key, 0)
+            if depth == 0:
+                lf = self.root / "locks" / (resource_key + ".lock")
+                fd = os.open(str(lf), os.O_CREAT | os.O_RDWR, 0o644)
+                self._os_lock_fds[resource_key] = fd
+                need_acquire = True
+            self._os_lock_depth[resource_key] = depth + 1
+        if need_acquire:
+            try:
+                fcntl.flock(self._os_lock_fds[resource_key], fcntl.LOCK_EX)
+            except BaseException:
+                # the blocking flock failed/was interrupted — undo the bookkeeping + close the fd so we
+                # NEVER leave a phantom-held lock (the deadlock the spec warns about). Fail loud.
+                with self._os_lock_guard:
+                    fd = self._os_lock_fds.pop(resource_key, None)
+                    self._os_lock_depth[resource_key] = self._os_lock_depth.get(resource_key, 1) - 1
+                    if self._os_lock_depth.get(resource_key, 0) <= 0:
+                        self._os_lock_depth.pop(resource_key, None)
+                if fd is not None:
+                    os.close(fd)
+                raise
+        try:
+            yield
+        finally:
+            # EXIT — outermost releases + closes; inner just decrements. Always runs (finally) so a raising
+            # critical section NEVER strands the OS lock held (cross-process deadlock prevention).
+            with self._os_lock_guard:
+                depth = self._os_lock_depth.get(resource_key, 1) - 1
+                if depth <= 0:
+                    self._os_lock_depth.pop(resource_key, None)
+                    fd = self._os_lock_fds.pop(resource_key, None)
+                else:
+                    self._os_lock_depth[resource_key] = depth
+                    fd = None
+            if fd is not None:
+                try:
+                    fcntl.flock(fd, fcntl.LOCK_UN)
+                finally:
+                    os.close(fd)
+
+    @staticmethod
+    def _fsync_atomic_write(path: Path, data: str) -> None:
+        """S4 — a crash-durable atomic write: write to a unique tmp, fsync the tmp's BYTES to disk, then
+        os.replace (atomic same-fs rename) into place. Without the fsync, os.replace makes a possibly-
+        still-in-page-cache tmp the live file → a crash can leave a zero/short file as the "committed"
+        version (Reality Map §1 "no crash-durable resume"). With it, the bytes are on disk BEFORE the
+        rename names them the truth. Unique tmp per write (pid+thread) so concurrent writers never share a
+        tmp name (last-writer-wins, each file whole). Mirrors the existing tmp+os.replace pattern, adding
+        the durability barrier. (Directory-entry durability after the rename is best-effort; the data-loss
+        case this kills is a torn/empty file masquerading as committed.)"""
+        import threading as _t
+        tmp = path.with_name(f"{path.name}.{os.getpid()}.{_t.get_ident()}.tmp")
+        fd = os.open(str(tmp), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
+        try:
+            os.write(fd, data.encode("utf-8"))
+            os.fsync(fd)                      # the durability barrier — bytes on disk before the rename
+        finally:
+            os.close(fd)
+        os.replace(str(tmp), str(path))       # atomic: a reader sees the whole old file or the whole new
 
     @staticmethod
     def _hash(b: bytes) -> str:
@@ -86,12 +204,10 @@ class FsStore:
         # atomic) means a reader sees the WHOLE old cas or the WHOLE new one — never a torn/empty ref.
         # Mirrors save_graph/save_surfaced/save_session exactly. Unique tmp PER WRITE (pid+thread) so two
         # concurrent set_refs on the same logical never share a tmp name (last-writer-wins, each whole).
-        import os as _os
-        import threading as _t
+        # S4: crash-durable (fsync the tmp before the atomic rename) — was tmp.write_text+replace (atomic
+        # vs torn reads) but NOT durable: a crash could leave the not-yet-flushed tmp as the live ref.
         path = self.root / "refs" / self._safe(logical)
-        tmp = path.with_name(f"{path.name}.{_os.getpid()}.{_t.get_ident()}.tmp")
-        tmp.write_text(cas)
-        tmp.replace(path)
+        self._fsync_atomic_write(path, cas)
 
     def head(self, logical: str) -> str | None:
         p = self.root / "refs" / self._safe(logical)
@@ -134,17 +250,14 @@ class FsStore:
         # write_text could tear graphs/<id>.json against the running bridge's reads. tmp + os.replace
         # (same-filesystem rename is atomic) means a reader sees the old file or the new — never a
         # half-written one. Mirrors the apply_* paths' tmp+replace pattern.
-        import os as _os
-        import threading as _t
-        path = self.root / "graphs" / (self._safe(graph.id) + ".json")
         # Unique tmp PER WRITE (pid+thread): two concurrent same-graph writers (two /api/move, or a
         # move racing an MCP-face create_node/connect on the threading server) must not share one tmp
         # name — a fixed name lets their write_texts interleave into invalid JSON that os.replace then
         # makes the LIVE file (durable corruption). Unique tmp + atomic replace = last-writer-wins, each
-        # file always whole. (Traded import-minimalism for write-concurrency correctness.)
-        tmp = path.with_name(f"{path.name}.{_os.getpid()}.{_t.get_ident()}.tmp")
-        tmp.write_text(graph.model_dump_json(indent=2))
-        tmp.replace(path)
+        # file always whole. S4: also fsync the tmp before the rename (crash-durable — the in-process
+        # graph_lock + the cross-process fcntl graph lock serialize the WRITE; the fsync makes it durable).
+        path = self.root / "graphs" / (self._safe(graph.id) + ".json")
+        self._fsync_atomic_write(path, graph.model_dump_json(indent=2))
 
     def load_graph(self, gid: str):
         from contracts.node_record import Graph
@@ -161,13 +274,9 @@ class FsStore:
         only atomic surfaced-shaped write.) Unique tmp PER WRITE (pid+thread) so concurrent writers never share
         a tmp name (last-writer-wins, each file whole)."""
         import json as _j
-        import os as _os
-        import threading as _t
         (self.root / "sessions").mkdir(parents=True, exist_ok=True)
         path = self.root / "sessions" / (self._safe(session["id"]) + ".json")
-        tmp = path.with_name(f"{path.name}.{_os.getpid()}.{_t.get_ident()}.tmp")
-        tmp.write_text(_j.dumps(session, indent=2))
-        tmp.replace(path)
+        self._fsync_atomic_write(path, _j.dumps(session, indent=2))   # S4: crash-durable atomic write
 
     def load_session(self, sid: str) -> dict | None:
         import json as _j
@@ -208,8 +317,15 @@ class FsStore:
                 if last:
                     seq = _j.loads(last).get("seq", 0) + 1
             rec = {"seq": seq, "ts": datetime.now(timezone.utc).isoformat(), **event}
+            # S4: fsync the appended line to disk before returning. The durable decision.dispatch claim
+            # (the wire's exactly-once guarantee) is written through here via _emit_durable — if it were
+            # only in the page cache, a crash after the caller acted on a "success" return could lose the
+            # claim and allow a double-launch on restart. fsync the fd so the claim is on disk before the
+            # caller proceeds. (Append-only log: the fsync is on the appended bytes, no rename needed.)
             with path.open("a", encoding="utf-8") as f:
                 f.write(_j.dumps(rec) + "\n")
+                f.flush()
+                os.fsync(f.fileno())
             return rec
 
     def recent_events(self, limit: int = 50) -> list[dict]:
@@ -266,20 +382,16 @@ class FsStore:
 
     def save_surfaced(self, decision: dict) -> None:
         import json as _j
-        import os as _os
-        import threading as _t
         # ATOMIC (T1-RACE): tmp + os.replace (same-filesystem rename is atomic) so a reader sees the
         # whole old file or the whole new one — never a half-written one against a concurrent read. The
         # naked write_text here (the prior code) could tear the file. Unique tmp PER WRITE (pid+thread)
         # so two concurrent writers never share a tmp name (each file stays whole). Held under the
         # surfaced lock so the WRITE is also serialized against other writers; callers that need the
         # READ serialized too hold surfaced_lock() across their whole get→mutate→save (RLock = no
-        # self-deadlock when this re-acquires).
+        # self-deadlock when this re-acquires). S4: also fsync the tmp before the rename (crash-durable).
         path = self.root / "surfaced" / (self._safe(decision["id"]) + ".json")
         with self._surfaced_lock:
-            tmp = path.with_name(f"{path.name}.{_os.getpid()}.{_t.get_ident()}.tmp")
-            tmp.write_text(_j.dumps(decision, indent=2))
-            tmp.replace(path)
+            self._fsync_atomic_write(path, _j.dumps(decision, indent=2))
 
     def list_surfaced(self) -> list[dict]:
         import json as _j

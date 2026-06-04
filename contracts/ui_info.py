@@ -325,17 +325,29 @@ class UnionAddressRecord(BaseModel):
     def from_live(cls, ref: str, kind: str, title: str, caps) -> "UnionAddressRecord":
         """Project a live UI_REGISTRY entry → the union record.
 
-        The live registry keys by a bare `ref` + a `kind`; the canonical
-        ADDRESS is the full string `ui://<kind>/<ref>` the live resolver
-        already emits (suite.py show/`_registry_ui_target`). region = the ref
-        ("inbox", "toolbar", …); for the canvas `*` entry the region is
-        "canvas". S0 does NOT migrate the live strings to region-first — it
-        leaves them as-is and records their kind/region explicitly (S1 carries
-        any element-level migration).
+        TWO row-forms now coexist in the live registry (S0 anticipated, S1 landed):
+          • BARE-ref rows (the 9 region/chrome handles + the '*' canvas): `ref` is a
+            bare handle ("inbox", "*"); the canonical ADDRESS is `ui://<kind>/<ref>`
+            (the form the live resolver emits — suite.py show/`_registry_ui_target`).
+            region = the ref; canvas → "canvas".
+          • FULL-STRING rows (S1's 24 corpus element addresses): `ref` is ALREADY the
+            full canonical string ("ui://inbox/build-review", region-first grammar) —
+            the full-string carrier baked into the corpus/mockups. Here the ref IS the
+            address (do NOT re-prefix `ui://<kind>/…` — that would double the scheme);
+            region = the address's FIRST segment ("inbox").
+        S0 left the bare strings as-is; S1 grew the registry with the corpus
+        element-level rows whose ref is the full address (per the guide's S1 unit).
         """
-        address = f"ui://{kind}/{ref}"
-        parse_ui_address(address)
-        region = "canvas" if (kind == "canvas") else ref
+        if ref.startswith("ui://"):
+            # S1 full-string row — the ref IS the canonical address (region-first form).
+            address = ref
+            parsed = parse_ui_address(address)
+            region = parsed["segments"][0] if parsed["segments"] else ""
+        else:
+            # bare-ref row — the canonical address is ui://<kind>/<ref> (the live resolver's form).
+            address = f"ui://{kind}/{ref}"
+            parse_ui_address(address)
+            region = "canvas" if (kind == "canvas") else ref
         return cls(
             address=address,
             kind=kind,
