@@ -147,4 +147,39 @@ check("FAIL-SAFE: a missing corpus lint returns False even for an otherwise-clea
       ok_nocorpus is False and "fail-safe" in why_nocorpus.lower())
 
 
-print(f"\nALL {PASS} CHECKS PASS — F9 FORM gate LIVE: clean→pass · off-token→fail · unrunnable→fail-safe")
+# --- 7 · NO-FORM · a pure-logic .ts canvas change has no styleable form → PASS (may auto-close) ---
+# (registryStore.ts / useAppController.ts are real .ts FE-logic files; a change to one carries no form.)
+s, base = fresh_suite()
+rel_ts = plant(base, "canvas/app/src/registryStore.ts", "export const REG = {};\n")
+ok_ts, why_ts = s._design_critic([rel_ts])
+check("NO-FORM: a pure-logic .ts canvas change has no lintable form → PASSES (auto-close allowed)",
+      ok_ts is True and "no lintable" in why_ts.lower())
+
+
+# --- 8 · a .tsx + .ts MIX agrees with the .tsx verdict (the .ts never flips it) ---
+# clean .tsx + a .ts → the .ts is skipped, the .tsx is clean → PASS.
+s, base = fresh_suite()
+plant(base, "canvas/app/src/Logic.ts", "export const REG = {};\n")
+rel_mix_clean = plant(base, "canvas/app/src/Card.tsx", CLEAN_TSX)
+ok_mix_clean, _ = s._design_critic([rel_mix_clean, "canvas/app/src/Logic.ts"])
+check("a CLEAN .tsx + a .ts change PASSES (the .ts carries no form, never flips the verdict)",
+      ok_mix_clean is True)
+# off-token .tsx + a .ts → the .tsx still fails → FAIL (consistent: the .ts does not rescue it).
+s, base = fresh_suite()
+plant(base, "canvas/app/src/Logic.ts", "export const REG = {};\n")
+rel_mix_dirty = plant(base, "canvas/app/src/Card.tsx", DIRTY_TSX)
+ok_mix_dirty, _ = s._design_critic([rel_mix_dirty, "canvas/app/src/Logic.ts"])
+check("an OFF-TOKEN .tsx + a .ts change FAILS (the .ts does not rescue the off-token .tsx — consistent)",
+      ok_mix_dirty is False)
+
+
+# --- 9 · FAIL-SAFE · a .tsx/.css the change NAMES but is not on disk → still fail-safe (vs a .ts) ---
+# A styled file that SHOULD exist but doesn't is unverifiable (distinct from a no-form .ts, which passes).
+s, base = fresh_suite()
+ok_missing_tsx, why_missing_tsx = s._design_critic(["canvas/app/src/Gone.tsx"])
+check("FAIL-SAFE: a named .tsx not on disk is unverifiable → False (a missing STYLED file, not no-form)",
+      ok_missing_tsx is False and "fail-safe" in why_missing_tsx.lower())
+
+
+print(f"\nALL {PASS} CHECKS PASS — F9 FORM gate LIVE: clean→pass · off-token→fail · no-form(.ts)→pass · "
+      f"missing-styled/no-corpus→fail-safe")

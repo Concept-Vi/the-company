@@ -2318,18 +2318,38 @@ class Suite:
                            f"cannot machine-check the surface change {surface}. Surfaced for design review.")
 
         # Lint only the surface files THIS build changed (a clean change must not be gated by pre-existing
-        # dirt elsewhere). Resolve each against _repo_root (the build's tree); skip any that don't exist
-        # on disk — if NONE resolve, the lint has nothing real to check → fail-safe.
+        # dirt elsewhere). Resolve each against _repo_root (the build's tree). The design-lint grades FORM,
+        # which lives in .tsx/.css (the styled markup) — a .ts logic file, an image, etc. carry NO
+        # lintable form (NO-FORM rule). So:
+        #   • a .tsx/.css that EXISTS → a lint target.
+        #   • a .tsx/.css the change names but that is NOT on disk → genuine can't-run → FAIL-SAFE (a
+        #     surface file that should exist but doesn't is unverifiable, never a silent pass).
+        #   • a non-.tsx/.css canvas file (.ts logic, asset) → no form to grade → skipped (not a target,
+        #     not a fail-safe miss) — so a pure-logic FE build can still auto-close, and a .tsx+.ts change
+        #     agrees with a .ts-alone change (the .ts never flips the verdict).
+        # If the change has NO lintable .tsx/.css at all (pure-logic surface) → no form to grade → PASS.
         import subprocess, sys as _sys
-        targets = []
+        targets, missing_form_files = [], []
         for p in surface:
             q = (p or "").strip().lstrip("./")
             full = os.path.join(self._repo_root, q)
-            if os.path.exists(full) and full.endswith((".tsx", ".css")):
-                targets.append(full)
+            if q.endswith((".tsx", ".css")):
+                if os.path.exists(full):
+                    targets.append(full)
+                else:
+                    missing_form_files.append(q)        # a styled file that should exist but doesn't
+            # else: a non-form canvas file (.ts / asset) — NO-FORM, skipped (neither target nor miss).
+        if missing_form_files:
+            return (False, f"FORM unverifiable (fail-safe): surface change names .tsx/.css file(s) "
+                           f"{missing_form_files} not present under {self._repo_root} — cannot lint a "
+                           f"styled file that should exist. Surfaced for design review.")
         if not targets:
-            return (False, f"FORM unverifiable (fail-safe): surface change {surface} resolved to no real "
-                           f".tsx/.css file under {self._repo_root} — nothing to lint. Surfaced for review.")
+            # the changed surface carried NO lintable .tsx/.css (a pure-logic .ts / asset FE change) →
+            # there is no form to machine-grade → it may proceed (the human design-critic agent, run
+            # separately at verify time, still covers any judgment call).
+            return (True, f"no lintable .tsx/.css in the changed surface {surface} (pure-logic / asset "
+                          f"FE change) → no machine FORM to grade; the human design-critic agent covers "
+                          f"any judgment at verify time.")
 
         py = _sys.executable
         offenders = []
