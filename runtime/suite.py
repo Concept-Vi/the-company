@@ -53,32 +53,58 @@ class Suite:
     # Step B: two ADDITIVE states for reference-resolved nodes (portals): `live` (ref resolves to content)
     # and `empty` (ref is None/dangling/unresolved) — so a portal stops mis-reporting idle/cached on
     # reload. Executing nodes are UNAFFECTED (scoped by applies_to).
+    #
+    # S5 (Interactive Addressed Surface) — each state additionally carries a `render` block so the surface
+    # paints the status vocabulary FROM the registry (one-source, rule 3) instead of the FE hardcoding a
+    # state→token switch (the thing F3 must avoid). Each render = {token, icon, shape}:
+    #   token — the CORPUS design-token (CSS custom property) the dot/badge colours from. Registry-is-truth
+    #           (rule 8): every token here REFERENCES an EXISTING corpus token in design/_system/tokens.json
+    #           → design-system.css (none invented). The four executing statuses bind to the corpus's existing
+    #           node-status classes (.s-idle/.s-ran/.s-cache/.s-stuck, design-system.css:92-93 →
+    #           --tx-3/--ok/--cache/--fail). The three with NO dedicated corpus CSS binding yet
+    #           (failed/live/empty — design-substrate §3) bind to the closest existing semantic token:
+    #           failed→--fail (it is an error state, shares stuck's error colour), live→--acc (the live/active
+    #           accent), empty→--tx-3 (the muted/idle tone). FLAGGED: failed/live/empty have no DISTINCT corpus
+    #           class today — adding .s-failed/.s-live/.s-empty CSS bindings is a FORM/corpus-lane follow-up
+    #           (the corpus keeper / F3), out of this backend lane (do NOT hand-edit the generated CSS).
+    #   icon  — a provisional glyph hint for the surface. FLAGGED: there is NO icon registry in the corpus
+    #           today; these are sensible provisional values the FE/design-critic may revise (F3).
+    #   shape — the dot shape hint ('dot' default; 'ring' marks the reference-window states). Provisional;
+    #           the corpus "shape" token group is border-radii, not a state-shape vocabulary — also a
+    #           FORM-lane follow-up. The design-critic (separate stage, rule 9) grades aesthetics, not this.
     NODE_STATES = (
         {"id": "idle", "label": "Idle", "applies_to": ("compute",),
          "means": "has never produced a result and holds none",
-         "derived_when": "no fresh run result and the node's output address does not resolve"},
+         "derived_when": "no fresh run result and the node's output address does not resolve",
+         "render": {"token": "--tx-3", "icon": "circle", "shape": "dot"}},
         {"id": "ran", "label": "Ran", "applies_to": ("compute",),
          "means": "fired on the most recent run and produced a fresh result",
-         "derived_when": "the node id is in the run result's `ran` set"},
+         "derived_when": "the node id is in the run result's `ran` set",
+         "render": {"token": "--ok", "icon": "check", "shape": "dot"}},
         {"id": "cached", "label": "Cached", "applies_to": ("compute",),
          "means": "output already existed, so the memo gate skipped re-running it (the GPU/clock guard)",
          "derived_when": "the node id is in the run result's `skipped` set, OR (on reload) its output "
-                         "address resolves to a stored result"},
+                         "address resolves to a stored result",
+         "render": {"token": "--cache", "icon": "layers", "shape": "dot"}},
         {"id": "stuck", "label": "Stuck", "applies_to": ("compute",),
          "means": "could not fire because a required input never resolved (not a pruned branch)",
          "derived_when": "the node id is in the run result's `stuck` set, OR (on reload) the most recent "
-                         "run event for the graph listed it stuck and it still holds no result"},
+                         "run event for the graph listed it stuck and it still holds no result",
+         "render": {"token": "--fail", "icon": "pause", "shape": "dot"}},
         {"id": "failed", "label": "Failed", "applies_to": ("compute",),
          "means": "fired but RAISED — it threw an error during run (the scheduler contained it; downstream "
                   "stays unresolved). Distinct from stuck (an input never arrived) — here the node ran and "
                   "errored. The error message is carried on the node where the shape allows.",
-         "derived_when": "the node id is a key in the run result's `failed` map (scheduler containment)"},
+         "derived_when": "the node id is a key in the run result's `failed` map (scheduler containment)",
+         "render": {"token": "--fail", "icon": "alert", "shape": "dot"}},
         {"id": "live", "label": "Live", "applies_to": ("reference",),
          "means": "a live window onto its reference address, currently resolving to content",
-         "derived_when": "RESOLVE='reference' and head(config.ref) resolves to a stored content hash"},
+         "derived_when": "RESOLVE='reference' and head(config.ref) resolves to a stored content hash",
+         "render": {"token": "--acc", "icon": "broadcast", "shape": "ring"}},
         {"id": "empty", "label": "Empty", "applies_to": ("reference",),
          "means": "a live window whose reference is unset, dangling, or not yet resolvable",
-         "derived_when": "RESOLVE='reference' and config.ref is empty/None or head(ref) does not resolve"},
+         "derived_when": "RESOLVE='reference' and config.ref is empty/None or head(ref) does not resolve",
+         "render": {"token": "--tx-3", "icon": "circle-dashed", "shape": "ring"}},
     )
 
     def __init__(self, store: FsStore, registry: NodeRegistry, nodes_dir: str | None = None):
@@ -279,7 +305,8 @@ class Suite:
         """The brain hit unregistered ground → ASK the operator (surfaced question) instead of
         fabricating. Confabulation is as bad as failing (Tim) — this makes asking the easy path."""
         sid = self.inbox.surface("question", {"question": question, "context": context}, default="reject")
-        self._emit("ask", f"the system needs input: {question[:60]}", surfaced=sid)
+        self._emit("ask", f"the system needs input: {question[:60]}", surfaced=sid,
+                   address="ui://chrome/inbox")   # S2: the question lands in the inbox for the operator
         return sid
 
     def _acceptance_suites(self) -> list:
@@ -422,7 +449,8 @@ class Suite:
                 pos = XY(**position) if position else XY()                       # optional initial placement (C5)
                 g.nodes.append(NodeInstance(id=nid, type=type, config=seeded, position=pos))
                 self.store.save_graph(g)
-                self._emit("create", f"+ {type} node ({nid})", graph=graph_id, node=nid, type=type)
+                self._emit("create", f"+ {type} node ({nid})", graph=graph_id, node=nid, type=type,
+                           address=f"run://{graph_id}/{nid}")   # S2: addressed at the node acted on
                 return nid
         return guard("compose", do=_do)                                  # AUTO → identical behavior; POLICY is the router
 
@@ -445,7 +473,8 @@ class Suite:
                                 to_node=to_node, to_port=to_port))
             self.store.save_graph(g)
             self._emit("connect", f"wired {from_node}.{from_port} → {to_node}.{to_port}",
-                       graph=graph_id, from_node=from_node, to_node=to_node)
+                       graph=graph_id, from_node=from_node, to_node=to_node,
+                       address=f"run://{graph_id}/{to_node}")   # S2: addressed at the wired-into (downstream) node
 
     def delete_node(self, graph_id: str, node_id: str) -> None:
         # T1-RACE: per-graph lock around the whole load→mutate→save (lost-update across both faces).
@@ -454,7 +483,8 @@ class Suite:
             g.nodes = [n for n in g.nodes if n.id != node_id]
             g.edges = [e for e in g.edges if e.from_node != node_id and e.to_node != node_id]
             self.store.save_graph(g)
-            self._emit("delete", f"removed node {node_id}", graph=graph_id, node=node_id)
+            self._emit("delete", f"removed node {node_id}", graph=graph_id, node=node_id,
+                       address=f"run://{graph_id}/{node_id}")   # S2: addressed at the deleted node
 
     def set_config(self, graph_id: str, node_id: str, config: dict) -> None:
         def _do():                                                       # G1: AUTO → guard runs it straight through
@@ -487,7 +517,8 @@ class Suite:
                         n.size = WH(w=w, h=h)
                     self.store.save_graph(g)
                     self._emit("move", f"moved {node_id} → ({x:.0f},{y:.0f})",
-                               graph=graph_id, node=node_id)
+                               graph=graph_id, node=node_id,
+                               address=f"run://{graph_id}/{node_id}")   # S2: addressed at the moved node
                     return
             raise KeyError(f"no node {node_id!r} in graph {graph_id!r}")
 
@@ -504,7 +535,8 @@ class Suite:
                        + (f", stuck {len(r['stuck'])}" if r.get("stuck") else "")
                        + (f", failed {len(failed)}" if failed else ""),
                        graph=graph_id, ran=sorted(r["ran"]), cached=sorted(r["skipped"]),
-                       stuck=sorted(r.get("stuck", [])), failed=dict(failed))
+                       stuck=sorted(r.get("stuck", [])), failed=dict(failed),
+                       address=f"run://{graph_id}")   # S2: graph-level run (ran N / cached M / …)
             # FAIL LOUD at the surface (engine handoff, rule 4): the run COMPLETES (containment, no raise),
             # but a failed node must be SEEN — a node-error is not a silent no-op. A distinct `warning`
             # event (not just the count folded into the run line) so now()'s last_event surfaces it and the
@@ -512,7 +544,9 @@ class Suite:
             if failed:
                 detail = "; ".join(f"{nid}: {err}" for nid, err in sorted(failed.items()))
                 self._emit("warning", f"{len(failed)} node(s) FAILED this run — {detail}",
-                           graph=graph_id, failed=dict(failed))
+                           graph=graph_id, failed=dict(failed),
+                           address=f"run://{graph_id}")   # S2: this warning is locus-bound to the run graph
+                                                          # (distinct from the locus-LESS system-health warnings)
             return r
         return guard("run", do=_do)                                     # AUTO → identical; POLICY is the router
 
@@ -678,7 +712,7 @@ class Suite:
             raise ValueError(f"unknown mode {mode!r} — one of {self.MODES}")
         self._ensure_rhm_node()
         self.set_config(self.SYSTEM_GRAPH, self.MODE_NODE, {"mode": mode})   # editing a parameter (same verb)
-        self._emit("mode", f"presence → {mode}")
+        self._emit("mode", f"presence → {mode}", address="ui://chrome/toolbar")   # S2: presence dial lives in the toolbar
         return mode
 
     def _mode_directive(self, mode: str) -> str:
@@ -731,7 +765,8 @@ class Suite:
             return self.rhm_config()
         self._ensure_rhm_node()
         self.set_config(self.SYSTEM_GRAPH, self.MODE_NODE, allowed)
-        self._emit("config", "RHM config → " + ", ".join(f"{k}={v}" for k, v in allowed.items()))
+        self._emit("config", "RHM config → " + ", ".join(f"{k}={v}" for k, v in allowed.items()),
+                   address="ui://chrome/chat")   # S2: RHM config is the chat organ's settings
         return self.rhm_config()
 
     # --- the twin (B1, B3): the explicit model-of-Tim + provenance grading ---
@@ -1345,7 +1380,7 @@ class Suite:
             self.store.append_chat({"role": "user", "text": message, "grade": "gold", "source": "operator"})
             off = "The right-hand-man is off. Switch a mode on the presence dial to wake me."
             self.store.append_chat({"role": "assistant", "text": off, "grade": "working", "source": "twin"})
-            self._emit("chat", f"you: {message[:40]} (RHM off)")
+            self._emit("chat", f"you: {message[:40]} (RHM off)", address="ui://chrome/chat")   # S2: chat organ
             return {"reply": off, "action": None, "mode": mode, "history": self.store.chat_history(40)}
         from fabric import client, transport
         cfg = self.rhm_config()
@@ -1429,7 +1464,7 @@ class Suite:
         self.store.append_chat({"role": "user", "text": message, "grade": self._provenance_grade("user"), "source": self._provenance_source("user")})
         self.store.append_chat({"role": "assistant", "text": reply, "action": outcome,
                                 "grade": self._provenance_grade("assistant"), "source": self._provenance_source("assistant")})
-        self._emit("chat", f"you: {message[:48]}")
+        self._emit("chat", f"you: {message[:48]}", address="ui://chrome/chat")   # S2: chat organ
         return {"reply": reply, "action": outcome, "mode": mode,
                 "model": cfg["model"], "history": self.store.chat_history(40)}
 
@@ -1458,7 +1493,7 @@ class Suite:
         if not out or out.upper().startswith("NOTHING"):
             return {"comment": ""}
         self.store.append_chat({"role": "assistant", "text": out, "grade": "working", "ambient": True, "source": "twin"})
-        self._emit("react", f"(watching) {out[:44]}")
+        self._emit("react", f"(watching) {out[:44]}", address="ui://chrome/chat")   # S2: watch-and-react is the chat organ
         return {"comment": out}
 
     # ============================================================================================
@@ -1530,7 +1565,9 @@ class Suite:
         if not (text or "").strip():
             raise ValueError("trial_record_turn needs non-empty text (fail loud)")
         self._emit_durable("trial.turn", f"[{character or role}] {text[:60]}",
-                           trial_session=sid, role=role, character=character, text=text)
+                           trial_session=sid, role=role, character=character, text=text,
+                           address="ui://chrome/chat")   # S2: a trial turn plays out in the chat organ
+                                                         # (additive meta; fail-loud posture unchanged)
         s = self._trial_session_record(sid, character)
         s["turns"] = s.get("turns", 0) + 1
         self.store.save_session(s)
@@ -1549,7 +1586,8 @@ class Suite:
         if not (text or "").strip():
             raise ValueError("trial_record_feedback needs non-empty text (fail loud)")
         self._emit_durable("trial.feedback", f"feedback: {text[:60]}",
-                           trial_session=sid, role="operator", character=character, text=text)
+                           trial_session=sid, role="operator", character=character, text=text,
+                           address="ui://chrome/chat")   # S2: trial feedback plays out in the chat organ
         s = self._trial_session_record(sid, character)
         s["feedback"] = s.get("feedback", 0) + 1
         self.store.save_session(s)
@@ -1566,7 +1604,8 @@ class Suite:
         if not (text or "").strip():
             raise ValueError("trial_record_reflection needs non-empty text (fail loud)")
         self._emit_durable("trial.reflection", f"[{character}] reflects: {text[:50]}",
-                           trial_session=sid, role="character", character=character, text=text)
+                           trial_session=sid, role="character", character=character, text=text,
+                           address="ui://chrome/chat")   # S2: trial reflection plays out in the chat organ
         s = self._trial_session_record(sid, character)
         s["reflections"] = s.get("reflections", 0) + 1
         self.store.save_session(s)
@@ -1633,7 +1672,8 @@ class Suite:
             surfaced.append(r["id"])
         self._emit("trial.debrief.start",
                    f"debrief started — {len(surfaced)} trial session(s) to walk",
-                   sessions=ids, surfaced=surfaced)
+                   sessions=ids, surfaced=surfaced,
+                   address="ui://chrome/inbox")   # S2: debrief items surface to the review queue (inbox)
         return self.start_session(surfaced, mode=mode)
 
     # ============================================================================================
@@ -1703,7 +1743,8 @@ class Suite:
                                  default="reject")
         # emit as 'ask' so the live SSE inbox-refresh path (App.tsx kinds: ask|reject|resolve|…) lights
         # up; the operator's button also poll()s for instant local feedback regardless of the stream.
-        self._emit("ask", f"a result was surfaced for your decision: {node_id}", surfaced=sid)
+        self._emit("ask", f"a result was surfaced for your decision: {node_id}", surfaced=sid,
+                   address=self._registry_ui_target({"node": node_id}))   # S2: registry-valid locus (the node)
         return {"id": sid, "node": node_id, "name": f"output · {node_id}"}
 
     # --- A: the review queue (one inbox, all sources; SEPARATE status lifecycle) ---
@@ -1718,7 +1759,8 @@ class Suite:
         sid = self.inbox.surface_review(item, origin=origin)
         # emit 'ask' so the SSE inbox-refresh lights up (same kind surface_output uses).
         self._emit("ask", f"a review item was surfaced ({origin}): {item.get('title', item.get('name', sid))}",
-                   surfaced=sid, origin=origin)
+                   surfaced=sid, origin=origin,
+                   address=self._registry_ui_target(item))   # S2: registry-valid locus (the node, or the inbox)
         return {"id": sid, "origin": origin, "status": "inbox"}
 
     def idea_capture(self, text: str) -> dict:
@@ -1785,7 +1827,8 @@ class Suite:
                    "cursor": 0, "opened": [], "done": False}
         self.store.save_session(session)
         self._emit("review.start", f"review session {session_id} started — {len(items)} item(s), mode={mode}",
-                   session=session_id, items=items, mode=mode)
+                   session=session_id, items=items, mode=mode,
+                   address="ui://chrome/chat")   # S2: the review session walks in the chat/walkthrough organ
         return self.present_current(session_id)
 
     def _load_session(self, session_id: str) -> dict:
@@ -1899,7 +1942,8 @@ class Suite:
             self.store.save_session(s)                      # commit the advance BEFORE releasing the lock
             cursor_now, done_now, total = s["cursor"], s["done"], len(s["items"])
         self._emit("review.advance", f"review session {session_id} → step {cursor_now}",
-                   session=session_id, cursor=cursor_now, total=total)
+                   session=session_id, cursor=cursor_now, total=total,
+                   address="ui://chrome/chat")   # S2: the review walk presents in the chat/walkthrough organ
         if done_now:
             return {"session": session_id, "done": True, "cursor": cursor_now, "total": total}
         return self.present_current(session_id)
@@ -1938,7 +1982,8 @@ class Suite:
                 f"(kind=resolve·choice=approve·surfaced=={sid!r}) — got "
                 f"kind={ev.get('kind')!r} choice={ev.get('choice')!r} surfaced={ev.get('surfaced')!r}. Refused.")
         self._emit("criterion.commit", f"criterion {criterion_id} committed (derived from verdict seq={derived_from})",
-                   criterion=criterion_id, surfaced=sid, derived_from=derived_from)
+                   criterion=criterion_id, surfaced=sid, derived_from=derived_from,
+                   address="ui://chrome/inbox")   # S2: a criterion commit closes an inbox/review item
         return {"criterion": criterion_id, "surfaced": sid, "derived_from": derived_from, "committed": True}
 
     def resolve_verdicts_since(self, since: int = -1) -> list:
@@ -1975,7 +2020,8 @@ class Suite:
         new_sid = self.inbox.surface_review(item, origin="responsive")
         self._emit("review.requeue",
                    f"requeued {sid} ({ev.get('choice')}) → {new_sid} (derived from verdict seq={derived_from})",
-                   surfaced=new_sid, requeued_from=sid, derived_from=derived_from, verdict=ev.get("choice"))
+                   surfaced=new_sid, requeued_from=sid, derived_from=derived_from, verdict=ev.get("choice"),
+                   address="ui://chrome/inbox")   # S2: requeue surfaces a new inbox/review item
         return {"requeued_from": sid, "new_item": new_sid, "verdict": ev.get("choice"),
                 "derived_from": derived_from}
 
@@ -2043,7 +2089,9 @@ class Suite:
                                  status="inbox", origin="responsive")
         self._emit("decision.intent",
                    f"build-intent surfaced ({consequence_class}, scope={scope or '∅'}) — awaiting operator approval",
-                   surfaced=sid, intent="build", consequence_class=consequence_class, scope=scope)
+                   surfaced=sid, intent="build", consequence_class=consequence_class, scope=scope,
+                   address="ui://chrome/inbox")   # S2: a build-intent surfaces in the inbox (live-registry-valid;
+                                                  # finer ui://inbox/build-review awaits S0's grammar unification)
         return {"id": sid, "intent": "build", "scope": scope, "consequence_class": consequence_class}
 
     @staticmethod
@@ -2337,7 +2385,9 @@ class Suite:
                                f"dispatching build for {sid} (class={declared}, scope={scope or '∅'}, "
                                f"derived from verdict seq={derived_from})",
                                surfaced=sid, derived_from=derived_from,
-                               consequence_class=declared, scope=scope)
+                               consequence_class=declared, scope=scope,
+                               address="ui://chrome/inbox")   # S2: the dispatched build-intent's inbox item
+                                                              # (additive meta; durable fail-loud posture unchanged)
             self.inbox.set_status(sid, "presented")
 
         # 6 — launch (W1). Loud on a bad round-trip (LaunchError) — caller (W7/loop) re-queues loud.
@@ -2351,7 +2401,8 @@ class Suite:
             new_sid = self.inbox.surface_review(req, origin="responsive")
             self._emit("decision.verify",
                        f"dispatch for {sid} FAILED to launch → re-queued {new_sid} — {e}",
-                       surfaced=new_sid, requeued_from=sid, derived_from=derived_from, verify_passed=False)
+                       surfaced=new_sid, requeued_from=sid, derived_from=derived_from, verify_passed=False,
+                       address="ui://chrome/inbox")   # S2: re-queued build-intent inbox item
             return {"surfaced": sid, "dispatched": True, "launched": False, "verified": False,
                     "requeued": new_sid, "error": str(e)}
 
@@ -2405,7 +2456,8 @@ class Suite:
             self._emit("decision.verify",
                        f"build for {sid} did NOT verify ({verify_reason}) → re-queued {new_sid}; not closed",
                        surfaced=new_sid, requeued_from=sid, derived_from=derived_from,
-                       verify_passed=False)
+                       verify_passed=False,
+                       address="ui://chrome/inbox")   # S2: re-queued build-intent inbox item
             return {"surfaced": sid, "dispatched": True, "launched": True, "verified": False,
                     "requeued": new_sid, "reason": verify_reason}
 
@@ -2429,7 +2481,8 @@ class Suite:
             self._emit("decision.verify",
                        f"build for {sid} touched an operator-facing surface → cannot auto-close (FORM "
                        f"unverifiable) → surfaced {new_sid} for design review; not closed",
-                       surfaced=new_sid, review_of=sid, derived_from=derived_from, verify_passed=False)
+                       surfaced=new_sid, review_of=sid, derived_from=derived_from, verify_passed=False,
+                       address="ui://chrome/inbox")   # S2: surfaced design-review inbox item
             return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
                     "closed": False, "requeued": new_sid, "reason": form_reason,
                     "form_unverifiable": True}
@@ -2457,7 +2510,8 @@ class Suite:
                 self._emit("decision.verify",
                            f"build for {sid} OVERRAN declared scope ({overrun}) → re-queued {new_sid}; not closed",
                            surfaced=new_sid, requeued_from=sid, derived_from=derived_from,
-                           verify_passed=False, overrun=overrun)
+                           verify_passed=False, overrun=overrun,
+                           address="ui://chrome/inbox")   # S2: re-queued build-intent inbox item
                 return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
                         "closed": False, "requeued": new_sid, "overrun": overrun}
 
@@ -2487,7 +2541,8 @@ class Suite:
             self._emit("decision.implemented",
                        f"build for {sid} verified + within scope → status=implemented "
                        f"(changed {len(changed)} files; derived from seq={derived_from})",
-                       surfaced=sid, derived_from=derived_from, verify_passed=True, changed_files=changed)
+                       surfaced=sid, derived_from=derived_from, verify_passed=True, changed_files=changed,
+                       address="ui://chrome/inbox")   # S2: the implemented build-intent's inbox item
             # surface the result for the MANDATORY review (reversible/AUTO builds are non-blocking —
             # the change is made + git-reversible — but the review is ALWAYS surfaced). Reuses the
             # existing surface_review inbox + event log; no parallel review system. surface_review
@@ -2512,7 +2567,8 @@ class Suite:
                        f"build for {sid} surfaced for review → {rev['id']} "
                        f"(changed {len(changed)} files; review is mandatory, not silent close)",
                        surfaced=rev["id"], review_of=sid, derived_from=derived_from,
-                       changed_files=changed)
+                       changed_files=changed,
+                       address="ui://chrome/inbox")   # S2: the surfaced-for-review inbox item
             return True
         guard("code_build", do=_close, confirmed=verify_passed, inbox=None)
         return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
@@ -2630,7 +2686,8 @@ class Suite:
             return {"needs": need, "id": self._ask_operator(need, f"while building node '{name}': {spec}")}
         code = _tag_system_origin(raw)
         sid = self.inbox.surface("code_build", {"name": name, "code": code}, default="reject")
-        self._emit("grow", f"brain wrote a '{name}' node — surfaced for approval", node_name=name, surfaced=sid)
+        self._emit("grow", f"brain wrote a '{name}' node — surfaced for approval", node_name=name, surfaced=sid,
+                   address="ui://chrome/inbox")   # S2: a proposed node-type surfaces for approval in the inbox
         return {"id": sid, "name": name, "code": code}
 
     def apply_node(self, surfaced_id: str) -> str:
@@ -2651,7 +2708,8 @@ class Suite:
             sha = self._commit_or_rollback(path, f"add node-type '{name}'")  # fail loud if not git-revertible
             self.registry.discover([self.nodes_dir])        # committed -> NOW make it live
             self._emit("apply", f"approved + applied '{name}' — now a live node-type · {sha[:8]}",
-                       node_name=name, commit=sha)
+                       node_name=name, commit=sha,
+                       address="ui://chrome/workshop")   # S2: a self-change shows at the workshop self-changes surface
             self.refresh_map()
             return path
         # G1: POLICY is the single router. code_build → CONFIRM → runs only if the OPERATOR approved
@@ -2808,7 +2866,8 @@ class Suite:
         self.registry.rediscover([self.nodes_dir])          # rebuild from FS so a removed file un-registers
         head = subprocess.run(["git", "-C", self._repo_root, "rev-parse", "HEAD"],
                               capture_output=True, text=True).stdout.strip()
-        self._emit("revert", f"rolled back self-change {sha[:8]}", reverted=sha, commit=head)
+        self._emit("revert", f"rolled back self-change {sha[:8]}", reverted=sha, commit=head,
+                   address="ui://chrome/workshop")   # S2: a revert shows at the workshop self-changes surface
         self.refresh_map()
         return {"reverted": sha, "head": head}
 
@@ -2872,7 +2931,8 @@ class Suite:
             return {"needs": q, "id": self._ask_operator(q, f"panel '{name}': {spec}")}
         sid = self.inbox.surface("ui_panel", {"name": name, "panel": deftn}, default="reject")
         self._emit("grow", f"brain authored a '{name}' UI panel — surfaced for approval",
-                   node_name=name, surfaced=sid)
+                   node_name=name, surfaced=sid,
+                   address="ui://chrome/inbox")   # S2: a proposed panel surfaces for approval in the inbox
         return {"id": sid, "name": name, "panel": deftn}
 
     def apply_panel(self, surfaced_id: str) -> str:
@@ -2908,7 +2968,8 @@ class Suite:
             open(tmp, "w", encoding="utf-8").write(_j.dumps(clean, indent=2))
             os.replace(tmp, path)
             sha = self._commit_or_rollback(path, f"add UI panel '{name}'")
-            self._emit("apply", f"approved + applied '{name}' UI panel · {sha[:8]}", node_name=name, commit=sha)
+            self._emit("apply", f"approved + applied '{name}' UI panel · {sha[:8]}", node_name=name, commit=sha,
+                       address="ui://chrome/workshop")   # S2: a self-change shows at the workshop self-changes surface
             self.refresh_map()
             return path
         # G1: ui_panel → CONFIRM (now explicit in POLICY) → runs only if operator-approved. inbox=None
@@ -2954,7 +3015,8 @@ class Suite:
             return {"needs": need, "id": self._ask_operator(need, f"while building extension '{name}': {spec}")}
         sid = self.inbox.surface("ui_extension", {"name": name, "code": code}, default="reject")
         self._emit("grow", f"brain authored a '{name}' UI extension — surfaced for approval",
-                   node_name=name, surfaced=sid)
+                   node_name=name, surfaced=sid,
+                   address="ui://chrome/inbox")   # S2: a proposed extension surfaces for approval in the inbox
         return {"id": sid, "name": name, "code": code}
 
     def _gate_extension(self, code: str) -> str | None:
@@ -2988,7 +3050,8 @@ class Suite:
             code = d["payload"]["code"]
             err = self._gate_extension(code)                  # gate runs on a temp file, NOT in src
             if err:
-                self._emit("reject", f"extension '{name}' REJECTED by build-gate (never went live)", node_name=name)
+                self._emit("reject", f"extension '{name}' REJECTED by build-gate (never went live)", node_name=name,
+                           address="ui://chrome/workshop")   # S2: a self-mod outcome shows at the workshop surface
                 return {"applied": None, "rejected": True, "error": err}
             extdir = os.path.join(self._repo_root, "canvas", "app", "src", "extensions")
             os.makedirs(extdir, exist_ok=True)
@@ -2999,7 +3062,8 @@ class Suite:
             os.replace(tmp, path)                             # promote (gate passed) — now Vite loads it
             sha = self._commit_or_rollback(path, f"add extension '{name}'")   # fail loud if not git-revertible
             self._emit("apply", f"approved + applied '{name}' extension (gate passed) · {sha[:8]}",
-                       node_name=name, commit=sha)
+                       node_name=name, commit=sha,
+                       address="ui://chrome/workshop")   # S2: a self-change shows at the workshop self-changes surface
             self.refresh_map()
             return {"applied": path, "rejected": False, "commit": sha}
         # G1: ui_extension → CONFIRM (now explicit in POLICY) → runs only if operator-approved. inbox=None
@@ -3040,7 +3104,8 @@ class Suite:
         if choice == "skip":
             self.inbox.set_status(sid, "inbox")            # defer — still a live escalation; NOT resolved
             self._emit("review.skip", f"operator skipped {sid}" + (f" — {reason}" if reason else ""),
-                       surfaced=sid, choice="skip", reason=reason, session=session_id, position=position)
+                       surfaced=sid, choice="skip", reason=reason, session=session_id, position=position,
+                       address=self._registry_ui_target(d.get("payload") or {}))   # S2: the item's locus (node or inbox)
             return {"id": sid, "choice": "skip", "status": "inbox", "resolved": False}
         if choice == "comment":
             if reason:                                     # annotate the WHY without resolving
@@ -3048,7 +3113,8 @@ class Suite:
                 self.store.save_surfaced(d)
             self.inbox.set_status(sid, "responded")
             self._emit("review.comment", f"operator commented on {sid}" + (f" — {reason}" if reason else ""),
-                       surfaced=sid, choice="comment", reason=reason, session=session_id, position=position)
+                       surfaced=sid, choice="comment", reason=reason, session=session_id, position=position,
+                       address=self._registry_ui_target(d.get("payload") or {}))   # S2: the item's locus (node or inbox)
             return {"id": sid, "choice": "comment", "status": "responded", "resolved": False}
 
         # approve / reject / decide (or any other verb) → RESOLVE (TERMINAL). resolve() writes `resolved` +
@@ -3072,7 +3138,8 @@ class Suite:
         except KeyError:
             pass
         self._emit("resolve", f"operator {choice}d {sid}" + (f" — {reason}" if reason else ""),
-                   surfaced=sid, choice=choice, reason=reason, session=session_id, position=position)
+                   surfaced=sid, choice=choice, reason=reason, session=session_id, position=position,
+                   address=self._registry_ui_target(d.get("payload") or {}))   # S2: the item's locus (node or inbox)
         return {"id": sid, "choice": choice, "status": "resolved", "resolved": True}
 
     def decision_view(self, sid: str) -> dict:
