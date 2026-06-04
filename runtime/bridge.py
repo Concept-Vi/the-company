@@ -133,6 +133,8 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.capabilities()))
             elif path == "/api/ui_info":                   # C1: the UI-component registry (sibling of object_info)
                 self._send(200, json.dumps(SUITE.ui_info()))
+            elif path == "/api/scope":                     # S3: ui://→code://→scope[] (the address→code join)
+                self._send(200, json.dumps(SUITE.resolve_scope(q["address"])))
             elif path == "/api/review/current":            # B: the node at the cursor + its framing + ui:// target
                 self._send(200, json.dumps(SUITE.present_current(q["session"])))
             elif path == "/api/review/status":             # B: the session's live status

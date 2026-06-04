@@ -2611,7 +2611,19 @@ class Suite:
     # --- C1: the UI-component registry serialization (sibling of object_info) ---
     # Seeds the known chrome regions (DOM-resolved via data-ui-ref handles the UI lane adds) + the node
     # canvas (camera-resolved). ref = the <ref> in ui://<kind>/<ref>; dom_handle = the data-ui-ref value.
-    # (ref, kind, title, dom_handle|camera_ref, caps-dict). caps keys are the Capabilities fields.
+    # (ref, kind, title, dom_handle|camera_ref, caps-dict[, union-extras-dict]). caps keys are the
+    # Capabilities fields.
+    # S0 (Interactive Addressed Surface) — the ONE canonical grammar:
+    #   The optional 6TH tuple element is the S0 union-extras dict (additive — defaults to {} via
+    #   row[5:] slicing in every consumer), carrying the union-record join fields (represents/code/
+    #   tier/states) for entries where a 1:1 corpus join is known. The 7 live entries leave it ABSENT
+    #   (rule 8 — joining from the corpus is optional, not S0's bar; S1 grows the element-level set).
+    #   Both this live registry AND design/_system/addresses.json validate against the ONE canonical
+    #   `ui://<region>/<element>[/<sub>][/@state]` grammar via contracts.ui_info.conform_live /
+    #   conform_corpus (proven by tests/address_grammar_acceptance.py). The grammar is purely
+    #   STRUCTURAL; kind/region are RECORD fields — so the live kind-form `ui://chrome/inbox` and the
+    #   corpus region-form `ui://inbox/build-review` both conform WITHOUT migrating the live strings
+    #   (that migration is S1, not S0).
     UI_REGISTRY = [
         ("toolbar",   "chrome", "Toolbar",      {"dom_handle": "toolbar"},
          {"pointable": True, "spotlit": True}),
@@ -2639,13 +2651,90 @@ class Suite:
         ui_info is actually called. The UI lane adds the matching data-ui-ref handles to the DOM."""
         from contracts.ui_info import UiComponentEntry, Capabilities, build_ui_info as _build
         entries = []
-        for ref, kind, title, handle, caps in self.UI_REGISTRY:
+        for row in self.UI_REGISTRY:
+            # S0-additive: a registry row is (ref, kind, title, handle, caps[, union-extras]). The
+            # 6th element (union-extras for the canonical grammar) is IGNORED by this v1 /ui_info
+            # serializer — it preserves the existing served shape (an older FE reads exactly what it
+            # did before). Slice the first five so a 6-tuple row does not break the unpack.
+            ref, kind, title, handle, caps = row[0], row[1], row[2], row[3], row[4]
             entries.append(UiComponentEntry(ref=ref, kind=kind, title=title,
                                             capabilities=Capabilities(**caps), **handle))
         return _build(entries)
 
     def ui_info(self) -> dict:
         return self.build_ui_info()
+
+    # --- S3: the backend ui://→code://→scope[] resolver (Interactive Addressed Surface) ---
+    # Establishes `code://` in the BACKEND (it was corpus-only). A resolver mapping a `ui://` address →
+    # its `code://` symbol(s) → a file `scope[]`. This is the pivot L1 (comment→build-intent needs the
+    # code scope) and L5 (self-change→element needs the file→ui join) both lean on. It READS the corpus
+    # join data on disk (design/_system/{addresses.json, code-symbols.json}); FRESHNESS coupling: that
+    # JSON is REGENERATED (by design/_system/symbols.py), not live — a stale code-symbols.json returns a
+    # stale scope. Surfaced, never pretended-live (seams-engine risk #4).
+
+    def _corpus_dir(self) -> str:
+        """The corpus _system dir holding the join data (addresses.json, code-symbols.json)."""
+        return os.path.join(self._repo_root, "design", "_system")
+
+    def resolve_scope(self, ui_addr: str) -> dict:
+        """S3 — map a `ui://` address → its `code://` symbol(s) → a file `scope[]`.
+
+        ONE-SOURCE (rule 3): the code:// ids AND the scope files come FROM the corpus code-symbol
+        registry (design/_system/code-symbols.json), NOT re-derived from the raw `addresses.json`
+        `code` string. The registry is the canonical `code://` index — keyed by the SAME
+        code://<file-stem>/<symbol> ids it mints (design/_system/symbols.py), carrying each symbol's
+        RESOLVED repo-relative file (e.g. canvas/app/src/App.tsx, not the corpus's shorthand 'App.tsx')
+        and a `referenced_by[]` listing the ui:// addresses that point at it. S3 INVERTS that
+        `referenced_by` into the forward map ui://addr → [symbols] (the guide's `files_for` design),
+        so a resolved id is a real registry key and a resolved path is the registry's resolved path —
+        BY CONSTRUCTION, never a parallel/disagreeing `code://` scheme (the two-grammars failure S0
+        exists to kill, kept out of code:// too).
+
+        Returns {address, symbols:[code://…], scope:[file,…], stale, note}:
+          • symbols — the code:// ids referencing this address (registry keys; canonical).
+          • scope   — the DISTINCT, sorted RESOLVED files those symbols live in. EMPTY ⇒ DENY-ALL
+                      downstream (matches surface_build_intent empty-scope=deny, suite.py — fail-safe,
+                      NEVER allow-all; rule 8 — an unmapped address is never a license to build anywhere).
+          • stale   — True if the corpus join data couldn't be read (regenerate it); fail-loud-legible.
+          • note    — a human-legible explanation when scope is empty / the join is stale.
+
+        The address MUST conform to the canonical grammar (S0) — a malformed ui:// raises (fail loud).
+        An address with NO referencing symbol in the registry (a CSS-selector ref like ui://tabbar, an
+        orphan, or one absent from the corpus) returns empty scope (DENY-ALL) WITHOUT raising — the gap
+        is surfaced via `note`, never fabricated.
+
+        FRESHNESS (seams-engine risk #4): code-symbols.json is REGENERATED by design/_system/symbols.py,
+        not live — a stale index returns a stale scope. The resolver reads it as-is; it does not pretend
+        the data is live. (A future rung could regenerate-then-read; for now the coupling is surfaced.)"""
+        import json as _j
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(ui_addr)                            # S0 grammar gate (raises on malformed)
+
+        symbols_path = os.path.join(self._corpus_dir(), "code-symbols.json")
+        try:
+            with open(symbols_path, encoding="utf-8") as f:
+                index = _j.load(f).get("symbols", {})
+        except (OSError, ValueError) as e:
+            return {"address": ui_addr, "symbols": [], "scope": [], "stale": True,
+                    "note": f"corpus code-symbols.json unreadable ({type(e).__name__}: {e}) — "
+                            f"regenerate design/_system (symbols.py); DENY-ALL until then"}
+
+        # INVERT referenced_by: collect every registry symbol that names this ui:// address.
+        symbols, scope = set(), set()
+        for sid, entry in index.items():
+            if ui_addr in (entry.get("referenced_by") or []):
+                symbols.add(sid)
+                f = entry.get("file")
+                if f:
+                    scope.add(f)                             # the RESOLVED repo-relative path
+
+        note = ""
+        if not symbols:
+            note = (f"{ui_addr!r} has no referencing code symbol in the corpus registry "
+                    f"(a CSS-selector/prose ref, an orphan, or absent) — DENY-ALL "
+                    f"(never fabricated — rule 8)")
+        return {"address": ui_addr, "symbols": sorted(symbols), "scope": sorted(scope),
+                "stale": False, "note": note}
 
     # --- self-growth: build-dispatch (the "direct its growth" half of the first purpose) ---
     @staticmethod

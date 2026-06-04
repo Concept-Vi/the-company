@@ -6,6 +6,7 @@ Grammar:
   blob://<algo>:<hash>                                large binary (addressed, not inlined)
   vec://<source-address>#emb=<model>                  an embedding of a source
   ui://<kind>/<ref>                                    a UI component (chrome/field/canvas/panel/ext)
+  code://<file-stem>/<symbol>                          a code symbol (the S3 ui://→code:// join)
 Schema-additive: add optional fields + bump schema_ver; never break an existing one.
 
 Note on `ui://`: this scheme is a *label* in the address grammar only. Unlike
@@ -13,11 +14,22 @@ run/cas/blob/vec (which the store resolves), `ui://` is resolved elsewhere — i
 target lives in the UI-component registry (`contracts.ui_info`), not the store.
 Adding it here is purely additive: it widens the legal scheme set, it does not
 touch any record shape (e.g. `Provenance`), so no `schema_ver` changes.
+
+Note on `code://` (S3, Interactive Addressed Surface): like `ui://`, this scheme
+is a *label* the store does not resolve — it is resolved by the backend
+`ui://→code://→scope[]` resolver (`Suite.resolve_scope`), which reads the corpus
+join data (`design/_system/{addresses.json, code-symbols.json}`). Its canonical
+id is `code://<file-stem>/<symbol>` (e.g. `code://suite/review_verdicts`), matching
+the corpus code-symbol registry (`design/_system/symbols.py`). Adding it to SCHEMES
+is purely additive (it widens the legal scheme set; mirrors the `ui://` precedent),
+so no record shape and no `schema_ver` change. Establishing `code://` in the
+backend is the pivot L1 (comment→build-intent scope) and L5 (self-change→element)
+both lean on.
 """
 from __future__ import annotations
 from pydantic import BaseModel, Field
 
-SCHEMES = ("run", "cas", "blob", "vec", "ui")
+SCHEMES = ("run", "cas", "blob", "vec", "ui", "code")
 
 
 class Provenance(BaseModel):
