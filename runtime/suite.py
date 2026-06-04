@@ -68,6 +68,11 @@ class Suite:
          "means": "could not fire because a required input never resolved (not a pruned branch)",
          "derived_when": "the node id is in the run result's `stuck` set, OR (on reload) the most recent "
                          "run event for the graph listed it stuck and it still holds no result"},
+        {"id": "failed", "label": "Failed", "applies_to": ("compute",),
+         "means": "fired but RAISED — it threw an error during run (the scheduler contained it; downstream "
+                  "stays unresolved). Distinct from stuck (an input never arrived) — here the node ran and "
+                  "errored. The error message is carried on the node where the shape allows.",
+         "derived_when": "the node id is a key in the run result's `failed` map (scheduler containment)"},
         {"id": "live", "label": "Live", "applies_to": ("reference",),
          "means": "a live window onto its reference address, currently resolving to content",
          "derived_when": "RESOLVE='reference' and head(config.ref) resolves to a stored content hash"},
@@ -145,24 +150,52 @@ class Suite:
 
     # --- the capability registry: the source of truth the brain authors FROM (never invents) ---
     _models_cache: list | None = None
+    _models_cache_at: float = 0.0                             # monotonic stamp of the last live fetch
+    _models_cache_degraded: bool = False                      # the cached list is the fallback, not the live list
+    MODELS_CACHE_TTL = 60.0                                    # seconds — a model that comes up later becomes
+    #                                                            visible without a process restart (was: pinned
+    #                                                            process-lifetime → the fleet went stale). A
+    #                                                            DEGRADED cache (endpoint was down) is NOT held for
+    #                                                            the TTL — it expires immediately so the next call
+    #                                                            re-probes and the fleet recovers the moment the
+    #                                                            endpoint returns. Manual refresh_models() forces it.
 
-    def available_models(self) -> list:
+    def available_models(self, force_refresh: bool = False) -> list:
         """The REAL models registered at the fabric endpoint — so the brain picks from what exists
-        instead of inventing names. Cached; falls back to the configured brain if the endpoint is down."""
-        if self._models_cache is None:
-            from fabric import transport, config as fcfg
-            try:
-                models = transport.list_models(fcfg.DEFAULT_BASE_URL)
-            except Exception as e:
-                models = None
-                self._emit("warning", f"model registry unreachable ({type(e).__name__}) — "
-                           f"falling back to [{fcfg.DEFAULT_BRAIN}]; the source-of-truth list is degraded")
-            if not models:                                    # surface the degraded fallback, never silent (F6)
-                if models is not None:
-                    self._emit("warning", "model registry returned empty — falling back to the default brain")
-                models = [fcfg.DEFAULT_BRAIN]
-            self._models_cache = models
+        instead of inventing names. Cached with a short TTL (MODELS_CACHE_TTL) so a model that comes up
+        LATER is visible without a restart; a degraded (fallback) cache is never held — it re-probes next
+        call so the fleet recovers the instant the endpoint returns. Falls back FAIL-LOUD-LEGIBLE to the
+        configured brain if the endpoint is down (a warning event, never silent). force_refresh bypasses
+        the cache (the manual-refresh path)."""
+        import time as _t
+        fresh = (self._models_cache is not None
+                 and not self._models_cache_degraded                      # never serve a stale degraded list
+                 and (_t.monotonic() - self._models_cache_at) < self.MODELS_CACHE_TTL)
+        if fresh and not force_refresh:
+            return self._models_cache
+        from fabric import transport, config as fcfg
+        degraded = False
+        try:
+            models = transport.list_models(fcfg.DEFAULT_BASE_URL)
+        except Exception as e:
+            models = None
+            self._emit("warning", f"model registry unreachable ({type(e).__name__}) — "
+                       f"falling back to [{fcfg.DEFAULT_BRAIN}]; the source-of-truth list is degraded")
+        if not models:                                        # surface the degraded fallback, never silent (F6)
+            if models is not None:
+                self._emit("warning", "model registry returned empty — falling back to the default brain")
+            models = [fcfg.DEFAULT_BRAIN]
+            degraded = True
+        self._models_cache = models
+        self._models_cache_at = _t.monotonic()
+        self._models_cache_degraded = degraded
         return self._models_cache
+
+    def refresh_models(self) -> list:
+        """Manual cache invalidation — re-probe the fabric endpoint NOW (no restart). The fleet stays
+        current: a model brought up after process start becomes visible the moment this is called (or
+        within MODELS_CACHE_TTL automatically). Returns the fresh list."""
+        return self.available_models(force_refresh=True)
 
     def models_at(self, kind: str = "chat", base_url: str | None = None) -> list:
         """List the REAL models registered at a GIVEN endpoint (B) — so the UI can fill chat-model
@@ -346,6 +379,20 @@ class Suite:
                 return list(st) if isinstance(st, list) else []
         return []
 
+    def _last_run_failed(self, graph_id: str) -> dict:
+        """The `failed` {nid: "ErrType: msg"} map from the MOST RECENT `run` event for `graph_id` (the
+        run emit records `failed=dict(failed)` with `graph=<id>`). Mirror of `_last_run_stuck` so a
+        FAILED node survives a reload (status=`failed`, not re-defaulting to idle) — closing the same
+        silent-regression shape on the no-fresh-result path (rule 4). Newest run wins; tolerant (a
+        malformed/absent field reads as no-failures; never raises in a status read). A node that since
+        resolved (its output address now holds content) is no longer reported failed (checked at the
+        call site, after cas)."""
+        for ev in self.store.recent_events(200):
+            if ev.get("kind") == "run" and ev.get("graph") == graph_id:
+                fl = ev.get("failed")
+                return dict(fl) if isinstance(fl, dict) else {}
+        return {}
+
     @staticmethod
     def _schema_defaults(schema: dict) -> dict:
         """Flatten a node-type's nested config_schema {key:{...,default}} → {key:default} (A).
@@ -452,10 +499,20 @@ class Suite:
         def _do():                                                       # G1: AUTO → guard runs it straight through
             r = scheduler.run(self._load(graph_id), self.store, self.registry,
                               branch=branch, pause=pause, force=force)
+            failed = r.get("failed") or {}
             self._emit("run", f"ran {len(r['ran'])}, cached {len(r['skipped'])}"
-                       + (f", stuck {len(r['stuck'])}" if r.get("stuck") else ""),
+                       + (f", stuck {len(r['stuck'])}" if r.get("stuck") else "")
+                       + (f", failed {len(failed)}" if failed else ""),
                        graph=graph_id, ran=sorted(r["ran"]), cached=sorted(r["skipped"]),
-                       stuck=sorted(r.get("stuck", [])))
+                       stuck=sorted(r.get("stuck", [])), failed=dict(failed))
+            # FAIL LOUD at the surface (engine handoff, rule 4): the run COMPLETES (containment, no raise),
+            # but a failed node must be SEEN — a node-error is not a silent no-op. A distinct `warning`
+            # event (not just the count folded into the run line) so now()'s last_event surfaces it and the
+            # operator/now-view can't miss it. Names the nodes + their errors.
+            if failed:
+                detail = "; ".join(f"{nid}: {err}" for nid, err in sorted(failed.items()))
+                self._emit("warning", f"{len(failed)} node(s) FAILED this run — {detail}",
+                           graph=graph_id, failed=dict(failed))
             return r
         return guard("run", do=_do)                                     # AUTO → identical; POLICY is the router
 
@@ -465,6 +522,7 @@ class Suite:
         for n in g.nodes:
             logical = f"run://{g.id}/{n.id}" if branch == "main" else f"run://{g.id}/{n.id}@{branch}"
             mod = self.registry.get(n.type)
+            node_error = None                                  # the run error for a `failed` node (else None)
             if getattr(mod, "RESOLVE", "compute") == "reference":
                 # REFERENCE-RESOLVED (portals): a live window onto another address, never computed and
                 # never fired (the scheduler SKIPS it). Resolve config.ref NOW (window, not a copy) and
@@ -488,9 +546,19 @@ class Suite:
                     # it from the backend instead of maintaining a parallel client-side `stuck` re-applied
                     # from events after every reload. Checked BEFORE ran/cached/idle so a stuck node is
                     # never mislabeled idle. (be-half → at most needs-tim until the FE drops its overlay.)
-                    status = ("stuck" if n.id in result.get("stuck", [])
-                              else "ran" if n.id in result["ran"]
-                              else "cached" if n.id in result["skipped"] else "idle")
+                    # FAILED (engine handoff): the scheduler now CONTAINS a node that RAISED into a
+                    # result['failed'] {nid: "ErrType: msg"} map. Without consuming it, a failed node fell
+                    # through to `idle` — a SILENT regression (the operator saw "nothing happened" for a
+                    # node that actually errored, violating rule 4). Branch on `failed` BEFORE the idle
+                    # fallthrough (the sets are disjoint) and carry the error message onto the node dict.
+                    failed_map = result.get("failed") or {}
+                    if n.id in failed_map:
+                        status = "failed"
+                        node_error = failed_map[n.id]
+                    else:
+                        status = ("stuck" if n.id in result.get("stuck", [])
+                                  else "ran" if n.id in result["ran"]
+                                  else "cached" if n.id in result["skipped"] else "idle")
                 else:
                     # D5-be (persisted run-status, in-territory): with no fresh run result, DERIVE status
                     # from the store — a node whose output address resolves has a cached result, so report
@@ -502,12 +570,18 @@ class Suite:
                     # to re-derive client-side). A node that since resolved (cas present) is never stuck.
                     if cas:
                         status = "cached"
+                    elif n.id in self._last_run_failed(g.id):
+                        # FAILED survives a reload too (rule 4): the most recent run recorded this node as
+                        # failed and it still holds no result, so it is NOT idle. Mirror of the stuck path;
+                        # checked before stuck/idle. Carry the persisted error message.
+                        status = "failed"
+                        node_error = self._last_run_failed(g.id).get(n.id)
                     elif n.id in self._last_run_stuck(g.id):
                         status = "stuck"
                     else:
                         status = "idle"
             nt = self.registry.types.get(n.type)
-            nodes.append({
+            node = {
                 "id": n.id, "type": n.type, "config": n.config,
                 "kind": nt.kind if nt else ("content" if n.type in CONTENT_KINDS else "process"),
                 "layer": getattr(mod, "ORIGIN", "authored"),   # provenance layer (authored vs system)
@@ -515,7 +589,10 @@ class Suite:
                 "output": self.store.get_content(cas) if cas else None,
                 "position": n.position.model_dump(),           # C5: layout is backend-authoritative
                 "size": n.size.model_dump(),
-            })
+            }
+            if node_error is not None:                         # carry the run error for a `failed` node (fail-loud)
+                node["error"] = node_error
+            nodes.append(node)
         return {"id": g.id, "nodes": nodes,
                 # C2/C3: carry per-port identity so the UI draws per-port wires + feeds multi-input
                 # nodes correctly. {from,to} kept for back-compat; from_port/to_port are additive.
@@ -615,6 +692,12 @@ class Suite:
                 "model": c.get("model") or fcfg.DEFAULT_BRAIN,
                 "base_url": c.get("base_url") or fcfg.DEFAULT_BASE_URL,
                 "persona": c.get("persona", ""),
+                # call-site timeout (D2): the interactive RHM model calls (chat reply, react) inherit
+                # THIS, so the RHM never hangs minutes on a slow endpoint. Default DEFAULT_TIMEOUT (the
+                # moderate 180s); configurable + persistent like the rest. Schema-additive (absent → default).
+                # consult() + the self-coding calls deliberately use the longer DEFAULT_CLOUD_TIMEOUT
+                # directly (they can wait) — see those call sites; this slot governs the INTERACTIVE calls.
+                "timeout": int(c.get("timeout") or fcfg.DEFAULT_TIMEOUT),
                 # voice-trial lane H: surface the per-mode voice toggle in the config the FE reads.
                 # Default 'on' so a node with no field is voice-enabled (schema-additive).
                 "voice_enabled": c.get("voice_enabled", "on")}
@@ -631,11 +714,19 @@ class Suite:
 
     def set_rhm_config(self, updates: dict) -> dict:
         allowed = {k: v for k, v in (updates or {}).items()
-                   if k in ("model", "base_url", "persona", "mode", "voice_enabled")}
+                   if k in ("model", "base_url", "persona", "mode", "voice_enabled", "timeout")}
         if "mode" in allowed and allowed["mode"] not in self.MODES:
             raise ValueError(f"unknown mode {allowed['mode']!r}")
         if "voice_enabled" in allowed and str(allowed["voice_enabled"]).lower() not in ("on", "off"):
             raise ValueError(f"voice_enabled must be 'on' or 'off', got {allowed['voice_enabled']!r}")
+        if "timeout" in allowed:                              # the interactive call-site timeout — positive int
+            try:
+                t = int(allowed["timeout"])
+            except (TypeError, ValueError):
+                raise ValueError(f"timeout must be a positive integer (seconds), got {allowed['timeout']!r}")
+            if t <= 0:
+                raise ValueError(f"timeout must be a positive integer (seconds), got {allowed['timeout']!r}")
+            allowed["timeout"] = t
         if not allowed:
             return self.rhm_config()
         self._ensure_rhm_node()
@@ -736,6 +827,10 @@ class Suite:
         graphs_s = (f"{len(all_graphs)} total — current: {nowv['graph']}"
                     + (f"; others incl. {', '.join(others[:5])}" + ("…" if len(others) > 5 else "") if others else ""))
         panels_s = ", ".join(p.get("id", "?") for p in self.list_panels()) or "(none)"
+        # the valid ui:// show-targets, from the UI_REGISTRY (single-source; chrome refs as full ui:// refs).
+        show_targets_s = ", ".join(
+            ("ui://canvas/*" if kind == "canvas" else f"ui://{kind}/{ref}")
+            for ref, kind, *_ in self.UI_REGISTRY) or "(none)"
 
         ctx = (
             "LIVE SYSTEM STATE (ground truth — answer only from this):\n"
@@ -748,6 +843,10 @@ class Suite:
             f"- embed models: {embed_s}\n"
             f"- presence modes: {modes_s} (current: {mode})\n"
             f"- RHM verbs you can perform: {verbs_s}\n"
+            # show-targets vocabulary (grounding for the `show` verb): enumerate the valid ui:// chrome
+            # refs from the UI_REGISTRY (single-source) + note node-ids are valid targets, so the RHM
+            # GROUNDS `show` in real handles instead of guessing. A bare handle resolves leniently.
+            f"- show targets (ui:// regions): {show_targets_s}; plus any node-id above is a valid show target\n"
             f"- inbox: {n_esc} item(s) awaiting you — {awaiting_s}\n"
             f"- graphs (multigraph): {graphs_s}\n"
             f"- panels: {panels_s}\n"
@@ -793,21 +892,119 @@ class Suite:
         "propose": "register_type", "panel": "ui_panel", "extend": "ui_extension",
     }
 
+    # consult retrieval: the WHOLE repo (~400k chars ≈ 100k tokens) into one model call overflowed /
+    # ran slow / "didn't return". So consult RETRIEVES a query-relevant slice instead of stuffing the
+    # repo — keyword scan over the SAME file set the codebase node reads (single-source the corpus), no
+    # embed-service dependency (retrieval-proper/embed is still future). Cap the fed source so it stays
+    # bounded; cite which files were used; on no match fall back to a small curated set (never the whole
+    # repo). The "answer strictly from source, cite the file, abstain if absent" contract is preserved.
+    CONSULT_CAP = 40000                                       # max chars of source fed to the model (~10k tok)
+    CONSULT_PER_FILE_CAP = 8000                               # max chars any ONE file contributes — so a single
+    #                                                            huge file (suite.py ≈140k) can't monopolize the
+    #                                                            budget and crowd out the actually-relevant smaller
+    #                                                            file (scheduler.py). ~CAP/5 → ≥5 distinct files of
+    #                                                            headroom. Big files get a relevance-WINDOWED slice
+    #                                                            (around the first term hit — the brief's "sections"),
+    #                                                            small files come in whole.
+    CONSULT_CURATED = ("AGENTS.md", "MAP.md", "STATE.md")     # the orientation fallback when nothing matches
+    _CONSULT_STOPWORDS = frozenset((
+        "the", "a", "an", "is", "are", "was", "were", "be", "been", "being", "of", "to", "in", "on",
+        "for", "and", "or", "but", "with", "as", "by", "at", "from", "how", "what", "why", "where",
+        "when", "which", "who", "does", "do", "did", "this", "that", "these", "those", "it", "its",
+        "system", "work", "works", "i", "you", "me", "my", "can", "could", "would", "should", "tell",
+        "about", "explain", "describe", "show", "get", "use", "used", "have", "has", "into", "out"))
+
+    @classmethod
+    def _consult_terms(cls, query: str) -> list:
+        """Salient lowercase terms from a query — words ≥3 chars, minus stopwords. The retrieval keys."""
+        import re
+        words = re.findall(r"[A-Za-z_][A-Za-z0-9_]{2,}", (query or "").lower())
+        seen, out = set(), []
+        for w in words:
+            if w in cls._CONSULT_STOPWORDS or w in seen:
+                continue
+            seen.add(w); out.append(w)
+        return out
+
+    def _retrieve_for_consult(self, query: str) -> tuple:
+        """Keyword retrieval over the repo — returns (context, sources, file_list). Feeds ONLY the
+        query-relevant files/sections (bounded by CONSULT_CAP), not the whole repo. file_list is a short
+        repo orientation (every candidate file's relpath). sources is the files actually fed (for the
+        citation + the test). On no keyword match, falls back to the curated orientation set — NEVER the
+        whole repo. No embed-service dependency: a plain term scan (relevance = term-hit count)."""
+        import os, glob
+        from nodes import codebase as cb
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # ~/company (single-source w/ codebase node)
+        files = []                                            # (relpath, text) for every candidate file
+        for g in cb.DEFAULT_GLOBS:
+            for p in sorted(glob.glob(os.path.join(root, g))):
+                try:
+                    text = open(p, encoding="utf-8").read()
+                except Exception:
+                    continue
+                files.append((os.path.relpath(p, root), text))
+        file_list = [rel for rel, _ in files]
+        terms = self._consult_terms(query)
+        scored = []
+        for rel, text in files:
+            low = text.lower(); rel_low = rel.lower()
+            score = sum(low.count(t) + (3 if t in rel_low else 0) for t in terms)   # filename match weighted
+            if score > 0:
+                scored.append((score, rel, text))
+        scored.sort(key=lambda x: (-x[0], x[1]))
+        if not scored:                                        # no match → curated orientation set, never the whole repo
+            picked = []                                       # read the curated files DIRECTLY (not all are in the
+            for rel in self.CONSULT_CURATED:                  # codebase globs — STATE.md isn't — so don't depend on it)
+                try:
+                    picked.append((rel, open(os.path.join(root, rel), encoding="utf-8").read(), []))
+                except Exception:
+                    continue
+        else:
+            picked = [(rel, text, [t for t in terms if t in text.lower()]) for _, rel, text in scored]
+        # Fill the budget ACROSS the top-ranked files (relevance order), capping each file's contribution
+        # to CONSULT_PER_FILE_CAP so no single huge file monopolizes the budget. A small file comes in
+        # whole; a big file gets a relevance-WINDOWED slice (centred on its first matching term — the
+        # brief's "files/SECTIONS"), so the slice carries the relevant code, not the header/imports.
+        parts, sources, total = [], [], 0
+        for rel, text, hits in picked:
+            if total >= self.CONSULT_CAP:
+                break
+            budget = min(self.CONSULT_PER_FILE_CAP, self.CONSULT_CAP - total)
+            if len(text) <= budget:                           # small file → whole
+                chunk = f"\n===== {rel} =====\n{text}\n"
+            else:                                             # big file → windowed slice around the first hit
+                low = text.lower()
+                pos = min((low.find(t) for t in hits if low.find(t) >= 0), default=0)
+                start = max(0, pos - 1000)
+                excerpt = text[start:start + budget]
+                tag = rel if start == 0 and len(excerpt) >= len(text) else f"{rel} (excerpt)"
+                chunk = f"\n===== {tag} =====\n{excerpt}\n"
+            if total + len(chunk) > self.CONSULT_CAP and parts:
+                break                                         # keep the overall cap hard once we have something
+            parts.append(chunk); sources.append(rel); total += len(chunk)
+        context = "".join(parts)
+        return context, sources, file_list
+
     def consult(self, query: str) -> dict:
         """The RHM reads the system's OWN code+design (the first-purpose Q&A, as a callable) and
-        answers — so it knows how it is built. Grounded in the source; cites the file; abstains if
-        the answer isn't there. A read (AUTO)."""
-        from nodes import codebase as cb
-        from fabric import client, transport
+        answers — so it knows how it is built. Grounded in a RETRIEVED, query-relevant slice (keyword
+        scan, bounded by CONSULT_CAP — NOT the whole repo, which overflowed/stalled); cites the files
+        used; abstains if the answer isn't there. A read (AUTO). Uses DEFAULT_CLOUD_TIMEOUT (a consult
+        can wait)."""
+        from fabric import client, transport, config as fcfg
         cfg = self.rhm_config()
-        src = cb.run({}, {})                              # repo source; AGENTS.md points at the vault design
+        context, sources, file_list = self._retrieve_for_consult(query)
+        orient = ", ".join(file_list)
         sys_p = ("You answer questions about THIS system's own design and code, STRICTLY from the SOURCE "
-                 "below. Cite the relevant file. If the answer is not in the source, say so plainly. Concise.")
-        ans = client.complete(transport.openai_transport(base_url=cfg["base_url"]),
+                 "below (a RETRIEVED slice of the repo selected for this question, not the whole repo). "
+                 "Cite the relevant file(s). If the answer is not in the source provided, say so plainly "
+                 "(it may live in a file that wasn't retrieved — name what you'd need). Concise.\n"
+                 f"REPO FILE-LIST (for orientation — these files exist): {orient}")
+        ans = client.complete(transport.openai_transport(base_url=cfg["base_url"], timeout=fcfg.DEFAULT_CLOUD_TIMEOUT),
                               [{"role": "system", "content": sys_p},
-                               {"role": "user", "content": f"SOURCE:\n{src[:380000]}\n\nQUESTION: {query}"}],
+                               {"role": "user", "content": f"SOURCE:\n{context}\n\nQUESTION: {query}"}],
                               model=cfg["model"])
-        return {"answer": ans}
+        return {"answer": ans, "sources": sources}
 
     # --- model-/provider-AGNOSTIC action extraction -------------------------------------------
     # The requirement (Tim): the RHM must ACT regardless of which model/provider is selected, and a
@@ -967,6 +1164,44 @@ class Suite:
             return {"verb": "run"}
         return {"verb": verb}
 
+    @staticmethod
+    def _confirmation_for(outcome: dict) -> str:
+        """Fold a dispatched verb's outcome dict → ONE concise operator-facing confirmation line, for
+        EVERY verb (run/build/show/propose/panel/extend/consult/ask + refused). Before this, only
+        consult/ask folded an outcome; run/build/show/propose/panel/extend executed but returned a BLANK
+        reply — worst for native-tool-call models that emit no prose. The operator must ALWAYS see what
+        happened (rule 4: no silent success). Returns '' only for a None/empty outcome (nothing dispatched).
+        consult's full answer is folded by the caller (it carries the looked-up text); here we don't
+        duplicate it — '' so the caller's answer-fold stands alone."""
+        if not outcome:
+            return ""
+        did = outcome.get("did")
+        if did == "run":
+            return f"▶ ran: {len(outcome.get('ran', []))} ran, {len(outcome.get('cached', []))} cached"
+        if did == "build":
+            if outcome.get("error"):
+                return (f"build failed: {outcome['error']}"
+                        + (f" (made {len(outcome.get('nodes', []))} before failing)" if outcome.get("nodes") else ""))
+            nodes, edges = outcome.get("nodes", []), outcome.get("edges", [])
+            wired = (" (" + ", ".join(edges) + ")") if edges else ""
+            return f"＋ built {len(nodes)} node(s){wired}"
+        if did == "show":
+            return "→ moved your view to " + ", ".join(outcome.get("targets", []))
+        if did == "propose":
+            return f"drafted node '{outcome.get('name')}' — awaiting your approval in the inbox"
+        if did == "panel":
+            return f"drafted panel '{outcome.get('name')}' — awaiting your approval in the inbox"
+        if did == "extend":
+            return f"authored UI component '{outcome.get('name')}' (build-gated) — awaiting your approval"
+        if did == "consult":
+            return ""                                         # the caller folds the full answer text
+        if did == "ask":
+            return ""                                         # the caller folds the ❓-needs line
+        if did == "none":
+            return "show refused: " + outcome["refused"] if "show" in str(outcome.get("refused", "")) \
+                   else "couldn't do that: " + str(outcome.get("refused", "no effect"))
+        return ""                                             # unknown did → nothing to confirm
+
     def _dispatch_rhm_action(self, action: dict, graph_id: str) -> dict:
         """Execute ONLY whitelisted verbs. Anything else is refused with no effect — this is the
         no-bypass guarantee: the RHM cannot apply/delete/write, only propose (surfaces) or run (AUTO)."""
@@ -996,6 +1231,12 @@ class Suite:
             #   • ui://<chrome|field|panel|ext>/<ref> → a UI-component in the registry (build_ui_info)
             ids = {n.id for n in self._load(graph_id).nodes}
             reg = None                                          # the ui:// registry, lazily built once
+            # LENIENT bare-target grounding: the RHM is told the vocabulary (in _chat_context) but a
+            # native-tool-call model still often emits a bare handle ("inbox") rather than the full
+            # ui://chrome/inbox. So a bare word that matches a UI_REGISTRY handle resolves to its FULL
+            # ref USING THE REGISTRY ENTRY'S OWN KIND (not assumed) — never hardcoded. We refuse ONLY on
+            # a genuine no-match (fail-loud preserved). Built from UI_REGISTRY so it can't drift.
+            handle_map = {ref: kind for ref, kind, *_ in self.UI_REGISTRY}   # 'inbox'→'chrome', '*'→'canvas'
             targets = []
             for t in action.get("targets", []):
                 if t.startswith("ui://"):
@@ -1013,6 +1254,11 @@ class Suite:
                             targets.append(t)
                 elif t in ids:
                     targets.append(t)                           # bare node-id (kept)
+                elif t in handle_map:
+                    # LENIENT: a bare UI handle ('inbox') → its full ref via the registry's own kind.
+                    # 'canvas' kind is the whole-canvas '*' camera ref; chrome/etc become ui://<kind>/<ref>.
+                    k = handle_map[t]
+                    targets.append("ui://canvas/*" if (k == "canvas" or t == "*") else f"ui://{k}/{t}")
             if not targets:
                 return {"did": "none", "refused": "show: no matching target (node-id or ui:// component)"}
             return {"did": "show", "targets": targets}
@@ -1145,8 +1391,8 @@ class Suite:
         for t in self.store.chat_history(20):
             msgs.append({"role": t["role"], "content": t["text"]})
         msgs.append({"role": "user", "content": message})
-        raw = client.complete(transport.openai_transport(base_url=cfg["base_url"]),
-                              msgs, model=cfg["model"])      # model + provider are configurable (E1)
+        raw = client.complete(transport.openai_transport(base_url=cfg["base_url"], timeout=cfg["timeout"]),
+                              msgs, model=cfg["model"])      # model + provider + timeout are configurable (E1/D2)
         reply, action = self._parse_rhm_action(raw)
         if action and mode == "decide-for-me":
             # G3 wiring: in decide-for-me the ACT-vs-SURFACE decision is routed DETERMINISTICALLY by the
@@ -1160,11 +1406,20 @@ class Suite:
                                                payload=action)
         else:
             outcome = self._dispatch_rhm_action(action, graph_id) if action else None
+        # ACTION-CONFIRMATION: fold a concise confirmation into `reply` for EVERY dispatched verb so the
+        # operator ALWAYS sees what happened — critical for native-tool-call models that emit NO prose
+        # (run/build/show/propose/panel/extend used to return a BLANK reply). consult/ask keep their
+        # richer folds (the full answer / the needs-line); all others get _confirmation_for. Never
+        # double-up: a confirmation only appends when there is prose, else it BECOMES the reply.
         if outcome and outcome.get("did") == "consult":   # fold the looked-up answer into the turn
             reply = (reply + "\n\n📖 " + outcome["answer"]).strip()
-        if outcome and outcome.get("did") == "ask":        # asked instead of fabricating (PoLR)
+        elif outcome and outcome.get("did") == "ask":     # asked instead of fabricating (PoLR)
             reply = (reply + "\n\n❓ That needs something not in the registry, so I'm asking rather than "
                      "guessing: " + outcome["needs"] + " — surfaced for you in the inbox.").strip()
+        else:
+            confirm = self._confirmation_for(outcome)
+            if confirm:
+                reply = (reply + "\n\n" + confirm).strip() if reply.strip() else confirm
         # provenance grading (B3): Tim's words are gold (train the twin); the twin's are working
         self.store.append_chat({"role": "user", "text": message, "grade": self._provenance_grade("user"), "source": self._provenance_source("user")})
         self.store.append_chat({"role": "assistant", "text": reply, "action": outcome,
@@ -1192,7 +1447,7 @@ class Suite:
                  "(e.g. a node left unwired, an obvious next step, a result worth noting). Only if there is "
                  "truly nothing useful to say, reply with exactly: NOTHING. Keep it to one sentence.")
         user = f"Latest activity: {last['kind']} — {last['summary']}.\n{self._chat_context(graph_id)[:700]}"
-        out = client.complete(transport.openai_transport(base_url=cfg["base_url"]),
+        out = client.complete(transport.openai_transport(base_url=cfg["base_url"], timeout=cfg["timeout"]),
                               [{"role": "system", "content": sys_p},
                                {"role": "user", "content": user}], model=cfg["model"]).strip()
         if not out or out.upper().startswith("NOTHING"):
@@ -2361,7 +2616,7 @@ class Suite:
             f"Write a node named '{name}' that: {spec}\n"
             "Use PORTS_IN={'text':'Text'} and PORTS_OUT={'text':'Text'} unless the spec needs otherwise. "
             "Output ONLY the code.")
-        t = transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL)
+        t = transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL, timeout=fcfg.DEFAULT_CLOUD_TIMEOUT)
         raw = _strip_fences(client.complete(
             t, [{"role": "system", "content": sys_p + "\n\n" + self._authoring_preamble()},
                 {"role": "user", "content": user_p}], model=model or fcfg.DEFAULT_BRAIN))
@@ -2597,7 +2852,7 @@ class Suite:
                 f"- modes (for target 'mode'): {cap['modes']}\n"
                 f"- models (for target 'model'): {cap['models']}\n"
                 "For select fields you may omit 'options' — the system fills them from the registry.")
-        raw = client.complete(transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL),
+        raw = client.complete(transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL, timeout=fcfg.DEFAULT_CLOUD_TIMEOUT),
                               [{"role": "system", "content": sys_p + "\n\n" + self._authoring_preamble()},
                                {"role": "user", "content": user}],
                               model=model or fcfg.DEFAULT_BRAIN)
@@ -2686,7 +2941,7 @@ class Suite:
                  "other module. You MAY call fetch('/api/...') against the bridge to read or act on the "
                  "system.\n\n" + self._authoring_preamble())
         code = _strip_fences(client.complete(
-            transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL),
+            transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL, timeout=fcfg.DEFAULT_CLOUD_TIMEOUT),
             [{"role": "system", "content": sys_p}, {"role": "user", "content": f"Build: {spec}"}],
             model=model or fcfg.DEFAULT_BRAIN))
         need = self._needs(code)
