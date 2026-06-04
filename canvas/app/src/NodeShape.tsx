@@ -223,7 +223,7 @@ export function Edges({ edges }: { edges: { from: string; from_port?: string; to
       {lines.map((l, i) => {
         const mx = (l.x1 + l.x2) / 2
         return <path key={i} d={`M ${l.x1} ${l.y1} C ${mx} ${l.y1} ${mx} ${l.y2} ${l.x2} ${l.y2}`}
-          fill="none" stroke="#2f6b59" strokeWidth={1.5} />
+          fill="none" style={{ stroke: 'var(--acc-dim)' }} strokeWidth={1.5} />
       })}
     </svg>
   )

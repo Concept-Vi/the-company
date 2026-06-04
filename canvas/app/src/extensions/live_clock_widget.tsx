@@ -22,14 +22,14 @@ export default function live_clock_widget() {
     position: 'fixed',
     top: '10px',
     right: '10px',
-    background: 'rgba(0, 0, 0, 0.75)',
-    color: 'white',
+    background: 'var(--s0)',
+    color: 'var(--tx)',
     padding: '8px 16px',
-    borderRadius: '8px',
+    borderRadius: 'var(--r-lg)',
     fontFamily: 'monospace',
     fontSize: '16px',
     zIndex: 9999,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+    boxShadow: 'var(--shadow)',
   };
 
   return <div style={style}>{time}</div>;
