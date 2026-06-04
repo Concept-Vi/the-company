@@ -28,6 +28,7 @@ from voice.ears._stt_service import serve  # noqa: E402
 
 PORT = 2032
 MODEL = os.environ.get("COMPANY_CANARY_MODEL", "nvidia/canary-qwen-2.5b")
+DEVICE = os.environ.get("COMPANY_CANARY_DEVICE", "cuda")
 
 _model = None
 _kind = None
@@ -35,7 +36,13 @@ _kind = None
 
 def _engine():
     """Lazy singleton. Prefer the SALM (speech-LM) path Canary-Qwen ships as; fall back to a generic
-    NeMo ASRModel if this NeMo build exposes it that way. Guarded import → clear install message."""
+    NeMo ASRModel if this NeMo build exposes it that way. Guarded import → clear install message.
+
+    DEVICE PLACEMENT (important): NeMo models load to CPU by default — `from_pretrained` does NOT move
+    them to the GPU. Measured 2026-06-05: without the explicit `.to(DEVICE)` below, canary transcribed
+    on CPU at ~0 VRAM, which is SILENT slow-path degradation in a live voice loop (the exact thing
+    fail-loud forbids). So we move it to the GPU explicitly + set eval. COMPANY_CANARY_DEVICE=cpu opts
+    INTO the CPU path deliberately (never silently)."""
     global _model, _kind
     if _model is None:
         try:
@@ -53,6 +60,9 @@ def _engine():
                     "NeMo (with Canary-Qwen support) not installed — `pip install -U "
                     "nemo_toolkit['asr']` into the canary venv (see voice/ears/REQUIREMENTS.md). "
                     "CUDA-13 hazard: verify the GPU path loads.") from e
+        if DEVICE.startswith("cuda"):                         # NeMo loads to CPU; move to GPU explicitly
+            _model = _model.to(DEVICE)
+        _model.eval()
     return _model, _kind
 
 

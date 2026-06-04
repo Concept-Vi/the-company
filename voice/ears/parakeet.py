@@ -28,13 +28,19 @@ from voice.ears._stt_service import serve  # noqa: E402
 
 PORT = 2031
 MODEL = os.environ.get("COMPANY_PARAKEET_MODEL", "nvidia/parakeet-tdt-0.6b-v3")
+DEVICE = os.environ.get("COMPANY_PARAKEET_DEVICE", "cuda")
 
 _model = None
 
 
 def _engine():
     """Lazy singleton NeMo ASR model. Heavy import guarded → a clear install message, never a crash on
-    import of this module (so the stdlib _stt_service shell stays cheap)."""
+    import of this module (so the stdlib _stt_service shell stays cheap).
+
+    DEVICE: NeMo's ASRModel.from_pretrained placed parakeet on the GPU here (measured ~3.05 GB resident
+    2026-06-05) — but we move it to DEVICE explicitly anyway, so the GPU path is GUARANTEED, not
+    relied-on (canary's SALM did NOT auto-place → silent CPU; this makes parakeet robust to the same).
+    COMPANY_PARAKEET_DEVICE=cpu opts into CPU deliberately."""
     global _model
     if _model is None:
         try:
@@ -44,6 +50,9 @@ def _engine():
                 "NeMo not installed — `pip install -U nemo_toolkit['asr']` into the parakeet venv "
                 "(see voice/ears/REQUIREMENTS.md). CUDA-13 hazard: verify the GPU path loads.") from e
         _model = nemo_asr.models.ASRModel.from_pretrained(model_name=MODEL)
+        if DEVICE.startswith("cuda"):                         # guarantee GPU placement (don't rely on auto)
+            _model = _model.to(DEVICE)
+        _model.eval()
     return _model
 
 
