@@ -990,6 +990,15 @@ class Suite:
                 lines.append(f"  · {nid} ({n['type']}, {n['status']}) — config={cfg} — output: {detail}")
             ctx += ("\nOPERATOR'S CURRENT FOCUS (co-presence — they have these selected on the canvas RIGHT "
                     "NOW; you may reference their full detail, including values):\n" + "\n".join(lines) + "\n")
+        # R2 — address-keyed context resolution. AFTER every existing block (they stay byte-for-byte;
+        # this only APPENDS). The retrieval key is now the ADDRESS THE OPERATOR IS AT — read via the
+        # getter `current_locus()` (R1's read seam; R2 is its first PRODUCTION caller, the I7-left-it-
+        # unwired precedent now closed) so info attached to the locus + its ancestors (I6 annotations,
+        # I7 chats, addressed events) auto-resolves here, BOUNDED by the relevance/recency decay so it
+        # cannot flood the window (the §21.10 tension R2 exists to kill). No locus / nothing attached →
+        # _resolve_context_at returns '' and nothing is injected (the keyword consult path stays the
+        # fallback). Fail-loud-LEGIBLE inside the helper (a warn + '' on error), never crash-the-turn.
+        ctx += self._resolve_context_at(self.current_locus())
         return ctx
 
     def _describe_ui_address(self, address: str) -> str:
@@ -1041,6 +1050,187 @@ class Suite:
         has no production caller yet (the I7-left-R2-unwired precedent), it is the read seam R2 hangs
         off."""
         return self._current_locus
+
+    # ============================================================================================
+    # R2 — address-keyed context resolution (the keystone of the RESOLUTION group)
+    # ============================================================================================
+    # IS (today): retrieval is KEYWORD-keyed — `_consult_terms` extracts salient terms,
+    # `_retrieve_for_consult` scans the repo by term-hit count, bounded only by CONSULT_CAP=40000
+    # (the consult context-flood is the RHM's worst wound — §21.4#3 / seams-rhm Seam 4).
+    # SHOULD-BE: the ADDRESS the operator is AT (R1's `current_locus()`) becomes the retrieval key.
+    # Info attached to the locus (I6 annotations + I7 chats + addressed events) — and its ancestors in
+    # the address tree — auto-resolves into the RHM context at that locus. A relevance/recency DECAY
+    # bounds it so it CANNOT flood the window (the §21.10 context-flood tension — without decay,
+    # auto-resolve recreates the 396k-char stuffing R2 exists to KILL). The keyword scan REMAINS as a
+    # fallback (no locus / no addressed match) — it is just no longer the PRIMARY key.
+    #
+    # The decay weights + the window budget are NAMED config constants (D2-configurable, never bare
+    # literals — the guide's "name the weights: recency · proximity · pin"):
+    R2_LAMBDA = 1.0 / (3 * 24 * 3600)   # recency decay rate (per second). exp(-LAMBDA*Δt): the score
+    #                                     halves at ~ln2/LAMBDA ≈ 2 days; an item ~3 days old decays to
+    #                                     1/e. Tuned so "recent" wins inside a working session/few days
+    #                                     while week-old chatter fades — without a pin it can still drop.
+    R2_PROXIMITY_WEIGHT = 1.0           # coefficient on tree-distance in 1/(1+W*proximity). The bare
+    #                                     pseudocode is 1/(1+proximity); W makes the proximity term's
+    #                                     STRENGTH explicit + tunable (W>1 punishes distance harder).
+    R2_PIN_WEIGHT = 1.0                 # additive bonus for an explicitly pinned item. ≥ the max
+    #                                     recency*proximity term (1.0 at exact+now) so a PIN always
+    #                                     outranks an unpinned item regardless of age/distance — pinning
+    #                                     is the operator's explicit "keep this in view" override.
+    R2_BUDGET = 4000                    # max chars of resolved addressed context injected into the RHM
+    #                                     window (~1k tokens). attention = BUDGET; the cap is ENFORCED —
+    #                                     never stuffed. Far below CONSULT_CAP: this is the always-on
+    #                                     locus slice that rides EVERY turn, not a one-shot consult read.
+
+    @staticmethod
+    def address_tree_distance(a: str, b: str) -> int:
+        """Tree-distance between two `ui://` addresses — closer in the address tree = smaller.
+        Strip the `ui://` scheme, split the remainder on `/`, take the common-prefix length, then
+        distance = (len(a)-common) + (len(b)-common). Exact match → 0; parent/child → 1; sibling → 2.
+        A non-`ui://` or empty operand degrades to its raw segments (no crash — distance is still a
+        well-defined non-negative int). Pure + deterministic (proven directly in the R2 test)."""
+        def segs(x: str) -> list:
+            x = x or ""
+            if x.startswith("ui://"):
+                x = x[len("ui://"):]
+            return [s for s in x.split("/") if s != ""]
+        sa, sb = segs(a), segs(b)
+        common = 0
+        for x, y in zip(sa, sb):
+            if x == y:
+                common += 1
+            else:
+                break
+        return (len(sa) - common) + (len(sb) - common)
+
+    def _r2_score(self, item: dict, locus: str, now) -> float:
+        """Score ONE gathered item by the relevance/recency decay (the guide pseudocode):
+            recency   = exp(-R2_LAMBDA * (now - ts))                 # newer = heavier
+            proximity = address_tree_distance(locus, item.address)   # closer in the tree = heavier
+            pin_bonus = R2_PIN_WEIGHT if item.pinned else 0.0
+            score     = recency * (1/(1 + R2_PROXIMITY_WEIGHT*proximity)) + pin_bonus
+        `now` is a tz-aware datetime (injected for deterministic tests); `ts` is the store's
+        ISO-8601 UTC string (`datetime.now(timezone.utc).isoformat()` → `+00:00`, fromisoformat-safe).
+        A missing/unparseable ts → recency 0 (treated as infinitely old, never a crash)."""
+        import math
+        from datetime import datetime
+        ts_raw = item.get("ts")
+        try:
+            ts = datetime.fromisoformat(ts_raw)
+            delta = (now - ts).total_seconds()
+            recency = math.exp(-self.R2_LAMBDA * max(0.0, delta))
+        except Exception:
+            recency = 0.0
+        proximity = self.address_tree_distance(locus, item.get("address", ""))
+        pin_bonus = self.R2_PIN_WEIGHT if item.get("pinned") else 0.0
+        return recency * (1.0 / (1.0 + self.R2_PROXIMITY_WEIGHT * proximity)) + pin_bonus
+
+    def _r2_ancestors(self, locus: str) -> list:
+        """The locus address + each ANCESTOR up the `ui://` tree (so proximity is a LIVE dimension,
+        not a dead term — a locus-exact item outranks a parent-address item end-to-end; faithful to
+        the guide's "addresses/types/screens"). Each candidate is validated against the S0 grammar
+        (`parse_ui_address`); an ancestor that doesn't parse is SKIPPED (never a crash, never a junk
+        key). Walks up to the region root (the first segment after the scheme), inclusive of locus."""
+        from contracts.ui_info import parse_ui_address
+        out, seen = [], set()
+        if not (isinstance(locus, str) and locus.startswith("ui://")):
+            return out
+        rest = locus[len("ui://"):]
+        parts = [p for p in rest.split("/") if p != ""]
+        # locus first (exact), then each shorter prefix down to the region root (1 segment).
+        for n in range(len(parts), 0, -1):
+            cand = "ui://" + "/".join(parts[:n])
+            if cand in seen:
+                continue
+            try:
+                parse_ui_address(cand)                # S0 grammar gate — skip anything malformed
+            except Exception:
+                continue
+            seen.add(cand); out.append(cand)
+        return out
+
+    def _r2_events_at(self, address: str) -> list:
+        """Addressed EVENTS at `address` — the 3rd gather source (I6 annotations + I7 chats +
+        addressed events, per the guide). Events ride the open `append_event` record with an additive
+        `address` field (annotate/attach_chat already emit them; suite.py:1773/1816). Filter the
+        shared events.jsonl by that field; newest-first. Reads disk every call (no in-memory cache),
+        so a reload sees prior writes. NOTE these partly RE-NARRATE the annotations/chats already
+        gathered (they are the S2 visibility echoes) — included because the guide names them; they are
+        narration, not new substance, and the budget cap absorbs the overlap."""
+        out = []
+        for e in self.store.recent_events(500):
+            if e.get("address") == address:
+                out.append({"kind": "event", "address": address, "ts": e.get("ts"),
+                            "text": f"[event] {e.get('kind', '')}: {e.get('summary', '')}",
+                            "pinned": False})
+        return out
+
+    def _r2_gather(self, locus: str) -> list:
+        """GATHER every item attached to the locus AND its ancestors (I6 annotations via
+        `annotations_at`, I7 chats via `chats_at`, addressed events). Each item is normalised to a
+        common shape `{kind, address, ts, text, pinned}` so the decay scores them uniformly. The
+        `pinned` flag rides free off the open annotation/chat record (schema-additive — an old record
+        with no `pinned` field reads as unpinned). REUSES R1's locus consumers (annotations_at /
+        chats_at — never duplicated). Address validation lives in those helpers (S0 gate); the
+        ancestors are pre-validated by `_r2_ancestors`."""
+        items = []
+        for addr in self._r2_ancestors(locus):
+            for a in self.annotations_at(addr):
+                items.append({"kind": "annotation", "address": addr, "ts": a.get("ts"),
+                              "text": f"[comment @ {addr}] {a.get('text', '')}",
+                              "pinned": bool(a.get("pinned"))})
+            for c in self.chats_at(addr):
+                items.append({"kind": "chat", "address": addr, "ts": c.get("ts"),
+                              "text": f"[chat @ {addr}] {c.get('role', '')}: {c.get('text', '')}",
+                              "pinned": bool(c.get("pinned"))})
+            items.extend(self._r2_events_at(addr))
+        return items
+
+    def _r2_score_and_cap(self, items: list, locus: str, now) -> list:
+        """Score each item by the decay, sort DESC, then `budget_cap` — accumulate text until R2_BUDGET
+        is reached and STOP (cap the window, NEVER stuff). Returns the surviving items in score order.
+        The cap is the keystone (the guide's THE-critical requirement): with more items than the budget,
+        only the highest-scoring (recent + proximate + pinned) survive; the rest are DROPPED, so R2 can
+        never recreate the context-flood it exists to kill."""
+        scored = sorted(items, key=lambda it: self._r2_score(it, locus, now), reverse=True)
+        out, total = [], 0
+        for it in scored:
+            t = it.get("text", "") or ""
+            if total + len(t) > self.R2_BUDGET and out:       # cap is hard once we have at least one item
+                break
+            out.append(it); total += len(t)
+            if total >= self.R2_BUDGET:
+                break
+        return out
+
+    def _resolve_context_at(self, locus: str | None, now=None) -> str:
+        """The R2 entry point: resolve the BOUNDED, address-keyed context slice at the operator's locus.
+        Returns a ready-to-inject block string, or '' when there is no locus / nothing attached (so the
+        caller skips injection cleanly). FAIL-LOUD-LEGIBLE, never crash-the-turn (mirrors _chat_context's
+        own model-registry guard — a raise here would break EVERY turn): a gather/score error warns +
+        returns '' rather than propagating."""
+        from datetime import datetime, timezone
+        if not locus:
+            return ""
+        if now is None:
+            now = datetime.now(timezone.utc)
+        try:
+            items = self._r2_gather(locus)
+            if not items:
+                return ""
+            capped = self._r2_score_and_cap(items, locus, now)
+            if not capped:
+                return ""
+            lines = "\n".join("  · " + (it.get("text", "") or "") for it in capped)
+            return ("\nCONTEXT RESOLVED AT YOUR LOCUS (info attached to the address the operator is at — "
+                    f"{locus} — and its ancestors, bounded by relevance/recency decay; this is what's "
+                    "relevant HERE, answer with respect to it):\n" + lines + "\n")
+        except Exception as e:
+            # locus-BOUND warning (not a locus-less system-health one) — the failure happened AT this
+            # address, so it carries `address=locus` (event_address_acceptance: every _emit is stamped
+            # or a documented locus-less exclusion; this one is honestly locus-bound).
+            self._emit("warning", f"R2 context resolution failed ({type(e).__name__})", address=locus)
+            return ""
 
     # The RHM signals intent with a trailing `ACTION:` line; the dispatcher enforces a
     # WHITELIST so the conversational surface can never reach apply/delete/file-write (E6).
