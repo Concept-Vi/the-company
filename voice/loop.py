@@ -136,10 +136,14 @@ def select_persona(persona_id: str, bridge_url: str | None = None) -> dict:
 
 def loop_turn(audio: bytes, persona_id: str, *, graph_id: str = "codebase",
               stt_provider: str | None = None, bridge_url: str | None = None,
-              think_fn=None, on_transcript=None, on_reply=None) -> dict:
+              think_fn=None, speak_reply: bool = True, on_transcript=None, on_reply=None) -> dict:
     """ONE full turn of the circuit for a given character:
         audio (a finished utterance) → transcript → brain reply → wav in that character's voice.
     Returns {"transcript", "reply", "engine", "voice", "wav": <bytes>, "action", "mode"}.
+    `speak_reply` is the per-mode VOICE GATE (G4.4): when False (the mode's voice_enabled is off — a
+    text-only presence), the SPEAK step is skipped — hear→think still run, wav is b"" and engine/voice
+    are None. The bridge passes Suite.voice_enabled() here so a text-only mode never synthesises audio
+    (and never boots an engine for nothing), honouring the per-mode toggle in the circuit itself.
     `on_transcript`/`on_reply` are optional callbacks (the UI shows them as they arrive — streaming feel).
     `think_fn` is the INJECTABLE brain step (the module docstring's "each step an injectable callable so
     the bridge can repoint them"): a callable `(transcript) -> {"reply", "action"?, "mode"?}`. When the
@@ -160,10 +164,13 @@ def loop_turn(audio: bytes, persona_id: str, *, graph_id: str = "codebase",
     reply = thought.get("reply", "")
     if on_reply:
         on_reply(reply)
+    if not speak_reply:                                     # G4.4: voice off for this mode → text-only turn
+        return {"transcript": transcript, "reply": reply, "engine": None, "voice": None,
+                "wav": b"", "spoke": False, "action": thought.get("action"), "mode": thought.get("mode")}
     voice_arg = _voice_arg_for(p)
     wav = speak(reply, p["engine"], voice=voice_arg)
     return {"transcript": transcript, "reply": reply, "engine": p["engine"],
-            "voice": voice_arg, "wav": wav, "action": thought.get("action"),
+            "voice": voice_arg, "wav": wav, "spoke": True, "action": thought.get("action"),
             "mode": thought.get("mode")}
 
 

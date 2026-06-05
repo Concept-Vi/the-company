@@ -286,26 +286,30 @@ class H(BaseHTTPRequestHandler):
                 audio = self.rfile.read(int(self.headers.get("Content-Length", 0)))
                 if not audio:
                     raise ValueError("/api/voice/turn got empty audio (fail loud)")
+                # G4.4 voice gate: the per-mode voice_enabled toggle. When voice is OFF (a text-only
+                # presence), the turn is hear→think only — no speak, and NO engine boot for nothing.
+                speak_reply = SUITE.voice_enabled()
                 # BOOT-ON-DEMAND ("make it all live"): the persona needs its TTS engine up. Check BEFORE
-                # the turn so we don't burn a brain call then fail at speak. If down: ?boot=1 launches it
-                # (returns 'booting' — the UI shows warming + retries when up; we do NOT block the request
-                # ~25s); else a legible, actionable refusal naming the load endpoint (no silent stall).
+                # the turn so we don't burn a brain call then fail at speak. Only when we WILL speak. If
+                # down: ?boot=1 launches it (returns 'booting' — the UI shows warming + retries when up;
+                # we do NOT block the request ~25s); else a legible refusal naming the load endpoint.
                 from voice import lifecycle as voice_lc, personas as voice_personas
                 eng = voice_personas.get_persona(persona)["engine"]   # fail loud on unknown persona
-                svc = voice_lc.engine_service_for(eng)
-                if svc and not voice_lc.is_up(voice_lc._loadable()[svc]):
-                    if vq.get("boot") == "1":
-                        booted = voice_lc.load(svc)               # warming; fail-loud if it won't fit
-                        self._send(200, json.dumps({"booting": booted, "persona": persona, "engine": eng,
-                            "note": f"engine {eng} is loading — retry the turn when status() shows it up"}))
-                        return
-                    raise RuntimeError(
-                        f"persona {persona!r} needs TTS engine {eng!r} ({svc}) which is DOWN — load it "
-                        f"first (POST /api/voice/load {{\"service\":\"{svc}\"}}) or call this with ?boot=1. "
-                        f"Refusing a silent stall (fail loud).")
+                if speak_reply:
+                    svc = voice_lc.engine_service_for(eng)
+                    if svc and not voice_lc.is_up(voice_lc._loadable()[svc]):
+                        if vq.get("boot") == "1":
+                            booted = voice_lc.load(svc)           # warming; fail-loud if it won't fit
+                            self._send(200, json.dumps({"booting": booted, "persona": persona, "engine": eng,
+                                "note": f"engine {eng} is loading — retry the turn when status() shows it up"}))
+                            return
+                        raise RuntimeError(
+                            f"persona {persona!r} needs TTS engine {eng!r} ({svc}) which is DOWN — load it "
+                            f"first (POST /api/voice/load {{\"service\":\"{svc}\"}}) or call this with ?boot=1. "
+                            f"Refusing a silent stall (fail loud).")
                 ear = SUITE.rhm_config().get("stt") or voice_stt.active_ear()
                 r = voice_loop.loop_turn(
-                    audio, persona, graph_id=gid, stt_provider=ear,
+                    audio, persona, graph_id=gid, stt_provider=ear, speak_reply=speak_reply,
                     think_fn=lambda txt: SUITE.chat(txt, gid))    # the ONE in-process brain
                 wav = r.pop("wav", b"")
                 r["wav_b64"] = _b64.b64encode(wav).decode()       # the spoken reply, travels with the text
