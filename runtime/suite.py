@@ -937,7 +937,27 @@ class Suite:
             f"- panels: {panels_s}\n"
             f"- recent activity: {evs}\n"
         )
-        selected = [s for s in (focus or {}).get("selected", []) if s in by]
+        # I1 — the operator's focus is now a WIDENED vocabulary (seams-rhm Seam 4: widen the EXISTING
+        # `focus` plug-in point, never a new mechanism). A `focus.selected` value is EITHER a canvas
+        # node-id (the existing co-presence path — UNCHANGED) OR a `ui://` address (a clicked addressed
+        # element — the new "indicating" path). We BRANCH on the value, additively:
+        #   • s.startswith("ui://")  → resolve via the S1 UI registry → an INDICATING block (NEW)
+        #   • elif s in by           → the canvas-node co-presence block (PRESERVED byte-for-byte)
+        #   • else                   → a stale node-id: dropped, exactly as before (NOT fail-loud — a
+        #                              vanished selection is normal; only an UNRESOLVED ui:// fails loud)
+        # The ui:// check comes FIRST so a clicked address can never be silently swallowed by the
+        # `s in by` node-id filter (rule 4). An unregistered ui:// is injected AS the address with an
+        # "(unregistered)" marker — surfaced honestly, never dropped.
+        raw_selected = (focus or {}).get("selected", [])
+        indicated = [s for s in raw_selected if isinstance(s, str) and s.startswith("ui://")]
+        selected = [s for s in raw_selected if s not in indicated and s in by]
+        if indicated:
+            ilines = []
+            for addr in indicated:
+                ilines.append("  · " + self._describe_ui_address(addr))
+            ctx += ("\nOPERATOR IS INDICATING (they clicked these addressed UI element(s) RIGHT NOW — "
+                    "this is the locus their message is about; answer with respect to the indicated "
+                    "thing):\n" + "\n".join(ilines) + "\n")
         if selected:
             lines = []
             for nid in selected:
@@ -949,6 +969,42 @@ class Suite:
             ctx += ("\nOPERATOR'S CURRENT FOCUS (co-presence — they have these selected on the canvas RIGHT "
                     "NOW; you may reference their full detail, including values):\n" + "\n".join(lines) + "\n")
         return ctx
+
+    def _describe_ui_address(self, address: str) -> str:
+        """I1 — resolve a clicked `ui://` address → a human-meaningful description for the RHM context,
+        from the S1 UI registry (UI_REGISTRY, served as /api/ui_info → build_ui_info). ONE-SOURCE
+        (rule 3/8): the description comes from the registry row's own `title`, never invented.
+
+        The registry carries TWO key conventions (both legitimate, S1):
+          • the 9 hand-authored REGION rows are bare-keyed (`ref="inbox"`, kind="chrome") and are SERVED
+            as the full address `ui://chrome/inbox` (canvas-kind serves as `ui://canvas/*`);
+          • the corpus ELEMENT rows are full-string-keyed (`ref="ui://inbox/build-review"`).
+        So we match an incoming full address against EITHER form (a region row's served form OR an
+        element row's full key) — never the naive `ui://{kind}/{ref}` builder (it produces the malformed
+        `ui://chrome/ui://inbox/build-review` for element rows; that builder is for the bare-region
+        show-targets vocabulary only).
+
+        FAIL LOUD (rule 4 — HARD CONSTRAINT): a malformed address raises (S0 grammar gate); a well-formed
+        but UNREGISTERED address returns the address tagged "(unregistered)" — surfaced in the context,
+        NEVER silently dropped, so the RHM (and the operator) sees the gap honestly."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                              # S0 grammar gate — raises on malformed
+        for row in self.UI_REGISTRY:
+            ref, kind, title = row[0], row[1], row[2]
+            served = "ui://canvas/*" if kind == "canvas" else f"ui://{kind}/{ref}"
+            if ref == address or served == address:           # element full-key OR region served-form
+                # Build the human description from the registry row (ONE-SOURCE): the `title` for the
+                # hand-authored region rows ("Inbox", "Toolbar"); the corpus `represents` (the feature-id,
+                # e.g. "RUN-run") for the element rows whose title falls back to the address. The address
+                # is always shown so the locus is exact.
+                extras = row[5] if len(row) > 5 else {}
+                represents = (extras or {}).get("represents")
+                if title and title != address:                # region rows carry a real human title
+                    return f"{title} ({address})"
+                if represents:                                # element rows carry the feature-id
+                    return f"{address} — represents {represents}"
+                return address                                 # registered, no extra descriptor available
+        return f"{address} (unregistered)"                    # fail-loud-legible: gap surfaced, not dropped
 
     # The RHM signals intent with a trailing `ACTION:` line; the dispatcher enforces a
     # WHITELIST so the conversational surface can never reach apply/delete/file-write (E6).

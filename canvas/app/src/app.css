@@ -320,6 +320,26 @@ button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
   border-radius:6px;transition:outline-color .2s, box-shadow .2s;animation:spotlight-pulse 1.1s ease-in-out 2}
 @keyframes spotlight-pulse{0%,100%{outline-color:var(--sig)}50%{outline-color:var(--warn)}}
 
+/* I1 · click-to-indicate — the PERSISTENT visible selection on the addressed element the operator has
+   clicked to indicate (the locus their next chat turn is about). Distinct from .ui-spotlight (the
+   transient show-resolver ring): this stays until they indicate something else or clear it. Built on the
+   corpus accent tokens (--sig=--acc, --acc-glow) — no literals, no bespoke colour (design-lint clean).
+   Outline + inset glow are paint-only (no layout reflow), so indicating any element is non-destructive. */
+.ui-indicated{outline:2px solid var(--sig) !important;outline-offset:2px;border-radius:6px;
+  box-shadow:inset 0 0 0 1px var(--sig-dim), 0 0 16px -4px var(--sig) !important;
+  background:var(--acc-glow)}
+/* the indicating chip in the RHM chat (above the input) — shows the locus + a clear. Reuses the corpus
+   panel/accent vocabulary (the same tokens the surrounding HUD uses); compact, single line. */
+.rhm-indicating{display:flex;align-items:center;gap:6px;margin:6px 8px 0;padding:4px 8px;
+  background:var(--acc-glow);border:1px solid var(--sig-dim);border-radius:6px;
+  font-size:10.5px;color:var(--ink);min-width:0}
+.rhm-indicating .ic{color:var(--sig);flex:none}
+.rhm-indicating .ind-addr{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-family:"IBM Plex Mono",ui-monospace,monospace;color:var(--dim)}
+.rhm-indicating .ind-clear{flex:none;background:transparent;border:0;color:var(--dim);cursor:pointer;
+  font-size:11px;line-height:1;padding:2px 4px;border-radius:4px}
+.rhm-indicating .ind-clear:hover{color:var(--ink);background:var(--s2)}
+
 /* B-frontend: the walkthrough card — the visible review organ. A new .hud region (top-centre, under the
    toolbar) shown only while a review session is active. Reuses the panel/coa/surf vocabulary. */
 /* U9: top:72px (was 64) keeps the card's header fully clear of the toolbar even when the U8 context-hint

@@ -64,6 +64,15 @@ export function useAppController(editor: Editor) {
   const [chat, setChat] = useState<any[]>([])
   const [chatMsg, setChatMsg] = useState('')
   const [chatBusy, setChatBusy] = useState(false)
+  // I1 · click-to-indicate: the ui:// address of the element the operator has CLICKED to indicate (the
+  // locus their next chat turn is about). null = nothing indicated. This is the WIDENED `focus`
+  // vocabulary (seams-rhm Seam 4): a ui:// address rides in the SAME `focus.selected` list as canvas
+  // node-ids — the backend `_chat_context` branches on the value (ui:// → INDICATING block; node-id →
+  // co-presence block). We mirror the address in React (the chip / shipped focus) AND apply a PERSISTENT
+  // `.ui-indicated` class on the DOM element (the visible selection — FORM), distinct from F4's TRANSIENT
+  // `.ui-spotlight` ring (which the show-resolver flashes and removes after a timeout).
+  const [indicated, setIndicated] = useState<string | null>(null)
+  const indicatedRef = useRef<string | null>(null)   // for the capture handler (avoids a stale closure)
   const [cfg, setCfg] = useState<any>({ model: '', persona: '' })
   const [cfgOpen, setCfgOpen] = useState(false)
   // U12: the /api/inbox payload is { live_escalations, resolved_for_you, batched, counts }. `batched` is a
@@ -436,14 +445,62 @@ export function useAppController(editor: Editor) {
     for (const s of sel) await api.del(s.props.nodeId)
     setNotice(`deleted ${sel.length} node(s)`); await reload()
   }
+  // I1 · click-to-indicate. Make `addr` the indicated locus: paint the PERSISTENT visible selection on
+  // its DOM element (single-selection — clear any prior one first) and mirror it in React (the chip +
+  // the shipped focus). Passing null/an unresolvable address CLEARS the indication. The class is applied
+  // to the element whose data-ui-ref attribute equals the full ui:// address (F4 stamps these); if that
+  // element isn't in the DOM right now we still keep the address as the locus (the backend resolves it
+  // from the registry), just without a visible ring — surfaced, never a silent no-op.
+  function clearIndicatedDom() {
+    document.querySelectorAll('.ui-indicated').forEach(el => el.classList.remove('ui-indicated'))
+  }
+  function indicate(addr: string | null) {
+    clearIndicatedDom()
+    if (!addr) { indicatedRef.current = null; setIndicated(null); setNotice('indication cleared'); return }
+    indicatedRef.current = addr; setIndicated(addr)
+    const el = document.querySelector('[data-ui-ref="' + addr + '"]') as HTMLElement | null
+    if (el) el.classList.add('ui-indicated')
+    const title = getUI_INFO()[addr]?.title
+    setNotice('indicating ' + (title || addr) + ' — your next message is about this')
+  }
+  // A document-level CAPTURE listener: a click on any element carrying a ui:// data-ui-ref INDICATES it.
+  // Capture phase + read the nearest [data-ui-ref] ancestor so a click on an inner glyph still resolves
+  // to the addressed container; we DON'T preventDefault/stopPropagation — indicating is additive, the
+  // element's own onClick still fires (a RUN button still runs AND becomes the indicated locus). Only
+  // FULL ui:// refs indicate (the locus vocabulary); bare-handle legacy refs are skipped.
+  // EXCLUSION (advisor): the RHM chat's OWN operating controls (ui://chat/* — input, send, mic, config,
+  // model-field, all F4-stamped) are how the operator CONVERSES, not things they point at. Without this
+  // the most basic flow self-destructs: click an element to indicate it → click the chat input to type →
+  // the input's ui://chat/input would OVERWRITE the locus → every message becomes "about the input/send".
+  // So a click anywhere inside the chat region (the .rhm container is bare-keyed "chat") leaves the
+  // current indication UNTOUCHED — you point with the rest of the surface, then talk in the chat.
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      const tgt = e.target as HTMLElement | null
+      if (tgt?.closest?.('[data-ui-ref="chat"]')) return    // inside the chat region → conversing, never indicating
+      const t = tgt?.closest?.('[data-ui-ref]') as HTMLElement | null
+      if (!t) return
+      const ref = t.getAttribute('data-ui-ref') || ''
+      if (!ref.startsWith('ui://')) return       // only full ui:// addresses are loci (skip bare/run:// carriers)
+      if (ref === indicatedRef.current) { indicate(null); return }   // click the indicated thing again → toggle off
+      indicate(ref)
+    }
+    document.addEventListener('click', onDocClick, true)   // capture: see it before the element's own onClick stops it
+    return () => document.removeEventListener('click', onDocClick, true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   async function sendChat(override?: string) {
     const m = (override ?? chatMsg).trim()
     if (!m || chatBusy) return
     setChatMsg(''); setChatBusy(true)
     setChat(c => [...c, { role: 'user', text: m }])
     try {
-      // co-presence: the RHM sees what the operator has selected on the canvas right now
-      const selected = (editor.getSelectedShapes().filter(s => s.type === 'node') as NodeShape[]).map(s => s.props.nodeId)
+      // co-presence: the RHM sees what the operator has selected on the canvas right now (node-ids) AND
+      // the ui:// address they've CLICKED to indicate (I1) — BOTH ride in the one `focus.selected` list
+      // (the widened vocabulary; the backend branches on each value). The indicated address goes first so
+      // the INDICATING block leads when both are present.
+      const nodeIds = (editor.getSelectedShapes().filter(s => s.type === 'node') as NodeShape[]).map(s => s.props.nodeId)
+      const selected = indicatedRef.current ? [indicatedRef.current, ...nodeIds] : nodeIds
       const r = await api.chat(m, { selected })
       // F5 · the named bug. On a backend 400 (model unreachable — the literal first thing an operator hits)
       // api.chat now resolves to a normalized `{error}` (api.ts jr). BEFORE F5 this did `setChat(r.history)`
@@ -782,7 +839,7 @@ export function useAppController(editor: Editor) {
     edges, running, runError, runStartedAt, runElapsed, types, gname, gspec, surf, growMsg, workshop,
     oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
     showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn,
-    wtSpoke, wtBusy, selected, mobileTab, fleet,
+    wtSpoke, wtBusy, selected, mobileTab, fleet, indicated,
     // refs the components read for the inspector form
     configByNode,
     // setters the components call directly
@@ -792,7 +849,7 @@ export function useAppController(editor: Editor) {
     poll, openCoa, reload, fitGraph, addNode, wireSelected, doConnect, setNodeConfig, surfaceOutput,
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
     resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, fieldValue,
-    setField, revertLast, approveApply, doRun, refreshFleet,
+    setField, revertLast, approveApply, doRun, refreshFleet, indicate,
   }
 }
 

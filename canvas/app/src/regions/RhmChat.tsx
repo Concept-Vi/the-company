@@ -16,7 +16,7 @@ import { useApp } from '../AppContext'
 import { registryStore } from '../registryStore'
 
 export function RhmChat() {
-  const { cfg, cfgOpen, chat, chatBusy, chatMsg, recording, setCfg, setCfgOpen, setChatMsg, applyCfg, sendChat, recordToggle } = useApp()
+  const { cfg, cfgOpen, chat, chatBusy, chatMsg, recording, indicated, setCfg, setCfgOpen, setChatMsg, applyCfg, sendChat, recordToggle, indicate } = useApp()
   // the live chat-model registry — same source the node-config model dropdown reads (MODEL_OPTIONS.chat_models).
   const registry = useSyncExternalStore(registryStore.subscribe, registryStore.getSnapshot)
   const chatModels = registry.MODEL_OPTIONS.chat_models || []
@@ -56,6 +56,16 @@ export function RhmChat() {
         ))}
         {chatBusy && <div className="msg assistant"><span className="who">vi</span><span className="txt muted">thinking…</span></div>}
       </div>
+      {/* I1 · click-to-indicate: when the operator has clicked an addressed element, a chip shows the
+          indicated locus (their next message is about it) + a clear (✕). NB: NO data-ui-ref on the chip
+          or its ✕ — they are not addressed loci themselves (clicking one must not re-indicate the chip). */}
+      {indicated && (
+        <div className="rhm-indicating" title="your next message is about this element">
+          <span className="ic">⌖</span>
+          <span className="ind-addr">{indicated}</span>
+          <button className="ind-clear" onClick={() => indicate(null)} title="stop indicating">✕</button>
+        </div>
+      )}
       <div className="rhm-input">
         <input placeholder="ask the company about itself…" data-ui-ref="ui://chat/input" value={chatMsg}
           onChange={e => setChatMsg(e.target.value)}
