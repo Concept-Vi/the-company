@@ -18,6 +18,15 @@
       "routes_on": "resolves:false -> drift(repair corpus) | referenced_by 2+ -> shared symbol (a change there ripples; surface) | id-collision -> surface",
       "tool": "_system/symbols.py",
       "model_augmentation": "a model annotates each symbol with what it actually does + flags where a symbol is referenced by features whose represents-claim it doesn't match (semantic, on top of this structural reverse map). The REVERSE complement of code-ref-validator: that one is forward (ref -> does it resolve), this one is the symbol -> who-references-it index — the code:// branch of the Block 17-18 universal coordinate, giving the future local-AI layer one canonical symbol list to do semantic checks against."
+    },
+    "code-dependency-graph": {
+      "id": "code-dependency-graph",
+      "layer": "structural",
+      "reads": "the real Python source under ~/company (READ-ONLY, stdlib ast) — the same SEARCH_DIRS refcheck/symbols search",
+      "emits": "the STRUCTURAL symbol->symbol code-dependency graph (Convergence X10) — _system/code-edges.json, keyed by the SAME code://<file-stem>/<symbol> ids symbols.py uses (one coordinate system, NOT a parallel), each entry: depends_on[] (dependencies-to-RESPECT) · depended_by[] (dependents-to-VERIFY) · resolves. DIRECT edges stored; transitive reach is a BOUNDED query (codeedges.reach / reach_report) capped at DEPTH (2-3 hops, X17-configurable via CODEEDGES_DEPTH, default 2), a reach hitting the bound reported `capped` (no silent truncation). An unparseable/unreadable source file -> stale[] (resolves:false) — fail-loud, never dropped. Resolution is precise (same-file > import > unambiguous-global); an ambiguous bare name does NOT fan out — tallied as unresolved_refs.",
+      "routes_on": "depended_by 2+ -> a symbol whose change ripples (surface for VERIFY) | depends_on -> the dependencies a pointed self-build must RESPECT | stale -> fail-loud(surface; never silent) | the bounded reach -> the blast radius (X14: dependents-to-verify / dependencies-to-respect for a scope)",
+      "tool": "_system/codeedges.py",
+      "model_augmentation": "the SIBLING third branch beside code-ref-validator (forward: ref->resolve) and code-symbol-registry (reverse: symbol->who-references-it, corpus-artifact->symbol): this is symbol->symbol (which symbol CALLS/IMPORTS which) — the true code-dependency graph that existed NOWHERE before X10. The local-model layer LATER reasons over the structural edges semantically (e.g. 'this dependency is load-bearing vs incidental', 'this rename's blast radius is conceptually wider than the call graph shows') and feeds the semantic edges (X11) beside these structural ones into the same blast_radius."
     }
   }
 }
