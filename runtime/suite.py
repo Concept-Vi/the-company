@@ -878,11 +878,16 @@ class Suite:
                 and (t.get("text") or "").strip() not in twin_texts]
 
     # --- the right-hand-man: the coherent voice of the Company about ITSELF (I2) ---
-    def _chat_context(self, graph_id: str, focus: dict | None = None) -> str:
+    def _chat_context(self, graph_id: str, focus: dict | None = None, intent: str | None = None) -> str:
         """Compact GROUND TRUTH — live system state, not the codebase (context-05 rung 1).
         With `focus` (the operator's current canvas selection), the RHM gains CO-PRESENCE:
         the focused nodes' full detail (output/config) — the shared perceptual field where
-        'context is a consequence of what I'm doing' (two planes, one state)."""
+        'context is a consequence of what I'm doing' (two planes, one state).
+
+        X13 (Convergence) — `intent` (the operator's current chat MESSAGE, passed by `chat()`) is the
+        SEMANTIC ranking query for R2: the locus context is ranked by RELEVANCE to what the operator is
+        actually asking, not just location+age. Optional (default None) so every existing caller is
+        unchanged (pre-X13 recency·proximity·pin ranking)."""
         nowv = self.now(graph_id)
         st = self.state(graph_id)
         by = {n["id"]: n for n in st["nodes"]}
@@ -1002,7 +1007,10 @@ class Suite:
         # `ui://canvas/<node>` locus to its `run://<graph_id>/<node>` counterpart (version-history L6 +
         # node events). The bridge is guarded (only a canvas-node in THIS graph maps); a non-canvas locus
         # or a node absent from graph_id skips the run:// step, leaving the ui:// resolution unchanged.
-        ctx += self._resolve_context_at(self.current_locus(), graph_id=graph_id)
+        # X13 (Convergence) — pass `intent` (the operator's current chat message) so the locus context is
+        # SEMANTICALLY ranked (relevance to what they're asking), not just recency·proximity·pin. With no
+        # intent the ranking is the pre-X13 ordering; a down embedder degrades the term to 0 with a warning.
+        ctx += self._resolve_context_at(self.current_locus(), graph_id=graph_id, intent=intent)
         return ctx
 
     def _describe_ui_address(self, address: str) -> str:
@@ -1081,6 +1089,20 @@ class Suite:
     #                                     recency*proximity term (1.0 at exact+now) so a PIN always
     #                                     outranks an unpinned item regardless of age/distance — pinning
     #                                     is the operator's explicit "keep this in view" override.
+    R2_SEMANTIC_WEIGHT = 1.0            # X13 (Convergence) — coefficient on the SEMANTIC term:
+    #                                     + R2_SEMANTIC_WEIGHT * cosine(intent, item) in _r2_score. R2 ranked
+    #                                     attached context by recency·proximity·pin — by LOCATION + AGE, not
+    #                                     by RELEVANCE to what the operator is actually ASKING. This term ranks
+    #                                     the gathered context by relevance to the operator's intent (Tim's
+    #                                     "gather by relevance"). Default 1.0 → it sits at parity with the
+    #                                     recency·proximity term (max 1.0 at exact+now) and at parity with a
+    #                                     pin: a perfectly-on-topic item (cosine→1) gets the same lift a pin
+    #                                     does, so RELEVANCE is a first-class dimension beside the others.
+    #                                     A NAMED config knob (D2/X17 will env-wire it — a sane default here,
+    #                                     never a bare literal). DEGRADE-WITH-WARNING: when the embedder
+    #                                     (:8001) is unreachable the term degrades to 0 + a loud warning and
+    #                                     R2 falls back to the proven recency·proximity·pin ranking (the term
+    #                                     is ADDED — set it to 0 and the pre-X13 ordering is byte-for-byte).
     R2_RUN_VERSIONS = 3                 # X6 (Convergence) — max run://-keyed L6 versions the bridge
     #                                     contributes per locus. The bridged versions score at proximity 0
     #                                     (same node as the ui:// locus) — so without a bound a freshly-run
@@ -1118,15 +1140,26 @@ class Suite:
                 break
         return (len(sa) - common) + (len(sb) - common)
 
-    def _r2_score(self, item: dict, locus: str, now) -> float:
+    def _r2_score(self, item: dict, locus: str, now, semantic: float = 0.0) -> float:
         """Score ONE gathered item by the relevance/recency decay (the guide pseudocode):
             recency   = exp(-R2_LAMBDA * (now - ts))                 # newer = heavier
             proximity = address_tree_distance(locus, item.address)   # closer in the tree = heavier
             pin_bonus = R2_PIN_WEIGHT if item.pinned else 0.0
             score     = recency * (1/(1 + R2_PROXIMITY_WEIGHT*proximity)) + pin_bonus
+                        + R2_SEMANTIC_WEIGHT * semantic                 # X13 — RELEVANCE to the intent
         `now` is a tz-aware datetime (injected for deterministic tests); `ts` is the store's
         ISO-8601 UTC string (`datetime.now(timezone.utc).isoformat()` → `+00:00`, fromisoformat-safe).
-        A missing/unparseable ts → recency 0 (treated as infinitely old, never a crash)."""
+        A missing/unparseable ts → recency 0 (treated as infinitely old, never a crash).
+
+        X13 (Convergence) — the SEMANTIC term. `semantic` is the PRECOMPUTED cosine(intent_vec, item_vec)
+        in [-1, 1], supplied by `_r2_score_and_cap` (which embeds the operator's intent + each item's text
+        ONCE per turn — never per `_r2_score` call, so the sort stays cheap and the embed cost is O(items),
+        not O(items·log items)). KEEPING the cosine OUT of `_r2_score` is what keeps this method
+        per-turn-safe + crash-free: it does NO I/O, exactly as before; an embedder failure is handled at
+        the score+cap layer (degrade-to-0-with-warning), never here.
+        BACKWARD-COMPATIBLE: `semantic` defaults to 0.0, so the pre-X13 3-arg call
+        `_r2_score(item, locus, now)` is byte-for-byte the old recency·proximity·pin score — this is what
+        preserves addr_context_acceptance (every existing call passes no `semantic`)."""
         import math
         from datetime import datetime
         ts_raw = item.get("ts")
@@ -1138,7 +1171,8 @@ class Suite:
             recency = 0.0
         proximity = self.address_tree_distance(locus, item.get("address", ""))
         pin_bonus = self.R2_PIN_WEIGHT if item.get("pinned") else 0.0
-        return recency * (1.0 / (1.0 + self.R2_PROXIMITY_WEIGHT * proximity)) + pin_bonus
+        return (recency * (1.0 / (1.0 + self.R2_PROXIMITY_WEIGHT * proximity)) + pin_bonus
+                + self.R2_SEMANTIC_WEIGHT * semantic)
 
     def _r2_ancestors(self, locus: str) -> list:
         """The locus address + each ANCESTOR up the `ui://` tree (so proximity is a LIVE dimension,
@@ -1376,13 +1410,74 @@ class Suite:
             out.append(ev)
         return out
 
-    def _r2_score_and_cap(self, items: list, locus: str, now) -> list:
+    def _r2_semantic_map(self, intent: str | None, items: list) -> dict:
+        """X13 (Convergence) — embed the operator's `intent` and each gathered item's `text` ONCE per
+        turn, return `{id(item): cosine(intent_vec, item_vec)}` so `_r2_score_and_cap` can add a weighted
+        RELEVANCE term. Keyed by `id(item)` (not the text) so two items with identical text still get
+        their own entry and nothing collides.
+
+        REUSES THE EMBED FABRIC suite.py already reaches (NO new transport): the embeddings endpoint is
+        its OWN base_url (BGE-M3 @ :8001), called via `fabric.transport.openai_embeddings_transport`
+        + `fabric.client.complete_embeddings` — the exact path `nodes/embed.py` uses. Everything is
+        embedded in ONE call (intent + every item text) so the per-turn embed cost is a single round-trip.
+        The cosine MIRRORS `nodes/similarity.py` (dot/(‖a‖·‖b‖), inlined — no cross-module import of
+        design/_system or the node; a zero-magnitude vector degrades that one pair to 0, never a crash).
+
+        DEGRADE-WITH-WARNING (HARD CONSTRAINT — mirror suite.py:906 'embed model registry unreachable'):
+        if there is no intent, or the embedder is unreachable / the call errors, return `{}` (every item's
+        semantic term is 0) + emit a LOUD warning — so R2 FALLS BACK to the proven recency·proximity·pin
+        ranking. NEVER a silent zero-vector, NEVER a wrong cosine, NEVER a crash of the per-turn gather.
+        The empty-intent case is silent (no embedder fault — just no query this turn); only an embedder
+        FAILURE warns."""
+        intent = (intent or "").strip()
+        if not intent or not items:
+            return {}                                          # no query → no semantic term (not a fault)
+        import math
+        from fabric import client, transport, config as fcfg
+        texts = [(it.get("text", "") or "") for it in items]
+        try:
+            t = transport.openai_embeddings_transport(base_url=fcfg.DEFAULT_EMBED_URL)
+            # ONE round-trip: index 0 = the intent, 1..N = each item text (aligned to `items`).
+            vecs = client.complete_embeddings(t, [intent] + texts,
+                                              model=fcfg.DEFAULT_EMBED_MODEL, dim=fcfg.DEFAULT_EMBED_DIM)
+        except Exception as e:
+            # FAIL-LOUD-LEGIBLE, never crash the per-turn slice: warn (locus-less system-health warning,
+            # exactly like suite.py:906's embed-registry guard) and degrade — caller sees {} → all 0.
+            self._emit("warning",
+                       f"X13: embed endpoint unreachable for R2 semantic ranking ({type(e).__name__}) — "
+                       "semantic term degraded to 0; falling back to recency·proximity·pin")
+            return {}
+        intent_vec = vecs[0]
+        ni = math.sqrt(sum(x * x for x in intent_vec))
+        out = {}
+        for it, v in zip(items, vecs[1:]):
+            nv = math.sqrt(sum(x * x for x in v))
+            if ni == 0.0 or nv == 0.0:                         # zero-magnitude → undefined cosine → 0 (no crash)
+                out[id(it)] = 0.0
+                continue
+            dot = sum(x * y for x, y in zip(intent_vec, v))
+            out[id(it)] = dot / (ni * nv)                      # cosine, mirror nodes/similarity.py
+        return out
+
+    def _r2_score_and_cap(self, items: list, locus: str, now, intent: str | None = None) -> list:
         """Score each item by the decay, sort DESC, then `budget_cap` — accumulate text until R2_BUDGET
         is reached and STOP (cap the window, NEVER stuff). Returns the surviving items in score order.
         The cap is the keystone (the guide's THE-critical requirement): with more items than the budget,
-        only the highest-scoring (recent + proximate + pinned) survive; the rest are DROPPED, so R2 can
-        never recreate the context-flood it exists to kill."""
-        scored = sorted(items, key=lambda it: self._r2_score(it, locus, now), reverse=True)
+        only the highest-scoring (recent + proximate + pinned + RELEVANT) survive; the rest are DROPPED,
+        so R2 can never recreate the context-flood it exists to kill.
+
+        X13 (Convergence) — `intent` (the operator's current chat MESSAGE / locus comment — "what the
+        operator is actually asking") adds the SEMANTIC term: embed the intent + each item ONCE here
+        (`_r2_semantic_map`), then score = recency·proximity·pin + R2_SEMANTIC_WEIGHT·cosine. The cosine
+        is PRECOMPUTED here and passed INTO `_r2_score` so the per-item score stays I/O-free and
+        crash-free. With `intent=None` (the default — every pre-X13 caller) the map is empty and every
+        item's semantic term is 0, so the ranking is byte-for-byte the pre-X13 recency·proximity·pin
+        ordering (preserves addr_context_acceptance). When the embedder is DOWN the map is empty too
+        (degrade-with-warning in `_r2_semantic_map`) — the SAME proven fallback."""
+        sem = self._r2_semantic_map(intent, items)             # X13: {id(item): cosine}; {} if no intent / down
+        scored = sorted(items,
+                        key=lambda it: self._r2_score(it, locus, now, semantic=sem.get(id(it), 0.0)),
+                        reverse=True)
         out, total = [], 0
         for it in scored:
             t = it.get("text", "") or ""
@@ -1393,7 +1488,8 @@ class Suite:
                 break
         return out
 
-    def _resolve_context_at(self, locus: str | None, now=None, graph_id: str | None = None) -> str:
+    def _resolve_context_at(self, locus: str | None, now=None, graph_id: str | None = None,
+                            intent: str | None = None) -> str:
         """The R2 entry point: resolve the BOUNDED, address-keyed context slice at the operator's locus.
         Returns a ready-to-inject block string, or '' when there is no locus / nothing attached (so the
         caller skips injection cleanly). FAIL-LOUD-LEGIBLE, never crash-the-turn (mirrors _chat_context's
@@ -1403,7 +1499,13 @@ class Suite:
         X6 (Convergence) — `graph_id` is threaded through (optional, default None) so the gather can BRIDGE
         a `ui://canvas/<node>` locus to its `run://<graph_id>/<node>` counterpart (version-history L6 +
         node events). The production caller (`_chat_context`) HOLDS graph_id as ground truth and passes it;
-        with no graph_id the gather's run:// step does not fire (the ui:// path is unchanged)."""
+        with no graph_id the gather's run:// step does not fire (the ui:// path is unchanged).
+
+        X13 (Convergence) — `intent` (the operator's current chat MESSAGE / locus comment) is threaded to
+        `_r2_score_and_cap`, which adds the SEMANTIC ranking term (R2_SEMANTIC_WEIGHT·cosine(intent,item)).
+        Optional (default None): with no intent the ranking is the pre-X13 recency·proximity·pin (byte-for-
+        byte). When the embedder is DOWN the semantic term degrades to 0 with a warning (handled in
+        `_r2_semantic_map`) — the score+cap still runs, never crashing the turn."""
         from datetime import datetime, timezone
         if not locus:
             return ""
@@ -1413,7 +1515,7 @@ class Suite:
             items = self._r2_gather(locus, graph_id=graph_id)
             if not items:
                 return ""
-            capped = self._r2_score_and_cap(items, locus, now)
+            capped = self._r2_score_and_cap(items, locus, now, intent=intent)
             if not capped:
                 return ""
             lines = "\n".join("  · " + (it.get("text", "") or "") for it in capped)
@@ -2445,7 +2547,9 @@ class Suite:
             "<address> is a node-id or a ui:// region from the registry. Use AFFORD when the operator should "
             "consent first; use ACTION only when they've clearly asked you to just do it. Never emit both."
         )
-        msgs = [{"role": "system", "content": sys_p + "\n\n" + self._chat_context(graph_id, focus)}]
+        # X13 (Convergence) — the operator's MESSAGE is the SEMANTIC ranking query ("what they're actually
+        # asking"): pass it as `intent` so R2 ranks the locus context by RELEVANCE, not just recency·proximity.
+        msgs = [{"role": "system", "content": sys_p + "\n\n" + self._chat_context(graph_id, focus, intent=message)}]
         for t in self.store.chat_history(20):
             msgs.append({"role": t["role"], "content": t["text"]})
         msgs.append({"role": "user", "content": message})
