@@ -372,6 +372,17 @@ button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
 .annotate-bar .ann-input::placeholder{color:var(--dim)}
 .annotate-bar .ind-clear{color:var(--warn)}
 .annotate-bar .ind-clear:disabled{color:var(--dim);cursor:default}
+/* L9 · the REVERSE journey-recording bar (App.tsx JourneyBar) — record an ordered ui:// click-path, then
+   replay it through the preserved resolveUiTarget. Reuses the .rhm-indicating chip vocabulary (corpus
+   tokens only); floats over the canvas cell ABOVE the annotate-bar so they never overlap. When recording,
+   the --sig accent reads as "live capture". Paint/position only. */
+.journey-bar{position:absolute;left:50%;bottom:60px;transform:translateX(-50%);z-index:6;
+  pointer-events:auto;max-width:min(540px,90vw);width:max-content;background:var(--bg)}
+.journey-bar .ind-clear{flex:none;color:var(--sig);font-size:10.5px;padding:3px 8px}
+.journey-bar .ind-addr{flex:none;min-width:0;background:transparent;border:1px solid var(--sig-dim);
+  border-radius:4px;color:var(--ink);font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:10.5px;padding:2px 6px}
+.journey-bar .ind-addr:disabled{color:var(--dim);cursor:default}
 /* the indicating chip in the RHM chat (above the input) — shows the locus + a clear. Reuses the corpus
    panel/accent vocabulary (the same tokens the surrounding HUD uses); compact, single line. */
 .rhm-indicating{display:flex;align-items:center;gap:6px;margin:6px 8px 0;padding:4px 8px;

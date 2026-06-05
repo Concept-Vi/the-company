@@ -21,7 +21,7 @@
 // reflects-never-owns · registry-driven config+ports · SSE mergeEvents seq-dedup · the resolveUiTarget/show
 // keystone · wtBusyRef guards · semantic zoom · drag-to-wire · voice push-to-talk · demonstrate-first ·
 // delete-confirm · the U1 canvas-RUN fix (() => doRun() + the always-clearing finally) · operator-only approval.
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Tldraw, useEditor } from 'tldraw'
 import { NodeShapeUtil, Edges } from './NodeShape'
 import { useAppController } from './useAppController'
@@ -40,6 +40,7 @@ import { RhmChat } from './regions/RhmChat'
 import { Walkthrough } from './regions/Walkthrough'
 import { Workshop } from './regions/Workshop'
 import { Fleet } from './regions/Fleet'
+import { api } from './api'
 
 // I5 · the ANNOTATE-FACE affordance. Renders ONLY when the operator has indicated a ui:// element whose
 // bare-click face is 'annotate' (ctrl.clickMode === 'annotate' — the canonical route_click rule, single-
@@ -63,6 +64,45 @@ function AnnotateBar() {
              onChange={e => setText(e.target.value)}
              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submit() } }} />
       <button className="ind-clear" onClick={submit} title="attach comment" disabled={!text.trim()}>↵</button>
+    </div>
+  )
+}
+
+// L9 · reverse journey-recording (§21.7#2-reverse). The REVERSE of the forward resolveUiTarget made
+// reachable on the surface: an explicit RECORD toggle captures the operator's ordered ui:// click-path as
+// a DISTINCT journey-record (each indicated element appends a step — wired in ctrl.indicate), and recorded
+// journeys are REPLAYED by stepping the view through their addresses via the PRESERVED resolveUiTarget
+// (ctrl.replayJourney). DISTINCT from the review-session walk (Walkthrough/Inbox → startWalk, which walks
+// item-ids) — this records NAVIGATION. FORM: built on the corpus .rhm-indicating chip vocabulary (tokens
+// only, mirroring AnnotateBar) — no bespoke styling, no literals. The control itself is NOT a registered
+// ui:// locus (it captures OTHER addresses; making it one would orphan the registry — deliberately bare).
+function JourneyBar() {
+  const { journeyId, journeyReplaying, toggleJourneyRecording, replayJourney } = useApp()
+  const [journeys, setJourneys] = useState<any[]>([])
+  // refresh the replayable list on mount, and whenever recording stops (journeyId → null finalizes one).
+  useEffect(() => {
+    let live = true
+    api.journeys().then((r: any) => { if (live && Array.isArray(r)) setJourneys(r) }).catch(() => { /* surfaced via notice elsewhere */ })
+    return () => { live = false }
+  }, [journeyId])
+  const recording = !!journeyId
+  return (
+    <div className="rhm-indicating journey-bar" title="record an ordered click-path through addresses, then replay it as a walkthrough">
+      <span className="ic">{recording ? '●' : '◉'}</span>
+      <button className="ind-clear" onClick={() => toggleJourneyRecording()}
+              title={recording ? 'stop + finalize this journey' : 'start recording a click-path journey'}>
+        {recording ? '■ stop journey' : '◉ record journey'}
+      </button>
+      {!recording && journeys.length > 0 && (
+        <select className="ind-addr" disabled={journeyReplaying} defaultValue=""
+                title="replay a recorded journey — steps the view through its addresses"
+                onChange={e => { const v = e.target.value; if (v) { replayJourney(v); e.currentTarget.value = '' } }}>
+          <option value="" disabled>{journeyReplaying ? 'replaying…' : '▶ replay…'}</option>
+          {journeys.map((j: any) => (
+            <option key={j.id} value={j.id}>{j.id} · {j.steps} step{j.steps === 1 ? '' : 's'}</option>
+          ))}
+        </select>
+      )}
     </div>
   )
 }
@@ -123,6 +163,12 @@ function Hud() {
              blurred. FORM: built on the corpus .rhm-indicating chip vocabulary (tokens only, no literals);
              the amber [data-click-mode="annotate"] cue + this bar are the DEFAULT mode-signal (needs-tim). */}
           <AnnotateBar />
+          {/* L9 · reverse journey-recording (§21.7#2-reverse). The RECORD toggle + REPLAY picker: capture
+             the operator's ordered ui:// click-path as a DISTINCT journey-record (steps appended in
+             ctrl.indicate while recording), replay it by stepping the view through its addresses via the
+             PRESERVED resolveUiTarget. Sits beside AnnotateBar (the indicated-element surface area). FORM:
+             corpus .rhm-indicating chip vocabulary (tokens only). DISTINCT from the review-session walk. */}
+          <JourneyBar />
         </div>
         {/* the right rail — Inspector + Inbox + Grow stacked in ONE scroll column (the .panel rail, as
            before). data-ui-ref="inspector" is on this scroll container (the resolveUiTarget keystone +

@@ -165,6 +165,14 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.present_current(q["session"])))
             elif path == "/api/review/status":             # B: the session's live status
                 self._send(200, json.dumps(SUITE.session_status(q["session"])))
+            elif path == "/api/journey/replay":             # L9: the ordered ui:// addresses of a recorded
+                # journey — the FE steps the view through them via the PRESERVED forward resolveUiTarget (the
+                # reverse of present_current's drive; no second navigation mechanism). Missing `journey` →
+                # KeyError → 400 (fail loud, mirrors /api/review/current).
+                self._send(200, json.dumps(SUITE.replay_journey(q["journey"])))
+            elif path == "/api/journeys":                   # L9: the recorded journeys (id · step-count · done),
+                # newest-first — the picker the FE replays from.
+                self._send(200, json.dumps(SUITE.list_journeys_meta()))
             elif path == "/api/voice":                     # voice status: STT providers + per-engine TTS
                 from voice import stt as voice_stt
                 import urllib.request as _u
@@ -367,6 +375,18 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/review/next":          # B: Next — open the gate, fire the step, advance
                 b = self._body()
                 self._send(200, json.dumps(SUITE.next(b["session"])))
+            elif self.path == "/api/journey/start":         # L9: open a journey-record (the REVERSE capture).
+                # DISTINCT from /api/review/start (the review-session organ): a journey records NAVIGATION
+                # (an ordered ui:// click-path), a session records a REVIEW (item-ids with a cursor). No body.
+                self._send(200, json.dumps(SUITE.start_journey()))
+            elif self.path == "/api/journey/step":          # L9: append one addressed step to an OPEN journey.
+                # The address is S0-validated in the Suite (parse_ui_address raises → 400 here, fail loud,
+                # mirrors /api/annotate). Appending to a finalized/absent journey raises → 400 (no silent no-op).
+                b = self._body()
+                self._send(200, json.dumps(SUITE.append_journey_step(b["journey"], b["address"])))
+            elif self.path == "/api/journey/stop":          # L9: finalize a journey → it becomes replayable.
+                b = self._body()
+                self._send(200, json.dumps(SUITE.stop_journey(b["journey"])))
             elif self.path == "/api/react":               # watch-and-react ambient comment
                 self._send(200, json.dumps(SUITE.react(DEMO)))
             elif self.path == "/api/revert":              # OPERATOR-only rollback of a self-change

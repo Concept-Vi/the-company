@@ -287,6 +287,31 @@ class FsStore:
         d = self.root / "sessions"
         return sorted(p.stem for p in d.glob("*.json")) if d.exists() else []
 
+    # --- journey-record state (L9): the REVERSE of the forward resolver — a recorded ordered click-path
+    # through ui:// addresses, retrieved-whole-by-id then replayed via the forward resolveUiTarget. This
+    # is a DISTINCT object from a review-session (above): a journey records NAVIGATION (an addressed
+    # path), a session records a REVIEW (item-ids walked with a cursor). Distinct directory → distinct
+    # store, so a journey id and a session id never collide. Mirrors save_session/load_session (the atomic
+    # tmp+replace whole-record write) — the truer structural parallel for a retrieved-whole record — while
+    # the record itself stays OPEN ({id, ts, steps:[{address, ts, **}], done, **}) per the append_*
+    # {ts,**} additive convention (store constitution: schema-additive, never schema-breaking). ---
+    def save_journey(self, journey: dict) -> None:
+        """Persist a journey-record (id + ordered addressed steps + done) atomically. Same crash-durable
+        tmp+replace guarantee as save_session — a reader sees the old file or the new, never a torn one."""
+        import json as _j
+        (self.root / "journeys").mkdir(parents=True, exist_ok=True)
+        path = self.root / "journeys" / (self._safe(journey["id"]) + ".json")
+        self._fsync_atomic_write(path, _j.dumps(journey, indent=2))
+
+    def load_journey(self, jid: str) -> dict | None:
+        import json as _j
+        p = self.root / "journeys" / (self._safe(jid) + ".json")
+        return _j.loads(p.read_text()) if p.exists() else None
+
+    def list_journeys(self) -> list[str]:
+        d = self.root / "journeys"
+        return sorted(p.stem for p in d.glob("*.json")) if d.exists() else []
+
     def list_graphs(self) -> list[str]:
         return sorted(p.stem for p in (self.root / "graphs").glob("*.json"))
 

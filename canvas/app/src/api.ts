@@ -117,6 +117,19 @@ export const api = {
   // legacy id+choice+reason callers unchanged). Reflects-never-owns: the verdict goes THROUGH the gate.
   resolveStep: (id: string, choice: string, reason: string, session: string, position: number) =>
     fetch('/api/resolve', { method: 'POST', headers: J, body: JSON.stringify({ id, choice, reason, session, position }) }).then(jr),
+  // L9 · reverse journey-recording (§21.7#2-reverse). The REVERSE of the forward resolveUiTarget: capture
+  // an ordered ui:// click-path as a DISTINCT journey-record (not a review session), then replay it by
+  // stepping the view through the recorded addresses via the PRESERVED resolveUiTarget. start opens the
+  // record; step appends one S0-validated address (a malformed/finalized-journey → backend 400); stop
+  // finalizes; replay returns { journey, addresses[] } the FE walks one resolveUiTarget at a time.
+  journeyStart: () => fetch('/api/journey/start', { method: 'POST', headers: J, body: '{}' }).then(jr),
+  journeyStep: (journey: string, address: string) =>
+    fetch('/api/journey/step', { method: 'POST', headers: J, body: JSON.stringify({ journey, address }) }).then(jr),
+  journeyStop: (journey: string) =>
+    fetch('/api/journey/stop', { method: 'POST', headers: J, body: JSON.stringify({ journey }) }).then(jr),
+  journeyReplay: (journey: string) =>
+    fetch('/api/journey/replay?journey=' + encodeURIComponent(journey)).then(jr),
+  journeys: () => fetch('/api/journeys').then(jr),
 }
 export { J }
 

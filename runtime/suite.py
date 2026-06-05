@@ -2751,6 +2751,106 @@ class Suite:
                 "mode": s.get("mode"), "items": s["items"], "opened": s.get("opened", []),
                 "done": bool(s.get("done"))}
 
+    # --- L9: reverse journey-recording (§21.7#2-reverse, fidelity ISSUE-5) -------------------------------
+    #
+    # The FORWARD direction is done: present_current + resolveUiTarget drive the view TO an address (seam
+    # 3 CONFIRM forward). The REVERSE was dropped — no code captured a free click-path through addresses
+    # as an ordered journey. The review-session organ above (start_session/present_current/next) records
+    # a REVIEW (item-ids walked with a cursor), NOT navigation; a journey is a DISTINCT object that records
+    # an addressed PATH. So these methods are a PARALLEL record + capture wire — they do NOT repurpose or
+    # overload the review organ (which stays byte-for-byte unchanged), and they REUSE the existing forward
+    # resolver for replay (replay_journey hands the FE the ordered addresses; the FE steps through them via
+    # the preserved resolveUiTarget — no second navigation mechanism).
+    #
+    # CAPTURE-TRIGGER decision (the task asks to DECIDE + state): EXPLICIT start/stop journey-recording
+    # (the default lean). start_journey() opens a record → each subsequent append_journey_step appends one
+    # addressed step → stop_journey() finalizes; replay by id. WHY explicit over auto-capture-of-every-
+    # indicate: auto-capture would silently fold ordinary indicate-to-comment clicks (I1) into a journey
+    # the operator never asked to record — surprising, and it would couple two unrelated gestures. Explicit
+    # start/stop makes recording a deliberate operator act (a journey is a thing you choose to make), and
+    # the FE wire only appends while recording is ON — clicks outside a recording are pure indication.
+    #
+    # STORAGE decision: a NEW journeys open-record in the store (store.save_journey/load_journey), a
+    # DISTINCT directory from sessions/ — so a journey id and a session id can never collide (the journey
+    # is genuinely a different object, not a session in disguise). It mirrors save_session/load_session
+    # (the atomic tmp+replace whole-record write) rather than the append_*.jsonl logs, because a journey is
+    # RETRIEVED-WHOLE-BY-ID exactly like a session — that is the truer structural parallel. The record and
+    # each step stay OPEN dicts ({id, ts, steps:[{address, ts}], done}) per the append_* {ts,**} additive
+    # convention (store constitution: schema-additive). Each step's address is S0-validated by the SAME
+    # parse_ui_address gate every other addressed write uses (annotate/attach-chat/address-history) —
+    # registry-truth, fail-loud, no fabrication.
+    def start_journey(self) -> dict:
+        """L9: open a new journey-record (the REVERSE capture). Returns the fresh open record; the FE then
+        appends a step per indicated ui:// address while recording is ON, and stops to finalize."""
+        import time as _t
+        from datetime import datetime, timezone
+        journey_id = f"j{int(_t.time()*1000)}-{len(self.store.list_journeys())}"
+        journey = {"id": journey_id, "ts": datetime.now(timezone.utc).isoformat(), "steps": [], "done": False}
+        self.store.save_journey(journey)
+        self._emit("journey.start", f"journey {journey_id} recording started",
+                   journey=journey_id, address="ui://chrome/chat")
+        return journey
+
+    def append_journey_step(self, journey_id: str, address: str) -> dict:
+        """L9: append one addressed step to an OPEN journey. The address is S0-validated (parse_ui_address,
+        the SAME grammar gate annotate/attach-chat use) — a malformed address RAISES (fail loud, never a
+        junk step). Appending to a finalized/absent journey RAISES (no silent no-op, rule 4). Atomic under
+        the per-id lock (concurrent appends each land a distinct step). Returns the updated record."""
+        from datetime import datetime, timezone
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                              # S0 grammar gate — raises on malformed (BEFORE any mutation)
+        with self._session_lock(f"journey:{journey_id}"):     # per-id lock; namespaced so it never aliases a session lock
+            j = self.store.load_journey(journey_id)            # re-read INSIDE the lock (compare-and-set against the substrate)
+            if not j:
+                raise KeyError(f"no journey {journey_id!r} (fail loud)")
+            if j.get("done"):
+                raise ValueError(f"journey {journey_id!r} is finalized — cannot append (fail loud)")
+            j["steps"].append({"address": address, "ts": datetime.now(timezone.utc).isoformat()})
+            self.store.save_journey(j)
+        self._emit("journey.step", f"journey {journey_id} → {address}",
+                   journey=journey_id, address=address)        # the step's OWN address (so the trajectory is addressed too)
+        return j
+
+    def stop_journey(self, journey_id: str) -> dict:
+        """L9: finalize an open journey (done=True), so it becomes a replayable walkthrough. Idempotent
+        past done. Fail loud on an absent journey (no silent no-op)."""
+        with self._session_lock(f"journey:{journey_id}"):
+            j = self.store.load_journey(journey_id)
+            if not j:
+                raise KeyError(f"no journey {journey_id!r} (fail loud)")
+            if not j.get("done"):
+                j["done"] = True
+                self.store.save_journey(j)
+        self._emit("journey.stop", f"journey {journey_id} finalized — {len(j['steps'])} step(s)",
+                   journey=journey_id, address="ui://chrome/chat")
+        return j
+
+    def get_journey(self, journey_id: str) -> dict:
+        """L9: retrieve a journey-record whole, by id (reflects-never-owns: the store is authoritative)."""
+        j = self.store.load_journey(journey_id)
+        if not j:
+            raise KeyError(f"no journey {journey_id!r} (fail loud)")
+        return j
+
+    def replay_journey(self, journey_id: str) -> dict:
+        """L9: the REPLAY — hand the FE the ordered ui:// addresses so it can step the view through them
+        via the PRESERVED forward resolveUiTarget (no second navigation mechanism; this is the reverse of
+        present_current's view-drive). Returns {journey, addresses[], done}; the FE walks `addresses` one
+        resolveUiTarget at a time. Each address was S0-validated at capture, so the replay vocabulary is
+        the same registry-valid address vocabulary the forward resolver already drives (S0/S1)."""
+        j = self.get_journey(journey_id)
+        return {"journey": journey_id,
+                "addresses": [s["address"] for s in j.get("steps", [])],
+                "done": bool(j.get("done"))}
+
+    def list_journeys_meta(self) -> list:
+        """L9: the recorded journeys (id · step-count · done), newest-first — the picker the FE replays from."""
+        out = []
+        for jid in self.store.list_journeys():
+            j = self.store.load_journey(jid) or {}
+            out.append({"id": jid, "ts": j.get("ts"), "steps": len(j.get("steps", [])), "done": bool(j.get("done"))})
+        return sorted(out, key=lambda m: m.get("ts") or "", reverse=True)
+
     # --- E: the channel back — the system acts, provably from a recorded verdict (the derived-from gate) ---
     def review_verdicts(self, since: int = -1) -> list:
         """E: the recorded verdicts the build loop reads from the STORE (not from Claude Code). Reads

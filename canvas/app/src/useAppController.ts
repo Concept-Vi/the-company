@@ -73,6 +73,16 @@ export function useAppController(editor: Editor) {
   // `.ui-spotlight` ring (which the show-resolver flashes and removes after a timeout).
   const [indicated, setIndicated] = useState<string | null>(null)
   const indicatedRef = useRef<string | null>(null)   // for the capture handler (avoids a stale closure)
+  // L9 · reverse journey-recording (§21.7#2-reverse). The REVERSE of the forward resolveUiTarget: an
+  // EXPLICIT start/stop recording of the operator's ordered ui:// click-path as a DISTINCT journey-record
+  // (NOT the review-session organ — that records item-ids; this records navigation). While `journeyId` is
+  // set (recording is ON), every indicated ui:// address is appended as a step (in `indicate`); stopping
+  // finalizes the record; replaying steps the view through the recorded addresses via the PRESERVED
+  // resolveUiTarget (no second navigation mechanism). DISTINCT names from the voice-PTT `recording`/
+  // `recordToggle` so the mic is untouched. The ref is read by the capture path (avoids a stale closure).
+  const [journeyId, setJourneyId] = useState<string | null>(null)
+  const journeyIdRef = useRef<string | null>(null)
+  const [journeyReplaying, setJourneyReplaying] = useState(false)
   // I3 · propose-affordance (the CONSENT gate, click #2): when the RHM PROPOSES an action (emits a
   // structured {verb, address, args} on the chat response WITHOUT executing it), we hold it here as
   // EPHEMERAL state — NOT in the `chat` array (that array is replaced wholesale by r.history on the
@@ -503,6 +513,24 @@ export function useAppController(editor: Editor) {
     const title = getUI_INFO()[addr]?.title
     const modeWord = mode === 'annotate' ? ' — click to comment' : mode === 'operate' ? ' — click to operate' : ''
     setNotice('indicating ' + (title || addr) + ' — your next message is about this' + modeWord)
+    // L9 · capture wire: while a journey is RECORDING, this indicated ui:// address is appended as the
+    // next step of the ordered path. Only full ui:// addresses reach here (the capture listener already
+    // filters), and only on a real indication (addr non-null — the clear/toggle-off path returned above),
+    // so an indicate(null) never records a step. The append is S0-validated server-side (fail loud).
+    if (journeyIdRef.current) recordJourneyStep(addr)
+  }
+  // L9 · the step-append, factored so `indicate` stays focused. Fire-and-surface: a backend 400 (malformed
+  // address — shouldn't happen since only registered ui:// refs indicate, but fail-loud anyway) surfaces a
+  // notice, never a silent swallow (rule 4). Recording continues; one bad step doesn't end the journey.
+  async function recordJourneyStep(addr: string) {
+    const jid = journeyIdRef.current
+    if (!jid) return
+    try {
+      const r = await api.journeyStep(jid, addr)
+      if (r?.error) { setNotice('✕ journey step: ' + r.error); return }
+      const n = Array.isArray(r?.steps) ? r.steps.length : '?'
+      setNotice('● recording journey — step ' + n + ': ' + (getUI_INFO()[addr]?.title || addr))
+    } catch (e: any) { setNotice('✕ could not record journey step: ' + (e?.message || e)) }
   }
   // I5 · the ANNOTATE commit gesture — the click→comment that makes the annotate FUNCTION reachable on
   // the surface (the criteria FUNCTION: "clicking a ui:// attaches a comment"). Fires POST /api/annotate
@@ -1040,6 +1068,51 @@ export function useAppController(editor: Editor) {
       recorderRef.current = rec; rec.start(); setRecording(true); setNotice('listening… (click again to stop)')
     } catch { setNotice('mic unavailable — grant microphone permission') }
   }
+  // L9 · reverse journey-recording — the explicit start/stop control. OFF → start_journey (open a record;
+  // subsequent indicated ui:// addresses append as steps via `indicate`). ON → stop_journey (finalize →
+  // the record becomes replayable). Distinct from the voice `recordToggle` above (the mic) — this records
+  // a NAVIGATION path, not audio. Keeps the ref in sync synchronously (the capture path reads the ref).
+  async function toggleJourneyRecording() {
+    if (journeyIdRef.current) {
+      const jid = journeyIdRef.current
+      journeyIdRef.current = null; setJourneyId(null)        // stop capturing immediately (ref first)
+      try {
+        const r = await api.journeyStop(jid)
+        if (r?.error) { setNotice('✕ stop journey: ' + r.error); return }
+        const n = Array.isArray(r?.steps) ? r.steps.length : 0
+        setNotice('■ journey recorded — ' + n + ' step(s). replayable.')
+      } catch (e: any) { setNotice('✕ could not stop journey: ' + (e?.message || e)) }
+      return
+    }
+    try {
+      const r = await api.journeyStart()
+      if (r?.error) { setNotice('✕ start journey: ' + r.error); return }
+      journeyIdRef.current = r.id; setJourneyId(r.id)
+      setNotice('● recording journey — click a path of elements, then stop to finalize')
+    } catch (e: any) { setNotice('✕ could not start journey: ' + (e?.message || e)) }
+  }
+  // L9 · the REPLAY — fetch a recorded journey's ordered ui:// addresses and step the view through them
+  // via the PRESERVED resolveUiTarget (the reverse of present_current's per-step drive; REUSE, not a
+  // second navigation mechanism). A short pause between steps so each spotlight is seen (the resolver's
+  // ring is ~2.4s; we pace at ~1.1s so the walkthrough reads as a guided tour). Fail-loud on a backend
+  // 400 or an unresolvable step (resolveUiTarget already surfaces its own "not in the DOM" notice).
+  async function replayJourney(jid: string) {
+    if (!jid || journeyReplaying) return
+    setJourneyReplaying(true); setNotice('▶ replaying journey ' + jid + '…')
+    try {
+      const r = await api.journeyReplay(jid)
+      if (r?.error) { setNotice('✕ replay: ' + r.error); return }
+      const addresses: string[] = Array.isArray(r?.addresses) ? r.addresses : []
+      if (!addresses.length) { setNotice('journey ' + jid + ' has no steps to replay'); return }
+      for (let i = 0; i < addresses.length; i++) {
+        setNotice('▶ journey step ' + (i + 1) + '/' + addresses.length + ': ' + addresses[i])
+        resolveUiTarget(addresses[i])                        // THE PRESERVED FORWARD RESOLVER — drives the view to the address
+        await new Promise(res => setTimeout(res, 1100))      // pace so each spotlight is seen (guided tour)
+      }
+      setNotice('✓ journey ' + jid + ' replayed — ' + addresses.length + ' step(s)')
+    } catch (e: any) { setNotice('✕ could not replay journey: ' + (e?.message || e)) }
+    finally { setJourneyReplaying(false) }
+  }
   function fieldValue(f: any) {
     if (f.target === 'mode') return now?.mode || 'listening'
     if (f.target === 'model') return cfg?.model || ''
@@ -1070,7 +1143,7 @@ export function useAppController(editor: Editor) {
     oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
     showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn,
     wtSpoke, wtBusy, selected, mobileTab, fleet, indicated, proposal, history, historyBusy,
-    selfChanges, selfChangesBusy,
+    selfChanges, selfChangesBusy, journeyId, journeyReplaying,
     // refs the components read for the inspector form
     configByNode,
     // setters the components call directly
@@ -1081,7 +1154,7 @@ export function useAppController(editor: Editor) {
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
     resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, fieldValue,
     setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus,
-    approveProposal, dismissProposal,
+    approveProposal, dismissProposal, toggleJourneyRecording, replayJourney,
   }
 }
 
