@@ -179,6 +179,18 @@ class Suite:
         # durable decision.dispatch event remains the cross-process/restart guarantee.
         self._dispatch_locks_guard = _t.Lock()
         self._dispatch_locks: dict = {}
+        # R1 — the BACKEND-HELD current `ui://` locus (seams-rhm Seam 4: "there is no stored
+        # current-locus anywhere in suite/store" — this is the net-new piece). Today the operator's
+        # locus exists ONLY FE-side, shipped per-request as `focus.selected`; nothing is remembered
+        # between calls. R1 holds the most-recent INDICATED `ui://` address (set in the chat path when
+        # I1's widened `focus` carries one — see _chat_context) so the RHM can READ where the operator
+        # IS across turns. PERSISTENCE = in-memory on this long-lived Suite instance (DELIBERATE,
+        # per the guide): single live operator; R2's auto-resolve reads it LIVE off the same Suite in
+        # the same process; the FE re-ships `focus` every request so a restart re-establishes it
+        # instantly (restart-survival buys nothing); store-backing would be a schema/contract addition
+        # with no consumer. It PERSISTS ALONGSIDE the per-request `focus` path — never replacing it.
+        # Exposed via current_locus() for R2 to consume (R2 is NOT wired here — held + set + readable).
+        self._current_locus: str | None = None
 
     def _session_lock(self, session_id: str):
         """One reentrant-safe lock per session, created on demand (threadsafe)."""
@@ -958,6 +970,16 @@ class Suite:
             ctx += ("\nOPERATOR IS INDICATING (they clicked these addressed UI element(s) RIGHT NOW — "
                     "this is the locus their message is about; answer with respect to the indicated "
                     "thing):\n" + "\n".join(ilines) + "\n")
+            # R1 — SET the backend-held current `ui://` locus from the indicated address. This is the
+            # spec's named set-point (old suite.py:855): reuse I1's exact `startswith("ui://")`
+            # extraction above (`indicated`), never a parallel mechanism (rule 3, one-source). It runs
+            # AFTER the describe loop on purpose — _describe_ui_address calls parse_ui_address (the S0
+            # grammar gate), so a MALFORMED `ui://` RAISES before this line and we NEVER remember an
+            # unvalidated locus (fail-loud, consistent with I1). Most-recent wins on a multi-select
+            # (indicated[-1] = last-wins). The write is guarded by `if indicated:` so a turn carrying
+            # ONLY a canvas node-id (or no focus) leaves the prior locus INTACT (no clobber) — the
+            # locus PERSISTS ALONGSIDE the per-request co-presence path, never replacing it.
+            self._current_locus = indicated[-1]
         if selected:
             lines = []
             for nid in selected:
@@ -1005,6 +1027,20 @@ class Suite:
                     return f"{address} — represents {represents}"
                 return address                                 # registered, no extra descriptor available
         return f"{address} (unregistered)"                    # fail-loud-legible: gap surfaced, not dropped
+
+    def current_locus(self) -> str | None:
+        """R1 — READ the backend-held current `ui://` locus (the most-recent indicated address).
+
+        This is the net-new backend notion of "where the operator IS" (seams-rhm Seam 4: there was
+        none before — locus lived only FE-side, per-request). It is SET in the chat path when I1's
+        widened `focus.selected` carries a `ui://` address (see _chat_context). Returns the address
+        string, or None if the operator has not indicated a `ui://` element this session.
+
+        EXPOSED for R2's address-keyed context resolution to consume (it will key retrieval by this
+        locus). R2 is NOT built here — R1 makes the locus HELD + SETTABLE + READABLE only; this getter
+        has no production caller yet (the I7-left-R2-unwired precedent), it is the read seam R2 hangs
+        off."""
+        return self._current_locus
 
     # The RHM signals intent with a trailing `ACTION:` line; the dispatcher enforces a
     # WHITELIST so the conversational surface can never reach apply/delete/file-write (E6).
