@@ -4210,92 +4210,233 @@ class Suite:
     # The corpus reverse index (design/_system/code-symbols.json) already encodes "which
     # addresses/features touch the same code symbol" in each symbol's `referenced_by[]` — but
     # NOTHING read it for this purpose (zero runtime consumers). X9 is the FREE half: invert that
-    # ALREADY-LOADED index into the sibling set. NO new substrate, NO re-parsing source — the
-    # structural symbol→symbol dependency graph (calls/imports) is X10, a SEPARATE net-new unit;
-    # this is purely the co-reference data that exists today. The depth/semantic edges are X10/X11/X14.
+    # ALREADY-LOADED index into the sibling set. NO new substrate, NO re-parsing source.
+    #
+    # --- X14 (Convergence, Seam 3): blast_radius spans BOTH edge kinds ---
+    # X9 gives co-reference (what shares this code). X14 WIDENS the SAME method to ALSO return, all
+    # DISTINGUISHED by kind: the TRUE STRUCTURAL dependents/dependencies (X10's code-edges.json —
+    # `depended_by` = dependents-to-VERIFY, `depends_on` = dependencies-to-RESPECT, bounded by X10's
+    # DEPTH-capped reach query) AND the SEMANTIC neighbours (X11's `semantically_nearest[]`). REUSE,
+    # never reimplement: resolve_scope for addr→symbols (S0 gate + stale), codeedges.reach_report for
+    # the bounded structural walk (the dependents side reuses the SAME walk over a transposed edge
+    # view — no new BFS), and semantically_nearest[] read straight off the same code-symbols.json.
+    # Graceful-empty + fail-loud-legible: a missing/absent layer → that kind empty + a note, NEVER a
+    # crash, NEVER a fabricated edge (registry-truth, rule 4 + rule 8).
+
+    def _structural_radius(self, symbols: list[str]) -> dict:
+        """X14 structural layer — for the resolved `code://` symbols, the bounded structural
+        dependents (X10 `depended_by`, dependents-to-VERIFY) + dependencies (X10 `depends_on`,
+        dependencies-to-RESPECT) from design/_system/code-edges.json.
+
+        REUSE, NOT reimplement (rule 3): the bounded transitive walk is X10's
+        `codeedges.reach_report` (capped at its DEPTH knob; a reach that hits the bound is reported
+        `capped`, no silent truncation). Dependencies = reach over `depends_on`. Dependents = the
+        SAME reach over a TRANSPOSED edge view (depends_on↔depended_by swapped) — so the algorithm
+        is X10's bounded BFS, not a new graph computation. Bounded by X10's DEPTH (do NOT unbound).
+
+        Graceful (rule 4): code-edges.json absent/unreadable → empty dependents/dependencies + a
+        legible `note` (regenerate it), never a crash, never a fabricated edge. Returns
+        {dependents, dependencies, dependents_capped, dependencies_capped, depth, note}."""
+        import json as _j
+        empty = {"dependents": [], "dependencies": [], "dependents_capped": False,
+                 "dependencies_capped": False, "depth": None}
+        edges_path = os.path.join(self._corpus_dir(), "code-edges.json")
+        try:
+            with open(edges_path, encoding="utf-8") as f:
+                edges = _j.load(f).get("edges", {})
+        except (OSError, ValueError) as e:
+            # fail-loud-legible: the structural graph isn't there → empty structural + a note.
+            return {**empty, "note": (
+                f"structural graph unavailable (design/_system/code-edges.json: "
+                f"{type(e).__name__}: {e}) — regenerate it (design/_system/codeedges.py); "
+                f"structural dependents/dependencies EMPTY until then (never fabricated — rule 8)")}
+
+        # REUSE X10's bounded reach query (and its DEPTH cap) — import the SAME module, do not
+        # reimplement the BFS. A transposed view (swap the two edge lists) lets the SAME forward
+        # `reach_report` (which walks depends_on) compute the DEPENDENTS side. The module itself
+        # lives at the REAL design/_system path (the engine code, not the join-DATA dir which a test
+        # may shadow via _corpus_dir); code-edges.json above is read from _corpus_dir (the data).
+        import importlib.util, sys as _sys
+        ce_dir = os.path.join(self._repo_root, "design", "_system")
+        ce_path = os.path.join(ce_dir, "codeedges.py")
+        # codeedges.py does top-level `import refcheck`/`import symbols` (its sibling modules), so its
+        # own dir must be importable. Add it for the exec (idempotent) — do NOT pollute permanently.
+        added = ce_dir not in _sys.path
+        if added:
+            _sys.path.insert(0, ce_dir)
+        try:
+            spec = importlib.util.spec_from_file_location("_company_codeedges", ce_path)
+            if spec is None or spec.loader is None:
+                return {**empty, "note": (
+                    f"structural reach module design/_system/codeedges.py unavailable — "
+                    f"structural dependents/dependencies EMPTY (never fabricated — rule 8)")}
+            ce = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(ce)
+        except Exception as e:  # noqa: BLE001 — a broken module must not crash the radius
+            return {**empty, "note": (
+                f"structural reach module design/_system/codeedges.py failed to load "
+                f"({type(e).__name__}: {e}) — structural EMPTY (never fabricated — rule 8)")}
+        finally:
+            if added and ce_dir in _sys.path:
+                _sys.path.remove(ce_dir)
+        depth = ce.DEPTH                                    # X10's DEPTH cap (2–3) — the bound
+        # transposed edges: depends_on ⇄ depended_by, so reach_report (forward over depends_on)
+        # walks DEPENDENTS over the same bounded algorithm.
+        transposed = {k: {"depends_on": v.get("depended_by", []),
+                          "depended_by": v.get("depends_on", [])} for k, v in edges.items()}
+
+        dependents, dependencies = set(), set()
+        dep_capped = dee_capped = False
+        for sid in symbols:
+            deps = ce.reach_report(sid, edges, depth=depth)          # dependencies (depends_on)
+            ddts = ce.reach_report(sid, transposed, depth=depth)     # dependents (depended_by)
+            dependencies.update(deps["reached"]); dep_capped = dep_capped or deps["capped"]
+            dependents.update(ddts["reached"]); dee_capped = dee_capped or ddts["capped"]
+        # never report the queried symbols themselves as their own dependents/dependencies.
+        sset = set(symbols)
+        return {"dependents": sorted(dependents - sset),
+                "dependencies": sorted(dependencies - sset),
+                "dependents_capped": dee_capped, "dependencies_capped": dep_capped,
+                "depth": depth, "note": ""}
+
+    def _semantic_radius(self, symbols: list[str], index: dict) -> dict:
+        """X14 semantic layer — the conceptually-related symbols from X11's `semantically_nearest[]`
+        (read straight off the SAME already-loaded code-symbols.json index — no recompute, no
+        embedder call here). Each entry's `semantically_nearest[]` is `[{id, score}, …]`.
+
+        Graceful (rule 4): when the field is ABSENT on the entries (the embedder :8001 was down at
+        regen — its CURRENT real state), semantic_neighbours is EMPTY + a legible note; never a
+        crash, never a fabricated nearest. Returns {neighbours, note}."""
+        neighbours: set[str] = set()
+        any_field = False
+        for sid in symbols:
+            entry = index.get(sid) or {}
+            near = entry.get("semantically_nearest")
+            if near is None:
+                continue                                    # field absent for this symbol
+            any_field = True
+            for item in near:
+                nid = item.get("id") if isinstance(item, dict) else item
+                if nid and nid not in symbols:              # exclude the queried symbols themselves
+                    neighbours.add(nid)
+        note = ""
+        if not any_field:
+            note = ("no semantically_nearest[] in the corpus index (X11) — the embedder (BGE-M3 "
+                    "@ :8001) was down at the last regen, so the semantic edges were skipped "
+                    "(degrade-with-warning); semantic_neighbours EMPTY until design/_system "
+                    "(symbols.py) is regenerated with :8001 up (never fabricated — rule 8)")
+        return {"neighbours": sorted(neighbours), "note": note}
 
     def blast_radius(self, ui_addr: str, shared_only: bool = False) -> dict:
-        """X9 — the CO-REFERENCE blast radius of a `ui://` address: the OTHER addresses/features
-        that share a `code://` symbol with it (so a pointed self-build knows what else touches the
-        same code and therefore what to verify). REUSES the existing reverse index; adds NO substrate.
+        """X9+X14 — the BLAST RADIUS of a `ui://` address, spanning BOTH edge kinds, distinguished:
+          • co_reference[]           — (X9) the OTHER addresses/features that share a `code://`
+                                       symbol (what else touches this code). Also surfaced under the
+                                       legacy `neighbours` key (X9 preserved byte-for-byte).
+          • structural_dependents[]  — (X10) the symbols that DEPEND ON the resolved symbol(s) =
+                                       dependents-to-VERIFY (what would break). Bounded by X10's reach.
+          • structural_dependencies[]— (X10) the symbols the resolved symbol(s) DEPEND ON =
+                                       dependencies-to-RESPECT (what it relies on). Bounded by reach.
+          • semantic_neighbours[]    — (X11) the conceptually-related symbols (`semantically_nearest`).
 
-        Sequence (Implementation Guide X9), ONE SOURCE (rule 3) — the forward step REUSES
-        `resolve_scope`, so the S0 grammar gate, the stale short-circuit, and the canonical symbol
-        set are inherited rather than re-implemented (no divergent parallel addr→symbols logic):
-          1. resolve_scope(addr) → its `code://` symbols (raises on a malformed address — S0 gate;
-             surfaces `stale` if the corpus join is unreadable).
-          2. For each of those symbols, read its `referenced_by[]` from the SAME code-symbols.json,
-             and collect every member EXCEPT `addr` itself → the co-reference neighbours (the
-             "what else touches this code" set). `referenced_by[]` carries BOTH ui:// addresses AND
-             feature-ids (ENG-*/NODE-*/WIRE-*) — the spec says "addresses/features", so BOTH are
-             legitimate neighbours; no ui-only filter.
+        REUSES (rule 3 — no parallel system, no recomputed graph):
+          1. resolve_scope(addr) → its `code://` symbols (S0 grammar gate raises on a malformed
+             address; surfaces `stale` if the corpus join is unreadable). The SAME forward step X9 used.
+          2. co_reference: invert each symbol's `referenced_by[]` from the SAME code-symbols.json,
+             MINUS `addr` itself. `referenced_by[]` carries BOTH ui:// addresses AND feature-ids
+             (ENG-*/NODE-*/WIRE-*) — both are legitimate neighbours (no ui-only filter).
+          3. structural: `_structural_radius` → X10's `codeedges.reach_report` (bounded at DEPTH;
+             dependents via a transposed edge view, the SAME bounded walk — no new BFS).
+          4. semantic: `_semantic_radius` → X11's `semantically_nearest[]` read off the same index.
 
-        Returns {address, symbols, neighbours, stale, note}:
-          • symbols    — the code:// ids this address resolves to (same as resolve_scope.symbols).
-          • neighbours — the DISTINCT, sorted co-reference siblings (addresses + features), MINUS
-                         `addr` itself. EMPTY is an HONEST answer (the symbol(s) touch nothing else),
-                         never a silent wrong one.
-          • stale      — True if the corpus index couldn't be read (mirrors resolve_scope; fail-loud-
-                         legible — empty neighbours + a regenerate note, never a fabricated radius).
-          • note       — a legible explanation for every empty/stale result. The TWO empty cases are
-                         distinguished honestly: (a) the address resolves to NO symbol at all, vs
-                         (b) it resolves to symbols but none of them are referenced by anything else.
+        Returns {address, symbols, co_reference, neighbours, structural_dependents,
+        structural_dependencies, structural_dependents_capped, structural_dependencies_capped,
+        structural_depth, semantic_neighbours, stale, note, structural_note, semantic_note}:
+          • symbols      — the code:// ids this address resolves to (same as resolve_scope.symbols).
+          • stale        — True if the CO-REFERENCE corpus index couldn't be read (mirrors
+                           resolve_scope; fail-loud-legible — every kind empty + a regenerate note).
+          • note         — the co-reference note (distinguishes the two co-reference empty cases:
+                           (a) the address resolves to NO symbol, vs (b) symbols but no co-referrers).
+          • *_capped     — True when a structural reach hit X10's DEPTH bound (no silent truncation).
+          • structural_note / semantic_note — legible per-layer notes when a layer is absent/empty.
 
-        X17 knob (`shared_only`, default False): when True, only symbols listed in the corpus's
-        top-level `shared` set (symbols referenced by 2+ owners) contribute neighbours. NOTE: this is
-        a near-no-op on the RESULT — any symbol that yields a neighbour necessarily has ≥2 referrers
-        (`addr` + the neighbour) and is therefore already `shared` — so it cannot change the neighbour
-        set in practice. It exists as the cheap, sane-default configurable seam X17 asks for (a thin
-        method param, NOT a config substrate — there is no Suite-global config dict, and inventing one
-        would violate no-new-substrate); the meaningful depth/semantic knobs land in X10/X11/X14.
+        GRACEFUL-EMPTY + fail-loud-legible (rule 4): a missing/stale layer → that KIND empty + its own
+        note, never a crash, never a fabricated edge. code-edges.json absent → structural empty + a
+        note; semantically_nearest[] absent (embedder :8001 down) → semantic empty + a note. The
+        co-reference stale short-circuit (the corpus index itself unreadable) returns ALL kinds empty.
 
-        FRESHNESS: same coupling as resolve_scope — code-symbols.json is REGENERATED by
-        design/_system/symbols.py, not live. A stale index returns a stale (and honestly-flagged)
-        radius; the resolver never pretends the data is live."""
+        X17 knob (`shared_only`, default False): restricts the co_reference contribution to symbols
+        in the corpus's top-level `shared` set (a near-no-op on the result — a neighbour-bearing
+        symbol is already shared by construction). A thin method param, NOT a config substrate.
+
+        FRESHNESS: code-symbols.json + code-edges.json are REGENERATED (symbols.py / codeedges.py),
+        not live; a stale index returns a stale (honestly-flagged) radius — never pretended live."""
         import json as _j
         # 1 — the forward step, REUSED from resolve_scope (S0 gate + stale + canonical symbols).
         forward = self.resolve_scope(ui_addr)
         symbols = forward["symbols"]
         if forward["stale"]:
-            # fail-loud-legible: the corpus join is unreadable — empty radius + the regenerate note.
-            return {"address": ui_addr, "symbols": symbols, "neighbours": [],
-                    "stale": True, "note": forward["note"]}
+            # fail-loud-legible: the corpus join is unreadable — ALL kinds empty + the regenerate note.
+            return {"address": ui_addr, "symbols": symbols, "co_reference": [], "neighbours": [],
+                    "structural_dependents": [], "structural_dependencies": [],
+                    "structural_dependents_capped": False, "structural_dependencies_capped": False,
+                    "structural_depth": None, "semantic_neighbours": [], "stale": True,
+                    "note": forward["note"], "structural_note": forward["note"],
+                    "semantic_note": forward["note"]}
         if not symbols:
-            # this address resolves to NO referencing symbol (CSS-selector/orphan/absent) → there is
-            # no shared code, so no co-reference radius. Honest empty, distinct from the (b) case.
-            return {"address": ui_addr, "symbols": [], "neighbours": [], "stale": False,
-                    "note": (f"{ui_addr!r} resolves to no code symbol "
-                             f"(a CSS-selector/prose ref, an orphan, or absent from the corpus) — "
-                             f"no shared code, so an EMPTY co-reference blast radius (not an error)")}
+            # this address resolves to NO referencing symbol (CSS-selector/orphan/absent) → no shared
+            # code, no structural anchor, no semantic anchor. Honest empty across every kind.
+            none_note = (f"{ui_addr!r} resolves to no code symbol "
+                         f"(a CSS-selector/prose ref, an orphan, or absent from the corpus) — "
+                         f"no shared code, so an EMPTY blast radius across all kinds (not an error)")
+            return {"address": ui_addr, "symbols": [], "co_reference": [], "neighbours": [],
+                    "structural_dependents": [], "structural_dependencies": [],
+                    "structural_dependents_capped": False, "structural_dependencies_capped": False,
+                    "structural_depth": None, "semantic_neighbours": [], "stale": False,
+                    "note": none_note, "structural_note": none_note, "semantic_note": none_note}
 
-        # 2 — read each resolved symbol's referenced_by[] from the SAME already-loaded index and
-        # collect the co-reference siblings, MINUS this address itself. The index re-read here is the
-        # one tiny cost of reusing resolve_scope for the forward step (a 60-key JSON); the payoff is
-        # zero divergence in how addr→symbols is computed (rule 3). symbols_set is canonical (registry
-        # keys), so a direct dict lookup is safe.
+        # 2 — CO-REFERENCE (X9, preserved). Read each resolved symbol's referenced_by[] from the
+        # SAME already-loaded index, MINUS this address itself. Also reused below for X11's
+        # semantically_nearest[] (one read of the index for both the co-reference + semantic layers).
         symbols_path = os.path.join(self._corpus_dir(), "code-symbols.json")
         with open(symbols_path, encoding="utf-8") as f:
             doc = _j.load(f)
         index = doc.get("symbols", {})
         shared = set(doc.get("shared") or [])               # X17: the symbols referenced by 2+ owners
 
-        neighbours: set[str] = set()
+        co_reference: set[str] = set()
         for sid in symbols:
             if shared_only and sid not in shared:
                 continue                                    # X17 knob — restrict to shared symbols
             entry = index.get(sid) or {}
             for ref in (entry.get("referenced_by") or []):
                 if ref != ui_addr:                          # MINUS self — the load-bearing exclusion
-                    neighbours.add(ref)
+                    co_reference.add(ref)
 
         note = ""
-        if not neighbours:
+        if not co_reference:
             # case (b): symbols resolved, but none are referenced by anything else → honest empty.
             note = (f"{ui_addr!r} resolves to {len(symbols)} code symbol(s) but none are referenced "
                     f"by any OTHER address/feature — an EMPTY co-reference blast radius "
                     f"(it touches code nothing else touches; not an error)")
-        return {"address": ui_addr, "symbols": symbols, "neighbours": sorted(neighbours),
-                "stale": False, "note": note}
+        co_ref_sorted = sorted(co_reference)
+
+        # 3 — STRUCTURAL (X10) + 4 — SEMANTIC (X11), each DISTINGUISHED, each graceful-empty.
+        struct = self._structural_radius(symbols)
+        sem = self._semantic_radius(symbols, index)
+
+        return {"address": ui_addr, "symbols": symbols,
+                # X9 (preserved): co_reference == the legacy `neighbours` field, byte-for-byte set.
+                "co_reference": co_ref_sorted, "neighbours": co_ref_sorted,
+                # X10 (bounded): dependents-to-VERIFY + dependencies-to-RESPECT, capped reported.
+                "structural_dependents": struct["dependents"],
+                "structural_dependencies": struct["dependencies"],
+                "structural_dependents_capped": struct["dependents_capped"],
+                "structural_dependencies_capped": struct["dependencies_capped"],
+                "structural_depth": struct["depth"],
+                # X11: conceptually-related (empty + note when the embedder was down at regen).
+                "semantic_neighbours": sem["neighbours"],
+                "stale": False, "note": note,
+                "structural_note": struct["note"], "semantic_note": sem["note"]}
 
     # --- self-growth: build-dispatch (the "direct its growth" half of the first purpose) ---
     @staticmethod
