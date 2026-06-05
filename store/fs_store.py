@@ -17,7 +17,7 @@ from contracts.address import Provenance
 class FsStore:
     def __init__(self, root):
         self.root = Path(root)
-        for d in ("objects", "refs", "ref_history", "meta", "memo", "graphs", "surfaced", "locks"):
+        for d in ("objects", "refs", "ref_history", "meta", "memo", "graphs", "surfaced", "locks", "vectors"):
             (self.root / d).mkdir(parents=True, exist_ok=True)
         # --- store-level concurrency locks (T1-SEQ / T1-RACE) ---
         # The bridge is a ThreadingHTTPServer over ONE Suite, so read-modify-write paths in the store
@@ -548,6 +548,72 @@ class FsStore:
             if rec.get("address") == address:
                 state[rec.get("target_ts")] = bool(rec.get("pinned"))   # last line wins
         return state
+
+    # --- persisted vector index (X12 · Convergence): {address: vector} keyed by the SAME address grammar ---
+    # A SIBLING namespace of objects/refs/surfaced under the ONE store root (NOT a parallel store, NOT a
+    # new DB — store constitution: one substrate, the address never changes). One file per ADDRESS (keyed by
+    # _safe(address), the same key transform every other namespace uses), holding the open record
+    # {address, vector, content_hash, dim, model, ts}. These are PURE substrate primitives — fabric-free:
+    # the store NEVER calls a model (store constitution: store turns an address into bytes and back). The
+    # embedding ORCHESTRATION (embed the corpus → degrade-with-warning when :8001 is down) lives in
+    # store/vector_index.py, which CALLS these. The content_hash makes a re-build INCREMENTAL — the build
+    # path re-embeds an address ONLY when its content_hash changed (compare get_vector(addr)["content_hash"]).
+    def put_vector(self, address: str, vector: list, content_hash: str, *, dim: int, model: str) -> dict:
+        """Persist one {address: vector} entry into the vectors/ namespace, ATOMICALLY (crash-durable
+        tmp+fsync+os.replace — the SAME guarantee save_surfaced/save_graph give, so a reader sees the whole
+        old entry or the whole new one, never a torn one). Keyed by _safe(address). Schema-additive open
+        record. The store does NOT validate the vector (no model here) — the dim contract is enforced UP at
+        the embed fabric (complete_embeddings dim= guard) and DOWN at the query cosine (retrieve._cosine);
+        the store just persists the bytes by address."""
+        import json as _j
+        from datetime import datetime, timezone
+        (self.root / "vectors").mkdir(parents=True, exist_ok=True)   # defensive (mirrors save_session) — never assume __init__ ran
+        rec = {"address": address, "vector": list(vector), "content_hash": content_hash,
+               "dim": int(dim), "model": model, "ts": datetime.now(timezone.utc).isoformat()}
+        path = self.root / "vectors" / (self._safe(address) + ".json")
+        self._fsync_atomic_write(path, _j.dumps(rec))
+        return rec
+
+    def get_vector(self, address: str) -> dict | None:
+        """The persisted vector entry at `address`, or None if never built (an HONEST None — never a
+        crash, never a fabricated zero-vector; rule 4). Reads disk every call (no in-memory cache), so a
+        SECOND store over the same root sees a prior store's vectors (persistence-survives-reload)."""
+        import json as _j
+        p = self.root / "vectors" / (self._safe(address) + ".json")
+        return _j.loads(p.read_text()) if p.exists() else None
+
+    def index_addresses(self) -> list[str]:
+        """Every address currently in the vector index, sorted. Reads the entries (the `address` field is
+        the truth, not the _safe filename) so the canonical address is returned verbatim. Empty index → []
+        (an honest empty — the embedder may have been DOWN at build, the index stays empty/partial honestly)."""
+        import json as _j
+        d = self.root / "vectors"
+        if not d.exists():
+            return []
+        out = []
+        for p in sorted(d.glob("*.json")):
+            try:
+                out.append(_j.loads(p.read_text())["address"])
+            except Exception:
+                continue
+        return sorted(out)
+
+    def index_corpus(self) -> list[dict]:
+        """The whole index as a corpus list `[{id: address, vector: [...]}]` — the EXACT shape
+        nodes/retrieve.run consumes (id + vector), so the QUERY path feeds it straight in with NO reshaping
+        and NO reimplemented cosine. Empty index → [] (query then returns empty + an honest note)."""
+        import json as _j
+        d = self.root / "vectors"
+        if not d.exists():
+            return []
+        out = []
+        for p in sorted(d.glob("*.json")):
+            try:
+                rec = _j.loads(p.read_text())
+                out.append({"id": rec["address"], "vector": rec["vector"]})
+            except Exception:
+                continue
+        return out
 
     # --- surfaced-decision inbox (S7/D4): non-blocking gates, shared across faces ---
     def surfaced_lock(self):
