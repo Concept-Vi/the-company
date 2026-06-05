@@ -366,6 +366,25 @@ class H(BaseHTTPRequestHandler):
                     str(spec).strip(), scope=b.get("scope"),
                     consequence_class=b.get("consequence_class", "decision_build"),
                     why=b.get("why", ""))))
+            elif self.path == "/api/intent-at":              # L1 (§21.4#2): a COMMENT-AT-AN-ADDRESS becomes a
+                # build-intent that surfaces for approval AT that address. The addressed-feedback → wire
+                # entry seam — mirrors /api/build-intent (OPERATOR face), but the scope is DERIVED from the
+                # ui:// address via S3 (resolve_scope) instead of declared by the caller, and the comment is
+                # RECORDED at the address via I6 (ingest_comment). It only SURFACES the intent (resolved=None);
+                # approval stays on the EXISTING operator-only /api/resolve, and dispatch-on-approve is L2 (a
+                # separate switch — this route NEVER dispatches). An orphan/stale address → EMPTY scope =
+                # DENY-ALL (never fabricated). Fail loud on a missing address/text (S0 + I6 gates → 400).
+                b = self._body()
+                addr = b.get("address")
+                if not addr or not str(addr).strip():
+                    raise ValueError("/api/intent-at needs a non-empty 'address' (fail loud)")
+                text = b.get("text") or b.get("comment")
+                if not text or not str(text).strip():
+                    raise ValueError("/api/intent-at needs a non-empty 'text' comment (fail loud)")
+                self._send(200, json.dumps(SUITE.surface_intent_at(
+                    str(addr).strip(), str(text).strip(), source=b.get("source", "operator"),
+                    consequence_class=b.get("consequence_class", "decision_build"),
+                    why=b.get("why", ""))))
             elif self.path == "/api/review/start":         # B: start a review session (NOT graph-scoped — makes its own)
                 b = self._body()
                 self._send(200, json.dumps(SUITE.start_session(

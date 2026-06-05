@@ -2990,6 +2990,61 @@ class Suite:
                                                   # finer ui://inbox/build-review awaits S0's grammar unification)
         return {"id": sid, "intent": "build", "scope": scope, "consequence_class": consequence_class}
 
+    def surface_intent_at(self, ui_addr: str, text: str, source: str = "operator",
+                          consequence_class: str = "decision_build", why: str = "") -> dict:
+        """L1 (§21.4#2) — a COMMENT-AT-AN-ADDRESS becomes a build-intent that surfaces for approval AT
+        that address. The addressed-feedback → wire entry seam: "this run button is too loud" on
+        `ui://chat/input` becomes a build-intent scoped to the code behind that address, awaiting the
+        operator's approve.
+
+        COMPOSES three EXISTING pieces (rule 3 — one source; never a parallel intent path):
+          1. `ingest_comment` (I6) — RECORD the comment at the address (its `annotation://` branch +
+             the located-gold chat turn). The comment IS the located gold label; it persists at the
+             locus AND becomes the build's spec. This is the SAME wired comment-ingest path the FE's
+             /api/annotate uses — L1 does not duplicate it.
+          2. `resolve_scope` (S3) — JOIN `ui://` → `code://` symbol(s) → repo-relative `scope[]`. The
+             SAME corpus-side resolver L5 used (`self_changes_at`); never re-derived. So the build
+             "lands at the address you touched" — its declared scope IS the code behind that address.
+          3. `surface_build_intent` (the wire's production FRONT DOOR, suite.py:2962) — mint the
+             build-intent with that scope. REUSED UNCHANGED: empty-scope=DENY-ALL + `resolved=None`
+             (a live escalation until the operator resolves) hold exactly as they do for /api/build-intent.
+
+        EMPTY / STALE SCOPE = DENY-ALL (the headline safety property, rule 8): S3's scope is passed
+        STRAIGHT THROUGH to `surface_build_intent`. If the address has no referencing code symbol
+        (orphan / CSS-selector ref) or the corpus is unreadable (stale), S3 returns an EMPTY scope —
+        which `surface_build_intent`'s dispatch-time scope-diff treats as DENY-ALL (`_in_any_scope`
+        False for EVERY path), so the build can NEVER close `implemented`. We NEVER fabricate a broad
+        scope to "make it buildable" (= confabulation, the same failure as not acting). We mirror L5's
+        propagate-`stale`/`note`-straight-through: the gap is fail-loud-LEGIBLE in the return + folded
+        into the build-intent `why`, never a silent empty that lies "buildable anywhere."
+
+        OPERATOR-ONLY APPROVAL (no-bypass, server.py:158): the build-intent is SURFACED here
+        (`resolved=None`) but APPROVED by the OPERATOR via `/api/resolve` (operator-only, off the MCP
+        face). L1 STOPS at surfacing for approval. Dispatch-on-approve is L2 — a separate, deliberate
+        switch (this method NEVER calls dispatch_decision).
+
+        S0 GATE: `ingest_comment`/`resolve_scope` both validate the address (parse_ui_address RAISES on
+        a malformed ui://), and `ingest_comment` fails loud on empty text — so a junk comment can never
+        mint a build-intent. Returns {id, intent, scope, consequence_class, address, stale, note}."""
+        # 1. RECORD the comment at the address (I6 — fails loud on malformed address / empty text).
+        self.ingest_comment(ui_addr, text, source=source)
+        # 2. RESOLVE the code scope (S3 — reused, never duplicated). Empty/stale ⇒ DENY-ALL, carried legibly.
+        scoped = self.resolve_scope(ui_addr)
+        scope = scoped.get("scope") or []
+        stale, note = bool(scoped.get("stale")), (scoped.get("note") or "")
+        # legible consent (I1): the build derives from THIS address + comment. Fold the scope gap into
+        # `why` so the operator's approve sees WHY it's empty (fail-loud-legible, never a silent empty).
+        reason = why or f"comment at {ui_addr}: {str(text).strip()[:200]}"
+        if not scope:
+            reason += f" — [no resolvable code scope: {note or 'orphan/CSS-selector address'} — DENY-ALL]"
+        # 3. MINT through the wire's UNCHANGED front door (empty-scope=DENY-ALL + resolved=None reused).
+        out = self.surface_build_intent(str(text).strip(), scope=scope,
+                                        consequence_class=consequence_class, why=reason)
+        out["address"] = ui_addr
+        out["stale"] = stale
+        out["note"] = note
+        return out
+
     @staticmethod
     def is_build_intent(decision: dict) -> bool:
         """The loop's discriminator (§W2): distinguish a 'go build this' decision from a 'mark a
