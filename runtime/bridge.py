@@ -179,9 +179,9 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.trial_sessions()))
             elif path == "/api/trial/transcript":          # G4.6: a trial session's CAS transcript (fail loud if unrecorded)
                 self._send(200, json.dumps(SUITE.trial_transcript(q["session"])))
-            elif path == "/api/voice/ears":                # G4.7: GPU-ear lifecycle state (up/warming/down + VRAM)
-                from voice.ears import lifecycle as ear_lc
-                self._send(200, json.dumps(ear_lc.status()))
+            elif path in ("/api/voice/services", "/api/voice/ears"):  # G4.7: voice-service lifecycle (ears+engines: up/warming/down + VRAM)
+                from voice import lifecycle as voice_lc       # /api/voice/ears kept as a back-compat alias
+                self._send(200, json.dumps(voice_lc.status()))
             elif path == "/api/roles":                     # G4.2: the model-ROLE registry (judge + future) the config lab binds
                 self._send(200, json.dumps(SUITE.roles()))
             else:
@@ -286,6 +286,23 @@ class H(BaseHTTPRequestHandler):
                 audio = self.rfile.read(int(self.headers.get("Content-Length", 0)))
                 if not audio:
                     raise ValueError("/api/voice/turn got empty audio (fail loud)")
+                # BOOT-ON-DEMAND ("make it all live"): the persona needs its TTS engine up. Check BEFORE
+                # the turn so we don't burn a brain call then fail at speak. If down: ?boot=1 launches it
+                # (returns 'booting' — the UI shows warming + retries when up; we do NOT block the request
+                # ~25s); else a legible, actionable refusal naming the load endpoint (no silent stall).
+                from voice import lifecycle as voice_lc, personas as voice_personas
+                eng = voice_personas.get_persona(persona)["engine"]   # fail loud on unknown persona
+                svc = voice_lc.engine_service_for(eng)
+                if svc and not voice_lc.is_up(voice_lc._loadable()[svc]):
+                    if vq.get("boot") == "1":
+                        booted = voice_lc.load(svc)               # warming; fail-loud if it won't fit
+                        self._send(200, json.dumps({"booting": booted, "persona": persona, "engine": eng,
+                            "note": f"engine {eng} is loading — retry the turn when status() shows it up"}))
+                        return
+                    raise RuntimeError(
+                        f"persona {persona!r} needs TTS engine {eng!r} ({svc}) which is DOWN — load it "
+                        f"first (POST /api/voice/load {{\"service\":\"{svc}\"}}) or call this with ?boot=1. "
+                        f"Refusing a silent stall (fail loud).")
                 ear = SUITE.rhm_config().get("stt") or voice_stt.active_ear()
                 r = voice_loop.loop_turn(
                     audio, persona, graph_id=gid, stt_provider=ear,
@@ -395,14 +412,14 @@ class H(BaseHTTPRequestHandler):
                 b = self._body()
                 self._send(200, json.dumps(SUITE.trial_record_reflection(
                     b["session_id"], b["text"], b.get("character"))))
-            elif self.path == "/api/voice/ear/load":        # G4.7: load a GPU ear (returns 'warming'; fail-loud if it won't fit)
-                from voice.ears import lifecycle as ear_lc
+            elif self.path in ("/api/voice/load", "/api/voice/ear/load"):    # G4.7: load a voice service (ear OR engine; 'warming'; fail-loud if it won't fit)
+                from voice import lifecycle as voice_lc
                 b = self._body()
-                self._send(200, json.dumps(ear_lc.load(b["ear"])))
-            elif self.path == "/api/voice/ear/unload":      # G4.7: unload a GPU ear → frees its VRAM
-                from voice.ears import lifecycle as ear_lc
+                self._send(200, json.dumps(voice_lc.load(b.get("service") or b["ear"])))
+            elif self.path in ("/api/voice/unload", "/api/voice/ear/unload"):  # G4.7: unload a voice service → frees its VRAM
+                from voice import lifecycle as voice_lc
                 b = self._body()
-                self._send(200, json.dumps(ear_lc.unload(b["ear"])))
+                self._send(200, json.dumps(voice_lc.unload(b.get("service") or b["ear"])))
             elif self.path == "/api/voice/finished-thought":  # G1.3: the semantic endpoint judge (brain-side)
                 b = self._body()
                 self._send(200, json.dumps(SUITE.is_finished_thought(b.get("text", ""))))
