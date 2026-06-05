@@ -671,6 +671,40 @@ class Suite:
     DEFAULT_MODE = "listening"
     SYSTEM_GRAPH = "system"
     MODE_NODE = "rhm"
+
+    # --- the MODEL-ROLE REGISTRY (registry-is-truth; mirrors STT_PROVIDERS / the node registry) -------
+    # A ROLE is a named model-FUNCTION of the collective cognition: a specific job done by a model that
+    # is NOT the conversational brain. The brain (rhm_config.model) is the primary/conscious role and
+    # stays its OWN slot (widely read; the model-registry session owns it) — these are the AUXILIARY
+    # roles. `judge` is the first (the voice circuit's finished-thought endpoint). Add a role TYPE here
+    # (+ the code that consumes it) → it appears as a configurable slot in the UI automatically; you
+    # never edit the config whitelist (bindings live in ONE `roles` dict).
+    #
+    # Each role DECLARES its full contract — Tim's "triggers, configs like outputs/tools, contexts, and
+    # whatever else": the fields below are the role's self-description the config lab renders + binds.
+    # WIRED-NOW fields (flow into the model call): default_model/base_url (None → the brain), knobs
+    # (max_tokens/temperature/…), thinking, output, tools. DECLARED-design fields (captured + designable,
+    # the growth path — NOT a faked general engine): `trigger` is descriptive today (judge's concrete
+    # trigger is the voice circuit calling /api/voice/finished-thought); a general event→role trigger
+    # engine, and per-role arbitrary tool-binding, come as their consuming code is built. `env_*` give
+    # the resolution precedence: a config binding > env override > the declared default.
+    ROLE_REGISTRY = {
+        "judge": {
+            "label": "Finished-thought judge",
+            "description": "Decides whether a spoken utterance is a COMPLETE thought (fire the turn) or "
+                           "mid-ramble (keep listening) — the voice circuit's semantic endpoint.",
+            "trigger": "voice circuit: a VAD pause during always-listen (POST /api/voice/finished-thought)",
+            "default_model": None,            # None → falls to the RHM brain (rhm_config.model)
+            "default_base_url": None,         # None → the brain's base_url
+            "thinking": False,                # WANTS a fast non-reasoning model (a reasoner stalls the hot path)
+            "output": "one word: FINISHED | MORE",
+            "tools": [],                      # no tools — a pure classifier
+            "context": "the utterance text only (no system grounding)",
+            "knobs": {"max_tokens": 256, "temperature": 0},
+            "env_model": "COMPANY_JUDGE_MODEL", "env_url": "COMPANY_JUDGE_URL",
+            "env_knobs": {"max_tokens": "COMPANY_JUDGE_MAX_TOKENS"},
+        },
+    }
     MODE_DIRECTIVES = {
         "listening": "Conversational and present; respond fully.",
         "text-only": "Respond in text, concisely, only to what is addressed.",
@@ -787,7 +821,12 @@ class Suite:
                 # the STT (ear) slot — WHICH speech-to-text provider the RHM listens through. A config
                 # slot mirroring `model` (the brain). Default = the stt lane's default ear when present
                 # (else ''); the operator swaps providers without code. Schema-additive (absent → default).
-                "stt": c.get("stt") or self._stt_default()}
+                "stt": c.get("stt") or self._stt_default(),
+                # the ROLE BINDINGS — {role_id: {model?, base_url?, knobs?, ...}} per the ROLE_REGISTRY.
+                # n model-FUNCTION roles (judge first; more to come) each bind a model + config from the
+                # live registry. Stored as ONE dict so adding a role never touches the config whitelist.
+                # Schema-additive (absent → {}); the brain stays its OWN slot (`model`) — NOT a role here.
+                "roles": c.get("roles", {})}
 
     def voice_enabled(self) -> bool:
         """Lane H — is voice on for the current presence? Reads the rhm node's `voice_enabled`
@@ -801,7 +840,33 @@ class Suite:
 
     def set_rhm_config(self, updates: dict) -> dict:
         allowed = {k: v for k, v in (updates or {}).items()
-                   if k in ("model", "base_url", "persona", "mode", "voice_enabled", "timeout", "stt")}
+                   if k in ("model", "base_url", "persona", "mode", "voice_enabled", "timeout", "stt", "roles")}
+        if "roles" in allowed:                                # the role-binding registry slot (n roles)
+            incoming = allowed["roles"]
+            if not isinstance(incoming, dict):
+                raise ValueError("roles must be a dict {role_id: {model?, base_url?, knobs?, ...}}")
+            for rid, binding in incoming.items():
+                if rid not in self.ROLE_REGISTRY:             # registry-is-truth: fail loud on an unknown role
+                    raise ValueError(f"unknown role {rid!r} — registered roles: {sorted(self.ROLE_REGISTRY)}. "
+                                     f"Author from the registry, never invent (add a role TYPE in code first).")
+                if not isinstance(binding, dict):
+                    raise ValueError(f"role {rid!r} binding must be a dict (model?/base_url?/knobs?/…)")
+            # MERGE with the existing bindings (set_config does a shallow top-level update, which would
+            # REPLACE the whole roles dict — so we deep-merge here). THREE levels so a partial update is
+            # non-destructive: (1) binding one role never wipes a SIBLING role; (2) within a role,
+            # incoming keys override, others preserved; (3) the `knobs` SUB-dict deep-merges too, so
+            # setting one knob (e.g. temperature) never resets another (e.g. max_tokens). Verified: a
+            # partial knob update used to drop the other knob to its default — this keeps both.
+            existing = dict(self.rhm_config().get("roles", {}))
+            for rid, binding in incoming.items():
+                merged = dict(existing.get(rid, {}))
+                inc = dict(binding)
+                if "knobs" in inc and isinstance(merged.get("knobs"), dict):
+                    knobs = dict(merged["knobs"]); knobs.update(inc["knobs"] or {})
+                    inc["knobs"] = knobs                      # deep-merge the knobs sub-dict
+                merged.update(inc)
+                existing[rid] = merged
+            allowed["roles"] = existing
         if "mode" in allowed and allowed["mode"] not in self.MODES:
             raise ValueError(f"unknown mode {allowed['mode']!r}")
         if "stt" in allowed:                                  # the ear slot — validate against voice/stt.py's
@@ -1463,44 +1528,81 @@ class Suite:
         out["routed_posture"] = p                              # deterministic record: which posture routed it
         return out
 
+    def roles(self) -> dict:
+        """The MODEL-ROLE registry as a STATUS read — the config lab's source (it NEVER hardcodes the
+        role list). For each registered role: its declared contract (label/description/trigger/output/
+        tools/context/thinking/knobs) + the current binding + the EFFECTIVE resolution (what would
+        actually be used right now). Mirrors available_stt()'s registry-as-status shape."""
+        bindings = self.rhm_config().get("roles", {})
+        out = {}
+        for rid, spec in self.ROLE_REGISTRY.items():
+            out[rid] = {"id": rid, **{k: spec[k] for k in spec
+                                      if k not in ("env_model", "env_url", "env_knobs")},
+                        "binding": bindings.get(rid, {}),
+                        "effective": self.resolve_role(rid)}
+        return out
+
+    def resolve_role(self, role_id: str) -> dict:
+        """Resolve a role to the EFFECTIVE {model, base_url, knobs, thinking, output, tools, context}
+        actually used when the role fires. Precedence (advisor-set): config BINDING > env override >
+        declared default; a None default_model falls to the RHM brain (rhm_config.model). Fail loud on
+        an unknown role (registry-is-truth). The role's consuming code (e.g. is_finished_thought) calls
+        THIS — so swapping a role's model is a config change, never a code change."""
+        import os
+        if role_id not in self.ROLE_REGISTRY:
+            raise ValueError(f"unknown role {role_id!r} — registered: {sorted(self.ROLE_REGISTRY)}")
+        spec = self.ROLE_REGISTRY[role_id]
+        cfg = self.rhm_config()
+        binding = cfg.get("roles", {}).get(role_id, {})
+        model = (binding.get("model") or os.environ.get(spec.get("env_model", ""))
+                 or spec.get("default_model") or cfg["model"])               # None default → the brain
+        base_url = (binding.get("base_url") or os.environ.get(spec.get("env_url", ""))
+                    or spec.get("default_base_url") or cfg["base_url"])
+        knobs = dict(spec.get("knobs", {}))                                  # declared defaults
+        for k, env_name in (spec.get("env_knobs") or {}).items():           # env override
+            if os.environ.get(env_name):
+                knobs[k] = type(knobs.get(k, 0))(os.environ[env_name]) if isinstance(knobs.get(k), int) else os.environ[env_name]
+        knobs.update(binding.get("knobs", {}))                              # binding wins
+        return {"role": role_id, "model": model, "base_url": base_url, "knobs": knobs,
+                "thinking": binding.get("thinking", spec.get("thinking")),
+                "output": spec.get("output"), "tools": spec.get("tools", []),
+                "context": spec.get("context")}
+
     def is_finished_thought(self, text: str) -> dict:
         """The voice circuit's SEMANTIC endpoint judge (G1.3): given the utterance heard so far (after a
         VAD pause), is it a FINISHED THOUGHT — fire the turn — or is the operator mid-ramble — keep
         listening? This is the "not a dumb silence timer" lever: a pause alone does NOT end a turn; a
         MODEL judges completeness.
 
-        JUDGE MODEL — separate, configurable, fast (NOT the conversational brain). The judge is a
-        utility classifier on the LIVE turn path, so a reasoning brain is the WRONG tool: measured
-        2026-06-05, deepseek-v4-pro (a reasoning model) needs ~256 tokens to surface a 1-word answer and
-        takes ~6.5s — unusable per pause. So the judge model is its OWN slot: env COMPANY_JUDGE_MODEL /
-        COMPANY_JUDGE_URL (default = the RHM brain+url, which WORKS but is slow until pointed at a fast
-        no-think model like the 4B local worker on :8000). max_tokens defaults generous (COMPANY_JUDGE_
-        MAX_TOKENS=256) so the default reasoning brain still returns an answer; a fast no-think judge
-        needs far fewer. Verdict is parsed by looking for 'finish' anywhere (robust to a little thinking).
+        JUDGE = the 'judge' ROLE in the ROLE_REGISTRY (resolve_role('judge')) — a separate, configurable,
+        fast model, NOT the conversational brain. The judge is a utility classifier on the LIVE turn
+        path, so a reasoning brain is the WRONG tool: measured 2026-06-05, deepseek-v4-pro (a reasoner)
+        needs ~256 tokens to surface a 1-word answer and takes ~6.5s — unusable per pause. The role's
+        model/knobs resolve binding > env (COMPANY_JUDGE_*) > declared default (default_model None → the
+        brain, which WORKS but is slow until rebound to a fast no-think model). Verdict parses 'finish'
+        anywhere (robust to a little thinking).
 
         Empty/blank text → trivially not finished (no model call). Returns {finished, verdict, text,
         judge_model}. Brain/transport errors PROPAGATE (FabricError) → fail loud; the circuit's explicit
         fallback is the manual push-to-talk toggle SURFACED to the operator, NEVER a silent degrade to a
         silence timer (the rejected design)."""
-        import os
         from fabric import client, transport
         t = (text or "").strip()
         if not t:
             return {"finished": False, "verdict": "MORE", "text": t, "note": "empty — nothing to end"}
+        r = self.resolve_role("judge")                        # the role registry resolves model+knobs
         cfg = self.rhm_config()
-        model = os.environ.get("COMPANY_JUDGE_MODEL") or cfg["model"]
-        base_url = os.environ.get("COMPANY_JUDGE_URL") or cfg["base_url"]
-        max_tokens = int(os.environ.get("COMPANY_JUDGE_MAX_TOKENS", "256"))
         sys_p = ("You judge ONLY whether a spoken utterance is a COMPLETE THOUGHT the listener should now "
                  "respond to, or whether the speaker is mid-sentence / mid-ramble and likely to continue. "
                  "Answer with EXACTLY one word: FINISHED or MORE. No punctuation, no explanation.")
         msgs = [{"role": "system", "content": sys_p},
                 {"role": "user", "content": f'Utterance so far: "{t}"\nFINISHED or MORE?'}]
         out = client.complete(
-            transport.openai_transport(base_url=base_url, timeout=cfg["timeout"]),
-            msgs, model=model, max_tokens=max_tokens, temperature=0)
+            transport.openai_transport(base_url=r["base_url"], timeout=cfg["timeout"]),
+            msgs, model=r["model"], max_tokens=r["knobs"].get("max_tokens", 256),
+            temperature=r["knobs"].get("temperature", 0))
         verdict = "FINISHED" if "finish" in (out or "").strip().lower() else "MORE"
-        return {"finished": verdict == "FINISHED", "verdict": verdict, "text": t, "judge_model": model}
+        return {"finished": verdict == "FINISHED", "verdict": verdict, "text": t, "judge_model": r["model"]}
 
     def chat(self, message: str, graph_id: str, focus: dict | None = None) -> dict:
         """Grounded conversation with the operator via NATIVE TOOL-CALLING. Answers from compact

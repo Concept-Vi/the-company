@@ -182,6 +182,8 @@ class H(BaseHTTPRequestHandler):
             elif path == "/api/voice/ears":                # G4.7: GPU-ear lifecycle state (up/warming/down + VRAM)
                 from voice.ears import lifecycle as ear_lc
                 self._send(200, json.dumps(ear_lc.status()))
+            elif path == "/api/roles":                     # G4.2: the model-ROLE registry (judge + future) the config lab binds
+                self._send(200, json.dumps(SUITE.roles()))
             else:
                 self._send(404, "{}")
         except Exception as e:                             # fail loud to the UI (parity with do_POST)
