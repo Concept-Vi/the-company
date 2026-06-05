@@ -1,0 +1,27 @@
+{
+  "_what": "GENERATED surface-spec for view B7. Directory = journey spine (tree); journeys[]/cross_journeys[] = the address-refs that carry the web (B3). Built by a Claude Code session to the addresses below (never invent an address).",
+  "id": "B7",
+  "area": "B",
+  "title": "decide-for-me autonomous routing",
+  "platforms": [
+    "desktop",
+    "mobile"
+  ],
+  "represents": [
+    "RHM-decide",
+    "GOV-tiers"
+  ],
+  "status": "planned",
+  "home_journey": "J4",
+  "journeys": [
+    "J4"
+  ],
+  "cross_journeys": [],
+  "addresses": [],
+  "build_to": {
+    "components": [],
+    "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
+    "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
+  },
+  "address_gap": "view B7 represents ['RHM-decide', 'GOV-tiers'] but no registered ui:// address joins by feature-id"
+}

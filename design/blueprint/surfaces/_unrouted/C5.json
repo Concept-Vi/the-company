@@ -1,0 +1,27 @@
+{
+  "_what": "GENERATED surface-spec for view C5. Directory = journey spine (tree); journeys[]/cross_journeys[] = the address-refs that carry the web (B3). Built by a Claude Code session to the addresses below (never invent an address).",
+  "id": "C5",
+  "area": "C",
+  "title": "Replay / decision trajectory audit",
+  "platforms": [
+    "desktop"
+  ],
+  "represents": [
+    "INB-replay",
+    "EVT-log"
+  ],
+  "status": "quality-passed",
+  "home_journey": "_unrouted",
+  "journeys": [],
+  "cross_journeys": [],
+  "addresses": [
+    "ui://activity/replay"
+  ],
+  "build_to": {
+    "components": [
+      "activity"
+    ],
+    "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
+    "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
+  }
+}

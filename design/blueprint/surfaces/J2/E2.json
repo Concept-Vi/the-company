@@ -1,0 +1,26 @@
+{
+  "_what": "GENERATED surface-spec for view E2. Directory = journey spine (tree); journeys[]/cross_journeys[] = the address-refs that carry the web (B3). Built by a Claude Code session to the addresses below (never invent an address).",
+  "id": "E2",
+  "area": "E",
+  "title": "Embedding chain embed\u2192similarity\u2192retrieve",
+  "platforms": [
+    "desktop"
+  ],
+  "represents": [
+    "MOD-embed",
+    "NODE-ports"
+  ],
+  "status": "planned",
+  "home_journey": "J2",
+  "journeys": [
+    "J2"
+  ],
+  "cross_journeys": [],
+  "addresses": [],
+  "build_to": {
+    "components": [],
+    "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
+    "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
+  },
+  "address_gap": "view E2 represents ['MOD-embed', 'NODE-ports'] but no registered ui:// address joins by feature-id"
+}

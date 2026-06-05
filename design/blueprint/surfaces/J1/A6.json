@@ -1,0 +1,29 @@
+{
+  "_what": "GENERATED surface-spec for view A6. Directory = journey spine (tree); journeys[]/cross_journeys[] = the address-refs that carry the web (B3). Built by a Claude Code session to the addresses below (never invent an address).",
+  "id": "A6",
+  "area": "A",
+  "title": "Force-rerun + cache legibility",
+  "platforms": [
+    "desktop"
+  ],
+  "represents": [
+    "ENG-force",
+    "ENG-memo"
+  ],
+  "status": "planned",
+  "home_journey": "J1",
+  "journeys": [
+    "J1"
+  ],
+  "cross_journeys": [],
+  "addresses": [
+    "ui://inspector/act"
+  ],
+  "build_to": {
+    "components": [
+      "inspector"
+    ],
+    "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
+    "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
+  }
+}

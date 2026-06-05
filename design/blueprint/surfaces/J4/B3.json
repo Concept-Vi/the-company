@@ -1,0 +1,32 @@
+{
+  "_what": "GENERATED surface-spec for view B3. Directory = journey spine (tree); journeys[]/cross_journeys[] = the address-refs that carry the web (B3). Built by a Claude Code session to the addresses below (never invent an address).",
+  "id": "B3",
+  "area": "B",
+  "title": "Walkthrough \u2014 RHM drives the view",
+  "platforms": [
+    "desktop",
+    "mobile"
+  ],
+  "represents": [
+    "WALK-present",
+    "WALK-next",
+    "WALK-uiresolve",
+    "RHM-copresence"
+  ],
+  "status": "planned",
+  "home_journey": "J4",
+  "journeys": [
+    "J4"
+  ],
+  "cross_journeys": [],
+  "addresses": [
+    "ui://walkthrough"
+  ],
+  "build_to": {
+    "components": [
+      "walkthrough"
+    ],
+    "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
+    "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
+  }
+}
