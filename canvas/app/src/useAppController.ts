@@ -87,6 +87,12 @@ export function useAppController(editor: Editor) {
   const [wtBusy, setWtBusy] = useState(false)
   const wtBusyRef = useRef(false)
   sessionRef.current = session
+  // F2 (responsive): the active MOBILE tab. At <699px the grid collapses to one column, the rails+overlays
+  // are hidden (they overlap at phone width — fe-map §4), and a bottom tabbar drives which surface shows as a
+  // bottom-sheet over the (always-mounted) canvas. 'canvas' = no sheet (board full-bleed). This state is INERT
+  // on desktop/tablet (those breakpoints display:none the tabbar+sheets), so it never changes desktop layout.
+  // tldraw stays mounted under the sheet at every width — semantic-zoom/drag-to-wire (preserve-list) intact.
+  const [mobileTab, setMobileTab] = useState<'canvas' | 'palette' | 'inbox' | 'rhm'>('canvas')
 
   // Merge events by SEQ into the current list — an event already present (same seq) is never duplicated,
   // regardless of source. Makes `key={e.seq}` inherently unique and kills the "two children with the same
@@ -236,8 +242,12 @@ export function useAppController(editor: Editor) {
   }
 
   async function reload() { const g = await loadGraph(editor); setEdges(g.edges || []); syncConfig(g); paintStuck(); await poll(); await maybeReact() }
-  // U6: fit the graph but PAD for the fixed chrome so no node tucks under the panels. (F2 will remove the
-  // duplicated px once the responsive shell lands; F0 keeps it verbatim.)
+  // U6: fit the graph but PAD for the chrome so no node tucks under the panels.
+  // F2: the pad is READ FROM THE LIVE LAYOUT, not hardcoded panel px. fe-map §4 found these magic numbers
+  // (158/330/56/240) DUPLICATED here and in app.css — they desync the moment the responsive grid changes a
+  // track. Now we measure the actual rendered rails/toolbar via getBoundingClientRect() (the layout OWNS the
+  // geometry; JS reads it — single source). At narrow breakpoints the rails are display:none → their rect
+  // width/height is 0 → zero pad automatically, so a phone fit isn't padded for chrome that isn't there.
   function fitGraph() {
     const shapes = editor.getCurrentPageShapes().filter(s => s.type === 'node')
     if (!shapes.length) { editor.zoomToFit({ animation: { duration: 300 } }); return }
@@ -249,7 +259,14 @@ export function useAppController(editor: Editor) {
     })
     if (!isFinite(minX)) { editor.zoomToFit({ animation: { duration: 300 } }); return }
     const z = editor.getZoomLevel() || 1
-    const padL = (158 + 24) / z, padR = (330 + 24) / z, padT = (56 + 16) / z, padB = (240 + 16) / z
+    // measure the chrome that actually overlaps the canvas at THIS width (0 when display:none)
+    const rectW = (sel: string) => { const e = document.querySelector(sel) as HTMLElement | null; return e ? e.getBoundingClientRect().width : 0 }
+    const rectH = (sel: string) => { const e = document.querySelector(sel) as HTMLElement | null; return e ? e.getBoundingClientRect().height : 0 }
+    const GAP = 16                                                    // breathing room past the chrome edge
+    const padL = (rectW('.as-rail') + GAP) / z                        // left rail (palette) — 0 on mobile
+    const padR = (rectW('.as-panel') + GAP) / z                       // right rail (inspector) — 0 on mobile
+    const padT = (rectH('.as-top') + GAP) / z                         // toolbar height (wraps → measured, not guessed)
+    const padB = (Math.max(rectH('.as-canvas .activity'), rectH('.as-canvas .rhm')) + GAP) / z   // bottom overlays — 0 on mobile
     const bounds = { x: minX - padL, y: minY - padT, w: (maxX - minX) + padL + padR, h: (maxY - minY) + padT + padB }
     editor.zoomToBounds(bounds, { targetZoom: 1, animation: { duration: 300 } })
   }
@@ -677,12 +694,12 @@ export function useAppController(editor: Editor) {
     edges, running, runError, runStartedAt, runElapsed, types, gname, gspec, surf, growMsg, workshop,
     oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
     showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn,
-    wtSpoke, wtBusy, selected,
+    wtSpoke, wtBusy, selected, mobileTab,
     // refs the components read for the inspector form
     configByNode,
     // setters the components call directly
     setGname, setGspec, setSurf, setWorkshop, setNotice, setCfg, setCfgOpen, setChatMsg, setShowResolved,
-    setDrill, setReason, setWtReason, setVoiceOn, setRunError, setGrowMsg,
+    setDrill, setReason, setWtReason, setVoiceOn, setRunError, setGrowMsg, setMobileTab,
     // handlers
     poll, openCoa, reload, fitGraph, addNode, wireSelected, doConnect, setNodeConfig, surfaceOutput,
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,

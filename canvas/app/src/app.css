@@ -371,3 +371,69 @@ button.b:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
 .as-canvas .op-panels{position:absolute;top:0;left:14px;width:212px;display:flex;flex-direction:column;gap:8px;pointer-events:auto}
 .as-canvas .activity{position:absolute;left:0;bottom:0;width:300px;pointer-events:auto}
 .as-canvas .rhm{position:absolute;right:0;bottom:0;width:340px;height:312px;pointer-events:auto}
+
+/* ============================================================================================
+   F2 · RESPONSIVE — usable at 1440 / 768 / 390 with NO overlap.
+   IS (fe-map §4): zero media queries, every panel a fixed-px island — on a 390px phone the palette + the
+   inspector rail + rhm + activity all overlap. The corpus design-system.css carries a real 3-breakpoint grid
+   app-shell + collapsible rails + a bottom tabbar (design-system.css:111–121). F0 carved `.app-shell` (NOT the
+   corpus's `.app`, so the corpus @media rules — which target `.app` — never match it). F2 reuses the corpus
+   BREAKPOINT VALUES (1099 / 820 / 699) + the corpus COMPONENT classes (.tabbar) as the net-new mobile DOM, and
+   adds the thin adapter rules that bind them to `.app-shell`'s grid areas. (Documented in FE.report notes:
+   corpus→F0-shell binding, deliberately NOT a rename of F0's shell — lower regression risk.)
+   tldraw stays MOUNTED at every width (never display:none'd) → semantic-zoom + drag-to-wire (preserve-list)
+   are width-independent; the sheets/tabbar overlay the live board, they never replace it.
+   ============================================================================================ */
+
+/* ── TABLET (≤1099): the rail (palette) narrows toward an icon strip; canvas widens; right panel stays. ── */
+@media (max-width:1099px){
+  .app-shell{grid-template-columns:128px 1fr 300px}
+}
+
+/* ── NARROW-TABLET (≤820): keep a real 3-column dock but TIGHTER — rail to an icon-ish strip, a narrower
+   inspector column that STAYS VISIBLE (no off-screen overlay: there's no toggle affordance at this width yet,
+   so docking the panel off-screen would strand the inspector — the corpus .panel.overlay model needs a toggle
+   the mobile tabbar provides only at ≤699). At 768px (a verify width) rail(96)+canvas+panel(248) all fit with
+   no collision. The two bottom in-canvas overlays (activity 300 + rhm 340) are the one tight spot, so we STACK
+   them: activity rides ABOVE the rhm in the bottom-right, never both bottom-anchored at 0. ── */
+@media (max-width:820px){
+  .app-shell{grid-template-columns:96px 1fr 248px}
+  /* keep both bottom overlays clear of each other: activity sits above the rhm */
+  .as-canvas .activity{left:auto;right:0;bottom:324px;width:280px}
+  .as-canvas .rhm{width:300px}
+  .as-canvas .op-panels{display:none}        /* brain-authored extras fold away on small canvas (reachable on desktop) */
+}
+
+/* ── MOBILE (≤699): single column, canvas FULL-BLEED. The rails + every in-canvas overlay (which overlap each
+   other at phone width — fe-map §4) are hidden; a bottom TABBAR (corpus component) replaces them and toggles
+   ONE bottom-sheet at a time over the always-live board. No two surfaces share screen space → zero overlap. ── */
+@media (max-width:699px){
+  .app-shell{grid-template-rows:auto 1fr;grid-template-columns:1fr;
+    grid-template-areas:"top" "canvas";padding:8px 8px 64px;gap:8px}
+  /* the toolbar wraps to fit 390px (flex-wrap already set in the F0 .app-shell .toolbar rule) */
+  .app-shell .toolbar{width:100%;justify-content:flex-start}
+  /* the in-canvas overlays overlap at phone width → hide them; their content reaches the operator via the
+     sheets/tabbar (rhm sheet, inbox sheet) — fail-loud preserved: nothing silently lost, just relocated. */
+  .as-canvas .op-panels,.as-canvas .activity,.as-canvas .walkthrough{display:none}
+  /* the two rails become bottom-SHEETS — off-screen by default, slid up when their tab is active. Only one
+     can be active (data-mtab is a single value) so they never co-occupy the screen. */
+  .as-sheet{position:fixed;left:0;right:0;bottom:58px;top:auto;width:auto;max-height:60vh;z-index:340;
+    border-radius:8px 8px 0 0;border:1px solid var(--line);border-bottom:none;box-shadow:var(--shadow);
+    transform:translateY(110%);transition:transform .22s ease;pointer-events:auto;overflow:auto}
+  .as-panel.as-sheet{position:fixed}                  /* override the ≤820 docked panel */
+  .app-shell[data-mtab="palette"] .as-rail.as-sheet{transform:translateY(0)}
+  .app-shell[data-mtab="inbox"]   .as-panel.as-sheet{transform:translateY(0)}
+  /* the rhm chat lives in the canvas cell; on mobile it becomes the 'rhm' bottom-sheet (toggled, not always-on) */
+  .as-canvas .rhm{display:none}
+  .app-shell[data-mtab="rhm"] .as-canvas .rhm{display:flex;position:fixed;left:0;right:0;bottom:58px;top:auto;
+    width:auto;height:auto;max-height:60vh;z-index:340;border-radius:8px 8px 0 0}
+  /* the tabbar — corpus component, mobile-only, pinned to the bottom edge as the nav */
+  .tabbar{display:flex !important;position:fixed;left:0;right:0;bottom:0;height:58px;z-index:360}
+}
+
+/* the tabbar component (corpus design-system.css:119–121 vocabulary) — hidden above 699 by default. */
+.tabbar{display:none;align-items:stretch;background:var(--s0);border-top:1px solid var(--line)}
+.tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  color:var(--dim);font-size:10px;cursor:pointer;text-decoration:none;letter-spacing:.04em}
+.tabbar a.on{color:var(--sig)}
+.tabbar a .ic{font-size:17px;line-height:1}

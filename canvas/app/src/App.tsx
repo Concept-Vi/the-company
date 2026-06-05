@@ -44,6 +44,10 @@ import { Workshop } from './regions/Workshop'
 function Hud() {
   const editor = useEditor()
   const ctrl = useAppController(editor)
+  // F2 (responsive): mobileTab drives which sheet shows at <699px. The data-mtab attribute on the shell lets
+  // the CSS reveal exactly one bottom-sheet (or none for 'canvas'). On desktop/tablet the tabbar + sheet
+  // behaviour is display:none, so this attribute is inert above 699px — desktop layout is untouched.
+  const { mobileTab, setMobileTab } = ctrl
   return (
     <AppContext.Provider value={ctrl}>
       {/* Edges paints over the whole viewport (pointer-events:none); kept outside the grid so it overlays
@@ -57,12 +61,17 @@ function Hud() {
          longer throws (api.ts jr + the sendChat guard), so this is defense-in-depth, not the primary fix. */}
     <PanelErrorBoundary name="surface">
       {/* The top-level layout shell — one grid container, not absolute-px islands. The `canvas` cell is
-         transparent + pointer-events:none so the tldraw board underneath stays interactive. */}
-      <div className="app-shell">
+         transparent + pointer-events:none so the tldraw board underneath stays interactive.
+         F2: data-mtab = the active mobile sheet; data-bp on the breakpoints does the column/row collapse. */}
+      <div className="app-shell" data-mtab={mobileTab}>
+        {/* F2: as-rail/as-panel get .as-sheet so that at <699px they become bottom-sheets the tabbar toggles
+           (instead of fixed-px islands that overlap the canvas). Above 699px .as-sheet is inert. */}
         <div className="as-top"><Toolbar /></div>
-        <div className="as-rail"><Palette /></div>
+        <div className="as-rail as-sheet"><Palette /></div>
         {/* the canvas cell is a passthrough — the tldraw board renders behind the shell; overlays that must
-           sit over the canvas (walkthrough card, op-panels) live here, each re-enabling pointer-events. */}
+           sit over the canvas (walkthrough card, op-panels) live here, each re-enabling pointer-events.
+           F2: at <699px these in-canvas overlays are display:none (they overlap each other at phone width —
+           fe-map §4); their content reaches the operator via the rhm bottom-sheet + the inbox sheet instead. */}
         <div className="as-canvas">
           <PanelErrorBoundary name="walkthrough">
             <Walkthrough />
@@ -79,12 +88,24 @@ function Hud() {
         </div>
         {/* the right rail — Inspector + Inbox + Grow stacked in ONE scroll column (the .panel rail, as
            before). data-ui-ref="inspector" is on this scroll container (the resolveUiTarget keystone +
-           the U7 scroll-into-view query it by that ref). */}
-        <div className="as-panel hud panel" data-ui-ref="inspector">
+           the U7 scroll-into-view query it by that ref).
+           F2: .as-sheet makes it a bottom-sheet (the 'inbox' tab) at <699px. */}
+        <div className="as-panel as-sheet hud panel" data-ui-ref="inspector">
           <Inspector />
           <Inbox />
           <Grow />
         </div>
+        {/* F2: the MOBILE NAV — a bottom tabbar (corpus .tabbar component) shown ONLY at <699px. It replaces
+           the hidden rails: Canvas (board, no sheet) · Inbox (the inspector/inbox sheet) · RHM (chat sheet) ·
+           Run. RUN here calls the SAME doRun() as the toolbar — U1 preserved (arrow-wrapped, no event passed),
+           so the operator can always run at phone width (corpus tabbar names Run as the 4th tab). */}
+        <nav className="tabbar" data-ui-ref="tabbar">
+          <a className={mobileTab === 'canvas' ? 'on' : ''} onClick={() => setMobileTab('canvas')}><span className="ic">▦</span>canvas</a>
+          <a className={mobileTab === 'palette' ? 'on' : ''} onClick={() => setMobileTab('palette')}><span className="ic">＋</span>add</a>
+          <a className={mobileTab === 'inbox' ? 'on' : ''} onClick={() => setMobileTab('inbox')}><span className="ic">▤</span>panel</a>
+          <a className={mobileTab === 'rhm' ? 'on' : ''} onClick={() => setMobileTab('rhm')}><span className="ic">◈</span>rhm</a>
+          <a onClick={() => ctrl.doRun()}><span className="ic">▶</span>run</a>
+        </nav>
       </div>
       {/* Workshop is a full-viewport modal (position:fixed) — outside the grid so it covers everything. */}
       <Workshop />
