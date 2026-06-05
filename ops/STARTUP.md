@@ -56,3 +56,10 @@ systemctl --user enable --now company.target
 loginctl enable-linger $USER   # start at boot without login
 ```
 (`vllm-chat.service` + `voicemode-whisper.service` are existing units pulled into the target via `systemctl --user add-wants company.target <unit>`.)
+
+## Reaching it from Tim's phone (DONE + WORKING — 2026-06-04/05)
+The Company is **already usable on Tim's iPhone** — this is the established, expected path, not a plan. If Tim says "my phone" / "Tailscale" / "the mobile access", it's this.
+- **Tailnet** `workstation001.tail777bc2.ts.net` (Tailscale **Standard plan**); **HTTPS certificates enabled** in the admin DNS console.
+- **`tailscale serve`** exposes the **canvas (:5173)** and **bridge (:8770)** over tailnet HTTPS at `https://workstation001.tail777bc2.ts.net/`. The vite dev server allows the tailnet host via `allowedHosts: ['.tail777bc2.ts.net']` in `canvas/app/vite.config.*` (else 403).
+- Installed as a **PWA**: full-screen home-screen app ("Vi", gold icon `vi-classic-gold.png`, theme `#d4af37`, `viewport-fit=cover`). Real HTTPS is required for the iOS browser mic (`getUserMedia` secure-context) → enables in-browser voice.
+- Survives reboot via `company.target` (+ linger). Cross-session memory: `project-mobile-access-tailscale`.
