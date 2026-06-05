@@ -1173,6 +1173,16 @@ class Suite:
                             _M_BUILDISH, lambda ctx: True),
         "extend":  VerbSpec("write a new UI component (build-gated)", "ui_extension",
                             _M_BUILDISH, lambda ctx: True),
+        # G8.2 — config-as-tools: the RHM operates its OWN config by voice, not only the UI. All AUTO
+        # (governance class 'configure') — operator-directed + reversible; the lifecycle fail-louds on
+        # VRAM. configure sets any rhm_config slot (model/persona/mode/stt/tts_engine/voice_enabled/roles
+        # — so "use the fast judge" or "switch to xtts" works); load/unload_voice drive the lifecycle.
+        "configure":    VerbSpec("set RHM config (model/persona/mode/voice/ear/role bindings)", "configure",
+                                 _M_BUILDISH, lambda ctx: True),
+        "load_voice":   VerbSpec("load a voice service (STT ear / TTS engine) into VRAM", "configure",
+                                 _M_BUILDISH, lambda ctx: True),
+        "unload_voice": VerbSpec("unload a voice service to free VRAM", "configure",
+                                 _M_BUILDISH, lambda ctx: True),
     }
 
     # --- the three legacy names, DERIVED from the one registry (no drift) ---
@@ -1212,6 +1222,18 @@ class Suite:
         "extend":  {"type": "object",
                     "properties": {"name": {"type": "string"}, "spec": {"type": "string"}},
                     "required": ["name", "spec"]},
+        "configure":    {"type": "object",
+                         "properties": {"updates": {"type": "object",
+                             "description": "rhm_config slots to set: any of model, base_url, persona, mode, "
+                                            "stt, tts_engine, tts_voice, voice_enabled, timeout, roles "
+                                            "({role_id:{model,base_url,knobs}})"}},
+                         "required": ["updates"]},
+        "load_voice":   {"type": "object",
+                         "properties": {"service": {"type": "string",
+                             "description": "a loadable voice-service id (e.g. tts-qwen3tts, stt-parakeet)"}},
+                         "required": ["service"]},
+        "unload_voice": {"type": "object",
+                         "properties": {"service": {"type": "string"}}, "required": ["service"]},
     }
 
     def _affordance_context(self, graph_id: str, focus: dict | None = None) -> dict:
@@ -1597,6 +1619,22 @@ class Suite:
             except Exception as e:                        # bad type/port → fail the build loudly, no half-claim
                 return {"did": "build", "error": f"{type(e).__name__}: {e}", "nodes": made, "edges": edges}
             return {"did": "build", "nodes": made, "edges": edges}
+        if verb == "configure":                              # G8.2: the RHM sets its own config (AUTO)
+            updates = action.get("updates") or {}
+            if not isinstance(updates, dict) or not updates:
+                return {"did": "none", "refused": "configure needs a non-empty 'updates' object"}
+            cfg = self.set_rhm_config(updates)               # fail-loud on unknown slot/model/role/engine
+            return {"did": "configure", "set": sorted(updates.keys()), "config": cfg}
+        if verb in ("load_voice", "unload_voice"):           # G8.2: the RHM drives the voice lifecycle (AUTO)
+            from voice import lifecycle as _vlc
+            svc = action.get("service")
+            if not svc:
+                return {"did": "none", "refused": f"{verb} needs a 'service' id"}
+            try:
+                r = _vlc.load(svc) if verb == "load_voice" else _vlc.unload(svc)
+            except Exception as e:                           # the lifecycle fail-loud (unknown/won't-fit) → structured, not a crash
+                return {"did": verb, "error": f"{type(e).__name__}: {e}"}
+            return {"did": verb, **r}
         return {"did": "none",
                 "refused": f"verb {verb!r} is not permitted from the RHM — only {self.RHM_VERBS} "
                            "(apply/delete/file-write are operator-gated)"}
