@@ -998,7 +998,11 @@ class Suite:
         # cannot flood the window (the §21.10 tension R2 exists to kill). No locus / nothing attached →
         # _resolve_context_at returns '' and nothing is injected (the keyword consult path stays the
         # fallback). Fail-loud-LEGIBLE inside the helper (a warn + '' on error), never crash-the-turn.
-        ctx += self._resolve_context_at(self.current_locus())
+        # X6 (Convergence) — pass `graph_id` (held here as ground truth) so the gather can BRIDGE a
+        # `ui://canvas/<node>` locus to its `run://<graph_id>/<node>` counterpart (version-history L6 +
+        # node events). The bridge is guarded (only a canvas-node in THIS graph maps); a non-canvas locus
+        # or a node absent from graph_id skips the run:// step, leaving the ui:// resolution unchanged.
+        ctx += self._resolve_context_at(self.current_locus(), graph_id=graph_id)
         return ctx
 
     def _describe_ui_address(self, address: str) -> str:
@@ -1077,6 +1081,17 @@ class Suite:
     #                                     recency*proximity term (1.0 at exact+now) so a PIN always
     #                                     outranks an unpinned item regardless of age/distance — pinning
     #                                     is the operator's explicit "keep this in view" override.
+    R2_RUN_VERSIONS = 3                 # X6 (Convergence) — max run://-keyed L6 versions the bridge
+    #                                     contributes per locus. The bridged versions score at proximity 0
+    #                                     (same node as the ui:// locus) — so without a bound a freshly-run
+    #                                     LLM/content node's 25 full-preview versions (~200 chars each ≈
+    #                                     5000 > R2_BUDGET) would dominate the window by recency and EVICT
+    #                                     the operator's ui:// comments/chats at the same locus. This caps
+    #                                     the run:// contribution to the FEW most-recent versions (newest-
+    #                                     first from ref_versions), so BOTH schemes coexist in the bounded
+    #                                     window rather than one starving the other. A named config knob
+    #                                     (D2/X17-configurable), not a bare literal; the per-turn R2_BUDGET
+    #                                     cap still applies on top.
     R2_BUDGET = 4000                    # max chars of resolved addressed context injected into the RHM
     #                                     window (~1k tokens). attention = BUDGET; the cap is ENFORCED —
     #                                     never stuffed. Far below CONSULT_CAP: this is the always-on
@@ -1165,14 +1180,116 @@ class Suite:
                             "pinned": False})
         return out
 
-    def _r2_gather(self, locus: str) -> list:
+    def _r2_run_counterpart(self, locus: str, graph_id: str | None) -> str | None:
+        """X6 (Convergence) — the ui://↔run:// BRIDGE: map a `ui://canvas/<node>` locus to its
+        `run://<graph_id>/<node>` counterpart, the address where the SAME node's output-versions (L6,
+        `set_ref`) and node-instance events accrue. Returns the run:// address, or None when the bridge
+        does NOT apply (so the caller cleanly skips the run:// step and the ui:// path is unchanged).
+
+        THE SPLIT THIS CLOSES (suite.py:1136): `_r2_ancestors` returns [] for any non-`ui://` locus, so
+        run://-keyed memory can never inherit. But the operator's live locus is ALWAYS ui:// (R1's
+        `current_locus()` holds a ui:// only; `ingest_comment`/`annotate` RAISE on run://). A canvas node
+        carries TWO addresses for the SAME thing — `ui://canvas/<node>` (the UI target) and
+        `run://<graph>/<node>` (where the scheduler writes versions/events). So the bridge fires from the
+        ui:// locus and resolves the run:// counterpart (approach (b)); it never walks a run:// locus
+        (which nothing reaches in production → would be dead code).
+
+        WHY graph_id IS THREADED (not held / not enumerated): the Suite holds NO current graph (every
+        verb takes graph_id as a param) and node-ids are NOT globally unique (`u`/`llm-1` recur across
+        graphs). The production caller (`_chat_context(graph_id, …)`) HOLDS graph_id as ground truth, so
+        it is THREADED in. With no graph_id we CANNOT recover the graph without enumerating (ambiguous,
+        fabrication) → we return None (the ui:// path stays byte-for-byte).
+
+        NODE-MEMBERSHIP GUARD (rule 4, no silent wrong value): `current_locus()` can hold a STALE locus
+        from a prior turn on a DIFFERENT graph; mapping a same-id node into the current graph could pull
+        the WRONG node's history. So we only bridge when the node ACTUALLY EXISTS in graph_id; otherwise
+        None (skip — never a silent wrong-node trail). Fail-loud-legible: a malformed locus is SKIPPED
+        (the ui:// gather already validated/ignored it), never a crash."""
+        from contracts.ui_info import parse_ui_address
+        if not graph_id or not isinstance(locus, str) or not locus.startswith("ui://"):
+            return None
+        try:
+            segs = parse_ui_address(locus)["segments"]    # S0 grammar gate (ignored on raise → no bridge)
+        except Exception:
+            return None
+        # the canvas-node form is `ui://canvas/<node>` — region 'canvas', the node id its 2nd segment.
+        if len(segs) < 2 or segs[0] != "canvas":
+            return None
+        node_id = segs[1]
+        # MEMBERSHIP: the node must exist in graph_id (else a same-id node in another graph could be
+        # silently mapped). Reuse the loaded graph (no new substrate) — never enumerate other graphs.
+        try:
+            g = self._load(graph_id)
+            if not any(n.id == node_id for n in g.nodes):
+                return None
+        except Exception:
+            return None
+        return f"run://{graph_id}/{node_id}"
+
+    def _r2_run_strata(self, run_addr: str, ui_locus: str) -> list:
+        """X6 — gather the run://-keyed strata at `run_addr`, NORMALISED into the R2 item shape so the
+        existing decay/cap/dedup score them uniformly with the ui:// items. Two strata, REUSING the
+        EXISTING retrievals (no new store):
+          • L6 version-history — `ref_versions(run_addr)` (the temporal trail of the node's output).
+          • node-instance events — `_r2_events_at(run_addr)` (the SAME addressed-event reader the ui://
+            path uses; it matches by exact address, so it works for run:// unchanged).
+
+        CROSS-SCHEME PROXIMITY (the load-bearing decision): a run:// address shares NO prefix with the
+        ui:// locus under `address_tree_distance` → it would score maximally-FAR and almost always lose
+        the R2_BUDGET cap (a present-but-inert bridge). But these strata ARE the SAME node as the ui://
+        locus — so each item's SCORING `address` is set to `ui_locus` (proximity 0 — the honest
+        cross-scheme distance: same node), while the `text` LABELS it [version]/run-event so it stays
+        legible. The scoring formula itself is UNCHANGED.
+
+        FAIL-LOUD-LEGIBLE (rule 4): a malformed/unresolvable run:// address makes `ref_versions` RAISE —
+        we WARN (address-stamped) and SKIP this stratum, never crash the per-turn gather (losing the
+        whole locus slice over one bad sub-read is the worse failure). The events stratum is independent
+        (its own try) so one failure never poisons the other."""
+        items = []
+        try:
+            # BOUND the run:// version contribution (R2_RUN_VERSIONS, newest-first): without it a
+            # freshly-run node's 25 full-preview versions all score at proximity 0 (same node as the
+            # locus) and, being recent, dominate the budget — EVICTING the operator's ui:// comments at
+            # the same locus. Capping here keeps BOTH schemes in the bounded window (the per-turn
+            # R2_BUDGET cap still applies on top). ref_versions returns newest-first, so `limit` keeps
+            # the most recent.
+            rv = self.ref_versions(run_addr, limit=self.R2_RUN_VERSIONS)
+            for v in rv.get("versions", []):
+                marker = " (current)" if v.get("is_current") else ""
+                items.append({"kind": "version", "address": ui_locus, "ts": v.get("ts"),
+                              "text": f"[version of {run_addr}{marker}] {v.get('preview', '')}",
+                              "_raw": (v.get("preview", "") or ""),   # X8 dedup identity (the version preview)
+                              "pinned": False})
+        except Exception as e:
+            self._emit("warning",
+                       f"X6 bridge: version-history unresolvable at {run_addr} ({type(e).__name__}) — skipped",
+                       address=ui_locus)
+        try:
+            for ev in self._r2_events_at(run_addr):
+                ev = dict(ev)
+                ev["address"] = ui_locus       # cross-scheme proximity: the event is AT this node (dist 0)
+                items.append(ev)
+        except Exception as e:
+            self._emit("warning",
+                       f"X6 bridge: node-instance events unresolvable at {run_addr} ({type(e).__name__}) — skipped",
+                       address=ui_locus)
+        return items
+
+    def _r2_gather(self, locus: str, graph_id: str | None = None) -> list:
         """GATHER every item attached to the locus AND its ancestors (I6 annotations via
         `annotations_at`, I7 chats via `chats_at`, addressed events). Each item is normalised to a
         common shape `{kind, address, ts, text, pinned}` so the decay scores them uniformly. The
         `pinned` flag rides free off the open annotation/chat record (schema-additive — an old record
         with no `pinned` field reads as unpinned). REUSES R1's locus consumers (annotations_at /
         chats_at — never duplicated). Address validation lives in those helpers (S0 gate); the
-        ancestors are pre-validated by `_r2_ancestors`."""
+        ancestors are pre-validated by `_r2_ancestors`.
+
+        X6 (Convergence) — the ui://↔run:// BRIDGE: when `graph_id` is supplied AND the locus is a
+        `ui://canvas/<node>` whose node exists in that graph, ALSO gather the node's run://-keyed strata
+        (L6 version-history + node-instance events) via `_r2_run_strata`, so at the locus BOTH schemes'
+        memory resolves into one bounded window. `graph_id` is OPTIONAL (default None): with no graph_id
+        the run:// step does NOT fire and the ui:// gather is byte-for-byte unchanged (preserving every
+        existing caller + addr_context_acceptance). The run:// items go through the SAME dedup/score/cap."""
         items = []
         for addr in self._r2_ancestors(locus):
             for a in self.annotations_at(addr):
@@ -1186,6 +1303,10 @@ class Suite:
                               "_raw": (c.get("text", "") or ""),   # X8: underlying text, for dedup identity
                               "pinned": bool(c.get("pinned"))})
             items.extend(self._r2_events_at(addr))
+        # X6: bridge the ui:// locus to its run:// counterpart (guarded; None when the bridge doesn't apply).
+        run_addr = self._r2_run_counterpart(locus, graph_id)
+        if run_addr is not None:
+            items.extend(self._r2_run_strata(run_addr, locus))
         deduped = self._r2_dedup(items)
         # `_raw` is dedup-INTERNAL identity (added above for X8); strip it before returning so the gather's
         # output shape stays {kind,address,ts,text,pinned} — X3 persists this bundle into the payload, and
@@ -1272,19 +1393,24 @@ class Suite:
                 break
         return out
 
-    def _resolve_context_at(self, locus: str | None, now=None) -> str:
+    def _resolve_context_at(self, locus: str | None, now=None, graph_id: str | None = None) -> str:
         """The R2 entry point: resolve the BOUNDED, address-keyed context slice at the operator's locus.
         Returns a ready-to-inject block string, or '' when there is no locus / nothing attached (so the
         caller skips injection cleanly). FAIL-LOUD-LEGIBLE, never crash-the-turn (mirrors _chat_context's
         own model-registry guard — a raise here would break EVERY turn): a gather/score error warns +
-        returns '' rather than propagating."""
+        returns '' rather than propagating.
+
+        X6 (Convergence) — `graph_id` is threaded through (optional, default None) so the gather can BRIDGE
+        a `ui://canvas/<node>` locus to its `run://<graph_id>/<node>` counterpart (version-history L6 +
+        node events). The production caller (`_chat_context`) HOLDS graph_id as ground truth and passes it;
+        with no graph_id the gather's run:// step does not fire (the ui:// path is unchanged)."""
         from datetime import datetime, timezone
         if not locus:
             return ""
         if now is None:
             now = datetime.now(timezone.utc)
         try:
-            items = self._r2_gather(locus)
+            items = self._r2_gather(locus, graph_id=graph_id)
             if not items:
                 return ""
             capped = self._r2_score_and_cap(items, locus, now)
