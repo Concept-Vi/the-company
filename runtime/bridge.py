@@ -357,6 +357,16 @@ class H(BaseHTTPRequestHandler):
                 ear = SUITE.rhm_config().get("stt") or voice_stt.active_ear()
                 self._send(200, json.dumps(voice_stt.transcribe(audio, provider=ear)))
                 return
+            if self.path == "/api/voice/stt-partial":     # Tier-2: PARTIAL transcript of the audio-so-far (FE drives the window)
+                from voice import stt as voice_stt
+                import time as _t
+                ln = int(self.headers.get("Content-Length", 0)); audio = self.rfile.read(ln)
+                ear = SUITE.rhm_config().get("stt") or voice_stt.active_ear()
+                t0 = _t.monotonic()
+                r = voice_stt.transcribe_partial(audio, provider=ear)
+                r["ms"] = int((_t.monotonic() - t0) * 1000)
+                self._send(200, json.dumps(r))
+                return
             if self.path == "/api/tts":                   # text in → wav out (routed by engine)
                 # lane B: parse the body to read the optional `engine` field, route to that engine's
                 # service (kokoro/absent → TTS_URL; others → ENGINE_PORTS), and forward ONLY the

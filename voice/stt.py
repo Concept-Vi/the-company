@@ -184,6 +184,19 @@ def available() -> dict:
     return {pid: e["available"] for pid, e in available_stt().items()}
 
 
+def transcribe_partial(audio: bytes, provider: str | None = None) -> dict:
+    """Tier-2 streaming-STT primitive: a PARTIAL transcript of the audio-so-far. The ears here are BATCH
+    (whisper.cpp / NeMo / faster-whisper transcribe a whole clip), so a 'partial' is simply a
+    re-transcription of the GROWING WINDOW the caller sends — the FE posts the accumulated buffer as the
+    operator speaks and shows the live partial; on the VAD pause it finalises (the last partial = the
+    utterance → the finished-thought judge + the turn). STATELESS by design (no server-side session
+    buffer to leak) — the FE drives the windowing. Returns {text, provider, partial:True}. Same fail-loud
+    as transcribe() (a down ear raises). A truly STREAMING ASR (chunked partials without re-transcribing)
+    is a later swap — this scaffold is engine-agnostic + works with the batch ears today."""
+    r = transcribe(audio, provider=provider)
+    return {**r, "partial": True}
+
+
 def transcribe(audio: bytes, provider: str | None = None) -> dict:
     """Turn a finished utterance (wav/audio bytes) into {text, provider}. Routes BY KIND from
     STT_PROVIDERS (so every registered id is dispatchable — the id IS the catalog key; that structurally
