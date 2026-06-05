@@ -318,6 +318,7 @@ class UnionAddressRecord(BaseModel):
             capabilities=normalize_capabilities(rec.get("capabilities")),
             represents=rec.get("represents"),
             code=rec.get("code"),
+            tier=rec.get("tier"),          # I4: governance action_class for COMMANDS at this address
             title=rec.get("title"),
         )
 

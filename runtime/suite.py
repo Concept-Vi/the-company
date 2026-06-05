@@ -67,7 +67,10 @@ def _load_corpus_element_addresses() -> list[tuple]:
             handle = {"camera_ref": "*"}                  # reuse the whole-canvas camera path
         else:
             handle = {"dom_handle": addr}                 # full-string carrier (the baked-in decision)
-        extras = {"region": ur.region, "represents": ur.represents, "code": ur.code}
+        # I4: carry the union-record `tier` (governance action_class for COMMANDS at this address)
+        # into the registry row's union-extras. ADDITIVE + OPTIONAL — None when the corpus entry
+        # carries no tier (the default), so an untiered address falls back to the verb's own class.
+        extras = {"region": ur.region, "represents": ur.represents, "code": ur.code, "tier": ur.tier}
         rows.append((addr, ur.kind, (ur.title or addr), handle, dict(ur.capabilities), extras))
     return rows
 
@@ -1275,6 +1278,11 @@ class Suite:
             return f"drafted panel '{outcome.get('name')}' — awaiting your approval in the inbox"
         if did == "extend":
             return f"authored UI component '{outcome.get('name')}' (build-gated) — awaiting your approval"
+        if did == "surfaced_for_approval":
+            # I4: the click hit an address whose governance tier is CONFIRM/LOCKED — the command was
+            # SURFACED for see-and-approve and did NOT act (no silent success, rule 4).
+            return (f"⏸ '{outcome.get('verb')}' at {outcome.get('address')} needs approval "
+                    f"(tier: {outcome.get('tier')}) — surfaced for you in the inbox, not yet acted")
         if did == "consult":
             return ""                                         # the caller folds the full answer text
         if did == "ask":
@@ -1453,6 +1461,33 @@ class Suite:
             action.setdefault("address", address)             # carry the locus through for audit (I1)
         return action
 
+    def _tier_for_address(self, address: str | None) -> str | None:
+        """I4 — resolve a clicked address → its governance `tier` (an action_class string) from the
+        union-record `tier` field carried in the registry row's union-extras (the 6th tuple element).
+
+        ADDRESS-KEYED, not verb-keyed. Returns:
+          • the tier action_class string  — if the address is registered AND carries a non-empty `tier`
+            (e.g. 'source_data', 'code_build' — a CONFIRM/LOCKED class). The caller routes the click
+            through governance by THIS class instead of the verb's own.
+          • None — if the address is None, unregistered, or registered-but-untiered. The caller then
+            FALLS BACK to the verb's own governance class — so a bare run/build on an untiered (or
+            unknown) address stays AUTO and ACTS IMMEDIATELY (U1 preserved, criteria line 153). The
+            ABSENCE of a tier is the verb-class fallback; it is NOT the unknown→CONFIRM fail-safe (that
+            fail-safe applies to an unknown tier VALUE inside posture(), never to a missing tier).
+
+        Reads the live UI_REGISTRY rows (single source). A row is
+        (ref, kind, title, handle, caps[, union-extras]); the 6th element (if present) is the
+        union-extras dict carrying `tier`. The 9 bare-region rows have no 6th element → None."""
+        if not address:
+            return None
+        for row in self.UI_REGISTRY:
+            if row[0] != address:
+                continue
+            extras = row[5] if len(row) > 5 else {}
+            tier = (extras or {}).get("tier")
+            return tier or None                                 # empty-string tier reads as untiered
+        return None                                             # address not registered → verb-class fallback
+
     def act(self, verb: str, graph_id: str, address: str | None = None,
             args: dict | None = None) -> dict:
         """I2 — the operator-face emission seam (the parallel-to-chat() entry to the SAME dispatcher).
@@ -1480,11 +1515,32 @@ class Suite:
         Returns the same `{reply, action}` shape /api/chat returns."""
         args = dict(args or {})
         action = self._act_dict(verb, address, args)
-        # GOVERNANCE re-fold: route by the verb's action-class (the same posture routing chat()'s
-        # decide-for-me path uses). Not mode-gated — a deterministic click is not subject to the RHM
-        # presence dial; and it is safe regardless, since every RHM verb is AUTO or a CONFIRM that
-        # only SURFACES (autonomous_dispatch never calls guard() for a non-AUTO class, so nothing
-        # raises and propose/panel/extend still only surface). Unknown verb → safest class (CONFIRM).
+        # I4 — ADDRESS-KEYED governance gate (FIRST, before the verb-class posture). A click resolves
+        # to (verb, address); the CLICKED ADDRESS — not the verb — decides the tier. If the address
+        # carries a CONFIRM/LOCKED tier in its union record, the click PROPOSES (surfaces for see-and-
+        # approve) and does NOT act; absent an address tier it falls through to the verb's own class
+        # below — so a bare run/build (no address, or an untiered/AUTO address) stays AUTO and ACTS
+        # IMMEDIATELY (U1 preserved, criteria line 153).
+        addr_tier = self._tier_for_address(address)
+        if addr_tier is not None and posture(addr_tier) != AUTO:
+            # The address's tier is CONFIRM/SURFACE/LOCKED → SURFACE the command for the operator and
+            # RETURN WITHOUT dispatching. We MUST NOT route this through autonomous_dispatch: its
+            # non-AUTO branch calls do() directly (suite.py autonomous_dispatch), and for a `run` verb
+            # do() EXECUTES the graph — that would be the inverse U1 regression (a CONFIRM-tier run
+            # running). Surfacing here keeps the dispatcher (and thus any execution) untouched until
+            # the operator approves (the approve→re-dispatch wire is I3, not this unit).
+            sid = self.inbox.surface(addr_tier,
+                                     {"verb": verb, "address": address, "args": args, "graph_id": graph_id},
+                                     default="reject", resolved=None)
+            outcome = {"did": "surfaced_for_approval", "verb": verb, "address": address,
+                       "tier": addr_tier, "surfaced": sid, "routed_posture": posture(addr_tier)}
+            return {"reply": self._confirmation_for(outcome), "action": outcome, "graph_id": graph_id}
+        # GOVERNANCE re-fold (verb-class fallback — the address is untiered/AUTO/None): route by the
+        # verb's action-class (the same posture routing chat()'s decide-for-me path uses). Not
+        # mode-gated — a deterministic click is not subject to the RHM presence dial; and it is safe
+        # regardless, since every RHM verb is AUTO or a CONFIRM that only SURFACES (autonomous_dispatch
+        # never calls guard() for a non-AUTO class, so nothing raises and propose/panel/extend still
+        # only surface). Unknown verb → safest class (CONFIRM).
         cls = self.RHM_VERB_CLASS.get(verb, "register_type")
         outcome = self.autonomous_dispatch(cls, do=lambda: self._dispatch_rhm_action(action, graph_id),
                                            payload=action)
