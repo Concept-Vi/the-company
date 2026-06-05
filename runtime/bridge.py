@@ -469,6 +469,22 @@ class H(BaseHTTPRequestHandler):
                 # annotation rec (unchanged response shape — retrieve the comment via GET /api/annotations).
                 self._send(200, json.dumps(SUITE.ingest_comment(
                     str(addr).strip(), b.get("text", ""), source=b.get("source", "operator"))))
+            elif self.path == "/api/pin":                # X7: pin/unpin an attached item at a ui:// ADDRESS
+                # OPERATOR face (beside /api/annotate, /api/attach-chat) — the SET path for the dead pin
+                # term: `pinned` is read in `_r2_score` but nothing set it. This records a pin/unpin of the
+                # attached item at (address, target_ts) so the gather's existing read picks up the real flag
+                # → a pinned item holds in the bounded R2 window. OPERATOR-ONLY, OFF the MCP face (not in
+                # RHM_VERBS — no-bypass preserved). Suite.pin S0-validates the address (raises → 400) AND
+                # fails loud if (address, target_ts) names no real attached item. Default pinned=True.
+                b = self._body()
+                addr = b.get("address")
+                target_ts = b.get("target_ts")
+                if not addr or not str(addr).strip():
+                    raise ValueError("/api/pin needs a non-empty 'address' (fail loud)")
+                if not target_ts or not str(target_ts).strip():
+                    raise ValueError("/api/pin needs a non-empty 'target_ts' (the item's handle) (fail loud)")
+                self._send(200, json.dumps(SUITE.pin(
+                    str(addr).strip(), str(target_ts).strip(), pinned=bool(b.get("pinned", True)))))
             elif self.path == "/api/attach-chat":        # I7: attach a chat turn to a ui:// ADDRESS (the
                 # dropped 4th attach-type, §21.1's chat:// branch). RIDES the open append_chat record with
                 # one additive `address` field — NO separate chat store (one-source). DISTINCT from

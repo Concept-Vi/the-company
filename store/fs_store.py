@@ -500,6 +500,55 @@ class FsStore:
                 out.append(rec)
         return out
 
+    # --- pin-state overlay (X7 · Convergence): operator's "keep this in view" override ---
+    def append_pin(self, address: str, target_ts: str, pinned: bool) -> dict:
+        """X7 — record a pin/unpin of an attached item, as an APPEND-ONLY control-state record.
+
+        WHY a separate `pins.jsonl` log instead of a field ON the annotation/chat record (the literal
+        guide wording): the annotation/chat stores are APPEND-ONLY immutable logs (store constitution —
+        an 'update' is a new object + a moved pointer, never a mutated line). So we cannot edit the
+        existing line to set `pinned:True`. Re-APPENDING the record with `pinned:True` ALSO fails: the
+        X8 dedup keys on `(address, full text)` and keeps the FIRST occurrence (the unpinned one), so a
+        re-append is silently dropped — the pin would be lost. And we MUST NOT write pin-state into
+        `chat.jsonl` at all (every chat turn must be `source`-tagged and flows the training pipe — a pin
+        control-record would pollute the twin's signal / the echo-guard).
+
+        So pin-state is an ADDITIVE OVERLAY: a tiny append-only `pins.jsonl` keyed by the item's
+        `(address, target_ts)` handle, resolved LAST-WINS on read (`pin_state_for`). This is additive
+        CONTROL-state on the SAME store (one FsStore, one root) — NOT a parallel CONTEXT system: it adds
+        no items to the gather, only flips the existing `pinned` field the gather already reads. The
+        `pinned` field still appears ON the record `annotations_at`/`chats_at` return (the overlay is
+        applied there), schema-additive: an item with no pin record reads as unpinned.
+
+        Open-record, like append_annotation: `{ts, address, target_ts, pinned}`. Append-only so the pin
+        HISTORY is preserved (a later unpin is a NEW record, last-wins on read — never a lost-update)."""
+        import json as _j
+        from datetime import datetime, timezone
+        rec = {"ts": datetime.now(timezone.utc).isoformat(),
+               "address": address, "target_ts": target_ts, "pinned": bool(pinned)}
+        with (self.root / "pins.jsonl").open("a", encoding="utf-8") as f:
+            f.write(_j.dumps(rec) + "\n")
+        return rec
+
+    def pin_state_for(self, address: str) -> dict:
+        """X7 — the resolved pin-state at `address`: `{target_ts: pinned_bool}`, LAST-WINS over the
+        append-only `pins.jsonl` (a later record for the same `(address, target_ts)` overrides — so an
+        unpin after a pin reads as unpinned). Reads disk every call (no in-memory cache), so a second
+        Suite over the same store root sees a prior Suite's pins (persistence-survives-reload). An
+        address with no pin records → `{}` (every item reads as unpinned — the additive default)."""
+        import json as _j
+        path = self.root / "pins.jsonl"
+        if not path.exists():
+            return {}
+        state: dict = {}
+        for l in path.read_text(encoding="utf-8").splitlines():
+            if not l.strip():
+                continue
+            rec = _j.loads(l)
+            if rec.get("address") == address:
+                state[rec.get("target_ts")] = bool(rec.get("pinned"))   # last line wins
+        return state
+
     # --- surfaced-decision inbox (S7/D4): non-blocking gates, shared across faces ---
     def surfaced_lock(self):
         """T1-RACE — the store-level lock a CALLER holds around a surfaced read-modify-write

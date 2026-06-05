@@ -2271,7 +2271,7 @@ class Suite:
         Suite's writes on the same store root (persistence-survives-reload)."""
         from contracts.ui_info import parse_ui_address
         parse_ui_address(address)                            # S0 grammar gate (raises on malformed)
-        return self.store.annotations_for(address)
+        return self._overlay_pins(address, self.store.annotations_for(address))
 
     def attach_chat(self, address: str, text: str, role: str = "user", source: str | None = None) -> dict:
         """I7 — attach a chat turn to a `ui://` address (the dropped 4th attach-type, §21.1: the
@@ -2316,7 +2316,68 @@ class Suite:
         locus (address-keyed context resolution) — the retrieval R2 consumes; I7 does NOT wire R2."""
         from contracts.ui_info import parse_ui_address
         parse_ui_address(address)                            # S0 grammar gate (raises on malformed)
-        return self.store.chats_for(address)
+        return self._overlay_pins(address, self.store.chats_for(address))
+
+    def _overlay_pins(self, address: str, records: list) -> list:
+        """X7 — overlay the resolved pin-state onto the records `annotations_at`/`chats_at` return.
+
+        The annotation/chat stores are APPEND-ONLY immutable logs, so the operator's pin override can't
+        be written ONTO the existing line; it lives as additive control-state in `pins.jsonl`, keyed by
+        the item's `(address, ts)` handle, and is RESOLVED here on read (`pin_state_for`, last-wins). The
+        returned records keep their SAME count + text (the overlay only flips an additive `pinned` field —
+        annotation_acceptance's count/text assertions stay green); an item with no pin record reads as
+        unpinned (schema-additive default). This is the SET-path completion of the dead pin term: the
+        gather (`_r2_gather`) already reads `bool(a.get('pinned'))` / `bool(c.get('pinned'))`, so feeding
+        the real flag here makes `_r2_score`'s `pin_bonus` reachable — the scoring formula is UNCHANGED.
+
+        Non-mutating to the stored bytes (a shallow per-record copy carries the resolved flag) — the
+        store stays immutable. An item whose `ts` has no pin record is returned unchanged-but-for the
+        explicit `pinned` default, so every reader sees a uniform shape."""
+        pin_state = self.store.pin_state_for(address)
+        out = []
+        for r in records:
+            rr = dict(r)                                     # don't mutate the store's record bytes
+            rr["pinned"] = bool(pin_state.get(r.get("ts"), r.get("pinned", False)))
+            out.append(rr)
+        return out
+
+    def pin(self, address: str, target_ts: str, pinned: bool = True) -> dict:
+        """X7 (Convergence) — the SET path for the operator's "keep this in view" override.
+
+        THE DEAD TERM THIS COMPLETES (Research Synthesis, Round 4): `_r2_score` already adds
+        `R2_PIN_WEIGHT` when `item.get('pinned')`, and `_r2_gather` already surfaces `bool(a.get('pinned'))`
+        — but NOTHING ever set `pinned` True (only the `pinned:False` literals). So the pin_bonus existed
+        in the math but was unreachable. `pin` wires the missing set-path: it records a pin/unpin of the
+        attached item at (`address`, `target_ts`) so the gather's already-present read picks up the real
+        flag → a pinned item holds in the bounded R2 window even when older/farther. The scoring FORMULA
+        and `R2_PIN_WEIGHT` are UNCHANGED — only the flag becomes settable.
+
+        OPERATOR-ONLY, OFF the MCP face: this is an operator action (mirrors `annotate`/`attach_chat`,
+        surfaced via the operator-face `/api/pin` route). It is NOT in `RHM_VERBS` — the RHM/MCP face
+        gains no pin tool (no-bypass preserved).
+
+        IDENTITY: an attached item is addressed by its `(address, ts)` — the `ts` the store stamps and
+        `annotations_at`/`chats_at` return is the stable per-record handle. Pin-state persists as an
+        additive overlay in `pins.jsonl` (append-only; the annotation/chat logs are immutable, and we
+        must not write into `chat.jsonl` — that would pollute the twin training pipe / echo-guard).
+
+        FAIL LOUD (rule 4 — no silent no-op): the address is S0-gated (raises on malformed), and the
+        `target_ts` MUST match an existing attached item (annotation OR chat) at that address — pinning a
+        non-existent item RAISES rather than silently recording a pin nothing will ever read."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                            # S0 grammar gate (raises on malformed)
+        if not target_ts or not str(target_ts).strip():
+            raise ValueError("pin needs a target_ts (the item's handle) — fail loud, no silent no-op")
+        # existence guard: the (address, ts) must name a real attached item (annotation or chat).
+        existing_ts = {r.get("ts") for r in self.store.annotations_for(address)}
+        existing_ts |= {r.get("ts") for r in self.store.chats_for(address)}
+        if target_ts not in existing_ts:
+            raise ValueError(
+                f"pin: no attached item at {address} with ts={target_ts} (fail loud — nothing to pin)")
+        rec = self.store.append_pin(address, target_ts, bool(pinned))
+        # S2: emit an addressed event so the pin/unpin is visible on the live stream at its locus.
+        self._emit("pin", f"{'pinned' if pinned else 'unpinned'} item at {address}", address=address)
+        return rec
 
     def chat(self, message: str, graph_id: str, focus: dict | None = None) -> dict:
         """Grounded conversation with the operator. Answers from compact ground truth; never
