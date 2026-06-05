@@ -620,15 +620,76 @@ export function useAppController(editor: Editor) {
   function resolveUiTarget(target?: string): boolean {
     if (!target) return false
     if (!target.startsWith('ui://')) return driveCanvas(target)   // form 1: bare node-id → canvas camera
-    const mm = target.match(/^ui:\/\/([^/]+)\/(.+)$/)
-    if (!mm) { setNotice('✕ malformed ui:// target: ' + target); return false }
-    const kind = mm[1], ref = mm[2]
-    if (kind === 'canvas') {
-      if (ref === '*') { editor.zoomToFit({ animation: { duration: 450 } }); setNotice('→ canvas'); return true }
+    // RES1 (F8 follow-up): the S0 canonical grammar is ui://<region>/<element>[/<sub>][/@state] where the
+    // ELEMENT segment is now OPTIONAL — region-only addresses (ui://models, ui://inbox, ui://chat, …) are
+    // valid AND registered in S1 (the 12 region-only corpus rows, served by /api/ui_info, DOM-stamped by
+    // F4). The old regex /^ui:\/\/([^/]+)\/(.+)$/ REQUIRED a /<element> after the region, so every
+    // region-only address returned "malformed" and could not be DRIVEN via show/walkthrough. We WIDEN the
+    // accepted grammar to BOTH forms without rewriting the resolver (PRESERVE-LIST item 5): the existing
+    // kind/element path below is unchanged byte-for-byte; we ADD a region-only/full-string branch in
+    // front of it that mirrors the backend _describe_ui_address (suite.py) matching — a registry row is
+    // matched by EITHER its full-string key (the corpus element + region-only rows, keyed by the whole
+    // ui:// address) OR the live region served-form ui://<kind>/<ref> (the bare-keyed chrome regions).
+    // GRAMMAR GATE (fail loud, rule 4): ui:// + ≥1 non-empty path segment, optional trailing /@state or
+    // @state — structurally identical to contracts/ui_info.py parse_ui_address. A non-conforming string
+    // (e.g. "ui://" alone, or no segments) is still rejected as malformed.
+    if (!/^ui:\/\/[^/@]+(?:\/[^/@]+)*(?:\/?@[^/@]+)?$/.test(target)) {
+      setNotice('✕ malformed ui:// target: ' + target); return false
+    }
+    const UI_INFO = getUI_INFO()
+    // canvas branch — first segment "canvas" drives the camera (PRESERVED). Covers the live served forms
+    // ui://canvas/* (whole canvas) and ui://canvas/<node-id>, AND the region-only ui://canvas (→ fit).
+    // NOTE (pre-existing, not a RES1 change): ui://canvas/<elem> like ui://canvas/portal-window /
+    // ui://canvas/node route to the CAMERA path (driveCanvas), not to their DOM elements — the canvas
+    // overlap was always camera-resolved. Left as-is.
+    const canvasMm = target.match(/^ui:\/\/canvas(?:\/(.+))?$/)
+    if (canvasMm) {
+      const ref = canvasMm[1]
+      if (ref == null || ref === '*') { editor.zoomToFit({ animation: { duration: 450 } }); setNotice('→ canvas'); return true }
       return driveCanvas(ref)
     }
+    // RES1 (F8 follow-up) — REGION-ONLY addresses (single segment, e.g. ui://inbox, ui://models). Two DOM
+    // conventions coexist (this is the reconciliation, mirroring backend _describe_ui_address's two match
+    // arms — ref==address (full-key) OR served==address (region served-form)):
+    //   • the 7 LEGACY chrome regions (inbox/chat/activity/inspector/toolbar/walkthrough/workshop) are
+    //     keyed BARE in the registry (UI_INFO["inbox"]) and carry the BARE DOM data-ui-ref="inbox". For
+    //     these, route the bare key through the EXISTING kind/element tail below so ui://inbox resolves
+    //     BYTE-FOR-BYTE identically to the served ui://chrome/inbox form (same DOM key, title, openable).
+    //   • the corpus-only region rows (models/grow/tabbar/twin) have NO bare twin; they are keyed by the
+    //     FULL string (UI_INFO["ui://models"]) and the DOM carries data-ui-ref="ui://models". Full-string DOM.
+    // SCOPE: bare resolution is SINGLE-SEGMENT ONLY — ui://toolbar/run is NEVER stripped to bare "run".
+    const regionMm = target.match(/^ui:\/\/([^/@]+)$/)   // exactly one segment, no element, no @state
+    let ref: string
+    if (regionMm) {
+      const region = regionMm[1]
+      if (UI_INFO[region] != null) {
+        ref = region                                     // bare row exists → existing kind/element tail (served-form mirror)
+      } else if (UI_INFO[target] != null) {
+        return spotlightUiRef(target, target, UI_INFO)   // full-string corpus region row → full-string DOM
+      } else if (Object.keys(UI_INFO).length) {
+        // well-formed but UNREGISTERED — fail loud as "no registered UI target", NOT "malformed" (mirrors
+        // backend _describe_ui_address's "(unregistered)" arm: unregistered ≠ malformed grammar).
+        setNotice('✕ no registered UI target for ' + target + ' (registry is truth)'); return false
+      } else {
+        ref = region                                     // registry not loaded yet — defer to the DOM tail
+      }
+    } else {
+      // RES1 multi-segment / full-string branch: a region+element (+sub/@state) address. The DOM carries
+      // the WHOLE ui:// string verbatim (F4 stamps full strings for the corpus element rows, e.g.
+      // data-ui-ref="ui://toolbar/run", data-ui-ref="ui://inbox/build-review"). If the full address is a
+      // registry key, resolve by it directly (the kind/element split below would mis-key it to a bare
+      // "run"). Mirrors backend _describe_ui_address's full-key arm.
+      if (UI_INFO[target] != null) {
+        return spotlightUiRef(target, target, UI_INFO)   // domKey === infoKey === the full address
+      }
+      // EXISTING kind/element served-form path (PRESERVED byte-for-byte): ui://<kind>/<ref> where kind ∈
+      // {chrome,field,panel,ext} and <ref> is the BARE registry key (ui://chrome/inbox → key "inbox",
+      // DOM data-ui-ref="inbox"). This is what backend show/_registry_ui_target emits today; unchanged.
+      const mm = target.match(/^ui:\/\/([^/]+)\/(.+)$/)
+      if (!mm) { setNotice('✕ malformed ui:// target: ' + target); return false }
+      ref = mm[2]
+    }
     // chrome | field | panel | ext → a DOM target. Validate against the registry (fail loud if unknown).
-    const UI_INFO = getUI_INFO()
     if (UI_INFO[ref] == null && Object.keys(UI_INFO).length) {
       setNotice('✕ no registered UI target for ' + ref + ' (registry is truth)'); return false
     }
@@ -636,13 +697,20 @@ export function useAppController(editor: Editor) {
     if (UI_INFO[ref]?.capabilities?.openable && ref === 'workshop' && !workshop && selectedRef.current) {
       setWorkshop(selectedRef.current)   // open the workshop onto the current selection so the target exists in the DOM
     }
+    return spotlightUiRef(ref, ref, UI_INFO)
+  }
+  // RES1: the shared DOM-spotlight tail of resolveUiTarget — querySelector the data-ui-ref, scroll it into
+  // view, ring it (fail loud if it's not mounted right now). Factored out so the existing kind/element path
+  // and the new region-only/full-string path drive the SAME spotlight behaviour verbatim (no behaviour
+  // drift). `domKey` is the data-ui-ref value to query; `infoKey` is the UI_INFO key for the title.
+  function spotlightUiRef(domKey: string, infoKey: string, UI_INFO: Record<string, any>): boolean {
     // defer one frame so a just-opened region is mounted before we query for it (fail loud if still absent).
     setTimeout(() => {
-      const el = document.querySelector('[data-ui-ref="' + ref + '"]') as HTMLElement | null
-      if (!el) { setNotice('✕ UI target not in the DOM right now: ' + ref); return }
+      const el = document.querySelector('[data-ui-ref="' + domKey + '"]') as HTMLElement | null
+      if (!el) { setNotice('✕ UI target not in the DOM right now: ' + domKey); return }
       el.scrollIntoView({ block: 'center', behavior: 'smooth' })
       el.classList.add('ui-spotlight')
-      setNotice('→ ' + (UI_INFO[ref]?.title || ref))
+      setNotice('→ ' + (UI_INFO[infoKey]?.title || infoKey))
       setTimeout(() => el.classList.remove('ui-spotlight'), 2400)   // transient ring — additive, no layout reflow
     }, 30)
     return true
