@@ -165,13 +165,91 @@ STANDARDS_BLOCK = (
     "is a later stage.")
 
 
+def _compose_context_block(payload: dict) -> str:
+    """X4 — compose the RICH-context sections from the WIDENED payload (X1/X2/X3), exactly the way
+    `scope` is slotted: legible, clearly-labelled, and CONDITIONAL (an absent/empty field renders NO
+    section at all, so an older intent without the fields composes byte-for-byte as today). This is a
+    PURE formatter — it reads what's ALREADY persisted on the payload (resolved at mint, X3); it does
+    NOT gather/embed/re-resolve (that would break the boundary AND X5's consent-time property).
+
+    Fail-loud-without-crashing: a malformed `context` bundle renders what is VALID and appends a
+    VISIBLE note for what was skipped (the note is the loud part — never a silent drop, never a crash),
+    per the root constitution's rule 4 reconciled with X4's never-crash-the-compose requirement.
+
+      address  → "INDICATED ELEMENT: <address>"        (X1 — the ui:// locus the build is pointed at)
+      symbols  → "RELATED CODE (neighbours): <symbols>" (X2 — the code:// neighbours of the locus)
+      context  → "CONTEXT AT THIS LOCUS (...): <items>" (X3 — the bounded R2 notebook at the locus)
+    """
+    sections: list[str] = []
+
+    # X1 — the indicated address (the ui:// locus). Empty/absent → no section.
+    address = payload.get("address")
+    if isinstance(address, str) and address.strip():
+        sections.append(f"INDICATED ELEMENT (the addressed locus this change is pointed at): {address}")
+
+    # X2 — the related code symbols (the neighbours behind the address). Empty list/absent → no section.
+    symbols = payload.get("symbols")
+    if isinstance(symbols, (list, tuple)) and len(symbols) > 0:
+        rendered = ", ".join(str(s) for s in symbols)
+        sections.append(
+            "RELATED CODE (neighbours of the indicated element — the code this change likely touches): "
+            + rendered)
+
+    # X3 — the attached context bundle (the accumulated notebook at the locus: comments/chats/history).
+    # ALREADY bounded + deduped + JSON-clean at mint (X3). X4 only FORMATS it readably. Fail-loud on a
+    # malformed bundle: render the valid items, NOTE the skipped ones, never crash, never silently drop.
+    context = payload.get("context")
+    if context is not None:
+        lines: list[str] = []
+        skipped = 0
+        note = ""
+        if isinstance(context, (list, tuple)):
+            for item in context:
+                if isinstance(item, dict) and isinstance(item.get("text"), str) and item.get("text").strip():
+                    kind = item.get("kind") or "note"
+                    addr = item.get("address") or ""
+                    pin = " [pinned]" if item.get("pinned") else ""
+                    loc = f" @ {addr}" if addr else ""
+                    lines.append(f"- [{kind}{loc}{pin}] {item['text'].strip()}")
+                else:
+                    skipped += 1
+            if skipped:
+                note = (f"\n  (note: {skipped} context item(s) were malformed — missing/empty text or "
+                        f"not a record — and were skipped; the valid items above are rendered. fail-loud.)")
+        else:
+            # the bundle itself is not a list (e.g. a dict) — render nothing from it, but say so LOUD.
+            note = (f"\n  (note: the attached context bundle was malformed — expected a list of items, "
+                    f"got {type(context).__name__}; it was skipped. fail-loud.)")
+        # only emit the section if there is something legible to show (valid items OR a loud note).
+        if lines or note:
+            body = ("\n".join(lines) if lines
+                    else "  (no valid context items to render)")
+            sections.append(
+                "CONTEXT AT THIS LOCUS (what's been said/done here — the accumulated notebook):\n"
+                + body + note)
+
+    if not sections:
+        return ""
+    return "\n\n" + "\n\n".join(sections)
+
+
 def build_instruction(decision: dict) -> str:
     """Build the work instruction from the recorded decision (its payload). The decision IS the
     authorization (W2) and carries the declared scope (W4) — the instruction tells Claude Code
     WHAT to build and WHERE it is allowed to touch, so a well-behaved run stays in scope. It ALSO
     carries the STANDARDS_BLOCK: the bar the work must meet (UI/UX bar for operator-facing surfaces,
     self-description updated as part of the change, a SEPARATE review pass + the operator will review).
-    It does NOT ask the build to review itself — reviewing is a separate stage (AI-operated ≠ review-free)."""
+    It does NOT ask the build to review itself — reviewing is a separate stage (AI-operated ≠ review-free).
+
+    X4 — the prompt is now RICH: when the WIDENED payload (X1/X2/X3) carries `address`, `symbols`, and
+    the bounded `context` bundle, `build_instruction` composes them into legible, clearly-labelled
+    sections — EXACTLY as it already slots `scope` — so the launched build arrives pointed (the locus)
+    + neighbour-aware (the related code) + memory-rich (the notebook at the locus). It stays a PURE
+    string-formatter (decision-in → string-out): it FORMATS what X3 already resolved at mint; it does
+    NOT gather/embed/re-resolve (that would break the boundary AND X5's consent-time property — the
+    operator approves WITH the exact context, the build can't resolve a different one later). An older
+    intent missing those fields composes byte-for-byte as before (additive + backward-compatible).
+    Constitution-naming (the governing module laws) is X15 — composed elsewhere, NOT here."""
     payload = decision.get("payload", {}) if isinstance(decision, dict) else {}
     spec = payload.get("spec") or payload.get("instruction") or payload.get("why") or ""
     scope = payload.get("scope") or payload.get("target_scope") or []
@@ -180,8 +258,9 @@ def build_instruction(decision: dict) -> str:
         scope_line = ("\n\nYou are authorized to change ONLY these paths (the operator approved "
                       "exactly this scope): " + ", ".join(scope) +
                       ". Do NOT touch anything outside that scope.")
+    context_block = _compose_context_block(payload)
     return (f"Implement the following approved change in the 'company' repo. "
-            f"Read AGENTS.md / MAP.md / STATE.md first.\n\n{spec}{scope_line}{STANDARDS_BLOCK}")
+            f"Read AGENTS.md / MAP.md / STATE.md first.\n\n{spec}{scope_line}{context_block}{STANDARDS_BLOCK}")
 
 
 def _default_runner(instruction: str, *, repo: str, permission_mode: str, timeout_s: int) -> dict:
