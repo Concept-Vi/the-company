@@ -706,8 +706,16 @@ class Suite:
             "description": "Decides whether a spoken utterance is a COMPLETE thought (fire the turn) or "
                            "mid-ramble (keep listening) — the voice circuit's semantic endpoint.",
             "trigger": "voice circuit: a VAD pause during always-listen (POST /api/voice/finished-thought)",
-            "default_model": None,            # None → falls to the RHM brain (rhm_config.model)
+            "default_model": None,            # None → falls to the RHM brain (rhm_config.model) — always
+                                              # available. The hard default stays safe; the data-driven
+                                              # PREFERENCE is `recommended_*` below (binding it live needs
+                                              # the 4B resident → the resource manager owns that).
             "default_base_url": None,         # None → the brain's base_url
+            "recommended_model": "cyankiwi/Qwen3.5-4B-AWQ-4bit",      # MEASURED day-one pick (Tim 2026-06-05)
+            "recommended_base_url": "http://localhost:8000/v1",
+            "recommended_reason": ("local 4B no-think judged FINISHED in 463ms / a fragment in 49ms vs "
+                                   "deepseek-cloud 2113–6500ms (measured) — a reasoning cloud model is the "
+                                   "wrong tool on the always-listen hot path. Bind when the 4B is resident."),
             "thinking": False,                # WANTS a fast non-reasoning model (a reasoner stalls the hot path)
             "output": "one word: FINISHED | MORE",
             "tools": [],                      # no tools — a pure classifier

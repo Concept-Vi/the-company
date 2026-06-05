@@ -143,9 +143,16 @@ def load(service_id: str) -> dict:
                     line = line[len("export "):]
                 k, _, val = line.partition("=")
                 env.setdefault(k.strip(), val.strip().strip('"').strip("'"))
+    # A (Tim 2026-06-05): per-service LAUNCH config is DATA, not hardcoded. The load block's optional
+    # `env` dict overrides voice.env for THIS service — so a per-model launch knob (e.g. a vLLM-backed
+    # engine's gpu-memory-utilization, device, ctx, or any tunable the engine script reads from the
+    # environment) is a services.json field the config lab / resource manager sets, never a code edit.
+    # (The measured lesson: 0.80 util is wrong for co-residence, 0.45 right — that belongs in config.)
+    for k, v in (load_spec.get("env") or {}).items():
+        env[str(k)] = str(v)                                   # explicit per-service override wins over voice.env
+    args = [py, script, str(load_spec["port"])] + [str(a) for a in (load_spec.get("args") or [])]
     log = open(logp, "ab")                                     # noqa: SIM115 (handed to the child)
-    subprocess.Popen([py, script, str(load_spec["port"])], cwd=REPO, env=env,
-                     stdout=log, stderr=log, start_new_session=True)
+    subprocess.Popen(args, cwd=REPO, env=env, stdout=log, stderr=log, start_new_session=True)
     return {"service": service_id, "state": "warming", "port": load_spec["port"], "log": logp,
             "note": "launched — model loading; poll status() for 'up'"}
 
