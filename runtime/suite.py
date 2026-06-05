@@ -1178,13 +1178,82 @@ class Suite:
             for a in self.annotations_at(addr):
                 items.append({"kind": "annotation", "address": addr, "ts": a.get("ts"),
                               "text": f"[comment @ {addr}] {a.get('text', '')}",
+                              "_raw": (a.get("text", "") or ""),   # X8: underlying text, for dedup identity
                               "pinned": bool(a.get("pinned"))})
             for c in self.chats_at(addr):
                 items.append({"kind": "chat", "address": addr, "ts": c.get("ts"),
                               "text": f"[chat @ {addr}] {c.get('role', '')}: {c.get('text', '')}",
+                              "_raw": (c.get("text", "") or ""),   # X8: underlying text, for dedup identity
                               "pinned": bool(c.get("pinned"))})
             items.extend(self._r2_events_at(addr))
-        return items
+        deduped = self._r2_dedup(items)
+        # `_raw` is dedup-INTERNAL identity (added above for X8); strip it before returning so the gather's
+        # output shape stays {kind,address,ts,text,pinned} — X3 persists this bundle into the payload, and
+        # a leaked `_raw` would duplicate `text` on disk. Removing it cannot affect scoring/cap (they read
+        # `text` only). Pre-X8 callers see exactly the old shape.
+        for it in deduped:
+            it.pop("_raw", None)
+        return deduped
+
+    def _r2_dedup(self, items: list) -> list:
+        """X8 (Convergence) — collapse the SAME comment to ONE item BEFORE the budget cap.
+
+        WHY: a single clicked comment lands through `ingest_comment` as THREE strata at the same
+        address — an annotation (its `annotations.jsonl` branch, full text), the located-gold chat turn
+        (`append_chat`, full text), AND one addressed event echo (`_emit("annotation", …)` at
+        suite.py:2032, whose summary is the text TRUNCATED to 40 chars). So the gather sees it 2–3× and
+        it would consume 2–3× the bounded R2 window — a double-count, not three distinct notebook items.
+
+        IDENTITY (the crux, robust to the 40-char truncation): items are the same comment when they share
+        an `(address, underlying-text)` identity. But the event echo's text is a 40-char PREFIX of the
+        full text, so an exact full-text key would match annotation↔chat yet MISS the event (it would
+        still count 2×). The model that actually collapses all three:
+          • annotation ↔ chat: exact `(address, full _raw text)` — collapse to one. (No false-collapse:
+            two genuinely-different comments differ in _raw.)
+          • the event echo: dropped IFF its (possibly truncated) `_raw` is a PREFIX of some
+            annotation/chat `_raw` AT THE SAME ADDRESS. This kills the narration echo WITHOUT flat-keying
+            on a 40-char prefix (which would wrongly merge two distinct comments that happen to share a
+            40-char opening — the "never drop legitimately-distinct items" clause).
+        SURVIVOR = the full-text annotation/chat item, NEVER the truncated event (X4 later composes the
+        prompt from this bundle; keeping the truncated echo would silently lose content).
+
+        PRESERVE: this ONLY removes double-counting. It does NOT touch `_r2_score`/the recency·proximity·
+        pin ranking or the `R2_BUDGET` cap — dropping echoes can only FREE budget, never reorder distinct
+        items, so the ranking is preserved by construction. An item without `_raw` (e.g. a non-comment
+        event, or any future stratum) is NEVER dropped — dedup is conservative."""
+        full_keys = set()        # (address, full _raw) of annotation/chat items already kept
+        full_by_addr: dict = {}  # address -> list of full _raw texts kept (for the event prefix test)
+        out = []
+        # PASS 1: keep annotation/chat, collapsing exact (address, _raw) duplicates (e.g. annotation↔chat).
+        events = []
+        for it in items:
+            if it.get("kind") == "event":
+                events.append(it)
+                continue
+            raw = it.get("_raw")
+            if raw is None:
+                out.append(it)               # no identity → never dropped (conservative)
+                continue
+            key = (it.get("address", ""), raw)
+            if key in full_keys:
+                continue                     # exact duplicate of an already-kept full-text item
+            full_keys.add(key)
+            full_by_addr.setdefault(it.get("address", ""), []).append(raw)
+            out.append(it)
+        # PASS 2: keep an event ONLY if it is NOT the truncated echo of a kept annotation/chat at its addr.
+        for ev in events:
+            raw = ev.get("_raw")
+            if raw is None:
+                # the standard comment echo carries no _raw; recover its underlying text from the summary
+                # so the prefix test can run. Format: "[event] <kind>: comment at <addr>: <text[:40]>".
+                txt = ev.get("text", "") or ""
+                marker = f": comment at {ev.get('address', '')}: "
+                raw = txt.split(marker, 1)[1] if marker in txt else None
+            if raw is not None and any(full.startswith(raw)
+                                       for full in full_by_addr.get(ev.get("address", ""), [])):
+                continue                     # truncated echo of a kept comment → drop the double-count
+            out.append(ev)
+        return out
 
     def _r2_score_and_cap(self, items: list, locus: str, now) -> list:
         """Score each item by the decay, sort DESC, then `budget_cap` — accumulate text until R2_BUDGET
@@ -2960,7 +3029,8 @@ class Suite:
         return ev
 
     def surface_build_intent(self, spec: str, scope: list[str] | None = None,
-                             consequence_class: str = "decision_build", why: str = "") -> dict:
+                             consequence_class: str = "decision_build", why: str = "",
+                             address: str | None = None, symbols: list[str] | None = None) -> dict:
         """W4 PRODUCER: mint a build-intent item — a decision that, once the operator approves it,
         AUTHORIZES an autonomous build of a DECLARED scope. It is distinguished from a plain
         criterion/review by `intent="build"` (the discriminator §W2 — `action` is the governance
@@ -2975,10 +3045,28 @@ class Suite:
         allow-all: the dispatch-time scope-diff treats empty scope as DENY-ALL (_in_any_scope returns
         False for every path), so a build with no declared scope can NEVER close `implemented` — every
         changed path reads as an overrun and surfaces back. This is the durable enforcement (the
-        vacuous-enforcement hole closed at the gate that runs, not only at surface time)."""
+        vacuous-enforcement hole closed at the gate that runs, not only at surface time).
+
+        X1/X2 (Convergence) — the PERSISTED payload widens, schema-ADDITIVELY, with the launch-context
+        truth so the build composes from disk (not a return-dict mutated AFTER persist, the old bug):
+          • `address` (X1) — the `ui://` locus the comment/build derives from. Optional; persisted into
+            the OPEN payload record (`inbox.surface` splats it) so the reloaded rec carries it. The 5
+            existing fields (intent/spec/scope/consequence_class/why) are untouched; readers that
+            `.get(...)` the old fields are unaffected (an absent `address` reads as None, as before).
+          • `symbols` (X2) — the `code://` symbol-neighbours `resolve_scope` ALREADY computed for this
+            address (the code relationships behind the locus). Reused, never recomputed here; the caller
+            (`surface_intent_at`) passes the value it already has. Optional; same additive treatment.
+        No `schema_ver` exists on the surfaced payload/rec (verified), so none is bumped — these are
+        purely additive optional keys on an open `.get`-read record (rule 2, schema-additive)."""
         scope = [s for s in (scope or []) if isinstance(s, str) and s.strip()]
         payload = {"intent": "build", "spec": spec, "scope": scope,
                    "consequence_class": consequence_class, "why": why or spec}
+        # X1/X2: thread the launch-context truth INTO the payload BEFORE persist (the old `out["address"]`
+        # set AFTER persist never reached disk). Additive + optional — only present when supplied.
+        if address is not None:
+            payload["address"] = address
+        if symbols is not None:
+            payload["symbols"] = list(symbols)
         # action="review" so it walks the same review lifecycle/UI; the build-intent discriminator is
         # payload["intent"]=="build" (action is the governance class, which surface_review hardcodes).
         sid = self.inbox.surface("review", payload, default="reject", resolved=None,
@@ -3031,6 +3119,7 @@ class Suite:
         # 2. RESOLVE the code scope (S3 — reused, never duplicated). Empty/stale ⇒ DENY-ALL, carried legibly.
         scoped = self.resolve_scope(ui_addr)
         scope = scoped.get("scope") or []
+        symbols = scoped.get("symbols") or []   # X2: the code:// neighbours, REUSED (never recomputed)
         stale, note = bool(scoped.get("stale")), (scoped.get("note") or "")
         # legible consent (I1): the build derives from THIS address + comment. Fold the scope gap into
         # `why` so the operator's approve sees WHY it's empty (fail-loud-legible, never a silent empty).
@@ -3038,9 +3127,14 @@ class Suite:
         if not scope:
             reason += f" — [no resolvable code scope: {note or 'orphan/CSS-selector address'} — DENY-ALL]"
         # 3. MINT through the wire's UNCHANGED front door (empty-scope=DENY-ALL + resolved=None reused).
+        #    X1/X2: the address + the already-computed symbols are threaded INTO the payload here, so the
+        #    PERSISTED record carries the launch-context truth (consent-time: the surfaced record == what
+        #    the build later composes from). The old `out["address"]=ui_addr` AFTER surface_build_intent
+        #    only mutated the return dict — never reached disk; the payload threading is the durable fix.
         out = self.surface_build_intent(str(text).strip(), scope=scope,
-                                        consequence_class=consequence_class, why=reason)
-        out["address"] = ui_addr
+                                        consequence_class=consequence_class, why=reason,
+                                        address=ui_addr, symbols=symbols)
+        out["address"] = ui_addr   # kept on the RETURN dict too (callers/return-readers unaffected)
         out["stale"] = stale
         out["note"] = note
         return out
