@@ -370,6 +370,28 @@ class FsStore:
         lines = [l for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
         return [_j.loads(l) for l in lines[-limit:]]   # oldest-first (chronological)
 
+    def chats_for(self, address: str) -> list[dict]:
+        """I7 — every chat turn ATTACHED to `address`, oldest-first (the `chat://` thread at that
+        locus). Filters the SAME append-only `chat.jsonl` (I2/I7's lane) by the additive `address`
+        field — the address IS the key. This is the INVERSE of the I6 `annotations_for` leaf: I6
+        has its OWN annotations.jsonl, I7 RIDES the open append_chat record (`rec = {"ts", **turn}`)
+        with one additive field, so it stays ONE-SOURCE (no parallel chat store — store constitution).
+        An ordinary RHM turn (no `address`) is NOT returned; a turn at a DIFFERENT address is NOT
+        returned (isolation). Reads disk every call (no in-memory cache), so a SECOND Suite over the
+        same store root sees a prior Suite's writes (persistence-survives-reload)."""
+        import json as _j
+        path = self.root / "chat.jsonl"
+        if not path.exists():
+            return []
+        out = []
+        for l in path.read_text(encoding="utf-8").splitlines():
+            if not l.strip():
+                continue
+            rec = _j.loads(l)
+            if rec.get("address") == address:
+                out.append(rec)
+        return out
+
     # --- addressed annotations (I6): append-only, keyed by `ui://` address, persists ---
     def append_annotation(self, rec: dict) -> dict:
         """Persist an annotation (comment) attached to a `ui://` address — the I6 store leaf.

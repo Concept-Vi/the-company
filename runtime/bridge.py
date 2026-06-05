@@ -140,6 +140,13 @@ class H(BaseHTTPRequestHandler):
                 # 400 (fail loud, mirrors /api/scope). Suite.annotations_at validates the address (S0)
                 # and returns the thread oldest-first. This is what R2 will gather at the operator's locus.
                 self._send(200, json.dumps(SUITE.annotations_at(q["address"])))
+            elif path == "/api/chats":                     # I7: the chat THREAD attached to a ui:// address
+                # The address-keyed READ side of /api/attach-chat (POST). Missing `address` → KeyError →
+                # 400 (fail loud, mirrors /api/scope + /api/annotations). Suite.chats_at validates the
+                # address (S0) and returns the thread oldest-first. DISTINCT from /api/chat (GET = the
+                # whole RHM history; POST = the RHM conversation) — this reads ONLY the turns attached to
+                # `address`. This is what R2 will gather at the operator's locus (address-keyed context).
+                self._send(200, json.dumps(SUITE.chats_at(q["address"])))
             elif path == "/api/review/current":            # B: the node at the cursor + its framing + ui:// target
                 self._send(200, json.dumps(SUITE.present_current(q["session"])))
             elif path == "/api/review/status":             # B: the session's live status
@@ -383,6 +390,20 @@ class H(BaseHTTPRequestHandler):
                     raise ValueError("/api/annotate needs a non-empty 'address' (fail loud)")
                 self._send(200, json.dumps(SUITE.annotate(
                     str(addr).strip(), b.get("text", ""), source=b.get("source", "operator"))))
+            elif self.path == "/api/attach-chat":        # I7: attach a chat turn to a ui:// ADDRESS (the
+                # dropped 4th attach-type, §21.1's chat:// branch). RIDES the open append_chat record with
+                # one additive `address` field — NO separate chat store (one-source). DISTINCT from
+                # /api/chat (the RHM conversation): this attaches a turn AT an address, retrieve via GET
+                # /api/chats?address=…. Suite.attach_chat validates the address against the S0 grammar
+                # (raises → 400 here) + tags source/grade (echo-guard) + flows through training_signal
+                # unchanged. Feeds R2 (address-keyed context resolution). Fail loud on a missing address.
+                b = self._body()
+                addr = b.get("address")
+                if not addr or not str(addr).strip():
+                    raise ValueError("/api/attach-chat needs a non-empty 'address' (fail loud)")
+                self._send(200, json.dumps(SUITE.attach_chat(
+                    str(addr).strip(), b.get("text", ""),
+                    role=b.get("role", "user"), source=b.get("source"))))
             elif self.path == "/api/resolve":           # OPERATOR approves/rejects/comments/skips (UI channel)
                 b = self._body()
                 # D: additive session tagging + the comment/skip/decide vocabulary; existing callers

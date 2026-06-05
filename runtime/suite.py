@@ -1748,6 +1748,51 @@ class Suite:
         parse_ui_address(address)                            # S0 grammar gate (raises on malformed)
         return self.store.annotations_for(address)
 
+    def attach_chat(self, address: str, text: str, role: str = "user", source: str | None = None) -> dict:
+        """I7 — attach a chat turn to a `ui://` address (the dropped 4th attach-type, §21.1: the
+        `chat://` content branch). The INVERSE of I6: I6 (`annotate`) writes its OWN annotations.jsonl;
+        I7 RIDES the EXISTING open `append_chat` record (`rec = {"ts", **turn}`, fs_store.py:357) with
+        ONE additive `address` field — NO separate chat store (that would violate one-source; the
+        existing chat.jsonl open-record handles it additively — store constitution).
+
+        S0 GATE FIRST: `parse_ui_address` validates the address against the ONE canonical grammar and
+        RAISES on a malformed `ui://` (fail-loud, rule 4) — so the store never persists a junk key, and
+        the bridge's try/except turns the raise into a 400 for free. Validation lives HERE (the Suite
+        semantic layer), matching where `annotate`/`act` do their work; the store leaf stays dumb.
+
+        ECHO-GUARD TAGS (store constitution 'Never write a chat turn without a source'): the turn is
+        stamped with `source` + `grade` derived from `role` via `_provenance_source`/`_provenance_grade`
+        — so an operator turn lands operator/gold (trains the twin) and an assistant/twin turn lands
+        twin/working (NEVER trains, even laundered back). The turn is an ORDINARY chat turn that ALSO
+        carries an `address`: it appears in chat_history, flows through training_signal UNCHANGED (the
+        `address` rides free — seams-rhm Seam 5), and is retrievable by `chats_at(address)`. The `ts`
+        stamped by the store leaf gives R2's relevance/recency decay its clock.
+
+        Fail loud on empty text (no silent no-op — rule 4)."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                            # S0 grammar gate (raises on malformed)
+        if not text or not str(text).strip():
+            raise ValueError("attach_chat needs non-empty text (fail loud — no silent no-op)")
+        src = source if source is not None else self._provenance_source(role)
+        rec = self.store.append_chat({"role": role, "text": str(text).strip(), "address": address,
+                                      "source": src, "grade": self._provenance_grade(role)})
+        # S2: emit an addressed event so the attached chat is visible on the live stream at its locus.
+        self._emit("chat", f"chat at {address}: {rec['text'][:40]}", address=address)
+        return rec
+
+    def chats_at(self, address: str) -> list:
+        """I7 — every chat turn attached to `address`, oldest-first (the `chat://` thread at that locus).
+
+        The address is VALIDATED first (same S0 gate as `attach_chat`/`annotate`) so a retrieval on a
+        malformed address fails loud rather than silently returning [] (which a caller could read as 'no
+        chat'). Reads through the store leaf (`chats_for`), which filters the open chat.jsonl by the
+        additive `address` field and reads disk every call — so this returns a prior Suite's writes on
+        the same store root (persistence-survives-reload). This is what R2 will gather at the operator's
+        locus (address-keyed context resolution) — the retrieval R2 consumes; I7 does NOT wire R2."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                            # S0 grammar gate (raises on malformed)
+        return self.store.chats_for(address)
+
     def chat(self, message: str, graph_id: str, focus: dict | None = None) -> dict:
         """Grounded conversation with the operator. Answers from compact ground truth; never
         confabulates system facts. Suggests actions but performs none that skip the surfaced
