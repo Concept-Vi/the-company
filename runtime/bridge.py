@@ -181,6 +181,8 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.trial_transcript(q["session"])))
             elif path in ("/api/voice/services", "/api/voice/ears"):  # G4.7: voice-service lifecycle (ears+engines: up/warming/down + VRAM)
                 from voice import lifecycle as voice_lc       # /api/voice/ears kept as a back-compat alias
+                for w in voice_lc.poll_wake():                # G7-loadcost: a service just became up → record its WAKE-TIME
+                    SUITE.emit_run_record("voice.load", w["wake_ms"], service=w["service"], vram_used_mb=w.get("vram_used_mb"))
                 self._send(200, json.dumps(voice_lc.status()))
             elif path == "/api/roles":                     # G4.2: the model-ROLE registry (judge + future) the config lab binds
                 self._send(200, json.dumps(SUITE.roles()))

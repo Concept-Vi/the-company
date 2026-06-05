@@ -25,6 +25,7 @@ import json
 import os
 import shutil
 import subprocess
+import time
 import urllib.error
 import urllib.request
 
@@ -153,8 +154,49 @@ def load(service_id: str) -> dict:
     args = [py, script, str(load_spec["port"])] + [str(a) for a in (load_spec.get("args") or [])]
     log = open(logp, "ab")                                     # noqa: SIM115 (handed to the child)
     subprocess.Popen(args, cwd=REPO, env=env, stdout=log, stderr=log, start_new_session=True)
+    # G7-loadcost: stamp the load START (wall-clock, cross-process — the bridge + this child are
+    # separate procs). poll_wake() reads this when the service first answers 'up' to measure the
+    # WAKE-TIME (the resource manager's "how long to bring this resident" — measured, not estimated).
+    try:
+        with open(_loadstart_path(service_id), "w") as f:
+            f.write(str(time.time()))
+    except Exception:
+        pass                                                   # telemetry must never break the load
     return {"service": service_id, "state": "warming", "port": load_spec["port"], "log": logp,
             "note": "launched — model loading; poll status() for 'up'"}
+
+
+def _loadstart_path(service_id: str) -> str:
+    return f"/tmp/company-voice-{service_id}.loadstart"
+
+
+def poll_wake() -> list:
+    """G7-loadcost: detect each loadable voice service that has just become 'up' AND carries a load-start
+    marker → return its measured WAKE-TIME (ms) + the marker is consumed (removed) so it's recorded once.
+    Stays Suite-free (returns data; the bridge emits the run-record via SUITE.emit_run_record) so the
+    stdlib lifecycle stays importable in any interpreter. Returns [{service, wake_ms, vram_used_mb}]."""
+    out = []
+    try:
+        free_used = vram().get("used_mb")
+    except RuntimeError:
+        free_used = None
+    for sid, spec in _loadable().items():
+        mp = _loadstart_path(sid)
+        if not os.path.exists(mp):
+            continue
+        if not is_up(spec):
+            continue                                           # still warming — leave the marker
+        try:
+            start = float(open(mp).read().strip())
+            wake_ms = int((time.time() - start) * 1000)
+            out.append({"service": sid, "wake_ms": wake_ms, "vram_used_mb": free_used})
+        except Exception:
+            pass
+        try:
+            os.remove(mp)                                      # record exactly once
+        except OSError:
+            pass
+    return out
 
 
 def unload(service_id: str) -> dict:
