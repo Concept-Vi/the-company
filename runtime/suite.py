@@ -1988,6 +1988,22 @@ class Suite:
                 "comment — supply text, or pass a verb to OPERATE). Fail loud — no silent no-op, no "
                 "silent dispatch.")
         rec = self.annotate(address, str(text), source=source)
+        # L4 — the addressed comment IS the twin's LOCATED gold label (§21.7#7, seams-rhm Seam 5).
+        # ONE additive call: ride the existing open `append_chat` record with the address stamped, so
+        # an operator's clicked comment flows the EXISTING `append_chat → training_signal` pipe (no new
+        # training pipeline) and surfaces in `training_signal` as a located gold label — automatically,
+        # echo-guarded. This lives in the I5 router (the real clicked-comment chokepoint), NOT in
+        # `annotate()` itself: `annotate` stays a PURE annotation-branch leaf (I6's SEPARATION preserve —
+        # `annotation_acceptance.py` asserts `annotate()` writes NO chat). The role is TIED to the click's
+        # `source` via `_provenance_*` (the same scheme `attach_chat`/`chat` use — no second grading
+        # scheme): an operator comment lands user/gold/operator (trains the twin, located); a non-operator
+        # source lands assistant/working/twin (NEVER trains, even laundered back — the F4 guard). We write
+        # through the store leaf directly (NOT `attach_chat`) so we do NOT emit a SECOND addressed event
+        # at this locus (`annotate` already emitted the addressed `annotation` event for the live stream).
+        role = "user" if source == "operator" else "assistant"
+        self.store.append_chat({"role": role, "text": str(text).strip(), "address": address,
+                                "source": self._provenance_source(role),
+                                "grade": self._provenance_grade(role)})
         return {"face": "annotate", "annotation": rec, "action": None, "graph_id": graph_id}
 
     def annotate(self, address: str, text: str, source: str = "operator") -> dict:
