@@ -499,6 +499,24 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.attach_chat(
                     str(addr).strip(), b.get("text", ""),
                     role=b.get("role", "user"), source=b.get("source"))))
+            elif self.path == "/api/approve-reach":      # X16: the operator authorizes HOW FAR a build's
+                # edit propagates — the reach-approval. OPERATOR face (beside /api/resolve, /api/pin — NOT
+                # the MCP/agent face). DEFAULT is the pointed address only (the build's declared scope is
+                # unchanged); this widens it to include the files the APPROVED blast-radius members live in.
+                # approve_reach validates each member against the PERSISTED blast_radius the operator saw
+                # (consent-time) — a member NOT in that radius RAISES (→ 400), so this is never a
+                # scope-injection path that defeats empty-scope=DENY-ALL. Operator-only, off the MCP face
+                # (not in RHM_VERBS — no-bypass + the 7-verb whitelist + no-self-apply preserved). Fail loud
+                # on a missing id / members (no silent no-op — AGENTS.md rule 4).
+                b = self._body()
+                if not b.get("id") or not str(b["id"]).strip():
+                    raise ValueError("/api/approve-reach needs a non-empty 'id' (the build-intent) (fail loud)")
+                members = b.get("members")
+                if not members or not isinstance(members, list):
+                    raise ValueError("/api/approve-reach needs a non-empty 'members' list (the approved "
+                                     "blast-radius members) (fail loud)")
+                self._send(200, json.dumps(SUITE.approve_reach(
+                    str(b["id"]).strip(), [str(m) for m in members], reason=b.get("reason", ""))))
             elif self.path == "/api/resolve":           # OPERATOR approves/rejects/comments/skips (UI channel)
                 b = self._body()
                 # D: additive session tagging + the comment/skip/decide vocabulary; existing callers

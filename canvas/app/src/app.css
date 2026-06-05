@@ -279,6 +279,39 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 .bi-summary{max-height:120px;overflow:auto;background:var(--panel);border:1px solid var(--line);padding:7px;
   font-size:10px;white-space:pre-wrap;border-radius:3px;color:var(--dim);margin-top:6px}
 .bi-perm{margin-top:5px;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+/* X16 · operator-approves-the-reach — the blast-radius / reach surface (a SENSIBLE DEFAULT, needs-tim).
+   Built ENTIRELY on corpus tokens (no hardcoded colour → design-lint clean). A navigable ripple: the
+   pointed address at the centre, the relationship rings around it; ticking a member widens the reach. */
+.br-reach{margin-top:8px;padding:7px 8px;background:var(--bg);border:1px solid var(--line);border-radius:3px}
+.br-reach.br-empty{opacity:.8}
+.br-reach-head{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--kind-content);margin-bottom:6px}
+.br-empty-note{font-size:10px;color:var(--dim);line-height:1.4}
+.br-ripple{display:flex;flex-direction:column;gap:6px}
+.br-centre{display:flex;align-items:center;gap:6px;padding:4px 7px;border:1px solid var(--sig-dim);
+  border-radius:9px;background:var(--acc-glow);align-self:flex-start}
+.br-centre-dot{width:8px;height:8px;border-radius:50%;background:var(--sig)}
+.br-centre-label{font-size:9.5px;letter-spacing:.04em;color:var(--sig)}
+.br-ring{padding-left:9px;border-left:2px solid var(--line-2)}
+.br-ring.br-ring-dependents{border-left-color:var(--err)}
+.br-ring.br-ring-dependencies{border-left-color:var(--warn)}
+.br-ring.br-ring-coref{border-left-color:var(--kind-content)}
+.br-ring.br-ring-semantic{border-left-color:var(--sig-dim)}
+.br-ring-label{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-bottom:3px}
+.br-chips{display:flex;flex-wrap:wrap;gap:5px}
+.br-chip{display:inline-flex;align-items:center;gap:3px;border:1px solid var(--line);border-radius:9px;
+  background:var(--panel);padding:1px 4px 1px 2px;max-width:100%}
+.br-chip.ticked{border-color:var(--sig);background:var(--acc-glow)}
+.br-chip.in-reach{border-color:var(--sig-dim);background:var(--acc-glow)}
+.br-chip-tick{border:none;background:transparent;color:var(--dim);cursor:pointer;font-size:11px;padding:0 2px;line-height:1}
+.br-chip.ticked .br-chip-tick,.br-chip.in-reach .br-chip-tick{color:var(--sig)}
+.br-chip-tick:disabled{cursor:default}
+.br-chip-label{border:none;background:transparent;color:var(--ink);cursor:pointer;font-size:9.5px;
+  letter-spacing:.02em;word-break:break-all;text-align:left;padding:0}
+.br-chip-label:hover{color:var(--sig)}
+.br-reach-act{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:7px}
+.br-approve{margin:0}
+.br-default-note{font-size:8.5px;letter-spacing:.04em}
+.br-err{margin-top:6px;font-size:10px;color:var(--err);line-height:1.4}
 .coa{font-family:"Fraunces",serif;color:var(--ink);font-size:12.5px;line-height:1.45;white-space:pre-wrap;
   background:var(--bg);border:1px solid var(--sig-dim);border-radius:3px;padding:9px;margin:6px 0}
 button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}

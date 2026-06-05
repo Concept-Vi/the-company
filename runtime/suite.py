@@ -3322,7 +3322,8 @@ class Suite:
     def surface_build_intent(self, spec: str, scope: list[str] | None = None,
                              consequence_class: str = "decision_build", why: str = "",
                              address: str | None = None, symbols: list[str] | None = None,
-                             context: list[dict] | None = None) -> dict:
+                             context: list[dict] | None = None,
+                             blast_radius: dict | None = None) -> dict:
         """W4 PRODUCER: mint a build-intent item — a decision that, once the operator approves it,
         AUTHORIZES an autonomous build of a DECLARED scope. It is distinguished from a plain
         criterion/review by `intent="build"` (the discriminator §W2 — `action` is the governance
@@ -3369,6 +3370,11 @@ class Suite:
             payload["symbols"] = list(symbols)
         if context is not None:                       # X3: the bounded, deduped attached-strata bundle
             payload["context"] = list(context)        # (resolved at mint by the caller; persister-only here)
+        if blast_radius is not None:                  # X16: the BLAST RADIUS (X14) the operator sees at
+            payload["blast_radius"] = dict(blast_radius)  # consent time — what the change could REACH. Persisted
+            # so (a) the FE surfaces it for reach-approval AND (b) `approve_reach` validates an approved
+            # member against the EXACT radius the operator saw (consent-time, not a fresh recompute that
+            # could disagree). Persister-only here (the caller resolves it at mint, X1/X2/X3 character).
         # action="review" so it walks the same review lifecycle/UI; the build-intent discriminator is
         # payload["intent"]=="build" (action is the governance class, which surface_review hardcodes).
         sid = self.inbox.surface("review", payload, default="reject", resolved=None,
@@ -3441,6 +3447,22 @@ class Suite:
         except Exception as e:
             self._emit("warning", f"X3 mint-time context gather failed ({type(e).__name__})", address=ui_addr)
             context = None   # omit the key — never persist a partial bundle (fail-loud, not silent-partial)
+        # X16: compute the BLAST RADIUS (X14) at MINT/consent time and persist it, so the operator
+        # sees WHAT THE CHANGE COULD REACH (co-reference + structural dependents-to-verify /
+        # dependencies-to-respect + semantic) BEFORE approving, and so `approve_reach` validates an
+        # approved member against the EXACT radius surfaced (consent-time, never a fresh recompute that
+        # could disagree). REUSE `blast_radius` (X9+X14) — no parallel system, no new substrate. The
+        # method is already graceful-empty + fail-loud-legible (orphan/stale → empty kinds + a note,
+        # never a crash), so an orphan address yields an empty radius (nothing to expand → DENY-ALL
+        # stays DENY-ALL). FAIL-LOUD-LEGIBLE, mirroring the context gather above: a hiccup WARNS
+        # (address-stamped) + omits the key (never persist a half-radius silently) — never crash the
+        # mint (losing the operator's build-intent over a radius hiccup is the worse failure).
+        radius = None
+        try:
+            radius = self.blast_radius(ui_addr)
+        except Exception as e:
+            self._emit("warning", f"X16 mint-time blast_radius failed ({type(e).__name__})", address=ui_addr)
+            radius = None   # omit the key — never persist a partial radius (fail-loud, not silent-partial)
         # legible consent (I1): the build derives from THIS address + comment. Fold the scope gap into
         # `why` so the operator's approve sees WHY it's empty (fail-loud-legible, never a silent empty).
         reason = why or f"comment at {ui_addr}: {str(text).strip()[:200]}"
@@ -3454,7 +3476,8 @@ class Suite:
         #    reached disk; the payload threading is the durable fix.
         out = self.surface_build_intent(str(text).strip(), scope=scope,
                                         consequence_class=consequence_class, why=reason,
-                                        address=ui_addr, symbols=symbols, context=context)
+                                        address=ui_addr, symbols=symbols, context=context,
+                                        blast_radius=radius)
         out["address"] = ui_addr   # kept on the RETURN dict too (callers/return-readers unaffected)
         out["stale"] = stale
         out["note"] = note
@@ -5060,6 +5083,147 @@ class Suite:
                            address="ui://chrome/inbox")
                 verdict["wire_drive_error"] = str(e)
         return verdict
+
+    # ── X16 · operator-approves-the-reach (the propagation decision) ───────────────────────────
+    # A consequential build surfaces its BLAST RADIUS (X14, persisted at mint into payload —
+    # surface_intent_at). The OPERATOR authorizes HOW FAR the edit propagates. The build's editable
+    # scope IS payload["scope"] (dispatch_decision reads it; the scope-diff close gates on it). So:
+    #   • DEFAULT-NARROW: with NO reach-approval, payload["scope"] stays the pointed address's scope —
+    #     unchanged from today, never auto-expanded.
+    #   • EXPLICIT EXPANSION: approve_reach widens payload["scope"] to the UNION of the original scope
+    #     and the files the APPROVED blast-radius members live in. The approved members are recorded
+    #     (payload["reach_approved"]) for audit + legibility.
+    # Mutating payload["scope"] (not a separate merge-at-dispatch field) means the wire's governed path
+    # is REUSED BYTE-FOR-BYTE — dispatch_decision/_in_any_scope are untouched; an EXPANDED scope
+    # authorizes the expanded files, a NARROW one does not, by the SAME scope-diff gate. Empty-scope =
+    # DENY-ALL is preserved (an orphan address has an empty radius → nothing to expand → scope stays []).
+    def _member_to_files(self, member: str) -> list[str]:
+        """Resolve a BLAST-RADIUS MEMBER to its repo-relative file(s) — the editable-scope grain.
+        Members come in three grammars (the X14 return shape): a `code://` symbol id (structural
+        dependents/dependencies, semantic neighbours), a `ui://` address (co-reference), or a feature-id
+        (co-reference: ENG-*/NODE-*/WIRE-*). REUSE the existing resolvers, never re-derive:
+          • code://<stem>/<symbol> → its `file` field in code-symbols.json (the same registry
+            resolve_scope reads; the canonical resolved repo-relative path).
+          • ui://…                 → resolve_scope(addr).scope (the SAME S3 forward map).
+          • a feature-id (no scheme) → resolves to NO file here (it isn't a code locus) → []; the
+            caller treats an all-empty resolution as a no-op for that member (legible, never a silent
+            broadening). We NEVER fabricate a file (rule 8 — confabulation is a failure)."""
+        import json as _j
+        m = (member or "").strip()
+        if not m:
+            return []
+        if m.startswith("code://"):
+            symbols_path = os.path.join(self._corpus_dir(), "code-symbols.json")
+            try:
+                with open(symbols_path, encoding="utf-8") as f:
+                    index = _j.load(f).get("symbols", {})
+            except (OSError, ValueError):
+                return []                              # unreadable index → no file (fail-safe, not fabricated)
+            entry = index.get(m) or {}
+            f = entry.get("file")
+            return [f] if f else []
+        if m.startswith("ui://"):
+            try:
+                return list(self.resolve_scope(m).get("scope") or [])
+            except Exception:
+                return []                              # malformed/orphan → no file (never fabricated)
+        return []                                      # a feature-id (or anything else) maps to no file
+
+    def approve_reach(self, sid: str, members: list[str], reason: str = "") -> dict:
+        """X16 — the OPERATOR authorizes HOW FAR a build's edit propagates. Default is the pointed
+        address only (payload["scope"] unchanged); this widens it to include the files the APPROVED
+        blast-radius members live in. The classic case: a rename whose ripples reach the structural
+        dependents — the operator approves expanding the editable scope to that relational cluster.
+
+        OPERATOR-ONLY, OFF the MCP face: this is an operator action (mirrors resolve_surfaced / pin) —
+        NOT in RHM_VERBS, so the RHM/MCP face gains no reach-expansion (no-bypass + the 7-verb
+        whitelist + no-self-apply preserved).
+
+        THE SAFETY GATE (the load-bearing invariant): each requested member MUST be a member of the
+        PERSISTED blast_radius the operator saw at mint (consent-time — NOT a fresh recompute that could
+        disagree). A member that is not in that radius RAISES (fail loud) — so approve_reach can only
+        RATIFY what the operator actually saw; it is NEVER a scope-injection path that could defeat
+        empty-scope=DENY-ALL or smuggle in an arbitrary file. A raw repo path is not a radius member
+        either → rejected.
+
+        ORDERING / IDEMPOTENCY: valid ONLY while the item is a live, UNRESOLVED build-intent. After a
+        terminal resolve (approve/reject/decide) it RAISES — you cannot widen the reach of a build that
+        has already been decided/launched (mirrors resolve_surfaced's idempotent-per-item refusal).
+
+        DEFAULT-NARROW + NEVER-SILENT: only the NAMED members widen the scope; an un-named member is
+        never pulled in. The new scope is the UNION of the original declared scope and the approved
+        members' files (the original is never dropped). EMPTY-SCOPE=DENY-ALL is preserved: an orphan
+        address has an empty radius, so every requested member is rejected and the scope stays []
+        (never widened into allow-all).
+
+        ATOMIC: the scope widen is a re-read-then-mutate-fresh-copy under the surfaced_lock (the T1-RACE
+        pattern resolve_surfaced uses), so a concurrent set_status / build_result write can't lose-update
+        the widened scope, nor it them. Returns the verbose verdict.
+
+        FAIL LOUD on a missing item / non-build-intent / a member not in the radius / a terminal item —
+        never a silent no-op (rule 4)."""
+        d = self.inbox.get(sid)
+        if not d:
+            raise KeyError(f"no surfaced decision {sid!r}")
+        if not self.is_build_intent(d):
+            raise GovernanceError(
+                f"approve_reach: {sid!r} is not a build-intent item (payload.intent != 'build') — "
+                f"the reach is the editable scope of a BUILD; there is nothing to widen on a "
+                f"non-build review item. Refused (fail loud).")
+        # ORDERING: a terminal verdict means the build is decided/launched — too late to widen its reach.
+        prior = d.get("resolved")
+        if prior in self.RESOLVING_VERBS:
+            raise GovernanceError(
+                f"approve_reach: {sid!r} already has a terminal verdict ({prior!r}) — its reach is "
+                f"locked; you cannot widen the editable scope of a decided/launched build. Refused.")
+        members = [m for m in (members or []) if isinstance(m, str) and m.strip()]
+        if not members:
+            raise ValueError(
+                "approve_reach needs a non-empty list of blast-radius members to approve — "
+                "fail loud, no silent no-op (the default reach is the pointed address; widen explicitly).")
+        payload = d.get("payload") or {}
+        radius = payload.get("blast_radius") or {}
+        # THE SAFETY GATE: build the SET of members the operator actually saw, across all kinds, from the
+        # PERSISTED radius (consent-time). A requested member outside it RAISES — no scope injection.
+        seen = set(radius.get("co_reference") or [])
+        seen |= set(radius.get("structural_dependents") or [])
+        seen |= set(radius.get("structural_dependencies") or [])
+        seen |= set(radius.get("semantic_neighbours") or [])
+        bad = [m for m in members if m not in seen]
+        if bad:
+            raise GovernanceError(
+                f"approve_reach: {bad!r} is/are NOT in the surfaced blast radius of {sid!r} — the reach "
+                f"can only RATIFY members the operator actually saw (consent-time, fail loud). Approving "
+                f"an un-surfaced member would be a scope-injection path that defeats empty-scope=DENY-ALL; "
+                f"refused. (Surfaced members: {sorted(seen) or '∅ — empty radius, nothing to expand'}.)")
+        # resolve the approved members → their repo-relative files (REUSE the existing resolvers).
+        add_files: set[str] = set()
+        for m in members:
+            for f in self._member_to_files(m):
+                if f:
+                    add_files.add(f)
+        # ATOMIC widen: re-read the fresh record under the lock, UNION the scope, record the approval.
+        with self.store.surfaced_lock():
+            d = self.inbox.get(sid) or d
+            payload = d.get("payload") or {}
+            scope = list(payload.get("scope") or [])
+            new_scope = sorted(set(scope) | add_files)
+            payload["scope"] = new_scope
+            approved = list(payload.get("reach_approved") or [])
+            for m in members:                          # record WHAT was approved (legible consent / audit)
+                if m not in approved:
+                    approved.append(m)
+            payload["reach_approved"] = approved
+            d["payload"] = payload
+            self.store.save_surfaced(d)
+        # S2: emit an addressed event so the reach-expansion is visible on the live stream + audit log.
+        self._emit("decision.reach",
+                   f"operator approved a wider reach for {sid}: +{sorted(add_files) or '∅'} "
+                   f"(members {members})" + (f" — {reason}" if reason else ""),
+                   surfaced=sid, reach_approved=members, added_scope=sorted(add_files),
+                   address="ui://chrome/inbox")        # S2: the build-intent's inbox item
+        return {"id": sid, "reach_approved": members, "added_scope": sorted(add_files),
+                "scope": new_scope}
 
     def decision_view(self, sid: str) -> dict:
         """A decision as a VIEW derived from the event log (I2): its full trajectory — proposed →

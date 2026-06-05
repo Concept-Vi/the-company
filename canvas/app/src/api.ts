@@ -45,6 +45,12 @@ export const api = {
     fetch('/api/propose', { method: 'POST', headers: J, body: JSON.stringify({ name, spec }) }).then(jr),
   resolve: (id: string, choice: string, reason = '') =>
     fetch('/api/resolve', { method: 'POST', headers: J, body: JSON.stringify({ id, choice, reason }) }).then(jr),
+  // X16: the operator authorizes HOW FAR a build's edit propagates — approve named blast-radius
+  // members to WIDEN the build's editable scope to their files. DEFAULT is the pointed address only
+  // (no call → no expansion). Operator-only (off the MCP face); a member not in the surfaced radius
+  // is refused by the backend (consent-time gate).
+  approveReach: (id: string, members: string[], reason = '') =>
+    fetch('/api/approve-reach', { method: 'POST', headers: J, body: JSON.stringify({ id, members, reason }) }).then(jr),
   apply: (id: string) =>
     fetch('/api/apply', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(jr),
   objectInfo: () => fetch('/api/object_info').then(jr),

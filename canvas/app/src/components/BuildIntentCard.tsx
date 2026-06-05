@@ -7,6 +7,7 @@
 // surfaced item; PanelErrorBoundary-wrapped at the call site. PRESERVE-LIST: demonstrate-first review.
 import { useState } from 'react'
 import { buildPhase, deriveOutcome } from '../api'
+import { BlastRadiusReach } from './BlastRadiusReach'
 
 export function BuildIntentCard({ d, onOpen, onDemonstrate, liveTypes }:
   { d: any; onOpen: (id: string) => void; onDemonstrate: (nodeType: string) => void; liveTypes: string[] }) {
@@ -30,6 +31,19 @@ export function BuildIntentCard({ d, onOpen, onDemonstrate, liveTypes }:
       </div>
       {/* the INTENT (what was asked) — shown for an awaiting/running build (no terminal phase yet). */}
       {(phase.cls === 'bi-inbox' || phase.cls === 'bi-running') && (p.spec || p.why) && <div className="bi-spec">{p.spec || p.why}</div>}
+      {/* X16 · operator-approves-the-reach — for an AWAITING build-intent (the operator decides the reach
+          BEFORE approving), surface the persisted blast radius (X14) as a navigable ripple + the
+          reach-approval control. DEFAULT-NARROW: until the operator ticks + approves a wider reach, the
+          build's editable scope stays the pointed address only. FORM = needs-tim (a reserved design call;
+          this is a sensible default, not green). */}
+      {phase.cls === 'bi-inbox' && p.blast_radius && (
+        // NOTE (needs-tim): onNavigate is intentionally NOT wired to onOpen here — onOpen is openCoa,
+        // which expects a decision SID, not a ui:///code:// member address (they'd mis-fire). Where a
+        // blast-radius member navigates TO (resolve the address on the canvas / open the code locus) is
+        // a RESERVED Tim design call, like the rest of this surface. Left unbound = a visible, inert
+        // chip-label (no wrong jump), pending the reach surface's design pass.
+        <BlastRadiusReach d={d} />
+      )}
       {/* DEMONSTRATE-FIRST · gated on the backend LIFECYCLE PHASE, NOT the subprocess exit code. Only a
           CLOSED build (status==='implemented' → bi-done) headlines the working outcome + offers the "show
           me" demonstration. A build can have build_result.success===true and STILL be surfaced-back (a
