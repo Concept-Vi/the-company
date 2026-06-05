@@ -842,6 +842,12 @@ class Suite:
                 # slot mirroring `model` (the brain). Default = the stt lane's default ear when present
                 # (else ''); the operator swaps providers without code. Schema-additive (absent → default).
                 "stt": c.get("stt") or self._stt_default(),
+                # the TTS slots (G4.2): an OPTIONAL active-engine + voice-arg OVERRIDE. Default '' →
+                # the circuit uses the PERSONA's engine (personas.py) — so qwen3tts stays Sable's default,
+                # nothing changes unless the operator explicitly picks an engine. Lets the config lab swap
+                # the voice engine + voice-arg live without touching the persona. Schema-additive.
+                "tts_engine": c.get("tts_engine", ""),
+                "tts_voice": c.get("tts_voice", ""),
                 # the ROLE BINDINGS — {role_id: {model?, base_url?, knobs?, ...}} per the ROLE_REGISTRY.
                 # n model-FUNCTION roles (judge first; more to come) each bind a model + config from the
                 # live registry. Stored as ONE dict so adding a role never touches the config whitelist.
@@ -860,7 +866,15 @@ class Suite:
 
     def set_rhm_config(self, updates: dict) -> dict:
         allowed = {k: v for k, v in (updates or {}).items()
-                   if k in ("model", "base_url", "persona", "mode", "voice_enabled", "timeout", "stt", "roles")}
+                   if k in ("model", "base_url", "persona", "mode", "voice_enabled", "timeout", "stt",
+                            "roles", "tts_engine", "tts_voice")}
+        if "tts_engine" in allowed and str(allowed["tts_engine"]).strip():
+            # validate against the engine port map (registry-is-truth; '' clears → persona default)
+            from voice import loop as _vl
+            eng = str(allowed["tts_engine"]).strip()
+            if eng not in _vl.ENGINE_PORTS and eng != "kokoro":
+                raise ValueError(f"unknown TTS engine {eng!r} — one of {['kokoro'] + sorted(_vl.ENGINE_PORTS)}")
+            allowed["tts_engine"] = eng
         if "roles" in allowed:                                # the role-binding registry slot (n roles)
             incoming = allowed["roles"]
             if not isinstance(incoming, dict):

@@ -223,6 +223,80 @@ class H(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             return                                          # client closed — done, not an error
 
+    def _voice_stream(self):
+        """Tier-1 STREAMING voice turn: hear → think → SPEAK SENTENCE-BY-SENTENCE. The win over
+        /api/voice/turn: instead of synthesising the WHOLE reply before any audio (the ~28s-on-a-long-
+        reply wall), we split the reply into sentences and stream each one's audio AS IT'S SYNTHESISED —
+        so the first words play at ~(silence+STT+brain+TTS-of-one-short-sentence), and the rest flows
+        behind. Response = newline-delimited JSON events the FE reads + plays incrementally:
+          {type:transcript,text} · {type:chunk,idx,text,wav_b64,ms} (per sentence) · {type:done,total_ms,reply}
+        Engine-agnostic (sentence-chunking works with the CURRENT qwen3tts — no engine change; each
+        sentence is a short, fast synth). Brain-token streaming is a later refinement; chunking the TTS
+        (the dominant cost) is most of the win. Fail-loud surfaces as a {type:error} event then closes."""
+        import base64 as _b64, re as _re, time as _t
+        from urllib.parse import urlparse as _up, parse_qs as _pq
+        from voice import loop as voice_loop, stt as voice_stt, lifecycle as voice_lc, personas as voice_personas
+        self.close_connection = True
+        vq = {k: v[0] for k, v in _pq(_up(self.path).query).items()}
+        persona = (vq.get("persona") or "").strip()
+        gid = vq.get("graph_id", DEMO)
+        audio = self.rfile.read(int(self.headers.get("Content-Length", 0)))
+        self.send_response(200)
+        self.send_header("Content-Type", "application/x-ndjson")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "close")
+        self.end_headers()
+
+        def emit(obj):
+            self.wfile.write((json.dumps(obj) + "\n").encode()); self.wfile.flush()
+        try:
+            if not persona:
+                raise ValueError("/api/voice/stream needs ?persona=<id> (fail loud)")
+            p = voice_personas.get_persona(persona)               # fail loud on unknown persona
+            _rc = SUITE.rhm_config()
+            eng_override = (_rc.get("tts_engine") or "").strip() or None   # G4.2 engine/voice override slots
+            voice_override = (_rc.get("tts_voice") or "").strip() or None
+            eng = eng_override or p["engine"]                     # override wins; else the persona's engine
+            t0 = _t.monotonic()
+            speak_reply = SUITE.voice_enabled()
+            # boot-on-demand (only if we'll speak)
+            if speak_reply:
+                svc = voice_lc.engine_service_for(eng)
+                if svc and not voice_lc.is_up(voice_lc._loadable()[svc]):
+                    emit({"type": "error", "error": f"engine {eng} ({svc}) is down — load it "
+                          f"(POST /api/voice/load) or use ?boot=1 on /api/voice/turn first"}); return
+            ear = SUITE.rhm_config().get("stt") or voice_stt.active_ear()
+            heard = voice_stt.transcribe(audio, provider=ear)
+            transcript = (heard.get("text") or "").strip()
+            stt_ms = int((_t.monotonic() - t0) * 1000)
+            emit({"type": "transcript", "text": transcript, "ms": stt_ms})
+            if not transcript:
+                raise RuntimeError("empty transcript — STT heard nothing (fail loud)")
+            thought = SUITE.chat(transcript, gid)                 # the ONE in-process brain (full reply)
+            reply = (thought.get("reply") or "").strip()
+            think_ms = int((_t.monotonic() - t0) * 1000) - stt_ms
+            emit({"type": "reply", "text": reply, "ms": think_ms})
+            if not speak_reply:
+                emit({"type": "done", "total_ms": int((_t.monotonic() - t0) * 1000), "spoke": False, "reply": reply}); return
+            # split into sentences → synth + stream each AS IT'S READY (the streaming win)
+            sentences = [s.strip() for s in _re.split(r'(?<=[.!?])\s+', reply) if s.strip()] or [reply]
+            voice_arg = voice_loop._voice_arg_for(p)
+            for idx, sent in enumerate(sentences):
+                cs = _t.monotonic()
+                wav = voice_loop.speak(sent, p["engine"], voice=voice_arg)   # short sentence → fast synth
+                emit({"type": "chunk", "idx": idx, "text": sent,
+                      "wav_b64": _b64.b64encode(wav).decode(),
+                      "ms": int((_t.monotonic() - cs) * 1000)})
+            total = int((_t.monotonic() - t0) * 1000)
+            SUITE.emit_run_record("voice.stream", total, stt_ms=stt_ms, think_ms=think_ms,
+                                  chunks=len(sentences), persona=persona, engine=p["engine"], ear=ear)
+            emit({"type": "done", "total_ms": total, "spoke": True, "chunks": len(sentences), "reply": reply})
+        except Exception as e:                                     # fail loud as a stream event, then close
+            try:
+                emit({"type": "error", "error": f"{type(e).__name__}: {e}"})
+            except Exception:
+                pass
+
     def do_POST(self):
         # HTTP/1.1 keeps sockets alive (needed for the GET /api/stream SSE). But a POST handler that
         # doesn't drain its request body (e.g. /api/react, the 404 branch) would leave bytes that the
@@ -294,7 +368,10 @@ class H(BaseHTTPRequestHandler):
                 # down: ?boot=1 launches it (returns 'booting' — the UI shows warming + retries when up;
                 # we do NOT block the request ~25s); else a legible refusal naming the load endpoint.
                 from voice import lifecycle as voice_lc, personas as voice_personas
-                eng = voice_personas.get_persona(persona)["engine"]   # fail loud on unknown persona
+                _rc = SUITE.rhm_config()
+                eng_override = (_rc.get("tts_engine") or "").strip() or None   # G4.2 engine override slot
+                voice_override = (_rc.get("tts_voice") or "").strip() or None
+                eng = eng_override or voice_personas.get_persona(persona)["engine"]   # override wins; else persona
                 if speak_reply:
                     svc = voice_lc.engine_service_for(eng)
                     if svc and not voice_lc.is_up(voice_lc._loadable()[svc]):
@@ -329,6 +406,9 @@ class H(BaseHTTPRequestHandler):
                 r["wav_b64"] = _b64.b64encode(wav).decode()       # the spoken reply, travels with the text
                 r["timing"] = {"total_ms": total, "stt_ms": stt_ms, "think_ms": think_ms, "tts_ms": tts_ms}
                 self._send(200, json.dumps(r))
+                return
+            if self.path.split("?")[0] == "/api/voice/stream":   # G7/Tier-1: STREAMING turn — speak sentence-by-sentence
+                self._voice_stream()
                 return
             if self.path == "/api/run":
                 b = self._body()

@@ -136,7 +136,8 @@ def select_persona(persona_id: str, bridge_url: str | None = None) -> dict:
 
 def loop_turn(audio: bytes, persona_id: str, *, graph_id: str = "codebase",
               stt_provider: str | None = None, bridge_url: str | None = None,
-              think_fn=None, speak_reply: bool = True, on_transcript=None, on_reply=None) -> dict:
+              think_fn=None, speak_reply: bool = True, engine_override: str | None = None,
+              voice_override: str | None = None, on_transcript=None, on_reply=None) -> dict:
     """ONE full turn of the circuit for a given character:
         audio (a finished utterance) → transcript → brain reply → wav in that character's voice.
     Returns {"transcript", "reply", "engine", "voice", "wav": <bytes>, "action", "mode"}.
@@ -167,16 +168,27 @@ def loop_turn(audio: bytes, persona_id: str, *, graph_id: str = "codebase",
     if not speak_reply:                                     # G4.4: voice off for this mode → text-only turn
         return {"transcript": transcript, "reply": reply, "engine": None, "voice": None,
                 "wav": b"", "spoke": False, "action": thought.get("action"), "mode": thought.get("mode")}
-    voice_arg = _voice_arg_for(p)
-    wav = speak(reply, p["engine"], voice=voice_arg)
-    return {"transcript": transcript, "reply": reply, "engine": p["engine"],
+    # G4.2: an explicit engine/voice override (the tts_engine/tts_voice config slots) wins over the
+    # persona's default engine — so the operator can voice ANY persona through ANY engine live; unset
+    # → the persona's own engine (qwen3tts for Sable, etc.) unchanged.
+    engine = engine_override or p["engine"]
+    voice_arg = voice_override or _voice_arg_for(p)
+    wav = speak(reply, engine, voice=voice_arg)
+    return {"transcript": transcript, "reply": reply, "engine": engine,
             "voice": voice_arg, "wav": wav, "spoke": True, "action": thought.get("action"),
             "mode": thought.get("mode")}
 
 
 # --- turn-detection + barge-in (the naturalness levers) — VAD glue the UI's audio stream drives ---
 
-def utterance_ended(audio_buffer, *, silence_ms: int = 700, sampling_rate: int = 16000,
+# The trailing-silence endpoint window (ms). Lowered 700→500 default for snappier turn-taking (Tim:
+# "shorter silence window") — the SEMANTIC judge (semantic_complete) catches false stops, so we can be
+# aggressive without cutting him off mid-ramble. Configurable: COMPANY_VAD_SILENCE_MS, and the caller
+# (the browser VAD) may pass `silence_ms` per-call. This is a per-request naturalness knob.
+SILENCE_MS = int(os.environ.get("COMPANY_VAD_SILENCE_MS", "500"))
+
+
+def utterance_ended(audio_buffer, *, silence_ms: int = SILENCE_MS, sampling_rate: int = 16000,
                     semantic_complete=None) -> bool:
     """Endpoint detector for the live stream: True when the operator's CURRENT utterance is finished, so
     the loop should fire a turn. Two signals (the cast doc's 'reply on a finished thought, not a silence
