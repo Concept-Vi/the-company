@@ -3030,7 +3030,8 @@ class Suite:
 
     def surface_build_intent(self, spec: str, scope: list[str] | None = None,
                              consequence_class: str = "decision_build", why: str = "",
-                             address: str | None = None, symbols: list[str] | None = None) -> dict:
+                             address: str | None = None, symbols: list[str] | None = None,
+                             context: list[dict] | None = None) -> dict:
         """W4 PRODUCER: mint a build-intent item — a decision that, once the operator approves it,
         AUTHORIZES an autonomous build of a DECLARED scope. It is distinguished from a plain
         criterion/review by `intent="build"` (the discriminator §W2 — `action` is the governance
@@ -3056,6 +3057,14 @@ class Suite:
           • `symbols` (X2) — the `code://` symbol-neighbours `resolve_scope` ALREADY computed for this
             address (the code relationships behind the locus). Reused, never recomputed here; the caller
             (`surface_intent_at`) passes the value it already has. Optional; same additive treatment.
+          • `context` (X3) — the ATTACHED-STRATA bundle (comments/chats/history at the address + ancestors)
+            that R2's EXISTING `_r2_gather` + `_r2_score_and_cap` assembled at MINT time, bounded by the
+            same recency·proximity·pin decay + the `R2_BUDGET` cap the chat gets, deduped (X8), JSON-clean
+            ({kind,address,ts,text,pinned} only — `_r2_gather` strips its internal `_raw`). NOT gathered
+            here (this method stays a pure persister, X1/X2 character) — the caller (`surface_intent_at`)
+            resolves it at mint and passes the bounded list, so the SURFACED record == what the build's
+            prompt later composes from (the consent-time trust property, X5). Reused, never a second
+            gather; the budget cap stays. Optional; same additive treatment.
         No `schema_ver` exists on the surfaced payload/rec (verified), so none is bumped — these are
         purely additive optional keys on an open `.get`-read record (rule 2, schema-additive)."""
         scope = [s for s in (scope or []) if isinstance(s, str) and s.strip()]
@@ -3067,6 +3076,8 @@ class Suite:
             payload["address"] = address
         if symbols is not None:
             payload["symbols"] = list(symbols)
+        if context is not None:                       # X3: the bounded, deduped attached-strata bundle
+            payload["context"] = list(context)        # (resolved at mint by the caller; persister-only here)
         # action="review" so it walks the same review lifecycle/UI; the build-intent discriminator is
         # payload["intent"]=="build" (action is the governance class, which surface_review hardcodes).
         sid = self.inbox.surface("review", payload, default="reject", resolved=None,
@@ -3121,19 +3132,38 @@ class Suite:
         scope = scoped.get("scope") or []
         symbols = scoped.get("symbols") or []   # X2: the code:// neighbours, REUSED (never recomputed)
         stale, note = bool(scoped.get("stale")), (scoped.get("note") or "")
+        # X3: gather the ATTACHED-STRATA bundle at the address — at MINT/consent time, so the surfaced
+        # record == what the build later composes from (the consent-time trust property, X5). REUSE R2's
+        # EXISTING machinery (NO second gather): `_r2_gather` (annotations + chats + addressed events at
+        # the locus AND its ancestors, deduped by X8, `_raw` stripped → JSON-clean {kind,address,ts,text,
+        # pinned}) then `_r2_score_and_cap` (the recency·proximity·pin decay + the SAME `R2_BUDGET` cap the
+        # chat gets — the persisted bundle is the SAME bounded slice, never an unbounded dump). The mint
+        # comment was just recorded by `ingest_comment` above, so the gather picks it up (counted ONCE via
+        # X8). FAIL-LOUD-LEGIBLE, mirroring `_resolve_context_at`'s posture: an error WARNS (address-stamped)
+        # + omits the key (never persist a half-bundle silently); we must NOT crash the mint (losing the
+        # operator's build-intent over a context hiccup is the worse failure). Empty (nothing attached) →
+        # `[]` persisted (honest, parallels orphan symbols=[]); gather errored → key omitted (distinct signal).
+        from datetime import datetime as _dt, timezone as _tz
+        context = None
+        try:
+            context = self._r2_score_and_cap(self._r2_gather(ui_addr), ui_addr, _dt.now(_tz.utc))
+        except Exception as e:
+            self._emit("warning", f"X3 mint-time context gather failed ({type(e).__name__})", address=ui_addr)
+            context = None   # omit the key — never persist a partial bundle (fail-loud, not silent-partial)
         # legible consent (I1): the build derives from THIS address + comment. Fold the scope gap into
         # `why` so the operator's approve sees WHY it's empty (fail-loud-legible, never a silent empty).
         reason = why or f"comment at {ui_addr}: {str(text).strip()[:200]}"
         if not scope:
             reason += f" — [no resolvable code scope: {note or 'orphan/CSS-selector address'} — DENY-ALL]"
         # 3. MINT through the wire's UNCHANGED front door (empty-scope=DENY-ALL + resolved=None reused).
-        #    X1/X2: the address + the already-computed symbols are threaded INTO the payload here, so the
-        #    PERSISTED record carries the launch-context truth (consent-time: the surfaced record == what
-        #    the build later composes from). The old `out["address"]=ui_addr` AFTER surface_build_intent
-        #    only mutated the return dict — never reached disk; the payload threading is the durable fix.
+        #    X1/X2/X3: the address + the already-computed symbols + the mint-time R2 context bundle are
+        #    threaded INTO the payload here, so the PERSISTED record carries the launch-context truth
+        #    (consent-time: the surfaced record == what the build later composes from). The old
+        #    `out["address"]=ui_addr` AFTER surface_build_intent only mutated the return dict — never
+        #    reached disk; the payload threading is the durable fix.
         out = self.surface_build_intent(str(text).strip(), scope=scope,
                                         consequence_class=consequence_class, why=reason,
-                                        address=ui_addr, symbols=symbols)
+                                        address=ui_addr, symbols=symbols, context=context)
         out["address"] = ui_addr   # kept on the RETURN dict too (callers/return-readers unaffected)
         out["stale"] = stale
         out["note"] = note
