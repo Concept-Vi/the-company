@@ -30,6 +30,7 @@ import { PanelErrorBoundary } from './components/PanelErrorBoundary'
 import { Toolbar } from './regions/Toolbar'
 import { Palette } from './regions/Palette'
 import { Inspector } from './regions/Inspector'
+import { History } from './regions/History'
 import { Inbox } from './regions/Inbox'
 import { Grow } from './regions/Grow'
 import { OpPanels } from './regions/OpPanels'
@@ -128,6 +129,14 @@ function Hud() {
            F2: .as-sheet makes it a bottom-sheet (the 'inbox' tab) at <699px. */}
         <div className="as-panel as-sheet hud panel" data-ui-ref="inspector">
           <Inspector />
+          {/* L3 · addressed history (§21.7#1): when the operator INDICATES a ui:// element, its full
+             addressed trajectory ("everything that happened here") shows here — navigable, grouped by kind
+             (GET /api/address-history → Suite.address_view, the decision_view sid path untouched). Per-panel
+             boundary (PRESERVE-LIST): a history render-throw degrades to a contained card, never a white-screen.
+             Renders nothing unless a ui:// locus is indicated, so it never clutters the rail. */}
+          <PanelErrorBoundary name="history">
+            <History />
+          </PanelErrorBoundary>
           <Inbox />
           <Grow />
           {/* F8: the fleet surface — the live model layer (model · kind · alive), addressed ui://models.

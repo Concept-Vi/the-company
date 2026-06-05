@@ -147,6 +147,13 @@ class H(BaseHTTPRequestHandler):
                 # whole RHM history; POST = the RHM conversation) — this reads ONLY the turns attached to
                 # `address`. This is what R2 will gather at the operator's locus (address-keyed context).
                 self._send(200, json.dumps(SUITE.chats_at(q["address"])))
+            elif path == "/api/address-history":            # L3: everything that happened AT a ui:// address
+                # §21.7#1: clicking an element shows its addressed history. The address-keyed READ over
+                # the event tail. Missing `address` → KeyError → 400 (fail loud, mirrors /api/scope +
+                # /api/annotations + /api/chats). Suite.address_view validates the address (S0 grammar
+                # gate) and returns the trajectory chronological — the addressed analogue of decision_view
+                # (it WIDENS the audit-view machinery to an address key; the sid path is untouched).
+                self._send(200, json.dumps(SUITE.address_view(q["address"])))
             elif path == "/api/review/current":            # B: the node at the cursor + its framing + ui:// target
                 self._send(200, json.dumps(SUITE.present_current(q["session"])))
             elif path == "/api/review/status":             # B: the session's live status

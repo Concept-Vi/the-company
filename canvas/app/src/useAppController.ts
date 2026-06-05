@@ -81,6 +81,11 @@ export function useAppController(editor: Editor) {
   // action runs ONLY on approve; dismiss just drops it (a reject does nothing). Mirrors the `indicated`
   // chip pattern (separate ephemeral state beside the chat log).
   const [proposal, setProposal] = useState<{ verb: string; address?: string | null; args?: any } | null>(null)
+  // L3 · addressed history (§21.7#1): the trajectory of events stamped AT the indicated ui:// address —
+  // "everything that happened here". Loaded by fetchHistory whenever the operator indicates an element;
+  // rendered NAVIGABLE (grouped by kind) by the History region. null = nothing indicated / no history yet.
+  const [history, setHistory] = useState<{ address: string; trajectory: any[] } | null>(null)
+  const [historyBusy, setHistoryBusy] = useState(false)
   const [cfg, setCfg] = useState<any>({ model: '', persona: '' })
   const [cfgOpen, setCfgOpen] = useState(false)
   // U12: the /api/inbox payload is { live_escalations, resolved_for_you, batched, counts }. `batched` is a
@@ -538,6 +543,26 @@ export function useAppController(editor: Editor) {
     return () => document.removeEventListener('click', onDocClick, true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+  // L3 · addressed history (§21.7#1). When the operator INDICATES a ui:// element, load "everything that
+  // happened here" — the GET /api/address-history trajectory for that locus. Reflects-never-owns: the
+  // runtime is authoritative, the surface just reads. Clearing the indication clears the history. A
+  // backend 400 (malformed address) is surfaced as a notice + empty trajectory (fail-loud, rule 4 — never
+  // a silent swallow). The live SSE feed also re-pokes it (poll bumps a tick) so a NEW addressed event at
+  // the indicated locus shows without a re-click — but the cheap, always-correct trigger is `indicated`.
+  async function fetchHistory(addr: string | null) {
+    if (!addr || !addr.startsWith('ui://')) { setHistory(null); return }   // only ui:// loci carry an addressed view
+    setHistoryBusy(true)
+    try {
+      const r = await api.addressHistory(addr)
+      if (r?.error) { setHistory({ address: addr, trajectory: [] }); setNotice('✕ ' + r.error); return }
+      setHistory({ address: addr, trajectory: Array.isArray(r?.trajectory) ? r.trajectory : [] })
+    } catch (e: any) {
+      setHistory({ address: addr, trajectory: [] }); setNotice('✕ could not load history: ' + (e?.message || e))
+    } finally { setHistoryBusy(false) }
+  }
+  // Load the history whenever the indicated locus changes (and re-load when the live event count moves, so
+  // a fresh addressed event at THIS locus appears without a re-click — events.length is the cheap poke).
+  useEffect(() => { fetchHistory(indicated) /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [indicated, events.length])
   async function sendChat(override?: string) {
     const m = (override ?? chatMsg).trim()
     if (!m || chatBusy) return
@@ -997,7 +1022,7 @@ export function useAppController(editor: Editor) {
     edges, running, runError, runStartedAt, runElapsed, types, gname, gspec, surf, growMsg, workshop,
     oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
     showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn,
-    wtSpoke, wtBusy, selected, mobileTab, fleet, indicated, proposal,
+    wtSpoke, wtBusy, selected, mobileTab, fleet, indicated, proposal, history, historyBusy,
     // refs the components read for the inspector form
     configByNode,
     // setters the components call directly

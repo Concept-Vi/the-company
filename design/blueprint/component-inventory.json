@@ -69,6 +69,7 @@
         "ui://inspector",
         "ui://inspector/act",
         "ui://inspector/build",
+        "ui://inspector/history",
         "ui://inspector/model-field",
         "ui://inspector/surface",
         "ui://inspector/workshop"

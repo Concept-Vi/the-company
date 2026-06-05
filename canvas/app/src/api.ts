@@ -90,6 +90,11 @@ export const api = {
   tts: (text: string) => fetch('/api/tts', { method: 'POST', headers: J, body: JSON.stringify({ text }) }).then(r => r.blob()),
   // C1: the UI-component registry (sibling of object_info) — the source of truth for what's addressable.
   uiInfo: () => fetch('/api/ui_info').then(jr),
+  // L3 · addressed history (§21.7#1): everything that happened AT a ui:// address. The address-keyed READ
+  // over the event tail — the addressed analogue of decision_view. Returns { address, trajectory[] }
+  // chronological; a non-ui:// / malformed address → backend 400 (fail-loud, normalized to {error} by jr).
+  addressHistory: (address: string) =>
+    fetch('/api/address-history?address=' + encodeURIComponent(address)).then(jr),
   // B: the walkthrough/review session lifecycle. start makes its OWN session-graph (not graph-scoped);
   // current = the node at the cursor + its coa framing + its ui:// target; next opens the gate + advances.
   reviewStart: (item_ids: string[], mode = 'walkthrough') =>

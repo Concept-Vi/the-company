@@ -15,11 +15,13 @@
   "journeys": [],
   "cross_journeys": [],
   "addresses": [
-    "ui://activity/replay"
+    "ui://activity/replay",
+    "ui://inspector/history"
   ],
   "build_to": {
     "components": [
-      "activity"
+      "activity",
+      "inspector"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"

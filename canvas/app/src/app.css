@@ -156,6 +156,21 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 .ev.intent .ev-k{color:var(--warn)}
 .ev.crashed .ev-k,.ev.verify .ev-k{color:var(--err)}
 .ev.deferred .ev-k{color:var(--dim)}
+/* L3 · addressed history (§21.7#1) — the indicated element's trajectory, NAVIGABLE (grouped by kind),
+   stacked in the right rail. Reuses the .ev event-row vocabulary (token-coloured per kind) so it reads
+   coherent with the Activity feed; the .hist-* layer is layout-only, all colour from design tokens. */
+.hist{margin-top:10px;padding-top:9px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
+.hist-head{display:flex;flex-direction:column;gap:2px}
+.hist-addr{font-size:9px;word-break:break-all;color:var(--dim)}
+.hist-groups{display:flex;flex-direction:column;gap:5px;max-height:340px;overflow:auto}
+.hist-group{border:1px solid var(--line);border-radius:5px;background:var(--s1);overflow:hidden}
+.hist-group-head{display:flex;align-items:baseline;gap:7px;width:100%;padding:5px 8px;
+  background:transparent;border:none;cursor:pointer;text-align:left;color:var(--ink);font:inherit}
+.hist-group-head:hover{background:var(--s2)}
+.hist-caret{flex:none;width:10px;color:var(--dim);font-size:9px}
+.hist-count{flex:1;color:var(--sig);font-size:9px;font-weight:600}
+.hist-list{margin-top:0;padding:4px 8px 7px 25px}
+.hist-list .ev-s{white-space:normal}
 .palette{top:64px;left:12px;width:158px;background:var(--s1);border:1px solid var(--line);
   border-radius:6px;padding:11px;max-height:calc(100vh - 90px);overflow:auto}
 .pchip{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:6px 8px;margin:4px 0;

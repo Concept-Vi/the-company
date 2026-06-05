@@ -4093,6 +4093,33 @@ class Suite:
         return {"session": session_id, "trajectory": evs,
                 "graph": g.model_dump(mode="json") if g else None}
 
+    def address_view(self, address: str) -> dict:
+        """L3 (§21.7#1): everything that happened AT an element's address — its addressed history.
+
+        Clicking an element shows its full trajectory. This is the addressed ANALOGUE of
+        `decision_view`: where `decision_view` filters `events_since(-1)` on `e.get("surfaced")==sid`,
+        this filters the SAME whole tail on `e.get("address")==address`. It is a SIBLING (mirroring how
+        `session_view` clones decision_view but filters on `session`) so `decision_view`'s `sid` path is
+        LITERALLY untouched — L3 WIDENS the audit-view machinery to an address key, it does not replace
+        the sid one. The store side is free: S2 already stamped the ~20 emit sites, so events carry an
+        additive `address` (event_address_acceptance.py); readers `.get()` it, so this is non-breaking.
+
+        S0 GATE FIRST: the QUERY address is validated by `parse_ui_address` (the same canonical-grammar
+        gate `annotate`/`annotations_at`/`chats_at` use) and RAISES on a malformed / non-`ui://` string
+        (fail-loud, rule 4) — so a junk query never silently returns [] (which a caller could read as 'no
+        history'), and the bridge's try/except turns the raise into a 400 for free. SCOPE: `ui://` queries
+        only — "clicking an element" is a `ui://` locus (the FE indicate flow fires only for `ui://`); the
+        stored events themselves may carry `run://` (a node-instance locus), but a `run://` event simply
+        won't equal a `ui://` query, so it is filtered out correctly — nothing to special-case.
+
+        Reads the WHOLE event tail (`events_since(-1)`), like `decision_view`/`session_view`: an audit must
+        NOT silently truncate (fail-loud). Returns the matching events in chronological (seq) order."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                              # S0 grammar gate — raises on malformed / non-ui://
+        evs = sorted((e for e in self.store.events_since(-1) if e.get("address") == address),
+                     key=lambda e: e.get("seq", 0))            # chronological path, not endpoint
+        return {"address": address, "trajectory": evs}
+
     def replay(self, limit: int = 200) -> list:
         """The whole captured path, oldest-first — the trajectory that trains the twin (I1)."""
         return list(reversed(self.store.recent_events(limit)))

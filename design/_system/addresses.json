@@ -323,6 +323,14 @@
       "represents": "SM-node",
       "code": "canvas/app/src/regions/Inspector.tsx (build from output) / runtime/suite.py:apply_node"
     },
+    "ui://inspector/history": {
+      "region": "inspector",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "INB-replay",
+      "code": "canvas/app/src/regions/History.tsx (L3 addressed history) / runtime/suite.py:address_view"
+    },
     "ui://grow": {
       "region": "grow",
       "capabilities": [
