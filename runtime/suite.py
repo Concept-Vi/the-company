@@ -1463,6 +1463,45 @@ class Suite:
         out["routed_posture"] = p                              # deterministic record: which posture routed it
         return out
 
+    def is_finished_thought(self, text: str) -> dict:
+        """The voice circuit's SEMANTIC endpoint judge (G1.3): given the utterance heard so far (after a
+        VAD pause), is it a FINISHED THOUGHT — fire the turn — or is the operator mid-ramble — keep
+        listening? This is the "not a dumb silence timer" lever: a pause alone does NOT end a turn; a
+        MODEL judges completeness.
+
+        JUDGE MODEL — separate, configurable, fast (NOT the conversational brain). The judge is a
+        utility classifier on the LIVE turn path, so a reasoning brain is the WRONG tool: measured
+        2026-06-05, deepseek-v4-pro (a reasoning model) needs ~256 tokens to surface a 1-word answer and
+        takes ~6.5s — unusable per pause. So the judge model is its OWN slot: env COMPANY_JUDGE_MODEL /
+        COMPANY_JUDGE_URL (default = the RHM brain+url, which WORKS but is slow until pointed at a fast
+        no-think model like the 4B local worker on :8000). max_tokens defaults generous (COMPANY_JUDGE_
+        MAX_TOKENS=256) so the default reasoning brain still returns an answer; a fast no-think judge
+        needs far fewer. Verdict is parsed by looking for 'finish' anywhere (robust to a little thinking).
+
+        Empty/blank text → trivially not finished (no model call). Returns {finished, verdict, text,
+        judge_model}. Brain/transport errors PROPAGATE (FabricError) → fail loud; the circuit's explicit
+        fallback is the manual push-to-talk toggle SURFACED to the operator, NEVER a silent degrade to a
+        silence timer (the rejected design)."""
+        import os
+        from fabric import client, transport
+        t = (text or "").strip()
+        if not t:
+            return {"finished": False, "verdict": "MORE", "text": t, "note": "empty — nothing to end"}
+        cfg = self.rhm_config()
+        model = os.environ.get("COMPANY_JUDGE_MODEL") or cfg["model"]
+        base_url = os.environ.get("COMPANY_JUDGE_URL") or cfg["base_url"]
+        max_tokens = int(os.environ.get("COMPANY_JUDGE_MAX_TOKENS", "256"))
+        sys_p = ("You judge ONLY whether a spoken utterance is a COMPLETE THOUGHT the listener should now "
+                 "respond to, or whether the speaker is mid-sentence / mid-ramble and likely to continue. "
+                 "Answer with EXACTLY one word: FINISHED or MORE. No punctuation, no explanation.")
+        msgs = [{"role": "system", "content": sys_p},
+                {"role": "user", "content": f'Utterance so far: "{t}"\nFINISHED or MORE?'}]
+        out = client.complete(
+            transport.openai_transport(base_url=base_url, timeout=cfg["timeout"]),
+            msgs, model=model, max_tokens=max_tokens, temperature=0)
+        verdict = "FINISHED" if "finish" in (out or "").strip().lower() else "MORE"
+        return {"finished": verdict == "FINISHED", "verdict": verdict, "text": t, "judge_model": model}
+
     def chat(self, message: str, graph_id: str, focus: dict | None = None) -> dict:
         """Grounded conversation with the operator via NATIVE TOOL-CALLING. Answers from compact
         ground truth; never confabulates system facts. It ACTS only through the governed verbs offered

@@ -265,6 +265,33 @@ class H(BaseHTTPRequestHandler):
                         f"{engine or 'kokoro'} TTS service at {base} (port {port}) unreachable: "
                         f"{type(e).__name__}: {e} — start the engine's service (fail loud).")
                 return
+            if self.path.split("?")[0] == "/api/voice/turn":   # G1.1: ONE live turn — hear→think→speak
+                # The core circuit, reusing voice.loop.loop_turn (NOT a parallel hear/think/speak). We
+                # inject the IN-PROCESS Suite.chat as the brain step (loop.py's designed injection point)
+                # AND pass the selected ear explicitly → loop_turn makes NO HTTP call back to this bridge
+                # (one in-process brain, one event log). Input: raw audio body + ?persona=<id>. Output:
+                # JSON with the wav base64'd (a turn is hear→think→speak; the reply text + the spoken wav
+                # travel together, so the UI shows the transcript/reply AND plays the audio from one call).
+                # Fail loud: empty transcript, unknown persona, a down engine/ear all raise → 400.
+                import base64 as _b64
+                from urllib.parse import urlparse as _up, parse_qs as _pq
+                from voice import loop as voice_loop, stt as voice_stt
+                vq = {k: v[0] for k, v in _pq(_up(self.path).query).items()}
+                persona = (vq.get("persona") or "").strip()
+                if not persona:
+                    raise ValueError("/api/voice/turn needs ?persona=<id> (fail loud)")
+                gid = vq.get("graph_id", DEMO)
+                audio = self.rfile.read(int(self.headers.get("Content-Length", 0)))
+                if not audio:
+                    raise ValueError("/api/voice/turn got empty audio (fail loud)")
+                ear = SUITE.rhm_config().get("stt") or voice_stt.active_ear()
+                r = voice_loop.loop_turn(
+                    audio, persona, graph_id=gid, stt_provider=ear,
+                    think_fn=lambda txt: SUITE.chat(txt, gid))    # the ONE in-process brain
+                wav = r.pop("wav", b"")
+                r["wav_b64"] = _b64.b64encode(wav).decode()       # the spoken reply, travels with the text
+                self._send(200, json.dumps(r))
+                return
             if self.path == "/api/run":
                 b = self._body()
                 gid = b.get("graph_id", DEMO)
@@ -374,6 +401,9 @@ class H(BaseHTTPRequestHandler):
                 from voice.ears import lifecycle as ear_lc
                 b = self._body()
                 self._send(200, json.dumps(ear_lc.unload(b["ear"])))
+            elif self.path == "/api/voice/finished-thought":  # G1.3: the semantic endpoint judge (brain-side)
+                b = self._body()
+                self._send(200, json.dumps(SUITE.is_finished_thought(b.get("text", ""))))
             elif self.path == "/api/review/next":          # B: Next — open the gate, fire the step, advance
                 b = self._body()
                 self._send(200, json.dumps(SUITE.next(b["session"])))

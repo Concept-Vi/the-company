@@ -24,6 +24,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import urllib.error
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -101,7 +102,13 @@ def speak(text: str, engine: str, voice: str | None = None, speed: float = 1.0) 
     payload = {"text": text, "speed": speed}
     if voice is not None:
         payload["voice"] = voice
-    return _post(engine_url(engine) + "/tts", payload, raw_bytes=True)
+    base = engine_url(engine)
+    try:
+        return _post(base + "/tts", payload, raw_bytes=True)
+    except (urllib.error.URLError, ConnectionError, OSError) as e:   # legible fail-loud (name engine+port)
+        raise RuntimeError(
+            f"TTS engine {engine!r} at {base} unreachable: {type(e).__name__}: {e} — "
+            f"start/load the engine's service. Refusing a silent failure (no garbage audio).") from e
 
 
 def _voice_arg_for(persona: dict) -> str | None:
@@ -129,11 +136,17 @@ def select_persona(persona_id: str, bridge_url: str | None = None) -> dict:
 
 def loop_turn(audio: bytes, persona_id: str, *, graph_id: str = "codebase",
               stt_provider: str | None = None, bridge_url: str | None = None,
-              on_transcript=None, on_reply=None) -> dict:
+              think_fn=None, on_transcript=None, on_reply=None) -> dict:
     """ONE full turn of the circuit for a given character:
         audio (a finished utterance) → transcript → brain reply → wav in that character's voice.
     Returns {"transcript", "reply", "engine", "voice", "wav": <bytes>, "action", "mode"}.
     `on_transcript`/`on_reply` are optional callbacks (the UI shows them as they arrive — streaming feel).
+    `think_fn` is the INJECTABLE brain step (the module docstring's "each step an injectable callable so
+    the bridge can repoint them"): a callable `(transcript) -> {"reply", "action"?, "mode"?}`. When the
+    loop runs INSIDE the 3.14 bridge, the bridge injects the IN-PROCESS Suite.chat here — so the brain is
+    the ONE in-process Suite (one event log, one store), NOT an HTTP self-call back to /api/chat. When
+    omitted (the loop running standalone in .voice-venv), it falls to the HTTP think() — same brain, the
+    way the UI reaches it. Either way: one brain, never a forked Suite (reuse-don't-parallel).
     Endpointing (knowing the utterance finished) is the CALLER's job via the turn-detection hooks below;
     by the time loop_turn is called, `audio` is a complete thought."""
     p = voice_personas.get_persona(persona_id)              # fail loud on unknown character
@@ -143,7 +156,7 @@ def loop_turn(audio: bytes, persona_id: str, *, graph_id: str = "codebase",
         on_transcript(transcript)
     if not transcript.strip():
         raise RuntimeError("empty transcript — STT heard nothing (fail loud, not a silent skip)")
-    thought = think(transcript, graph_id=graph_id, bridge_url=bridge_url)
+    thought = think_fn(transcript) if think_fn else think(transcript, graph_id=graph_id, bridge_url=bridge_url)
     reply = thought.get("reply", "")
     if on_reply:
         on_reply(reply)
