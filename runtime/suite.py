@@ -4369,7 +4369,50 @@ class Suite:
         self._emit("resolve", f"operator {choice}d {sid}" + (f" — {reason}" if reason else ""),
                    surfaced=sid, choice=choice, reason=reason, session=session_id, position=position,
                    address=self._registry_ui_target(d.get("payload") or {}))   # S2: the item's locus (node or inbox)
-        return {"id": sid, "choice": choice, "status": "resolved", "resolved": True}
+        verdict = {"id": sid, "choice": choice, "status": "resolved", "resolved": True}
+
+        # ── L2 · the resolve→dispatch PRODUCTION TRIGGER (INERT BY DEFAULT — 🔒 built-not-armed) ──
+        # This is the seam where the LIVE loop used to STOP: resolve_surfaced wrote the verdict but
+        # nothing READ it to fire dispatch_decision, and drive_dispatchable (the watcher that does) had
+        # NO production caller — only tests. L2 adds the missing trigger: an operator approve of a
+        # build-intent, WHEN the live loop is deliberately ARMED, drives the watcher pass — which is the
+        # production caller for drive_dispatchable AND the resolve→dispatch link (both collapse into the
+        # ONE existing mechanism: the watcher reads the just-written verdict and calls dispatch_decision).
+        #
+        # SAFE-BY-DEFAULT (the headline L2 property — wire-bridge §3, AGENTS.md rule 4): this fires ONLY
+        # when implement.wire_armed() — i.e. COMPANY_WIRE_PERMISSION=acceptEdits, the deliberate opt-in.
+        # The DEFAULT posture is "plan": wire_armed() is False → this block is a no-op → resolve_surfaced
+        # behaves EXACTLY as before (the system does NOT self-modify; the lead fires the one-shot proof
+        # under the deliberate flag). Even if it DID fire under `plan`, a plan-mode `claude -p` is
+        # read-only → empty change-delta → the build can never close `implemented` (a second safety layer).
+        #
+        # NO-BYPASS PRESERVED: this is the OPERATOR face (resolve_surfaced is off the MCP face,
+        # server.py:158) — the RHM can never reach it, so dispatch stays operator-authorized only. The
+        # GOVERNED PATH IS UNCHANGED: we call drive_dispatchable, which calls dispatch_decision, which
+        # still does the full three-part bind + exactly-once decision.dispatch claim under the per-seq
+        # lock + the AUTO-posture pre-gate + the guarded close + the DENY-ALL scope-diff + surfaced-for-
+        # review. We REUSE it (the watcher also enforces the §W7 concurrency cap + re-surfaces crashed
+        # dispatches); we never re-implement or weaken it. A non-AUTO / non-build-intent approve is NOT
+        # dispatched (drive_dispatchable._is_dispatchable filters it) — it surfaces for the operator.
+        from runtime import implement      # local import (mirrors dispatch_decision) — avoid import cycle
+        if choice == "approve" and implement.wire_armed() and self.is_build_intent(d):
+            try:
+                drive = implement.drive_dispatchable(self)
+                verdict["wire_drive"] = {
+                    "dispatched": [x.get("surfaced") for x in drive.get("dispatched", [])],
+                    "deferred": [x.get("surfaced") for x in drive.get("deferred", [])],
+                    "crashed_resurfaced": drive.get("crashed_resurfaced", []),
+                }
+            except Exception as e:
+                # FAIL LOUD (rule 4): the trigger firing but the dispatch erroring must NOT pretend the
+                # approve silently did nothing — surface the failure on the verdict + a telemetry event.
+                # The operator's resolve itself already committed (above) — operator-only resolve holds.
+                self._emit("decision.verify",
+                           f"resolve→dispatch trigger for {sid} errored: {e}",
+                           surfaced=sid, derived_from=None, verify_passed=False,
+                           address="ui://chrome/inbox")
+                verdict["wire_drive_error"] = str(e)
+        return verdict
 
     def decision_view(self, sid: str) -> dict:
         """A decision as a VIEW derived from the event log (I2): its full trajectory — proposed →

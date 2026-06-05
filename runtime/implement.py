@@ -32,10 +32,44 @@ import subprocess
 
 # --- config constants (NOT time estimates relayed to Tim — internal wall-clock ceilings) ---
 DEFAULT_TIMEOUT_S = 900                 # subprocess wall-clock ceiling (a fixed cap, fail loud past it)
-PERMISSION_MODE = os.environ.get("COMPANY_WIRE_PERMISSION", "plan")  # plan | acceptEdits — graduate via env flag
+# COMPANY_WIRE_PERMISSION — the SECOND of the wire's two deliberate graduation switches (wire-bridge §3).
+# The DEFAULT is "plan" (SAFE-BY-DEFAULT): a plan-mode `claude -p` run is read-only — it changes NOTHING,
+# so even if the production trigger (the first switch) fires, NOTHING self-modifies. acceptEdits is OPT-IN
+# ONLY, via this env var; it is NEVER the default. `permission_mode()` reads the env at CALL time (not at
+# import) so a runtime `COMPANY_WIRE_PERMISSION=acceptEdits` is honoured without a process restart and a
+# test can monkeypatch the env; the module-level PERMISSION_MODE remains for back-compat (the import-time
+# snapshot of the default — DO NOT rely on it for the live posture, use permission_mode()).
+PERMISSION_MODE = os.environ.get("COMPANY_WIRE_PERMISSION", "plan")  # plan | acceptEdits — import-time snapshot
 CONCURRENCY_CAP = int(os.environ.get("COMPANY_WIRE_CONCURRENCY", "3"))  # W7: max concurrent claude -p
 CLAUDE_BIN = os.environ.get("COMPANY_CLAUDE_BIN", "claude")
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def permission_mode() -> str:
+    """The LIVE permission posture (call-time read of COMPANY_WIRE_PERMISSION; default "plan").
+    Call-time (not the import-time PERMISSION_MODE constant) so a deliberately-set env var flips the
+    posture WITHOUT a process restart, and so the safe default ("plan", read-only, no self-modify)
+    holds for every run that does not OPT IN. Use this — not the constant — for the live posture."""
+    return os.environ.get("COMPANY_WIRE_PERMISSION", "plan")
+
+
+def wire_armed() -> bool:
+    """The PRODUCTION-TRIGGER arming gate (L2): is the live loop deliberately armed to SELF-MODIFY?
+    True ONLY when the operator has deliberately opted in via COMPANY_WIRE_PERMISSION=acceptEdits.
+
+    This is the gate that keeps the resolve→dispatch production trigger INERT BY DEFAULT (🔒
+    built-not-armed). With the default `plan` posture this returns False, so the trigger
+    (Suite.resolve_surfaced, when an operator approves a build-intent) does NOT fire a dispatch — the
+    system is SAFE-BY-DEFAULT, exactly as before L2. acceptEdits is the deliberate, env-gated opt-in
+    that arms the live circuit; the lead fires the one-shot proof under it (NOT this worker). A `plan`
+    posture, even if the trigger DID fire, would change nothing (read-only) — so this gate + the
+    plan-default are the two layers that together guarantee no autonomous self-modification by default.
+
+    NOTE: the wire suites (wire_loop_acceptance / wire_adversarial) call drive_dispatchable DIRECTLY
+    with the env unset → wire_armed() is False → resolve_surfaced does NOT also fire, so those suites'
+    single explicit dispatch stays exactly-one (no double-launch). The trigger only adds a SECOND path
+    when deliberately armed."""
+    return permission_mode() == "acceptEdits"
 
 
 class LaunchError(RuntimeError):
@@ -201,7 +235,9 @@ def launch(decision: dict, *, repo: str = REPO_ROOT, permission_mode: str | None
     Note: changed_files is GIT ground truth (not the model's self-report) — W4's scope-diff
     rests on the repo's own record.
     """
-    mode = permission_mode or PERMISSION_MODE
+    # call-time live posture (default "plan" = read-only/no self-modify) unless an explicit mode is
+    # passed; permission_mode() honours a deliberately-set COMPANY_WIRE_PERMISSION without a restart.
+    mode = permission_mode if permission_mode is not None else globals()["permission_mode"]()
     run = runner or _default_runner
     instruction = build_instruction(decision)
     # Capture the pre-build content baseline FIRST (the tree may already be dirty — other lanes,
