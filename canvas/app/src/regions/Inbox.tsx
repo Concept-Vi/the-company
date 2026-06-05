@@ -18,7 +18,7 @@ export function Inbox() {
         <span className="muted"> · {inbox.counts?.resolved || 0} resolved-for-you</span>
         {/* B-frontend: the operator entry point for S1 — walk ALL live escalations through the organ. */}
         {(inbox.live_escalations || []).length > 0 && !session && (
-          <button className="b sm" style={{ marginLeft: 'auto' }} disabled={wtBusy} title="walk all awaiting items through the review organ"
+          <button className="b sm" data-ui-ref="ui://inbox/walk" style={{ marginLeft: 'auto' }} disabled={wtBusy} title="walk all awaiting items through the review organ"
             onClick={() => startWalk((inbox.live_escalations || []).map((d: any) => d.id))}>{wtBusy ? 'starting…' : '▷ walk these'}</button>
         )}
       </div>
@@ -30,7 +30,7 @@ export function Inbox() {
         const builds = esc.filter(isBuildIntent)
         if (!builds.length) return null
         return (
-          <div className="ibx-lane ibx-builds">
+          <div className="ibx-lane ibx-builds" data-ui-ref="ui://inbox/build-review">
             <div className="ibx-lane-head">decision → build <span className="muted">· {builds.length}</span></div>
             {builds.map((d: any) => (
               <PanelErrorBoundary key={d.id} name={'build-intent ' + d.id}>
@@ -53,7 +53,7 @@ export function Inbox() {
           <div key={lane} className={'ibx-lane' + (/^test · /.test(lane) ? ' ibx-test' : '')}>
             <div className="ibx-lane-head">{lane} <span className="muted">· {items.length}</span></div>
             {items.map((d: any) => (
-              <div key={d.id} className="ibx-item" onClick={() => openCoa(d.id)}>
+              <div key={d.id} className="ibx-item" data-ui-ref="ui://inbox/coa" onClick={() => openCoa(d.id)}>
                 ⚠ {d.payload?.name || d.id} <span className="muted">— compile ↗</span>
               </div>
             ))}

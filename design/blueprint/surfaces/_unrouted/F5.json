@@ -14,11 +14,16 @@
   "home_journey": "_unrouted",
   "journeys": [],
   "cross_journeys": [],
-  "addresses": [],
+  "addresses": [
+    "ui://chat/mic",
+    "ui://walkthrough/voice"
+  ],
   "build_to": {
-    "components": [],
+    "components": [
+      "chat",
+      "walkthrough"
+    ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
-  },
-  "address_gap": "view F5 represents ['VOICE', 'EVT-stream'] but no registered ui:// address joins by feature-id"
+  }
 }

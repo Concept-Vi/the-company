@@ -99,7 +99,7 @@ function Hud() {
            the hidden rails: Canvas (board, no sheet) · Inbox (the inspector/inbox sheet) · RHM (chat sheet) ·
            Run. RUN here calls the SAME doRun() as the toolbar — U1 preserved (arrow-wrapped, no event passed),
            so the operator can always run at phone width (corpus tabbar names Run as the 4th tab). */}
-        <nav className="tabbar" data-ui-ref="tabbar">
+        <nav className="tabbar" data-ui-ref="ui://tabbar">
           <a className={mobileTab === 'canvas' ? 'on' : ''} onClick={() => setMobileTab('canvas')}><span className="ic">▦</span>canvas</a>
           <a className={mobileTab === 'palette' ? 'on' : ''} onClick={() => setMobileTab('palette')}><span className="ic">＋</span>add</a>
           <a className={mobileTab === 'inbox' ? 'on' : ''} onClick={() => setMobileTab('inbox')}><span className="ic">▤</span>panel</a>

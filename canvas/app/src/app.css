@@ -416,19 +416,32 @@ button.b:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
      sheets/tabbar (rhm sheet, inbox sheet) — fail-loud preserved: nothing silently lost, just relocated. */
   .as-canvas .op-panels,.as-canvas .activity,.as-canvas .walkthrough{display:none}
   /* the two rails become bottom-SHEETS — off-screen by default, slid up when their tab is active. Only one
-     can be active (data-mtab is a single value) so they never co-occupy the screen. */
-  .as-sheet{position:fixed;left:0;right:0;bottom:58px;top:auto;width:auto;max-height:60vh;z-index:340;
-    border-radius:8px 8px 0 0;border:1px solid var(--line);border-bottom:none;box-shadow:var(--shadow);
+     can be active (data-mtab is a single value) so they never co-occupy the screen. NOTE: `.as-panel` also
+     carries the bare corpus `.panel` class (for its F1 styling), and the corpus design-system.css HIDES
+     `.panel` at ≤699 (`.rail,.panel,.foot{display:none}`). Our `.as-rail.as-sheet`/`.as-panel.as-sheet`
+     (specificity 0,2,0 > the corpus 0,1,0) RE-ENABLE display:block so the sheet shows — the corpus mobile
+     intent (rails off the flow) is honoured, but the content reaches the operator as a tabbar-driven sheet. */
+  .as-sheet{position:fixed !important;left:0;right:0;bottom:58px;top:auto !important;width:auto;
+    height:auto !important;max-height:60vh !important;z-index:340;
+    display:block;border-radius:8px 8px 0 0;border:1px solid var(--line);border-bottom:none;box-shadow:var(--shadow);
     transform:translateY(110%);transition:transform .22s ease;pointer-events:auto;overflow:auto}
-  .as-panel.as-sheet{position:fixed}                  /* override the ≤820 docked panel */
   .app-shell[data-mtab="palette"] .as-rail.as-sheet{transform:translateY(0)}
   .app-shell[data-mtab="inbox"]   .as-panel.as-sheet{transform:translateY(0)}
   /* the rhm chat lives in the canvas cell; on mobile it becomes the 'rhm' bottom-sheet (toggled, not always-on) */
   .as-canvas .rhm{display:none}
   .app-shell[data-mtab="rhm"] .as-canvas .rhm{display:flex;position:fixed;left:0;right:0;bottom:58px;top:auto;
     width:auto;height:auto;max-height:60vh;z-index:340;border-radius:8px 8px 0 0}
-  /* the tabbar — corpus component, mobile-only, pinned to the bottom edge as the nav */
-  .tabbar{display:flex !important;position:fixed;left:0;right:0;bottom:0;height:58px;z-index:360}
+  /* the tabbar — corpus component, mobile-only, pinned to the bottom edge as the nav. pointer-events:auto is
+     REQUIRED: the tabbar is a child of `.app-shell` which is pointer-events:none (so the canvas underneath
+     stays interactive); without re-enabling it here, taps fall THROUGH the tabbar to the board. */
+  .tabbar{display:flex !important;position:fixed;left:0;right:0;bottom:0;height:58px;z-index:360;pointer-events:auto}
+  /* tldraw's native mobile drawing-toolbar sits at the bottom (its own z:300 stacking context) and would
+     COVER our tabbar — and `.app-shell` (z:300) confines our tabbar's z:360 to its own context, so this can't
+     be won with z-index. We already suppress tldraw chrome (App() passes StylePanel/ActionsMenu/QuickActions
+     =null) and already style tldraw classes (.tl-background). The drawing-tool switcher is NOT on the
+     preserve-list (semantic-zoom + drag-to-wire + camera don't need it), so we hide it at phone width and let
+     the company tabbar be the unobstructed mobile nav. The BOARD stays fully mounted + interactive. */
+  .tlui-toolbar{display:none}
 }
 
 /* the tabbar component (corpus design-system.css:119–121 vocabulary) — hidden above 699 by default. */

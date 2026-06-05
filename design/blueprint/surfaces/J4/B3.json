@@ -20,10 +20,14 @@
   ],
   "cross_journeys": [],
   "addresses": [
-    "ui://walkthrough"
+    "ui://inbox/walk",
+    "ui://walkthrough",
+    "ui://walkthrough/next",
+    "ui://walkthrough/show-again"
   ],
   "build_to": {
     "components": [
+      "inbox",
       "walkthrough"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",

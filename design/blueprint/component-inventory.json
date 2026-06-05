@@ -27,10 +27,26 @@
       "status": "built",
       "addresses": [
         "ui://chat",
+        "ui://chat/config",
         "ui://chat/input",
+        "ui://chat/mic",
+        "ui://chat/model-field",
+        "ui://chat/send",
         "ui://twin",
         "ui://walkthrough",
         "ui://walkthrough/verdict"
+      ]
+    },
+    {
+      "region": "grow",
+      "component": null,
+      "status": "planned",
+      "note": "region in addresses.json with no component mapping",
+      "addresses": [
+        "ui://grow",
+        "ui://grow/approve",
+        "ui://grow/dispatch",
+        "ui://grow/reject"
       ]
     },
     {
@@ -41,7 +57,8 @@
         "ui://inbox",
         "ui://inbox/build-intent",
         "ui://inbox/build-review",
-        "ui://inbox/coa"
+        "ui://inbox/coa",
+        "ui://inbox/walk"
       ]
     },
     {
@@ -51,7 +68,10 @@
       "addresses": [
         "ui://inspector",
         "ui://inspector/act",
-        "ui://inspector/model-field"
+        "ui://inspector/build",
+        "ui://inspector/model-field",
+        "ui://inspector/surface",
+        "ui://inspector/workshop"
       ]
     },
     {
@@ -86,8 +106,25 @@
       "status": "built",
       "addresses": [
         "ui://toolbar",
+        "ui://toolbar/delete",
+        "ui://toolbar/fit",
+        "ui://toolbar/layers",
+        "ui://toolbar/portal",
         "ui://toolbar/presence",
-        "ui://toolbar/run"
+        "ui://toolbar/reload",
+        "ui://toolbar/run",
+        "ui://toolbar/wire"
+      ]
+    },
+    {
+      "region": "walkthrough",
+      "component": "canvas/app/src/regions/Walkthrough.tsx",
+      "status": "built",
+      "addresses": [
+        "ui://walkthrough/next",
+        "ui://walkthrough/reason",
+        "ui://walkthrough/show-again",
+        "ui://walkthrough/voice"
       ]
     },
     {

@@ -20,12 +20,15 @@
   "cross_journeys": [],
   "addresses": [
     "ui://activity",
-    "ui://canvas"
+    "ui://canvas",
+    "ui://toolbar/delete",
+    "ui://toolbar/wire"
   ],
   "build_to": {
     "components": [
       "activity",
-      "canvas"
+      "canvas",
+      "toolbar"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"

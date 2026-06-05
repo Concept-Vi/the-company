@@ -4,7 +4,7 @@ import { useApp } from '../AppContext'
 export function Palette() {
   const { oinfo, addNode } = useApp()
   return (
-    <div className="hud palette">
+    <div className="hud palette" data-ui-ref="ui://rail/palette">
       <h3>palette</h3>
       <div className="muted" style={{ marginBottom: 8 }}>click to add · select 2 + “wire”</div>
       {Object.keys(oinfo).sort().map(t => (

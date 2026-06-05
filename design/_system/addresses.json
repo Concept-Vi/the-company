@@ -224,6 +224,185 @@
       ],
       "represents": "INB-replay",
       "code": "runtime/suite.py:replay"
+    },
+    "ui://toolbar/wire": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "CAN-compose",
+      "code": "canvas/app/src/regions/Toolbar.tsx (wire) / runtime/suite.py:set_config"
+    },
+    "ui://toolbar/portal": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "NODE-portal",
+      "code": "canvas/app/src/regions/Toolbar.tsx (portal) / nodes/portal.py"
+    },
+    "ui://toolbar/delete": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "CAN-compose",
+      "code": "canvas/app/src/regions/Toolbar.tsx (delete) / runtime/suite.py:set_config"
+    },
+    "ui://toolbar/layers": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "CAN-layers",
+      "code": "canvas/app/src/regions/Toolbar.tsx (layers) / canvas/app/src/useAppController.ts:cycleLayers"
+    },
+    "ui://toolbar/fit": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "CAN-zoom",
+      "code": "canvas/app/src/regions/Toolbar.tsx (fit) / canvas/app/src/useAppController.ts:fitGraph"
+    },
+    "ui://toolbar/reload": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "RUN-status",
+      "code": "canvas/app/src/regions/Toolbar.tsx (reload) / runtime/suite.py:state"
+    },
+    "ui://chat/send": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "RHM-chat",
+      "code": "canvas/app/src/regions/RhmChat.tsx (send) / runtime/suite.py:chat"
+    },
+    "ui://chat/mic": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "VOICE",
+      "code": "canvas/app/src/regions/RhmChat.tsx (mic) / voice/"
+    },
+    "ui://chat/config": {
+      "region": "chat",
+      "capabilities": [
+        "pointable",
+        "openable"
+      ],
+      "represents": "RHM-config",
+      "code": "canvas/app/src/regions/RhmChat.tsx (config gear) / runtime/suite.py:set_rhm_config"
+    },
+    "ui://inspector/workshop": {
+      "region": "inspector",
+      "capabilities": [
+        "pointable",
+        "openable"
+      ],
+      "represents": "WS-workshop",
+      "code": "canvas/app/src/regions/Inspector.tsx (open workshop) / runtime/suite.py:ui_info"
+    },
+    "ui://inspector/surface": {
+      "region": "inspector",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "INB-surface",
+      "code": "canvas/app/src/regions/Inspector.tsx (surface output) / runtime/suite.py:surface_review"
+    },
+    "ui://inspector/build": {
+      "region": "inspector",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "SM-node",
+      "code": "canvas/app/src/regions/Inspector.tsx (build from output) / runtime/suite.py:apply_node"
+    },
+    "ui://grow": {
+      "region": "grow",
+      "capabilities": [
+        "openable",
+        "presentable"
+      ],
+      "represents": "SM-node",
+      "code": "canvas/app/src/regions/Grow.tsx / runtime/suite.py:apply_node"
+    },
+    "ui://grow/dispatch": {
+      "region": "grow",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "SM-node",
+      "code": "canvas/app/src/regions/Grow.tsx (dispatch build) / runtime/suite.py:apply_node"
+    },
+    "ui://grow/approve": {
+      "region": "grow",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "GOV-resolve",
+      "code": "canvas/app/src/regions/Grow.tsx (approve & apply) / runtime/governance.py:resolve"
+    },
+    "ui://grow/reject": {
+      "region": "grow",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "INB-resolve",
+      "code": "canvas/app/src/regions/Grow.tsx (reject) / runtime/suite.py:resolve_surfaced"
+    },
+    "ui://walkthrough/voice": {
+      "region": "walkthrough",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "VOICE",
+      "code": "canvas/app/src/regions/Walkthrough.tsx (voice/text toggle) / voice/"
+    },
+    "ui://walkthrough/next": {
+      "region": "walkthrough",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "WALK-next",
+      "code": "canvas/app/src/regions/Walkthrough.tsx (next) / runtime/suite.py:next"
+    },
+    "ui://walkthrough/reason": {
+      "region": "walkthrough",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "INB-resolve",
+      "code": "canvas/app/src/regions/Walkthrough.tsx (reason) / runtime/suite.py:resolve_surfaced"
+    },
+    "ui://walkthrough/show-again": {
+      "region": "walkthrough",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "WALK-uiresolve",
+      "code": "canvas/app/src/regions/Walkthrough.tsx (show again) / runtime/suite.py:_registry_ui_target"
+    },
+    "ui://inbox/walk": {
+      "region": "inbox",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "WALK-present",
+      "code": "canvas/app/src/regions/Inbox.tsx (walk these) / runtime/suite.py:present_current"
+    },
+    "ui://chat/model-field": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "RHM-config",
+      "code": "canvas/app/src/regions/RhmChat.tsx (model input) / runtime/suite.py:set_rhm_config"
     }
   }
 }

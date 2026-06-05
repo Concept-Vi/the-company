@@ -19,7 +19,8 @@
   ],
   "cross_journeys": [],
   "addresses": [
-    "ui://inspector/act"
+    "ui://inspector/act",
+    "ui://inspector/surface"
   ],
   "build_to": {
     "components": [

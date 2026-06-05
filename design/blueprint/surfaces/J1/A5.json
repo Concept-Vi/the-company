@@ -23,6 +23,7 @@
     "J7"
   ],
   "addresses": [
+    "ui://toolbar/reload",
     "ui://toolbar/run"
   ],
   "build_to": {

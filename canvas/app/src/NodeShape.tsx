@@ -129,14 +129,24 @@ export class NodeShapeUtil extends ShapeUtil<NodeShape> {
     return (
       <HTMLContainer>
         {/* F3: status rides in the card class (`failed`/`live`/`empty` now too, not just ran/cached/stuck) so
-            the CSS by-sight treatment keys off it; the dot's colour comes from the registry render token. */}
-        <div className={`node-card ${p.status} layer-${p.layer}` + (isPortal ? ' portal' : '')}>
+            the CSS by-sight treatment keys off it; the dot's colour comes from the registry render token.
+            F4: the node carries its LIVE INSTANCE address as data-ui-ref — p.address is the canonical
+            `run://<graph>/<node>` string (suite.py:604, loaded into the shape prop). This is the run://
+            instance form (design-substrate CONTRACT.4): the resolver dispatches canvas via camera, and a
+            click attaches to THIS node instance. It is an expression (not a quoted literal) so the
+            ui_registry orphan scanner does not capture it — correct, because run:// instances are LIVE
+            addresses, not registry entries (the orphan check excludes run://). The registered template
+            address is ui://canvas/node. */}
+        <div data-ui-ref={p.address} className={`node-card ${p.status} layer-${p.layer}` + (isPortal ? ' portal' : '')}>
           <div className="node-bar">
             <span className={`node-dot ${dotShapeCls}`} style={dotStyle} title={def?.label || p.status} />
             <span className="node-type">{isPortal ? '⊕ portal' : p.nodeType}</span>
             <span className="node-kind">{p.layer === 'system' ? 'system' : p.kind}</span>
           </div>
-          {isPortal && <div className="node-ref">{isEmpty ? 'window onto an unresolved address' : 'live view → ' + p.ref}</div>}
+          {/* F4: the portal's live-transclusion window carries the ui://canvas/portal-window address
+              (the registered driven-read-only element — NODE-portal). The body keys live/empty off the
+              DERIVED reference state (F3), not the old isPortal+hasOut guess. */}
+          {isPortal && <div className="node-ref" data-ui-ref="ui://canvas/portal-window">{isEmpty ? 'window onto an unresolved address' : 'live view → ' + p.ref}</div>}
           {expanded && (
             <div className="node-body">
               {/* F3: status-driven body. FAILED shows the ERROR STRING (it raised) — the most legible-by-sight

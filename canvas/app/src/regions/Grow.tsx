@@ -10,11 +10,11 @@ export function Grow() {
     setGname, setGspec, setDrill, setReason, setSurf, setGrowMsg, dispatch, approveApply, revertLast, poll,
   } = useApp()
   return (
-    <>
+    <div data-ui-ref="ui://grow">
       <h3 style={{ marginTop: 18 }}>grow · teach a new node</h3>
       <input placeholder="node name (e.g. wordcount)" value={gname} onChange={e => setGname(e.target.value)} />
       <input placeholder="what it should do" value={gspec} onChange={e => setGspec(e.target.value)} />
-      <button className="b" onClick={dispatch}>dispatch build →</button>
+      <button className="b" data-ui-ref="ui://grow/dispatch" onClick={dispatch}>dispatch build →</button>
       {surf?.error && <div className="err" style={{ marginTop: 8 }}>{surf.error}</div>}
       {surf && !surf.error && (
         <div className="surf">
@@ -28,8 +28,8 @@ export function Grow() {
             : <pre>{surf.code}</pre>}
           <input className="reason" placeholder="why? (captured into the trajectory)" value={reason}
             onChange={e => setReason(e.target.value)} />
-          <button className="b" onClick={approveApply}>✓ approve &amp; apply</button>
-          <button className="b ghost" onClick={() => { api.resolve(surf.id, 'reject', reason); setSurf(null); setReason(''); setGrowMsg('rejected — reason captured into the path.'); poll() }}>✕ reject</button>
+          <button className="b" data-ui-ref="ui://grow/approve" onClick={approveApply}>✓ approve &amp; apply</button>
+          <button className="b ghost" data-ui-ref="ui://grow/reject" onClick={() => { api.resolve(surf.id, 'reject', reason); setSurf(null); setReason(''); setGrowMsg('rejected — reason captured into the path.'); poll() }}>✕ reject</button>
         </div>
       )}
       {!surf && <div className="muted" style={{ marginTop: 8 }}>{growMsg}</div>}
@@ -39,9 +39,9 @@ export function Grow() {
       {lastChange?.sha && (
         <div className="muted" style={{ marginTop: 8 }}>
           last self-change: <span className="sig">{(lastChange.subject || '').replace('[self-apply] ', '')}</span>
-          <button className="b ghost sm" style={{ marginLeft: 8 }} onClick={revertLast} title="git revert — bounded, recoverable">⟲ revert</button>
+          <button className="b ghost sm" data-ui-ref="ui://workshop/self-changes" style={{ marginLeft: 8 }} onClick={revertLast} title="git revert — bounded, recoverable">⟲ revert</button>
         </div>
       )}
-    </>
+    </div>
   )
 }

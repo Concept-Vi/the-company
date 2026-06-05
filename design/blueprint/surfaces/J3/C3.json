@@ -21,11 +21,14 @@
     "J7"
   ],
   "addresses": [
+    "ui://grow/reject",
     "ui://inbox/build-review",
+    "ui://walkthrough/reason",
     "ui://walkthrough/verdict"
   ],
   "build_to": {
     "components": [
+      "grow",
       "inbox",
       "walkthrough"
     ],

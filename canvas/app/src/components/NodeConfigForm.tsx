@@ -20,7 +20,7 @@ export function NodeConfigForm({ nodeType, config, onSet }:
           <div className="op-field" key={f.key}>
             <span className="op-label">{f.label}</span>
             {f.type === 'select'
-              ? <select value={cur == null ? '' : String(cur)} onChange={e => onSet(f.key, coerceConfigValue(f, e.target.value))}>
+              ? <select data-ui-ref="ui://inspector/model-field" value={cur == null ? '' : String(cur)} onChange={e => onSet(f.key, coerceConfigValue(f, e.target.value))}>
                   {/* surface the current value even if it isn't in the live option list (fail-loud, no silent drop) */}
                   {cur != null && !f.options.includes(String(cur)) && <option value={String(cur)}>{String(cur)} (current)</option>}
                   {f.options.length === 0 && <option value="">(no registered options)</option>}

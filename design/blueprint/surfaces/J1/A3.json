@@ -20,11 +20,13 @@
   "cross_journeys": [],
   "addresses": [
     "ui://inspector",
-    "ui://inspector/act"
+    "ui://inspector/act",
+    "ui://toolbar/reload"
   ],
   "build_to": {
     "components": [
-      "inspector"
+      "inspector",
+      "toolbar"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"

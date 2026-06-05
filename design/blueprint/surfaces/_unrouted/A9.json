@@ -14,11 +14,14 @@
   "home_journey": "_unrouted",
   "journeys": [],
   "cross_journeys": [],
-  "addresses": [],
+  "addresses": [
+    "ui://toolbar/layers"
+  ],
   "build_to": {
-    "components": [],
+    "components": [
+      "toolbar"
+    ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
-  },
-  "address_gap": "view A9 represents ['CAN-layers', 'NODE-layer'] but no registered ui:// address joins by feature-id"
+  }
 }

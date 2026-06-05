@@ -9,15 +9,15 @@ export function RhmChat() {
     <div className="hud rhm" data-ui-ref="chat">
       <div className="rhm-head">
         right-hand-man <span className="muted">· {cfg.model || 'default model'}</span>
-        <span className="cfg-gear" title="configure model + persona" onClick={() => setCfgOpen(o => !o)}>⚙</span>
+        <span className="cfg-gear" data-ui-ref="ui://chat/config" title="configure model + persona" onClick={() => setCfgOpen(o => !o)}>⚙</span>
       </div>
       {cfgOpen && (
         <div className="rhm-cfg">
-          <input placeholder="model (e.g. deepseek-v4-flash:cloud)" value={cfg.model || ''}
+          <input placeholder="model (e.g. deepseek-v4-flash:cloud)" data-ui-ref="ui://chat/model-field" value={cfg.model || ''}
             onChange={e => setCfg({ ...cfg, model: e.target.value })} />
           <input placeholder="persona / voice (optional)" value={cfg.persona || ''}
             onChange={e => setCfg({ ...cfg, persona: e.target.value })} />
-          <button className="b" onClick={applyCfg}>apply config</button>
+          <button className="b" data-ui-ref="ui://chat/config" onClick={applyCfg}>apply config</button>
         </div>
       )}
       <div className="rhm-log">
@@ -34,12 +34,12 @@ export function RhmChat() {
         {chatBusy && <div className="msg assistant"><span className="who">vi</span><span className="txt muted">thinking…</span></div>}
       </div>
       <div className="rhm-input">
-        <input placeholder="ask the company about itself…" value={chatMsg}
+        <input placeholder="ask the company about itself…" data-ui-ref="ui://chat/input" value={chatMsg}
           onChange={e => setChatMsg(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') sendChat() }} />
-        <button className={'b ghost mic' + (recording ? ' rec' : '')} onClick={recordToggle}
+        <button className={'b ghost mic' + (recording ? ' rec' : '')} data-ui-ref="ui://chat/mic" onClick={recordToggle}
           title="push-to-talk (voice in; speaks back in listening mode)">{recording ? '■' : '🎙'}</button>
-        <button className="b" onClick={() => sendChat()} disabled={chatBusy}>{chatBusy ? '…' : '→'}</button>
+        <button className="b" data-ui-ref="ui://chat/send" onClick={() => sendChat()} disabled={chatBusy}>{chatBusy ? '…' : '→'}</button>
       </div>
     </div>
   )

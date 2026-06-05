@@ -22,11 +22,15 @@
     "J5"
   ],
   "addresses": [
+    "ui://grow/approve",
+    "ui://grow/reject",
     "ui://inbox/coa",
+    "ui://walkthrough/reason",
     "ui://walkthrough/verdict"
   ],
   "build_to": {
     "components": [
+      "grow",
       "inbox",
       "walkthrough"
     ],

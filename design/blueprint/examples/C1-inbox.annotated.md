@@ -54,14 +54,18 @@ exact addresses and rides the design-system:
 
 ## Step 4 — the addresses you carry (addresses.json — never invent)
 
-| address                   | region | represents   | capabilities (corpus)        | code (powering)                  |
-|---------------------------|--------|--------------|------------------------------|----------------------------------|
-| `ui://inbox`              | inbox  | INB-lanes    | pointable                    | runtime/suite.py (inbox lanes)   |
-| `ui://inbox/build-review` | inbox  | WIRE-review  | pointable·spotlit·presentable| runtime/suite.py:review_verdicts |
-| `ui://inbox/coa`          | inbox  | INB-coa      | pointable·openable           | runtime/suite.py (COA)           |
-| `ui://activity`           | activity| EVT-now     | pointable                    | runtime/suite.py (now/events)    |
+(Values below copied verbatim from `addresses.json` — do not paraphrase; the corpus's "no fiction" law binds
+this doc too.)
+
+| address                   | region  | represents  | capabilities (corpus)         | code (powering)                  |
+|---------------------------|---------|-------------|-------------------------------|----------------------------------|
+| `ui://inbox`              | inbox   | INB-lanes   | openable·presentable          | runtime/suite.py:inbox_lanes     |
+| `ui://inbox/build-review` | inbox   | WIRE-review | pointable·presentable·spotlit | runtime/suite.py:review_verdicts |
+| `ui://inbox/coa`          | inbox   | INB-coa     | pointable·presentable         | runtime/suite.py:coa             |
+| `ui://activity`           | activity| EVT-now     | presentable·driven            | runtime/suite.py:now             |
 
 Carry these as `data-ui-ref` exactly. Anything not in `addresses.json` is an orphan — register it first.
+(Note: the corpus `driven` capability maps to the live model's `drivenReadOnly` — see CONNECTION-CONTRACT §1.)
 
 ## Step 5 — the connection (CONNECTION-CONTRACT.md)
 

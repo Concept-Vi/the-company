@@ -12,7 +12,7 @@ export function Walkthrough() {
     <div className="hud walkthrough" data-ui-ref="walkthrough">
       <div className="wt-head">
         <span className="wt-title">walkthrough</span>
-        <span className="wt-mode">
+        <span className="wt-mode" data-ui-ref="ui://walkthrough/voice">
           <button className={voiceOn ? 'on' : ''} onClick={() => setVoiceOn(true)} title="voice-first: speak each step">🔊 voice</button>
           <button className={!voiceOn ? 'on' : ''} onClick={() => setVoiceOn(false)} title="text only">text</button>
         </span>
@@ -31,13 +31,13 @@ export function Walkthrough() {
              still show SOMETHING (the note / the item id), the walk never blocks. */}
           <div className="wt-frame">{session.framing || (session.raw?.payload?.note) || ('Review item: ' + session.item + ' (no framing returned — raw payload below)')}</div>
           {session.raw?.ui_target && <div className="wt-target">concerns: {session.raw.ui_target}
-            <button className="b ghost sm" style={{ marginLeft: 8 }} title="move the view to this thing again"
+            <button className="b ghost sm" data-ui-ref="ui://walkthrough/show-again" style={{ marginLeft: 8 }} title="move the view to this thing again"
               onClick={() => resolveUiTarget(session.raw.ui_target)}>↪ show again</button></div>}
-          <input className="wt-reason" placeholder="why? (captured into the verdict — required for reject/comment)"
+          <input className="wt-reason" data-ui-ref="ui://walkthrough/reason" placeholder="why? (captured into the verdict — required for reject/comment)"
             value={wtReason} onChange={e => setWtReason(e.target.value)} />
           {/* CONCURRENCY GUARD: every respond control is disabled while a request is in flight (wtBusy) —
              one click = one verdict; the .wt-busy class dims them so the lock is visible during the ~20s wait. */}
-          <div className={'wt-respond' + (wtBusy ? ' wt-busy' : '')}>
+          <div className={'wt-respond' + (wtBusy ? ' wt-busy' : '')} data-ui-ref="ui://walkthrough/verdict">
             <button className="b verdict approve" disabled={wtBusy} onClick={() => respondStep('approve')} title="approve this item">✓ approve</button>
             <button className="b ghost verdict reject" disabled={wtBusy} onClick={() => respondStep('reject')} title="reject (give a reason)">✕ reject</button>
             <button className="b ghost verdict" disabled={wtBusy} onClick={() => respondStep('comment')} title="comment — capture a note, stays pending">✎ comment</button>
@@ -52,7 +52,7 @@ export function Walkthrough() {
                 : <span className="muted">respond, then advance</span>}
             {/* Next disabled while a /api/review/next (or any respond) request is pending — a 2nd click
                mid-flight would issue a concurrent next that desyncs the backend cursor. */}
-            <button className="b" style={{ marginLeft: 'auto' }} disabled={wtBusy} onClick={nextStep} title="advance to the next step">{wtBusy ? '…' : 'next →'}</button>
+            <button className="b" data-ui-ref="ui://walkthrough/next" style={{ marginLeft: 'auto' }} disabled={wtBusy} onClick={nextStep} title="advance to the next step">{wtBusy ? '…' : 'next →'}</button>
             {wtSpoke && <span className="wt-spoke">{wtSpoke}</span>}
           </div>
         </>

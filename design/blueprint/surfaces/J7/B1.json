@@ -20,7 +20,10 @@
   "cross_journeys": [],
   "addresses": [
     "ui://chat",
-    "ui://chat/input"
+    "ui://chat/config",
+    "ui://chat/input",
+    "ui://chat/model-field",
+    "ui://chat/send"
   ],
   "build_to": {
     "components": [

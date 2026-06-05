@@ -28,7 +28,7 @@ export function Toolbar() {
       )}
       {now && (
         // U11: the dropdown's title shows the CURRENT mode's description; each option carries its own.
-        <select className="mode-sel" value={now.mode || 'listening'} onChange={e => changeMode(e.target.value)}
+        <select className="mode-sel" data-ui-ref="ui://toolbar/presence" value={now.mode || 'listening'} onChange={e => changeMode(e.target.value)}
           title={'presence dial · ' + (now.mode || 'listening') + ' — ' + (modeDesc[now.mode || 'listening'] || '')}>
           {MODES.map(m => <option key={m} value={m} title={modeDesc[m] || ''}>{m}</option>)}
         </select>
@@ -39,14 +39,14 @@ export function Toolbar() {
          Passing the event made `force.join(', ')` (doRun) throw a synchronous TypeError BEFORE the try{,
          so `finally{ setRunning(false) }` never ran and api.run() never fired → button latched until
          reload. `() => doRun()` → force is undefined → the normal-run branch POSTs /api/run. */}
-      <button className="b" onClick={() => doRun()} disabled={running}>{running ? 'running…' : '▶ run'}</button>
-      <button className="b ghost" onClick={wireSelected}>＋ wire</button>
-      <button className="b ghost" onClick={portalSelected}>⊕ portal</button>
-      <button className="b ghost" onClick={deleteSelected}>🗑 delete</button>
-      <button className="b ghost" onClick={cycleLayers}>◐ layers: {['all', 'origin', 'system'][layerView]}</button>
+      <button className="b" data-ui-ref="ui://toolbar/run" onClick={() => doRun()} disabled={running}>{running ? 'running…' : '▶ run'}</button>
+      <button className="b ghost" data-ui-ref="ui://toolbar/wire" onClick={wireSelected}>＋ wire</button>
+      <button className="b ghost" data-ui-ref="ui://toolbar/portal" onClick={portalSelected}>⊕ portal</button>
+      <button className="b ghost" data-ui-ref="ui://toolbar/delete" onClick={deleteSelected}>🗑 delete</button>
+      <button className="b ghost" data-ui-ref="ui://toolbar/layers" onClick={cycleLayers}>◐ layers: {['all', 'origin', 'system'][layerView]}</button>
       {/* U6: fit the graph with padding for the fixed panels so nothing tucks under the chrome */}
-      <button className="b ghost" onClick={fitGraph} title="zoom to fit — padded so no node hides under the panels">⊡ fit</button>
-      <button className="b ghost" onClick={reload}>reload</button>
+      <button className="b ghost" data-ui-ref="ui://toolbar/fit" onClick={fitGraph} title="zoom to fit — padded so no node hides under the panels">⊡ fit</button>
+      <button className="b ghost" data-ui-ref="ui://toolbar/reload" onClick={reload}>reload</button>
       {notice && <span className="notice">{notice}</span>}
     </div>
   )

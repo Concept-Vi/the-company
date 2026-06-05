@@ -17,11 +17,17 @@
     "J8"
   ],
   "cross_journeys": [],
-  "addresses": [],
+  "addresses": [
+    "ui://grow",
+    "ui://grow/dispatch",
+    "ui://inspector/build"
+  ],
   "build_to": {
-    "components": [],
+    "components": [
+      "grow",
+      "inspector"
+    ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
-  },
-  "address_gap": "view D5 represents ['SM-node', 'SM-panel', 'SM-extension'] but no registered ui:// address joins by feature-id"
+  }
 }

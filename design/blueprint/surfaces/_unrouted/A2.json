@@ -19,11 +19,14 @@
   "journeys": [],
   "cross_journeys": [],
   "addresses": [
-    "ui://canvas/node"
+    "ui://canvas/node",
+    "ui://toolbar/fit",
+    "ui://toolbar/reload"
   ],
   "build_to": {
     "components": [
-      "canvas"
+      "canvas",
+      "toolbar"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
