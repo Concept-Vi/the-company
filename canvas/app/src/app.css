@@ -340,6 +340,22 @@ button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
   font-size:11px;line-height:1;padding:2px 4px;border-radius:4px}
 .rhm-indicating .ind-clear:hover{color:var(--ink);background:var(--s2)}
 
+/* I3 · propose-affordance — the CONSENT card (click #2). Built on the corpus token vocabulary
+   (mirrors .rhm-indicating: --acc-glow surface, --sig-dim border) extended into a card with the
+   proposed verb (headline) + address (monospace, exactly what will run) + approve/dismiss. The
+   action runs ONLY on approve. NO hardcoded literals (design-lint gate). */
+.rhm-afford{display:flex;flex-direction:column;gap:7px;margin:6px 8px 0;padding:8px 10px;
+  background:var(--acc-glow);border:1px solid var(--sig-dim);border-radius:6px;min-width:0}
+.rhm-afford .afford-head{display:flex;align-items:center;gap:6px;font-size:8px;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--dim)}
+.rhm-afford .afford-head .ic{color:var(--sig);flex:none}
+.rhm-afford .afford-body{display:flex;align-items:baseline;gap:8px;min-width:0}
+.rhm-afford .afford-verb{flex:none;font-family:"Fraunces",serif;font-size:14px;color:var(--sig)}
+.rhm-afford .afford-addr{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10.5px;color:var(--dim)}
+.rhm-afford .afford-actions{display:flex;gap:6px}
+.rhm-afford .afford-actions .b{font-size:10.5px;padding:4px 12px}
+
 /* B-frontend: the walkthrough card — the visible review organ. A new .hud region (top-centre, under the
    toolbar) shown only while a review session is active. Reuses the panel/coa/surf vocabulary. */
 /* U9: top:72px (was 64) keeps the card's header fully clear of the toolbar even when the U8 context-hint

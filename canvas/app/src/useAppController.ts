@@ -73,6 +73,14 @@ export function useAppController(editor: Editor) {
   // `.ui-spotlight` ring (which the show-resolver flashes and removes after a timeout).
   const [indicated, setIndicated] = useState<string | null>(null)
   const indicatedRef = useRef<string | null>(null)   // for the capture handler (avoids a stale closure)
+  // I3 · propose-affordance (the CONSENT gate, click #2): when the RHM PROPOSES an action (emits a
+  // structured {verb, address, args} on the chat response WITHOUT executing it), we hold it here as
+  // EPHEMERAL state — NOT in the `chat` array (that array is replaced wholesale by r.history on the
+  // next turn, which would vanish the card). The RhmChat region renders it as an approvable card; the
+  // approve handler fires /api/act (api.act → the I2 dispatch path — REUSE, not a new path), so the
+  // action runs ONLY on approve; dismiss just drops it (a reject does nothing). Mirrors the `indicated`
+  // chip pattern (separate ephemeral state beside the chat log).
+  const [proposal, setProposal] = useState<{ verb: string; address?: string | null; args?: any } | null>(null)
   const [cfg, setCfg] = useState<any>({ model: '', persona: '' })
   const [cfgOpen, setCfgOpen] = useState(false)
   // U12: the /api/inbox payload is { live_escalations, resolved_for_you, batched, counts }. `batched` is a
@@ -494,6 +502,10 @@ export function useAppController(editor: Editor) {
     if (!m || chatBusy) return
     setChatMsg(''); setChatBusy(true)
     setChat(c => [...c, { role: 'user', text: m }])
+    // I3 — consent integrity: clear any prior un-acted proposal BEFORE this turn. A card the operator
+    // ignored must not linger beside a new answer (approving it later would fire the OLD, now out-of-
+    // context, verb-at-address). A fresh proposal (if this turn carries one) is set below from r.proposal.
+    setProposal(null)
     try {
       // co-presence: the RHM sees what the operator has selected on the canvas right now (node-ids) AND
       // the ui:// address they've CLICKED to indicate (I1) — BOTH ride in the one `focus.selected` list
@@ -513,33 +525,70 @@ export function useAppController(editor: Editor) {
       if (Array.isArray(r.history)) setChat(r.history)
       await poll()
       if (now?.mode === 'listening' && r.reply) speakReply(r.reply).catch(() => { /* TTS hiccup is harmless here */ })   // voice out
-      // the decision-compiler DOWN: an action the RHM took routes through the gate
-      if (r.action?.did === 'run' || r.action?.did === 'build') { await reload() }
-      if (r.action?.did === 'show') {           // attention-direction: move the operator's view (THE KEYSTONE)
-        const targets: string[] = r.action.targets || []
-        const canvasIds = targets.filter(t => !t.startsWith('ui://')).map((nid: string) => shapeIdFor(nid)).filter((id: any) => editor.getShape(id))
-        if (canvasIds.length) { editor.select(...canvasIds); editor.zoomToSelection({ animation: { duration: 450 } }) }
-        targets.forEach(t => { if (t.startsWith('ui://')) resolveUiTarget(t) })   // chrome/panel/canvas-by-address
-      }
-      if (r.action?.did === 'propose') {
-        const all = await fetch('/api/surfaced').then(x => x.json())
-        const d = all.find((x: any) => x.id === r.action.surfaced)
-        if (d) setSurf({ id: d.id, name: d.payload.name, code: d.payload.code })   // → operator approves in GROW panel
-      }
-      if (r.action?.did === 'panel') {            // update the interface through the interface
-        const all = await fetch('/api/surfaced').then(x => x.json())
-        const d = all.find((x: any) => x.id === r.action.surfaced)
-        if (d) setSurf({ id: d.id, name: d.payload.name, code: JSON.stringify(d.payload.panel, null, 2), isPanel: true })
-      }
-      if (r.action?.did === 'extend') {           // arbitrary code → build-gated on approve
-        const all = await fetch('/api/surfaced').then(x => x.json())
-        const d = all.find((x: any) => x.id === r.action.surfaced)
-        if (d) setSurf({ id: d.id, name: d.payload.name, code: d.payload.code, isExt: true })
-      }
+      // I3 — the CONSENT gate: if the RHM PROPOSED an action (a structured {verb, address, args} on the
+      // response, with action===null because nothing ran), hold it for the operator to APPROVE. The card
+      // renders in RhmChat; approveProposal fires /api/act. Nothing executes here (the whole point).
+      if (r.proposal) { setProposal(r.proposal); return }
+      // the decision-compiler DOWN: an action the RHM TOOK (execute-then-render — PRESERVED) routes its
+      // post-hoc reaction through the SAME handler the approve path reuses.
+      await applyActionReactions(r.action)
     }
     catch { setChat(c => [...c, { role: 'assistant', text: '(could not reach the brain)' }]) }
     finally { setChatBusy(false) }
   }
+
+  // I3 — the post-dispatch reaction handler, factored out so BOTH the execute-then-render chat path
+  // (sendChat, PRESERVED verbatim) AND the propose-affordance APPROVE path (approveProposal → /api/act)
+  // drive the SAME reactions. This is what makes "approving runs the verb EXACTLY as it would have"
+  // true: the approve path is the I2 dispatch path, and its outcome reaction is this one handler.
+  async function applyActionReactions(action: any) {
+    if (!action) return
+    if (action.did === 'run' || action.did === 'build') { await reload() }
+    if (action.did === 'show') {           // attention-direction: move the operator's view (THE KEYSTONE)
+      const targets: string[] = action.targets || []
+      const canvasIds = targets.filter(t => !t.startsWith('ui://')).map((nid: string) => shapeIdFor(nid)).filter((id: any) => editor.getShape(id))
+      if (canvasIds.length) { editor.select(...canvasIds); editor.zoomToSelection({ animation: { duration: 450 } }) }
+      targets.forEach(t => { if (t.startsWith('ui://')) resolveUiTarget(t) })   // chrome/panel/canvas-by-address
+    }
+    if (action.did === 'propose') {
+      const all = await fetch('/api/surfaced').then(x => x.json())
+      const d = all.find((x: any) => x.id === action.surfaced)
+      if (d) setSurf({ id: d.id, name: d.payload.name, code: d.payload.code })   // → operator approves in GROW panel
+    }
+    if (action.did === 'panel') {            // update the interface through the interface
+      const all = await fetch('/api/surfaced').then(x => x.json())
+      const d = all.find((x: any) => x.id === action.surfaced)
+      if (d) setSurf({ id: d.id, name: d.payload.name, code: JSON.stringify(d.payload.panel, null, 2), isPanel: true })
+    }
+    if (action.did === 'extend') {           // arbitrary code → build-gated on approve
+      const all = await fetch('/api/surfaced').then(x => x.json())
+      const d = all.find((x: any) => x.id === action.surfaced)
+      if (d) setSurf({ id: d.id, name: d.payload.name, code: d.payload.code, isExt: true })
+    }
+  }
+
+  // I3 — APPROVE (click #2, the consent commit): fire the proposed verb-at-address through /api/act
+  // (the I2 dispatch path — REUSE, never a new path). The action runs ONLY here, on the operator's
+  // approve. Then drive the SAME post-dispatch reaction the chat path uses, surface the "did X"
+  // confirmation as an assistant message, and clear the card. Fail-loud on a backend error (rule 4).
+  async function approveProposal() {
+    const p = proposal
+    if (!p || chatBusy) return
+    setChatBusy(true)
+    try {
+      const r = await api.act(p.verb, p.address || undefined, p.args)
+      if (r.error) { setChat(c => [...c, { role: 'assistant', text: '⚠ ' + r.error }]) }
+      else {
+        if (r.reply) setChat(c => [...c, { role: 'assistant', text: '✓ ' + r.reply }])
+        await applyActionReactions(r.action)
+        await poll()
+      }
+    }
+    catch { setChat(c => [...c, { role: 'assistant', text: '(could not reach the brain to act)' }]) }
+    finally { setProposal(null); setChatBusy(false) }
+  }
+  // I3 — REJECT/DISMISS does nothing but drop the card (no backend call; the action never ran).
+  function dismissProposal() { setProposal(null) }
   async function changeMode(mm: string) { setNotice('presence → ' + mm); await api.setMode(mm); await poll() }
   async function applyCfg() {
     const c = await api.setRhmConfig({ model: cfg.model, persona: cfg.persona })
@@ -839,7 +888,7 @@ export function useAppController(editor: Editor) {
     edges, running, runError, runStartedAt, runElapsed, types, gname, gspec, surf, growMsg, workshop,
     oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
     showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn,
-    wtSpoke, wtBusy, selected, mobileTab, fleet, indicated,
+    wtSpoke, wtBusy, selected, mobileTab, fleet, indicated, proposal,
     // refs the components read for the inspector form
     configByNode,
     // setters the components call directly
@@ -850,6 +899,7 @@ export function useAppController(editor: Editor) {
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
     resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, fieldValue,
     setField, revertLast, approveApply, doRun, refreshFleet, indicate,
+    approveProposal, dismissProposal,
   }
 }
 

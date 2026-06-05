@@ -1305,6 +1305,104 @@ class Suite:
             return {"verb": "run"}
         return {"verb": verb}
 
+    # --- I3: propose-affordance — the CONSENT gate (click #2 of the two-click model) ----------
+    # NET-NEW (seams-rhm Seam 2 REFUTE): today the system is EXECUTE-then-render — a verb runs inside
+    # chat() and the FE renders the OUTCOME (App.tsx r.action.did). There is no "proposed action
+    # awaiting a click" affordance. I3 adds one WITHOUT touching that executed path: the RHM may emit a
+    # propose-affordance directive — `AFFORD: <verb> <address> [<args-json>]` — which chat() recognises
+    # and returns as a structured `proposal` field, and which DOES NOT DISPATCH. The action runs ONLY
+    # when the operator approves the rendered card → /api/act (Suite.act, the I2 endpoint). This is the
+    # whole point: proposing must not execute (the see-and-approve consent gate, criteria line 99/107).
+    #
+    # WHY A SEPARATE KEYWORD (`AFFORD:`), not `PROPOSE:` — `propose` is already an RHM verb meaning
+    # "draft a NEW node-type → inbox" (the propose/panel/extend inbox path the task warns NOT to confuse
+    # this with). `AFFORD:` is the propose-affordance directive; its `<verb>` may itself be ANY RHM verb
+    # (incl. `propose`), so a muddled keyword would be a real bug.
+    #
+    # WHY A SEPARATE PARSER (not folded into _parse_rhm_action) — _parse_rhm_action feeds the
+    # EXECUTE-then-render dispatch; widening it would risk auto-running a proposal (consent-gate failure)
+    # and would entangle the preserved path. This parser is recognition-only and returns a proposal the
+    # caller hands BACK to the FE, never to the dispatcher.
+    #
+    # WHY NO SECOND WHITELIST HERE — AGENTS.md rule 3 (one source): the verb is NOT filtered at parse
+    # time (that would be a second list drifting from the dispatcher's RHM_VERBS). The ONE governance
+    # gate is /api/act → _dispatch_rhm_action's refuse-tail (the 7-verb whitelist + no-self-apply), which
+    # the approve click reuses unchanged. The model is fed the real RHM_VERBS + the ui:// vocabulary in
+    # _chat_context, so it proposes from truth; a bad verb is refused loudly at the click, not silently
+    # dropped here. We DO grammar-validate the address (parse_ui_address, the S0 gate `annotate` uses) so
+    # a malformed locus fails fast rather than rendering an un-resolvable card — but a NON-ui:// locus
+    # (e.g. a bare canvas node-id, which `show`/`act` accept) is carried through untouched.
+    _AFFORD_RE = None   # compiled lazily (see _parse_rhm_proposal)
+
+    @classmethod
+    def _parse_rhm_proposal(cls, reply: str):
+        """Split a reply into (shown_text, proposal|None). A proposal is the propose-affordance directive
+        `AFFORD: <verb> <address> [<args-json>]` (anchored to the start of a line, found anywhere —
+        same anchoring discipline as the ACTION: handler so prose merely MENTIONING 'AFFORD:' mid-
+        sentence does not over-trigger). On a match it RETURNS a structured `{verb, address, args}`
+        proposal AND strips the directive from the shown prose (so the raw directive never leaks to the
+        operator). On no match → (reply, None). This NEVER dispatches — it only recognises.
+
+        The proposal dict mirrors Suite.act's signature ({verb, address, args}) so an approve→/api/act
+        fires faithfully for ANY verb, not just `show` (act() is verb-shaped: show→targets, consult→
+        query, build→steps — _act_dict adapts; the args travel here to feed it)."""
+        import re, json as _j
+        if not reply or not reply.strip():
+            return reply, None
+        if cls._AFFORD_RE is None:
+            cls._AFFORD_RE = re.compile(r"^[ \t]*AFFORD:\s*(.+)$", re.MULTILINE | re.IGNORECASE)
+        m = cls._AFFORD_RE.search(reply)
+        if not m:
+            return reply, None
+        body = m.group(1).strip()
+        shown = (reply[:m.start()] + reply[m.end():]).strip()
+        # body = "<verb> <address> [<args-json>]". Split off the verb, then the address; whatever
+        # remains (if it parses as a JSON object) is the args. Address is the first whitespace token
+        # after the verb; if it begins a JSON object, there is no address (verb-only proposal, e.g. run).
+        verb, _, rest = body.partition(" ")
+        verb = verb.strip().lower()
+        rest = rest.strip()
+        address = None
+        args: dict = {}
+        if rest.startswith("{"):
+            # no address — the remainder is args-json (e.g. `AFFORD: build {"steps":[...]}`)
+            try:
+                parsed = _j.loads(rest)
+                if isinstance(parsed, dict):
+                    args = parsed
+            except Exception:
+                args = {}
+        elif rest:
+            address, _, tail = rest.partition(" ")
+            address = address.strip() or None
+            tail = tail.strip()
+            if tail.startswith("{"):
+                try:
+                    parsed = _j.loads(tail)
+                    if isinstance(parsed, dict):
+                        args = parsed
+                except Exception:
+                    args = {}
+        # A ui:// address is grammar-CHECKED, but consistent with the verb philosophy above (a bad verb
+        # rides through and is refused LOUDLY AT THE CLICK, not silently dropped here), a malformed
+        # model-emitted address must NOT kill the whole turn (which would 400 it and lose the prose
+        # answer — model output is unreliable, unlike `annotate`'s operator-supplied address). So a
+        # grammatically-malformed ui:// → DROP the proposal and keep the prose (no card to approve);
+        # a well-formed-but-unregistered address rides through and fails loud at the click
+        # (resolveUiTarget / the dispatcher validate at act-time). A non-ui:// locus (bare canvas
+        # node-id) passes through untouched — show/act accept both.
+        if address and address.startswith("ui://"):
+            from contracts.ui_info import parse_ui_address
+            try:
+                parse_ui_address(address)                      # grammar check only (S0)
+            except Exception:
+                # malformed locus → no card, but STILL strip the directive from the shown prose (the
+                # operator must never see a raw `AFFORD:` line). Return the stripped text + no proposal;
+                # chat() then renders the prose answer alone (the turn is not killed).
+                return shown, None
+        proposal = {"verb": verb, "address": address, "args": args}
+        return shown, proposal
+
     @staticmethod
     def _confirmation_for(outcome: dict) -> str:
         """Fold a dispatched verb's outcome dict → ONE concise operator-facing confirmation line, for
@@ -1704,7 +1802,17 @@ class Suite:
             "`ACTION:` line in THIS reply. Do NOT write 'I'll consult', 'consulting now', 'let me build', or "
             "'showing the inbox' and stop — that performs NOTHING and the operator gets no result. If you intend "
             "to act, emit the `ACTION:` line now, in the same reply. (If a previous attempt seemed to return "
-            "nothing, that was a bug that is now fixed — emit the ACTION again rather than giving up.)"
+            "nothing, that was a bug that is now fixed — emit the ACTION again rather than giving up.)\n"
+            "SEE-AND-APPROVE (the consent gate) — when the right thing is to let the operator APPROVE before "
+            "anything runs (a consequential or ambiguous action, or simply when offering a next step they "
+            "should confirm), do NOT emit `ACTION:` (which runs immediately). Instead append EXACTLY ONE "
+            "final line:\n"
+            "  AFFORD: <verb> <address>            (PROPOSE the verb-at-address as a card the operator "
+            "clicks to APPROVE; nothing runs until they do)\n"
+            "e.g. `AFFORD: show ui://chrome/inbox` proposes showing the inbox; the operator sees an approve "
+            "card and the show only happens on their click. <verb> is one of the governed verbs above; "
+            "<address> is a node-id or a ui:// region from the registry. Use AFFORD when the operator should "
+            "consent first; use ACTION only when they've clearly asked you to just do it. Never emit both."
         )
         msgs = [{"role": "system", "content": sys_p + "\n\n" + self._chat_context(graph_id, focus)}]
         for t in self.store.chat_history(20):
@@ -1712,7 +1820,29 @@ class Suite:
         msgs.append({"role": "user", "content": message})
         raw = client.complete(transport.openai_transport(base_url=cfg["base_url"], timeout=cfg["timeout"]),
                               msgs, model=cfg["model"])      # model + provider + timeout are configurable (E1/D2)
-        reply, action = self._parse_rhm_action(raw)
+        # I3 — the CONSENT gate (FIRST, before any dispatch decision): if the model emitted a
+        # propose-affordance directive (`AFFORD: <verb> <address>`), return it as a structured
+        # `proposal` and DISPATCH NOTHING. The action runs ONLY when the operator approves the
+        # rendered card → /api/act (Suite.act, the I2 endpoint). Proposing must not execute — this
+        # is the whole point of I3 (criteria 99/107). Proposal and ACTION: are mutually exclusive;
+        # the proposal wins (consent gate), so the execute-then-render path below is never reached.
+        # The executed-outcome path (the else/decide-for-me branches) is PRESERVED untouched for
+        # ordinary ACTION: turns.
+        prop_shown, proposal = self._parse_rhm_proposal(raw)
+        if proposal:
+            reply = prop_shown or "Here's what I can do — approve it to run."
+            self.store.append_chat({"role": "user", "text": message,
+                                    "grade": self._provenance_grade("user"), "source": self._provenance_source("user")})
+            self.store.append_chat({"role": "assistant", "text": reply, "proposal": proposal,
+                                    "grade": self._provenance_grade("assistant"), "source": self._provenance_source("assistant")})
+            self._emit("chat", f"you: {message[:48]} (proposed)", address="ui://chrome/chat")   # S2: chat organ
+            return {"reply": reply, "action": None, "proposal": proposal, "mode": mode,
+                    "model": cfg["model"], "history": self.store.chat_history(40)}
+        # No proposal (either no AFFORD line, or a malformed-address AFFORD that was DROPPED). Parse for
+        # an ACTION: on `prop_shown` — the AFFORD directive is already stripped from it (so a dropped
+        # malformed AFFORD never leaks its raw line to the operator), while a no-AFFORD reply leaves
+        # prop_shown == raw unchanged. The execute-then-render path is otherwise untouched.
+        reply, action = self._parse_rhm_action(prop_shown)
         if action and mode == "decide-for-me":
             # G3 wiring: in decide-for-me the ACT-vs-SURFACE decision is routed DETERMINISTICALLY by the
             # verb's governance action-class (no confidence) through autonomous_dispatch. The verb BODY
@@ -1744,7 +1874,9 @@ class Suite:
         self.store.append_chat({"role": "assistant", "text": reply, "action": outcome,
                                 "grade": self._provenance_grade("assistant"), "source": self._provenance_source("assistant")})
         self._emit("chat", f"you: {message[:48]}", address="ui://chrome/chat")   # S2: chat organ
-        return {"reply": reply, "action": outcome, "mode": mode,
+        # `proposal: None` on the execute-then-render path keeps the response shape uniform (I3,
+        # schema-additive) — the FE always reads `proposal`; an executed turn has none.
+        return {"reply": reply, "action": outcome, "proposal": None, "mode": mode,
                 "model": cfg["model"], "history": self.store.chat_history(40)}
 
     def chat_history(self, limit: int = 40) -> list:

@@ -14,6 +14,7 @@
 import { useSyncExternalStore } from 'react'
 import { useApp } from '../AppContext'
 import { registryStore } from '../registryStore'
+import { ProposeAffordance } from './ProposeAffordance'
 
 export function RhmChat() {
   const { cfg, cfgOpen, chat, chatBusy, chatMsg, recording, indicated, setCfg, setCfgOpen, setChatMsg, applyCfg, sendChat, recordToggle, indicate } = useApp()
@@ -66,6 +67,9 @@ export function RhmChat() {
           <button className="ind-clear" onClick={() => indicate(null)} title="stop indicating">✕</button>
         </div>
       )}
+      {/* I3 · propose-affordance: when the RHM PROPOSES an action, the approvable card renders here —
+          the action runs ONLY when the operator approves it (the consent gate, click #2). */}
+      <ProposeAffordance />
       <div className="rhm-input">
         <input placeholder="ask the company about itself…" data-ui-ref="ui://chat/input" value={chatMsg}
           onChange={e => setChatMsg(e.target.value)}

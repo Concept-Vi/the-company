@@ -62,6 +62,13 @@ export const api = {
   events: () => fetch('/api/events').then(jr),
   chat: (message: string, focus?: any) =>
     fetch('/api/chat', { method: 'POST', headers: J, body: JSON.stringify({ message, focus }) }).then(jr),
+  // I3/I2: the click-emission seam — a DETERMINISTIC operator click ships a STRUCTURED {verb, address,
+  // args} that drives _dispatch_rhm_action directly (the 7-verb whitelist + no-self-apply ride along
+  // INSIDE the dispatcher). This is the path an APPROVED propose-affordance card fires (I3 = click #2,
+  // the consent gate) — the action runs ONLY on approve. Returns the same {reply, action} shape /api/chat
+  // returns, so the post-approve reaction reuses the existing r.action.did handling.
+  act: (verb: string, address?: string, args?: any) =>
+    fetch('/api/act', { method: 'POST', headers: J, body: JSON.stringify({ verb, address, args }) }).then(jr),
   chatHistory: () => fetch('/api/chat').then(jr),
   setMode: (mode: string) =>
     fetch('/api/mode', { method: 'POST', headers: J, body: JSON.stringify({ mode }) }).then(jr),
