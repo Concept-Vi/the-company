@@ -190,6 +190,8 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.run_stats(op=q.get("op"))))
             elif path == "/api/knobs":                     # G8.1: the dynamic configurable-knob surface for a (loaded) model
                 self._send(200, json.dumps(SUITE.knobs_for(model=q.get("model"), base_url=q.get("base_url"))))
+            elif path == "/api/voice/paths":               # Tier-4: the swappable voice-path registry (pipeline vs s2s)
+                self._send(200, json.dumps(SUITE.voice_paths()))
             else:
                 self._send(404, "{}")
         except Exception as e:                             # fail loud to the UI (parity with do_POST)
@@ -258,6 +260,9 @@ class H(BaseHTTPRequestHandler):
         try:
             if not persona:
                 raise ValueError("/api/voice/stream needs ?persona=<id> (fail loud)")
+            if SUITE.rhm_config().get("voice_path") == "s2s":
+                emit({"type": "error", "error": "voice_path is 's2s' but no S2S runner/model exists yet — "
+                      "this is the pipeline route. Set voice_path=pipeline or download an S2S model."}); return
             p = voice_personas.get_persona(persona)               # fail loud on unknown persona
             _rc = SUITE.rhm_config()
             eng_override = (_rc.get("tts_engine") or "").strip() or None   # G4.2 engine/voice override slots
@@ -366,6 +371,10 @@ class H(BaseHTTPRequestHandler):
                 audio = self.rfile.read(int(self.headers.get("Content-Length", 0)))
                 if not audio:
                     raise ValueError("/api/voice/turn got empty audio (fail loud)")
+                if SUITE.rhm_config().get("voice_path") == "s2s":     # Tier-4: s2s path has no runner yet
+                    raise RuntimeError("voice_path is 's2s' but no S2S runner/model exists yet — this is "
+                                       "the PIPELINE route. Set voice_path=pipeline, or download an S2S "
+                                       "model + build the s2s runner. Refusing to silently use the pipeline.")
                 # G4.4 voice gate: the per-mode voice_enabled toggle. When voice is OFF (a text-only
                 # presence), the turn is hear→think only — no speak, and NO engine boot for nothing.
                 speak_reply = SUITE.voice_enabled()

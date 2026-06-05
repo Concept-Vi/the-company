@@ -785,6 +785,25 @@ class Suite:
                               "note": "vLLM guided-decoding / ollama format=json"},
     }
 
+    # --- VOICE PATHS (Tier 4 — the SWAPPABLE voice architecture; registry-is-truth) ------------------
+    # Tim: "that [S2S] should be a swappable thing." Two ways the RHM can voice:
+    #   pipeline — STT → brain → TTS (3 models, full control, BUILT, the default)
+    #   s2s      — one fused audio→audio model (Qwen3-Omni/Moshi/GLM-Voice/mini-omni): sub-second,
+    #              full-duplex, but the brain+voice are fused (less control). NO such model is on disk
+    #              yet (only STT+TTS components + canary/granite which are speech→TEXT, not s2s) — so
+    #              the s2s path is available:false until one is downloaded (mirrors a down-ear). The
+    #              SWAPPABILITY is built now (a voice_path slot); the s2s runner is a fail-loud stub.
+    VOICE_PATHS = {
+        "pipeline": {"label": "Pipeline (STT → brain → TTS)", "built": True,
+                     "note": "3 models, full per-stage control + config; the default. Tier 1 streaming."},
+        "s2s":      {"label": "Speech-to-speech (one fused model)", "built": False,
+                     "note": "sub-second + full-duplex; brain+voice fused. Needs an S2S model downloaded "
+                             "(candidates: Qwen3-Omni, Moshi, GLM-Voice, mini-omni). No runner until then."},
+    }
+    # HF-cache name fragments that would indicate an s2s/omni model is present (probed by voice_paths()).
+    _S2S_HINTS = ("omni", "moshi", "glm-voice", "glm4-voice", "mini-omni", "miniomni", "qwen2.5-omni",
+                  "qwen3-omni", "ultravox", "llama-omni", "csm", "sesame")
+
     MODE_DIRECTIVES = {
         "listening": "Conversational and present; respond fully.",
         "text-only": "Respond in text, concisely, only to what is addressed.",
@@ -908,6 +927,8 @@ class Suite:
                 # the voice engine + voice-arg live without touching the persona. Schema-additive.
                 "tts_engine": c.get("tts_engine", ""),
                 "tts_voice": c.get("tts_voice", ""),
+                # the VOICE PATH slot (Tier 4): 'pipeline' (default, built) or 's2s' (needs a model).
+                "voice_path": c.get("voice_path", "pipeline"),
                 # the ROLE BINDINGS — {role_id: {model?, base_url?, knobs?, ...}} per the ROLE_REGISTRY.
                 # n model-FUNCTION roles (judge first; more to come) each bind a model + config from the
                 # live registry. Stored as ONE dict so adding a role never touches the config whitelist.
@@ -927,7 +948,12 @@ class Suite:
     def set_rhm_config(self, updates: dict) -> dict:
         allowed = {k: v for k, v in (updates or {}).items()
                    if k in ("model", "base_url", "persona", "mode", "voice_enabled", "timeout", "stt",
-                            "roles", "tts_engine", "tts_voice")}
+                            "roles", "tts_engine", "tts_voice", "voice_path")}
+        if "voice_path" in allowed:                           # the voice-path slot (registry-is-truth)
+            vp = str(allowed["voice_path"]).strip()
+            if vp not in self.VOICE_PATHS:
+                raise ValueError(f"unknown voice_path {vp!r} — one of {sorted(self.VOICE_PATHS)}")
+            allowed["voice_path"] = vp
         if "tts_engine" in allowed and str(allowed["tts_engine"]).strip():
             # validate against the engine port map (registry-is-truth; '' clears → persona default)
             from voice import loop as _vl
@@ -1734,6 +1760,35 @@ class Suite:
                 entry.update(available=True, source="declared")
             out[kid] = entry
         return {"model": model, "base_url": base_url, "knobs": out}
+
+    def _s2s_models(self) -> list:
+        """Probe the HF cache for any downloaded s2s/omni model (the _S2S_HINTS). Returns matching dir
+        names — empty = no s2s model present (so the s2s path stays available:false)."""
+        import os
+        hub = os.path.expanduser("~/.cache/huggingface/hub")
+        try:
+            return [d for d in os.listdir(hub) if any(h in d.lower() for h in self._S2S_HINTS)]
+        except OSError:
+            return []
+
+    def voice_paths(self) -> dict:
+        """Tier 4 — the swappable voice-path registry as a STATUS read (the config lab's source). Each
+        path + whether it's AVAILABLE right now: pipeline always (built); s2s only if an S2S model is on
+        disk (probed). `active` = the rhm_config.voice_path slot (default pipeline). Mirrors the
+        available_stt()/roles() registry-as-status shape — the UI never hardcodes the path list."""
+        s2s_models = self._s2s_models()
+        active = self.rhm_config().get("voice_path", "pipeline")
+        out = {}
+        for pid, spec in self.VOICE_PATHS.items():
+            avail = spec["built"] or (pid == "s2s" and bool(s2s_models))
+            entry = {"id": pid, "label": spec["label"], "built": spec["built"], "available": avail,
+                     "note": spec["note"], "active": pid == active}
+            if pid == "s2s":
+                entry["models"] = s2s_models
+                entry["detail"] = (f"s2s model present: {s2s_models}" if s2s_models
+                                   else "no S2S model on disk — download one (Qwen3-Omni/Moshi/GLM-Voice) to enable")
+            out[pid] = entry
+        return {"paths": out, "active": active}
 
     def is_finished_thought(self, text: str) -> dict:
         """The voice circuit's SEMANTIC endpoint judge (G1.3): given the utterance heard so far (after a
