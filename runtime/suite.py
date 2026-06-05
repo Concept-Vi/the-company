@@ -192,6 +192,53 @@ class Suite:
         # Exposed via current_locus() for R2 to consume (R2 is NOT wired here — held + set + readable).
         self._current_locus: str | None = None
 
+        # X17 (Convergence, D2) — THE COMPOSITION IS CONFIGURABLE. The R2 ranking WEIGHTS (recency λ ·
+        # proximity · pin · semantic), the window BUDGET cap, and the run-versions bound were hardcoded
+        # CLASS constants (still defined on the class above, as the DEFAULT FLOOR). Here we RESOLVE each
+        # from the env (the fabric.config `os.environ.get(default)` pattern — NO parallel config system,
+        # consistent with CODEEDGES_DEPTH / COMPANY_WIRE_PERMISSION) INTO INSTANCE attributes that shadow
+        # the class defaults. So retuning the context composition needs NO code change: a FRESH Suite (a
+        # restart re-reads) picks up the env. The default is the OLD constant → byte-for-behaviour when
+        # unset (every R2 preserve suite stays green). Reading into INSTANCE attrs (not re-binding the
+        # class) keeps BOTH `Suite.R2_BUDGET` class-access (sibling suites) AND `su.R2_BUDGET = …`
+        # per-instance override (conv_semantic_rank) working. FAIL LOUD on a malformed value (rule 4):
+        # _cfg_float/_cfg_int raise a clear, knob-NAMED error — never a silent wrong/zero value. Exposed
+        # in capabilities().composition_config so the surface/fleet can READ them (registry-is-truth).
+        self.R2_LAMBDA = self._cfg_float("COMPANY_R2_LAMBDA", type(self).R2_LAMBDA)
+        self.R2_PROXIMITY_WEIGHT = self._cfg_float("COMPANY_R2_PROXIMITY_WEIGHT", type(self).R2_PROXIMITY_WEIGHT)
+        self.R2_PIN_WEIGHT = self._cfg_float("COMPANY_R2_PIN_WEIGHT", type(self).R2_PIN_WEIGHT)
+        self.R2_SEMANTIC_WEIGHT = self._cfg_float("COMPANY_R2_SEMANTIC_WEIGHT", type(self).R2_SEMANTIC_WEIGHT)
+        self.R2_BUDGET = self._cfg_int("COMPANY_R2_BUDGET", type(self).R2_BUDGET)
+        self.R2_RUN_VERSIONS = self._cfg_int("COMPANY_R2_RUN_VERSIONS", type(self).R2_RUN_VERSIONS)
+
+    @staticmethod
+    def _cfg_float(env_name: str, default: float) -> float:
+        """X17 — resolve a float knob from the env (default = the class constant). FAIL LOUD on a
+        malformed value with a knob-NAMED error (rule 4 — never a silent wrong/zero value). The default
+        is passed as the NUMERIC value (never round-tripped through a string) so the precision of e.g.
+        R2_LAMBDA = 1/(3·24·3600) is preserved byte-for-behaviour when the env is unset."""
+        raw = os.environ.get(env_name)
+        if raw is None:
+            return default
+        try:
+            return float(raw)
+        except (TypeError, ValueError):
+            raise ValueError(f"{env_name}={raw!r} is not a valid float — fix the env value "
+                             f"(X17 composition knob; default {default!r})")
+
+    @staticmethod
+    def _cfg_int(env_name: str, default: int) -> int:
+        """X17 — resolve an int knob from the env (default = the class constant). FAIL LOUD on a
+        malformed value with a knob-NAMED error (rule 4 — never a silent wrong/zero value)."""
+        raw = os.environ.get(env_name)
+        if raw is None:
+            return default
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            raise ValueError(f"{env_name}={raw!r} is not a valid int — fix the env value "
+                             f"(X17 composition knob; default {default!r})")
+
     def _session_lock(self, session_id: str):
         """One reentrant-safe lock per session, created on demand (threadsafe)."""
         import threading as _t
@@ -326,6 +373,20 @@ class Suite:
             "node_states": [dict(s, applies_to=list(s["applies_to"])) for s in self.NODE_STATES],
             "panels": [p.get("id") for p in self.list_panels()],
             "panel_field_targets": list(self.PANEL_TARGETS),
+            # X17 (Convergence, D2) — THE COMPOSITION IS CONFIGURABLE. The R2 ranking knobs (the recency
+            # λ · proximity · pin · semantic WEIGHTS, the window BUDGET cap, the run-versions bound) read
+            # from the env (resolved in __init__; defaults = the class constants), so retuning the context
+            # composition needs NO code change. Exposed here (registry-is-truth) as the LIVE instance
+            # values so the surface/fleet can READ them — and later a config panel can SET them via the
+            # env. Additive key; an older reader that ignores it is unaffected (rule 2).
+            "composition_config": {
+                "R2_LAMBDA": self.R2_LAMBDA,
+                "R2_PROXIMITY_WEIGHT": self.R2_PROXIMITY_WEIGHT,
+                "R2_PIN_WEIGHT": self.R2_PIN_WEIGHT,
+                "R2_SEMANTIC_WEIGHT": self.R2_SEMANTIC_WEIGHT,
+                "R2_BUDGET": self.R2_BUDGET,
+                "R2_RUN_VERSIONS": self.R2_RUN_VERSIONS,
+            },
             "api_verbs": ["/api/run", "/api/now", "/api/chat", "/api/graph", "/api/graphs",
                           "/api/types", "/api/object_info", "/api/events", "/api/inbox",
                           "/api/panels", "/api/models", "/api/stream", "/api/move",
@@ -1077,7 +1138,11 @@ class Suite:
     # fallback (no locus / no addressed match) — it is just no longer the PRIMARY key.
     #
     # The decay weights + the window budget are NAMED config constants (D2-configurable, never bare
-    # literals — the guide's "name the weights: recency · proximity · pin"):
+    # literals — the guide's "name the weights: recency · proximity · pin"). X17 (Convergence): these
+    # class constants are now the DEFAULT FLOOR — __init__ RESOLVES each from the env (COMPANY_R2_*) into
+    # an INSTANCE attribute that shadows the class default, so the composition is retunable with NO code
+    # change (a fresh Suite/restart re-reads). Unset env → the class default → behaviour byte-for-behaviour
+    # unchanged. Exposed via capabilities().composition_config (registry-is-truth). See __init__ + _cfg_*.
     R2_LAMBDA = 1.0 / (3 * 24 * 3600)   # recency decay rate (per second). exp(-LAMBDA*Δt): the score
     #                                     halves at ~ln2/LAMBDA ≈ 2 days; an item ~3 days old decays to
     #                                     1/e. Tuned so "recent" wins inside a working session/few days
