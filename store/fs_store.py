@@ -17,7 +17,7 @@ from contracts.address import Provenance
 class FsStore:
     def __init__(self, root):
         self.root = Path(root)
-        for d in ("objects", "refs", "meta", "memo", "graphs", "surfaced", "locks"):
+        for d in ("objects", "refs", "ref_history", "meta", "memo", "graphs", "surfaced", "locks"):
             (self.root / d).mkdir(parents=True, exist_ok=True)
         # --- store-level concurrency locks (T1-SEQ / T1-RACE) ---
         # The bridge is a ThreadingHTTPServer over ONE Suite, so read-modify-write paths in the store
@@ -208,6 +208,54 @@ class FsStore:
         # vs torn reads) but NOT durable: a crash could leave the not-yet-flushed tmp as the live ref.
         path = self.root / "refs" / self._safe(logical)
         self._fsync_atomic_write(path, cas)
+        # L6 (§21.7#6) — APPEND (ts, cas) to this address's version-history index AFTER the current-ref
+        # write SUCCEEDS. set_ref OVERWRITES the live ref (head() = last write, preserved byte-for-byte
+        # above) and the *old* cas bytes already SURVIVE (put_content is write-once, never deletes) — but
+        # nothing mapped a ref to its PRIOR cas hashes. This index is that map: it stores only (ts, cas)
+        # tuples (hashes + timestamps), NEVER copies of the bytes — a prior version is fetched by its cas
+        # through the existing get_content path. DECISION: versioning is ALL refs (every set_ref appends —
+        # cheap, ~80 bytes/line); NO write cap (append-only, lock-free `open("a")`, mirroring the
+        # append_annotation/append_chat precedent — a write cap would force a read-modify-write that
+        # regresses set_ref's atomic hot path); the READ is bounded instead (ref_history(ref, limit=...)).
+        # Appended AFTER the atomic write so (a) the overwrite path is untouched and (b) a write that
+        # RAISES never records a version that never became current. Consecutive identical cas is a
+        # legitimate entry (history records WRITES, not distinct values). One jsonl file per logical ref
+        # (keyed by _safe(logical)), so two addresses never collide and one address's trail reads alone.
+        # NOTE: lineage() (provenance INPUTS — what an artefact was made FROM) is a DIFFERENT axis and stays
+        # untouched; this is the TEMPORAL trail of one address.
+        self._append_ref_version(logical, cas)
+
+    def _append_ref_version(self, logical: str, cas: str) -> None:
+        """Append one {ts, cas} line to this ref's version-history jsonl (L6). Lock-free append (the same
+        durability class as append_annotation/append_chat) — it is a SEPARATE file from the live ref, so it
+        never interferes with set_ref's atomic tmp+replace on the ref itself."""
+        import json as _j
+        from datetime import datetime, timezone
+        d = self.root / "ref_history"
+        d.mkdir(parents=True, exist_ok=True)   # defensive (mirrors save_session/save_journey) — never assume __init__ ran
+        rec = {"ts": datetime.now(timezone.utc).isoformat(), "cas": cas}
+        # ONE write() of a single line (< 4KB) — on POSIX a single write of < PIPE_BUF/page is atomic for an
+        # O_APPEND file handle, so concurrent appenders never interleave a torn line (verified by the
+        # concurrent-storm check in version_history_acceptance.py: N×M writers, every line parses, count exact).
+        with (d / self._safe(logical)).open("a", encoding="utf-8") as f:
+            f.write(_j.dumps(rec) + "\n")
+
+    def ref_history(self, logical: str, limit: int | None = None) -> list[dict]:
+        """L6 — the ordered version trail of one address: every set_ref to `logical` as a {ts, cas} entry,
+        OLDEST-FIRST (chronological). `limit` bounds the READ (the last N entries, newest end kept, order
+        preserved) — the append side is unbounded, so a bound here never loses an older write, it just
+        windows the view. A ref NEVER written returns [] (an HONEST empty, not a crash, not a silent wrong
+        value — rule 4). Reads disk every call (no in-memory cache), so a SECOND store over the same root
+        sees a prior store's writes (persistence-survives-reload). A prior version's BYTES are fetched by
+        its `cas` through get_content (the cas objects survive — put_content is write-once)."""
+        import json as _j
+        p = self.root / "ref_history" / self._safe(logical)
+        if not p.exists():
+            return []
+        lines = [l for l in p.read_text(encoding="utf-8").splitlines() if l.strip()]
+        if limit is not None:
+            lines = lines[-limit:]
+        return [_j.loads(l) for l in lines]
 
     def head(self, logical: str) -> str | None:
         p = self.root / "refs" / self._safe(logical)

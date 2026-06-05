@@ -31,6 +31,7 @@ import { Toolbar } from './regions/Toolbar'
 import { Palette } from './regions/Palette'
 import { Inspector } from './regions/Inspector'
 import { History } from './regions/History'
+import { Versions } from './regions/Versions'
 import { SelfChanges } from './regions/SelfChanges'
 import { Inbox } from './regions/Inbox'
 import { Grow } from './regions/Grow'
@@ -192,6 +193,16 @@ function Hud() {
              locus is indicated. */}
           <PanelErrorBoundary name="self-changes">
             <SelfChanges />
+          </PanelErrorBoundary>
+          {/* L6 · live-history / versions at an address (§21.7#6): when a node with a versioned OUTPUT
+             address is SELECTED, the trail of values that address has HELD over time shows here — navigable,
+             newest-first, the current version badged, each prior version fetchable by its surviving cas (GET
+             /api/ref-versions → Suite.ref_versions → store.ref_history). A portal is a live window onto
+             another address, so this surfaces the address its config.ref POINTS AT (where set_ref wrote the
+             versions), not the portal's own. Per-panel boundary (PRESERVE-LIST): a render-throw degrades to a
+             contained card, never a white-screen. Renders nothing unless a versioned node is selected. */}
+          <PanelErrorBoundary name="versions">
+            <Versions />
           </PanelErrorBoundary>
           <Inbox />
           <Grow />

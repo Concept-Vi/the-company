@@ -15,11 +15,13 @@
   "cross_journeys": [],
   "addresses": [
     "ui://canvas/portal-window",
+    "ui://inspector/versions",
     "ui://toolbar/portal"
   ],
   "build_to": {
     "components": [
       "canvas",
+      "inspector",
       "toolbar"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",

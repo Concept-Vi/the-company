@@ -58,6 +58,7 @@
         "ui://inbox/build-intent",
         "ui://inbox/build-review",
         "ui://inbox/coa",
+        "ui://inbox/target",
         "ui://inbox/walk"
       ]
     },
@@ -69,9 +70,11 @@
         "ui://inspector",
         "ui://inspector/act",
         "ui://inspector/build",
+        "ui://inspector/freshness",
         "ui://inspector/history",
         "ui://inspector/model-field",
         "ui://inspector/surface",
+        "ui://inspector/versions",
         "ui://inspector/workshop"
       ]
     },

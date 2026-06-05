@@ -655,6 +655,7 @@
       "ui://inspector/freshness",
       "ui://inspector/history",
       "ui://inspector/surface",
+      "ui://inspector/versions",
       "ui://inspector/workshop",
       "ui://toolbar/delete",
       "ui://toolbar/fit",
@@ -672,8 +673,8 @@
     "screens": 17,
     "addressed_elements": 79,
     "distinct_addresses_used": 25,
-    "registered_addresses": 50,
+    "registered_addresses": 51,
     "unregistered_orphans": 2,
-    "unused_orphans": 27
+    "unused_orphans": 28
   }
 }

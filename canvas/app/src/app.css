@@ -183,6 +183,12 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 .hist-count{flex:1;color:var(--sig);font-size:9px;font-weight:600}
 .hist-list{margin-top:0;padding:4px 8px 7px 25px}
 .hist-list .ev-s{white-space:normal}
+/* L6 · versions at an address (§21.7#6). REUSES the .ev row + .hist layout vocabulary (token-coloured per
+   kind) so the version trail reads coherent with the L3 History + L5 SelfChanges regions. The thin .ver-*
+   layer is LAYOUT-ONLY — all colour comes from the .ev kind tokens (.ev-run = current/live signal,
+   .ev-decision = prior/content); no hardcoded colours, no bespoke element (design-lint clean). */
+.ver-row{align-items:baseline}
+.ver-cas{font-family:inherit;letter-spacing:.04em}
 .palette{top:64px;left:12px;width:158px;background:var(--s1);border:1px solid var(--line);
   border-radius:6px;padding:11px;max-height:calc(100vh - 90px);overflow:auto}
 .pchip{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:6px 8px;margin:4px 0;

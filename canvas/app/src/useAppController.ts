@@ -113,6 +113,15 @@ export function useAppController(editor: Editor) {
   const [freshness, setFreshness] =
     useState<{ address: string; stale: boolean | null; unknown?: boolean; reason?: string; volatile?: boolean } | null>(null)
   const [freshnessBusy, setFreshnessBusy] = useState(false)
+  // L6 · live-history / versions at an address (§21.7#6): the TEMPORAL trail of values an addressed output
+  // has held over time (GET /api/ref-versions → Suite.ref_versions → store.ref_history, appended on each
+  // set_ref). The CURRENT value is the live portal window; this is the OTHER half — prior versions, each
+  // fetchable by its surviving cas. Loaded ON-DEMAND when a node with a stored-output address is selected
+  // (mirroring how freshness loads on selection). null = nothing selected / no versioned address.
+  const [versions, setVersions] =
+    useState<{ address: string; current: string | null; count: number;
+               versions: { cas: string; ts: string; is_current: boolean; preview: string }[] } | null>(null)
+  const [versionsBusy, setVersionsBusy] = useState(false)
   const [cfg, setCfg] = useState<any>({ model: '', persona: '' })
   const [cfgOpen, setCfgOpen] = useState(false)
   // U12: the /api/inbox payload is { live_escalations, resolved_for_you, batched, counts }. `batched` is a
@@ -1009,6 +1018,34 @@ export function useAppController(editor: Editor) {
   useEffect(() => { fetchFreshness(selected?.address || null, selected?.status)
     /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [selected?.address, selected?.status, events.length])
 
+  // L6 · versions at an address (§21.7#6). When a node is selected, load the trail of values its OUTPUT
+  // address has held (GET /api/ref-versions → Suite.ref_versions). THE LOAD-BEARING CHOICE: versions accrue
+  // where a `set_ref` WROTE. A PORTAL never calls set_ref (RESOLVE='reference', the scheduler skips it), so
+  // its OWN address has no history — the address that holds the versions is the one its config.ref POINTS
+  // AT (carried in the shape prop as `ref`). A compute node's own run:// `address` IS where its versions
+  // accrue. So: portal → its `ref`; any other node → its `address`. Re-poked by events.length so a fresh
+  // set_ref at this address (a re-run) surfaces the new version without a re-select. Fail-loud (rule 4):
+  // a backend 400 (malformed / non-run address) surfaces as a notice, never a silent empty mistaken for
+  // "no versions"; an address never written returns versions:[] honestly.
+  function versionedAddress(s: typeof selected): string | null {
+    if (!s) return null
+    if (s.nodeType === 'portal') return (s.ref && s.ref.startsWith('run://')) ? s.ref : null   // the address it WINDOWS onto
+    return (s.address && s.address.startsWith('run://')) ? s.address : null                      // its own output
+  }
+  async function fetchVersions(addr: string | null) {
+    if (!addr) { setVersions(null); return }
+    setVersionsBusy(true)
+    try {
+      const r = await api.refVersions(addr)
+      if (r?.error) { setVersions(null); setNotice('⚠ could not load versions: ' + r.error); return }
+      setVersions(r)
+    } catch (e: any) {
+      setVersions(null); setNotice('⚠ could not load versions: ' + (e?.message || e))
+    } finally { setVersionsBusy(false) }
+  }
+  useEffect(() => { fetchVersions(versionedAddress(selected))
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [selected?.address, selected?.nodeType, selected?.ref, events.length])
+
   // D4: run the graph; `force` (a node-id list) bypasses the memo gate for just those nodes. U1: the
   // arrow-wrapped call sites pass `() => doRun()` so React's MouseEvent is NEVER passed as `force`.
   async function doRun(force?: string[]) {
@@ -1181,7 +1218,7 @@ export function useAppController(editor: Editor) {
     oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
     showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn,
     wtSpoke, wtBusy, selected, mobileTab, fleet, indicated, proposal, history, historyBusy,
-    selfChanges, selfChangesBusy, freshness, freshnessBusy, journeyId, journeyReplaying,
+    selfChanges, selfChangesBusy, freshness, freshnessBusy, versions, versionsBusy, journeyId, journeyReplaying,
     // refs the components read for the inspector form
     configByNode,
     // setters the components call directly

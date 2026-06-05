@@ -114,6 +114,16 @@ export const api = {
   // backend 400 (fail-loud, normalized to {error} by jr).
   staleAt: (address: string) =>
     fetch('/api/stale-at?address=' + encodeURIComponent(address)).then(jr),
+  // L6 · versions at an address (§21.7#6): the TEMPORAL trail of values an addressed output has held — every
+  // set_ref to this run:// address as a {cas, ts, is_current, preview}, NEWEST-FIRST (GET /api/ref-versions
+  // → Suite.ref_versions → store.ref_history, the index appended on each set_ref). The CURRENT value is the
+  // live portal window; this is the PRIOR-versions half, each fetchable by its surviving cas (put_content is
+  // write-once). Returns { address, current, count, versions[] }. The key is a run://<graph>/<node> OUTPUT
+  // address (NOT ui:// — versions accrue where set_ref wrote; a PORTAL never writes, so the FE passes the
+  // address its config.ref POINTS AT). A malformed / non-run address → backend 400 (fail-loud, normalized to
+  // {error} by jr); an address with no history → versions:[] (honest empty, never a silent wrong value).
+  refVersions: (address: string) =>
+    fetch('/api/ref-versions?address=' + encodeURIComponent(address)).then(jr),
   // B: the walkthrough/review session lifecycle. start makes its OWN session-graph (not graph-scoped);
   // current = the node at the cursor + its coa framing + its ui:// target; next opens the gate + advances.
   reviewStart: (item_ids: string[], mode = 'walkthrough') =>

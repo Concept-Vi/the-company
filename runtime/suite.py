@@ -4419,6 +4419,58 @@ class Suite:
                      key=lambda e: e.get("seq", 0))            # chronological path, not endpoint
         return {"address": address, "trajectory": evs}
 
+    def ref_versions(self, address: str, limit: int = 25) -> dict:
+        """L6 (§21.7#6): the PRIOR VERSIONS of an addressed output — its temporal trail.
+
+        A portal shows the CURRENT ref live (`state()` reads `head(ref)`, the live window). This is the
+        OTHER half: every value the address has HELD over time. It reads the store's ref→version-history
+        index (`ref_history`, appended on each `set_ref`) — the cas bytes already survive (put_content is
+        write-once), so each entry's PRIOR bytes are fetched by its `cas` through `get_content` (no bytes
+        are copied; the index only MAPS the ref to its prior cas hashes). Returns NEWEST-FIRST (the FE
+        leads with the most recent), each entry carrying a short `preview` of the version's content + an
+        `is_current` flag (the cas == `head(address)`), so the operator scans the trail by sight.
+
+        THE ADDRESS THIS QUERIES (the load-bearing point):
+          versions accrue at the address a `set_ref` WROTE — a compute node's own `run://<graph>/<node>`
+          (it gets a `set_ref` every fire). A PORTAL never calls `set_ref` (RESOLVE='reference', the
+          scheduler skips it), so a portal's OWN address has NO history — the FE must query the address the
+          portal POINTS AT (its `config.ref`), which is what gets the versions. This method takes whatever
+          `run://` address is asked and returns that address's trail; the FE chooses the right one.
+
+        S0/SCOPE GATE: a versioned output is a `run://` address (mirrors how `cached` + `stale_at_address`
+        are served). Malformed / non-`run://` RAISES (fail-loud, rule 4 — the bridge turns it into a 400 so
+        a junk query never silently reads as 'no versions'). An address with NO history returns an HONEST
+        empty list (`versions: []`) — distinct from a malformed query (which raises), never a silent wrong
+        value. `lineage()` (provenance INPUTS) is a different axis and is untouched — this is the temporal
+        trail of one address, not what it was made from.
+
+        Returns {address, current, count, versions:[{cas, ts, is_current, preview}]} newest-first."""
+        import json as _json
+        from contracts.address import scheme as _scheme
+        if _scheme(address) != "run":
+            raise ValueError(
+                f"ref_versions expects a run:// output address (e.g. run://<graph>/<node>); got "
+                f"{address!r}. 'Versions at an address' is a stored-output trail — a ui:// element (or any "
+                f"non-run scheme) has no set_ref history. For a PORTAL, query the address its config.ref "
+                f"points at (the portal itself is a live window, it never writes a version).")
+        current = self.store.head(address)                       # the live current value (UNCHANGED resolve)
+        trail = self.store.ref_history(address, limit=limit)     # oldest-first {ts, cas} from the index
+        versions = []
+        for e in reversed(trail):                                # NEWEST-FIRST for the surface
+            cas = e.get("cas")
+            preview = None
+            try:
+                val = self.store.get_content(cas)                # the PRIOR bytes, fetched by cas (survive)
+                s = val if isinstance(val, str) else _json.dumps(val)
+                preview = s if len(s) <= 160 else s[:157] + "…"
+            except Exception:
+                # the index references a cas whose object is missing/unreadable — SURFACE it, do NOT pretend
+                # an empty value (rule 4: fail-loud-legible; the operator sees the version is unfetchable).
+                preview = "⚠ version bytes unavailable at this cas"
+            versions.append({"cas": cas, "ts": e.get("ts"),
+                             "is_current": (cas == current), "preview": preview})
+        return {"address": address, "current": current, "count": len(versions), "versions": versions}
+
     def stale_at_address(self, address: str) -> dict:
         """L10 (§21.7#10): is the cached result AT this node's address out of date vs its CURRENT inputs?
 

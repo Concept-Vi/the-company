@@ -339,6 +339,15 @@
       "represents": "INB-replay",
       "code": "canvas/app/src/regions/History.tsx (L3 addressed history) / runtime/suite.py:address_view"
     },
+    "ui://inspector/versions": {
+      "region": "inspector",
+      "capabilities": [
+        "pointable",
+        "driven-read-only"
+      ],
+      "represents": "NODE-portal",
+      "code": "canvas/app/src/regions/Versions.tsx (L6 versions at an address) / runtime/suite.py:ref_versions / store/fs_store.py:ref_history"
+    },
     "ui://inspector/freshness": {
       "region": "inspector",
       "capabilities": [

@@ -23,11 +23,13 @@
     "J7"
   ],
   "addresses": [
+    "ui://inspector/freshness",
     "ui://toolbar/reload",
     "ui://toolbar/run"
   ],
   "build_to": {
     "components": [
+      "inspector",
       "toolbar"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",

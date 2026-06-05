@@ -17,7 +17,8 @@
   ],
   "cross_journeys": [],
   "addresses": [
-    "ui://inspector/act"
+    "ui://inspector/act",
+    "ui://inspector/freshness"
   ],
   "build_to": {
     "components": [

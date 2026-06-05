@@ -171,6 +171,16 @@ class H(BaseHTTPRequestHandler):
                 # silent 'fresh'. The verdict carries stale/unknown/reason/volatile (rule 4: an unevaluable
                 # node is 'unknown' with a reason, never a silent false). READ-ONLY: the memo gate is unmutated.
                 self._send(200, json.dumps(SUITE.stale_at_address(q["address"])))
+            elif path == "/api/ref-versions":               # L6: the PRIOR VERSIONS of an addressed output
+                # §21.7#6: a portal shows the CURRENT ref live; this is the trail of values the address has
+                # HELD over time (Suite.ref_versions → store.ref_history index, appended on each set_ref).
+                # The key is a run://<graph>/<node> OUTPUT address (NOT ui:// — versions accrue where set_ref
+                # wrote; a PORTAL never writes, so the FE queries the address its config.ref POINTS AT). The
+                # cas bytes survive (put_content write-once), so each prior version is fetchable by its cas.
+                # Missing `address` → KeyError → 400 (fail loud, mirrors /api/stale-at + /api/address-history);
+                # a malformed / non-run:// address RAISES in ref_versions → 400 too (a junk query never reads
+                # as a silent 'no versions'). An address with no history returns versions:[] (honest empty).
+                self._send(200, json.dumps(SUITE.ref_versions(q["address"])))
             elif path == "/api/review/current":            # B: the node at the cursor + its framing + ui:// target
                 self._send(200, json.dumps(SUITE.present_current(q["session"])))
             elif path == "/api/review/status":             # B: the session's live status
