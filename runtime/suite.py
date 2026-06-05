@@ -170,6 +170,40 @@ class Suite:
         RHM verbs, surface, errors) — same emit→substrate→rollup loop, per-type."""
         self._emit("op.run", f"{op} · {duration_ms}ms", op=op, duration_ms=duration_ms, **conditions)
 
+    def run_stats(self, op: str | None = None, since: int = -1) -> dict:
+        """G7 ROLLUP — raw op.run run-records → DISTRIBUTIONS (n · median · p95 · min · max), grouped by
+        (op, model/engine). The read-half of introspective-data-building: the trace becomes KNOWLEDGE.
+        Read-time aggregation over the event log — NEVER on the hot path (callers hit this on demand /
+        a cadence). Feeds the Manifest's measured cells + the resource manager's pre-warm decisions.
+        `op` filters to one operation; `since` is an event seq (default -1 = all)."""
+        import statistics
+        evs = [e for e in self.events_since(since) if e.get("kind") == "op.run"]
+        if op:
+            evs = [e for e in evs if e.get("op") == op]
+
+        def dist(vals):
+            vals = sorted(v for v in vals if isinstance(v, (int, float)))
+            if not vals:
+                return None
+            n = len(vals)
+            return {"n": n, "median": round(statistics.median(vals), 1),
+                    "p95": vals[min(n - 1, int(round(0.95 * (n - 1))))],
+                    "min": vals[0], "max": vals[-1]}
+
+        groups: dict = {}
+        for e in evs:
+            key = (e.get("op"), e.get("model") or e.get("engine") or "")
+            groups.setdefault(key, []).append(e)
+        out = []
+        for (o, who), es in groups.items():
+            rec = {"op": o, "who": who, "n": len(es), "duration_ms": dist([e.get("duration_ms") for e in es])}
+            for f in ("stt_ms", "think_ms", "tts_ms", "queue_ms", "chunks"):   # extra timing/condition fields
+                d = dist([e.get(f) for e in es if e.get(f) is not None])
+                if d:
+                    rec[f] = d
+            out.append(rec)
+        return {"ops": sorted(out, key=lambda r: -r["n"]), "total_records": len(evs)}
+
     def _emit_durable(self, kind: str, summary: str, **meta) -> dict:
         """Append a DURABLE CLAIM event — FAIL LOUD (T1-EMIT). Unlike _emit (lenient telemetry), this
         does NOT swallow a failure: it returns the written record, and lets any append_event exception

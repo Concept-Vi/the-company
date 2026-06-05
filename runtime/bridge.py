@@ -184,6 +184,8 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(voice_lc.status()))
             elif path == "/api/roles":                     # G4.2: the model-ROLE registry (judge + future) the config lab binds
                 self._send(200, json.dumps(SUITE.roles()))
+            elif path == "/api/run-stats":                 # G7 rollup: op.run run-records → distributions (learning by use)
+                self._send(200, json.dumps(SUITE.run_stats(op=q.get("op"))))
             else:
                 self._send(404, "{}")
         except Exception as e:                             # fail loud to the UI (parity with do_POST)
