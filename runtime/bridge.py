@@ -188,6 +188,8 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.roles()))
             elif path == "/api/run-stats":                 # G7 rollup: op.run run-records → distributions (learning by use)
                 self._send(200, json.dumps(SUITE.run_stats(op=q.get("op"))))
+            elif path == "/api/knobs":                     # G8.1: the dynamic configurable-knob surface for a (loaded) model
+                self._send(200, json.dumps(SUITE.knobs_for(model=q.get("model"), base_url=q.get("base_url"))))
             else:
                 self._send(404, "{}")
         except Exception as e:                             # fail loud to the UI (parity with do_POST)

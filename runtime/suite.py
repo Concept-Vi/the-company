@@ -759,6 +759,32 @@ class Suite:
             "env_knobs": {"max_tokens": "COMPANY_JUDGE_MAX_TOKENS"},
         },
     }
+
+    # --- the MODEL KNOB CATALOG (G8.1 — dynamic knob resolution; mirrors STT_PROVIDERS/ROLE_REGISTRY) --
+    # "all the configurable knobs for whatever is loaded" (Tim): a declarative catalog of the per-request
+    # knobs a chat model exposes. knobs_for(model) resolves it DYNAMICALLY — tool-capability is PROBED
+    # live (the existing _model_supports_tools, endpoint-aware), the rest are DECLARED-by-capability
+    # (thinking/structured-output can't be universally probed; marked source='declared'). Emitted in the
+    # NODE CONFIG SHAPE ({type,label,default,min?,max?,options?}) so the UI renders model-knobs with the
+    # SAME NodeConfigForm it renders node config — one resolution, two faces (the RHM tools + the UI).
+    # Load-time knobs (gpu-util/ctx) are per-service launch DATA (services.json load.env, the A mechanism),
+    # not per-request — kept separate. Adding a knob = a row here; no dispatch edit.
+    MODEL_KNOBS = {
+        "temperature":       {"type": "number", "label": "Temperature", "default": 0.7, "min": 0.0, "max": 2.0,
+                              "applies": "always", "note": "sampling randomness"},
+        "max_tokens":        {"type": "number", "label": "Max output tokens", "default": 1024, "min": 1, "max": 32768,
+                              "applies": "always"},
+        "top_p":             {"type": "number", "label": "Top-p", "default": 1.0, "min": 0.0, "max": 1.0,
+                              "applies": "always"},
+        "tools":             {"type": "boolean", "label": "Native tool-calling", "default": True,
+                              "applies": "capability", "note": "PROBED live per the endpoint (vllm/ollama/litellm)"},
+        "thinking":          {"type": "boolean", "label": "Reasoning / thinking", "default": False,
+                              "applies": "declared", "note": "reasoning models (ollama think / a reasoning-parser)"},
+        "structured_output": {"type": "choice", "label": "Structured output", "default": "none",
+                              "options": ["none", "json", "json_schema"], "applies": "declared",
+                              "note": "vLLM guided-decoding / ollama format=json"},
+    }
+
     MODE_DIRECTIVES = {
         "listening": "Conversational and present; respond fully.",
         "text-only": "Respond in text, concisely, only to what is addressed.",
@@ -1645,6 +1671,31 @@ class Suite:
                 "thinking": binding.get("thinking", spec.get("thinking")),
                 "output": spec.get("output"), "tools": spec.get("tools", []),
                 "context": spec.get("context")}
+
+    def knobs_for(self, model: str | None = None, base_url: str | None = None) -> dict:
+        """G8.1 — DYNAMIC knob resolution: the configurable per-request surface for a (loaded) model,
+        in the node config_schema SHAPE so the UI renders it with NodeConfigForm + the RHM can read it
+        as a tool. `always` knobs always apply; the `tools` knob is PROBED LIVE (endpoint-aware) — its
+        default + availability reflect what the model actually supports right now; `declared` knobs
+        (thinking/structured-output, not universally probeable) are offered with source='declared'.
+        None model/base_url → the current brain. Reuses MODEL_KNOBS (registry-is-truth) — no hardcoding
+        in the UI; adding a knob is a catalog row."""
+        cfg = self.rhm_config()
+        model = model or cfg["model"]
+        base_url = base_url or cfg["base_url"]
+        out = {}
+        for kid, spec in self.MODEL_KNOBS.items():
+            entry = {k: v for k, v in spec.items() if k != "applies"}
+            applies = spec.get("applies")
+            if applies == "always":
+                entry.update(available=True, source="always")
+            elif applies == "capability" and kid == "tools":
+                ok = self._model_supports_tools(model, base_url)     # PROBED live (vllm/ollama/litellm)
+                entry.update(default=ok, available=ok, source="probed")
+            else:                                                    # declared (can't universally probe)
+                entry.update(available=True, source="declared")
+            out[kid] = entry
+        return {"model": model, "base_url": base_url, "knobs": out}
 
     def is_finished_thought(self, text: str) -> dict:
         """The voice circuit's SEMANTIC endpoint judge (G1.3): given the utterance heard so far (after a
