@@ -179,6 +179,9 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.trial_sessions()))
             elif path == "/api/trial/transcript":          # G4.6: a trial session's CAS transcript (fail loud if unrecorded)
                 self._send(200, json.dumps(SUITE.trial_transcript(q["session"])))
+            elif path == "/api/voice/ears":                # G4.7: GPU-ear lifecycle state (up/warming/down + VRAM)
+                from voice.ears import lifecycle as ear_lc
+                self._send(200, json.dumps(ear_lc.status()))
             else:
                 self._send(404, "{}")
         except Exception as e:                             # fail loud to the UI (parity with do_POST)
@@ -363,6 +366,14 @@ class H(BaseHTTPRequestHandler):
                 b = self._body()
                 self._send(200, json.dumps(SUITE.trial_record_reflection(
                     b["session_id"], b["text"], b.get("character"))))
+            elif self.path == "/api/voice/ear/load":        # G4.7: load a GPU ear (returns 'warming'; fail-loud if it won't fit)
+                from voice.ears import lifecycle as ear_lc
+                b = self._body()
+                self._send(200, json.dumps(ear_lc.load(b["ear"])))
+            elif self.path == "/api/voice/ear/unload":      # G4.7: unload a GPU ear → frees its VRAM
+                from voice.ears import lifecycle as ear_lc
+                b = self._body()
+                self._send(200, json.dumps(ear_lc.unload(b["ear"])))
             elif self.path == "/api/review/next":          # B: Next — open the gate, fire the step, advance
                 b = self._body()
                 self._send(200, json.dumps(SUITE.next(b["session"])))
