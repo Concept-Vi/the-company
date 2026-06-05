@@ -135,6 +135,11 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.ui_info()))
             elif path == "/api/scope":                     # S3: ui://→code://→scope[] (the address→code join)
                 self._send(200, json.dumps(SUITE.resolve_scope(q["address"])))
+            elif path == "/api/annotations":               # I6: the comment THREAD attached to a ui:// address
+                # The address-keyed READ side of /api/annotate (POST). Missing `address` → KeyError →
+                # 400 (fail loud, mirrors /api/scope). Suite.annotations_at validates the address (S0)
+                # and returns the thread oldest-first. This is what R2 will gather at the operator's locus.
+                self._send(200, json.dumps(SUITE.annotations_at(q["address"])))
             elif path == "/api/review/current":            # B: the node at the cursor + its framing + ui:// target
                 self._send(200, json.dumps(SUITE.present_current(q["session"])))
             elif path == "/api/review/status":             # B: the session's live status
@@ -365,6 +370,19 @@ class H(BaseHTTPRequestHandler):
                     raise ValueError("/api/act needs a non-empty 'verb' (fail loud)")
                 self._send(200, json.dumps(SUITE.act(
                     str(verb).strip(), gid, address=b.get("address"), args=b.get("args"))))
+            elif self.path == "/api/annotate":          # I6: attach a comment/annotation to a ui:// ADDRESS
+                # NET-NEW and SEPARATE from /api/resolve's comment choice (which annotates a surfaced
+                # item by id, suite.py:3045) and from /api/act (I2): nothing else attaches BY ADDRESS.
+                # OPERATOR face (beside the others). Suite.annotate validates the address against the S0
+                # grammar (raises → 400 here) and persists keyed by address; retrieve via GET
+                # /api/annotations?address=…. Feeds R2 (address-keyed context resolution). Fail loud on a
+                # missing address (no silent no-op — AGENTS.md rule 4).
+                b = self._body()
+                addr = b.get("address")
+                if not addr or not str(addr).strip():
+                    raise ValueError("/api/annotate needs a non-empty 'address' (fail loud)")
+                self._send(200, json.dumps(SUITE.annotate(
+                    str(addr).strip(), b.get("text", ""), source=b.get("source", "operator"))))
             elif self.path == "/api/resolve":           # OPERATOR approves/rejects/comments/skips (UI channel)
                 b = self._body()
                 # D: additive session tagging + the comment/skip/decide vocabulary; existing callers

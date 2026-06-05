@@ -1499,6 +1499,45 @@ class Suite:
             reply = self._confirmation_for(outcome)
         return {"reply": reply, "action": outcome, "graph_id": graph_id}
 
+    def annotate(self, address: str, text: str, source: str = "operator") -> dict:
+        """I6 — attach a comment / annotation to a `ui://` address (the `annotation://` content branch).
+
+        NET-NEW and SEPARATE from `/api/resolve`'s comment choice (which annotates a surfaced item by
+        `id`, not an arbitrary address — suite.py:3045) and from the I2 act path. Nothing else attaches
+        by ADDRESS today.
+
+        S0 GATE FIRST: `parse_ui_address` validates the address against the ONE canonical grammar and
+        RAISES on a malformed `ui://` (fail-loud, rule 4) — so the store never persists a junk key, and
+        the bridge's try/except turns the raise into a 400 for free. Validation lives HERE (the Suite
+        semantic layer), matching where `act` does its work; the store leaf stays dumb.
+
+        Then persist via the open-record store leaf (`append_annotation`), keyed by `address`. The
+        annotation is retrievable by `annotations_at(address)`. This feeds R2 (address-keyed context
+        resolution): info attached to an address auto-resolves into the RHM context at that locus, and
+        the `ts` stamped by the store leaf gives R2's relevance/recency decay its clock.
+
+        Fail loud on empty text (no silent no-op — rule 4)."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                            # S0 grammar gate (raises on malformed)
+        if not text or not str(text).strip():
+            raise ValueError("annotate needs non-empty text (fail loud — no silent no-op)")
+        rec = self.store.append_annotation(
+            {"kind": "annotation", "address": address, "text": str(text).strip(), "source": source})
+        # S2: emit an addressed event so the comment is visible on the live stream at its locus.
+        self._emit("annotation", f"comment at {address}: {rec['text'][:40]}", address=address)
+        return rec
+
+    def annotations_at(self, address: str) -> list:
+        """I6 — every annotation attached to `address`, oldest-first (the comment thread at that locus).
+
+        The address is VALIDATED first (same S0 gate as `annotate`) so a retrieval on a malformed
+        address fails loud rather than silently returning [] (which a caller could read as 'no
+        comments'). Reads through the store leaf, which reads disk every call — so this returns a prior
+        Suite's writes on the same store root (persistence-survives-reload)."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                            # S0 grammar gate (raises on malformed)
+        return self.store.annotations_for(address)
+
     def chat(self, message: str, graph_id: str, focus: dict | None = None) -> dict:
         """Grounded conversation with the operator. Answers from compact ground truth; never
         confabulates system facts. Suggests actions but performs none that skip the surfaced

@@ -370,6 +370,41 @@ class FsStore:
         lines = [l for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
         return [_j.loads(l) for l in lines[-limit:]]   # oldest-first (chronological)
 
+    # --- addressed annotations (I6): append-only, keyed by `ui://` address, persists ---
+    def append_annotation(self, rec: dict) -> dict:
+        """Persist an annotation (comment) attached to a `ui://` address — the I6 store leaf.
+
+        OPEN-RECORD, like append_chat: `{ts, **rec}` splat through to a NEW `annotations.jsonl`
+        at the store root (its own file — SEPARATE from chat.jsonl, which is I2/I7's lane). The
+        store stays dumb: it does NOT validate the address (that S0 gate is the Suite's job, where
+        the semantic work lives, mirroring `act`). The `address` field is the retrieval key; `ts`
+        rides free from the open shape and feeds R2's recency/decay bound later. Append-only so an
+        address accrues a comment THREAD (history), not a last-writer-wins single value."""
+        import json as _j
+        from datetime import datetime, timezone
+        out = {"ts": datetime.now(timezone.utc).isoformat(), **rec}
+        with (self.root / "annotations.jsonl").open("a", encoding="utf-8") as f:
+            f.write(_j.dumps(out) + "\n")
+        return out
+
+    def annotations_for(self, address: str) -> list[dict]:
+        """Every annotation attached to `address`, oldest-first (the comment thread at that locus).
+        Filters the append-only `annotations.jsonl` by the `address` field — the address IS the key.
+        Reads from disk every call (no in-memory cache), so a SECOND Suite over the same store root
+        sees a prior Suite's writes (the persistence-survives-reload property I6 must prove)."""
+        import json as _j
+        path = self.root / "annotations.jsonl"
+        if not path.exists():
+            return []
+        out = []
+        for l in path.read_text(encoding="utf-8").splitlines():
+            if not l.strip():
+                continue
+            rec = _j.loads(l)
+            if rec.get("address") == address:
+                out.append(rec)
+        return out
+
     # --- surfaced-decision inbox (S7/D4): non-blocking gates, shared across faces ---
     def surfaced_lock(self):
         """T1-RACE — the store-level lock a CALLER holds around a surfaced read-modify-write
