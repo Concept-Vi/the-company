@@ -36,6 +36,7 @@ import { Activity } from './regions/Activity'
 import { RhmChat } from './regions/RhmChat'
 import { Walkthrough } from './regions/Walkthrough'
 import { Workshop } from './regions/Workshop'
+import { Fleet } from './regions/Fleet'
 
 // Hud — the single component with useEditor. It builds the controller (the state container) ONCE and
 // provides it to every region via AppContext, then lays the regions out in the grid shell. It is a child
@@ -94,6 +95,13 @@ function Hud() {
           <Inspector />
           <Inbox />
           <Grow />
+          {/* F8: the fleet surface — the live model layer (model · kind · alive), addressed ui://models.
+             Additive, stacked in the SAME right-rail scroll column as Inspector/Inbox/Grow so it inherits the
+             responsive bottom-sheet behaviour at <699px. Per-panel boundary (PRESERVE-LIST item 1): a fleet
+             render-throw degrades to a contained card, never a white-screen. */}
+          <PanelErrorBoundary name="fleet">
+            <Fleet />
+          </PanelErrorBoundary>
         </div>
         {/* F2: the MOBILE NAV — a bottom tabbar (corpus .tabbar component) shown ONLY at <699px. It replaces
            the hidden rails: Canvas (board, no sheet) · Inbox (the inspector/inbox sheet) · RHM (chat sheet) ·

@@ -40,6 +40,16 @@ export function useAppController(editor: Editor) {
   const [growMsg, setGrowMsg] = useState('the brain writes it · you approve · it goes live.')
   const [workshop, setWorkshop] = useState<any>(null)
   const [oinfo, setOinfo] = useState<any>({})
+  // F8 (fleet surface): the live model fleet, fed from the registry (api.models per kind — the B2 source of
+  // truth, never a hardcoded list). Shape: per-kind a string list of model names + a per-kind error string.
+  // reflects-never-owns: this is READ truth off /api/models; the canvas never owns the fleet. fail-loud
+  // (rule 4): a kind whose registry fetch FAILS carries its error so the panel surfaces it (never a silently
+  // empty list). `alive` is NOT a per-model heartbeat (no such field exists in the registry — fabricating one
+  // would break rule 8): a model PRESENT in the live registry list IS the live fleet for that kind; an empty
+  // list with no error means the registry returned none. `loaded` flips true after the first fetch resolves
+  // so the panel can distinguish "still booting" from "registry genuinely empty".
+  const [fleet, setFleet] = useState<{ chat: string[]; embed: string[]; chatErr: string; embedErr: string; loaded: boolean }>(
+    { chat: [], embed: [], chatErr: '', embedErr: '', loaded: false })
   // F3: the served node_states index (id -> {label, render{token,icon,shape}…}) mirrored into React state so
   // the Inspector (a context-reading region) paints status BY SIGHT from the registry, same as the shape does.
   const [nodeStates, setNodeStates] = useState<Record<string, any>>({})
@@ -115,6 +125,24 @@ export function useAppController(editor: Editor) {
     try { setNow(await api.now()); mergeEvents(setEvents, await api.events()); setInbox(await api.inbox()); setLastChange(await api.lastChange()); setPanels(await api.panels()) }
     catch (e: any) { setNotice('⚠ refresh failed — surfaces may be stale (' + (e?.message || e) + ')') }
   }
+  // F8 (fleet surface): (re)load the live model fleet from the registry, PER KIND so one endpoint being
+  // down doesn't blank the other. fail-loud (rule 4): each kind captures its own error string — api.models
+  // returns a normalized `{error}` on a non-ok response (api.ts jr), and a thrown network error is caught
+  // here; either way the panel renders the error, never a silently empty list. registry-is-truth (rule 8):
+  // the rows ARE the registry response; nothing is invented. Returns nothing — it writes the fleet state.
+  async function refreshFleet() {
+    for (const kind of ['chat', 'embed'] as const) {
+      let list: string[] = []
+      let err = ''
+      try {
+        const r = await api.models(kind)
+        if (r && r.error) err = String(r.error)                 // normalized backend error (e.g. embed endpoint not configured)
+        else if (Array.isArray(r)) list = r                     // the live model-name list for this kind
+        else err = 'unexpected registry response'               // neither a list nor an {error} — surface it, never guess
+      } catch (e: any) { err = e?.message || String(e) }        // network/transport failure — fail loud
+      setFleet(prev => ({ ...prev, [kind]: list, [kind + 'Err']: err, loaded: true }))
+    }
+  }
   async function openCoa(id: string) {
     setGrowMsg('compiling the decision into a value-choice…')
     const c = await api.coa(id)            // decision-compiler UP
@@ -159,6 +187,12 @@ export function useAppController(editor: Editor) {
       let modelOptions: Record<string, string[]> = {}
       try { modelOptions = { chat_models: await api.models('chat'), embed_models: await api.models('embed') } }
       catch (e: any) { bootErrors.push('model lists (' + (e?.message || e) + ')') }
+      // F8 (fleet surface): populate the live fleet panel from the registry, PER KIND with its own error
+      // (refreshFleet surfaces an embed-endpoint-not-configured or a down endpoint visibly, never silently
+      // empty). Fire-and-forget (`void`): refreshFleet OWNS its fail-loud path — it catches each kind's error
+      // INTO the fleet state, so a failure surfaces IN THE PANEL (the right place for it), independent of the
+      // boot-notice path. Not awaited, so a slow/hung model endpoint never stalls the rest of boot.
+      void refreshFleet()
       const oi = await api.objectInfo()
       let ui: Record<string, any> = {}
       try { ui = await api.uiInfo() }
@@ -748,7 +782,7 @@ export function useAppController(editor: Editor) {
     edges, running, runError, runStartedAt, runElapsed, types, gname, gspec, surf, growMsg, workshop,
     oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
     showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn,
-    wtSpoke, wtBusy, selected, mobileTab,
+    wtSpoke, wtBusy, selected, mobileTab, fleet,
     // refs the components read for the inspector form
     configByNode,
     // setters the components call directly
@@ -758,7 +792,7 @@ export function useAppController(editor: Editor) {
     poll, openCoa, reload, fitGraph, addNode, wireSelected, doConnect, setNodeConfig, surfaceOutput,
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
     resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, fieldValue,
-    setField, revertLast, approveApply, doRun,
+    setField, revertLast, approveApply, doRun, refreshFleet,
   }
 }
 

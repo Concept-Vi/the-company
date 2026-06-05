@@ -282,6 +282,34 @@ button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
 .surf{border:1px dashed var(--warn);border-radius:3px;padding:9px;margin-top:8px}
 .surf .shd{color:var(--warn);font-size:10px;letter-spacing:.06em;margin-bottom:6px}
 .muted{color:var(--dim);font-size:11px;line-height:1.6}
+/* F8 · the fleet surface — the live model layer (model · kind · alive), stacked in the right-rail .panel
+   column. Built ENTIRELY on corpus tokens (no off-token literal → design-lint --fail-on clean): --s1 panel
+   surface, --bg row well, --line/--line-2 borders, --sig accent title, --dim muted, --ok the alive signal,
+   --err the fail-loud tint. Coherent in scale with the inspector (h3 / .row rhythm) — a navigable panel, not
+   a dump (rule 9). */
+.fleet{margin-top:13px;padding-top:11px;border-top:1px solid var(--line)}
+.fleet-head{display:flex;align-items:baseline;gap:7px}
+.fleet-title{font-family:"Fraunces",serif;font-weight:600;font-size:14px;color:var(--sig);margin:0}
+.fleet-refresh{margin-left:auto;flex:none}
+.fleet-body{margin-top:9px;display:flex;flex-direction:column;gap:10px}
+.fleet-kind{display:flex;flex-direction:column;gap:5px}
+.fleet-kind-head{display:flex;align-items:baseline;gap:7px;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.fleet-kind-name{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.fleet-kind-count{margin-left:auto;font-size:9px;color:var(--dim);font-variant-numeric:tabular-nums}
+.fleet-list{display:flex;flex-direction:column;gap:3px}
+.fleet-row{display:flex;align-items:center;gap:7px;padding:5px 8px;background:var(--bg);
+  border:1px solid var(--line);border-left:3px solid var(--ok);border-radius:3px;font-size:10.5px}
+.fleet-row:hover{border-color:var(--sig)}
+/* the live-registry dot — a model present in the registry IS the live fleet (registry-is-truth); the dot
+   reuses the corpus --ok alive token, the same alive signal used across the surface. */
+.fleet-dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok)}
+.fleet-name{flex:1;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fleet-kind-tag{flex:none;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+/* fail-loud (rule 4): a down/unconfigured endpoint surfaces its error in the fail tint, never a blank group. */
+.fleet-err{padding:6px 8px;background:var(--bg);border:1px solid var(--err);border-left:3px solid var(--err);
+  border-radius:3px;font-size:10px;color:var(--err);line-height:1.4;overflow-wrap:anywhere}
+/* the legend states what the dot means in-surface (honest membership signal, not a fabricated health probe). */
+.fleet-legend{margin-top:9px;display:flex;align-items:center;gap:6px;font-size:9px;color:var(--dim);line-height:1.4}
 .sig{color:var(--sig)} .err{color:var(--err)}
 .tg{color:var(--sig);margin-right:5px}
 
