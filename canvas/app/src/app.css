@@ -205,6 +205,13 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 /* WIRE-UI: the W7 deferred-queue lane — held builds, visible (fail-loud), dimmed (not awaiting a verdict yet). */
 .ibx-lane.ibx-deferred .ibx-lane-head{color:var(--dim)}
 .ibx-item.ibx-defer-item{border-left-color:var(--dim);opacity:.82;font-size:10.5px}
+/* L8 (§21.7#9): the click-to-thing link on a surfaced item that carries a ui:// target — clicking it
+   composes the preserved resolveUiTarget keystone to navigate+spotlight the thing the item is about.
+   Reads as a subtle inline affordance (corpus tokens only, no literals); the signal accent on hover
+   mirrors the row's own :hover so the link is clearly actionable. */
+.ibx-target-link{display:inline-block;margin-left:8px;padding:0;border:0;background:none;cursor:pointer;
+  font-family:inherit;font-size:10px;letter-spacing:.04em;color:var(--sig-dim)}
+.ibx-target-link:hover{color:var(--sig);text-decoration:underline}
 
 /* WIRE-UI: the build-intent card — a build-intent legible end to end (scope · class · phase · the
    implemented result/diff). Its left border + phase tint encode the lifecycle: awaiting (warn) → running

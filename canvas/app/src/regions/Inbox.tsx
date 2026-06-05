@@ -8,7 +8,7 @@ import { isBuildIntent } from '../api'
 import { useApp } from '../AppContext'
 
 export function Inbox() {
-  const { inbox, session, wtBusy, events, types, showResolved, startWalk, openCoa, addNode, setShowResolved } = useApp()
+  const { inbox, session, wtBusy, events, types, showResolved, startWalk, openCoa, addNode, setShowResolved, resolveUiTarget } = useApp()
   return (
     <div data-ui-ref="inbox">
       <h3 style={{ marginTop: 18 }}>inbox · chief-of-staff triage</h3>
@@ -55,6 +55,19 @@ export function Inbox() {
             {items.map((d: any) => (
               <div key={d.id} className="ibx-item" data-ui-ref="ui://inbox/coa" onClick={() => openCoa(d.id)}>
                 ⚠ {d.payload?.name || d.id} <span className="muted">— compile ↗</span>
+                {/* L8 (§21.7#9): a surfaced item that CARRIES a ui:// target (in payload — seams-engine
+                   Seam 2) gets a visible click-to-thing link. Clicking it composes the PRESERVED
+                   resolveUiTarget keystone (the single sink that drives the view to any address) to
+                   navigate + spotlight the thing the item is about — IN CONTEXT. stopPropagation so it
+                   doesn't also fire the row's openCoa. No target → this renders nothing (the item
+                   behaves exactly as today). resolveUiTarget fails loud on a bad explicit target. */}
+                {d.payload?.ui_target && (
+                  <button type="button" className="ibx-target-link" data-ui-ref="ui://inbox/target"
+                    title={'go to ' + d.payload.ui_target}
+                    onClick={(e) => { e.stopPropagation(); resolveUiTarget(d.payload.ui_target) }}>
+                    ↳ go to thing
+                  </button>
+                )}
               </div>
             ))}
           </div>

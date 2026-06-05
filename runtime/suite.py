@@ -1909,9 +1909,19 @@ class Suite:
             # do() EXECUTES the graph — that would be the inverse U1 regression (a CONFIRM-tier run
             # running). Surfacing here keeps the dispatcher (and thus any execution) untouched until
             # the operator approves (the approve→re-dispatch wire is I3, not this unit).
-            sid = self.inbox.surface(addr_tier,
-                                     {"verb": verb, "address": address, "args": args, "graph_id": graph_id},
-                                     default="reject", resolved=None)
+            # L8 (§21.7#9): this surfaced approval IS the canonical click-to-thing case — it concerns
+            # the very address the operator clicked (gated CONFIRM/LOCKED). The GUIDE: "if the item
+            # already has an address/locus, USE it." So carry that address as the navigable ui:// target
+            # inside payload (the open bag — seams-engine Seam 2), so clicking the inbox item drives the
+            # view back to the element awaiting approval via the preserved resolveUiTarget keystone. The
+            # address reached here only by matching a registered UI_REGISTRY row in _tier_for_address, so
+            # it is ALWAYS a ui:// form (navigable); we still gate on the ui:// prefix (mirror the resolver
+            # grammar — a non-ui:// string would fail driveCanvas) so a malformed/absent locus simply
+            # carries no target and the item behaves exactly as today (no navigation, not an error).
+            i4_payload = {"verb": verb, "address": address, "args": args, "graph_id": graph_id}
+            if isinstance(address, str) and address.startswith("ui://"):
+                i4_payload["ui_target"] = address
+            sid = self.inbox.surface(addr_tier, i4_payload, default="reject", resolved=None)
             outcome = {"did": "surfaced_for_approval", "verb": verb, "address": address,
                        "tier": addr_tier, "surfaced": sid, "routed_posture": posture(addr_tier)}
             return {"reply": self._confirmation_for(outcome), "action": outcome, "graph_id": graph_id}
@@ -2515,7 +2525,17 @@ class Suite:
             raise ValueError(f"node {node_id!r} has no output to surface yet — run it first (fail loud)")
         sid = self.inbox.surface("result",
                                  {"name": f"output · {node_id}", "node": node_id,
-                                  "graph_id": graph_id, "output": str(out)},
+                                  "graph_id": graph_id, "output": str(out),
+                                  # L8 (§21.7#9): the surfaced item CARRIES its navigable ui:// target so
+                                  # clicking it in the inbox drives the operator's view to the thing it is
+                                  # about (the node), via the preserved resolveUiTarget keystone. Derived
+                                  # by the EXISTING _registry_ui_target (node → ui://canvas/<node>) —
+                                  # registry-valid by construction, never fabricated. It lands inside
+                                  # `payload` (the open bag every consumer reads via .get — seams-engine
+                                  # Seam 2), so all surfaced-item consumers (inbox_lanes/escalation/wire)
+                                  # ignore it cleanly. present_current's transient stamp (2662-2664) sees
+                                  # it already present and skips re-stamping — same value, no conflict.
+                                  "ui_target": self._registry_ui_target({"node": node_id})},
                                  default="reject")
         # emit as 'ask' so the live SSE inbox-refresh path (App.tsx kinds: ask|reject|resolve|…) lights
         # up; the operator's button also poll()s for instant local feedback regardless of the stream.

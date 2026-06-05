@@ -231,6 +231,12 @@
       "code": "runtime/suite.py:coa"
     },
     {
+      "id": "INB-target",
+      "area": "inbox",
+      "label": "click-to-thing: a surfaced item carries its ui:// target; clicking navigates+spotlights in context",
+      "code": "canvas/app/src/regions/Inbox.tsx:Inbox / runtime/suite.py:surface_output"
+    },
+    {
       "id": "INB-surface",
       "area": "inbox",
       "label": "surface a node output to the inbox",

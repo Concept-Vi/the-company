@@ -120,6 +120,14 @@
       "represents": "INB-coa",
       "code": "runtime/suite.py:coa"
     },
+    "ui://inbox/target": {
+      "region": "inbox",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "INB-target",
+      "code": "canvas/app/src/regions/Inbox.tsx (go to thing) / runtime/suite.py:surface_output"
+    },
     "ui://chat": {
       "region": "chat",
       "capabilities": [
