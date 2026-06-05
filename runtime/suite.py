@@ -1203,7 +1203,17 @@ class Suite:
         hit = self._tools_cap_cache.get(key)
         if hit is not None and (_t.monotonic() - hit[1]) < self.TOOLS_CAP_TTL:
             return hit[0]
-        endpoint = "litellm" if "4100" in base else "ollama"   # the LiteLLM proxy default port; else ollama
+        # Classify the endpoint so the tool-cap detector probes the RIGHT way (was: everything-not-4100
+        # = ollama, which mis-routed a raw vLLM endpoint to ollama's /api/show → false refusal). ollama
+        # is :11434; litellm proxy :4100; a raw vLLM OpenAI server (the local model workers, :8000+) is
+        # its own kind (probed by a forced tool-call). Default base (config) stays ollama.
+        from fabric import config as _fc
+        if "4100" in base:
+            endpoint = "litellm"
+        elif "11434" in base or base.rstrip("/") == _fc.DEFAULT_BASE_URL.rstrip("/"):
+            endpoint = "ollama"
+        else:
+            endpoint = "vllm"                                  # raw OpenAI-compatible vLLM (local workers)
         try:
             ok = bool(ftrans.model_supports_tools(model, base_url=base, endpoint=endpoint))
         except Exception:

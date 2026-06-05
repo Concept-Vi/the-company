@@ -99,6 +99,12 @@ def model_supports_tools(model: str, base_url: str = DEFAULT_BASE_URL, api_key: 
       - endpoint='litellm' : the proxy's model_info / supports_function_calling field. (Proxy was
                              down at probe — implemented per the documented field; any failure or a
                              missing field RAISES, never assume-capable.)
+      - endpoint='vllm'    : a raw vLLM OpenAI endpoint has no caps field to read, so we PROBE: a tiny
+                             chat completion with a forced tool_choice. A server launched with
+                             --enable-auto-tool-choice honours it and returns a tool_call (→ True); one
+                             without tool support errors on the forced choice (→ raises, fail loud). This
+                             is an honest runtime VERIFICATION, not an assume — vLLM is supported
+                             natively (no need to route through litellm just to read a flag).
       - any other endpoint : RAISE (cannot determine).
     """
     forbid_gemini(model)                                       # hard constraint, fail loud, FIRST
@@ -138,6 +144,25 @@ def model_supports_tools(model: str, base_url: str = DEFAULT_BASE_URL, api_key: 
             f"fabric: cannot determine tool-capability for {model!r} via LiteLLM model_info "
             f"(no supports_function_calling field; never assume-capable)"
         )
+
+    if endpoint == "vllm":
+        # No caps field on a raw vLLM endpoint → PROBE by forcing a trivial tool call. A tool-enabled
+        # vLLM (--enable-auto-tool-choice) honours the forced tool_choice and returns a tool_call;
+        # a server without tool support 400s on the forced choice → urlopen raises → fail loud (never
+        # assume-capable). A 200 that returns NO tool_calls → the model didn't actually call it → False.
+        probe_tool = {"type": "function", "function": {
+            "name": "ping", "description": "health probe",
+            "parameters": {"type": "object", "properties": {}}}}
+        body = {"model": model, "messages": [{"role": "user", "content": "ping"}],
+                "tools": [probe_tool], "tool_choice": {"type": "function", "function": {"name": "ping"}},
+                "max_tokens": 8, "stream": False}
+        req = urllib.request.Request(
+            root + "/v1/chat/completions", data=json.dumps(body).encode(),
+            headers={"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"})
+        with urllib.request.urlopen(req, timeout=timeout) as r:   # 400/unreachable → raises → fail loud
+            data = json.loads(r.read())
+        msg = (data.get("choices") or [{}])[0].get("message", {}) or {}
+        return bool(msg.get("tool_calls"))                        # honoured the forced tool → supports tools
 
     raise ValueError(
         f"fabric: cannot determine tool-capability for {model!r} — unknown endpoint kind "
