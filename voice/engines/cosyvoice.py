@@ -88,6 +88,23 @@ def voices() -> tuple[list, str]:
     return ([DEFAULT_INSTRUCT], DEFAULT_INSTRUCT)
 
 
+def warm():
+    """Load the model, and BEST-EFFORT run one throwaway synth so the wetext text-normalisation FSTs
+    download now (they download lazily on the first inference_instruct2 — that race 500'd the first real
+    request). The model load is REQUIRED (fail loud); the pre-fetch synth is best-effort — it must NOT
+    block startup, because CosyVoice's synth currently has a SEPARATE bug (a soundfile/tensor API
+    mismatch in inference_instruct2's prompt handling — a version difference vs the documented example).
+    So: load always; attempt the pre-fetch; on synth error log it + stay up (the model serves, the bug
+    is visible for debugging) rather than refusing to start (which warm=synth would do). Tess is the 5th
+    voice — the trial runs on the other 4 until this is debugged."""
+    _engine()                                              # REQUIRED — fail loud if the model won't load
+    try:
+        synth("Ready.", None, 1.0)                         # pre-fetch wetext; best-effort
+    except Exception as e:
+        sys.stderr.write(f"[cosyvoice] warm pre-fetch synth failed (engine still UP for debugging): "
+                         f"{type(e).__name__}: {e}\n"); sys.stderr.flush()
+
+
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else PORT
-    serve("cosyvoice", port, synth, voices, warm=_engine)
+    serve("cosyvoice", port, synth, voices, warm=warm)
