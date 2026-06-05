@@ -197,7 +197,7 @@ class Suite:
         out = []
         for (o, who), es in groups.items():
             rec = {"op": o, "who": who, "n": len(es), "duration_ms": dist([e.get("duration_ms") for e in es])}
-            for f in ("stt_ms", "think_ms", "tts_ms", "queue_ms", "chunks"):   # extra timing/condition fields
+            for f in ("stt_ms", "think_ms", "tts_ms", "queue_ms", "chunks", "chunks_done", "chunks_total"):  # extra timing/condition fields
                 d = dist([e.get(f) for e in es if e.get(f) is not None])
                 if d:
                     rec[f] = d

@@ -255,8 +255,29 @@ class H(BaseHTTPRequestHandler):
         self.send_header("Connection", "close")
         self.end_headers()
 
+        import select as _sel, socket as _sock
+        gone = [False]                                        # Tier-2: client-disconnect flag (cancel a speculative turn)
+
         def emit(obj):
-            self.wfile.write((json.dumps(obj) + "\n").encode()); self.wfile.flush()
+            try:
+                self.wfile.write((json.dumps(obj) + "\n").encode()); self.wfile.flush()
+            except (BrokenPipeError, ConnectionResetError, OSError):
+                gone[0] = True                                # client hung up (e.g. resumed talking) — stop, don't raise
+
+        def client_gone():
+            """Tier-2: PROACTIVELY detect a client disconnect (a speculative turn cancelled on resume) so
+            we stop BEFORE the next expensive synth — more reliable + prompt than waiting for a write to
+            fail (TCP buffers the first post-close write). select+MSG_PEEK: socket readable AND 0 bytes
+            peeked = EOF (closed). Readable-with-data is unexpected here (body's read) → treat as alive."""
+            if gone[0]:
+                return True
+            try:
+                r, _, _ = _sel.select([self.connection], [], [], 0)
+                if r and self.connection.recv(1, _sock.MSG_PEEK) == b"":
+                    gone[0] = True
+            except Exception:
+                pass
+            return gone[0]
         try:
             if not persona:
                 raise ValueError("/api/voice/stream needs ?persona=<id> (fail loud)")
@@ -291,16 +312,24 @@ class H(BaseHTTPRequestHandler):
                 emit({"type": "done", "total_ms": int((_t.monotonic() - t0) * 1000), "spoke": False, "reply": reply}); return
             # split into sentences → synth + stream each AS IT'S READY (the streaming win)
             sentences = [s.strip() for s in _re.split(r'(?<=[.!?])\s+', reply) if s.strip()] or [reply]
-            voice_arg = voice_loop._voice_arg_for(p)
+            voice_arg = voice_override or voice_loop._voice_arg_for(p)   # G4.2: honour the engine/voice override
+            done_n = 0
             for idx, sent in enumerate(sentences):
+                if client_gone():                             # Tier-2: client disconnected → STOP before the next synth (don't burn TTS)
+                    break
                 cs = _t.monotonic()
-                wav = voice_loop.speak(sent, p["engine"], voice=voice_arg)   # short sentence → fast synth
+                wav = voice_loop.speak(sent, eng, voice=voice_arg)   # `eng` honours the override; short sentence → fast synth
                 emit({"type": "chunk", "idx": idx, "text": sent,
                       "wav_b64": _b64.b64encode(wav).decode(),
                       "ms": int((_t.monotonic() - cs) * 1000)})
+                done_n = idx + 1
             total = int((_t.monotonic() - t0) * 1000)
+            if gone[0]:                                       # cancelled mid-stream — record it (server-side; the socket's dead)
+                SUITE.emit_run_record("voice.stream.cancelled", total, stt_ms=stt_ms, think_ms=think_ms,
+                                      chunks_done=done_n, chunks_total=len(sentences), persona=persona, engine=eng)
+                return
             SUITE.emit_run_record("voice.stream", total, stt_ms=stt_ms, think_ms=think_ms,
-                                  chunks=len(sentences), persona=persona, engine=p["engine"], ear=ear)
+                                  chunks=len(sentences), persona=persona, engine=eng, ear=ear)
             emit({"type": "done", "total_ms": total, "spoke": True, "chunks": len(sentences), "reply": reply})
         except Exception as e:                                     # fail loud as a stream event, then close
             try:
