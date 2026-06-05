@@ -107,7 +107,13 @@ export function useAppController(editor: Editor) {
   }
   async function poll() {
     // poll() MERGES events (never replaces) so it can't reintroduce a seq the stream already showed.
-    try { setNow(await api.now()); mergeEvents(setEvents, await api.events()); setInbox(await api.inbox()); setLastChange(await api.lastChange()); setPanels(await api.panels()) } catch { /* bridge transient */ }
+    // F7 (fail-loud, rule 4): a poll failure means the surfaces (now/events/inbox/last-change/panels) just
+    // went STALE without any signal — the operator can't tell live data from frozen data. Surface a visible
+    // notice instead of swallowing. This is self-limiting (the next successful op overwrites `notice`), so a
+    // one-off transient blip clears itself rather than accumulating spam — but a persistent bridge-down stays
+    // visible because nothing succeeds to clear it.
+    try { setNow(await api.now()); mergeEvents(setEvents, await api.events()); setInbox(await api.inbox()); setLastChange(await api.lastChange()); setPanels(await api.panels()) }
+    catch (e: any) { setNotice('⚠ refresh failed — surfaces may be stale (' + (e?.message || e) + ')') }
   }
   async function openCoa(id: string) {
     setGrowMsg('compiling the decision into a value-choice…')
@@ -134,13 +140,29 @@ export function useAppController(editor: Editor) {
     setConnect((fn, fp, tn, tp) => { void doConnect(fn, fp, tn, tp) })
     // D4: install the per-node force-rerun hook.
     setForceRun((nid) => { void doRun([nid]) })
+    // F7 (fail-loud, rule 4): boot fetches were each `try{…}catch{ /* */ }` — a bridge hiccup mid-boot left
+    // the matching panel SILENTLY empty (no Notice, no signal). Now each swallow records WHICH source failed
+    // into `bootErrors`; at the end of boot we surface ONE combined visible notice (Toolbar line 50 renders
+    // `notice`). `notice` is last-write-wins and the boot happy-path NEVER calls setNotice, so a boot-error
+    // notice persists until the operator's first action — and accumulating into one string means two boot
+    // failures can't clobber each other into a single misleading line. We still degrade gracefully (the app
+    // boots with whatever DID load) — fail-loud, not fail-stop.
+    // bootErrors is declared HERE (above the outer try) so the catch below can fold the partial detail into the
+    // final notice — a TOTAL bridge-down trips an UNGUARDED await first (objectInfo/loadGraph/types/…), which
+    // before this aborted the IIFE as an "Uncaught (in promise)" and the combined notice was NEVER reached
+    // (verified: forced dead-backend → shell rendered but blank panels, no notice). The outer catch turns that
+    // unreachable-notice failure into a loud one without restructuring the individual awaits.
+    const bootErrors: string[] = []
     ;(async () => {
+     try {
       // B2: live model lists FIRST (the source of truth) so config_schema dropdowns resolve immediately.
       let modelOptions: Record<string, string[]> = {}
-      try { modelOptions = { chat_models: await api.models('chat'), embed_models: await api.models('embed') } } catch { /* */ }
+      try { modelOptions = { chat_models: await api.models('chat'), embed_models: await api.models('embed') } }
+      catch (e: any) { bootErrors.push('model lists (' + (e?.message || e) + ')') }
       const oi = await api.objectInfo()
       let ui: Record<string, any> = {}
-      try { ui = await api.uiInfo() } catch { /* the registry is the source of truth for ui:// targets */ }
+      try { ui = await api.uiInfo() }
+      catch (e: any) { bootErrors.push('ui registry (' + (e?.message || e) + ')') }   // registry is the source of truth for ui:// targets — its absence MUST be visible
       registryStore.set({ OINFO: oi, MODEL_OPTIONS: modelOptions, UI_INFO: ui })   // C1: ports/schema/ui reachable by the shape + Edges
       setOinfo(oi)
       // registry-is-truth: pull the per-mode directives from capabilities() (backend MODE_DIRECTIVES is the
@@ -155,7 +177,7 @@ export function useAppController(editor: Editor) {
         for (const s of ns) if (s && s.id) nsIndex[s.id] = s
         registryStore.set({ NODE_STATES: nsIndex })   // shape-reachable half (NodeShape reads via getNODE_STATES)
         setNodeStates(nsIndex)                         // React half (the Inspector region reads via context)
-      } catch { /* */ }
+      } catch (e: any) { bootErrors.push('capabilities/node-states (' + (e?.message || e) + ')') }   // F7: status-by-sight + mode dial silently went blank on a swallow — surface it
       const g = await loadGraph(editor); setEdges(g.edges || []); setGid(g.id); syncConfig(g)
       if ((g.nodes || []).length) setTimeout(fitGraph, 120)   // U6: chrome-aware fit on first load
       setTypes(await api.types())
@@ -172,10 +194,30 @@ export function useAppController(editor: Editor) {
         if (sid) {
           const s = await api.reviewCurrent(sid)
           if (s && !s.error) setSession(s)
-          else localStorage.removeItem('company-review-session')   // stale/closed — don't resurface a dead walk
+          else localStorage.removeItem('company-review-session')   // stale/closed — don't resurface a dead walk (EXPECTED, not an error — stays quiet)
         }
-      } catch { /* */ }
-      openStream()                                        // G2: replaces setInterval(poll, 2500)
+      } catch (e: any) {
+        // F7: a stale/closed session resolving to `{error}` is EXPECTED (handled above, stays quiet). This
+        // catch only fires on a real FETCH failure (bridge unreachable) — that is NOT expected and must be
+        // visible, not a silent no-op that leaves a half-resumed walk.
+        bootErrors.push('walk resume (' + (e?.message || e) + ')')
+      }
+      // F7: the GUARDED-fetch failures (above) accumulated into bootErrors; surface them as ONE visible notice
+      // (fail-loud, rule 4). The UNGUARDED-await failures are caught by the outer catch below. Empty list +
+      // no throw → boot was clean → stays silent. Set in `finally` so BOTH paths converge to one notice.
+     } catch (e: any) {
+       // F7: an UNGUARDED boot await rejected (a TOTAL bridge-down hits objectInfo/loadGraph/types/… before
+       // the guarded blocks can complete). Without this the IIFE aborted as "Uncaught (in promise)" and the
+       // shell rendered with blank panels and NO signal. Now it fails LOUD — fold in any partial detail.
+       bootErrors.push('boot halted (' + (e?.message || e) + ')')
+     } finally {
+       // single convergence point for clean | partial | total-failure boot. Empty list → silent (clean boot).
+       if (bootErrors.length) setNotice('⚠ boot incomplete — could not load: ' + bootErrors.join('; ') + ' (the bridge may be down)')
+       // openStream in `finally` (NOT in the try): even on a boot failure the live surface must still connect,
+       // so when the bridge returns the EventSource reconnect (es.onerror) recovers the surface on the next
+       // event — fail-loud, NOT fail-stop (a boot reject must not strand the app dead-until-reload).
+       openStream()                                       // G2: replaces setInterval(poll, 2500)
+     }
     })()
     // C5: drag-end write-back. The {source:'user'} filter narrows to operator gestures; the LOAD-BEARING
     // loop-breaker is the equality guard below (from.x/y === to.x/y → skip). Debounced per-shape.
@@ -215,29 +257,37 @@ export function useAppController(editor: Editor) {
         if (k === 'run') applyStuckFromEvents([ev])
         const g = await loadGraph(editor); setEdges(g.edges || []); syncConfig(g)
         paintStuck()   // U2: re-apply stuck after loadGraph reset statuses to ran|cached|idle
-        try { setNow(await api.now()) } catch { /* */ }
+        // F7 (fail-loud, rule 4): a genuinely-NEW event arrived (we're past the high-water gate) but the
+        // follow-up refresh fetch failed → the surface is now STALE relative to a live event, with no signal.
+        // Surface it. NOTE: this is NOT the SSE reconnect (that's es.onerror below — a transient retry, left
+        // untouched). A per-event refresh failure is a real swallow; the reconnect is legitimate tolerate.
+        try { setNow(await api.now()) } catch (e: any) { setNotice('⚠ live update missed a refresh (' + (e?.message || e) + ')') }
       } else if (k === 'mode' || k === 'config') {
-        try { setNow(await api.now()); setCfg(await api.rhmConfig()) } catch { /* */ }
+        try { setNow(await api.now()); setCfg(await api.rhmConfig()) } catch (e: any) { setNotice('⚠ mode/config update missed a refresh (' + (e?.message || e) + ')') }
       } else if (k === 'ask' || k === 'reject' || k === 'resolve' || k === 'apply' || k === 'grow' || k === 'revert' || k.startsWith('decision.')) {
         // WIRE-UI: the decision→implementation wire emits `decision.*` events. NONE carry a companion `ask`,
         // so without this branch a surfaced build-intent / dispatch start / `implemented` close would fall
         // into the final `else` (setNow only) and the inbox/build-intent surface would go STALE.
         // startsWith('decision.') so the NEW `decision.surfaced_for_review` kind is handled the moment the
         // backend lane emits it — author-from-registry. Events already auto-merged at the top of onmessage.
-        try { setInbox(await api.inbox()); setNow(await api.now()); setLastChange(await api.lastChange()); setPanels(await api.panels()) } catch { /* */ }
+        try { setInbox(await api.inbox()); setNow(await api.now()); setLastChange(await api.lastChange()); setPanels(await api.panels()) } catch (e: any) { setNotice('⚠ inbox/decision update missed a refresh (' + (e?.message || e) + ')') }
       } else if (k === 'chat' || k === 'react') {
         // F5: SSE-driven refresh — guard against a non-array (`{error}`) ever reaching the chat log.
-        try { const h = await api.chatHistory(); if (Array.isArray(h)) setChat(h) } catch { /* */ }
+        try { const h = await api.chatHistory(); if (Array.isArray(h)) setChat(h) } catch (e: any) { setNotice('⚠ chat update missed a refresh (' + (e?.message || e) + ')') }
       } else if (k === 'review.advance' || k === 'review.start') {
         // B-frontend: the walk advanced server-side. Refresh the card from present_current IF it's OUR
-        // session — reflects-never-owns (the backend session is truth).
+        // session — reflects-never-owns (the backend session is truth). refreshSession surfaces its own
+        // failures via setNotice already (✕ session: …), so no extra wrap needed here.
         if (ev.session && sessionRef.current && ev.session === sessionRef.current.session) {
           await refreshSession(ev.session)
         }
       } else {
-        try { setNow(await api.now()) } catch { /* */ }
+        try { setNow(await api.now()) } catch (e: any) { setNotice('⚠ live update missed a refresh (' + (e?.message || e) + ')') }
       }
     }
+    // PRESERVE-LIST (transient tolerate, NOT a swallow): EventSource auto-reconnects on a dropped connection;
+    // Last-Event-ID gives gapless resume. This is the ONE legitimate tolerate-then-retry — a reconnect is
+    // expected operational churn, not a swallowed error, so it stays quiet by design. (F7 distinction.)
     es.onerror = () => { /* EventSource auto-reconnects; Last-Event-ID gives gapless resume */ }
   }
 
@@ -271,7 +321,11 @@ export function useAppController(editor: Editor) {
     editor.zoomToBounds(bounds, { targetZoom: 1, animation: { duration: 300 } })
   }
   async function maybeReact() {   // watch-and-react: backend-gated, comments only in that mode
-    try { const r = await api.react(); if (r.comment) { const h = await api.chatHistory(); if (Array.isArray(h)) setChat(h) } } catch { /* */ }
+    // F7 (fail-loud, rule 4): this probe runs after every reload/run. A failure used to vanish silently — if
+    // the brain is supposed to be reacting and the call dies, the operator should know it isn't. Self-limiting
+    // (the next successful op overwrites `notice`), so a transient blip clears; a persistent failure stays up.
+    try { const r = await api.react(); if (r.comment) { const h = await api.chatHistory(); if (Array.isArray(h)) setChat(h) } }
+    catch (e: any) { setNotice('⚠ watch-and-react probe failed (' + (e?.message || e) + ')') }
   }
   // U5: a palette add seeds its position into the VISIBLE viewport. Operator-intent placement (the canvas
   // reporting where the operator placed it), NOT an invented layout: the position rides to the backend.
