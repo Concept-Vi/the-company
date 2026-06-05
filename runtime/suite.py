@@ -1248,132 +1248,17 @@ class Suite:
                               model=cfg["model"])
         return {"answer": ans, "sources": sources}
 
-    # --- model-/provider-AGNOSTIC action extraction -------------------------------------------
+    # --- model-/provider-AGNOSTIC action mapping -------------------------------------------------
     # The requirement (Tim): the RHM must ACT regardless of which model/provider is selected, and a
-    # NEW model must "just work". Real models DON'T emit the canonical `ACTION: verb args` line — each
-    # provider emits its OWN native tool-call shape. So the parser is a small set of SHAPE handlers,
-    # tried in order, each recognising one common verb-invocation shape and normalising it to the SAME
-    # `{"verb":..., ...}` dict the dispatcher already takes. Extend by ADDING a handler — never by
-    # special-casing one model. The parser is shape-recognition ONLY: it does NOT whitelist (that would
-    # be a second whitelist that drifts from the dispatcher's — AGENTS.md rule 3). The ONE whitelist
-    # lives in `_dispatch_rhm_action` (RHM_VERBS), so a forbidden verb extracted here is REFUSED there
-    # (the E6 no-bypass guarantee, proven end-to-end in rhm_action_parse_acceptance.py).
-
-    # provider delimiters some models prepend to a tool-call (e.g. minimax's `]<]minimax[>[`). They are
-    # noise around the real wrapper — stripped wherever they appear so the XML/JSON handler can match.
-    _PROVIDER_DELIMS = (r"\]<\]\s*[a-zA-Z0-9_.\-]+\s*\[>\[", r"<\|tool_calls?_begin\|>", r"<\|tool_call_end\|>")
-
-    @staticmethod
-    def _normalise_rhm_action(verb: str, raw_args: str):
-        """The ONE place a (verb, raw-args) pair becomes the dispatcher dict — so the SAME intent in
-        any shape (ACTION: line, <invoke>, JSON, fenced) yields the IDENTICAL action. raw_args is the
-        verb's argument text (for build: the JSON pipeline; for consult/show: the query/targets; for
-        propose/panel/extend: `<name> :: <spec>`)."""
-        import json as _j
-        verb = (verb or "").strip().lower()
-        rest = (raw_args or "").strip()
-        if verb in ("propose", "panel", "extend"):
-            name, _, spec = rest.partition("::")
-            return {"verb": verb, "name": name.strip(), "spec": spec.strip()}
-        if verb == "build":
-            try:
-                steps = _j.loads(rest) if rest else None
-            except Exception:
-                steps = None
-            return {"verb": "build", "steps": steps}
-        if verb == "consult":
-            return {"verb": "consult", "query": rest}
-        if verb == "show":
-            return {"verb": "show", "targets": [t for t in rest.replace(",", " ").split() if t]}
-        if verb == "run":
-            return {"verb": "run"}
-        return {"verb": verb}                                  # unknown → passes through; dispatcher refuses it
-
-    @classmethod
-    def _strip_provider_delims(cls, text: str) -> str:
-        import re
-        for pat in cls._PROVIDER_DELIMS:
-            text = re.sub(pat, "", text)
-        return text
-
-    @classmethod
-    def _parse_rhm_action(cls, reply: str):
-        """Split a reply into (shown_text, action|None), recognising a verb-invocation in ANY common
-        shape. Handlers tried in order; the first that matches wins. ALSO strips the recognised wrapper
-        (provider delimiter / `<invoke>` / `<tool_call>` / fenced json) from the SHOWN reply so raw
-        tool-call tokens NEVER leak to the operator."""
-        import re, json as _j
-        if not reply or not reply.strip():
-            return reply, None
-
-        # --- handler 1: native XML tool-call — Anthropic/XML `<invoke name="VERB">args</invoke>`,
-        #     optionally inside `<tool_call>...</tool_call>`, optionally after a provider delimiter
-        #     (minimax `]<]minimax[>[`). Strip the WHOLE wrapper (delims + tool_call + invoke) from
-        #     the shown text. Args = the inner text of the <invoke> element.
-        invoke_re = re.compile(r"<invoke\s+name\s*=\s*[\"']?([a-zA-Z_]+)[\"']?\s*>(.*?)</invoke\s*>",
-                               re.IGNORECASE | re.DOTALL)
-        m = invoke_re.search(reply)
-        if m:
-            verb, args = m.group(1), m.group(2)
-            shown = reply
-            # remove the invoke element, any surrounding <tool_call>…</tool_call>, and provider delims
-            shown = re.sub(r"<tool_call\s*>\s*", "", shown, flags=re.IGNORECASE)
-            shown = re.sub(r"\s*</tool_call\s*>", "", shown, flags=re.IGNORECASE)
-            shown = invoke_re.sub("", shown)
-            shown = cls._strip_provider_delims(shown).strip()
-            return shown, cls._normalise_rhm_action(verb, args)
-
-        # --- handler 2: a fenced ```json {...}``` action block carrying an explicit verb/name/tool.
-        fence_re = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
-        for fm in fence_re.finditer(reply):
-            try:
-                obj = _j.loads(fm.group(1))
-            except Exception:
-                continue
-            if not isinstance(obj, dict):
-                continue
-            verb = obj.get("verb") or obj.get("name") or obj.get("tool")
-            if not verb:
-                continue
-            shown = fence_re.sub("", reply).strip()
-            return shown, cls._json_obj_to_action(obj, verb)
-
-        # --- handler 3: a bare JSON tool-call object {"name"/"tool":"VERB","arguments":{...}} or
-        #     {"verb":"VERB",...} on its own (no fence). Scan lines for a JSON object that names a verb.
-        for ln in reply.splitlines():
-            s = ln.strip()
-            if not (s.startswith("{") and s.endswith("}")):
-                continue
-            try:
-                obj = _j.loads(s)
-            except Exception:
-                continue
-            if not isinstance(obj, dict):
-                continue
-            # `verb`/`tool` unambiguously name a tool-call. A bare `name`, however, is ALSO how the
-            # RHM shows an example config ({"name":"uppercase","type":...}) — so accept `name` as the
-            # verb ONLY when the real tool-call envelope (arguments/args/input) is also present.
-            # Otherwise this handler would eat a benign object out of the shown reply (silent loss).
-            verb = obj.get("verb") or obj.get("tool")
-            if not verb and obj.get("name") and any(k in obj for k in ("arguments", "args", "input")):
-                verb = obj.get("name")
-            if not verb:
-                continue
-            shown = reply.replace(ln, "").strip()
-            return shown, cls._json_obj_to_action(obj, verb)
-
-        # --- handler 4: the canonical `ACTION: verb args` line — found ANYWHERE in the reply (a real
-        #     trailing directive), NOT only the strict last line; but anchored to the START of a line
-        #     so prose that merely MENTIONS "ACTION:" mid-sentence does not over-trigger.
-        action_re = re.compile(r"^[ \t]*ACTION:\s*(.+)$", re.MULTILINE | re.IGNORECASE)
-        am = action_re.search(reply)
-        if am:
-            body = am.group(1).strip()
-            shown = (reply[:am.start()] + reply[am.end():]).strip()
-            verb, _, rest = body.partition(" ")
-            return shown, cls._normalise_rhm_action(verb, rest)
-
-        return reply, None
+    # NEW model must "just work". The RHM now acts through NATIVE TOOL-CALLING — chat() feeds each
+    # tool_call's {name, arguments} through `_json_obj_to_action` (below) to the SAME dispatcher dict
+    # the gate already takes. There is no prose-parsing step: the old `ACTION:`-line / `<invoke>` /
+    # fenced-json / bare-json TEXT-shape parser cluster (_parse_rhm_action + _normalise_rhm_action +
+    # _strip_provider_delims + _PROVIDER_DELIMS) has been RETIRED — chat() never used it once it moved
+    # to native tools. The mapper is shape-recognition ONLY: it does NOT whitelist (that would be a
+    # second whitelist that drifts from the dispatcher's — AGENTS.md rule 3). The ONE whitelist lives
+    # in `_dispatch_rhm_action` (RHM_VERBS), so a forbidden verb mapped here is REFUSED there (the E6
+    # no-bypass guarantee, proven end-to-end via chat() in rhm_action_parse_acceptance.py).
 
     @classmethod
     def _json_obj_to_action(cls, obj: dict, verb: str):
