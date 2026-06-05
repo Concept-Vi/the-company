@@ -1,0 +1,19 @@
+[Unit]
+Description=Company STT ear — IBM Granite Speech 4.0 1b (transformers, GPU) on port 2033
+After=default.target
+# VRAM: ~4.66 GB resident. The compact top-accuracy English ear (also has a GGUF build for a lean path).
+# Do NOT enable all 3 STT ears together (16 GB ceiling). Enable per the VRAM-arbitration decision.
+
+[Service]
+Type=simple
+WorkingDirectory=/home/tim/company
+EnvironmentFile=-%h/company/voice/ops/voice.env
+ExecStart=%h/.voice-venvs/granite/bin/python /home/tim/company/voice/ears/granite.py 2033
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=600
+
+[Install]
+WantedBy=default.target

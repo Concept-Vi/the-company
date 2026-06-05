@@ -1,0 +1,21 @@
+[Unit]
+Description=Company STT ear — NVIDIA Parakeet-TDT 0.6b v3 (NeMo, GPU) on port 2031
+After=default.target
+# VRAM: ~3.05 GB resident. The intended live-workhorse default ear.
+# DO NOT enable all 3 STT ears together — the 16 GB card can't hold parakeet+canary+granite
+# alongside the brain/embeddings. Enable ONE (the boot-default) per the VRAM-arbitration decision
+# (see build-prep "Voice STT — VRAM Arbitration & Autostart" brief). Others stay on-demand.
+
+[Service]
+Type=simple
+WorkingDirectory=/home/tim/company
+EnvironmentFile=-%h/company/voice/ops/voice.env
+ExecStart=%h/.voice-venvs/parakeet/bin/python /home/tim/company/voice/ears/parakeet.py 2031
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=600
+
+[Install]
+WantedBy=default.target
