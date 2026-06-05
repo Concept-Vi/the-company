@@ -111,6 +111,56 @@ def main():
     check("every register.json journey is present in the reconstruction", not missing,
           f"missing: {sorted(missing)}")
 
+    # --- ADVERSARIAL: the FILESYSTEM must be LOAD-BEARING (the anti-circularity proof) ---
+    # If reconstruction re-serialised register.json's own steps, corrupting the LAYOUT (dropping the
+    # cross-journey refs) would leave the match intact. It must NOT. We corrupt an isolated scratch copy of
+    # the surfaces tree, point navgraph at it, and assert the affected journeys NO LONGER match register.
+    import tempfile, shutil
+    scratch = tempfile.mkdtemp(prefix="navgraph_adv_")
+    try:
+        scratch_surfaces = os.path.join(scratch, "surfaces")
+        shutil.copytree(SURFACES, scratch_surfaces)
+        # drop every cross_journeys ref — destroy the web; the tree alone remains
+        corrupted_views = []
+        for home in os.listdir(scratch_surfaces):
+            hdir = os.path.join(scratch_surfaces, home)
+            if not os.path.isdir(hdir):
+                continue
+            for fn in os.listdir(hdir):
+                if not fn.endswith(".json"):
+                    continue
+                p = os.path.join(hdir, fn)
+                s = json.load(open(p))
+                if s.get("cross_journeys"):
+                    corrupted_views.append(s["id"])
+                s["cross_journeys"] = []
+                json.dump(s, open(p, "w"), indent=2)
+        check("there were cross-refs to corrupt (the adversarial test is meaningful)",
+              len(corrupted_views) >= 1, f"corrupted: {corrupted_views}")
+
+        # rebuild navgraph against the corrupted layout (monkeypatch its SURFACES + load_register stays same)
+        orig = ng.SURFACES
+        ng.SURFACES = scratch_surfaces
+        try:
+            corrupt_verdict = ng.match_register()
+        finally:
+            ng.SURFACES = orig
+        check("corrupting the LAYOUT (dropping cross-refs) BREAKS the reconstruction "
+              "(filesystem is load-bearing — NOT a circular re-read of register)",
+              corrupt_verdict["_all"] is False,
+              "corruption left the match intact → the proof is circular")
+        # and specifically: a journey that depended on a cross-ref view now misses it
+        # (e.g. J7 borrows C1/C3/B2/A5 from other dirs — losing the refs drops them)
+        broke = [j for j in seqs if not corrupt_verdict[j]["match"]]
+        check("at least one journey mismatches after layout corruption", len(broke) >= 1,
+              f"journeys broken by corruption: {broke}")
+    finally:
+        shutil.rmtree(scratch, ignore_errors=True)
+
+    # restore clean reconstruction is still green (the corruption was isolated to the scratch copy)
+    check("clean reconstruction still matches after the adversarial run (corruption was isolated)",
+          ng.match_register()["_all"])
+
     print(f"\n{'ALL ' + str(PASS) + ' CHECKS PASS' if not FAILS else str(len(FAILS)) + ' CHECK(S) FAILED'}"
           " — B3 filesystem-as-graph reconstructs register.json journeys")
     if FAILS:

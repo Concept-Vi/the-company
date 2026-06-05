@@ -107,53 +107,38 @@ def build_graph():
 
 
 def reconstruct_journeys(graph=None):
-    """Rebuild each journey's ORDERED member-view list from the graph — using the tree home for the views the
-    journey owns PLUS the cross-edges for the views it borrows. The order is recovered by walking the spine
-    edges. Returns {journey_id: [ordered view ids]}.
+    """Rebuild each journey's ORDERED member-view list — MEMBERSHIP from the FILESYSTEM (tree home ∪ the
+    cross-journey address-refs), ORDER from register.json sequences[].steps. Returns {journey_id: [views]}.
 
-    The reconstruction must use BOTH halves: tree membership alone misses a borrowed view (it lives under
-    another journey's dir); cross-edges restore it. This is the load-bearing proof."""
+    THE LOAD-BEARING DESIGN (the fix for the circular proof): membership is derived ONLY from the layout —
+    a view's TREE HOME directory plus its `cross_journeys[]` refs. The journeys[] convenience field is NOT
+    used here. Register supplies the STEP ORDER only (a sanctioned input — the task permits 'order comes from
+    register'); the FILESYSTEM decides WHO is in each journey by FILTERING those steps to the filesystem-
+    derived member set. So if the tree misplaces a view, or a cross-ref is dropped, that view falls OUT of
+    its journey → the reconstruction MISMATCHES register → the proof has teeth. (Verified: navgraph_acceptance
+    corrupts the layout and asserts the affected journey no longer matches.)"""
     if graph is None:
         graph = build_graph()
     nodes = graph["nodes"]
 
-    # which views belong to each journey (from the web: every node's journeys[] — the union of tree home +
-    # cross memberships). This is the SET; order comes next from the spine edges.
-    members = {}
-    for vid, n in nodes.items():
-        for j in n["journeys"]:
-            members.setdefault(j, set()).add(vid)
-
-    # order: chain the spine edges per journey into the ordered walk.
+    # MEMBERSHIP from the filesystem: tree home (the view's one directory) ∪ cross-journey refs.
+    # NOT from nodes[*]["journeys"] (the full field) — that would make the layout non-load-bearing.
     from collections import defaultdict
-    succ = defaultdict(dict)   # journey -> {from: to}
-    has_pred = defaultdict(set)
-    for e in graph["spine_edges"]:
-        succ[e["journey"]][e["from"]] = e["to"]
-        has_pred[e["journey"]].add(e["to"])
+    members = defaultdict(set)
+    for vid, n in nodes.items():
+        homes = []
+        if n["tree_home"] != UNROUTED:
+            homes.append(n["tree_home"])       # the directory it physically lives in
+        homes += n["cross_journeys"]           # the address-refs that restore the web
+        for j in homes:
+            members[j].add(vid)
 
+    # ORDER from register steps, FILTERED by the filesystem-derived membership.
+    reg = load_register()
+    seqs = {s["id"]: s for s in reg["sequences"]}
     ordered = {}
-    for j, mset in members.items():
-        # find the head: a member with no predecessor edge in this journey.
-        heads = [v for v in mset if v not in has_pred[j]]
-        chain = []
-        if j in succ:
-            # walk from each head along succ; handles the single-step journeys (no edges) too.
-            start = sorted(heads)[0] if heads else sorted(mset)[0]
-            seen = set()
-            cur = start
-            while cur is not None and cur not in seen:
-                chain.append(cur)
-                seen.add(cur)
-                cur = succ[j].get(cur)
-            # append any member not reached by the walk (e.g. an isolated cross-only view) — sorted for det.
-            for v in sorted(mset):
-                if v not in seen:
-                    chain.append(v)
-        else:
-            # no spine edges (single-step journey) — the lone member(s).
-            chain = sorted(mset)
-        ordered[j] = chain
+    for j in seqs:
+        ordered[j] = [v for v in seqs[j]["steps"] if v in members.get(j, set())]
     return ordered
 
 
