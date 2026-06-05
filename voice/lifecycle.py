@@ -139,6 +139,8 @@ def load(service_id: str) -> dict:
         for line in open(ENV_FILE, encoding="utf-8"):
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
+                if line.startswith("export "):                 # voice.env uses `export KEY=VAL` on some lines
+                    line = line[len("export "):]
                 k, _, val = line.partition("=")
                 env.setdefault(k.strip(), val.strip().strip('"').strip("'"))
     log = open(logp, "ab")                                     # noqa: SIM115 (handed to the child)
