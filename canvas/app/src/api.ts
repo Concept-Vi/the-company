@@ -95,6 +95,14 @@ export const api = {
   // chronological; a non-ui:// / malformed address → backend 400 (fail-loud, normalized to {error} by jr).
   addressHistory: (address: string) =>
     fetch('/api/address-history?address=' + encodeURIComponent(address)).then(jr),
+  // L5 · self-change locating (§21.7#5): "what did the system change HERE?" — the self-change audit log
+  // FILTERED by the S3 address→code scope join. Returns { address, scope[], stale, note, changes[] }
+  // (each change carries matched_files = the subset that touched this element). A stale corpus is surfaced
+  // via `stale`/`note` (regenerate the corpus), NEVER a silent empty that reads "nothing changed here".
+  // Revert from here reuses the EXISTING operator-only api.revert(sha) — no new revert path. Malformed
+  // address → backend 400 (fail-loud, normalized to {error} by jr).
+  selfChangesAt: (address: string) =>
+    fetch('/api/self-changes-at?address=' + encodeURIComponent(address)).then(jr),
   // B: the walkthrough/review session lifecycle. start makes its OWN session-graph (not graph-scoped);
   // current = the node at the cursor + its coa framing + its ui:// target; next opens the gate + advances.
   reviewStart: (item_ids: string[], mode = 'walkthrough') =>

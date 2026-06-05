@@ -31,6 +31,7 @@ import { Toolbar } from './regions/Toolbar'
 import { Palette } from './regions/Palette'
 import { Inspector } from './regions/Inspector'
 import { History } from './regions/History'
+import { SelfChanges } from './regions/SelfChanges'
 import { Inbox } from './regions/Inbox'
 import { Grow } from './regions/Grow'
 import { OpPanels } from './regions/OpPanels'
@@ -136,6 +137,15 @@ function Hud() {
              Renders nothing unless a ui:// locus is indicated, so it never clutters the rail. */}
           <PanelErrorBoundary name="history">
             <History />
+          </PanelErrorBoundary>
+          {/* L5 · self-change locating (§21.7#5): when the operator INDICATES a ui:// element, "what did the
+             SYSTEM change HERE?" shows beneath its history — the self-change audit log filtered to this
+             element's code scope (GET /api/self-changes-at → Suite.self_changes_at), with a per-row revert
+             that reuses the EXISTING operator-only /api/revert gate. Per-panel boundary (PRESERVE-LIST): a
+             render-throw degrades to a contained card, never a white-screen. Renders nothing unless a ui://
+             locus is indicated. */}
+          <PanelErrorBoundary name="self-changes">
+            <SelfChanges />
           </PanelErrorBoundary>
           <Inbox />
           <Grow />

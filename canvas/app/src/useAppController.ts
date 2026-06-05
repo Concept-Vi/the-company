@@ -86,6 +86,14 @@ export function useAppController(editor: Editor) {
   // rendered NAVIGABLE (grouped by kind) by the History region. null = nothing indicated / no history yet.
   const [history, setHistory] = useState<{ address: string; trajectory: any[] } | null>(null)
   const [historyBusy, setHistoryBusy] = useState(false)
+  // L5 · self-change locating (§21.7#5): "what did the SYSTEM change HERE?" — the self-change audit log
+  // FILTERED to the indicated ui:// element's code scope (the S3 address→code join). Loaded by
+  // fetchSelfChanges whenever the operator indicates an element; rendered by the SelfChanges region with a
+  // per-row revert (the EXISTING operator-only api.revert). Carries `stale`/`note` so the surface tells
+  // "corpus stale — regenerate" apart from "no changes here" (fail-loud, never a silent empty).
+  const [selfChanges, setSelfChanges] =
+    useState<{ address: string; scope: string[]; stale: boolean; note: string; changes: any[] } | null>(null)
+  const [selfChangesBusy, setSelfChangesBusy] = useState(false)
   const [cfg, setCfg] = useState<any>({ model: '', persona: '' })
   const [cfgOpen, setCfgOpen] = useState(false)
   // U12: the /api/inbox payload is { live_escalations, resolved_for_you, batched, counts }. `batched` is a
@@ -563,6 +571,45 @@ export function useAppController(editor: Editor) {
   // Load the history whenever the indicated locus changes (and re-load when the live event count moves, so
   // a fresh addressed event at THIS locus appears without a re-click — events.length is the cheap poke).
   useEffect(() => { fetchHistory(indicated) /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [indicated, events.length])
+  // L5 · self-change locating (§21.7#5). When the operator INDICATES a ui:// element, load "what did the
+  // SYSTEM change HERE?" — the self-change audit log filtered by the S3 address→code scope join. Mirrors
+  // fetchHistory exactly: reflects-never-owns (the runtime is authoritative; this only reads). A backend
+  // 400 (malformed address) is surfaced as a notice (fail-loud, rule 4 — never a silent swallow). STALE
+  // TRICHOTOMY is carried through whole (stale/note) so the region renders "corpus stale — regenerate"
+  // distinctly from "no self-changes here." Re-poked by events.length so a fresh self-apply at THIS locus
+  // appears without a re-click.
+  async function fetchSelfChanges(addr: string | null) {
+    if (!addr || !addr.startsWith('ui://')) { setSelfChanges(null); return }   // only ui:// loci have a code scope
+    setSelfChangesBusy(true)
+    try {
+      const r = await api.selfChangesAt(addr)
+      if (r?.error) {
+        setSelfChanges({ address: addr, scope: [], stale: false, note: r.error, changes: [] })
+        setNotice('✕ ' + r.error); return
+      }
+      setSelfChanges({
+        address: addr,
+        scope: Array.isArray(r?.scope) ? r.scope : [],
+        stale: !!r?.stale,
+        note: r?.note || '',
+        changes: Array.isArray(r?.changes) ? r.changes : [],
+      })
+    } catch (e: any) {
+      setSelfChanges({ address: addr, scope: [], stale: false, note: '', changes: [] })
+      setNotice('✕ could not load self-changes: ' + (e?.message || e))
+    } finally { setSelfChangesBusy(false) }
+  }
+  useEffect(() => { fetchSelfChanges(indicated) /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [indicated, events.length])
+  // Revert a self-change FROM the indicated element — reuses the EXISTING operator-only api.revert(sha)
+  // (the /api/revert gate; no new revert path). After it lands, re-read the located list so the row clears.
+  async function revertSelfChangeAt(sha: string) {
+    if (!sha) return
+    setNotice('rolling back self-change ' + sha.slice(0, 8) + '…')
+    const r = await api.revert(sha)
+    if (r?.error) { setNotice('✕ revert failed: ' + r.error); return }
+    setNotice('↩ reverted ' + sha.slice(0, 8) + ' — undone (git ' + (r.head || '').slice(0, 8) + '). bounded, recoverable.')
+    setTypes(await api.types()); await fetchSelfChanges(indicated); setLastChange(await api.lastChange())
+  }
   async function sendChat(override?: string) {
     const m = (override ?? chatMsg).trim()
     if (!m || chatBusy) return
@@ -1023,6 +1070,7 @@ export function useAppController(editor: Editor) {
     oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
     showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn,
     wtSpoke, wtBusy, selected, mobileTab, fleet, indicated, proposal, history, historyBusy,
+    selfChanges, selfChangesBusy,
     // refs the components read for the inspector form
     configByNode,
     // setters the components call directly
@@ -1032,7 +1080,7 @@ export function useAppController(editor: Editor) {
     poll, openCoa, reload, fitGraph, addNode, wireSelected, doConnect, setNodeConfig, surfaceOutput,
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
     resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, fieldValue,
-    setField, revertLast, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus,
+    setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus,
     approveProposal, dismissProposal,
   }
 }

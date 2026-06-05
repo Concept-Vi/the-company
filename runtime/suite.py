@@ -3901,6 +3901,14 @@ class Suite:
         `revert_self_change(sha)` — the SAME operator-only rollback (the `/api/revert` gate is the one
         that guards it; this adds NO new revert path and does NOT weaken the gate).
 
+        WIRING NOTE (so the next agent isn't misled): this is a TESTED backend primitive that is
+        deliberately NOT on a face — adding a `/api/revert-at` route would be the "new revert path" the
+        L5 spec forbids. The LIVE operator drive path is FE `revertSelfChangeAt` → `api.revert(sha)` →
+        POST `/api/revert` → `revert_self_change(sha)` (the existing operator-only gate), and per-address
+        SCOPING on that path is UI-level (only the address-filtered rows are clickable). This method's
+        server-side scoped-refusal is the additional belt the loop can wire to a face later if desired;
+        for now it documents + proves the composition without weakening or duplicating the live gate.
+
         SCOPED + FAIL LOUD: you may only revert a change that actually touched THIS element. A `sha`
         absent from the address's filtered list RAISES (never silently revert something that didn't
         change here, never silently no-op) — rule 4. The leaf is the unchanged `revert_self_change`."""
