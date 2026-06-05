@@ -1418,6 +1418,87 @@ class Suite:
         out["routed_posture"] = p                              # deterministic record: which posture routed it
         return out
 
+    # --- I2: the /api/act emission seam — a DETERMINISTIC human click replaces the model's
+    #     unreliable prose-emission for the interactive path (the emission RELOCATION, §21.4#1) ---
+    @staticmethod
+    def _act_dict(verb: str, address: str | None, args: dict) -> dict:
+        """The thin per-verb ADAPTER: turn a click's `{verb, address, args}` into the verb-shaped
+        dispatcher dict `_dispatch_rhm_action` expects (it is verb-shaped, NOT uniform-`address`:
+        show→targets, propose/panel/extend→name+spec, build→steps, run/consult→query — seams-rhm
+        Seam 1). The `address` (the clicked locus, I1) maps onto the verb's natural address slot
+        (show's `targets[]`, the existing ui:// vocabulary). UNKNOWN verbs are NOT filtered here —
+        the dict is built and handed to the dispatcher, whose refuse-tail (suite.py:1386) enforces
+        the 7-verb whitelist + no-self-apply STRUCTURALLY (the no-bypass guarantee rides along for
+        free; I2 never widens authority)."""
+        action: dict = {"verb": verb}
+        if verb == "show":
+            # the click's address IS the target; also accept explicit targets[] (multi-select clicks)
+            targets = list(args.get("targets") or [])
+            if address and address not in targets:
+                targets.insert(0, address)
+            action["targets"] = targets
+        elif verb in ("run",):
+            pass                                              # run takes the current graph — no extra args
+        elif verb == "consult":
+            action["query"] = args.get("query") or args.get("question") or ""
+        elif verb in ("propose", "panel", "extend"):
+            action["name"] = args.get("name")
+            action["spec"] = args.get("spec")
+        elif verb == "build":
+            action["steps"] = args.get("steps")
+        else:
+            # unknown/non-whitelisted verb: pass the raw args through; the dispatcher refuses it.
+            action.update({k: v for k, v in args.items() if k not in ("verb", "address")})
+        if address is not None:
+            action.setdefault("address", address)             # carry the locus through for audit (I1)
+        return action
+
+    def act(self, verb: str, graph_id: str, address: str | None = None,
+            args: dict | None = None) -> dict:
+        """I2 — the operator-face emission seam (the parallel-to-chat() entry to the SAME dispatcher).
+
+        A human click ships a STRUCTURED `{verb, address, args}` — never prose — and this constructs
+        the final dispatcher dict directly, BYPASSING the unreliable model-prose parse
+        (`_parse_rhm_action`, the narration-prone step this exists to relocate, suite.py:1140). It
+        then drives `_dispatch_rhm_action` (suite.py:1287) through the SAME governance posture routing
+        chat()'s decide-for-me path uses (`autonomous_dispatch`), and re-folds the SAME operator
+        confirmation chat() folds — so the operator always sees "did X" (rule 4: no silent success),
+        and consult/ask get their richer folds too (not just the else-branch).
+
+        Re-fold #1 — GOVERNANCE: the verb's action-class routes through `autonomous_dispatch`
+          (suite.py:1391): AUTO verbs (run/build/show/consult) act now; CONFIRM verbs
+          (propose/panel/extend) run their body whose action is to SURFACE a draft for operator
+          approval — they NEVER self-apply. The 7-verb whitelist + no-self-apply ride along INSIDE
+          the dispatcher (RHM_VERBS suite.py:952; refuse-tail suite.py:1386). I2 inherits exactly the
+          RHM's permitted set — a click cannot widen authority.
+          (NOTE: I4 will key the tier by ADDRESS on top of this; I2 folds the verb-class posture that
+          already lives in chat(), not I4's address→tier lookup.)
+        Re-fold #2 — CONFIRMATION: `_confirmation_for` (suite.py:1250) returns "" for consult/ask by
+          design (chat() folds those separately at suite.py:1501); so act() replicates chat()'s FULL
+          fold, not the else-branch alone — else a consult/ask click is a silent success.
+
+        Returns the same `{reply, action}` shape /api/chat returns."""
+        args = dict(args or {})
+        action = self._act_dict(verb, address, args)
+        # GOVERNANCE re-fold: route by the verb's action-class (the same posture routing chat()'s
+        # decide-for-me path uses). Not mode-gated — a deterministic click is not subject to the RHM
+        # presence dial; and it is safe regardless, since every RHM verb is AUTO or a CONFIRM that
+        # only SURFACES (autonomous_dispatch never calls guard() for a non-AUTO class, so nothing
+        # raises and propose/panel/extend still only surface). Unknown verb → safest class (CONFIRM).
+        cls = self.RHM_VERB_CLASS.get(verb, "register_type")
+        outcome = self.autonomous_dispatch(cls, do=lambda: self._dispatch_rhm_action(action, graph_id),
+                                           payload=action)
+        # CONFIRMATION re-fold (mirror chat() suite.py:1501–1509): consult folds its full answer; ask
+        # folds its needs-line; every other verb (incl. refused → did=="none") folds _confirmation_for.
+        if outcome and outcome.get("did") == "consult":
+            reply = "📖 " + outcome["answer"]
+        elif outcome and outcome.get("did") == "ask":
+            reply = ("❓ That needs something not in the registry, so I'm asking rather than guessing: "
+                     + outcome["needs"] + " — surfaced for you in the inbox.")
+        else:
+            reply = self._confirmation_for(outcome)
+        return {"reply": reply, "action": outcome, "graph_id": graph_id}
+
     def chat(self, message: str, graph_id: str, focus: dict | None = None) -> dict:
         """Grounded conversation with the operator. Answers from compact ground truth; never
         confabulates system facts. Suggests actions but performs none that skip the surfaced

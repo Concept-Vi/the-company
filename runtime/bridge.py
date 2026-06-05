@@ -350,6 +350,21 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/propose":          # agent/operator dispatches a build
                 b = self._body()
                 self._send(200, json.dumps(SUITE.propose_node(b["name"], b["spec"])))
+            elif self.path == "/api/act":               # I2: the click-emission seam — a DETERMINISTIC
+                # human click ships a STRUCTURED {verb, address, args} that drives _dispatch_rhm_action
+                # DIRECTLY (bypassing the unreliable model-prose parse) — the emission RELOCATION
+                # (§21.4#1). OPERATOR face only (beside /api/resolve, NOT the MCP/agent face): a human
+                # click is an operator act, where the no-self-approve gates already live (seams-rhm
+                # headline). The 7-verb whitelist + no-self-apply ride along INSIDE the dispatcher; the
+                # verb-class governance posture + the "did X" confirmation are re-folded by Suite.act.
+                # Fail loud on a missing verb (no silent no-op).
+                b = self._body()
+                gid = b.get("graph_id", DEMO)
+                verb = b.get("verb")
+                if not verb or not str(verb).strip():
+                    raise ValueError("/api/act needs a non-empty 'verb' (fail loud)")
+                self._send(200, json.dumps(SUITE.act(
+                    str(verb).strip(), gid, address=b.get("address"), args=b.get("args"))))
             elif self.path == "/api/resolve":           # OPERATOR approves/rejects/comments/skips (UI channel)
                 b = self._body()
                 # D: additive session tagging + the comment/skip/decide vocabulary; existing callers
