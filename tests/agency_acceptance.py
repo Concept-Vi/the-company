@@ -5,7 +5,7 @@ the canvas — compose a typed pipeline (add nodes + wire them) via the `build` 
 AUTO (create_node + connect — reversible, exactly the operator's palette/wire), and the whitelist
 stays {run, propose, build}: still NO path to apply/delete/file-write. NL→graph is proven by use.
 """
-import os, sys, tempfile, shutil
+import os, sys, tempfile, shutil, json
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -32,12 +32,15 @@ try:
     suite = Suite(store, reg, nodes_dir=NODES)
     g = "agency"
 
-    # parse a build action (NL → typed pipeline as JSON)
-    pipeline = ('[{"as":"a","type":"constant","config":{"value":"hi"}},'
-                '{"as":"b","type":"uppercase"},{"wire":"a.value -> b.text"}]')
-    shown, act = suite._parse_rhm_action("Building that pipeline now.\nACTION: build " + pipeline)
-    check("parses ACTION: build <json> into steps", act["verb"] == "build" and len(act["steps"]) == 3)
-    check("build line stripped from shown reply", "ACTION:" not in shown)
+    # NATIVE-TOOL-CALL path (the one the live chat() uses): a `build` tool_call → action dict via the
+    # SAME _json_obj_to_action the chat loop feeds each tool_call through. The model supplies the typed
+    # pipeline as the tool's `steps` argument (a JSON list); the args envelope is a JSON STRING as the
+    # API returns it. (Was: the retired `ACTION: build <json>` prose-parse + ACTION-line stripping.)
+    steps = [{"as": "a", "type": "constant", "config": {"value": "hi"}},
+             {"as": "b", "type": "uppercase"}, {"wire": "a.value -> b.text"}]
+    act = suite._json_obj_to_action(
+        {"name": "build", "arguments": json.dumps({"steps": steps})}, "build")
+    check("build tool_call → action dict with the 3 steps", act["verb"] == "build" and len(act["steps"]) == 3)
 
     # dispatch build → composes the pipeline on the canvas (symmetric agency)
     r = suite._dispatch_rhm_action(act, g)

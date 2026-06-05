@@ -89,6 +89,44 @@ def complete(transport: Callable, messages: list, model: str,
     raise last or FabricError("no attempts made")
 
 
+def complete_with_tools(transport: Callable, messages: list, model: str, tools: list,
+                        tool_choice: str = "auto", retries: int = 4,
+                        sleep: Callable = time.sleep, **opts) -> dict:
+    """SIBLING of complete() for NATIVE TOOL-CALLING — returns the message dict {content, tool_calls}.
+
+    complete()'s empty-content guard (`:71`) treats empty content as a FAILURE. That's wrong for
+    tool-calling: a tool_call with EMPTY content is SUCCESS (the model chose to call a tool, not to
+    speak). So this is a separate guarded path with a TOOL-AWARE validity rule, keeping the SAME
+    "every call guarded, fail loud" guarantee. No schema/JSON guards (the message dict isn't a
+    JSON-content string). complete() (and its 12+ string-callers) is UNTOUCHED.
+
+    transport: `(model, messages, tools=..., tool_choice=...) -> message dict` (openai_tools_transport).
+    Validity guard: a response is VALID iff `msg.get("tool_calls")` is truthy OR
+    `str(msg.get("content") or "").strip()` is non-empty. (Tool_call ⇒ success even with empty content;
+    empty-AND-no-tool_calls ⇒ the empty-failure ⇒ retry.) Reuses the jittered backoff (_retry_sleep).
+    Retries on: transport error · empty-AND-no-tool_calls. Exhausted → raises FabricError (fail loud).
+    Returns the whole message dict (so the caller can read tool_calls + content).
+    """
+    last: FabricError | None = None
+    for attempt in range(retries):
+        try:
+            msg = transport(model, messages, tools=tools, tool_choice=tool_choice, **opts)
+        except Exception as e:                                   # transport/network/backoff
+            last = FabricError(f"transport error: {e!r}")
+            _retry_sleep(sleep, attempt, retries); continue
+
+        # tool-aware validity: a tool_call with empty content is SUCCESS (NOT the complete() empty-fail)
+        has_tool_calls = bool(msg.get("tool_calls"))
+        has_content = bool(str(msg.get("content") or "").strip())
+        if has_tool_calls or has_content:
+            return msg
+
+        last = FabricError("empty content AND no tool_calls from model")
+        _retry_sleep(sleep, attempt, retries); continue
+
+    raise last or FabricError("no attempts made")
+
+
 def complete_embeddings(transport: Callable, inputs: list, model: str,
                         dim: int | None = None, retries: int = 3,
                         sleep: Callable = time.sleep) -> list:

@@ -121,16 +121,19 @@ try:
     revert_subj = git(repo, "log", "-1", "--format=%s")
     check("the revert commit subject is a Revert of a [self-apply]", revert_subj.startswith('Revert "[self-apply]'))
 
-    # THE ADVERSARIAL CASE: last_self_change must NOT return the revert (it is an UNDO, not a change).
-    # NB git semantics: `git revert` does NOT delete the original commit — it ADDS a revert commit on
-    # top. So after reverting gamma, the original `[self-apply] gamma` commit is STILL the newest
-    # *change* in history (the revert sits above it). The bug was returning the REVERT (the tip); the
-    # fix returns the newest NON-revert change, which is gamma's original commit — NOT the revert.
+    # THE ADVERSARIAL CASE (D9): last_self_change must NOT return the revert (it is an UNDO, not a
+    # change) AND must NOT return the change the revert UNDID (gamma no longer STANDS). NB git semantics:
+    # `git revert` does NOT delete the original commit — it ADDS a revert commit on top, so gamma's
+    # `[self-apply]` commit is still IN history. The old contract returned gamma's original (newest
+    # non-revert). D9 sharpens it: gamma was REVERTED, so it no longer stands — last_self_change skips
+    # BOTH the revert AND gamma, returning the newest STILL-STANDING change (beta).
     lsc = suite.last_self_change() or {}
     check("#2: last_self_change does NOT return the revert (no 'revert the revert')",
           not lsc.get("subject", "").startswith('Revert "'))
-    check("#2: last_self_change reflects the true last CHANGE commit (gamma's original, not the revert)",
-          lsc.get("sha") == sha_c)
+    check("D9: last_self_change SKIPS the reverted change (gamma no longer stands)",
+          lsc.get("sha") != sha_c)
+    check("D9: last_self_change returns the newest STILL-STANDING change (beta, the one before gamma)",
+          lsc.get("sha") == sha_b)
     check("#2: that record is correctly tagged a change, not an undo", lsc.get("is_revert") is False)
     # the revert IS still in the audit log, but tagged as a revert (distinctly surfaced, not hidden)
     log2 = suite.self_change_log(limit=10)

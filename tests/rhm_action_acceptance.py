@@ -2,13 +2,14 @@
 
 The decision-compiler DOWN: the RHM can act from conversation, but ONLY through whitelisted,
 governed verbs — propose (→ surfaces for operator approval, CONFIRM) and run (→ AUTO,
-recomputable). It has NO path to apply / delete / file-write (E6 invariant). The LLM signals
-intent with a trailing `ACTION:` line; the dispatcher enforces the whitelist.
+recomputable). It has NO path to apply / delete / file-write (E6 invariant). The RHM acts via
+NATIVE TOOL-CALLING: chat() feeds each tool_call's {name, arguments} through `_json_obj_to_action`
+to the dispatcher, which enforces the whitelist (the old hand-typed `ACTION:` prose line is retired).
 
 This test proves the SECURITY invariant deterministically (crafted apply/delete actions do
-NOTHING) + the action-line parsing. The propose→surface→approve→live loop is proven by use.
+NOTHING) + the native verb→action mapping. The propose→surface→approve→live loop is proven by use.
 """
-import os, sys, tempfile, shutil
+import os, sys, tempfile, shutil, json
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -38,15 +39,17 @@ try:
     suite.create_node(g, "uppercase", node_id="u")
     suite.connect(g, "c", "value", "u", "text")
 
-    # --- ACTION-line parsing ---
-    clean, act = suite._parse_rhm_action("Sure, running it now.\nACTION: run")
-    check("parses an ACTION: run line", act == {"verb": "run"})
-    check("strips the ACTION line from the shown reply", "ACTION:" not in clean and "running it now" in clean)
-    clean, act = suite._parse_rhm_action("I'll draft that.\nACTION: propose reverse :: reverse the input text")
-    check("parses ACTION: propose <name> :: <spec>",
+    # --- NATIVE-TOOL-CALL action mapping (the path the live chat() uses) ---
+    # A `propose` tool_call → action dict via the SAME _json_obj_to_action the chat loop feeds each
+    # tool_call through (args a JSON STRING, as the API returns them). The run/show/build/consult
+    # mappings are covered in rhm_action_parse_acceptance (a)/(b)/(e); propose's mapping is proven HERE
+    # (it is the propose→surface→approve→live loop's front door). (Was: the retired `ACTION:`-prose
+    # parse + ACTION-line stripping + the no-ACTION-line case — all dead on the native path.)
+    act = suite._json_obj_to_action(
+        {"name": "propose", "arguments": json.dumps({"name": "reverse", "spec": "reverse the input text"})},
+        "propose")
+    check("propose tool_call → action dict with name + spec",
           act["verb"] == "propose" and act["name"] == "reverse" and "reverse the input" in act["spec"])
-    clean, act = suite._parse_rhm_action("Just a normal grounded answer about the system.")
-    check("no ACTION line → no action", act is None)
 
     # --- THE SECURITY INVARIANT: whitelist {run, propose}; everything else does NOTHING ---
     snapshot_files = set(os.listdir(NODES))

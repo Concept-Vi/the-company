@@ -1,0 +1,31 @@
+[Unit]
+Description=vLLM Chat Server (Qwen3.5-4B-AWQ) on port 8000
+# The local WORKER model (the brain on :8000). Pulled into the core boot set via
+#   systemctl --user add-wants company.target vllm-chat.service
+# (it predates company.target, so it is wired by add-wants rather than WantedBy).
+# Canonical copy of an EXISTING unit, captured here so the repo holds the truth
+# (ops/AGENTS.md: "ops/systemd/ holds the canonical copies"). The proven launch
+# config lives in the ExecStart script ~/vllm-tests/serve.sh — see note below.
+After=default.target
+
+[Service]
+Type=simple
+# serve.sh is the PROVEN launcher: --gpu-memory-utilization 0.80 --max-model-len 32768
+# --max-num-seqs 16 --enable-prefix-caching --enable-auto-tool-choice
+# --tool-call-parser qwen3_xml --chat-template chat_template_nothink.jinja (no-think).
+# This is the hand-started config the RHM needs (32K context + native tool-calling).
+# NOTE: serve.sh lives OUTSIDE this repo (~/vllm-tests/, untracked) so it can drift
+# silently. Moving the flags in-repo (inline Environment= + ExecStart, or a serve
+# script under ops/) is a native-model-layer-stage change that requires a tested
+# restart of the live brain — flagged for the operator, not done here.
+ExecStart=/home/tim/vllm-tests/serve.sh
+Restart=on-failure
+RestartSec=10
+# Logs go to journalctl: journalctl --user -u vllm-chat -f
+StandardOutput=journal
+StandardError=journal
+# Generous timeout for cold-start compilation
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

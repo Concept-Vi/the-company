@@ -165,8 +165,10 @@ class H(BaseHTTPRequestHandler):
                     _probe(name, f"http://127.0.0.1:{port}")
                     for name, port in sorted(ENGINE_PORTS.items())]
                 self._send(200, json.dumps({
-                    "stt": voice_stt.available(),
-                    "stt_default": voice_stt.DEFAULT_PROVIDER,
+                    "stt": voice_stt.available(),          # back-compat: id → bool (the old shape)
+                    "stt_default": voice_stt.stt_default(),  # back-compat: the default ear id
+                    "stt_registry": voice_stt.available_stt(),  # the RICH ear registry (label/kind/detail)
+                    "stt_active": SUITE.rhm_config().get("stt") or voice_stt.active_ear(),  # selected ear
                     "tts_up": engines[0]["up"],            # back-compat: the default (kokoro) up?
                     "engines": engines,                    # lane B: per-engine availability + voices
                     "voice_enabled": SUITE.voice_enabled()}))  # lane H: the per-mode voice toggle state
@@ -218,10 +220,16 @@ class H(BaseHTTPRequestHandler):
         self.close_connection = True
         try:
             if self.path == "/api/stt":                   # raw audio bytes in → transcript out
+                # The ear is chosen by the SELECTED provider (rhm_config().stt — the config slot the
+                # suite lane added, mirroring the brain-model slot), NOT a literal default. This closes
+                # the bug where the bridge defaulted assemblyai while the loop defaulted local — ONE
+                # source of selection now. A selected-but-down ear → transcribe() raises LOUD (fail
+                # loud, no fallback); _send's except surfaces it to the UI.
                 from voice import stt as voice_stt
                 ln = int(self.headers.get("Content-Length", 0))
                 audio = self.rfile.read(ln)
-                self._send(200, json.dumps(voice_stt.transcribe(audio)))
+                ear = SUITE.rhm_config().get("stt") or voice_stt.active_ear()
+                self._send(200, json.dumps(voice_stt.transcribe(audio, provider=ear)))
                 return
             if self.path == "/api/tts":                   # text in → wav out (routed by engine)
                 # lane B: parse the body to read the optional `engine` field, route to that engine's

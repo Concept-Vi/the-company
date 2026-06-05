@@ -4,7 +4,7 @@ The RHM can SHOW the operator things: a `show` verb is a VIEW directive (drives 
 highlights nodes) — it resolves targets against the live graph and mutates NOTHING. The camera
 move is proven by use; here we prove parsing, target-resolution, and that it's non-mutating.
 """
-import os, sys, tempfile, shutil
+import os, sys, tempfile, shutil, json
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -34,8 +34,12 @@ try:
     suite.create_node(g, "uppercase", node_id="b")
 
     check("show is a whitelisted verb", "show" in suite.RHM_VERBS)
-    shown, act = suite._parse_rhm_action("Here it is.\nACTION: show a, b")
-    check("parses ACTION: show <ids>", act["verb"] == "show" and act["targets"] == ["a", "b"])
+    # NATIVE-TOOL-CALL path (the one the live chat() uses): a `show` tool_call → action dict via the
+    # SAME _json_obj_to_action the chat loop feeds each tool_call through. Args are a JSON STRING, as
+    # the API returns them. (Was: the retired `ACTION: show a, b` prose-parse.)
+    act = suite._json_obj_to_action(
+        {"name": "show", "arguments": json.dumps({"targets": ["a", "b"]})}, "show")
+    check("show tool_call → action dict with the targets", act["verb"] == "show" and act["targets"] == ["a", "b"])
 
     before = suite._load(g)
     r = suite._dispatch_rhm_action(act, g)
