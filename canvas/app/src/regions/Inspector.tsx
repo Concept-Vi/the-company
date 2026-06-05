@@ -7,7 +7,26 @@ import { NodeConfigForm } from '../components/NodeConfigForm'
 import { useApp } from '../AppContext'
 
 export function Inspector() {
-  const { selected, nodeStates, configTick, configByNode, setWorkshop, doRun, surfaceOutput, buildFromOutput, setNodeConfig } = useApp()
+  const { selected, nodeStates, configTick, configByNode, setWorkshop, doRun, surfaceOutput, buildFromOutput, setNodeConfig, freshness, freshnessBusy } = useApp()
+  // L10 · "stale at this address" (§21.7#10): the DERIVED half of cached/stale, shown ALONGSIDE the served
+  // `cached` chip below (it does NOT change how `cached` is served). The verdict is a COSTED DERIVATION
+  // (recompile + input-hash + _memo_sig compare; seams-engine Seam 8a), fetched on-demand for THIS selected
+  // node (controller.fetchFreshness → GET /api/stale-at). Fail-loud (rule 4): an unevaluable node
+  // (volatile/reference/no-cache/error) reads "unknown — <reason>", NEVER a silent "fresh". Only render the
+  // badge for the node it was derived FOR (guard against a stale verdict from a prior selection).
+  const fr = freshness && selected && freshness.address === selected.address ? freshness : null
+  const staleBadge = freshnessBusy
+    ? <span className="fresh-badge unknown" title="deriving freshness…">checking…</span>
+    : fr
+      ? (fr.unknown || fr.stale == null
+          ? <span className="fresh-badge unknown" title={fr.reason || 'freshness could not be derived'}>
+              {fr.volatile ? 'always re-derived' : 'unknown'}</span>
+          : fr.stale
+            ? <span className="fresh-badge stale" data-ui-ref="ui://inspector/freshness"
+                title="the cached result at this address is out of date vs its current inputs — rerun to refresh">stale ⚠</span>
+            : <span className="fresh-badge fresh" data-ui-ref="ui://inspector/freshness"
+                title="the cached result at this address matches its current inputs">fresh ✓</span>)
+      : null
   // F3: drive the inspector status BY SIGHT from the served registry (capabilities().node_states), same source
   // as the canvas card — no parallel hardcoded ternary. `def.label` is the word; `def.render.token` colours the
   // chip (the ONE source of status colour, rule 3). FAILED surfaces its error string (fail-loud, rule 4);
@@ -31,6 +50,10 @@ export function Inspector() {
                   : selected.status === 'cached'
                     ? <span style={chipStyle}>{word} ↺</span>
                     : <span style={chipStyle}>{word}</span>}
+              {/* L10 · the DERIVED "stale at this address" half, shown beside the served `cached` chip. A
+                  costed derivation (recompile + input-hash + _memo_sig compare), fetched on-demand for this
+                  node — fail-loud "unknown — <reason>" for an unevaluable node, never a silent fresh. */}
+              {staleBadge}
               {/* D4/D5: force this node past the memo cache, right from the inspector */}
               <button className="b ghost sm" data-ui-ref="ui://inspector/act" style={{ marginLeft: 8 }} title="force re-run (bypass memo cache)"
                 onClick={() => doRun([selected.nodeId])}>↻ force</button>

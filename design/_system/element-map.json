@@ -652,6 +652,7 @@
       "ui://inbox/target",
       "ui://inbox/walk",
       "ui://inspector/build",
+      "ui://inspector/freshness",
       "ui://inspector/history",
       "ui://inspector/surface",
       "ui://inspector/workshop",
@@ -671,8 +672,8 @@
     "screens": 17,
     "addressed_elements": 79,
     "distinct_addresses_used": 25,
-    "registered_addresses": 49,
+    "registered_addresses": 50,
     "unregistered_orphans": 2,
-    "unused_orphans": 26
+    "unused_orphans": 27
   }
 }

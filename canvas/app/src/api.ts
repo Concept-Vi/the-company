@@ -103,6 +103,17 @@ export const api = {
   // address → backend 400 (fail-loud, normalized to {error} by jr).
   selfChangesAt: (address: string) =>
     fetch('/api/self-changes-at?address=' + encodeURIComponent(address)).then(jr),
+  // L10 · "stale at this address" (§21.7#10): is the cached result AT this NODE's run:// address out of
+  // date vs its CURRENT inputs? A COSTED DERIVATION, not a served field — the surface CALLS this only when
+  // it wants the verdict (the backend recompiles + resolves input-hashes + recomputes the _memo_sig +
+  // memo_get-compares against the stored output; seams-engine Seam 8a). READ-ONLY: it does NOT mutate the
+  // memo gate (no memo_set/set_ref/run). Returns { address, graph, node, stale, unknown, reason, volatile,
+  // … }: stale=true/false ONLY when a real comparison was made; otherwise stale=null + unknown=true + a
+  // reason (rule 4 — an unevaluable node is never a silent 'fresh'). The key is a run://<graph>/<node>
+  // node-instance address (NOT ui:// — `cached` is served per run:// node). A malformed / non-run address →
+  // backend 400 (fail-loud, normalized to {error} by jr).
+  staleAt: (address: string) =>
+    fetch('/api/stale-at?address=' + encodeURIComponent(address)).then(jr),
   // B: the walkthrough/review session lifecycle. start makes its OWN session-graph (not graph-scoped);
   // current = the node at the cursor + its coa framing + its ui:// target; next opens the gate + advances.
   reviewStart: (item_ids: string[], mode = 'walkthrough') =>

@@ -104,6 +104,15 @@ export function useAppController(editor: Editor) {
   const [selfChanges, setSelfChanges] =
     useState<{ address: string; scope: string[]; stale: boolean; note: string; changes: any[] } | null>(null)
   const [selfChangesBusy, setSelfChangesBusy] = useState(false)
+  // L10 · "stale at this address" (§21.7#10): the freshness verdict for the SELECTED node — is its cached
+  // result out of date vs its CURRENT inputs? A COSTED DERIVATION (recompile + input-hash + _memo_sig
+  // compare — seams-engine Seam 8a), NOT a free read, so it is fetched ON-DEMAND when a node WITH a stored
+  // output is selected (the operator focusing a node is the request, mirroring how History/SelfChanges
+  // load on indicate). null = nothing selected / no cached result to compare. The "cached" half is already
+  // served (selected.status); L10 adds the derived "stale" half ALONGSIDE it — it does not change `cached`.
+  const [freshness, setFreshness] =
+    useState<{ address: string; stale: boolean | null; unknown?: boolean; reason?: string; volatile?: boolean } | null>(null)
+  const [freshnessBusy, setFreshnessBusy] = useState(false)
   const [cfg, setCfg] = useState<any>({ model: '', persona: '' })
   const [cfgOpen, setCfgOpen] = useState(false)
   // U12: the /api/inbox payload is { live_escalations, resolved_for_you, batched, counts }. `batched` is a
@@ -971,6 +980,35 @@ export function useAppController(editor: Editor) {
   }, [selected?.nodeId])
   selectedRef.current = selected
 
+  // L10 · "stale at this address" (§21.7#10). When a node with a STORED output is selected, derive whether
+  // its cached result is out of date vs its CURRENT inputs (GET /api/stale-at → Suite.stale_at_address). A
+  // COSTED DERIVATION (recompile + input-hash + _memo_sig compare; seams-engine Seam 8a), NOT a served
+  // field — so we fetch it ON-DEMAND on selection (the operator focusing the node IS the request), keyed by
+  // the node's run:// instance address (NOT ui:// — `cached` is served per run:// node). READ-ONLY: the
+  // memo gate is unmutated. Re-poked by events.length so a fresh run/input-change at THIS node re-derives
+  // the badge without a re-select. Fail-loud (rule 4): a backend 400 surfaces as unknown+reason, never a
+  // silent "fresh"; an unevaluable node (volatile/reference/no-cache) comes back unknown with its reason.
+  async function fetchFreshness(addr: string | null, status?: string) {
+    // only a node that HOLDS a cached result has a "stale vs inputs" question (cached/ran). idle/stuck/
+    // failed/empty have nothing cached to be stale → clear the badge (never a misleading verdict).
+    if (!addr || !addr.startsWith('run://') || !(status === 'cached' || status === 'ran')) {
+      setFreshness(null); return
+    }
+    setFreshnessBusy(true)
+    try {
+      const r = await api.staleAt(addr)
+      if (r?.error) { setFreshness({ address: addr, stale: null, unknown: true, reason: r.error }); return }
+      setFreshness(r)
+    } catch (e: any) {
+      setFreshness({ address: addr, stale: null, unknown: true, reason: 'could not derive freshness: ' + (e?.message || e) })
+    } finally { setFreshnessBusy(false) }
+  }
+  // Derive freshness whenever the selected node changes (and re-derive when the live event count moves, so a
+  // run or an upstream input-change at THIS node refreshes the badge without a re-select). selected?.address
+  // is the run:// instance; selected?.status gates the fetch to nodes that actually hold a cached result.
+  useEffect(() => { fetchFreshness(selected?.address || null, selected?.status)
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [selected?.address, selected?.status, events.length])
+
   // D4: run the graph; `force` (a node-id list) bypasses the memo gate for just those nodes. U1: the
   // arrow-wrapped call sites pass `() => doRun()` so React's MouseEvent is NEVER passed as `force`.
   async function doRun(force?: string[]) {
@@ -1143,7 +1181,7 @@ export function useAppController(editor: Editor) {
     oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
     showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn,
     wtSpoke, wtBusy, selected, mobileTab, fleet, indicated, proposal, history, historyBusy,
-    selfChanges, selfChangesBusy, journeyId, journeyReplaying,
+    selfChanges, selfChangesBusy, freshness, freshnessBusy, journeyId, journeyReplaying,
     // refs the components read for the inspector form
     configByNode,
     // setters the components call directly

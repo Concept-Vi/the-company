@@ -4364,6 +4364,156 @@ class Suite:
                      key=lambda e: e.get("seq", 0))            # chronological path, not endpoint
         return {"address": address, "trajectory": evs}
 
+    def stale_at_address(self, address: str) -> dict:
+        """L10 (§21.7#10): is the cached result AT this node's address out of date vs its CURRENT inputs?
+
+        A surface shows "cached / stale at this address." **"cached" is ALREADY served** — the
+        `cached` node-state derives on reload when the output address resolves (`state()`, S5/F3).
+        **"stale" is NOT a served field, and it is NOT a free read.** Deriving it is a COSTED
+        DERIVATION (seams-engine Seam 8a): recompile the node → resolve its current input
+        content-hashes → compute the NEW `_memo_sig` → `memo_get`-compare against the STORED output
+        cas at the node's `run://` address. So this is a method the surface CALLS when it wants the
+        verdict — never an always-on key on the node dict (that would pretend staleness is free).
+
+        It LEANS ON THE EXISTING MEMO GATE — it does not add a new cache. It REUSES the scheduler's
+        `_memo_sig` (the exact formula the gate computes, port→content-hash) and `compile` (the exact
+        execution face the scheduler runs), reads `memo_get` + `head`, and COMPARES. It writes
+        nothing: NO `mod.run`, NO `put_content`, NO `memo_set`, NO `set_ref`. The memo gate
+        (scheduler.py) is UNCHANGED — L10 reads a derived comparison from it, never mutates it.
+
+        THE LOAD-BEARING RULE (one rule; both verdict cases fall out of it):
+            fresh  ⟺  memo_get(sig_now) is not None  AND  memo_get(sig_now) == head(address)
+            everything else (INCLUDING a memo miss) → stale.
+        The compare to `head(address)` (not just "does sig_now exist in memo") is essential: current
+        inputs could map to a DIFFERENT memoized output than the one written at the ref — that is
+        stale too. A memo miss (sig never computed for these inputs) is stale, NOT fresh, NOT unknown.
+
+        FAIL LOUD (rule 4) — the verdict is "unknown" (with a reason), NEVER a silent "fresh", when
+        the node CANNOT be meaningfully compared:
+          • malformed / non-`run://` address → RAISES (the bridge turns it into a 400);
+          • the node isn't in the graph → unknown;
+          • a VOLATILE node → the gate re-runs it EVERY pass by design (its output is not a pure
+            function of its inputs), so a memo comparison is misleading → flag `volatile=True`;
+          • a reference node (portal, RESOLVE='reference') → never computed/memoized → unknown;
+          • a DECLARED input port unresolved → can't form a valid sig → unknown;
+          • NO stored output at the address yet → a distinct "no cached result" (never a silent fresh).
+
+        Returns {address, graph, node, stale, unknown, reason, volatile, sig?, stored_cas?, memo_cas?}.
+        `stale` is True/False ONLY when a real comparison was made; otherwise it is None and
+        `unknown` is True (a silent `stale=False` for an unevaluable node would be a lie — rule 4)."""
+        from contracts.address import scheme as _scheme
+
+        # --- SCOPE GATE: a node-instance locus is a run:// address (matching how `cached` is served).
+        # Do NOT reuse the ui:// grammar gate (parse_ui_address) — that RAISES on non-ui:// and this
+        # key is run://<graph>/<node>. We parse the run grammar ourselves (the address module exposes
+        # the builder `run_address`/`scheme`, not a structured parser). The node-level logical form the
+        # scheduler + compile use is `run://<graph>/<node>` (main) or `run://<graph>/<node>@<branch>`
+        # (compile._addr / suite.state). Malformed / non-run:// RAISES (fail-loud; the bridge's
+        # try/except → 400 — a junk query must never silently read as a node verdict).
+        if _scheme(address) != "run":
+            raise ValueError(
+                f"stale_at_address expects a run:// node address (e.g. run://<graph>/<node>); "
+                f"got {address!r}. 'Stale at this address' is a NODE-instance verdict — a ui:// element "
+                f"(or any non-run scheme) has no memo/run semantics.")
+        rest = address[len("run://"):]
+        rest = rest.split("#", 1)[0]                       # drop a #run=<id> fragment if present
+        branch = "main"
+        if "@" in rest:
+            rest, branch = rest.rsplit("@", 1)             # run://<graph>/<node>@<branch>
+        parts = rest.split("/")
+        if len(parts) != 2 or not parts[0] or not parts[1]:
+            raise ValueError(
+                f"stale_at_address: {address!r} does not name a node (need run://<graph>/<node>"
+                f"[@<branch>]).")
+        graph_id, node_id = parts[0], parts[1]
+
+        def _unknown(reason: str, **extra) -> dict:
+            # fail-loud-legible: stale is None (NOT False) when we could not compare — never a silent fresh.
+            base = {"address": address, "graph": graph_id, "node": node_id,
+                    "stale": None, "unknown": True, "reason": reason}
+            base.update(extra)
+            return base
+
+        # --- recompile (the SAME execution face the scheduler runs). A dangling edge raises in
+        # compile → unknown (we don't let it crash a status read; rule 4 legibility).
+        from runtime.compile import compile as _compile
+        try:
+            execs = _compile(self._load(graph_id), branch=branch, node_types=self.registry)
+        except Exception as e:
+            return _unknown(f"could not recompile graph {graph_id!r}: {type(e).__name__}: {e}")
+        ex = next((e for e in execs if e.id == node_id), None)
+        if ex is None:
+            return _unknown(f"no node {node_id!r} in graph {graph_id!r}")
+
+        mod = self.registry.get(ex.type)
+        if mod is None:
+            return _unknown(f"node-type {ex.type!r} is not registered")
+
+        # --- reference nodes (portals) are never computed/memoized — a live window, not a run.
+        if getattr(mod, "RESOLVE", "compute") == "reference":
+            return _unknown(
+                f"node {node_id!r} is a reference node ({ex.type!r}, RESOLVE='reference') — it is a "
+                f"live window onto another address, never computed or memoized, so 'stale vs inputs' "
+                f"does not apply.")
+
+        # --- VOLATILE nodes: the gate re-runs them EVERY pass by design (output is not a pure
+        # function of inputs — they read external truth: repo/index/clock). A memo comparison would
+        # be misleading (their sig can be constant while their true output changes), so flag it.
+        if getattr(mod, "VOLATILE", False):
+            return _unknown(
+                f"node {node_id!r} ({ex.type!r}) is VOLATILE — the memo gate re-runs it every pass by "
+                f"design (it reads mutable external truth), so a memo-signature comparison cannot tell "
+                f"fresh from stale; it is always re-derived on run.", volatile=True)
+
+        # --- resolve CURRENT input content-hashes EXACTLY as the scheduler does (scheduler.py:80).
+        # A declared input port that is unwired or unresolved → we cannot form the sig the gate
+        # would → unknown (never a silent fresh).
+        declared = set(getattr(mod, "PORTS_IN", {}).keys())
+        if not declared <= set(ex.inputs.keys()):
+            missing = sorted(declared - set(ex.inputs.keys()))
+            return _unknown(f"node {node_id!r} has unwired input port(s) {missing} — cannot form its "
+                            f"memo signature (it would not be READY to run).")
+        input_map = {}
+        for port, a in ex.inputs.items():
+            cas = self.store.head(a)
+            if cas is None:
+                return _unknown(f"input port {port!r} of {node_id!r} is unresolved (address {a!r} holds "
+                                f"no content) — cannot form its current memo signature.")
+            input_map[port] = cas                           # port -> content-hash (the gate's form)
+
+        # --- compute the NEW signature via the scheduler's OWN formula (no reimplementation — one source).
+        from runtime.scheduler import _memo_sig
+        version = getattr(mod, "VERSION", "1")
+        sig_now = _memo_sig(ex, version, input_map)
+
+        # --- MULTI-OUTPUT nodes (gate/join/pair: >=2 declared PORTS_OUT) write to per-port FRAGMENT
+        # addresses (run://<g>/<n>#<port>, compile.py), so NOTHING is stored at the bare node address —
+        # yet the memo cas is the WHOLE multi-port result, not a single cas comparable to one output
+        # address. A bare head(address)==None here would emit a misleading "run it first" even for a node
+        # that HAS run. Flag it honestly (unknown + the real reason) rather than mis-report — fail-loud
+        # legibility (rule 4). Single-output staleness is the served contract (the FREE 'cached' half is
+        # also a single bare-address read).
+        if len(ex.outputs) > 1:
+            return _unknown(
+                f"node {node_id!r} has {len(ex.outputs)} output ports {sorted(ex.outputs)} — its memo "
+                f"entry is the WHOLE multi-port result, not a single cas comparable to one output "
+                f"address (each port writes its own run://…#<port> fragment); single-output staleness only.")
+
+        # --- the stored output cas at the node's address (the FREE 'cached' half reads this same ref).
+        stored_cas = self.store.head(address)
+        if stored_cas is None:
+            return _unknown(f"node {node_id!r} has no stored output at {address!r} yet — there is no "
+                            f"cached result to be stale (run it first).")
+
+        # --- THE COMPARISON (read-only). memo_get(sig_now) is the cas the gate WOULD reuse for the
+        # current inputs; fresh iff it exists AND equals the stored output. A miss (None) or a
+        # mismatch → stale. NO write of any kind happens here (the gate is untouched).
+        memo_cas = self.store.memo_get(sig_now)
+        fresh = (memo_cas is not None) and (memo_cas == stored_cas)
+        return {"address": address, "graph": graph_id, "node": node_id,
+                "stale": (not fresh), "unknown": False, "reason": "",
+                "volatile": False, "sig": sig_now, "stored_cas": stored_cas, "memo_cas": memo_cas}
+
     def replay(self, limit: int = 200) -> list:
         """The whole captured path, oldest-first — the trajectory that trains the twin (I1)."""
         return list(reversed(self.store.recent_events(limit)))

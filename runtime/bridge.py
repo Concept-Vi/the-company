@@ -161,6 +161,16 @@ class H(BaseHTTPRequestHandler):
                 # gate) and returns the trajectory chronological — the addressed analogue of decision_view
                 # (it WIDENS the audit-view machinery to an address key; the sid path is untouched).
                 self._send(200, json.dumps(SUITE.address_view(q["address"])))
+            elif path == "/api/stale-at":                  # L10: "is the cached result at this node's address
+                # stale vs its CURRENT inputs?" (§21.7#10). A COSTED DERIVATION, not a served field — the FE
+                # CALLS it only for a cached node (it recompiles + resolves input-hashes + recomputes the
+                # _memo_sig + memo_get-compares; seams-engine Seam 8a). The key is a run://<graph>/<node>
+                # node-instance address (NOT ui:// — `cached` is served per run:// node). Missing `address`
+                # → KeyError → 400 (fail loud, mirrors /api/scope + /api/address-history). A malformed /
+                # non-run:// address RAISES in stale_at_address → 400 too — a junk query never reads as a
+                # silent 'fresh'. The verdict carries stale/unknown/reason/volatile (rule 4: an unevaluable
+                # node is 'unknown' with a reason, never a silent false). READ-ONLY: the memo gate is unmutated.
+                self._send(200, json.dumps(SUITE.stale_at_address(q["address"])))
             elif path == "/api/review/current":            # B: the node at the cursor + its framing + ui:// target
                 self._send(200, json.dumps(SUITE.present_current(q["session"])))
             elif path == "/api/review/status":             # B: the session's live status

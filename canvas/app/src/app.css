@@ -96,6 +96,18 @@ body.canvas-running .node-card.idle .node-dot{background:var(--kind-content);box
   border-radius:3px;padding:6px;font-family:inherit;font-size:11px;width:100%}
 .cfg-form select:focus,.cfg-form input:focus{outline:none;border-color:var(--sig)}
 
+/* L10 · "stale at this address" badge — the DERIVED half of cached/stale, shown beside the inspector's
+   served `cached` chip. A small token-coloured pill (NO hardcoded colour): stale = --warn amber (the
+   attention/await signal, same token the layer-system + intent cues use), fresh = --sig green (the alive
+   accent), unknown = --dim muted (fail-loud-legible: an unevaluable node reads "unknown — <reason>", never
+   a silent fresh). Coherent in scale with the inspector chips (same 9.5px uppercase letter-spaced form the
+   .bi-class pill uses). Built entirely on corpus tokens → design-lint clean. */
+.fresh-badge{display:inline-block;margin-left:8px;padding:1px 6px;border-radius:3px;font-size:9px;
+  letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line-2);background:var(--bg)}
+.fresh-badge.stale{color:var(--warn);border-color:var(--warn)}
+.fresh-badge.fresh{color:var(--sig);border-color:var(--sig-dim)}
+.fresh-badge.unknown{color:var(--dim)}
+
 /* HUD: toolbar, inspector, grow, workshop */
 .hud{position:absolute;z-index:300;color:var(--ink)}
 .toolbar{top:12px;left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;

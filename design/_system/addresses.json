@@ -339,6 +339,14 @@
       "represents": "INB-replay",
       "code": "canvas/app/src/regions/History.tsx (L3 addressed history) / runtime/suite.py:address_view"
     },
+    "ui://inspector/freshness": {
+      "region": "inspector",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "ENG-memo",
+      "code": "canvas/app/src/regions/Inspector.tsx (L10 memo stale badge) / runtime/suite.py:stale_at_address"
+    },
     "ui://grow": {
       "region": "grow",
       "capabilities": [
