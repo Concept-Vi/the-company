@@ -328,6 +328,28 @@ button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
 .ui-indicated{outline:2px solid var(--sig) !important;outline-offset:2px;border-radius:6px;
   box-shadow:inset 0 0 0 1px var(--sig-dim), 0 0 16px -4px var(--sig) !important;
   background:var(--acc-glow)}
+/* I5 · annotate-vs-operate MODE SIGNAL (FORM default — needs-tim, Tim's reserved design call).
+   A visible cue of which FACE a click at an indicated element is in: annotate (attach a comment) vs
+   operate (propose/run an operation). Built ENTIRELY on corpus tokens (--warn amber for annotate,
+   --sig green for operate) — no literals, no bespoke colour (design-lint clean). Paint-only (outline
+   recolour + cursor), so it never reflows. This default is for the design-critic + Tim to judge; the
+   ACTUAL gate is the backend route_click + I4 tier, not this cue. */
+.ui-indicated[data-click-mode="annotate"]{outline-color:var(--warn) !important;
+  box-shadow:inset 0 0 0 1px var(--warn), 0 0 16px -4px var(--warn) !important;cursor:text}
+.ui-indicated[data-click-mode="operate"]{outline-color:var(--sig) !important;cursor:pointer}
+/* I5 · the ANNOTATE-FACE bar (App.tsx AnnotateBar) — the click→comment affordance for an annotate-mode
+   locus. Reuses the .rhm-indicating chip vocabulary (corpus tokens only) but tinted to the annotate
+   (--warn amber) face so it reads as the SAME mode as the element's cue. Floats over the canvas cell
+   (which is pointer-events:none) and re-enables its own pointer events. Paint/position only. */
+.annotate-bar{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:6;
+  pointer-events:auto;max-width:min(540px,90vw);width:max-content;
+  border-color:var(--warn);background:var(--bg)}
+.annotate-bar .ic{color:var(--warn)}
+.annotate-bar .ann-input{flex:1 1 auto;min-width:220px;background:transparent;border:0;outline:0;
+  color:var(--ink);font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px}
+.annotate-bar .ann-input::placeholder{color:var(--dim)}
+.annotate-bar .ind-clear{color:var(--warn)}
+.annotate-bar .ind-clear:disabled{color:var(--dim);cursor:default}
 /* the indicating chip in the RHM chat (above the input) — shows the locus + a clear. Reuses the corpus
    panel/accent vocabulary (the same tokens the surrounding HUD uses); compact, single line. */
 .rhm-indicating{display:flex;align-items:center;gap:6px;margin:6px 8px 0;padding:4px 8px;

@@ -460,16 +460,57 @@ export function useAppController(editor: Editor) {
   // element isn't in the DOM right now we still keep the address as the locus (the backend resolves it
   // from the registry), just without a visible ring — surfaced, never a silent no-op.
   function clearIndicatedDom() {
-    document.querySelectorAll('.ui-indicated').forEach(el => el.classList.remove('ui-indicated'))
+    document.querySelectorAll('.ui-indicated').forEach(el => {
+      el.classList.remove('ui-indicated'); el.removeAttribute('data-click-mode')   // I5: drop the prior mode cue too
+    })
+  }
+  // I5 · the annotate-vs-operate ROUTING HINT (the FORM default — needs-tim). Classify which FACE a
+  // BARE click (no consequential verb) at `addr` is in. THIS MIRRORS THE CANONICAL BACKEND RULE
+  // (Suite.route_click) EXACTLY — single-source, so the visible cue never contradicts what fires:
+  //   • `run://` (a LIVE graph-node instance) → 'operate'  (a click proposes/runs an operation).
+  //   • `ui://`  (a DESIGN/UI element)         → 'annotate' (a bare click attaches a comment), ALWAYS.
+  // The scheme is a ROUTING HINT, not the gate (design-substrate CONTRACT.2): the read-only `show`/
+  // camera drive is reached by an EXPLICIT `show` VERB (the RHM / the I3 approve path), NOT by a bare
+  // click — so a bare click on a drivenReadOnly element still ANNOTATES (matching route_click). The
+  // actual safety gate for a verb-bearing operate click is the BACKEND's address→tier (I4) + guard().
+  // Verb-bearing controls (a RUN button) operate via their own onClick regardless of this cue.
+  function clickMode(addr: string | null | undefined): 'annotate' | 'operate' | null {
+    if (!addr) return null
+    if (addr.startsWith('run://')) return 'operate'            // a live instance — always the operate face
+    if (!addr.startsWith('ui://')) return null
+    return 'annotate'                                          // a ui:// element, no verb → annotate (route_click rule)
   }
   function indicate(addr: string | null) {
     clearIndicatedDom()
     if (!addr) { indicatedRef.current = null; setIndicated(null); setNotice('indication cleared'); return }
     indicatedRef.current = addr; setIndicated(addr)
     const el = document.querySelector('[data-ui-ref="' + addr + '"]') as HTMLElement | null
-    if (el) el.classList.add('ui-indicated')
+    const mode = clickMode(addr)
+    if (el) { el.classList.add('ui-indicated'); if (mode) el.setAttribute('data-click-mode', mode) }   // I5: paint the mode cue
     const title = getUI_INFO()[addr]?.title
-    setNotice('indicating ' + (title || addr) + ' — your next message is about this')
+    const modeWord = mode === 'annotate' ? ' — click to comment' : mode === 'operate' ? ' — click to operate' : ''
+    setNotice('indicating ' + (title || addr) + ' — your next message is about this' + modeWord)
+  }
+  // I5 · the ANNOTATE commit gesture — the click→comment that makes the annotate FUNCTION reachable on
+  // the surface (the criteria FUNCTION: "clicking a ui:// attaches a comment"). Fires POST /api/annotate
+  // (the I6 endpoint) for the indicated `ui://` locus. Fail-loud (rule 4): no locus / not a ui:// element
+  // / empty text → a visible notice, never a silent no-op. api.ts is off-limits here, so the fetch is
+  // inline (the same J header the rest of the app uses). The OPERATE face is reached separately (a
+  // control's own onClick → /api/act, and the I3 approve→/api/act path) — never blurred with this.
+  async function annotateLocus(text: string) {
+    const addr = indicatedRef.current
+    if (!addr || !addr.startsWith('ui://')) { setNotice('✕ indicate a ui:// element first, then comment'); return }
+    const body = (text || '').trim()
+    if (!body) { setNotice('✕ a comment needs text (no silent no-op)'); return }
+    try {
+      const r = await fetch('/api/annotate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: addr, text: body }),
+      }).then(x => x.json())
+      if (r?.error) { setNotice('✕ ' + r.error); return }       // fail-loud: surface the backend 400, never swallow
+      const title = getUI_INFO()[addr]?.title
+      setNotice('💬 comment attached to ' + (title || addr))     // the annotate face's "did X" (rule 4)
+    } catch (e: any) { setNotice('✕ could not attach comment: ' + (e?.message || e)) }
   }
   // A document-level CAPTURE listener: a click on any element carrying a ui:// data-ui-ref INDICATES it.
   // Capture phase + read the nearest [data-ui-ref] ancestor so a click on an inner glyph still resolves
@@ -966,7 +1007,7 @@ export function useAppController(editor: Editor) {
     poll, openCoa, reload, fitGraph, addNode, wireSelected, doConnect, setNodeConfig, surfaceOutput,
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
     resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, fieldValue,
-    setField, revertLast, approveApply, doRun, refreshFleet, indicate,
+    setField, revertLast, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus,
     approveProposal, dismissProposal,
   }
 }

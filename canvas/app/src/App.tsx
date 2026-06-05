@@ -21,10 +21,11 @@
 // reflects-never-owns · registry-driven config+ports · SSE mergeEvents seq-dedup · the resolveUiTarget/show
 // keystone · wtBusyRef guards · semantic zoom · drag-to-wire · voice push-to-talk · demonstrate-first ·
 // delete-confirm · the U1 canvas-RUN fix (() => doRun() + the always-clearing finally) · operator-only approval.
+import { useState } from 'react'
 import { Tldraw, useEditor } from 'tldraw'
 import { NodeShapeUtil, Edges } from './NodeShape'
 import { useAppController } from './useAppController'
-import { AppContext } from './AppContext'
+import { AppContext, useApp } from './AppContext'
 import { PanelErrorBoundary } from './components/PanelErrorBoundary'
 import { Toolbar } from './regions/Toolbar'
 import { Palette } from './regions/Palette'
@@ -37,6 +38,32 @@ import { RhmChat } from './regions/RhmChat'
 import { Walkthrough } from './regions/Walkthrough'
 import { Workshop } from './regions/Workshop'
 import { Fleet } from './regions/Fleet'
+
+// I5 · the ANNOTATE-FACE affordance. Renders ONLY when the operator has indicated a ui:// element whose
+// bare-click face is 'annotate' (ctrl.clickMode === 'annotate' — the canonical route_click rule, single-
+// sourced). A small comment box → ctrl.annotateLocus → POST /api/annotate (the I6 path). This is the
+// click→comment that makes the criteria FUNCTION reachable on the surface. The OPERATE face is never
+// blurred with it (operate rides a control's own onClick → /api/act + the I3 approve path). FORM: reuses
+// the corpus .rhm-indicating chip vocabulary (tokens only — the amber annotate cue is the mode-signal,
+// needs-tim). Hidden whenever nothing annotate-mode is indicated, so it never clutters the canvas.
+function AnnotateBar() {
+  const { indicated, clickMode, annotateLocus } = useApp()
+  const [text, setText] = useState('')
+  if (!indicated || clickMode(indicated) !== 'annotate') return null   // only for an annotate-mode locus
+  async function submit() {
+    const t = text.trim(); if (!t) return
+    await annotateLocus(t); setText('')                                // annotateLocus is fail-loud (notice on error)
+  }
+  return (
+    <div className="rhm-indicating annotate-bar" title="attach a comment to the indicated element">
+      <span className="ic">💬</span>
+      <input className="ind-addr ann-input" value={text} placeholder={'comment on ' + indicated + '…'}
+             onChange={e => setText(e.target.value)}
+             onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submit() } }} />
+      <button className="ind-clear" onClick={submit} title="attach comment" disabled={!text.trim()}>↵</button>
+    </div>
+  )
+}
 
 // Hud — the single component with useEditor. It builds the controller (the state container) ONCE and
 // provides it to every region via AppContext, then lays the regions out in the grid shell. It is a child
@@ -86,6 +113,14 @@ function Hud() {
           <PanelErrorBoundary name="chat">
             <RhmChat />
           </PanelErrorBoundary>
+          {/* I5 · the ANNOTATE FACE made reachable on the surface. When the operator has indicated a
+             ui:// element that a bare click ANNOTATES (clickMode==='annotate' — the canonical route_click
+             rule), this bar lets them attach a comment at that locus → POST /api/annotate (the I6 path,
+             via ctrl.annotateLocus). This is the click→comment that makes the criteria FUNCTION live; the
+             OPERATE face stays separate (a control's own onClick → /api/act + the I3 approve path) — never
+             blurred. FORM: built on the corpus .rhm-indicating chip vocabulary (tokens only, no literals);
+             the amber [data-click-mode="annotate"] cue + this bar are the DEFAULT mode-signal (needs-tim). */}
+          <AnnotateBar />
         </div>
         {/* the right rail — Inspector + Inbox + Grow stacked in ONE scroll column (the .panel rail, as
            before). data-ui-ref="inspector" is on this scroll container (the resolveUiTarget keystone +

@@ -1935,6 +1935,61 @@ class Suite:
             reply = self._confirmation_for(outcome)
         return {"reply": reply, "action": outcome, "graph_id": graph_id}
 
+    def route_click(self, address: str | None, graph_id: str, verb: str | None = None,
+                    text: str | None = None, args: dict | None = None,
+                    source: str = "operator") -> dict:
+        """I5 — the annotate-vs-operate ROUTER: ONE classifier that decides, per click, whether the
+        click attaches a COMMENT (annotate, I6) or proposes/runs an OPERATION (operate, I2/I4/I3) —
+        and NEVER blurs the two. It COMPOSES `act` (which carries I4's address→tier gate inside) and
+        `annotate` (I6); it does NOT re-implement or weaken either.
+
+        THE ROUTING DISTINCTION (criteria line 109; Implementation Guide I5):
+          • the SCHEME is a ROUTING HINT, not the safety gate (design-substrate CONTRACT.2, Verified):
+              - `ui://`  = a DESIGN/UI element.  A `ui://` click with NO consequential verb → ANNOTATE.
+              - `run://` = a LIVE graph-node instance.  A `run://` click → OPERATE (always).
+          • a consequential VERB at ANY address → OPERATE (a verb makes it an operation regardless of
+            scheme — e.g. the camera-driving `show` on a `ui://` element stays on the operate face).
+          • what GATES a mutating command is NOT the scheme — it is the address's governance TIER
+            (`_tier_for_address` → CONFIRM/LOCKED) + `guard()`, REUSED unchanged inside `act`. So:
+              - bare / untiered / unknown address + an immediate verb → ACTS IMMEDIATELY (U1 preserved).
+              - a CONFIRM/LOCKED-tier address + a consequential verb → PROPOSES (surfaces), never runs.
+              - a `ui://` element that resolves to a read-only-driveable target keeps working read-only
+                via the live `show` path (`show` is AUTO → operate → drives the camera; not blocked).
+
+        FAIL-LOUD over silent (rule 4): an annotate route with empty text RAISES (never a silent no-op
+        and never a silent dispatch); `annotate` itself raises on a non-`ui://` (run://) address, so a
+        live instance is STRUCTURALLY incapable of being commented — half of "never blur" for free.
+
+        Returns a tagged dict:
+          • annotate face → {"face": "annotate", "annotation": <rec>, "action": None, "graph_id": …}
+          • operate  face → {"face": "operate",  **act(...)}  (the same {reply, action, graph_id} shape)
+        The `face` tag is the never-blur marker: an annotate route never carries an `action`; an operate
+        route never carries an `annotation`."""
+        args = dict(args or {})
+        has_verb = bool(verb and str(verb).strip())
+        is_run_scheme = isinstance(address, str) and address.startswith("run://")
+        # OPERATE if there is a consequential verb OR the address is a live graph-node instance.
+        # ANNOTATE only when there is NO verb AND the address is a UI/design element (the ui:// hint).
+        if has_verb or is_run_scheme:
+            # OPERATE — hand to act(), which applies I4's ADDRESS→TIER gate FIRST (CONFIRM/LOCKED →
+            # propose/surface; bare/untiered/AUTO → act immediately, U1 preserved), then the verb-class
+            # governance posture. The 7-verb whitelist + no-self-apply ride along inside the dispatcher.
+            # A run:// click with no verb defaults to `run` (the natural verb for a live instance).
+            v = str(verb).strip() if has_verb else "run"
+            out = self.act(v, graph_id, address=address, args=args)
+            out["face"] = "operate"
+            return out
+        # ANNOTATE — a ui:// element click with no verb attaches a comment at the address (I6). FAIL
+        # LOUD if there is no text: never silently dispatch and never a silent no-op (rule 4). `annotate`
+        # validates the address against the S0 grammar and RAISES on a non-ui:// (run://) address.
+        if not text or not str(text).strip():
+            raise ValueError(
+                "I5 annotate route needs non-empty text (a ui:// element click with no verb attaches a "
+                "comment — supply text, or pass a verb to OPERATE). Fail loud — no silent no-op, no "
+                "silent dispatch.")
+        rec = self.annotate(address, str(text), source=source)
+        return {"face": "annotate", "annotation": rec, "action": None, "graph_id": graph_id}
+
     def annotate(self, address: str, text: str, source: str = "operator") -> dict:
         """I6 — attach a comment / annotation to a `ui://` address (the `annotation://` content branch).
 
