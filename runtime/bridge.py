@@ -135,6 +135,13 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.ui_info()))
             elif path == "/api/scope":                     # S3: ui://→code://→scope[] (the address→code join)
                 self._send(200, json.dumps(SUITE.resolve_scope(q["address"])))
+            elif path == "/api/self-changes-at":           # L5: "what did the system change HERE?" (§21.7#5)
+                # The address-keyed READ over the self-change audit log: filters self_change_log by the
+                # S3 address→code scope join. Missing `address` → KeyError → 400 (fail loud, mirrors
+                # /api/scope). Revert from here stays on the EXISTING operator-only /api/revert (no new
+                # revert route, gate untouched). Carries stale/note straight through so the surface
+                # distinguishes "corpus stale — regenerate" from "no changes here" (never a silent lie).
+                self._send(200, json.dumps(SUITE.self_changes_at(q["address"])))
             elif path == "/api/annotations":               # I6: the comment THREAD attached to a ui:// address
                 # The address-keyed READ side of /api/annotate (POST). Missing `address` → KeyError →
                 # 400 (fail loud, mirrors /api/scope). Suite.annotations_at validates the address (S0)
@@ -395,7 +402,13 @@ class H(BaseHTTPRequestHandler):
                 addr = b.get("address")
                 if not addr or not str(addr).strip():
                     raise ValueError("/api/annotate needs a non-empty 'address' (fail loud)")
-                self._send(200, json.dumps(SUITE.annotate(
+                # L4: route through `ingest_comment` (NOT the pure `annotate` leaf) — a clicked comment
+                # IS the twin's LOCATED gold label: it records the I6 annotation AND emits one additive
+                # located-gold chat turn (operator=gold, address-stamped) that rides the existing
+                # `append_chat → training_signal` pipe. This is the WIRED production entry the FE's
+                # annotate-click hits; the same entry the I5 router composes (single-source). Returns the
+                # annotation rec (unchanged response shape — retrieve the comment via GET /api/annotations).
+                self._send(200, json.dumps(SUITE.ingest_comment(
                     str(addr).strip(), b.get("text", ""), source=b.get("source", "operator"))))
             elif self.path == "/api/attach-chat":        # I7: attach a chat turn to a ui:// ADDRESS (the
                 # dropped 4th attach-type, §21.1's chat:// branch). RIDES the open append_chat record with

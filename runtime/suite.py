@@ -1987,23 +1987,11 @@ class Suite:
                 "I5 annotate route needs non-empty text (a ui:// element click with no verb attaches a "
                 "comment — supply text, or pass a verb to OPERATE). Fail loud — no silent no-op, no "
                 "silent dispatch.")
-        rec = self.annotate(address, str(text), source=source)
-        # L4 — the addressed comment IS the twin's LOCATED gold label (§21.7#7, seams-rhm Seam 5).
-        # ONE additive call: ride the existing open `append_chat` record with the address stamped, so
-        # an operator's clicked comment flows the EXISTING `append_chat → training_signal` pipe (no new
-        # training pipeline) and surfaces in `training_signal` as a located gold label — automatically,
-        # echo-guarded. This lives in the I5 router (the real clicked-comment chokepoint), NOT in
-        # `annotate()` itself: `annotate` stays a PURE annotation-branch leaf (I6's SEPARATION preserve —
-        # `annotation_acceptance.py` asserts `annotate()` writes NO chat). The role is TIED to the click's
-        # `source` via `_provenance_*` (the same scheme `attach_chat`/`chat` use — no second grading
-        # scheme): an operator comment lands user/gold/operator (trains the twin, located); a non-operator
-        # source lands assistant/working/twin (NEVER trains, even laundered back — the F4 guard). We write
-        # through the store leaf directly (NOT `attach_chat`) so we do NOT emit a SECOND addressed event
-        # at this locus (`annotate` already emitted the addressed `annotation` event for the live stream).
-        role = "user" if source == "operator" else "assistant"
-        self.store.append_chat({"role": role, "text": str(text).strip(), "address": address,
-                                "source": self._provenance_source(role),
-                                "grade": self._provenance_grade(role)})
+        # L4 — compose the COMMENT-INGEST entry (`ingest_comment`): the pure I6 `annotate()` PLUS the
+        # one additive located-gold `append_chat` (§21.7#7, seams-rhm Seam 5). The same wired entry the
+        # FE's `/api/annotate` route uses — single-source, so a clicked comment IS the twin's located
+        # gold label whether it arrives via the I5 classifier (here) or the direct annotate API.
+        rec = self.ingest_comment(address, str(text), source=source)
         return {"face": "annotate", "annotation": rec, "action": None, "graph_id": graph_id}
 
     def annotate(self, address: str, text: str, source: str = "operator") -> dict:
@@ -2032,6 +2020,41 @@ class Suite:
             {"kind": "annotation", "address": address, "text": str(text).strip(), "source": source})
         # S2: emit an addressed event so the comment is visible on the live stream at its locus.
         self._emit("annotation", f"comment at {address}: {rec['text'][:40]}", address=address)
+        return rec
+
+    def ingest_comment(self, address: str, text: str, source: str = "operator") -> dict:
+        """L4 — the COMMENT-INGEST entry point (§21.7#7, seams-rhm Seam 5): an addressed comment IS the
+        twin's *located* gold label. This is the ONE wired entry a clicked comment flows through (the
+        FE's `/api/annotate` route → `bridge.py` → here; and the I5 router's annotate branch composes it
+        too). It does TWO things, in order:
+
+          1. the pure I6 `annotate()` (records the comment on its OWN `annotations.jsonl` branch — that
+             leaf stays byte-for-byte pure so I6's SEPARATION preserve holds: `annotate()` itself NEVER
+             writes chat — `annotation_acceptance.py` asserts `chat_history()==[]` after a bare annotate);
+          2. ONE additive `append_chat` (the located gold label): the existing OPEN `{ts, **turn}` record
+             (`fs_store.py:357`) carries the `address` verbatim, so the comment flows the EXISTING
+             `append_chat → training_signal` pipe — NO new training pipeline, NO parallel store — and
+             surfaces in `training_signal` as a LOCATED gold label automatically (echo-guarded).
+
+        WHY a separate ingest method (not folded into `annotate`): the default lean (make `annotate()`
+        itself emit the gold turn) is impossible — `annotation_acceptance.py:131-132` asserts a bare
+        `annotate()` writes NO chat (the I6 SEPARATION preserve), an un-editable hard constraint. So
+        `annotate()` stays the PURE annotation leaf and the located-gold emit lives ONE layer up, here,
+        on the WIRED comment-ingest path — exactly the "comment-ingest entry point that grades as
+        operator-gold and stamps the address" seams-rhm:170 named.
+
+        PROVENANCE / F4 (no second grading scheme): the chat turn's role is TIED to `source` via the same
+        `_provenance_source`/`_provenance_grade` helpers `attach_chat`/`chat` use — an operator comment
+        lands user/gold/operator (trains the twin, LOCATED); ANY non-operator source lands
+        assistant/working/twin (NEVER trains, even laundered back — the F4 guard). We write through the
+        store leaf DIRECTLY (not `attach_chat`) so we do NOT emit a SECOND addressed event at this locus
+        (`annotate` already emitted the addressed `annotation` event for the live stream) — avoids
+        double-stamping the addressed history (L3)."""
+        rec = self.annotate(address, text, source=source)        # the pure I6 leaf (S0-gated, fail-loud)
+        role = "user" if source == "operator" else "assistant"  # role-tied provenance (F4)
+        self.store.append_chat({"role": role, "text": str(text).strip(), "address": address,
+                                "source": self._provenance_source(role),
+                                "grade": self._provenance_grade(role)})
         return rec
 
     def annotations_at(self, address: str) -> list:
@@ -3816,6 +3839,83 @@ class Suite:
                    address="ui://chrome/workshop")   # S2: a revert shows at the workshop self-changes surface
         self.refresh_map()
         return {"reverted": sha, "head": head}
+
+    # --- L5: self-change LOCATING (§21.7#5) — "what changed HERE?" -------------------------------
+    # ADDITIVE on top of the existing audit log: filter `self_change_log` by the ADDRESS the operator
+    # is at, then revert from there. The address→code join is S3's `resolve_scope` (corpus-side) — L5
+    # does NOT duplicate it and does NOT modify the log/revert methods (they stay byte-for-byte). The
+    # join is: address --resolve_scope--> scope[] (repo-relative files) ∩ each record's `changed_files`.
+    # FRESHNESS COUPLING (seams-engine risk #4): resolve_scope reads the REGENERATED code-symbols.json —
+    # a stale corpus returns a stale scope, hence a stale change list. We PROPAGATE `stale`/`note` from
+    # resolve_scope straight through (fail-loud-legible, rule 4) rather than collapsing to a silent empty
+    # that would falsely read "nothing changed here."
+
+    def self_changes_at(self, ui_addr: str, limit: int = 50) -> dict:
+        """"What did the system change HERE?" — the self-change audit log FILTERED to the code scope
+        the address resolves to (S3). Returns:
+          {address, scope:[file,…], stale, note, changes:[ <self_change_log record> + matched_files ]}
+
+        THE JOIN (no new revert path, no duplicated resolver):
+          1. `resolve_scope(ui_addr)` (S3) → the address's `code://` symbol(s) → repo-relative `scope[]`.
+          2. Keep each `self_change_log` record whose `changed_files` INTERSECT that scope; annotate the
+             record with `matched_files` (the subset that touched here — the operator sees WHY it matched).
+
+        STALE TRICHOTOMY (rule 4 — fail loud, never a silent-success lie):
+          • scope resolves        → filter; an empty `changes` is a legitimate "no self-changes here."
+          • scope empty, NOT stale (orphan / CSS-selector / DENY-ALL address) → `changes:[]` WITH `note`
+                                     ("this element maps to no code") — surfaced, not fabricated.
+          • corpus unreadable     → `stale:True` PROPAGATED WITH `note` ("regenerate the corpus") AND
+                                     `changes:[]` — NEVER pretended-live. A stale corpus that read
+                                     "nothing changed here" would be a silent failure (rule 4); the
+                                     surface MUST distinguish "stale" from "nothing here."
+
+        The address MUST conform to the canonical grammar (S0) — resolve_scope raises on a malformed
+        ui:// (fail loud). The audit log itself is unchanged (this calls `self_change_log`, never edits
+        it); a git failure there degrades to `[]` as documented."""
+        scoped = self.resolve_scope(ui_addr)                 # S3 — reused, never duplicated (rule 3)
+        scope = set(scoped.get("scope") or [])
+        out = {
+            "address": ui_addr,
+            "scope": scoped.get("scope") or [],
+            "stale": bool(scoped.get("stale")),
+            "note": scoped.get("note") or "",
+            "changes": [],
+        }
+        # stale OR empty scope ⇒ no scope to filter against → DENY-ALL change list, but the REASON is
+        # carried (stale vs orphan) via `stale`/`note` so the surface never reads a lie. (Matches the
+        # surface_build_intent empty-scope=deny posture — an unmapped/stale address is never a license.)
+        if scoped.get("stale") or not scope:
+            if not out["note"]:
+                out["note"] = (f"{ui_addr!r} maps to no code scope — no self-change can be located here "
+                               f"(DENY-ALL; never fabricated — rule 8)")
+            return out
+        for rec in self.self_change_log(limit):              # the EXISTING ledger, unchanged
+            touched = sorted(scope.intersection(rec.get("changed_files") or []))
+            if touched:
+                out["changes"].append(dict(rec, matched_files=touched))
+        return out
+
+    def revert_self_change_at(self, ui_addr: str, sha: str) -> dict:
+        """Revert a self-change FROM the address you're at (§21.7#5). The file→ui→sha chain resolves
+        through `self_changes_at` (the address-filtered list), then this composes the EXISTING
+        `revert_self_change(sha)` — the SAME operator-only rollback (the `/api/revert` gate is the one
+        that guards it; this adds NO new revert path and does NOT weaken the gate).
+
+        SCOPED + FAIL LOUD: you may only revert a change that actually touched THIS element. A `sha`
+        absent from the address's filtered list RAISES (never silently revert something that didn't
+        change here, never silently no-op) — rule 4. The leaf is the unchanged `revert_self_change`."""
+        located = self.self_changes_at(ui_addr)
+        if located.get("stale"):
+            raise ValueError(
+                f"cannot locate self-changes at {ui_addr!r}: the corpus join is STALE "
+                f"({located.get('note')}) — regenerate design/_system before reverting from an address.")
+        shas = {c["sha"] for c in located["changes"]}
+        if sha not in shas:
+            raise KeyError(
+                f"self-change {sha!r} did not change anything at {ui_addr!r} "
+                f"(scope {located['scope']}); refusing to revert it from here — you can only revert "
+                f"what changed at this element (the address-located changes are {sorted(shas)}).")
+        return self.revert_self_change(sha)                  # the EXISTING operator-only rollback, reused
 
     # --- UI extension point (slice 14): brain-authored DECLARATIVE panels added through the UI ---
     # Bounded by construction: the brain authors a panel DEFINITION (a generic renderer displays it),

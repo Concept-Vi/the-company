@@ -62,18 +62,22 @@ try:
     suite = Suite(store, reg, nodes_dir=NODES)
     g = suite.list_graphs()[0] if suite.list_graphs() else "default"
 
-    check("Suite.route_click exists (the I5 per-click annotate-vs-operate entry — L4's ingest point)",
+    check("Suite.ingest_comment exists (the WIRED comment-ingest entry — what /api/annotate calls)",
+          hasattr(suite, "ingest_comment") and callable(suite.ingest_comment))
+    check("Suite.route_click exists (the I5 per-click classifier — composes ingest_comment)",
           hasattr(suite, "route_click") and callable(suite.route_click))
 
     # =====================================================================================
-    # 1. A ui:// click WITH text, NO verb → ANNOTATE → ALSO emits a located gold turn.
+    # 1. The WIRED entry: ingest_comment (what POST /api/annotate calls in production) records the
+    #    I6 comment AND emits the located gold turn. (Drive the REAL production path, not just the
+    #    router — the located-gold MUST fire on the path a real operator's click takes.)
     # =====================================================================================
     A1 = "ui://inbox/coa"
-    out = suite.route_click(A1, g, text="this lane decides too aggressively")
-    check("a ui:// click (no verb) ROUTED to ANNOTATE (face=='annotate')", out.get("face") == "annotate")
-    check("the annotate branch still records the comment (I6 unchanged — annotation rec returned)",
-          (out.get("annotation") or {}).get("text") == "this lane decides too aggressively"
-          and (out.get("annotation") or {}).get("address") == A1)
+    rec = suite.ingest_comment(A1, "this lane decides too aggressively")
+    check("ingest_comment records the I6 annotation (the comment is attached at the address)",
+          rec.get("text") == "this lane decides too aggressively" and rec.get("address") == A1)
+    check("ingest_comment leaves the I6 annotation thread intact (the comment is retrievable)",
+          len(suite.annotations_at(A1)) == 1)
 
     # the located gold label: a gold/operator chat turn carrying that SAME address now exists
     hist = suite.chat_history(200)
@@ -100,12 +104,39 @@ try:
           located_sig[0].get("address") == A1)
 
     # =====================================================================================
+    # 1b. The I5 classifier (route_click) COMPOSES ingest_comment — so a ui:// click with no verb
+    #     ALSO produces located gold (the MCP/classifier path, same single-source entry).
+    # =====================================================================================
+    AR = "ui://canvas/node-7/@selected"
+    out = suite.route_click(AR, g, text="routed clicked comment is located gold too")
+    check("a ui:// click (no verb) ROUTED to ANNOTATE (face=='annotate')", out.get("face") == "annotate")
+    sig_r = suite.training_signal()
+    check("the I5-routed clicked comment is a located gold label too (route_click composes ingest)",
+          any(t.get("address") == AR and t.get("grade") == "gold" and t.get("source") == "operator"
+              and t.get("text") == "routed clicked comment is located gold too" for t in sig_r))
+
+    # =====================================================================================
+    # 1c. REACHABILITY: the WIRED production entry — POST /api/annotate in bridge.py calls
+    #     ingest_comment (NOT the pure annotate leaf), so a real operator's click fires located gold.
+    # =====================================================================================
+    bridge_src = open(os.path.join(ROOT, "runtime", "bridge.py"), encoding="utf-8").read()
+    # SAME-HANDLER check (not a loose anywhere-in-file match): slice the /api/annotate block (from its
+    # marker to the next `elif self.path` route) and assert ingest_comment is dispatched INSIDE it AND
+    # the pure annotate() leaf is NOT (so a regression to SUITE.annotate would FAIL this — it bites).
+    assert '"/api/annotate"' in bridge_src, "FAIL: /api/annotate route missing from bridge.py"
+    blk = bridge_src.split('"/api/annotate"', 1)[1].split("elif self.path", 1)[0]
+    check("POST /api/annotate dispatches SUITE.ingest_comment INSIDE its handler (located-gold REACHABLE)",
+          "SUITE.ingest_comment(" in blk)
+    check("POST /api/annotate does NOT call the pure annotate() leaf (no regression to unreachable path)",
+          "SUITE.annotate(" not in blk)
+
+    # =====================================================================================
     # 3. PRESERVE — training_signal's gold/operator/echo-guard filter is UNCHANGED.
     #    A twin/assistant addressed turn does NOT become gold (the filter still fires).
     # =====================================================================================
     AP = "ui://chrome/chat"
-    # an operator located comment via the router (gold) vs a twin addressed turn (must be filtered).
-    suite.route_click(AP, g, text="operator located gold for training")
+    # an operator located comment via the wired entry (gold) vs a twin addressed turn (must be filtered).
+    suite.ingest_comment(AP, "operator located gold for training")
     suite.store.append_chat({"role": "assistant", "text": "twin addressed turn never trains",
                              "address": AP, "source": "twin",
                              "grade": suite._provenance_grade("assistant")})
@@ -120,8 +151,9 @@ try:
 
     # =====================================================================================
     # 4. I6 SEPARATION still holds — annotate() called DIRECTLY writes NO chat (the leaf is pure).
-    #    This is what guards the CHOSEN placement (router, not leaf): annotation_acceptance's
-    #    chat_history()==[] preserve survives because only the I5 router emits the located gold.
+    #    This guards the CHOSEN placement (the located-gold lives in ingest_comment, NOT in the
+    #    annotate leaf): annotation_acceptance's chat_history()==[] preserve survives because the
+    #    leaf annotate() never emits chat — only ingest_comment (the wired entry) does.
     # =====================================================================================
     store_b = FsStore(os.path.join(store_dir, "store-b"))
     suite_b = Suite(store_b, reg, nodes_dir=NODES)
@@ -135,7 +167,7 @@ try:
     # 5. A non-operator comment can NOT launder into gold (F4 guard — role-tied provenance).
     # =====================================================================================
     AN = "ui://chrome/inbox"
-    suite_b.route_click(AN, g, text="a non-operator comment must not train", source="twin")
+    suite_b.ingest_comment(AN, "a non-operator comment must not train", source="twin")
     hist_b = suite_b.chat_history(200)
     laundered = [t for t in hist_b if t.get("address") == AN]
     check("a source='twin' route emitted a turn (it is recorded)", len(laundered) == 1)
@@ -145,10 +177,12 @@ try:
     check("the non-operator comment is ABSENT from training_signal (F4 — never trains the twin)",
           all(t.get("text") != "a non-operator comment must not train" for t in sig_b))
 
-    print(f"\nALL {PASS} CHECKS PASS — L4 twin located-gold: a ui:// clicked comment (I5 router) "
+    print(f"\nALL {PASS} CHECKS PASS — L4 twin located-gold: a ui:// clicked comment via the WIRED "
+          "entry (ingest_comment — what POST /api/annotate calls; the I5 router composes it too) "
           "becomes a gold/operator chat turn carrying its address → a LOCATED gold label in "
           "training_signal (rides the existing append_chat→training_signal pipe, address intact); "
           "training_signal's gold/operator/echo-guard filter byte-for-byte preserved (twin turn "
-          "filtered, no launder); annotate() leaf stays pure (I6 SEPARATION intact)")
+          "filtered, no launder); annotate() leaf stays pure (I6 SEPARATION intact); located-gold "
+          "REACHABLE in production (bridge /api/annotate → ingest_comment)")
 finally:
     shutil.rmtree(store_dir, ignore_errors=True)
