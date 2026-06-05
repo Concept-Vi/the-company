@@ -308,11 +308,26 @@ class H(BaseHTTPRequestHandler):
                             f"first (POST /api/voice/load {{\"service\":\"{svc}\"}}) or call this with ?boot=1. "
                             f"Refusing a silent stall (fail loud).")
                 ear = SUITE.rhm_config().get("stt") or voice_stt.active_ear()
+                # G7 timing: split the turn into stt/think/tts using loop_turn's EXISTING callbacks as
+                # markers (on_transcript fires after STT, on_reply after THINK) — no new plumbing.
+                import time as _t
+                marks = {}
+                t0 = _t.monotonic()
                 r = voice_loop.loop_turn(
                     audio, persona, graph_id=gid, stt_provider=ear, speak_reply=speak_reply,
-                    think_fn=lambda txt: SUITE.chat(txt, gid))    # the ONE in-process brain
+                    think_fn=lambda txt: SUITE.chat(txt, gid),    # the ONE in-process brain
+                    on_transcript=lambda _t_, _m=marks: _m.__setitem__("stt", int((_t.monotonic()-t0)*1000)),
+                    on_reply=lambda _r_, _m=marks: _m.__setitem__("think_done", int((_t.monotonic()-t0)*1000)))
+                total = int((_t.monotonic() - t0) * 1000)
+                stt_ms = marks.get("stt")
+                think_ms = (marks["think_done"] - stt_ms) if ("think_done" in marks and stt_ms is not None) else None
+                tts_ms = (total - marks["think_done"]) if "think_done" in marks else None
+                SUITE.emit_run_record("voice.turn", total, stt_ms=stt_ms, think_ms=think_ms,
+                                      tts_ms=tts_ms, persona=persona, engine=r.get("engine"),
+                                      ear=ear, spoke=r.get("spoke", True))
                 wav = r.pop("wav", b"")
                 r["wav_b64"] = _b64.b64encode(wav).decode()       # the spoken reply, travels with the text
+                r["timing"] = {"total_ms": total, "stt_ms": stt_ms, "think_ms": think_ms, "tts_ms": tts_ms}
                 self._send(200, json.dumps(r))
                 return
             if self.path == "/api/run":

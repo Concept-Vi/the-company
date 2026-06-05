@@ -158,6 +158,18 @@ class Suite:
         except Exception:
             pass
 
+    def emit_run_record(self, op: str, duration_ms: int, **conditions) -> None:
+        """G7 / Introspective Data Building (Tim's law) — FIRST INSTANCE, the voice/model layer learning
+        by use. A typed run-record: an operation + HOW LONG IT TOOK + the CONDITIONS it happened under,
+        into the EXISTING event log (kind='op.run') — NOT a new analytics store. A datum without its
+        conditions is noise, so callers pass model/ear/engine/mode/ok/etc. Lenient-emit (telemetry must
+        never break the op it records; the raw record is cheap + append-only). Rollups (n·median·p95) are
+        DERIVED off the hot path from these — never computed here. 'How long it TOOK' lands here; 'how
+        long it TAKES' (the prior/estimate) lives in the declared specs (role knobs, services.json
+        vram/wake) — the measured refines the estimate. Generalises Company-wide past voice (cognition,
+        RHM verbs, surface, errors) — same emit→substrate→rollup loop, per-type."""
+        self._emit("op.run", f"{op} · {duration_ms}ms", op=op, duration_ms=duration_ms, **conditions)
+
     def _emit_durable(self, kind: str, summary: str, **meta) -> dict:
         """Append a DURABLE CLAIM event — FAIL LOUD (T1-EMIT). Unlike _emit (lenient telemetry), this
         does NOT swallow a failure: it returns the written record, and lets any append_event exception
@@ -1590,6 +1602,7 @@ class Suite:
         t = (text or "").strip()
         if not t:
             return {"finished": False, "verdict": "MORE", "text": t, "note": "empty — nothing to end"}
+        import time
         r = self.resolve_role("judge")                        # the role registry resolves model+knobs
         cfg = self.rhm_config()
         sys_p = ("You judge ONLY whether a spoken utterance is a COMPLETE THOUGHT the listener should now "
@@ -1597,12 +1610,19 @@ class Suite:
                  "Answer with EXACTLY one word: FINISHED or MORE. No punctuation, no explanation.")
         msgs = [{"role": "system", "content": sys_p},
                 {"role": "user", "content": f'Utterance so far: "{t}"\nFINISHED or MORE?'}]
+        t0 = time.monotonic()
         out = client.complete(
             transport.openai_transport(base_url=r["base_url"], timeout=cfg["timeout"]),
             msgs, model=r["model"], max_tokens=r["knobs"].get("max_tokens", 256),
             temperature=r["knobs"].get("temperature", 0))
+        ms = int((time.monotonic() - t0) * 1000)
         verdict = "FINISHED" if "finish" in (out or "").strip().lower() else "MORE"
-        return {"finished": verdict == "FINISHED", "verdict": verdict, "text": t, "judge_model": r["model"]}
+        # G7 run-record: the judge is on the LIVE turn path — how long it took, on which model, the
+        # verdict (the condition that matters for tuning the always-listen feel). Rollups reveal whether
+        # the bound judge model is fast enough live (the deepseek-6.5s lesson, measured per use).
+        self.emit_run_record("judge", ms, model=r["model"], verdict=verdict)
+        return {"finished": verdict == "FINISHED", "verdict": verdict, "text": t,
+                "judge_model": r["model"], "ms": ms}
 
     def chat(self, message: str, graph_id: str, focus: dict | None = None) -> dict:
         """Grounded conversation with the operator via NATIVE TOOL-CALLING. Answers from compact
