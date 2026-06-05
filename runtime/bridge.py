@@ -172,6 +172,13 @@ class H(BaseHTTPRequestHandler):
                     "tts_up": engines[0]["up"],            # back-compat: the default (kokoro) up?
                     "engines": engines,                    # lane B: per-engine availability + voices
                     "voice_enabled": SUITE.voice_enabled()}))  # lane H: the per-mode voice toggle state
+            elif path == "/api/personas":                  # G2.4/G3: the 5-cast registry the picker reads
+                from voice import personas as voice_personas   # stdlib-only data module (3.14-importable)
+                self._send(200, json.dumps(voice_personas.list_personas()))
+            elif path == "/api/trial/sessions":            # G4.6: the recorded trial sessions (the debrief's set)
+                self._send(200, json.dumps(SUITE.trial_sessions()))
+            elif path == "/api/trial/transcript":          # G4.6: a trial session's CAS transcript (fail loud if unrecorded)
+                self._send(200, json.dumps(SUITE.trial_transcript(q["session"])))
             else:
                 self._send(404, "{}")
         except Exception as e:                             # fail loud to the UI (parity with do_POST)
@@ -344,6 +351,18 @@ class H(BaseHTTPRequestHandler):
                     raise ValueError("/api/debrief/start needs a non-empty 'session_ids' list (fail loud)")
                 self._send(200, json.dumps(SUITE.start_debrief(
                     sids, host_persona=b.get("host_persona"), mode=b.get("mode", "walkthrough"))))
+            elif self.path == "/api/trial/turn":            # G4.6: record one spoken trial turn (durable event + CAS)
+                b = self._body()
+                self._send(200, json.dumps(SUITE.trial_record_turn(
+                    b["session_id"], b.get("role", "operator"), b["text"], b.get("character"))))
+            elif self.path == "/api/trial/feedback":        # G4.6: record Tim's spoken feedback during a trial
+                b = self._body()
+                self._send(200, json.dumps(SUITE.trial_record_feedback(
+                    b["session_id"], b["text"], b.get("character"))))
+            elif self.path == "/api/trial/reflection":      # G4.6: record the character's own reflection-note
+                b = self._body()
+                self._send(200, json.dumps(SUITE.trial_record_reflection(
+                    b["session_id"], b["text"], b.get("character"))))
             elif self.path == "/api/review/next":          # B: Next — open the gate, fire the step, advance
                 b = self._body()
                 self._send(200, json.dumps(SUITE.next(b["session"])))
