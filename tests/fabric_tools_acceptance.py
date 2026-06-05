@@ -188,7 +188,7 @@ def main():
             if isinstance(payload_or_exc, BaseException):
                 raise payload_or_exc
             captured["show_url"] = req.full_url
-            captured["show_body"] = json.loads(req.data.decode())
+            captured["show_body"] = json.loads(req.data.decode()) if req.data else None
             return FakeResp(payload_or_exc)
         return f
 
