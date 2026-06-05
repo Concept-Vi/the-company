@@ -30,10 +30,20 @@ ref FORMS handled (none silently dropped):
   • glob / dir   (nodes/*.py, voice/)          → NOT a symbol entry → index_ref returns None (counted in the
                                                   summary as 'not indexable as a symbol', never silently skipped).
 Compound refs (' / ' and ' + ' separated) are split (refcheck.split_refs); each sub-ref is indexed independently."""
-import os, re, json
+import os, re, json, sys
 import refcheck
 
 COMPANY = refcheck.COMPANY
+
+# X11 · SEMANTIC EDGES BESIDE STRUCTURAL — how many nearest OTHER entries each symbol records.
+# The seam this fills is RESERVED in this module's own docstring (lines 20-22): "the model layer
+# extends this later … semantic, on top of this structural reverse map." That later layer is here:
+# `referenced_by[]` is the STRUCTURAL edge (a code link — feature/address → symbol). X11 adds the
+# SIBLING SEMANTIC edge `semantically_nearest[]` — symbols that are CONCEPTUALLY related with NO code
+# link, the complement of the structural call-graph (X10's code-edges). Computed by embedding each
+# entry's representative text (the existing nodes/embed path → BGE-M3 @ :8001) and ranking the rest
+# by cosine via the existing nodes/retrieve node (reused, NOT reimplemented — one cosine path).
+SEMANTIC_K = 5  # top-K nearest OTHER entries kept per symbol (a named constant, not a literal).
 
 # classify the def/class/declaration KIND from the source line that DECLARES the symbol.
 # refcheck's _PYDEF/_TSXDEF capture the NAME only; we read the keyword here to assign kind.
@@ -180,13 +190,16 @@ def index_ref(ref: str, resolve=refcheck._resolve, bridge_lines=None):
             "kind": "file-only", "resolves": True}
 
 
-def build_index(items: list, resolve=refcheck._resolve) -> dict:
+def build_index(items: list, resolve=refcheck._resolve, labels_out: dict = None) -> dict:
     """The REVERSE index. Given collect_refs-shaped items ({raw, source, owner, label}),
     split each raw into sub-refs, index each, and COLLAPSE every ref that lands on the same
     id into ONE entry whose `referenced_by` is the de-duped, sorted list of owners pointing at
     it. Returns {id: {file, symbol, kind, resolves, referenced_by[]}}.
     Collision guard: if two refs hit the same id but DIFFERENT resolved files, that's a real
-    id collision — recorded under entry['_collision'] (surfaced, never silently merged)."""
+    id collision — recorded under entry['_collision'] (surfaced, never silently merged).
+    `labels_out` (optional): if given, populated {id: [the owners' `label`/`represents` texts]} —
+    the human-meaning context X11 embeds for the SEMANTIC edge. Sidecar so the returned reg
+    shape (the structural index) is UNCHANGED."""
     bres = resolve("bridge.py")
     bridge_lines = bres[1] if bres else []
     reg = {}
@@ -209,8 +222,90 @@ def build_index(items: list, resolve=refcheck._resolve) -> dict:
                                  "kind": ent["kind"], "resolves": True})
             if it["owner"] not in reg[sid]["referenced_by"]:
                 reg[sid]["referenced_by"].append(it["owner"])
+            if labels_out is not None:
+                lab = (it.get("label") or "").strip()
+                if lab and lab not in labels_out.setdefault(sid, []):
+                    labels_out[sid].append(lab)
     for ent in reg.values():
         ent["referenced_by"].sort()
+    return reg
+
+
+# ---------------------------------------------------------------------------------------------
+# X11 · the SEMANTIC edge — `semantically_nearest[]` beside the structural `referenced_by[]`.
+# ---------------------------------------------------------------------------------------------
+def representative_text(sid: str, entry: dict, labels: list = None) -> str:
+    """The text X11 embeds to find a symbol's CONCEPTUAL neighbours. It is the meaning of the
+    symbol, assembled from what the registry already knows — NO new parsing of ~/company:
+      symbol name + its kind + its file stem + the `represents`/label texts of the corpus
+      owners that reference it (the human description of WHAT the symbol is for).
+    e.g. code://suite/chat → 'chat def suite | the right-hand-man conversational voice'.
+    A file-only entry (symbol is None) falls back to its file stem + labels."""
+    file_stem = _stem(entry.get("file") or "")
+    sym = entry.get("symbol") or file_stem
+    kind = entry.get("kind") or ""
+    head = f"{sym} {kind} {file_stem}".strip()
+    ctx = " ".join(labels or [])
+    return f"{head} | {ctx}".strip(" |") if ctx else head
+
+
+def _default_embed(text: str) -> list:
+    """The DEFAULT embedder seam — the EXISTING nodes/embed path (text → Vector via the guarded
+    embeddings fabric, BGE-M3 @ :8001). Reused, not reimplemented. Importable lazily so symbols.py
+    has no import-time dependency on the fabric (it must build the structural index even with the
+    fabric absent). Raises on endpoint-down — the caller treats that as the degrade signal."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    root = os.path.dirname(os.path.dirname(here))  # design/_system → design → repo root
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    from nodes import embed
+    return embed.run({"text": text}, {})
+
+
+def attach_semantic_edges(reg: dict, labels: dict = None, embed_fn=_default_embed,
+                          k: int = SEMANTIC_K, warn=None) -> dict:
+    """Add `semantically_nearest[]` to each entry of `reg` IN PLACE, beside `referenced_by[]`.
+    For each entry: embed its representative_text (via the embed seam) → a corpus of {id, vector}
+    → for each entry, rank the OTHER entries by cosine using the EXISTING nodes/retrieve node
+    (one cosine path, not reimplemented) → keep the top-`k` ids (+ score). The structural fields
+    are NOT touched — this is an ADDITIVE sibling field.
+
+    DEGRADE-WITH-WARNING (root rule 4 + the X11 brief): if embedding ANY entry fails (the :8001
+    endpoint is unreachable — FabricError / URLError), the SEMANTIC field is SKIPPED ENTIRELY with
+    a LOUD warning. NEVER a silent zero-vector / fabricated nearest / wrong cosine. The structural
+    index returned is intact and valid. Returns reg (with or without the semantic field)."""
+    warn = warn or (lambda m: print(m, file=sys.stderr))
+    labels = labels or {}
+    here = os.path.dirname(os.path.abspath(__file__))
+    root = os.path.dirname(os.path.dirname(here))
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    try:
+        from nodes import retrieve  # the existing cosine-ranking node — reused, not reimplemented.
+    except Exception as e:
+        warn(f"[symbols.py X11] WARNING: nodes/retrieve unavailable ({e!r}) — "
+             "SKIPPING semantic edges; the structural index is intact.")
+        return reg
+
+    ids = list(reg.keys())
+    vectors = {}
+    try:
+        for sid in ids:
+            vectors[sid] = embed_fn(representative_text(sid, reg[sid], labels.get(sid)))
+    except Exception as e:
+        # Endpoint down / any embed failure → DEGRADE: no semantic field, loud warning, structural
+        # index intact. NOT a crash, NOT a fabricated nearest, NOT a silent skip.
+        warn(f"[symbols.py X11] WARNING: embedder unreachable / embed failed ({e!r}) — "
+             "SKIPPING semantically_nearest[] for ALL entries (degrade-with-warning). "
+             "The structural code-symbols index built fully; re-run with BGE-M3 @ :8001 up "
+             "to populate the semantic edges.")
+        return reg
+
+    for sid in ids:
+        corpus = [{"id": other, "vector": vectors[other]} for other in ids if other != sid]
+        ranked = retrieve.run({"query": vectors[sid], "corpus": corpus}, {"k": k})
+        reg[sid]["semantically_nearest"] = [
+            {"id": r["id"], "score": round(float(r["score"]), 6)} for r in ranked]
     return reg
 
 
@@ -220,9 +315,14 @@ def shared_symbols(reg: dict) -> list:
     return sorted(sid for sid, e in reg.items() if len(e["referenced_by"]) >= 2)
 
 
-def build_registry(register: dict, addresses: dict, resolve=refcheck._resolve) -> dict:
+def build_registry(register: dict, addresses: dict, resolve=refcheck._resolve,
+                   embed_fn=_default_embed, k: int = SEMANTIC_K, warn=None) -> dict:
     """Assemble the emitted doc. Reuses refcheck.collect_refs (which fails LOUD on a malformed
-    registry). Returns the full code-symbols.json shape (with _what + summary)."""
+    registry). Returns the full code-symbols.json shape (with _what + summary).
+    X11: after the STRUCTURAL reverse index is built, attach the SEMANTIC sibling edge
+    `semantically_nearest[]` per entry (embed via `embed_fn`, rank via nodes/retrieve). If the
+    embedder (:8001) is down, that step degrades-with-warning and the field is simply absent —
+    the structural part is unchanged."""
     items = refcheck.collect_refs(register, addresses)  # raises ValueError on malformed input.
     # tally the non-symbol forms (glob/dir) honestly, so nothing is silently dropped.
     not_indexable = []
@@ -233,7 +333,11 @@ def build_registry(register: dict, addresses: dict, resolve=refcheck._resolve) -
             if index_ref(sub, resolve=resolve, bridge_lines=bridge_lines) is None:
                 not_indexable.append({"owner": it["owner"], "ref": sub})
 
-    reg = build_index(items, resolve=resolve)
+    labels = {}
+    reg = build_index(items, resolve=resolve, labels_out=labels)
+    # X11 · the SEMANTIC edge, additive sibling of referenced_by[] (degrade-with-warning if :8001 down).
+    attach_semantic_edges(reg, labels=labels, embed_fn=embed_fn, k=k, warn=warn)
+    semantic_count = sum(1 for e in reg.values() if "semantically_nearest" in e)
     shared = shared_symbols(reg)
     unresolved = sorted(sid for sid, e in reg.items() if not e["resolves"])
     collisions = sorted(sid for sid, e in reg.items() if e.get("_collision"))
@@ -251,7 +355,12 @@ def build_registry(register: dict, addresses: dict, resolve=refcheck._resolve) -
                  "change. glob/dir refs (nodes/*.py, voice/) are not symbols → listed under "
                  "not_indexable (counted, never silently dropped). The future local-AI layer "
                  "(mechanisms.json · code-symbol-registry) annotates each symbol with what it actually "
-                 "does + flags symbols referenced by features whose represents-claim they don't match.",
+                 "does + flags symbols referenced by features whose represents-claim they don't match. "
+                 "X11 · the SEMANTIC edge: each entry ALSO carries `semantically_nearest[]` "
+                 "({id, score}, top-K by cosine) — symbols CONCEPTUALLY related with no code link, the "
+                 "SIBLING of the structural `referenced_by[]` (embedded via nodes/embed @ BGE-M3 :8001, "
+                 "ranked via nodes/retrieve). When :8001 is DOWN the field is ABSENT (degrade-with-warning, "
+                 "never a fabricated nearest) and the structural index is unchanged — old readers ignore it.",
         "symbols": reg,
         "not_indexable": not_indexable,
         "summary": {
@@ -261,6 +370,7 @@ def build_registry(register: dict, addresses: dict, resolve=refcheck._resolve) -
             "shared_2plus": len(shared),
             "not_indexable": len(not_indexable),
             "id_collisions": len(collisions),
+            "semantic_edges": semantic_count,  # X11: entries with semantically_nearest[] (0 if :8001 down)
         },
         "unresolved": unresolved,
         "shared": shared,
@@ -299,6 +409,10 @@ def run_corpus():
     print("symbols (code:// reverse index) — summary:")
     for k, v in s.items():
         print(f"  {k}: {v}")
+    if s.get("semantic_edges", 0) == 0 and s.get("symbols_indexed", 0) > 0:
+        print("  → NOTE (X11): semantically_nearest[] is ABSENT on all entries — the embedder "
+              "(:8001) was unreachable. The STRUCTURAL index built fully; re-run with BGE-M3 up "
+              "to populate the semantic edges (degrade-with-warning, not a failure).")
     if doc["shared"]:
         print("  → SHARED symbols (referenced by 2+ corpus things):")
         for sid in doc["shared"]:

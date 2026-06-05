@@ -160,9 +160,100 @@ def run():
     assert "_what" in doc and "code://" in doc["_what"], "carries the code:// branch note"
     assert doc["symbols"]["code://suite/chat"]["referenced_by"] and "summary" in doc, doc
 
+    # ---- 6) X11: the SEMANTIC edge `semantically_nearest[]` beside `referenced_by[]` ---------
+    # A deterministic, hermetic stand-in for the BGE-M3 embedder (no :8001 access, like the
+    # resolver seam). representative_text(sid, entry, labels) carries the symbol's MEANING (name +
+    # kind + file stem + the owners' represents/label text); the fake maps a text to a vector by
+    # the CONCEPT WORDS it contains, so conceptually-similar texts get near-parallel vectors and
+    # unrelated ones get near-orthogonal vectors — exactly the semantic ordering the live BGE-M3
+    # gives (the embeddings_acceptance proof: cat≈feline > cat/stocks), without any network.
+    CONCEPTS = ["chat", "voice", "vector", "embedding", "schedule", "tick", "finance", "money"]
+
+    def fake_embed(text):
+        t = text.lower()
+        # one axis per concept word present; a tiny constant so no vector is all-zero (cosine-safe).
+        return [1.0 if c in t else 0.0 for c in CONCEPTS] + [0.01]
+
+    # Two conceptually-CLOSE entries (both about chat/voice) + one UNRELATED (finance/money).
+    sem_items = [
+        {"raw": "runtime/suite.py:chat", "source": "register", "owner": "RHM-chat",
+         "label": "the conversational voice chat reply"},
+        {"raw": "runtime/suite.py:run", "source": "register", "owner": "RHM-decide",
+         "label": "the conversational voice chat turn"},   # close to chat: shares 'chat'/'voice'
+        {"raw": "scheduler.py:run", "source": "register", "owner": "BILLING",
+         "label": "finance money billing total"},          # unrelated concept
+    ]
+    sem_labels = {}
+    sem_reg = symbols.build_index(sem_items, resolve=fake_resolver, labels_out=sem_labels)
+    # representative_text pulls the owners' label/represents text (the human meaning).
+    rt_chat = symbols.representative_text("code://suite/chat", sem_reg["code://suite/chat"],
+                                          sem_labels.get("code://suite/chat"))
+    assert "chat" in rt_chat and "voice" in rt_chat, f"representative text carries meaning: {rt_chat}"
+
+    # structural SNAPSHOT before attaching — to prove byte-for-byte preservation after.
+    import copy
+    structural_before = copy.deepcopy(sem_reg)
+
+    # --- embedder UP: each entry gains semantically_nearest[] of code:// ids -----------------
+    symbols.attach_semantic_edges(sem_reg, labels=sem_labels, embed_fn=fake_embed, k=2)
+    for sid, e in sem_reg.items():
+        assert "semantically_nearest" in e, f"{sid} gained semantically_nearest[]: {e}"
+        for n in e["semantically_nearest"]:
+            assert n["id"].startswith("code://") and n["id"] != sid, f"nearest is an OTHER code:// id: {n}"
+        # the structural fields are UNCHANGED (preserve — byte-for-byte).
+        for k in ("file", "symbol", "kind", "resolves", "referenced_by"):
+            assert e[k] == structural_before[sid][k], f"structural field {k} changed on {sid}!"
+
+    # SEMANTIC ORDERING (the heart of X11, like embeddings_acceptance's cat≈feline>cat/stocks):
+    # for the chat entry, the OTHER chat/voice symbol must rank ABOVE the unrelated finance one.
+    chat_near = sem_reg["code://suite/chat"]["semantically_nearest"]
+    chat_run = sem_reg["code://suite/run"]      # the conceptually-close sibling (chat/voice)
+    ordering = {n["id"]: n["score"] for n in chat_near}
+    assert ordering["code://suite/run"] > ordering["code://scheduler/run"], \
+        f"conceptually-similar (chat↔chat) nearer than unrelated (chat↔finance): {ordering}"
+
+    # --- embedder DOWN: degrade-with-warning, field ABSENT, structural index INTACT, NO crash --
+    class _Down(Exception):
+        pass
+
+    def down_embed(text):
+        raise _Down("connection refused :8001 (embedder down)")
+
+    down_reg = symbols.build_index(sem_items, resolve=fake_resolver, labels_out={})
+    warnings = []
+    out = symbols.attach_semantic_edges(down_reg, labels=sem_labels, embed_fn=down_embed, k=2,
+                                        warn=warnings.append)
+    assert out is down_reg, "degrade returns the (structural) reg, does not crash"
+    assert all("semantically_nearest" not in e for e in down_reg.values()), \
+        "embedder-down: the semantic field is SKIPPED ENTIRELY (no fabricated nearest)"
+    for sid, e in down_reg.items():  # structural part still fully built + valid
+        assert e["resolves"] in (True, False) and isinstance(e["referenced_by"], list), e
+    assert warnings and any("embedder unreachable" in w.lower() or "embed failed" in w.lower()
+                            for w in warnings), f"a LOUD warning was emitted on degrade: {warnings}"
+
+    # build_registry end-to-end with the embedder down → valid doc, semantic_edges == 0 in summary.
+    doc_down = symbols.build_registry(
+        {"features": [{"id": "RHM-chat", "code": "runtime/suite.py:chat"}]},
+        {"ui://x": {"code": "runtime/suite.py:run", "represents": "F1"}},
+        resolve=fake_resolver, embed_fn=down_embed, warn=lambda m: None)
+    symbols._validate(doc_down)  # still VALID with the semantic field absent
+    assert doc_down["summary"]["semantic_edges"] == 0, "down → 0 semantic edges, structural doc valid"
+
+    # build_registry end-to-end with the embedder UP → semantic_edges populated.
+    doc_up = symbols.build_registry(
+        {"features": [{"id": "RHM-chat", "code": "runtime/suite.py:chat"},
+                      {"id": "RHM-decide", "code": "runtime/suite.py:run"}]},
+        {"ui://x": {"code": "scheduler.py:run", "represents": "finance money billing"}},
+        resolve=fake_resolver, embed_fn=fake_embed, k=2, warn=lambda m: None)
+    symbols._validate(doc_up)
+    assert doc_up["summary"]["semantic_edges"] == len(doc_up["symbols"]) > 0, \
+        f"up → every entry has a semantic edge: {doc_up['summary']}"
+
     print("PASS test_symbols (form→symbol/kind/resolves + id stability + REVERSE merge "
           "[many owners→one entry, bare/qualified unify, compound split] + shared + "
-          "absent-symbol drift + glob/dir not-indexed + malformed raises)")
+          "absent-symbol drift + glob/dir not-indexed + malformed raises + X11 semantic edges "
+          "[up: nearest code:// ids + semantic ordering + structural unchanged; "
+          "down: degrade-with-warning, field absent, structural intact, no crash])")
 
 
 run()
