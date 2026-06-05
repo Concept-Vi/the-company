@@ -233,6 +233,44 @@ def _compose_context_block(payload: dict) -> str:
     return "\n\n" + "\n\n".join(sections)
 
 
+def _governing_constitutions(scope, repo: str = REPO_ROOT) -> list[str]:
+    """X15 — the constitution-hop. From the resolved `scope[]` (repo-relative files), derive the
+    DISTINCT governing module `AGENTS.md` paths to NAME alongside the root three: walk each scope
+    file's parent dirs UP to the NEAREST ancestor that HAS an `AGENTS.md` under the repo, dedupe,
+    return them (repo-relative, sorted). The root `AGENTS.md` itself is EXCLUDED — it is already
+    named by the root "Read AGENTS.md / MAP.md / STATE.md first." line, so naming it again as a
+    "module" constitution would be noise (a top-level scope file resolves to the root → no module
+    line, which is correct: the root law already governs it).
+
+    PURE-of-side-effects: the ONLY IO is a read-only `os.path.exists` stat against `repo` (NOT cwd),
+    which is deterministic and reads nothing through the suite/embed/network — X4's pure boundary and
+    X5's consent-time property both hold (the build sees exactly what the payload + the repo's static
+    constitution layout name; no live re-resolution). A scope file under NO ancestor AGENTS.md (none
+    exist, in practice the root always does) yields nothing for that file — fail-loud-legible, no crash.
+    """
+    if not scope:
+        return []
+    found: set[str] = set()
+    for raw in scope:
+        if not isinstance(raw, str) or not raw.strip():
+            continue
+        # normalize: strip a leading ./, collapse, and refuse anything that escapes the repo via `..`
+        rel = os.path.normpath(raw.strip())
+        if rel.startswith("..") or os.path.isabs(rel):
+            continue  # outside the repo — not ours to govern; skip (no crash)
+        # walk dirs UP to the nearest ancestor with an AGENTS.md, EXCLUDING the repo root. A scope
+        # entry that is ITSELF a directory (e.g. "runtime/") starts AT itself (you pointed at the
+        # module dir, so its own AGENTS.md governs); a file entry starts at its parent dir.
+        start = rel if os.path.isdir(os.path.join(repo, rel)) else os.path.dirname(rel)
+        parent = start
+        while parent and parent not in (".", os.sep):
+            if os.path.exists(os.path.join(repo, parent, "AGENTS.md")):
+                found.add(parent.replace(os.sep, "/") + "/AGENTS.md")
+                break
+            parent = os.path.dirname(parent)
+    return sorted(found)
+
+
 def build_instruction(decision: dict) -> str:
     """Build the work instruction from the recorded decision (its payload). The decision IS the
     authorization (W2) and carries the declared scope (W4) — the instruction tells Claude Code
@@ -249,7 +287,11 @@ def build_instruction(decision: dict) -> str:
     NOT gather/embed/re-resolve (that would break the boundary AND X5's consent-time property — the
     operator approves WITH the exact context, the build can't resolve a different one later). An older
     intent missing those fields composes byte-for-byte as before (additive + backward-compatible).
-    Constitution-naming (the governing module laws) is X15 — composed elsewhere, NOT here."""
+
+    X15 — the constitution-hop: it ALSO names the GOVERNING module constitution(s) on a NEW adjacent
+    line (the root "Read … first." sentence is preserved unaltered), derived from the scope's parent
+    dirs via `_governing_constitutions` (a read-only path stat — still pure-of-side-effects). So the
+    launched build reads the laws of exactly where you pointed. Empty/no scope → just the root three."""
     payload = decision.get("payload", {}) if isinstance(decision, dict) else {}
     spec = payload.get("spec") or payload.get("instruction") or payload.get("why") or ""
     scope = payload.get("scope") or payload.get("target_scope") or []
@@ -259,8 +301,17 @@ def build_instruction(decision: dict) -> str:
                       "exactly this scope): " + ", ".join(scope) +
                       ". Do NOT touch anything outside that scope.")
     context_block = _compose_context_block(payload)
+    # X15 — the constitution-hop: name the GOVERNING module constitution(s) derived from the scope's
+    # parent dirs, on a NEW adjacent line (the root "Read … first." sentence is PRESERVED unaltered).
+    # Empty/no scope (or a scope under no module dir) → no line → the root three exactly as before.
+    governing = _governing_constitutions(scope)
+    constitution_line = ""
+    if governing:
+        constitution_line = ("\n\nAlso read the governing module constitution(s) — the laws of exactly "
+                             "where this change is pointed: " + ", ".join(governing) + ".")
     return (f"Implement the following approved change in the 'company' repo. "
-            f"Read AGENTS.md / MAP.md / STATE.md first.\n\n{spec}{scope_line}{context_block}{STANDARDS_BLOCK}")
+            f"Read AGENTS.md / MAP.md / STATE.md first.{constitution_line}"
+            f"\n\n{spec}{scope_line}{context_block}{STANDARDS_BLOCK}")
 
 
 def _default_runner(instruction: str, *, repo: str, permission_mode: str, timeout_s: int) -> dict:

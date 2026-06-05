@@ -131,13 +131,22 @@ check("BACKWARD-COMPAT: NO empty 'CONTEXT AT THIS LOCUS' section when there is n
       "CONTEXT AT THIS LOCUS" not in bare.upper())
 
 # byte-for-byte: the bare compose == the SAME payload built today (the existing slots, unchanged shape).
-# We reconstruct today's expected output from the preserved pieces to prove X4 ADDED nothing here.
+# We reconstruct the expected output from the preserved pieces to prove X4 ADDED nothing of the rich
+# context here (no address/symbols/context sections). NOTE: X15 (the constitution-hop, landed AFTER X4)
+# ALSO names the GOVERNING module constitution on a NEW adjacent line — scope=["runtime/suite.py"] →
+# runtime/AGENTS.md — so the exact compose now includes that X15 line. The root "Read … first." sentence
+# is PRESERVED unaltered; X15's line is adjacent. We keep this assertion EXACT-EQUALITY (not weakened to
+# a substring) so it still proves X4 added no rich-context section here — it just accounts for X15's line.
 expected_bare = (
     "Implement the following approved change in the 'company' repo. "
-    "Read AGENTS.md / MAP.md / STATE.md first.\n\na plain build with no address"
+    "Read AGENTS.md / MAP.md / STATE.md first."
+    "\n\nAlso read the governing module constitution(s) — the laws of exactly where this change is "
+    "pointed: runtime/AGENTS.md."
+    "\n\na plain build with no address"
     "\n\nYou are authorized to change ONLY these paths (the operator approved exactly this scope): "
     "runtime/suite.py. Do NOT touch anything outside that scope." + STANDARDS_BLOCK)
-check("BACKWARD-COMPAT (byte-for-byte): the bare prompt == today's exact compose (X4 added NOTHING here)",
+check("BACKWARD-COMPAT (byte-for-byte): the bare prompt == the exact compose (X4 added no rich-context "
+      "section; the X15 constitution-hop line for runtime/AGENTS.md is the only addition)",
       bare == expected_bare)
 
 # an intent with NO payload at all (the oldest shape) still composes (no crash, no empty sections)
