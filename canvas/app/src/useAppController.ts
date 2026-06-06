@@ -1038,12 +1038,24 @@ export function useAppController(editor: Editor) {
     wtBusyRef.current = true; setWtBusy(true)
     setNotice('starting walk over ' + itemIds.length + ' item(s)…')
     try {
-      const s = await api.reviewStart(itemIds, 'walkthrough')
+      // G-44 — BOUND the start (mirrors changeMode's G-41 fix): reviewStart compiles a model-invoking
+      // review-session graph; with NO model up it HANGS server-side, and a bare await would leave the
+      // SHARED wtBusyRef guard TRUE forever (the finally never runs) → bricks the whole review organ until
+      // reload (a silent failure, rule 4). Race it against a generous deadline (a live walk is legitimately
+      // slow — minutes for a cold model — so the window is wide; this only catches a true hang). On timeout:
+      // degrade LOUD + release the guard so the operator can retry.
+      const s: any = await Promise.race([
+        api.reviewStart(itemIds, 'walkthrough'),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('__wt_timeout__')), 45000)),
+      ])
       if (s?.error) { setNotice('✕ ' + s.error); return }
       try { localStorage.setItem('company-review-session', s.session) } catch { /* */ }
       setSession(s); setWtReason(''); setWtSpoke('')
-    } catch (e: any) { setNotice('✕ could not start the walk: ' + (e?.message || e)) }
-    finally { wtBusyRef.current = false; setWtBusy(false) }   // re-enable on success OR error
+    } catch (e: any) {
+      if (e?.message === '__wt_timeout__') setNotice('✕ no model responded — start a model (the walk organ needs one to compile), then try again')
+      else setNotice('✕ could not start the walk: ' + (e?.message || e))
+    }
+    finally { wtBusyRef.current = false; setWtBusy(false) }   // re-enable on success OR error OR timeout — never stuck
   }
   // refresh the card from the server-authoritative present_current. reflects-never-owns.
   async function refreshSession(sid: string) {
