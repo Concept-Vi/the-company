@@ -193,7 +193,11 @@ export function useAppController(editor: Editor) {
   // bottom-sheet over the (always-mounted) canvas. 'canvas' = no sheet (board full-bleed). This state is INERT
   // on desktop/tablet (those breakpoints display:none the tabbar+sheets), so it never changes desktop layout.
   // tldraw stays mounted under the sheet at every width — semantic-zoom/drag-to-wire (preserve-list) intact.
-  const [mobileTab, setMobileTab] = useState<'canvas' | 'palette' | 'inbox' | 'rhm'>('canvas')
+  // A2 (G-36): 'activity' joins the union so the ambient feed gets a tabbar-driven bottom-sheet (mirrors the
+  // 'rhm' reveal). G-57: an interactive offer landing raises 'rhm' (the App.tsx Hud effect calls setMobileTab).
+  // This is sheet-layer state only — NOT a voice function; it stays the single source of "which bottom surface
+  // is up" so a fresh offer and the operator's tab never both claim the bottom edge.
+  const [mobileTab, setMobileTab] = useState<'canvas' | 'palette' | 'inbox' | 'rhm' | 'activity'>('canvas')
 
   // Merge events by SEQ into the current list — an event already present (same seq) is never duplicated,
   // regardless of source. Makes `key={e.seq}` inherently unique and kills the "two children with the same

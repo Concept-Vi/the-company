@@ -779,10 +779,36 @@ button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
 .wire-door-noreach{font-family:var(--font-mono);font-size:var(--fs-meta);padding:var(--sp-2);
   background:var(--s0);border:1px solid var(--line);border-radius:var(--r-sm)}
 .wire-door-err{color:var(--err);font-family:var(--font-mono);font-size:var(--fs-meta)}
+/* A2 PHONE-PARITY (G-31/G-54) — the indicated-element affordance FAMILY (annotate-bar · journey-bar ·
+   wire-door) gets a designed phone home so the core loop point→ask→see→approve works thumb-first (the
+   brainwave-on-a-walk case). These three float over the canvas cell on desktop (bottom:16/60/104px);
+   on phone that desktop stack would sit UNDER the 58px tabbar. So at ≤699 we re-pin them as bottom CARDS
+   above the tabbar — full-bleed, stacked upward from the tabbar, capped-height + scroll so a long door
+   never runs off-screen. They render ONLY on the canvas tab (data-mtab="canvas", the no-sheet view) so
+   they never collide with an open inbox/rhm bottom-sheet (precedence: a sheet, when raised, owns the
+   bottom edge; indication-cards live on the bare canvas where the operator points). Tokens only; the
+   widths go full-bleed so a 390px thumb has the whole row. */
 @media (max-width:699px){
-  /* on the phone the in-canvas overlays are display:none (they overlap at phone width — the corpus rule);
-     the door is reachable through the indicated-element flow + the Inbox builds lane on the panel sheet. */
-  .wire-door{display:none}
+  /* the WIRE-DOOR is the indicated-element affordance that matters on phone (the point→ask→approve self-
+     build loop, the brainwave-on-a-walk case). It's the PRIMARY bottom card pinned just above the 58px
+     tabbar; the X16 reach + approve scroll WITHIN it (capped). Hidden whenever a sheet is raised (a sheet
+     owns the bottom edge — no two bottom surfaces stack). */
+  .app-shell:not([data-mtab="canvas"]) .wire-door{display:none}
+  .as-canvas .wire-door{left:8px;right:8px;bottom:66px;transform:none;width:auto;max-width:none;
+    max-height:56vh;overflow:auto;z-index:341}
+  /* the annotate bar (click→comment) + journey record/replay are the WIRE-DOOR's DESKTOP siblings — they
+     float over the canvas at desktop. On phone the toolbar (`.as-top`, in-flow at the top) WRAPS to ~300px
+     tall, so a fixed top-strip would overlap the toolbar buttons, and the bottom edge is owned by the door +
+     tabbar — there is no non-overlapping home for them at 390px. Neither is in the A2 surface set; comment-
+     at-locus (/api/annotate) + journey-recording are DESKTOP affordances (on phone the RHM chat is the
+     conversational channel — NOT claimed as an equivalent annotate path). So we HIDE them at ≤699 (no
+     overlap, rule-9 clean) rather than relocate a collision. The door — the affordance the A2 core loop
+     needs — is the one indicated-element card that gets the phone home.
+     Specificity (G-25 law): these chips carry BOTH `.rhm-indicating` (display:flex, 0,1,0) and the bare
+     `.annotate-bar`/`.journey-bar`, so a bare `{display:none}` (0,1,0) is a source-order coin-flip after the
+     dev bundler reorders. We scope UP a notch (`.app-shell .annotate-bar`, 0,2,0) so the hide ALWAYS beats
+     `.rhm-indicating` regardless of injected order — verified by computed style. */
+  .app-shell .annotate-bar,.app-shell .journey-bar{display:none}
 }
 /* the indicating chip in the RHM chat (above the input) — shows the locus + a clear. Reuses the corpus
    panel/accent vocabulary (the same tokens the surrounding HUD uses); compact, single line. */
@@ -1003,16 +1029,27 @@ button.b:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
   /* the toolbar wraps to fit 390px (flex-wrap already set in the F0 .app-shell .toolbar rule) */
   .app-shell .toolbar{width:100%;justify-content:flex-start}
   /* the in-canvas overlays overlap at phone width → hide them; their content reaches the operator via the
-     sheets/tabbar (rhm sheet, inbox sheet) — fail-loud preserved: nothing silently lost, just relocated. */
-  .as-canvas .op-panels,.as-canvas .activity,.as-canvas .walkthrough{display:none}
-  /* C1 · PHONE PARITY for the GUIDED-SEQUENCE card ONLY (scoped to .wt-guide — the review .walkthrough
-     stays hidden as above; its phone home is the A2/G-31/G-36 sweep, not this lane). The guide's spotlight
-     targets (toolbar/run, toolbar/presence, inbox/build-review) ARE mounted at ≤699px (verified by use), so
-     the guide genuinely works on phone — re-show it as a bottom card above the tabbar (mirrors the .as-sheet
-     placement: pinned, above the 58px tabbar, scrollable, capped height so the spotlighted element stays
-     visible above it). Specificity (0,2,0) beats the 0,2,0 hide rule by source-order (this comes after). */
-  .as-canvas .walkthrough.wt-guide{display:flex;position:fixed;left:8px;right:8px;bottom:66px;top:auto;
-    transform:none;width:auto;max-width:none;max-height:46vh;z-index:340}
+     sheets/tabbar (rhm sheet, inbox sheet) — fail-loud preserved: nothing silently lost, just relocated.
+     A2 (G-50): .walkthrough is REMOVED from this hide list — the review-walk card now has a phone home (below).
+     A2 (G-36): .activity is REMOVED too — it becomes a tabbar-driven bottom-sheet (the 'activity' tab, below). */
+  .as-canvas .op-panels{display:none}
+  /* C1+A2 (G-50) · PHONE PARITY for the WALKTHROUGH CARD — BOTH the guided-sequence tour (.wt-guide) AND the
+     review-walk (the pending-item review). They are the SAME card, branched on `isGuide` in one session, so
+     they NEVER co-occur — one show rule serves both. The C1 lane proved the guide works on phone (its
+     spotlight targets toolbar/run · toolbar/presence · inbox/build-review are mounted at ≤699). The review
+     walk's verdict row (approve/reject/comment/skip/decide) + reason input are all in-card controls that work
+     thumb-first at this width; its `show again` targets resolve via the same drive. Re-shown as a bottom card
+     above the 58px tabbar (scrollable, capped height so the verdict buttons stay reachable). Like the other
+     bottom cards, hidden when a sheet is raised (a sheet owns the bottom edge). Specificity (0,2,0) beats the
+     0,1,0 hide rule (this comes after; .walkthrough no longer in the hide list above either). */
+  .app-shell:not([data-mtab="canvas"]) .as-canvas .walkthrough{display:none}
+  /* overflow:auto (mirrors the wire-door rule) is LOAD-BEARING for the REVIEW variant: it stacks a reason
+     input + a 5-button verdict row + foot BELOW a flex:1 frame — their natural sum can exceed 56vh, and
+     without scroll on the card itself the bottom children (approve/reject) would CLIP rather than scroll.
+     A2 = verdicts thumb-first, so the verdict row must always be reachable. The guide variant is short
+     (no verdicts) and never needed it; the review variant does. */
+  .as-canvas .walkthrough{display:flex;flex-direction:column;position:fixed;left:8px;right:8px;bottom:66px;top:auto;
+    transform:none;width:auto;max-width:none;max-height:56vh;overflow:auto;z-index:342}
   /* the two rails become bottom-SHEETS — off-screen by default, slid up when their tab is active. Only one
      can be active (data-mtab is a single value) so they never co-occupy the screen. NOTE: `.as-panel` also
      carries the bare corpus `.panel` class (for its F1 styling), and the corpus design-system.css HIDES
@@ -1029,6 +1066,14 @@ button.b:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
   .as-canvas .rhm{display:none}
   .app-shell[data-mtab="rhm"] .as-canvas .rhm{display:flex;position:fixed;left:0;right:0;bottom:58px;top:auto;
     width:auto;height:auto;max-height:60vh;z-index:340;border-radius:8px 8px 0 0}
+  /* A2 (G-36) · the ACTIVITY feed — an AMBIENT trace (not a conditional card), so it gets its own tabbar
+     entry + bottom-sheet (the 'activity' tab), mirroring the .rhm template byte-for-byte (same cell, same
+     data-mtab reveal). Hidden by default at phone width; slid up when its tab is active. Desktop untouched
+     (the bottom-left .as-canvas .activity rule at §F0 stays — this only adds inside the ≤699 block). */
+  .as-canvas .activity{display:none}
+  .app-shell[data-mtab="activity"] .as-canvas .activity{display:flex;flex-direction:column;position:fixed;
+    left:0;right:0;bottom:58px;top:auto;width:auto;height:auto;max-height:60vh;z-index:340;
+    border-radius:8px 8px 0 0;overflow:auto}
   /* the tabbar — corpus component, mobile-only, pinned to the bottom edge as the nav. pointer-events:auto is
      REQUIRED: the tabbar is a child of `.app-shell` which is pointer-events:none (so the canvas underneath
      stays interactive); without re-enabling it here, taps fall THROUGH the tabbar to the board. */

@@ -121,6 +121,18 @@ function Hud() {
   // the CSS reveal exactly one bottom-sheet (or none for 'canvas'). On desktop/tablet the tabbar + sheet
   // behaviour is display:none, so this attribute is inert above 699px — desktop layout is untouched.
   const { mobileTab, setMobileTab } = ctrl
+  // G-57 · PHONE: a CONSEQUENTIAL offer (the B2 interactive proposal — build/panel/extend) lands in the RHM
+  // chat, but on phone the chat is a bottom-sheet hidden unless the 'rhm' tab is raised — so a fresh
+  // consequential offer could be MISSED. When `ctrl.proposal.interactive` flips true (the registry-truth flag
+  // the comparison surface renders on), auto-raise the rhm sheet so the operator sees the choice. This is the
+  // SHEET-LAYER hook only (setMobileTab — already on the controller, zero voice-function reach). INERT on
+  // desktop: the tabbar/sheets are display:none >699px, so setMobileTab changes nothing visible there (the
+  // chat is always-on in the canvas cell) — it only matters at phone width. Single-source: it sets the SAME
+  // mobileTab the operator's taps drive, so a raised offer and a manual tab never both claim the bottom edge.
+  useEffect(() => {
+    if (ctrl.proposal?.interactive) setMobileTab('rhm')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ctrl.proposal?.interactive])
   return (
     <AppContext.Provider value={ctrl}>
       {/* Edges paints over the whole viewport (pointer-events:none); kept outside the grid so it overlays
@@ -247,6 +259,9 @@ function Hud() {
           <a className={mobileTab === 'palette' ? 'on' : ''} onClick={() => setMobileTab('palette')}><span className="ic">＋</span>add</a>
           <a className={mobileTab === 'inbox' ? 'on' : ''} onClick={() => setMobileTab('inbox')}><span className="ic">▤</span>panel</a>
           <a className={mobileTab === 'rhm' ? 'on' : ''} onClick={() => setMobileTab('rhm')}><span className="ic">◈</span>rhm</a>
+          {/* A2 (G-36): the ACTIVITY feed tab — the ambient trace gets a thumb-reachable home (its own
+             bottom-sheet, the .rhm-template reveal). Sits between rhm and run. */}
+          <a className={mobileTab === 'activity' ? 'on' : ''} onClick={() => setMobileTab('activity')}><span className="ic">≋</span>feed</a>
           <a onClick={() => ctrl.doRun()}><span className="ic">▶</span>run</a>
         </nav>
       </div>
