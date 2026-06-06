@@ -815,6 +815,15 @@ button.b:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
 .wt-done{font-family:"Fraunces",serif;color:var(--sig);font-size:13px;padding:8px 0}
 .wt-resolved{color:var(--sig);font-size:10px;letter-spacing:.06em}
 .wt-spoke{margin-left:auto;color:var(--dim);font-size:9px}
+/* C1 · GUIDED-SEQUENCE ("show me how") variant of the walkthrough card. Reuses the SAME card shell + the
+   .wt-frame / .wt-target / .wt-foot primitives (build ON, not parallel). The guide reads as a calm TOUR
+   (no verdicts): the spotlighted element is named at the top (.wt-guide-target), the corpus how-to is the
+   body (.wt-guide-frame). Tokens only — accent ring echoes the .ui-spotlight signal so card + on-surface
+   spotlight read as ONE gesture (recognition-by-sight). */
+.wt-guide{border-color:var(--sig)}
+.wt-guide-target{color:var(--sig);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+  display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.wt-guide-frame{border-color:var(--sig);min-height:48px}
 
 /* full-screen workshop — REGION-BATCH-2 (FULL conversion): the head/output now compose the kit (SectionHead
    + Surface). The .workshop position:fixed/inset (the full-viewport modal) + .close stay (STRUCTURAL chrome,
@@ -915,6 +924,14 @@ button.b:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
   /* the in-canvas overlays overlap at phone width → hide them; their content reaches the operator via the
      sheets/tabbar (rhm sheet, inbox sheet) — fail-loud preserved: nothing silently lost, just relocated. */
   .as-canvas .op-panels,.as-canvas .activity,.as-canvas .walkthrough{display:none}
+  /* C1 · PHONE PARITY for the GUIDED-SEQUENCE card ONLY (scoped to .wt-guide — the review .walkthrough
+     stays hidden as above; its phone home is the A2/G-31/G-36 sweep, not this lane). The guide's spotlight
+     targets (toolbar/run, toolbar/presence, inbox/build-review) ARE mounted at ≤699px (verified by use), so
+     the guide genuinely works on phone — re-show it as a bottom card above the tabbar (mirrors the .as-sheet
+     placement: pinned, above the 58px tabbar, scrollable, capped height so the spotlighted element stays
+     visible above it). Specificity (0,2,0) beats the 0,2,0 hide rule by source-order (this comes after). */
+  .as-canvas .walkthrough.wt-guide{display:flex;position:fixed;left:8px;right:8px;bottom:66px;top:auto;
+    transform:none;width:auto;max-width:none;max-height:46vh;z-index:340}
   /* the two rails become bottom-SHEETS — off-screen by default, slid up when their tab is active. Only one
      can be active (data-mtab is a single value) so they never co-occupy the screen. NOTE: `.as-panel` also
      carries the bare corpus `.panel` class (for its F1 styling), and the corpus design-system.css HIDES

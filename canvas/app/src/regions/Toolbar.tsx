@@ -7,7 +7,7 @@ import { useApp } from '../AppContext'
 export function Toolbar() {
   const {
     now, running, chatBusy, runElapsed, runError, modeDesc, layerView, notice,
-    doRun, changeMode, wireSelected, portalSelected, deleteSelected, cycleLayers, fitGraph, reload, setRunError,
+    doRun, changeMode, wireSelected, portalSelected, deleteSelected, cycleLayers, fitGraph, reload, setRunError, startGuide,
   } = useApp()
   return (
     <div className="hud toolbar" data-ui-ref="toolbar">
@@ -47,6 +47,13 @@ export function Toolbar() {
       {/* U6: fit the graph with padding for the fixed panels so nothing tucks under the chrome */}
       <button className="b ghost" data-ui-ref="ui://toolbar/fit" onClick={fitGraph} title="zoom to fit — padded so no node hides under the panels">⊡ fit</button>
       <button className="b ghost" data-ui-ref="ui://toolbar/reload" onClick={reload}>reload</button>
+      {/* C1: the operator entry to the SYSTEM-INITIATED guided sequence ("show me how" tour). Steps through
+         the interface's addressed elements, narrating each from its corpus how-to + spotlighting it.
+         NOTE: deliberately carries NO ui:// data-ui-ref — ui://toolbar/guide is not yet a registered corpus
+         address (design/_system/addresses.json is owned by the corpus lane, file-disjoint), and the orphan
+         check (ui_registry_acceptance) forbids an unregistered data-ui-ref. Flagged as a grown gap: register
+         ui://toolbar/guide in the corpus so the guide control itself becomes an addressable/guidable element. */}
+      <button className="b ghost" onClick={() => startGuide()} title="show me how — a guided tour of the interface, spotlighting each part with its how-to">? guide</button>
       {notice && <span className="notice">{notice}</span>}
     </div>
   )

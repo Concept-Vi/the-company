@@ -641,6 +641,15 @@ class H(BaseHTTPRequestHandler):
                 # The FE that CALLS this on dial-select + drives the per-step view is the FE show-me lane.
                 b = self._body()
                 self._send(200, json.dumps(SUITE.start_walkthrough(b.get("item_ids"))))
+            elif self.path == "/api/guide/start":           # C1: the SYSTEM-INITIATED guided sequence ("show
+                # me how" tour). start_guide composes the SAME walkthrough organ over ui:// ELEMENT addresses
+                # (not inbox items): it sets the dial to 'walkthrough' AND starts a session whose steps each
+                # narrate the element's corpus how-to (address_help) + spotlight the real element (G-43).
+                # MODEL-FREE by construction (present_current's guide branch reads the corpus, never a model).
+                # Optional `topic` to pick a sequence; absent → the default orientation tour. FAIL LOUD: no
+                # registered addresses → {organ_started:False, reason} (the dial is set, the surface is told).
+                b = self._body()
+                self._send(200, json.dumps(SUITE.start_guide(b.get("topic"))))
             elif self.path == "/api/debrief/start":         # voice-trial lane F: walk Tim back through the
                 # recorded trial sessions. start_debrief SURFACES each recorded session as a review item
                 # (carrying its real CAS transcript) then drives the SAME walkthrough organ — so the

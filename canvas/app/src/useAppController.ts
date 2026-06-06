@@ -868,6 +868,45 @@ export function useAppController(editor: Editor) {
     }
     finally { wtBusyRef.current = false; setWtBusy(false) }   // re-enable on success OR error OR timeout — the guard is NEVER stuck
   }
+  // C1 (FE show-me lane) — start a SYSTEM-INITIATED GUIDED SEQUENCE (the "show me how" tour). Distinct from
+  // changeMode/startWalk (which walk pending INBOX items via coa, model-dependent): a guide walks the
+  // INTERFACE's own addressed ELEMENTS, narrating each from the corpus how-to (address_help) — MODEL-FREE
+  // by construction (the backend present_current guide branch returns before coa). It rides the EXISTING
+  // walk machinery: on organ_started we setSession(r) and the SAME per-step view-drive effect [~1104] +
+  // narration effect [~1113] + the Walkthrough card drive themselves — because each step's raw.ui_target is
+  // now a real element address (G-43), resolveUiTarget SPOTLIGHTS the live element, and session.framing IS
+  // the how-to text (so the voice narration effect speaks the how-to for free — we never touch speakReply).
+  // POST /api/guide/start is called INLINE (api.ts is the voice session's hot-collision file, G-8 — we do
+  // NOT add a method there). BOUNDED-await mirrors changeMode's G-41 fix: although the guide is model-free,
+  // a hung/slow bridge must never leave the SHARED wtBusyRef guard stuck (that would brick the review organ
+  // too) — we race the start against a deadline and the finally ALWAYS releases. Reachable as an operator
+  // entry (the toolbar "?" guide control) AND directly system/RHM-initiated (the route + start_guide()).
+  async function startGuide(topic?: string) {
+    if (wtBusyRef.current) return                    // a walk/guide start or step is already in flight — drop the extra
+    wtBusyRef.current = true; setWtBusy(true)
+    setNotice('show me how — starting a guided tour…')
+    try {
+      // BOUND the start (G-41/G-44 reuse): the guide is model-free, but a hung bridge would otherwise leave
+      // wtBusyRef TRUE forever (the SHARED guard for startWalk/nextStep/respondStep too) → a silent brick.
+      const r: any = await Promise.race([
+        fetch('/api/guide/start', { method: 'POST', headers: J, body: JSON.stringify({ topic: topic || undefined }) }).then(x => x.json()),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('__wt_timeout__')), 45000)),
+      ])
+      if (r?.error) { setNotice('✕ guide: ' + r.error); return }
+      if (r.organ_started) {
+        try { localStorage.setItem('company-review-session', r.session) } catch { /* */ }
+        setSession(r); setWtReason(''); setWtSpoke('')   // → the existing per-step view-drive + narration fire
+        setNotice('guided tour started — stepping you through ' + (r.total != null ? r.total + ' part(s)' : 'the interface'))
+      } else {
+        // FAIL LOUD (rule 4 — no silent no-op): the dial IS in guide register, but nothing to tour. Say so.
+        setNotice('🛈 ' + (r.reason || 'no parts of the interface to tour right now'))
+      }
+    } catch (e: any) {
+      if (e?.message === '__wt_timeout__') setNotice('✕ the guide did not start in time — try again')
+      else setNotice('✕ could not start the guide: ' + (e?.message || e))
+    }
+    finally { wtBusyRef.current = false; setWtBusy(false) }   // re-enable on success OR error OR timeout — never stuck
+  }
   async function applyCfg() {
     const c = await api.setRhmConfig({ model: cfg.model, persona: cfg.persona })
     setCfg(c); setCfgOpen(false); setNotice('RHM config → ' + (c.model || 'default')); await poll()
@@ -1385,7 +1424,7 @@ export function useAppController(editor: Editor) {
     // handlers
     poll, openCoa, reload, fitGraph, addNode, wireSelected, doConnect, setNodeConfig, surfaceOutput,
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
-    resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, fieldValue,
+    resolveUiTarget, startWalk, startGuide, endWalk, respondStep, nextStep, dispatch, recordToggle, fieldValue,
     setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus, mintBuildIntent,
     approveProposal, dismissProposal, steerProposal, deferProposal, toggleJourneyRecording, replayJourney, switchPersona,
   }

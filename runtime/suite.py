@@ -4283,6 +4283,22 @@ class Suite:
         returns a ref present in UI_REGISTRY (no fabrication). This stamps INTO the payload (what `raw`
         carries) — the additive field the FE reads — WITHOUT removing the top-level ui://review/<id>."""
         p = payload or {}
+        # G-43 (C1 guided-sequence seam) — a payload may ALREADY carry an explicit registry-valid `ui://`
+        # element address (a guided-step item is an `ui://<region>/<element>` address, NOT a node-backed
+        # review payload). Honour it FIRST, validated against the live UI registry (registry-is-truth,
+        # rule 8 — never pass through a fabricated ref the FE resolveUiTarget would then fail-loud on).
+        # Before this, payload-less / synthetic / address-keyed items fell straight to the inbox region
+        # (G-43: "per-step ui_target not stamped for payload-less items") so the FE spotlight no-op'd.
+        # `payload['ui_target']` (a guided step stamps it) OR `payload['guide_address']` (the C1 marker) —
+        # whichever is a registered element address wins. A NODE-backed payload still maps node→canvas.
+        for key in ("ui_target", "guide_address"):
+            cand = p.get(key)
+            if isinstance(cand, str) and cand.startswith("ui://"):
+                try:
+                    if cand in self.build_ui_info():           # registered element address → drive to it
+                        return cand
+                except Exception:
+                    pass                                       # registry unavailable → fall through (fail-safe)
         node = p.get("node")                               # surface_output result items carry the node id
         if isinstance(node, str) and node.strip():
             return f"ui://canvas/{node.strip()}"
@@ -4297,6 +4313,35 @@ class Suite:
             return {"session": session_id, "done": True, "cursor": cur, "total": len(s["items"])}
         item_id = s["items"][cur]
         framing, raw = None, None
+        # ── C1 · GUIDED-SEQUENCE branch (system-initiated show-me) ───────────────────────────────────
+        # A guided sequence is a review session whose ITEMS are `ui://<region>/<element>` ADDRESSES (not
+        # inbox review-ids). Reuse-only: it rides the SAME start_session/present_current/next organ + the
+        # SAME FE per-step view-drive (resolveUiTarget) + spotlight — NO parallel stepper. The ONLY divergence
+        # is HERE: a step that IS a ui:// address frames from the CORPUS how-to (address_help, D1) and returns
+        # BEFORE the coa() call — so the guided walk is MODEL-FREE BY CONSTRUCTION (coa is what makes the
+        # review walk model-dependent, G-41; the tour reads its narration from the registry/corpus, never a
+        # model). The prefix check works on cursor 0 too (present_current(0) runs inside start_session before
+        # any session flag could be set, so we sniff the item, not a session field).
+        if isinstance(item_id, str) and item_id.startswith("ui://"):
+            try:
+                bundle = self.address_help(item_id)         # the THREE-leg D1 affordance bundle (corpus)
+            except Exception as e:                          # malformed address → fail loud, never a silent skip
+                raise ValueError(f"guided step {cur} carries an unresolvable address {item_id!r}: {e}")
+            # NARRATION: prefer the authored how-to-use; fall back to what-this-is; NEVER empty, NEVER
+            # fabricated (registry-is-truth). This lands in `framing` so the EXISTING voice narration effect
+            # (useAppController ~1113 reads session.framing) speaks the how-to FOR FREE — we drive the visual
+            # sequence + supply the narration TEXT, we never call speakReply (G-8 voice functions untouched).
+            narration = bundle.get("how_to_use") or bundle.get("what_this_is") \
+                or f"This is {item_id} — a part of the interface."
+            # raw carries: a registry-valid per-step ui_target (G-43 — _registry_ui_target honours
+            # guide_address) so the FE per-step drive spotlights the REAL element; guide_address as the C1
+            # marker the FE branches on (tour vs review card); the full how-to bundle for a richer surface.
+            raw = {"guide_address": item_id, "ui_target": self._registry_ui_target({"guide_address": item_id}),
+                   "how_to": bundle, "kind": "guide"}
+            return {"session": session_id, "cursor": cur, "total": len(s["items"]),
+                    "item": item_id, "framing": narration, "raw": raw,
+                    "ui_target": item_id,                   # the step's present target IS the element address
+                    "done": False, "guide": True}
         try:
             c = self.coa(item_id)                          # decision-compiler UP (D1, reuse)
             framing, raw = c.get("framing"), c.get("raw")
@@ -4377,6 +4422,73 @@ class Suite:
         # carry the session id + the organ_started flag so the surface can drive the organ view.
         return {**started, "organ_started": True,
                 "session": started.get("session"), "mode": mode}
+
+    # --- C1 · SYSTEM-INITIATED GUIDED SEQUENCES (the "show me how" tour) ---
+    # A guided sequence is the SAME walkthrough organ (start_session/present_current/next) walking
+    # `ui://` ELEMENT ADDRESSES instead of inbox review-items. It is SYSTEM-INITIATED: start_guide is
+    # directly callable (no operator click needed — the test calls it bare; the RHM/bridge can call it
+    # too), distinct from the review-organ's pending-item walk which is operator/dial-triggered. Each step
+    # resolves the element's HOW-TO from the corpus (address_help, D1) as narration, drives the view to it,
+    # and spotlights it (the FE per-step resolveUiTarget over the registry-valid ui_target, G-43). MODEL-FREE
+    # by construction (present_current's guide branch returns before coa) — the tour reads the corpus, never
+    # a model, so a model-down can't brick it (the FE still bounds the start, G-41/G-44 reuse).
+
+    # The DEFAULT guided sequence — a registry-true ordered tour of the cockpit's primary affordances.
+    # registry-is-truth (rule 8): every address here MUST be a live UI_REGISTRY key (validated in
+    # _guide_sequence), never invented. Ordered as a first-run orientation: run → presence-dial → inbox.
+    # ui://toolbar/run carries an AUTHORED howto (the seeded D1 text), so the tour opens on real how-to
+    # narration; the others narrate their what-this-is leg. Named GUIDE_SEQUENCES so topic-keyed tours
+    # extend by adding a key (each filtered to registered addresses at resolve time — registry-is-truth).
+    GUIDE_SEQUENCES: dict = {
+        "default": ["ui://toolbar/run", "ui://toolbar/presence", "ui://inbox/build-review"],
+    }
+
+    def _guide_sequence(self, topic: str | None = None) -> list:
+        """Resolve a topic → an ORDERED list of registry-valid `ui://` addresses for the guided walk.
+        registry-is-truth (rule 8): a candidate address is kept ONLY if it is a live UI_REGISTRY key
+        (build_ui_info) — an unregistered/typo address is DROPPED (never drives the FE to a dead ref).
+        An unknown topic falls back to 'default' (the orientation tour). Fail loud at the CALLER
+        (start_guide) if the resolved list is empty after the registry filter."""
+        key = (topic or "default").strip().lower()
+        candidates = self.GUIDE_SEQUENCES.get(key) or self.GUIDE_SEQUENCES["default"]
+        try:
+            reg = self.build_ui_info()
+        except Exception:
+            reg = {}
+        # keep order, keep only registered addresses (registry-is-truth — never drive to a dead ref).
+        return [a for a in candidates if (not reg) or (a in reg)]
+
+    def start_guide(self, topic: str | None = None) -> dict:
+        """C1 — start a SYSTEM-INITIATED guided sequence (the "show me how" tour). Composes the EXISTING
+        walkthrough organ over `ui://` element ADDRESSES (REUSE-ONLY, no parallel stepper): set the
+        presence dial to 'walkthrough' (so the RHM speaks in guide register — same as start_walkthrough)
+        + start_session over the resolved address sequence. Each step narrates the element's corpus
+        how-to (address_help) and spotlights the real element (present_current's guide branch + G-43).
+
+        SYSTEM-INITIATED: callable directly (no operator click) — the bridge route + the RHM can invoke
+        it. DISTINCT from start_walkthrough (which walks pending INBOX items): a guide walks the
+        INTERFACE's own addressed elements, teaching what each is + how to use it, model-free.
+
+        FAIL LOUD (rule 4 — no silent no-op): if the topic resolves to NO registered addresses, this
+        does NOT crash and does NOT pretend success — it returns {organ_started:False, reason:'…',
+        mode:'walkthrough', topic} so the dial is set but the surface is told plainly there is nothing to
+        tour. A populated guide returns start_session's first presentation (cursor 0) tagged
+        organ_started:True + guide:True + the session id, so the FE drives the tour view per step."""
+        addresses = self._guide_sequence(topic)
+        mode = self.set_mode("walkthrough")                      # the cosmetic dial — kept, pure reuse
+        if not addresses:
+            # FAIL LOUD: the dial IS set, but there is nothing to tour — say so plainly (no silent no-op).
+            self._emit("mode", f"guide selected (topic={topic or 'default'}) — no registered addresses to tour",
+                       address="ui://chrome/chat")
+            return {"organ_started": False, "mode": mode, "topic": topic or "default", "guide": True,
+                    "reason": "no registered UI addresses resolved for this guide topic "
+                              "(the sequence is registry-filtered — nothing to tour)"}
+        started = self.start_session(addresses, mode="walkthrough")   # the REAL organ — model-free guide branch
+        self._emit("guide.start", f"guided sequence started — {len(addresses)} step(s), topic={topic or 'default'}",
+                   session=started.get("session"), topic=topic or "default", address="ui://chrome/chat")
+        return {**started, "organ_started": True, "guide": True,
+                "session": started.get("session"), "mode": mode, "topic": topic or "default",
+                "steps": addresses}
 
     def respond(self, session_id: str, choice: str, reason: str = "") -> dict:
         """B→D: record the operator's verdict for the CURRENT step, tagged with the session + position
