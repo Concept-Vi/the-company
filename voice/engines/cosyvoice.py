@@ -57,13 +57,17 @@ def _engine():
 
 
 def _prompt_wav():
+    """Return the prompt clip as a PATH (validated) — NOT a pre-loaded tensor. This installed CosyVoice2
+    version's frontend (_extract_speech_feat etc.) calls load_wav(prompt_wav, ...) ITSELF, so it expects
+    a file path; passing load_wav's tensor made it re-load a tensor → soundfile 'Invalid file: tensor'
+    (the Tess synth bug, debugged 2026-06-06). The documented example passed a tensor — a version
+    difference; the installed reality wins."""
     if not VOICE_REF:
         raise RuntimeError("CosyVoice needs a prompt clip — set COMPANY_VOICE_REF to a real wav "
                            "(the refined-Australian clip). No clip was fabricated; fail loud.")
     if not os.path.exists(VOICE_REF):
         raise RuntimeError(f"prompt clip not found: {VOICE_REF!r}")
-    from cosyvoice.utils.file_utils import load_wav        # 16k load, the repo's canonical loader
-    return load_wav(VOICE_REF, 16000)
+    return VOICE_REF                                          # the PATH; the frontend loads it internally
 
 
 def synth(text: str, voice: str | None, speed: float) -> bytes:
