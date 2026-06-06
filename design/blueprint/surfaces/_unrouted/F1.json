@@ -17,6 +17,7 @@
   "journeys": [],
   "cross_journeys": [],
   "addresses": [
+    "ui://toolbar",
     "ui://toolbar/presence",
     "ui://toolbar/run"
   ],

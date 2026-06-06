@@ -18,7 +18,8 @@
       "addresses": [
         "ui://canvas",
         "ui://canvas/node",
-        "ui://canvas/portal-window"
+        "ui://canvas/portal-window",
+        "ui://canvas/wire-request"
       ]
     },
     {
@@ -31,6 +32,7 @@
         "ui://chat/input",
         "ui://chat/mic",
         "ui://chat/model-field",
+        "ui://chat/persona-field",
         "ui://chat/send",
         "ui://twin",
         "ui://walkthrough",

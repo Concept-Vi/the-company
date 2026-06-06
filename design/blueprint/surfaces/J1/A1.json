@@ -21,6 +21,8 @@
   "addresses": [
     "ui://activity",
     "ui://canvas",
+    "ui://rail/palette",
+    "ui://tabbar",
     "ui://toolbar/delete",
     "ui://toolbar/wire"
   ],
@@ -28,6 +30,8 @@
     "components": [
       "activity",
       "canvas",
+      "rail",
+      "tabbar",
       "toolbar"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",

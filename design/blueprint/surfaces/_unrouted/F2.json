@@ -17,7 +17,8 @@
   "cross_journeys": [],
   "addresses": [
     "ui://chat/config",
-    "ui://chat/model-field"
+    "ui://chat/model-field",
+    "ui://chat/persona-field"
   ],
   "build_to": {
     "components": [

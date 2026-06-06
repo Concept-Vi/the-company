@@ -181,11 +181,9 @@ body.canvas-running .node-card.idle .node-dot{background:var(--kind-content);box
    accent), unknown = --dim muted (fail-loud-legible: an unevaluable node reads "unknown — <reason>", never
    a silent fresh). Coherent in scale with the inspector chips (same 9.5px uppercase letter-spaced form the
    .bi-class pill uses). Built entirely on corpus tokens → design-lint clean. */
-.fresh-badge{display:inline-block;margin-left:8px;padding:1px 6px;border-radius:3px;font-size:9px;
-  letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line-2);background:var(--bg)}
-.fresh-badge.stale{color:var(--warn);border-color:var(--warn)}
-.fresh-badge.fresh{color:var(--sig);border-color:var(--sig-dim)}
-.fresh-badge.unknown{color:var(--dim)}
+/* WAVE-4: .fresh-badge* (the inspector's bespoke stale/fresh/unknown pills) were DELETED — the inspector now
+   renders the L10 freshness verdict as a kit Badge (await=stale · sig=fresh · dim=unknown/checking), the same
+   state-by-colour vocabulary as the rest of the deck (G-25 — kit is the sole authority). */
 
 /* HUD: toolbar, inspector, grow, workshop */
 .hud{position:absolute;z-index:300;color:var(--ink)}
@@ -232,10 +230,12 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
 /* activity panel — now-view + the captured trajectory (event log) */
 .activity{left:12px;bottom:12px;width:300px;background:var(--s1);border:1px solid var(--line);
-  border-radius:6px;padding:10px 12px;max-height:230px;display:flex;flex-direction:column}
-.act-head{display:flex;flex-direction:column;gap:2px;padding-bottom:7px;border-bottom:1px solid var(--line)}
-.act-title{font-family:"Fraunces",serif;font-weight:600;font-size:13px;color:var(--sig)}
-.ev-list{overflow:auto;margin-top:7px;display:flex;flex-direction:column;gap:3px}
+  border-radius:var(--r-lg);padding:var(--sp-3);max-height:230px;display:flex;flex-direction:column;box-shadow:var(--elev-1)}
+/* WAVE-4: the activity HEAD now composes the kit SectionHead + Badges (the `now` state read by colour). The
+   legacy .act-head / .act-title rules were DELETED (no longer rendered — the kit is the sole authority for
+   the head). The .ev* FEED rows below are LEFT on the shared event-row vocabulary (History/Versions/
+   SelfChanges reuse them); the SectionHead's own bottom-border replaces the old .act-head divider. */
+.ev-list{overflow:auto;margin-top:var(--sp-1);display:flex;flex-direction:column;gap:3px}
 .ev{display:flex;align-items:baseline;gap:7px;font-size:10.5px;line-height:1.35}
 .ev-k{flex:none;width:52px;color:var(--dim);font-size:8px;letter-spacing:.12em;text-transform:uppercase;text-align:right}
 .ev-s{flex:1;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -274,10 +274,26 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 .ver-cas{font-family:inherit;letter-spacing:.04em}
 .palette{top:64px;left:12px;width:158px;background:var(--s1);border:1px solid var(--line);
   border-radius:var(--r-lg);padding:var(--sp-3);max-height:calc(100vh - 90px);overflow:auto;box-shadow:var(--elev-1)}
-.pchip{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:6px 8px;margin:4px 0;
-  background:var(--bg);border:1px solid var(--line);border-radius:3px;cursor:pointer;font-size:11px;color:var(--ink)}
-.pchip:hover{border-color:var(--sig);color:var(--sig)}
-.pchip .pk{color:var(--dim);font-size:8px;letter-spacing:.14em;text-transform:uppercase}
+/* WAVE-4: the palette is now a recognition-by-sight rack composed from the shared kit (kit SectionHead +
+   LaneHead + Surface). This thin layer is LAYOUT-ONLY — the look lives in .kit-* (kit is the sole authority).
+   The legacy .pchip / .pchip:hover / .pchip .pk rules were DELETED: the redesigned palette renders the kit
+   Surface card instead, and the old chip rules (border-radius:3px, bespoke hover) would silently override the
+   kit by source-order, breaking H2 "one language" (G-25). */
+.pal-hint{color:var(--dim);font-size:var(--fs-meta);line-height:var(--lh-body);margin-bottom:var(--sp-2)}
+.pal-lane{margin-bottom:var(--sp-2)}
+/* the type card: the kit Surface gives the well + spine tint + hover-lift; this lays out the monogram, the
+   type name (fills), and the add cue. The monogram chip carries the kind colour (the same kind language as
+   the canvas node-cards) so the card's tint = its kind, read by sight. */
+.pal-chip{display:flex;align-items:center;gap:var(--sp-2)}
+.pal-mono{flex:none;width:22px;height:22px;border-radius:var(--r-sm);display:grid;place-items:center;
+  font-family:var(--font-display);font-weight:600;font-size:var(--fs-tag);color:var(--bg)}
+.pal-mono-sig{background:var(--kind-process)} .pal-mono-wire{background:var(--kind-content)}
+.pal-mono-dim{background:var(--line-2);color:var(--ink)}
+.pal-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);
+  font-family:var(--font-mono);font-size:var(--fs-body)}
+.pal-add{flex:none;font-family:var(--font-mono);font-size:var(--fs-micro);letter-spacing:var(--tr-label);
+  text-transform:uppercase;color:var(--dim)}
+.pal-chip:hover .pal-add{color:var(--sig)}
 .panel{top:64px;right:12px;width:330px;background:var(--s1);border:1px solid var(--line);
   border-radius:var(--r-lg);padding:var(--sp-3);max-height:calc(100vh - 400px);overflow:auto;box-shadow:var(--elev-1)}
 /* right-hand-man — the coherent conversational voice of the Company */
@@ -477,11 +493,57 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 .cb-text{margin-top:3px;font-family:"Fraunces",serif;font-size:11px;line-height:1.4;color:var(--ink);
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .cb-err{margin-top:6px;font-size:10px;color:var(--err);line-height:1.4}
-.coa{font-family:"Fraunces",serif;color:var(--ink);font-size:12.5px;line-height:1.45;white-space:pre-wrap;
-  background:var(--bg);border:1px solid var(--sig-dim);border-radius:3px;padding:9px;margin:6px 0}
 button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
 /* F2/F3: act-on-output affordances — wrap so chain/inbox/build buttons never overflow the inspector */
-.out-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.out-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:var(--sp-2)}
+
+/* ── WAVE-4 · INSPECTOR (layout-only; composes kit SectionHead + Badge + Surface) ──────────────────────
+   The look lives in .kit-* (kit is the sole authority, H2). These rules only LAY OUT the inspector's
+   identity/state row, the meta rows, the address, and the section labels — recognition-by-sight: the kind +
+   status + freshness read as badges, the output as a Surface well. Token-only (design-lint clean). */
+.ins-state{display:flex;align-items:center;flex-wrap:wrap;gap:var(--sp-2);margin-bottom:var(--sp-2)}
+/* the status badge: shape from the kit badge vocabulary, COLOUR from the served registry token (inline style,
+   rule 3 — the single source of status colour). Matches the kit-badge pill so it reads as one family. */
+.ins-status-badge{display:inline-flex;align-items:center;gap:3px;font-family:var(--font-mono);
+  font-size:var(--fs-micro);letter-spacing:var(--tr-label);text-transform:uppercase;
+  border:1px solid var(--line-2);border-radius:var(--r-pill);padding:2px var(--sp-2);white-space:nowrap}
+.ins-force{margin-left:auto;flex:none}
+/* the failed/stuck reason, fail-loud in full (rule 4) — never hidden behind a title alone. */
+.ins-fail-reason{color:var(--err);font-size:var(--fs-meta);line-height:var(--lh-body);margin-bottom:var(--sp-2);
+  padding:var(--sp-2);border:1px solid var(--err);border-radius:var(--r-sm);background:var(--bg);overflow-wrap:anywhere}
+.ins-meta{display:flex;justify-content:space-between;gap:var(--sp-3);margin:var(--sp-1) 0;font-size:var(--fs-meta)}
+.ins-addr{font-size:var(--fs-tag);word-break:break-all;color:var(--dim);margin-bottom:var(--sp-1)}
+.ins-section-label{margin:var(--sp-2) 0 var(--sp-1)}
+.ins-section-label .k{font-family:var(--font-mono);font-size:var(--fs-micro);letter-spacing:var(--tr-tag);
+  text-transform:uppercase}
+.ins-output pre{max-height:160px;overflow:auto;white-space:pre-wrap;font-size:var(--fs-meta);color:var(--ink);
+  margin:0;background:none;border:none;padding:0}
+
+/* ── WAVE-4 · GROW (layout-only; composes kit SectionHead + LaneHead + Badge + Surface) ────────────────
+   The surfaced-for-approval review is a kit Surface (await tone); the live node-types a kit lane of Badge
+   chips; the last-self-change a dim Surface footer. Token-only. */
+.grow{margin-top:var(--sp-4)}
+.grow-err{color:var(--err);overflow-wrap:anywhere}
+.grow-surf-head{display:flex;align-items:center;gap:var(--sp-2);margin-bottom:var(--sp-2)}
+.grow-surf-id{font-size:var(--fs-tag);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* the COA plain-language draft — the calm display voice, the same Fraunces reading-surface the wire cards
+   use (var(--font-display)); a quiet well so it reads as the brain's words. */
+.grow-coa{font-family:var(--font-display);color:var(--ink);font-size:var(--fs-body);line-height:1.45;
+  white-space:pre-wrap;background:var(--bg);border:1px solid var(--sig-dim);border-radius:var(--r-sm);
+  padding:var(--sp-2);margin:var(--sp-1) 0}
+.grow-drill{margin:var(--sp-1) 0}
+.grow-reason{width:100%;margin:var(--sp-1) 0;background:var(--bg);border:1px solid var(--line);color:var(--ink);
+  border-radius:var(--r-sm);padding:var(--sp-2);font-family:var(--font-mono);font-size:var(--fs-meta)}
+.grow-reason:focus{outline:none;border-color:var(--sig)}
+.grow-verdicts{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-1)}
+.grow-msg{margin-top:var(--sp-2)}
+.grow-types{margin-top:var(--sp-3)}
+.grow-types-chips{display:flex;flex-wrap:wrap;gap:var(--sp-1);margin-top:var(--sp-1)}
+.grow-lastchange{display:flex;align-items:center;flex-wrap:wrap;gap:var(--sp-2)}
+.grow-lc-label{font-family:var(--font-mono);font-size:var(--fs-micro);letter-spacing:var(--tr-label);
+  text-transform:uppercase;color:var(--dim)}
+.grow-lc-subj{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grow-revert{flex:none}
 /* operator panels — brain-authored declarative panels, added through the interface */
 .op-panels{left:184px;top:64px;display:flex;flex-direction:column;gap:8px;width:212px}
 .op-panel{background:var(--s1);border:1px solid var(--sig-dim);border-radius:6px;padding:11px 12px}
@@ -492,8 +554,6 @@ button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
 .op-field select,.op-field input{background:var(--bg);border:1px solid var(--line);color:var(--ink);
   border-radius:3px;padding:6px;font-family:inherit;font-size:11px}
 .op-field select:focus,.op-field input:focus{outline:none;border-color:var(--sig)}
-.surf .reason{width:100%;margin:6px 0;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:6px;font-family:inherit;font-size:10.5px}
-.surf .reason:focus{outline:none;border-color:var(--sig)}
 .rhm-log{flex:1;overflow:auto;margin:9px 0;display:flex;flex-direction:column;gap:9px}
 .msg{display:flex;gap:8px;font-size:11.5px;line-height:1.42}
 .msg .who{flex:none;width:30px;font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);padding-top:3px;display:flex;align-items:center;gap:2px}
@@ -509,16 +569,19 @@ button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
 .rhm-input button{padding:8px 13px}
 .rhm-input .mic{padding:8px 10px}
 .rhm-input .mic.rec{border-color:var(--err);color:var(--err);animation:pulse 1s ease-in-out infinite}
-.panel h3{font-family:var(--font-display);font-weight:600;font-size:var(--fs-lg);color:var(--sig);margin:0 0 var(--sp-2);letter-spacing:-.1px}
-.panel .row{display:flex;justify-content:space-between;gap:10px;margin:4px 0;font-size:11px}
+/* WAVE-4: .panel h3 + .panel .row were DELETED — the panel-stacked regions (Inspector · Grow · Inbox) now
+   compose the kit SectionHead for their heading (kit is the sole authority, H2/G-25) and no longer render a
+   bare <h3> or a .row in the panel (Inspector's identity/state moved to .ins-* layout + kit Badges). Fleet's
+   heading uses its own .fleet-title. The shared .panel .k label + .panel input/pre are KEPT — still rendered
+   by the inspector meta rows + Grow's inputs + the generic NodeConfigForm. */
 .panel .k{color:var(--dim)}
 .panel input{width:100%;margin:5px 0;background:var(--bg);border:1px solid var(--line);color:var(--ink);
   font-family:inherit;font-size:12px;padding:8px;border-radius:3px}
 .panel input:focus{outline:none;border-color:var(--sig)}
 .panel pre{max-height:160px;overflow:auto;background:var(--bg);border:1px solid var(--line);padding:8px;
   font-size:10.5px;white-space:pre-wrap;border-radius:3px;color:var(--ink)}
-.surf{border:1px dashed var(--warn);border-radius:3px;padding:9px;margin-top:8px}
-.surf .shd{color:var(--warn);font-size:10px;letter-spacing:.06em;margin-bottom:6px}
+/* WAVE-4: .surf + .surf .shd (the old dashed "surfaced for approval" scrap) were DELETED — Grow now renders
+   the proposal as a kit Surface on the AWAIT tone (a card, read by colour). See the .grow-* layer below. */
 .muted{color:var(--dim);font-size:11px;line-height:1.6}
 /* F8 · the fleet surface — the live model layer (model · kind · alive), stacked in the right-rail .panel
    column. Built ENTIRELY on corpus tokens (no off-token literal → design-lint --fail-on clean): --s1 panel
@@ -549,7 +612,8 @@ button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
 /* the legend states what the dot means in-surface (honest membership signal, not a fabricated health probe). */
 .fleet-legend{margin-top:9px;display:flex;align-items:center;gap:6px;font-size:9px;color:var(--dim);line-height:1.4}
 .sig{color:var(--sig)} .err{color:var(--err)}
-.tg{color:var(--sig);margin-right:5px}
+/* WAVE-4: .tg (the old comma-list live-node-type tag) was DELETED — Grow now renders the live node-types as a
+   kit lane of Badge chips (navigable, counted), see the .grow-types layer below. */
 
 /* C3: ui:// DOM-spotlight — a transient ring on a chrome/panel/field/ext target the resolver scrolled to.
    Reuses the .hud z-index plane; the outline does not reflow layout (additive, removed after the timeout). */
