@@ -23,8 +23,18 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from voice.engines._service import serve  # noqa: E402
 
 PORT = 4125
-MODEL_NAME = os.environ.get("COMPANY_ORPHEUS_MODEL", "canopylabs/orpheus-tts-0.1-finetune-prod")
-MAX_LEN = int(os.environ.get("COMPANY_ORPHEUS_MAXLEN", "2048"))
+# the model that's actually CACHED (canopylabs/orpheus-3b-0.1-ft) — NOT orpheus-speech's stock default
+# "orpheus-tts-0.1-finetune-prod", which isn't on disk and triggers a ~6GB DOWNLOAD at load.
+MODEL_NAME = os.environ.get("COMPANY_ORPHEUS_MODEL", "canopylabs/orpheus-3b-0.1-ft")
+# context window (tokens): MUST hold a real spoken reply — text + the MANY SNAC audio tokens a reply
+# generates (audio is token-dense). 2048 was too tight (a longer reply truncates); 4096 comfortably
+# holds a multi-sentence turn. NOT minimised — a starved context can't carry a real conversational reply.
+MAX_LEN = int(os.environ.get("COMPANY_ORPHEUS_MAXLEN", "4096"))
+GPU_UTIL = float(os.environ.get("COMPANY_ORPHEUS_GPU_UTIL", "0.6"))    # fit the 16GB card; room for the 4096 KV cache
+# graphs vs eager: DEFAULT graphs (enforce_eager=False) — Tim's priority is REAL-TIME inference after a
+# one-time pinned load, and CUDA graphs make per-token inference fast (eager was the wrong trade: fast
+# load, slow inference). COMPANY_ORPHEUS_EAGER=1 forces eager (instant load, slower synth) if ever needed.
+EAGER = os.environ.get("COMPANY_ORPHEUS_EAGER", "0") == "1"
 DEFAULT_VOICE = os.environ.get("COMPANY_ORPHEUS_VOICE", "tara")
 RATE = 24000
 VOICE_BANK = ["tara", "leah", "jess", "leo", "dan", "mia", "zac", "zoe"]
@@ -33,14 +43,30 @@ _model = None
 
 
 def _engine():
+    """Load Orpheus's vLLM engine FAST. Stock OrpheusModel cold-starts ~17min: its _setup_engine builds
+    vLLM with DEFAULTS — full CUDA-graph capture (+ flashinfer compile) at gpu-util 0.90 (the long pole),
+    and the configured model wasn't cached (a ~6GB download on top). We fix all three: cached model
+    (above), and PATCH _setup_engine to pass enforce_eager=True (skip the graph capture), a modest
+    gpu_memory_utilization (fit the card), and max_model_len. Trades ~10-20% inference speed for a load
+    in MINUTES not 17 — right for an on-demand voice engine. NOTE: the installed OrpheusModel.__init__ is
+    (model_name, dtype) ONLY — it does NOT accept max_model_len (a version drift; passing it TypeErrors),
+    so max_model_len rides via the patched engine args, not the constructor."""
     global _model
     if _model is None:
+        os.environ.setdefault("VLLM_USE_FLASHINFER_SAMPLER", "0")   # known orpheus flashinfer workaround
         try:
             from orpheus_tts import OrpheusModel
+            from vllm import AsyncLLMEngine, AsyncEngineArgs
         except ImportError as e:
             raise RuntimeError("orpheus not installed — `pip install orpheus-speech` (vLLM-based) "
                                "into the orpheus venv (see voice/engines/REQUIREMENTS.md)") from e
-        _model = OrpheusModel(model_name=MODEL_NAME, max_model_len=MAX_LEN)
+
+        def _fast_setup(self):                                  # replaces OrpheusModel._setup_engine
+            args = AsyncEngineArgs(model=self.model_name, dtype=self.dtype, enforce_eager=EAGER,
+                                   gpu_memory_utilization=GPU_UTIL, max_model_len=MAX_LEN)
+            return AsyncLLMEngine.from_engine_args(args)
+        OrpheusModel._setup_engine = _fast_setup
+        _model = OrpheusModel(model_name=MODEL_NAME)            # __init__ takes (model_name, dtype) only
     return _model
 
 

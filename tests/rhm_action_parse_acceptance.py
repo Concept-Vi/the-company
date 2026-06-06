@@ -1,17 +1,22 @@
-"""tests/rhm_action_parse_acceptance.py — model-/provider-AGNOSTIC RHM action parsing.
+"""tests/rhm_action_parse_acceptance.py — RHM NATIVE TOOL-CALLING dispatch + affordances.
 
-The requirement (Tim): the RHM must ACTUALLY ACT regardless of which model/provider is
-selected, and a NEW model must "just work". Real models DON'T emit the canonical
-`ACTION: verb args` line — each provider emits its OWN native tool-call shape (Anthropic/XML
-`<invoke>`, JSON `{"name":...}`, minimax's `]<]minimax[>[` delimiter, a fenced ```json block).
-`_parse_rhm_action` must recognise the intended verb+args in ANY of these shapes and normalise
-them to the SAME dispatcher dict — so the same intent expressed in any shape extracts the same
-action. And the wrapper tokens must NEVER leak into the shown reply.
+The RHM now ACTS through NATIVE tool-calling, not a hand-typed `ACTION:` line. The fleet chat
+models all support native tools (ollama /api/show → capabilities contains "tools"); only an
+embedder like nomic-embed-text does not. So:
 
-THE INVARIANT THAT MUST HOLD ACROSS THE CHANGE (E6, AGENTS.md rule 9): the parser is
-shape-recognition ONLY — it does NOT whitelist. The DISPATCHER holds the one whitelist
-(RHM_VERBS). So a forbidden verb (delete) extracted by the parser is REFUSED end-to-end by the
-dispatcher (did == "none") — proven here parse→dispatch, not just "the parser dropped it".
+  • a model's `tool_calls` (OpenAI shape {function:{name, arguments}}) maps — via the SAME
+    `_json_obj_to_action` the chat loop uses — to the dispatcher's action dict;
+  • the ONE whitelist still lives in `_dispatch_rhm_action` (RHM_VERBS), so a forbidden verb
+    emitted as a tool_call is REFUSED end-to-end (E6 — proven parse→dispatch, node not deleted);
+  • an empty-content tool_call still yields a NON-BLANK reply (the confirmation fold) — critical
+    because a native-tool-call model often emits NO prose, only the call;
+  • the RHM model is CAPABILITY-GATED FIRST: a non-tool model (nomic-embed-text) is refused
+    FAIL-LOUD — a legible turn, NO model call, NO fallback (rule 4);
+  • the AFFORDANCE SET (which verbs are OFFERED) is correct per mode×context (mode-primary,
+    context-refines), and narrowing the OFFER never weakens the gate.
+
+THE INVARIANT THAT MUST HOLD (E6, AGENTS.md rule 9): the affordance layer narrows what is
+OFFERED; the dispatcher's whitelist is the real gate. A forbidden verb is refused regardless.
 """
 import os, sys, tempfile, shutil
 
@@ -33,94 +38,243 @@ def check(label, cond):
     print(f"  ok  {label}")
 
 
-# wrapper tokens that must NEVER reach the operator's shown text
-LEAK_TOKENS = ("<invoke", "</invoke>", "<tool_call", "</tool_call>", "]<]", "[>[", "```json", "ACTION:")
+def tool_call(name, arguments):
+    """Build an OpenAI-shape tool_call. `arguments` is a JSON STRING (as the API returns it)."""
+    import json
+    return {"id": "call_1", "type": "function",
+            "function": {"name": name, "arguments": json.dumps(arguments)}}
 
-store_dir = tempfile.mkdtemp(prefix="rhm-parse-test-")
+
+store_dir = tempfile.mkdtemp(prefix="rhm-tool-test-")
 try:
     store = FsStore(os.path.join(store_dir, "store"))
     reg = NodeRegistry(); reg.discover([NODES])
     suite = Suite(store, reg, nodes_dir=NODES)
 
-    # ---------------------------------------------------------------------------------------
-    # (a) the canonical ACTION: line (clean prose then the action) — the existing shape, kept.
-    # The build pipeline JSON is the SAME for all four "build" shapes below — assert identical.
-    # ---------------------------------------------------------------------------------------
-    BUILD_JSON = '[{"as":"a","type":"constant","config":{"value":"x"}},{"as":"u","type":"uppercase"},{"wire":"a.value -> u.text"}]'
-    shown_a, act_a = suite._parse_rhm_action(f"Sure — I'll wire that up now.\nACTION: build {BUILD_JSON}")
-    check("(a) canonical ACTION: build parses",
-          act_a and act_a["verb"] == "build" and isinstance(act_a["steps"], list) and len(act_a["steps"]) == 3)
-    check("(a) shown reply has the prose, no ACTION token", "wire that up" in shown_a and "ACTION:" not in shown_a)
+    # ============================================================================================
+    # (a) a native tool_call → the correct action dict (via _json_obj_to_action — the SAME path the
+    #     chat loop feeds each tool_call through). Args are a JSON string, as the API returns them.
+    # ============================================================================================
+    BUILD_STEPS = [{"as": "a", "type": "constant", "config": {"value": "x"}},
+                   {"as": "u", "type": "uppercase"},
+                   {"wire": "a.value -> u.text"}]
+    act_build = suite._json_obj_to_action(
+        {"name": "build", "arguments": __import__("json").dumps({"steps": BUILD_STEPS})}, "build")
+    check("(a) build tool_call → action dict with the 3 steps",
+          act_build["verb"] == "build" and isinstance(act_build["steps"], list) and len(act_build["steps"]) == 3)
 
-    # ---------------------------------------------------------------------------------------
-    # (b) minimax native: the `]<]minimax[>[` delimiter + a <tool_call><invoke> wrapper.
-    #     This is the LITERAL shape observed leaking raw into a live chat.
-    # ---------------------------------------------------------------------------------------
-    minimax = (f"Here's the pipeline.]<]minimax[>[<tool_call><invoke name=\"build\">{BUILD_JSON}</invoke></tool_call>")
-    shown_b, act_b = suite._parse_rhm_action(minimax)
-    check("(b) minimax wrapper → build extracted", act_b and act_b["verb"] == "build" and len(act_b["steps"]) == 3)
-    check("(b) build steps IDENTICAL to the canonical shape", act_b["steps"] == act_a["steps"])
-    check("(b) NO wrapper token leaks into the shown reply",
-          not any(tok in shown_b for tok in LEAK_TOKENS))
+    act_consult = suite._json_obj_to_action(
+        {"name": "consult", "arguments": __import__("json").dumps({"query": "how does the memo gate work"})}, "consult")
+    check("(a) consult tool_call → action dict carrying the query",
+          act_consult["verb"] == "consult" and "memo gate" in act_consult["query"])
 
-    # ---------------------------------------------------------------------------------------
-    # (c) Anthropic/XML <invoke name="consult"> — args are the query text inside the tag.
-    # ---------------------------------------------------------------------------------------
-    shown_c, act_c = suite._parse_rhm_action('Let me check the source.\n<invoke name="consult">how does the memo gate work</invoke>')
-    check("(c) <invoke name=consult> → consult extracted",
-          act_c and act_c["verb"] == "consult" and "memo gate" in act_c["query"])
-    check("(c) no wrapper token leaks", not any(tok in shown_c for tok in LEAK_TOKENS))
+    act_show = suite._json_obj_to_action(
+        {"name": "show", "arguments": __import__("json").dumps({"targets": ["answer", "u"]})}, "show")
+    check("(a) show tool_call → action dict carrying the targets list",
+          act_show["verb"] == "show" and act_show["targets"] == ["answer", "u"])
 
-    # ---------------------------------------------------------------------------------------
-    # (d) a fenced ```json {"verb":"show","targets":[...]} action block.
-    # ---------------------------------------------------------------------------------------
-    fenced = 'I will take you there.\n```json\n{"verb":"show","targets":["answer"]}\n```'
-    shown_d, act_d = suite._parse_rhm_action(fenced)
-    check("(d) fenced json action → show extracted",
-          act_d and act_d["verb"] == "show" and act_d["targets"] == ["answer"])
-    check("(d) no fence token leaks into the shown reply", not any(tok in shown_d for tok in LEAK_TOKENS))
-
-    # also a JSON tool-call shape {"name":"consult","arguments":{"query":...}} — provider-agnostic
-    shown_e2, act_e2 = suite._parse_rhm_action('Checking.\n{"name":"consult","arguments":{"query":"what are the contracts"}}')
-    check("JSON {name,arguments} tool-call → consult extracted",
-          act_e2 and act_e2["verb"] == "consult" and "contracts" in act_e2["query"])
-
-    # ---------------------------------------------------------------------------------------
-    # (e) NO action: a plain grounded answer → action is None (don't over-trigger).
-    #     Includes prose that MENTIONS "ACTION:" mid-sentence (the RHM explains its own mechanism)
-    #     — that must NOT be mistaken for a real trailing action.
-    # ---------------------------------------------------------------------------------------
-    _, act_none = suite._parse_rhm_action("The graph has 2 nodes, both resolved. Nothing to do.")
-    check("(e) plain answer → no action", act_none is None)
-    _, act_mention = suite._parse_rhm_action(
-        "To act, I append an ACTION: line such as ACTION: run — but you didn't ask me to do anything.")
-    check("(e) 'ACTION:' described mid-prose (not a trailing directive) → no over-trigger", act_mention is None)
-    # a benign standalone JSON object (e.g. the RHM SHOWING an example node config) must NOT be
-    # mistaken for a tool-call and silently eaten from the shown reply (no-silent-loss).
-    benign = 'Here is an example node config:\n{"name":"uppercase","type":"uppercase"}\nThat is all.'
-    shown_benign, act_benign = suite._parse_rhm_action(benign)
-    check("(e) benign {name,type} example config → NOT a tool-call (no over-trigger)", act_benign is None)
-    check("(e) the benign JSON is NOT stripped from the shown reply (no silent content loss)",
-          '"name":"uppercase"' in shown_benign)
-
-    # ---------------------------------------------------------------------------------------
-    # (f) THE WHITELIST HOLDS — a forbidden verb is extractable by the parser but REFUSED by the
-    #     dispatcher. Proven END-TO-END (parse → dispatch → did == "none"), the no-bypass guarantee.
-    # ---------------------------------------------------------------------------------------
-    g = "parse-sec"
+    # ============================================================================================
+    # (b) THE WHITELIST HOLDS — a forbidden `delete` tool_call is mapped to an action by the shape
+    #     mapper, but REFUSED by the dispatcher end-to-end (did==none); the node is NOT deleted.
+    # ============================================================================================
+    g = "tool-sec"
     suite.create_node(g, "constant", config={"value": "x"}, node_id="c")
-    _, act_del = suite._parse_rhm_action('<invoke name="delete">c</invoke>')
-    # the parser is allowed to extract it (shape-recognition only) — the DISPATCHER must refuse it.
+    act_del = suite._json_obj_to_action(
+        {"name": "delete", "arguments": __import__("json").dumps({"node": "c"})}, "delete")
     r_del = suite._dispatch_rhm_action(act_del, g)
-    check("(f) forbidden 'delete' (any shape) is REFUSED end-to-end (whitelist in dispatcher, did==none)",
+    check("(b) forbidden 'delete' tool_call is REFUSED end-to-end (whitelist in dispatcher, did==none)",
           r_del["did"] == "none")
-    check("(f) the node was NOT deleted", any(n.id == "c" for n in suite._load(g).nodes))
+    check("(b) the node was NOT deleted by the refused delete", any(n.id == "c" for n in suite._load(g).nodes))
 
-    # and the allowed verbs still dispatch from these shapes — the WHOLE point: it acts.
+    # and an allowed verb from a tool_call DISPATCHES (it actually acts) — the whole point.
     suite.create_node(g, "uppercase", node_id="u"); suite.connect(g, "c", "value", "u", "text")
-    r_run = suite._dispatch_rhm_action(suite._parse_rhm_action('<invoke name="run"></invoke>')[1], g)
-    check("an allowed verb (run) from a native wrapper DISPATCHES (it actually acts)", r_run["did"] == "run")
+    r_run = suite._dispatch_rhm_action(suite._json_obj_to_action({"name": "run", "arguments": "{}"}, "run"), g)
+    check("(b) an allowed verb (run) from a tool_call DISPATCHES (it acts)", r_run["did"] == "run")
 
-    print(f"\nALL {PASS} CHECKS PASS — RHM parses verbs from ANY model/provider shape; whitelist holds; no leak")
+    # ============================================================================================
+    # (c) AFFORDANCE-SET correctness per mode×context (mode-primary, context-refines). All from the
+    #     ONE registry; the rendered verb list + the tools array both read available_verbs().
+    # ============================================================================================
+    full_ctx = {"graph_nonempty": True, "inbox_pending": False, "node_selected": False}
+    empty_ctx = {"graph_nonempty": False, "inbox_pending": False, "node_selected": False}
+
+    # listening: all 7 verbs offered (graph non-empty so run is in)
+    av_listen = suite.available_verbs("listening", full_ctx)
+    check("(c) listening (non-empty graph) offers ALL 7 verbs", set(av_listen) == set(suite.RHM_VERBS))
+
+    # listening with an EMPTY graph: run is predicate-gated OUT (no point recomputing nothing)
+    av_listen_empty = suite.available_verbs("listening", empty_ctx)
+    check("(c) listening (EMPTY graph) drops `run` (predicate context-refines)",
+          "run" not in av_listen_empty and "build" in av_listen_empty)
+
+    # watch-and-react: an OBSERVE mode — show + consult ONLY. NO build cluster (it doesn't compose) AND
+    # NO run (it observes/comments, it does NOT recompute the graph — spec said show+consult only).
+    av_watch = suite.available_verbs("watch-and-react", full_ctx)
+    check("(c) watch-and-react offers ONLY show+consult (no build cluster, NO run — observe mode)",
+          set(av_watch) == {"consult", "show"})
+
+    # walkthrough: a GUIDE mode — show + consult ONLY (same rationale: it guides/consults, doesn't recompute).
+    av_walk = suite.available_verbs("walkthrough", full_ctx)
+    check("(c) walkthrough offers ONLY show+consult (guide mode — NO run)",
+          set(av_walk) == {"consult", "show"})
+
+    # focus: minimal — run + show only (no consult, no build cluster)
+    av_focus = suite.available_verbs("focus", full_ctx)
+    check("(c) focus offers only run + show (minimal)", set(av_focus) == {"run", "show"})
+
+    # background: same minimal as focus (run + show)
+    av_bg = suite.available_verbs("background", full_ctx)
+    check("(c) background offers only run + show", set(av_bg) == {"run", "show"})
+
+    # text-only MIRRORS listening (the action set is identical; only the style differs by directive)
+    check("(c) text-only mirrors listening's action set",
+          set(suite.available_verbs("text-only", full_ctx)) == set(av_listen))
+
+    # decide-for-me: the full set (it acts on what posture permits)
+    av_dfm = suite.available_verbs("decide-for-me", full_ctx)
+    check("(c) decide-for-me offers all 7 verbs (non-empty graph)", set(av_dfm) == set(suite.RHM_VERBS))
+
+    # off: NO verbs offered (the RHM is disabled)
+    check("(c) off offers NO verbs", suite.available_verbs("off", full_ctx) == [])
+
+    # the tools array is built FROM available_verbs — one tool per offered verb, named for the verb,
+    # carrying the single-source description. Two channels agree by construction.
+    tools = suite._rhm_tools("watch-and-react", full_ctx)
+    tool_names = {t["function"]["name"] for t in tools}
+    check("(c) _rhm_tools names exactly the available verbs + the `suggest` offer-affordance (single-source w/ available_verbs)",
+          tool_names == set(av_watch) | {"suggest"})
+    check("(c) each VERB tool carries its single-source description (RHM_VERB_DESC); `suggest` is the meta-offer tool",
+          all(t["function"]["description"] == suite.RHM_VERB_DESC[t["function"]["name"]]
+              for t in tools if t["function"]["name"] != "suggest"))
+    check("(c) off → _rhm_tools is empty (no tools offered)", suite._rhm_tools("off", full_ctx) == [])
+
+    # the single-source derivation: RHM_VERBS / RHM_VERB_DESC / RHM_VERB_CLASS all come from one spec
+    check("(c) RHM_VERBS derives from the spec, exact registry-order tuple (7 governed verbs + 3 config-as-tools)",
+          suite.RHM_VERBS == ("run", "propose", "build", "consult", "show", "panel", "extend",
+                              "configure", "load_voice", "unload_voice"))
+    check("(c) RHM_VERB_DESC / RHM_VERB_CLASS keys == the spec keys (no drift)",
+          set(suite.RHM_VERB_DESC) == set(suite.RHM_VERB_SPECS) == set(suite.RHM_VERB_CLASS))
+
+    # ============================================================================================
+    # (d) CAPABILITY-GATE FAIL-LOUD: a non-tool model (nomic-embed-text) is refused BEFORE any model
+    #     call — a legible turn, NO model call, NO fallback. We force the gate to report False (as it
+    #     would for an embedder) and assert chat() refuses without ever calling complete_with_tools.
+    # ============================================================================================
+    from runtime import suite as suite_mod
+    import fabric.client as fclient
+
+    # select the embedder as the RHM brain, and force the capability gate to report it non-tool-capable
+    suite.set_rhm_config({"model": "nomic-embed-text:latest", "mode": "listening"})
+    suite._model_supports_tools = lambda model, base_url=None: False   # the gate says: not tool-capable
+
+    called = {"with_tools": 0}
+    _orig = fclient.complete_with_tools
+    fclient.complete_with_tools = lambda *a, **k: called.__setitem__("with_tools", called["with_tools"] + 1) or {}
+    try:
+        r_gate = suite.chat("please run the graph", g)
+    finally:
+        fclient.complete_with_tools = _orig
+    check("(d) non-tool model → chat refuses (no action taken)", r_gate["action"] is None)
+    check("(d) refusal is LEGIBLE (names the model / tool requirement, no silent fallback)",
+          "nomic-embed-text" in r_gate["reply"] and "tool" in r_gate["reply"].lower())
+    check("(d) NO model call was made (complete_with_tools never invoked)", called["with_tools"] == 0)
+    # the refusal turn is still logged (continuity), and reports the mode
+    check("(d) the refused turn is still logged", store.chat_history(1)[0]["text"].lower().find("can't act") >= 0
+          or "select a tool" in store.chat_history(1)[0]["text"].lower())
+
+    # ============================================================================================
+    # (e) EMPTY-CONTENT + tool_call → a NON-BLANK reply (the confirmation fold). A native-tool-call
+    #     model often emits NO prose, only the call. We stub the transport to return {content:"",
+    #     tool_calls:[run]} and a tool-capable gate, and assert the reply is the run confirmation.
+    # ============================================================================================
+    suite.set_rhm_config({"model": "minimax-m3:cloud", "mode": "listening"})
+    suite._model_supports_tools = lambda model, base_url=None: True    # tool-capable now
+
+    # stub complete_with_tools: empty content + a single `run` tool_call (the empty-content-is-success case)
+    def _stub_run(*a, **k):
+        return {"role": "assistant", "content": "", "tool_calls": [tool_call("run", {})]}
+    fclient.complete_with_tools = _stub_run
+    try:
+        r_empty = suite.chat("recompute it", g)
+    finally:
+        fclient.complete_with_tools = _orig
+    check("(e) empty-content + run tool_call → an action WAS dispatched", r_empty["action"] is not None)
+    check("(e) the dispatched action is a run", (r_empty["action"] or {}).get("did") == "run")
+    check("(e) the reply is NON-BLANK despite empty content (confirmation fold)",
+          bool(r_empty["reply"].strip()) and "ran" in r_empty["reply"].lower())
+
+    # and a forbidden tool_call THROUGH chat() (not just the dispatcher) is refused end-to-end with a
+    # legible 'couldn't do that' confirmation — the whitelist holds even via the native-call path.
+    def _stub_delete(*a, **k):
+        return {"role": "assistant", "content": "", "tool_calls": [tool_call("delete", {"node": "c"})]}
+    fclient.complete_with_tools = _stub_delete
+    try:
+        r_fdel = suite.chat("delete node c", g)
+    finally:
+        fclient.complete_with_tools = _orig
+    check("(e) forbidden 'delete' via chat() native call is REFUSED (did==none)",
+          (r_fdel["action"] or {}).get("did") == "none")
+    check("(e) node c STILL exists after the refused delete through chat()", any(n.id == "c" for n in suite._load(g).nodes))
+    check("(e) the refusal is surfaced in the reply (no silent no-op)", bool(r_fdel["reply"].strip()))
+
+    # ============================================================================================
+    # (f) MODE-DISCIPLINE AT DISPATCH (defense-in-depth ATOP the whitelist). A WHITELISTED verb that is
+    #     NOT OFFERED in the current mode (e.g. `build` in watch-and-react) must NOT execute. The
+    #     affordance set is a REAL gate at dispatch — a forged/confused tool_call for a not-in-mode verb
+    #     is refused (did=="none") and NO node is created. The whitelist (E6) still refuses non-RHM_VERBS;
+    #     this adds the mode layer. We drive it through the FULL chat() path (the surface the model uses).
+    # ============================================================================================
+    gm = "mode-discipline"
+    suite.create_node(gm, "constant", config={"value": "x"}, node_id="k")   # non-empty graph (so `run` would be ctx-OK)
+    suite.set_rhm_config({"model": "minimax-m3:cloud", "mode": "watch-and-react"})
+    suite._model_supports_tools = lambda model, base_url=None: True
+
+    # build is a whitelisted RHM verb but NOT offered in watch-and-react → must be refused at dispatch.
+    BUILD_FORGED = [{"as": "n", "type": "constant", "config": {"value": "forged"}}]
+    nodes_before = len(suite._load(gm).nodes)
+    def _stub_build(*a, **k):
+        return {"role": "assistant", "content": "", "tool_calls": [tool_call("build", {"steps": BUILD_FORGED})]}
+    fclient.complete_with_tools = _stub_build
+    try:
+        r_modebuild = suite.chat("build me a node", gm)
+    finally:
+        fclient.complete_with_tools = _orig
+    check("(f) forged `build` in watch-and-react via chat() is REFUSED at dispatch (did==none)",
+          (r_modebuild["action"] or {}).get("did") == "none")
+    check("(f) the refusal names the mode-discipline reason (legible)",
+          "watch-and-react" in str((r_modebuild["action"] or {}).get("refused", "")) and
+          "build" in str((r_modebuild["action"] or {}).get("refused", "")))
+    check("(f) NO node was created by the refused not-in-mode build (graph unchanged)",
+          len(suite._load(gm).nodes) == nodes_before)
+    check("(f) the refusal is folded into the reply (no silent no-op)", bool(r_modebuild["reply"].strip()))
+
+    # CONTRAST: a verb that IS offered in this mode (show) still DISPATCHES normally — the gate narrows,
+    # it does not break offered verbs. `show k` targets the live node → did=="show".
+    def _stub_show(*a, **k):
+        return {"role": "assistant", "content": "", "tool_calls": [tool_call("show", {"targets": ["k"]})]}
+    fclient.complete_with_tools = _stub_show
+    try:
+        r_modeshow = suite.chat("show me node k", gm)
+    finally:
+        fclient.complete_with_tools = _orig
+    check("(f) an OFFERED verb (show) in watch-and-react still DISPATCHES normally",
+          (r_modeshow["action"] or {}).get("did") == "show")
+
+    # E6 STILL HOLDS through the mode-gate: a catastrophic forged `delete` in watch-and-react is refused
+    # (it is neither offered in mode NOR whitelisted) and node k survives.
+    def _stub_del2(*a, **k):
+        return {"role": "assistant", "content": "", "tool_calls": [tool_call("delete", {"node": "k"})]}
+    fclient.complete_with_tools = _stub_del2
+    try:
+        r_modedel = suite.chat("delete node k", gm)
+    finally:
+        fclient.complete_with_tools = _orig
+    check("(f) E6: forged `delete` in watch-and-react STILL refused (did==none)",
+          (r_modedel["action"] or {}).get("did") == "none")
+    check("(f) E6: node k survives the forged delete", any(n.id == "k" for n in suite._load(gm).nodes))
+
+    print(f"\nALL {PASS} CHECKS PASS — RHM acts via NATIVE tool-calling; whitelist holds end-to-end; "
+          "capability-gate fails loud; affordances correct per mode; empty-content tool_call → non-blank reply; "
+          "mode-discipline enforced at dispatch")
 finally:
     shutil.rmtree(store_dir, ignore_errors=True)

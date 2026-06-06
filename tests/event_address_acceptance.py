@@ -257,6 +257,10 @@ try:
         #                                               embedder down / empty index / no resolvable match
         #                                               → fall back to the keyword scan
     )
+    # locus-LESS introspective-telemetry kinds: a SYSTEM metric (op timing / run-record), not an action
+    # at an addressable element — no honest ui:// locus (the introspective-data-building law). Excluded
+    # by KIND (the 1st _emit arg), not by summary.
+    EXCLUDED_KINDS = ("op.run",)
     import ast as _ast
     suite_src = open(os.path.join(ROOT, "runtime", "suite.py"), encoding="utf-8").read()
     tree = _ast.parse(suite_src)
@@ -269,6 +273,8 @@ try:
                 and isinstance(f.value, _ast.Name) and f.value.id == "self"):
             continue
         has_address = any(kw.arg == "address" for kw in node.keywords)
+        kind = (node.args[0].value if (node.args and isinstance(node.args[0], _ast.Constant)
+                                       and isinstance(node.args[0].value, str)) else None)
         # the summary is the 2nd positional arg; capture ALL of its literal text (a constant, or the
         # concatenation of every literal chunk of an f-string — so a marker anywhere in the literal text
         # matches, even after a leading {expr}).
@@ -280,20 +286,21 @@ try:
             elif isinstance(a, _ast.JoinedStr):  # f-string: join every literal chunk
                 summary = "".join(v.value for v in a.values
                                   if isinstance(v, _ast.Constant) and isinstance(v.value, str))
-        emit_calls.append((node.lineno, has_address, summary))
+        emit_calls.append((node.lineno, has_address, summary, kind))
 
     check("AST scan found a realistic number of _emit/_emit_durable call sites (>= 25)", len(emit_calls) >= 25)
 
     def is_excluded(summary):
         return bool(summary) and any(m in summary for m in EXCLUDED_SUMMARY_MARKERS)
 
-    unstamped_unexcluded = [(ln, s) for (ln, has, s) in emit_calls if not has and not is_excluded(s)]
+    unstamped_unexcluded = [(ln, s) for (ln, has, s, k) in emit_calls
+                            if not has and not is_excluded(s) and k not in EXCLUDED_KINDS]
     check(f"EVERY _emit/_emit_durable call site carries `address=` OR is a documented locus-less "
           f"exclusion (offenders: {unstamped_unexcluded})", not unstamped_unexcluded)
 
     # and assert the exclusion set is REAL (each marker matches at least one unstamped call) — a stale
     # marker (matching nothing) would silently widen the allow-list; fail loud on a dead marker.
-    excluded_calls = [(ln, s) for (ln, has, s) in emit_calls if not has and is_excluded(s)]
+    excluded_calls = [(ln, s) for (ln, has, s, k) in emit_calls if not has and is_excluded(s)]
     matched_markers = {m for m in EXCLUDED_SUMMARY_MARKERS
                        for (_ln, s) in excluded_calls if s and m in s}
     check(f"every exclusion marker matches a real unstamped call site (no dead allow-list entries; "
@@ -301,7 +308,7 @@ try:
           matched_markers == set(EXCLUDED_SUMMARY_MARKERS))
 
     # the run-failure warning IS stamped (the SPLIT proof): a `warning` call carrying "FAILED this run" has address.
-    failrun = [(ln, has) for (ln, has, s) in emit_calls if s and "FAILED this run" in s]
+    failrun = [(ln, has) for (ln, has, s, k) in emit_calls if s and "FAILED this run" in s]
     check("the run-FAILURE warning call site IS stamped (the split-kind proof: run-warning addressed, "
           "health-warnings excluded)", bool(failrun) and all(has for (_ln, has) in failrun))
 

@@ -218,23 +218,41 @@ try:
           "refused" in suite._confirmation_for(cases["show-refused"]).lower())
     # INTEGRATION: prove the REAL chat() wiring (not just the helper) — a native-tool-call model that
     # emits a bare tool-call with ZERO prose must still produce a NON-BLANK reply carrying the confirmation
-    # (the exact case the change exists for). Model-free: monkeypatch fabric.client.complete.
+    # (the exact case the change exists for). Model-FREE + HERMETIC (mirrors rhm_action_parse_acceptance):
+    # chat() now ACTS via NATIVE TOOL-CALLING, so we stub `complete_with_tools` (the function chat() calls)
+    # to return an empty-content message carrying a single tool_call, and force the capability gate True.
+    # (Was: a patch of the dead `fclient.complete` returning `"ACTION: run"` — INERT, since chat() no
+    # longer calls complete; that left the outcome at the mercy of whatever a LIVE model happened to emit,
+    # i.e. flaky. The fix makes it deterministic AND actually exercises the empty-content confirmation fold.)
+    import json as _json
     from fabric import client as fclient
-    orig_complete = fclient.complete
-    fclient.complete = lambda *a, **k: "ACTION: run"          # tool-call ONLY, no prose
+    def _tc(name, arguments):                                 # OpenAI-shape tool_call (arguments = JSON string)
+        return {"id": "call_1", "type": "function",
+                "function": {"name": name, "arguments": _json.dumps(arguments)}}
+    # the graph must be NON-EMPTY for `run` to be offered in listening (the run predicate context-refines
+    # OUT on an empty graph — no point recomputing nothing; proven in rhm_action_parse_acceptance (c)).
+    # So compose a tiny runnable pipeline, exactly the "recompute the graph" scenario this asserts.
+    suite.create_node(GRAPH, "constant", config={"value": "x"}, node_id="cc")
+    suite.create_node(GRAPH, "uppercase", node_id="uu")
+    suite.connect(GRAPH, "cc", "value", "uu", "text")
+    orig_cwt = fclient.complete_with_tools
+    orig_gate = suite._model_supports_tools
+    suite._model_supports_tools = lambda model, base_url=None: True   # tool-capable (no live endpoint dependency)
     try:
+        fclient.complete_with_tools = lambda *a, **k: {"role": "assistant", "content": "", "tool_calls": [_tc("run", {})]}
         out = suite.chat("recompute the graph please", GRAPH)
         check("chat() reply is NON-BLANK when the model emits ONLY a tool-call (no prose)",
               bool(out["reply"] and out["reply"].strip()))
         check("the blank-model reply carries the run confirmation (operator sees what happened)",
               "ran" in out["reply"])
         # and a verb whose outcome used to be blank (show) — bare tool-call, no prose
-        fclient.complete = lambda *a, **k: "ACTION: show inbox"
+        fclient.complete_with_tools = lambda *a, **k: {"role": "assistant", "content": "", "tool_calls": [_tc("show", {"targets": ["inbox"]})]}
         out2 = suite.chat("show me the inbox", GRAPH)
         check("a bare 'show' tool-call yields a non-blank reply with the move confirmation",
               bool(out2["reply"].strip()) and "moved" in out2["reply"].lower())
     finally:
-        fclient.complete = orig_complete
+        fclient.complete_with_tools = orig_cwt
+        suite._model_supports_tools = orig_gate
 
     # consult/ask fold their own richer text — _confirmation_for yields '' (no double-up)
     check("consult outcome yields '' from _confirmation_for (caller folds the answer)",
@@ -349,9 +367,10 @@ try:
           bnode_r["status"] == "failed")
     check("the reloaded failed node still carries its error", "boom" in str(bnode_r.get("error", "")))
 
-    # ---- invariant: the 7-verb whitelist + no-bypass preserved -------------------------------------
-    check("RHM_VERBS unchanged (7-verb whitelist)",
-          suite.RHM_VERBS == ("run", "propose", "build", "consult", "show", "panel", "extend"))
+    # ---- invariant: the RHM verb whitelist + no-bypass preserved (7 governed + 3 config-as-tools) ---
+    check("RHM_VERBS is the expected whitelist (7 governed verbs + main's configure/load_voice/unload_voice)",
+          suite.RHM_VERBS == ("run", "propose", "build", "consult", "show", "panel", "extend",
+                              "configure", "load_voice", "unload_voice"))
     check("a forbidden verb (apply) is STILL refused end-to-end",
           suite._dispatch_rhm_action({"verb": "apply", "id": "x"}, GRAPH)["did"] == "none")
     check("delete still refused", suite._dispatch_rhm_action({"verb": "delete", "id": "x"}, GRAPH)["did"] == "none")

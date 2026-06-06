@@ -90,7 +90,7 @@ check("file-only id is code://portal (a registry key)", r3["symbols"] == ["code:
 # code://App/doRun. A hand-rolled string parser would diverge here; sourcing from the index agrees.
 run_addr = suite.resolve_scope("ui://toolbar/run")
 check(f"file:line/multi-ref ui://toolbar/run → symbols {run_addr['symbols']}",
-      run_addr["symbols"] == ["code://App/doRun", "code://bridge/_stream"])
+      run_addr["symbols"] == ["code://App/doRun", "code://bridge/_probe"])
 check(f"resolved scope uses the registry's RESOLVED path (scope {run_addr['scope']})",
       run_addr["scope"] == ["canvas/app/src/App.tsx", "runtime/bridge.py"])
 check("the resolved path is NOT the corpus shorthand 'App.tsx'",

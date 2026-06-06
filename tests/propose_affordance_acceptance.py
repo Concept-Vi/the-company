@@ -1,27 +1,22 @@
-"""tests/propose_affordance_acceptance.py — I3: propose-affordance (the CONSENT gate, click #2).
+"""tests/propose_affordance_acceptance.py — the OFFER-WITH-OPTIONS consent affordance (the "shall I?").
 
-NET-NEW (seams-rhm Seam 2 REFUTE): today the system is execute-then-render — a verb runs
-server-side inside chat() and the FE renders the OUTCOME. There is no "proposed action awaiting
-a click" affordance. I3 adds one: the RHM emits a structured {verb, address, args} PROPOSAL
-alongside its prose, chat() returns it WITHOUT executing the verb, the FE renders an approvable
-card, and APPROVING fires /api/act (the I2 endpoint) — the action runs ONLY on approve.
+UNIFIED (2026-06-06 main-merge): the convergence shipped this as a parser-era `AFFORD:` TEXT directive
+(`_parse_rhm_proposal`); main moved the RHM to NATIVE tool-calling and retired the text-directive trigger.
+The capability is PRESERVED and unified: the RHM now OFFERS an action by calling a native `suggest` tool
+(instead of emitting `AFFORD:` text) → chat() returns a structured `proposal` WITHOUT dispatching → the FE
+renders an approvable card → approving fires /api/act. Same consent guarantee (propose must NOT execute),
+modern trigger. The proposal carries an `options[]` + `direction` shape so the RICH layer (multi-option
+generation + a steer→refine loop + interactive on-screen builds; see the Self-Modifying-Interface direction
+doc §6B) extends it WITHOUT a re-trigger.
 
-THE WHOLE POINT (the consent gate): proposing must NOT execute. This test proves it by spying on
-the dispatcher: when the model emits the propose-affordance directive, `_dispatch_rhm_action` is
-NEVER called (no side-effect), `action` is None, and a structured `proposal` rides on the response.
-
-What this proves end-to-end (Suite level — the bridge route is a thin wrapper, grepped separately):
-  1. A chat turn whose model-completion carries the propose-affordance directive emits a structured
-     {verb, address} PROPOSAL on the response AND does NOT dispatch (the consent gate).
-  2. The proposal carries a REAL whitelisted RHM verb (RHM_VERBS — registry-is-truth) and a REAL
-     ui:// address (grammar-valid; registry-is-truth).
-  3. PRESERVED: an ordinary ACTION: turn STILL execute-then-renders (the existing path untouched).
-  4. Approve → Suite.act (what /api/act calls) runs the verb EXACTLY as a direct act() call does
-     (reuse, not a new dispatch path) — same outcome shape.
+THE WHOLE POINT (the consent gate): proposing must NOT execute. Proven by spying on the dispatcher: a
+`suggest` tool_call NEVER reaches `_dispatch_rhm_action` (no side-effect), `action` is None, and a
+structured `proposal` rides on the response. An ORDINARY verb tool_call still execute-then-renders
+(the native dispatch path untouched). Approve → Suite.act (what /api/act calls) — reuse, not a new path.
 
 COMPANY_TEST_RUN is set so any surfaced draft is tagged test_origin (inbox hygiene, governance.py).
 """
-import os, sys, tempfile, shutil
+import os, sys, json, tempfile, shutil
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -43,25 +38,26 @@ def check(label, cond):
     print(f"  ok  {label}")
 
 
-def stub_completion(text):
-    """Replace fabric.client.complete so chat() gets a DETERMINISTIC model output (no live model)."""
-    fabric_client.complete = lambda *a, **k: text
+def tool_call(name, args):
+    """The OpenAI tool_call shape chat() consumes (arguments is a JSON string)."""
+    return {"function": {"name": name, "arguments": json.dumps(args)}}
 
 
-_real_complete = fabric_client.complete
+_real_with_tools = fabric_client.complete_with_tools
 
 store_dir = tempfile.mkdtemp(prefix="propose-affordance-test-")
 try:
     store = FsStore(os.path.join(store_dir, "store"))
     reg = NodeRegistry(); reg.discover([NODES])
     suite = Suite(store, reg, nodes_dir=NODES)
+    suite._model_supports_tools = lambda model, base_url=None: True   # native tool-calling path (no live model)
     g = "i3-graph"
     suite.create_node(g, "constant", config={"value": "hello"}, node_id="c")
     suite.create_node(g, "uppercase", node_id="u")
     suite.connect(g, "c", "value", "u", "text")
-    suite.set_mode("text-only")   # a normal (non-decide-for-me) mode — the execute-then-render path
+    suite.set_mode("text-only")   # a normal (non-decide-for-me) interactive mode
 
-    # ---- spy on the dispatcher so we can PROVE proposing does not execute ----
+    # ---- spy on the dispatcher so we can PROVE offering does not execute ----
     dispatched = []
     _real_dispatch = suite._dispatch_rhm_action
     def spy_dispatch(action, graph_id):
@@ -70,22 +66,39 @@ try:
     suite._dispatch_rhm_action = spy_dispatch
 
     # =====================================================================================
-    # 1+2. THE CONSENT GATE: a propose-affordance directive emits a structured proposal and
-    #      does NOT dispatch. The proposal carries a real whitelisted verb + a real address.
+    # 0. the `suggest` tool is OFFERED whenever the RHM can act (the unified trigger exists).
     # =====================================================================================
-    check("Suite has a propose-affordance parser (_parse_rhm_proposal)",
-          hasattr(suite, "_parse_rhm_proposal") and callable(suite._parse_rhm_proposal))
+    actx = suite._affordance_context(g, None)
+    tool_names = {t["function"]["name"] for t in suite._rhm_tools("text-only", actx)}
+    check("the RHM is offered the `suggest` tool (the unified offer-with-options affordance)",
+          "suggest" in tool_names)
+    check("`suggest` is offered ALONGSIDE the real verbs (not instead of them)",
+          "show" in tool_names and "run" in tool_names)
 
+    # =====================================================================================
+    # 1+2. THE CONSENT GATE: a `suggest` tool_call emits a structured proposal and does NOT dispatch.
+    #      The proposal carries a real whitelisted verb + a real address + the options/direction shape.
+    # =====================================================================================
     dispatched.clear()
-    stub_completion("Here's the inbox — want me to take you there?\nAFFORD: show ui://chrome/inbox")
+    fabric_client.complete_with_tools = lambda *a, **k: {
+        "role": "assistant",
+        "content": "Here's the inbox — want me to take you there?",
+        "tool_calls": [tool_call("suggest", {"verb": "show", "address": "ui://chrome/inbox",
+                                              "label": "Go to the inbox"})]}
     r = suite.chat("show me the inbox", g)
 
     check("the chat response carries a structured `proposal`", isinstance(r.get("proposal"), dict))
     prop = r.get("proposal") or {}
-    check("the proposal carries the verb", prop.get("verb") == "show")
+    check("the proposal carries the offered verb", prop.get("verb") == "show")
     check("the proposal carries the address", prop.get("address") == "ui://chrome/inbox")
     check("the proposal verb is a REAL whitelisted RHM verb (registry-is-truth)",
           prop.get("verb") in Suite.RHM_VERBS)
+    # the rich-layer shape is carried from v1 (so multi-option + steer extends without a re-trigger):
+    check("the proposal carries an options[] (rich-layer-ready; v1 = the single offer)",
+          isinstance(prop.get("options"), list) and len(prop["options"]) >= 1
+          and prop["options"][0].get("verb") == "show")
+    check("the proposal carries the direction channel flag (operator may steer, not only yes/no)",
+          prop.get("direction") is True)
 
     from contracts.ui_info import parse_ui_address
     ok_addr = True
@@ -95,29 +108,30 @@ try:
         ok_addr = False
     check("the proposal address is a grammar-valid ui:// address", ok_addr)
 
-    # THE WHOLE POINT — proposing executed NOTHING:
-    check("proposing did NOT dispatch the verb (consent gate: dispatcher never called)",
+    # THE WHOLE POINT — offering executed NOTHING:
+    check("offering did NOT dispatch the verb (consent gate: dispatcher never called)",
           dispatched == [])
-    check("proposing returned action=None (nothing ran)", r.get("action") is None)
-    check("the prose reply survives alongside the proposal (the directive is stripped from prose)",
-          "AFFORD:" not in (r.get("reply") or "") and (r.get("reply") or "").strip() != "")
+    check("offering returned action=None (nothing ran)", r.get("action") is None)
+    check("the prose reply survives alongside the proposal",
+          (r.get("reply") or "").strip() != "")
 
     # =====================================================================================
-    # 3. PRESERVED: an ordinary ACTION: turn STILL execute-then-renders (existing path intact).
+    # 3. PRESERVED: an ordinary verb tool_call STILL execute-then-renders (native path untouched).
     # =====================================================================================
     dispatched.clear()
-    stub_completion("Recomputing the graph now.\nACTION: run")
+    fabric_client.complete_with_tools = lambda *a, **k: {
+        "role": "assistant", "content": "", "tool_calls": [tool_call("run", {})]}
     r2 = suite.chat("run the graph", g)
-    check("an ordinary ACTION: turn STILL dispatches (execute-then-render preserved)",
+    check("an ordinary verb tool_call STILL dispatches (execute-then-render preserved)",
           len(dispatched) == 1 and dispatched[0].get("verb") == "run")
-    check("the ACTION: turn returns an executed outcome (r.action.did=run)",
+    check("the dispatched turn returns an executed outcome (r.action.did=run)",
           r2.get("action") and r2["action"].get("did") == "run")
-    check("an ACTION: turn carries NO proposal (the two paths are distinct)",
+    check("a dispatched turn carries NO proposal (act and offer are distinct)",
           r2.get("proposal") is None)
 
     # =====================================================================================
     # 4. APPROVE → Suite.act (what /api/act calls) runs the verb EXACTLY as a direct act() call.
-    #    This is the reuse proof: the approve path is the I2 dispatch path, not a new one.
+    #    The reuse proof: the approve path is the act dispatch path, not a new one.
     # =====================================================================================
     suite._dispatch_rhm_action = _real_dispatch   # drop the spy for the real run
     approved = suite.act(prop["verb"], g, address=prop["address"], args=prop.get("args"))
@@ -127,29 +141,28 @@ try:
           and "ui://chrome/inbox" in approved["action"]["targets"])
 
     # =====================================================================================
-    # 5. A malformed model-emitted ui:// address DROPS the proposal and KEEPS the prose (consistent
-    #    with the verb philosophy: a bad model output never kills the whole turn — it rides through /
-    #    fails loud at the click, or here yields no card; the operator still gets the answer).
+    # 5. GOVERNED: a `suggest` for a NON-whitelisted verb yields NO card (the offer is whitelist-gated,
+    #    never a silent bad proposal) — the offer is governed by the SAME RHM_VERBS truth as dispatch.
     # =====================================================================================
     suite._dispatch_rhm_action = spy_dispatch   # re-attach the spy
     dispatched.clear()
-    # `ui://` alone is grammatically malformed (no segments) — parse_ui_address RAISES on it. The
-    # parser must catch that and DROP the proposal (keep the prose), never let it 400 the turn.
-    stub_completion("Sure, here you go.\nAFFORD: show ui://")
-    r5 = suite.chat("show me that", g)
-    check("a malformed proposed address yields NO proposal (the turn is not killed)",
+    fabric_client.complete_with_tools = lambda *a, **k: {
+        "role": "assistant", "content": "Sure.",
+        "tool_calls": [tool_call("suggest", {"verb": "delete", "address": "ui://chrome/inbox"})]}
+    r5 = suite.chat("delete that", g)
+    check("a `suggest` for a non-whitelisted verb yields NO proposal (offer is governed, never a bad card)",
           r5.get("proposal") is None)
-    check("the prose answer survives a malformed proposed address (no 400, no lost turn)",
-          (r5.get("reply") or "").strip() != "" and "AFFORD:" not in (r5.get("reply") or ""))
-    check("a malformed proposed address still dispatches NOTHING (consent gate intact)",
+    check("a non-whitelisted offer still dispatches NOTHING (consent gate + whitelist intact)",
           dispatched == [] and r5.get("action") is None)
 
-    # NOTE on REJECT/DISMISS: dismissing a card is PURE FRONT-END state (setProposal(null)) with NO
-    # backend call — there is nothing server-side to assert. The consent guarantee it rests on is the
-    # one proven above: at propose time NOTHING dispatched (#1), so a dropped card leaves the system
-    # exactly as it was. (FE dismiss behavior is verified by the loop's browser pass.)
+    # NOTE — the parser-era `_parse_rhm_proposal` (the retired AFFORD: text directive) remains on the
+    # Suite as dead code from the merge; the live trigger is the native `suggest` tool proven above. The
+    # RICH layer (multi-option generation, the steer→refine direction loop, interactive on-screen builds
+    # for consequential verbs, configurable interactive-inbox) extends the options[]/direction shape —
+    # see build-prep "Self-Modifying Interface … §6B. The RHM Consent-Interaction Model".
 
-    print(f"\nALL {PASS} CHECKS PASS — I3 propose-affordance: the RHM proposes, the action runs ONLY on approve")
+    print(f"\nALL {PASS} CHECKS PASS — offer-with-options consent affordance (unified into native "
+          f"tool-calling): the RHM OFFERS, nothing runs until approve; act and offer stay distinct.")
 finally:
-    fabric_client.complete = _real_complete
+    fabric_client.complete_with_tools = _real_with_tools
     shutil.rmtree(store_dir, ignore_errors=True)

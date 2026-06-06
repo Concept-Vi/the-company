@@ -2,11 +2,21 @@
 
 Stdlib + pydantic. Content-addressed immutable objects, mutable refs, typed provenance,
 lineage walk, and the memo index. See store/AGENTS.md (never mutate cas://; ext4 only).
+
+PORTABILITY (a hard constraint — Tim is Supabase-bound): the concurrency + durability
+guarantees below (cross-process locking, fsync) are filesystem-BACKEND properties expressed
+ENTIRELY behind the resolver seam. The engine calls `store.graph_lock(gid)` and never knows
+whether it is enforced by a thread RLock, an OS file-lock, or a Postgres advisory lock. NO
+`fcntl`/lockfile/fsync reference may leak outside this module — a Supabase backend would
+implement the SAME methods with backend-native concurrency/durability and the engine would
+not change. That is the whole point of the indirection (store/AGENTS.md).
 """
 from __future__ import annotations
+import fcntl
 import hashlib
 import json
 import os
+import threading
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
@@ -14,154 +24,153 @@ from typing import Any
 from contracts.address import Provenance
 
 
+class _CrossProcessLock:
+    """A RE-ENTRANT lock that serializes a critical section across BOTH threads (in one
+    process) AND processes (against the same store on disk).
+
+    Why both: the bridge is a ThreadingHTTPServer over ONE Suite (in-process thread race),
+    AND Tim runs MULTIPLE sessions/processes against the SAME store (cross-process race,
+    STATE.md). A thread RLock alone covers only the first; an `fcntl.flock` on a per-key
+    lockfile covers the second. We compose them.
+
+    Re-entrancy is REQUIRED, not optional: `graph_lock` is documented + used re-entrantly
+    (suite.py nests locked calls on the same gid). But `fcntl.flock` is PER-FD and NOT
+    re-entrant — a naive flock-on-enter / release-on-exit deadlocks (or, worse, the inner
+    `__exit__` releases the OUTER's lock). So we:
+      • hold a thread RLock (re-entrant in-process by construction), and
+      • take the `flock` ONLY on the OUTERMOST acquire (depth 0→1) and release it ONLY on
+        the OUTERMOST exit (depth 1→0), tracked by a per-THREAD depth counter.
+    A separate process has its own counter + its own fd, so flock serializes the two
+    processes; within a thread, nesting just increments depth (no second flock).
+    """
+
+    def __init__(self, lockfile: Path):
+        self._lockfile = lockfile
+        self._rlock = threading.RLock()          # in-process re-entrancy + nesting
+        self._depth: dict[int, int] = {}         # thread-id -> nesting depth (flock held iff depth>0)
+        self._fds: dict[int, int] = {}           # thread-id -> the open fd holding the flock
+        self._depth_guard = threading.Lock()     # guards the two maps above
+
+    @contextmanager
+    def acquire(self):
+        tid = threading.get_ident()
+        # Serialize THREADS first (re-entrant). This also makes the depth bookkeeping safe:
+        # only the holder of the RLock for THIS key touches its own thread's depth entry.
+        self._rlock.acquire()
+        try:
+            with self._depth_guard:
+                d = self._depth.get(tid, 0)
+                if d == 0:
+                    # OUTERMOST acquire for this thread → take the OS file-lock (serializes processes).
+                    fd = os.open(self._lockfile, os.O_RDWR | os.O_CREAT, 0o644)
+                    fcntl.flock(fd, fcntl.LOCK_EX)   # blocking exclusive lock across processes
+                    self._fds[tid] = fd
+                self._depth[tid] = d + 1
+            yield
+        finally:
+            with self._depth_guard:
+                d = self._depth.get(tid, 0)
+                if d <= 1:
+                    # OUTERMOST exit → release the OS file-lock + close its fd.
+                    fd = self._fds.pop(tid, None)
+                    if fd is not None:
+                        fcntl.flock(fd, fcntl.LOCK_UN)
+                        os.close(fd)
+                    self._depth.pop(tid, None)
+                else:
+                    self._depth[tid] = d - 1
+            self._rlock.release()
+
+
+def _fsync_path(path: Path) -> None:
+    """fsync a directory entry so a rename/create within it is durable (the rename can be
+    lost on crash if the parent dir is not itself fsync'd). Best-effort on platforms that
+    refuse to fsync a directory fd; the file-content fsync is the primary guarantee."""
+    try:
+        dfd = os.open(str(path), os.O_RDONLY)
+        try:
+            os.fsync(dfd)
+        finally:
+            os.close(dfd)
+    except (OSError, PermissionError):
+        # Some filesystems disallow fsync on a directory fd. The file's own content fsync
+        # (done by the caller) is the durability guarantee; the dir fsync hardens the rename.
+        pass
+
+
+def _atomic_write_fsync(path: Path, data: str) -> None:
+    """Write `data` to `path` atomically AND durably: write to a unique tmp, fsync the tmp's
+    fd (force the BYTES to stable storage), os.replace (atomic same-fs rename), then fsync the
+    PARENT DIR (force the rename's directory entry to stable storage). Unique tmp PER WRITE
+    (pid+thread) so two concurrent writers on the same target never share a tmp name —
+    last-writer-wins, each file always whole. Mirrors the prior tmp+os.replace pattern but
+    adds the two fsyncs (T-FSYNC)."""
+    tmp = path.with_name(f"{path.name}.{os.getpid()}.{threading.get_ident()}.tmp")
+    fd = os.open(str(tmp), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
+    try:
+        os.write(fd, data.encode())
+        os.fsync(fd)                      # bytes → stable storage BEFORE the rename
+    finally:
+        os.close(fd)
+    os.replace(tmp, path)                 # atomic rename (same filesystem)
+    _fsync_path(path.parent)              # rename's dir entry → stable storage
+
+
 class FsStore:
     def __init__(self, root):
         self.root = Path(root)
         for d in ("objects", "refs", "ref_history", "meta", "memo", "graphs", "surfaced", "locks", "vectors"):
             (self.root / d).mkdir(parents=True, exist_ok=True)
-        # --- store-level concurrency locks (T1-SEQ / T1-RACE) ---
+        # --- store-level concurrency locks (T1-SEQ / T1-RACE / T-LOCK) ---
         # The bridge is a ThreadingHTTPServer over ONE Suite, so read-modify-write paths in the store
-        # are run UNSERIALIZED across threads → lost updates + colliding sequence numbers. The locks
-        # live HERE (in the store) — not in the Suite — because BOTH the Suite (resolve_surfaced,
-        # build_result writes) AND governance.Inbox (set_status, resolve) mutate surfaced items; a lock
-        # held only by the Suite would not serialize governance's writes against the Suite's. The store
-        # is the one object every writer reaches, so serializing here is the only place that covers all
-        # callers. Re-entrant locks so a method that calls another locked store method can't self-deadlock.
-        import threading as _t
-        self._event_lock = _t.RLock()       # T1-SEQ: append_event seq = read-last → +1 → append (atomic)
-        self._surfaced_lock = _t.RLock()     # T1-RACE: surfaced read-modify-write across both faces
-        self._graph_locks_guard = _t.Lock()  # guards the per-graph lock map below
-        self._graph_locks: dict = {}         # T1-RACE: one lock per graph id (load→mutate→save serialized)
-        # --- S4: cross-PROCESS advisory file locks (fcntl) ---
-        # The threading locks above serialize threads WITHIN ONE process. The bridge and the MCP face are
-        # TWO separate processes on ONE STORE_DIR (bridge.py + mcp_face/server.py both Suite(FsStore(
-        # STORE_DIR))), and threading.RLock CANNOT cross that boundary (seams-engine Seam 8b, CONFIRMED).
-        # So an OS-level advisory lock (fcntl.flock) is ADDED ON TOP — one lock FILE per resource (per
-        # graph id; one for the dispatch claim), never a single global lock (a global one would serialize
-        # the whole night + invite the deadlock the spec warns about). LOCK ORDER (documented, applied
-        # identically everywhere): the in-process threading RLock is the OUTER lock; the fcntl OS lock is
-        # the INNER lock, taken ONLY at the OUTERMOST in-process acquire (depth-counted below) and released
-        # on the outermost exit. A nested same-resource acquire reuses the already-held OS lock — it does
-        # NOT re-flock (fcntl flock on a 2nd fresh fd for a lock THIS process already holds would BLOCK on
-        # itself = self-deadlock; depth-counting sidesteps it). Because the threading RLock guarantees only
-        # ONE thread of THIS process is ever inside the critical section, the single shared fd + depth count
-        # is race-free. fcntl is POSIX-only (the deploy target is WSL/Linux ext4 — store/AGENTS.md).
-        self._os_lock_guard = _t.Lock()      # guards the os-lock fd/depth maps below
-        self._os_lock_fds: dict = {}         # resource-key → open fd holding flock(LOCK_EX) while depth>0
-        self._os_lock_depth: dict = {}       # resource-key → re-entrant depth (this process/thread)
+        # are run UNSERIALIZED across threads → lost updates + colliding sequence numbers. AND Tim runs
+        # MULTIPLE sessions/PROCESSES against the SAME store (STATE.md) → the thread lock alone does
+        # NOTHING across processes. The locks live HERE (in the store) — not in the Suite — because BOTH
+        # the Suite (resolve_surfaced, build_result writes) AND governance.Inbox (set_status, resolve)
+        # mutate surfaced items; a lock held only by the Suite would not serialize governance's writes
+        # against the Suite's. The store is the one object every writer reaches, so serializing here is
+        # the only place that covers all callers. Re-entrant so a method that calls another locked store
+        # method can't self-deadlock.
+        self._event_lock = threading.RLock()       # T1-SEQ: append_event seq = read-last → +1 → append (atomic)
+        self._surfaced_lock = threading.RLock()    # T1-RACE: surfaced read-modify-write across both faces
+        self._graph_locks_guard = threading.Lock()  # guards the per-graph cross-process lock map below
+        self._graph_locks: dict = {}                # T-LOCK: one CROSS-PROCESS lock per graph id
+
+    def _safe_lock_name(self, key: str) -> str:
+        """A filename-safe lockfile name for an arbitrary key (graph id, claim key). Reuses the
+        address-safe encoder so e.g. 'dispatch-claim:7' and 'g/1' both map to valid filenames."""
+        return self._safe(key) + ".lock"
 
     def graph_lock(self, gid: str):
-        """One re-entrant lock per graph id, created on demand (threadsafe). The Suite's whole-graph
-        load→mutate→save_graph mutations (create_node/connect/delete_node/set_config/set_position) hold
-        this around the WHOLE read-modify-write so two concurrent mutations on the same graph can't both
-        load version V and last-writer-wins (lost update). Re-entrant so a mutation that nests another
-        locked call on the same graph does not self-deadlock.
+        """A re-entrant CROSS-PROCESS lock per graph id, created on demand (threadsafe). Backed by
+        BOTH a thread RLock (in-process re-entrancy + the threading-bridge race) AND an `fcntl.flock`
+        on a per-graph lockfile under `<root>/locks/` (the cross-PROCESS guarantee — Tim runs multiple
+        sessions). The Suite's whole-graph load→mutate→save_graph mutations (create_node / connect /
+        delete_node / set_config / set_position) hold this around the WHOLE read-modify-write so two
+        concurrent mutations on the same graph — even in two SEPARATE PROCESSES — can't both load
+        version V and last-writer-wins (lost update). Returned object is a context manager
+        (`with store.graph_lock(gid): ...`), API unchanged from the prior thread-only RLock — the
+        engine is agnostic to the enforcement (PORTABILITY: a Supabase backend would use an advisory
+        lock here and the engine would not change). Re-entrant so a mutation that nests another locked
+        call on the same graph (or the same claim key) does not self-deadlock.
 
-        S4: returns a COMPOUND context manager — the in-process RLock (thread mutual-exclusion) wrapping
-        the per-resource fcntl OS lock (cross-PROCESS mutual-exclusion). LOCK ORDER: RLock outer, fcntl
-        inner. Existing callers `with self.store.graph_lock(gid):` get cross-process safety for free —
-        no call-site change (S4 PRESERVES the existing in-process guarantee, adds the cross-process one)."""
-        import threading as _t
+        Also used (with a distinct key, e.g. `dispatch-claim:<seq>`) to wrap the exactly-once
+        dispatch check→claim so two PROCESSES can't both pass the TOCTOU — the same primitive the
+        spec mandates for the dispatch-claim, behind the same seam."""
         with self._graph_locks_guard:
             lk = self._graph_locks.get(gid)
             if lk is None:
-                lk = _t.RLock()
+                lk = _CrossProcessLock(self.root / "locks" / self._safe_lock_name(gid))
                 self._graph_locks[gid] = lk
-        return self._compound_lock(lk, f"graph__{self._safe(gid)}")
+        return lk.acquire()
 
     def dispatch_lock(self, key):
-        """S4 — cross-process advisory lock for the wire's exactly-once dispatch CHECK→CLAIM (keyed on
-        the resolve seq). The Suite already holds a per-seq THREADING lock around the check→emit critical
-        section (suite.py _dispatch_lock); this is the OS-level companion so two FACES (bridge + MCP, or a
-        face + the wire) can't both clear the exactly-once check and double-launch `claude -p`. The durable
-        decision.dispatch event remains the cross-RESTART guarantee; this fcntl lock adds the CONCURRENT
-        (two-faces-at-once) guarantee the durable event alone does not cover. The Suite wraps its existing
-        per-seq RLock as the OUTER lock; pass that RLock here so the compound lock keeps the same RLock-outer
-        / fcntl-inner order as graph_lock (one consistent order = no deadlock)."""
-        return self._os_lock_cm(f"dispatch__{self._safe(str(key))}")
-
-    @contextmanager
-    def _compound_lock(self, rlock, resource_key: str):
-        """RLock (outer, thread mutual-exclusion + re-entrancy) → fcntl OS lock (inner, cross-process).
-        The OS lock is taken only at the OUTERMOST RLock acquire (the depth-count in _os_lock_cm does that)
-        — a nested same-thread acquire reuses the held RLock and the held OS lock. This is THE documented
-        lock order, applied identically at every graph mutation site."""
-        with rlock:
-            with self._os_lock_cm(resource_key):
-                yield
-
-    @contextmanager
-    def _os_lock_cm(self, resource_key: str):
-        """Acquire/release a per-resource fcntl advisory file lock, RE-ENTRANT within this process via a
-        depth count. Only the OUTERMOST acquire opens the fd + flock(LOCK_EX) (a blocking exclusive lock);
-        inner acquires just bump the depth and reuse the held fd. The outermost release flock(LOCK_UN) +
-        closes the fd. Guarded by a threading.Lock so the fd/depth maps are mutated atomically. POSIX-only
-        (fcntl); the deploy target is Linux/WSL ext4. The lock FILE is its own file under locks/ — never
-        the data file (so an flock on the lock file never interferes with the atomic tmp+replace writes)."""
-        import fcntl
-        # ENTER — outermost opens + flocks; inner bumps depth. The flock() (which BLOCKS) is taken OUTSIDE
-        # the guard so a real cross-process wait does not freeze every other resource's lock bookkeeping.
-        need_acquire = False
-        with self._os_lock_guard:
-            depth = self._os_lock_depth.get(resource_key, 0)
-            if depth == 0:
-                lf = self.root / "locks" / (resource_key + ".lock")
-                fd = os.open(str(lf), os.O_CREAT | os.O_RDWR, 0o644)
-                self._os_lock_fds[resource_key] = fd
-                need_acquire = True
-            self._os_lock_depth[resource_key] = depth + 1
-        if need_acquire:
-            try:
-                fcntl.flock(self._os_lock_fds[resource_key], fcntl.LOCK_EX)
-            except BaseException:
-                # the blocking flock failed/was interrupted — undo the bookkeeping + close the fd so we
-                # NEVER leave a phantom-held lock (the deadlock the spec warns about). Fail loud.
-                with self._os_lock_guard:
-                    fd = self._os_lock_fds.pop(resource_key, None)
-                    self._os_lock_depth[resource_key] = self._os_lock_depth.get(resource_key, 1) - 1
-                    if self._os_lock_depth.get(resource_key, 0) <= 0:
-                        self._os_lock_depth.pop(resource_key, None)
-                if fd is not None:
-                    os.close(fd)
-                raise
-        try:
-            yield
-        finally:
-            # EXIT — outermost releases + closes; inner just decrements. Always runs (finally) so a raising
-            # critical section NEVER strands the OS lock held (cross-process deadlock prevention).
-            with self._os_lock_guard:
-                depth = self._os_lock_depth.get(resource_key, 1) - 1
-                if depth <= 0:
-                    self._os_lock_depth.pop(resource_key, None)
-                    fd = self._os_lock_fds.pop(resource_key, None)
-                else:
-                    self._os_lock_depth[resource_key] = depth
-                    fd = None
-            if fd is not None:
-                try:
-                    fcntl.flock(fd, fcntl.LOCK_UN)
-                finally:
-                    os.close(fd)
-
-    @staticmethod
-    def _fsync_atomic_write(path: Path, data: str) -> None:
-        """S4 — a crash-durable atomic write: write to a unique tmp, fsync the tmp's BYTES to disk, then
-        os.replace (atomic same-fs rename) into place. Without the fsync, os.replace makes a possibly-
-        still-in-page-cache tmp the live file → a crash can leave a zero/short file as the "committed"
-        version (Reality Map §1 "no crash-durable resume"). With it, the bytes are on disk BEFORE the
-        rename names them the truth. Unique tmp per write (pid+thread) so concurrent writers never share a
-        tmp name (last-writer-wins, each file whole). Mirrors the existing tmp+os.replace pattern, adding
-        the durability barrier. (Directory-entry durability after the rename is best-effort; the data-loss
-        case this kills is a torn/empty file masquerading as committed.)"""
-        import threading as _t
-        tmp = path.with_name(f"{path.name}.{os.getpid()}.{_t.get_ident()}.tmp")
-        fd = os.open(str(tmp), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o644)
-        try:
-            os.write(fd, data.encode("utf-8"))
-            os.fsync(fd)                      # the durability barrier — bytes on disk before the rename
-        finally:
-            os.close(fd)
-        os.replace(str(tmp), str(path))       # atomic: a reader sees the whole old file or the whole new
+        """Compat alias for the wire's exactly-once dispatch CHECK→CLAIM → the SAME cross-process
+        primitive as graph_lock, keyed by a distinct `dispatch-claim:<key>` lockfile (this is exactly
+        main's generalized design — graph_lock's docstring documents this usage). The convergence lineage
+        called `store.dispatch_lock(seq)`; this routes it to graph_lock so there is ONE cross-process lock
+        mechanism, two call spellings (no duplicate locking)."""
+        return self.graph_lock(f"dispatch-claim:{key}")
 
     @staticmethod
     def _hash(b: bytes) -> str:
@@ -193,6 +202,14 @@ class FsStore:
 
     def exists(self, cas: str) -> bool:
         return (self.root / "objects" / self._safe(cas)).exists()
+
+    def _fsync_atomic_write(self, path: Path, data: str) -> None:
+        """Compat method alias → the module-level `_atomic_write_fsync` (the one verified T-FSYNC
+        crash-durable atomic-write primitive). The convergence lineage spelled this `self._fsync_atomic_write`;
+        the night-build lineage spelled it `_atomic_write_fsync` (module func). The merge standardises on the
+        module func as THE implementation and keeps this thin method so every existing `self.`-call routes to it
+        — ONE primitive, both call spellings (no duplicate durability code)."""
+        _atomic_write_fsync(path, data)
 
     # --- mutable pointer (run://) ---
     def set_ref(self, logical: str, cas: str) -> None:
@@ -298,14 +315,15 @@ class FsStore:
         # write_text could tear graphs/<id>.json against the running bridge's reads. tmp + os.replace
         # (same-filesystem rename is atomic) means a reader sees the old file or the new — never a
         # half-written one. Mirrors the apply_* paths' tmp+replace pattern.
+        path = self.root / "graphs" / (self._safe(graph.id) + ".json")
         # Unique tmp PER WRITE (pid+thread): two concurrent same-graph writers (two /api/move, or a
         # move racing an MCP-face create_node/connect on the threading server) must not share one tmp
         # name — a fixed name lets their write_texts interleave into invalid JSON that os.replace then
         # makes the LIVE file (durable corruption). Unique tmp + atomic replace = last-writer-wins, each
-        # file always whole. S4: also fsync the tmp before the rename (crash-durable — the in-process
-        # graph_lock + the cross-process fcntl graph lock serialize the WRITE; the fsync makes it durable).
-        path = self.root / "graphs" / (self._safe(graph.id) + ".json")
-        self._fsync_atomic_write(path, graph.model_dump_json(indent=2))
+        # file always whole. (Traded import-minimalism for write-concurrency correctness.)
+        # DURABLE (T-FSYNC): _atomic_write_fsync fsyncs the tmp's bytes BEFORE the rename + fsyncs the
+        # parent dir AFTER, so the canvas substrate (shared across faces) survives a crash.
+        _atomic_write_fsync(path, graph.model_dump_json(indent=2))
 
     def load_graph(self, gid: str):
         from contracts.node_record import Graph
@@ -375,6 +393,14 @@ class FsStore:
         # (a duplicate could bind to the WRONG event); (b) the SSE cursor `id:<seq>` (bridge.py) assumes
         # monotonic-unique. The lock makes seq atomic + monotonic + unique. (RLock so a nested store
         # call cannot self-deadlock.)
+        # T1-SEQ: the thread `_event_lock` makes the read-last → +1 → append atomic within ONE process.
+        # NOTE (surfaced to Tim — see store.report.json needs_tim): this is NOT cross-process — two
+        # PROCESSES can still both read seq=N and append N+1 → a duplicated seq. Closing that would wrap
+        # this section in the same cross-process primitive graph_lock uses, but that adds an flock+fsync
+        # to EVERY emit (hot path) + a permanent lock-ordering invariant the self-coding brain must know.
+        # Whether the event log needs cross-process seq-uniqueness is a deliberate shared-semantics
+        # decision (AGENTS.md rule 7 — surface cross-cutting, don't decide unilaterally), so it is
+        # surfaced, not silently built into the hottest write path.
         with self._event_lock:
             seq = 0
             if path.exists():
@@ -390,11 +416,9 @@ class FsStore:
                 if last:
                     seq = _j.loads(last).get("seq", 0) + 1
             rec = {"seq": seq, "ts": datetime.now(timezone.utc).isoformat(), **event}
-            # S4: fsync the appended line to disk before returning. The durable decision.dispatch claim
-            # (the wire's exactly-once guarantee) is written through here via _emit_durable — if it were
-            # only in the page cache, a crash after the caller acted on a "success" return could lose the
-            # claim and allow a double-launch on restart. fsync the fd so the claim is on disk before the
-            # caller proceeds. (Append-only log: the fsync is on the appended bytes, no rename needed.)
+            # DURABLE (T-FSYNC): append, flush, then os.fsync the fd so the event (incl. the exactly-once
+            # dispatch claim + the SSE trajectory) is forced to stable storage before we return — a
+            # power-loss after this return must not lose an acknowledged claim/event.
             with path.open("a", encoding="utf-8") as f:
                 f.write(_j.dumps(rec) + "\n")
                 f.flush()

@@ -221,11 +221,33 @@ class H(BaseHTTPRequestHandler):
                     _probe(name, f"http://127.0.0.1:{port}")
                     for name, port in sorted(ENGINE_PORTS.items())]
                 self._send(200, json.dumps({
-                    "stt": voice_stt.available(),
-                    "stt_default": voice_stt.DEFAULT_PROVIDER,
+                    "stt": voice_stt.available(),          # back-compat: id → bool (the old shape)
+                    "stt_default": voice_stt.stt_default(),  # back-compat: the default ear id
+                    "stt_registry": voice_stt.available_stt(),  # the RICH ear registry (label/kind/detail)
+                    "stt_active": SUITE.rhm_config().get("stt") or voice_stt.active_ear(),  # selected ear
                     "tts_up": engines[0]["up"],            # back-compat: the default (kokoro) up?
                     "engines": engines,                    # lane B: per-engine availability + voices
                     "voice_enabled": SUITE.voice_enabled()}))  # lane H: the per-mode voice toggle state
+            elif path == "/api/personas":                  # G2.4/G3: the 5-cast registry the picker reads
+                from voice import personas as voice_personas   # stdlib-only data module (3.14-importable)
+                self._send(200, json.dumps(voice_personas.list_personas()))
+            elif path == "/api/trial/sessions":            # G4.6: the recorded trial sessions (the debrief's set)
+                self._send(200, json.dumps(SUITE.trial_sessions()))
+            elif path == "/api/trial/transcript":          # G4.6: a trial session's CAS transcript (fail loud if unrecorded)
+                self._send(200, json.dumps(SUITE.trial_transcript(q["session"])))
+            elif path in ("/api/voice/services", "/api/voice/ears"):  # G4.7: voice-service lifecycle (ears+engines: up/warming/down + VRAM)
+                from voice import lifecycle as voice_lc       # /api/voice/ears kept as a back-compat alias
+                for w in voice_lc.poll_wake():                # G7-loadcost: a service just became up → record its WAKE-TIME
+                    SUITE.emit_run_record("voice.load", w["wake_ms"], service=w["service"], vram_used_mb=w.get("vram_used_mb"))
+                self._send(200, json.dumps(voice_lc.status()))
+            elif path == "/api/roles":                     # G4.2: the model-ROLE registry (judge + future) the config lab binds
+                self._send(200, json.dumps(SUITE.roles()))
+            elif path == "/api/run-stats":                 # G7 rollup: op.run run-records → distributions (learning by use)
+                self._send(200, json.dumps(SUITE.run_stats(op=q.get("op"))))
+            elif path == "/api/knobs":                     # G8.1: the dynamic configurable-knob surface for a (loaded) model
+                self._send(200, json.dumps(SUITE.knobs_for(model=q.get("model"), base_url=q.get("base_url"))))
+            elif path == "/api/voice/paths":               # Tier-4: the swappable voice-path registry (pipeline vs s2s)
+                self._send(200, json.dumps(SUITE.voice_paths()))
             else:
                 self._send(404, "{}")
         except Exception as e:                             # fail loud to the UI (parity with do_POST)
@@ -265,6 +287,112 @@ class H(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             return                                          # client closed — done, not an error
 
+    def _voice_stream(self):
+        """Tier-1 STREAMING voice turn: hear → think → SPEAK SENTENCE-BY-SENTENCE. The win over
+        /api/voice/turn: instead of synthesising the WHOLE reply before any audio (the ~28s-on-a-long-
+        reply wall), we split the reply into sentences and stream each one's audio AS IT'S SYNTHESISED —
+        so the first words play at ~(silence+STT+brain+TTS-of-one-short-sentence), and the rest flows
+        behind. Response = newline-delimited JSON events the FE reads + plays incrementally:
+          {type:transcript,text} · {type:chunk,idx,text,wav_b64,ms} (per sentence) · {type:done,total_ms,reply}
+        Engine-agnostic (sentence-chunking works with the CURRENT qwen3tts — no engine change; each
+        sentence is a short, fast synth). Brain-token streaming is a later refinement; chunking the TTS
+        (the dominant cost) is most of the win. Fail-loud surfaces as a {type:error} event then closes."""
+        import base64 as _b64, re as _re, time as _t
+        from urllib.parse import urlparse as _up, parse_qs as _pq
+        from voice import loop as voice_loop, stt as voice_stt, lifecycle as voice_lc, personas as voice_personas
+        self.close_connection = True
+        vq = {k: v[0] for k, v in _pq(_up(self.path).query).items()}
+        persona = (vq.get("persona") or "").strip()
+        gid = vq.get("graph_id", DEMO)
+        audio = self.rfile.read(int(self.headers.get("Content-Length", 0)))
+        self.send_response(200)
+        self.send_header("Content-Type", "application/x-ndjson")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "close")
+        self.end_headers()
+
+        import select as _sel, socket as _sock
+        gone = [False]                                        # Tier-2: client-disconnect flag (cancel a speculative turn)
+
+        def emit(obj):
+            try:
+                self.wfile.write((json.dumps(obj) + "\n").encode()); self.wfile.flush()
+            except (BrokenPipeError, ConnectionResetError, OSError):
+                gone[0] = True                                # client hung up (e.g. resumed talking) — stop, don't raise
+
+        def client_gone():
+            """Tier-2: PROACTIVELY detect a client disconnect (a speculative turn cancelled on resume) so
+            we stop BEFORE the next expensive synth — more reliable + prompt than waiting for a write to
+            fail (TCP buffers the first post-close write). select+MSG_PEEK: socket readable AND 0 bytes
+            peeked = EOF (closed). Readable-with-data is unexpected here (body's read) → treat as alive."""
+            if gone[0]:
+                return True
+            try:
+                r, _, _ = _sel.select([self.connection], [], [], 0)
+                if r and self.connection.recv(1, _sock.MSG_PEEK) == b"":
+                    gone[0] = True
+            except Exception:
+                pass
+            return gone[0]
+        try:
+            if not persona:
+                raise ValueError("/api/voice/stream needs ?persona=<id> (fail loud)")
+            if SUITE.rhm_config().get("voice_path") == "s2s":
+                emit({"type": "error", "error": "voice_path is 's2s' but no S2S runner/model exists yet — "
+                      "this is the pipeline route. Set voice_path=pipeline or download an S2S model."}); return
+            p = voice_personas.get_persona(persona)               # fail loud on unknown persona
+            _rc = SUITE.rhm_config()
+            eng_override = (_rc.get("tts_engine") or "").strip() or None   # G4.2 engine/voice override slots
+            voice_override = (_rc.get("tts_voice") or "").strip() or None
+            eng = eng_override or p["engine"]                     # override wins; else the persona's engine
+            t0 = _t.monotonic()
+            speak_reply = SUITE.voice_enabled()
+            # boot-on-demand (only if we'll speak)
+            if speak_reply:
+                svc = voice_lc.engine_service_for(eng)
+                if svc and not voice_lc.is_up(voice_lc._loadable()[svc]):
+                    emit({"type": "error", "error": f"engine {eng} ({svc}) is down — load it "
+                          f"(POST /api/voice/load) or use ?boot=1 on /api/voice/turn first"}); return
+            ear = SUITE.rhm_config().get("stt") or voice_stt.active_ear()
+            heard = voice_stt.transcribe(audio, provider=ear)
+            transcript = (heard.get("text") or "").strip()
+            stt_ms = int((_t.monotonic() - t0) * 1000)
+            emit({"type": "transcript", "text": transcript, "ms": stt_ms})
+            if not transcript:
+                raise RuntimeError("empty transcript — STT heard nothing (fail loud)")
+            thought = SUITE.chat(transcript, gid)                 # the ONE in-process brain (full reply)
+            reply = (thought.get("reply") or "").strip()
+            think_ms = int((_t.monotonic() - t0) * 1000) - stt_ms
+            emit({"type": "reply", "text": reply, "ms": think_ms})
+            if not speak_reply:
+                emit({"type": "done", "total_ms": int((_t.monotonic() - t0) * 1000), "spoke": False, "reply": reply}); return
+            # split into sentences → synth + stream each AS IT'S READY (the streaming win)
+            sentences = [s.strip() for s in _re.split(r'(?<=[.!?])\s+', reply) if s.strip()] or [reply]
+            voice_arg = voice_override or voice_loop._voice_arg_for(p)   # G4.2: honour the engine/voice override
+            done_n = 0
+            for idx, sent in enumerate(sentences):
+                if client_gone():                             # Tier-2: client disconnected → STOP before the next synth (don't burn TTS)
+                    break
+                cs = _t.monotonic()
+                wav = voice_loop.speak(sent, eng, voice=voice_arg)   # `eng` honours the override; short sentence → fast synth
+                emit({"type": "chunk", "idx": idx, "text": sent,
+                      "wav_b64": _b64.b64encode(wav).decode(),
+                      "ms": int((_t.monotonic() - cs) * 1000)})
+                done_n = idx + 1
+            total = int((_t.monotonic() - t0) * 1000)
+            if gone[0]:                                       # cancelled mid-stream — record it (server-side; the socket's dead)
+                SUITE.emit_run_record("voice.stream.cancelled", total, stt_ms=stt_ms, think_ms=think_ms,
+                                      chunks_done=done_n, chunks_total=len(sentences), persona=persona, engine=eng)
+                return
+            SUITE.emit_run_record("voice.stream", total, stt_ms=stt_ms, think_ms=think_ms,
+                                  chunks=len(sentences), persona=persona, engine=eng, ear=ear)
+            emit({"type": "done", "total_ms": total, "spoke": True, "chunks": len(sentences), "reply": reply})
+        except Exception as e:                                     # fail loud as a stream event, then close
+            try:
+                emit({"type": "error", "error": f"{type(e).__name__}: {e}"})
+            except Exception:
+                pass
+
     def do_POST(self):
         # HTTP/1.1 keeps sockets alive (needed for the GET /api/stream SSE). But a POST handler that
         # doesn't drain its request body (e.g. /api/react, the 404 branch) would leave bytes that the
@@ -274,10 +402,26 @@ class H(BaseHTTPRequestHandler):
         self.close_connection = True
         try:
             if self.path == "/api/stt":                   # raw audio bytes in → transcript out
+                # The ear is chosen by the SELECTED provider (rhm_config().stt — the config slot the
+                # suite lane added, mirroring the brain-model slot), NOT a literal default. This closes
+                # the bug where the bridge defaulted assemblyai while the loop defaulted local — ONE
+                # source of selection now. A selected-but-down ear → transcribe() raises LOUD (fail
+                # loud, no fallback); _send's except surfaces it to the UI.
                 from voice import stt as voice_stt
                 ln = int(self.headers.get("Content-Length", 0))
                 audio = self.rfile.read(ln)
-                self._send(200, json.dumps(voice_stt.transcribe(audio)))
+                ear = SUITE.rhm_config().get("stt") or voice_stt.active_ear()
+                self._send(200, json.dumps(voice_stt.transcribe(audio, provider=ear)))
+                return
+            if self.path == "/api/voice/stt-partial":     # Tier-2: PARTIAL transcript of the audio-so-far (FE drives the window)
+                from voice import stt as voice_stt
+                import time as _t
+                ln = int(self.headers.get("Content-Length", 0)); audio = self.rfile.read(ln)
+                ear = SUITE.rhm_config().get("stt") or voice_stt.active_ear()
+                t0 = _t.monotonic()
+                r = voice_stt.transcribe_partial(audio, provider=ear)
+                r["ms"] = int((_t.monotonic() - t0) * 1000)
+                self._send(200, json.dumps(r))
                 return
             if self.path == "/api/tts":                   # text in → wav out (routed by engine)
                 # lane B: parse the body to read the optional `engine` field, route to that engine's
@@ -302,6 +446,79 @@ class H(BaseHTTPRequestHandler):
                     raise RuntimeError(
                         f"{engine or 'kokoro'} TTS service at {base} (port {port}) unreachable: "
                         f"{type(e).__name__}: {e} — start the engine's service (fail loud).")
+                return
+            if self.path.split("?")[0] == "/api/voice/turn":   # G1.1: ONE live turn — hear→think→speak
+                # The core circuit, reusing voice.loop.loop_turn (NOT a parallel hear/think/speak). We
+                # inject the IN-PROCESS Suite.chat as the brain step (loop.py's designed injection point)
+                # AND pass the selected ear explicitly → loop_turn makes NO HTTP call back to this bridge
+                # (one in-process brain, one event log). Input: raw audio body + ?persona=<id>. Output:
+                # JSON with the wav base64'd (a turn is hear→think→speak; the reply text + the spoken wav
+                # travel together, so the UI shows the transcript/reply AND plays the audio from one call).
+                # Fail loud: empty transcript, unknown persona, a down engine/ear all raise → 400.
+                import base64 as _b64
+                from urllib.parse import urlparse as _up, parse_qs as _pq
+                from voice import loop as voice_loop, stt as voice_stt
+                vq = {k: v[0] for k, v in _pq(_up(self.path).query).items()}
+                persona = (vq.get("persona") or "").strip()
+                if not persona:
+                    raise ValueError("/api/voice/turn needs ?persona=<id> (fail loud)")
+                gid = vq.get("graph_id", DEMO)
+                audio = self.rfile.read(int(self.headers.get("Content-Length", 0)))
+                if not audio:
+                    raise ValueError("/api/voice/turn got empty audio (fail loud)")
+                if SUITE.rhm_config().get("voice_path") == "s2s":     # Tier-4: s2s path has no runner yet
+                    raise RuntimeError("voice_path is 's2s' but no S2S runner/model exists yet — this is "
+                                       "the PIPELINE route. Set voice_path=pipeline, or download an S2S "
+                                       "model + build the s2s runner. Refusing to silently use the pipeline.")
+                # G4.4 voice gate: the per-mode voice_enabled toggle. When voice is OFF (a text-only
+                # presence), the turn is hear→think only — no speak, and NO engine boot for nothing.
+                speak_reply = SUITE.voice_enabled()
+                # BOOT-ON-DEMAND ("make it all live"): the persona needs its TTS engine up. Check BEFORE
+                # the turn so we don't burn a brain call then fail at speak. Only when we WILL speak. If
+                # down: ?boot=1 launches it (returns 'booting' — the UI shows warming + retries when up;
+                # we do NOT block the request ~25s); else a legible refusal naming the load endpoint.
+                from voice import lifecycle as voice_lc, personas as voice_personas
+                _rc = SUITE.rhm_config()
+                eng_override = (_rc.get("tts_engine") or "").strip() or None   # G4.2 engine override slot
+                voice_override = (_rc.get("tts_voice") or "").strip() or None
+                eng = eng_override or voice_personas.get_persona(persona)["engine"]   # override wins; else persona
+                if speak_reply:
+                    svc = voice_lc.engine_service_for(eng)
+                    if svc and not voice_lc.is_up(voice_lc._loadable()[svc]):
+                        if vq.get("boot") == "1":
+                            booted = voice_lc.load(svc)           # warming; fail-loud if it won't fit
+                            self._send(200, json.dumps({"booting": booted, "persona": persona, "engine": eng,
+                                "note": f"engine {eng} is loading — retry the turn when status() shows it up"}))
+                            return
+                        raise RuntimeError(
+                            f"persona {persona!r} needs TTS engine {eng!r} ({svc}) which is DOWN — load it "
+                            f"first (POST /api/voice/load {{\"service\":\"{svc}\"}}) or call this with ?boot=1. "
+                            f"Refusing a silent stall (fail loud).")
+                ear = SUITE.rhm_config().get("stt") or voice_stt.active_ear()
+                # G7 timing: split the turn into stt/think/tts using loop_turn's EXISTING callbacks as
+                # markers (on_transcript fires after STT, on_reply after THINK) — no new plumbing.
+                import time as _t
+                marks = {}
+                t0 = _t.monotonic()
+                r = voice_loop.loop_turn(
+                    audio, persona, graph_id=gid, stt_provider=ear, speak_reply=speak_reply,
+                    think_fn=lambda txt: SUITE.chat(txt, gid),    # the ONE in-process brain
+                    on_transcript=lambda _t_, _m=marks: _m.__setitem__("stt", int((_t.monotonic()-t0)*1000)),
+                    on_reply=lambda _r_, _m=marks: _m.__setitem__("think_done", int((_t.monotonic()-t0)*1000)))
+                total = int((_t.monotonic() - t0) * 1000)
+                stt_ms = marks.get("stt")
+                think_ms = (marks["think_done"] - stt_ms) if ("think_done" in marks and stt_ms is not None) else None
+                tts_ms = (total - marks["think_done"]) if "think_done" in marks else None
+                SUITE.emit_run_record("voice.turn", total, stt_ms=stt_ms, think_ms=think_ms,
+                                      tts_ms=tts_ms, persona=persona, engine=r.get("engine"),
+                                      ear=ear, spoke=r.get("spoke", True))
+                wav = r.pop("wav", b"")
+                r["wav_b64"] = _b64.b64encode(wav).decode()       # the spoken reply, travels with the text
+                r["timing"] = {"total_ms": total, "stt_ms": stt_ms, "think_ms": think_ms, "tts_ms": tts_ms}
+                self._send(200, json.dumps(r))
+                return
+            if self.path.split("?")[0] == "/api/voice/stream":   # G7/Tier-1: STREAMING turn — speak sentence-by-sentence
+                self._voice_stream()
                 return
             if self.path == "/api/run":
                 b = self._body()
@@ -411,6 +628,29 @@ class H(BaseHTTPRequestHandler):
                     raise ValueError("/api/debrief/start needs a non-empty 'session_ids' list (fail loud)")
                 self._send(200, json.dumps(SUITE.start_debrief(
                     sids, host_persona=b.get("host_persona"), mode=b.get("mode", "walkthrough"))))
+            elif self.path == "/api/trial/turn":            # G4.6: record one spoken trial turn (durable event + CAS)
+                b = self._body()
+                self._send(200, json.dumps(SUITE.trial_record_turn(
+                    b["session_id"], b.get("role", "operator"), b["text"], b.get("character"))))
+            elif self.path == "/api/trial/feedback":        # G4.6: record Tim's spoken feedback during a trial
+                b = self._body()
+                self._send(200, json.dumps(SUITE.trial_record_feedback(
+                    b["session_id"], b["text"], b.get("character"))))
+            elif self.path == "/api/trial/reflection":      # G4.6: record the character's own reflection-note
+                b = self._body()
+                self._send(200, json.dumps(SUITE.trial_record_reflection(
+                    b["session_id"], b["text"], b.get("character"))))
+            elif self.path in ("/api/voice/load", "/api/voice/ear/load"):    # G4.7: load a voice service (ear OR engine; 'warming'; fail-loud if it won't fit)
+                from voice import lifecycle as voice_lc
+                b = self._body()
+                self._send(200, json.dumps(voice_lc.load(b.get("service") or b["ear"])))
+            elif self.path in ("/api/voice/unload", "/api/voice/ear/unload"):  # G4.7: unload a voice service → frees its VRAM
+                from voice import lifecycle as voice_lc
+                b = self._body()
+                self._send(200, json.dumps(voice_lc.unload(b.get("service") or b["ear"])))
+            elif self.path == "/api/voice/finished-thought":  # G1.3: the semantic endpoint judge (brain-side)
+                b = self._body()
+                self._send(200, json.dumps(SUITE.is_finished_thought(b.get("text", ""))))
             elif self.path == "/api/review/next":          # B: Next — open the gate, fire the step, advance
                 b = self._body()
                 self._send(200, json.dumps(SUITE.next(b["session"])))

@@ -57,13 +57,17 @@ def _engine():
 
 
 def _prompt_wav():
+    """Return the prompt clip as a PATH (validated) — NOT a pre-loaded tensor. This installed CosyVoice2
+    version's frontend (_extract_speech_feat etc.) calls load_wav(prompt_wav, ...) ITSELF, so it expects
+    a file path; passing load_wav's tensor made it re-load a tensor → soundfile 'Invalid file: tensor'
+    (the Tess synth bug, debugged 2026-06-06). The documented example passed a tensor — a version
+    difference; the installed reality wins."""
     if not VOICE_REF:
         raise RuntimeError("CosyVoice needs a prompt clip — set COMPANY_VOICE_REF to a real wav "
                            "(the refined-Australian clip). No clip was fabricated; fail loud.")
     if not os.path.exists(VOICE_REF):
         raise RuntimeError(f"prompt clip not found: {VOICE_REF!r}")
-    from cosyvoice.utils.file_utils import load_wav        # 16k load, the repo's canonical loader
-    return load_wav(VOICE_REF, 16000)
+    return VOICE_REF                                          # the PATH; the frontend loads it internally
 
 
 def synth(text: str, voice: str | None, speed: float) -> bytes:
@@ -88,6 +92,23 @@ def voices() -> tuple[list, str]:
     return ([DEFAULT_INSTRUCT], DEFAULT_INSTRUCT)
 
 
+def warm():
+    """Load the model, and BEST-EFFORT run one throwaway synth so the wetext text-normalisation FSTs
+    download now (they download lazily on the first inference_instruct2 — that race 500'd the first real
+    request). The model load is REQUIRED (fail loud); the pre-fetch synth is best-effort — it must NOT
+    block startup, because CosyVoice's synth currently has a SEPARATE bug (a soundfile/tensor API
+    mismatch in inference_instruct2's prompt handling — a version difference vs the documented example).
+    So: load always; attempt the pre-fetch; on synth error log it + stay up (the model serves, the bug
+    is visible for debugging) rather than refusing to start (which warm=synth would do). Tess is the 5th
+    voice — the trial runs on the other 4 until this is debugged."""
+    _engine()                                              # REQUIRED — fail loud if the model won't load
+    try:
+        synth("Ready.", None, 1.0)                         # pre-fetch wetext; best-effort
+    except Exception as e:
+        sys.stderr.write(f"[cosyvoice] warm pre-fetch synth failed (engine still UP for debugging): "
+                         f"{type(e).__name__}: {e}\n"); sys.stderr.flush()
+
+
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else PORT
-    serve("cosyvoice", port, synth, voices, warm=_engine)
+    serve("cosyvoice", port, synth, voices, warm=warm)

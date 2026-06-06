@@ -24,6 +24,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import urllib.error
 import urllib.request
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -56,11 +57,32 @@ def _post(url: str, payload, timeout: int = 120, raw_bytes: bool = False):
 
 # --- the three steps ---
 
-def listen(audio: bytes, provider: str = "local") -> dict:
-    """STT step. In-process (same venv) so no extra hop. Default provider 'local' = faster-whisper.
-    Returns voice.stt.transcribe's shape: {"text":..., "provider":...}. Fails loud if the local ear
-    isn't installed (the RuntimeError from stt._whisper_engine), per fail-loud."""
-    return voice_stt.transcribe(audio, provider=provider)
+def default_ear(bridge_url: str | None = None) -> str:
+    """The SELECTED ear, read from the bridge's GET /api/rhm-config .stt (the ONE source of which ear
+    is active — the config slot the suite lane added). The loop runs in .voice-venv (3.12) and cannot
+    import the 3.14 Suite, so it asks the bridge (same as it reaches the brain). Fail-soft to the stt
+    module's STT_DEFAULT only if the bridge can't be reached / has no slot yet (NOT a hardcoded 'local'
+    — that was bug 2, selection split bridge-vs-loop)."""
+    base = bridge_url or BRIDGE_URL
+    try:
+        req = urllib.request.Request(base + "/api/rhm-config")
+        with urllib.request.urlopen(req, timeout=5) as r:
+            cfg = json.loads(r.read() or b"{}")
+        ear = cfg.get("stt")
+        if ear:
+            return ear
+    except Exception:
+        pass
+    return getattr(voice_stt, "STT_DEFAULT", None) or voice_stt.active_ear()
+
+
+def listen(audio: bytes, provider: str | None = None, bridge_url: str | None = None) -> dict:
+    """STT step. In-process (same venv) so no extra hop. The ear defaults to the SELECTED provider
+    (bridge /api/rhm-config .stt via default_ear), not a literal 'local' — one source of selection.
+    Returns voice.stt.transcribe's shape: {"text":..., "provider":...}. Fails loud if the chosen ear
+    is down / not installed (the RuntimeError from transcribe), per fail-loud (no silent fallback)."""
+    ear = provider or default_ear(bridge_url)
+    return voice_stt.transcribe(audio, provider=ear)
 
 
 def think(message: str, graph_id: str = "codebase", focus: dict | None = None,
@@ -80,7 +102,13 @@ def speak(text: str, engine: str, voice: str | None = None, speed: float = 1.0) 
     payload = {"text": text, "speed": speed}
     if voice is not None:
         payload["voice"] = voice
-    return _post(engine_url(engine) + "/tts", payload, raw_bytes=True)
+    base = engine_url(engine)
+    try:
+        return _post(base + "/tts", payload, raw_bytes=True)
+    except (urllib.error.URLError, ConnectionError, OSError) as e:   # legible fail-loud (name engine+port)
+        raise RuntimeError(
+            f"TTS engine {engine!r} at {base} unreachable: {type(e).__name__}: {e} — "
+            f"start/load the engine's service. Refusing a silent failure (no garbage audio).") from e
 
 
 def _voice_arg_for(persona: dict) -> str | None:
@@ -107,35 +135,60 @@ def select_persona(persona_id: str, bridge_url: str | None = None) -> dict:
 # --- one turn, and the hooks ---
 
 def loop_turn(audio: bytes, persona_id: str, *, graph_id: str = "codebase",
-              stt_provider: str = "local", bridge_url: str | None = None,
-              on_transcript=None, on_reply=None) -> dict:
+              stt_provider: str | None = None, bridge_url: str | None = None,
+              think_fn=None, speak_reply: bool = True, engine_override: str | None = None,
+              voice_override: str | None = None, on_transcript=None, on_reply=None) -> dict:
     """ONE full turn of the circuit for a given character:
         audio (a finished utterance) → transcript → brain reply → wav in that character's voice.
     Returns {"transcript", "reply", "engine", "voice", "wav": <bytes>, "action", "mode"}.
+    `speak_reply` is the per-mode VOICE GATE (G4.4): when False (the mode's voice_enabled is off — a
+    text-only presence), the SPEAK step is skipped — hear→think still run, wav is b"" and engine/voice
+    are None. The bridge passes Suite.voice_enabled() here so a text-only mode never synthesises audio
+    (and never boots an engine for nothing), honouring the per-mode toggle in the circuit itself.
     `on_transcript`/`on_reply` are optional callbacks (the UI shows them as they arrive — streaming feel).
+    `think_fn` is the INJECTABLE brain step (the module docstring's "each step an injectable callable so
+    the bridge can repoint them"): a callable `(transcript) -> {"reply", "action"?, "mode"?}`. When the
+    loop runs INSIDE the 3.14 bridge, the bridge injects the IN-PROCESS Suite.chat here — so the brain is
+    the ONE in-process Suite (one event log, one store), NOT an HTTP self-call back to /api/chat. When
+    omitted (the loop running standalone in .voice-venv), it falls to the HTTP think() — same brain, the
+    way the UI reaches it. Either way: one brain, never a forked Suite (reuse-don't-parallel).
     Endpointing (knowing the utterance finished) is the CALLER's job via the turn-detection hooks below;
     by the time loop_turn is called, `audio` is a complete thought."""
     p = voice_personas.get_persona(persona_id)              # fail loud on unknown character
-    heard = listen(audio, provider=stt_provider)
+    heard = listen(audio, provider=stt_provider, bridge_url=bridge_url)
     transcript = heard.get("text", "")
     if on_transcript:
         on_transcript(transcript)
     if not transcript.strip():
         raise RuntimeError("empty transcript — STT heard nothing (fail loud, not a silent skip)")
-    thought = think(transcript, graph_id=graph_id, bridge_url=bridge_url)
+    thought = think_fn(transcript) if think_fn else think(transcript, graph_id=graph_id, bridge_url=bridge_url)
     reply = thought.get("reply", "")
     if on_reply:
         on_reply(reply)
-    voice_arg = _voice_arg_for(p)
-    wav = speak(reply, p["engine"], voice=voice_arg)
-    return {"transcript": transcript, "reply": reply, "engine": p["engine"],
-            "voice": voice_arg, "wav": wav, "action": thought.get("action"),
+    if not speak_reply:                                     # G4.4: voice off for this mode → text-only turn
+        return {"transcript": transcript, "reply": reply, "engine": None, "voice": None,
+                "wav": b"", "spoke": False, "action": thought.get("action"), "mode": thought.get("mode")}
+    # G4.2: an explicit engine/voice override (the tts_engine/tts_voice config slots) wins over the
+    # persona's default engine — so the operator can voice ANY persona through ANY engine live; unset
+    # → the persona's own engine (qwen3tts for Sable, etc.) unchanged.
+    engine = engine_override or p["engine"]
+    voice_arg = voice_override or _voice_arg_for(p)
+    wav = speak(reply, engine, voice=voice_arg)
+    return {"transcript": transcript, "reply": reply, "engine": engine,
+            "voice": voice_arg, "wav": wav, "spoke": True, "action": thought.get("action"),
             "mode": thought.get("mode")}
 
 
 # --- turn-detection + barge-in (the naturalness levers) — VAD glue the UI's audio stream drives ---
 
-def utterance_ended(audio_buffer, *, silence_ms: int = 700, sampling_rate: int = 16000,
+# The trailing-silence endpoint window (ms). Lowered 700→500 default for snappier turn-taking (Tim:
+# "shorter silence window") — the SEMANTIC judge (semantic_complete) catches false stops, so we can be
+# aggressive without cutting him off mid-ramble. Configurable: COMPANY_VAD_SILENCE_MS, and the caller
+# (the browser VAD) may pass `silence_ms` per-call. This is a per-request naturalness knob.
+SILENCE_MS = int(os.environ.get("COMPANY_VAD_SILENCE_MS", "500"))
+
+
+def utterance_ended(audio_buffer, *, silence_ms: int = SILENCE_MS, sampling_rate: int = 16000,
                     semantic_complete=None) -> bool:
     """Endpoint detector for the live stream: True when the operator's CURRENT utterance is finished, so
     the loop should fire a turn. Two signals (the cast doc's 'reply on a finished thought, not a silence

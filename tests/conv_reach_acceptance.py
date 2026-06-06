@@ -215,8 +215,9 @@ check("DENY-ALL: the orphan build's scope is STILL empty (DENY-ALL intact)",
 # ── 7. OPERATOR-ONLY, OFF THE MCP FACE ─────────────────────────────────────────────────────────
 check("approve_reach is NOT in RHM_VERBS (operator-only, off the MCP face — no-bypass preserved)",
       "approve_reach" not in s.RHM_VERBS and "reach" not in s.RHM_VERBS)
-check("the 7-verb whitelist is intact (unchanged by X16)",
-      tuple(s.RHM_VERBS) == ("run", "propose", "build", "consult", "show", "panel", "extend"))
+check("the RHM verb whitelist is intact (unchanged by X16 — the 7 governed verbs + main's 3 config-as-tools verbs)",
+      tuple(s.RHM_VERBS) == ("run", "propose", "build", "consult", "show", "panel", "extend",
+                             "configure", "load_voice", "unload_voice"))
 
 # ── 8. ORDERING / IDEMPOTENCY: reach-approval invalid after a terminal resolve ─────────────────
 s4 = with_corpus(SYMBOLS, EDGES)

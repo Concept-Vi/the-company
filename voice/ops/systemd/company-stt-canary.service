@@ -1,0 +1,20 @@
+[Unit]
+Description=Company STT ear — NVIDIA Canary-Qwen 2.5b (NeMo, GPU) on port 2032
+After=default.target
+# VRAM: ~10.06 GB resident / ~15 GB peak — NEAR-OOM. Cannot co-reside with the brain or another GPU ear.
+# Run on-demand only (start → use → stop), or arbitrate via the VRAM-swap stage. Do NOT auto-enable
+# alongside anything else. See the VRAM-arbitration brief. Canary is the English-max / understanding ear.
+
+[Service]
+Type=simple
+WorkingDirectory=/home/tim/company
+EnvironmentFile=-%h/company/voice/ops/voice.env
+ExecStart=%h/.voice-venvs/canary/bin/python /home/tim/company/voice/ears/canary.py 2032
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=600
+
+[Install]
+WantedBy=default.target

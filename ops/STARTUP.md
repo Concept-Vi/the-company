@@ -1,58 +1,73 @@
-# Company — Startup (the one place everything starts from)
+# Company — Startup & Control (the one place everything starts from)
 
-> **The single command:** `systemctl --user start company.target`
-> Everything the Company needs comes up from here, each set to restart-on-failure, and auto-starts at boot (user-linger is enabled). Built 2026-06-04 to replace the scatter of hand-started processes.
+> **Nothing auto-starts at boot anymore** (Tim's call, 2026-06-06). The Company has many
+> models and capabilities that don't all run at once and would fight over 16 GB of VRAM,
+> so every service is **on-demand** through the `company` CLI. You bring up exactly what a
+> task needs and free it when done. The only things still enabled at boot are the two
+> always-on system services: **ollama** and **tailscaled** (the phone path).
 
-## The command center — `company`
-One console to **see what's running and start/stop/restart it**. It reads the self-describing registry (`ops/services.json`) and drives systemd underneath. Callable from anywhere (symlinked into `~/.local/bin`).
+## The one command center — `company`
+One console to see what's running, start/stop it, manage the local models, and read the GPU.
+It reads the self-describing registry (`ops/services.json`) and drives systemd underneath.
+Callable from anywhere (symlinked into `~/.local/bin`). The old `vllm-stack` tool is now a
+thin shim that forwards here — there is a single brain.
+
 | Do | Command |
 |---|---|
-| **See everything + its state** | `company` (or `company status`) |
-| Start the core set (autostart) | `company up` |
-| Start one / a group / all | `company up bridge` · `company up voice` · `company up all` |
-| Stop one / a group | `company down bridge` · `company down models` |
+| **See everything + state + VRAM budget** | `company` (or `company status`) |
+| Start the surface (canvas + bridge) | `company up` |
+| Start one / a group / all | `company up chat-4b` · `company up voice` · `company up all` |
+| Stop one / a group | `company down chat-4b` · `company down models` |
 | Restart one | `company restart bridge` |
 | Tail a service's logs | `company logs bridge -f` |
+| **Measured GPU VRAM** (used/free of 16 GB) | `company gpu` |
+| Quick health ping of every port | `company health` |
+| What's on disk (HF cache + Ollama) | `company models` |
+| Point a model service at a different model + restart | `company swap chat-4b <model_id>` |
+| Run a stack benchmark | `company bench chat\|embed\|suite\|long-ctx [args]` |
 | What it can do | `company help` |
 
-`company status` shows each service grouped (core · brain · voice · models · reach), its live state (▶ running · ◐ active-no-port-yet · ✖ failed · · stopped), and **drift** (e.g. "RUNNING (unmanaged)" when something is up by hand instead of under systemd). Add a service = add an entry to `ops/services.json`.
+`company status` groups services (core · brain · voice · models · reach), shows live state
+(▶ running · ◐ active-no-port-yet · ✖ failed · · stopped), each service's **~VRAM cost**, and
+a **GPU budget** line. `company up <model>` prints the VRAM it will add against what's already
+committed and **warns if the start would exceed 16 GB** (it surfaces the risk; it does not yet
+hard-refuse — that resource-manager enforcement is an open decision). Add a service = add an
+entry to `ops/services.json` (set `serve` to its serve-script for `swap`, `vram_mb` for budgeting).
+
+### `swap` coverage
+Generic over the registry: works for any model service whose `serve` script uses the
+`MODEL="${1:-...}"` pattern — verified for `chat-4b`, `embed-bge`, `chat-nemotron`, `chat-2b/08b`.
+`embed-jina-v5` and `embed-qwen3` set their model differently, so `swap` will refuse them
+cleanly (script left unchanged) until those scripts are normalized.
 
 ### Underneath: systemd (the muscle — still usable directly)
 | Do | Command |
 |---|---|
-| Start/stop the whole core target | `systemctl --user start\|stop company.target` |
-| Dependency tree | `systemctl --user list-dependencies company.target` |
 | Direct unit control | `systemctl --user restart company-bridge.service` |
+| A system service (ollama/tailscale) | `sudo systemctl restart ollama.service` |
 
-## What starts, and where
-| Service | Port | What it is | Unit |
-|---|---|---|---|
-| canvas | 5173 | the operable surface (vite dev server) | `company-canvas.service` |
-| bridge | 8770 | UI face of the Suite — the HTTP API the canvas + phone hit | `company-bridge.service` |
-| brain (4B) | 8000 | vLLM `Qwen3.5-4B-AWQ` chat (the model) | `vllm-chat.service` |
-| TTS (Kokoro) | 4123 | voice out | `company-tts-kokoro.service` |
-| STT (Whisper) | 2022 | voice in | `voicemode-whisper.service` |
+## Boot behaviour (2026-06-06)
+- **No user services auto-start.** `company.target` and all its children, the vLLM units,
+  whisper, and the CI runner (`pipeliner`) are **systemd-disabled**. `loginctl` linger may still
+  be set, but with nothing enabled, nothing comes up — you start it with `company up`.
+- **System services kept at boot:** `ollama.service`, `tailscaled.service`. Disabled at boot:
+  `snap.docker.dockerd` (start with `sudo systemctl start snap.docker.dockerd` when you need a
+  container), the ubuntu installer junk service.
+- **WSL at Windows boot** is still separate (Windows Task Scheduler running `wsl`), if you want
+  the box reachable after a Windows reboot with no login.
 
-Each has `Restart=on-failure` (**proven**: kill the bridge → systemd respawns it, port back in ~5 s).
-
-### Already-reliable SYSTEM services (auto-start, not in the target by design)
-- **ollama** (`:11434`) — `ollama.service` (system)
-- **tailscaled** + `tailscale serve` (canvas + bridge over tailnet HTTPS to the phone at `https://workstation001.tail777bc2.ts.net/`) — `tailscaled.service` (system)
-
-## Boot behaviour
-`loginctl enable-linger tim` is set → the user services start when **WSL** boots, no login needed. (See the open item below about WSL itself starting on Windows boot.)
-
-## ⚠️ Open items (flagged, not silently decided)
-- **vLLM config drift — needs a decision (native-model-layer stage).** The 4B that was running by hand used `--gpu-memory-utilization 0.80 --max-model-len 32768` (big context, **no** tool-calling). But `vllm-chat.service` runs `~/vllm-tests/serve.sh`, which uses `--gpu-memory-utilization 0.40 --max-model-len 4096 --enable-auto-tool-choice --tool-call-parser qwen3_xml`. **They differ**, so post-restart the brain comes up with serve.sh's config (smaller context, tool-calling on). The RHM wants *both* tool-calling and adequate context — settle the canonical config in the model-layer work. (For now the hand-started 4B is left running; `vllm-chat.service` is enabled for boot but not started, to avoid disrupting the loaded model.)
-- **WSL at Windows boot.** Linger starts the services when *WSL* starts — but WSL only starts when Windows launches it. For the box to be reachable after a Windows reboot with no login, add a Windows Task Scheduler entry that runs `wsl` at logon/startup (Windows-side; separate from this).
-- **Other models** (`vllm-embed` BGE-M3, jina, larger models) are deliberately **not** in `company.target` — 16 GB VRAM can't hold them alongside the 4B; they belong to the model-layer / VRAM-swap stage.
+## Reaching it from Tim's phone (DONE + WORKING — 2026-06-04/05)
+The Company is usable on Tim's iPhone — the established, expected path. If Tim says "my phone" /
+"Tailscale" / "the mobile access", it's this. Because the surface no longer auto-starts, bring it
+up first with **`company up`** (canvas + bridge), then:
+- **Tailnet** `workstation001.tail777bc2.ts.net` (Tailscale **Standard plan**); HTTPS certs enabled.
+- **`tailscale serve`** exposes canvas (:5173) + bridge (:8770) over tailnet HTTPS at
+  `https://workstation001.tail777bc2.ts.net/`. vite allows the tailnet host via
+  `allowedHosts: ['.tail777bc2.ts.net']` in `canvas/app/vite.config.*`.
+- Installed as a **PWA** ("Vi", gold icon, theme `#d4af37`). Real HTTPS enables the iOS browser mic.
+- Cross-session memory: `project-mobile-access-tailscale`.
 
 ## Canonical unit files
-The unit files live in `ops/systemd/` (this repo) as the source of truth. To (re)install on a fresh machine:
-```
-cp ops/systemd/*.service ops/systemd/*.target ~/.config/systemd/user/
-systemctl --user daemon-reload
-systemctl --user enable --now company.target
-loginctl enable-linger $USER   # start at boot without login
-```
-(`vllm-chat.service` + `voicemode-whisper.service` are existing units pulled into the target via `systemctl --user add-wants company.target <unit>`.)
+Unit files live in `ops/systemd/` (this repo) as the source of truth. To (re)install on a fresh
+machine, copy them to `~/.config/systemd/user/`, `systemctl --user daemon-reload`. Do **not**
+`enable` them — leave boot-autostart off; control everything with `company up`.

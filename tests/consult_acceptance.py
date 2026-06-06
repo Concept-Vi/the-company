@@ -31,8 +31,8 @@ try:
     suite = Suite(store, reg, nodes_dir=NODES)
 
     check("consult is a whitelisted RHM verb", "consult" in suite.RHM_VERBS)
-    shown, act = suite._parse_rhm_action("Let me check.\nACTION: consult how does the memo gate work")
-    check("parses ACTION: consult <query>", act["verb"] == "consult" and "memo gate" in act["query"])
+    # (the consult tool_call → action mapping is covered in rhm_action_parse_acceptance (a), the
+    # native-tool-calling path the live chat() uses; the dead `ACTION:`-prose parse is retired.)
 
     # consult with no query is refused (not a crash)
     r = suite._dispatch_rhm_action({"verb": "consult", "query": ""}, "g")

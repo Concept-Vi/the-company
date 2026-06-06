@@ -7,6 +7,8 @@ separate processes. Operations are the C7 generic verbs — generic over node-ty
 """
 from __future__ import annotations
 import os
+from dataclasses import dataclass
+from typing import Callable
 
 from contracts.node_record import NodeInstance, Edge, Graph, XY, WH
 from runtime import scheduler
@@ -83,6 +85,25 @@ def _strip_fences(code: str) -> str:
         if c.lstrip().startswith("python"):
             c = c.lstrip()[len("python"):]
     return c.strip()
+
+
+@dataclass(frozen=True)
+class VerbSpec:
+    """ONE source for a single RHM verb (replaces the 3 parallel tables RHM_VERBS / RHM_VERB_DESC /
+    RHM_VERB_CLASS — which could drift). Each verb carries: its operator-facing gloss (desc), its
+    GOVERNANCE action-class (the deterministic decide-for-me router input), the set of presence MODES
+    in which it is OFFERED (mode-primary), and a PREDICATE over the live affordance context that
+    further refines whether it makes sense RIGHT NOW (context-refines). The three legacy dicts are
+    DERIVED from the registry below so there is no second copy to fall out of sync.
+
+    The `modes`/`predicate` pair governs only what is OFFERED to the model (the tools array +
+    the rendered verb list). The ONE whitelist that ENFORCES safety still lives in
+    `_dispatch_rhm_action` (it keys on RHM_VERBS), so even a verb the model emits unprompted —
+    or a forbidden verb — is refused there: narrowing the offer never weakens the gate (E6)."""
+    desc: str                       # one-line operator-facing gloss (the old RHM_VERB_DESC value)
+    action_class: str               # governance action-class (the old RHM_VERB_CLASS value)
+    modes: frozenset                # the presence modes in which this verb is OFFERED
+    predicate: Callable             # ctx(dict) -> bool — does this verb make sense in the current context
 
 
 class Suite:
@@ -272,6 +293,52 @@ class Suite:
         except Exception:
             pass
 
+    def emit_run_record(self, op: str, duration_ms: int, **conditions) -> None:
+        """G7 / Introspective Data Building (Tim's law) — FIRST INSTANCE, the voice/model layer learning
+        by use. A typed run-record: an operation + HOW LONG IT TOOK + the CONDITIONS it happened under,
+        into the EXISTING event log (kind='op.run') — NOT a new analytics store. A datum without its
+        conditions is noise, so callers pass model/ear/engine/mode/ok/etc. Lenient-emit (telemetry must
+        never break the op it records; the raw record is cheap + append-only). Rollups (n·median·p95) are
+        DERIVED off the hot path from these — never computed here. 'How long it TOOK' lands here; 'how
+        long it TAKES' (the prior/estimate) lives in the declared specs (role knobs, services.json
+        vram/wake) — the measured refines the estimate. Generalises Company-wide past voice (cognition,
+        RHM verbs, surface, errors) — same emit→substrate→rollup loop, per-type."""
+        self._emit("op.run", f"{op} · {duration_ms}ms", op=op, duration_ms=duration_ms, **conditions)
+
+    def run_stats(self, op: str | None = None, since: int = -1) -> dict:
+        """G7 ROLLUP — raw op.run run-records → DISTRIBUTIONS (n · median · p95 · min · max), grouped by
+        (op, model/engine). The read-half of introspective-data-building: the trace becomes KNOWLEDGE.
+        Read-time aggregation over the event log — NEVER on the hot path (callers hit this on demand /
+        a cadence). Feeds the Manifest's measured cells + the resource manager's pre-warm decisions.
+        `op` filters to one operation; `since` is an event seq (default -1 = all)."""
+        import statistics
+        evs = [e for e in self.events_since(since) if e.get("kind") == "op.run"]
+        if op:
+            evs = [e for e in evs if e.get("op") == op]
+
+        def dist(vals):
+            vals = sorted(v for v in vals if isinstance(v, (int, float)))
+            if not vals:
+                return None
+            n = len(vals)
+            return {"n": n, "median": round(statistics.median(vals), 1),
+                    "p95": vals[min(n - 1, int(round(0.95 * (n - 1))))],
+                    "min": vals[0], "max": vals[-1]}
+
+        groups: dict = {}
+        for e in evs:
+            key = (e.get("op"), e.get("model") or e.get("engine") or "")
+            groups.setdefault(key, []).append(e)
+        out = []
+        for (o, who), es in groups.items():
+            rec = {"op": o, "who": who, "n": len(es), "duration_ms": dist([e.get("duration_ms") for e in es])}
+            for f in ("stt_ms", "think_ms", "tts_ms", "queue_ms", "chunks", "chunks_done", "chunks_total"):  # extra timing/condition fields
+                d = dist([e.get(f) for e in es if e.get(f) is not None])
+                if d:
+                    rec[f] = d
+            out.append(rec)
+        return {"ops": sorted(out, key=lambda r: -r["n"]), "total_records": len(evs)}
+
     def _emit_durable(self, kind: str, summary: str, **meta) -> dict:
         """Append a DURABLE CLAIM event — FAIL LOUD (T1-EMIT). Unlike _emit (lenient telemetry), this
         does NOT swallow a failure: it returns the written record, and lets any append_event exception
@@ -372,6 +439,12 @@ class Suite:
             # ignores it is unaffected (the four executing statuses derive exactly as before).
             "node_states": [dict(s, applies_to=list(s["applies_to"])) for s in self.NODE_STATES],
             "panels": [p.get("id") for p in self.list_panels()],
+            # the STT (ear) registry — WHAT speech-to-text providers exist + are usable (the slot mirrors
+            # the brain model). From voice/stt.py's source of truth (guarded — {} if voice is absent), so
+            # the surface fills the ear dropdown from what's real, never a hand-typed list. The stt lane
+            # may not have shipped its richer available_stt() yet → degrades to available() (rule 4: no
+            # crash, no fabrication). Schema-additive key; an older surface ignoring it is unaffected.
+            "stt": self.available_stt(),
             "panel_field_targets": list(self.PANEL_TARGETS),
             # X17 (Convergence, D2) — THE COMPOSITION IS CONFIGURABLE. The R2 ranking knobs (the recency
             # λ · proximity · pin · semantic WEIGHTS, the window BUDGET cap, the run-versions bound) read
@@ -801,6 +874,93 @@ class Suite:
     DEFAULT_MODE = "listening"
     SYSTEM_GRAPH = "system"
     MODE_NODE = "rhm"
+
+    # --- the MODEL-ROLE REGISTRY (registry-is-truth; mirrors STT_PROVIDERS / the node registry) -------
+    # A ROLE is a named model-FUNCTION of the collective cognition: a specific job done by a model that
+    # is NOT the conversational brain. The brain (rhm_config.model) is the primary/conscious role and
+    # stays its OWN slot (widely read; the model-registry session owns it) — these are the AUXILIARY
+    # roles. `judge` is the first (the voice circuit's finished-thought endpoint). Add a role TYPE here
+    # (+ the code that consumes it) → it appears as a configurable slot in the UI automatically; you
+    # never edit the config whitelist (bindings live in ONE `roles` dict).
+    #
+    # Each role DECLARES its full contract — Tim's "triggers, configs like outputs/tools, contexts, and
+    # whatever else": the fields below are the role's self-description the config lab renders + binds.
+    # WIRED-NOW fields (flow into the model call): default_model/base_url (None → the brain), knobs
+    # (max_tokens/temperature/…), thinking, output, tools. DECLARED-design fields (captured + designable,
+    # the growth path — NOT a faked general engine): `trigger` is descriptive today (judge's concrete
+    # trigger is the voice circuit calling /api/voice/finished-thought); a general event→role trigger
+    # engine, and per-role arbitrary tool-binding, come as their consuming code is built. `env_*` give
+    # the resolution precedence: a config binding > env override > the declared default.
+    ROLE_REGISTRY = {
+        "judge": {
+            "label": "Finished-thought judge",
+            "description": "Decides whether a spoken utterance is a COMPLETE thought (fire the turn) or "
+                           "mid-ramble (keep listening) — the voice circuit's semantic endpoint.",
+            "trigger": "voice circuit: a VAD pause during always-listen (POST /api/voice/finished-thought)",
+            "default_model": None,            # None → falls to the RHM brain (rhm_config.model) — always
+                                              # available. The hard default stays safe; the data-driven
+                                              # PREFERENCE is `recommended_*` below (binding it live needs
+                                              # the 4B resident → the resource manager owns that).
+            "default_base_url": None,         # None → the brain's base_url
+            "recommended_model": "cyankiwi/Qwen3.5-4B-AWQ-4bit",      # MEASURED day-one pick (Tim 2026-06-05)
+            "recommended_base_url": "http://localhost:8000/v1",
+            "recommended_reason": ("local 4B no-think judged FINISHED in 463ms / a fragment in 49ms vs "
+                                   "deepseek-cloud 2113–6500ms (measured) — a reasoning cloud model is the "
+                                   "wrong tool on the always-listen hot path. Bind when the 4B is resident."),
+            "thinking": False,                # WANTS a fast non-reasoning model (a reasoner stalls the hot path)
+            "output": "one word: FINISHED | MORE",
+            "tools": [],                      # no tools — a pure classifier
+            "context": "the utterance text only (no system grounding)",
+            "knobs": {"max_tokens": 256, "temperature": 0},
+            "env_model": "COMPANY_JUDGE_MODEL", "env_url": "COMPANY_JUDGE_URL",
+            "env_knobs": {"max_tokens": "COMPANY_JUDGE_MAX_TOKENS"},
+        },
+    }
+
+    # --- the MODEL KNOB CATALOG (G8.1 — dynamic knob resolution; mirrors STT_PROVIDERS/ROLE_REGISTRY) --
+    # "all the configurable knobs for whatever is loaded" (Tim): a declarative catalog of the per-request
+    # knobs a chat model exposes. knobs_for(model) resolves it DYNAMICALLY — tool-capability is PROBED
+    # live (the existing _model_supports_tools, endpoint-aware), the rest are DECLARED-by-capability
+    # (thinking/structured-output can't be universally probed; marked source='declared'). Emitted in the
+    # NODE CONFIG SHAPE ({type,label,default,min?,max?,options?}) so the UI renders model-knobs with the
+    # SAME NodeConfigForm it renders node config — one resolution, two faces (the RHM tools + the UI).
+    # Load-time knobs (gpu-util/ctx) are per-service launch DATA (services.json load.env, the A mechanism),
+    # not per-request — kept separate. Adding a knob = a row here; no dispatch edit.
+    MODEL_KNOBS = {
+        "temperature":       {"type": "number", "label": "Temperature", "default": 0.7, "min": 0.0, "max": 2.0,
+                              "applies": "always", "note": "sampling randomness"},
+        "max_tokens":        {"type": "number", "label": "Max output tokens", "default": 1024, "min": 1, "max": 32768,
+                              "applies": "always"},
+        "top_p":             {"type": "number", "label": "Top-p", "default": 1.0, "min": 0.0, "max": 1.0,
+                              "applies": "always"},
+        "tools":             {"type": "boolean", "label": "Native tool-calling", "default": True,
+                              "applies": "capability", "note": "PROBED live per the endpoint (vllm/ollama/litellm)"},
+        "thinking":          {"type": "boolean", "label": "Reasoning / thinking", "default": False,
+                              "applies": "declared", "note": "reasoning models (ollama think / a reasoning-parser)"},
+        "structured_output": {"type": "choice", "label": "Structured output", "default": "none",
+                              "options": ["none", "json", "json_schema"], "applies": "declared",
+                              "note": "vLLM guided-decoding / ollama format=json"},
+    }
+
+    # --- VOICE PATHS (Tier 4 — the SWAPPABLE voice architecture; registry-is-truth) ------------------
+    # Tim: "that [S2S] should be a swappable thing." Two ways the RHM can voice:
+    #   pipeline — STT → brain → TTS (3 models, full control, BUILT, the default)
+    #   s2s      — one fused audio→audio model (Qwen3-Omni/Moshi/GLM-Voice/mini-omni): sub-second,
+    #              full-duplex, but the brain+voice are fused (less control). NO such model is on disk
+    #              yet (only STT+TTS components + canary/granite which are speech→TEXT, not s2s) — so
+    #              the s2s path is available:false until one is downloaded (mirrors a down-ear). The
+    #              SWAPPABILITY is built now (a voice_path slot); the s2s runner is a fail-loud stub.
+    VOICE_PATHS = {
+        "pipeline": {"label": "Pipeline (STT → brain → TTS)", "built": True,
+                     "note": "3 models, full per-stage control + config; the default. Tier 1 streaming."},
+        "s2s":      {"label": "Speech-to-speech (one fused model)", "built": False,
+                     "note": "sub-second + full-duplex; brain+voice fused. Needs an S2S model downloaded "
+                             "(candidates: Qwen3-Omni, Moshi, GLM-Voice, mini-omni). No runner until then."},
+    }
+    # HF-cache name fragments that would indicate an s2s/omni model is present (probed by voice_paths()).
+    _S2S_HINTS = ("omni", "moshi", "glm-voice", "glm4-voice", "mini-omni", "miniomni", "qwen2.5-omni",
+                  "qwen3-omni", "ultravox", "llama-omni", "csm", "sesame")
+
     MODE_DIRECTIVES = {
         "listening": "Conversational and present; respond fully.",
         "text-only": "Respond in text, concisely, only to what is addressed.",
@@ -809,7 +969,12 @@ class Suite:
         "walkthrough": "Actively guide: narrate what you are doing and direct the operator's attention step by step.",
         "watch-and-react": "Observe; comment only when relevant, and briefly.",
         "decide-for-me": "Act on what the governance posture lets you act on (the AUTO/reversible classes — propose a node, run the graph) rather than asking; surface the rest for the operator. The routing is deterministic (the action's posture decides), not a judgement call. You still cannot self-approve; anything that needs approval is surfaced.",
-        "off": "",
+        # D13: 'off' now carries a one-line DESCRIPTION (was an empty string — the only mode with none,
+        # so the surface had nothing to render for it). chat() still short-circuits on mode=='off' BEFORE
+        # any directive is used, so this is purely descriptive for the surface (capabilities().
+        # mode_directives) — it does NOT re-enable the RHM. modes_acceptance asserts non-empty directives
+        # only for m != 'off', so this is schema-additive there too.
+        "off": "The right-hand-man is asleep — no conversation, no actions. Switch any other mode on the presence dial to wake it.",
     }
 
     def _rhm_cfg(self) -> dict:
@@ -841,6 +1006,57 @@ class Suite:
     def _mode_directive(self, mode: str) -> str:
         return self.MODE_DIRECTIVES.get(mode, "")
 
+    # --- the STT (ear) slot: a SWAPPABLE speech-to-text provider, mirroring the brain-model slot ---
+    # The RHM's ear is a config slot just like its brain model — so the operator can swap providers
+    # without code. The stt lane (voice/stt.py) is the source of truth for WHAT ears exist; this slot
+    # records WHICH one is selected. Because the stt lane DEPENDS on this lane and may not have shipped
+    # its richer registry (STT_PROVIDERS / available_stt()) yet, we GUARD the import and degrade
+    # gracefully: prefer the new registry when present, else fall back to the current `available()` dict
+    # + `DEFAULT_PROVIDER`. Never fabricate a provider id (rule 8) — the valid ids come from voice/stt.py.
+    @staticmethod
+    def _stt_module():
+        """The voice STT module, or None if voice isn't importable here (a status read must never
+        crash a turn). Namespace import (no voice/__init__.py) — mirrors bridge.py's usage."""
+        try:
+            from voice import stt as voice_stt
+            return voice_stt
+        except Exception:
+            return None
+
+    def available_stt(self) -> dict:
+        """Which STT providers exist + are usable right now — the registry the UI/RHM reads (never
+        guess). Prefers the stt lane's richer `available_stt()` (status read, never raises) when it has
+        shipped; else the current `available()` {id: usable}. {} when voice isn't importable."""
+        m = self._stt_module()
+        if m is None:
+            return {}
+        fn = getattr(m, "available_stt", None) or getattr(m, "available", None)
+        try:
+            return fn() if fn else {}
+        except Exception:
+            return {}
+
+    def _stt_provider_ids(self) -> list:
+        """The valid STT provider IDS to validate a selection against — from voice/stt.py's source of
+        truth (STT_PROVIDERS when present, else the keys of available()). Empty when voice is absent."""
+        m = self._stt_module()
+        if m is None:
+            return []
+        providers = getattr(m, "STT_PROVIDERS", None)
+        if isinstance(providers, dict):
+            return list(providers.keys())
+        try:
+            return list((getattr(m, "available", lambda: {})() or {}).keys())
+        except Exception:
+            return []
+
+    def _stt_default(self) -> str:
+        """The default ear id — the stt lane's STT_DEFAULT/DEFAULT_PROVIDER when present, else ''."""
+        m = self._stt_module()
+        if m is None:
+            return ""
+        return getattr(m, "STT_DEFAULT", None) or getattr(m, "DEFAULT_PROVIDER", "") or ""
+
     # --- RHM configs (E1-E2): model/provider + persona, all configurable + persistent ---
     def rhm_config(self) -> dict:
         from fabric import config as fcfg
@@ -857,7 +1073,24 @@ class Suite:
                 "timeout": int(c.get("timeout") or fcfg.DEFAULT_TIMEOUT),
                 # voice-trial lane H: surface the per-mode voice toggle in the config the FE reads.
                 # Default 'on' so a node with no field is voice-enabled (schema-additive).
-                "voice_enabled": c.get("voice_enabled", "on")}
+                "voice_enabled": c.get("voice_enabled", "on"),
+                # the STT (ear) slot — WHICH speech-to-text provider the RHM listens through. A config
+                # slot mirroring `model` (the brain). Default = the stt lane's default ear when present
+                # (else ''); the operator swaps providers without code. Schema-additive (absent → default).
+                "stt": c.get("stt") or self._stt_default(),
+                # the TTS slots (G4.2): an OPTIONAL active-engine + voice-arg OVERRIDE. Default '' →
+                # the circuit uses the PERSONA's engine (personas.py) — so qwen3tts stays Sable's default,
+                # nothing changes unless the operator explicitly picks an engine. Lets the config lab swap
+                # the voice engine + voice-arg live without touching the persona. Schema-additive.
+                "tts_engine": c.get("tts_engine", ""),
+                "tts_voice": c.get("tts_voice", ""),
+                # the VOICE PATH slot (Tier 4): 'pipeline' (default, built) or 's2s' (needs a model).
+                "voice_path": c.get("voice_path", "pipeline"),
+                # the ROLE BINDINGS — {role_id: {model?, base_url?, knobs?, ...}} per the ROLE_REGISTRY.
+                # n model-FUNCTION roles (judge first; more to come) each bind a model + config from the
+                # live registry. Stored as ONE dict so adding a role never touches the config whitelist.
+                # Schema-additive (absent → {}); the brain stays its OWN slot (`model`) — NOT a role here.
+                "roles": c.get("roles", {})}
 
     def voice_enabled(self) -> bool:
         """Lane H — is voice on for the current presence? Reads the rhm node's `voice_enabled`
@@ -871,9 +1104,60 @@ class Suite:
 
     def set_rhm_config(self, updates: dict) -> dict:
         allowed = {k: v for k, v in (updates or {}).items()
-                   if k in ("model", "base_url", "persona", "mode", "voice_enabled", "timeout")}
+                   if k in ("model", "base_url", "persona", "mode", "voice_enabled", "timeout", "stt",
+                            "roles", "tts_engine", "tts_voice", "voice_path")}
+        if "voice_path" in allowed:                           # the voice-path slot (registry-is-truth)
+            vp = str(allowed["voice_path"]).strip()
+            if vp not in self.VOICE_PATHS:
+                raise ValueError(f"unknown voice_path {vp!r} — one of {sorted(self.VOICE_PATHS)}")
+            allowed["voice_path"] = vp
+        if "tts_engine" in allowed and str(allowed["tts_engine"]).strip():
+            # validate against the engine port map (registry-is-truth; '' clears → persona default)
+            from voice import loop as _vl
+            eng = str(allowed["tts_engine"]).strip()
+            if eng not in _vl.ENGINE_PORTS and eng != "kokoro":
+                raise ValueError(f"unknown TTS engine {eng!r} — one of {['kokoro'] + sorted(_vl.ENGINE_PORTS)}")
+            allowed["tts_engine"] = eng
+        if "roles" in allowed:                                # the role-binding registry slot (n roles)
+            incoming = allowed["roles"]
+            if not isinstance(incoming, dict):
+                raise ValueError("roles must be a dict {role_id: {model?, base_url?, knobs?, ...}}")
+            for rid, binding in incoming.items():
+                if rid not in self.ROLE_REGISTRY:             # registry-is-truth: fail loud on an unknown role
+                    raise ValueError(f"unknown role {rid!r} — registered roles: {sorted(self.ROLE_REGISTRY)}. "
+                                     f"Author from the registry, never invent (add a role TYPE in code first).")
+                if not isinstance(binding, dict):
+                    raise ValueError(f"role {rid!r} binding must be a dict (model?/base_url?/knobs?/…)")
+            # MERGE with the existing bindings (set_config does a shallow top-level update, which would
+            # REPLACE the whole roles dict — so we deep-merge here). THREE levels so a partial update is
+            # non-destructive: (1) binding one role never wipes a SIBLING role; (2) within a role,
+            # incoming keys override, others preserved; (3) the `knobs` SUB-dict deep-merges too, so
+            # setting one knob (e.g. temperature) never resets another (e.g. max_tokens). Verified: a
+            # partial knob update used to drop the other knob to its default — this keeps both.
+            existing = dict(self.rhm_config().get("roles", {}))
+            for rid, binding in incoming.items():
+                merged = dict(existing.get(rid, {}))
+                inc = dict(binding)
+                if "knobs" in inc and isinstance(merged.get("knobs"), dict):
+                    knobs = dict(merged["knobs"]); knobs.update(inc["knobs"] or {})
+                    inc["knobs"] = knobs                      # deep-merge the knobs sub-dict
+                merged.update(inc)
+                existing[rid] = merged
+            allowed["roles"] = existing
         if "mode" in allowed and allowed["mode"] not in self.MODES:
             raise ValueError(f"unknown mode {allowed['mode']!r}")
+        if "stt" in allowed:                                  # the ear slot — validate against voice/stt.py's
+            # source of truth (never fabricate a provider id, rule 8). When the stt lane's registry has
+            # shipped we validate ∈ its ids; until then (registry absent → no ids) we accept any non-empty
+            # str (TODO: tighten once voice/stt.py exports STT_PROVIDERS/available_stt — coordinated with
+            # the stt lane, which depends on THIS slot existing; do not block on it).
+            ids = self._stt_provider_ids()
+            val = str(allowed["stt"]).strip()
+            if not val:
+                raise ValueError("stt provider must be a non-empty id")
+            if ids and val not in ids:
+                raise ValueError(f"unknown STT provider {val!r} — one of {ids}")
+            allowed["stt"] = val
         if "voice_enabled" in allowed and str(allowed["voice_enabled"]).lower() not in ("on", "off"):
             raise ValueError(f"voice_enabled must be 'on' or 'off', got {allowed['voice_enabled']!r}")
         if "timeout" in allowed:                              # the interactive call-site timeout — positive int
@@ -976,7 +1260,14 @@ class Suite:
 
         mode = nowv["mode"]
         modes_s = ", ".join(self.MODES)
-        verbs_s = "; ".join(f"{v} ({self.RHM_VERB_DESC.get(v, '')})" for v in self.RHM_VERBS)
+        # render ONLY the verbs AVAILABLE in this mode×context (mode-primary, context-refines), from
+        # the SAME available_verbs() the tools array is built from — so the two channels (what the
+        # prompt says it can do + what the native tools array offers) AGREE by construction. (Was: all
+        # 7 unconditionally, which told the RHM it could `run` an empty graph or `build` in watch mode.)
+        ctx = self._affordance_context(graph_id, focus)
+        avail = self.available_verbs(mode, ctx)
+        verbs_s = ("; ".join(f"{v} ({self.RHM_VERB_DESC.get(v, '')})" for v in avail)
+                   if avail else "(none in this mode/context)")
         lanes = self.inbox_lanes()
         n_esc = lanes["counts"]["escalations"]
         # count AND what's awaiting — so the RHM can answer "what's awaiting", not just "how many".
@@ -1594,32 +1885,223 @@ class Suite:
             self._emit("warning", f"R2 context resolution failed ({type(e).__name__})", address=locus)
             return ""
 
-    # The RHM signals intent with a trailing `ACTION:` line; the dispatcher enforces a
-    # WHITELIST so the conversational surface can never reach apply/delete/file-write (E6).
-    RHM_VERBS = ("run", "propose", "build", "consult", "show", "panel", "extend")
+    # ════════════════════════════════════════════════════════════════════════════════════════════
+    # THE SINGLE-SOURCE RHM VERB REGISTRY (replaces the old 3 parallel tables RHM_VERBS /
+    # RHM_VERB_DESC / RHM_VERB_CLASS, which could drift). ONE VerbSpec per verb carries everything:
+    # the gloss, the governance class, the modes it is OFFERED in (mode-primary), and a predicate over
+    # the live affordance context (context-refines). The three legacy names are DERIVED below — there
+    # is no second copy to fall out of sync (AGENTS.md rule 3, one-source).
+    #
+    # MODE SETS (per the Change-Maps §suite, mode-primary / context-refines):
+    #   run    → {focus, background, listening, text-only, decide-for-me}
+    #            pred = graph_nonempty (no point recomputing an empty graph)
+    #            NOT walkthrough / watch-and-react: those are GUIDE / OBSERVE modes (show+consult only) —
+    #            they do not RECOMPUTE the graph (spec-aligned). (whether walkthrough should offer run is
+    #            a Tim mode-design call — flagged needs_tim; shipping the spec-aligned version now.)
+    #   show   → all modes BUT 'off'
+    #   consult→ {walkthrough, watch-and-react, listening, text-only, decide-for-me}
+    #   build/propose/panel/extend → {listening, text-only, decide-for-me}
+    #   off    → no verb is offered (the RHM is disabled; chat() short-circuits before this anyway)
+    #   text-only MIRRORS listening for the ACTION set (its style differs via the mode directive, not
+    #            the affordances) — so wherever 'listening' appears above, 'text-only' appears too.
+    # The dict insertion ORDER (run, propose, build, consult, show, panel, extend) defines RHM_VERBS'
+    # tuple order — kept identical to the prior literal so RHM_VERBS == the same 7-tuple (a contract
+    # rhm_completion_acceptance asserts exactly).
+    # ════════════════════════════════════════════════════════════════════════════════════════════
+    _M_BUILDISH = frozenset({"listening", "text-only", "decide-for-me"})
+    _M_RUN = frozenset({"focus", "background", "listening", "text-only", "decide-for-me"})
+    _M_CONSULT = frozenset({"walkthrough", "watch-and-react", "listening", "text-only", "decide-for-me"})
+    _M_ALL_BUT_OFF = frozenset(MODES) - {"off"}
 
-    # one-line gloss per verb — single-source, so the grounding context can tell the RHM its OWN
-    # capabilities (what each verb does) without re-typing the prose already in the chat system prompt.
-    RHM_VERB_DESC = {
-        "run": "recompute the current graph",
-        "propose": "draft a new node-type for approval",
-        "build": "compose a pipeline on the canvas",
-        "consult": "read the system's own code+design",
-        "show": "move the operator's view to node(s)/UI",
-        "panel": "add a declarative settings panel",
-        "extend": "write a new UI component (build-gated)",
+    RHM_VERB_SPECS = {
+        "run":     VerbSpec("recompute the current graph", "run",
+                            _M_RUN, lambda ctx: ctx.get("graph_nonempty", False)),
+        "propose": VerbSpec("draft a new node-type for approval", "register_type",
+                            _M_BUILDISH, lambda ctx: True),
+        "build":   VerbSpec("compose a pipeline on the canvas", "compose",
+                            _M_BUILDISH, lambda ctx: True),
+        "consult": VerbSpec("read the system's own code+design", "inspect",
+                            _M_CONSULT, lambda ctx: True),
+        "show":    VerbSpec("move the operator's view to node(s)/UI", "inspect",
+                            _M_ALL_BUT_OFF, lambda ctx: True),
+        "panel":   VerbSpec("add a declarative settings panel", "ui_panel",
+                            _M_BUILDISH, lambda ctx: True),
+        "extend":  VerbSpec("write a new UI component (build-gated)", "ui_extension",
+                            _M_BUILDISH, lambda ctx: True),
+        # G8.2 — config-as-tools: the RHM operates its OWN config by voice, not only the UI. All AUTO
+        # (governance class 'configure') — operator-directed + reversible; the lifecycle fail-louds on
+        # VRAM. configure sets any rhm_config slot (model/persona/mode/stt/tts_engine/voice_enabled/roles
+        # — so "use the fast judge" or "switch to xtts" works); load/unload_voice drive the lifecycle.
+        "configure":    VerbSpec("set RHM config (model/persona/mode/voice/ear/role bindings)", "configure",
+                                 _M_BUILDISH, lambda ctx: True),
+        "load_voice":   VerbSpec("load a voice service (STT ear / TTS engine) into VRAM", "configure",
+                                 _M_BUILDISH, lambda ctx: True),
+        "unload_voice": VerbSpec("unload a voice service to free VRAM", "configure",
+                                 _M_BUILDISH, lambda ctx: True),
     }
 
-    # G3: each RHM verb's GOVERNANCE action-class — the deterministic input to autonomous_dispatch in
-    # decide-for-me mode. AUTO classes (run/compose/inspect) → the verb runs; CONFIRM classes
-    # (register_type/ui_panel/ui_extension) → surfaced for the operator (the verb body is NOT run, so
-    # there is exactly ONE surface, posture-routed). Classes are the SAME ones governance.POLICY routes;
-    # no parallel mechanism. (Mirrors what the verb already does per-mode; in decide-for-me the routing
-    # is made explicit + single-source through posture, with no confidence anywhere.)
-    RHM_VERB_CLASS = {
-        "run": "run", "build": "compose", "show": "inspect", "consult": "inspect",
-        "propose": "register_type", "panel": "ui_panel", "extend": "ui_extension",
+    # --- the three legacy names, DERIVED from the one registry (no drift) ---
+    # The dispatcher's WHITELIST: a verb the RHM may perform. apply/delete/file-write are NOT here, so
+    # the conversational surface can never reach them (E6). Tuple in registry-insertion order.
+    RHM_VERBS = tuple(RHM_VERB_SPECS)
+    # one-line gloss per verb — so the grounding context can tell the RHM its OWN capabilities.
+    RHM_VERB_DESC = {v: s.desc for v, s in RHM_VERB_SPECS.items()}
+    # G3: each verb's GOVERNANCE action-class — the deterministic decide-for-me router input. AUTO
+    # classes (run/compose/inspect) run; CONFIRM classes (register_type/ui_panel/ui_extension) surface.
+    RHM_VERB_CLASS = {v: s.action_class for v, s in RHM_VERB_SPECS.items()}
+
+    # the OpenAI-tool parameter schema per verb — built FROM the registry (single-source). The shapes
+    # MIRROR exactly what _json_obj_to_action consumes (so a native tool_call round-trips to an action
+    # dict with no shape drift): run{} · consult{query} · show{targets[]} · build{steps[]} ·
+    # propose/panel/extend{name,spec}.
+    _VERB_PARAMS = {
+        "run":     {"type": "object", "properties": {}},
+        "consult": {"type": "object",
+                    "properties": {"query": {"type": "string",
+                                             "description": "the question about this system's own design/code"}},
+                    "required": ["query"]},
+        "show":    {"type": "object",
+                    "properties": {"targets": {"type": "array", "items": {"type": "string"},
+                                               "description": "node-ids and/or ui:// regions to move the view to"}},
+                    "required": ["targets"]},
+        "build":   {"type": "object",
+                    "properties": {"steps": {"type": "array", "items": {"type": "object"},
+                                             "description": "pipeline steps: a node {as,type,config} or a wire {wire:'a.port -> b.port'}"}},
+                    "required": ["steps"]},
+        "propose": {"type": "object",
+                    "properties": {"name": {"type": "string"}, "spec": {"type": "string"}},
+                    "required": ["name", "spec"]},
+        "panel":   {"type": "object",
+                    "properties": {"name": {"type": "string"}, "spec": {"type": "string"}},
+                    "required": ["name", "spec"]},
+        "extend":  {"type": "object",
+                    "properties": {"name": {"type": "string"}, "spec": {"type": "string"}},
+                    "required": ["name", "spec"]},
+        "configure":    {"type": "object",
+                         "properties": {"updates": {"type": "object",
+                             "description": "rhm_config slots to set: any of model, base_url, persona, mode, "
+                                            "stt, tts_engine, tts_voice, voice_enabled, timeout, roles "
+                                            "({role_id:{model,base_url,knobs}})"}},
+                         "required": ["updates"]},
+        "load_voice":   {"type": "object",
+                         "properties": {"service": {"type": "string",
+                             "description": "a loadable voice-service id (e.g. tts-qwen3tts, stt-parakeet)"}},
+                         "required": ["service"]},
+        "unload_voice": {"type": "object",
+                         "properties": {"service": {"type": "string"}}, "required": ["service"]},
     }
+
+    def _affordance_context(self, graph_id: str, focus: dict | None = None) -> dict:
+        """The live AFFORDANCE CONTEXT a verb's predicate is evaluated against — all derived from
+        EXISTING reads (state() / now() / the operator's focus), nothing fabricated:
+          - graph_nonempty : the current graph has at least one node (a `run` makes sense)
+          - inbox_pending  : there is at least one item awaiting the operator
+          - node_selected  : the operator currently has a node selected on the canvas (co-presence)
+        Tolerant: a read hiccup degrades a flag to False rather than crashing a turn (the affordance
+        layer narrows the OFFER; the dispatcher's whitelist is the real gate, so a conservative-False
+        here only offers fewer verbs, never weakens safety)."""
+        try:
+            st = self.state(graph_id)
+            graph_nonempty = len(st.get("nodes", [])) > 0
+        except Exception:
+            graph_nonempty = False
+        try:
+            inbox_pending = any(d.get("resolved") is None for d in self.inbox.list())
+        except Exception:
+            inbox_pending = False
+        node_selected = bool((focus or {}).get("selected"))
+        return {"graph_nonempty": graph_nonempty,
+                "inbox_pending": inbox_pending,
+                "node_selected": node_selected}
+
+    def available_verbs(self, mode: str, ctx: dict) -> list:
+        """The verbs OFFERED right now = those whose spec lists this `mode` AND whose predicate holds
+        for the live affordance context. Mode-primary, context-refines. Order follows the registry
+        (run, propose, build, …) so the rendered list + the tools array are deterministic. This is the
+        ONE source both channels (the rendered verb list in _chat_context and the _rhm_tools array)
+        read, so the two never disagree about what the RHM may do."""
+        return [v for v, s in self.RHM_VERB_SPECS.items()
+                if mode in s.modes and s.predicate(ctx)]
+
+    def _rhm_tools(self, mode: str, ctx: dict) -> list:
+        """The OpenAI tools array for THIS turn — built FROM available_verbs() + the single-source
+        RHM_VERB_DESC (description) + _VERB_PARAMS (schema). So the model is offered exactly the verbs
+        that are mode-appropriate + context-sensible, each as a native function tool. Empty list when
+        no verb is available (off, or an empty graph with only `run` eligible) — the caller then passes
+        no tools (tool_choice auto over zero tools = a plain reply)."""
+        tools = []
+        verbs = self.available_verbs(mode, ctx)
+        for v in verbs:
+            tools.append({
+                "type": "function",
+                "function": {
+                    "name": v,
+                    "description": self.RHM_VERB_DESC.get(v, ""),
+                    "parameters": self._VERB_PARAMS.get(v, {"type": "object", "properties": {}}),
+                },
+            })
+        # OFFER-WITH-OPTIONS (the consent affordance): if the RHM can ACT in this mode, it can also OFFER
+        # — call `suggest` to surface a one-click "shall I?" card (sees-then-approves, ANY offered verb)
+        # INSTEAD of acting now. This is the convergence's propose-affordance, unified into native
+        # tool-calling (no retired AFFORD: text directive). The card carries options[]/direction so the
+        # rich layer (multi-option + steer→refine + interactive-build) extends it without a re-trigger.
+        if verbs:
+            tools.append({
+                "type": "function",
+                "function": {
+                    "name": "suggest",
+                    "description": ("OFFER an action as a one-click suggestion the operator SEES and approves "
+                                    "(the 'shall I?' affordance) INSTEAD of doing it now. Use when proposing "
+                                    "rather than acting, or when the operator should choose/steer first."),
+                    "parameters": {"type": "object", "properties": {
+                        "verb": {"type": "string", "enum": list(verbs),
+                                 "description": "the action being offered (a real RHM verb)"},
+                        "address": {"type": "string", "description": "the ui:// locus the action targets, if any"},
+                        "args": {"type": "object", "description": "the offered verb's arguments"},
+                        "label": {"type": "string", "description": "a short human label for the offer"},
+                    }, "required": ["verb"]},
+                },
+            })
+        return tools
+
+    # tool-capability gate: a short-TTL cache (mirrors available_models) so the RHM doesn't re-probe
+    # /api/show on every turn, while a model brought up later still becomes usable without a restart.
+    _tools_cap_cache: dict = {}                               # (model, base_url) -> (bool, monotonic_stamp)
+    TOOLS_CAP_TTL = 60.0
+
+    def _model_supports_tools(self, model: str, base_url: str | None = None) -> bool:
+        """Endpoint-aware, FAIL-LOUD tool-capability gate (rule 4 — no silent assume-capable). Delegates
+        to the fabric helper (transport.model_supports_tools), which RAISES if it cannot determine the
+        answer (endpoint down / no capabilities field / unknown endpoint kind). Here we translate a
+        cannot-determine RAISE into FALSE — the RHM treats 'can't prove it supports tools' as 'does NOT',
+        the safe refusal (a non-tool model must never silently be called with tools). Cached short-TTL
+        (TOOLS_CAP_TTL) keyed on (model, base_url); a model that comes up later becomes usable without a
+        restart. A POSITIVE (True) result is cached; a False from an unreachable endpoint is NOT cached
+        (so recovery is immediate, mirroring the degraded-models policy)."""
+        import time as _t
+        from fabric import config as fcfg, transport as ftrans
+        base = base_url or fcfg.DEFAULT_BASE_URL
+        key = (model, base)
+        hit = self._tools_cap_cache.get(key)
+        if hit is not None and (_t.monotonic() - hit[1]) < self.TOOLS_CAP_TTL:
+            return hit[0]
+        # Classify the endpoint so the tool-cap detector probes the RIGHT way (was: everything-not-4100
+        # = ollama, which mis-routed a raw vLLM endpoint to ollama's /api/show → false refusal). ollama
+        # is :11434; litellm proxy :4100; a raw vLLM OpenAI server (the local model workers, :8000+) is
+        # its own kind (probed by a forced tool-call). Default base (config) stays ollama.
+        from fabric import config as _fc
+        if "4100" in base:
+            endpoint = "litellm"
+        elif "11434" in base or base.rstrip("/") == _fc.DEFAULT_BASE_URL.rstrip("/"):
+            endpoint = "ollama"
+        else:
+            endpoint = "vllm"                                  # raw OpenAI-compatible vLLM (local workers)
+        try:
+            ok = bool(ftrans.model_supports_tools(model, base_url=base, endpoint=endpoint))
+        except Exception:
+            return False                                       # cannot determine → False (safe), NOT cached
+        self._tools_cap_cache[key] = (ok, _t.monotonic())
+        return ok
 
     # consult retrieval: the WHOLE repo (~400k chars ≈ 100k tokens) into one model call overflowed /
     # ran slow / "didn't return". So consult RETRIEVES a query-relevant slice instead of stuffing the
@@ -1866,132 +2348,17 @@ class Suite:
                               model=cfg["model"])
         return {"answer": ans, "sources": sources}
 
-    # --- model-/provider-AGNOSTIC action extraction -------------------------------------------
+    # --- model-/provider-AGNOSTIC action mapping -------------------------------------------------
     # The requirement (Tim): the RHM must ACT regardless of which model/provider is selected, and a
-    # NEW model must "just work". Real models DON'T emit the canonical `ACTION: verb args` line — each
-    # provider emits its OWN native tool-call shape. So the parser is a small set of SHAPE handlers,
-    # tried in order, each recognising one common verb-invocation shape and normalising it to the SAME
-    # `{"verb":..., ...}` dict the dispatcher already takes. Extend by ADDING a handler — never by
-    # special-casing one model. The parser is shape-recognition ONLY: it does NOT whitelist (that would
-    # be a second whitelist that drifts from the dispatcher's — AGENTS.md rule 3). The ONE whitelist
-    # lives in `_dispatch_rhm_action` (RHM_VERBS), so a forbidden verb extracted here is REFUSED there
-    # (the E6 no-bypass guarantee, proven end-to-end in rhm_action_parse_acceptance.py).
-
-    # provider delimiters some models prepend to a tool-call (e.g. minimax's `]<]minimax[>[`). They are
-    # noise around the real wrapper — stripped wherever they appear so the XML/JSON handler can match.
-    _PROVIDER_DELIMS = (r"\]<\]\s*[a-zA-Z0-9_.\-]+\s*\[>\[", r"<\|tool_calls?_begin\|>", r"<\|tool_call_end\|>")
-
-    @staticmethod
-    def _normalise_rhm_action(verb: str, raw_args: str):
-        """The ONE place a (verb, raw-args) pair becomes the dispatcher dict — so the SAME intent in
-        any shape (ACTION: line, <invoke>, JSON, fenced) yields the IDENTICAL action. raw_args is the
-        verb's argument text (for build: the JSON pipeline; for consult/show: the query/targets; for
-        propose/panel/extend: `<name> :: <spec>`)."""
-        import json as _j
-        verb = (verb or "").strip().lower()
-        rest = (raw_args or "").strip()
-        if verb in ("propose", "panel", "extend"):
-            name, _, spec = rest.partition("::")
-            return {"verb": verb, "name": name.strip(), "spec": spec.strip()}
-        if verb == "build":
-            try:
-                steps = _j.loads(rest) if rest else None
-            except Exception:
-                steps = None
-            return {"verb": "build", "steps": steps}
-        if verb == "consult":
-            return {"verb": "consult", "query": rest}
-        if verb == "show":
-            return {"verb": "show", "targets": [t for t in rest.replace(",", " ").split() if t]}
-        if verb == "run":
-            return {"verb": "run"}
-        return {"verb": verb}                                  # unknown → passes through; dispatcher refuses it
-
-    @classmethod
-    def _strip_provider_delims(cls, text: str) -> str:
-        import re
-        for pat in cls._PROVIDER_DELIMS:
-            text = re.sub(pat, "", text)
-        return text
-
-    @classmethod
-    def _parse_rhm_action(cls, reply: str):
-        """Split a reply into (shown_text, action|None), recognising a verb-invocation in ANY common
-        shape. Handlers tried in order; the first that matches wins. ALSO strips the recognised wrapper
-        (provider delimiter / `<invoke>` / `<tool_call>` / fenced json) from the SHOWN reply so raw
-        tool-call tokens NEVER leak to the operator."""
-        import re, json as _j
-        if not reply or not reply.strip():
-            return reply, None
-
-        # --- handler 1: native XML tool-call — Anthropic/XML `<invoke name="VERB">args</invoke>`,
-        #     optionally inside `<tool_call>...</tool_call>`, optionally after a provider delimiter
-        #     (minimax `]<]minimax[>[`). Strip the WHOLE wrapper (delims + tool_call + invoke) from
-        #     the shown text. Args = the inner text of the <invoke> element.
-        invoke_re = re.compile(r"<invoke\s+name\s*=\s*[\"']?([a-zA-Z_]+)[\"']?\s*>(.*?)</invoke\s*>",
-                               re.IGNORECASE | re.DOTALL)
-        m = invoke_re.search(reply)
-        if m:
-            verb, args = m.group(1), m.group(2)
-            shown = reply
-            # remove the invoke element, any surrounding <tool_call>…</tool_call>, and provider delims
-            shown = re.sub(r"<tool_call\s*>\s*", "", shown, flags=re.IGNORECASE)
-            shown = re.sub(r"\s*</tool_call\s*>", "", shown, flags=re.IGNORECASE)
-            shown = invoke_re.sub("", shown)
-            shown = cls._strip_provider_delims(shown).strip()
-            return shown, cls._normalise_rhm_action(verb, args)
-
-        # --- handler 2: a fenced ```json {...}``` action block carrying an explicit verb/name/tool.
-        fence_re = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL)
-        for fm in fence_re.finditer(reply):
-            try:
-                obj = _j.loads(fm.group(1))
-            except Exception:
-                continue
-            if not isinstance(obj, dict):
-                continue
-            verb = obj.get("verb") or obj.get("name") or obj.get("tool")
-            if not verb:
-                continue
-            shown = fence_re.sub("", reply).strip()
-            return shown, cls._json_obj_to_action(obj, verb)
-
-        # --- handler 3: a bare JSON tool-call object {"name"/"tool":"VERB","arguments":{...}} or
-        #     {"verb":"VERB",...} on its own (no fence). Scan lines for a JSON object that names a verb.
-        for ln in reply.splitlines():
-            s = ln.strip()
-            if not (s.startswith("{") and s.endswith("}")):
-                continue
-            try:
-                obj = _j.loads(s)
-            except Exception:
-                continue
-            if not isinstance(obj, dict):
-                continue
-            # `verb`/`tool` unambiguously name a tool-call. A bare `name`, however, is ALSO how the
-            # RHM shows an example config ({"name":"uppercase","type":...}) — so accept `name` as the
-            # verb ONLY when the real tool-call envelope (arguments/args/input) is also present.
-            # Otherwise this handler would eat a benign object out of the shown reply (silent loss).
-            verb = obj.get("verb") or obj.get("tool")
-            if not verb and obj.get("name") and any(k in obj for k in ("arguments", "args", "input")):
-                verb = obj.get("name")
-            if not verb:
-                continue
-            shown = reply.replace(ln, "").strip()
-            return shown, cls._json_obj_to_action(obj, verb)
-
-        # --- handler 4: the canonical `ACTION: verb args` line — found ANYWHERE in the reply (a real
-        #     trailing directive), NOT only the strict last line; but anchored to the START of a line
-        #     so prose that merely MENTIONS "ACTION:" mid-sentence does not over-trigger.
-        action_re = re.compile(r"^[ \t]*ACTION:\s*(.+)$", re.MULTILINE | re.IGNORECASE)
-        am = action_re.search(reply)
-        if am:
-            body = am.group(1).strip()
-            shown = (reply[:am.start()] + reply[am.end():]).strip()
-            verb, _, rest = body.partition(" ")
-            return shown, cls._normalise_rhm_action(verb, rest)
-
-        return reply, None
+    # NEW model must "just work". The RHM now acts through NATIVE TOOL-CALLING — chat() feeds each
+    # tool_call's {name, arguments} through `_json_obj_to_action` (below) to the SAME dispatcher dict
+    # the gate already takes. There is no prose-parsing step: the old `ACTION:`-line / `<invoke>` /
+    # fenced-json / bare-json TEXT-shape parser cluster (_parse_rhm_action + _normalise_rhm_action +
+    # _strip_provider_delims + _PROVIDER_DELIMS) has been RETIRED — chat() never used it once it moved
+    # to native tools. The mapper is shape-recognition ONLY: it does NOT whitelist (that would be a
+    # second whitelist that drifts from the dispatcher's — AGENTS.md rule 3). The ONE whitelist lives
+    # in `_dispatch_rhm_action` (RHM_VERBS), so a forbidden verb mapped here is REFUSED there (the E6
+    # no-bypass guarantee, proven end-to-end via chat() in rhm_action_parse_acceptance.py).
 
     @classmethod
     def _json_obj_to_action(cls, obj: dict, verb: str):
@@ -2264,6 +2631,22 @@ class Suite:
             except Exception as e:                        # bad type/port → fail the build loudly, no half-claim
                 return {"did": "build", "error": f"{type(e).__name__}: {e}", "nodes": made, "edges": edges}
             return {"did": "build", "nodes": made, "edges": edges}
+        if verb == "configure":                              # G8.2: the RHM sets its own config (AUTO)
+            updates = action.get("updates") or {}
+            if not isinstance(updates, dict) or not updates:
+                return {"did": "none", "refused": "configure needs a non-empty 'updates' object"}
+            cfg = self.set_rhm_config(updates)               # fail-loud on unknown slot/model/role/engine
+            return {"did": "configure", "set": sorted(updates.keys()), "config": cfg}
+        if verb in ("load_voice", "unload_voice"):           # G8.2: the RHM drives the voice lifecycle (AUTO)
+            from voice import lifecycle as _vlc
+            svc = action.get("service")
+            if not svc:
+                return {"did": "none", "refused": f"{verb} needs a 'service' id"}
+            try:
+                r = _vlc.load(svc) if verb == "load_voice" else _vlc.unload(svc)
+            except Exception as e:                           # the lifecycle fail-loud (unknown/won't-fit) → structured, not a crash
+                return {"did": verb, "error": f"{type(e).__name__}: {e}"}
+            return {"did": verb, **r}
         return {"did": "none",
                 "refused": f"verb {verb!r} is not permitted from the RHM — only {self.RHM_VERBS} "
                            "(apply/delete/file-write are operator-gated)"}
@@ -2676,11 +3059,150 @@ class Suite:
         # S2: emit an addressed event so the pin/unpin is visible on the live stream at its locus.
         self._emit("pin", f"{'pinned' if pinned else 'unpinned'} item at {address}", address=address)
         return rec
+    def roles(self) -> dict:
+        """The MODEL-ROLE registry as a STATUS read — the config lab's source (it NEVER hardcodes the
+        role list). For each registered role: its declared contract (label/description/trigger/output/
+        tools/context/thinking/knobs) + the current binding + the EFFECTIVE resolution (what would
+        actually be used right now). Mirrors available_stt()'s registry-as-status shape."""
+        bindings = self.rhm_config().get("roles", {})
+        out = {}
+        for rid, spec in self.ROLE_REGISTRY.items():
+            out[rid] = {"id": rid, **{k: spec[k] for k in spec
+                                      if k not in ("env_model", "env_url", "env_knobs")},
+                        "binding": bindings.get(rid, {}),
+                        "effective": self.resolve_role(rid)}
+        return out
+
+    def resolve_role(self, role_id: str) -> dict:
+        """Resolve a role to the EFFECTIVE {model, base_url, knobs, thinking, output, tools, context}
+        actually used when the role fires. Precedence (advisor-set): config BINDING > env override >
+        declared default; a None default_model falls to the RHM brain (rhm_config.model). Fail loud on
+        an unknown role (registry-is-truth). The role's consuming code (e.g. is_finished_thought) calls
+        THIS — so swapping a role's model is a config change, never a code change."""
+        import os
+        if role_id not in self.ROLE_REGISTRY:
+            raise ValueError(f"unknown role {role_id!r} — registered: {sorted(self.ROLE_REGISTRY)}")
+        spec = self.ROLE_REGISTRY[role_id]
+        cfg = self.rhm_config()
+        binding = cfg.get("roles", {}).get(role_id, {})
+        model = (binding.get("model") or os.environ.get(spec.get("env_model", ""))
+                 or spec.get("default_model") or cfg["model"])               # None default → the brain
+        base_url = (binding.get("base_url") or os.environ.get(spec.get("env_url", ""))
+                    or spec.get("default_base_url") or cfg["base_url"])
+        knobs = dict(spec.get("knobs", {}))                                  # declared defaults
+        for k, env_name in (spec.get("env_knobs") or {}).items():           # env override
+            if os.environ.get(env_name):
+                knobs[k] = type(knobs.get(k, 0))(os.environ[env_name]) if isinstance(knobs.get(k), int) else os.environ[env_name]
+        knobs.update(binding.get("knobs", {}))                              # binding wins
+        return {"role": role_id, "model": model, "base_url": base_url, "knobs": knobs,
+                "thinking": binding.get("thinking", spec.get("thinking")),
+                "output": spec.get("output"), "tools": spec.get("tools", []),
+                "context": spec.get("context")}
+
+    def knobs_for(self, model: str | None = None, base_url: str | None = None) -> dict:
+        """G8.1 — DYNAMIC knob resolution: the configurable per-request surface for a (loaded) model,
+        in the node config_schema SHAPE so the UI renders it with NodeConfigForm + the RHM can read it
+        as a tool. `always` knobs always apply; the `tools` knob is PROBED LIVE (endpoint-aware) — its
+        default + availability reflect what the model actually supports right now; `declared` knobs
+        (thinking/structured-output, not universally probeable) are offered with source='declared'.
+        None model/base_url → the current brain. Reuses MODEL_KNOBS (registry-is-truth) — no hardcoding
+        in the UI; adding a knob is a catalog row."""
+        cfg = self.rhm_config()
+        model = model or cfg["model"]
+        base_url = base_url or cfg["base_url"]
+        out = {}
+        for kid, spec in self.MODEL_KNOBS.items():
+            entry = {k: v for k, v in spec.items() if k != "applies"}
+            applies = spec.get("applies")
+            if applies == "always":
+                entry.update(available=True, source="always")
+            elif applies == "capability" and kid == "tools":
+                ok = self._model_supports_tools(model, base_url)     # PROBED live (vllm/ollama/litellm)
+                entry.update(default=ok, available=ok, source="probed")
+            else:                                                    # declared (can't universally probe)
+                entry.update(available=True, source="declared")
+            out[kid] = entry
+        return {"model": model, "base_url": base_url, "knobs": out}
+
+    def _s2s_models(self) -> list:
+        """Probe the HF cache for any downloaded s2s/omni model (the _S2S_HINTS). Returns matching dir
+        names — empty = no s2s model present (so the s2s path stays available:false)."""
+        import os
+        hub = os.path.expanduser("~/.cache/huggingface/hub")
+        try:
+            return [d for d in os.listdir(hub) if any(h in d.lower() for h in self._S2S_HINTS)]
+        except OSError:
+            return []
+
+    def voice_paths(self) -> dict:
+        """Tier 4 — the swappable voice-path registry as a STATUS read (the config lab's source). Each
+        path + whether it's AVAILABLE right now: pipeline always (built); s2s only if an S2S model is on
+        disk (probed). `active` = the rhm_config.voice_path slot (default pipeline). Mirrors the
+        available_stt()/roles() registry-as-status shape — the UI never hardcodes the path list."""
+        s2s_models = self._s2s_models()
+        active = self.rhm_config().get("voice_path", "pipeline")
+        out = {}
+        for pid, spec in self.VOICE_PATHS.items():
+            avail = spec["built"] or (pid == "s2s" and bool(s2s_models))
+            entry = {"id": pid, "label": spec["label"], "built": spec["built"], "available": avail,
+                     "note": spec["note"], "active": pid == active}
+            if pid == "s2s":
+                entry["models"] = s2s_models
+                entry["detail"] = (f"s2s model present: {s2s_models}" if s2s_models
+                                   else "no S2S model on disk — download one (Qwen3-Omni/Moshi/GLM-Voice) to enable")
+            out[pid] = entry
+        return {"paths": out, "active": active}
+
+    def is_finished_thought(self, text: str) -> dict:
+        """The voice circuit's SEMANTIC endpoint judge (G1.3): given the utterance heard so far (after a
+        VAD pause), is it a FINISHED THOUGHT — fire the turn — or is the operator mid-ramble — keep
+        listening? This is the "not a dumb silence timer" lever: a pause alone does NOT end a turn; a
+        MODEL judges completeness.
+
+        JUDGE = the 'judge' ROLE in the ROLE_REGISTRY (resolve_role('judge')) — a separate, configurable,
+        fast model, NOT the conversational brain. The judge is a utility classifier on the LIVE turn
+        path, so a reasoning brain is the WRONG tool: measured 2026-06-05, deepseek-v4-pro (a reasoner)
+        needs ~256 tokens to surface a 1-word answer and takes ~6.5s — unusable per pause. The role's
+        model/knobs resolve binding > env (COMPANY_JUDGE_*) > declared default (default_model None → the
+        brain, which WORKS but is slow until rebound to a fast no-think model). Verdict parses 'finish'
+        anywhere (robust to a little thinking).
+
+        Empty/blank text → trivially not finished (no model call). Returns {finished, verdict, text,
+        judge_model}. Brain/transport errors PROPAGATE (FabricError) → fail loud; the circuit's explicit
+        fallback is the manual push-to-talk toggle SURFACED to the operator, NEVER a silent degrade to a
+        silence timer (the rejected design)."""
+        from fabric import client, transport
+        t = (text or "").strip()
+        if not t:
+            return {"finished": False, "verdict": "MORE", "text": t, "note": "empty — nothing to end"}
+        import time
+        r = self.resolve_role("judge")                        # the role registry resolves model+knobs
+        cfg = self.rhm_config()
+        sys_p = ("You judge ONLY whether a spoken utterance is a COMPLETE THOUGHT the listener should now "
+                 "respond to, or whether the speaker is mid-sentence / mid-ramble and likely to continue. "
+                 "Answer with EXACTLY one word: FINISHED or MORE. No punctuation, no explanation.")
+        msgs = [{"role": "system", "content": sys_p},
+                {"role": "user", "content": f'Utterance so far: "{t}"\nFINISHED or MORE?'}]
+        t0 = time.monotonic()
+        out = client.complete(
+            transport.openai_transport(base_url=r["base_url"], timeout=cfg["timeout"]),
+            msgs, model=r["model"], max_tokens=r["knobs"].get("max_tokens", 256),
+            temperature=r["knobs"].get("temperature", 0))
+        ms = int((time.monotonic() - t0) * 1000)
+        verdict = "FINISHED" if "finish" in (out or "").strip().lower() else "MORE"
+        # G7 run-record: the judge is on the LIVE turn path — how long it took, on which model, the
+        # verdict (the condition that matters for tuning the always-listen feel). Rollups reveal whether
+        # the bound judge model is fast enough live (the deepseek-6.5s lesson, measured per use).
+        self.emit_run_record("judge", ms, model=r["model"], verdict=verdict)
+        return {"finished": verdict == "FINISHED", "verdict": verdict, "text": t,
+                "judge_model": r["model"], "ms": ms}
 
     def chat(self, message: str, graph_id: str, focus: dict | None = None) -> dict:
-        """Grounded conversation with the operator. Answers from compact ground truth; never
-        confabulates system facts. Suggests actions but performs none that skip the surfaced
-        gate (E6 invariant) — proposing/running route through the normal verbs."""
+        """Grounded conversation with the operator via NATIVE TOOL-CALLING. Answers from compact
+        ground truth; never confabulates system facts. It ACTS only through the governed verbs offered
+        as native function-tools for this mode×context — and the dispatcher's whitelist still REFUSES
+        anything off it (E6). The RHM model MUST support native tools: a non-tool model is refused
+        FAIL-LOUD (no model call, no fallback, rule 4)."""
         mode = self.get_mode()
         if mode == "off":                                     # the dial disables the RHM entirely
             self.store.append_chat({"role": "user", "text": message, "grade": "gold", "source": "operator"})
@@ -2689,8 +3211,33 @@ class Suite:
             self._emit("chat", f"you: {message[:40]} (RHM off)", address="ui://chrome/chat")   # S2: chat organ
             return {"reply": off, "action": None, "mode": mode, "history": self.store.chat_history(40)}
         from fabric import client, transport
+        from fabric.client import FabricError
         cfg = self.rhm_config()
+
+        # CAPABILITY-GATE FIRST (before any model call): the RHM acts through NATIVE tools, so the
+        # selected model MUST support tool-calling. A non-tool model (e.g. an embedder mis-selected, or
+        # a chat model the endpoint reports without "tools") is a CONFIGURATION error — refuse it FAIL
+        # LOUD: a legible turn + a warning event, and NO model call and NO fallback (rule 4 — never
+        # silently degrade to a non-acting path). _model_supports_tools translates a cannot-determine
+        # (endpoint down) into False, so an unreachable endpoint is ALSO a loud refusal, never an
+        # assume-capable call.
+        if not self._model_supports_tools(cfg["model"], cfg["base_url"]):
+            self.store.append_chat({"role": "user", "text": message, "grade": "gold", "source": "operator"})
+            refusal = (f"I can't act right now: the selected model '{cfg['model']}' does not report "
+                       f"native tool-calling support (or its endpoint is unreachable), and I act ONLY "
+                       f"through governed tools — I won't silently fall back to a non-acting path. "
+                       f"Select a tool-capable chat model in the RHM config.")
+            self.store.append_chat({"role": "assistant", "text": refusal, "grade": "working", "source": "twin"})
+            self._emit("warning", f"RHM model '{cfg['model']}' is not tool-capable — refused (no model "
+                       f"call, no fallback); select a tool-capable model", address="ui://chrome/chat")  # S2: chat-path locus
+            return {"reply": refusal, "action": None, "mode": mode,
+                    "model": cfg["model"], "history": self.store.chat_history(40)}
+
         persona = cfg["persona"]
+        # PERSONA / GROUND-TRUTH / MODE-DIRECTIVE HEAD (the ACTION:-prose block is GONE — the verbs are
+        # now offered as native function-tools, so the model invokes them through the tool API, not by
+        # emitting a hand-typed `ACTION:` line). The head still tells it WHO it is, to answer only from
+        # ground truth, the persona, the model-of-Tim, and the current mode's behavioral directive.
         sys_p = (
             "You are the right-hand-man — the coherent voice of the Company, speaking to its operator "
             "about the system ITSELF. Answer ONLY from the LIVE SYSTEM STATE below; it is ground truth. "
@@ -2702,112 +3249,127 @@ class Suite:
                "never as Tim's actual words; when genuinely uncertain, say so and defer to Tim):\n"
                f"{self._model_of_tim_digest()}\n\n" if self._model_of_tim_digest() else "")
             + f"CURRENT MODE — {mode}: {self._mode_directive(mode)}\n\n"
-            "You can ACT on the system, but only through governed verbs. When the operator asks you to do "
-            "something you're capable of, append EXACTLY ONE final line:\n"
-            "  ACTION: run                         (recompute the current graph)\n"
-            "  ACTION: propose <name> :: <spec>    (draft a NEW node-type for the operator to approve)\n"
-            "  ACTION: build <json>                (compose a pipeline on the canvas from EXISTING types)\n"
-            "  ACTION: consult <question>          (read the system's OWN code+design and answer it)\n"
-            "Use consult for any question about how THIS system is built/designed that isn't in the live "
-            "state above (e.g. 'how does the memo gate work', 'what are the contracts'). "
-            "  ACTION: show <target(s)>            (move the operator's view to node(s)/UI region — to SHOW them)\n"
-            "  ACTION: panel <name> :: <spec>      (add a declarative settings/control PANEL)\n"
-            "  ACTION: extend <name> :: <spec>     (write a NEW interface component in code — build-gated)\n"
-            "Use panel when the operator asks to add a UI panel/settings to the application; you author a "
-            "declarative panel (fields editing real config: mode/model/persona), surfaced for approval. "
-            "Use show whenever the operator asks you to show/take them to/point at something. A target is "
-            "either a node-id from the live state, or a UI region as ui://<kind>/<ref> from the UI registry "
-            "(e.g. ui://chrome/inbox, ui://chrome/activity, ui://canvas/<node-id>). show only moves their "
-            "view; it changes nothing. "
-            "build's <json> is a list of steps, each either a node "
-            '{"as":"a","type":"<existing type>","config":{...}} or a wire {"wire":"a.port -> b.port"} '
-            "(reference nodes by their 'as' name). Use build to turn a described pipeline into real nodes "
-            "wired on the canvas. Use the available node-types listed in the state; if a needed type does "
-            "not exist, propose it first.\n"
-            "Proposing only DRAFTS a node-type (operator must approve before it goes live). build only adds/"
-            "wires nodes (reversible, like the operator does). You CANNOT apply, delete, or write files "
-            "yourself. Never append an ACTION line unless asked to act.\n"
-            "CRITICAL — DESCRIBING AN ACTION DOES NOTHING. The ONLY way to actually perform one is to emit its "
-            "`ACTION:` line in THIS reply. Do NOT write 'I'll consult', 'consulting now', 'let me build', or "
-            "'showing the inbox' and stop — that performs NOTHING and the operator gets no result. If you intend "
-            "to act, emit the `ACTION:` line now, in the same reply. (If a previous attempt seemed to return "
-            "nothing, that was a bug that is now fixed — emit the ACTION again rather than giving up.)\n"
-            "SEE-AND-APPROVE (the consent gate) — when the right thing is to let the operator APPROVE before "
-            "anything runs (a consequential or ambiguous action, or simply when offering a next step they "
-            "should confirm), do NOT emit `ACTION:` (which runs immediately). Instead append EXACTLY ONE "
-            "final line:\n"
-            "  AFFORD: <verb> <address>            (PROPOSE the verb-at-address as a card the operator "
-            "clicks to APPROVE; nothing runs until they do)\n"
-            "e.g. `AFFORD: show ui://chrome/inbox` proposes showing the inbox; the operator sees an approve "
-            "card and the show only happens on their click. <verb> is one of the governed verbs above; "
-            "<address> is a node-id or a ui:// region from the registry. Use AFFORD when the operator should "
-            "consent first; use ACTION only when they've clearly asked you to just do it. Never emit both."
+            "You can ACT on the system, but ONLY by CALLING one of the governed tools provided to you "
+            "(they are the verbs you are permitted in this mode/context). Call a tool ONLY when the "
+            "operator actually asks you to act — otherwise just answer in text. Describing an action in "
+            "prose does NOTHING; to act you must CALL the tool. You CANNOT apply, delete, or write files "
+            "(those are operator-gated and are not offered as tools)."
         )
-        # X13 (Convergence) — the operator's MESSAGE is the SEMANTIC ranking query ("what they're actually
-        # asking"): pass it as `intent` so R2 ranks the locus context by RELEVANCE, not just recency·proximity.
-        msgs = [{"role": "system", "content": sys_p + "\n\n" + self._chat_context(graph_id, focus, intent=message)}]
+
+        # the affordance context for THIS turn → the native tools array (mode-primary, context-refines),
+        # built from the ONE registry (same available_verbs the grounding context renders).
+        actx = self._affordance_context(graph_id, focus)
+        tools = self._rhm_tools(mode, actx)
+
+        msgs = [{"role": "system", "content": sys_p + "\n\n" + self._chat_context(graph_id, focus)}]
         for t in self.store.chat_history(20):
             msgs.append({"role": t["role"], "content": t["text"]})
         msgs.append({"role": "user", "content": message})
-        raw = client.complete(transport.openai_transport(base_url=cfg["base_url"], timeout=cfg["timeout"]),
-                              msgs, model=cfg["model"])      # model + provider + timeout are configurable (E1/D2)
-        # I3 — the CONSENT gate (FIRST, before any dispatch decision): if the model emitted a
-        # propose-affordance directive (`AFFORD: <verb> <address>`), return it as a structured
-        # `proposal` and DISPATCH NOTHING. The action runs ONLY when the operator approves the
-        # rendered card → /api/act (Suite.act, the I2 endpoint). Proposing must not execute — this
-        # is the whole point of I3 (criteria 99/107). Proposal and ACTION: are mutually exclusive;
-        # the proposal wins (consent gate), so the execute-then-render path below is never reached.
-        # The executed-outcome path (the else/decide-for-me branches) is PRESERVED untouched for
-        # ordinary ACTION: turns.
-        prop_shown, proposal = self._parse_rhm_proposal(raw)
-        if proposal:
-            reply = prop_shown or "Here's what I can do — approve it to run."
-            self.store.append_chat({"role": "user", "text": message,
-                                    "grade": self._provenance_grade("user"), "source": self._provenance_source("user")})
-            self.store.append_chat({"role": "assistant", "text": reply, "proposal": proposal,
-                                    "grade": self._provenance_grade("assistant"), "source": self._provenance_source("assistant")})
-            self._emit("chat", f"you: {message[:48]} (proposed)", address="ui://chrome/chat")   # S2: chat organ
-            return {"reply": reply, "action": None, "proposal": proposal, "mode": mode,
-                    "model": cfg["model"], "history": self.store.chat_history(40)}
-        # No proposal (either no AFFORD line, or a malformed-address AFFORD that was DROPPED). Parse for
-        # an ACTION: on `prop_shown` — the AFFORD directive is already stripped from it (so a dropped
-        # malformed AFFORD never leaks its raw line to the operator), while a no-AFFORD reply leaves
-        # prop_shown == raw unchanged. The execute-then-render path is otherwise untouched.
-        reply, action = self._parse_rhm_action(prop_shown)
-        if action and mode == "decide-for-me":
-            # G3 wiring: in decide-for-me the ACT-vs-SURFACE decision is routed DETERMINISTICALLY by the
-            # verb's governance action-class (no confidence) through autonomous_dispatch. The verb BODY
-            # performs it either way — AUTO verbs run; CONFIRM verbs run their body whose action is to
-            # SURFACE a consumable, applyable draft (propose→code_build, panel→ui_panel, extend→ui_extension).
-            # So the outcome is the verb's own dict (did=run/propose/panel/extend/...), plus routed_posture.
-            # Every OTHER mode keeps the exact per-verb dispatch below (untouched — mode-gated).
-            cls = self.RHM_VERB_CLASS.get(action.get("verb"), "register_type")   # unknown verb → safest (CONFIRM)
-            outcome = self.autonomous_dispatch(cls, do=lambda: self._dispatch_rhm_action(action, graph_id),
-                                               payload=action)
-        else:
-            outcome = self._dispatch_rhm_action(action, graph_id) if action else None
+
+        # NATIVE tool-calling: complete_with_tools returns the whole message dict {content, tool_calls}.
+        # A tool_call with empty content is SUCCESS (the model chose to act, not to speak) — the fabric
+        # guard knows this. A non-tool model never reaches here (gated above). FAIL LOUD on exhaustion:
+        # complete_with_tools raises FabricError, which we let propagate (no fallback) after logging the
+        # operator turn — the bridge surfaces the error rather than the system pretending success.
+        msg = client.complete_with_tools(
+            transport.openai_tools_transport(base_url=cfg["base_url"], timeout=cfg["timeout"]),
+            msgs, model=cfg["model"], tools=tools, tool_choice="auto", timeout=cfg["timeout"])
+        reply = msg.get("content") or ""                      # may be empty (the model called a tool)
+
+        # LOOP over every tool_call the model emitted (a model may call >1). Each becomes an action via
+        # the EXISTING _json_obj_to_action (it JSON-decodes the `arguments` string) → the EXISTING
+        # _dispatch_rhm_action (the ONE whitelist — a forbidden verb is refused end-to-end, E6 holds).
+        # In decide-for-me each call routes per its governance posture via autonomous_dispatch.
+        # MODE-DISCIPLINE GATE (defense-in-depth ATOP the whitelist): the affordance set is a REAL gate
+        # at dispatch, not merely a hint to the model. A forged/confused tool_call for a verb that is
+        # whitelisted but NOT OFFERED in this mode×context (e.g. `build` in watch-and-react) must NOT
+        # execute. We re-validate each call against the SAME available_verbs(mode, actx) that built the
+        # tools array — so the OFFER and the DISPATCH agree by construction. A not-offered verb is
+        # refused here (did=='none', a legible note folded into the reply) and never reaches the
+        # dispatcher. This is purely additive: the dispatcher's whitelist still refuses non-RHM_VERBS
+        # (E6), the catastrophic apply/delete/file-write wall is untouched, decide-for-me routing is
+        # unchanged for OFFERED verbs, and a verb that IS offered dispatches exactly as before.
+        offered = set(self.available_verbs(mode, actx))
+        outcomes = []
+        proposals = []                                        # OFFER-WITH-OPTIONS: suggest-then-confirm cards (no dispatch)
+        for tc in (msg.get("tool_calls") or []):
+            fn = tc.get("function") or {}
+            verb = fn.get("name")
+            if not verb:
+                continue
+            if verb == "suggest":
+                # OFFER-WITH-OPTIONS (the consent affordance): build a PROPOSAL, do NOT dispatch. The
+                # operator sees a one-click card for ANY offered verb and approves (→ /api/act) or steers —
+                # nothing runs until then. The verb is validated against the ONE whitelist (RHM_VERBS); a
+                # non-verb offer is dropped (refused-loud-at-the-click philosophy, never a silent bad card).
+                import json as _json
+                try:
+                    sargs = _json.loads(fn.get("arguments") or "{}")
+                except Exception:
+                    sargs = {}
+                sv = str(sargs.get("verb") or "").strip().lower()
+                if sv in self.RHM_VERBS:
+                    one = {"verb": sv, "address": sargs.get("address"), "args": sargs.get("args") or {}}
+                    proposals.append({**one,
+                                      # options[]/direction: the rich layer extends to multi-option + a
+                                      # steer→refine loop + interactive-build; v1 carries the single offer.
+                                      "options": [{**one, "label": sargs.get("label") or sv}],
+                                      "direction": True})
+                continue
+            if verb not in offered:
+                # not offered in THIS mode → refuse without dispatching (mode-discipline gate). Legible
+                # reason; same {did:none, refused} shape _confirmation_for folds into the reply.
+                outcomes.append({"did": "none",
+                                 "refused": f"{verb} not available in mode {mode}"})
+                continue
+            action = self._json_obj_to_action({"name": verb, "arguments": fn.get("arguments")}, verb)
+            if mode == "decide-for-me":
+                # G3 wiring: route the ACT-vs-SURFACE decision DETERMINISTICALLY by the verb's governance
+                # action-class (no confidence) through autonomous_dispatch. The verb BODY performs it
+                # either way — AUTO verbs run; CONFIRM verbs run their body whose action is to SURFACE a
+                # consumable applyable draft. Outcome carries routed_posture for audit.
+                cls = self.RHM_VERB_CLASS.get(verb, "register_type")   # unknown verb → safest (CONFIRM)
+                outcome = self.autonomous_dispatch(
+                    cls, do=lambda a=action: self._dispatch_rhm_action(a, graph_id), payload=action)
+            else:
+                outcome = self._dispatch_rhm_action(action, graph_id)
+            outcomes.append(outcome)
+
         # ACTION-CONFIRMATION: fold a concise confirmation into `reply` for EVERY dispatched verb so the
-        # operator ALWAYS sees what happened — critical for native-tool-call models that emit NO prose
-        # (run/build/show/propose/panel/extend used to return a BLANK reply). consult/ask keep their
-        # richer folds (the full answer / the needs-line); all others get _confirmation_for. Never
-        # double-up: a confirmation only appends when there is prose, else it BECOMES the reply.
-        if outcome and outcome.get("did") == "consult":   # fold the looked-up answer into the turn
-            reply = (reply + "\n\n📖 " + outcome["answer"]).strip()
-        elif outcome and outcome.get("did") == "ask":     # asked instead of fabricating (PoLR)
-            reply = (reply + "\n\n❓ That needs something not in the registry, so I'm asking rather than "
-                     "guessing: " + outcome["needs"] + " — surfaced for you in the inbox.").strip()
+        # operator ALWAYS sees what happened — CRITICAL with native tool-calls (the model often emits NO
+        # prose, only the call → reply would otherwise be blank). consult/ask keep their richer folds
+        # (the full answer / the needs-line); all others get _confirmation_for. A confirmation appends to
+        # existing prose, or BECOMES the reply when there is none (handles empty-content + tool_call).
+        for outcome in outcomes:
+            if outcome and outcome.get("did") == "consult":   # fold the looked-up answer into the turn
+                reply = (reply + "\n\n📖 " + outcome["answer"]).strip()
+            elif outcome and outcome.get("did") == "ask":     # asked instead of fabricating (PoLR)
+                reply = (reply + "\n\n❓ That needs something not in the registry, so I'm asking rather "
+                         "than guessing: " + outcome["needs"] + " — surfaced for you in the inbox.").strip()
+            else:
+                confirm = self._confirmation_for(outcome)
+                if confirm:
+                    reply = (reply + "\n\n" + confirm).strip() if reply.strip() else confirm
+
+        # the persisted/returned `action`: a LIST of outcomes (a turn may now carry several). Kept
+        # backward-compatible for the single-action consumers (bridge/mcp passthrough): None when nothing
+        # was dispatched, the single dict when exactly one (the prior shape), the list when several.
+        if not outcomes:
+            action_field = None
+        elif len(outcomes) == 1:
+            action_field = outcomes[0]
         else:
-            confirm = self._confirmation_for(outcome)
-            if confirm:
-                reply = (reply + "\n\n" + confirm).strip() if reply.strip() else confirm
+            action_field = outcomes
         # provenance grading (B3): Tim's words are gold (train the twin); the twin's are working
         self.store.append_chat({"role": "user", "text": message, "grade": self._provenance_grade("user"), "source": self._provenance_source("user")})
-        self.store.append_chat({"role": "assistant", "text": reply, "action": outcome,
+        self.store.append_chat({"role": "assistant", "text": reply, "action": action_field,
                                 "grade": self._provenance_grade("assistant"), "source": self._provenance_source("assistant")})
-        self._emit("chat", f"you: {message[:48]}", address="ui://chrome/chat")   # S2: chat organ
-        # `proposal: None` on the execute-then-render path keeps the response shape uniform (I3,
-        # schema-additive) — the FE always reads `proposal`; an executed turn has none.
-        return {"reply": reply, "action": outcome, "proposal": None, "mode": mode,
+        self._emit("chat", f"you: {message[:48]}", address="ui://chrome/chat")   # S2: chat organ event carries its locus
+        # OFFER-WITH-OPTIONS: a `suggest` tool_call rides back as a `proposal` (the FE renders the one-click
+        # card; approve → /api/act). Additive + back-compat: None when the turn dispatched/spoke instead of
+        # offering; the existing single-`proposal` FE consumer (useAppController r.proposal) reads it unchanged.
+        proposal = proposals[0] if proposals else None
+        return {"reply": reply, "action": action_field, "proposal": proposal, "mode": mode,
                 "model": cfg["model"], "history": self.store.chat_history(40)}
 
     def chat_history(self, limit: int = 40) -> list:
@@ -4029,17 +4591,15 @@ class Suite:
                 f"operator (CONFIRM/SURFACE/LOCKED never auto-run; surfacing a result after the act is "
                 f"too late). The operator launches a non-AUTO build; refused.")
 
-        # 3 + 5 — EXACTLY-ONCE check→claim, ATOMIC under a per-seq lock. The bridge is a
-        # ThreadingHTTPServer over one Suite; without the lock two concurrent fires both clear the
-        # check before either claims → double-launch. The lock serializes check→emit; the durable
-        # decision.dispatch event is the cross-process/restart guarantee.
-        # S4: RLock OUTER (in-process per-seq, the existing thread guard) → fcntl OS lock INNER (the
-        # cross-PROCESS companion via the store). This is the documented lock order, identical to
-        # graph_lock's RLock-outer/fcntl-inner. The threading RLock stops two THREADS of one face from
-        # double-claiming; the fcntl lock stops two FACES (bridge + MCP, or a face + the wire) from both
-        # clearing the exactly-once check and double-launching `claude -p`. The durable decision.dispatch
-        # event stays the cross-RESTART guarantee; fcntl adds the CONCURRENT (two-faces-now) guarantee.
-        with self._dispatch_lock(derived_from), self.store.dispatch_lock(derived_from):
+        # 3 + 5 — EXACTLY-ONCE check→claim, ATOMIC under TWO nested locks. The bridge is a
+        # ThreadingHTTPServer over one Suite; without a lock two concurrent fires both clear the check
+        # before either claims → double-launch. The thread lock (_dispatch_lock) serializes in-PROCESS
+        # threads; nested INSIDE it the store's cross-PROCESS graph_lock (keyed dispatch-claim:<seq>,
+        # backed by fcntl.flock — the primitive the store lane built) serializes across SEPARATE
+        # PROCESSES too (Tim runs multiple sessions). So the check→emit critical section is atomic
+        # whether the race is two threads or two processes; the durable decision.dispatch event remains
+        # the restart guarantee. Re-entrant, so a nested locked call on the same key won't self-deadlock.
+        with self._dispatch_lock(derived_from), self.store.graph_lock(f"dispatch-claim:{derived_from}"):
             if self._already_dispatched(derived_from):
                 raise GovernanceError(
                     f"dispatch_decision: a decision.dispatch already exists for resolve seq={derived_from} — "
@@ -4838,15 +5398,55 @@ class Suite:
         latest (last_self_change) existed — no ledger."""
         return self._self_change_records(limit)
 
+    @staticmethod
+    def _reverted_target_sha(body: str) -> str | None:
+        """The ORIGINAL commit a revert undid — `git revert --no-edit` writes `This reverts commit
+        <40-hex-sha>.` in the commit BODY. So the revert names its target unambiguously by full sha
+        (subject-matching would be fragile — two changes can share a subject). Returns the full sha, or
+        None if the body has no such line. Read from the body, NOT the line-split %s parser of
+        _self_change_records (which would corrupt on a multi-line body)."""
+        import re
+        m = re.search(r"This reverts commit ([0-9a-f]{40})", body or "")
+        return m.group(1) if m else None
+
+    def _reverted_shas(self, records: list) -> set:
+        """The set of ORIGINAL-change shas that a revert (in `records`) has UNDONE — so a change that
+        no longer STANDS (it was reverted) can be skipped. For each revert record, read its body once
+        (`git show -s --format=%b`, surgical — NOT through the shared %s parser) and extract the target
+        sha. D9: 'still-standing' means not only 'not itself a revert' but also 'not the target of a
+        later revert'. Tolerant: an unreadable body contributes no sha (degrade, never raise in a read).
+        Minimal-correct: we do NOT model revert-of-revert restoration (a once-reverted change stays
+        skipped) — only build that if a test demands it (no gold-plating)."""
+        import subprocess
+        out = set()
+        for rec in records:
+            if not rec.get("is_revert"):
+                continue
+            try:
+                body = subprocess.run(
+                    ["git", "-C", self._repo_root, "show", "-s", "--format=%b", rec["sha"]],
+                    check=True, capture_output=True, text=True).stdout
+            except Exception:
+                continue
+            tgt = self._reverted_target_sha(body)
+            if tgt:
+                out.add(tgt)
+        return out
+
     def last_self_change(self) -> dict | None:
-        """The most recent self-applied CHANGE (for one-click rollback + audit) — EXCLUDING reverts
-        (Finding #2). A `git revert` of a self-apply still matches `--grep=[self-apply]`, so the naive
-        `-1` returned the revert itself → the UI offered to 'revert the revert' and couldn't tell an
-        undo from a change. Now it scans the tagged log and returns the first NON-revert record, so it
-        reflects the true last *change*. Keeps the {sha, subject} keys callers/the bridge read, and adds
-        ts + changed_files (additive)."""
-        for rec in self._self_change_records(50):
-            if not rec["is_revert"]:
+        """The most recent STILL-STANDING self-applied CHANGE (for one-click rollback + audit). D9:
+        a change still STANDS only if (a) it is not itself a revert (Finding #2 — a `git revert` of a
+        self-apply still matches `--grep=[self-apply]`, so the naive `-1` returned the revert itself,
+        and the UI offered to 'revert the revert'), AND (b) it has not since been UNDONE by a later
+        revert. Without (b), `last_self_change` would still point at a change the operator already
+        reverted — offering to roll back something that no longer exists in the working tree. So we read
+        the tagged log, compute the set of shas reverted by any revert in it, and return the newest
+        record that is neither a revert NOR in that reverted set. Keeps the {sha, subject} keys callers/
+        the bridge read; ts + changed_files are additive."""
+        records = self._self_change_records(50)
+        reverted = self._reverted_shas(records)
+        for rec in records:
+            if not rec["is_revert"] and rec["sha"] not in reverted:
                 return rec
         return None
 
