@@ -36,7 +36,7 @@ Start at `Company Build Hub.md`. Contracts = `contracts/` notes (C1–C8). Engin
 | a new **node-type** (process/content/presentation) | `nodes/<name>.py` | declare VERSION/KIND/PORTS + `run`; drop it in; it self-registers (auto-discovered). If it reads **mutable truth** (repo, index, model-of-someone, clock) → also `VOLATILE=True` or the memo gate freezes it |
 | a new **model / provider** | `fabric/config.py` | repoint `DEFAULT_BASE_URL` / register; `transport.list_models` exposes them |
 | a new **storage backend** | `store/` | implement the Resolver Protocol (C4); add a backfill |
-| a new **RHM action verb** | `runtime/suite.py` | add to `RHM_VERBS` + `_parse_rhm_action` + `_dispatch_rhm_action`; whitelist-gated |
+| a new **RHM action verb** | `runtime/suite.py` | add a `VerbSpec` to `RHM_VERB_SPECS` (the single-source registry — `RHM_VERBS`/`_DESC`/`_CLASS` + the native-tool param-schema all derive from it) + a case in `_dispatch_rhm_action` to execute it; if the tool-call args have a non-trivial shape, a case in `_json_obj_to_action`. Whitelist-gated via `RHM_VERBS`. (The old `_parse_rhm_action` text-shape parser is RETIRED — the RHM acts via native tool-calling now.) |
 | a new **presence mode** | `runtime/suite.py` `MODES` + `MODE_DIRECTIVES` | the mode IS a node (`rhm_mode`); behavior comes from the directive |
 | a **settings/control panel** (declarative) | ask the RHM (`propose_panel`) | fields edit real config; the 'others' tier; git-reversible |
 | a **new UI component in code** (arbitrary) | ask the RHM (`propose_extension`), operator-only | build-GATED → `src/extensions/` → error boundary → git-revert |
