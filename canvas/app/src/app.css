@@ -255,8 +255,13 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
    stacked in the right rail. Reuses the .ev event-row vocabulary (token-coloured per kind) so it reads
    coherent with the Activity feed; the .hist-* layer is layout-only, all colour from design tokens. */
 .hist{margin-top:10px;padding-top:9px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px}
-.hist-head{display:flex;flex-direction:column;gap:2px}
-.hist-addr{font-size:9px;word-break:break-all;color:var(--dim)}
+/* REGION-BATCH-2 (head-only pass): .hist-head + .hist-addr + .act-title were DELETED — the L3 History, L6
+   Versions, L5 SelfChanges heads now compose the kit SectionHead (the indicated/versioned address rides the
+   kicker, the count/stale state reads as a kit Badge). The kit is the sole authority for the head (H2). NOTE:
+   .act-title's CSS rule was already deleted in Activity's wave-4 pass, so these three heads had been rendering
+   unstyled since then — the SectionHead conversion fixes that drift. The .ev / .hist-groups / .hist-group /
+   .hist-list / .ver body vocabulary below is KEPT (shared across these three Class-A regions + the Activity
+   feed — the designed, token-coloured-per-kind rows; Surface-ifying them would regress cross-region coherence). */
 .hist-groups{display:flex;flex-direction:column;gap:5px;max-height:340px;overflow:auto}
 .hist-group{border:1px solid var(--line);border-radius:5px;background:var(--s1);overflow:hidden}
 .hist-group-head{display:flex;align-items:baseline;gap:7px;width:100%;padding:5px 8px;
@@ -571,9 +576,9 @@ button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
 .rhm-input .mic.rec{border-color:var(--err);color:var(--err);animation:pulse 1s ease-in-out infinite}
 /* WAVE-4: .panel h3 + .panel .row were DELETED — the panel-stacked regions (Inspector · Grow · Inbox) now
    compose the kit SectionHead for their heading (kit is the sole authority, H2/G-25) and no longer render a
-   bare <h3> or a .row in the panel (Inspector's identity/state moved to .ins-* layout + kit Badges). Fleet's
-   heading uses its own .fleet-title. The shared .panel .k label + .panel input/pre are KEPT — still rendered
-   by the inspector meta rows + Grow's inputs + the generic NodeConfigForm. */
+   bare <h3> or a .row in the panel (Inspector's identity/state moved to .ins-* layout + kit Badges). Fleet now
+   composes the kit SectionHead too (region-batch-2). The shared .panel .k label + .panel input/pre are KEPT —
+   still rendered by the inspector meta rows + Grow's inputs + the generic NodeConfigForm. */
 .panel .k{color:var(--dim)}
 .panel input{width:100%;margin:5px 0;background:var(--bg);border:1px solid var(--line);color:var(--ink);
   font-family:inherit;font-size:12px;padding:8px;border-radius:3px}
@@ -584,33 +589,34 @@ button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
    the proposal as a kit Surface on the AWAIT tone (a card, read by colour). See the .grow-* layer below. */
 .muted{color:var(--dim);font-size:11px;line-height:1.6}
 /* F8 · the fleet surface — the live model layer (model · kind · alive), stacked in the right-rail .panel
-   column. Built ENTIRELY on corpus tokens (no off-token literal → design-lint --fail-on clean): --s1 panel
-   surface, --bg row well, --line/--line-2 borders, --sig accent title, --dim muted, --ok the alive signal,
-   --err the fail-loud tint. Coherent in scale with the inspector (h3 / .row rhythm) — a navigable panel, not
-   a dump (rule 9). */
+   column. REGION-BATCH-2 (FULL conversion): redesigned to the commander's-bridge language composed from the
+   shared kit (kit SectionHead + LaneHead + Surface, following the Palette exemplar). The legacy look rules
+   (.fleet-head / .fleet-title / .fleet-kind-head / .fleet-kind-name / .fleet-kind-count / .fleet-list /
+   .fleet-row look / .fleet-kind-tag / .fleet-err bespoke block) were DELETED — the kit Surface/LaneHead now
+   carry the well + spine + count, and a failed endpoint renders a kit <Surface tone="fail">. What REMAINS is
+   a thin LAYOUT-ONLY layer (the kit is the sole authority for the look, H2): the kit-row layout, the kind
+   monogram (the same monogram language as the Palette rack), the honest live-registry dot, and the legend. */
 .fleet{margin-top:13px;padding-top:11px;border-top:1px solid var(--line)}
-.fleet-head{display:flex;align-items:baseline;gap:7px}
-.fleet-title{font-family:"Fraunces",serif;font-weight:600;font-size:14px;color:var(--sig);margin:0}
-.fleet-refresh{margin-left:auto;flex:none}
-.fleet-body{margin-top:9px;display:flex;flex-direction:column;gap:10px}
-.fleet-kind{display:flex;flex-direction:column;gap:5px}
-.fleet-kind-head{display:flex;align-items:baseline;gap:7px;padding-bottom:4px;border-bottom:1px solid var(--line)}
-.fleet-kind-name{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
-.fleet-kind-count{margin-left:auto;font-size:9px;color:var(--dim);font-variant-numeric:tabular-nums}
-.fleet-list{display:flex;flex-direction:column;gap:3px}
-.fleet-row{display:flex;align-items:center;gap:7px;padding:5px 8px;background:var(--bg);
-  border:1px solid var(--line);border-left:3px solid var(--ok);border-radius:3px;font-size:10.5px}
-.fleet-row:hover{border-color:var(--sig)}
+.fleet-refresh{flex:none}
+.fleet-body{display:flex;flex-direction:column;gap:var(--sp-3)}
+.fleet-kind{display:flex;flex-direction:column}
+/* the model card lays out as: a kind monogram · the model name (fills) · the honest live dot. The kit Surface
+   gives the well + spine tint + hover-lift; this only arranges the row's contents. */
+.fleet-row{display:flex;align-items:center;gap:var(--sp-2)}
+.fleet-mono{flex:none;width:22px;height:22px;border-radius:var(--r-sm);display:grid;place-items:center;
+  font-family:var(--font-display);font-weight:600;font-size:var(--fs-tag);color:var(--bg)}
+.fleet-mono-sig{background:var(--kind-process)} .fleet-mono-wire{background:var(--kind-content)}
+.fleet-mono-dim{background:var(--line-2);color:var(--ink)}
+.fleet-name{flex:1;min-width:0;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-family:var(--font-mono);font-size:var(--fs-body)}
 /* the live-registry dot — a model present in the registry IS the live fleet (registry-is-truth); the dot
    reuses the corpus --ok alive token, the same alive signal used across the surface. */
-.fleet-dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok)}
-.fleet-name{flex:1;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fleet-kind-tag{flex:none;font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
-/* fail-loud (rule 4): a down/unconfigured endpoint surfaces its error in the fail tint, never a blank group. */
-.fleet-err{padding:6px 8px;background:var(--bg);border:1px solid var(--err);border-left:3px solid var(--err);
-  border-radius:3px;font-size:10px;color:var(--err);line-height:1.4;overflow-wrap:anywhere}
+.fleet-dot{flex:none;width:7px;height:7px;border-radius:var(--r-pill);background:var(--ok);box-shadow:0 0 6px var(--ok)}
+/* the fail-loud endpoint error reads as a kit fail Surface — this only makes the long error string wrap. */
+.fleet-err{overflow-wrap:anywhere}
 /* the legend states what the dot means in-surface (honest membership signal, not a fabricated health probe). */
-.fleet-legend{margin-top:9px;display:flex;align-items:center;gap:6px;font-size:9px;color:var(--dim);line-height:1.4}
+.fleet-legend{margin-top:var(--sp-2);display:flex;align-items:center;gap:var(--sp-1);font-size:var(--fs-tag);
+  color:var(--dim);line-height:var(--lh-body)}
 .sig{color:var(--sig)} .err{color:var(--err)}
 /* WAVE-4: .tg (the old comma-list live-node-type tag) was DELETED — Grow now renders the live node-types as a
    kit lane of Badge chips (navigable, counted), see the .grow-types layer below. */
@@ -786,12 +792,23 @@ button.b:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
 .wt-resolved{color:var(--sig);font-size:10px;letter-spacing:.06em}
 .wt-spoke{margin-left:auto;color:var(--dim);font-size:9px}
 
-/* full-screen workshop */
+/* full-screen workshop — REGION-BATCH-2 (FULL conversion): the head/output now compose the kit (SectionHead
+   + Surface). The .workshop position:fixed/inset (the full-viewport modal) + .close stay (STRUCTURAL chrome,
+   not look). The legacy .workshop h2 / .workshop .full LOOK rules were DELETED — the kit SectionHead carries
+   the display-voice title and the kit Surface carries the output well; .ws-* below is layout-only. On phone
+   (≤699) the inset tightens so the 40px gutter doesn't crowd a 390px screen. */
 .workshop{position:fixed;inset:40px;z-index:500;background:var(--panel);border:1px solid var(--sig-dim);
-  border-radius:8px;padding:24px;overflow:auto;box-shadow:var(--shadow)}
-.workshop h2{font-family:"Fraunces",serif;color:var(--sig);margin:0 0 4px}
-.workshop .close{position:absolute;top:16px;right:20px;cursor:pointer;color:var(--dim);font-size:20px}
-.workshop .full{font-family:"Fraunces",serif;font-size:19px;line-height:1.5;color:var(--ink);white-space:pre-wrap;margin-top:16px}
+  border-radius:var(--r);padding:var(--sp-5);overflow:auto;box-shadow:var(--shadow)}
+.workshop .close{position:absolute;top:var(--sp-4);right:var(--sp-4);cursor:pointer;color:var(--dim);font-size:20px}
+.workshop .close:hover{color:var(--sig)}
+/* the output well — the kit Surface gives the card; this reads the value in the display voice (the workshop
+   is the calm full-screen read of a resolved output). */
+.ws-output{margin-top:var(--sp-3)}
+.ws-full{font-family:var(--font-display);font-size:var(--fs-display);line-height:var(--lh-body);
+  color:var(--ink);white-space:pre-wrap}
+@media (max-width:699px){
+  .workshop{inset:var(--sp-2);padding:var(--sp-4)}
+}
 
 /* ============================================================================================
    F0 · THE LAYOUT SHELL — one top-level grid, NOT 7 fixed-px absolute islands.

@@ -22,8 +22,15 @@
 // Renders ONLY when a node with a versioned output address is selected (else nothing). data-ui-ref (quoted,
 // per the lane rule) keeps it addressable on the surface itself.
 import { relTime } from '../api'
+import { SectionHead, Badge } from '../components/kit'
 import { useApp } from '../AppContext'
 
+// WAVE-? REGION-BATCH-2 (HEAD-ONLY pass, A1/H) — CLASS-A region: the `.ev`/`.ver` row body is the shared,
+// designed, token-coloured vocabulary (current=ev-run signal, prior=ev-decision content) coherent with the
+// L3 History + L5 SelfChanges + Activity regions — left untouched (Surface-ifying it would regress that). The
+// conversion is HEAD-ONLY (the Activity pattern): a kit SectionHead in the display voice (the versioned
+// address rides the kicker; the version count reads as a Badge). PRESERVED: the is_current "current"/"prior"
+// kind badge, the abbreviated cas hash, newest-first ordering, the honest empty, every data-ui-ref.
 export function Versions() {
   const { versions, versionsBusy } = useApp()
   if (!versions) return null                                    // nothing versioned selected — never clutters
@@ -33,13 +40,14 @@ export function Versions() {
 
   return (
     <div className="hist ver" data-ui-ref="ui://inspector/versions">
-      <div className="hist-head">
-        <span className="act-title">versions at this address</span>
-        <span className="muted hist-addr" title={addr}>{addr}</span>
-        <span className="muted">
-          {versionsBusy ? 'loading…' : `${rows.length} version${rows.length === 1 ? '' : 's'} held here`}
-        </span>
-      </div>
+      {/* the HEAD — display-voice title; the versioned address rides the kicker; the count of values this
+          address has HELD reads as a Badge (the trail depth, by sight). */}
+      <SectionHead tag={addr}
+        aside={versionsBusy
+          ? <Badge tone="dim">loading…</Badge>
+          : <Badge tone={rows.length ? 'sig' : 'dim'}>{rows.length} version{rows.length === 1 ? '' : 's'} held</Badge>}>
+        versions
+      </SectionHead>
 
       {/* honest empty (rule 4): an address never written shows a true "no versions", never a silent blank. */}
       {rows.length === 0 && !versionsBusy && (
