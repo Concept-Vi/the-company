@@ -1,5 +1,5 @@
 /* GENERATED from tokens.json by emit.py — DO NOT hand-edit. Edit tokens.json + re-run `python3 emit.py`. */
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,900&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 :root{
   /* surface tiers */
   --bg:#080a0d;
@@ -36,14 +36,40 @@
   --kind-content-bg:rgba(107,155,216,.10);
   --kind-present-bg:rgba(230,171,92,.10);
   --kind-model-bg:rgba(181,140,220,.10);
-  /* shape */
-  /* shadow-color added 2026-06-07 — the near-black drop-shadow colour the mockups' bespoke node/sheet box-shadows recurred (#000 ×12 across A2/A3/A11/B3/B4/B6/E1); the panel --shadow token now refs it so the shadow colour lives in one place. */
-  --r:7px;
-  --r-lg:11px;
-  --r-pill:99px;
+  /* typography — the commander's-bridge voice */
+  /* THE TYPE SYSTEM (wave-2 design-direction, 2026-06-07). The running app's de-facto pairing — promoted from raw 'Fraunces'/'IBM Plex Mono' string literals scattered across canvas/app/src/app.css into registry tokens so the look assembles FROM the registry, not bolt-on (law 2). DIRECTION: a dark instrument / commander's bridge — a monospace INSTRUMENT BODY (IBM Plex Mono) for precision + machine-truth, a Fraunces SERIF DISPLAY for authority/headings (the calm-authority signature: serif-in-a-cockpit, not generic-dashboard sans). Fraunces added to the imports beside Bricolage (Bricolage stays for the mockup corpus' .display; the running app wears Fraunces). --font-display = Fraunces serif (titles, RHM voice, node output, panel headings); --font-mono = IBM Plex Mono (every control, label, value, address — the instrument body); --font-body aliases mono (the app's base font IS mono — the precision read). The type SCALE is a coherent modular ladder (no more scattered 8/8.5/9/9.5/10/10.5/11/11.5/12/12.5/13/13.5/14/15/16/19 literals); steps named by ROLE so a region picks intent, not a number. */
+  --font-display:'Fraunces', Georgia, serif;
+  --font-mono:'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+  --font-body:'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+  --font-sans:'IBM Plex Sans', system-ui, sans-serif;
+  --fs-micro:8.5px;
+  --fs-tag:9.5px;
+  --fs-meta:10.5px;
+  --fs-body:12px;
+  --fs-lg:13.5px;
+  --fs-title:15px;
+  --fs-display:19px;
+  --lh-tight:1.3;
+  --lh-body:1.5;
+  --tr-tag:.12em;
+  --tr-label:.08em;
+  /* shape — a coherent space + radius + elevation scale */
+  /* shadow-color added 2026-06-07 — the near-black drop-shadow colour the mockups' bespoke node/sheet box-shadows recurred (#000 ×12). G-22 FIX (wave-2 design-direction): the old scale was 3 colliding steps (--r 7px / --r-lg 11px / --sp 8px) — incoherent + value-overloaded. REPLACED with a coherent modular ladder. SPACE is a base-4 ramp (--sp-1..--sp-6 = 4·8·12·16·24·32) so every gap/pad reads on one rhythm; --sp kept = base-8 (8px, the legacy default — now an explicit alias of --sp-2). RADII harmonised to a 3-step ramp (--r-sm 5 / --r 8 / --r-lg 12) + --r-pill; --r nudged 7→8 and --r-lg 11→12 so radii sit ON the 4-grid too (one rhythm for space AND corners). The token NAMES are unchanged so every existing var(--r)/var(--sp) reference keeps resolving — only the values rationalised; the global re-screenshot verifies no regression. --elev-1/-2 = the two elevations (rail/panel vs floating card/sheet) so depth is a token, not a per-region literal. */
+  --sp-1:4px;
+  --sp-2:8px;
+  --sp-3:12px;
+  --sp-4:16px;
+  --sp-5:24px;
+  --sp-6:32px;
   --sp:8px;
+  --r-sm:5px;
+  --r:8px;
+  --r-lg:12px;
+  --r-pill:99px;
   --shadow-color:#000;
   --shadow:0 18px 40px -22px var(--shadow-color);
+  --elev-1:0 1px 0 rgba(255,255,255,.02), 0 8px 24px -16px var(--shadow-color);
+  --elev-2:0 1px 0 rgba(255,255,255,.03), 0 24px 60px -28px var(--shadow-color);
   font-size:14px;
 }
 

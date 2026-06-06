@@ -14,9 +14,88 @@
   --err:var(--fail);      /* red */
 }
 *{box-sizing:border-box}
-html,body,#root{margin:0;height:100%;background:var(--bg);font-family:"IBM Plex Mono",ui-monospace,monospace}
-/* dark instrument theme over tldraw */
-.tl-background{background-color:var(--bg) !important}
+/* WAVE-2 DESIGN DIRECTION — the commander's bridge.
+   The aesthetic: a dark instrument deck. A monospace INSTRUMENT BODY (var(--font-mono), the precision read —
+   every control, label, value, address) under a Fraunces SERIF DISPLAY (var(--font-display), the calm-
+   authority voice — titles, the RHM, node output, panel headings). The signature is serif-in-a-cockpit on
+   near-black, mint as the single live signal, and ATMOSPHERE (a subtle dual-radial mesh + a fractal-noise
+   grain) so the deck has depth — not a flat generic-dashboard surface. The fonts/scale resolve from the
+   registry tokens (design-system.css ← tokens.json), so this assembles FROM the registry (law 2). */
+html,body,#root{margin:0;height:100%;font-family:var(--font-mono);font-size:var(--fs-body);
+  letter-spacing:.1px;color:var(--ink)}
+/* the bridge atmosphere — two faint radials (a mint dawn upper-right, a cool deep glow lower-left) over the
+   near-black base, so the deck reads as a lit instrument volume rather than flat paint. Lives on the root so
+   the tldraw board floats IN the volume (the board's own .tl-background is transparent-tinted below). */
+/* the cool lower-left glow is DERIVED from the --cache token (the same blue-grey, at 6% — token-derived via
+   color-mix, the established pattern at .bi-outcome-bad; no invented literal → design-lint clean). */
+body{background:
+  radial-gradient(1200px 760px at 78% -12%, var(--acc-glow), transparent 60%),
+  radial-gradient(960px 640px at -6% 112%, color-mix(in srgb, var(--cache) 6%, transparent), transparent 56%),
+  var(--bg)}
+/* a near-invisible film grain over everything (under the HUD, over the void) — the texture that lifts the
+   deck out of "solid colour". pointer-events:none so it never intercepts a click. */
+body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.022;z-index:9998;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+/* dark instrument theme over tldraw — the board is transparent so the bridge atmosphere shows through it. */
+.tl-background{background-color:transparent !important}
+
+/* ============================================================================================
+   THE SHARED KIT (H2) — the reusable visual vocabulary every region composes from (components/kit.tsx).
+   ONE language for the whole product: a region is recognised by the SHAPE + TINT these give it.
+   Token-only (no off-token literal, no bespoke element → design-lint clean). The four tones map the
+   product's signals: sig=alive/done(green) · await=awaiting-you(amber) · fail=error(red) ·
+   wire=decision→build(blue) · dim=neutral/audit.
+   ============================================================================================ */
+/* tone tokens — one place maps a tone NAME to its colour, so every kit primitive tints consistently. */
+.kit-tone-sig{--tone:var(--sig);--tone-dim:var(--sig-dim)}
+.kit-tone-await{--tone:var(--warn);--tone-dim:var(--line-2)}
+.kit-tone-fail{--tone:var(--err);--tone-dim:var(--err)}
+.kit-tone-wire{--tone:var(--kind-content);--tone-dim:var(--line-2)}
+.kit-tone-dim{--tone:var(--dim);--tone-dim:var(--line)}
+
+/* SECTION HEADING — the display-voice region title + an uppercase role kicker + a right aside slot. */
+.kit-sechead{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--sp-3);
+  margin:0 0 var(--sp-3);padding-bottom:var(--sp-2);border-bottom:1px solid var(--line)}
+.kit-sechead-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.kit-kicker{font-family:var(--font-mono);font-size:var(--fs-micro);letter-spacing:var(--tr-tag);
+  text-transform:uppercase;color:var(--tx-3)}
+/* scoped under .kit-sechead (specificity 0,2,0) so the kit always WINS over legacy container rules like
+   `.panel h3` (0,1,1) — the kit is the sole authority for its heading, the H2 "one language" guarantee. */
+.kit-sechead .kit-sectitle{font-family:var(--font-display);font-weight:600;font-size:var(--fs-title);
+  color:var(--ink);margin:0;letter-spacing:-.2px;line-height:1.1}
+.kit-sechead-aside{flex:none;display:flex;align-items:center;gap:var(--sp-2)}
+
+/* LANE HEADER — a grouped-lane band: a tint spine, a name, a count chip. Collapsible when it's a <button>. */
+.kit-lanehead{display:flex;align-items:center;gap:var(--sp-2);width:100%;text-align:left;
+  margin:var(--sp-3) 0 var(--sp-1);padding:var(--sp-1) 0 var(--sp-1) var(--sp-2);
+  border-left:2px solid var(--tone);background:transparent;border-top:none;border-right:none;border-bottom:none;
+  font-family:var(--font-mono);font-size:var(--fs-tag);letter-spacing:var(--tr-label);text-transform:uppercase;
+  color:var(--tone);cursor:default}
+button.kit-lanehead{cursor:pointer}
+button.kit-lanehead:hover{color:var(--ink)}
+.kit-caret{flex:none;width:11px;color:var(--dim)}
+.kit-lane-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kit-lane-count{flex:none;font-variant-numeric:tabular-nums;color:var(--tone);background:var(--s2);
+  border:1px solid var(--line);border-radius:var(--r-pill);padding:0 var(--sp-2);font-size:var(--fs-micro)}
+
+/* BADGE — a small state pill (read the state by colour). */
+.kit-badge{display:inline-flex;align-items:center;gap:3px;font-family:var(--font-mono);font-size:var(--fs-micro);
+  letter-spacing:var(--tr-label);text-transform:uppercase;color:var(--tone);
+  border:1px solid var(--tone-dim);border-radius:var(--r-pill);padding:2px var(--sp-2);white-space:nowrap}
+
+/* SURFACE — the card primitive. An elevated well; the optional left spine carries the tone (lifecycle/kind).
+   Actionable surfaces lift on hover (the affordance read). The unit a navigable list is built from. */
+.kit-surface{position:relative;background:var(--bg);border:1px solid var(--line);border-radius:var(--r);
+  padding:var(--sp-2) var(--sp-3);margin:var(--sp-1) 0;color:var(--ink);font-size:var(--fs-meta);
+  box-shadow:var(--elev-1);transition:border-color .12s ease, box-shadow .12s ease, transform .12s ease}
+.kit-surface.kit-tone-sig,.kit-surface.kit-tone-await,.kit-surface.kit-tone-fail,
+.kit-surface.kit-tone-wire,.kit-surface.kit-tone-dim{border-left:3px solid var(--tone)}
+.kit-surface-actionable{cursor:pointer}
+.kit-surface-actionable:hover{border-color:var(--sig);box-shadow:var(--elev-2);transform:translateY(-1px)}
+
+/* EMPTY STATE — the honest rest cue. */
+.kit-empty{padding:var(--sp-3) var(--sp-2);color:var(--dim);font-size:var(--fs-meta);line-height:var(--lh-body);
+  font-style:italic;border:1px dashed var(--line);border-radius:var(--r);text-align:center}
 
 /* node card (rendered inside a tldraw shape) */
 .node-card{position:relative;width:100%;height:100%;border:1px solid var(--line);border-radius:4px;background:var(--panel);
@@ -110,9 +189,13 @@ body.canvas-running .node-card.idle .node-dot{background:var(--kind-content);box
 
 /* HUD: toolbar, inspector, grow, workshop */
 .hud{position:absolute;z-index:300;color:var(--ink)}
-.toolbar{top:12px;left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center;
-  background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:8px 12px}
-.toolbar .title{font-family:"Fraunces",serif;font-weight:900;font-size:16px;margin-right:6px}
+/* the toolbar — the bridge's command rail. A floating instrument bar: tier-2 surface, a hairline + the
+   tier-1 elevation so it sits ABOVE the deck, and the company name in the Fraunces display voice. */
+.toolbar{top:var(--sp-3);left:50%;transform:translateX(-50%);display:flex;gap:var(--sp-3);align-items:center;
+  background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid var(--line-2);
+  border-radius:var(--r-lg);padding:var(--sp-2) var(--sp-4);box-shadow:var(--elev-1)}
+.toolbar .title{font-family:var(--font-display);font-weight:900;font-size:var(--fs-title);margin-right:var(--sp-1);
+  letter-spacing:-.2px}
 .toolbar .title em{color:var(--sig);font-style:italic}
 button.b{font-family:inherit;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
   color:var(--bg);background:var(--sig);border:none;border-radius:3px;padding:8px 14px;cursor:pointer}
@@ -190,13 +273,13 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 .ver-row{align-items:baseline}
 .ver-cas{font-family:inherit;letter-spacing:.04em}
 .palette{top:64px;left:12px;width:158px;background:var(--s1);border:1px solid var(--line);
-  border-radius:6px;padding:11px;max-height:calc(100vh - 90px);overflow:auto}
+  border-radius:var(--r-lg);padding:var(--sp-3);max-height:calc(100vh - 90px);overflow:auto;box-shadow:var(--elev-1)}
 .pchip{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:6px 8px;margin:4px 0;
   background:var(--bg);border:1px solid var(--line);border-radius:3px;cursor:pointer;font-size:11px;color:var(--ink)}
 .pchip:hover{border-color:var(--sig);color:var(--sig)}
 .pchip .pk{color:var(--dim);font-size:8px;letter-spacing:.14em;text-transform:uppercase}
 .panel{top:64px;right:12px;width:330px;background:var(--s1);border:1px solid var(--line);
-  border-radius:6px;padding:13px;max-height:calc(100vh - 400px);overflow:auto}
+  border-radius:var(--r-lg);padding:var(--sp-3);max-height:calc(100vh - 400px);overflow:auto;box-shadow:var(--elev-1)}
 /* right-hand-man — the coherent conversational voice of the Company */
 .rhm{right:12px;bottom:12px;width:340px;height:312px;background:var(--s1);
   border:1px solid var(--line);border-radius:6px;padding:11px 13px;display:flex;flex-direction:column}
@@ -207,22 +290,20 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 .rhm-cfg{display:flex;flex-direction:column;gap:5px;padding:8px 0;border-bottom:1px solid var(--line)}
 .rhm-cfg input{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:6px;font-family:inherit;font-size:10.5px}
 .rhm-cfg input:focus{outline:none;border-color:var(--sig)}
-.ibx-head{font-size:11px;margin-bottom:6px}
-.ibx-item{padding:6px 8px;margin:4px 0;background:var(--bg);border:1px solid var(--line);border-left:3px solid var(--warn);
-  border-radius:3px;cursor:pointer;font-size:11px;color:var(--ink)}
-.ibx-item:hover{border-color:var(--sig)}
-/* U12: triage lanes — escalations grouped by action into visual groups, not one flat list. */
-.ibx-lane{margin:6px 0;padding-left:2px}
-.ibx-lane-head{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);
-  padding:3px 0;border-bottom:1px solid var(--line);margin-bottom:3px}
-.ibx-lane.ibx-test .ibx-lane-head{color:var(--warn)}        /* test-pollution items visible but separable */
-.ibx-lane.ibx-test .ibx-item{opacity:.6;border-left-color:var(--dim)}
-.ibx-lane.ibx-resolved .ibx-item.ibx-done{border-left-color:var(--sig-dim);color:var(--dim);cursor:pointer}
-/* WIRE-UI: the decision→build lane head reads as the wire's own band (the blue the wire events use). */
-.ibx-lane.ibx-builds .ibx-lane-head{color:var(--kind-content)}
-/* WIRE-UI: the W7 deferred-queue lane — held builds, visible (fail-loud), dimmed (not awaiting a verdict yet). */
-.ibx-lane.ibx-deferred .ibx-lane-head{color:var(--dim)}
-.ibx-item.ibx-defer-item{border-left-color:var(--dim);opacity:.82;font-size:10.5px}
+/* WAVE-2: the Inbox layer — LAYOUT ONLY, composing the shared kit (the look lives in .kit-*). The triage
+   reads by sight: an awaiting-count headline, kit lanes per group, kit Surface cards per item. */
+.ibx-stat{display:flex;align-items:center;gap:var(--sp-1);margin-bottom:var(--sp-2);font-size:var(--fs-meta)}
+.ibx .ibx-item{display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap}
+.ibx-item-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
+.ibx-item-cta{flex:none;font-size:var(--fs-micro)}
+.ibx .ibx-done .ibx-item-name{color:var(--dim)}
+.ibx .ibx-defer-item{opacity:.85}
+/* WAVE-2: the legacy .ibx-head / .ibx-item / .ibx-lane-head / .ibx-builds / .ibx-resolved / .ibx-deferred
+   per-item + per-lane-head styles were DELETED — the redesigned Inbox composes the shared kit (kit LaneHead +
+   Surface) for those, and the old rules (border-radius:3px, hardcoded amber spine, font-size:11px) were
+   silently OVERRIDING the kit by source-order/specificity, breaking H2 "one language". The kit is now the
+   sole authority for the lane-heads + item cards. .ibx-lane stays = a thin wrapper (margin only). */
+.ibx-lane{margin:var(--sp-2) 0}
 /* L8 (§21.7#9): the click-to-thing link on a surfaced item that carries a ui:// target — clicking it
    composes the preserved resolveUiTarget keystone to navigate+spotlight the thing the item is about.
    Reads as a subtle inline affordance (corpus tokens only, no literals); the signal accent on hover
@@ -428,7 +509,7 @@ button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
 .rhm-input button{padding:8px 13px}
 .rhm-input .mic{padding:8px 10px}
 .rhm-input .mic.rec{border-color:var(--err);color:var(--err);animation:pulse 1s ease-in-out infinite}
-.panel h3{font-family:"Fraunces",serif;font-weight:600;font-size:14px;color:var(--sig);margin:0 0 9px}
+.panel h3{font-family:var(--font-display);font-weight:600;font-size:var(--fs-lg);color:var(--sig);margin:0 0 var(--sp-2);letter-spacing:-.1px}
 .panel .row{display:flex;justify-content:space-between;gap:10px;margin:4px 0;font-size:11px}
 .panel .k{color:var(--dim)}
 .panel input{width:100%;margin:5px 0;background:var(--bg);border:1px solid var(--line);color:var(--ink);
