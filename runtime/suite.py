@@ -4223,17 +4223,29 @@ class Suite:
         """The go-gate address for step `position` — the source node's logical output (compile.py form)."""
         return f"run://{self._session_graph_id(session_id)}/go{position}"
 
-    def start_session(self, item_ids: list, mode: str = "walkthrough") -> dict:
+    def start_session(self, item_ids: list, mode: str = "walkthrough",
+                      teach: list | None = None, indicate: list | None = None) -> dict:
         """Compile a review-session into a Graph the existing scheduler runs, operator-paced (B).
         For each item i: a go-SOURCE node `go{i}` (constant, unwired → never auto-fires → its address
         stays unresolved = the gate) wired into a STEP node `step{i}` (carrier) on its `text` port. The
         step thus waits until next() writes `go{i}`'s address. Persists the session record atomically
-        (save_session) + the graph. The session is server-authoritative; the canvas reflects it."""
+        (save_session) + the graph. The session is server-authoritative; the canvas reflects it.
+
+        C2 (schema-additive side-channels, both optional): `teach` is a per-step list of flow-level
+        narration (the bootstrap's own teaching voice, composed WITH the corpus how-to in present_current's
+        guide branch), `indicate` is a per-step list of FE mount-hints (a ui:// address the FE indicates so
+        a hard-gated element mounts before its spotlight). Both POSITIONALLY ALIGNED to `item_ids`; None
+        (the default — every existing caller) leaves the session record C1-shaped (no teach/indicate keys),
+        so the guide/review narration is byte-identical. A length mismatch fails loud (no silent misalign)."""
         items = list(item_ids or [])
         if not items:
             raise ValueError("start_session needs at least one item id (fail loud)")
         if mode not in self.MODES:
             raise ValueError(f"unknown session mode {mode!r} — one of {self.MODES}")
+        if teach is not None and len(teach) != len(items):
+            raise ValueError(f"start_session teach length {len(teach)} != items length {len(items)} (fail loud — no silent misalign)")
+        if indicate is not None and len(indicate) != len(items):
+            raise ValueError(f"start_session indicate length {len(indicate)} != items length {len(items)} (fail loud — no silent misalign)")
         import time as _t
         session_id = f"{int(_t.time())}-{len(items)}"
         gid = self._session_graph_id(session_id)
@@ -4255,6 +4267,12 @@ class Suite:
         # silently breaks pacing — every step would fire on the first Next; no test would catch it.)
         session = {"id": session_id, "graph": gid, "mode": mode, "items": items,
                    "cursor": 0, "opened": [], "done": False}
+        # C2 side-channels (schema-additive): only set when provided, so a plain review/guide session record
+        # stays C1-shaped (no extra keys → byte-identical). present_current's guide branch reads these by cursor.
+        if teach is not None:
+            session["teach"] = list(teach)
+        if indicate is not None:
+            session["indicate"] = list(indicate)
         self.store.save_session(session)
         self._emit("review.start", f"review session {session_id} started — {len(items)} item(s), mode={mode}",
                    session=session_id, items=items, mode=mode,
@@ -4331,13 +4349,35 @@ class Suite:
             # fabricated (registry-is-truth). This lands in `framing` so the EXISTING voice narration effect
             # (useAppController ~1113 reads session.framing) speaks the how-to FOR FREE — we drive the visual
             # sequence + supply the narration TEXT, we never call speakReply (G-8 voice functions untouched).
-            narration = bundle.get("how_to_use") or bundle.get("what_this_is") \
+            corpus_narration = bundle.get("how_to_use") or bundle.get("what_this_is") \
                 or f"This is {item_id} — a part of the interface."
+            # C2 — COMPOSE the bootstrap's flow-level TEACH (the side-channel, by cursor) WITH the corpus
+            # how-to (rule 3: teach is the FLOW framing, not a second source of element how-to). Teach LEADS
+            # (it carries the point→ask→surface→approve step), the element's corpus how-to/what-this-is
+            # FOLLOWS where it exists — so the narration auto-enriches when the corpus fills the per-element
+            # howtos (no drift). When the topic carries no teach (the default tour), narration == the corpus
+            # narration BYTE-FOR-BYTE (C1 unchanged). Read defensively (the side-channel may be shorter/absent).
+            teach_list = s.get("teach") or []
+            teach_text = teach_list[cur] if (isinstance(teach_list, list) and cur < len(teach_list)) else None
+            if teach_text:
+                # the element's WHAT-THIS-IS as a brief tail (skip the verbose how_to_use leg here — teach is
+                # already the teaching voice; what_this_is grounds the element by name without doubling text).
+                what = bundle.get("what_this_is")
+                narration = f"{teach_text}\n\n({what})" if what else teach_text
+            else:
+                narration = corpus_narration
+            # the FE mount-hint for this step (the side-channel, by cursor): a ui:// address the FE indicates
+            # so a hard-gated element (the wire-door) MOUNTS before resolveUiTarget spotlights it. None = no
+            # indication for this step. The FE per-step effect calls the EXISTING indicate(addr) (we supply
+            # the hint; we never touch the indicate machinery here — fail-loud-safe, registry-validated FE-side).
+            indicate_list = s.get("indicate") or []
+            indicate_hint = indicate_list[cur] if (isinstance(indicate_list, list) and cur < len(indicate_list)) else None
             # raw carries: a registry-valid per-step ui_target (G-43 — _registry_ui_target honours
             # guide_address) so the FE per-step drive spotlights the REAL element; guide_address as the C1
-            # marker the FE branches on (tour vs review card); the full how-to bundle for a richer surface.
+            # marker the FE branches on (tour vs review card); the full how-to bundle for a richer surface;
+            # teach (the step's flow narration) + indicate (the mount-hint) for the C2 teach-to-self-modify tour.
             raw = {"guide_address": item_id, "ui_target": self._registry_ui_target({"guide_address": item_id}),
-                   "how_to": bundle, "kind": "guide"}
+                   "how_to": bundle, "kind": "guide", "teach": teach_text, "indicate": indicate_hint}
             return {"session": session_id, "cursor": cur, "total": len(s["items"]),
                     "item": item_id, "framing": narration, "raw": raw,
                     "ui_target": item_id,                   # the step's present target IS the element address
@@ -4441,7 +4481,57 @@ class Suite:
     # extend by adding a key (each filtered to registered addresses at resolve time — registry-is-truth).
     GUIDE_SEQUENCES: dict = {
         "default": ["ui://toolbar/run", "ui://toolbar/presence", "ui://inbox/build-review"],
+        # C2 — the BOOTSTRAP tour: teach the operator HOW TO REQUEST A CHANGE AND APPROVE IT FROM INSIDE
+        # (point → ask → surface → approve). Every address here is a LIVE registry key (registry-is-truth,
+        # filtered in _guide_sequence); the teach-narration (GUIDE_TEACH) + the indicate-hint (GUIDE_INDICATE)
+        # ride PARALLEL side-channels keyed by position (the session items stay address STRINGS — the organ
+        # keys on a ui:// string; teach/indicate are NOT folded into the items, so C1 stays byte-identical).
+        #   • point   ui://toolbar/run        — point at an element (also the indicate-target that MOUNTS the door)
+        #   • ask     ui://canvas/wire-request — the request-a-change door (appears because step 1 indicated an element)
+        #   • surface ui://inbox              — the build-intent surfaces in the inbox, awaiting you (always-mounted region)
+        #   • approve ui://inbox              — you approve it; only then does it dispatch (same region, distinct teach)
+        "request-a-change": ["ui://toolbar/run", "ui://canvas/wire-request", "ui://inbox", "ui://inbox"],
+        # alias — same bootstrap tour under the self-modify name (both resolve to the request-a-change spine).
+        "self-modify": ["ui://toolbar/run", "ui://canvas/wire-request", "ui://inbox", "ui://inbox"],
     }
+
+    # C2 — the flow-level TEACH narration, POSITIONALLY ALIGNED to each topic's GUIDE_SEQUENCES list. This is
+    # the BOOTSTRAP's own teaching voice (not per-element how-to — that lives in the corpus, rule 3): each
+    # string frames its STEP in the point→ask→surface→approve flow. It is COMPOSED WITH the corpus how-to in
+    # present_current (teach leads; the element's authored how_to_use/what_this_is follows where present), so
+    # the narration auto-enriches when the corpus fills the per-element howtos (no drift, no second source of
+    # element how-to). Model-free (read here, never generated). Topics without a TEACH entry (e.g. 'default')
+    # narrate purely from the corpus exactly as C1 did — teach is None → byte-identical C1 behaviour.
+    GUIDE_TEACH: dict = {
+        "request-a-change": [
+            "The first thing to learn here is that you can change the Company from inside it — by sight. "
+            "Start by POINTING at any element. Here it's the Run button; it could be any part of the "
+            "interface. The element you point at becomes the place you request a change.",
+            "With an element pointed at, the request-a-change door appears right here. You describe the "
+            "change in plain words — what you want different. Your description becomes a scoped build-intent: "
+            "the system works out which code it reaches (the blast radius), you don't have to.",
+            "A minted build-intent surfaces here, in the inbox's decision-to-build lane, awaiting you. It "
+            "shows what the change is and how far it reaches. Nothing has run yet — minting a build-intent "
+            "composes a plan, it does not modify anything.",
+            "Approval is yours alone — and it is safe by default. You approve the build-intent; that records "
+            "your verdict, but nothing modifies the Company yet. The wire stays in plan-mode (inert) until it "
+            "is deliberately armed, so an approved change is a plan awaiting that final go — you can always "
+            "ask first ('shall I?'). This is the loop that lets you grow the Company by sight: point, ask, "
+            "approve — with no change ever made behind your back.",
+        ],
+    }
+    GUIDE_TEACH["self-modify"] = GUIDE_TEACH["request-a-change"]
+
+    # C2 — the per-step INDICATE hint (the FE reads raw.indicate and calls the EXISTING indicate(addr) so a
+    # hard-gated element MOUNTS before the spotlight). POSITIONALLY ALIGNED. The wire-door (ui://canvas/wire-
+    # request) renders ONLY when a ui:// element is indicated (clickMode==='annotate'); so the 'point' step
+    # indicates ui://toolbar/run, which MOUNTS the door for the 'ask' step's spotlight. The later inbox steps
+    # carry no indicate (the door may stay up — harmless; the spotlight moves to the inbox region). A None per
+    # position = no FE indication for that step. Topics without an entry (default) = no indication anywhere.
+    GUIDE_INDICATE: dict = {
+        "request-a-change": ["ui://toolbar/run", None, None, None],
+    }
+    GUIDE_INDICATE["self-modify"] = GUIDE_INDICATE["request-a-change"]
 
     def _guide_sequence(self, topic: str | None = None) -> list:
         """Resolve a topic → an ORDERED list of registry-valid `ui://` addresses for the guided walk.
@@ -4449,14 +4539,32 @@ class Suite:
         (build_ui_info) — an unregistered/typo address is DROPPED (never drives the FE to a dead ref).
         An unknown topic falls back to 'default' (the orientation tour). Fail loud at the CALLER
         (start_guide) if the resolved list is empty after the registry filter."""
+        return [a for a, _t, _i in self._guide_steps(topic)]
+
+    def _guide_steps(self, topic: str | None = None) -> list:
+        """C2 — resolve a topic → ORDERED (address, teach, indicate) triples, PAIRED so the registry filter
+        keeps teach/indicate aligned to the surviving addresses (filtering by address alone would misalign a
+        positional teach list). registry-is-truth: an address is kept ONLY if it is a live UI_REGISTRY key
+        (build_ui_info) — a dropped address takes its teach+indicate with it. teach is the flow-level
+        narration (GUIDE_TEACH, None when the topic authors none → C1-identical corpus-only narration);
+        indicate is the FE mount-hint (GUIDE_INDICATE, None when none). An unknown topic falls back to
+        'default'. The CALLER (start_guide) fail-louds if the resolved list is empty after the filter."""
         key = (topic or "default").strip().lower()
-        candidates = self.GUIDE_SEQUENCES.get(key) or self.GUIDE_SEQUENCES["default"]
+        addresses = self.GUIDE_SEQUENCES.get(key) or self.GUIDE_SEQUENCES["default"]
+        teach = self.GUIDE_TEACH.get(key) or []
+        indicate = self.GUIDE_INDICATE.get(key) or []
         try:
             reg = self.build_ui_info()
         except Exception:
             reg = {}
-        # keep order, keep only registered addresses (registry-is-truth — never drive to a dead ref).
-        return [a for a in candidates if (not reg) or (a in reg)]
+        out = []
+        for idx, a in enumerate(addresses):
+            if reg and a not in reg:
+                continue                                    # registry-is-truth — drop unregistered, with its teach+indicate
+            out.append((a,
+                        teach[idx] if idx < len(teach) else None,
+                        indicate[idx] if idx < len(indicate) else None))
+        return out
 
     def start_guide(self, topic: str | None = None) -> dict:
         """C1 — start a SYSTEM-INITIATED guided sequence (the "show me how" tour). Composes the EXISTING
@@ -4474,7 +4582,10 @@ class Suite:
         mode:'walkthrough', topic} so the dial is set but the surface is told plainly there is nothing to
         tour. A populated guide returns start_session's first presentation (cursor 0) tagged
         organ_started:True + guide:True + the session id, so the FE drives the tour view per step."""
-        addresses = self._guide_sequence(topic)
+        steps = self._guide_steps(topic)                        # (address, teach, indicate) triples (registry-filtered, paired)
+        addresses = [a for a, _t, _i in steps]
+        teach = [t for _a, t, _i in steps]                       # the flow-level teach narration, aligned to the kept addresses
+        indicate = [i for _a, _t, i in steps]                    # the FE mount-hints, aligned to the kept addresses
         mode = self.set_mode("walkthrough")                      # the cosmetic dial — kept, pure reuse
         if not addresses:
             # FAIL LOUD: the dial IS set, but there is nothing to tour — say so plainly (no silent no-op).
@@ -4483,7 +4594,12 @@ class Suite:
             return {"organ_started": False, "mode": mode, "topic": topic or "default", "guide": True,
                     "reason": "no registered UI addresses resolved for this guide topic "
                               "(the sequence is registry-filtered — nothing to tour)"}
-        started = self.start_session(addresses, mode="walkthrough")   # the REAL organ — model-free guide branch
+        # teach/indicate ride PARALLEL side-channels onto the session record (the items stay address STRINGS,
+        # so the organ + C1 are unchanged); present_current's guide branch reads them by cursor. Pass None
+        # when the topic carries no teach/indicate (the default tour) so the session record stays C1-shaped.
+        started = self.start_session(addresses, mode="walkthrough",
+                                     teach=teach if any(teach) else None,
+                                     indicate=indicate if any(indicate) else None)   # the REAL organ — model-free guide branch
         self._emit("guide.start", f"guided sequence started — {len(addresses)} step(s), topic={topic or 'default'}",
                    session=started.get("session"), topic=topic or "default", address="ui://chrome/chat")
         return {**started, "organ_started": True, "guide": True,

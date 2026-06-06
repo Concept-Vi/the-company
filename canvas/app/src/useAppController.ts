@@ -990,6 +990,21 @@ export function useAppController(editor: Editor) {
     if (canvasMm) {
       const ref = canvasMm[1]
       if (ref == null || ref === '*') { editor.zoomToFit({ animation: { duration: 450 } }); setNotice('→ canvas'); return true }
+      // C2 fix — a DOM-STAMPED canvas ELEMENT (not a graph node): the wire-door (data-ui-ref=
+      // "ui://canvas/wire-request") + the portal window (ui://canvas/portal-window) are REGISTERED corpus
+      // addresses carried as literal data-ui-ref strings on a DOM element, NOT tldraw shapes. Before this,
+      // EVERY ui://canvas/<ref> fell to driveCanvas (the camera path) → it looked for a graph NODE named
+      // "wire-request" and fail-loud'd ("no node wire-request on the canvas"), so the C2 ask-step spotlight
+      // (the request-a-change door — the heart of the bootstrap) never landed. DISCRIMINATOR (cannot drift
+      // the node-camera path): a live graph node-id is NEITHER a registered corpus address (UI_INFO[target]
+      // is null for runtime node-ids) NOR DOM-stamped with a literal ui://canvas/<id> data-ui-ref (tldraw
+      // shapes are camera-driven). So a registered address that is ALSO present in the DOM as that exact
+      // data-ui-ref → spotlight it (the DOM element); everything else (every review-walk node drive) falls
+      // straight through to driveCanvas, byte-identical. The DOM-present check means a registered-but-
+      // unmounted canvas element camera-falls-back rather than spotlight-failing.
+      if (UI_INFO[target] != null && document.querySelector('[data-ui-ref="' + target + '"]')) {
+        return spotlightUiRef(target, target, UI_INFO)   // DOM-stamped canvas element (e.g. the wire-door)
+      }
       return driveCanvas(ref)
     }
     // RES1 (F8 follow-up) — REGION-ONLY addresses (single segment, e.g. ui://inbox, ui://models). Two DOM
@@ -1105,7 +1120,14 @@ export function useAppController(editor: Editor) {
     } catch { /* bridge transient — the next event re-pulls */ }
   }
   function endWalk() {
+    // C2 — a GUIDED TOUR may have left an element INDICATED (step 0 indicates ui://toolbar/run to MOUNT the
+    // wire-door for the ask step). On closing the tour, clear that indication so the canvas returns to a
+    // neutral state the operator didn't have to choose (no lingering door / .ui-indicated / contextualized
+    // history). Scoped to a GUIDE close (capture the flag BEFORE nulling) so a REVIEW-walk close — which never
+    // sets indication — is byte-identical/undisturbed. indicate(null) is the existing clear path (fail-safe).
+    const wasGuide = !!(sessionRef.current?.guide || sessionRef.current?.raw?.guide_address)
     setSession(null); sessionRef.current = null; spokenFor.current = ''
+    if (wasGuide && indicatedRef.current) indicate(null)
     try { localStorage.removeItem('company-review-session') } catch { /* */ }
   }
   // D-frontend: respond to the current step — operator-only, tagged with the session id + cursor position.
@@ -1140,10 +1162,21 @@ export function useAppController(editor: Editor) {
 
   // B+C — the per-step VIEW DRIVE: when the walk lands on a new step, MOVE the view to the thing the item
   // concerns. Deps are the STEP only (not voiceOn) so toggling voice mid-step does NOT re-zoom.
+  // C2 (teach-to-self-modify tour): a guided step may carry an INDICATE hint (raw.indicate, a ui:// address)
+  // — a hard-gated element (the request-a-change wire-door) renders ONLY while a ui:// element is indicated.
+  // So we call the EXISTING indicate(addr) FIRST (it sets `indicated` → React re-renders → the door mounts),
+  // THEN resolveUiTarget. The spotlight is safe across this re-render because spotlightUiRef DEFERS its DOM
+  // query one frame (setTimeout 30ms) — by the time it querySelectors the freshly-mounted door, React has
+  // flushed. We supply the hint only; indicate() is the unchanged machinery (registry-validated, fail-loud).
+  // No indicate hint (the default tour / review walk) → unchanged behaviour (resolveUiTarget only).
   useEffect(() => {
     if (!session || session.done || !session.item) return
+    const hint = session.raw?.indicate as string | undefined
+    if (hint && hint.startsWith('ui://') && indicatedRef.current !== hint) {
+      indicate(hint)                // MOUNT the hard-gated element (the wire-door) before the spotlight
+    }
     const tgt = session.raw?.ui_target
-    if (tgt) resolveUiTarget(tgt)   // registry-validated; fail-loud if unknown
+    if (tgt) resolveUiTarget(tgt)   // registry-validated; fail-loud if unknown (defers 30ms → mount lands first)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.session, session?.cursor, session?.item])
 

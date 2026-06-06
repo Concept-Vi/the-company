@@ -54,6 +54,14 @@ export function Toolbar() {
          check (ui_registry_acceptance) forbids an unregistered data-ui-ref. Flagged as a grown gap: register
          ui://toolbar/guide in the corpus so the guide control itself becomes an addressable/guidable element. */}
       <button className="b ghost" onClick={() => startGuide()} title="show me how — a guided tour of the interface, spotlighting each part with its how-to">? guide</button>
+      {/* C2: the BOOTSTRAP entry — the FIRST thing show-me teaches is HOW TO REQUEST A CHANGE AND APPROVE IT
+         FROM INSIDE (point → ask → surface → approve), wiring the operator into self-modifying the Company.
+         Same C1 guided-sequence machinery, the 'request-a-change' topic: it spotlights the real wire-door +
+         inbox + approve elements (indicating an element first so the door MOUNTS) and narrates the flow.
+         The wire-blue tint ties it to the wire's signature colour (the door + the inbox build lane). Same
+         NO-data-ui-ref note as ? guide (ui://toolbar/teach not yet a corpus address — flagged grown gap). */}
+      <button className="b ghost kit-tone-wire" onClick={() => startGuide('request-a-change')}
+        title="teach me to self-modify — a guided walk of requesting a change and approving it from inside the interface (point → ask → surface → approve)">⚙ teach me to self-modify</button>
       {notice && <span className="notice">{notice}</span>}
     </div>
   )

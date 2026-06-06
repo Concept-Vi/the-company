@@ -200,6 +200,11 @@ button.b{font-family:inherit;font-size:11px;font-weight:600;letter-spacing:.08em
 button.b:hover{box-shadow:0 0 18px -4px var(--sig)}
 button.b.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
 button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
+/* C2: the "teach me to self-modify" toolbar entry wears the WIRE tone (--kind-content via .kit-tone-wire)
+   so it reads BY SIGHT as the door into self-modification — the same signature colour as the wire-door + the
+   inbox decision→build lane the bootstrap tour walks. Tokens only (no literal), recognition-by-tint. */
+button.b.ghost.kit-tone-wire{border-color:var(--tone);color:var(--tone)}
+button.b.ghost.kit-tone-wire:hover{border-color:var(--tone);color:var(--tone);box-shadow:0 0 14px -6px var(--tone)}
 
 /* U8: the toolbar context hint is the most instructive text — never truncate it. Allow it to wrap to a
    second line (capped width keeps the toolbar from sprawling) and clamp to 2 lines so it stays legible
