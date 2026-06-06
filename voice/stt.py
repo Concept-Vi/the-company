@@ -8,10 +8,40 @@ from __future__ import annotations
 import io
 import json
 import os
+import shutil
+import subprocess
 import time
 import urllib.error
 import urllib.request
 import uuid
+
+# ffmpeg path — used to NORMALISE browser-recorded audio to the WAV whisper.cpp/NeMo decode (see
+# _to_wav16). Static build lives in ~/.local/bin on this box; env-overridable; PATH fallback.
+_FFMPEG = (os.environ.get("COMPANY_FFMPEG") or shutil.which("ffmpeg")
+           or (os.path.expanduser("~/.local/bin/ffmpeg")
+               if os.path.exists(os.path.expanduser("~/.local/bin/ffmpeg")) else None))
+
+
+def _to_wav16(audio: bytes) -> bytes:
+    """Normalise ANY recorded audio → 16 kHz mono 16-bit WAV (what whisper.cpp + the NeMo ears decode).
+    THE FIX for "the mic records but transcribes nothing": a browser's MediaRecorder produces compressed
+    audio — webm/opus on Chrome, mp4/aac on iOS Safari — which whisper.cpp returns an EMPTY transcript
+    for (verified 2026-06-06: a webm POST to /api/stt → text=''; the same clip as wav → full transcript).
+    So the whole voice-IN loop silently did nothing on a real phone. ffmpeg decodes the container/codec
+    and resamples to 16 kHz mono (also fixes any wrong sample rate on a wav). On ffmpeg-missing or a
+    decode failure we RETURN THE ORIGINAL bytes (the wav path still works; the failure surfaces as the
+    same empty transcript rather than a crash) — and stderr is left legible for diagnosis."""
+    if not _FFMPEG:
+        return audio                                          # no ffmpeg → pass through (wav still decodes)
+    try:
+        p = subprocess.run([_FFMPEG, "-hide_banner", "-loglevel", "error", "-i", "pipe:0",
+                            "-ar", "16000", "-ac", "1", "-f", "wav", "pipe:1"],
+                           input=audio, capture_output=True, timeout=30)
+        if p.returncode == 0 and p.stdout:
+            return p.stdout
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return audio                                              # decode failed → original (no crash)
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AAI_BASE = "https://api.assemblyai.com/v2"
@@ -206,6 +236,7 @@ def transcribe(audio: bytes, provider: str | None = None) -> dict:
     pid = _resolve_id(provider)
     spec = STT_PROVIDERS[pid]
     kind = spec["kind"]
+    audio = _to_wav16(audio)                                  # browser webm/mp4 → 16k mono wav (the ears decode wav)
     if kind == "cloud":
         if pid == "assemblyai":
             return _assemblyai(audio)
