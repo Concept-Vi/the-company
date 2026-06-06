@@ -135,6 +135,12 @@ export function useAppController(editor: Editor) {
   const [panels, setPanels] = useState<any[]>([])
   const [recording, setRecording] = useState(false)
   const recorderRef = useRef<MediaRecorder | null>(null)
+  // V2.1 — iOS audio unlock. iOS only plays audio that was unlocked by a USER GESTURE; the reply plays
+  // ~5s later (post STT+brain), so a fresh `new Audio().play()` is blocked + silently dropped. We keep ONE
+  // Web Audio AudioContext, resume() it inside the mic/send gesture (primeAudio), and play every reply
+  // (and every streamed chunk, V2.2) through it — scheduled on a cursor so chunks play in order.
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const playCursorRef = useRef<number>(0)
   // A2/A4: the selected node's live config (from /api/graph), keyed by nodeId — the inspector reads it
   // here, NOT off the tldraw shape props (which carry no config). Refreshed on every graph load.
   const configByNode = useRef<Record<string, any>>({})
@@ -661,6 +667,7 @@ export function useAppController(editor: Editor) {
   async function sendChat(override?: string) {
     const m = (override ?? chatMsg).trim()
     if (!m || chatBusy) return
+    primeAudio()                                               // V2.1: unlock audio in the send gesture (typed-chat voice-out)
     setChatMsg(''); setChatBusy(true)
     setChat(c => [...c, { role: 'user', text: m }])
     // I3 — consent integrity: clear any prior un-acted proposal BEFORE this turn. A card the operator
@@ -1131,14 +1138,45 @@ export function useAppController(editor: Editor) {
     if (r.error) { setGrowMsg(''); setSurf({ error: r.error }) } else setSurf(r)
     await poll()
   }
-  // voice out — speak text (local Kokoro via the bridge). Throws on failure so callers that need a fallback
-  // (the walk, F4) can catch and degrade to text. PRESERVE-LIST: voice push-to-talk.
+  // V2.1 — prime/unlock audio. MUST be called from a synchronous user-gesture handler (the mic tap, the
+  // send click) BEFORE any await, so iOS unlocks the context for the later (post-async) reply playback.
+  // Idempotent: resume() is safe to call repeatedly. On a fresh turn it also resets the play cursor.
+  function primeAudio() {
+    try {
+      if (!audioCtxRef.current) {
+        const Ctx = (window.AudioContext || (window as any).webkitAudioContext)
+        if (Ctx) audioCtxRef.current = new Ctx()
+      }
+      audioCtxRef.current?.resume?.()
+    } catch { /* no Web Audio → speakReply falls back to <audio> below */ }
+  }
+  // Play one wav (an ArrayBuffer) through the unlocked context, SCHEDULED after anything already queued
+  // (so streamed sentence-chunks play in order — V2.2). Fail-loud-ish: if the context is blocked/absent,
+  // fall back to a plain <audio> element (works on desktop; on iOS the gesture-primed context is the path).
+  async function playWavBuffer(buf: ArrayBuffer) {
+    const ctx = audioCtxRef.current
+    if (ctx && ctx.state === 'running') {
+      const audioBuf = await ctx.decodeAudioData(buf.slice(0))
+      const src = ctx.createBufferSource(); src.buffer = audioBuf; src.connect(ctx.destination)
+      const now = ctx.currentTime
+      const at = Math.max(now, playCursorRef.current || now)
+      src.start(at); playCursorRef.current = at + audioBuf.duration
+      return
+    }
+    // fallback (desktop / context not unlocked): a one-shot element
+    await new Audio(URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }))).play()
+  }
+  // voice out — speak text in the configured persona voice (the bridge routes /api/tts to it). Plays through
+  // the gesture-unlocked Web Audio context (V2.1) so it actually sounds on iOS. Throws on a hard failure so
+  // callers that need a fallback (the walk, F4) can catch and degrade to text. PRESERVE-LIST: push-to-talk.
   async function speakReply(text: string) {
+    playCursorRef.current = 0                                   // a whole-reply utterance starts a fresh queue
     const blob = await api.tts(text)
-    await new Audio(URL.createObjectURL(blob)).play()
+    await playWavBuffer(await blob.arrayBuffer())
   }
   // voice in — push-to-talk: record → STT → send as a chat turn (which then speaks its reply)
   async function recordToggle() {
+    primeAudio()                                               // V2.1: unlock audio in THIS gesture for the later reply
     if (recording) { recorderRef.current?.stop(); return }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
