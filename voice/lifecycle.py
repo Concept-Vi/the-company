@@ -5,50 +5,72 @@ TTS engines too (Tim: "if voice is down you can boot it up, to make it all live"
 service = any `group:"voice"` entry in ops/services.json carrying a `load` block (the 3 GPU ears +
 the 5 trial TTS engines). whisper.cpp (CPU) + Kokoro + assemblyai have no `load` block → nothing to load.
 
-ONE SOURCE OF TRUTH: ops/services.json (the service registry the `company` console already owns). We do
-NOT keep a second port/venv/vram map here — `_loadable()` reads it. Adding a loadable voice service =
-adding its services.json entry; no edit here.
+ONE SOURCE OF TRUTH — TWO senses, both now honoured:
+  • The SERVICE registry: ops/services.json (the `company` console already owns it). We keep no second
+    port/venv/vram map here — `_loadable()` reads it. Adding a loadable voice service = adding its
+    services.json entry; no edit here.
+  • The VRAM authority: ops/cli/gpu.py (the shared resource-manager CORE). voice IMPORTS it now instead
+    of keeping a second budget/teardown — closing the dual-authority disconnect (see CONVERGENCE below).
 
-  • load(id)   = launch the service in its own venv subprocess (model loads at warm()/first use; NeMo
-                 ears are MINUTES, TTS engines ~25s, orpheus ~17min/swap-hostile). Returns IMMEDIATELY
-                 'warming' (poll status() for 'up'). FAIL LOUD if it won't fit the card (names free vs
-                 needed + which to unload) — NEVER a silent OOM.
-  • unload(id) = SIGTERM the service's process(es) → VRAM freed. Idempotent.
-  • status()   = per service: up / warming / down + the card VRAM.
+CONVERGENCE (2026-06-06, the keeper pass that follows the company-CLI VRAM manager):
+  Before this, load() launched the service via subprocess.Popen and unload() killed it by pgrep+killpg —
+  a SECOND launch/teardown/budget mechanism, parallel to the `company` console (which drives the SAME
+  services via their systemd user-units). The disconnect was REAL and active: a UI-launched (Popen)
+  voice service left its systemd unit `inactive`, so `company`/gpu.py — which reads is-active for unit
+  services — saw it as DOWN, did NOT count its VRAM in the budget, and could green-light a second load
+  on top of it → OOM. Two authorities, one card, no shared truth.
+  The fix: lifecycle now drives the SAME systemd units the console does (systemctl --user start) and
+  budgets/tears-down through the shared core (gpu.check_fit / gpu.teardown). So:
+    - a UI load is is-active=active → `company` SEES it, counts its VRAM, and won't over-commit;
+    - the budget gate counts EVERY GPU service (brain + models + voice), not just resident voices;
+    - teardown is the cgroup stop (systemctl stop) — which reaps vLLM's EngineCore (orpheus) that a
+      plain SIGTERM/SIGKILL on the launcher does NOT (no OS death-link; upstream #19849). The unit IS
+      the orphan-safe path; lifecycle no longer needs its own pgrep teardown.
+  Env-parity holds for free: every voice unit carries `EnvironmentFile=voice.env`, and NO voice service
+  declares a per-service `load.env` override (verified) — so the unit launch loses zero config the old
+  Popen+voice.env path carried. The systemd path is also the one already PROVEN reliable (the 5-voice
+  sweep ran through `company up`, i.e. the units), so converging onto it inherits that reliability.
 
-Stdlib-only → runs IN the 3.14 bridge; the service runs as a subprocess in its own venv (NeMo /
-transformers / vLLM never touch the bridge interpreter). Teardown is by pgrep on the script path, so
-unload works across a bridge restart (no in-memory pid table to lose).
+Stdlib-only → runs IN the bridge interpreter (.venv); the service runs as a systemd-managed subprocess
+in its own venv (NeMo / transformers / vLLM never touch the bridge interpreter). Teardown is by the
+unit's cgroup, so unload works across a bridge restart (no in-memory pid table to lose).
 """
 from __future__ import annotations
 import json
 import os
-import shutil
-import signal
-import subprocess
+import sys
 import time
 import urllib.error
 import urllib.request
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SERVICES_JSON = os.path.join(REPO, "ops", "services.json")
-ENV_FILE = os.path.join(REPO, "voice", "ops", "voice.env")
 
-# WSL ships nvidia-smi at a non-PATH location; env-overridable, fall back to PATH.
-_WSL_SMI = "/usr/lib/wsl/lib/nvidia-smi"
-SMI = os.environ.get("COMPANY_NVIDIA_SMI") or (_WSL_SMI if os.path.exists(_WSL_SMI)
-                                               else (shutil.which("nvidia-smi") or _WSL_SMI))
+# --- the SHARED VRAM resource-manager core (ops/cli) — the single budget/teardown authority ----------
+# gpu.py + its siblings (registry/systemd/telemetry) use bare imports and are stdlib-only, so we put
+# ops/cli on the path and import them by name. SAFE in the bridge context: `runtime.registry`
+# (NodeRegistry) is a NAMESPACED submodule, so the bare `registry` here resolves to ops/cli/registry.py,
+# not runtime's (verified 2026-06-06). Imported once at module load; fail loud if the core is missing
+# (no silent fallback to a private second authority — that's the very thing this convergence removes).
+_OPS_CLI = os.path.join(REPO, "ops", "cli")
+if _OPS_CLI not in sys.path:
+    sys.path.insert(0, _OPS_CLI)
+import gpu as _gpu            # noqa: E402  read_gpu / budget_of / check_fit / plan_eviction / teardown / format_state
+import systemd as _sd         # noqa: E402  is_active / port_open / control (systemctl --user)
+import registry as _reg       # noqa: E402  load() / vram_of / ceiling_mb  (ops/cli/registry.py, NOT runtime's)
 
 
 def _loadable() -> dict:
-    """id → its `load` block (+ health path), for every group:voice service in services.json that
-    declares one. The SINGLE source — no hardcoded map here (registry-is-truth)."""
+    """id → its `load` block (+ health path + the full svc spec), for every group:voice service in
+    services.json that declares a `load` block. The SINGLE source — no hardcoded map (registry-is-truth).
+    Carries the whole `svc` (incl. its `manage` unit) so the shared core can budget/control/teardown it."""
     with open(SERVICES_JSON, encoding="utf-8") as f:
         services = json.load(f).get("services", {})
     out = {}
     for sid, spec in services.items():
         if spec.get("group") == "voice" and isinstance(spec.get("load"), dict):
-            out[sid] = {**spec["load"], "health": spec.get("health", "/"), "title": spec.get("title", sid)}
+            out[sid] = {**spec["load"], "health": spec.get("health", "/"),
+                        "title": spec.get("title", sid), "svc": spec}
     return out
 
 
@@ -57,24 +79,21 @@ def _url(load: dict) -> str:
 
 
 def vram() -> dict:
-    """Card memory in MB via nvidia-smi (the WSL path). FAIL LOUD if nvidia-smi is unavailable — we do
-    NOT 'assume it fits' and risk an OOM (no-silent-failure)."""
-    try:
-        out = subprocess.run(
-            [SMI, "--query-gpu=memory.used,memory.free,memory.total", "--format=csv,noheader,nounits"],
-            capture_output=True, text=True, timeout=10)
-    except (FileNotFoundError, OSError, subprocess.SubprocessError) as e:
-        raise RuntimeError(f"nvidia-smi unavailable at {SMI!r} ({type(e).__name__}: {e}) — "
-                           f"cannot VRAM-budget a load (fail loud)")
-    if out.returncode != 0:
-        raise RuntimeError(f"nvidia-smi failed (rc={out.returncode}): {out.stderr.strip()}")
-    used, free, total = (int(x.strip()) for x in out.stdout.strip().split(",")[:3])
-    return {"used_mb": used, "free_mb": free, "total_mb": total}
+    """Card memory in MB via the shared core (gpu.read_gpu → nvidia-smi). FAIL LOUD if it is unreadable —
+    we do NOT 'assume it fits' and risk an OOM (no-silent-failure). Keeps the {used_mb,free_mb,total_mb}
+    shape lifecycle's callers (status, poll_wake) expect; adds util_pct from the shared read."""
+    g = _gpu.read_gpu()
+    if g is None:
+        raise RuntimeError("nvidia-smi unreadable via the shared resource-manager core (gpu.read_gpu) — "
+                           "cannot VRAM-budget a load (fail loud)")
+    return {"used_mb": g["used"], "free_mb": g["free"], "total_mb": g["total"], "util_pct": g["util"]}
 
 
 def is_up(load: dict) -> bool:
     """Liveness probe (GET the service's health path → answers). Never raises — down/unreachable = False.
-    Ears answer GET / ; engines answer GET /voices (the per-service `health` from services.json)."""
+    Ears answer GET / ; engines answer GET /voices (the per-service `health` from services.json). This is
+    the WARMING→UP discriminator: a systemd unit is is-active the instant ExecStart launches, but the
+    model is still loading (orpheus ~42s) until the health endpoint answers — only then is it truly 'up'."""
     try:
         with urllib.request.urlopen(_url(load) + load.get("health", "/"), timeout=3) as r:
             return 200 <= r.status < 500
@@ -84,37 +103,37 @@ def is_up(load: dict) -> bool:
         return False
 
 
-def _pids(load: dict) -> list:
-    """PIDs running this service's script — by pgrep, so unload is stateless across bridge restarts."""
-    try:
-        out = subprocess.run(["pgrep", "-f", load["script"]], capture_output=True, text=True, timeout=5)
-        return [int(p) for p in out.stdout.split()]
-    except Exception:
-        return []
-
-
 def status() -> dict:
-    """Per loadable voice service: up (health answers) / warming (process running, not yet up) / down —
-    plus the card VRAM. Fail-SOFT on the VRAM read here (the picker still renders if nvidia-smi
-    hiccups); load() is the fail-LOUD budget gate."""
+    """Per loadable voice service: up (health answers) / warming (unit active, model still loading) /
+    down — plus the card VRAM. The unit's is-active is the AUTHORITATIVE 'has it started' signal (so this
+    matches what `company` sees — one authority); the health probe refines active→up vs active→warming.
+    Fail-SOFT on the VRAM read here (the picker still renders if nvidia-smi hiccups); load() is the
+    fail-LOUD budget gate."""
     try:
         v = vram()
     except RuntimeError as e:
         v = {"error": str(e)}
     services = {}
     for sid, load_spec in _loadable().items():
-        up = is_up(load_spec)
-        state = "up" if up else ("warming" if _pids(load_spec) else "down")
+        svc = load_spec["svc"]
+        if is_up(load_spec):
+            state = "up"
+        elif _sd.is_active(svc) == "active":
+            state = "warming"
+        else:
+            state = "down"
         services[sid] = {"id": sid, "title": load_spec["title"], "kind": load_spec.get("kind"),
                          "port": load_spec["port"], "state": state, "vram_mb_est": load_spec.get("vram_mb")}
     return {"vram": v, "services": services}
 
 
 def load(service_id: str) -> dict:
-    """Bring a voice service resident: launch its process in its own venv (the model loads at warm()/
-    first use). Returns IMMEDIATELY 'warming' (poll status() for 'up'). FAIL LOUD on: unknown/non-
-    loadable id, missing venv, OR a load that won't fit the card (names free vs needed + the resident
-    loadable voice services to unload). Idempotent: an already-up service returns 'up' without relaunch."""
+    """Bring a voice service resident: START ITS SYSTEMD UNIT (the same one `company` drives), so the
+    console SEES it and budgets against it. The model loads at warm()/first use; returns IMMEDIATELY
+    'warming' (poll status() for 'up'). FAIL LOUD on: unknown/non-loadable id, missing venv, a unit that
+    won't start, OR a load that won't fit the card — the budget gate now counts EVERY GPU service (brain +
+    models + voice) via the shared core, names free-vs-need + what's holding the card + what to unload.
+    Idempotent: an already-up service returns 'up' without a relaunch."""
     loadables = _loadable()
     if service_id not in loadables:
         raise ValueError(f"unknown or non-loadable voice service {service_id!r} — loadable: "
@@ -122,49 +141,42 @@ def load(service_id: str) -> dict:
     load_spec = loadables[service_id]
     if is_up(load_spec):
         return {"service": service_id, "state": "up", "note": "already resident"}
+    svc = load_spec["svc"]
+    manage = svc.get("manage", {})
+    if manage.get("type") not in ("user-unit", "system-unit"):
+        raise RuntimeError(f"voice service {service_id!r} has no systemd unit (manage.type="
+                           f"{manage.get('type')!r}) — the convergence requires a unit to launch through "
+                           f"so the console can see+budget it. Add one in voice/ops/systemd/ + services.json.")
     py = os.path.expanduser(f"~/.voice-venvs/{load_spec['venv']}/bin/python")
     if not os.path.exists(py):
         raise RuntimeError(f"voice service {service_id!r} venv missing at {py} — install it "
                            f"(voice/ears/REQUIREMENTS.md or voice/engines/REQUIREMENTS.md)")
-    need = load_spec.get("vram_mb", 0)
-    free = vram()["free_mb"]                                    # fail-loud if nvidia-smi is unavailable
-    if free < need:
-        resident = [s for s in loadables if s != service_id and is_up(loadables[s])]
+    # --- the SHARED budget gate: counts ALL running GPU services, not just resident voices (the fix) ---
+    reg = _reg.load()
+    if service_id not in reg["services"]:
+        raise RuntimeError(f"{service_id!r} not in the service registry — registry-is-truth out of sync")
+    ok, need, free, _measured = _gpu.check_fit(reg, [service_id])
+    if not ok:
+        evict, projected = _gpu.plan_eviction(reg, [service_id], need, free)
         raise RuntimeError(
-            f"cannot load {service_id!r}: needs ~{need} MB, only {free} MB free on the card. Unload to "
-            f"make room" + (f" (resident: {', '.join(resident)})" if resident else "")
-            + " — refusing to OOM (fail loud).")
-    script = os.path.join(REPO, load_spec["script"])
-    logp = f"/tmp/company-voice-{service_id}.log"
-    env = dict(os.environ)
-    if os.path.exists(ENV_FILE):                               # the engines/ears read voice.env (CUDA_HOME, refs…)
-        for line in open(ENV_FILE, encoding="utf-8"):
-            line = line.strip()
-            if line and not line.startswith("#") and "=" in line:
-                if line.startswith("export "):                 # voice.env uses `export KEY=VAL` on some lines
-                    line = line[len("export "):]
-                k, _, val = line.partition("=")
-                env.setdefault(k.strip(), val.strip().strip('"').strip("'"))
-    # A (Tim 2026-06-05): per-service LAUNCH config is DATA, not hardcoded. The load block's optional
-    # `env` dict overrides voice.env for THIS service — so a per-model launch knob (e.g. a vLLM-backed
-    # engine's gpu-memory-utilization, device, ctx, or any tunable the engine script reads from the
-    # environment) is a services.json field the config lab / resource manager sets, never a code edit.
-    # (The measured lesson: 0.80 util is wrong for co-residence, 0.45 right — that belongs in config.)
-    for k, v in (load_spec.get("env") or {}).items():
-        env[str(k)] = str(v)                                   # explicit per-service override wins over voice.env
-    args = [py, script, str(load_spec["port"])] + [str(a) for a in (load_spec.get("args") or [])]
-    log = open(logp, "ab")                                     # noqa: SIM115 (handed to the child)
-    subprocess.Popen(args, cwd=REPO, env=env, stdout=log, stderr=log, start_new_session=True)
-    # G7-loadcost: stamp the load START (wall-clock, cross-process — the bridge + this child are
-    # separate procs). poll_wake() reads this when the service first answers 'up' to measure the
-    # WAKE-TIME (the resource manager's "how long to bring this resident" — measured, not estimated).
+            f"cannot load {service_id!r}: needs ~{need} MB, only {free} MB free on the card. "
+            + (f"Unload to make room — e.g. {', '.join(evict)} (→ ~{projected} MB free). " if evict
+               else "Nothing evictable would free enough. ")
+            + "Refusing to OOM (fail loud).\n" + _gpu.format_state(reg))
+    # --- start the unit (the console's own mechanism — one authority); the unit carries voice.env -----
+    started, msg = _sd.control(svc, "start")
+    if not started:
+        raise RuntimeError(f"failed to start {service_id!r} unit ({manage.get('unit')}): {msg} — "
+                           f"check `journalctl --user -u {manage.get('unit')}` (fail loud)")
+    # G7-loadcost: stamp the load START (wall-clock, cross-process). poll_wake() reads this when the
+    # service first answers 'up' to measure the WAKE-TIME (measured, not estimated).
     try:
         with open(_loadstart_path(service_id), "w") as f:
             f.write(str(time.time()))
     except Exception:
         pass                                                   # telemetry must never break the load
-    return {"service": service_id, "state": "warming", "port": load_spec["port"], "log": logp,
-            "note": "launched — model loading; poll status() for 'up'"}
+    return {"service": service_id, "state": "warming", "port": load_spec["port"], "unit": manage.get("unit"),
+            "note": "unit started — model loading; poll status() for 'up'"}
 
 
 def _loadstart_path(service_id: str) -> str:
@@ -201,60 +213,39 @@ def poll_wake() -> list:
 
 
 def unload(service_id: str) -> dict:
-    """Free a voice service with a GUARANTEED-no-orphan, PROCESS-GROUP teardown (researched 2026-06-06).
-    The old single-pid `os.kill(pid, SIGTERM)` was the bug for vLLM engines (orpheus): vLLM's EngineCore
-    is a spawn child with NO OS death-link and finalizer-only cleanup, so a SIGTERM to just the launcher
-    pid bypassed cleanup → EngineCore orphaned + squatted ~10GB VRAM. Fix: kill the whole PROCESS GROUP
-    (launcher + its spawn children share the group — these are launched start_new_session=True, so
-    pgid==launcher pid). Ordered: graceful group-SIGTERM (→ the launcher's SIGTERM→sys.exit handler →
-    Python finalizers → vLLM's own terminate/kill_process_tree) → bounded poll → group-SIGKILL if
-    needed → VERIFY VRAM dropped. NO blind GPU-pid sweep (other sessions share the card — never stomp
-    them); if VRAM doesn't drop, REPORT it loud (a possible orphan) rather than nuking the card.
-    Idempotent; fail loud on an unknown id."""
+    """Free a voice service via the shared core's ORPHAN-SAFE teardown (gpu.teardown → systemctl stop →
+    the unit's CGROUP is killed). The cgroup stop is what reaps vLLM's EngineCore (orpheus): EngineCore is
+    a spawn child with NO OS death-link + finalizer-only cleanup, so a SIGTERM/SIGKILL to just the launcher
+    pid orphans it (it reparents to init + squats ~10 GB — upstream #19849). The systemd cgroup kills the
+    whole unit tree, EngineCore included — so the unit IS the orphan-safe path. We then VERIFY VRAM
+    actually dropped and REPORT loud if it didn't (a possible orphan), never blind-killing GPU pids (other
+    sessions share the card). Idempotent; fail loud on an unknown id."""
     loadables = _loadable()
     if service_id not in loadables:
         raise ValueError(f"unknown or non-loadable voice service {service_id!r} — loadable: {sorted(loadables)}")
-    spec = loadables[service_id]
+    svc = loadables[service_id]["svc"]
     before = None
     try:
         before = vram().get("used_mb")
     except RuntimeError:
         pass
-    pids = _pids(spec)
-    pgids = set()
-    for pid in pids:
-        try:
-            pgids.add(os.getpgid(pid))                         # start_new_session=True → pgid==launcher pid
-        except ProcessLookupError:
-            pass
-    for pg in pgids:                                           # 1. graceful group SIGTERM
-        try:
-            os.killpg(pg, signal.SIGTERM)
-        except ProcessLookupError:
-            pass
-    deadline = time.time() + 8                                 # 2. bounded poll (graceful can hang on a dead ZMQ socket)
-    while time.time() < deadline and _pids(spec):
-        time.sleep(0.5)
-    if _pids(spec):                                            # 3. force group SIGKILL
-        for pg in pgids:
-            try:
-                os.killpg(pg, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-        time.sleep(1.5)
-    after = None                                               # 4. verify VRAM actually dropped
+    ok, msg = _gpu.teardown(svc)                               # cgroup stop — reaps EngineCore
+    time.sleep(1.5)                                            # let the card settle before the verify read
+    after = None
     try:
         after = vram().get("used_mb")
     except RuntimeError:
         pass
-    leftover = bool(_pids(spec))
-    note = "freed (process-group teardown)" if pgids else "was not running"
-    if leftover:                                               # fail loud — a possible orphan; don't stomp the card
-        note = (f"WARNING: {service_id} processes still present after SIGKILL — possible orphan squatting "
-                f"VRAM (before={before}MB after={after}MB). Investigate (nvidia-smi); do NOT blind-kill "
-                f"GPU pids (other sessions share the card).")
+    leftover = _sd.port_open(svc.get("port")) is True         # the unit's port still answering = not down
+    note = f"freed via cgroup teardown ({msg})" if ok else f"teardown reported: {msg}"
+    if leftover:                                              # fail loud — a possible orphan; don't stomp the card
+        note = (f"WARNING: {service_id} still answering on port {svc.get('port')} after teardown — possible "
+                f"orphan squatting VRAM (before={before}MB after={after}MB). Investigate "
+                f"(journalctl --user -u {svc.get('manage', {}).get('unit')}); do NOT blind-kill GPU pids "
+                f"(other sessions share the card).")
     return {"service": service_id, "state": "down" if not leftover else "leftover",
-            "pgids": sorted(pgids), "vram_before_mb": before, "vram_after_mb": after, "note": note}
+            "unit": svc.get("manage", {}).get("unit"),
+            "vram_before_mb": before, "vram_after_mb": after, "note": note}
 
 
 def engine_service_for(engine: str) -> str | None:
