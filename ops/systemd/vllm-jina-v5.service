@@ -1,0 +1,10 @@
+[Unit]
+Description=vLLM jina-v5-text-small embedder on 8004
+After=default.target
+[Service]
+Type=simple
+ExecStart=/home/tim/company/ops/serve_model.sh embed-jina-v5
+Restart=no
+TimeoutStartSec=300
+[Install]
+WantedBy=default.target

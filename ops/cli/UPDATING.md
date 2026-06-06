@@ -14,9 +14,11 @@ registry.py       load services.json; resolve(target)→keys; vram_of; serve_scr
 systemd.py        port_open, verdict, control(start/stop/restart), journal — all systemctl/journald
 gpu.py            THE RESOURCE MANAGER: read_gpu (nvidia-smi), running_gpu_services,
                   check_fit (budget decision), format_state (the "what's holding the card" block)
-models.py         inventory (HF cache + ollama); swap (rewrite serve-script MODEL default)
+models.py         inventory (HF cache + ollama); swap (config.model or legacy script)
 bench.py          run a ~/vllm-tests bench via the vLLM venv
 render.py         status() + health() views
+serveconfig.py    emits vLLM args from a service's `config` block
+../serve_model.sh the ONE registry-driven vLLM launcher: `serve_model.sh <service-key>`
 README.md         use guide   ·   UPDATING.md   this file
 ```
 Seam: everything that asks "what runs here" reads `services.json`; everything that
@@ -41,6 +43,16 @@ New systemd unit? Put the canonical copy in `../systemd/`, then
 `cp ../systemd/my-svc.service ~/.config/systemd/user/ && systemctl --user daemon-reload`.
 **Do NOT `enable` it** — boot-autostart is off by design; control via `company up`.
 Then `company status` to confirm it appears.
+
+> **Canonicalization (2026-06-06):** every *installed* user-unit is now copied into
+> `ops/systemd/` (company-*, vllm-chat/2b/08b/embed/jina-v4/jina-v5/nemotron/qwen3emb,
+> voicemode-whisper, github-runner, llama-swap, litellm-proxy, openclaw-gateway). When you
+> add or change a unit, keep its `ops/systemd/` copy in sync (the repo must be able to rebuild
+> the machine — self-hosting principle). See STARTUP.md → "Rebuild from the repo".
+> **Still outside the repo (deeper coupling, flagged):** (1) the 5 voice trial engines
+> (`company-voice-*`) have NO unit installed yet — install one, then add its unit here;
+> (2) legacy script-based model services still source `~/vllm-tests/serve_*.sh` (not in repo)
+> — migrating them to a `config` block + `serve_model.sh` makes them fully repo-described.
 
 ## Make `swap` work for a model service
 Its `serve` script must set the model via `MODEL="${1:-default/id}"` and pass `"$MODEL"`
@@ -70,6 +82,44 @@ thin — dispatch + the resource gate only.
   introspective-data substrate (vault) for cross-session rollups; smarter scheduling (warm-pin,
   predict-load, evict-by-recency). Add as functions here + (eventually) a canvas view-mode —
   never a separate tool (constitution: one console, more types).
+
+## Config-driven models (the generic launcher)
+A model service can carry a `config` block instead of a `serve` script string:
+```json
+"config": {
+  "model": "Qwen/Qwen3.5-0.8B", "port": 8006, "gpu_util": 0.30,
+  "max_model_len": 4096, "max_num_seqs": 32,
+  "flags": ["--enable-prefix-caching", "--tool-call-parser", "qwen3_xml", "--trust-remote-code"],
+  "env": {"VLLM_USE_FLASHINFER_SAMPLER": "0"}
+}
+```
+`env` (optional) is per-service env vars — `serve_model.sh` exports them before `vllm serve`
+(faithful to what each old serve script set; each script's env differed, so it's per-service,
+not hardcoded in the launcher). `serveconfig.py <key> --env` emits them; `serveconfig.py <key>`
+emits the args. **All vLLM models are migrated to this** (2026-06-06); the old `serve_*.sh` in
+`~/vllm-tests` are superseded (kept as reference, not the launch path).
+**Exception — `embed-jina-v4`:** NOT config-driven. vLLM lacks jina-v4 support, so it runs a
+custom FastAPI server (`serve_jina_v4.py`, raw transformers) in the `jina-v4-env` venv via
+`serve_jina_v4.sh`. It keeps a `serve` string and is the one legitimately script-based model.
+Voice services are similar (custom python servers) but carry a `load` block and are managed by
+`voice/lifecycle.py` — a different launch path; do not force either onto `serve_model.sh`.
+Its unit's ExecStart is just `~/company/ops/serve_model.sh <service-key>`. That launcher
+asks `serveconfig.py` to turn the config block into vLLM args and execs `vllm serve`. So:
+- **Tuning is data:** `company config <svc> <key> <value>` edits the block + saves; `company
+  restart <svc>` applies it. No script editing. `swap` sets `config.model`.
+- **The budget reads `gpu_util`:** `budget_vram` returns `gpu_util × ceiling` (the slice vLLM
+  reserves) — authoritative, immune to stale telemetry. Lower `gpu_util` → more co-residency.
+- **Floor gotcha:** `gpu_util` must hold weights + activations + KV cache. Too low → vLLM
+  `ValueError: No available memory for the cache blocks`. (0.20 starved the 0.8B; 0.30 works.)
+- **Migrate a legacy script service:** give it a `config` block, point its unit at
+  `serve_model.sh <key>`, `daemon-reload`. Goal state: all models config-driven, scripts gone.
+- **Add a NEW value field?** add it to the block and teach `serveconfig.py` to emit its flag.
+
+## Combos (run-together sets)
+`combos` in `services.json` maps a name → `{services: [...], note}`. `company up @<name>`
+resolves to those services and goes through the normal resource gate (so a combo that
+doesn't fit is refused/evictable like any start). Add a combo = one entry. Keep combos that
+are meant to co-reside within the 16 GB budget (sum their `gpu_util × ceiling`).
 
 ## Verify before claiming done
 `company` is operational truth — test every command against the real machine, not by

@@ -1,0 +1,15 @@
+[Unit]
+Description=vLLM Embedding Server (BGE-M3) on port 8001
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=/home/tim/company/ops/serve_model.sh embed-bge
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

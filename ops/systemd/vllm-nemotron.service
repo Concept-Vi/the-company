@@ -1,0 +1,14 @@
+[Unit]
+Description=vLLM Nemotron-30B-A3B-AWQ (NemotronH, CPU offload) on port 8005
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=/home/tim/company/ops/serve_model.sh chat-nemotron
+Restart=no
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=600
+
+[Install]
+WantedBy=default.target

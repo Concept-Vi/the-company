@@ -1,16 +1,21 @@
-"""gpu — the resource manager: read the card, enforce the VRAM budget.
+"""gpu — the ONE VRAM resource manager (shared core).
 
-This is the models/VRAM type-view of the one console (ops/AGENTS.md): "the operable
-face of 'it's all resource management'." It reads measured VRAM from nvidia-smi and
-the per-service estimates from the registry, and decides whether a start fits.
+The models/VRAM type-view of the one console (ops/AGENTS.md): "the operable face of
+'it's all resource management'." Reads measured VRAM (nvidia-smi) + per-service budget
+from the registry, decides whether a start fits, and tears services down orphan-safely.
 
 POLICY (Tim, 2026-06-06): `company up` REFUSES a start that would blow past the GPU
-capacity, and ALWAYS shows what is already holding the card so any agent knows the
-state. `--force` overrides (loudly). stdlib-only.
+capacity, and ALWAYS shows what is already holding the card. `--force` overrides.
+
+SHARED CORE (2026-06-06, with the voice-stack session): this is the single VRAM
+authority for BOTH the `company` CLI and `voice/lifecycle.py` — voice imports it
+instead of keeping a second budget/teardown. stdlib-only so it loads in the 3.14
+bridge. Public API: read_gpu, budget_of, is_gpu_service, check_fit, plan_eviction,
+teardown, format_state. (Named `gpu` not `resource` — `resource` shadows a stdlib module.)
 """
-import os, subprocess
+import os, subprocess, signal, time
 from registry import vram_of, ceiling_mb
-from systemd import port_open, is_active
+from systemd import port_open, is_active, control as _unit_control
 from telemetry import learned_vram
 
 NVSMI = "/usr/lib/wsl/lib/nvidia-smi"
@@ -19,10 +24,27 @@ NVSMI = "/usr/lib/wsl/lib/nvidia-smi"
 _EVICT_PRIORITY = {"models": 0, "brain": 1, "voice": 2}
 
 
-def budget_vram(svc, key):
-    """VRAM to budget for a service: the MEASURED resident from telemetry if we've
-    learned it, else the registry estimate. Measured beats guessed."""
+def is_gpu_service(svc):
+    """Does this service occupy the GPU? (has a vram_mb estimate OR a config gpu_util)."""
+    return bool(vram_of(svc) or svc.get("config", {}).get("gpu_util"))
+
+
+def budget_vram(reg, key):
+    """VRAM to budget for a service, in priority order:
+      1. config.gpu_util × ceiling  — for config-driven models this IS the reservation
+         vLLM takes from the card, so it's authoritative (and immune to stale telemetry
+         from a previous gpu_util);
+      2. learned (measured) telemetry — for non-config services we've actually loaded;
+      3. the registry vram_mb estimate."""
+    svc = reg["services"][key]
+    c = svc.get("config")
+    if c and c.get("gpu_util"):
+        return int(round(c["gpu_util"] * ceiling_mb(reg)))
     return learned_vram(key) or vram_of(svc)
+
+
+# Public API name for the shared core (voice/lifecycle.py imports this). Same signature.
+budget_of = budget_vram
 
 
 def _is_running(svc):
@@ -60,8 +82,8 @@ def running_gpu_services(reg):
     """[(key, vram_mb)] for services that are up (port open) AND occupy the GPU."""
     out = []
     for k, v in reg["services"].items():
-        if vram_of(v) and _is_running(v):
-            out.append((k, vram_of(v)))
+        if is_gpu_service(v) and _is_running(v):
+            out.append((k, budget_vram(reg, k)))
     return out
 
 
@@ -94,8 +116,8 @@ def check_fit(reg, to_start):
     Uses MEASURED free VRAM (truth) vs the SUM of registry estimates for the
     not-yet-running GPU services in the set. Returns (ok, need_mb, free_mb, gpu_present)."""
     svcs = reg["services"]
-    need = sum(budget_vram(svcs[k], k) for k in to_start
-               if vram_of(svcs[k]) and not _is_running(svcs[k]))
+    need = sum(budget_vram(reg, k) for k in to_start
+               if is_gpu_service(svcs[k]) and not _is_running(svcs[k]))
     gpu = read_gpu()
     if gpu is None:
         # Can't measure — fall back to the registry budget (estimate vs ceiling).
@@ -120,3 +142,55 @@ def plan_eviction(reg, to_start, need, free):
         evict.append(k)
         projected += mb
     return evict, projected
+
+
+def _script_token(run):
+    """The identifying script path in a manual service's run cmd (for pgrep)."""
+    for t in run.split():
+        if t.endswith(".py") or t.endswith(".sh"):
+            return os.path.expanduser(t)
+    return None
+
+
+def teardown(svc):
+    """Orphan-SAFE stop. Returns (ok, message).
+
+    Unit services → `systemctl stop`, which kills the whole systemd CGROUP — this reaps
+    vLLM's EngineCore + its spawn helpers, which a plain SIGTERM/SIGKILL on the parent
+    does NOT (EngineCore has no OS death-link; it reparents to init and squats ~10 GB —
+    upstream #19849, found by the voice-stack session 2026-06-06). So units are the
+    orphan-safe path; prefer them.
+
+    Manual/Popen services → process-GROUP teardown: SIGTERM the pgroup, poll, then SIGKILL,
+    so child workers die with the parent. (After the 2026-06-06 ear→unit flip there should
+    be no manual GPU services left; kept as the robust fallback.)"""
+    m = svc["manage"]
+    if m.get("type") != "manual":
+        return _unit_control(svc, "stop")          # cgroup teardown — reaps EngineCore
+    target = _script_token(m.get("run", ""))
+    if not target:
+        return False, "manual service: cannot identify process (no script in run cmd)"
+    pids = subprocess.run(["pgrep", "-f", target], capture_output=True, text=True).stdout.split()
+    if not pids:
+        return True, "already stopped"
+    pgids = set()
+    for p in pids:
+        try:
+            pgids.add(os.getpgid(int(p)))
+        except (ProcessLookupError, ValueError):
+            pass
+    for g in pgids:
+        try:
+            os.killpg(g, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+    for _ in range(8):                              # poll up to ~8s for graceful exit
+        time.sleep(1)
+        if not subprocess.run(["pgrep", "-f", target], capture_output=True, text=True).stdout.strip():
+            return True, f"stopped (process-group SIGTERM, {len(pids)} pid(s))"
+    for g in pgids:                                 # still alive → force
+        try:
+            os.killpg(g, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+    return True, f"stopped (process-group SIGKILL after timeout, {len(pids)} pid(s))"

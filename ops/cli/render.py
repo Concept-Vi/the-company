@@ -1,7 +1,7 @@
 """render — the human/AI-readable views (status, health). stdlib-only."""
-from registry import vram_of, ceiling_mb, shared_ports
+from registry import ceiling_mb, shared_ports
 from systemd import verdict, port_open
-from gpu import committed_mb, read_gpu
+from gpu import committed_mb, read_gpu, budget_vram, is_gpu_service
 
 
 def status(reg):
@@ -15,7 +15,7 @@ def status(reg):
         for k, v in members:
             label, sym = verdict(v, shared)
             port = f":{v['port']}" if v.get("port") else ""
-            vm = vram_of(v)
+            vm = budget_vram(reg, k) if is_gpu_service(v) else 0
             vram = f"~{vm/1000:.1f}G" if vm else ""
             note = f"   ⚠ {v['note']}" if v.get("note") else ""
             out.append(f"    {sym}  {k:<15}{label:<22}{port:<7}{vram:<7}{v['title']}{note}")

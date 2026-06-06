@@ -1,0 +1,13 @@
+[Unit]
+Description=llama-swap model swapper (test)
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/llama-swap -config /home/tim/llama-swap/config.yaml -listen 127.0.0.1:9090 -watch-config
+Restart=on-failure
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

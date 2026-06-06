@@ -1,0 +1,15 @@
+[Unit]
+Description=jina-embeddings-v4 server (multimodal) on port 8002
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=/home/tim/vllm-tests/serve_jina_v4.sh
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

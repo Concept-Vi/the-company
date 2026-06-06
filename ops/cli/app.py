@@ -16,11 +16,13 @@ stdlib-only. See README.md (use) and UPDATING.md (extend). Constitution: ../AGEN
   company health           ping every service's port
   company models           what's on disk (HF cache + Ollama)
   company swap SERVICE MODEL_ID   point a model service at another model + restart
+  company config SERVICE [KEY VAL] show / edit a model's serve config (gpu_util, model, ctx…)
+  company combos           list runnable combinations (`company up @<name>` to start one)
   company bench KIND [args]       chat|embed|suite|long-ctx
   company telemetry        learned model load times + measured VRAM (vs estimates)
   company help
 
-TARGET = a service key, a group (core|brain|voice|models|reach), or `all`.
+TARGET = a service key, a group (core|brain|voice|models|reach), `@combo`, or `all`.
 RESOURCE MANAGER (the models/VRAM type-view): `company up` REFUSES a start that would
 exceed GPU capacity and shows what's holding the card.
   --evict   make room first: stop running GPU services (models→brain→voice, largest
@@ -39,8 +41,12 @@ def _gpu_keys(reg, keys):
 
 
 def _wait_and_record(reg, keys, free_before, timeout=420):
-    """After starting, block until each GPU service is serving, then record telemetry."""
-    for k in _gpu_keys(reg, keys):
+    """After starting, block until each GPU service is serving. Record telemetry ONLY
+    for a single GPU load — concurrent loads (a combo) can't be VRAM-attributed per
+    service from one measurement, so we confirm serving but don't record garbage."""
+    gks = _gpu_keys(reg, keys)
+    solo = len(gks) == 1
+    for k in gks:
         svc = reg["services"][k]
         port = svc["port"]
         t0 = time.time()
@@ -54,14 +60,18 @@ def _wait_and_record(reg, keys, free_before, timeout=420):
             time.sleep(3)
         served = systemd.port_open(port) is True
         elapsed = time.time() - t0
-        after = gpu.read_gpu()
-        resident = max(0, free_before - after["free"]) if after else 0
-        if served:
-            rec = telemetry.record(k, elapsed, resident, vram_of(svc))
+        if not served:
+            print(f"  ✗ {k} did not come up within {timeout}s")
+            continue
+        if solo:
+            after = gpu.read_gpu()
+            resident = max(0, free_before - after["free"]) if after else 0
+            telemetry.record(k, elapsed, resident, vram_of(svc))
             print(f"  ✓ {k} serving in {elapsed:.0f}s · measured ~{resident/1000:.1f} GB "
                   f"(est ~{vram_of(svc)/1000:.1f} GB) · recorded")
         else:
-            print(f"  ✗ {k} did not come up within {timeout}s (not recorded)")
+            print(f"  ✓ {k} serving in {elapsed:.0f}s (concurrent start — VRAM not "
+                  f"per-service-attributable, telemetry skipped)")
 
 
 def _act(reg, action, keys, force=False, evict=False, wait=False):
@@ -96,7 +106,10 @@ def _act(reg, action, keys, force=False, evict=False, wait=False):
     free_before = (gpu.read_gpu() or {}).get("free", 0) if wait else 0
     word = {"up": "start", "down": "stop", "restart": "restart"}[action]
     for k in keys:
-        ok, msg = systemd.control(svcs[k], word)
+        if action == "down":
+            ok, msg = gpu.teardown(svcs[k])        # orphan-safe (cgroup for units; pgroup for manual)
+        else:
+            ok, msg = systemd.control(svcs[k], word)
         print(f"  {'✓' if ok else '✗'} {word} {k}" + ("" if ok else f"  [{msg}]"))
     if wait and action in ("up", "restart"):
         _wait_and_record(reg, keys, free_before)
@@ -119,6 +132,33 @@ def main():
         print(models.inventory()); return
     if cmd == "telemetry":
         print(telemetry.rollups()); return
+    if cmd == "combos":
+        cs = registry.combos(reg)
+        if not cs:
+            print("  no combos defined."); return
+        for name, c in cs.items():
+            note = f"   — {c['note']}" if c.get("note") else ""
+            print(f"  @{name:<14} {', '.join(c['services'])}{note}")
+        return
+    if cmd == "config":
+        if len(args) < 2:
+            sys.exit("usage: company config SERVICE [KEY VALUE]")
+        key = args[1]
+        if key not in reg["services"]:
+            sys.exit(f"unknown service {key!r}")
+        if len(args) == 2:
+            import json as _json
+            c = reg["services"][key].get("config")
+            print(_json.dumps(c, indent=2) if c else f"  {key} has no config block (legacy/script service).")
+            return
+        if len(args) >= 4:
+            try:
+                newv = registry.set_config(reg, key, args[2], args[3])
+            except ValueError as e:
+                sys.exit(f"  {e}")
+            print(f"  ✓ {key}.config.{args[2]} = {newv!r} (saved). Apply with: company restart {key}")
+            return
+        sys.exit("usage: company config SERVICE [KEY VALUE]")
     if cmd == "swap":
         rest = [a for a in args[1:] if not a.startswith("-")]
         if len(rest) < 2:

@@ -1,0 +1,22 @@
+[Unit]
+Description=GitHub Actions self-hosted runner (Concept-Vi/ollama-pipeliner)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/tim/actions-runner/run.sh
+WorkingDirectory=/home/tim/actions-runner
+Restart=always
+RestartSec=10
+KillMode=process
+KillSignal=SIGTERM
+TimeoutStopSec=5min
+# Pass through credentials/PATH so the runner can find claude, gh, python, etc.
+Environment=PATH=/home/tim/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=HOME=/home/tim
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

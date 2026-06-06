@@ -1,0 +1,10 @@
+[Unit]
+Description=vLLM Qwen3.5-0.8B generator on 8006
+After=default.target
+[Service]
+Type=simple
+ExecStart=/home/tim/company/ops/serve_model.sh chat-08b
+Restart=no
+TimeoutStartSec=300
+[Install]
+WantedBy=default.target

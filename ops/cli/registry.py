@@ -39,6 +39,45 @@ def serve_script(svc):
     return os.path.expanduser(s) if s else None
 
 
+def combos(reg):
+    """Named service-sets meant to run together (the `_doc` key is not a combo)."""
+    return {k: v for k, v in reg.get("combos", {}).items() if k != "_doc"}
+
+
+def save(reg):
+    """Persist the registry back to services.json (pretty JSON). Used by `config`/`swap`."""
+    with open(REG_PATH, "w") as f:
+        json.dump(reg, f, indent=2, ensure_ascii=False)
+        f.write("\n")
+
+
+def _coerce(s):
+    low = s.lower()
+    if low in ("true", "false"):
+        return low == "true"
+    for cast in (int, float):
+        try:
+            return cast(s)
+        except ValueError:
+            pass
+    return s
+
+
+def set_config(reg, key, field, value):
+    """Set one field in a service's `config` block and save. Requires an existing
+    config block (so we never create a half-formed one from the CLI)."""
+    svc = reg["services"].get(key)
+    if svc is None:
+        raise KeyError(key)
+    c = svc.get("config")
+    if c is None:
+        raise ValueError(f"{key} has no `config` block to edit "
+                         f"(legacy script service — see cli/UPDATING.md to migrate it).")
+    c[field] = _coerce(value)
+    save(reg)
+    return c[field]
+
+
 def shared_ports(reg):
     """Ports used by more than one service (e.g. chat-2b + chat-08b both :8003).
     On these, port-open does NOT tell you WHICH service is up — only the per-unit
@@ -57,6 +96,12 @@ def resolve(reg, target):
         return [k for k, v in svcs.items() if v.get("autostart")]
     if target == "all":
         return list(svcs)
+    if isinstance(target, str) and target.startswith("@"):
+        name = target[1:]
+        cs = combos(reg)
+        if name in cs:
+            return list(cs[name]["services"])
+        raise KeyError(target)
     if target in reg["groups"]:
         return [k for k, v in svcs.items() if v["group"] == target]
     if target in svcs:

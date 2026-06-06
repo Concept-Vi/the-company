@@ -5,6 +5,7 @@ store). `swap()` is generic over the registry: it rewrites the `MODEL="${1:-...}
 default in a service's `serve` script and restarts the unit — works for any model
 service whose serve script uses that pattern; refuses cleanly otherwise."""
 import os, re, subprocess
+import registry
 from registry import serve_script
 from systemd import control
 
@@ -38,6 +39,17 @@ def swap(reg, key, model_id):
     if key not in svcs:
         return False, f"unknown service {key!r}"
     svc = svcs[key]
+    if svc["manage"]["type"] != "user-unit":
+        return False, f"{key} is not a user-unit — swap only handles vLLM user units."
+    # Config-driven service: set config.model in the registry, save, restart.
+    if svc.get("config"):
+        svc["config"]["model"] = model_id
+        registry.save(reg)
+        control(svc, "stop")
+        ok, msg = control(svc, "start")
+        return ok, (f"config.model → {model_id}; restarted "
+                    f"({'ok' if ok else 'start failed: ' + msg}). Tail: company logs {key} -f")
+    # Legacy script-based service: rewrite the serve script's MODEL default.
     path = serve_script(svc)
     if not path:
         return False, f"{key} has no `serve` script in the registry — swap not supported."

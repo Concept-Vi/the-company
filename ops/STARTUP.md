@@ -68,6 +68,27 @@ up first with **`company up`** (canvas + bridge), then:
 - Cross-session memory: `project-mobile-access-tailscale`.
 
 ## Canonical unit files
-Unit files live in `ops/systemd/` (this repo) as the source of truth. To (re)install on a fresh
-machine, copy them to `~/.config/systemd/user/`, `systemctl --user daemon-reload`. Do **not**
-`enable` them — leave boot-autostart off; control everything with `company up`.
+Every installed user-unit lives in `ops/systemd/` (this repo) as the source of truth
+(canonicalized 2026-06-06). When you add/change a unit, keep its `ops/systemd/` copy in sync.
+
+## Rebuild from the repo
+What the repo fully describes and can restore on a fresh machine:
+- the console (`ops/cli/` + `ops/company`), the registry (`ops/services.json`),
+- the generic launcher (`ops/serve_model.sh`), and **all installed systemd units** (`ops/systemd/`).
+
+To reinstall the runtime layer:
+```bash
+cp ops/systemd/*.service ops/systemd/*.target ~/.config/systemd/user/
+systemctl --user daemon-reload
+# do NOT `enable` anything — boot-autostart is off by design; bring up on demand:
+company status        # confirm the map
+company up            # the surface (canvas + bridge)
+```
+**What the repo does NOT carry (separate restore — flagged honestly):**
+- the model-serving venvs (`~/vllm-env`, `~/.voice-venvs/*`) and the model weights
+  (HF cache, Ollama store) — large, live outside the repo;
+- legacy serve scripts (`~/vllm-tests/serve_*.sh`) that script-based services still source.
+  **Config-driven models** (a `config` block + `serve_model.sh`, e.g. chat-2b/chat-08b) need
+  none of those scripts — migrating the rest to `config` makes the repo progressively more
+  self-sufficient. The 5 voice trial engines (`company-voice-*`) have no unit yet — install,
+  then add the unit to `ops/systemd/`.

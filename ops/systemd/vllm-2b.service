@@ -1,0 +1,15 @@
+[Unit]
+Description=vLLM Chat Server (Qwen3.5-2B) on port 8003
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=/home/tim/company/ops/serve_model.sh chat-2b
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=300
+
+[Install]
+WantedBy=default.target

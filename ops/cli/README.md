@@ -57,6 +57,28 @@ company up embed-jina-v4 --evict  # auto-free room for jina-v4, then start it
 company telemetry                 # see measured load times + VRAM vs the estimates
 ```
 
+## Tunable model config + combinations
+A model's serve settings live in the registry as a `config` block (model, port,
+`gpu_util`, context, flags) and run through one launcher (`../serve_model.sh`) — no
+per-model shell script. So you tune from the CLI; no file-editing:
+```
+company config chat-08b              # show its config
+company config chat-08b gpu_util 0.3 # change a value (saved to the registry)
+company restart chat-08b             # apply it
+company swap chat-08b <model_id>     # point it at a different model
+```
+The VRAM budget reads `gpu_util` directly (it's the slice vLLM reserves), so lowering
+it lets more models co-reside — and the gate updates automatically.
+
+**Combos** are named sets meant to run together:
+```
+company combos                # list them
+company up @small-pair        # start the set (gate checks it all fits)
+company down @small-pair
+```
+Add a combo = one entry under `combos` in `services.json` (see UPDATING.md). Example
+shipped: `@small-pair` = chat-2b + chat-08b co-resident (0.45 + 0.30 util, both fit).
+
 State symbols in `status`: ▶ running · ◐ active-no-port-yet · ✖ failed · · stopped ·
 "RUNNING (unmanaged)" = up by hand, not under its unit (drift).
 
