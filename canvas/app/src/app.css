@@ -335,6 +335,43 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 .br-approve{margin:0}
 .br-default-note{font-size:8.5px;letter-spacing:.04em}
 .br-err{margin-top:6px;font-size:10px;color:var(--err);line-height:1.4}
+/* X16 AESTHETIC VARIANTS — three distinguishable looks of the SAME ripple behind ONE selector (no copied
+   files). The selector is a small on-system segmented control; the geometry is JS-config-driven; the glow/
+   emphasis per variant is THIS wrapper class, token-only (no off-token colour → design-lint stays green). */
+.br-variant-pick{display:inline-flex;align-items:center;gap:3px;margin-left:auto}
+.br-variant-tag{font-size:8px;letter-spacing:.08em;text-transform:uppercase;margin-right:2px}
+.br-variant-btn{border:1px solid var(--line);background:var(--panel);color:var(--dim);cursor:pointer;
+  font-size:9px;letter-spacing:.04em;line-height:1.4;padding:1px 6px;border-radius:3px}
+.br-variant-btn:first-of-type{border-top-right-radius:0;border-bottom-right-radius:0}
+.br-variant-btn:last-of-type{border-top-left-radius:0;border-bottom-left-radius:0}
+.br-variant-btn:not(:first-of-type):not(:last-of-type){border-radius:0;border-left:none;border-right:none}
+.br-variant-btn:hover{border-color:var(--sig);color:var(--sig)}
+.br-variant-btn.on{border-color:var(--sig);background:var(--acc-glow);color:var(--sig)}
+/* inline ring labels (variant B) — a short kind label riding each ring's top edge; colour from br-ring-*. */
+.br-ring-label{font-size:6.5px;letter-spacing:.04em;text-transform:uppercase;opacity:.85}
+.br-ring-label.br-ring-dependents{fill:var(--err)}
+.br-ring-label.br-ring-dependencies{fill:var(--warn)}
+.br-ring-label.br-ring-coref{fill:var(--kind-content)}
+.br-ring-label.br-ring-semantic{fill:var(--sig-dim)}
+/* the "+N" overflow chip (variant B density cap) — a single mark for the capped-off members (all still
+   listed + tick-able in the legend). Colour from the ring class; text on the panel token for contrast. */
+.br-overflow-node{stroke:var(--bg);stroke-width:1;opacity:.55}
+.br-overflow-node.br-ring-dependents{fill:var(--err)}
+.br-overflow-node.br-ring-dependencies{fill:var(--warn)}
+.br-overflow-node.br-ring-coref{fill:var(--kind-content)}
+.br-overflow-node.br-ring-semantic{fill:var(--sig-dim)}
+.br-overflow-text{font-size:6px;font-weight:600;fill:var(--bg);pointer-events:none;letter-spacing:0}
+/* variant B — generous, legible: a touch more breathing room around the ripple, node hover reads bigger. */
+.br-variant-B .br-ripplemap{max-width:260px}
+.br-variant-B .br-node:hover{stroke-width:2.5}
+/* variant C — dense constellation: a subtle field glow (token-driven drop-shadow on the nodes), tighter
+   map, brighter centre. The glow is the ONLY emphasis difference; geometry is in the JS config. */
+.br-variant-C .br-ripplemap{max-width:215px}
+.br-variant-C .br-rings-svg{filter:drop-shadow(0 0 2px var(--acc-glow))}
+.br-variant-C .br-node{filter:drop-shadow(0 0 1.5px var(--sig-dim))}
+.br-variant-C .br-node.ticked,.br-variant-C .br-node.in-reach{filter:drop-shadow(0 0 3px var(--sig))}
+.br-variant-C .br-centre-node{filter:drop-shadow(0 0 3px var(--sig))}
+.br-variant-C .br-ring-circle{stroke-dasharray:1 3}
 /* X5 · the SURFACED CONTEXT-BUNDLE (the build's notebook) + X7 · the PIN affordance. Token-only; a
    navigable per-item list (kind + address legible, pin control, address drives the view). */
 .cb-bundle{margin-top:8px;padding:7px 8px;background:var(--bg);border:1px solid var(--line);border-radius:3px}
