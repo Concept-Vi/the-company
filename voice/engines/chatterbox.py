@@ -16,6 +16,14 @@ from __future__ import annotations
 import os
 import sys
 
+# THIS file is voice/engines/chatterbox.py and the pip package is ALSO named `chatterbox` — so when the
+# script is launched as a FILE (its own dir lands on sys.path[0], ahead of site-packages), the import
+# `from chatterbox.tts import ChatterboxTTS` resolves to THIS file (no .tts submodule) → ImportError →
+# the misleading "not installed". Remove this script's own dir from sys.path so the installed pip
+# `chatterbox` package wins. (Verified 2026-06-06 — the shadow is why company up tts-chatterbox failed
+# while a bare-venv import worked. Robust for BOTH the systemd-unit and lifecycle Popen launch paths.)
+_self_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path[:] = [p for p in sys.path if os.path.abspath(p or ".") != _self_dir]
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from voice.engines._service import serve, wav_bytes_from_array  # noqa: E402
 
@@ -36,8 +44,11 @@ def _engine():
         try:
             from chatterbox.tts import ChatterboxTTS
         except ImportError as e:
-            raise RuntimeError("chatterbox not installed — `pip install chatterbox-tts` "
-                               "into the chatterbox venv (see voice/engines/REQUIREMENTS.md)") from e
+            # Surface the REAL import error — don't assume "not installed" (it was a path-shadow, not a
+            # missing package; a misleading message cost real debug time). Name the actual cause.
+            raise RuntimeError(f"chatterbox import failed ({type(e).__name__}: {e}) — if it's a missing "
+                               f"module, `pip install chatterbox-tts` into the chatterbox venv; if it's a "
+                               f"shadow/path issue, check sys.path (see voice/engines/REQUIREMENTS.md)") from e
         _model = ChatterboxTTS.from_pretrained(device=DEVICE)
     return _model
 
