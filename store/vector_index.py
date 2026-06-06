@@ -146,6 +146,56 @@ def query_index(store, query_vector, *, k=5, with_note=False):
     return {"ranked": ranked, "note": f"ranked {len(ranked)} of {len(corpus)} indexed addresses by cosine"}
 
 
+def index_staleness(store, corpus, *, model=None) -> dict:
+    """READ-ONLY staleness check: does the persisted vector index still reflect `corpus`, WITHOUT a
+    rebuild? A SIBLING of build_index/query_index — but it embeds NOTHING, touches NO network, never
+    calls the :8001 embedder. It only compares content_hashes, so the caller (query_index / consult /
+    R2 semantic ranking) can ASK 'is the index stale?' before trusting a ranking, instead of silently
+    retrieving over a stale index as the corpus grows (STATE.md:47 — the gap the embedder-regen
+    follow-up names: incremental build had no way to be INTERROGATED for staleness).
+
+    `corpus` = `[{address, text}, ...]` — the SAME shape build_index consumes. Each item's content_hash
+    is recomputed via the EXISTING content_hash() in this module (NOT reimplemented — same blake2b key
+    the build path persisted), and compared against the persisted index. The persisted side is read by
+    ADDRESS: store.index_addresses() enumerates every indexed address, store.get_vector(address) carries
+    the stored content_hash (index_corpus() returns only {id, vector} — no hash — so it is NOT the read
+    path here; the hash lives on the per-address record). `model=` is accepted for signature symmetry
+    with build_index/query_index but does NOT enter the comparison — staleness is content_hash-only.
+
+    FAIL LOUD (rule 4): a corpus item missing `address` or `text` RAISES (KeyError-shaped ValueError
+    naming the offending item) — NEVER a silent skip (build_index's tolerant item.get is the build
+    path's choice; an honest staleness verdict cannot quietly drop an item it failed to read).
+
+    Returns:
+        {"fresh": bool,                      # True iff missing/changed/extra are ALL empty
+         "missing": [addr, ...],             # in corpus but NOT in the index (never embedded)
+         "changed": [addr, ...],             # in both, but the stored content_hash differs (re-embed due)
+         "extra":   [addr, ...],             # in the index but NO longer in the corpus (orphaned entry)
+         "counts":  {"corpus": N, "indexed": M, "missing": .., "changed": .., "extra": ..}}
+    All three lists are sorted (a stable, comparable verdict).
+    """
+    # 1) the corpus side — recompute each item's content_hash via the SHARED key (fail loud on a bad item)
+    corpus_hashes = {}
+    for item in corpus:
+        if "address" not in item or "text" not in item:
+            raise ValueError(f"index_staleness: malformed corpus item (needs 'address' and 'text'): {item!r}")
+        corpus_hashes[item["address"]] = content_hash(item["text"])
+
+    # 2) the persisted side — read by ADDRESS (the stored content_hash lives on the per-address record)
+    indexed = set(store.index_addresses())
+    corpus_addrs = set(corpus_hashes)
+
+    missing = sorted(corpus_addrs - indexed)                 # in corpus, never indexed
+    extra = sorted(indexed - corpus_addrs)                   # indexed, no longer in corpus
+    changed = sorted(addr for addr in (corpus_addrs & indexed)
+                     if (store.get_vector(addr) or {}).get("content_hash") != corpus_hashes[addr])
+
+    fresh = not missing and not changed and not extra
+    return {"fresh": fresh, "missing": missing, "changed": changed, "extra": extra,
+            "counts": {"corpus": len(corpus_addrs), "indexed": len(indexed),
+                       "missing": len(missing), "changed": len(changed), "extra": len(extra)}}
+
+
 def index_addresses(store) -> list:
     """Convenience pass-through — every address currently in the persisted index (sorted)."""
     return store.index_addresses()
