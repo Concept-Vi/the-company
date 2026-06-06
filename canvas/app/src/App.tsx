@@ -238,7 +238,14 @@ export default function App() {
     <div style={{ position: 'fixed', inset: 0 }}>
       <Tldraw
         shapeUtils={[NodeShapeUtil]}
-        persistenceKey="company-canvas-v2"
+        // BUMP THIS whenever the NodeShape props schema changes — tldraw persists the store to
+        // IndexedDB under this key and VALIDATES every record on load; a snapshot written by an older
+        // schema (e.g. before `error` was added to the node props) fails with
+        // `ValidationError: props.error: Expected string, got undefined` in TldrawEditorBeforeLoading,
+        // which white-screens the canvas. Bumping the key makes tldraw ignore the stale snapshot and
+        // rebuild from the backend (nodes/positions are backend-authoritative — reflects-never-owns —
+        // so only the local camera resets). v2→v3: the interactive-surface merge added node.props.error.
+        persistenceKey="company-canvas-v3"
         components={{ StylePanel: null, ActionsMenu: null, QuickActions: null }}
       >
         <Hud />
