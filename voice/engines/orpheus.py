@@ -14,9 +14,13 @@ API (verified against github.com/canopyai/Orpheus-TTS, 2026-06-03):
 Run (its OWN venv with vLLM — see REQUIREMENTS.md):  python voice/engines/orpheus.py 4125
 """
 from __future__ import annotations
+import asyncio
 import io
 import os
+import queue
 import sys
+import threading
+import uuid
 import wave
 
 # TRITON_ATTN (the attention backend, see ATTN_BACKEND) JIT-compiles its kernels with `ninja`, which
@@ -91,14 +95,67 @@ def _engine():
     return _model
 
 
+# --- ONE PERSISTENT event loop for the engine's lifetime (THE sequential-hang fix, 2026-06-06) ---
+# orpheus_tts's generate_tokens_sync runs `asyncio.run(...)` in a NEW thread+loop PER CALL. AsyncLLMEngine
+# binds its background output-processing loop to the FIRST call's event loop; asyncio.run() CLOSES that
+# loop when the first synth returns, so the 2nd+ call's fresh loop can't drive the engine → the request
+# HANGS (engine stays alive, request never completes — exactly the symptom: synth#1 OK, synth#2+ hang,
+# even with unique request_ids). Fix: run ONE event loop in a daemon thread for the whole process and
+# submit every request to it via run_coroutine_threadsafe — the engine's bg loop stays alive across
+# requests. We drive m.engine.generate directly (the wrapper's prompt-format + sampling + SNAC decoder
+# reused verbatim) so only the loop lifecycle changes.
+_loop = None
+_loop_lock = threading.Lock()
+
+
+def _persistent_loop():
+    global _loop
+    with _loop_lock:
+        if _loop is None:
+            _loop = asyncio.new_event_loop()
+            threading.Thread(target=_loop.run_forever, daemon=True, name="orpheus-engine-loop").start()
+    return _loop
+
+
+def _generate_token_texts(text: str, voice: str):
+    """Yield the engine's token-text stream for one request, driven on the PERSISTENT loop (not a
+    per-call asyncio.run). Matches orpheus_tts.generate_tokens_sync's params + per-result token handling
+    exactly; only the loop lifecycle differs."""
+    from vllm import SamplingParams
+    m = _engine()
+    prompt_string = m._format_prompt(text, voice)
+    sp = SamplingParams(temperature=0.6, top_p=0.8, max_tokens=1200,
+                        stop_token_ids=[49158], repetition_penalty=1.3)
+    rid = "orph-" + uuid.uuid4().hex
+    q: queue.Queue = queue.Queue()
+
+    async def _producer():
+        try:
+            async for result in m.engine.generate(prompt=prompt_string, sampling_params=sp, request_id=rid):
+                q.put(result.outputs[0].text)
+        except Exception as e:                                # surface engine errors to the consumer
+            q.put(e)
+        q.put(None)                                           # completion sentinel
+
+    asyncio.run_coroutine_threadsafe(_producer(), _persistent_loop())
+    while True:
+        item = q.get()
+        if item is None:
+            break
+        if isinstance(item, Exception):
+            raise item
+        yield item
+
+
 def synth(text: str, voice: str | None, speed: float) -> bytes:
     v = (voice or DEFAULT_VOICE).strip()
     if v not in VOICE_BANK:
         raise RuntimeError(f"unknown Orpheus voice {v!r} — one of {VOICE_BANK}")
     # speed accepted per the shared contract but NOT applied — Orpheus has no speed arg (it's an LLM
     # token stream; pace via inline cues / prompt). Documented in REQUIREMENTS.md.
-    # generate_speech yields raw 16-bit mono PCM byte chunks; assemble them into one WAV container.
-    chunks = _engine().generate_speech(prompt=text, voice=v)
+    from orpheus_tts.decoder import tokens_decoder_sync     # SNAC: token-texts → 16-bit mono PCM chunks
+    _engine()                                                # ensure loaded
+    chunks = tokens_decoder_sync(_generate_token_texts(text, v))
     buf = io.BytesIO()
     with wave.open(buf, "wb") as wf:
         wf.setnchannels(1)
