@@ -17,7 +17,7 @@ import { registryStore } from '../registryStore'
 import { ProposeAffordance } from './ProposeAffordance'
 
 export function RhmChat() {
-  const { cfg, cfgOpen, chat, chatBusy, chatMsg, recording, indicated, personas, voiceStatus, switchPersona, setCfg, setCfgOpen, setChatMsg, applyCfg, sendChat, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, indicate } = useApp()
+  const { cfg, cfgOpen, chat, chatBusy, chatMsg, recording, indicated, personas, voiceStatus, recordingSession, switchPersona, setCfg, setCfgOpen, setChatMsg, applyCfg, sendChat, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, toggleRecordConversation, startDebriefSession, indicate } = useApp()
   // the live chat-model registry — same source the node-config model dropdown reads (MODEL_OPTIONS.chat_models).
   const registry = useSyncExternalStore(registryStore.subscribe, registryStore.getSnapshot)
   const chatModels = registry.MODEL_OPTIONS.chat_models || []
@@ -75,6 +75,16 @@ export function RhmChat() {
               onChange={e => setVoiceEnabled(e.target.checked)} />
             <span>{(cfg.voice_enabled || 'on') === 'on' ? '🔊 voice on' : '🔇 voice off'}</span>
           </label>
+          {/* V3 — the memory loop: record this conversation as a trial session, then debrief over the
+              recorded sessions (reuses the walkthrough organ). */}
+          <div className="cfg-mem">
+            <button className={'b ghost' + (recordingSession ? ' rec' : '')} data-ui-ref="ui://chat/record"
+              title="record this conversation as a session (so it can be debriefed + feeds the twin)"
+              onClick={toggleRecordConversation}>{recordingSession ? '■ stop recording' : '● record'}</button>
+            <button className="b ghost" data-ui-ref="ui://chat/debrief"
+              title="walk back through the recorded sessions (debrief)"
+              onClick={startDebriefSession}>debrief</button>
+          </div>
           <button className="b" data-ui-ref="ui://chat/config" onClick={applyCfg}>apply config</button>
         </div>
       )}

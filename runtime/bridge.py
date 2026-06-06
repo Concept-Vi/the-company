@@ -304,6 +304,7 @@ class H(BaseHTTPRequestHandler):
         vq = {k: v[0] for k, v in _pq(_up(self.path).query).items()}
         persona = (vq.get("persona") or "").strip()
         gid = vq.get("graph_id", DEMO)
+        trial_session = (vq.get("trial_session") or "").strip()   # V3.1: when present, RECORD the turn
         audio = self.rfile.read(int(self.headers.get("Content-Length", 0)))
         self.send_response(200)
         self.send_header("Content-Type", "application/x-ndjson")
@@ -364,6 +365,12 @@ class H(BaseHTTPRequestHandler):
             reply = (thought.get("reply") or "").strip()
             think_ms = int((_t.monotonic() - t0) * 1000) - stt_ms
             emit({"type": "reply", "text": reply, "ms": think_ms})
+            if trial_session:                                     # V3.1: RECORD the turn into the trial session
+                try:                                              # (the EXISTING trial_record_turn; reuse, don't reinvent)
+                    SUITE.trial_record_turn(trial_session, "operator", transcript, character=persona)
+                    SUITE.trial_record_turn(trial_session, "character", reply, character=persona)
+                except Exception as _e:
+                    emit({"type": "note", "text": f"(recording skipped: {type(_e).__name__})"})  # never break the turn
             if not speak_reply:
                 emit({"type": "done", "total_ms": int((_t.monotonic() - t0) * 1000), "spoke": False, "reply": reply}); return
             # split into sentences → synth + stream each AS IT'S READY (the streaming win)

@@ -109,9 +109,15 @@ export const api = {
   // V2.2 — the streaming voice circuit: POST the recorded utterance, get back an ndjson stream
   // (transcript → reply → per-sentence {wav_b64} chunks → done) in the persona's voice. Returns the raw
   // Response so the caller reads `.body` (NOT jr — it's a stream, not one JSON object).
-  voiceStream: (blob: Blob, persona: string) =>
-    fetch('/api/voice/stream?persona=' + encodeURIComponent(persona),
+  voiceStream: (blob: Blob, persona: string, trialSession?: string) =>
+    fetch('/api/voice/stream?persona=' + encodeURIComponent(persona)
+          + (trialSession ? '&trial_session=' + encodeURIComponent(trialSession) : ''),
           { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: blob }),
+  // V3 — the memory loop: list recorded trial sessions, and start a debrief over them (reuses the
+  // walkthrough organ — start_debrief surfaces each session's REAL transcript through the same walk).
+  trialSessions: () => fetch('/api/trial/sessions').then(jr),
+  startDebrief: (sessionIds: string[], hostPersona?: string) =>
+    fetch('/api/debrief/start', { method: 'POST', headers: J, body: JSON.stringify({ session_ids: sessionIds, host_persona: hostPersona }) }).then(jr),
   // V1.1 — the finished-thought judge: given the utterance-so-far (after a silence pause), is it a complete
   // thought (fire the turn) or is the operator mid-ramble (keep listening)? The "not a dumb silence timer"
   // lever. Returns {finished, verdict, ...}. Fail-loud upstream (a judge error → caller surfaces + can fall

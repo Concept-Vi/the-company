@@ -214,6 +214,9 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 .rhm-cfg .voice-status.down{color:var(--err)}
 .rhm-cfg .cfg-toggle{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--ink);cursor:pointer}
 .rhm-cfg .cfg-toggle input{width:auto;padding:0;border:0;background:none}
+.rhm-cfg .cfg-mem{display:flex;gap:6px}
+.rhm-cfg .cfg-mem .b{flex:1;font-size:10px}
+.rhm-cfg .cfg-mem .b.rec{border-color:var(--err);color:var(--err)}
 .ibx-head{font-size:11px;margin-bottom:6px}
 .ibx-item{padding:6px 8px;margin:4px 0;background:var(--bg);border:1px solid var(--line);border-left:3px solid var(--warn);
   border-radius:3px;cursor:pointer;font-size:11px;color:var(--ink)}

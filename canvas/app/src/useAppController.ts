@@ -126,6 +126,7 @@ export function useAppController(editor: Editor) {
   const [cfgOpen, setCfgOpen] = useState(false)
   const [personas, setPersonas] = useState<any[]>([])   // Option A: the cast you can switch between (id·name·engine)
   const [voiceStatus, setVoiceStatus] = useState<string>('')   // V4.2: '' | 'loading' | 'ready' | 'down' (the persona voice's load state)
+  const [recordingSession, setRecordingSession] = useState<string>('')   // V3.1: the active trial_session id when recording the conversation ('' = not recording)
   // U12: the /api/inbox payload is { live_escalations, resolved_for_you, batched, counts }. `batched` is a
   // SUBSET-grouping of live_escalations — NOT a third disjoint lane. We render the two real lanes.
   const [inbox, setInbox] = useState<any>({ live_escalations: [], resolved_for_you: [], batched: {}, counts: { escalations: 0, resolved: 0 } })
@@ -1203,7 +1204,7 @@ export function useAppController(editor: Editor) {
     playCursorRef.current = 0
     setNotice('listening…')
     let res: Response
-    try { res = await api.voiceStream(blob, persona) }
+    try { res = await api.voiceStream(blob, persona, recordingSession || undefined) }   // V3.1: record if a session is active
     catch (e: any) { setNotice('⚠ voice circuit unreachable: ' + (e?.message || e)); return }
     if (!res.ok || !res.body) {
       const t = await res.text().catch(() => ''); setNotice('⚠ voice turn failed (' + res.status + '): ' + t.slice(0, 160)); return
@@ -1332,6 +1333,29 @@ export function useAppController(editor: Editor) {
     try { const c = await api.setRhmConfig({ voice_input_mode: mode }); setCfg(c); setNotice('voice input → ' + mode.replace('_', '-')) }
     catch (e: any) { setNotice('⚠ ' + (e?.message || e)) }
   }
+  // V3.1 — record this conversation as a TRIAL SESSION (so it can be debriefed + feeds the twin). Start
+  // mints a trial_session id (the voice stream then records each turn via trial_record_turn); stop clears
+  // it. The id format mirrors the backend's namespaced trial sessions.
+  function toggleRecordConversation() {
+    if (recordingSession) { setRecordingSession(''); setNotice('recording stopped') }
+    else {
+      const persona = (cfg?.persona || 'rhm')
+      const id = 'trial-' + persona + '-' + Math.floor(Date.now() / 1000)
+      setRecordingSession(id); setNotice('● recording this conversation — speak; turns are saved for debrief')
+    }
+  }
+  // V3.2 — debrief: walk back through the recorded session(s) via the EXISTING walkthrough organ
+  // (start_debrief surfaces each session's real transcript as review items through the same walk).
+  async function startDebriefSession() {
+    try {
+      const sessions = await api.trialSessions()
+      const ids = (Array.isArray(sessions) ? sessions : []).map((s: any) => s.session_id || s.id || s).filter(Boolean)
+      if (!ids.length) { setNotice('no recorded sessions yet — record a conversation first'); return }
+      const r = await api.startDebrief(ids)
+      if (r && r.error) { setNotice('⚠ debrief: ' + r.error); return }
+      setNotice('debrief started — review the surfaced sessions in the inbox / walk'); await poll()
+    } catch (e: any) { setNotice('⚠ debrief failed: ' + (e?.message || e)) }
+  }
   // V4.3 — global voice OUTPUT on/off (the voice_enabled slot), independent of presence mode. off = text
   // replies, no synth. Persists live.
   async function setVoiceEnabled(on: boolean) {
@@ -1420,7 +1444,7 @@ export function useAppController(editor: Editor) {
     // state values (read by the region components)
     edges, running, runError, runStartedAt, runElapsed, types, gname, gspec, surf, growMsg, workshop,
     oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
-    showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn, personas, voiceStatus,
+    showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn, personas, voiceStatus, recordingSession,
     wtSpoke, wtBusy, selected, mobileTab, fleet, indicated, proposal, history, historyBusy,
     selfChanges, selfChangesBusy, freshness, freshnessBusy, versions, versionsBusy, journeyId, journeyReplaying,
     // refs the components read for the inspector form
@@ -1431,7 +1455,7 @@ export function useAppController(editor: Editor) {
     // handlers
     poll, openCoa, reload, fitGraph, addNode, wireSelected, doConnect, setNodeConfig, surfaceOutput,
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
-    resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, fieldValue,
+    resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, toggleRecordConversation, startDebriefSession, fieldValue,
     setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus,
     approveProposal, dismissProposal, toggleJourneyRecording, replayJourney, switchPersona,
   }
