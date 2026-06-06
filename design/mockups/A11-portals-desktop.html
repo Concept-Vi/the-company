@@ -1,0 +1,268 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>A11 · Portals — live transclusion · desktop</title>
+<link rel="stylesheet" href="../design-system.css">
+<!--
+  ============================================================
+  VIEW  A11 · Portals — live transclusion · desktop   (DRAFT / probe — GAP-LIST item, no prior mockup)
+  AREA  A (canvas / operate)
+  PANEL TARGET  A11 "Portals — live transclusion" · feature NODE-portal · register.json status: planned
+  ============================================================
+  REPRESENTS[] (feature-id · what it surfaces · code ref — GROUNDED in the real app):
+    · NODE-portal — portal is a CONTENT-kind node, RESOLVE='reference': NOT computed, NOT wired by
+                    dataflow. The scheduler SKIPS it (marks processed, fires nothing); its output is
+                    resolved LIVE at view-time from config.ref via head(ref) on EVERY state() call.
+                    A window onto another address — never a copy.        nodes/portal.py (VERSION 1, KIND content,
+                    RESOLVE='reference', PORTS_IN={}, PORTS_OUT={'view':'Any'}, CONFIG.ref)
+    · NODE-portal — LIVE property (the decisive one): change the source, re-read → the portal reflects
+                    the new content. window, not snapshot.               tests/portal_acceptance.py (check 3:
+                    "portal is LIVE — reflects changed source")
+    · NODE-portal — IDENTITY, not copy: a resolved portal's content_hash == the SOURCE node's
+                    content_hash (the SAME artefact at two places).       suite.py:417-463 (state(): reference
+                    branch resolves head(config.ref); portal_acceptance check 2: same content-hash)
+    · NODE-portal — DANGLING/empty ref → output:None, NO crash, NO fabrication (fail-loud-by-honesty:
+                    shows nothing rather than fake content).              portal_acceptance check 4 ("resolves
+                    to None (no fabrication)"); suite.py:426 (head(ref) if ref else None)
+  ------------------------------------------------------------
+  GROUNDING — STATUS HONESTY (the one fiction-risk, verified against code):
+    A portal is SKIPPED by the scheduler (scheduler.py:57-63 — never in ran/cached/stuck). So in state():
+      · fresh-run path (suite.py:436-438): portal is not in ran/skipped/stuck → 'idle'.
+      · reload/derive path (suite.py:448-453): status is DERIVED from whether config.ref RESOLVES —
+        cas present → 'cached'; absent → 'idle'. A portal NEVER shows 'ran' (it never fires) and never
+        'stuck' (stuck is input-resolution-relative; a portal has no input ports).
+    => HONEST portal status vocabulary = { live (ref resolves, cas present) · empty (dangling ref, output None) }.
+       It is depicted here as a distinct "live window" badge, NOT a process-style ran/cached/stuck dot,
+       because borrowing the four computed-node dots (A2's legend) onto a non-computed node would be FICTION.
+  ------------------------------------------------------------
+  ADDRESSES (REAL only — no invention):
+    · portal NODE on canvas      → ui://canvas/node   (registered: region canvas · App.tsx:124 / suite.py:436)
+    · its inspector / config     → ui://inspector      (registered: contracts/node_type.py / App.tsx:447)
+    · the model-field slot reuse → n/a (portal has no model; content node)
+    · the LIVE transcluded ref   → run://<graph>/<id>  INSTANCE ref (pattern-based, NOT a ui:// type;
+                                    parse.py treats run:// as instance-of-its-ui://-type, not an orphan —
+                                    free-ball 17.x identity↔instance rule).
+    *** UPDATED 2026-06-05: the transclusion REGION now HAS a dedicated registered ui:// address —
+        ui://canvas/portal-window (NODE-portal · nodes/portal.py) — carried on each live-window frame below.
+        The inspector config still uses ui://inspector. (Was previously flagged as an address gap.) ***
+  ------------------------------------------------------------
+  PROPOSED-vs-EXISTING (honest layering — this is a probe over a real substrate):
+    EXISTING (real, in code/tests): the portal node, RESOLVE='reference', live head(ref) resolution,
+        same-content-hash identity, dangling→None, content-kind palette entry (A2 palette: ⊕ portal).
+    PROPOSED (design, not yet in app): the dedicated VISUAL treatment of a portal as a translucent
+        "live window" frame distinct from a normal content node; the on-window "live ⇄ source" link line;
+        the empty-state card; a many-views-of-one-artefact layout. The app renders nodes GENERICALLY from
+        /object_info today (canvas constitution) — there is no special portal renderer yet. Labelled below.
+  ============================================================
+-->
+<style>
+.top{grid-area:top;display:flex;align-items:center;gap:16px;padding:0 16px;background:linear-gradient(180deg,var(--s1),var(--s0));border-bottom:1px solid var(--line);min-width:0}
+.brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:17px;letter-spacing:-.3px;white-space:nowrap}
+.brand em{font-style:normal;color:var(--acc)}
+.brand .tag{font-size:10.5px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:7px}
+.verbs{margin-left:auto;display:flex;gap:6px;flex:none}
+.verbs .btn{padding:7px 11px}
+.verbs .btn .lbl{white-space:nowrap}
+
+.rail{grid-area:rail;background:var(--s0);border-right:1px solid var(--line);padding:13px 11px;overflow:auto}
+.rail .railhd{font-size:9.5px;text-transform:uppercase;letter-spacing:1.3px;color:var(--tx-3);font-weight:600;margin:0 2px 9px}
+.rail h4{font-size:10px;text-transform:uppercase;letter-spacing:1.1px;color:var(--tx-2);margin:15px 3px 7px;font-weight:600;display:flex;align-items:center;gap:7px}
+.rail h4 .ct{margin-left:auto;color:var(--tx-3);font-family:'IBM Plex Mono';font-size:9px;font-weight:400}
+.kdot{width:8px;height:8px;border-radius:2px;flex:none}
+.chip{display:flex;align-items:center;gap:9px;padding:6px 9px;border-radius:var(--r);background:var(--s1);border:1px solid var(--line);font-size:12px;margin-bottom:5px;cursor:grab}
+.chip.on{border-color:var(--kind-content);background:var(--kind-content-bg)}
+.chip .mono-chip{width:19px;height:19px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:11px;color:var(--ink-accent);flex:none}
+.chip .label{color:var(--tx)}
+.rail .note{font-size:10px;color:var(--tx-3);line-height:1.5;margin:14px 3px 0;padding-top:11px;border-top:1px solid var(--line)}
+.rail .note b{color:var(--kind-content);font-weight:500}
+
+.canvas{grid-area:canvas;position:relative;overflow:hidden;background-image:radial-gradient(var(--line) .9px,transparent .9px);background-size:26px 26px}
+.canvas .node{position:absolute}
+.node.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc-glow),0 22px 50px -22px #000}
+
+/* ── PROPOSED portal "live window" treatment — a translucent framed window, NOT a solid content node.
+   Reads as a viewport onto something elsewhere. content-kind blue (portal IS content), but glassy. ── */
+.portal{position:absolute;border:1.5px dashed var(--kind-content);border-radius:var(--r);
+  background:linear-gradient(180deg,var(--kind-content-bg),rgba(107,155,216,.03));
+  backdrop-filter:blur(2px);box-shadow:0 14px 40px -22px #000, inset 0 0 0 1px rgba(107,155,216,.10);width:236px}
+.portal .phd{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px dashed rgba(107,155,216,.35);font-size:11px}
+.portal .phd .mono-chip{width:18px;height:18px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:10px;color:var(--ink-accent);background:var(--kind-content);flex:none}
+.portal .phd .ty{font-weight:600;color:var(--tx)}
+.portal .phd .kindlabel{font-size:9px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:2px}
+/* the LIVE badge — the honest portal status (NOT ran/cached/stuck). ref resolves → live. */
+.livebadge{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-family:'IBM Plex Mono';font-size:9px;color:var(--acc);background:var(--acc-glow);border:1px solid var(--acc);border-radius:99px;padding:2px 7px}
+.livebadge i{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.portal .pbodywin{padding:9px 10px;font-size:12px;color:var(--tx);line-height:1.5;min-height:34px}
+.portal .pbodywin.code{font-family:'IBM Plex Mono';font-size:11px;color:var(--tx-2)}
+.portal .pref{display:flex;align-items:center;gap:6px;padding:6px 10px;border-top:1px dashed rgba(107,155,216,.25);font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3)}
+.portal .pref b{color:var(--kind-content);font-weight:500}
+.portal .pref .arrow{color:var(--acc)}
+/* empty/dangling portal — output None, honest: shows the gap, never fakes content */
+.portal.empty{border-color:var(--line-2);background:repeating-linear-gradient(135deg,var(--s1),var(--s1) 8px,var(--s0) 8px,var(--s0) 16px)}
+.portal.empty .phd{border-bottom-color:var(--line-2)}
+.portal.empty .phd .mono-chip{background:var(--tx-3)}
+.emptybadge{margin-left:auto;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);border:1px solid var(--line-2);border-radius:99px;padding:2px 7px}
+.portal.empty .pbodywin{color:var(--tx-3);font-style:italic;display:flex;align-items:center;gap:7px}
+
+/* the SOURCE node — a normal content/process node (house A2 .node styling from design-system.css) */
+.src .addr .live{color:var(--acc)}
+
+/* proposed: the "same artefact" tag that marks identity (same content-hash) between source + portals */
+.identitytag{position:absolute;font-family:'IBM Plex Mono';font-size:8.5px;color:var(--acc);background:var(--s0);border:1px solid var(--acc);border-radius:4px;padding:1px 5px;white-space:nowrap}
+
+.legend{display:flex;gap:16px;align-items:center;position:absolute;left:16px;bottom:12px;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3);background:rgba(8,10,13,.7);border:1px solid var(--line);border-radius:var(--r);padding:7px 12px;backdrop-filter:blur(4px)}
+.legend b{display:inline-flex;align-items:center;gap:5px;color:var(--tx-2);font-weight:500}
+.legend i{width:9px;height:9px;flex:none}
+.legend .win{border:1.5px dashed var(--kind-content);border-radius:3px;background:var(--kind-content-bg)}
+.legend .liv{border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.legend .emp{border:1px solid var(--line-2);background:var(--s1)}
+.legend .sep{width:1px;height:16px;background:var(--line-2)}
+
+.foot{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--s0);border-top:1px solid var(--line);font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';overflow:hidden;white-space:nowrap}
+.foot .live{color:var(--acc);display:inline-flex;align-items:center;gap:5px}
+.foot .live i{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+
+.panel{grid-area:panel;background:var(--s0);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);padding:10px 12px 0}
+.tab{padding:8px 12px;font-size:12px;color:var(--tx-3);border-bottom:2px solid transparent;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.tab.on{color:var(--tx);border-bottom-color:var(--acc)}
+.pbody{padding:14px;overflow:auto;flex:1;min-height:0}
+.fld{font-size:11px;color:var(--tx-2);margin:0 0 5px}
+.fld .opt{color:var(--tx-3);font-size:10px}
+.box{background:var(--s1);border:1px solid var(--line-2);border-radius:var(--r);padding:9px 11px;font-size:12.5px;margin-bottom:12px}
+.box.code{font-family:'IBM Plex Mono';font-size:11px;color:var(--tx-2);line-height:1.5}
+.box.sel-row{display:flex;justify-content:space-between;align-items:center}
+.box b{color:var(--acc);font-weight:500}
+.seclbl{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--tx-3);font-weight:600;margin:4px 0 9px}
+.kindrow{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+.kindrow .mono-chip{width:22px;height:22px;background:var(--kind-content);border-radius:6px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;color:var(--ink-accent)}
+.kindrow .display{font-weight:700;font-size:15px}
+.kindrow .mono{font-size:10px;color:var(--tx-3);margin-left:auto;font-family:'IBM Plex Mono'}
+.propose{margin-top:6px;padding:8px 10px;border:1px dashed var(--line-2);border-radius:var(--r);font-size:10px;color:var(--tx-3);line-height:1.55}
+.propose b{color:var(--tx-2);font-weight:600}
+.note-existing{font-family:'IBM Plex Mono';font-size:9px;color:var(--ok,var(--kind-process));border:1px solid var(--kind-process);border-radius:3px;padding:1px 5px}
+.note-proposed{font-family:'IBM Plex Mono';font-size:9px;color:var(--await);border:1px solid var(--await);border-radius:3px;padding:1px 5px}
+</style></head>
+<body><div class="app">
+
+  <!-- ── TOP BAR ── -->
+  <header class="top" data-ui-ref="ui://toolbar">
+    <span class="brand">the&nbsp;<em>company</em><span class="tag">// portals · live transclusion</span></span>
+    <div class="verbs">
+      <button class="btn">◐ <span class="lbl">layers</span></button>
+      <button class="btn">＋ <span class="lbl">wire</span></button>
+      <button class="btn run" data-ui-ref="ui://toolbar/run">▶ <span class="lbl">run</span> <span class="k">⏎</span></button>
+    </div>
+  </header>
+
+  <!-- ── LEFT RAIL — palette; portal is a CONTENT node (highlighted, being placed) ── -->
+  <nav class="rail" data-ui-ref="ui://rail/palette">
+    <div class="railhd">Node palette</div>
+    <h4><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span><span class="ct">5</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">C</span><span class="label">constant</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">▦</span><span class="label">codebase</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">T</span><span class="label">model_of_tim</span></div>
+    <div class="chip on"><span class="mono-chip" style="background:var(--kind-content)">⊕</span><span class="label">portal</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">◑</span><span class="label">rhm_mode</span></div>
+    <p class="note"><b>portal</b> ⊕ — a live window onto another address. Not computed, not wired. Resolves <code style="font-family:'IBM Plex Mono'">config.ref</code> on every read. One artefact, many views — never copied.</p>
+  </nav>
+
+  <!-- ── CANVAS — ONE SOURCE artefact, transcluded into MANY live portals (the relationship IS the feature) ── -->
+  <main class="canvas" data-ui-ref="ui://canvas">
+
+    <!-- transclusion link lines (PROPOSED visual): source ⇄ each live portal. acc = the live identity link -->
+    <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none">
+      <!-- source.out (run://demo/answer) → portal #1 -->
+      <path d="M 286 220 C 430 220 470 168 612 168" fill="none" stroke="var(--acc)" stroke-width="1.4" stroke-dasharray="2 4" opacity=".75"/>
+      <!-- source.out → portal #2 (same artefact, second live view) -->
+      <path d="M 286 244 C 430 244 470 420 612 420" fill="none" stroke="var(--acc)" stroke-width="1.4" stroke-dasharray="2 4" opacity=".75"/>
+    </svg>
+
+    <!-- THE SOURCE — a real process node (ask), output addressed run://demo/answer. EXISTING. -->
+    <div class="node sel src" data-kind="process" data-ui-ref="ui://canvas/node" style="left:54px;top:150px;width:232px">
+      <div class="bar"><span class="mono-chip">A</span><span class="ty">ask</span><span class="kindlabel">process · ran</span></div>
+      <div class="body">the source artefact
+        <div class="cfg"><span class="pill" style="border-color:var(--kind-model);color:var(--kind-model)">model <b style="color:var(--kind-model)">deepseek-v4-pro</b></span></div>
+        <div class="out">The memo gate skips re-running a node when its (type, version, config, inputs) hash is unchanged — runtime/scheduler.py…</div>
+      </div>
+      <div class="addr"><span>run://demo/answer</span><span class="sdot s-ran"></span></div>
+      <span class="port out"></span>
+    </div>
+    <span class="identitytag" style="left:300px;top:130px">⊜ one artefact · 2 live views</span>
+
+    <!-- PORTAL #1 — LIVE window onto run://demo/answer. content-kind, reference-resolved. EXISTING node, PROPOSED treatment. -->
+    <div class="portal" data-ui-ref="ui://canvas/portal-window" style="left:612px;top:120px">
+      <div class="phd"><span class="mono-chip">⊕</span><span class="ty">portal</span><span class="kindlabel">content · window</span>
+        <span class="livebadge"><i></i>live</span></div>
+      <div class="pbodywin">The memo gate skips re-running a node when its (type, version, config, inputs) hash is unchanged — runtime/scheduler.py…</div>
+      <div class="pref">↪ <span class="arrow">reflects</span> <b>run://demo/answer</b></div>
+    </div>
+
+    <!-- PORTAL #2 — a SECOND live window onto the SAME address (one artefact, many views). content_hash IDENTICAL to source. -->
+    <div class="portal" data-ui-ref="ui://canvas/portal-window" style="left:612px;top:372px">
+      <div class="phd"><span class="mono-chip">⊕</span><span class="ty">portal</span><span class="kindlabel">content · window</span>
+        <span class="livebadge"><i></i>live</span></div>
+      <div class="pbodywin">The memo gate skips re-running a node when its (type, version, config, inputs) hash is unchanged — runtime/scheduler.py…</div>
+      <div class="pref">↪ <span class="arrow">reflects</span> <b>run://demo/answer</b> · same hash <b>sha:9f2a…</b></div>
+    </div>
+
+    <!-- PORTAL #3 — DANGLING ref → output None. HONEST empty state (no crash, no fabrication). EXISTING behaviour. -->
+    <div class="portal empty" data-ui-ref="ui://canvas/portal-window" style="left:900px;top:246px">
+      <div class="phd"><span class="mono-chip">⊕</span><span class="ty">portal</span><span class="kindlabel">content</span>
+        <span class="emptybadge">∅ no source</span></div>
+      <div class="pbodywin">— nothing to show (ref does not resolve)</div>
+      <div class="pref">↪ <span style="color:var(--tx-3)">run://demo/nonexistent</span></div>
+    </div>
+
+    <!-- LEGEND — portal's OWN honest vocabulary (live · empty), distinct from computed-node ran/cached/stuck -->
+    <div class="legend">
+      <b><i class="win"></i>live window</b>
+      <b><i class="liv"></i>live (ref resolves)</b>
+      <b><i class="emp"></i>empty (no source · output None)</b>
+      <span class="sep"></span>
+      <span style="color:var(--tx-3)">portals are reference-resolved — never fire, never ran/cached/stuck</span>
+    </div>
+  </main>
+
+  <!-- ── ACTIVITY STRIP ── -->
+  <footer class="foot">
+    <span class="live"><i></i>live</span>
+    <span>ran ask (source) · 2 portals reflecting run://demo/answer · 1 empty</span>
+    <span style="margin-left:auto">demo · portals not in run-set (reference-resolved) · event-stream connected</span>
+  </footer>
+
+  <!-- ── RIGHT PANEL — INSPECTOR of the selected portal ── -->
+  <aside class="panel">
+    <div class="tabs">
+      <span class="tab on">⊙ Inspector</span>
+      <span class="tab">✦ Inbox</span>
+      <span class="tab">◈ RHM</span>
+    </div>
+    <div class="pbody" data-ui-ref="ui://inspector">
+      <div class="kindrow">
+        <span class="mono-chip">⊕</span>
+        <span class="display">portal</span>
+        <span class="mono">content · live window</span>
+      </div>
+
+      <p class="fld">Reference address <span class="opt">· config.ref · the address this window reflects</span></p>
+      <div class="box sel-row"><span class="box code" style="margin:0;padding:0;border:0;background:none"><b style="color:var(--kind-content)">run://demo/answer</b></span><span style="color:var(--tx-3)">▾</span></div>
+
+      <p class="fld">Resolution <span class="opt">· how the output is produced</span></p>
+      <div class="box code">RESOLVE = <b>reference</b><br>output = head(config.ref) → live, every read<br><span style="color:var(--tx-3)">scheduler SKIPS this node — run() never called</span></div>
+
+      <p class="fld">Live state <span class="opt">· not a computed status</span></p>
+      <div class="box sel-row"><span style="display:inline-flex;align-items:center;gap:7px"><span class="livebadge" style="margin:0"><i></i>live</span> ref resolves</span><span style="color:var(--tx-3)">content_hash <b style="color:var(--acc)">sha:9f2a…</b></span></div>
+
+      <p class="fld">Identity <span class="opt">· window, not copy</span></p>
+      <div class="box code">same content-hash as <b style="color:var(--kind-content)">ask</b> (run://demo/answer)<br><span style="color:var(--tx-3)">→ one artefact, shown in 2 places, live</span></div>
+
+      <p class="seclbl">Honesty notes (grounding)</p>
+      <div class="propose">
+        <span class="note-existing">EXISTING</span> the portal node, reference-resolution, live <code style="font-family:'IBM Plex Mono'">head(ref)</code>, same-hash identity, dangling→None — all real (<b>nodes/portal.py</b>, <b>tests/portal_acceptance.py</b>).<br><br>
+        <span class="note-proposed">PROPOSED</span> the translucent <b>window</b> treatment, the <b>live⇄source</b> link line, and the <b>empty-state</b> card are a DESIGN proposal — the app renders nodes generically today (no special portal renderer). <br><br>
+        <b>Address:</b> the portal window now has a dedicated registered address — <code style="font-family:'IBM Plex Mono'">ui://canvas/portal-window</code> (NODE-portal · nodes/portal.py) — carried on each live-window frame; the inspector config still uses <code style="font-family:'IBM Plex Mono'">ui://inspector</code>.
+      </div>
+    </div>
+  </aside>
+
+</div></body></html>

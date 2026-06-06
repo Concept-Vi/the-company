@@ -1,0 +1,458 @@
+{
+  "_what": "The address registry — every valid ui:// address, its region, capabilities, the real feature it represents, and the code that powers it. Mirrors/extends the running app's UI_REGISTRY so a mockup element and its real component share ONE address. Add an addressable thing = add an entry here (extend-by-registration) + carry its data-ui-ref in the mockup; run parse.py to refresh element-map.json. Capabilities: pointable·spotlit·presentable·openable·driven (from contracts/ui_info.py).",
+  "scheme": "ui://<region>/<element>[/<sub>][@<state>]  (chrome) · run://<graph>/<node>[#<port>] (canvas nodes)",
+  "addresses": {
+    "ui://toolbar": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable",
+        "spotlit"
+      ],
+      "represents": "F1",
+      "code": "canvas/app/src/App.tsx (toolbar)"
+    },
+    "ui://toolbar/run": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable",
+        "openable"
+      ],
+      "represents": "RUN-run",
+      "code": "runtime/bridge.py:184 / App.tsx:1146"
+    },
+    "ui://toolbar/presence": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable",
+        "openable"
+      ],
+      "represents": "RHM-modes",
+      "code": "runtime/suite.py:set_mode"
+    },
+    "ui://rail/palette": {
+      "region": "rail",
+      "capabilities": [
+        "pointable",
+        "spotlit"
+      ],
+      "represents": "F3",
+      "code": "canvas/app/src/App.tsx:App"
+    },
+    "ui://canvas": {
+      "region": "canvas",
+      "capabilities": [
+        "pointable",
+        "driven"
+      ],
+      "represents": "CAN-compose",
+      "code": "App.tsx NodeShapeUtil:124"
+    },
+    "ui://canvas/node": {
+      "region": "canvas",
+      "capabilities": [
+        "pointable",
+        "spotlit",
+        "driven"
+      ],
+      "represents": "NODE-kinds",
+      "code": "App.tsx:124 / suite.py:436"
+    },
+    "ui://inspector": {
+      "region": "inspector",
+      "capabilities": [
+        "openable",
+        "presentable"
+      ],
+      "represents": "NODE-config",
+      "code": "contracts/node_type.py / App.tsx:447"
+    },
+    "ui://inspector/model-field": {
+      "region": "inspector",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "MOD-registry",
+      "code": "runtime/suite.py:109 / App.tsx:134"
+    },
+    "ui://inspector/act": {
+      "region": "inspector",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "ENG-force",
+      "code": "canvas/app/src/App.tsx:doRun / runtime/scheduler.py:run"
+    },
+    "ui://inbox": {
+      "region": "inbox",
+      "capabilities": [
+        "openable",
+        "presentable"
+      ],
+      "represents": "INB-lanes",
+      "code": "runtime/suite.py:inbox_lanes"
+    },
+    "ui://inbox/build-review": {
+      "region": "inbox",
+      "capabilities": [
+        "pointable",
+        "presentable",
+        "spotlit"
+      ],
+      "represents": "WIRE-review",
+      "code": "runtime/suite.py:review_verdicts"
+    },
+    "ui://inbox/build-intent": {
+      "region": "inbox",
+      "capabilities": [
+        "pointable",
+        "presentable",
+        "spotlit"
+      ],
+      "represents": "WIRE-intent",
+      "code": "runtime/suite.py:surface_build_intent"
+    },
+    "ui://inbox/context-bundle": {
+      "region": "inbox",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "WIRE-intent",
+      "code": "runtime/suite.py:surface_build_intent (payload.context — the X3 R2 gather) / canvas/app/src/components/ContextBundle.tsx"
+    },
+    "ui://inbox/context-pin": {
+      "region": "inbox",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "WIRE-intent",
+      "code": "runtime/suite.py:pin (X7 pin override) / canvas/app/src/components/ContextBundle.tsx"
+    },
+    "ui://inbox/coa": {
+      "region": "inbox",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "INB-coa",
+      "code": "runtime/suite.py:coa"
+    },
+    "ui://inbox/target": {
+      "region": "inbox",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "INB-target",
+      "code": "canvas/app/src/regions/Inbox.tsx (go to thing) / runtime/suite.py:surface_output"
+    },
+    "ui://chat": {
+      "region": "chat",
+      "capabilities": [
+        "openable",
+        "driven"
+      ],
+      "represents": "RHM-chat",
+      "code": "runtime/suite.py:chat"
+    },
+    "ui://chat/input": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "RHM-chat",
+      "code": "App.tsx (chat input)"
+    },
+    "ui://activity": {
+      "region": "activity",
+      "capabilities": [
+        "presentable",
+        "driven"
+      ],
+      "represents": "EVT-now",
+      "code": "runtime/suite.py:now"
+    },
+    "ui://walkthrough": {
+      "region": "chat",
+      "capabilities": [
+        "presentable",
+        "spotlit"
+      ],
+      "represents": "WALK-present",
+      "code": "runtime/suite.py:present_current"
+    },
+    "ui://walkthrough/verdict": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "INB-resolve",
+      "code": "runtime/suite.py:resolve_surfaced"
+    },
+    "ui://workshop": {
+      "region": "workshop",
+      "capabilities": [
+        "openable",
+        "presentable"
+      ],
+      "represents": "WS-workshop",
+      "code": "runtime/suite.py:ui_info"
+    },
+    "ui://tabbar": {
+      "region": "tabbar",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "G2",
+      "code": "design-system.css .tabbar (mobile nav)"
+    },
+    "ui://models": {
+      "region": "models",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "MOD-registry",
+      "code": "runtime/suite.py:available_models"
+    },
+    "ui://twin": {
+      "region": "chat",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "RHM-twin",
+      "code": "runtime/suite.py:training_signal"
+    },
+    "ui://canvas/portal-window": {
+      "region": "canvas",
+      "capabilities": [
+        "pointable",
+        "driven-read-only"
+      ],
+      "represents": "NODE-portal",
+      "code": "nodes/portal.py"
+    },
+    "ui://workshop/self-changes": {
+      "region": "workshop",
+      "capabilities": [
+        "pointable",
+        "openable"
+      ],
+      "represents": "SM-revert",
+      "code": "runtime/suite.py:revert_self_change"
+    },
+    "ui://activity/replay": {
+      "region": "activity",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "INB-replay",
+      "code": "runtime/suite.py:replay"
+    },
+    "ui://toolbar/wire": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "CAN-compose",
+      "code": "canvas/app/src/regions/Toolbar.tsx (wire) / runtime/suite.py:set_config"
+    },
+    "ui://toolbar/portal": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "NODE-portal",
+      "code": "canvas/app/src/regions/Toolbar.tsx (portal) / nodes/portal.py"
+    },
+    "ui://toolbar/delete": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "CAN-compose",
+      "code": "canvas/app/src/regions/Toolbar.tsx (delete) / runtime/suite.py:set_config"
+    },
+    "ui://toolbar/layers": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "CAN-layers",
+      "code": "canvas/app/src/regions/Toolbar.tsx (layers) / canvas/app/src/useAppController.ts:cycleLayers"
+    },
+    "ui://toolbar/fit": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "CAN-zoom",
+      "code": "canvas/app/src/regions/Toolbar.tsx (fit) / canvas/app/src/useAppController.ts:fitGraph"
+    },
+    "ui://toolbar/reload": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "RUN-status",
+      "code": "canvas/app/src/regions/Toolbar.tsx (reload) / runtime/suite.py:state"
+    },
+    "ui://chat/send": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "RHM-chat",
+      "code": "canvas/app/src/regions/RhmChat.tsx (send) / runtime/suite.py:chat"
+    },
+    "ui://chat/mic": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "VOICE",
+      "code": "canvas/app/src/regions/RhmChat.tsx (mic) / voice/"
+    },
+    "ui://chat/config": {
+      "region": "chat",
+      "capabilities": [
+        "pointable",
+        "openable"
+      ],
+      "represents": "RHM-config",
+      "code": "canvas/app/src/regions/RhmChat.tsx (config gear) / runtime/suite.py:set_rhm_config"
+    },
+    "ui://inspector/workshop": {
+      "region": "inspector",
+      "capabilities": [
+        "pointable",
+        "openable"
+      ],
+      "represents": "WS-workshop",
+      "code": "canvas/app/src/regions/Inspector.tsx (open workshop) / runtime/suite.py:ui_info"
+    },
+    "ui://inspector/surface": {
+      "region": "inspector",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "INB-surface",
+      "code": "canvas/app/src/regions/Inspector.tsx (surface output) / runtime/suite.py:surface_review"
+    },
+    "ui://inspector/build": {
+      "region": "inspector",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "SM-node",
+      "code": "canvas/app/src/regions/Inspector.tsx (build from output) / runtime/suite.py:apply_node"
+    },
+    "ui://inspector/history": {
+      "region": "inspector",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "INB-replay",
+      "code": "canvas/app/src/regions/History.tsx (L3 addressed history) / runtime/suite.py:address_view"
+    },
+    "ui://inspector/versions": {
+      "region": "inspector",
+      "capabilities": [
+        "pointable",
+        "driven-read-only"
+      ],
+      "represents": "NODE-portal",
+      "code": "canvas/app/src/regions/Versions.tsx (L6 versions at an address) / runtime/suite.py:ref_versions / store/fs_store.py:ref_history"
+    },
+    "ui://inspector/freshness": {
+      "region": "inspector",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "ENG-memo",
+      "code": "canvas/app/src/regions/Inspector.tsx (L10 memo stale badge) / runtime/suite.py:stale_at_address"
+    },
+    "ui://grow": {
+      "region": "grow",
+      "capabilities": [
+        "openable",
+        "presentable"
+      ],
+      "represents": "SM-node",
+      "code": "canvas/app/src/regions/Grow.tsx / runtime/suite.py:apply_node"
+    },
+    "ui://grow/dispatch": {
+      "region": "grow",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "SM-node",
+      "code": "canvas/app/src/regions/Grow.tsx (dispatch build) / runtime/suite.py:apply_node"
+    },
+    "ui://grow/approve": {
+      "region": "grow",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "GOV-resolve",
+      "code": "canvas/app/src/regions/Grow.tsx (approve & apply) / runtime/governance.py:resolve"
+    },
+    "ui://grow/reject": {
+      "region": "grow",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "INB-resolve",
+      "code": "canvas/app/src/regions/Grow.tsx (reject) / runtime/suite.py:resolve_surfaced"
+    },
+    "ui://walkthrough/voice": {
+      "region": "walkthrough",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "VOICE",
+      "code": "canvas/app/src/regions/Walkthrough.tsx (voice/text toggle) / voice/"
+    },
+    "ui://walkthrough/next": {
+      "region": "walkthrough",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "WALK-next",
+      "code": "canvas/app/src/regions/Walkthrough.tsx (next) / runtime/suite.py:next"
+    },
+    "ui://walkthrough/reason": {
+      "region": "walkthrough",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "INB-resolve",
+      "code": "canvas/app/src/regions/Walkthrough.tsx (reason) / runtime/suite.py:resolve_surfaced"
+    },
+    "ui://walkthrough/show-again": {
+      "region": "walkthrough",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "WALK-uiresolve",
+      "code": "canvas/app/src/regions/Walkthrough.tsx (show again) / runtime/suite.py:_registry_ui_target"
+    },
+    "ui://inbox/walk": {
+      "region": "inbox",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "WALK-present",
+      "code": "canvas/app/src/regions/Inbox.tsx (walk these) / runtime/suite.py:present_current"
+    },
+    "ui://chat/model-field": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "RHM-config",
+      "code": "canvas/app/src/regions/RhmChat.tsx (model input) / runtime/suite.py:set_rhm_config"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "_what": "THE MECHANISMS REGISTRY — the corpus-analysis mechanisms that read the design corpus and emit findings the keeper/lead acts on. This is the Layer-0 structural FLOOR (exact, free, deterministic — no models): each mechanism reads some part of the registries/mockups, emits findings, and routes them (repair the corpus, or surface to a build track). A local-model layer AUGMENTS these later (semantic judgement on top of structure) — every entry carries a `model_augmentation` note saying what that layer adds. Extend-by-registration: add a mechanism = add an entry keyed by `id` to `mechanisms` below; no surgery. Mirrors how addresses.json / tokens.json are extended. Fields per entry: id · layer(structural|semantic) · reads · emits · routes_on · tool · model_augmentation.",
+  "mechanisms": {
+    "code-ref-validator": {
+      "id": "code-ref-validator",
+      "layer": "structural",
+      "reads": "every code: ref in register.json + addresses.json",
+      "emits": "drift findings",
+      "routes_on": "drift -> repair(corpus) | surface(build-track)",
+      "tool": "_system/refcheck.py",
+      "model_augmentation": "today: line exists + sits near a def; LATER (free local-AI): a model reads the code at the ref + the represents[] claim and judges whether the symbol actually IMPLEMENTS what the corpus says it does (semantic match, not just structural)"
+    },
+    "code-symbol-registry": {
+      "id": "code-symbol-registry",
+      "layer": "structural",
+      "reads": "every code: ref in register.json (features[].code) + addresses.json (addresses.*.code)",
+      "emits": "the code:// reverse index (symbol -> who references it) — _system/code-symbols.json, keyed by code://<file-stem>/<symbol>, with file · symbol · kind · resolves · referenced_by[] (STRUCTURAL edge) AND, X11, semantically_nearest[] ({id,score}, top-SEMANTIC_K by cosine — the SEMANTIC edge, conceptually-related-with-no-code-link, the SIBLING of referenced_by[]). The semantic field is ABSENT (degrade-with-warning) when the embedder (:8001) is unreachable; the structural fields are then unchanged.",
+      "routes_on": "resolves:false -> drift(repair corpus) | referenced_by 2+ -> shared symbol (a change there ripples; surface) | id-collision -> surface | semantically_nearest[] -> the conceptual neighbours the blast-radius (X14) reads beside the structural code-edges (X10)",
+      "tool": "_system/symbols.py",
+      "model_augmentation": "X11 (BUILT): the semantic edge is now computed by the EXISTING embed/retrieve nodes — each entry's representative text (symbol + kind + file + its owners' represents/label) is embedded via nodes/embed (BGE-M3 @ :8001) and the rest ranked by cosine via nodes/retrieve, the top-SEMANTIC_K kept as semantically_nearest[]. This realises the seam this module's docstring reserved ('the model layer extends this later … semantic, on top of this structural reverse map'). Degrade-with-warning: :8001 down -> the field is skipped for ALL entries with a loud warning, never a fabricated nearest, and the structural index is built fully. FURTHER model augmentation still open: a model annotates each symbol with what it ACTUALLY does + flags a symbol referenced by features whose represents-claim it doesn't match (semantic JUDGEMENT, on top of this nearest-neighbour map). The REVERSE complement of code-ref-validator (forward: ref->resolve); the code:// branch of the Block 17-18 universal coordinate."
+    },
+    "code-dependency-graph": {
+      "id": "code-dependency-graph",
+      "layer": "structural",
+      "reads": "the real Python source under ~/company (READ-ONLY, stdlib ast) — the same SEARCH_DIRS refcheck/symbols search",
+      "emits": "the STRUCTURAL symbol->symbol code-dependency graph (Convergence X10) — _system/code-edges.json, keyed by the SAME code://<file-stem>/<symbol> ids symbols.py uses (one coordinate system, NOT a parallel), each entry: depends_on[] (dependencies-to-RESPECT) · depended_by[] (dependents-to-VERIFY) · resolves. DIRECT edges stored; transitive reach is a BOUNDED query (codeedges.reach / reach_report) capped at DEPTH (2-3 hops, X17-configurable via CODEEDGES_DEPTH, default 2), a reach hitting the bound reported `capped` (no silent truncation). An unparseable/unreadable source file -> stale[] (resolves:false) — fail-loud, never dropped. Resolution is precise (same-file > import > unambiguous-global); an ambiguous bare name does NOT fan out — tallied as unresolved_refs.",
+      "routes_on": "depended_by 2+ -> a symbol whose change ripples (surface for VERIFY) | depends_on -> the dependencies a pointed self-build must RESPECT | stale -> fail-loud(surface; never silent) | the bounded reach -> the blast radius (X14: dependents-to-verify / dependencies-to-respect for a scope)",
+      "tool": "_system/codeedges.py",
+      "model_augmentation": "the SIBLING third branch beside code-ref-validator (forward: ref->resolve) and code-symbol-registry (reverse: symbol->who-references-it, corpus-artifact->symbol): this is symbol->symbol (which symbol CALLS/IMPORTS which) — the true code-dependency graph that existed NOWHERE before X10. The local-model layer LATER reasons over the structural edges semantically (e.g. 'this dependency is load-bearing vs incidental', 'this rename's blast radius is conceptually wider than the call graph shows') and feeds the semantic edges (X11) beside these structural ones into the same blast_radius."
+    }
+  }
+}

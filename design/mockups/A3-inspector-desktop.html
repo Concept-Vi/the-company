@@ -1,0 +1,320 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>A3 · Node selected → inspector · desktop</title>
+<link rel="stylesheet" href="../design-system.css">
+<!--
+  ============================================================
+  VIEW  A3 · Node selected → inspector · desktop
+  AREA  A (canvas / operate) · JOURNEY J1
+  JOURNEY-MOMENT  J1 · configure a node
+        (J1 step 3 "A3 configure each" · surfaces when: operator selects a node on the canvas
+         to set its config before/after a run — the inspector is the ONE place config lives.)
+  ============================================================
+  REPRESENTS[] (feature-id · what it surfaces · code ref — from the Feature & Function Inventory):
+    · NODE-config — per-node CONFIG → config_schema drives the inspector FORM. The selected node is
+                    `llm`, whose REAL fields are model · system · temperature · max_tokens · top_p ·
+                    base_url · retries (inventory line 29). Rendered as the REAL inspector control
+                    types (line 30): enum→<select> (options_from chat_models), text→<textarea>,
+                    string→<input text>, number→<input number min/max/step>.
+                                                              node_type.py / App.tsx:129-152
+    · RUN-status  — node status dot is ONLY one of idle · ran · cached · stuck (state() emits these
+                    four; nothing else). Shown here = `ran` (the node has produced output).
+                    "await" is INBOX/presence, never a node dot.   suite.py:436-453 (await = :491)
+    · ENG-force   — force re-run: the inspector's "↻ rerun" is the FE force affordance; POSTs the
+                    node id into force=[ids] so the memo gate is bypassed for it on the next run.
+                                                              scheduler.py:89 / bridge.py:187 (FE ↻ App.tsx:1397,1420)
+  ------------------------------------------------------------
+  GROUNDING NOTES — no fiction:
+    · Node KINDS shown: only the two live kinds — process(mint) + content(blue). 'llm' is `process`.
+      'model' is NOT a kind; it is a fabric CONFIG SLOT a process node binds → rendered as the
+      model field (a dropdown), not as a node.            registry.py:15,18
+    · llm chosen over ask DELIBERATELY: temperature/max_tokens/top_p are llm-only fields; rendering
+      them on `ask` would be invented config. ask's real fields = model/system/base_url/retries only.
+    · Number field bounds (temp 0–2 step .1, top_p 0–1 step .05, max_tokens step 1, retries 0–10) are
+      conventional sampling ranges — the FIELD TYPE (number min/max/step) is grounded; the specific
+      bounds are the one allowed judgment call, NOT claimed as from the code.
+    · Model names in the dropdown (deepseek-v4-pro:cloud default, kimi, glm, qwen…) are from the real
+      15-model fleet (MAP.md:75); the list is labelled "from live model fleet" because the registry
+      feeds it (models_at('chat'), /api/models?kind=chat). No Gemini (hard-excluded).  suite.py:109-145
+  ============================================================
+-->
+<style>
+/* ── app shell (carried from the corpus convention) ────────────────── */
+.top{grid-area:top;display:flex;align-items:center;gap:16px;padding:0 16px;background:linear-gradient(180deg,var(--s1),var(--s0));border-bottom:1px solid var(--line);min-width:0}
+.brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:17px;letter-spacing:-.3px;white-space:nowrap}
+.brand em{font-style:normal;color:var(--acc)}
+.brand .tag{font-size:10.5px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:7px}
+.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--line-2);border-radius:99px;background:var(--s2);font-size:11.5px;color:var(--tx-2);white-space:nowrap;cursor:pointer}
+.presence .dot{width:7px;height:7px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.presence .ch{color:var(--tx-3);font-size:10px}
+.verbs{margin-left:auto;display:flex;gap:6px;flex:none}
+.verbs .btn{padding:7px 11px}
+.verbs .btn .lbl{white-space:nowrap}
+@media (max-width:1280px){ .verbs .btn .lbl{display:none} .verbs .btn{padding:7px 9px} }
+
+.rail{grid-area:rail;background:var(--s0);border-right:1px solid var(--line);padding:13px 11px;overflow:auto}
+.rail .railhd{font-size:9.5px;text-transform:uppercase;letter-spacing:1.3px;color:var(--tx-3);font-weight:600;margin:0 2px 9px}
+.rail h4{font-size:10px;text-transform:uppercase;letter-spacing:1.1px;color:var(--tx-2);margin:15px 3px 7px;font-weight:600;display:flex;align-items:center;gap:7px}
+.rail h4 .ct{margin-left:auto;color:var(--tx-3);font-family:'IBM Plex Mono';font-size:9px;font-weight:400}
+.kdot{width:8px;height:8px;border-radius:2px;flex:none}
+.chip{display:flex;align-items:center;gap:9px;padding:6px 9px;border-radius:var(--r);background:var(--s1);border:1px solid var(--line);font-size:12px;margin-bottom:5px;cursor:grab}
+.chip.on{border-color:var(--kind-process);background:var(--kind-process-bg)}
+.chip .mono-chip{width:19px;height:19px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:11px;color:var(--ink-accent);flex:none}
+.chip .label{color:var(--tx)}
+
+.canvas{grid-area:canvas;position:relative;overflow:hidden;background-image:radial-gradient(var(--line) .9px,transparent .9px);background-size:26px 26px}
+.canvas .node{position:absolute}
+.node.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc-glow),0 22px 50px -22px #000}
+.ptag{position:absolute;font-family:'IBM Plex Mono';font-size:8.5px;letter-spacing:.4px;color:var(--tx-3);background:var(--s0);border:1px solid var(--line);border-radius:4px;padding:1px 4px}
+/* a thin "selected → inspector" tie line so the relationship reads */
+.seltie{position:absolute;right:0;top:230px;display:flex;align-items:center;gap:7px;background:rgba(8,10,13,.72);border:1px solid var(--line-2);border-right:none;border-radius:99px 0 0 99px;padding:5px 12px 5px 13px;font-family:'IBM Plex Mono';font-size:9.5px;color:var(--acc);backdrop-filter:blur(4px)}
+.seltie i{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+
+.foot{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--s0);border-top:1px solid var(--line);font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';overflow:hidden;white-space:nowrap}
+.foot .live{color:var(--acc);display:inline-flex;align-items:center;gap:5px}
+.foot .live i{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+
+/* ── right panel — the docked tabbed instrument ───────────────────── */
+.panel{grid-area:panel;background:var(--s0);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);padding:10px 12px 0}
+.tab{padding:8px 12px;font-size:12px;color:var(--tx-3);border-bottom:2px solid transparent;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.tab.on{color:var(--tx);border-bottom-color:var(--acc)}
+.tab .badge{font-family:'IBM Plex Mono';font-size:9px;background:var(--await);color:var(--ink-await);border-radius:99px;padding:0 5px;font-weight:600}
+.pbody{padding:14px;overflow:auto;flex:1;min-height:0}
+
+/* inspector header */
+.insphd{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+.insphd .mono-chip{width:24px;height:24px;background:var(--kind-process);border-radius:6px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:13px;color:var(--ink-accent)}
+.insphd .nm{font-family:'Bricolage Grotesque';font-weight:700;font-size:16px}
+.insphd .meta{margin-left:auto;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3);display:flex;align-items:center;gap:6px}
+.insphd .sdot{width:8px;height:8px;border-radius:99px;flex:none}
+.subhd{font-size:11px;color:var(--tx-3);margin:0 0 14px;line-height:1.5}
+.subhd b{color:var(--tx-2);font-weight:500}
+
+/* form section divider */
+.formhd{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--tx-3);font-weight:600;margin:6px 0 11px;display:flex;align-items:center;gap:8px}
+.formhd::after{content:"";flex:1;height:1px;background:var(--line)}
+
+/* ── FORM CONTROLS — real editable types, built on tokens (ON-SYSTEM) ── */
+.field{margin-bottom:13px}
+.field > label{display:flex;align-items:baseline;gap:7px;font-size:11.5px;color:var(--tx-2);margin-bottom:5px}
+.field > label .t{font-family:'IBM Plex Mono';font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:var(--tx-3);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+.field > label .src{margin-left:auto;font-size:10px;color:var(--kind-model);font-family:'IBM Plex Mono'}
+.ctrl{width:100%;background:var(--s1);border:1px solid var(--line-2);border-radius:var(--r);color:var(--tx);font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;padding:9px 11px}
+.ctrl:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+textarea.ctrl{font-family:'IBM Plex Mono';font-size:11.5px;line-height:1.55;resize:vertical;min-height:64px}
+/* a select that reads as "fed from a live source" */
+select.ctrl{appearance:none;background-image:linear-gradient(180deg,transparent,transparent);cursor:pointer}
+.selwrap{position:relative}
+.selwrap::after{content:"▾";position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--tx-3);pointer-events:none;font-size:11px}
+.selwrap .modeldot{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:7px;height:7px;border-radius:99px;background:var(--kind-model);box-shadow:0 0 0 3px var(--kind-model-bg);pointer-events:none}
+.selwrap select.ctrl{padding-left:26px;padding-right:30px}
+
+/* number row — three sampling params side by side */
+.numrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.numrow .field{margin-bottom:0}
+.num{display:flex;align-items:stretch}
+.num input.ctrl{border-radius:var(--r) 0 0 var(--r);border-right:none;text-align:right;font-family:'IBM Plex Mono';font-size:12px}
+.num .range{font-family:'IBM Plex Mono';font-size:8.5px;color:var(--tx-3);background:var(--s0);border:1px solid var(--line-2);border-left:none;border-radius:0 var(--r) var(--r) 0;padding:0 7px;display:flex;align-items:center;white-space:nowrap}
+.tworow{display:grid;grid-template-columns:1fr 124px;gap:9px}
+
+/* ── OUTPUT block — what the node produced ───────────────────────── */
+.outhd{display:flex;align-items:center;gap:8px;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--tx-3);font-weight:600;margin:18px 0 8px}
+.outhd .pill{margin-left:auto;font-family:'IBM Plex Mono';font-size:9px;text-transform:none;letter-spacing:0;background:var(--s2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--tx-2)}
+.outbox{background:var(--s0);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;font-family:'IBM Plex Mono';font-size:11px;color:var(--tx-2);line-height:1.55;max-height:120px;overflow:auto}
+/* address + status row */
+.addrrow{display:flex;align-items:center;gap:9px;margin-top:10px;padding:8px 11px;background:var(--s1);border:1px solid var(--line);border-radius:var(--r);font-family:'IBM Plex Mono';font-size:10.5px;color:var(--tx-3)}
+.addrrow .sdot{width:8px;height:8px;border-radius:99px;flex:none}
+.addrrow .st{color:var(--ok)}
+.addrrow .addr{color:var(--tx-2)}
+
+/* ── act-on-output row ───────────────────────────────────────────── */
+.actlbl{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--tx-3);font-weight:600;margin:18px 0 9px}
+.act{display:flex;gap:7px}
+.act .btn{flex:1;justify-content:center;padding:9px 6px;flex-direction:column;gap:3px;text-align:center;line-height:1.2}
+.act .btn .sub{font-size:9px;color:var(--tx-3);font-weight:400}
+.act .btn.force{border-color:var(--acc-dim)}
+.act .btn.force .gly{color:var(--acc)}
+.dirty{display:flex;align-items:center;gap:7px;margin-top:11px;font-size:10.5px;color:var(--await);font-family:'IBM Plex Mono'}
+.dirty i{width:6px;height:6px;border-radius:99px;background:var(--await);box-shadow:0 0 0 3px rgba(230,171,92,.16)}
+</style></head>
+<body><div class="app">
+
+  <!-- ── TOP BAR ── -->
+  <header class="top">
+    <span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
+    <span class="presence"><span class="dot"></span>focus<span class="ch">· present ▾</span></span>
+    <div class="verbs">
+      <button class="btn">◐ <span class="lbl">layers</span></button>
+      <button class="btn">＋ <span class="lbl">wire</span></button>
+      <button class="btn">↻ <span class="lbl">force</span></button>
+      <button class="btn run">▶ <span class="lbl">run</span> <span class="k">⏎</span></button>
+    </div>
+  </header>
+
+  <!-- ── LEFT RAIL — palette grouped by the TWO real kinds; llm highlighted (it's selected) ── -->
+  <nav class="rail collapsible">
+    <div class="railhd">Node palette</div>
+
+    <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span><span class="ct">11</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
+    <div class="chip on"><span class="mono-chip" style="background:var(--kind-process)">L</span><span class="label">llm</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">E</span><span class="label">embed</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">≈</span><span class="label">similarity</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">⌕</span><span class="label">retrieve</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">⑂</span><span class="label">gate</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">⋈</span><span class="label">join</span></div>
+
+    <h4><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span><span class="ct">5</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">C</span><span class="label">constant</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">▦</span><span class="label">codebase</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">T</span><span class="label">model_of_tim</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">⊕</span><span class="label">portal</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">◑</span><span class="label">rhm_mode</span></div>
+  </nav>
+
+  <!-- ── CANVAS — the selected llm node sits here; inspector mirrors it ── -->
+  <main class="canvas" data-ui-ref="ui://canvas">
+    <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none">
+      <!-- constant → llm (content blue, into the prompt/context port) -->
+      <path d="M 268 300 C 360 300 360 232 452 232" fill="none" stroke="var(--kind-content)" stroke-width="1.6" opacity=".55"/>
+    </svg>
+
+    <!-- CONTENT · constant — feeds llm; cached -->
+    <div class="node" data-kind="content" style="left:54px;top:226px">
+      <div class="bar"><span class="mono-chip">C</span><span class="ty">constant</span><span class="kindlabel">content</span></div>
+      <div class="body"><div class="out">"Summarise the engine's memo-gate in two sentences for an operator."</div></div>
+      <div class="addr"><span>run://demo/brief</span><span class="sdot s-cache"></span></div>
+      <span class="port out"></span><span class="ptag" style="right:-44px;top:calc(50% - 9px)">Text</span>
+    </div>
+
+    <!-- PROCESS · llm (SELECTED) — its real config is shown in the inspector; status = ran -->
+    <div class="node sel" data-kind="process" style="left:452px;top:170px" data-ui-ref="ui://canvas/node">
+      <div class="bar"><span class="mono-chip">L</span><span class="ty">llm</span><span class="kindlabel">process · ran</span></div>
+      <div class="body">free-form completion over a system prompt
+        <div class="cfg">
+          <span class="pill" style="border-color:var(--kind-model);color:var(--kind-model)">model <b style="color:var(--kind-model)">deepseek-v4-pro</b></span>
+          <span class="pill">temp <b>0.7</b></span>
+        </div>
+        <div class="out">The memo gate avoids recomputation: a node re-runs only when its (type, version, config, input-hash) changes — otherwise the prior result is served as "cached"…</div>
+      </div>
+      <div class="addr"><span>run://demo/llm</span><span class="sdot s-ran"></span></div>
+      <span class="port in"></span><span class="ptag" style="left:-42px;top:calc(50% - 9px)">Text</span>
+      <span class="port out"></span><span class="ptag" style="right:-44px;top:calc(50% - 9px)">Text</span>
+    </div>
+
+    <!-- the selected→inspector tie -->
+    <div class="seltie"><i></i>selected → inspector ▸</div>
+  </main>
+
+  <!-- ── THIN ACTIVITY STRIP ── -->
+  <footer class="foot">
+    <span class="live"><i></i>live</span>
+    <span>selected llm · ran · 1 input cached (constant)</span>
+    <span style="margin-left:auto">demo · 2/2 resolved · event-stream connected</span>
+  </footer>
+
+  <!-- ── RIGHT PANEL — Inspector showing the llm node's REAL config form ── -->
+  <aside class="panel">
+    <div class="tabs">
+      <span class="tab on">⊙ Inspector</span>
+      <span class="tab">✦ Inbox <span class="badge">2</span></span>
+      <span class="tab">◈ RHM</span>
+    </div>
+    <div class="pbody" data-ui-ref="ui://inspector">
+
+      <!-- header: which node, its kind, its status (one of idle/ran/cached/stuck) -->
+      <div class="insphd">
+        <span class="mono-chip">L</span>
+        <span class="nm">llm</span>
+        <span class="meta"><span class="sdot s-ran"></span>process · ran</span>
+      </div>
+      <p class="subhd">free-form completion over a system prompt · the form below is this node's <b>config_schema</b> — the one place its settings live.</p>
+
+      <!-- ── THE REAL CONFIG FORM (llm fields, real control types) ── -->
+      <div class="formhd">Config</div>
+
+      <!-- model — enum, options_from = chat_models (from the live registry) -->
+      <div class="field" data-ui-ref="ui://inspector/model-field">
+        <label>model <span class="t">enum</span><span class="src">↻ from live model fleet</span></label>
+        <div class="selwrap">
+          <span class="modeldot"></span>
+          <!-- options mirror the LIVE fabric registry (ground truth: ~/company MAP.md REGISTRY block / available_models()). Refresh from there; do not invent names. -->
+          <select class="ctrl">
+            <option selected>deepseek-v4-pro:cloud</option>
+            <option>kimi-k2.6:cloud</option>
+            <option>glm-5.1:cloud</option>
+            <option>qwen3.5:397b-cloud</option>
+            <option>qwen3.6-27b-q3km:latest</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- system — text → textarea -->
+      <div class="field">
+        <label>system <span class="t">text</span></label>
+        <textarea class="ctrl" rows="3">You are a precise technical writer. Answer using only what the input provides. Be concise; favour two-sentence explanations for an operator.</textarea>
+      </div>
+
+      <!-- temperature / max_tokens / top_p — number(min/max/step) -->
+      <div class="formhd" style="margin-top:16px">Sampling <span style="text-transform:none;letter-spacing:0;color:var(--tx-3);font-weight:400;font-family:'IBM Plex Mono';font-size:9px">number · min / max / step</span></div>
+      <div class="numrow">
+        <div class="field">
+          <label>temperature <span class="t">num</span></label>
+          <div class="num"><input class="ctrl" type="number" min="0" max="2" step="0.1" value="0.7"><span class="range">0–2</span></div>
+        </div>
+        <div class="field">
+          <label>top_p <span class="t">num</span></label>
+          <div class="num"><input class="ctrl" type="number" min="0" max="1" step="0.05" value="1" ><span class="range">0–1</span></div>
+        </div>
+        <div class="field">
+          <label>max_tokens <span class="t">num</span></label>
+          <div class="num"><input class="ctrl" type="number" min="1" step="1" value="512"><span class="range">≥1</span></div>
+        </div>
+      </div>
+
+      <!-- base_url (string) + retries (number) -->
+      <div class="formhd" style="margin-top:16px">Connection</div>
+      <div class="tworow">
+        <div class="field">
+          <label>base_url <span class="t">string</span></label>
+          <input class="ctrl" type="text" value="" placeholder="(default fabric endpoint)" style="font-family:'IBM Plex Mono';font-size:11.5px">
+        </div>
+        <div class="field">
+          <label>retries <span class="t">num</span></label>
+          <div class="num"><input class="ctrl" type="number" min="0" max="10" step="1" value="2"><span class="range">0–10</span></div>
+        </div>
+      </div>
+
+      <!-- config edited but not re-run → memo gate would re-fire on next run -->
+      <div class="dirty"><i></i>config changed — re-runs on next ▶ run (or ↻ rerun now)</div>
+
+      <!-- ── OUTPUT — what this node produced ── -->
+      <div class="outhd">Output <span class="pill">Text</span></div>
+      <div class="outbox">The memo gate avoids recomputation: a node re-runs only when its (type, version, config, input-hash) changes — otherwise the prior result is served as "cached." It lives in runtime/scheduler.py, keyed per node so unchanged branches stay frozen across runs.</div>
+
+      <!-- address + status (status ∈ idle/ran/cached/stuck — here: ran) -->
+      <div class="addrrow">
+        <span class="addr">run://demo/llm</span>
+        <span class="sdot s-ran"></span><span class="st">ran</span>
+      </div>
+
+      <!-- ── ACT ON THIS OUTPUT — ↻ rerun (force) / → inbox / ⊕ build ── -->
+      <div class="actlbl">Act on this output</div>
+      <div class="act" data-ui-ref="ui://inspector/act">
+        <button class="btn force"><span><span class="gly">↻</span> rerun</span><span class="sub">force re-run</span></button>
+        <button class="btn"><span>→ inbox</span><span class="sub">surface output</span></button>
+        <button class="btn"><span>⊕ build</span><span class="sub">build from this</span></button>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- mobile tab-bar (hidden on desktop; present so the responsive system resolves) -->
+  <nav class="tabbar">
+    <a class="on"><span class="ic">▦</span>Canvas</a>
+    <a><span class="ic">✦</span>Inbox</a>
+    <a><span class="ic">◈</span>RHM</a>
+    <a><span class="ic">▶</span>Run</a>
+  </nav>
+</div></body></html>

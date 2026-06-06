@@ -1,0 +1,193 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>P3 · A12 · Workshop — full-detail node surface · desktop</title>
+<link rel="stylesheet" href="../design-system.css">
+<!--
+  ============================================================
+  PROBE  P3 · A12 · Workshop — full-detail node working surface · desktop
+  AREA   A (canvas / operate) · no fixed journey (operator-directed deep-dive on one node)
+  JOURNEY-MOMENT  surfaces when: the operator opens the workshop onto the selected node to see it at
+        FULL detail — the render-mode beyond collapsed/expanded. Opened by "open workshop ⤢"
+        (App.tsx:1418 → setWorkshop(selected)); the ui:// resolver can also DRIVE to it
+        (openable → must be opened before scroll-to, App.tsx:999-1001).
+  STATUS  staging probe — NOT registered in register.json; written only to _panel-staging/.
+        Addresses GAP-LIST #1 (Workshop region — a real feature no planned mockup covers).
+  ============================================================
+  REPRESENTS[] (feature-id · what it surfaces · code ref — from the Feature & Function Inventory):
+    · WS-workshop — the workshop region: render-mode "workshop", the 4th/full render mode
+                    (node_type.py:10 RenderMode = collapsed|expanded|full|workshop; :29 default list).
+                    The REAL FE overlay (App.tsx:1636-1641) renders exactly: nodeType · nodeId,
+                    its address, and the FULL output; the element carries the ui://workshop handle
+                    (App.tsx:1637). The address is registered as ui://workshop (region workshop, caps
+                    openable+presentable, addresses.json -> WS-workshop, runtime/suite.py:ui_info).
+                    ui_info registers it as a chrome handle dom_handle=workshop.
+    · NODE-config — the same node's config_schema is its settings; the workshop shows config as
+                    READ context alongside the full output (the EDITABLE form lives in the inspector,
+                    A3 — the workshop is the full-detail READ/work surface, not a second editor).
+                    (node_type.py / App.tsx:129-152)
+    · RUN-status  — the node's status is one of idle·ran·cached·stuck ONLY (suite.py:436-453).
+                    Shown = ran (it has produced the full output displayed).
+  ------------------------------------------------------------
+  GROUNDING NOTES — no fiction:
+    · The real overlay shows {nodeType·nodeId, address, output}. This probe keeps those THREE as the
+      spine and adds only honest context already in the node record: kind, status dot, ports/types,
+      provenance layer (suite.py:458 ORIGIN/system). It does NOT invent metrics/timing/cost the app
+      doesn't track.
+    · The node shown is `ask` (process). ask's REAL config fields = model · system · base_url ·
+      retries ONLY (inventory line 29) — no temperature/top_p (those are llm-only); shown as read
+      context, not invented.
+    · Address shown two ways, honestly: the TYPE address ui://canvas/node and the live INSTANCE ref
+      run://codebase/ask. (Possibility-Space Block 17: run:// is ui:// resolved onto a running graph —
+      the same identity, instance side. The workshop's own chrome address is ui://workshop.)
+    · No 4-kind language: only process(mint)/content(blue). No await/failed/running node dots.
+    · ask's REAL ports (nodes/ask.py:10-11): PORTS_IN={question:Text, context:Text}, PORTS_OUT={answer:Text}.
+      (context is Text, NOT Any — Any is the wildcard used by join/pair, not ask.)
+    · PROPOSED-vs-EXISTING (quality_bar): the REAL workshop overlay (App.tsx:1636-1641) renders only
+      FOUR things — nodeType·nodeId, address, full output (+ a close ✕). This panel PROPOSES the fuller
+      surface (config-read + ports + provenance/instance split) for GAP-LIST #1. The spine three are
+      grounded; the side column + address split are a PROPOSED extension, not existing FE.
+  ============================================================
+-->
+<style>
+.top{grid-area:top;display:flex;align-items:center;gap:16px;padding:0 18px;background:linear-gradient(180deg,var(--s1),var(--s0));border-bottom:1px solid var(--line)}
+.brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:18px;letter-spacing:-.3px}
+.brand em{font-style:normal;color:var(--acc)}
+.brand .tag{font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:8px}
+.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--line-2);border-radius:99px;background:var(--s2);font-size:12px;color:var(--tx-2)}
+.presence .dot{width:7px;height:7px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.verbs{margin-left:auto;display:flex;gap:7px}
+
+.rail{grid-area:rail;background:var(--s0);border-right:1px solid var(--line);padding:14px 12px;overflow:auto}
+.rail h4{font-size:10px;text-transform:uppercase;letter-spacing:1.3px;color:var(--tx-3);margin:14px 4px 8px;font-weight:600;display:flex;align-items:center;gap:7px}
+.rail h4:first-child{margin-top:2px}
+.kdot{width:8px;height:8px;border-radius:2px}
+.chip{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:var(--r);background:var(--s1);border:1px solid var(--line);font-size:12.5px;margin-bottom:5px}
+.chip .mono-chip{width:20px;height:20px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:11px;color:var(--ink-accent)}
+
+/* canvas dims behind the workshop; the workshop is a near-full overlay onto ONE node */
+.canvas{grid-area:canvas;position:relative;overflow:hidden;background-image:radial-gradient(var(--line) .9px,transparent .9px);background-size:26px 26px}
+.scrim{position:absolute;inset:0;background:rgba(6,8,11,.7);backdrop-filter:blur(3px);z-index:5}
+/* a faint trace of the node on the canvas, to show "this is the same node, opened full" */
+.ghost{position:absolute;left:60px;top:140px;opacity:.4}
+
+/* ── THE WORKSHOP — full-detail surface on one node ── */
+.workshop{position:absolute;z-index:10;left:50px;right:24px;top:34px;bottom:24px;
+  background:linear-gradient(180deg,var(--s1),var(--s0));border:1px solid var(--line-2);
+  border-left:3px solid var(--kind-process);border-radius:var(--r-lg);box-shadow:var(--shadow);
+  display:flex;flex-direction:column;overflow:hidden}
+.ws-head{display:flex;align-items:center;gap:12px;padding:15px 18px;border-bottom:1px solid var(--line);background:var(--kind-process-bg)}
+.ws-head .mono-chip{width:30px;height:30px;border-radius:7px;background:var(--kind-process);display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:15px;color:var(--ink-accent);flex:none}
+.ws-head .ttl{font-family:'Bricolage Grotesque';font-weight:800;font-size:19px;letter-spacing:-.4px}
+.ws-head .ttl .id{color:var(--tx-3);font-weight:500;font-family:'IBM Plex Mono';font-size:13px}
+.ws-head .mode-tag{font-family:'IBM Plex Mono';font-size:9px;text-transform:uppercase;letter-spacing:.9px;color:var(--kind-process);border:1px solid var(--acc-dim);border-radius:99px;padding:2px 9px}
+.ws-head .status{margin-left:auto;display:flex;align-items:center;gap:7px;font-family:'IBM Plex Mono';font-size:11px;color:var(--tx-2)}
+.ws-head .status .sdot{width:9px;height:9px;border-radius:99px}
+.ws-head .close{font-size:16px;color:var(--tx-3);cursor:pointer;margin-left:6px}
+
+/* the address strip — TYPE address + live INSTANCE ref (one identity, two faces) */
+.ws-addr{display:flex;align-items:center;gap:14px;padding:9px 18px;border-bottom:1px solid var(--line);font-family:'IBM Plex Mono';font-size:10.5px;color:var(--tx-3);background:var(--s0)}
+.ws-addr .pair{display:flex;align-items:center;gap:7px}
+.ws-addr .lbl{color:var(--tx-3)} .ws-addr .ui{color:var(--cache)} .ws-addr .run{color:var(--acc)}
+.ws-addr .arrow{color:var(--tx-3)}
+.ws-addr .layer{margin-left:auto;color:var(--tx-3)}
+.ws-addr .layer b{color:var(--tx-2);font-weight:500}
+
+.ws-body{flex:1;min-height:0;display:grid;grid-template-columns:1fr 320px;overflow:hidden}
+/* main column — the FULL output (the real overlay's .full) */
+.ws-main{padding:18px;overflow:auto;border-right:1px solid var(--line)}
+.ws-secthd{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--tx-3);font-weight:600;margin:0 0 11px;display:flex;align-items:center;gap:8px}
+.ws-secthd .pill{margin-left:auto;font-family:'IBM Plex Mono';font-size:9px;letter-spacing:0;text-transform:none;background:var(--s2);border:1px solid var(--line);border-radius:5px;padding:1px 7px;color:var(--tx-2)}
+.ws-full{background:var(--s0);border:1px solid var(--line);border-radius:var(--r);padding:15px 17px;font-family:'IBM Plex Mono';font-size:12px;color:var(--tx);line-height:1.65;white-space:pre-wrap}
+/* side column — read context (config + ports), NOT an editor (editor = inspector A3) */
+.ws-side{padding:18px 16px;overflow:auto;background:var(--s0)}
+.ws-side h5{font-size:10px;text-transform:uppercase;letter-spacing:1.1px;color:var(--tx-3);font-weight:600;margin:0 0 9px}
+.ws-side h5:not(:first-child){margin-top:20px}
+.cfgrow{display:flex;align-items:baseline;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:11.5px}
+.cfgrow:last-child{border-bottom:none}
+.cfgrow .key{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--tx-3);min-width:74px}
+.cfgrow .val{color:var(--tx-2);font-family:'IBM Plex Mono';font-size:11px}
+.cfgrow .val.model{color:var(--kind-model)}
+.portrow{display:flex;align-items:center;gap:9px;padding:6px 0;font-size:11.5px;color:var(--tx-2)}
+.portrow .io{font-family:'IBM Plex Mono';font-size:9px;text-transform:uppercase;letter-spacing:.7px;color:var(--tx-3);border:1px solid var(--line);border-radius:4px;padding:1px 5px;min-width:30px;text-align:center}
+.portrow .ty{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--cache);margin-left:auto;border:1px solid var(--line);border-radius:4px;padding:1px 6px}
+.ws-side .note{font-size:10px;color:var(--tx-3);line-height:1.6;margin-top:9px;font-style:italic}
+.ws-side .editlink{display:inline-flex;align-items:center;gap:6px;margin-top:11px;font-family:'IBM Plex Mono';font-size:10.5px;color:var(--acc);border:1px solid var(--acc-dim);border-radius:var(--r);padding:7px 11px;cursor:pointer}
+
+.foot{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--s0);border-top:1px solid var(--line);font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono'}
+.foot .live{color:var(--acc)}
+.panel{grid-area:panel;background:var(--s0);border-left:1px solid var(--line)}
+</style></head>
+<body><div class="app">
+  <header class="top"><span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
+    <span class="presence"><span class="dot"></span>focus</span>
+    <div class="verbs"><button class="btn">◐ layers</button><button class="btn">＋ wire</button><button class="btn">↻ force</button><button class="btn run">▶ run <span class="k">⏎</span></button></div>
+  </header>
+
+  <nav class="rail collapsible">
+    <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">L</span><span class="label">llm</span></div>
+    <h4><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">▦</span><span class="label">codebase</span></div>
+  </nav>
+
+  <main class="canvas">
+    <div class="scrim"></div>
+    <!-- the same node, faint behind — "opened full" -->
+    <div class="node ghost" data-kind="process" style="position:absolute">
+      <div class="bar"><span class="mono-chip">A</span><span class="ty">ask</span><span class="kindlabel">process · ran</span></div>
+      <div class="body">question + context → answer</div>
+    </div>
+
+    <!-- ── THE WORKSHOP OVERLAY — full-detail surface on one node ── -->
+    <section class="workshop" data-ui-ref="ui://workshop">
+      <div class="ws-head">
+        <span class="mono-chip">A</span>
+        <span class="ttl">ask <span class="id">· ask</span></span>
+        <span class="mode-tag">workshop · full render</span>
+        <span class="status"><span class="sdot s-ran"></span>process · ran</span>
+        <span class="close">✕</span>
+      </div>
+
+      <!-- one identity, two faces: ui:// TYPE address + run:// live INSTANCE ref -->
+      <div class="ws-addr">
+        <div class="pair"><span class="lbl">type</span><span class="ui">ui://canvas/node</span></div>
+        <span class="arrow">→ resolved onto graph →</span>
+        <div class="pair"><span class="lbl">instance</span><span class="run">run://codebase/ask</span></div>
+        <span class="layer">provenance layer · <b>ORIGIN</b> (operator-authored)</span>
+      </div>
+
+      <div class="ws-body">
+        <!-- MAIN — the FULL output (the real overlay's .full block) -->
+        <div class="ws-main">
+          <div class="ws-secthd">Full output <span class="pill">Text · run://codebase/ask</span></div>
+          <div class="ws-full">The memo gate is the engine's "re-run only what changed" mechanism. Each node carries a content hash keyed on (type, version, config, input-port hashes). On a run the scheduler compares the freshly-computed key against the stored one: equal → the prior result is served and the node is marked **cached**; different → the node fires, produces a new result, and is marked **ran**. This is why an unchanged branch stays frozen across runs while only the edited path recomputes.
+
+It lives in runtime/scheduler.py. Two node kinds are VOLATILE (codebase, model_of_tim) — they bypass the memo gate and always re-read, because their truth is outside the graph (the filesystem, the operator-model). For everything else, the gate is what makes the surface cheap to re-run: pressing ▶ run repeatedly costs only the work that actually changed.
+
+A node that can never resolve its inputs is **stuck** — distinct from a pruned branch (a gate verdict that took the other port). Stuck is transitive and reload-persistent, so it surfaces as a real signal rather than a transient.</div>
+        </div>
+
+        <!-- SIDE — read context (config + ports). The EDITOR is the inspector (A3), not here. -->
+        <div class="ws-side">
+          <h5>Config (read)</h5>
+          <div class="cfgrow"><span class="key">model</span><span class="val model">deepseek-v4-pro:cloud</span></div>
+          <div class="cfgrow"><span class="key">system</span><span class="val">"Answer using only the input…"</span></div>
+          <div class="cfgrow"><span class="key">base_url</span><span class="val">(default fabric)</span></div>
+          <div class="cfgrow"><span class="key">retries</span><span class="val">2</span></div>
+          <div class="note">ask's real fields only — model · system · base_url · retries. (No temperature/top_p — those are llm-only.)</div>
+
+          <h5>Ports</h5>
+          <div class="portrow"><span class="io">in</span>question<span class="ty">Text</span></div>
+          <div class="portrow"><span class="io">in</span>context<span class="ty">Text</span></div>
+          <div class="portrow"><span class="io">out</span>answer<span class="ty">Text</span></div>
+
+          <span class="editlink">⊙ edit config in inspector →</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot"><span class="live">● live</span><span>workshop open · ask · ran</span><span style="margin-left:auto">render-mode workshop · ui://workshop · openable</span></footer>
+  <aside class="panel"></aside>
+</div></body></html>

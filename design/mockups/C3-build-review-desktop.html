@@ -1,0 +1,205 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>C3 · Demonstrate-first build-review (desktop)</title>
+<link rel="stylesheet" href="../design-system.css">
+<!--
+  id: C3
+  represents: [
+    "WIRE-review"  — the demonstrate-first build_result_review card. When a self-build CLOSES (status=implemented,
+                     i.e. "done AND surfaced"), the wire posts a build_result_review inbox item carrying summary +
+                     changed-files diff + derived_from; INERT to the dispatcher. The operator reviews by SEEING the
+                     working outcome, not by reading a diff.  (runtime/suite.py:1801-1837 · App.tsx BuildIntentCard:252-325 ·
+                     deriveOutcome:230-244 · buildPhase:209-220)
+    "INB-resolve"  — operator-only resolve verdict: accept = api.resolve(id,'approve'); send-back = api.resolve(id,'reject',why).
+                     The WHY is captured into the path. Agent can NEVER self-approve. (App.tsx api.resolve:37-38 · verdict bar:1310-1311 ·
+                     governance.py operator-only resolve:120-169 · resolve vocabulary suite.py:2243-2302)
+  journey-moment: "J3 · review a self-build · surfaces when: a build reaches implemented"
+                  (J3: intent → surfaces awaiting → approve → dispatches+implements backstage → THIS demonstrate-first review →
+                   accept → live, OR send back with a why. The operator never sees `claude -p` mechanics.)
+
+  GROUNDING NOTES (only real behaviour, no fiction):
+  • The "▷ show me it working" demonstrate button is GATED: it renders ONLY when the build added a nodes/<name>.py whose
+    stem is now a LIVE registered type (deriveOutcome:235-238, demo gate:281-290). So the example build here adds a NEW
+    node-type — `sentiment` — which authorises the demo button + the canonical headline line (App.tsx:238).
+  • The done headline is gated on the backend LIFECYCLE phase status==='implemented' (bi-done), NOT the subprocess exit
+    code (App.tsx:274-281). This is the one phase that earns the "done" headline + demo.
+  • The changed-files diff is SECONDARY / "for the record" — collapsed behind a disclosure, never the headline (App.tsx:302-321).
+  • This card lives in the right Inbox tab, in the "decision → build" lane (App.tsx:1457-1458). It is shown here in a
+    focused review surface (the panel widened to a review column) — the headline review moment.
+  • Real strings preserved: ⚙ build-intent · phase "implemented ✓" (212) · consequence_class/scope meta (266-271) ·
+    "✓ done — here is what you can now do" (283) · "▷ show me \"sentiment\" working" (287) · "for the record · N file(s) changed" (308).
+-->
+<style>
+.top{grid-area:top;display:flex;align-items:center;gap:18px;padding:0 18px;background:linear-gradient(180deg,var(--s1),var(--s0));border-bottom:1px solid var(--line)}
+.brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:18px;letter-spacing:-.3px}
+.brand em{font-style:normal;color:var(--acc)}
+.brand .tag{font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:8px}
+.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--line-2);border-radius:99px;background:var(--s2);font-size:12px;color:var(--tx-2)}
+.presence .dot{width:7px;height:7px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.verbs{margin-left:auto;display:flex;gap:7px}
+
+.rail{grid-area:rail;background:var(--s0);border-right:1px solid var(--line);padding:14px 12px;overflow:auto}
+.rail h4{font-size:10px;text-transform:uppercase;letter-spacing:1.3px;color:var(--tx-3);margin:14px 4px 8px;font-weight:600;display:flex;align-items:center;gap:7px}
+.rail h4:first-child{margin-top:2px}
+.kdot{width:8px;height:8px;border-radius:2px}
+.chip{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:var(--r);background:var(--s1);border:1px solid var(--line);font-size:12.5px;margin-bottom:5px}
+.chip.fresh{border-color:var(--acc-dim);box-shadow:0 0 0 1px var(--acc-glow)}
+.chip .mono-chip{width:20px;height:20px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:11px;color:var(--ink-accent)}
+.chip .neu{margin-left:auto;font-family:'IBM Plex Mono';font-size:8.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--acc)}
+
+.canvas{grid-area:canvas;position:relative;overflow:hidden;background-image:radial-gradient(var(--line) .9px,transparent .9px);background-size:26px 26px;display:grid;place-items:center}
+.dim-note{max-width:430px;text-align:center;color:var(--tx-3);font-size:12.5px;line-height:1.7}
+.dim-note .display{font-size:16px;color:var(--tx-2);display:block;margin-bottom:6px}
+.dim-note .play{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:6px 12px;border:1px dashed var(--line-2);border-radius:99px;font-family:'IBM Plex Mono';font-size:11px;color:var(--acc)}
+.foot{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--s0);border-top:1px solid var(--line);font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono'}
+.foot .live{color:var(--acc)}
+
+/* the review surface = the panel, widened into a focused review column */
+.app{grid-template-columns:232px 1fr 460px}
+.panel{grid-area:panel;background:var(--s0);border-left:1px solid var(--line);padding:14px;overflow:auto}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:-14px -14px 14px;padding:10px 12px 0}
+.tab{padding:8px 13px;font-size:12.5px;color:var(--tx-3);border-bottom:2px solid transparent;font-weight:500;display:flex;align-items:center;gap:7px}
+.tab.on{color:var(--tx);border-bottom-color:var(--acc)}
+.tab .badge{background:var(--await);color:var(--ink-await);font-family:'IBM Plex Mono';font-size:9px;font-weight:600;border-radius:99px;padding:1px 6px}
+
+.ibx-lane-head{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--tx-3);font-weight:600;display:flex;align-items:center;gap:8px;margin:4px 2px 11px}
+.ibx-lane-head .muted{color:var(--tx-3);font-family:'IBM Plex Mono';font-weight:400;letter-spacing:0}
+
+/* ── BuildIntentCard · bi-done (implemented) — the headline review moment ── */
+.bi-card{background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid var(--line-2);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow)}
+.bi-card.bi-done{border-left:3px solid var(--ok)}
+.bi-head{display:flex;align-items:center;gap:9px;padding:10px 13px;border-bottom:1px solid var(--line);cursor:pointer}
+.bi-tag{font-family:'IBM Plex Mono';font-size:11px;color:var(--tx-2);background:var(--s3);border:1px solid var(--line);border-radius:5px;padding:2px 7px}
+.bi-phase{margin-left:auto;font-family:'IBM Plex Mono';font-size:10px;text-transform:uppercase;letter-spacing:.8px;padding:2px 8px;border-radius:99px}
+.bi-phase.bi-done{color:var(--ink-accent);background:var(--ok);font-weight:600}
+.bi-meta{display:flex;flex-wrap:wrap;gap:7px;padding:10px 13px 4px}
+.bi-class,.bi-scope{font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-2);background:var(--s0);border:1px solid var(--line);border-radius:5px;padding:3px 7px}
+.bi-scope b{color:var(--acc);font-weight:500}
+
+/* the OUTCOME — plain-language headline + demonstrate button (the load-bearing moment) */
+.bi-outcome{margin:11px 13px;padding:14px;border:1px solid var(--acc-dim);border-radius:var(--r);background:var(--acc-glow)}
+.bi-outcome-head{font-family:'IBM Plex Mono';font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--ok);font-weight:600;margin-bottom:8px}
+.bi-outcome-line{font-family:'Bricolage Grotesque';font-weight:700;font-size:17px;line-height:1.32;color:var(--tx);letter-spacing:-.2px}
+.bi-demo{margin-top:13px;display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:var(--r);border:none;cursor:pointer;
+  font-family:'IBM Plex Sans';font-size:14px;font-weight:600;color:var(--ink-accent);background:linear-gradient(180deg,var(--acc),var(--acc-deep));box-shadow:0 8px 22px -10px var(--acc)}
+.bi-demo .tri{font-size:15px}
+
+/* SECONDARY / for-the-record — collapsed diff */
+.bi-record{margin:0 13px 13px;border:1px solid var(--line);border-radius:var(--r);background:var(--s0)}
+.bi-record-toggle{display:flex;align-items:center;gap:8px;padding:9px 11px;cursor:pointer;font-size:11.5px;color:var(--tx-2)}
+.bi-record-toggle .car{color:var(--tx-3);font-family:'IBM Plex Mono'}
+.bi-record-toggle .ct{color:var(--tx-3);font-family:'IBM Plex Mono';font-size:10.5px;margin-left:auto}
+.bi-files{border-top:1px solid var(--line);padding:8px 11px;display:flex;flex-direction:column;gap:3px}
+.bi-file{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--tx-2);display:flex;align-items:center;gap:8px}
+.bi-file .g{color:var(--ok);width:14px}
+.bi-file.add .g{color:var(--ok)} .bi-file.mod .g{color:var(--await)}
+.bi-summary{border-top:1px solid var(--line);padding:9px 11px;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3);white-space:pre-wrap;line-height:1.6}
+.bi-perm{padding:6px 11px;border-top:1px solid var(--line);font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3)}
+
+/* derived_from provenance — what this build was wired from (3-part bind) */
+.bi-prov{margin:0 13px 11px;font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.bi-prov code{color:var(--cache);background:var(--s0);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+
+/* INB-resolve verdict — operator-only accept / send-back */
+.bi-verdict{border-top:1px solid var(--line);padding:13px;background:var(--s0)}
+.bi-verdict-row{display:flex;gap:9px}
+.bi-verdict .b{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:var(--r);font-size:13.5px;font-weight:600;cursor:pointer;border:1px solid var(--line-2)}
+.bi-verdict .accept{background:linear-gradient(180deg,var(--acc),var(--acc-deep));color:var(--ink-accent);border-color:transparent}
+.bi-verdict .sendback{background:var(--s2);color:var(--tx-2)}
+.bi-why{margin-top:9px;width:100%;background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:9px 11px;font-family:'IBM Plex Sans';font-size:12px;color:var(--tx-2);resize:none;height:54px}
+.bi-why::placeholder{color:var(--tx-3)}
+.bi-op-only{margin-top:9px;font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3);display:flex;align-items:center;gap:6px}
+.bi-op-only .lk{color:var(--await)}
+</style></head>
+<body><div class="app">
+  <header class="top" data-ui-ref="ui://toolbar"><span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
+    <span class="presence" data-ui-ref="ui://toolbar/presence"><span class="dot"></span>focus · present ▾</span>
+    <div class="verbs"><button class="btn">◐ layers</button><button class="btn">＋ wire</button><button class="btn">↻ force</button><button class="btn run" data-ui-ref="ui://toolbar/run">▶ run <span class="k">⏎</span></button></div>
+  </header>
+
+  <nav class="rail collapsible">
+    <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">L</span><span class="label">llm</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">E</span><span class="label">embed</span></div>
+    <!-- the freshly-built node-type, now live in the registry → this is what the build review just delivered -->
+    <div class="chip fresh"><span class="mono-chip" style="background:var(--kind-process)">S</span><span class="label">sentiment</span><span class="neu">new</span></div>
+    <h4><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">C</span><span class="label">constant</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">▦</span><span class="label">codebase</span></div>
+  </nav>
+
+  <main class="canvas" data-ui-ref="ui://canvas">
+    <!-- the operator's eyes are on the review, not the graph. The canvas waits: ▷ show me drops the new node here, placed + runnable. -->
+    <div class="dim-note">
+      <span class="display">A build just completed.</span>
+      It's surfaced for your review on the right — the wire built it backstage and is now showing you the working outcome.
+      <span class="play">▷ show me drops the new node here, placed &amp; runnable</span>
+    </div>
+  </main>
+
+  <footer class="foot"><span class="live">● live</span><span>build closed · status implemented</span><span style="margin-left:auto">company · 1 awaiting you · event-stream connected</span></footer>
+
+  <!-- THE REVIEW SURFACE — the right Inbox tab, "decision → build" lane (App.tsx:1457-1464) -->
+  <aside class="panel" data-ui-ref="ui://inbox">
+    <div class="tabs"><span class="tab">⊙ Inspector</span><span class="tab on">✦ Inbox <span class="badge">1</span></span><span class="tab">◈ RHM</span></div>
+
+    <div class="ibx-lane ibx-builds">
+      <div class="ibx-lane-head">decision → build <span class="muted">· 1</span></div>
+
+      <!-- BuildIntentCard · bi-done (status==='implemented') -->
+      <div class="bi-card bi-done" data-ui-ref="ui://inbox/build-review">
+        <div class="bi-head" title="compile this decision to a value-choice ↗">
+          <span class="bi-tag">⚙ build-intent</span>
+          <span class="bi-phase bi-done">implemented ✓</span>
+        </div>
+
+        <div class="bi-meta">
+          <span class="bi-class" title="declared consequence class — its governance posture decides whether it auto-runs or surfaces">decision_build</span>
+          <span class="bi-scope" title="the declared scope — paths a verified build is allowed to touch (empty = deny-all)">scope: <b>runtime/nodes/</b>, <b>runtime/registry.py</b></span>
+        </div>
+
+        <!-- THE HEADLINE: plain-language working outcome + the prominent demonstrate button (deriveOutcome → demoType) -->
+        <div class="bi-outcome">
+          <div class="bi-outcome-head">✓ done — here is what you can now do</div>
+          <div class="bi-outcome-line">The “sentiment” node is ready — place it on the canvas to see it work.</div>
+          <button class="bi-demo" title="place a sentiment node on the canvas and see it run"><span class="tri">▷</span> show me “sentiment” working</button>
+        </div>
+
+        <!-- derived_from — the 3-part bind the wire stamped (intent ← decision ← proposal). Provenance, not the headline. -->
+        <div class="bi-prov" title="what this build was derived from — the wire's 3-part bind">
+          derived from <code>decision://inbox/route-by-tone</code> · <code>intent://build/sentiment-node</code> · <code>proposal://brain/0xa1</code>
+        </div>
+
+        <!-- SECONDARY / for-the-record — the changed-files diff, COLLAPSED by default -->
+        <div class="bi-record">
+          <div class="bi-record-toggle" title="the technical record — changed files + the build's own log (for reference, not the review)">
+            <span class="car">⌃</span> for the record <span class="ct">· 3 file(s) changed</span>
+          </div>
+          <!-- (collapsed; the diff + summary live behind the disclosure. The operator never has to read edits to review.) -->
+          <!-- expanded contents, shown here greyed only to evidence the structure — in the live card these are hidden until toggled:
+          <div class="bi-files">
+            <div class="bi-file add"><span class="g">＋</span>runtime/nodes/sentiment.py</div>
+            <div class="bi-file mod"><span class="g">~</span>runtime/registry.py</div>
+            <div class="bi-file add"><span class="g">＋</span>tests/nodes/test_sentiment.py</div>
+          </div>
+          <pre class="bi-summary">Added a `sentiment` process node: scores text −1..+1 with a one-shot
+classifier prompt; registered the type; covered with a passing suite.
+Verified by use: placed + ran on a scratch graph, output resolved.</pre>
+          <div class="bi-perm">ran under: acceptEdits</div>
+          -->
+        </div>
+
+        <!-- INB-resolve · operator-only accept / send-back-with-a-why (api.resolve approve | reject+reason) -->
+        <div class="bi-verdict">
+          <div class="bi-verdict-row">
+            <button class="b accept" title="accept → it goes live">✓ accept</button>
+            <button class="b sendback" title="send back with a reason → re-queued to the wire">↩ send back</button>
+          </div>
+          <textarea class="bi-why" placeholder="why send it back? (the reason is captured into the path)"></textarea>
+          <div class="bi-op-only"><span class="lk">⚿</span> operator-only — an agent can never self-approve its own build</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div></body></html>

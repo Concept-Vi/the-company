@@ -119,7 +119,7 @@ def _atomic_write_fsync(path: Path, data: str) -> None:
 class FsStore:
     def __init__(self, root):
         self.root = Path(root)
-        for d in ("objects", "refs", "meta", "memo", "graphs", "surfaced", "locks"):
+        for d in ("objects", "refs", "ref_history", "meta", "memo", "graphs", "surfaced", "locks", "vectors"):
             (self.root / d).mkdir(parents=True, exist_ok=True)
         # --- store-level concurrency locks (T1-SEQ / T1-RACE / T-LOCK) ---
         # The bridge is a ThreadingHTTPServer over ONE Suite, so read-modify-write paths in the store
@@ -164,6 +164,14 @@ class FsStore:
                 self._graph_locks[gid] = lk
         return lk.acquire()
 
+    def dispatch_lock(self, key):
+        """Compat alias for the wire's exactly-once dispatch CHECK→CLAIM → the SAME cross-process
+        primitive as graph_lock, keyed by a distinct `dispatch-claim:<key>` lockfile (this is exactly
+        main's generalized design — graph_lock's docstring documents this usage). The convergence lineage
+        called `store.dispatch_lock(seq)`; this routes it to graph_lock so there is ONE cross-process lock
+        mechanism, two call spellings (no duplicate locking)."""
+        return self.graph_lock(f"dispatch-claim:{key}")
+
     @staticmethod
     def _hash(b: bytes) -> str:
         return "cas://b2:" + hashlib.blake2b(b, digest_size=16).hexdigest()
@@ -195,6 +203,14 @@ class FsStore:
     def exists(self, cas: str) -> bool:
         return (self.root / "objects" / self._safe(cas)).exists()
 
+    def _fsync_atomic_write(self, path: Path, data: str) -> None:
+        """Compat method alias → the module-level `_atomic_write_fsync` (the one verified T-FSYNC
+        crash-durable atomic-write primitive). The convergence lineage spelled this `self._fsync_atomic_write`;
+        the night-build lineage spelled it `_atomic_write_fsync` (module func). The merge standardises on the
+        module func as THE implementation and keeps this thin method so every existing `self.`-call routes to it
+        — ONE primitive, both call spellings (no duplicate durability code)."""
+        _atomic_write_fsync(path, data)
+
     # --- mutable pointer (run://) ---
     def set_ref(self, logical: str, cas: str) -> None:
         # ATOMIC (T1-RACE): set_ref is the scheduler's hot-path output write (every node fire writes its
@@ -205,10 +221,58 @@ class FsStore:
         # atomic) means a reader sees the WHOLE old cas or the WHOLE new one — never a torn/empty ref.
         # Mirrors save_graph/save_surfaced/save_session exactly. Unique tmp PER WRITE (pid+thread) so two
         # concurrent set_refs on the same logical never share a tmp name (last-writer-wins, each whole).
-        # DURABLE (T-FSYNC): _atomic_write_fsync fsyncs the tmp's bytes BEFORE the rename + fsyncs the
-        # parent dir AFTER, so this hot output write survives a crash (every node fire writes its ref here).
+        # S4: crash-durable (fsync the tmp before the atomic rename) — was tmp.write_text+replace (atomic
+        # vs torn reads) but NOT durable: a crash could leave the not-yet-flushed tmp as the live ref.
         path = self.root / "refs" / self._safe(logical)
-        _atomic_write_fsync(path, cas)
+        self._fsync_atomic_write(path, cas)
+        # L6 (§21.7#6) — APPEND (ts, cas) to this address's version-history index AFTER the current-ref
+        # write SUCCEEDS. set_ref OVERWRITES the live ref (head() = last write, preserved byte-for-byte
+        # above) and the *old* cas bytes already SURVIVE (put_content is write-once, never deletes) — but
+        # nothing mapped a ref to its PRIOR cas hashes. This index is that map: it stores only (ts, cas)
+        # tuples (hashes + timestamps), NEVER copies of the bytes — a prior version is fetched by its cas
+        # through the existing get_content path. DECISION: versioning is ALL refs (every set_ref appends —
+        # cheap, ~80 bytes/line); NO write cap (append-only, lock-free `open("a")`, mirroring the
+        # append_annotation/append_chat precedent — a write cap would force a read-modify-write that
+        # regresses set_ref's atomic hot path); the READ is bounded instead (ref_history(ref, limit=...)).
+        # Appended AFTER the atomic write so (a) the overwrite path is untouched and (b) a write that
+        # RAISES never records a version that never became current. Consecutive identical cas is a
+        # legitimate entry (history records WRITES, not distinct values). One jsonl file per logical ref
+        # (keyed by _safe(logical)), so two addresses never collide and one address's trail reads alone.
+        # NOTE: lineage() (provenance INPUTS — what an artefact was made FROM) is a DIFFERENT axis and stays
+        # untouched; this is the TEMPORAL trail of one address.
+        self._append_ref_version(logical, cas)
+
+    def _append_ref_version(self, logical: str, cas: str) -> None:
+        """Append one {ts, cas} line to this ref's version-history jsonl (L6). Lock-free append (the same
+        durability class as append_annotation/append_chat) — it is a SEPARATE file from the live ref, so it
+        never interferes with set_ref's atomic tmp+replace on the ref itself."""
+        import json as _j
+        from datetime import datetime, timezone
+        d = self.root / "ref_history"
+        d.mkdir(parents=True, exist_ok=True)   # defensive (mirrors save_session/save_journey) — never assume __init__ ran
+        rec = {"ts": datetime.now(timezone.utc).isoformat(), "cas": cas}
+        # ONE write() of a single line (< 4KB) — on POSIX a single write of < PIPE_BUF/page is atomic for an
+        # O_APPEND file handle, so concurrent appenders never interleave a torn line (verified by the
+        # concurrent-storm check in version_history_acceptance.py: N×M writers, every line parses, count exact).
+        with (d / self._safe(logical)).open("a", encoding="utf-8") as f:
+            f.write(_j.dumps(rec) + "\n")
+
+    def ref_history(self, logical: str, limit: int | None = None) -> list[dict]:
+        """L6 — the ordered version trail of one address: every set_ref to `logical` as a {ts, cas} entry,
+        OLDEST-FIRST (chronological). `limit` bounds the READ (the last N entries, newest end kept, order
+        preserved) — the append side is unbounded, so a bound here never loses an older write, it just
+        windows the view. A ref NEVER written returns [] (an HONEST empty, not a crash, not a silent wrong
+        value — rule 4). Reads disk every call (no in-memory cache), so a SECOND store over the same root
+        sees a prior store's writes (persistence-survives-reload). A prior version's BYTES are fetched by
+        its `cas` through get_content (the cas objects survive — put_content is write-once)."""
+        import json as _j
+        p = self.root / "ref_history" / self._safe(logical)
+        if not p.exists():
+            return []
+        lines = [l for l in p.read_text(encoding="utf-8").splitlines() if l.strip()]
+        if limit is not None:
+            lines = lines[-limit:]
+        return [_j.loads(l) for l in lines]
 
     def head(self, logical: str) -> str | None:
         p = self.root / "refs" / self._safe(logical)
@@ -276,13 +340,9 @@ class FsStore:
         only atomic surfaced-shaped write.) Unique tmp PER WRITE (pid+thread) so concurrent writers never share
         a tmp name (last-writer-wins, each file whole)."""
         import json as _j
-        import os as _os
-        import threading as _t
         (self.root / "sessions").mkdir(parents=True, exist_ok=True)
         path = self.root / "sessions" / (self._safe(session["id"]) + ".json")
-        tmp = path.with_name(f"{path.name}.{_os.getpid()}.{_t.get_ident()}.tmp")
-        tmp.write_text(_j.dumps(session, indent=2))
-        tmp.replace(path)
+        self._fsync_atomic_write(path, _j.dumps(session, indent=2))   # S4: crash-durable atomic write
 
     def load_session(self, sid: str) -> dict | None:
         import json as _j
@@ -291,6 +351,31 @@ class FsStore:
 
     def list_sessions(self) -> list[str]:
         d = self.root / "sessions"
+        return sorted(p.stem for p in d.glob("*.json")) if d.exists() else []
+
+    # --- journey-record state (L9): the REVERSE of the forward resolver — a recorded ordered click-path
+    # through ui:// addresses, retrieved-whole-by-id then replayed via the forward resolveUiTarget. This
+    # is a DISTINCT object from a review-session (above): a journey records NAVIGATION (an addressed
+    # path), a session records a REVIEW (item-ids walked with a cursor). Distinct directory → distinct
+    # store, so a journey id and a session id never collide. Mirrors save_session/load_session (the atomic
+    # tmp+replace whole-record write) — the truer structural parallel for a retrieved-whole record — while
+    # the record itself stays OPEN ({id, ts, steps:[{address, ts, **}], done, **}) per the append_*
+    # {ts,**} additive convention (store constitution: schema-additive, never schema-breaking). ---
+    def save_journey(self, journey: dict) -> None:
+        """Persist a journey-record (id + ordered addressed steps + done) atomically. Same crash-durable
+        tmp+replace guarantee as save_session — a reader sees the old file or the new, never a torn one."""
+        import json as _j
+        (self.root / "journeys").mkdir(parents=True, exist_ok=True)
+        path = self.root / "journeys" / (self._safe(journey["id"]) + ".json")
+        self._fsync_atomic_write(path, _j.dumps(journey, indent=2))
+
+    def load_journey(self, jid: str) -> dict | None:
+        import json as _j
+        p = self.root / "journeys" / (self._safe(jid) + ".json")
+        return _j.loads(p.read_text()) if p.exists() else None
+
+    def list_journeys(self) -> list[str]:
+        d = self.root / "journeys"
         return sorted(p.stem for p in d.glob("*.json")) if d.exists() else []
 
     def list_graphs(self) -> list[str]:
@@ -382,6 +467,178 @@ class FsStore:
         lines = [l for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
         return [_j.loads(l) for l in lines[-limit:]]   # oldest-first (chronological)
 
+    def chats_for(self, address: str) -> list[dict]:
+        """I7 — every chat turn ATTACHED to `address`, oldest-first (the `chat://` thread at that
+        locus). Filters the SAME append-only `chat.jsonl` (I2/I7's lane) by the additive `address`
+        field — the address IS the key. This is the INVERSE of the I6 `annotations_for` leaf: I6
+        has its OWN annotations.jsonl, I7 RIDES the open append_chat record (`rec = {"ts", **turn}`)
+        with one additive field, so it stays ONE-SOURCE (no parallel chat store — store constitution).
+        An ordinary RHM turn (no `address`) is NOT returned; a turn at a DIFFERENT address is NOT
+        returned (isolation). Reads disk every call (no in-memory cache), so a SECOND Suite over the
+        same store root sees a prior Suite's writes (persistence-survives-reload)."""
+        import json as _j
+        path = self.root / "chat.jsonl"
+        if not path.exists():
+            return []
+        out = []
+        for l in path.read_text(encoding="utf-8").splitlines():
+            if not l.strip():
+                continue
+            rec = _j.loads(l)
+            if rec.get("address") == address:
+                out.append(rec)
+        return out
+
+    # --- addressed annotations (I6): append-only, keyed by `ui://` address, persists ---
+    def append_annotation(self, rec: dict) -> dict:
+        """Persist an annotation (comment) attached to a `ui://` address — the I6 store leaf.
+
+        OPEN-RECORD, like append_chat: `{ts, **rec}` splat through to a NEW `annotations.jsonl`
+        at the store root (its own file — SEPARATE from chat.jsonl, which is I2/I7's lane). The
+        store stays dumb: it does NOT validate the address (that S0 gate is the Suite's job, where
+        the semantic work lives, mirroring `act`). The `address` field is the retrieval key; `ts`
+        rides free from the open shape and feeds R2's recency/decay bound later. Append-only so an
+        address accrues a comment THREAD (history), not a last-writer-wins single value."""
+        import json as _j
+        from datetime import datetime, timezone
+        out = {"ts": datetime.now(timezone.utc).isoformat(), **rec}
+        with (self.root / "annotations.jsonl").open("a", encoding="utf-8") as f:
+            f.write(_j.dumps(out) + "\n")
+        return out
+
+    def annotations_for(self, address: str) -> list[dict]:
+        """Every annotation attached to `address`, oldest-first (the comment thread at that locus).
+        Filters the append-only `annotations.jsonl` by the `address` field — the address IS the key.
+        Reads from disk every call (no in-memory cache), so a SECOND Suite over the same store root
+        sees a prior Suite's writes (the persistence-survives-reload property I6 must prove)."""
+        import json as _j
+        path = self.root / "annotations.jsonl"
+        if not path.exists():
+            return []
+        out = []
+        for l in path.read_text(encoding="utf-8").splitlines():
+            if not l.strip():
+                continue
+            rec = _j.loads(l)
+            if rec.get("address") == address:
+                out.append(rec)
+        return out
+
+    # --- pin-state overlay (X7 · Convergence): operator's "keep this in view" override ---
+    def append_pin(self, address: str, target_ts: str, pinned: bool) -> dict:
+        """X7 — record a pin/unpin of an attached item, as an APPEND-ONLY control-state record.
+
+        WHY a separate `pins.jsonl` log instead of a field ON the annotation/chat record (the literal
+        guide wording): the annotation/chat stores are APPEND-ONLY immutable logs (store constitution —
+        an 'update' is a new object + a moved pointer, never a mutated line). So we cannot edit the
+        existing line to set `pinned:True`. Re-APPENDING the record with `pinned:True` ALSO fails: the
+        X8 dedup keys on `(address, full text)` and keeps the FIRST occurrence (the unpinned one), so a
+        re-append is silently dropped — the pin would be lost. And we MUST NOT write pin-state into
+        `chat.jsonl` at all (every chat turn must be `source`-tagged and flows the training pipe — a pin
+        control-record would pollute the twin's signal / the echo-guard).
+
+        So pin-state is an ADDITIVE OVERLAY: a tiny append-only `pins.jsonl` keyed by the item's
+        `(address, target_ts)` handle, resolved LAST-WINS on read (`pin_state_for`). This is additive
+        CONTROL-state on the SAME store (one FsStore, one root) — NOT a parallel CONTEXT system: it adds
+        no items to the gather, only flips the existing `pinned` field the gather already reads. The
+        `pinned` field still appears ON the record `annotations_at`/`chats_at` return (the overlay is
+        applied there), schema-additive: an item with no pin record reads as unpinned.
+
+        Open-record, like append_annotation: `{ts, address, target_ts, pinned}`. Append-only so the pin
+        HISTORY is preserved (a later unpin is a NEW record, last-wins on read — never a lost-update)."""
+        import json as _j
+        from datetime import datetime, timezone
+        rec = {"ts": datetime.now(timezone.utc).isoformat(),
+               "address": address, "target_ts": target_ts, "pinned": bool(pinned)}
+        with (self.root / "pins.jsonl").open("a", encoding="utf-8") as f:
+            f.write(_j.dumps(rec) + "\n")
+        return rec
+
+    def pin_state_for(self, address: str) -> dict:
+        """X7 — the resolved pin-state at `address`: `{target_ts: pinned_bool}`, LAST-WINS over the
+        append-only `pins.jsonl` (a later record for the same `(address, target_ts)` overrides — so an
+        unpin after a pin reads as unpinned). Reads disk every call (no in-memory cache), so a second
+        Suite over the same store root sees a prior Suite's pins (persistence-survives-reload). An
+        address with no pin records → `{}` (every item reads as unpinned — the additive default)."""
+        import json as _j
+        path = self.root / "pins.jsonl"
+        if not path.exists():
+            return {}
+        state: dict = {}
+        for l in path.read_text(encoding="utf-8").splitlines():
+            if not l.strip():
+                continue
+            rec = _j.loads(l)
+            if rec.get("address") == address:
+                state[rec.get("target_ts")] = bool(rec.get("pinned"))   # last line wins
+        return state
+
+    # --- persisted vector index (X12 · Convergence): {address: vector} keyed by the SAME address grammar ---
+    # A SIBLING namespace of objects/refs/surfaced under the ONE store root (NOT a parallel store, NOT a
+    # new DB — store constitution: one substrate, the address never changes). One file per ADDRESS (keyed by
+    # _safe(address), the same key transform every other namespace uses), holding the open record
+    # {address, vector, content_hash, dim, model, ts}. These are PURE substrate primitives — fabric-free:
+    # the store NEVER calls a model (store constitution: store turns an address into bytes and back). The
+    # embedding ORCHESTRATION (embed the corpus → degrade-with-warning when :8001 is down) lives in
+    # store/vector_index.py, which CALLS these. The content_hash makes a re-build INCREMENTAL — the build
+    # path re-embeds an address ONLY when its content_hash changed (compare get_vector(addr)["content_hash"]).
+    def put_vector(self, address: str, vector: list, content_hash: str, *, dim: int, model: str) -> dict:
+        """Persist one {address: vector} entry into the vectors/ namespace, ATOMICALLY (crash-durable
+        tmp+fsync+os.replace — the SAME guarantee save_surfaced/save_graph give, so a reader sees the whole
+        old entry or the whole new one, never a torn one). Keyed by _safe(address). Schema-additive open
+        record. The store does NOT validate the vector (no model here) — the dim contract is enforced UP at
+        the embed fabric (complete_embeddings dim= guard) and DOWN at the query cosine (retrieve._cosine);
+        the store just persists the bytes by address."""
+        import json as _j
+        from datetime import datetime, timezone
+        (self.root / "vectors").mkdir(parents=True, exist_ok=True)   # defensive (mirrors save_session) — never assume __init__ ran
+        rec = {"address": address, "vector": list(vector), "content_hash": content_hash,
+               "dim": int(dim), "model": model, "ts": datetime.now(timezone.utc).isoformat()}
+        path = self.root / "vectors" / (self._safe(address) + ".json")
+        self._fsync_atomic_write(path, _j.dumps(rec))
+        return rec
+
+    def get_vector(self, address: str) -> dict | None:
+        """The persisted vector entry at `address`, or None if never built (an HONEST None — never a
+        crash, never a fabricated zero-vector; rule 4). Reads disk every call (no in-memory cache), so a
+        SECOND store over the same root sees a prior store's vectors (persistence-survives-reload)."""
+        import json as _j
+        p = self.root / "vectors" / (self._safe(address) + ".json")
+        return _j.loads(p.read_text()) if p.exists() else None
+
+    def index_addresses(self) -> list[str]:
+        """Every address currently in the vector index, sorted. Reads the entries (the `address` field is
+        the truth, not the _safe filename) so the canonical address is returned verbatim. Empty index → []
+        (an honest empty — the embedder may have been DOWN at build, the index stays empty/partial honestly)."""
+        import json as _j
+        d = self.root / "vectors"
+        if not d.exists():
+            return []
+        out = []
+        for p in sorted(d.glob("*.json")):
+            try:
+                out.append(_j.loads(p.read_text())["address"])
+            except Exception:
+                continue
+        return sorted(out)
+
+    def index_corpus(self) -> list[dict]:
+        """The whole index as a corpus list `[{id: address, vector: [...]}]` — the EXACT shape
+        nodes/retrieve.run consumes (id + vector), so the QUERY path feeds it straight in with NO reshaping
+        and NO reimplemented cosine. Empty index → [] (query then returns empty + an honest note)."""
+        import json as _j
+        d = self.root / "vectors"
+        if not d.exists():
+            return []
+        out = []
+        for p in sorted(d.glob("*.json")):
+            try:
+                rec = _j.loads(p.read_text())
+                out.append({"id": rec["address"], "vector": rec["vector"]})
+            except Exception:
+                continue
+        return out
+
     # --- surfaced-decision inbox (S7/D4): non-blocking gates, shared across faces ---
     def surfaced_lock(self):
         """T1-RACE — the store-level lock a CALLER holds around a surfaced read-modify-write
@@ -394,20 +651,16 @@ class FsStore:
 
     def save_surfaced(self, decision: dict) -> None:
         import json as _j
-        import os as _os
-        import threading as _t
         # ATOMIC (T1-RACE): tmp + os.replace (same-filesystem rename is atomic) so a reader sees the
         # whole old file or the whole new one — never a half-written one against a concurrent read. The
         # naked write_text here (the prior code) could tear the file. Unique tmp PER WRITE (pid+thread)
         # so two concurrent writers never share a tmp name (each file stays whole). Held under the
         # surfaced lock so the WRITE is also serialized against other writers; callers that need the
         # READ serialized too hold surfaced_lock() across their whole get→mutate→save (RLock = no
-        # self-deadlock when this re-acquires).
+        # self-deadlock when this re-acquires). S4: also fsync the tmp before the rename (crash-durable).
         path = self.root / "surfaced" / (self._safe(decision["id"]) + ".json")
         with self._surfaced_lock:
-            tmp = path.with_name(f"{path.name}.{_os.getpid()}.{_t.get_ident()}.tmp")
-            tmp.write_text(_j.dumps(decision, indent=2))
-            tmp.replace(path)
+            self._fsync_atomic_write(path, _j.dumps(decision, indent=2))
 
     def list_surfaced(self) -> list[dict]:
         import json as _j

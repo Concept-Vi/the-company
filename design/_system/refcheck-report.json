@@ -1,0 +1,1253 @@
+{
+  "_what": "Drift findings for every code: ref in register.json (features[].code) + addresses.json (addresses.*.code). Produced by _system/refcheck.py (read ~/company READ-ONLY). drift[] is the lead's repair worklist; the lead repairs the registries centrally. 'points_at' = what the ref now lands on; 'expected' = the symbol hint derived from the owner's label. NOTE: represents[] in views[] are feature-ids, not code refs \u2014 code refs live in features[].code, so THAT is what this validates (see report (d)).",
+  "snapshot": "~/company @ 92d8d47c267b60cbe42d0a167690b7d63aec999f 2026-06-04 18:21:15 +1000 \u2014 line numbers are as-of this revision (the repo is under an active build loop; re-run after the registries are repaired).",
+  "checked": 91,
+  "ok": [
+    {
+      "ref": "scheduler.py:37",
+      "full_code": "scheduler.py:37",
+      "source": "register",
+      "owner": "ENG-resolve",
+      "represents": "reactive resolution (fires when input addresses resolve)",
+      "candidates": [
+        "resolve"
+      ],
+      "points_at": "run (def @ line 37, +0)",
+      "resolved": "runtime/scheduler.py",
+      "line_content": "def run(graph, store, node_types, branch: str = \"main\",",
+      "repair_target": null
+    },
+    {
+      "ref": "scheduler.py:26",
+      "full_code": "scheduler.py:26",
+      "source": "register",
+      "owner": "ENG-memo",
+      "represents": "memo gate \u2014 ran vs cached",
+      "candidates": [
+        "memo"
+      ],
+      "points_at": "_memo_sig (def @ line 26, +0)",
+      "resolved": "runtime/scheduler.py",
+      "line_content": "def _memo_sig(ex, version, input_map: dict) -> str:",
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/scheduler.py:run",
+      "full_code": "runtime/scheduler.py:run",
+      "source": "register",
+      "owner": "ENG-volatile",
+      "represents": "VOLATILE bypass",
+      "candidates": [
+        "volatile"
+      ],
+      "points_at": "file runtime/scheduler.py exists (no line given)",
+      "resolved": "runtime/scheduler.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/scheduler.py:run",
+      "full_code": "runtime/scheduler.py:run / runtime/bridge.py:do_POST",
+      "source": "register",
+      "owner": "ENG-force",
+      "represents": "force re-run",
+      "candidates": [
+        "force"
+      ],
+      "points_at": "file runtime/scheduler.py exists (no line given)",
+      "resolved": "runtime/scheduler.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/bridge.py:do_POST",
+      "full_code": "runtime/scheduler.py:run / runtime/bridge.py:do_POST",
+      "source": "register",
+      "owner": "ENG-force",
+      "represents": "force re-run",
+      "candidates": [
+        "force"
+      ],
+      "points_at": "file runtime/bridge.py exists (no line given)",
+      "resolved": "runtime/bridge.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/scheduler.py:run",
+      "full_code": "runtime/scheduler.py:run",
+      "source": "register",
+      "owner": "ENG-branch",
+      "represents": "per-port branching + pruning (gate)",
+      "candidates": [
+        "branch"
+      ],
+      "points_at": "file runtime/scheduler.py exists (no line given)",
+      "resolved": "runtime/scheduler.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "suite.py:_last_run_stuck",
+      "full_code": "suite.py:_last_run_stuck",
+      "source": "register",
+      "owner": "ENG-stuck",
+      "represents": "stuck detection (distinct from pruned)",
+      "candidates": [
+        "stuck"
+      ],
+      "points_at": "file runtime/suite.py exists; defines _last_run_stuck @ line 370",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/scheduler.py:run",
+      "full_code": "runtime/scheduler.py:run",
+      "source": "register",
+      "owner": "ENG-branches-pause",
+      "represents": "branches / pause (engine-only, no FE)",
+      "candidates": [
+        "pause"
+      ],
+      "points_at": "file runtime/scheduler.py exists (no line given)",
+      "resolved": "runtime/scheduler.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "registry.py:18",
+      "full_code": "registry.py:18",
+      "source": "register",
+      "owner": "NODE-kinds",
+      "represents": "2 live kinds: process, content",
+      "candidates": [
+        "kinds"
+      ],
+      "points_at": "_infer_kind (def @ line 18, +0)",
+      "resolved": "runtime/registry.py",
+      "line_content": "def _infer_kind(name: str) -> str:",
+      "repair_target": null
+    },
+    {
+      "ref": "node_type.py",
+      "full_code": "node_type.py / App.tsx:134",
+      "source": "register",
+      "owner": "NODE-config",
+      "represents": "per-node config_schema \u2192 inspector form",
+      "candidates": [
+        "config",
+        "config_schema"
+      ],
+      "points_at": "file contracts/node_type.py exists (no line given)",
+      "resolved": "contracts/node_type.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "App.tsx:134",
+      "full_code": "node_type.py / App.tsx:134",
+      "source": "register",
+      "owner": "NODE-config",
+      "represents": "per-node config_schema \u2192 inspector form",
+      "candidates": [
+        "config",
+        "config_schema"
+      ],
+      "points_at": "configSchemaToFields (def @ line 127, +7)",
+      "resolved": "canvas/app/src/App.tsx",
+      "line_content": "default: f.default,",
+      "repair_target": null
+    },
+    {
+      "ref": "suite.py:349",
+      "full_code": "suite.py:349",
+      "source": "register",
+      "owner": "NODE-ports",
+      "represents": "typed ports Text/Any/Vector/Number",
+      "candidates": [
+        "ports"
+      ],
+      "points_at": "doc_drift (def @ line 335, +14)",
+      "resolved": "runtime/suite.py",
+      "line_content": "}",
+      "repair_target": null
+    },
+    {
+      "ref": "nodes/portal.py",
+      "full_code": "nodes/portal.py",
+      "source": "register",
+      "owner": "NODE-portal",
+      "represents": "portal \u2014 live transclusion",
+      "candidates": [
+        "portal"
+      ],
+      "points_at": "file nodes/portal.py exists (no line given)",
+      "resolved": "nodes/portal.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:state",
+      "full_code": "runtime/suite.py:state",
+      "source": "register",
+      "owner": "NODE-layer",
+      "represents": "provenance layer (authored/system)",
+      "candidates": [
+        "layer"
+      ],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:set_config",
+      "full_code": "runtime/suite.py:set_config",
+      "source": "register",
+      "owner": "CAN-compose",
+      "represents": "create/connect/delete/set_config/set_position",
+      "candidates": [
+        "compose",
+        "set_config",
+        "set_position"
+      ],
+      "points_at": "file runtime/suite.py exists; defines set_config @ line 459",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/App.tsx:DRAG_CONN",
+      "full_code": "canvas/app/src/App.tsx:DRAG_CONN",
+      "source": "register",
+      "owner": "CAN-drag",
+      "represents": "drag-to-connect port nubs",
+      "candidates": [
+        "drag"
+      ],
+      "points_at": "file canvas/app/src/App.tsx exists; defines DRAG_CONN @ line 111",
+      "resolved": "canvas/app/src/App.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/App.tsx:zoom",
+      "full_code": "canvas/app/src/App.tsx:zoom",
+      "source": "register",
+      "owner": "CAN-zoom",
+      "represents": "semantic zoom",
+      "candidates": [
+        "zoom"
+      ],
+      "points_at": "file canvas/app/src/App.tsx exists; defines zoom @ line 389",
+      "resolved": "canvas/app/src/App.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/App.tsx:cycleLayers",
+      "full_code": "canvas/app/src/App.tsx:cycleLayers",
+      "source": "register",
+      "owner": "CAN-layers",
+      "represents": "layer view all/origin/system",
+      "candidates": [
+        "layers"
+      ],
+      "points_at": "file canvas/app/src/App.tsx exists; defines cycleLayers @ line 955",
+      "resolved": "canvas/app/src/App.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "suite.py:285",
+      "full_code": "suite.py:285",
+      "source": "register",
+      "owner": "CAN-multigraph",
+      "represents": "multiple named graphs",
+      "candidates": [
+        "multigraph"
+      ],
+      "points_at": "_acceptance_suites (def @ line 285, +0)",
+      "resolved": "runtime/suite.py",
+      "line_content": "def _acceptance_suites(self) -> list:",
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:run",
+      "full_code": "runtime/suite.py:run",
+      "source": "register",
+      "owner": "RUN-run",
+      "represents": "run / state / results",
+      "candidates": [
+        "run"
+      ],
+      "points_at": "file runtime/suite.py exists; defines run @ line 498",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:state",
+      "full_code": "runtime/suite.py:state",
+      "source": "register",
+      "owner": "RUN-status",
+      "represents": "node status dots idle/ran/cached/stuck",
+      "candidates": [
+        "status"
+      ],
+      "points_at": "file runtime/suite.py exists; defines session_status @ line 1907",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:chat",
+      "full_code": "runtime/suite.py:chat",
+      "source": "register",
+      "owner": "RHM-chat",
+      "represents": "grounded chat, abstains",
+      "candidates": [
+        "chat"
+      ],
+      "points_at": "file runtime/suite.py exists; defines chat @ line 1339",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:RHM_VERBS",
+      "full_code": "runtime/suite.py:RHM_VERBS",
+      "source": "register",
+      "owner": "RHM-verbs",
+      "represents": "7 action verbs (run/propose/build/consult/show/panel/extend)",
+      "candidates": [
+        "verbs"
+      ],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:set_mode",
+      "full_code": "runtime/suite.py:set_mode",
+      "source": "register",
+      "owner": "RHM-modes",
+      "represents": "8 presence modes (the dial)",
+      "candidates": [
+        "modes"
+      ],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:chat",
+      "full_code": "runtime/suite.py:chat",
+      "source": "register",
+      "owner": "RHM-decide",
+      "represents": "decide-for-me autonomous routing",
+      "candidates": [
+        "decide"
+      ],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:react",
+      "full_code": "runtime/suite.py:react",
+      "source": "register",
+      "owner": "RHM-react",
+      "represents": "watch-and-react ambient comment",
+      "candidates": [
+        "react"
+      ],
+      "points_at": "file runtime/suite.py exists; defines react @ line 1439",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:set_rhm_config",
+      "full_code": "runtime/suite.py:set_rhm_config",
+      "source": "register",
+      "owner": "RHM-config",
+      "represents": "model/provider/persona config",
+      "candidates": [
+        "config"
+      ],
+      "points_at": "file runtime/suite.py exists; defines set_config @ line 459",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "suite.py:_chat_context",
+      "full_code": "suite.py:_chat_context",
+      "source": "register",
+      "owner": "RHM-copresence",
+      "represents": "co-presence (sees your selection)",
+      "candidates": [
+        "copresence"
+      ],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:training_signal",
+      "full_code": "runtime/suite.py:training_signal",
+      "source": "register",
+      "owner": "RHM-twin",
+      "represents": "twin / model-of-Tim grading (gold/working, cold-start)",
+      "candidates": [
+        "twin"
+      ],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:session_view",
+      "full_code": "runtime/suite.py:session_view",
+      "source": "register",
+      "owner": "WALK-session",
+      "represents": "review session as a graph",
+      "candidates": [
+        "session"
+      ],
+      "points_at": "file runtime/suite.py exists; defines _session_lock @ line 107",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:present_current",
+      "full_code": "runtime/suite.py:present_current",
+      "source": "register",
+      "owner": "WALK-present",
+      "represents": "present_current + ui_target framing",
+      "candidates": [
+        "present",
+        "present_current",
+        "ui_target"
+      ],
+      "points_at": "file runtime/suite.py exists; defines present_current @ line 1818",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:next",
+      "full_code": "runtime/suite.py:next",
+      "source": "register",
+      "owner": "WALK-next",
+      "represents": "next page-turn (open gate\u2192fire\u2192advance)",
+      "candidates": [
+        "next"
+      ],
+      "points_at": "file runtime/suite.py exists; defines next @ line 1866",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:_registry_ui_target",
+      "full_code": "runtime/suite.py:_registry_ui_target",
+      "source": "register",
+      "owner": "WALK-uiresolve",
+      "represents": "ui:// resolver + UI registry (drive the view)",
+      "candidates": [
+        "uiresolve"
+      ],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:inbox_lanes",
+      "full_code": "runtime/suite.py:inbox_lanes",
+      "source": "register",
+      "owner": "INB-lanes",
+      "represents": "3-lane inbox + test-origin exclusion",
+      "candidates": [
+        "lanes"
+      ],
+      "points_at": "file runtime/suite.py exists; defines inbox_lanes @ line 1642",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:coa",
+      "full_code": "runtime/suite.py:coa",
+      "source": "register",
+      "owner": "INB-coa",
+      "represents": "COA value-choice (decision-compiler up)",
+      "candidates": [
+        "coa"
+      ],
+      "points_at": "file runtime/suite.py exists; defines coa @ line 1667",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:surface_review",
+      "full_code": "runtime/suite.py:surface_review",
+      "source": "register",
+      "owner": "INB-surface",
+      "represents": "surface a node output to the inbox",
+      "candidates": [
+        "surface"
+      ],
+      "points_at": "file runtime/suite.py exists; defines surface_output @ line 1687",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:idea_capture",
+      "full_code": "runtime/suite.py:idea_capture",
+      "source": "register",
+      "owner": "INB-idea",
+      "represents": "idea capture (generative)",
+      "candidates": [
+        "idea"
+      ],
+      "points_at": "file runtime/suite.py exists; defines idea_capture @ line 1724",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:resolve_surfaced",
+      "full_code": "runtime/suite.py:resolve_surfaced",
+      "source": "register",
+      "owner": "INB-resolve",
+      "represents": "resolve vocab (approve/reject/decide/comment/skip, operator-only, idempotent)",
+      "candidates": [
+        "resolve"
+      ],
+      "points_at": "file runtime/suite.py exists; defines resolve_verdicts_since @ line 1944",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:replay",
+      "full_code": "runtime/suite.py:replay",
+      "source": "register",
+      "owner": "INB-replay",
+      "represents": "replay / decision-view / trajectory audit",
+      "candidates": [
+        "replay"
+      ],
+      "points_at": "file runtime/suite.py exists; defines replay @ line 3099",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:surface_build_intent",
+      "full_code": "runtime/suite.py:surface_build_intent / runtime/bridge.py:do_POST",
+      "source": "register",
+      "owner": "WIRE-intent",
+      "represents": "surface_build_intent (entry \u2014 no FE yet)",
+      "candidates": [
+        "intent",
+        "surface_build_intent"
+      ],
+      "points_at": "file runtime/suite.py exists; defines surface_build_intent @ line 2020",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/bridge.py:do_POST",
+      "full_code": "runtime/suite.py:surface_build_intent / runtime/bridge.py:do_POST",
+      "source": "register",
+      "owner": "WIRE-intent",
+      "represents": "surface_build_intent (entry \u2014 no FE yet)",
+      "candidates": [
+        "intent",
+        "surface_build_intent"
+      ],
+      "points_at": "file runtime/bridge.py exists (no line given)",
+      "resolved": "runtime/bridge.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:dispatch_decision",
+      "full_code": "runtime/suite.py:dispatch_decision",
+      "source": "register",
+      "owner": "WIRE-dispatch",
+      "represents": "dispatch_decision (internal, governed)",
+      "candidates": [
+        "dispatch",
+        "dispatch_decision"
+      ],
+      "points_at": "file runtime/suite.py exists; defines dispatch_decision @ line 2260",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "App.tsx:252",
+      "full_code": "App.tsx:252",
+      "source": "register",
+      "owner": "WIRE-review",
+      "represents": "demonstrate-first build_result_review card",
+      "candidates": [
+        "review",
+        "build_result_review"
+      ],
+      "points_at": "outcome (def @ line 252, +0)",
+      "resolved": "canvas/app/src/App.tsx",
+      "line_content": "const outcome = deriveOutcome(d, liveTypes)",
+      "repair_target": null
+    },
+    {
+      "ref": "suite.py:1713",
+      "full_code": "suite.py:1713 / implement.py:260",
+      "source": "register",
+      "owner": "WIRE-states",
+      "represents": "failure/lifecycle states (verify-fail/scope-overrun/FORM-review/launch-fail/cap-deferred/crashed)",
+      "candidates": [
+        "states"
+      ],
+      "points_at": "surface_review (def @ line 1710, +3)",
+      "resolved": "runtime/suite.py",
+      "line_content": "Tim threw in). The item carries a SEPARATE `status` (starts 'inbox') so the walk-lifecycle never",
+      "repair_target": null
+    },
+    {
+      "ref": "implement.py:260",
+      "full_code": "suite.py:1713 / implement.py:260",
+      "source": "register",
+      "owner": "WIRE-states",
+      "represents": "failure/lifecycle states (verify-fail/scope-overrun/FORM-review/launch-fail/cap-deferred/crashed)",
+      "candidates": [
+        "states"
+      ],
+      "points_at": "resurface_crashed (def @ line 260, +0)",
+      "resolved": "runtime/implement.py",
+      "line_content": "def resurface_crashed(suite) -> list[str]:",
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:apply_node",
+      "full_code": "runtime/suite.py:apply_node",
+      "source": "register",
+      "owner": "SM-node",
+      "represents": "propose/apply node-type",
+      "candidates": [
+        "node"
+      ],
+      "points_at": "file runtime/suite.py exists; defines create_node @ line 408",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:apply_panel",
+      "full_code": "runtime/suite.py:apply_panel",
+      "source": "register",
+      "owner": "SM-panel",
+      "represents": "propose/apply declarative panel",
+      "candidates": [
+        "panel"
+      ],
+      "points_at": "file runtime/suite.py exists; defines propose_panel @ line 2843",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:apply_extension",
+      "full_code": "runtime/suite.py:apply_extension",
+      "source": "register",
+      "owner": "SM-extension",
+      "represents": "propose/apply arbitrary extension (build-gated)",
+      "candidates": [
+        "extension"
+      ],
+      "points_at": "file runtime/suite.py exists; defines propose_extension @ line 2936",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:revert_self_change",
+      "full_code": "runtime/suite.py:revert_self_change",
+      "source": "register",
+      "owner": "SM-revert",
+      "represents": "revert / last-self-change audit",
+      "candidates": [
+        "revert"
+      ],
+      "points_at": "file runtime/suite.py exists; defines _is_revert_subject @ line 2697",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:available_models",
+      "full_code": "runtime/suite.py:available_models",
+      "source": "register",
+      "owner": "MOD-registry",
+      "represents": "live model registry (chat + embed, registry-fed)",
+      "candidates": [
+        "registry"
+      ],
+      "points_at": "file runtime/suite.py exists; defines _registry_ui_target @ line 1797",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "nodes/embed.py",
+      "full_code": "nodes/embed.py",
+      "source": "register",
+      "owner": "MOD-embed",
+      "represents": "embedding chain embed\u2192similarity\u2192retrieve",
+      "candidates": [
+        "embed"
+      ],
+      "points_at": "file nodes/embed.py exists (no line given)",
+      "resolved": "nodes/embed.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/governance.py:posture",
+      "full_code": "runtime/governance.py:posture",
+      "source": "register",
+      "owner": "GOV-tiers",
+      "represents": "consequence tiers AUTO/SURFACE/CONFIRM/LOCKED",
+      "candidates": [
+        "tiers"
+      ],
+      "points_at": "file runtime/governance.py exists (no line given)",
+      "resolved": "runtime/governance.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/governance.py:resolve",
+      "full_code": "runtime/governance.py:resolve",
+      "source": "register",
+      "owner": "GOV-resolve",
+      "represents": "operator-only resolve (agent can't self-approve)",
+      "candidates": [
+        "resolve"
+      ],
+      "points_at": "file runtime/governance.py exists; defines resolve @ line 153",
+      "resolved": "runtime/governance.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "App.tsx:1214",
+      "full_code": "voice/ + App.tsx:1214",
+      "source": "register",
+      "owner": "VOICE",
+      "represents": "two-way voice (TTS Kokoro / STT) + listening loop",
+      "candidates": [
+        "VOICE"
+      ],
+      "points_at": "recordToggle (def @ line 1212, +2)",
+      "resolved": "canvas/app/src/App.tsx",
+      "line_content": "try {",
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/bridge.py:_stream",
+      "full_code": "runtime/bridge.py:_stream",
+      "source": "register",
+      "owner": "EVT-stream",
+      "represents": "SSE live stream (pushed, not polled)",
+      "candidates": [
+        "stream"
+      ],
+      "points_at": "file runtime/bridge.py exists; defines _stream @ line 178",
+      "resolved": "runtime/bridge.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:now",
+      "full_code": "runtime/suite.py:now",
+      "source": "register",
+      "owner": "EVT-now",
+      "represents": "now-view + presence",
+      "candidates": [
+        "now"
+      ],
+      "points_at": "file runtime/suite.py exists; defines now @ line 615",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:events",
+      "full_code": "runtime/suite.py:events",
+      "source": "register",
+      "owner": "EVT-log",
+      "represents": "activity event log",
+      "candidates": [
+        "log"
+      ],
+      "points_at": "file runtime/suite.py exists; defines self_change_log @ line 2765",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:ui_info",
+      "full_code": "runtime/suite.py:ui_info",
+      "source": "register",
+      "owner": "WS-workshop",
+      "represents": "workshop region (full-detail node surface)",
+      "candidates": [
+        "workshop"
+      ],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "suite.py:capabilities",
+      "full_code": "suite.py:capabilities",
+      "source": "register",
+      "owner": "INTRO-cap",
+      "represents": "capabilities() source-of-truth + object_info",
+      "candidates": [
+        "cap",
+        "object_info"
+      ],
+      "points_at": "file runtime/suite.py exists; defines object_info @ line 357",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/bridge.py:do_GET",
+      "full_code": "runtime/bridge.py:do_GET",
+      "source": "register",
+      "owner": "FRM-divergence",
+      "represents": "legacy skeleton served at / (must resolve to React app)",
+      "candidates": [
+        "divergence"
+      ],
+      "points_at": "file runtime/bridge.py exists (no line given)",
+      "resolved": "runtime/bridge.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/App.tsx (toolbar)",
+      "full_code": "canvas/app/src/App.tsx (toolbar)",
+      "source": "addresses",
+      "owner": "ui://toolbar",
+      "represents": "F1",
+      "candidates": [],
+      "points_at": "file canvas/app/src/App.tsx exists (no line given)",
+      "resolved": "canvas/app/src/App.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/bridge.py:184",
+      "full_code": "runtime/bridge.py:184 / App.tsx:1146",
+      "source": "addresses",
+      "owner": "ui://toolbar/run",
+      "represents": "RUN-run",
+      "candidates": [],
+      "points_at": "_stream (def @ line 178, +6)",
+      "resolved": "runtime/bridge.py",
+      "line_content": "since = q.get(\"since\")",
+      "repair_target": null
+    },
+    {
+      "ref": "App.tsx:1146",
+      "full_code": "runtime/bridge.py:184 / App.tsx:1146",
+      "source": "addresses",
+      "owner": "ui://toolbar/run",
+      "represents": "RUN-run",
+      "candidates": [],
+      "points_at": "doRun (def @ line 1145, +1)",
+      "resolved": "canvas/app/src/App.tsx",
+      "line_content": "setRunning(true); setRunError(null)",
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:set_mode",
+      "full_code": "runtime/suite.py:set_mode",
+      "source": "addresses",
+      "owner": "ui://toolbar/presence",
+      "represents": "RHM-modes",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/App.tsx:App",
+      "full_code": "canvas/app/src/App.tsx:App",
+      "source": "addresses",
+      "owner": "ui://rail/palette",
+      "represents": "F3",
+      "candidates": [],
+      "points_at": "file canvas/app/src/App.tsx exists (no line given)",
+      "resolved": "canvas/app/src/App.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "App.tsx NodeShapeUtil:124",
+      "full_code": "App.tsx NodeShapeUtil:124",
+      "source": "addresses",
+      "owner": "ui://canvas",
+      "represents": "CAN-compose",
+      "candidates": [],
+      "points_at": "resolveOptions (def @ line 122, +2)",
+      "resolved": "canvas/app/src/App.tsx",
+      "line_content": "if (Array.isArray(f.options)) return f.options",
+      "repair_target": null
+    },
+    {
+      "ref": "App.tsx:124",
+      "full_code": "App.tsx:124 / suite.py:436",
+      "source": "addresses",
+      "owner": "ui://canvas/node",
+      "represents": "NODE-kinds",
+      "candidates": [],
+      "points_at": "resolveOptions (def @ line 122, +2)",
+      "resolved": "canvas/app/src/App.tsx",
+      "line_content": "if (Array.isArray(f.options)) return f.options",
+      "repair_target": null
+    },
+    {
+      "ref": "suite.py:436",
+      "full_code": "App.tsx:124 / suite.py:436",
+      "source": "addresses",
+      "owner": "ui://canvas/node",
+      "represents": "NODE-kinds",
+      "candidates": [],
+      "points_at": "connect (def @ line 429, +7)",
+      "resolved": "runtime/suite.py",
+      "line_content": "raise KeyError(f\"connect: unknown node ({from_node!r} -> {to_node!r})\")",
+      "repair_target": null
+    },
+    {
+      "ref": "contracts/node_type.py",
+      "full_code": "contracts/node_type.py / App.tsx:447",
+      "source": "addresses",
+      "owner": "ui://inspector",
+      "represents": "NODE-config",
+      "candidates": [],
+      "points_at": "file contracts/node_type.py exists (no line given)",
+      "resolved": "contracts/node_type.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "App.tsx:447",
+      "full_code": "contracts/node_type.py / App.tsx:447",
+      "source": "addresses",
+      "owner": "ui://inspector",
+      "represents": "NODE-config",
+      "candidates": [],
+      "points_at": "toPort (def @ line 435, +12)",
+      "resolved": "canvas/app/src/App.tsx",
+      "line_content": "<div className={`node-card ${p.status} layer-${p.layer}` + (isPortal ? ' portal' : '')}>",
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:109",
+      "full_code": "runtime/suite.py:109 / App.tsx:134",
+      "source": "addresses",
+      "owner": "ui://inspector/model-field",
+      "represents": "MOD-registry",
+      "candidates": [
+        "field"
+      ],
+      "points_at": "_session_lock (def @ line 107, +2)",
+      "resolved": "runtime/suite.py",
+      "line_content": "import threading as _t",
+      "repair_target": null
+    },
+    {
+      "ref": "App.tsx:134",
+      "full_code": "runtime/suite.py:109 / App.tsx:134",
+      "source": "addresses",
+      "owner": "ui://inspector/model-field",
+      "represents": "MOD-registry",
+      "candidates": [
+        "field"
+      ],
+      "points_at": "configSchemaToFields (def @ line 127, +7)",
+      "resolved": "canvas/app/src/App.tsx",
+      "line_content": "default: f.default,",
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/App.tsx:doRun",
+      "full_code": "canvas/app/src/App.tsx:doRun / runtime/scheduler.py:run",
+      "source": "addresses",
+      "owner": "ui://inspector/act",
+      "represents": "ENG-force",
+      "candidates": [],
+      "points_at": "file canvas/app/src/App.tsx exists (no line given)",
+      "resolved": "canvas/app/src/App.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/scheduler.py:run",
+      "full_code": "canvas/app/src/App.tsx:doRun / runtime/scheduler.py:run",
+      "source": "addresses",
+      "owner": "ui://inspector/act",
+      "represents": "ENG-force",
+      "candidates": [],
+      "points_at": "file runtime/scheduler.py exists (no line given)",
+      "resolved": "runtime/scheduler.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:inbox_lanes",
+      "full_code": "runtime/suite.py:inbox_lanes",
+      "source": "addresses",
+      "owner": "ui://inbox",
+      "represents": "INB-lanes",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:review_verdicts",
+      "full_code": "runtime/suite.py:review_verdicts",
+      "source": "addresses",
+      "owner": "ui://inbox/build-review",
+      "represents": "WIRE-review",
+      "candidates": [
+        "review"
+      ],
+      "points_at": "file runtime/suite.py exists; defines surface_review @ line 1710",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:coa",
+      "full_code": "runtime/suite.py:coa",
+      "source": "addresses",
+      "owner": "ui://inbox/coa",
+      "represents": "INB-coa",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:chat",
+      "full_code": "runtime/suite.py:chat",
+      "source": "addresses",
+      "owner": "ui://chat",
+      "represents": "RHM-chat",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "App.tsx (chat input)",
+      "full_code": "App.tsx (chat input)",
+      "source": "addresses",
+      "owner": "ui://chat/input",
+      "represents": "RHM-chat",
+      "candidates": [],
+      "points_at": "file canvas/app/src/App.tsx exists (no line given)",
+      "resolved": "canvas/app/src/App.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:now",
+      "full_code": "runtime/suite.py:now",
+      "source": "addresses",
+      "owner": "ui://activity",
+      "represents": "EVT-now",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:present_current",
+      "full_code": "runtime/suite.py:present_current",
+      "source": "addresses",
+      "owner": "ui://walkthrough",
+      "represents": "WALK-present",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:resolve_surfaced",
+      "full_code": "runtime/suite.py:resolve_surfaced",
+      "source": "addresses",
+      "owner": "ui://walkthrough/verdict",
+      "represents": "INB-resolve",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:ui_info",
+      "full_code": "runtime/suite.py:ui_info",
+      "source": "addresses",
+      "owner": "ui://workshop",
+      "represents": "WS-workshop",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:available_models",
+      "full_code": "runtime/suite.py:available_models",
+      "source": "addresses",
+      "owner": "ui://models",
+      "represents": "MOD-registry",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:training_signal",
+      "full_code": "runtime/suite.py:training_signal",
+      "source": "addresses",
+      "owner": "ui://twin",
+      "represents": "RHM-twin",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "nodes/portal.py",
+      "full_code": "nodes/portal.py",
+      "source": "addresses",
+      "owner": "ui://canvas/portal-window",
+      "represents": "NODE-portal",
+      "candidates": [
+        "window"
+      ],
+      "points_at": "file nodes/portal.py exists (no line given)",
+      "resolved": "nodes/portal.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:revert_self_change",
+      "full_code": "runtime/suite.py:revert_self_change",
+      "source": "addresses",
+      "owner": "ui://workshop/self-changes",
+      "represents": "SM-revert",
+      "candidates": [
+        "changes"
+      ],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:replay",
+      "full_code": "runtime/suite.py:replay",
+      "source": "addresses",
+      "owner": "ui://activity/replay",
+      "represents": "INB-replay",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    }
+  ],
+  "drift": [],
+  "unverifiable": [
+    {
+      "ref": "nodes/*.py",
+      "full_code": "nodes/*.py",
+      "source": "register",
+      "owner": "NODE-types",
+      "represents": "the 16 node types",
+      "candidates": [
+        "types"
+      ],
+      "points_at": "unrecognised form (glob/dir/no file:line): 'nodes/*.py'",
+      "resolved": null,
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "voice/",
+      "full_code": "voice/ + App.tsx:1214",
+      "source": "register",
+      "owner": "VOICE",
+      "represents": "two-way voice (TTS Kokoro / STT) + listening loop",
+      "candidates": [
+        "VOICE"
+      ],
+      "points_at": "unrecognised form (glob/dir/no file:line): 'voice/'",
+      "resolved": null,
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "design-system.css .tabbar (mobile nav)",
+      "full_code": "design-system.css .tabbar (mobile nav)",
+      "source": "addresses",
+      "owner": "ui://tabbar",
+      "represents": "G2",
+      "candidates": [],
+      "points_at": "file 'design-system.css' not found under ~/company code dirs",
+      "resolved": null,
+      "line_content": null,
+      "repair_target": null
+    }
+  ],
+  "summary": {
+    "checked": 91,
+    "ok": 88,
+    "drift": 0,
+    "unverifiable": 3
+  }
+}

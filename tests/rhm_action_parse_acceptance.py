@@ -141,19 +141,23 @@ try:
     # carrying the single-source description. Two channels agree by construction.
     tools = suite._rhm_tools("watch-and-react", full_ctx)
     tool_names = {t["function"]["name"] for t in tools}
-    check("(c) _rhm_tools array names exactly the available verbs (single-source w/ available_verbs)",
-          tool_names == set(av_watch))
-    check("(c) each tool carries its single-source description (RHM_VERB_DESC)",
-          all(t["function"]["description"] == suite.RHM_VERB_DESC[t["function"]["name"]] for t in tools))
+    check("(c) _rhm_tools names exactly the available verbs + the `suggest` offer-affordance (single-source w/ available_verbs)",
+          tool_names == set(av_watch) | {"suggest"})
+    check("(c) each VERB tool carries its single-source description (RHM_VERB_DESC); `suggest` is the meta-offer tool",
+          all(t["function"]["description"] == suite.RHM_VERB_DESC[t["function"]["name"]]
+              for t in tools if t["function"]["name"] != "suggest"))
     check("(c) off → _rhm_tools is empty (no tools offered)", suite._rhm_tools("off", full_ctx) == [])
 
     # the single-source derivation: RHM_VERBS / RHM_VERB_DESC / RHM_VERB_CLASS all come from one spec
     # (Derivation-based: RHM_VERBS IS tuple(RHM_VERB_SPECS). The core-7 lead in their original order;
     # the config-as-tools verbs configure/load_voice/unload_voice (G8.2) appended after — so assert the
-    # derivation + the preserved core-7 prefix, not a frozen 7-tuple that re-breaks on every new verb.)
+    # derivation + the preserved core-7 prefix AND that the 3 config-as-tools verbs are present, not a
+    # frozen 7-tuple that re-breaks on every new verb. (Merge: keeps HEAD's robust derivation form over
+    # the branch's hardcoded 10-tuple — both pass against the merged suite, this one survives verb #11.))
     check("(c) RHM_VERBS derives from the spec (== tuple(RHM_VERB_SPECS), core-7 order preserved)",
           suite.RHM_VERBS == tuple(suite.RHM_VERB_SPECS)
-          and suite.RHM_VERBS[:7] == ("run", "propose", "build", "consult", "show", "panel", "extend"))
+          and suite.RHM_VERBS[:7] == ("run", "propose", "build", "consult", "show", "panel", "extend")
+          and {"configure", "load_voice", "unload_voice"}.issubset(set(suite.RHM_VERBS)))
     check("(c) RHM_VERB_DESC / RHM_VERB_CLASS keys == the spec keys (no drift)",
           set(suite.RHM_VERB_DESC) == set(suite.RHM_VERB_SPECS) == set(suite.RHM_VERB_CLASS))
 

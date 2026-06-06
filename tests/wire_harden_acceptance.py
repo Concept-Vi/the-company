@@ -21,7 +21,9 @@ H-items proven:
        drift GREEN (the reverse incident reproduced THEN fixed: rediscover-only = drift RED;
        rediscover+refresh = drift GREEN → the refresh is load-bearing, not a tautology).
   H3 — after a successful node build the new type is LIVE in suite.registry (not just on disk).
-  H4 — a surface-touching build (canvas/) CANNOT auto-close → surfaces a dispatcher-INERT review item.
+  H4/F9 — the FORM gate is LIVE (corpus design-lint over changed surface): a CLEAN token-only surface
+       AUTO-CLOSES; an OFF-TOKEN surface (or an unrunnable lint, fail-safe) surfaces a dispatcher-INERT
+       review item. The gate is STRUCTURAL (an injected passing verifier cannot bypass it).
   H5 — the adversarial critic is a first-class part of verify, SEPARATE from the builder's self-report.
   H6 — ANY verify miss → surfaces back, never a silent close; the item does NOT reach implemented.
   H7 — build_instruction carries the FULL standard (design system + self-description + tests/drift).
@@ -199,46 +201,87 @@ check("drift-red surfaces back with the reason (H2/H6)",
       bool(out.get("requeued")) and "drift" in s.inbox.get(out["requeued"])["payload"].get("why", "").lower())
 
 
-print("\n=== H4 — a SURFACE-touching build (canvas/) CANNOT auto-close → surfaces INERT for design review ===")
+print("\n=== H4/F9 — the FORM gate is LIVE: a CLEAN surface auto-closes; an OFF-TOKEN surface surfaces INERT ===")
+# F9 GRADUATION (was: ANY surface → never closes). The in-repo machine FORM gate is now the corpus
+# design-lint over the CHANGED surface files. A surface_launch writes a REAL .tsx into the sandbox so
+# the lint has something on disk to check (the sandbox _repo_root has no canvas tree otherwise → that
+# is the fail-safe path, exercised below).
+def surface_launch(nodes_dir, rel, body):
+    """Write a real .tsx surface file into the sandbox at <repo_root>/<rel> and report it changed."""
+    repo_root = os.path.dirname(nodes_dir)
+    def _launch(decision, *, repo):
+        full = os.path.join(repo_root, rel)
+        os.makedirs(os.path.dirname(full), exist_ok=True)
+        with open(full, "w") as f:
+            f.write(body)
+        return {"finished": True, "success": True, "exit_code": 0, "summary": "ui change",
+                "changed_files": [rel], "permission_mode": "acceptEdits"}
+    return _launch
+
+# CLEAN surface (token-only — uses var(--x), no raw hex/rgba) → lint exits 0 → AUTO-CLOSES.
+CLEAN_TSX = ("export const Panel = () =>\n"
+             "  <div style={{ color: 'var(--fg)', padding: 'var(--space-2)' }}>ok</div>;\n")
 s, sandbox, nodes = fresh_sandbox()
-intent = s.surface_build_intent("touch the canvas surface", scope=["canvas/"],
+intent = s.surface_build_intent("clean canvas surface change", scope=["canvas/"],
                                 consequence_class="decision_build")
 sid = intent["id"]; seq = approve_seq(s, sid)
 out = s.dispatch_decision(
     sid, seq,
-    launcher=lambda d, *, repo: {"finished": True, "success": True, "exit_code": 0,
-                                 "summary": "ui change", "changed_files": ["canvas/app/src/App.tsx"],
-                                 "permission_mode": "acceptEdits"},
+    launcher=surface_launch(nodes, "canvas/app/src/Panel.tsx", CLEAN_TSX),
     suite_runner=in_process_drift_runner(s))                 # NO verifier → real FORM gate runs
-check("a surface-touching build does NOT auto-close (FORM is unverifiable, no design system yet) (H4)",
+check("F9: a CLEAN token-only surface build PASSES the live FORM gate and AUTO-CLOSES",
+      out.get("closed") and s.inbox.get(sid)["status"] == "implemented" and not out.get("form_unverifiable"))
+
+# OFF-TOKEN surface (raw hex literal — must be var(--x)) → lint exits non-zero → surfaces INERT.
+DIRTY_TSX = ("export const Panel = () =>\n"
+             "  <div style={{ color: '#abc123', padding: 'var(--space-2)' }}>off-token</div>;\n")
+s, sandbox, nodes = fresh_sandbox()
+intent = s.surface_build_intent("off-token canvas surface change", scope=["canvas/"],
+                                consequence_class="decision_build")
+sid = intent["id"]; seq = approve_seq(s, sid)
+out = s.dispatch_decision(
+    sid, seq,
+    launcher=surface_launch(nodes, "canvas/app/src/Panel.tsx", DIRTY_TSX),
+    suite_runner=in_process_drift_runner(s))                 # NO verifier → real FORM gate runs
+check("F9: an OFF-TOKEN surface build FAILS the live FORM gate and does NOT auto-close (H4)",
       not out.get("closed") and s.inbox.get(sid)["status"] != "implemented")
 check("it is flagged form_unverifiable + surfaced back (H4/H6)",
       out.get("form_unverifiable") and bool(out.get("requeued")))
 form_item = s.inbox.get(out["requeued"])
 check("the surfaced form item is DISPATCHER-INERT (NOT a build-intent — re-approving it never rebuilds)",
       s.is_build_intent(form_item) is False and form_item["payload"].get("kind") == "build_form_review")
-check("the form item names the missing design-critic / FORM bar (the named plug-in hook)",
+check("the form item names the FORM bar / design gate (the live machine half)",
       "FORM" in form_item["payload"].get("why", "") and "design" in form_item["payload"].get("why", "").lower())
-# the named seam exists as a real method (not a comment) and currently forces surface-back for surfaces.
+# the named seam is a REAL gate (not a comment): backend build passes; a clean planted surface passes;
+# an off-token planted surface fails. (Plant real files in a temp tree — _repo_root is the sandbox.)
 ok_be, _ = s._design_critic(["runtime/x.py"])
-ok_fe, _ = s._design_critic(["canvas/app/src/App.tsx"])
-check("_design_critic is a real seam: backend build passes, surface build fails (the fail-safe default)",
-      ok_be is True and ok_fe is False)
-# CRITICAL (the FORM gate is STRUCTURAL, not part of the replaceable verifier): a surface build with an
-# INJECTED PASSING verifier (the live WIRE-LOOP path — wire_loop_acceptance injects verifier=ok_verify)
-# must STILL surface inert, never close. If FORM lived inside the bypassable _wire_verify this would
-# wrongly close → violating H4. This proves the gate runs unconditionally in dispatch_decision.
+clean_dir = tempfile.mkdtemp(prefix="f9-clean-"); os.makedirs(os.path.join(clean_dir, "nodes"))
+sc = Suite(FsStore(os.path.join(clean_dir, "store")), NodeRegistry(), nodes_dir=os.path.join(clean_dir, "nodes"))
+os.makedirs(os.path.join(clean_dir, "canvas", "app", "src"))
+open(os.path.join(clean_dir, "canvas", "app", "src", "C.tsx"), "w").write(CLEAN_TSX)
+open(os.path.join(clean_dir, "canvas", "app", "src", "D.tsx"), "w").write(DIRTY_TSX)
+ok_clean, _ = sc._design_critic(["canvas/app/src/C.tsx"])
+ok_dirty, _ = sc._design_critic(["canvas/app/src/D.tsx"])
+check("_design_critic is a real gate: backend passes, CLEAN surface passes, OFF-TOKEN surface fails",
+      ok_be is True and ok_clean is True and ok_dirty is False)
+# FAIL-SAFE: a surface change that resolves to NO real file (corpus/lint can't run) → False, never silent True.
+ok_missing, why_missing = sc._design_critic(["canvas/app/src/DoesNotExist.tsx"])
+check("_design_critic is FAIL-SAFE: an unrunnable lint (no real file) returns False (unverifiable = not-passed)",
+      ok_missing is False and "fail-safe" in why_missing.lower())
+
+# CRITICAL (the FORM gate is STRUCTURAL, not part of the replaceable verifier): an OFF-TOKEN surface
+# build with an INJECTED PASSING verifier (the live WIRE-LOOP path — wire_loop_acceptance injects
+# verifier=ok_verify) must STILL surface inert, never close. If FORM lived inside the bypassable
+# _wire_verify this would wrongly close → violating H4. Proves the gate runs unconditionally.
 s2, sb2, nd2 = fresh_sandbox()
-it2 = s2.surface_build_intent("touch the canvas surface (loop path)", scope=["canvas/"],
+it2 = s2.surface_build_intent("off-token canvas surface (loop path)", scope=["canvas/"],
                               consequence_class="decision_build")
 sid2 = it2["id"]; seq2 = approve_seq(s2, sid2)
 out2 = s2.dispatch_decision(
     sid2, seq2,
-    launcher=lambda d, *, repo: {"finished": True, "success": True, "exit_code": 0,
-                                 "summary": "ui change", "changed_files": ["canvas/app/src/App.tsx"],
-                                 "permission_mode": "acceptEdits"},
+    launcher=surface_launch(nd2, "canvas/app/src/Panel.tsx", DIRTY_TSX),
     verifier=lambda r: (True, "scenario passed"))            # INJECTED passing verifier (the loop path)
-check("a surface build with an injected PASSING verifier STILL does NOT auto-close (FORM is structural)",
+check("an OFF-TOKEN surface build with an injected PASSING verifier STILL does NOT auto-close (FORM is structural)",
       not out2.get("closed") and out2.get("form_unverifiable") and s2.inbox.get(sid2)["status"] != "implemented")
 check("the injected-verifier surface build also surfaced a DISPATCHER-INERT form item",
       s2.is_build_intent(s2.inbox.get(out2["requeued"])) is False)

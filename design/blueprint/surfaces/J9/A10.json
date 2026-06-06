@@ -1,0 +1,26 @@
+{
+  "_what": "GENERATED surface-spec for view A10. Directory = journey spine (tree); journeys[]/cross_journeys[] = the address-refs that carry the web (B3). Built by a Claude Code session to the addresses below (never invent an address).",
+  "id": "A10",
+  "area": "A",
+  "title": "Graph picker \u2014 multiple graphs",
+  "platforms": [
+    "desktop",
+    "mobile"
+  ],
+  "represents": [
+    "CAN-multigraph"
+  ],
+  "status": "planned",
+  "home_journey": "J9",
+  "journeys": [
+    "J9"
+  ],
+  "cross_journeys": [],
+  "addresses": [],
+  "build_to": {
+    "components": [],
+    "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
+    "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
+  },
+  "address_gap": "view A10 represents ['CAN-multigraph'] but no registered ui:// address joins by feature-id"
+}

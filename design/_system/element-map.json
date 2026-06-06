@@ -1,0 +1,682 @@
+{
+  "elements": [
+    {
+      "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://toolbar",
+      "region": "toolbar",
+      "feature": "F1",
+      "code": "canvas/app/src/App.tsx (toolbar)",
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://toolbar/presence",
+      "region": "toolbar",
+      "feature": "RHM-modes",
+      "code": "runtime/suite.py:set_mode",
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://toolbar/run",
+      "region": "toolbar",
+      "feature": "RUN-run",
+      "code": "runtime/bridge.py:184 / App.tsx:1146",
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://rail/palette",
+      "region": "rail",
+      "feature": "F3",
+      "code": "canvas/app/src/App.tsx:App",
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://canvas",
+      "region": "canvas",
+      "feature": "CAN-compose",
+      "code": "App.tsx NodeShapeUtil:124",
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://activity",
+      "region": "activity",
+      "feature": "EVT-now",
+      "code": "runtime/suite.py:now",
+      "registered": true
+    },
+    {
+      "screen": "A11-portals-desktop.html",
+      "address": "ui://toolbar",
+      "region": "toolbar",
+      "feature": "F1",
+      "code": "canvas/app/src/App.tsx (toolbar)",
+      "registered": true
+    },
+    {
+      "screen": "A11-portals-desktop.html",
+      "address": "ui://toolbar/run",
+      "region": "toolbar",
+      "feature": "RUN-run",
+      "code": "runtime/bridge.py:184 / App.tsx:1146",
+      "registered": true
+    },
+    {
+      "screen": "A11-portals-desktop.html",
+      "address": "ui://rail/palette",
+      "region": "rail",
+      "feature": "F3",
+      "code": "canvas/app/src/App.tsx:App",
+      "registered": true
+    },
+    {
+      "screen": "A11-portals-desktop.html",
+      "address": "ui://canvas",
+      "region": "canvas",
+      "feature": "CAN-compose",
+      "code": "App.tsx NodeShapeUtil:124",
+      "registered": true
+    },
+    {
+      "screen": "A11-portals-desktop.html",
+      "address": "ui://canvas/node",
+      "region": "canvas",
+      "feature": "NODE-kinds",
+      "code": "App.tsx:124 / suite.py:436",
+      "registered": true
+    },
+    {
+      "screen": "A11-portals-desktop.html",
+      "address": "ui://canvas/portal-window",
+      "region": "canvas",
+      "feature": "NODE-portal",
+      "code": "nodes/portal.py",
+      "registered": true
+    },
+    {
+      "screen": "A11-portals-desktop.html",
+      "address": "ui://canvas/portal-window",
+      "region": "canvas",
+      "feature": "NODE-portal",
+      "code": "nodes/portal.py",
+      "registered": true
+    },
+    {
+      "screen": "A11-portals-desktop.html",
+      "address": "ui://canvas/portal-window",
+      "region": "canvas",
+      "feature": "NODE-portal",
+      "code": "nodes/portal.py",
+      "registered": true
+    },
+    {
+      "screen": "A11-portals-desktop.html",
+      "address": "ui://inspector",
+      "region": "inspector",
+      "feature": "NODE-config",
+      "code": "contracts/node_type.py / App.tsx:447",
+      "registered": true
+    },
+    {
+      "screen": "A12-workshop-desktop.html",
+      "address": "ui://workshop",
+      "region": "workshop",
+      "feature": "WS-workshop",
+      "code": "runtime/suite.py:ui_info",
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-desktop.html",
+      "address": "ui://toolbar",
+      "region": "toolbar",
+      "feature": "F1",
+      "code": "canvas/app/src/App.tsx (toolbar)",
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-desktop.html",
+      "address": "ui://toolbar/presence",
+      "region": "toolbar",
+      "feature": "RHM-modes",
+      "code": "runtime/suite.py:set_mode",
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-desktop.html",
+      "address": "ui://toolbar/run",
+      "region": "toolbar",
+      "feature": "RUN-run",
+      "code": "runtime/bridge.py:184 / App.tsx:1146",
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-desktop.html",
+      "address": "ui://rail/palette",
+      "region": "rail",
+      "feature": "F3",
+      "code": "canvas/app/src/App.tsx:App",
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-mobile.html",
+      "address": "ui://toolbar",
+      "region": "toolbar",
+      "feature": "F1",
+      "code": "canvas/app/src/App.tsx (toolbar)",
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-mobile.html",
+      "address": "ui://canvas",
+      "region": "canvas",
+      "feature": "CAN-compose",
+      "code": "App.tsx NodeShapeUtil:124",
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-mobile.html",
+      "address": "ui://canvas/node",
+      "region": "canvas",
+      "feature": "NODE-kinds",
+      "code": "App.tsx:124 / suite.py:436",
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-mobile.html",
+      "address": "ui://toolbar/run",
+      "region": "toolbar",
+      "feature": "RUN-run",
+      "code": "runtime/bridge.py:184 / App.tsx:1146",
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-mobile.html",
+      "address": "ui://tabbar",
+      "region": "tabbar",
+      "feature": "G2",
+      "code": "design-system.css .tabbar (mobile nav)",
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://canvas",
+      "region": "canvas",
+      "feature": "CAN-compose",
+      "code": "App.tsx NodeShapeUtil:124",
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://canvas/node",
+      "region": "canvas",
+      "feature": "NODE-kinds",
+      "code": "App.tsx:124 / suite.py:436",
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector",
+      "region": "inspector",
+      "feature": "NODE-config",
+      "code": "contracts/node_type.py / App.tsx:447",
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/model-field",
+      "region": "inspector",
+      "feature": "MOD-registry",
+      "code": "runtime/suite.py:109 / App.tsx:134",
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/act",
+      "region": "inspector",
+      "feature": "ENG-force",
+      "code": "canvas/app/src/App.tsx:doRun / runtime/scheduler.py:run",
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "run://demo/ask",
+      "region": null,
+      "feature": null,
+      "code": null,
+      "registered": false
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "run://demo/ask",
+      "region": null,
+      "feature": null,
+      "code": null,
+      "registered": false
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://walkthrough",
+      "region": "chat",
+      "feature": "WALK-present",
+      "code": "runtime/suite.py:present_current",
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://walkthrough/verdict",
+      "region": "chat",
+      "feature": "INB-resolve",
+      "code": "runtime/suite.py:resolve_surfaced",
+      "registered": true
+    },
+    {
+      "screen": "B4-presence-dial-desktop.html",
+      "address": "ui://toolbar/presence",
+      "region": "toolbar",
+      "feature": "RHM-modes",
+      "code": "runtime/suite.py:set_mode",
+      "registered": true
+    },
+    {
+      "screen": "B4-presence-dial-desktop.html",
+      "address": "ui://toolbar/presence",
+      "region": "toolbar",
+      "feature": "RHM-modes",
+      "code": "runtime/suite.py:set_mode",
+      "registered": true
+    },
+    {
+      "screen": "B4-presence-dial-mobile.html",
+      "address": "ui://toolbar/presence",
+      "region": "toolbar",
+      "feature": "RHM-modes",
+      "code": "runtime/suite.py:set_mode",
+      "registered": true
+    },
+    {
+      "screen": "B4-presence-dial-mobile.html",
+      "address": "ui://toolbar/presence",
+      "region": "toolbar",
+      "feature": "RHM-modes",
+      "code": "runtime/suite.py:set_mode",
+      "registered": true
+    },
+    {
+      "screen": "B4-presence-dial-mobile.html",
+      "address": "ui://tabbar",
+      "region": "tabbar",
+      "feature": "G2",
+      "code": "design-system.css .tabbar (mobile nav)",
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://toolbar/presence",
+      "region": "toolbar",
+      "feature": "RHM-modes",
+      "code": "runtime/suite.py:set_mode",
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://canvas",
+      "region": "canvas",
+      "feature": "CAN-compose",
+      "code": "App.tsx NodeShapeUtil:124",
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "run://system/model_of_tim",
+      "region": null,
+      "feature": null,
+      "code": null,
+      "registered": false
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://activity",
+      "region": "activity",
+      "feature": "EVT-now",
+      "code": "runtime/suite.py:now",
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://chat",
+      "region": "chat",
+      "feature": "RHM-chat",
+      "code": "runtime/suite.py:chat",
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://twin",
+      "region": "chat",
+      "feature": "RHM-twin",
+      "code": "runtime/suite.py:training_signal",
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://tabbar",
+      "region": "tabbar",
+      "feature": "G2",
+      "code": "design-system.css .tabbar (mobile nav)",
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox",
+      "region": "inbox",
+      "feature": "INB-lanes",
+      "code": "runtime/suite.py:inbox_lanes",
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/build-review",
+      "region": "inbox",
+      "feature": "WIRE-review",
+      "code": "runtime/suite.py:review_verdicts",
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/coa",
+      "region": "inbox",
+      "feature": "INB-coa",
+      "code": "runtime/suite.py:coa",
+      "registered": true
+    },
+    {
+      "screen": "C3-build-review-desktop.html",
+      "address": "ui://toolbar",
+      "region": "toolbar",
+      "feature": "F1",
+      "code": "canvas/app/src/App.tsx (toolbar)",
+      "registered": true
+    },
+    {
+      "screen": "C3-build-review-desktop.html",
+      "address": "ui://toolbar/presence",
+      "region": "toolbar",
+      "feature": "RHM-modes",
+      "code": "runtime/suite.py:set_mode",
+      "registered": true
+    },
+    {
+      "screen": "C3-build-review-desktop.html",
+      "address": "ui://toolbar/run",
+      "region": "toolbar",
+      "feature": "RUN-run",
+      "code": "runtime/bridge.py:184 / App.tsx:1146",
+      "registered": true
+    },
+    {
+      "screen": "C3-build-review-desktop.html",
+      "address": "ui://canvas",
+      "region": "canvas",
+      "feature": "CAN-compose",
+      "code": "App.tsx NodeShapeUtil:124",
+      "registered": true
+    },
+    {
+      "screen": "C3-build-review-desktop.html",
+      "address": "ui://inbox",
+      "region": "inbox",
+      "feature": "INB-lanes",
+      "code": "runtime/suite.py:inbox_lanes",
+      "registered": true
+    },
+    {
+      "screen": "C3-build-review-desktop.html",
+      "address": "ui://inbox/build-review",
+      "region": "inbox",
+      "feature": "WIRE-review",
+      "code": "runtime/suite.py:review_verdicts",
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://activity",
+      "region": "activity",
+      "feature": "EVT-now",
+      "code": "runtime/suite.py:now",
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://inbox/coa",
+      "region": "inbox",
+      "feature": "INB-coa",
+      "code": "runtime/suite.py:coa",
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://activity/replay",
+      "region": "activity",
+      "feature": "INB-replay",
+      "code": "runtime/suite.py:replay",
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://inbox/coa",
+      "region": "inbox",
+      "feature": "INB-coa",
+      "code": "runtime/suite.py:coa",
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox",
+      "region": "inbox",
+      "feature": "INB-lanes",
+      "code": "runtime/suite.py:inbox_lanes",
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review",
+      "region": "inbox",
+      "feature": "WIRE-review",
+      "code": "runtime/suite.py:review_verdicts",
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review",
+      "region": "inbox",
+      "feature": "WIRE-review",
+      "code": "runtime/suite.py:review_verdicts",
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review",
+      "region": "inbox",
+      "feature": "WIRE-review",
+      "code": "runtime/suite.py:review_verdicts",
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review",
+      "region": "inbox",
+      "feature": "WIRE-review",
+      "code": "runtime/suite.py:review_verdicts",
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review",
+      "region": "inbox",
+      "feature": "WIRE-review",
+      "code": "runtime/suite.py:review_verdicts",
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review",
+      "region": "inbox",
+      "feature": "WIRE-review",
+      "code": "runtime/suite.py:review_verdicts",
+      "registered": true
+    },
+    {
+      "screen": "D7-selfmod-desktop.html",
+      "address": "ui://toolbar",
+      "region": "toolbar",
+      "feature": "F1",
+      "code": "canvas/app/src/App.tsx (toolbar)",
+      "registered": true
+    },
+    {
+      "screen": "D7-selfmod-desktop.html",
+      "address": "ui://toolbar/presence",
+      "region": "toolbar",
+      "feature": "RHM-modes",
+      "code": "runtime/suite.py:set_mode",
+      "registered": true
+    },
+    {
+      "screen": "D7-selfmod-desktop.html",
+      "address": "ui://toolbar/run",
+      "region": "toolbar",
+      "feature": "RUN-run",
+      "code": "runtime/bridge.py:184 / App.tsx:1146",
+      "registered": true
+    },
+    {
+      "screen": "D7-selfmod-desktop.html",
+      "address": "ui://canvas",
+      "region": "canvas",
+      "feature": "CAN-compose",
+      "code": "App.tsx NodeShapeUtil:124",
+      "registered": true
+    },
+    {
+      "screen": "D7-selfmod-desktop.html",
+      "address": "ui://workshop",
+      "region": "workshop",
+      "feature": "WS-workshop",
+      "code": "runtime/suite.py:ui_info",
+      "registered": true
+    },
+    {
+      "screen": "D7-selfmod-desktop.html",
+      "address": "ui://workshop/self-changes",
+      "region": "workshop",
+      "feature": "SM-revert",
+      "code": "runtime/suite.py:revert_self_change",
+      "registered": true
+    },
+    {
+      "screen": "D7-selfmod-desktop.html",
+      "address": "ui://activity",
+      "region": "activity",
+      "feature": "EVT-now",
+      "code": "runtime/suite.py:now",
+      "registered": true
+    },
+    {
+      "screen": "E1-fleet-desktop.html",
+      "address": "ui://canvas",
+      "region": "canvas",
+      "feature": "CAN-compose",
+      "code": "App.tsx NodeShapeUtil:124",
+      "registered": true
+    },
+    {
+      "screen": "E1-fleet-desktop.html",
+      "address": "ui://canvas/node",
+      "region": "canvas",
+      "feature": "NODE-kinds",
+      "code": "App.tsx:124 / suite.py:436",
+      "registered": true
+    },
+    {
+      "screen": "E1-fleet-desktop.html",
+      "address": "ui://inspector",
+      "region": "inspector",
+      "feature": "NODE-config",
+      "code": "contracts/node_type.py / App.tsx:447",
+      "registered": true
+    },
+    {
+      "screen": "E1-fleet-desktop.html",
+      "address": "ui://inspector/model-field",
+      "region": "inspector",
+      "feature": "MOD-registry",
+      "code": "runtime/suite.py:109 / App.tsx:134",
+      "registered": true
+    },
+    {
+      "screen": "E1-fleet-desktop.html",
+      "address": "ui://models",
+      "region": "models",
+      "feature": "MOD-registry",
+      "code": "runtime/suite.py:available_models",
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://activity",
+      "region": "activity",
+      "feature": "EVT-now",
+      "code": "runtime/suite.py:now",
+      "registered": true
+    }
+  ],
+  "orphans": {
+    "unregistered": [
+      "run://demo/ask",
+      "run://system/model_of_tim"
+    ],
+    "unused": [
+      "ui://chat/config",
+      "ui://chat/input",
+      "ui://chat/mic",
+      "ui://chat/model-field",
+      "ui://chat/send",
+      "ui://grow",
+      "ui://grow/approve",
+      "ui://grow/dispatch",
+      "ui://grow/reject",
+      "ui://inbox/build-intent",
+      "ui://inbox/context-bundle",
+      "ui://inbox/context-pin",
+      "ui://inbox/target",
+      "ui://inbox/walk",
+      "ui://inspector/build",
+      "ui://inspector/freshness",
+      "ui://inspector/history",
+      "ui://inspector/surface",
+      "ui://inspector/versions",
+      "ui://inspector/workshop",
+      "ui://toolbar/delete",
+      "ui://toolbar/fit",
+      "ui://toolbar/layers",
+      "ui://toolbar/portal",
+      "ui://toolbar/reload",
+      "ui://toolbar/wire",
+      "ui://walkthrough/next",
+      "ui://walkthrough/reason",
+      "ui://walkthrough/show-again",
+      "ui://walkthrough/voice"
+    ]
+  },
+  "summary": {
+    "screens": 17,
+    "addressed_elements": 79,
+    "distinct_addresses_used": 25,
+    "registered_addresses": 53,
+    "unregistered_orphans": 2,
+    "unused_orphans": 30
+  }
+}

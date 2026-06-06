@@ -1,0 +1,260 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>A2 · Canvas — running chain (kind-coded) · desktop</title>
+<link rel="stylesheet" href="../design-system.css">
+<!--
+  ============================================================
+  VIEW  A2 · Canvas — running chain (kind-coded) · desktop
+  AREA  A (canvas / operate) · JOURNEY J1
+  JOURNEY-MOMENT  J1 step: running chain · surfaces when: operator has run a graph
+  ============================================================
+  REPRESENTS[] (feature-id · what it surfaces · code ref — from the Feature & Function Inventory):
+    · NODE-kinds  — ONLY two live kinds: process(mint) + content(blue); 'model' is a CONFIG SLOT a
+                    process node binds (pill), NOT a kind; 'presentation' contract-allowed but no live
+                    node → NOT drawn.                                   registry.py:15,18 (_infer_kind)
+    · RUN-status  — node status dots are ONLY idle · ran · cached · stuck (state() emits these four).
+                    "await" is INBOX/presence, never a node dot.        suite.py:436-453  (await = :491)
+    · ENG-resolve — reactive resolution + memo gate: ran vs cached keyed on
+                    (type,version,config,port→content-hash); VOLATILE bypasses gate (codebase always
+                    re-runs = ran, never cached).                       scheduler.py:37-133, 26-99, 87-89
+    · NODE-ports  — typed ports type-check on connect: Text · Any · Vector · Number; Any = wildcard.
+                    embed out = 1024-d Vector.                          suite.py:349 ; embed in embed.py
+    · CAN-zoom    — semantic zoom: expanded = zoom>0.5; below that nodes collapse to chips.  App.tsx:396
+  ------------------------------------------------------------
+  CHAIN DEPICTED (real, from the inventory's node library):
+    codebase[content,VOLATILE→ran] ─┐
+                                    ├─→ ask[process,ran] ──→ embed[process,ran] →(Vector)
+    constant[content,cached] ───────┘   model = config PILL (deepseek-v4-pro), NOT a kind
+  No fiction: no 'presentation'/note node, no 'await'/'failed'/'running' node dot, no 4-kind legend.
+  ============================================================
+-->
+<style>
+.top{grid-area:top;display:flex;align-items:center;gap:16px;padding:0 16px;background:linear-gradient(180deg,var(--s1),var(--s0));border-bottom:1px solid var(--line);min-width:0}
+.brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:17px;letter-spacing:-.3px;white-space:nowrap}
+.brand em{font-style:normal;color:var(--acc)}
+.brand .tag{font-size:10.5px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:7px}
+/* presence dial — the 8-mode posture control; current = focus */
+.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--line-2);border-radius:99px;background:var(--s2);font-size:11.5px;color:var(--tx-2);white-space:nowrap;cursor:pointer}
+.presence .dot{width:7px;height:7px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.presence .ch{color:var(--tx-3);font-size:10px}
+.verbs{margin-left:auto;display:flex;gap:6px;flex:none}
+.verbs .btn{padding:7px 11px}
+.verbs .btn .lbl{white-space:nowrap}
+@media (max-width:1280px){ .verbs .btn .lbl{display:none} .verbs .btn{padding:7px 9px} }
+
+.rail{grid-area:rail;background:var(--s0);border-right:1px solid var(--line);padding:13px 11px;overflow:auto}
+.rail .railhd{font-size:9.5px;text-transform:uppercase;letter-spacing:1.3px;color:var(--tx-3);font-weight:600;margin:0 2px 9px}
+.rail h4{font-size:10px;text-transform:uppercase;letter-spacing:1.1px;color:var(--tx-2);margin:15px 3px 7px;font-weight:600;display:flex;align-items:center;gap:7px}
+.rail h4 .ct{margin-left:auto;color:var(--tx-3);font-family:'IBM Plex Mono';font-size:9px;font-weight:400}
+.kdot{width:8px;height:8px;border-radius:2px;flex:none}
+.chip{display:flex;align-items:center;gap:9px;padding:6px 9px;border-radius:var(--r);background:var(--s1);border:1px solid var(--line);font-size:12px;margin-bottom:5px;cursor:grab}
+.chip .mono-chip{width:19px;height:19px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:11px;color:var(--ink-accent);flex:none}
+.chip .label{color:var(--tx)}
+
+.canvas{grid-area:canvas;position:relative;overflow:hidden;background-image:radial-gradient(var(--line) .9px,transparent .9px);background-size:26px 26px}
+.canvas .node{position:absolute}
+/* selected node ring */
+.node.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc-glow),0 22px 50px -22px #000}
+/* typed-port labels next to nubs */
+.ptag{position:absolute;font-family:'IBM Plex Mono';font-size:8.5px;letter-spacing:.4px;color:var(--tx-3);background:var(--s0);border:1px solid var(--line);border-radius:4px;padding:1px 4px}
+
+.foot{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--s0);border-top:1px solid var(--line);font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';overflow:hidden;white-space:nowrap}
+.foot .live{color:var(--acc);display:inline-flex;align-items:center;gap:5px}
+.foot .live i{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+
+.panel{grid-area:panel;background:var(--s0);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);padding:10px 12px 0}
+.tab{padding:8px 12px;font-size:12px;color:var(--tx-3);border-bottom:2px solid transparent;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.tab.on{color:var(--tx);border-bottom-color:var(--acc)}
+.tab .badge{font-family:'IBM Plex Mono';font-size:9px;background:var(--await);color:var(--ink-await);border-radius:99px;padding:0 5px;font-weight:600}
+.pbody{padding:14px;overflow:auto;flex:1;min-height:0}
+.fld{font-size:11px;color:var(--tx-2);margin:0 0 5px}
+.box{background:var(--s1);border:1px solid var(--line-2);border-radius:var(--r);padding:9px 11px;font-size:12.5px;margin-bottom:12px}
+.box.sel-row{display:flex;justify-content:space-between;align-items:center}
+.box.code{font-family:'IBM Plex Mono';font-size:11px;color:var(--tx-2);line-height:1.5}
+.box b{color:var(--acc);font-weight:500}
+.seclbl{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--tx-3);font-weight:600;margin:4px 0 9px}
+.act{display:flex;gap:7px}
+.act .btn{flex:1;justify-content:center;padding:8px 6px}
+
+/* semantic-zoom hint chip on the canvas */
+.zoomhint{position:absolute;right:14px;top:12px;display:flex;align-items:center;gap:8px;background:var(--s1);border:1px solid var(--line-2);border-radius:99px;padding:5px 11px;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3)}
+.zoomhint b{color:var(--tx-2);font-weight:500}
+.zoomhint .z{width:64px;height:4px;border-radius:99px;background:var(--s3);position:relative}
+.zoomhint .z::after{content:"";position:absolute;left:62%;top:50%;transform:translateY(-50%);width:9px;height:9px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+
+/* collapsed chip — what a node becomes below zoom 0.5 (semantic zoom made visible) */
+.zchip{position:absolute;display:flex;align-items:center;gap:7px;background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid var(--line-2);border-radius:99px;padding:5px 11px 5px 6px;font-size:11px}
+.zchip .mono-chip{width:18px;height:18px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:10px;color:var(--ink-accent);flex:none}
+.zchip[data-kind=content] .mono-chip{background:var(--kind-content)}
+.zchip .sdot{width:7px;height:7px;border-radius:99px}
+
+/* legend — ONLY the two real kinds + the real status vocabulary */
+.legend{display:flex;gap:18px;align-items:center;position:absolute;left:16px;bottom:12px;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3);background:rgba(8,10,13,.7);border:1px solid var(--line);border-radius:var(--r);padding:7px 12px;backdrop-filter:blur(4px)}
+.legend .grp{display:flex;gap:11px;align-items:center}
+.legend b{display:inline-flex;align-items:center;gap:5px;color:var(--tx-2);font-weight:500}
+.legend i{width:9px;height:9px;border-radius:2px;font-style:normal;flex:none}
+.legend .s{display:inline-flex;align-items:center;gap:5px;color:var(--tx-2)}
+.legend .s i{border-radius:99px}
+.legend .sep{width:1px;height:16px;background:var(--line-2)}
+</style></head>
+<body><div class="app">
+
+  <!-- ── TOP BAR — identity · presence dial · verbs (run/wire/force/layers) ── -->
+  <header class="top" data-ui-ref="ui://toolbar">
+    <span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
+    <span class="presence" data-ui-ref="ui://toolbar/presence"><span class="dot"></span>focus<span class="ch">· present ▾</span></span>
+    <div class="verbs">
+      <button class="btn">◐ <span class="lbl">layers</span></button>
+      <button class="btn">＋ <span class="lbl">wire</span></button>
+      <button class="btn">↻ <span class="lbl">force</span></button>
+      <button class="btn run" data-ui-ref="ui://toolbar/run">▶ <span class="lbl">run</span> <span class="k">⏎</span></button>
+    </div>
+  </header>
+
+  <!-- ── LEFT RAIL — palette grouped by the TWO real kinds ── -->
+  <nav class="rail collapsible" data-ui-ref="ui://rail/palette">
+    <div class="railhd">Node palette</div>
+
+    <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span><span class="ct">11</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">L</span><span class="label">llm</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">E</span><span class="label">embed</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">≈</span><span class="label">similarity</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">⌕</span><span class="label">retrieve</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">⑂</span><span class="label">gate</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">⋈</span><span class="label">join</span></div>
+
+    <h4><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span><span class="ct">5</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">C</span><span class="label">constant</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">▦</span><span class="label">codebase</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">T</span><span class="label">model_of_tim</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">⊕</span><span class="label">portal</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">◑</span><span class="label">rhm_mode</span></div>
+  </nav>
+
+  <!-- ── CANVAS — the running chain ── -->
+  <main class="canvas">
+    <!-- wires: kind-coloured at source; ask→embed dashed = the freshly-fired edge -->
+    <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none">
+      <!-- codebase → ask (content blue) -->
+      <path d="M 268 246 C 360 246 360 214 452 214" fill="none" stroke="var(--kind-content)" stroke-width="1.6" opacity=".55"/>
+      <!-- constant → ask (content blue) -->
+      <path d="M 268 408 C 360 408 360 268 452 268" fill="none" stroke="var(--kind-content)" stroke-width="1.6" opacity=".55"/>
+      <!-- ask → embed (process mint) -->
+      <path d="M 678 252 C 760 252 760 318 836 318" fill="none" stroke="var(--kind-process)" stroke-width="1.8" opacity=".7"/>
+    </svg>
+
+    <div class="zoomhint">CAN-zoom <span class="z"></span> <b>0.78</b> · expanded</div>
+
+    <!-- CONTENT · codebase — VOLATILE, so it bypasses the memo gate → always re-runs = RAN (never cached) -->
+    <div class="node" data-kind="content" style="left:54px;top:172px">
+      <div class="bar"><span class="mono-chip">▦</span><span class="ty">codebase</span><span class="kindlabel">content</span></div>
+      <div class="body">reads the repo into context
+        <div class="cfg"><span class="pill">root <b>~/company</b></span><span class="pill">volatile</span></div>
+      </div>
+      <div class="addr"><span>run://demo/code</span><span class="sdot s-ran"></span></div>
+      <span class="port out"></span><span class="ptag" style="right:-44px;top:calc(50% - 9px)">Text</span>
+    </div>
+
+    <!-- CONTENT · constant — stable value → memo gate hit → CACHED -->
+    <div class="node" data-kind="content" style="left:54px;top:334px">
+      <div class="bar"><span class="mono-chip">C</span><span class="ty">constant</span><span class="kindlabel">content</span></div>
+      <div class="body"><div class="out">"What does the memo gate do, and which file holds it?"</div></div>
+      <div class="addr"><span>run://demo/q</span><span class="sdot s-cache"></span></div>
+      <span class="port out"></span><span class="ptag" style="right:-44px;top:calc(50% - 9px)">Text</span>
+    </div>
+
+    <!-- PROCESS · ask (selected) — model is a CONFIG PILL, not a kind -->
+    <div class="node sel" data-kind="process" style="left:452px;top:150px">
+      <div class="bar"><span class="mono-chip">A</span><span class="ty">ask</span><span class="kindlabel">process · ran</span></div>
+      <div class="body">grounded answer over the codebase
+        <div class="cfg"><span class="pill" style="border-color:var(--kind-model);color:var(--kind-model)">model <b style="color:var(--kind-model)">deepseek-v4-pro</b></span></div>
+        <div class="out">The memo gate skips re-running a node when its (type, version, config, inputs) hash is unchanged — runtime/scheduler.py…</div>
+      </div>
+      <div class="addr"><span>run://demo/ask</span><span class="sdot s-ran"></span></div>
+      <span class="port in" style="top:36%"></span><span class="ptag" style="left:-42px;top:calc(36% - 9px)">Text</span>
+      <span class="port in" style="top:66%"></span><span class="ptag" style="left:-42px;top:calc(66% - 9px)">Text</span>
+      <span class="port out"></span><span class="ptag" style="right:-44px;top:calc(50% - 9px)">Text</span>
+    </div>
+
+    <!-- PROCESS · embed — RAN; out port is a Vector (1024-d) -->
+    <div class="node" data-kind="process" style="left:836px;top:256px">
+      <div class="bar"><span class="mono-chip">E</span><span class="ty">embed</span><span class="kindlabel">process · ran</span></div>
+      <div class="body">text → vector
+        <div class="cfg"><span class="pill">model <b>BGE-M3</b></span><span class="pill">1024d</span></div>
+        <div class="out" style="color:var(--kind-model)">[0.018, −0.07, 0.114, 0.002, −0.041, …]</div>
+      </div>
+      <div class="addr"><span>run://demo/embed</span><span class="sdot s-ran"></span></div>
+      <span class="port in"></span><span class="ptag" style="left:-42px;top:calc(50% - 9px)">Text</span>
+      <span class="port out" style="border-color:var(--kind-model);background:var(--kind-model-bg)"></span>
+      <span class="ptag" style="right:-52px;top:calc(50% - 9px);color:var(--kind-model);border-color:var(--kind-model)">Vector</span>
+    </div>
+
+    <!-- a collapsed (semantic-zoom) neighbour — shows what nodes become below zoom 0.5 -->
+    <div class="zchip" data-kind="content" style="left:54px;top:486px"><span class="mono-chip">◑</span><span>rhm_mode</span><span class="sdot s-idle"></span></div>
+
+    <!-- LEGEND — ONLY the two real kinds + the real four-status vocabulary -->
+    <div class="legend">
+      <div class="grp">
+        <b><i style="background:var(--kind-process)"></i>process</b>
+        <b><i style="background:var(--kind-content)"></i>content</b>
+      </div>
+      <span class="sep"></span>
+      <div class="grp">
+        <span class="s"><i class="s-idle"></i>idle</span>
+        <span class="s"><i class="s-ran"></i>ran</span>
+        <span class="s"><i class="s-cache"></i>cached</span>
+        <span class="s"><i class="s-stuck"></i>stuck</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── THIN ACTIVITY STRIP ── -->
+  <footer class="foot">
+    <span class="live"><i></i>live</span>
+    <span>ran ask · ran embed · 1 cached (constant) · codebase volatile→ran</span>
+    <span style="margin-left:auto">demo · 4/4 resolved · event-stream connected</span>
+  </footer>
+
+  <!-- ── RIGHT PANEL — docked tabbed instrument (Inspector / Inbox / RHM) ── -->
+  <aside class="panel">
+    <div class="tabs">
+      <span class="tab on">⊙ Inspector</span>
+      <span class="tab">✦ Inbox <span class="badge">2</span></span>
+      <span class="tab">◈ RHM</span>
+    </div>
+    <div class="pbody">
+      <!-- INSPECTOR of the selected 'ask' node -->
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px">
+        <span class="mono-chip" style="width:22px;height:22px;background:var(--kind-process);border-radius:6px;display:grid;place-items:center;font-family:Bricolage Grotesque;font-weight:800;color:var(--ink-accent)">A</span>
+        <span class="display" style="font-weight:700;font-size:15px">ask</span>
+        <span class="mono" style="font-size:10px;color:var(--tx-3);margin-left:auto">process · ran</span>
+      </div>
+
+      <p class="fld">Model <span style="color:var(--tx-3)">· config slot (fabric)</span></p>
+      <div class="box sel-row"><span><b style="color:var(--kind-model)">deepseek-v4-pro</b> · cloud</span><span style="color:var(--tx-3)">▾</span></div>
+
+      <p class="fld">System prompt</p>
+      <div class="box code">Answer using ONLY the provided code. Cite file paths. Be concise.</div>
+
+      <p class="fld">Inputs <span style="color:var(--tx-3)">· typed</span></p>
+      <div class="box code" style="margin-bottom:14px">question ← constant <span style="color:var(--tx-3)">(Text)</span><br>context&nbsp;&nbsp;← codebase <span style="color:var(--tx-3)">(Text)</span></div>
+
+      <p class="seclbl">Act on this output</p>
+      <div class="act">
+        <button class="btn">↻ rerun</button>
+        <button class="btn">→ inbox</button>
+        <button class="btn">⊕ build</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- mobile tab-bar (hidden on desktop; present so the responsive system from design-system.css resolves) -->
+  <nav class="tabbar">
+    <a class="on"><span class="ic">▦</span>Canvas</a>
+    <a><span class="ic">✦</span>Inbox</a>
+    <a><span class="ic">◈</span>RHM</a>
+    <a><span class="ic">▶</span>Run</a>
+  </nav>
+</div></body></html>

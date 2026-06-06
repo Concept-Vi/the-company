@@ -1,0 +1,333 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>B6 · The twin / model-of-Tim grading · desktop</title>
+<link rel="stylesheet" href="../design-system.css">
+<!--
+  ============================================================
+  VIEW  B6 · The twin / model-of-Tim grading · desktop   [PANEL PROBE — Q1, _panel-staging]
+  AREA  B (right-hand-man) · JOURNEY  none (register.json B6 journeys:[] — standalone GAP-LIST item, no prior mockup)
+  ============================================================
+  REPRESENTS[] (feature-id · what it surfaces · code ref — from the Feature & Function Inventory):
+    · RHM-twin  — twin / model-of-Tim / gold-working provenance grading + echo-guard, cold-start.
+                  suite.py:577-635 (the twin block) · nodes/model_of_tim.py · STATE.md:44-45 (cold-start)
+                  Inventory line 36 + line 70; tests/twin_acceptance.py (verified: digest+grading+echo-guard).
+
+  ------------------------------------------------------------
+  HONESTY CONTRACT — this view is the most fiction-inviting in the register; built around an EXISTS/PROPOSED split.
+  EXISTS (verified by code + twin_acceptance.py — depicted at full fidelity):
+    · Provenance grading on EVERY persisted turn: operator→gold, twin→working.
+        _provenance_grade/_provenance_source  suite.py:593-603 ; append_chat grade+source at suite.py:868-870,937-940,969
+        SEMANTICS: grades the TRUST/SOURCE of a turn (protects the training signal) — NOT the twin scoring outputs,
+        NOT anyone scoring the twin's accuracy. Framing stays on PROVENANCE.
+    · Echo-guard / anti-laundering — the truthful hero. Only operator-sourced gold trains the twin; a twin turn
+        resubmitted as a 'user' turn is REJECTED from the training signal (red-team F4).   training_signal() suite.py:625-635
+    · Explicit model-of-Tim — a CONTENT node, VOLATILE, fail-loud; feeds a compact digest into the twin's context.
+        nodes/model_of_tim.py (KIND content, VOLATILE=True, fail-loud) ; _model_of_tim_digest suite.py:605-623
+        VOLATILE ⇒ memo bypass ⇒ this node's real status is RAN, never cached (scheduler.py:87-89).
+  PROPOSED (NOT built — labelled in the chrome, not just here):
+    · The twin PREDICTING Tim's judgement. COLD-START: it abstains; corpus ingestion (D8) is unbuilt (STATE.md:44-45).
+        Abstention is shown as a first-class, honest state — not hidden.
+    · NO confidence score anywhere — would be DOUBLE fiction: unbuilt AND contradicts the stated law
+        "no confidence anywhere" (suite.py:680). Deliberately absent; called out in observations.
+
+  ADDRESSING (per conventions — carry only REAL addresses; do NOT invent):
+    · ui://chat        RHM-chat  suite.py:847   — the turn-stream where grade/source are attached (closest registered fit).
+    · run://system/model_of_tim   — pattern-valid run:// node address (parse.py treats run:// as pattern-based, not orphan)
+                                     for the explicit-model content node. Stronger grounding than ui://chat alone.
+    FLAG: addresses.json has NO dedicated chrome address for the twin/grading surface. B6 NEEDS one registered
+    (suggested name surfaced in the report, NOT invented into this file).
+  NO FICTION: 2 node kinds only (process/content); node status from {idle·ran·cached·stuck} only.
+  ============================================================
+-->
+<style>
+.top{grid-area:top;display:flex;align-items:center;gap:16px;padding:0 16px;background:linear-gradient(180deg,var(--s1),var(--s0));border-bottom:1px solid var(--line);min-width:0}
+.brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:17px;letter-spacing:-.3px;white-space:nowrap}
+.brand em{font-style:normal;color:var(--acc)}
+.brand .tag{font-size:10.5px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:7px}
+.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--line-2);border-radius:99px;background:var(--s2);font-size:11.5px;color:var(--tx);white-space:nowrap;cursor:pointer}
+.presence .dot{width:7px;height:7px;border-radius:99px;background:var(--tx-3)}
+.presence .ch{color:var(--tx-3);font-size:10px}
+
+/* the EXISTS/PROPOSED legend lives in the chrome (top bar) — the honesty contract, visible */
+.legend{margin-left:auto;display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono';font-size:9.5px;flex:none}
+.lg{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:99px;border:1px solid var(--line-2)}
+.lg .sw{width:8px;height:8px;border-radius:2px;flex:none}
+.lg.exists{color:var(--ok);border-color:var(--ok)} .lg.exists .sw{background:var(--ok)}
+.lg.proposed{color:var(--await);border-color:var(--await)} .lg.proposed .sw{background:var(--await);border-radius:99px}
+
+.rail{grid-area:rail;background:var(--s0);border-right:1px solid var(--line);padding:13px 11px;overflow:auto}
+.rail .railhd{font-size:9.5px;text-transform:uppercase;letter-spacing:1.3px;color:var(--tx-3);font-weight:600;margin:0 2px 9px}
+.rail h4{font-size:10px;text-transform:uppercase;letter-spacing:1.1px;color:var(--tx-2);margin:15px 3px 7px;font-weight:600;display:flex;align-items:center;gap:7px}
+.rail h4 .ct{margin-left:auto;color:var(--tx-3);font-family:'IBM Plex Mono';font-size:9px;font-weight:400}
+.kdot{width:8px;height:8px;border-radius:2px;flex:none}
+.chip{display:flex;align-items:center;gap:9px;padding:6px 9px;border-radius:var(--r);background:var(--s1);border:1px solid var(--line);font-size:12px;margin-bottom:5px;cursor:grab}
+.chip.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc-glow)}
+.chip .mono-chip{width:19px;height:19px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:11px;color:var(--ink-accent);flex:none}
+.chip .label{color:var(--tx)}
+
+/* CANVAS — the model_of_tim CONTENT node sits here, lit as the subject the panel reads from */
+.canvas{grid-area:canvas;position:relative;overflow:hidden;background-image:radial-gradient(var(--line) .9px,transparent .9px);background-size:26px 26px}
+.node{position:absolute;width:250px;background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid var(--line-2);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.node .bar{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--line)}
+.node .mono-chip{width:19px;height:19px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:11px;color:var(--ink-accent);flex:none;background:var(--kind-content)}
+.node .ty{font-weight:600;font-size:12.5px}
+.node .kindlabel{margin-left:auto;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3)}
+.node .body{padding:9px 10px;font-size:11.5px;color:var(--tx-2);line-height:1.45}
+.node .out{margin-top:7px;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3);background:var(--s0);border:1px solid var(--line);border-radius:6px;padding:6px 8px;line-height:1.5}
+.node .cfg{margin-top:7px;display:flex;gap:6px;flex-wrap:wrap}
+.node .pill{font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3);border:1px solid var(--line-2);border-radius:99px;padding:1px 7px}
+.node .pill.vol{border-color:var(--cache);color:var(--cache)}
+.node .addr{display:flex;align-items:center;gap:7px;padding:6px 10px;border-top:1px solid var(--line);font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3)}
+.node .sdot{width:7px;height:7px;border-radius:99px;margin-left:auto;flex:none}
+.s-ran{background:var(--ok);box-shadow:0 0 0 3px rgba(84,214,176,.18)}
+.node.target{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc-glow),0 0 30px 1px var(--acc-glow),0 22px 50px -20px #000}
+.node .port{position:absolute;width:9px;height:9px;border-radius:99px;background:var(--s3);border:1px solid var(--line-2);top:50%}
+.node .port.out{right:-5px} .node .port.in{left:-5px}
+.ptag{position:absolute;font-family:'IBM Plex Mono';font-size:8.5px;letter-spacing:.4px;color:var(--tx-3);background:var(--s0);border:1px solid var(--line);border-radius:4px;padding:1px 4px}
+/* a small caption pinned over the model node — names what it is */
+.nodecap{position:absolute;z-index:7;display:flex;align-items:center;gap:7px;background:rgba(8,10,13,.82);border:1px solid var(--ok);border-radius:99px;padding:4px 10px;font-family:'IBM Plex Mono';font-size:9.5px;color:var(--ok);backdrop-filter:blur(4px)}
+
+.foot{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--s0);border-top:1px solid var(--line);font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';overflow:hidden;white-space:nowrap}
+.foot .live{color:var(--acc);display:inline-flex;align-items:center;gap:5px}
+.foot .live i{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+
+/* ── RIGHT PANEL — the twin surface, on its own tab ── */
+.panel{grid-area:panel;background:var(--s0);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);padding:10px 12px 0}
+.tab{padding:8px 12px;font-size:12px;color:var(--tx-3);border-bottom:2px solid transparent;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.tab.on{color:var(--tx);border-bottom-color:var(--acc)}
+.pbody{padding:14px;overflow:auto;flex:1;min-height:0;display:flex;flex-direction:column;gap:14px}
+
+/* twin header */
+.twinhd{display:flex;align-items:center;gap:9px}
+.twinhd .av{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--acc),var(--acc-deep));display:grid;place-items:center;color:var(--ink-accent);font-family:'Bricolage Grotesque';font-weight:800;font-size:13px;flex:none}
+.twinhd .ttl{font-family:'Bricolage Grotesque';font-weight:700;font-size:14px;line-height:1.1}
+.twinhd .ttl small{display:block;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);font-weight:400;letter-spacing:.4px;margin-top:2px}
+
+/* section header w/ EXISTS/PROPOSED badge — the split made structural on every block */
+.sec{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--s1);overflow:hidden}
+.sechd{display:flex;align-items:center;gap:8px;padding:9px 11px;border-bottom:1px solid var(--line);background:var(--s2)}
+.sechd .h{font-family:'Bricolage Grotesque';font-weight:700;font-size:12.5px;color:var(--tx)}
+.sechd .badge{margin-left:auto;font-family:'IBM Plex Mono';font-size:8.5px;text-transform:uppercase;letter-spacing:.7px;padding:2px 8px;border-radius:99px;flex:none}
+.badge.exists{color:var(--ok);border:1px solid var(--ok)}
+.badge.proposed{color:var(--await);border:1px solid var(--await);background:rgba(232,168,56,.06)}
+.secbody{padding:11px}
+.sec.prop{border-color:var(--await);border-style:dashed}
+.sec.prop .sechd{background:rgba(232,168,56,.06)}
+
+/* the model-of-Tim grounding block (EXISTS) */
+.ground{font-size:11.5px;color:var(--tx-2);line-height:1.5}
+.ground .src{display:flex;align-items:center;gap:8px;margin-top:9px;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3);background:var(--s0);border:1px solid var(--line);border-radius:6px;padding:7px 9px}
+.ground .src .ic{color:var(--kind-content);flex:none}
+.ground .src .ref{color:var(--kind-content)}
+.ground .src .ok{margin-left:auto;color:var(--ok);flex:none}
+.digest{margin-top:9px;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3);line-height:1.6;background:var(--s0);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.digest .b{color:var(--tx-2)}
+
+/* the GRADED TURN-STREAM (EXISTS) — every turn carries grade + source */
+.turn{display:flex;gap:9px;padding:9px 0;border-bottom:1px solid var(--line)}
+.turn:last-child{border-bottom:0}
+.turn .who{width:54px;flex:none;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);text-transform:uppercase;letter-spacing:.6px;padding-top:2px}
+.turn .txt{font-size:11.5px;color:var(--tx-2);line-height:1.45;flex:1;min-width:0}
+.gtag{display:inline-flex;align-items:center;gap:5px;font-family:'IBM Plex Mono';font-size:8.5px;text-transform:uppercase;letter-spacing:.6px;padding:1px 7px;border-radius:99px;margin-top:5px}
+.gtag .d{width:6px;height:6px;border-radius:2px;flex:none}
+.gtag.gold{color:var(--acc);border:1px solid var(--acc-dim)} .gtag.gold .d{background:var(--acc)}
+.gtag.working{color:var(--tx-3);border:1px solid var(--line-2)} .gtag.working .d{background:var(--tx-3);border-radius:99px}
+.src-note{font-family:'IBM Plex Mono';font-size:8.5px;color:var(--tx-3);margin-left:6px}
+
+/* THE ECHO-GUARD — the truthful hero: a twin turn resubmitted as 'user' is REJECTED from training */
+.guard{margin-top:0}
+.guard .lane{display:flex;align-items:stretch;gap:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--s0)}
+.guard .candidate{flex:1;padding:9px 10px;font-size:11px;color:var(--tx-2);line-height:1.4}
+.guard .candidate .meta{font-family:'IBM Plex Mono';font-size:8.5px;color:var(--tx-3);margin-top:5px}
+.guard .verdict-col{width:118px;flex:none;border-left:1px solid var(--line);display:grid;place-items:center;text-align:center;padding:8px;font-family:'IBM Plex Mono';font-size:9.5px;line-height:1.4}
+.guard .lane.accept .verdict-col{color:var(--ok);background:rgba(84,214,176,.07)}
+.guard .lane.reject .verdict-col{color:var(--fail);background:rgba(236,106,94,.07)}
+.guard .lane+.lane{margin-top:7px}
+.guard .why{font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);margin-top:9px;line-height:1.55}
+.guard .why b{color:var(--tx-2)}
+
+/* PROPOSED — cold-start abstention, first-class + honest (NOT a confidence meter) */
+.coldstart{font-size:11.5px;color:var(--tx-2);line-height:1.5}
+.abstain{display:flex;gap:9px;align-items:flex-start;background:var(--s0);border:1px solid var(--await);border-radius:var(--r);padding:10px 11px;margin-top:10px}
+.abstain .ic{color:var(--await);font-size:14px;flex:none;margin-top:1px}
+.abstain .t{font-size:11.5px;color:var(--tx-2);line-height:1.5}
+.abstain .t b{color:var(--tx);font-weight:600}
+.gapnote{margin-top:10px;display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3);line-height:1.5}
+.gapnote .dep{color:var(--await)}
+.noconf{margin-top:10px;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);border:1px dashed var(--line-2);border-radius:6px;padding:7px 9px;line-height:1.55}
+.noconf b{color:var(--fail)}
+
+/* address-flag footnote (chrome) */
+.addrflag{margin-top:2px;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);border-top:1px solid var(--line);padding-top:10px;line-height:1.6}
+.addrflag .k{color:var(--await)} .addrflag .ref{color:var(--acc)}
+</style></head>
+<body><div class="app">
+
+  <!-- ── TOP BAR — identity · presence · the EXISTS/PROPOSED legend (honesty contract, in the chrome) ── -->
+  <header class="top">
+    <span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
+    <span class="presence" data-ui-ref="ui://toolbar/presence"><span class="dot"></span>background<span class="ch">· presence dial ▾</span></span>
+    <div class="legend">
+      <span class="lg exists"><span class="sw"></span>exists · verified</span>
+      <span class="lg proposed"><span class="sw"></span>proposed · over real substrate</span>
+    </div>
+  </header>
+
+  <!-- ── LEFT RAIL — palette; the model_of_tim CONTENT node-type is real + selected ── -->
+  <nav class="rail">
+    <div class="railhd">Node palette</div>
+    <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span><span class="ct">11</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">L</span><span class="label">llm</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">⌕</span><span class="label">retrieve</span></div>
+    <h4><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span><span class="ct">5</span></h4>
+    <div class="chip"><span class="mono-chip">C</span><span class="label">constant</span></div>
+    <div class="chip"><span class="mono-chip">▦</span><span class="label">codebase</span></div>
+    <div class="chip sel"><span class="mono-chip">◔</span><span class="label">model_of_tim</span></div>
+    <div class="chip"><span class="mono-chip">⊕</span><span class="label">portal</span></div>
+    <div class="chip"><span class="mono-chip">◑</span><span class="label">rhm_mode</span></div>
+  </nav>
+
+  <!-- ── CANVAS — the explicit model-of-Tim, a real CONTENT node, VOLATILE → status RAN (never cached) ── -->
+  <main class="canvas" data-ui-ref="ui://canvas">
+    <div class="nodecap" style="left:380px;top:150px">◔ the twin's explicit grounding · a content node</div>
+    <div class="node target" data-ui-ref="run://system/model_of_tim" style="left:330px;top:196px">
+      <div class="bar"><span class="mono-chip">◔</span><span class="ty">model_of_tim</span><span class="kindlabel">content · ran</span></div>
+      <div class="body">Tim's synthesised principles/laws — the twin reasons FROM this (explicit), plus a later corpus-trained implicit model.
+        <div class="cfg">
+          <span class="pill">path <b>foundation/system/principles.md</b></span>
+          <span class="pill vol">VOLATILE · fail-loud</span>
+        </div>
+        <div class="out">## Single origin&nbsp;&nbsp;The Company is one entity…&nbsp;&nbsp;## No silent failures&nbsp;&nbsp;Operations succeed or fail loud…</div>
+      </div>
+      <div class="addr"><span>run://system/model_of_tim</span><span class="sdot s-ran"></span></div>
+      <span class="port out"></span><span class="ptag" style="right:-50px;top:calc(50% - 9px)">Text · principles</span>
+    </div>
+  </main>
+
+  <!-- ── ACTIVITY STRIP ── -->
+  <footer class="foot" data-ui-ref="ui://activity">
+    <span class="live"><i></i>live</span>
+    <span>model_of_tim · VOLATILE → recomputed each run (memo bypass) · twin grounding refreshed</span>
+    <span style="margin-left:auto">presence: background · event-stream connected</span>
+  </footer>
+
+  <!-- ── RIGHT PANEL — the twin surface ── -->
+  <aside class="panel" data-ui-ref="ui://chat">
+    <div class="tabs">
+      <span class="tab">⊙ Inspector</span>
+      <span class="tab">✦ Inbox</span>
+      <span class="tab on">◈ Twin</span>
+    </div>
+    <div class="pbody" data-ui-ref="ui://twin">
+
+      <div class="twinhd">
+        <span class="av">◈</span>
+        <span class="ttl">The twin · model-of-Tim<small>provenance grading · cold-start</small></span>
+      </div>
+
+      <!-- ════ EXISTS — the explicit grounding (model_of_tim digest into the twin's context) ════ -->
+      <section class="sec">
+        <div class="sechd"><span class="h">Grounding — the explicit model of Tim</span><span class="badge exists">exists</span></div>
+        <div class="secbody">
+          <div class="ground">
+            The twin reasons from Tim's <b>explicit</b> principles — read live from a content node, never fabricated.
+            <div class="src"><span class="ic">◔</span><span>node <span class="ref">run://system/model_of_tim</span> · VOLATILE</span><span class="ok">✓ read</span></div>
+            <div class="digest">compact digest in context (≤2600 chars · headers + statements):<br>
+              <span class="b">• Single origin</span> — the Company is one entity<br>
+              <span class="b">• No silent failures</span> — succeed or fail loud<br>
+              <span class="b">• No confidence</span> — posture, not a score<br>
+              <span style="color:var(--tx-3)">…drillable to the full text via the node</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ EXISTS — provenance grading: every turn carries grade (gold/working) + source (operator/twin) ════ -->
+      <section class="sec">
+        <div class="sechd"><span class="h">Provenance grading — every turn</span><span class="badge exists">exists</span></div>
+        <div class="secbody">
+          <div class="turn">
+            <span class="who">Tim</span>
+            <span class="txt">"The Company is one entity — never thousands of separate yous."
+              <br><span class="gtag gold"><span class="d"></span>gold</span><span class="src-note">source: operator · trains the twin</span></span>
+          </div>
+          <div class="turn">
+            <span class="who">Twin</span>
+            <span class="txt">"Reading your single-origin principle, I'd keep one coherent voice across channels — but that's my inference, not your word."
+              <br><span class="gtag working"><span class="d"></span>working</span><span class="src-note">source: twin · never trains</span></span>
+          </div>
+          <div class="turn">
+            <span class="who">Tim</span>
+            <span class="txt">"Right — and persistence is entity-memory, not per-session."
+              <br><span class="gtag gold"><span class="d"></span>gold</span><span class="src-note">source: operator · trains the twin</span></span>
+          </div>
+          <p style="font-size:10.5px;color:var(--tx-3);line-height:1.5;margin:10px 0 0">
+            Grade marks the <b style="color:var(--tx-2)">trust/source</b> of a turn — it is <b style="color:var(--tx-2)">not</b> the twin scoring an output, nor anyone scoring the twin's accuracy.
+          </p>
+        </div>
+      </section>
+
+      <!-- ════ EXISTS — THE ECHO-GUARD (the truthful hero): twin output resubmitted as 'user' is REJECTED ════ -->
+      <section class="sec">
+        <div class="sechd"><span class="h">Echo-guard — the training signal stays clean</span><span class="badge exists">exists</span></div>
+        <div class="secbody guard">
+          <div class="lane accept">
+            <div class="candidate">"The Company is one entity…"
+              <div class="meta">grade=gold · source=operator</div>
+            </div>
+            <div class="verdict-col">✓ trains<br>the twin</div>
+          </div>
+          <div class="lane reject">
+            <div class="candidate">"…keep one coherent voice across channels…" <span style="color:var(--fail)">— twin text, resubmitted as a 'user' turn (red-team F4)</span>
+              <div class="meta">claimed role=user · actual source=twin</div>
+            </div>
+            <div class="verdict-col">✕ rejected<br>echo-guarded</div>
+          </div>
+          <div class="why">
+            two guards (<b>training_signal()</b>): <b>source≠twin</b> (source travels with the turn, not launderable by role)
+            + the text must not <b>echo</b> any twin/assistant turn in history. Result: the twin can never train on its own output → no model-collapse.
+          </div>
+        </div>
+      </section>
+
+      <!-- ════ PROPOSED — cold-start abstention, first-class + honest. NO confidence score. ════ -->
+      <section class="sec prop">
+        <div class="sechd"><span class="h">Predicting Tim's judgement</span><span class="badge proposed">proposed</span></div>
+        <div class="secbody">
+          <div class="coldstart">
+            The mechanism above is live. What is <b>not</b> yet built is the twin actually <b>predicting</b> what Tim would decide.
+            <div class="abstain">
+              <span class="ic">⃠</span>
+              <span class="t"><b>Cold-start — the twin abstains.</b> Asked to predict a verdict, it grounds in the explicit model and says
+                "this is my inference, not your word" rather than confabulating a judgement it cannot yet make.</span>
+            </div>
+            <div class="gapnote">
+              <span>depends on:</span><span class="dep">corpus ingestion (D8) — not built</span><span>→ turns the mechanism into a learned model of Tim.</span>
+            </div>
+            <div class="noconf">
+              note: <b>no confidence score</b> is shown — by law there is "no confidence anywhere" (posture, not a number).
+              A meter here would be double-fiction: unbuilt AND against the principle. Deliberately absent.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ADDRESS (in the chrome) — the twin surface now has a dedicated registered address -->
+      <div class="addrflag">
+        <span class="k">⊹ addressed:</span> the twin surface carries <span class="ref">ui://twin</span> (RHM-twin · suite.py:training_signal), registered in <span class="ref">addresses.json</span>;
+        the panel frame is <span class="ref">ui://chat</span> and the explicit grounding is the live node <span class="ref">run://system/model_of_tim</span>.
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- mobile tab-bar (hidden on desktop; present so the responsive system resolves) -->
+  <nav class="tabbar" data-ui-ref="ui://tabbar">
+    <a><span class="ic">▦</span>Canvas</a>
+    <a><span class="ic">✦</span>Inbox</a>
+    <a class="on"><span class="ic">◈</span>Twin</a>
+    <a><span class="ic">▶</span>Run</a>
+  </nav>
+</div></body></html>

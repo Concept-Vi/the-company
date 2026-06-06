@@ -133,10 +133,66 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.capabilities()))
             elif path == "/api/ui_info":                   # C1: the UI-component registry (sibling of object_info)
                 self._send(200, json.dumps(SUITE.ui_info()))
+            elif path == "/api/scope":                     # S3: ui://→code://→scope[] (the address→code join)
+                self._send(200, json.dumps(SUITE.resolve_scope(q["address"])))
+            elif path == "/api/self-changes-at":           # L5: "what did the system change HERE?" (§21.7#5)
+                # The address-keyed READ over the self-change audit log: filters self_change_log by the
+                # S3 address→code scope join. Missing `address` → KeyError → 400 (fail loud, mirrors
+                # /api/scope). Revert from here stays on the EXISTING operator-only /api/revert (no new
+                # revert route, gate untouched). Carries stale/note straight through so the surface
+                # distinguishes "corpus stale — regenerate" from "no changes here" (never a silent lie).
+                self._send(200, json.dumps(SUITE.self_changes_at(q["address"])))
+            elif path == "/api/annotations":               # I6: the comment THREAD attached to a ui:// address
+                # The address-keyed READ side of /api/annotate (POST). Missing `address` → KeyError →
+                # 400 (fail loud, mirrors /api/scope). Suite.annotations_at validates the address (S0)
+                # and returns the thread oldest-first. This is what R2 will gather at the operator's locus.
+                self._send(200, json.dumps(SUITE.annotations_at(q["address"])))
+            elif path == "/api/chats":                     # I7: the chat THREAD attached to a ui:// address
+                # The address-keyed READ side of /api/attach-chat (POST). Missing `address` → KeyError →
+                # 400 (fail loud, mirrors /api/scope + /api/annotations). Suite.chats_at validates the
+                # address (S0) and returns the thread oldest-first. DISTINCT from /api/chat (GET = the
+                # whole RHM history; POST = the RHM conversation) — this reads ONLY the turns attached to
+                # `address`. This is what R2 will gather at the operator's locus (address-keyed context).
+                self._send(200, json.dumps(SUITE.chats_at(q["address"])))
+            elif path == "/api/address-history":            # L3: everything that happened AT a ui:// address
+                # §21.7#1: clicking an element shows its addressed history. The address-keyed READ over
+                # the event tail. Missing `address` → KeyError → 400 (fail loud, mirrors /api/scope +
+                # /api/annotations + /api/chats). Suite.address_view validates the address (S0 grammar
+                # gate) and returns the trajectory chronological — the addressed analogue of decision_view
+                # (it WIDENS the audit-view machinery to an address key; the sid path is untouched).
+                self._send(200, json.dumps(SUITE.address_view(q["address"])))
+            elif path == "/api/stale-at":                  # L10: "is the cached result at this node's address
+                # stale vs its CURRENT inputs?" (§21.7#10). A COSTED DERIVATION, not a served field — the FE
+                # CALLS it only for a cached node (it recompiles + resolves input-hashes + recomputes the
+                # _memo_sig + memo_get-compares; seams-engine Seam 8a). The key is a run://<graph>/<node>
+                # node-instance address (NOT ui:// — `cached` is served per run:// node). Missing `address`
+                # → KeyError → 400 (fail loud, mirrors /api/scope + /api/address-history). A malformed /
+                # non-run:// address RAISES in stale_at_address → 400 too — a junk query never reads as a
+                # silent 'fresh'. The verdict carries stale/unknown/reason/volatile (rule 4: an unevaluable
+                # node is 'unknown' with a reason, never a silent false). READ-ONLY: the memo gate is unmutated.
+                self._send(200, json.dumps(SUITE.stale_at_address(q["address"])))
+            elif path == "/api/ref-versions":               # L6: the PRIOR VERSIONS of an addressed output
+                # §21.7#6: a portal shows the CURRENT ref live; this is the trail of values the address has
+                # HELD over time (Suite.ref_versions → store.ref_history index, appended on each set_ref).
+                # The key is a run://<graph>/<node> OUTPUT address (NOT ui:// — versions accrue where set_ref
+                # wrote; a PORTAL never writes, so the FE queries the address its config.ref POINTS AT). The
+                # cas bytes survive (put_content write-once), so each prior version is fetchable by its cas.
+                # Missing `address` → KeyError → 400 (fail loud, mirrors /api/stale-at + /api/address-history);
+                # a malformed / non-run:// address RAISES in ref_versions → 400 too (a junk query never reads
+                # as a silent 'no versions'). An address with no history returns versions:[] (honest empty).
+                self._send(200, json.dumps(SUITE.ref_versions(q["address"])))
             elif path == "/api/review/current":            # B: the node at the cursor + its framing + ui:// target
                 self._send(200, json.dumps(SUITE.present_current(q["session"])))
             elif path == "/api/review/status":             # B: the session's live status
                 self._send(200, json.dumps(SUITE.session_status(q["session"])))
+            elif path == "/api/journey/replay":             # L9: the ordered ui:// addresses of a recorded
+                # journey — the FE steps the view through them via the PRESERVED forward resolveUiTarget (the
+                # reverse of present_current's drive; no second navigation mechanism). Missing `journey` →
+                # KeyError → 400 (fail loud, mirrors /api/review/current).
+                self._send(200, json.dumps(SUITE.replay_journey(q["journey"])))
+            elif path == "/api/journeys":                   # L9: the recorded journeys (id · step-count · done),
+                # newest-first — the picker the FE replays from.
+                self._send(200, json.dumps(SUITE.list_journeys_meta()))
             elif path == "/api/voice":                     # voice status: STT providers + per-engine TTS
                 from voice import stt as voice_stt
                 import urllib.request as _u
@@ -537,6 +593,25 @@ class H(BaseHTTPRequestHandler):
                     str(spec).strip(), scope=b.get("scope"),
                     consequence_class=b.get("consequence_class", "decision_build"),
                     why=b.get("why", ""))))
+            elif self.path == "/api/intent-at":              # L1 (§21.4#2): a COMMENT-AT-AN-ADDRESS becomes a
+                # build-intent that surfaces for approval AT that address. The addressed-feedback → wire
+                # entry seam — mirrors /api/build-intent (OPERATOR face), but the scope is DERIVED from the
+                # ui:// address via S3 (resolve_scope) instead of declared by the caller, and the comment is
+                # RECORDED at the address via I6 (ingest_comment). It only SURFACES the intent (resolved=None);
+                # approval stays on the EXISTING operator-only /api/resolve, and dispatch-on-approve is L2 (a
+                # separate switch — this route NEVER dispatches). An orphan/stale address → EMPTY scope =
+                # DENY-ALL (never fabricated). Fail loud on a missing address/text (S0 + I6 gates → 400).
+                b = self._body()
+                addr = b.get("address")
+                if not addr or not str(addr).strip():
+                    raise ValueError("/api/intent-at needs a non-empty 'address' (fail loud)")
+                text = b.get("text") or b.get("comment")
+                if not text or not str(text).strip():
+                    raise ValueError("/api/intent-at needs a non-empty 'text' comment (fail loud)")
+                self._send(200, json.dumps(SUITE.surface_intent_at(
+                    str(addr).strip(), str(text).strip(), source=b.get("source", "operator"),
+                    consequence_class=b.get("consequence_class", "decision_build"),
+                    why=b.get("why", ""))))
             elif self.path == "/api/review/start":         # B: start a review session (NOT graph-scoped — makes its own)
                 b = self._body()
                 self._send(200, json.dumps(SUITE.start_session(
@@ -579,6 +654,18 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/review/next":          # B: Next — open the gate, fire the step, advance
                 b = self._body()
                 self._send(200, json.dumps(SUITE.next(b["session"])))
+            elif self.path == "/api/journey/start":         # L9: open a journey-record (the REVERSE capture).
+                # DISTINCT from /api/review/start (the review-session organ): a journey records NAVIGATION
+                # (an ordered ui:// click-path), a session records a REVIEW (item-ids with a cursor). No body.
+                self._send(200, json.dumps(SUITE.start_journey()))
+            elif self.path == "/api/journey/step":          # L9: append one addressed step to an OPEN journey.
+                # The address is S0-validated in the Suite (parse_ui_address raises → 400 here, fail loud,
+                # mirrors /api/annotate). Appending to a finalized/absent journey raises → 400 (no silent no-op).
+                b = self._body()
+                self._send(200, json.dumps(SUITE.append_journey_step(b["journey"], b["address"])))
+            elif self.path == "/api/journey/stop":          # L9: finalize a journey → it becomes replayable.
+                b = self._body()
+                self._send(200, json.dumps(SUITE.stop_journey(b["journey"])))
             elif self.path == "/api/react":               # watch-and-react ambient comment
                 self._send(200, json.dumps(SUITE.react(DEMO)))
             elif self.path == "/api/revert":              # OPERATOR-only rollback of a self-change
@@ -588,6 +675,88 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/propose":          # agent/operator dispatches a build
                 b = self._body()
                 self._send(200, json.dumps(SUITE.propose_node(b["name"], b["spec"])))
+            elif self.path == "/api/act":               # I2: the click-emission seam — a DETERMINISTIC
+                # human click ships a STRUCTURED {verb, address, args} that drives _dispatch_rhm_action
+                # DIRECTLY (bypassing the unreliable model-prose parse) — the emission RELOCATION
+                # (§21.4#1). OPERATOR face only (beside /api/resolve, NOT the MCP/agent face): a human
+                # click is an operator act, where the no-self-approve gates already live (seams-rhm
+                # headline). The 7-verb whitelist + no-self-apply ride along INSIDE the dispatcher; the
+                # verb-class governance posture + the "did X" confirmation are re-folded by Suite.act.
+                # Fail loud on a missing verb (no silent no-op).
+                b = self._body()
+                gid = b.get("graph_id", DEMO)
+                verb = b.get("verb")
+                if not verb or not str(verb).strip():
+                    raise ValueError("/api/act needs a non-empty 'verb' (fail loud)")
+                self._send(200, json.dumps(SUITE.act(
+                    str(verb).strip(), gid, address=b.get("address"), args=b.get("args"))))
+            elif self.path == "/api/annotate":          # I6: attach a comment/annotation to a ui:// ADDRESS
+                # NET-NEW and SEPARATE from /api/resolve's comment choice (which annotates a surfaced
+                # item by id, suite.py:3045) and from /api/act (I2): nothing else attaches BY ADDRESS.
+                # OPERATOR face (beside the others). Suite.annotate validates the address against the S0
+                # grammar (raises → 400 here) and persists keyed by address; retrieve via GET
+                # /api/annotations?address=…. Feeds R2 (address-keyed context resolution). Fail loud on a
+                # missing address (no silent no-op — AGENTS.md rule 4).
+                b = self._body()
+                addr = b.get("address")
+                if not addr or not str(addr).strip():
+                    raise ValueError("/api/annotate needs a non-empty 'address' (fail loud)")
+                # L4: route through `ingest_comment` (NOT the pure `annotate` leaf) — a clicked comment
+                # IS the twin's LOCATED gold label: it records the I6 annotation AND emits one additive
+                # located-gold chat turn (operator=gold, address-stamped) that rides the existing
+                # `append_chat → training_signal` pipe. This is the WIRED production entry the FE's
+                # annotate-click hits; the same entry the I5 router composes (single-source). Returns the
+                # annotation rec (unchanged response shape — retrieve the comment via GET /api/annotations).
+                self._send(200, json.dumps(SUITE.ingest_comment(
+                    str(addr).strip(), b.get("text", ""), source=b.get("source", "operator"))))
+            elif self.path == "/api/pin":                # X7: pin/unpin an attached item at a ui:// ADDRESS
+                # OPERATOR face (beside /api/annotate, /api/attach-chat) — the SET path for the dead pin
+                # term: `pinned` is read in `_r2_score` but nothing set it. This records a pin/unpin of the
+                # attached item at (address, target_ts) so the gather's existing read picks up the real flag
+                # → a pinned item holds in the bounded R2 window. OPERATOR-ONLY, OFF the MCP face (not in
+                # RHM_VERBS — no-bypass preserved). Suite.pin S0-validates the address (raises → 400) AND
+                # fails loud if (address, target_ts) names no real attached item. Default pinned=True.
+                b = self._body()
+                addr = b.get("address")
+                target_ts = b.get("target_ts")
+                if not addr or not str(addr).strip():
+                    raise ValueError("/api/pin needs a non-empty 'address' (fail loud)")
+                if not target_ts or not str(target_ts).strip():
+                    raise ValueError("/api/pin needs a non-empty 'target_ts' (the item's handle) (fail loud)")
+                self._send(200, json.dumps(SUITE.pin(
+                    str(addr).strip(), str(target_ts).strip(), pinned=bool(b.get("pinned", True)))))
+            elif self.path == "/api/attach-chat":        # I7: attach a chat turn to a ui:// ADDRESS (the
+                # dropped 4th attach-type, §21.1's chat:// branch). RIDES the open append_chat record with
+                # one additive `address` field — NO separate chat store (one-source). DISTINCT from
+                # /api/chat (the RHM conversation): this attaches a turn AT an address, retrieve via GET
+                # /api/chats?address=…. Suite.attach_chat validates the address against the S0 grammar
+                # (raises → 400 here) + tags source/grade (echo-guard) + flows through training_signal
+                # unchanged. Feeds R2 (address-keyed context resolution). Fail loud on a missing address.
+                b = self._body()
+                addr = b.get("address")
+                if not addr or not str(addr).strip():
+                    raise ValueError("/api/attach-chat needs a non-empty 'address' (fail loud)")
+                self._send(200, json.dumps(SUITE.attach_chat(
+                    str(addr).strip(), b.get("text", ""),
+                    role=b.get("role", "user"), source=b.get("source"))))
+            elif self.path == "/api/approve-reach":      # X16: the operator authorizes HOW FAR a build's
+                # edit propagates — the reach-approval. OPERATOR face (beside /api/resolve, /api/pin — NOT
+                # the MCP/agent face). DEFAULT is the pointed address only (the build's declared scope is
+                # unchanged); this widens it to include the files the APPROVED blast-radius members live in.
+                # approve_reach validates each member against the PERSISTED blast_radius the operator saw
+                # (consent-time) — a member NOT in that radius RAISES (→ 400), so this is never a
+                # scope-injection path that defeats empty-scope=DENY-ALL. Operator-only, off the MCP face
+                # (not in RHM_VERBS — no-bypass + the 7-verb whitelist + no-self-apply preserved). Fail loud
+                # on a missing id / members (no silent no-op — AGENTS.md rule 4).
+                b = self._body()
+                if not b.get("id") or not str(b["id"]).strip():
+                    raise ValueError("/api/approve-reach needs a non-empty 'id' (the build-intent) (fail loud)")
+                members = b.get("members")
+                if not members or not isinstance(members, list):
+                    raise ValueError("/api/approve-reach needs a non-empty 'members' list (the approved "
+                                     "blast-radius members) (fail loud)")
+                self._send(200, json.dumps(SUITE.approve_reach(
+                    str(b["id"]).strip(), [str(m) for m in members], reason=b.get("reason", ""))))
             elif self.path == "/api/resolve":           # OPERATOR approves/rejects/comments/skips (UI channel)
                 b = self._body()
                 # D: additive session tagging + the comment/skip/decide vocabulary; existing callers

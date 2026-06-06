@@ -1,0 +1,354 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>B3 · Walkthrough — RHM drives the view · desktop</title>
+<link rel="stylesheet" href="../design-system.css">
+<!--
+  ============================================================
+  VIEW  B3 · Walkthrough — RHM drives the view · desktop
+  AREA  B (right-hand-man) · JOURNEY J4
+  JOURNEY-MOMENT  J4 · being walked through · surfaces when: RHM proposes a walk
+  ============================================================
+  REPRESENTS[] (feature-id · what it surfaces · code ref — from the Feature & Function Inventory):
+    · WALK-present    — present_current: the RHM speaks the CURRENT item as a COA value-choice
+                        (value-framing + 2-3 options + a recommendation), with a registry-valid
+                        ui:// target stamped in the payload (fail-safe).        suite.py:1135
+    · WALK-next       — next(): the page-turn. "N of M" + Next ▷. The gate→fire→advance mechanic
+                        (open the human-writable `go` gate → fire → advance, atomic) stays BACKSTAGE.
+                        FE verdict path is /api/resolve carrying session/position.  suite.py:1183 / App.tsx:1278
+    · WALK-uiresolve  — ui:// resolver + UI_REGISTRY: the KEYSTONE. The FE reads the stamped ui:// ref and
+                        DRIVES THE VIEW — camera moves to a node (primary, shown here) OR scroll+spotlight a
+                        chrome region via data-ui-ref (toolbar/inspector/inbox/activity/chat/workshop;
+                        caps pointable/spotlit/presentable/openable/drivenReadOnly). Fail-loud on unknown ref.
+                                                                          suite.py:1876-1909 / ui_info.py:39-51 / App.tsx:984-1010
+    · RHM-copresence  — co-presence: the RHM already SEES your current selection + its values, so the card
+                        speaks from what's on your canvas — no hunting, no re-stating.    suite.py:643-653
+    + presence dial = WALKTHROUGH (one of the 8 real modes; suite.py:510-524).
+  ------------------------------------------------------------
+  THE KEYSTONE MADE VISIBLE (the view MOVED to the subject — movement, not mere selection):
+    · the canvas is VIGNETTED/dimmed everywhere except the target node (spotlight), so the eye is taken there;
+    · a "RHM drove the view here" camera-flight signal (the ghost path the camera flew + a re-center badge);
+    · the resolver chip shows the real ui:// ref resolving onto data-ui-ref="run://demo/ask" — the mechanism, acting.
+  VERDICT VOCAB IS REAL — operator-only resolve verbs ONLY: approve · reject · decide · comment · skip
+    (idempotent, captures WHY). NO invented yes/no. Voice affordance is real (push-to-talk loop App.tsx:1214-1245).
+  No fiction: 2 kinds only (process/content), node status from {idle·ran·cached·stuck} only, COA at value-altitude.
+  ============================================================
+-->
+<style>
+.top{grid-area:top;display:flex;align-items:center;gap:16px;padding:0 16px;background:linear-gradient(180deg,var(--s1),var(--s0));border-bottom:1px solid var(--line);min-width:0}
+.brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:17px;letter-spacing:-.3px;white-space:nowrap}
+.brand em{font-style:normal;color:var(--acc)}
+.brand .tag{font-size:10.5px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:7px}
+/* presence dial — current posture = WALKTHROUGH (one of the 8 real modes) */
+.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--kind-model);border-radius:99px;background:var(--kind-model-bg);font-size:11.5px;color:var(--tx);white-space:nowrap;cursor:pointer}
+.presence .dot{width:7px;height:7px;border-radius:99px;background:var(--kind-model);box-shadow:0 0 0 3px var(--kind-model-bg)}
+.presence .ch{color:var(--tx-3);font-size:10px}
+.verbs{margin-left:auto;display:flex;gap:6px;flex:none}
+.verbs .btn{padding:7px 11px}
+.verbs .btn .lbl{white-space:nowrap}
+@media (max-width:1280px){ .verbs .btn .lbl{display:none} .verbs .btn{padding:7px 9px} }
+
+.rail{grid-area:rail;background:var(--s0);border-right:1px solid var(--line);padding:13px 11px;overflow:auto}
+.rail .railhd{font-size:9.5px;text-transform:uppercase;letter-spacing:1.3px;color:var(--tx-3);font-weight:600;margin:0 2px 9px}
+.rail h4{font-size:10px;text-transform:uppercase;letter-spacing:1.1px;color:var(--tx-2);margin:15px 3px 7px;font-weight:600;display:flex;align-items:center;gap:7px}
+.rail h4 .ct{margin-left:auto;color:var(--tx-3);font-family:'IBM Plex Mono';font-size:9px;font-weight:400}
+.kdot{width:8px;height:8px;border-radius:2px;flex:none}
+.chip{display:flex;align-items:center;gap:9px;padding:6px 9px;border-radius:var(--r);background:var(--s1);border:1px solid var(--line);font-size:12px;margin-bottom:5px;cursor:grab}
+.chip .mono-chip{width:19px;height:19px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:11px;color:var(--ink-accent);flex:none}
+.chip .label{color:var(--tx)}
+
+.canvas{grid-area:canvas;position:relative;overflow:hidden;background-image:radial-gradient(var(--line) .9px,transparent .9px);background-size:26px 26px}
+.canvas .node{position:absolute}
+
+/* ── THE KEYSTONE — the view was DRIVEN to the subject ──────────────────
+   A vignette/spotlight dims everything EXCEPT the target node, so the eye is
+   physically taken to where the camera flew. This is movement, not selection. */
+.spotlight{position:absolute;inset:0;pointer-events:none;z-index:5;
+  background:radial-gradient(280px 230px at 600px 318px, transparent 0%, transparent 38%, rgba(8,10,13,.62) 78%);
+  transition:background .5s ease}
+/* the target node sits ABOVE the spotlight, lit, ringed, gently lifted (just-arrived) */
+.node.target{z-index:6;border-color:var(--acc);
+  box-shadow:0 0 0 1px var(--acc-glow),0 0 34px 2px var(--acc-glow),0 26px 60px -20px #000;
+  animation:settle .55s ease both}
+@keyframes settle{from{transform:scale(1.05);filter:brightness(1.25)}to{transform:scale(1);filter:none}}
+/* the GHOST FLIGHT-PATH — where the camera flew FROM → the subject (movement made literal) */
+.flight{position:absolute;inset:0;z-index:4;pointer-events:none}
+/* a small "re-centred here" badge pinned over the target — names the act */
+.drovehere{position:absolute;z-index:7;left:600px;top:150px;transform:translateX(-50%);
+  display:flex;align-items:center;gap:7px;background:rgba(8,10,13,.82);border:1px solid var(--acc-dim);
+  border-radius:99px;padding:5px 11px;font-family:'IBM Plex Mono';font-size:10px;color:var(--acc);backdrop-filter:blur(4px)}
+.drovehere .av{width:14px;height:14px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow);flex:none}
+/* faded neighbour nodes (under the vignette) make the contrast obvious */
+.node.dim{opacity:.5;z-index:2}
+
+/* typed-port labels next to nubs (same vocabulary as A2) */
+.ptag{position:absolute;font-family:'IBM Plex Mono';font-size:8.5px;letter-spacing:.4px;color:var(--tx-3);background:var(--s0);border:1px solid var(--line);border-radius:4px;padding:1px 4px}
+
+.foot{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--s0);border-top:1px solid var(--line);font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';overflow:hidden;white-space:nowrap}
+.foot .live{color:var(--acc);display:inline-flex;align-items:center;gap:5px}
+.foot .live i{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+
+/* ── RIGHT PANEL — the RHM is on its own tab while walking ── */
+.panel{grid-area:panel;background:var(--s0);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);padding:10px 12px 0}
+.tab{padding:8px 12px;font-size:12px;color:var(--tx-3);border-bottom:2px solid transparent;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.tab.on{color:var(--tx);border-bottom-color:var(--acc)}
+.tab .badge{font-family:'IBM Plex Mono';font-size:9px;background:var(--await);color:var(--ink-await);border-radius:99px;padding:0 5px;font-weight:600}
+.pbody{padding:14px;overflow:auto;flex:1;min-height:0;display:flex;flex-direction:column;gap:0}
+
+/* walkthrough header — N of M + the page-turn */
+.walkhd{display:flex;align-items:center;gap:9px;margin-bottom:13px}
+.walkhd .rhmav{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--acc),var(--acc-deep));display:grid;place-items:center;color:var(--ink-accent);font-family:'Bricolage Grotesque';font-weight:800;font-size:13px;flex:none}
+.walkhd .ttl{font-family:'Bricolage Grotesque';font-weight:700;font-size:14px;line-height:1.1}
+.walkhd .ttl small{display:block;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);font-weight:400;letter-spacing:.4px;margin-top:2px}
+.nofm{margin-left:auto;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-2);background:var(--s2);border:1px solid var(--line-2);border-radius:99px;padding:3px 9px;white-space:nowrap}
+.nofm b{color:var(--acc);font-weight:500}
+/* slim progress rail = the session-as-a-graph, one tick per gated step */
+.steps{display:flex;gap:4px;margin-bottom:14px}
+.steps i{height:4px;flex:1;border-radius:99px;background:var(--s3)}
+.steps i.done{background:var(--acc-dim)} .steps i.now{background:var(--acc);box-shadow:0 0 0 2px var(--acc-glow)}
+
+/* co-presence line — the RHM already SEES your selection + its value */
+.copres{display:flex;align-items:flex-start;gap:8px;background:var(--kind-model-bg);border:1px solid var(--kind-model);border-radius:var(--r);padding:8px 10px;margin-bottom:13px;font-size:11px;color:var(--tx-2);line-height:1.45}
+.copres .eye{color:var(--kind-model);flex:none;font-size:12px;margin-top:1px}
+.copres b{color:var(--tx);font-weight:600}
+.copres .mono{color:var(--kind-model)}
+
+/* THE WALKTHROUGH CARD — the RHM speaking the COA value-framing of the current item */
+.card{background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid var(--line-2);border-radius:var(--r-lg);padding:14px;box-shadow:var(--shadow)}
+.card .frame{font-family:'Bricolage Grotesque';font-weight:700;font-size:15px;line-height:1.32;letter-spacing:-.2px;color:var(--tx)}
+.card .speaks{font-size:12px;color:var(--tx-2);line-height:1.55;margin-top:8px}
+.card .speaks b{color:var(--acc);font-weight:500}
+/* the value-choice OPTIONS (COA: 2-3 options + a recommendation) */
+.opts{margin-top:13px;display:flex;flex-direction:column;gap:7px}
+.opt{display:flex;gap:9px;align-items:flex-start;background:var(--s0);border:1px solid var(--line);border-radius:var(--r);padding:9px 10px;cursor:pointer}
+.opt .key{font-family:'IBM Plex Mono';font-size:11px;color:var(--tx-3);border:1px solid var(--line-2);border-radius:5px;padding:1px 6px;flex:none;margin-top:1px}
+.opt .ot{font-size:12px;color:var(--tx);line-height:1.4}
+.opt .ot small{display:block;color:var(--tx-3);font-size:10.5px;margin-top:2px;line-height:1.4}
+.opt.rec{border-color:var(--acc-dim);background:linear-gradient(180deg,var(--acc-glow),transparent)}
+.opt.rec .key{border-color:var(--acc-dim);color:var(--acc)}
+.rectag{font-family:'IBM Plex Mono';font-size:8.5px;text-transform:uppercase;letter-spacing:.8px;color:var(--acc);margin-left:auto;flex:none;align-self:center}
+
+/* the ui:// resolver chip — WALK-uiresolve, the mechanism shown ACTING */
+.resolver{margin-top:14px;display:flex;align-items:center;gap:9px;background:var(--s0);border:1px dashed var(--acc-dim);border-radius:var(--r);padding:8px 10px;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3)}
+.resolver .ic{color:var(--acc);font-size:12px;flex:none}
+.resolver .ref{color:var(--acc)}
+.resolver .arrow{color:var(--tx-3)}
+.resolver .tgt{color:var(--tx-2)}
+.resolver .ok{margin-left:auto;color:var(--ok);flex:none}
+
+/* VERDICT ROW — operator-only resolve vocab ONLY: approve·reject·decide·comment·skip + voice */
+.verdict{margin-top:15px}
+.verdict .lbl{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--tx-3);font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.verdict .lbl .oo{font-family:'IBM Plex Mono';font-size:8.5px;text-transform:none;letter-spacing:.4px;color:var(--await);border:1px solid var(--await);border-radius:99px;padding:0 6px}
+.vrow{display:flex;gap:7px}
+.vbtn{flex:1;justify-content:center;padding:9px 6px}
+.vbtn.approve{background:linear-gradient(180deg,var(--acc),var(--acc-deep));color:var(--ink-accent);border-color:transparent;font-weight:600}
+.vbtn.reject{border-color:var(--fail);color:var(--fail)}
+/* secondary resolve verbs + the page-turn */
+.vrow2{display:flex;gap:7px;margin-top:7px}
+.vrow2 .vbtn{font-size:12px}
+.vbtn.next{flex:1.4;background:var(--s3);color:var(--tx);border-color:var(--line-2);font-weight:600}
+.vbtn.next .k{font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3);border:1px solid var(--line);border-radius:3px;padding:0 4px}
+
+/* the COMMENT capture (resolve verb comment→annotate, captures WHY) + voice affordance */
+.why{margin-top:13px;background:var(--s0);border:1px solid var(--line);border-radius:var(--r);padding:9px 10px}
+.why .head{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--tx-2);margin-bottom:7px}
+.why .head .v{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--tx-2);background:var(--s2);border:1px solid var(--line-2);border-radius:99px;padding:4px 10px;cursor:pointer}
+.why .head .v .mic{width:9px;height:9px;border-radius:99px;background:var(--fail);box-shadow:0 0 0 3px rgba(236,106,94,.18);flex:none;animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.why .field{font-family:'IBM Plex Sans';font-size:12px;color:var(--tx-3);line-height:1.5;min-height:34px}
+.why .field .typed{color:var(--tx-2)}
+.why .field .caret{display:inline-block;width:1px;height:13px;background:var(--acc);vertical-align:-2px;margin-left:1px;animation:pulse 1s steps(2) infinite}
+
+.idempotent{margin-top:11px;font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3);text-align:center}
+</style></head>
+<body><div class="app">
+
+  <!-- ── TOP BAR — identity · presence dial set to WALKTHROUGH · verbs ── -->
+  <header class="top">
+    <span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
+    <span class="presence"><span class="dot"></span>walkthrough<span class="ch">· RHM is driving ▾</span></span>
+    <div class="verbs">
+      <button class="btn">◐ <span class="lbl">layers</span></button>
+      <button class="btn">＋ <span class="lbl">wire</span></button>
+      <button class="btn">↻ <span class="lbl">force</span></button>
+      <button class="btn run">▶ <span class="lbl">run</span> <span class="k">⏎</span></button>
+    </div>
+  </header>
+
+  <!-- ── LEFT RAIL — palette grouped by the TWO real kinds (dimmed under the walk, but present) ── -->
+  <nav class="rail collapsible">
+    <div class="railhd">Node palette</div>
+    <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span><span class="ct">11</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">L</span><span class="label">llm</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">E</span><span class="label">embed</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">≈</span><span class="label">similarity</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">⌕</span><span class="label">retrieve</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">⑂</span><span class="label">gate</span></div>
+    <h4><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span><span class="ct">5</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">C</span><span class="label">constant</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">▦</span><span class="label">codebase</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">⊕</span><span class="label">portal</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">◑</span><span class="label">rhm_mode</span></div>
+  </nav>
+
+  <!-- ── CANVAS — driven to the subject: vignette + flight-path + lit target ── -->
+  <main class="canvas">
+
+    <!-- existing wires (kind-coloured at source) — the chain the operator was on -->
+    <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1">
+      <path d="M 268 412 C 360 412 360 280 452 280" fill="none" stroke="var(--kind-content)" stroke-width="1.6" opacity=".4"/>
+      <path d="M 678 318 C 770 318 770 470 850 470" fill="none" stroke="var(--kind-process)" stroke-width="1.8" opacity=".4"/>
+    </svg>
+
+    <!-- THE GHOST FLIGHT-PATH — where the camera flew FROM (off-frame) → the subject.
+         Dashed, arrowed, fading toward origin = movement made literal, not a static ring. -->
+    <svg class="flight">
+      <defs>
+        <marker id="fa" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 Z" fill="var(--acc)"/>
+        </marker>
+        <linearGradient id="fade" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="var(--acc)" stop-opacity="0"/>
+          <stop offset="100%" stop-color="var(--acc)" stop-opacity=".8"/>
+        </linearGradient>
+      </defs>
+      <path d="M 120 560 Q 360 520 560 360" fill="none" stroke="url(#fade)" stroke-width="2"
+            stroke-dasharray="5 6" marker-end="url(#fa)"/>
+    </svg>
+
+    <!-- the spotlight vignette — everything dark except the target -->
+    <div class="spotlight"></div>
+
+    <!-- "re-centred here" badge — names the act of driving -->
+    <div class="drovehere"><span class="av"></span>RHM drove the view here</div>
+
+    <!-- DIMMED neighbour (under the vignette) — kind=content, real status, makes contrast obvious -->
+    <div class="node dim" data-kind="content" style="left:54px;top:374px">
+      <div class="bar"><span class="mono-chip">C</span><span class="ty">constant</span><span class="kindlabel">content</span></div>
+      <div class="body"><div class="out">"Summarise the memo-gate change for review."</div></div>
+      <div class="addr"><span>run://demo/q</span><span class="sdot s-cache"></span></div>
+      <span class="port out"></span>
+    </div>
+
+    <!-- DIMMED downstream neighbour — kind=process, real status -->
+    <div class="node dim" data-kind="process" style="left:850px;top:430px">
+      <div class="bar"><span class="mono-chip">⋈</span><span class="ty">join</span><span class="kindlabel">process · idle</span></div>
+      <div class="body">awaiting upstream<div class="cfg"><span class="pill">sep <b>\n</b></span></div></div>
+      <div class="addr"><span>run://demo/join</span><span class="sdot s-idle"></span></div>
+      <span class="port in"></span><span class="port out"></span>
+    </div>
+
+    <!-- ★ THE TARGET — the node this walkthrough step concerns; the camera was DRIVEN here.
+         data-ui-ref is the REAL FE handle the ui:// resolver targets (App.tsx:984-1010).
+         Lit, ringed, settled-into-place; real kind=process; real status=ran. -->
+    <div class="node target" data-kind="process" data-ui-ref="run://demo/ask" style="left:492px;top:222px">
+      <div class="bar"><span class="mono-chip">A</span><span class="ty">ask</span><span class="kindlabel">process · ran</span></div>
+      <div class="body">grounded answer over the codebase
+        <div class="cfg"><span class="pill" style="border-color:var(--kind-model);color:var(--kind-model)">model <b style="color:var(--kind-model)">deepseek-v4-pro</b></span></div>
+        <div class="out">The memo gate skips re-running a node when its (type, version, config, inputs) hash is unchanged — runtime/scheduler.py…</div>
+      </div>
+      <div class="addr"><span>run://demo/ask</span><span class="sdot s-ran"></span></div>
+      <span class="port in" style="top:40%"></span><span class="ptag" style="left:-42px;top:calc(40% - 9px)">Text</span>
+      <span class="port out"></span><span class="ptag" style="right:-44px;top:calc(50% - 9px)">Text</span>
+    </div>
+  </main>
+
+  <!-- ── THIN ACTIVITY STRIP — the walk is live; gate→fire→advance stays here, backstage ── -->
+  <footer class="foot">
+    <span class="live"><i></i>live</span>
+    <span>walkthrough session · item 2/4 · view driven → run://demo/ask · gate open, awaiting verdict</span>
+    <span style="margin-left:auto">presence: walkthrough · event-stream connected</span>
+  </footer>
+
+  <!-- ── RIGHT PANEL — the RHM, walking ── -->
+  <aside class="panel">
+    <div class="tabs">
+      <span class="tab">⊙ Inspector</span>
+      <span class="tab">✦ Inbox <span class="badge">3</span></span>
+      <span class="tab on">◈ RHM</span>
+    </div>
+    <div class="pbody">
+
+      <!-- header — who's speaking + N of M page position -->
+      <div class="walkhd">
+        <span class="rhmav">◈</span>
+        <span class="ttl">Walking you through<small>a review session · 4 items gated for you</small></span>
+        <span class="nofm">item <b>2</b> of 4</span>
+      </div>
+      <!-- session-as-a-graph progress: one tick per gated step (item 1 done · 2 now · 3-4 ahead) -->
+      <div class="steps"><i class="done"></i><i class="now"></i><i></i><i></i></div>
+
+      <!-- CO-PRESENCE — the RHM already sees your selection + its current value -->
+      <div class="copres"><span class="eye">◉</span><span>I can see you've got <b>ask</b> selected — <span class="mono">run://demo/ask</span>, status <b>ran</b>. Its answer is the thing this step is about, so I've <b>moved the view to it</b>.</span></div>
+
+      <!-- THE CARD — the RHM speaking the COA value-framing of the current item -->
+      <!-- ui://walkthrough = the present_current framing region (WALK-present · present_current) -->
+      <div class="card" data-ui-ref="ui://walkthrough">
+        <div class="frame">Is this grounded answer good enough to ship to the inbox?</div>
+        <p class="speaks">The <b>ask</b> node ran cleanly and cited <b>scheduler.py</b>. I read it as accurate but a little thin on the <i>VOLATILE bypass</i> — your call on whether that matters here.</p>
+
+        <!-- COA: 2-3 options + a recommendation -->
+        <div class="opts">
+          <div class="opt rec">
+            <span class="key">A</span>
+            <span class="ot">Ship it as-is to the inbox<small>good enough; surfaces as a resolved-for-you item</small></span>
+            <span class="rectag">my pick</span>
+          </div>
+          <div class="opt">
+            <span class="key">B</span>
+            <span class="ot">Force a re-run with a fuller prompt<small>I'll add "cover the VOLATILE bypass" and re-ask</small></span>
+          </div>
+          <div class="opt">
+            <span class="key">C</span>
+            <span class="ot">Hold — you want to read the full output first<small>opens the workshop on this node</small></span>
+          </div>
+        </div>
+
+        <!-- WALK-uiresolve — the ui:// resolver shown ACTING (the keystone mechanism) -->
+        <div class="resolver">
+          <span class="ic">⊹</span><span>resolved</span>
+          <span class="ref">ui://node/run/demo/ask</span>
+          <span class="arrow">→</span>
+          <span class="tgt">camera · data-ui-ref</span>
+          <span class="ok">✓ drove view</span>
+        </div>
+
+        <!-- VERDICT — operator-only resolve vocab ONLY: approve · reject · decide · comment · skip -->
+        <!-- ui://walkthrough/verdict = the resolve control (INB-resolve · resolve_surfaced) -->
+        <div class="verdict" data-ui-ref="ui://walkthrough/verdict">
+          <div class="lbl">your verdict <span class="oo">operator-only</span></div>
+          <div class="vrow">
+            <button class="btn vbtn approve">✓ approve</button>
+            <button class="btn vbtn reject">✕ reject</button>
+            <button class="btn vbtn">⟐ decide</button>
+          </div>
+          <div class="vrow2">
+            <button class="btn vbtn">✎ comment</button>
+            <button class="btn vbtn">↷ skip</button>
+            <button class="btn vbtn next">Next ▷ <span class="k">→</span></button>
+          </div>
+        </div>
+
+        <!-- WHY capture (resolve verb comment→annotate) + the VOICE affordance (push-to-talk loop) -->
+        <div class="why">
+          <div class="head">why <span style="color:var(--tx-3)">· captured with the verdict</span>
+            <span class="v"><span class="mic"></span>listening…</span>
+          </div>
+          <div class="field"><span class="typed">"Good enough for now — flag the bypass gap for the next pass</span><span class="caret"></span></div>
+        </div>
+
+        <div class="idempotent">resolve is idempotent · one terminal verdict per item · the why is recorded</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- mobile tab-bar (hidden on desktop; present so the responsive system resolves) -->
+  <nav class="tabbar">
+    <a><span class="ic">▦</span>Canvas</a>
+    <a><span class="ic">✦</span>Inbox</a>
+    <a class="on"><span class="ic">◈</span>RHM</a>
+    <a><span class="ic">▶</span>Run</a>
+  </nav>
+</div></body></html>

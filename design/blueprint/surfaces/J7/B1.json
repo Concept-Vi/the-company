@@ -1,0 +1,35 @@
+{
+  "_what": "GENERATED surface-spec for view B1. Directory = journey spine (tree); journeys[]/cross_journeys[] = the address-refs that carry the web (B3). Built by a Claude Code session to the addresses below (never invent an address).",
+  "id": "B1",
+  "area": "B",
+  "title": "RHM chat panel",
+  "platforms": [
+    "desktop",
+    "mobile"
+  ],
+  "represents": [
+    "RHM-chat",
+    "RHM-verbs",
+    "RHM-config"
+  ],
+  "status": "planned",
+  "home_journey": "J7",
+  "journeys": [
+    "J7"
+  ],
+  "cross_journeys": [],
+  "addresses": [
+    "ui://chat",
+    "ui://chat/config",
+    "ui://chat/input",
+    "ui://chat/model-field",
+    "ui://chat/send"
+  ],
+  "build_to": {
+    "components": [
+      "chat"
+    ],
+    "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
+    "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
+  }
+}

@@ -1,0 +1,196 @@
+{
+  "should_use_var": [
+    {
+      "literal": "8px",
+      "count": 197,
+      "screens": [
+        "A1-canvas-empty-desktop.html",
+        "A11-portals-desktop.html",
+        "A12-workshop-desktop.html",
+        "A2-canvas-desktop.html",
+        "A2-canvas-mobile.html",
+        "A3-inspector-desktop.html",
+        "B3-walkthrough-desktop.html",
+        "B4-presence-dial-desktop.html",
+        "B4-presence-dial-mobile.html",
+        "B6-twin-desktop.html",
+        "C1-inbox-desktop.html",
+        "C3-build-review-desktop.html",
+        "C5-replay-desktop.html",
+        "D6-wire-states-desktop.html",
+        "D7-selfmod-desktop.html",
+        "E1-fleet-desktop.html",
+        "F4-activity-desktop.html"
+      ],
+      "matches_token": "sp",
+      "kind": "size"
+    },
+    {
+      "literal": "7px",
+      "count": 190,
+      "screens": [
+        "A1-canvas-empty-desktop.html",
+        "A11-portals-desktop.html",
+        "A12-workshop-desktop.html",
+        "A2-canvas-desktop.html",
+        "A2-canvas-mobile.html",
+        "A3-inspector-desktop.html",
+        "B3-walkthrough-desktop.html",
+        "B4-presence-dial-desktop.html",
+        "B4-presence-dial-mobile.html",
+        "B6-twin-desktop.html",
+        "C1-inbox-desktop.html",
+        "C3-build-review-desktop.html",
+        "C5-replay-desktop.html",
+        "D6-wire-states-desktop.html",
+        "D7-selfmod-desktop.html",
+        "E1-fleet-desktop.html",
+        "F4-activity-desktop.html"
+      ],
+      "matches_token": "r",
+      "kind": "size"
+    },
+    {
+      "literal": "11px",
+      "count": 176,
+      "screens": [
+        "A1-canvas-empty-desktop.html",
+        "A11-portals-desktop.html",
+        "A12-workshop-desktop.html",
+        "A2-canvas-desktop.html",
+        "A2-canvas-mobile.html",
+        "A3-inspector-desktop.html",
+        "B3-walkthrough-desktop.html",
+        "B4-presence-dial-desktop.html",
+        "B4-presence-dial-mobile.html",
+        "B6-twin-desktop.html",
+        "C1-inbox-desktop.html",
+        "C3-build-review-desktop.html",
+        "C5-replay-desktop.html",
+        "D6-wire-states-desktop.html",
+        "D7-selfmod-desktop.html",
+        "E1-fleet-desktop.html",
+        "F4-activity-desktop.html"
+      ],
+      "matches_token": "r-lg",
+      "kind": "size"
+    },
+    {
+      "literal": "99px",
+      "count": 128,
+      "screens": [
+        "A1-canvas-empty-desktop.html",
+        "A11-portals-desktop.html",
+        "A12-workshop-desktop.html",
+        "A2-canvas-desktop.html",
+        "A2-canvas-mobile.html",
+        "A3-inspector-desktop.html",
+        "B3-walkthrough-desktop.html",
+        "B4-presence-dial-desktop.html",
+        "B4-presence-dial-mobile.html",
+        "B6-twin-desktop.html",
+        "C1-inbox-desktop.html",
+        "C3-build-review-desktop.html",
+        "C5-replay-desktop.html",
+        "D6-wire-states-desktop.html",
+        "D7-selfmod-desktop.html",
+        "E1-fleet-desktop.html",
+        "F4-activity-desktop.html"
+      ],
+      "matches_token": "r-pill",
+      "kind": "size"
+    }
+  ],
+  "candidate_new_colour_tokens": [
+    {
+      "literal": "#000",
+      "count": 10,
+      "screens": [
+        "A11-portals-desktop.html",
+        "A2-canvas-desktop.html",
+        "A2-canvas-mobile.html",
+        "A3-inspector-desktop.html",
+        "B3-walkthrough-desktop.html",
+        "B4-presence-dial-mobile.html",
+        "B6-twin-desktop.html",
+        "E1-fleet-desktop.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#1a0a08",
+      "count": 2,
+      "screens": [
+        "C5-replay-desktop.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#214",
+      "count": 2,
+      "screens": [
+        "F4-activity-desktop.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    }
+  ],
+  "coverage_gaps": [
+    "ENG-branch",
+    "ENG-branches-pause",
+    "ENG-volatile",
+    "FRM-divergence",
+    "INB-target",
+    "WALK-session"
+  ],
+  "address_orphans": {
+    "unregistered": [
+      "run://demo/ask",
+      "run://system/model_of_tim"
+    ],
+    "unused": [
+      "ui://chat/config",
+      "ui://chat/input",
+      "ui://chat/mic",
+      "ui://chat/model-field",
+      "ui://chat/send",
+      "ui://grow",
+      "ui://grow/approve",
+      "ui://grow/dispatch",
+      "ui://grow/reject",
+      "ui://inbox/build-intent",
+      "ui://inbox/target",
+      "ui://inbox/walk",
+      "ui://inspector/build",
+      "ui://inspector/history",
+      "ui://inspector/surface",
+      "ui://inspector/workshop",
+      "ui://toolbar/delete",
+      "ui://toolbar/fit",
+      "ui://toolbar/layers",
+      "ui://toolbar/portal",
+      "ui://toolbar/reload",
+      "ui://toolbar/wire",
+      "ui://walkthrough/next",
+      "ui://walkthrough/reason",
+      "ui://walkthrough/show-again",
+      "ui://walkthrough/voice"
+    ]
+  },
+  "hygiene": {
+    "missing_css_link": [],
+    "missing_any_data_ui_ref": []
+  },
+  "summary": {
+    "screens": 17,
+    "literals_should_use_var": 4,
+    "candidate_new_colour_tokens": 3,
+    "coverage_gaps": 6,
+    "address_orphans_unregistered": 2,
+    "address_orphans_unused": 26,
+    "mockups_missing_css": 0,
+    "mockups_missing_address": 0
+  }
+}

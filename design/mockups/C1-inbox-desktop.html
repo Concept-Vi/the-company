@@ -1,0 +1,251 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>C1 · Inbox — three lanes (desktop)</title>
+<link rel="stylesheet" href="../design-system.css">
+<!--
+  id: C1
+  represents: [
+    "INB-lanes"  — the chief-of-staff inbox: THREE real lanes returned by inbox_lanes(), keyed on the SAME surfaced/inbox store
+                   both faces read. The lanes are EXACTLY (runtime/suite.py:958-982):
+                     • live_escalations   = surfaced items where `resolved is None` — the irreducible, brought as a COA value-choice.
+                                            This is the "awaiting you" set; counts.escalations drives the panel head + footer.
+                     • resolved_for_you   = items where `resolved is not None` — already handled, logged for AUDIT (needn't be worked).
+                     • batched            = live escalations grouped by `action`, kept ONLY where len(group) > 1 — themes to handle in
+                                            one sitting. The lane carries IDs of the grouped escalations (it indexes the live set; it is
+                                            not a fourth pile).  (suite.py:975-979)
+                   Test-origin exclusion (T3-HYGIENE, filter-at-source): items tagged `test_origin` at CREATION under COMPANY_TEST_RUN
+                   are EXCLUDED from the operator's lanes, and the exclusion is NOT silent — counts.test_origin_excluded reports how many
+                   were filtered (fail-loud-legible). A real operator run sets no flag → nothing tagged → identical to before.
+                   (runtime/suite.py:959-982 · tag-at-source governance.py:86-110 · counts dict suite.py:980-981)
+    "EVT-now"    — now-view + presence: presence reads "awaiting your approval" while any surfaced item has `resolved is None`
+                   (suite.py:483-507). The top presence pill + the footer "N awaiting you" reflect that live count; the inbox-refresh is
+                   pushed over SSE (the surface emits 'ask' on each surfaced item — suite.py:1037-1038, bridge.py:128-160).
+  ]
+  journey-moment: "J5/J7 · triage — the chief-of-staff inbox · step 1 (C1 → C4 drill → C2 COA). Also J7 step 1 (operate from mobile)."
+                  surfaces-when: the inbox is the operator's standing triage surface — it shows ONLY what needs them, pre-filtered
+                  (test/agent noise excluded), lanes encoding urgency; every item is drillable but framed at VALUE-altitude first.
+                  (User Journeys & UX.md J5 lines 48-51 · J7 lines 58-61)
+
+  GROUNDING NOTES (only real behaviour — no fiction):
+  • Item shape is the real surfaced record: {id:"s{n}-{action}", action, payload, default, resolved, status?, origin?} (governance.py:86-110).
+    The items shown are the real classes the app surfaces:
+      - a build_result_review (kind="build_result_review", INERT to the dispatcher; the wire posts it when a build CLOSES = implemented;
+        suite.py:1800-1837) — a live escalation, "awaiting you", the J3/J7 build-review moment (its full card is C3).
+      - a surfaced node RESULT (surface_output routes a node's live output into live_escalations, drillable via coa() — suite.py:1004-1026).
+      - a generative idea-capture item (origin="generative", kind="idea" — suite.py:1041-1047) sitting as a live escalation until triaged.
+      - resolved_for_you items carry `resolved is not None` (already approved/decided) — audit only.
+  • Every live item shows its COA value-altitude line + "drill to ground ↘" (coa() compiles the raw fork into a value-choice; the raw
+    payload stays DRILLABLE — suite.py:984-1002). The verdict itself is operator-only (resolve vocabulary, suite.py:2243-2302) and lives
+    on the drill / the focused card — C1 frames + routes, it does not duplicate the C2/C3 verdict surface.
+  • "N awaiting you" = counts.escalations = len(live_escalations) (NOT a total of all lanes; resolved_for_you is excluded by definition).
+  • The batched lane is a PURE REGROUPING of live_escalations by `action`, keeping only groups with len>1 (suite.py:975-979).
+    Two invariants hold and are honoured here: (a) every batched ID is also present in the escalations lane (batched indexes the
+    live set; it never introduces a new item); (b) "N awaiting you" counts every batched member (same source list).
+    Action keys are real: surface_review() (build_result_review, idea, panel-proposal) all set action="review" (governance.py:131);
+    surface_output() sets action="result" (suite.py:1019). So the 3 action="review" escalations {s31,s28,s24} form one valid
+    "review" theme; the lone action="result" item {s30} is a group of 1 → correctly NOT batched. So escalations = 4, batched theme = 3.
+  • This is the right Inbox tab in its NORMAL panel width (360px), the standing triage state — distinct from C3, which widens the panel
+    into a focused single-build review column.
+  • Node statuses idle/ran/cached/stuck are NOT used here (no node dots) — "awaiting you" is INBOX/presence (s-await), never a node status.
+-->
+<style>
+.top{grid-area:top;display:flex;align-items:center;gap:18px;padding:0 18px;background:linear-gradient(180deg,var(--s1),var(--s0));border-bottom:1px solid var(--line)}
+.brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:18px;letter-spacing:-.3px}
+.brand em{font-style:normal;color:var(--acc)}
+.brand .tag{font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:8px}
+.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--line-2);border-radius:99px;background:var(--s2);font-size:12px;color:var(--tx-2)}
+.presence .dot{width:7px;height:7px;border-radius:99px;background:var(--await);box-shadow:0 0 0 3px rgba(230,171,92,.14)}
+.verbs{margin-left:auto;display:flex;gap:7px}
+
+.rail{grid-area:rail;background:var(--s0);border-right:1px solid var(--line);padding:14px 12px;overflow:auto}
+.rail h4{font-size:10px;text-transform:uppercase;letter-spacing:1.3px;color:var(--tx-3);margin:14px 4px 8px;font-weight:600;display:flex;align-items:center;gap:7px}
+.rail h4:first-child{margin-top:2px}
+.kdot{width:8px;height:8px;border-radius:2px}
+.chip{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:var(--r);background:var(--s1);border:1px solid var(--line);font-size:12.5px;margin-bottom:5px}
+.chip .mono-chip{width:20px;height:20px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:11px;color:var(--ink-accent)}
+
+.canvas{grid-area:canvas;position:relative;overflow:hidden;background-image:radial-gradient(var(--line) .9px,transparent .9px);background-size:26px 26px;display:grid;place-items:center}
+.dim-note{max-width:420px;text-align:center;color:var(--tx-3);font-size:12.5px;line-height:1.7}
+.dim-note .display{font-size:16px;color:var(--tx-2);display:block;margin-bottom:6px}
+.dim-note .play{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:6px 12px;border:1px dashed var(--line-2);border-radius:99px;font-family:'IBM Plex Mono';font-size:11px;color:var(--acc)}
+.foot{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--s0);border-top:1px solid var(--line);font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono'}
+.foot .live{color:var(--acc)} .foot .await{color:var(--await)}
+
+/* the inbox lives in the right panel at its NORMAL width — the standing triage surface */
+.panel{grid-area:panel;background:var(--s0);border-left:1px solid var(--line);padding:14px;overflow:auto}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:-14px -14px 14px;padding:10px 12px 0}
+.tab{padding:8px 13px;font-size:12.5px;color:var(--tx-3);border-bottom:2px solid transparent;font-weight:500;display:flex;align-items:center;gap:7px}
+.tab.on{color:var(--tx);border-bottom-color:var(--acc)}
+.tab .badge{background:var(--await);color:var(--ink-await);font-family:'IBM Plex Mono';font-size:9px;font-weight:600;border-radius:99px;padding:1px 6px}
+
+/* the "N awaiting you" head + the test-origin excluded note (the real counts dict) */
+.ibx-head{display:flex;align-items:baseline;gap:9px;margin:2px 2px 4px}
+.ibx-head .n{font-family:'Bricolage Grotesque';font-weight:800;font-size:22px;color:var(--await);letter-spacing:-.4px}
+.ibx-head .lab{font-size:13px;color:var(--tx-2)}
+.ibx-excluded{display:flex;align-items:center;gap:7px;margin:0 2px 16px;padding:6px 9px;border:1px dashed var(--line-2);border-radius:var(--r);
+  font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3);background:var(--s1)}
+.ibx-excluded b{color:var(--cache);font-weight:500} .ibx-excluded .i{color:var(--tx-3)}
+
+/* a lane head — encodes urgency by label + a count + an accent rule per lane */
+.lane{margin-bottom:18px}
+.lane-head{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;font-weight:600;display:flex;align-items:center;gap:8px;margin:0 2px 10px}
+.lane-head .dot{width:7px;height:7px;border-radius:99px;flex:none}
+.lane-head .c{margin-left:auto;font-family:'IBM Plex Mono';font-weight:400;letter-spacing:0;color:var(--tx-3)}
+.lane.escalations .lane-head{color:var(--await)} .lane.escalations .lane-head .dot{background:var(--await);box-shadow:0 0 0 3px rgba(230,171,92,.14)}
+.lane.batched .lane-head{color:var(--tx-2)} .lane.batched .lane-head .dot{background:var(--cache)}
+.lane.resolved .lane-head{color:var(--tx-3)} .lane.resolved .lane-head .dot{background:var(--acc-dim)}
+
+/* an inbox item — framed at VALUE-altitude, drillable */
+.item{border:1px solid var(--line);border-radius:var(--r-lg);background:linear-gradient(180deg,var(--s2),var(--s1));margin-bottom:8px;overflow:hidden}
+.item.live{border-left:3px solid var(--await)}
+.item .ihead{display:flex;align-items:center;gap:8px;padding:9px 11px 7px}
+.item .kind{font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-2);background:var(--s3);border:1px solid var(--line);border-radius:5px;padding:2px 7px}
+.item .kind.build{color:var(--ok);border-color:var(--acc-dim)}
+.item .id{margin-left:auto;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3)}
+.item .coa{padding:1px 11px 9px;font-family:'Bricolage Grotesque';font-weight:700;font-size:14.5px;line-height:1.32;color:var(--tx);letter-spacing:-.15px}
+.item .rec{padding:0 11px 9px;font-size:11px;color:var(--tx-2);line-height:1.5}
+.item .rec b{color:var(--acc);font-weight:500}
+.item .ifoot{display:flex;align-items:center;gap:8px;padding:8px 11px;border-top:1px solid var(--line);background:var(--s0)}
+.item .drill{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--acc);display:flex;align-items:center;gap:5px}
+.item .review{margin-left:auto;font-family:'IBM Plex Sans';font-size:11.5px;font-weight:600;color:var(--ink-accent);background:linear-gradient(180deg,var(--acc),var(--acc-deep));border:none;border-radius:var(--r);padding:6px 11px;display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.item .open{margin-left:auto;font-family:'IBM Plex Mono';font-size:10.5px;color:var(--tx-2);border:1px solid var(--line-2);background:var(--s2);border-radius:var(--r);padding:5px 10px;cursor:pointer}
+
+/* batched: ONE themed row standing for a group of >1 escalation (expands to its members) */
+.batch{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--s1);overflow:hidden}
+.batch-head{display:flex;align-items:center;gap:9px;padding:9px 11px;cursor:pointer}
+.batch-head .car{color:var(--tx-3);font-family:'IBM Plex Mono'}
+.batch-head .action{font-family:'IBM Plex Mono';font-size:11px;color:var(--cache);background:var(--s0);border:1px solid var(--line);border-radius:5px;padding:2px 7px}
+.batch-head .lbl{font-size:12.5px;color:var(--tx-2)}
+.batch-head .n{margin-left:auto;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3)}
+.batch-members{border-top:1px solid var(--line);padding:7px 11px;display:flex;flex-direction:column;gap:5px}
+.batch-member{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--tx-2);display:flex;align-items:center;gap:8px}
+.batch-member .mid{color:var(--tx-3)}
+
+/* resolved-for-you: quiet, audit-only rows (resolved is not None) */
+.rrow{display:flex;align-items:center;gap:9px;padding:8px 11px;border:1px solid var(--line);border-radius:var(--r);background:var(--s1);margin-bottom:6px;opacity:.82}
+.rrow .v{font-family:'IBM Plex Mono';font-size:9.5px;text-transform:uppercase;letter-spacing:.7px;padding:2px 7px;border-radius:99px;flex:none}
+.rrow .v.approve{color:var(--ink-accent);background:var(--ok)} .rrow .v.decide{color:var(--ink-accent);background:var(--cache)}
+.rrow .t{font-size:12px;color:var(--tx-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rrow .when{margin-left:auto;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);flex:none}
+</style></head>
+<body><div class="app">
+  <header class="top"><span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
+    <!-- EVT-now presence: any surfaced item with resolved is None → "awaiting your approval" (suite.py:489-490) -->
+    <span class="presence"><span class="dot"></span>focus · awaiting your approval ▾</span>
+    <div class="verbs"><button class="btn">◐ layers</button><button class="btn">＋ wire</button><button class="btn">↻ force</button><button class="btn run">▶ run <span class="k">⏎</span></button></div>
+  </header>
+
+  <nav class="rail collapsible">
+    <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">L</span><span class="label">llm</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">E</span><span class="label">embed</span></div>
+    <h4><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">C</span><span class="label">constant</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">▦</span><span class="label">codebase</span></div>
+  </nav>
+
+  <main class="canvas">
+    <!-- the canvas waits; the operator's attention is on the inbox. Drilling an item moves the view to its subject (ui:// resolver). -->
+    <div class="dim-note">
+      <span class="display">Four things need you.</span>
+      Pre-triaged — test &amp; agent noise filtered out. Each is framed as a value-choice first; drill any to its ground, or open the build review.
+      <span class="play">↘ drill moves the canvas to the thing a decision concerns</span>
+    </div>
+  </main>
+
+  <footer class="foot"><span class="live">● live</span><span>event-stream connected</span><span style="margin-left:auto">company · <span class="await">4 awaiting you</span> · 2 resolved (audit)</span></footer>
+
+  <!-- THE INBOX — right panel, normal width, standing triage state (the Inbox tab is on) -->
+  <aside class="panel" data-ui-ref="ui://inbox">
+    <div class="tabs"><span class="tab">⊙ Inspector</span><span class="tab on">✦ Inbox <span class="badge">4</span></span><span class="tab">◈ RHM</span></div>
+
+    <!-- "N awaiting you" head = counts.escalations = len(live_escalations) -->
+    <div class="ibx-head"><span class="n">4</span><span class="lab">awaiting you</span></div>
+
+    <!-- test-origin excluded note — the REAL counts.test_origin_excluded (fail-loud-legible, never hidden) -->
+    <div class="ibx-excluded" title="items created under a test/adversarial run are tagged test_origin at creation and excluded from your lanes — but the count is shown, never hidden (suite.py:965-967, governance.py:101-103)">
+      <span class="i">⊘</span> test-origin excluded: <b>14</b> &nbsp;·&nbsp; filtered at source, not hidden
+    </div>
+
+    <!-- ── LANE 1 · live_escalations (resolved is None — the irreducible, the "awaiting you" set) ── -->
+    <div class="lane escalations">
+      <div class="lane-head"><span class="dot"></span>live escalations <span class="c">· 4</span></div>
+
+      <!-- a build_result_review (kind, INERT to dispatcher) — the J3/J7 build-review moment; its full card is C3 -->
+      <div class="item live" data-ui-ref="ui://inbox/build-review">
+        <div class="ihead"><span class="kind build">⚙ build_result_review</span><span class="id">s31-build_result_review</span></div>
+        <div class="coa">A build finished — the “sentiment” node is ready to go live.</div>
+        <div class="rec">Demonstrate-first: see it working, then accept or send back with a why. <b>Recommended: review now.</b></div>
+        <div class="ifoot">
+          <span class="drill">↘ drill to ground</span>
+          <button class="review">▷ review the build</button>
+        </div>
+      </div>
+
+      <!-- a surfaced node RESULT (surface_output → live_escalations, drillable via coa) -->
+      <div class="item live" data-ui-ref="ui://inbox/coa">
+        <div class="ihead"><span class="kind">result</span><span class="id">s30-result</span></div>
+        <div class="coa">A retrieval chain returned a low-confidence top result — keep it, or widen the corpus?</div>
+        <div class="rec">The <code>retrieve</code> node ranked 5; the top score is below your usual bar. <b>Recommended: widen the corpus, then re-run.</b></div>
+        <div class="ifoot">
+          <span class="drill">↘ drill to the node + raw output</span>
+          <button class="open">open value-choice</button>
+        </div>
+      </div>
+
+      <!-- a generative idea-capture item (origin=generative, kind=idea) — a live escalation until triaged -->
+      <div class="item live">
+        <div class="ihead"><span class="kind">idea</span><span class="id">s28-review · generative</span></div>
+        <div class="coa">Idea you captured: “a node that scores tone across a whole thread.”</div>
+        <div class="rec">Filed mid-flow; resurfaced for triage. <b>Recommended: turn into a build-intent, or defer.</b></div>
+        <div class="ifoot">
+          <span class="drill">↘ open the captured note</span>
+          <button class="open">decide</button>
+        </div>
+      </div>
+
+      <!-- a panel proposal awaiting a look (propose_panel → surface_review, action="review") — the 4th live escalation -->
+      <div class="item live">
+        <div class="ihead"><span class="kind">review</span><span class="id">s24-review · responsive</span></div>
+        <div class="coa">A proposed settings panel is ready for your look before it goes live.</div>
+        <div class="rec">Self-mod proposed a declarative panel; validated, registry-checked, reversible. <b>Recommended: approve, or send back with a why.</b></div>
+        <div class="ifoot">
+          <span class="drill">↘ see the proposed panel</span>
+          <button class="open">decide</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LANE 2 · batched (live escalations grouped by `action`, only where len(group) > 1) ── -->
+    <div class="lane batched">
+      <div class="lane-head"><span class="dot"></span>batched · handle in one sitting <span class="c">· 1 theme</span></div>
+      <!-- one themed row = a group of >1 escalation sharing an action; expands to its member IDs (it indexes the live set) -->
+      <div class="batch">
+        <div class="batch-head" title="a theme: more than one live escalation shares this action class — handle them together (suite.py:975-979)">
+          <span class="car">⌄</span><span class="action">review</span><span class="lbl">3 review items share a theme</span><span class="n">·  expand</span>
+        </div>
+        <div class="batch-members">
+          <div class="batch-member"><span class="mid">s31</span> build_result_review — “sentiment” node ready</div>
+          <div class="batch-member"><span class="mid">s28</span> idea — tone-scoring node</div>
+          <div class="batch-member"><span class="mid">s24</span> review — panel proposal awaiting a look</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LANE 3 · resolved_for_you (resolved is not None — already handled, audit only, needn't be worked) ── -->
+    <div class="lane resolved">
+      <div class="lane-head"><span class="dot"></span>resolved for you <span class="c">· 2 · audit</span></div>
+      <div class="rrow">
+        <span class="v approve">approved</span>
+        <span class="t">build-intent: add a `wordcount` node — accepted, now live</span>
+        <span class="when">s19 · 11:02</span>
+      </div>
+      <div class="rrow">
+        <span class="v decide">decided</span>
+        <span class="t">route-by-tone fork — chose “escalate negatives to you”</span>
+        <span class="when">s14 · 09:48</span>
+      </div>
+    </div>
+  </aside>
+</div></body></html>

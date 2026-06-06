@@ -1,0 +1,187 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>P3 · F4 · Activity / now + live event stream · desktop</title>
+<link rel="stylesheet" href="../design-system.css">
+<!--
+  ============================================================
+  PROBE  P3 · F4 · Activity / now + live event stream · desktop
+  AREA   F (frame / system) · no fixed journey (ambient, always-on)
+  JOURNEY-MOMENT  ambient — the standing "what's happening" surface; pushed, not polled.
+        Surfaces continuously while connected; the now-view header is the operator's at-a-glance
+        state; the stream below is the live tail of the shared event log.
+  STATUS  staging probe — NOT registered in register.json; written only to _panel-staging/.
+  ============================================================
+  REPRESENTS[] (feature-id · what it surfaces · code ref — from the Feature & Function Inventory):
+    · EVT-stream — SSE live stream, PUSHED not polled. /api/stream tails events.jsonl, gapless
+                   reconnect (cursor = last seq), heartbeat (bridge.py:128-160). The FE openStream
+                   refreshes on decision.*/ask (App.tsx:745). The "● live" + reconnect cursor here
+                   are that mechanism shown honestly. events_since(seq) is the cursor read (suite.py).
+    · EVT-now    — now-view + presence, derived LIVE from state + inbox + log (suite.py:483-507).
+                   The header tiles are the REAL now() fields: graph, nodes_total, nodes_resolved,
+                   surfaced_pending, presence, mode, last_event. presence is DERIVED, not free text:
+                     pending>0 → "awaiting your approval"
+                     else all nodes resolved → "ready · all resolved"
+                     else nodes exist → "ready · work unresolved"
+                     else → "empty"   ('off' overrides if mode==off).  (suite.py:489-497)
+    · EVT-log    — append-only events.jsonl, atomic monotonic seq, BOTH faces (op + agent) write to
+                   the one log (store/fs_store.py:172-200). events(limit) / recent_events. Each row's
+                   REAL stored shape (append_event, fs_store.py:197) = {seq, ts, kind, summary, **meta}.
+                   INFERRED / PROPOSED — the per-row "face" badge (op·agent·internal): the event record
+                   does NOT carry a face/origin field today (append_event adds only seq+ts). The badge
+                   is a DESIGN PROPOSAL (would need _emit to stamp a face), shown to make "both faces
+                   write one log" legible — it is NOT a grounded field. Treat as inferred, not existing.
+  ------------------------------------------------------------
+  GROUNDING NOTES — no fiction:
+    · Landmark address = ui://activity (region activity, caps presentable+driven → EVT-now,
+      addresses.json). EVT-stream and EVT-log have NO own address; they live IN this region, so the
+      landmark is ui://activity (honest — see the report's address-gap observation).
+    · Every event row's `kind` is a REAL emitted kind (grep of suite.py _emit(...)):
+        run · create · connect · config · move · ask · chat · resolve · mode · react · grow ·
+        apply · revert · warning · decision.intent · decision.surfaced_for_review ·
+        decision.implemented · decision.verify · review.start · review.advance · review.comment ·
+        criterion.commit  — NONE invented.
+    · The now-tiles use the four real presence strings only; mode shown = "focus" (a real mode).
+    · No node status dots here (idle/ran/cached/stuck are NODE dots) — this is the log/now surface.
+      The dots beside event rows are KIND-coloured (process/content accents + warn), not statuses.
+    · seq is monotonic; the stream shows a heartbeat + a reconnect cursor (real: gapless reconnect).
+  ============================================================
+-->
+<style>
+.top{grid-area:top;display:flex;align-items:center;gap:16px;padding:0 18px;background:linear-gradient(180deg,var(--s1),var(--s0));border-bottom:1px solid var(--line)}
+.brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:18px;letter-spacing:-.3px}
+.brand em{font-style:normal;color:var(--acc)}
+.brand .tag{font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:8px}
+.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--line-2);border-radius:99px;background:var(--s2);font-size:12px;color:var(--tx-2)}
+.presence .dot{width:7px;height:7px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.verbs{margin-left:auto;display:flex;gap:7px}
+
+.rail{grid-area:rail;background:var(--s0);border-right:1px solid var(--line);padding:14px 12px;overflow:auto}
+.rail h4{font-size:10px;text-transform:uppercase;letter-spacing:1.3px;color:var(--tx-3);margin:14px 4px 8px;font-weight:600;display:flex;align-items:center;gap:7px}
+.rail h4:first-child{margin-top:2px}
+.kdot{width:8px;height:8px;border-radius:2px}
+.chip{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:var(--r);background:var(--s1);border:1px solid var(--line);font-size:12.5px;margin-bottom:5px}
+.chip .mono-chip{width:20px;height:20px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:11px;color:var(--ink-accent)}
+
+.canvas{grid-area:canvas;position:relative;overflow:auto;background-image:radial-gradient(var(--line) .9px,transparent .9px);background-size:26px 26px;padding:18px}
+
+/* ── now-view: the derived state header (the real now() fields) ── */
+.now{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:16px}
+.tile{border:1px solid var(--line);border-radius:var(--r-lg);background:linear-gradient(180deg,var(--s2),var(--s1));padding:12px 14px}
+.tile .k{font-family:'IBM Plex Mono';font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--tx-3)}
+.tile .v{font-family:'Bricolage Grotesque';font-weight:800;font-size:22px;letter-spacing:-.4px;color:var(--tx);margin-top:5px}
+.tile .v small{font-size:13px;color:var(--tx-3);font-weight:500}
+.tile.presence-tile{grid-column:span 2;background:var(--acc-glow);border-color:var(--acc-dim)}
+.tile.presence-tile .v{color:var(--acc);font-size:18px}
+.tile .sub{font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3);margin-top:6px}
+
+/* ── the live event stream — the tail of the shared log ── */
+.streamhd{display:flex;align-items:center;gap:10px;margin:0 2px 11px}
+.streamhd .ttl{font-family:'Bricolage Grotesque';font-weight:700;font-size:15px}
+.streamhd .live{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--acc);display:inline-flex;align-items:center;gap:6px}
+.streamhd .live i{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.streamhd .cursor{margin-left:auto;font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3)}
+
+.log{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--s0);overflow:hidden}
+.ev{display:flex;align-items:flex-start;gap:11px;padding:9px 13px;border-bottom:1px solid var(--line);font-size:12px}
+.ev:last-child{border-bottom:none}
+.ev .seq{font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3);min-width:34px;text-align:right;padding-top:2px}
+.ev .kdot{width:8px;height:8px;border-radius:99px;margin-top:4px;flex:none;background:var(--tx-3)}
+.ev .kind{font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-2);background:var(--s2);border:1px solid var(--line);border-radius:5px;padding:1px 7px;flex:none;align-self:flex-start}
+.ev .sum{color:var(--tx-2);line-height:1.45}
+.ev .sum b{color:var(--tx);font-weight:500}
+.ev .face{margin-left:auto;font-family:'IBM Plex Mono';font-size:8.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--tx-3);border:1px solid var(--line);border-radius:99px;padding:1px 7px;flex:none;align-self:flex-start}
+/* kind families → the colour the dot carries (kind accents, NOT node statuses) */
+.ev.k-run .kdot,.ev.k-create .kdot,.ev.k-connect .kdot,.ev.k-config .kdot,.ev.k-move .kdot{background:var(--kind-process)}
+.ev.k-ask .kdot,.ev.k-chat .kdot{background:var(--kind-content)}
+.ev.k-decision .kdot,.ev.k-review .kdot,.ev.k-resolve .kdot{background:var(--await)}
+.ev.k-warn .kdot{background:var(--fail)} .ev.k-warn .kind{color:var(--fail);border-color:var(--fail)}
+.ev.k-mode .kdot{background:var(--kind-model)}
+.ev .heartbeat{font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3);font-style:italic}
+
+.foot{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--s0);border-top:1px solid var(--line);font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono'}
+.foot .live{color:var(--acc)}
+
+.panel{grid-area:panel;background:var(--s0);border-left:1px solid var(--line);padding:14px;overflow:auto}
+.panel .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:-14px -14px 14px;padding:10px 12px 0}
+.panel .tab{padding:8px 13px;font-size:12.5px;color:var(--tx-3);border-bottom:2px solid transparent;font-weight:500}
+.panel .tab.on{color:var(--tx);border-bottom-color:var(--acc)}
+.panel .legend{font-size:10px;color:var(--tx-3);line-height:1.7}
+.panel .legend .row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.panel .legend .d{width:8px;height:8px;border-radius:99px;flex:none}
+.panel h5{font-family:'IBM Plex Mono';font-size:9.5px;text-transform:uppercase;letter-spacing:1px;color:var(--tx-3);margin:14px 0 8px}
+</style></head>
+<body><div class="app">
+  <header class="top"><span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
+    <span class="presence"><span class="dot"></span>focus · ready</span>
+    <div class="verbs"><button class="btn">◐ layers</button><button class="btn">＋ wire</button><button class="btn">↻ force</button><button class="btn run">▶ run <span class="k">⏎</span></button></div>
+  </header>
+
+  <nav class="rail collapsible">
+    <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">⌕</span><span class="label">retrieve</span></div>
+    <h4><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">▦</span><span class="label">codebase</span></div>
+  </nav>
+
+  <!-- the activity region lives where the canvas would be in this probe; landmark = ui://activity -->
+  <main class="canvas" data-ui-ref="ui://activity">
+
+    <!-- ── NOW-VIEW — the REAL now() fields, presence DERIVED ── -->
+    <div class="now">
+      <div class="tile"><div class="k">graph</div><div class="v" style="font-size:16px;font-family:'IBM Plex Mono';font-weight:600">codebase</div><div class="sub">the operated graph</div></div>
+      <div class="tile"><div class="k">nodes resolved</div><div class="v">7<small> / 7</small></div><div class="sub">nodes_resolved / nodes_total</div></div>
+      <div class="tile presence-tile"><div class="k">presence · mode</div><div class="v">ready · all resolved <small style="color:var(--tx-3)">· focus</small></div><div class="sub">derived: pending=0 &amp; all resolved → "ready · all resolved"</div></div>
+    </div>
+    <div class="now" style="grid-template-columns:repeat(4,1fr);margin-top:-6px">
+      <div class="tile"><div class="k">surfaced pending</div><div class="v">0</div><div class="sub">nothing awaiting you</div></div>
+      <div class="tile" style="grid-column:span 3"><div class="k">last event</div><div class="v" style="font-size:13px;font-family:'IBM Plex Mono';font-weight:500;color:var(--tx-2)">#214 · run — codebase graph ran (3 cached, 4 ran)</div><div class="sub">now().last_event = recent_events(1)[0]</div></div>
+    </div>
+
+    <!-- ── THE LIVE STREAM — tail of the one shared log; pushed over SSE ── -->
+    <div class="streamhd">
+      <span class="ttl">Activity</span>
+      <span class="live"><i></i>live · SSE</span>
+      <span class="cursor">cursor seq 214 · gapless reconnect · heartbeat 15s</span>
+    </div>
+
+    <div class="log">
+      <!-- each row: seq · kind (REAL emitted kind) · summary · which face wrote it (both faces share the log) -->
+      <div class="ev k-decision"><span class="seq">#214</span><span class="kdot"></span><span class="kind">run</span><span class="sum"><b>codebase</b> graph ran — 4 ran, 3 cached (memo gate)</span><span class="face">op</span></div>
+      <div class="ev k-warn"><span class="seq">#213</span><span class="kdot"></span><span class="kind">warning</span><span class="sum">model registry returned empty — falling back to the default brain</span><span class="face">agent</span></div>
+      <div class="ev k-decision"><span class="seq">#212</span><span class="kdot"></span><span class="kind">decision.implemented</span><span class="sum">build closed — <b>sentiment</b> node surfaced for review</span><span class="face">internal</span></div>
+      <div class="ev k-decision"><span class="seq">#211</span><span class="kdot"></span><span class="kind">decision.verify</span><span class="sum">build verified by use — affected suites green</span><span class="face">internal</span></div>
+      <div class="ev k-review"><span class="seq">#210</span><span class="kdot"></span><span class="kind">review.advance</span><span class="sum">walkthrough advanced — gate opened, next item fired</span><span class="face">op</span></div>
+      <div class="ev k-decision"><span class="seq">#209</span><span class="kdot"></span><span class="kind">decision.surfaced_for_review</span><span class="sum">build_result_review surfaced → live escalation</span><span class="face">internal</span></div>
+      <div class="ev k-mode"><span class="seq">#208</span><span class="kdot"></span><span class="kind">mode</span><span class="sum">presence → <b>focus</b></span><span class="face">op</span></div>
+      <div class="ev k-ask"><span class="seq">#207</span><span class="kdot"></span><span class="kind">ask</span><span class="sum"><b>ask</b> node answered — grounded in 2 inputs</span><span class="face">op</span></div>
+      <div class="ev k-create"><span class="seq">#206</span><span class="kdot"></span><span class="kind">connect</span><span class="sum">connected constant → llm (Text → Text)</span><span class="face">op</span></div>
+      <div class="ev k-create"><span class="seq">#205</span><span class="kdot"></span><span class="kind">create</span><span class="sum">created node <b>llm</b> on codebase</span><span class="face">op</span></div>
+      <div class="ev k-decision"><span class="seq">#204</span><span class="kdot"></span><span class="kind">grow</span><span class="sum">node-type proposal applied — rediscovered registry</span><span class="face">op</span></div>
+      <div class="ev"><span class="seq"></span><span class="kdot" style="background:transparent"></span><span class="heartbeat">· · · heartbeat · stream open · waiting for next event · · ·</span></div>
+    </div>
+
+  </main>
+
+  <footer class="foot"><span class="live">● live</span><span>event-stream connected · seq 214</span><span style="margin-left:auto">both faces write one log · monotonic seq · append-only</span></footer>
+
+  <aside class="panel">
+    <div class="tabs"><span class="tab">⊙ Inspector</span><span class="tab">✦ Inbox</span><span class="tab on">◷ Activity</span></div>
+    <h5>now-view</h5>
+    <div class="legend" style="line-height:1.6">Derived live from <b style="color:var(--tx-2)">state + inbox + log</b>. The presence string is one of four — never free text:
+      <div style="margin-top:8px;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3)">
+        pending&gt;0 → awaiting your approval<br>all resolved → ready · all resolved<br>nodes exist → ready · work unresolved<br>none → empty<br><span style="color:var(--kind-model)">mode=off → off (overrides)</span>
+      </div>
+    </div>
+    <h5>event kinds (real)</h5>
+    <div class="legend">
+      <div class="row"><span class="d" style="background:var(--kind-process)"></span>compose / run — create·connect·config·move·run</div>
+      <div class="row"><span class="d" style="background:var(--kind-content)"></span>converse — ask·chat</div>
+      <div class="row"><span class="d" style="background:var(--await)"></span>decision / review — decision.*·review.*·resolve</div>
+      <div class="row"><span class="d" style="background:var(--kind-model)"></span>mode — presence change</div>
+      <div class="row"><span class="d" style="background:var(--fail)"></span>warning — fail-loud, never silent</div>
+    </div>
+    <h5>face</h5>
+    <div class="legend">op · agent (MCP) · internal (wire/cron) — all write the ONE log.</div>
+  </aside>
+</div></body></html>

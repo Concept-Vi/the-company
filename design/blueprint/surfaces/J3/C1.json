@@ -1,0 +1,37 @@
+{
+  "_what": "GENERATED surface-spec for view C1. Directory = journey spine (tree); journeys[]/cross_journeys[] = the address-refs that carry the web (B3). Built by a Claude Code session to the addresses below (never invent an address).",
+  "id": "C1",
+  "area": "C",
+  "title": "Inbox \u2014 three lanes, clean",
+  "platforms": [
+    "desktop",
+    "mobile"
+  ],
+  "represents": [
+    "INB-lanes",
+    "EVT-now"
+  ],
+  "status": "planned",
+  "home_journey": "J3",
+  "journeys": [
+    "J3",
+    "J5",
+    "J7"
+  ],
+  "cross_journeys": [
+    "J5",
+    "J7"
+  ],
+  "addresses": [
+    "ui://activity",
+    "ui://inbox"
+  ],
+  "build_to": {
+    "components": [
+      "activity",
+      "inbox"
+    ],
+    "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
+    "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
+  }
+}

@@ -32,10 +32,44 @@ import subprocess
 
 # --- config constants (NOT time estimates relayed to Tim — internal wall-clock ceilings) ---
 DEFAULT_TIMEOUT_S = 900                 # subprocess wall-clock ceiling (a fixed cap, fail loud past it)
-PERMISSION_MODE = os.environ.get("COMPANY_WIRE_PERMISSION", "plan")  # plan | acceptEdits — graduate via env flag
+# COMPANY_WIRE_PERMISSION — the SECOND of the wire's two deliberate graduation switches (wire-bridge §3).
+# The DEFAULT is "plan" (SAFE-BY-DEFAULT): a plan-mode `claude -p` run is read-only — it changes NOTHING,
+# so even if the production trigger (the first switch) fires, NOTHING self-modifies. acceptEdits is OPT-IN
+# ONLY, via this env var; it is NEVER the default. `permission_mode()` reads the env at CALL time (not at
+# import) so a runtime `COMPANY_WIRE_PERMISSION=acceptEdits` is honoured without a process restart and a
+# test can monkeypatch the env; the module-level PERMISSION_MODE remains for back-compat (the import-time
+# snapshot of the default — DO NOT rely on it for the live posture, use permission_mode()).
+PERMISSION_MODE = os.environ.get("COMPANY_WIRE_PERMISSION", "plan")  # plan | acceptEdits — import-time snapshot
 CONCURRENCY_CAP = int(os.environ.get("COMPANY_WIRE_CONCURRENCY", "3"))  # W7: max concurrent claude -p
 CLAUDE_BIN = os.environ.get("COMPANY_CLAUDE_BIN", "claude")
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def permission_mode() -> str:
+    """The LIVE permission posture (call-time read of COMPANY_WIRE_PERMISSION; default "plan").
+    Call-time (not the import-time PERMISSION_MODE constant) so a deliberately-set env var flips the
+    posture WITHOUT a process restart, and so the safe default ("plan", read-only, no self-modify)
+    holds for every run that does not OPT IN. Use this — not the constant — for the live posture."""
+    return os.environ.get("COMPANY_WIRE_PERMISSION", "plan")
+
+
+def wire_armed() -> bool:
+    """The PRODUCTION-TRIGGER arming gate (L2): is the live loop deliberately armed to SELF-MODIFY?
+    True ONLY when the operator has deliberately opted in via COMPANY_WIRE_PERMISSION=acceptEdits.
+
+    This is the gate that keeps the resolve→dispatch production trigger INERT BY DEFAULT (🔒
+    built-not-armed). With the default `plan` posture this returns False, so the trigger
+    (Suite.resolve_surfaced, when an operator approves a build-intent) does NOT fire a dispatch — the
+    system is SAFE-BY-DEFAULT, exactly as before L2. acceptEdits is the deliberate, env-gated opt-in
+    that arms the live circuit; the lead fires the one-shot proof under it (NOT this worker). A `plan`
+    posture, even if the trigger DID fire, would change nothing (read-only) — so this gate + the
+    plan-default are the two layers that together guarantee no autonomous self-modification by default.
+
+    NOTE: the wire suites (wire_loop_acceptance / wire_adversarial) call drive_dispatchable DIRECTLY
+    with the env unset → wire_armed() is False → resolve_surfaced does NOT also fire, so those suites'
+    single explicit dispatch stays exactly-one (no double-launch). The trigger only adds a SECOND path
+    when deliberately armed."""
+    return permission_mode() == "acceptEdits"
 
 
 class LaunchError(RuntimeError):
@@ -131,13 +165,133 @@ STANDARDS_BLOCK = (
     "is a later stage.")
 
 
+def _compose_context_block(payload: dict) -> str:
+    """X4 — compose the RICH-context sections from the WIDENED payload (X1/X2/X3), exactly the way
+    `scope` is slotted: legible, clearly-labelled, and CONDITIONAL (an absent/empty field renders NO
+    section at all, so an older intent without the fields composes byte-for-byte as today). This is a
+    PURE formatter — it reads what's ALREADY persisted on the payload (resolved at mint, X3); it does
+    NOT gather/embed/re-resolve (that would break the boundary AND X5's consent-time property).
+
+    Fail-loud-without-crashing: a malformed `context` bundle renders what is VALID and appends a
+    VISIBLE note for what was skipped (the note is the loud part — never a silent drop, never a crash),
+    per the root constitution's rule 4 reconciled with X4's never-crash-the-compose requirement.
+
+      address  → "INDICATED ELEMENT: <address>"        (X1 — the ui:// locus the build is pointed at)
+      symbols  → "RELATED CODE (neighbours): <symbols>" (X2 — the code:// neighbours of the locus)
+      context  → "CONTEXT AT THIS LOCUS (...): <items>" (X3 — the bounded R2 notebook at the locus)
+    """
+    sections: list[str] = []
+
+    # X1 — the indicated address (the ui:// locus). Empty/absent → no section.
+    address = payload.get("address")
+    if isinstance(address, str) and address.strip():
+        sections.append(f"INDICATED ELEMENT (the addressed locus this change is pointed at): {address}")
+
+    # X2 — the related code symbols (the neighbours behind the address). Empty list/absent → no section.
+    symbols = payload.get("symbols")
+    if isinstance(symbols, (list, tuple)) and len(symbols) > 0:
+        rendered = ", ".join(str(s) for s in symbols)
+        sections.append(
+            "RELATED CODE (neighbours of the indicated element — the code this change likely touches): "
+            + rendered)
+
+    # X3 — the attached context bundle (the accumulated notebook at the locus: comments/chats/history).
+    # ALREADY bounded + deduped + JSON-clean at mint (X3). X4 only FORMATS it readably. Fail-loud on a
+    # malformed bundle: render the valid items, NOTE the skipped ones, never crash, never silently drop.
+    context = payload.get("context")
+    if context is not None:
+        lines: list[str] = []
+        skipped = 0
+        note = ""
+        if isinstance(context, (list, tuple)):
+            for item in context:
+                if isinstance(item, dict) and isinstance(item.get("text"), str) and item.get("text").strip():
+                    kind = item.get("kind") or "note"
+                    addr = item.get("address") or ""
+                    pin = " [pinned]" if item.get("pinned") else ""
+                    loc = f" @ {addr}" if addr else ""
+                    lines.append(f"- [{kind}{loc}{pin}] {item['text'].strip()}")
+                else:
+                    skipped += 1
+            if skipped:
+                note = (f"\n  (note: {skipped} context item(s) were malformed — missing/empty text or "
+                        f"not a record — and were skipped; the valid items above are rendered. fail-loud.)")
+        else:
+            # the bundle itself is not a list (e.g. a dict) — render nothing from it, but say so LOUD.
+            note = (f"\n  (note: the attached context bundle was malformed — expected a list of items, "
+                    f"got {type(context).__name__}; it was skipped. fail-loud.)")
+        # only emit the section if there is something legible to show (valid items OR a loud note).
+        if lines or note:
+            body = ("\n".join(lines) if lines
+                    else "  (no valid context items to render)")
+            sections.append(
+                "CONTEXT AT THIS LOCUS (what's been said/done here — the accumulated notebook):\n"
+                + body + note)
+
+    if not sections:
+        return ""
+    return "\n\n" + "\n\n".join(sections)
+
+
+def _governing_constitutions(scope, repo: str = REPO_ROOT) -> list[str]:
+    """X15 — the constitution-hop. From the resolved `scope[]` (repo-relative files), derive the
+    DISTINCT governing module `AGENTS.md` paths to NAME alongside the root three: walk each scope
+    file's parent dirs UP to the NEAREST ancestor that HAS an `AGENTS.md` under the repo, dedupe,
+    return them (repo-relative, sorted). The root `AGENTS.md` itself is EXCLUDED — it is already
+    named by the root "Read AGENTS.md / MAP.md / STATE.md first." line, so naming it again as a
+    "module" constitution would be noise (a top-level scope file resolves to the root → no module
+    line, which is correct: the root law already governs it).
+
+    PURE-of-side-effects: the ONLY IO is a read-only `os.path.exists` stat against `repo` (NOT cwd),
+    which is deterministic and reads nothing through the suite/embed/network — X4's pure boundary and
+    X5's consent-time property both hold (the build sees exactly what the payload + the repo's static
+    constitution layout name; no live re-resolution). A scope file under NO ancestor AGENTS.md (none
+    exist, in practice the root always does) yields nothing for that file — fail-loud-legible, no crash.
+    """
+    if not scope:
+        return []
+    found: set[str] = set()
+    for raw in scope:
+        if not isinstance(raw, str) or not raw.strip():
+            continue
+        # normalize: strip a leading ./, collapse, and refuse anything that escapes the repo via `..`
+        rel = os.path.normpath(raw.strip())
+        if rel.startswith("..") or os.path.isabs(rel):
+            continue  # outside the repo — not ours to govern; skip (no crash)
+        # walk dirs UP to the nearest ancestor with an AGENTS.md, EXCLUDING the repo root. A scope
+        # entry that is ITSELF a directory (e.g. "runtime/") starts AT itself (you pointed at the
+        # module dir, so its own AGENTS.md governs); a file entry starts at its parent dir.
+        start = rel if os.path.isdir(os.path.join(repo, rel)) else os.path.dirname(rel)
+        parent = start
+        while parent and parent not in (".", os.sep):
+            if os.path.exists(os.path.join(repo, parent, "AGENTS.md")):
+                found.add(parent.replace(os.sep, "/") + "/AGENTS.md")
+                break
+            parent = os.path.dirname(parent)
+    return sorted(found)
+
+
 def build_instruction(decision: dict) -> str:
     """Build the work instruction from the recorded decision (its payload). The decision IS the
     authorization (W2) and carries the declared scope (W4) — the instruction tells Claude Code
     WHAT to build and WHERE it is allowed to touch, so a well-behaved run stays in scope. It ALSO
     carries the STANDARDS_BLOCK: the bar the work must meet (UI/UX bar for operator-facing surfaces,
     self-description updated as part of the change, a SEPARATE review pass + the operator will review).
-    It does NOT ask the build to review itself — reviewing is a separate stage (AI-operated ≠ review-free)."""
+    It does NOT ask the build to review itself — reviewing is a separate stage (AI-operated ≠ review-free).
+
+    X4 — the prompt is now RICH: when the WIDENED payload (X1/X2/X3) carries `address`, `symbols`, and
+    the bounded `context` bundle, `build_instruction` composes them into legible, clearly-labelled
+    sections — EXACTLY as it already slots `scope` — so the launched build arrives pointed (the locus)
+    + neighbour-aware (the related code) + memory-rich (the notebook at the locus). It stays a PURE
+    string-formatter (decision-in → string-out): it FORMATS what X3 already resolved at mint; it does
+    NOT gather/embed/re-resolve (that would break the boundary AND X5's consent-time property — the
+    operator approves WITH the exact context, the build can't resolve a different one later). An older
+    intent missing those fields composes byte-for-byte as before (additive + backward-compatible).
+
+    X15 — the constitution-hop: it ALSO names the GOVERNING module constitution(s) on a NEW adjacent
+    line (the root "Read … first." sentence is preserved unaltered), derived from the scope's parent
+    dirs via `_governing_constitutions` (a read-only path stat — still pure-of-side-effects). So the
+    launched build reads the laws of exactly where you pointed. Empty/no scope → just the root three."""
     payload = decision.get("payload", {}) if isinstance(decision, dict) else {}
     spec = payload.get("spec") or payload.get("instruction") or payload.get("why") or ""
     scope = payload.get("scope") or payload.get("target_scope") or []
@@ -146,8 +300,18 @@ def build_instruction(decision: dict) -> str:
         scope_line = ("\n\nYou are authorized to change ONLY these paths (the operator approved "
                       "exactly this scope): " + ", ".join(scope) +
                       ". Do NOT touch anything outside that scope.")
+    context_block = _compose_context_block(payload)
+    # X15 — the constitution-hop: name the GOVERNING module constitution(s) derived from the scope's
+    # parent dirs, on a NEW adjacent line (the root "Read … first." sentence is PRESERVED unaltered).
+    # Empty/no scope (or a scope under no module dir) → no line → the root three exactly as before.
+    governing = _governing_constitutions(scope)
+    constitution_line = ""
+    if governing:
+        constitution_line = ("\n\nAlso read the governing module constitution(s) — the laws of exactly "
+                             "where this change is pointed: " + ", ".join(governing) + ".")
     return (f"Implement the following approved change in the 'company' repo. "
-            f"Read AGENTS.md / MAP.md / STATE.md first.\n\n{spec}{scope_line}{STANDARDS_BLOCK}")
+            f"Read AGENTS.md / MAP.md / STATE.md first.{constitution_line}"
+            f"\n\n{spec}{scope_line}{context_block}{STANDARDS_BLOCK}")
 
 
 def _default_runner(instruction: str, *, repo: str, permission_mode: str, timeout_s: int) -> dict:
@@ -201,7 +365,9 @@ def launch(decision: dict, *, repo: str = REPO_ROOT, permission_mode: str | None
     Note: changed_files is GIT ground truth (not the model's self-report) — W4's scope-diff
     rests on the repo's own record.
     """
-    mode = permission_mode or PERMISSION_MODE
+    # call-time live posture (default "plan" = read-only/no self-modify) unless an explicit mode is
+    # passed; permission_mode() honours a deliberately-set COMPANY_WIRE_PERMISSION without a restart.
+    mode = permission_mode if permission_mode is not None else globals()["permission_mode"]()
     run = runner or _default_runner
     instruction = build_instruction(decision)
     # Capture the pre-build content baseline FIRST (the tree may already be dirty — other lanes,

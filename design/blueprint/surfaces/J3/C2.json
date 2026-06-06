@@ -1,0 +1,40 @@
+{
+  "_what": "GENERATED surface-spec for view C2. Directory = journey spine (tree); journeys[]/cross_journeys[] = the address-refs that carry the web (B3). Built by a Claude Code session to the addresses below (never invent an address).",
+  "id": "C2",
+  "area": "C",
+  "title": "Decision \u2192 value-choice (COA)",
+  "platforms": [
+    "desktop",
+    "mobile"
+  ],
+  "represents": [
+    "INB-coa",
+    "INB-resolve",
+    "GOV-resolve"
+  ],
+  "status": "planned",
+  "home_journey": "J3",
+  "journeys": [
+    "J3",
+    "J5"
+  ],
+  "cross_journeys": [
+    "J5"
+  ],
+  "addresses": [
+    "ui://grow/approve",
+    "ui://grow/reject",
+    "ui://inbox/coa",
+    "ui://walkthrough/reason",
+    "ui://walkthrough/verdict"
+  ],
+  "build_to": {
+    "components": [
+      "grow",
+      "inbox",
+      "walkthrough"
+    ],
+    "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
+    "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
+  }
+}

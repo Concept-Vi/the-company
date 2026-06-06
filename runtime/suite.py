@@ -27,6 +27,56 @@ def _tag_system_origin(code: str) -> str:
     return "ORIGIN = 'system'  # brain-written (self-grown) — provenance layer\n" + code
 
 
+def _load_corpus_element_addresses() -> list[tuple]:
+    """S1 — project the 24+ element-level addresses from the design corpus (design/_system/addresses.json)
+    into live UI_REGISTRY rows, so the live registry carries ELEMENT addresses (ui://inbox/build-review),
+    not just the 7 region handles. ONE SOURCE (rule 8): the rows are READ from the corpus, never
+    hand-transcribed/invented — addresses.json is the design-time superset the mockups carry.
+
+    Each row is the registry's 6-tuple shape `(ref, kind, title, handle, caps, union-extras)`:
+      • ref          — the FULL canonical corpus string `ui://<region>/<element>` (region-first grammar).
+                       It is the DICT KEY in build_ui_info AND the value the corpus/mockup carries as
+                       data-ui-ref (full-string carrier, the baked-in decision) — so an orphan check
+                       (every used data-ui-ref is registered) passes by construction for the corpus form.
+      • kind         — DERIVED by UnionAddressRecord.from_corpus (region 'canvas' → 'canvas', else
+                       'chrome' = the DOM-resolved default). The live resolver dispatches on kind.
+      • handle       — for kind=canvas → camera_ref='*' (the whole canvas, reusing the existing camera
+                       path); else dom_handle = the FULL ui:// string (the corpus full-string carrier).
+      • caps         — the corpus list-capabilities NORMALIZED to the canonical bool-object via
+                       UnionAddressRecord (driven/driven-read-only → drivenReadOnly; unknown → fail loud).
+      • union-extras — the S0 union-record join fields (region/represents/code) — carried for the
+                       element rows because the corpus join IS known for them (unlike the 7 live regions).
+
+    PRESERVE: this is ADDITIVE. The 7 hand-authored bare-ref rows (UI_REGISTRY below) keep their bare keys
+    ('inbox' → ui://chrome/inbox), so show's handle_map, _registry_ui_target, and the walkthrough drive
+    keep resolving exactly as before — they read those bare entries, which are untouched. The element rows
+    use DISTINCT full-string keys (no collision with the bare keys; build_ui_info's duplicate-ref guard
+    stays satisfied). FAIL LOUD (rule 4): a missing/malformed corpus file raises — the registry never
+    silently ships region-only.
+    """
+    import json as _json
+    from contracts.ui_info import UnionAddressRecord
+    here = os.path.dirname(os.path.abspath(__file__))
+    repo_root = os.path.dirname(here)
+    path = os.path.join(repo_root, "design", "_system", "addresses.json")
+    with open(path, encoding="utf-8") as f:
+        data = _json.load(f)
+    addresses = data.get("addresses", data)   # tolerate {addresses:{...}} or a bare map
+    rows: list[tuple] = []
+    for addr, rec in addresses.items():
+        ur = UnionAddressRecord.from_corpus(addr, rec)   # validates grammar + normalizes caps (fail loud)
+        if ur.kind == "canvas":
+            handle = {"camera_ref": "*"}                  # reuse the whole-canvas camera path
+        else:
+            handle = {"dom_handle": addr}                 # full-string carrier (the baked-in decision)
+        # I4: carry the union-record `tier` (governance action_class for COMMANDS at this address)
+        # into the registry row's union-extras. ADDITIVE + OPTIONAL — None when the corpus entry
+        # carries no tier (the default), so an untiered address falls back to the verb's own class.
+        extras = {"region": ur.region, "represents": ur.represents, "code": ur.code, "tier": ur.tier}
+        rows.append((addr, ur.kind, (ur.title or addr), handle, dict(ur.capabilities), extras))
+    return rows
+
+
 def _strip_fences(code: str) -> str:
     c = code.strip()
     if c.startswith("```"):
@@ -74,32 +124,58 @@ class Suite:
     # Step B: two ADDITIVE states for reference-resolved nodes (portals): `live` (ref resolves to content)
     # and `empty` (ref is None/dangling/unresolved) — so a portal stops mis-reporting idle/cached on
     # reload. Executing nodes are UNAFFECTED (scoped by applies_to).
+    #
+    # S5 (Interactive Addressed Surface) — each state additionally carries a `render` block so the surface
+    # paints the status vocabulary FROM the registry (one-source, rule 3) instead of the FE hardcoding a
+    # state→token switch (the thing F3 must avoid). Each render = {token, icon, shape}:
+    #   token — the CORPUS design-token (CSS custom property) the dot/badge colours from. Registry-is-truth
+    #           (rule 8): every token here REFERENCES an EXISTING corpus token in design/_system/tokens.json
+    #           → design-system.css (none invented). The four executing statuses bind to the corpus's existing
+    #           node-status classes (.s-idle/.s-ran/.s-cache/.s-stuck, design-system.css:92-93 →
+    #           --tx-3/--ok/--cache/--fail). The three with NO dedicated corpus CSS binding yet
+    #           (failed/live/empty — design-substrate §3) bind to the closest existing semantic token:
+    #           failed→--fail (it is an error state, shares stuck's error colour), live→--acc (the live/active
+    #           accent), empty→--tx-3 (the muted/idle tone). FLAGGED: failed/live/empty have no DISTINCT corpus
+    #           class today — adding .s-failed/.s-live/.s-empty CSS bindings is a FORM/corpus-lane follow-up
+    #           (the corpus keeper / F3), out of this backend lane (do NOT hand-edit the generated CSS).
+    #   icon  — a provisional glyph hint for the surface. FLAGGED: there is NO icon registry in the corpus
+    #           today; these are sensible provisional values the FE/design-critic may revise (F3).
+    #   shape — the dot shape hint ('dot' default; 'ring' marks the reference-window states). Provisional;
+    #           the corpus "shape" token group is border-radii, not a state-shape vocabulary — also a
+    #           FORM-lane follow-up. The design-critic (separate stage, rule 9) grades aesthetics, not this.
     NODE_STATES = (
         {"id": "idle", "label": "Idle", "applies_to": ("compute",),
          "means": "has never produced a result and holds none",
-         "derived_when": "no fresh run result and the node's output address does not resolve"},
+         "derived_when": "no fresh run result and the node's output address does not resolve",
+         "render": {"token": "--tx-3", "icon": "circle", "shape": "dot"}},
         {"id": "ran", "label": "Ran", "applies_to": ("compute",),
          "means": "fired on the most recent run and produced a fresh result",
-         "derived_when": "the node id is in the run result's `ran` set"},
+         "derived_when": "the node id is in the run result's `ran` set",
+         "render": {"token": "--ok", "icon": "check", "shape": "dot"}},
         {"id": "cached", "label": "Cached", "applies_to": ("compute",),
          "means": "output already existed, so the memo gate skipped re-running it (the GPU/clock guard)",
          "derived_when": "the node id is in the run result's `skipped` set, OR (on reload) its output "
-                         "address resolves to a stored result"},
+                         "address resolves to a stored result",
+         "render": {"token": "--cache", "icon": "layers", "shape": "dot"}},
         {"id": "stuck", "label": "Stuck", "applies_to": ("compute",),
          "means": "could not fire because a required input never resolved (not a pruned branch)",
          "derived_when": "the node id is in the run result's `stuck` set, OR (on reload) the most recent "
-                         "run event for the graph listed it stuck and it still holds no result"},
+                         "run event for the graph listed it stuck and it still holds no result",
+         "render": {"token": "--fail", "icon": "pause", "shape": "dot"}},
         {"id": "failed", "label": "Failed", "applies_to": ("compute",),
          "means": "fired but RAISED — it threw an error during run (the scheduler contained it; downstream "
                   "stays unresolved). Distinct from stuck (an input never arrived) — here the node ran and "
                   "errored. The error message is carried on the node where the shape allows.",
-         "derived_when": "the node id is a key in the run result's `failed` map (scheduler containment)"},
+         "derived_when": "the node id is a key in the run result's `failed` map (scheduler containment)",
+         "render": {"token": "--fail", "icon": "alert", "shape": "dot"}},
         {"id": "live", "label": "Live", "applies_to": ("reference",),
          "means": "a live window onto its reference address, currently resolving to content",
-         "derived_when": "RESOLVE='reference' and head(config.ref) resolves to a stored content hash"},
+         "derived_when": "RESOLVE='reference' and head(config.ref) resolves to a stored content hash",
+         "render": {"token": "--acc", "icon": "broadcast", "shape": "ring"}},
         {"id": "empty", "label": "Empty", "applies_to": ("reference",),
          "means": "a live window whose reference is unset, dangling, or not yet resolvable",
-         "derived_when": "RESOLVE='reference' and config.ref is empty/None or head(ref) does not resolve"},
+         "derived_when": "RESOLVE='reference' and config.ref is empty/None or head(ref) does not resolve",
+         "render": {"token": "--tx-3", "icon": "circle-dashed", "shape": "ring"}},
     )
 
     def __init__(self, store: FsStore, registry: NodeRegistry, nodes_dir: str | None = None):
@@ -124,6 +200,65 @@ class Suite:
         # durable decision.dispatch event remains the cross-process/restart guarantee.
         self._dispatch_locks_guard = _t.Lock()
         self._dispatch_locks: dict = {}
+        # R1 — the BACKEND-HELD current `ui://` locus (seams-rhm Seam 4: "there is no stored
+        # current-locus anywhere in suite/store" — this is the net-new piece). Today the operator's
+        # locus exists ONLY FE-side, shipped per-request as `focus.selected`; nothing is remembered
+        # between calls. R1 holds the most-recent INDICATED `ui://` address (set in the chat path when
+        # I1's widened `focus` carries one — see _chat_context) so the RHM can READ where the operator
+        # IS across turns. PERSISTENCE = in-memory on this long-lived Suite instance (DELIBERATE,
+        # per the guide): single live operator; R2's auto-resolve reads it LIVE off the same Suite in
+        # the same process; the FE re-ships `focus` every request so a restart re-establishes it
+        # instantly (restart-survival buys nothing); store-backing would be a schema/contract addition
+        # with no consumer. It PERSISTS ALONGSIDE the per-request `focus` path — never replacing it.
+        # Exposed via current_locus() for R2 to consume (R2 is NOT wired here — held + set + readable).
+        self._current_locus: str | None = None
+
+        # X17 (Convergence, D2) — THE COMPOSITION IS CONFIGURABLE. The R2 ranking WEIGHTS (recency λ ·
+        # proximity · pin · semantic), the window BUDGET cap, and the run-versions bound were hardcoded
+        # CLASS constants (still defined on the class above, as the DEFAULT FLOOR). Here we RESOLVE each
+        # from the env (the fabric.config `os.environ.get(default)` pattern — NO parallel config system,
+        # consistent with CODEEDGES_DEPTH / COMPANY_WIRE_PERMISSION) INTO INSTANCE attributes that shadow
+        # the class defaults. So retuning the context composition needs NO code change: a FRESH Suite (a
+        # restart re-reads) picks up the env. The default is the OLD constant → byte-for-behaviour when
+        # unset (every R2 preserve suite stays green). Reading into INSTANCE attrs (not re-binding the
+        # class) keeps BOTH `Suite.R2_BUDGET` class-access (sibling suites) AND `su.R2_BUDGET = …`
+        # per-instance override (conv_semantic_rank) working. FAIL LOUD on a malformed value (rule 4):
+        # _cfg_float/_cfg_int raise a clear, knob-NAMED error — never a silent wrong/zero value. Exposed
+        # in capabilities().composition_config so the surface/fleet can READ them (registry-is-truth).
+        self.R2_LAMBDA = self._cfg_float("COMPANY_R2_LAMBDA", type(self).R2_LAMBDA)
+        self.R2_PROXIMITY_WEIGHT = self._cfg_float("COMPANY_R2_PROXIMITY_WEIGHT", type(self).R2_PROXIMITY_WEIGHT)
+        self.R2_PIN_WEIGHT = self._cfg_float("COMPANY_R2_PIN_WEIGHT", type(self).R2_PIN_WEIGHT)
+        self.R2_SEMANTIC_WEIGHT = self._cfg_float("COMPANY_R2_SEMANTIC_WEIGHT", type(self).R2_SEMANTIC_WEIGHT)
+        self.R2_BUDGET = self._cfg_int("COMPANY_R2_BUDGET", type(self).R2_BUDGET)
+        self.R2_RUN_VERSIONS = self._cfg_int("COMPANY_R2_RUN_VERSIONS", type(self).R2_RUN_VERSIONS)
+
+    @staticmethod
+    def _cfg_float(env_name: str, default: float) -> float:
+        """X17 — resolve a float knob from the env (default = the class constant). FAIL LOUD on a
+        malformed value with a knob-NAMED error (rule 4 — never a silent wrong/zero value). The default
+        is passed as the NUMERIC value (never round-tripped through a string) so the precision of e.g.
+        R2_LAMBDA = 1/(3·24·3600) is preserved byte-for-behaviour when the env is unset."""
+        raw = os.environ.get(env_name)
+        if raw is None:
+            return default
+        try:
+            return float(raw)
+        except (TypeError, ValueError):
+            raise ValueError(f"{env_name}={raw!r} is not a valid float — fix the env value "
+                             f"(X17 composition knob; default {default!r})")
+
+    @staticmethod
+    def _cfg_int(env_name: str, default: int) -> int:
+        """X17 — resolve an int knob from the env (default = the class constant). FAIL LOUD on a
+        malformed value with a knob-NAMED error (rule 4 — never a silent wrong/zero value)."""
+        raw = os.environ.get(env_name)
+        if raw is None:
+            return default
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            raise ValueError(f"{env_name}={raw!r} is not a valid int — fix the env value "
+                             f"(X17 composition knob; default {default!r})")
 
     def _session_lock(self, session_id: str):
         """One reentrant-safe lock per session, created on demand (threadsafe)."""
@@ -311,6 +446,20 @@ class Suite:
             # crash, no fabrication). Schema-additive key; an older surface ignoring it is unaffected.
             "stt": self.available_stt(),
             "panel_field_targets": list(self.PANEL_TARGETS),
+            # X17 (Convergence, D2) — THE COMPOSITION IS CONFIGURABLE. The R2 ranking knobs (the recency
+            # λ · proximity · pin · semantic WEIGHTS, the window BUDGET cap, the run-versions bound) read
+            # from the env (resolved in __init__; defaults = the class constants), so retuning the context
+            # composition needs NO code change. Exposed here (registry-is-truth) as the LIVE instance
+            # values so the surface/fleet can READ them — and later a config panel can SET them via the
+            # env. Additive key; an older reader that ignores it is unaffected (rule 2).
+            "composition_config": {
+                "R2_LAMBDA": self.R2_LAMBDA,
+                "R2_PROXIMITY_WEIGHT": self.R2_PROXIMITY_WEIGHT,
+                "R2_PIN_WEIGHT": self.R2_PIN_WEIGHT,
+                "R2_SEMANTIC_WEIGHT": self.R2_SEMANTIC_WEIGHT,
+                "R2_BUDGET": self.R2_BUDGET,
+                "R2_RUN_VERSIONS": self.R2_RUN_VERSIONS,
+            },
             "api_verbs": ["/api/run", "/api/now", "/api/chat", "/api/graph", "/api/graphs",
                           "/api/types", "/api/object_info", "/api/events", "/api/inbox",
                           "/api/panels", "/api/models", "/api/stream", "/api/move",
@@ -352,7 +501,8 @@ class Suite:
         """The brain hit unregistered ground → ASK the operator (surfaced question) instead of
         fabricating. Confabulation is as bad as failing (Tim) — this makes asking the easy path."""
         sid = self.inbox.surface("question", {"question": question, "context": context}, default="reject")
-        self._emit("ask", f"the system needs input: {question[:60]}", surfaced=sid)
+        self._emit("ask", f"the system needs input: {question[:60]}", surfaced=sid,
+                   address="ui://chrome/inbox")   # S2: the question lands in the inbox for the operator
         return sid
 
     def _acceptance_suites(self) -> list:
@@ -495,7 +645,8 @@ class Suite:
                 pos = XY(**position) if position else XY()                       # optional initial placement (C5)
                 g.nodes.append(NodeInstance(id=nid, type=type, config=seeded, position=pos))
                 self.store.save_graph(g)
-                self._emit("create", f"+ {type} node ({nid})", graph=graph_id, node=nid, type=type)
+                self._emit("create", f"+ {type} node ({nid})", graph=graph_id, node=nid, type=type,
+                           address=f"run://{graph_id}/{nid}")   # S2: addressed at the node acted on
                 return nid
         return guard("compose", do=_do)                                  # AUTO → identical behavior; POLICY is the router
 
@@ -518,7 +669,8 @@ class Suite:
                                 to_node=to_node, to_port=to_port))
             self.store.save_graph(g)
             self._emit("connect", f"wired {from_node}.{from_port} → {to_node}.{to_port}",
-                       graph=graph_id, from_node=from_node, to_node=to_node)
+                       graph=graph_id, from_node=from_node, to_node=to_node,
+                       address=f"run://{graph_id}/{to_node}")   # S2: addressed at the wired-into (downstream) node
 
     def delete_node(self, graph_id: str, node_id: str) -> None:
         # T1-RACE: per-graph lock around the whole load→mutate→save (lost-update across both faces).
@@ -527,7 +679,8 @@ class Suite:
             g.nodes = [n for n in g.nodes if n.id != node_id]
             g.edges = [e for e in g.edges if e.from_node != node_id and e.to_node != node_id]
             self.store.save_graph(g)
-            self._emit("delete", f"removed node {node_id}", graph=graph_id, node=node_id)
+            self._emit("delete", f"removed node {node_id}", graph=graph_id, node=node_id,
+                       address=f"run://{graph_id}/{node_id}")   # S2: addressed at the deleted node
 
     def set_config(self, graph_id: str, node_id: str, config: dict) -> None:
         def _do():                                                       # G1: AUTO → guard runs it straight through
@@ -560,7 +713,8 @@ class Suite:
                         n.size = WH(w=w, h=h)
                     self.store.save_graph(g)
                     self._emit("move", f"moved {node_id} → ({x:.0f},{y:.0f})",
-                               graph=graph_id, node=node_id)
+                               graph=graph_id, node=node_id,
+                               address=f"run://{graph_id}/{node_id}")   # S2: addressed at the moved node
                     return
             raise KeyError(f"no node {node_id!r} in graph {graph_id!r}")
 
@@ -577,7 +731,8 @@ class Suite:
                        + (f", stuck {len(r['stuck'])}" if r.get("stuck") else "")
                        + (f", failed {len(failed)}" if failed else ""),
                        graph=graph_id, ran=sorted(r["ran"]), cached=sorted(r["skipped"]),
-                       stuck=sorted(r.get("stuck", [])), failed=dict(failed))
+                       stuck=sorted(r.get("stuck", [])), failed=dict(failed),
+                       address=f"run://{graph_id}")   # S2: graph-level run (ran N / cached M / …)
             # FAIL LOUD at the surface (engine handoff, rule 4): the run COMPLETES (containment, no raise),
             # but a failed node must be SEEN — a node-error is not a silent no-op. A distinct `warning`
             # event (not just the count folded into the run line) so now()'s last_event surfaces it and the
@@ -585,7 +740,9 @@ class Suite:
             if failed:
                 detail = "; ".join(f"{nid}: {err}" for nid, err in sorted(failed.items()))
                 self._emit("warning", f"{len(failed)} node(s) FAILED this run — {detail}",
-                           graph=graph_id, failed=dict(failed))
+                           graph=graph_id, failed=dict(failed),
+                           address=f"run://{graph_id}")   # S2: this warning is locus-bound to the run graph
+                                                          # (distinct from the locus-LESS system-health warnings)
             return r
         return guard("run", do=_do)                                     # AUTO → identical; POLICY is the router
 
@@ -843,7 +1000,7 @@ class Suite:
             raise ValueError(f"unknown mode {mode!r} — one of {self.MODES}")
         self._ensure_rhm_node()
         self.set_config(self.SYSTEM_GRAPH, self.MODE_NODE, {"mode": mode})   # editing a parameter (same verb)
-        self._emit("mode", f"presence → {mode}")
+        self._emit("mode", f"presence → {mode}", address="ui://chrome/toolbar")   # S2: presence dial lives in the toolbar
         return mode
 
     def _mode_directive(self, mode: str) -> str:
@@ -1015,7 +1172,8 @@ class Suite:
             return self.rhm_config()
         self._ensure_rhm_node()
         self.set_config(self.SYSTEM_GRAPH, self.MODE_NODE, allowed)
-        self._emit("config", "RHM config → " + ", ".join(f"{k}={v}" for k, v in allowed.items()))
+        self._emit("config", "RHM config → " + ", ".join(f"{k}={v}" for k, v in allowed.items()),
+                   address="ui://chrome/chat")   # S2: RHM config is the chat organ's settings
         return self.rhm_config()
 
     # --- the twin (B1, B3): the explicit model-of-Tim + provenance grading ---
@@ -1065,11 +1223,16 @@ class Suite:
                 and (t.get("text") or "").strip() not in twin_texts]
 
     # --- the right-hand-man: the coherent voice of the Company about ITSELF (I2) ---
-    def _chat_context(self, graph_id: str, focus: dict | None = None) -> str:
+    def _chat_context(self, graph_id: str, focus: dict | None = None, intent: str | None = None) -> str:
         """Compact GROUND TRUTH — live system state, not the codebase (context-05 rung 1).
         With `focus` (the operator's current canvas selection), the RHM gains CO-PRESENCE:
         the focused nodes' full detail (output/config) — the shared perceptual field where
-        'context is a consequence of what I'm doing' (two planes, one state)."""
+        'context is a consequence of what I'm doing' (two planes, one state).
+
+        X13 (Convergence) — `intent` (the operator's current chat MESSAGE, passed by `chat()`) is the
+        SEMANTIC ranking query for R2: the locus context is ranked by RELEVANCE to what the operator is
+        actually asking, not just location+age. Optional (default None) so every existing caller is
+        unchanged (pre-X13 recency·proximity·pin ranking)."""
         nowv = self.now(graph_id)
         st = self.state(graph_id)
         by = {n["id"]: n for n in st["nodes"]}
@@ -1143,7 +1306,37 @@ class Suite:
             f"- panels: {panels_s}\n"
             f"- recent activity: {evs}\n"
         )
-        selected = [s for s in (focus or {}).get("selected", []) if s in by]
+        # I1 — the operator's focus is now a WIDENED vocabulary (seams-rhm Seam 4: widen the EXISTING
+        # `focus` plug-in point, never a new mechanism). A `focus.selected` value is EITHER a canvas
+        # node-id (the existing co-presence path — UNCHANGED) OR a `ui://` address (a clicked addressed
+        # element — the new "indicating" path). We BRANCH on the value, additively:
+        #   • s.startswith("ui://")  → resolve via the S1 UI registry → an INDICATING block (NEW)
+        #   • elif s in by           → the canvas-node co-presence block (PRESERVED byte-for-byte)
+        #   • else                   → a stale node-id: dropped, exactly as before (NOT fail-loud — a
+        #                              vanished selection is normal; only an UNRESOLVED ui:// fails loud)
+        # The ui:// check comes FIRST so a clicked address can never be silently swallowed by the
+        # `s in by` node-id filter (rule 4). An unregistered ui:// is injected AS the address with an
+        # "(unregistered)" marker — surfaced honestly, never dropped.
+        raw_selected = (focus or {}).get("selected", [])
+        indicated = [s for s in raw_selected if isinstance(s, str) and s.startswith("ui://")]
+        selected = [s for s in raw_selected if s not in indicated and s in by]
+        if indicated:
+            ilines = []
+            for addr in indicated:
+                ilines.append("  · " + self._describe_ui_address(addr))
+            ctx += ("\nOPERATOR IS INDICATING (they clicked these addressed UI element(s) RIGHT NOW — "
+                    "this is the locus their message is about; answer with respect to the indicated "
+                    "thing):\n" + "\n".join(ilines) + "\n")
+            # R1 — SET the backend-held current `ui://` locus from the indicated address. This is the
+            # spec's named set-point (old suite.py:855): reuse I1's exact `startswith("ui://")`
+            # extraction above (`indicated`), never a parallel mechanism (rule 3, one-source). It runs
+            # AFTER the describe loop on purpose — _describe_ui_address calls parse_ui_address (the S0
+            # grammar gate), so a MALFORMED `ui://` RAISES before this line and we NEVER remember an
+            # unvalidated locus (fail-loud, consistent with I1). Most-recent wins on a multi-select
+            # (indicated[-1] = last-wins). The write is guarded by `if indicated:` so a turn carrying
+            # ONLY a canvas node-id (or no focus) leaves the prior locus INTACT (no clobber) — the
+            # locus PERSISTS ALONGSIDE the per-request co-presence path, never replacing it.
+            self._current_locus = indicated[-1]
         if selected:
             lines = []
             for nid in selected:
@@ -1154,7 +1347,543 @@ class Suite:
                 lines.append(f"  · {nid} ({n['type']}, {n['status']}) — config={cfg} — output: {detail}")
             ctx += ("\nOPERATOR'S CURRENT FOCUS (co-presence — they have these selected on the canvas RIGHT "
                     "NOW; you may reference their full detail, including values):\n" + "\n".join(lines) + "\n")
+        # R2 — address-keyed context resolution. AFTER every existing block (they stay byte-for-byte;
+        # this only APPENDS). The retrieval key is now the ADDRESS THE OPERATOR IS AT — read via the
+        # getter `current_locus()` (R1's read seam; R2 is its first PRODUCTION caller, the I7-left-it-
+        # unwired precedent now closed) so info attached to the locus + its ancestors (I6 annotations,
+        # I7 chats, addressed events) auto-resolves here, BOUNDED by the relevance/recency decay so it
+        # cannot flood the window (the §21.10 tension R2 exists to kill). No locus / nothing attached →
+        # _resolve_context_at returns '' and nothing is injected (the keyword consult path stays the
+        # fallback). Fail-loud-LEGIBLE inside the helper (a warn + '' on error), never crash-the-turn.
+        # X6 (Convergence) — pass `graph_id` (held here as ground truth) so the gather can BRIDGE a
+        # `ui://canvas/<node>` locus to its `run://<graph_id>/<node>` counterpart (version-history L6 +
+        # node events). The bridge is guarded (only a canvas-node in THIS graph maps); a non-canvas locus
+        # or a node absent from graph_id skips the run:// step, leaving the ui:// resolution unchanged.
+        # X13 (Convergence) — pass `intent` (the operator's current chat message) so the locus context is
+        # SEMANTICALLY ranked (relevance to what they're asking), not just recency·proximity·pin. With no
+        # intent the ranking is the pre-X13 ordering; a down embedder degrades the term to 0 with a warning.
+        ctx += self._resolve_context_at(self.current_locus(), graph_id=graph_id, intent=intent)
         return ctx
+
+    def _describe_ui_address(self, address: str) -> str:
+        """I1 — resolve a clicked `ui://` address → a human-meaningful description for the RHM context,
+        from the S1 UI registry (UI_REGISTRY, served as /api/ui_info → build_ui_info). ONE-SOURCE
+        (rule 3/8): the description comes from the registry row's own `title`, never invented.
+
+        The registry carries TWO key conventions (both legitimate, S1):
+          • the 9 hand-authored REGION rows are bare-keyed (`ref="inbox"`, kind="chrome") and are SERVED
+            as the full address `ui://chrome/inbox` (canvas-kind serves as `ui://canvas/*`);
+          • the corpus ELEMENT rows are full-string-keyed (`ref="ui://inbox/build-review"`).
+        So we match an incoming full address against EITHER form (a region row's served form OR an
+        element row's full key) — never the naive `ui://{kind}/{ref}` builder (it produces the malformed
+        `ui://chrome/ui://inbox/build-review` for element rows; that builder is for the bare-region
+        show-targets vocabulary only).
+
+        FAIL LOUD (rule 4 — HARD CONSTRAINT): a malformed address raises (S0 grammar gate); a well-formed
+        but UNREGISTERED address returns the address tagged "(unregistered)" — surfaced in the context,
+        NEVER silently dropped, so the RHM (and the operator) sees the gap honestly."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                              # S0 grammar gate — raises on malformed
+        for row in self.UI_REGISTRY:
+            ref, kind, title = row[0], row[1], row[2]
+            served = "ui://canvas/*" if kind == "canvas" else f"ui://{kind}/{ref}"
+            if ref == address or served == address:           # element full-key OR region served-form
+                # Build the human description from the registry row (ONE-SOURCE): the `title` for the
+                # hand-authored region rows ("Inbox", "Toolbar"); the corpus `represents` (the feature-id,
+                # e.g. "RUN-run") for the element rows whose title falls back to the address. The address
+                # is always shown so the locus is exact.
+                extras = row[5] if len(row) > 5 else {}
+                represents = (extras or {}).get("represents")
+                if title and title != address:                # region rows carry a real human title
+                    return f"{title} ({address})"
+                if represents:                                # element rows carry the feature-id
+                    return f"{address} — represents {represents}"
+                return address                                 # registered, no extra descriptor available
+        return f"{address} (unregistered)"                    # fail-loud-legible: gap surfaced, not dropped
+
+    def current_locus(self) -> str | None:
+        """R1 — READ the backend-held current `ui://` locus (the most-recent indicated address).
+
+        This is the net-new backend notion of "where the operator IS" (seams-rhm Seam 4: there was
+        none before — locus lived only FE-side, per-request). It is SET in the chat path when I1's
+        widened `focus.selected` carries a `ui://` address (see _chat_context). Returns the address
+        string, or None if the operator has not indicated a `ui://` element this session.
+
+        EXPOSED for R2's address-keyed context resolution to consume (it will key retrieval by this
+        locus). R2 is NOT built here — R1 makes the locus HELD + SETTABLE + READABLE only; this getter
+        has no production caller yet (the I7-left-R2-unwired precedent), it is the read seam R2 hangs
+        off."""
+        return self._current_locus
+
+    # ============================================================================================
+    # R2 — address-keyed context resolution (the keystone of the RESOLUTION group)
+    # ============================================================================================
+    # IS (today): retrieval is KEYWORD-keyed — `_consult_terms` extracts salient terms,
+    # `_retrieve_for_consult` scans the repo by term-hit count, bounded only by CONSULT_CAP=40000
+    # (the consult context-flood is the RHM's worst wound — §21.4#3 / seams-rhm Seam 4).
+    # SHOULD-BE: the ADDRESS the operator is AT (R1's `current_locus()`) becomes the retrieval key.
+    # Info attached to the locus (I6 annotations + I7 chats + addressed events) — and its ancestors in
+    # the address tree — auto-resolves into the RHM context at that locus. A relevance/recency DECAY
+    # bounds it so it CANNOT flood the window (the §21.10 context-flood tension — without decay,
+    # auto-resolve recreates the 396k-char stuffing R2 exists to KILL). The keyword scan REMAINS as a
+    # fallback (no locus / no addressed match) — it is just no longer the PRIMARY key.
+    #
+    # The decay weights + the window budget are NAMED config constants (D2-configurable, never bare
+    # literals — the guide's "name the weights: recency · proximity · pin"). X17 (Convergence): these
+    # class constants are now the DEFAULT FLOOR — __init__ RESOLVES each from the env (COMPANY_R2_*) into
+    # an INSTANCE attribute that shadows the class default, so the composition is retunable with NO code
+    # change (a fresh Suite/restart re-reads). Unset env → the class default → behaviour byte-for-behaviour
+    # unchanged. Exposed via capabilities().composition_config (registry-is-truth). See __init__ + _cfg_*.
+    R2_LAMBDA = 1.0 / (3 * 24 * 3600)   # recency decay rate (per second). exp(-LAMBDA*Δt): the score
+    #                                     halves at ~ln2/LAMBDA ≈ 2 days; an item ~3 days old decays to
+    #                                     1/e. Tuned so "recent" wins inside a working session/few days
+    #                                     while week-old chatter fades — without a pin it can still drop.
+    R2_PROXIMITY_WEIGHT = 1.0           # coefficient on tree-distance in 1/(1+W*proximity). The bare
+    #                                     pseudocode is 1/(1+proximity); W makes the proximity term's
+    #                                     STRENGTH explicit + tunable (W>1 punishes distance harder).
+    R2_PIN_WEIGHT = 1.0                 # additive bonus for an explicitly pinned item. ≥ the max
+    #                                     recency*proximity term (1.0 at exact+now) so a PIN always
+    #                                     outranks an unpinned item regardless of age/distance — pinning
+    #                                     is the operator's explicit "keep this in view" override.
+    R2_SEMANTIC_WEIGHT = 1.0            # X13 (Convergence) — coefficient on the SEMANTIC term:
+    #                                     + R2_SEMANTIC_WEIGHT * cosine(intent, item) in _r2_score. R2 ranked
+    #                                     attached context by recency·proximity·pin — by LOCATION + AGE, not
+    #                                     by RELEVANCE to what the operator is actually ASKING. This term ranks
+    #                                     the gathered context by relevance to the operator's intent (Tim's
+    #                                     "gather by relevance"). Default 1.0 → it sits at parity with the
+    #                                     recency·proximity term (max 1.0 at exact+now) and at parity with a
+    #                                     pin: a perfectly-on-topic item (cosine→1) gets the same lift a pin
+    #                                     does, so RELEVANCE is a first-class dimension beside the others.
+    #                                     A NAMED config knob (D2/X17 will env-wire it — a sane default here,
+    #                                     never a bare literal). DEGRADE-WITH-WARNING: when the embedder
+    #                                     (:8001) is unreachable the term degrades to 0 + a loud warning and
+    #                                     R2 falls back to the proven recency·proximity·pin ranking (the term
+    #                                     is ADDED — set it to 0 and the pre-X13 ordering is byte-for-byte).
+    R2_RUN_VERSIONS = 3                 # X6 (Convergence) — max run://-keyed L6 versions the bridge
+    #                                     contributes per locus. The bridged versions score at proximity 0
+    #                                     (same node as the ui:// locus) — so without a bound a freshly-run
+    #                                     LLM/content node's 25 full-preview versions (~200 chars each ≈
+    #                                     5000 > R2_BUDGET) would dominate the window by recency and EVICT
+    #                                     the operator's ui:// comments/chats at the same locus. This caps
+    #                                     the run:// contribution to the FEW most-recent versions (newest-
+    #                                     first from ref_versions), so BOTH schemes coexist in the bounded
+    #                                     window rather than one starving the other. A named config knob
+    #                                     (D2/X17-configurable), not a bare literal; the per-turn R2_BUDGET
+    #                                     cap still applies on top.
+    R2_BUDGET = 4000                    # max chars of resolved addressed context injected into the RHM
+    #                                     window (~1k tokens). attention = BUDGET; the cap is ENFORCED —
+    #                                     never stuffed. Far below CONSULT_CAP: this is the always-on
+    #                                     locus slice that rides EVERY turn, not a one-shot consult read.
+
+    @staticmethod
+    def address_tree_distance(a: str, b: str) -> int:
+        """Tree-distance between two `ui://` addresses — closer in the address tree = smaller.
+        Strip the `ui://` scheme, split the remainder on `/`, take the common-prefix length, then
+        distance = (len(a)-common) + (len(b)-common). Exact match → 0; parent/child → 1; sibling → 2.
+        A non-`ui://` or empty operand degrades to its raw segments (no crash — distance is still a
+        well-defined non-negative int). Pure + deterministic (proven directly in the R2 test)."""
+        def segs(x: str) -> list:
+            x = x or ""
+            if x.startswith("ui://"):
+                x = x[len("ui://"):]
+            return [s for s in x.split("/") if s != ""]
+        sa, sb = segs(a), segs(b)
+        common = 0
+        for x, y in zip(sa, sb):
+            if x == y:
+                common += 1
+            else:
+                break
+        return (len(sa) - common) + (len(sb) - common)
+
+    def _r2_score(self, item: dict, locus: str, now, semantic: float = 0.0) -> float:
+        """Score ONE gathered item by the relevance/recency decay (the guide pseudocode):
+            recency   = exp(-R2_LAMBDA * (now - ts))                 # newer = heavier
+            proximity = address_tree_distance(locus, item.address)   # closer in the tree = heavier
+            pin_bonus = R2_PIN_WEIGHT if item.pinned else 0.0
+            score     = recency * (1/(1 + R2_PROXIMITY_WEIGHT*proximity)) + pin_bonus
+                        + R2_SEMANTIC_WEIGHT * semantic                 # X13 — RELEVANCE to the intent
+        `now` is a tz-aware datetime (injected for deterministic tests); `ts` is the store's
+        ISO-8601 UTC string (`datetime.now(timezone.utc).isoformat()` → `+00:00`, fromisoformat-safe).
+        A missing/unparseable ts → recency 0 (treated as infinitely old, never a crash).
+
+        X13 (Convergence) — the SEMANTIC term. `semantic` is the PRECOMPUTED cosine(intent_vec, item_vec)
+        in [-1, 1], supplied by `_r2_score_and_cap` (which embeds the operator's intent + each item's text
+        ONCE per turn — never per `_r2_score` call, so the sort stays cheap and the embed cost is O(items),
+        not O(items·log items)). KEEPING the cosine OUT of `_r2_score` is what keeps this method
+        per-turn-safe + crash-free: it does NO I/O, exactly as before; an embedder failure is handled at
+        the score+cap layer (degrade-to-0-with-warning), never here.
+        BACKWARD-COMPATIBLE: `semantic` defaults to 0.0, so the pre-X13 3-arg call
+        `_r2_score(item, locus, now)` is byte-for-byte the old recency·proximity·pin score — this is what
+        preserves addr_context_acceptance (every existing call passes no `semantic`)."""
+        import math
+        from datetime import datetime
+        ts_raw = item.get("ts")
+        try:
+            ts = datetime.fromisoformat(ts_raw)
+            delta = (now - ts).total_seconds()
+            recency = math.exp(-self.R2_LAMBDA * max(0.0, delta))
+        except Exception:
+            recency = 0.0
+        proximity = self.address_tree_distance(locus, item.get("address", ""))
+        pin_bonus = self.R2_PIN_WEIGHT if item.get("pinned") else 0.0
+        return (recency * (1.0 / (1.0 + self.R2_PROXIMITY_WEIGHT * proximity)) + pin_bonus
+                + self.R2_SEMANTIC_WEIGHT * semantic)
+
+    def _r2_ancestors(self, locus: str) -> list:
+        """The locus address + each ANCESTOR up the `ui://` tree (so proximity is a LIVE dimension,
+        not a dead term — a locus-exact item outranks a parent-address item end-to-end; faithful to
+        the guide's "addresses/types/screens"). Each candidate is validated against the S0 grammar
+        (`parse_ui_address`); an ancestor that doesn't parse is SKIPPED (never a crash, never a junk
+        key). Walks up to the region root (the first segment after the scheme), inclusive of locus."""
+        from contracts.ui_info import parse_ui_address
+        out, seen = [], set()
+        if not (isinstance(locus, str) and locus.startswith("ui://")):
+            return out
+        rest = locus[len("ui://"):]
+        parts = [p for p in rest.split("/") if p != ""]
+        # locus first (exact), then each shorter prefix down to the region root (1 segment).
+        for n in range(len(parts), 0, -1):
+            cand = "ui://" + "/".join(parts[:n])
+            if cand in seen:
+                continue
+            try:
+                parse_ui_address(cand)                # S0 grammar gate — skip anything malformed
+            except Exception:
+                continue
+            seen.add(cand); out.append(cand)
+        return out
+
+    def _r2_events_at(self, address: str) -> list:
+        """Addressed EVENTS at `address` — the 3rd gather source (I6 annotations + I7 chats +
+        addressed events, per the guide). Events ride the open `append_event` record with an additive
+        `address` field (annotate/attach_chat already emit them; suite.py:1773/1816). Filter the
+        shared events.jsonl by that field; newest-first. Reads disk every call (no in-memory cache),
+        so a reload sees prior writes. NOTE these partly RE-NARRATE the annotations/chats already
+        gathered (they are the S2 visibility echoes) — included because the guide names them; they are
+        narration, not new substance, and the budget cap absorbs the overlap."""
+        out = []
+        for e in self.store.recent_events(500):
+            if e.get("address") == address:
+                out.append({"kind": "event", "address": address, "ts": e.get("ts"),
+                            "text": f"[event] {e.get('kind', '')}: {e.get('summary', '')}",
+                            "pinned": False})
+        return out
+
+    def _r2_run_counterpart(self, locus: str, graph_id: str | None) -> str | None:
+        """X6 (Convergence) — the ui://↔run:// BRIDGE: map a `ui://canvas/<node>` locus to its
+        `run://<graph_id>/<node>` counterpart, the address where the SAME node's output-versions (L6,
+        `set_ref`) and node-instance events accrue. Returns the run:// address, or None when the bridge
+        does NOT apply (so the caller cleanly skips the run:// step and the ui:// path is unchanged).
+
+        THE SPLIT THIS CLOSES (suite.py:1136): `_r2_ancestors` returns [] for any non-`ui://` locus, so
+        run://-keyed memory can never inherit. But the operator's live locus is ALWAYS ui:// (R1's
+        `current_locus()` holds a ui:// only; `ingest_comment`/`annotate` RAISE on run://). A canvas node
+        carries TWO addresses for the SAME thing — `ui://canvas/<node>` (the UI target) and
+        `run://<graph>/<node>` (where the scheduler writes versions/events). So the bridge fires from the
+        ui:// locus and resolves the run:// counterpart (approach (b)); it never walks a run:// locus
+        (which nothing reaches in production → would be dead code).
+
+        WHY graph_id IS THREADED (not held / not enumerated): the Suite holds NO current graph (every
+        verb takes graph_id as a param) and node-ids are NOT globally unique (`u`/`llm-1` recur across
+        graphs). The production caller (`_chat_context(graph_id, …)`) HOLDS graph_id as ground truth, so
+        it is THREADED in. With no graph_id we CANNOT recover the graph without enumerating (ambiguous,
+        fabrication) → we return None (the ui:// path stays byte-for-byte).
+
+        NODE-MEMBERSHIP GUARD (rule 4, no silent wrong value): `current_locus()` can hold a STALE locus
+        from a prior turn on a DIFFERENT graph; mapping a same-id node into the current graph could pull
+        the WRONG node's history. So we only bridge when the node ACTUALLY EXISTS in graph_id; otherwise
+        None (skip — never a silent wrong-node trail). Fail-loud-legible: a malformed locus is SKIPPED
+        (the ui:// gather already validated/ignored it), never a crash."""
+        from contracts.ui_info import parse_ui_address
+        if not graph_id or not isinstance(locus, str) or not locus.startswith("ui://"):
+            return None
+        try:
+            segs = parse_ui_address(locus)["segments"]    # S0 grammar gate (ignored on raise → no bridge)
+        except Exception:
+            return None
+        # the canvas-node form is `ui://canvas/<node>` — region 'canvas', the node id its 2nd segment.
+        if len(segs) < 2 or segs[0] != "canvas":
+            return None
+        node_id = segs[1]
+        # MEMBERSHIP: the node must exist in graph_id (else a same-id node in another graph could be
+        # silently mapped). Reuse the loaded graph (no new substrate) — never enumerate other graphs.
+        try:
+            g = self._load(graph_id)
+            if not any(n.id == node_id for n in g.nodes):
+                return None
+        except Exception:
+            return None
+        return f"run://{graph_id}/{node_id}"
+
+    def _r2_run_strata(self, run_addr: str, ui_locus: str) -> list:
+        """X6 — gather the run://-keyed strata at `run_addr`, NORMALISED into the R2 item shape so the
+        existing decay/cap/dedup score them uniformly with the ui:// items. Two strata, REUSING the
+        EXISTING retrievals (no new store):
+          • L6 version-history — `ref_versions(run_addr)` (the temporal trail of the node's output).
+          • node-instance events — `_r2_events_at(run_addr)` (the SAME addressed-event reader the ui://
+            path uses; it matches by exact address, so it works for run:// unchanged).
+
+        CROSS-SCHEME PROXIMITY (the load-bearing decision): a run:// address shares NO prefix with the
+        ui:// locus under `address_tree_distance` → it would score maximally-FAR and almost always lose
+        the R2_BUDGET cap (a present-but-inert bridge). But these strata ARE the SAME node as the ui://
+        locus — so each item's SCORING `address` is set to `ui_locus` (proximity 0 — the honest
+        cross-scheme distance: same node), while the `text` LABELS it [version]/run-event so it stays
+        legible. The scoring formula itself is UNCHANGED.
+
+        FAIL-LOUD-LEGIBLE (rule 4): a malformed/unresolvable run:// address makes `ref_versions` RAISE —
+        we WARN (address-stamped) and SKIP this stratum, never crash the per-turn gather (losing the
+        whole locus slice over one bad sub-read is the worse failure). The events stratum is independent
+        (its own try) so one failure never poisons the other."""
+        items = []
+        try:
+            # BOUND the run:// version contribution (R2_RUN_VERSIONS, newest-first): without it a
+            # freshly-run node's 25 full-preview versions all score at proximity 0 (same node as the
+            # locus) and, being recent, dominate the budget — EVICTING the operator's ui:// comments at
+            # the same locus. Capping here keeps BOTH schemes in the bounded window (the per-turn
+            # R2_BUDGET cap still applies on top). ref_versions returns newest-first, so `limit` keeps
+            # the most recent.
+            rv = self.ref_versions(run_addr, limit=self.R2_RUN_VERSIONS)
+            for v in rv.get("versions", []):
+                marker = " (current)" if v.get("is_current") else ""
+                items.append({"kind": "version", "address": ui_locus, "ts": v.get("ts"),
+                              "text": f"[version of {run_addr}{marker}] {v.get('preview', '')}",
+                              "_raw": (v.get("preview", "") or ""),   # X8 dedup identity (the version preview)
+                              "pinned": False})
+        except Exception as e:
+            self._emit("warning",
+                       f"X6 bridge: version-history unresolvable at {run_addr} ({type(e).__name__}) — skipped",
+                       address=ui_locus)
+        try:
+            for ev in self._r2_events_at(run_addr):
+                ev = dict(ev)
+                ev["address"] = ui_locus       # cross-scheme proximity: the event is AT this node (dist 0)
+                items.append(ev)
+        except Exception as e:
+            self._emit("warning",
+                       f"X6 bridge: node-instance events unresolvable at {run_addr} ({type(e).__name__}) — skipped",
+                       address=ui_locus)
+        return items
+
+    def _r2_gather(self, locus: str, graph_id: str | None = None) -> list:
+        """GATHER every item attached to the locus AND its ancestors (I6 annotations via
+        `annotations_at`, I7 chats via `chats_at`, addressed events). Each item is normalised to a
+        common shape `{kind, address, ts, text, pinned}` so the decay scores them uniformly. The
+        `pinned` flag rides free off the open annotation/chat record (schema-additive — an old record
+        with no `pinned` field reads as unpinned). REUSES R1's locus consumers (annotations_at /
+        chats_at — never duplicated). Address validation lives in those helpers (S0 gate); the
+        ancestors are pre-validated by `_r2_ancestors`.
+
+        X6 (Convergence) — the ui://↔run:// BRIDGE: when `graph_id` is supplied AND the locus is a
+        `ui://canvas/<node>` whose node exists in that graph, ALSO gather the node's run://-keyed strata
+        (L6 version-history + node-instance events) via `_r2_run_strata`, so at the locus BOTH schemes'
+        memory resolves into one bounded window. `graph_id` is OPTIONAL (default None): with no graph_id
+        the run:// step does NOT fire and the ui:// gather is byte-for-byte unchanged (preserving every
+        existing caller + addr_context_acceptance). The run:// items go through the SAME dedup/score/cap."""
+        items = []
+        for addr in self._r2_ancestors(locus):
+            for a in self.annotations_at(addr):
+                items.append({"kind": "annotation", "address": addr, "ts": a.get("ts"),
+                              "text": f"[comment @ {addr}] {a.get('text', '')}",
+                              "_raw": (a.get("text", "") or ""),   # X8: underlying text, for dedup identity
+                              "pinned": bool(a.get("pinned"))})
+            for c in self.chats_at(addr):
+                items.append({"kind": "chat", "address": addr, "ts": c.get("ts"),
+                              "text": f"[chat @ {addr}] {c.get('role', '')}: {c.get('text', '')}",
+                              "_raw": (c.get("text", "") or ""),   # X8: underlying text, for dedup identity
+                              "pinned": bool(c.get("pinned"))})
+            items.extend(self._r2_events_at(addr))
+        # X6: bridge the ui:// locus to its run:// counterpart (guarded; None when the bridge doesn't apply).
+        run_addr = self._r2_run_counterpart(locus, graph_id)
+        if run_addr is not None:
+            items.extend(self._r2_run_strata(run_addr, locus))
+        deduped = self._r2_dedup(items)
+        # `_raw` is dedup-INTERNAL identity (added above for X8); strip it before returning so the gather's
+        # output shape stays {kind,address,ts,text,pinned} — X3 persists this bundle into the payload, and
+        # a leaked `_raw` would duplicate `text` on disk. Removing it cannot affect scoring/cap (they read
+        # `text` only). Pre-X8 callers see exactly the old shape.
+        for it in deduped:
+            it.pop("_raw", None)
+        return deduped
+
+    def _r2_dedup(self, items: list) -> list:
+        """X8 (Convergence) — collapse the SAME comment to ONE item BEFORE the budget cap.
+
+        WHY: a single clicked comment lands through `ingest_comment` as THREE strata at the same
+        address — an annotation (its `annotations.jsonl` branch, full text), the located-gold chat turn
+        (`append_chat`, full text), AND one addressed event echo (`_emit("annotation", …)` at
+        suite.py:2032, whose summary is the text TRUNCATED to 40 chars). So the gather sees it 2–3× and
+        it would consume 2–3× the bounded R2 window — a double-count, not three distinct notebook items.
+
+        IDENTITY (the crux, robust to the 40-char truncation): items are the same comment when they share
+        an `(address, underlying-text)` identity. But the event echo's text is a 40-char PREFIX of the
+        full text, so an exact full-text key would match annotation↔chat yet MISS the event (it would
+        still count 2×). The model that actually collapses all three:
+          • annotation ↔ chat: exact `(address, full _raw text)` — collapse to one. (No false-collapse:
+            two genuinely-different comments differ in _raw.)
+          • the event echo: dropped IFF its (possibly truncated) `_raw` is a PREFIX of some
+            annotation/chat `_raw` AT THE SAME ADDRESS. This kills the narration echo WITHOUT flat-keying
+            on a 40-char prefix (which would wrongly merge two distinct comments that happen to share a
+            40-char opening — the "never drop legitimately-distinct items" clause).
+        SURVIVOR = the full-text annotation/chat item, NEVER the truncated event (X4 later composes the
+        prompt from this bundle; keeping the truncated echo would silently lose content).
+
+        PRESERVE: this ONLY removes double-counting. It does NOT touch `_r2_score`/the recency·proximity·
+        pin ranking or the `R2_BUDGET` cap — dropping echoes can only FREE budget, never reorder distinct
+        items, so the ranking is preserved by construction. An item without `_raw` (e.g. a non-comment
+        event, or any future stratum) is NEVER dropped — dedup is conservative."""
+        full_keys = set()        # (address, full _raw) of annotation/chat items already kept
+        full_by_addr: dict = {}  # address -> list of full _raw texts kept (for the event prefix test)
+        out = []
+        # PASS 1: keep annotation/chat, collapsing exact (address, _raw) duplicates (e.g. annotation↔chat).
+        events = []
+        for it in items:
+            if it.get("kind") == "event":
+                events.append(it)
+                continue
+            raw = it.get("_raw")
+            if raw is None:
+                out.append(it)               # no identity → never dropped (conservative)
+                continue
+            key = (it.get("address", ""), raw)
+            if key in full_keys:
+                continue                     # exact duplicate of an already-kept full-text item
+            full_keys.add(key)
+            full_by_addr.setdefault(it.get("address", ""), []).append(raw)
+            out.append(it)
+        # PASS 2: keep an event ONLY if it is NOT the truncated echo of a kept annotation/chat at its addr.
+        for ev in events:
+            raw = ev.get("_raw")
+            if raw is None:
+                # the standard comment echo carries no _raw; recover its underlying text from the summary
+                # so the prefix test can run. Format: "[event] <kind>: comment at <addr>: <text[:40]>".
+                txt = ev.get("text", "") or ""
+                marker = f": comment at {ev.get('address', '')}: "
+                raw = txt.split(marker, 1)[1] if marker in txt else None
+            if raw is not None and any(full.startswith(raw)
+                                       for full in full_by_addr.get(ev.get("address", ""), [])):
+                continue                     # truncated echo of a kept comment → drop the double-count
+            out.append(ev)
+        return out
+
+    def _r2_semantic_map(self, intent: str | None, items: list) -> dict:
+        """X13 (Convergence) — embed the operator's `intent` and each gathered item's `text` ONCE per
+        turn, return `{id(item): cosine(intent_vec, item_vec)}` so `_r2_score_and_cap` can add a weighted
+        RELEVANCE term. Keyed by `id(item)` (not the text) so two items with identical text still get
+        their own entry and nothing collides.
+
+        REUSES THE EMBED FABRIC suite.py already reaches (NO new transport): the embeddings endpoint is
+        its OWN base_url (BGE-M3 @ :8001), called via `fabric.transport.openai_embeddings_transport`
+        + `fabric.client.complete_embeddings` — the exact path `nodes/embed.py` uses. Everything is
+        embedded in ONE call (intent + every item text) so the per-turn embed cost is a single round-trip.
+        The cosine MIRRORS `nodes/similarity.py` (dot/(‖a‖·‖b‖), inlined — no cross-module import of
+        design/_system or the node; a zero-magnitude vector degrades that one pair to 0, never a crash).
+
+        DEGRADE-WITH-WARNING (HARD CONSTRAINT — mirror suite.py:906 'embed model registry unreachable'):
+        if there is no intent, or the embedder is unreachable / the call errors, return `{}` (every item's
+        semantic term is 0) + emit a LOUD warning — so R2 FALLS BACK to the proven recency·proximity·pin
+        ranking. NEVER a silent zero-vector, NEVER a wrong cosine, NEVER a crash of the per-turn gather.
+        The empty-intent case is silent (no embedder fault — just no query this turn); only an embedder
+        FAILURE warns."""
+        intent = (intent or "").strip()
+        if not intent or not items:
+            return {}                                          # no query → no semantic term (not a fault)
+        import math
+        from fabric import client, transport, config as fcfg
+        texts = [(it.get("text", "") or "") for it in items]
+        try:
+            t = transport.openai_embeddings_transport(base_url=fcfg.DEFAULT_EMBED_URL)
+            # ONE round-trip: index 0 = the intent, 1..N = each item text (aligned to `items`).
+            vecs = client.complete_embeddings(t, [intent] + texts,
+                                              model=fcfg.DEFAULT_EMBED_MODEL, dim=fcfg.DEFAULT_EMBED_DIM)
+        except Exception as e:
+            # FAIL-LOUD-LEGIBLE, never crash the per-turn slice: warn (locus-less system-health warning,
+            # exactly like suite.py:906's embed-registry guard) and degrade — caller sees {} → all 0.
+            self._emit("warning",
+                       f"X13: embed endpoint unreachable for R2 semantic ranking ({type(e).__name__}) — "
+                       "semantic term degraded to 0; falling back to recency·proximity·pin")
+            return {}
+        intent_vec = vecs[0]
+        ni = math.sqrt(sum(x * x for x in intent_vec))
+        out = {}
+        for it, v in zip(items, vecs[1:]):
+            nv = math.sqrt(sum(x * x for x in v))
+            if ni == 0.0 or nv == 0.0:                         # zero-magnitude → undefined cosine → 0 (no crash)
+                out[id(it)] = 0.0
+                continue
+            dot = sum(x * y for x, y in zip(intent_vec, v))
+            out[id(it)] = dot / (ni * nv)                      # cosine, mirror nodes/similarity.py
+        return out
+
+    def _r2_score_and_cap(self, items: list, locus: str, now, intent: str | None = None) -> list:
+        """Score each item by the decay, sort DESC, then `budget_cap` — accumulate text until R2_BUDGET
+        is reached and STOP (cap the window, NEVER stuff). Returns the surviving items in score order.
+        The cap is the keystone (the guide's THE-critical requirement): with more items than the budget,
+        only the highest-scoring (recent + proximate + pinned + RELEVANT) survive; the rest are DROPPED,
+        so R2 can never recreate the context-flood it exists to kill.
+
+        X13 (Convergence) — `intent` (the operator's current chat MESSAGE / locus comment — "what the
+        operator is actually asking") adds the SEMANTIC term: embed the intent + each item ONCE here
+        (`_r2_semantic_map`), then score = recency·proximity·pin + R2_SEMANTIC_WEIGHT·cosine. The cosine
+        is PRECOMPUTED here and passed INTO `_r2_score` so the per-item score stays I/O-free and
+        crash-free. With `intent=None` (the default — every pre-X13 caller) the map is empty and every
+        item's semantic term is 0, so the ranking is byte-for-byte the pre-X13 recency·proximity·pin
+        ordering (preserves addr_context_acceptance). When the embedder is DOWN the map is empty too
+        (degrade-with-warning in `_r2_semantic_map`) — the SAME proven fallback."""
+        sem = self._r2_semantic_map(intent, items)             # X13: {id(item): cosine}; {} if no intent / down
+        scored = sorted(items,
+                        key=lambda it: self._r2_score(it, locus, now, semantic=sem.get(id(it), 0.0)),
+                        reverse=True)
+        out, total = [], 0
+        for it in scored:
+            t = it.get("text", "") or ""
+            if total + len(t) > self.R2_BUDGET and out:       # cap is hard once we have at least one item
+                break
+            out.append(it); total += len(t)
+            if total >= self.R2_BUDGET:
+                break
+        return out
+
+    def _resolve_context_at(self, locus: str | None, now=None, graph_id: str | None = None,
+                            intent: str | None = None) -> str:
+        """The R2 entry point: resolve the BOUNDED, address-keyed context slice at the operator's locus.
+        Returns a ready-to-inject block string, or '' when there is no locus / nothing attached (so the
+        caller skips injection cleanly). FAIL-LOUD-LEGIBLE, never crash-the-turn (mirrors _chat_context's
+        own model-registry guard — a raise here would break EVERY turn): a gather/score error warns +
+        returns '' rather than propagating.
+
+        X6 (Convergence) — `graph_id` is threaded through (optional, default None) so the gather can BRIDGE
+        a `ui://canvas/<node>` locus to its `run://<graph_id>/<node>` counterpart (version-history L6 +
+        node events). The production caller (`_chat_context`) HOLDS graph_id as ground truth and passes it;
+        with no graph_id the gather's run:// step does not fire (the ui:// path is unchanged).
+
+        X13 (Convergence) — `intent` (the operator's current chat MESSAGE / locus comment) is threaded to
+        `_r2_score_and_cap`, which adds the SEMANTIC ranking term (R2_SEMANTIC_WEIGHT·cosine(intent,item)).
+        Optional (default None): with no intent the ranking is the pre-X13 recency·proximity·pin (byte-for-
+        byte). When the embedder is DOWN the semantic term degrades to 0 with a warning (handled in
+        `_r2_semantic_map`) — the score+cap still runs, never crashing the turn."""
+        from datetime import datetime, timezone
+        if not locus:
+            return ""
+        if now is None:
+            now = datetime.now(timezone.utc)
+        try:
+            items = self._r2_gather(locus, graph_id=graph_id)
+            if not items:
+                return ""
+            capped = self._r2_score_and_cap(items, locus, now, intent=intent)
+            if not capped:
+                return ""
+            lines = "\n".join("  · " + (it.get("text", "") or "") for it in capped)
+            return ("\nCONTEXT RESOLVED AT YOUR LOCUS (info attached to the address the operator is at — "
+                    f"{locus} — and its ancestors, bounded by relevance/recency decay; this is what's "
+                    "relevant HERE, answer with respect to it):\n" + lines + "\n")
+        except Exception as e:
+            # locus-BOUND warning (not a locus-less system-health one) — the failure happened AT this
+            # address, so it carries `address=locus` (event_address_acceptance: every _emit is stamped
+            # or a documented locus-less exclusion; this one is honestly locus-bound).
+            self._emit("warning", f"R2 context resolution failed ({type(e).__name__})", address=locus)
+            return ""
 
     # ════════════════════════════════════════════════════════════════════════════════════════════
     # THE SINGLE-SOURCE RHM VERB REGISTRY (replaces the old 3 parallel tables RHM_VERBS /
@@ -1301,13 +2030,36 @@ class Suite:
         no verb is available (off, or an empty graph with only `run` eligible) — the caller then passes
         no tools (tool_choice auto over zero tools = a plain reply)."""
         tools = []
-        for v in self.available_verbs(mode, ctx):
+        verbs = self.available_verbs(mode, ctx)
+        for v in verbs:
             tools.append({
                 "type": "function",
                 "function": {
                     "name": v,
                     "description": self.RHM_VERB_DESC.get(v, ""),
                     "parameters": self._VERB_PARAMS.get(v, {"type": "object", "properties": {}}),
+                },
+            })
+        # OFFER-WITH-OPTIONS (the consent affordance): if the RHM can ACT in this mode, it can also OFFER
+        # — call `suggest` to surface a one-click "shall I?" card (sees-then-approves, ANY offered verb)
+        # INSTEAD of acting now. This is the convergence's propose-affordance, unified into native
+        # tool-calling (no retired AFFORD: text directive). The card carries options[]/direction so the
+        # rich layer (multi-option + steer→refine + interactive-build) extends it without a re-trigger.
+        if verbs:
+            tools.append({
+                "type": "function",
+                "function": {
+                    "name": "suggest",
+                    "description": ("OFFER an action as a one-click suggestion the operator SEES and approves "
+                                    "(the 'shall I?' affordance) INSTEAD of doing it now. Use when proposing "
+                                    "rather than acting, or when the operator should choose/steer first."),
+                    "parameters": {"type": "object", "properties": {
+                        "verb": {"type": "string", "enum": list(verbs),
+                                 "description": "the action being offered (a real RHM verb)"},
+                        "address": {"type": "string", "description": "the ui:// locus the action targets, if any"},
+                        "args": {"type": "object", "description": "the offered verb's arguments"},
+                        "label": {"type": "string", "description": "a short human label for the offer"},
+                    }, "required": ["verb"]},
                 },
             })
         return tools
@@ -1420,10 +2172,16 @@ class Suite:
                     continue
         else:
             picked = [(rel, text, [t for t in terms if t in text.lower()]) for _, rel, text in scored]
-        # Fill the budget ACROSS the top-ranked files (relevance order), capping each file's contribution
-        # to CONSULT_PER_FILE_CAP so no single huge file monopolizes the budget. A small file comes in
-        # whole; a big file gets a relevance-WINDOWED slice (centred on its first matching term — the
-        # brief's "files/SECTIONS"), so the slice carries the relevant code, not the header/imports.
+        context, sources = self._fill_consult_budget(picked)
+        return context, sources, file_list
+
+    def _fill_consult_budget(self, picked: list) -> tuple:
+        """Fill the CONSULT_CAP budget ACROSS the top-ranked (rel, text, hits) files in the given order,
+        capping each file's contribution to CONSULT_PER_FILE_CAP so no single huge file monopolizes the
+        budget. A small file comes in WHOLE; a big file gets a relevance-WINDOWED slice (centred on its
+        first matching term — the brief's "files/SECTIONS"), so the slice carries the relevant code, not
+        the header/imports. SHARED by both the keyword path (_retrieve_for_consult) and the semantic path
+        (_retrieve_for_consult_semantic) — one bounding discipline, never two. Returns (context, sources)."""
         parts, sources, total = [], [], 0
         for rel, text, hits in picked:
             if total >= self.CONSULT_CAP:
@@ -1441,18 +2199,143 @@ class Suite:
             if total + len(chunk) > self.CONSULT_CAP and parts:
                 break                                         # keep the overall cap hard once we have something
             parts.append(chunk); sources.append(rel); total += len(chunk)
-        context = "".join(parts)
+        return "".join(parts), sources
+
+    # ============================================================================================
+    # CONSULT-MIGRATION — semantic retrieval against the LIVE X12 vector index (retiring the stuff path)
+    # ============================================================================================
+    # WHY: the `codebase` node STUFFS the whole repo into one context and FAILS LOUD past max_chars (now
+    # 600k; the repo is 865k). STATE.md:47 named the fix: "embed-based (semantic) retrieval — the next
+    # rung." That rung is now BUILT + LIVE: the embedder (BGE-M3 @ :8001) is up, and the X12 persisted
+    # vector index (store/vector_index.py over the store `vectors/` namespace) is populated with `code://`
+    # symbol addresses. So consult RETRIEVES the query-relevant slice from the index instead of stuffing
+    # the whole repo. This AUGMENTS the proven keyword scan — it does NOT replace it: the keyword path
+    # (_retrieve_for_consult) REMAINS the fallback for no-match / no-index / embedder-down.
+    #
+    # NO PARALLEL SYSTEM: the embed call reuses the EXACT fabric path nodes/embed.py uses (mirrors
+    # _semantic_for_r2's X13 reuse), and the ranking reuses store/vector_index.query_index (which itself
+    # reuses nodes/retrieve's cosine). NO new retriever, NO new embedding transport, NO new whole-repo
+    # stuffing. DEGRADE-WITH-WARNING: an unreachable :8001 or an empty index → a LOUD warning + the
+    # keyword fallback (never a silent zero-vector, never a wrong cosine).
+    def _embed_consult_query(self, query: str):
+        """Embed ONE consult query through the EXACT fabric path nodes/embed.py + _semantic_for_r2 use
+        (NO new transport): BGE-M3 @ DEFAULT_EMBED_URL, with the SAME model/dim the X12 index was built
+        with so the cosine is dim-consistent (a mismatch is already fail-loud at retrieve._cosine). Returns
+        the query vector, or None on an unreachable endpoint — DEGRADE-WITH-WARNING (mirrors suite.py's
+        _semantic_for_r2 :8001-down guard): a LOUD warning + None so the caller falls back to keyword. NEVER
+        a fabricated/zero vector."""
+        from fabric import client, transport, config as fcfg
+        try:
+            t = transport.openai_embeddings_transport(base_url=fcfg.DEFAULT_EMBED_URL)
+            return client.complete_embeddings(t, [query], model=fcfg.DEFAULT_EMBED_MODEL,
+                                              dim=fcfg.DEFAULT_EMBED_DIM)[0]
+        except Exception as e:
+            self._emit("warning",
+                       f"consult: embed endpoint unreachable for semantic retrieval ({type(e).__name__}) — "
+                       "falling back to the keyword scan")
+            return None
+
+    @staticmethod
+    def _code_addr_parts(address: str) -> tuple:
+        """Split a `code://<file-stem>/<symbol>` index address into (file_stem, symbol). A file-only
+        `code://<file-stem>` → (stem, None). A non-code:// address → (None, None) so the caller skips it
+        (the index also holds `ui://` addresses, which have no source file to read)."""
+        if not isinstance(address, str) or not address.startswith("code://"):
+            return None, None
+        rest = address[len("code://"):]
+        if "/" in rest:
+            stem, sym = rest.split("/", 1)
+            return stem, (sym or None)
+        return rest, None
+
+    def _retrieve_for_consult_semantic(self, query: str) -> tuple | None:
+        """SEMANTIC retrieval against the LIVE X12 index (the migration path). Embeds the query → ranks the
+        persisted index by cosine (store/vector_index.query_index, reusing nodes/retrieve) → resolves the
+        top-K ranked `code://` addresses back to their SOURCE files (the SAME worktree file set the keyword
+        path reads — single-source the corpus, no runtime design/ dependency) → builds the SAME bounded
+        slice (_fill_consult_budget). Returns (context, sources, file_list) on a usable result, or None to
+        signal the caller to FALL BACK to the keyword scan. DEGRADE-WITH-WARNING (HARD CONSTRAINT):
+          • embedder :8001 unreachable  → _embed_consult_query warns + returns None → here returns None
+          • index EMPTY (embedder was down at build) → query_index's honest note → warn + return None
+          • ranked but NO code:// address resolves to a readable file → return None (keyword fallback)
+        NEVER a silent zero-vector, NEVER a fabricated nearest, NEVER a wrong cosine."""
+        import os, glob
+        from nodes import codebase as cb
+        from store import vector_index as vx
+        qvec = self._embed_consult_query(query)
+        if qvec is None:                                      # :8001 down — warned already
+            return None
+        result = vx.query_index(self.store, qvec, k=8, with_note=True)
+        ranked = result.get("ranked", [])
+        if not ranked:                                        # EMPTY index (embedder down at build) or no rank
+            self._emit("warning",
+                       f"consult: the vector index returned no ranking ({result.get('note', 'empty')}) — "
+                       "falling back to the keyword scan")
+            return None
+        # Resolve the ranked code:// addresses back to source files in the worktree (the SAME globs the
+        # keyword path + the codebase node read — one corpus). Read each candidate file ONCE.
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # ~/company (this worktree)
+        files = {}                                            # stem -> [(relpath, text), ...] (stem can collide)
+        rel_text = {}                                         # relpath -> text
+        for g in cb.DEFAULT_GLOBS:
+            for p in sorted(glob.glob(os.path.join(root, g))):
+                rel = os.path.relpath(p, root)
+                if rel in rel_text:
+                    continue
+                try:
+                    text = open(p, encoding="utf-8").read()
+                except Exception:
+                    continue
+                rel_text[rel] = text
+                stem = os.path.splitext(os.path.basename(rel))[0]
+                files.setdefault(stem, []).append(rel)
+        file_list = sorted(rel_text.keys())
+        picked, seen = [], set()                              # (rel, text, hits) in cosine-rank order, de-duped
+        for r in ranked:
+            stem, sym = self._code_addr_parts(r.get("id", ""))
+            if stem is None or stem not in files:             # ui:// address or a stem with no source file
+                continue
+            cands = files[stem]
+            # Disambiguate a stem collision by the symbol actually appearing in the file; else the first.
+            rel = None
+            if sym:
+                for c in cands:
+                    if sym in rel_text[c]:
+                        rel = c; break
+            rel = rel or cands[0]
+            if rel in seen:
+                continue
+            seen.add(rel)
+            # hits = the symbol (so the windowing centres on the relevant region for a big file)
+            picked.append((rel, rel_text[rel], [sym] if sym else []))
+        if not picked:                                        # nothing in the index resolved to a readable file
+            self._emit("warning",
+                       "consult: the index ranked addresses but none resolved to a source file — "
+                       "falling back to the keyword scan")
+            return None
+        context, sources = self._fill_consult_budget(picked)
         return context, sources, file_list
+
+    def _retrieve_for_consult_best(self, query: str) -> tuple:
+        """The consult retrieval ENTRY: SEMANTIC-first (the live X12 index), KEYWORD-fallback (the proven
+        scan). Tries _retrieve_for_consult_semantic; on its None signal (embedder down / empty index / no
+        resolvable match — each already warned) returns the keyword _retrieve_for_consult. The keyword path
+        is UNCHANGED + still directly tested; this wrapper only chooses which one grounds a real consult."""
+        sem = self._retrieve_for_consult_semantic(query)
+        if sem is not None:
+            return sem
+        return self._retrieve_for_consult(query)
 
     def consult(self, query: str) -> dict:
         """The RHM reads the system's OWN code+design (the first-purpose Q&A, as a callable) and
-        answers — so it knows how it is built. Grounded in a RETRIEVED, query-relevant slice (keyword
-        scan, bounded by CONSULT_CAP — NOT the whole repo, which overflowed/stalled); cites the files
-        used; abstains if the answer isn't there. A read (AUTO). Uses DEFAULT_CLOUD_TIMEOUT (a consult
-        can wait)."""
+        answers — so it knows how it is built. Grounded in a RETRIEVED, query-relevant slice
+        (SEMANTIC-first against the live X12 vector index, KEYWORD-fallback — bounded by CONSULT_CAP,
+        NEVER the whole repo, which overflowed/stalled); cites the files used; abstains if the answer
+        isn't there. DEGRADE-WITH-WARNING: an unreachable embedder / empty index falls back to the proven
+        keyword scan with a loud warning. A read (AUTO). Uses DEFAULT_CLOUD_TIMEOUT (a consult can wait)."""
         from fabric import client, transport, config as fcfg
         cfg = self.rhm_config()
-        context, sources, file_list = self._retrieve_for_consult(query)
+        context, sources, file_list = self._retrieve_for_consult_best(query)
         orient = ", ".join(file_list)
         sys_p = ("You answer questions about THIS system's own design and code, STRICTLY from the SOURCE "
                  "below (a RETRIEVED slice of the repo selected for this question, not the whole repo). "
@@ -1508,6 +2391,104 @@ class Suite:
             return {"verb": "run"}
         return {"verb": verb}
 
+    # --- I3: propose-affordance — the CONSENT gate (click #2 of the two-click model) ----------
+    # NET-NEW (seams-rhm Seam 2 REFUTE): today the system is EXECUTE-then-render — a verb runs inside
+    # chat() and the FE renders the OUTCOME (App.tsx r.action.did). There is no "proposed action
+    # awaiting a click" affordance. I3 adds one WITHOUT touching that executed path: the RHM may emit a
+    # propose-affordance directive — `AFFORD: <verb> <address> [<args-json>]` — which chat() recognises
+    # and returns as a structured `proposal` field, and which DOES NOT DISPATCH. The action runs ONLY
+    # when the operator approves the rendered card → /api/act (Suite.act, the I2 endpoint). This is the
+    # whole point: proposing must not execute (the see-and-approve consent gate, criteria line 99/107).
+    #
+    # WHY A SEPARATE KEYWORD (`AFFORD:`), not `PROPOSE:` — `propose` is already an RHM verb meaning
+    # "draft a NEW node-type → inbox" (the propose/panel/extend inbox path the task warns NOT to confuse
+    # this with). `AFFORD:` is the propose-affordance directive; its `<verb>` may itself be ANY RHM verb
+    # (incl. `propose`), so a muddled keyword would be a real bug.
+    #
+    # WHY A SEPARATE PARSER (not folded into _parse_rhm_action) — _parse_rhm_action feeds the
+    # EXECUTE-then-render dispatch; widening it would risk auto-running a proposal (consent-gate failure)
+    # and would entangle the preserved path. This parser is recognition-only and returns a proposal the
+    # caller hands BACK to the FE, never to the dispatcher.
+    #
+    # WHY NO SECOND WHITELIST HERE — AGENTS.md rule 3 (one source): the verb is NOT filtered at parse
+    # time (that would be a second list drifting from the dispatcher's RHM_VERBS). The ONE governance
+    # gate is /api/act → _dispatch_rhm_action's refuse-tail (the 7-verb whitelist + no-self-apply), which
+    # the approve click reuses unchanged. The model is fed the real RHM_VERBS + the ui:// vocabulary in
+    # _chat_context, so it proposes from truth; a bad verb is refused loudly at the click, not silently
+    # dropped here. We DO grammar-validate the address (parse_ui_address, the S0 gate `annotate` uses) so
+    # a malformed locus fails fast rather than rendering an un-resolvable card — but a NON-ui:// locus
+    # (e.g. a bare canvas node-id, which `show`/`act` accept) is carried through untouched.
+    _AFFORD_RE = None   # compiled lazily (see _parse_rhm_proposal)
+
+    @classmethod
+    def _parse_rhm_proposal(cls, reply: str):
+        """Split a reply into (shown_text, proposal|None). A proposal is the propose-affordance directive
+        `AFFORD: <verb> <address> [<args-json>]` (anchored to the start of a line, found anywhere —
+        same anchoring discipline as the ACTION: handler so prose merely MENTIONING 'AFFORD:' mid-
+        sentence does not over-trigger). On a match it RETURNS a structured `{verb, address, args}`
+        proposal AND strips the directive from the shown prose (so the raw directive never leaks to the
+        operator). On no match → (reply, None). This NEVER dispatches — it only recognises.
+
+        The proposal dict mirrors Suite.act's signature ({verb, address, args}) so an approve→/api/act
+        fires faithfully for ANY verb, not just `show` (act() is verb-shaped: show→targets, consult→
+        query, build→steps — _act_dict adapts; the args travel here to feed it)."""
+        import re, json as _j
+        if not reply or not reply.strip():
+            return reply, None
+        if cls._AFFORD_RE is None:
+            cls._AFFORD_RE = re.compile(r"^[ \t]*AFFORD:\s*(.+)$", re.MULTILINE | re.IGNORECASE)
+        m = cls._AFFORD_RE.search(reply)
+        if not m:
+            return reply, None
+        body = m.group(1).strip()
+        shown = (reply[:m.start()] + reply[m.end():]).strip()
+        # body = "<verb> <address> [<args-json>]". Split off the verb, then the address; whatever
+        # remains (if it parses as a JSON object) is the args. Address is the first whitespace token
+        # after the verb; if it begins a JSON object, there is no address (verb-only proposal, e.g. run).
+        verb, _, rest = body.partition(" ")
+        verb = verb.strip().lower()
+        rest = rest.strip()
+        address = None
+        args: dict = {}
+        if rest.startswith("{"):
+            # no address — the remainder is args-json (e.g. `AFFORD: build {"steps":[...]}`)
+            try:
+                parsed = _j.loads(rest)
+                if isinstance(parsed, dict):
+                    args = parsed
+            except Exception:
+                args = {}
+        elif rest:
+            address, _, tail = rest.partition(" ")
+            address = address.strip() or None
+            tail = tail.strip()
+            if tail.startswith("{"):
+                try:
+                    parsed = _j.loads(tail)
+                    if isinstance(parsed, dict):
+                        args = parsed
+                except Exception:
+                    args = {}
+        # A ui:// address is grammar-CHECKED, but consistent with the verb philosophy above (a bad verb
+        # rides through and is refused LOUDLY AT THE CLICK, not silently dropped here), a malformed
+        # model-emitted address must NOT kill the whole turn (which would 400 it and lose the prose
+        # answer — model output is unreliable, unlike `annotate`'s operator-supplied address). So a
+        # grammatically-malformed ui:// → DROP the proposal and keep the prose (no card to approve);
+        # a well-formed-but-unregistered address rides through and fails loud at the click
+        # (resolveUiTarget / the dispatcher validate at act-time). A non-ui:// locus (bare canvas
+        # node-id) passes through untouched — show/act accept both.
+        if address and address.startswith("ui://"):
+            from contracts.ui_info import parse_ui_address
+            try:
+                parse_ui_address(address)                      # grammar check only (S0)
+            except Exception:
+                # malformed locus → no card, but STILL strip the directive from the shown prose (the
+                # operator must never see a raw `AFFORD:` line). Return the stripped text + no proposal;
+                # chat() then renders the prose answer alone (the turn is not killed).
+                return shown, None
+        proposal = {"verb": verb, "address": address, "args": args}
+        return shown, proposal
+
     @staticmethod
     def _confirmation_for(outcome: dict) -> str:
         """Fold a dispatched verb's outcome dict → ONE concise operator-facing confirmation line, for
@@ -1537,6 +2518,11 @@ class Suite:
             return f"drafted panel '{outcome.get('name')}' — awaiting your approval in the inbox"
         if did == "extend":
             return f"authored UI component '{outcome.get('name')}' (build-gated) — awaiting your approval"
+        if did == "surfaced_for_approval":
+            # I4: the click hit an address whose governance tier is CONFIRM/LOCKED — the command was
+            # SURFACED for see-and-approve and did NOT act (no silent success, rule 4).
+            return (f"⏸ '{outcome.get('verb')}' at {outcome.get('address')} needs approval "
+                    f"(tier: {outcome.get('tier')}) — surfaced for you in the inbox, not yet acted")
         if did == "consult":
             return ""                                         # the caller folds the full answer text
         if did == "ask":
@@ -1696,6 +2682,383 @@ class Suite:
         out["routed_posture"] = p                              # deterministic record: which posture routed it
         return out
 
+    # --- I2: the /api/act emission seam — a DETERMINISTIC human click replaces the model's
+    #     unreliable prose-emission for the interactive path (the emission RELOCATION, §21.4#1) ---
+    @staticmethod
+    def _act_dict(verb: str, address: str | None, args: dict) -> dict:
+        """The thin per-verb ADAPTER: turn a click's `{verb, address, args}` into the verb-shaped
+        dispatcher dict `_dispatch_rhm_action` expects (it is verb-shaped, NOT uniform-`address`:
+        show→targets, propose/panel/extend→name+spec, build→steps, run/consult→query — seams-rhm
+        Seam 1). The `address` (the clicked locus, I1) maps onto the verb's natural address slot
+        (show's `targets[]`, the existing ui:// vocabulary). UNKNOWN verbs are NOT filtered here —
+        the dict is built and handed to the dispatcher, whose refuse-tail (suite.py:1386) enforces
+        the 7-verb whitelist + no-self-apply STRUCTURALLY (the no-bypass guarantee rides along for
+        free; I2 never widens authority)."""
+        action: dict = {"verb": verb}
+        if verb == "show":
+            # the click's address IS the target; also accept explicit targets[] (multi-select clicks)
+            targets = list(args.get("targets") or [])
+            if address and address not in targets:
+                targets.insert(0, address)
+            action["targets"] = targets
+        elif verb in ("run",):
+            pass                                              # run takes the current graph — no extra args
+        elif verb == "consult":
+            action["query"] = args.get("query") or args.get("question") or ""
+        elif verb in ("propose", "panel", "extend"):
+            action["name"] = args.get("name")
+            action["spec"] = args.get("spec")
+        elif verb == "build":
+            action["steps"] = args.get("steps")
+        else:
+            # unknown/non-whitelisted verb: pass the raw args through; the dispatcher refuses it.
+            action.update({k: v for k, v in args.items() if k not in ("verb", "address")})
+        if address is not None:
+            action.setdefault("address", address)             # carry the locus through for audit (I1)
+        return action
+
+    def _tier_for_address(self, address: str | None) -> str | None:
+        """I4 — resolve a clicked address → its governance `tier` (an action_class string) from the
+        union-record `tier` field carried in the registry row's union-extras (the 6th tuple element).
+
+        ADDRESS-KEYED, not verb-keyed. Returns:
+          • the tier action_class string  — if the address is registered AND carries a non-empty `tier`
+            (e.g. 'source_data', 'code_build' — a CONFIRM/LOCKED class). The caller routes the click
+            through governance by THIS class instead of the verb's own.
+          • None — if the address is None, unregistered, or registered-but-untiered. The caller then
+            FALLS BACK to the verb's own governance class — so a bare run/build on an untiered (or
+            unknown) address stays AUTO and ACTS IMMEDIATELY (U1 preserved, criteria line 153). The
+            ABSENCE of a tier is the verb-class fallback; it is NOT the unknown→CONFIRM fail-safe (that
+            fail-safe applies to an unknown tier VALUE inside posture(), never to a missing tier).
+
+        Reads the live UI_REGISTRY rows (single source). A row is
+        (ref, kind, title, handle, caps[, union-extras]); the 6th element (if present) is the
+        union-extras dict carrying `tier`. The 9 bare-region rows have no 6th element → None."""
+        if not address:
+            return None
+        for row in self.UI_REGISTRY:
+            if row[0] != address:
+                continue
+            extras = row[5] if len(row) > 5 else {}
+            tier = (extras or {}).get("tier")
+            return tier or None                                 # empty-string tier reads as untiered
+        return None                                             # address not registered → verb-class fallback
+
+    def act(self, verb: str, graph_id: str, address: str | None = None,
+            args: dict | None = None) -> dict:
+        """I2 — the operator-face emission seam (the parallel-to-chat() entry to the SAME dispatcher).
+
+        A human click ships a STRUCTURED `{verb, address, args}` — never prose — and this constructs
+        the final dispatcher dict directly, BYPASSING the unreliable model-prose parse
+        (`_parse_rhm_action`, the narration-prone step this exists to relocate, suite.py:1140). It
+        then drives `_dispatch_rhm_action` (suite.py:1287) through the SAME governance posture routing
+        chat()'s decide-for-me path uses (`autonomous_dispatch`), and re-folds the SAME operator
+        confirmation chat() folds — so the operator always sees "did X" (rule 4: no silent success),
+        and consult/ask get their richer folds too (not just the else-branch).
+
+        Re-fold #1 — GOVERNANCE: the verb's action-class routes through `autonomous_dispatch`
+          (suite.py:1391): AUTO verbs (run/build/show/consult) act now; CONFIRM verbs
+          (propose/panel/extend) run their body whose action is to SURFACE a draft for operator
+          approval — they NEVER self-apply. The 7-verb whitelist + no-self-apply ride along INSIDE
+          the dispatcher (RHM_VERBS suite.py:952; refuse-tail suite.py:1386). I2 inherits exactly the
+          RHM's permitted set — a click cannot widen authority.
+          (NOTE: I4 will key the tier by ADDRESS on top of this; I2 folds the verb-class posture that
+          already lives in chat(), not I4's address→tier lookup.)
+        Re-fold #2 — CONFIRMATION: `_confirmation_for` (suite.py:1250) returns "" for consult/ask by
+          design (chat() folds those separately at suite.py:1501); so act() replicates chat()'s FULL
+          fold, not the else-branch alone — else a consult/ask click is a silent success.
+
+        Returns the same `{reply, action}` shape /api/chat returns."""
+        args = dict(args or {})
+        action = self._act_dict(verb, address, args)
+        # I4 — ADDRESS-KEYED governance gate (FIRST, before the verb-class posture). A click resolves
+        # to (verb, address); the CLICKED ADDRESS — not the verb — decides the tier. If the address
+        # carries a CONFIRM/LOCKED tier in its union record, the click PROPOSES (surfaces for see-and-
+        # approve) and does NOT act; absent an address tier it falls through to the verb's own class
+        # below — so a bare run/build (no address, or an untiered/AUTO address) stays AUTO and ACTS
+        # IMMEDIATELY (U1 preserved, criteria line 153).
+        addr_tier = self._tier_for_address(address)
+        if addr_tier is not None and posture(addr_tier) != AUTO:
+            # The address's tier is CONFIRM/SURFACE/LOCKED → SURFACE the command for the operator and
+            # RETURN WITHOUT dispatching. We MUST NOT route this through autonomous_dispatch: its
+            # non-AUTO branch calls do() directly (suite.py autonomous_dispatch), and for a `run` verb
+            # do() EXECUTES the graph — that would be the inverse U1 regression (a CONFIRM-tier run
+            # running). Surfacing here keeps the dispatcher (and thus any execution) untouched until
+            # the operator approves (the approve→re-dispatch wire is I3, not this unit).
+            # L8 (§21.7#9): this surfaced approval IS the canonical click-to-thing case — it concerns
+            # the very address the operator clicked (gated CONFIRM/LOCKED). The GUIDE: "if the item
+            # already has an address/locus, USE it." So carry that address as the navigable ui:// target
+            # inside payload (the open bag — seams-engine Seam 2), so clicking the inbox item drives the
+            # view back to the element awaiting approval via the preserved resolveUiTarget keystone. The
+            # address reached here only by matching a registered UI_REGISTRY row in _tier_for_address, so
+            # it is ALWAYS a ui:// form (navigable); we still gate on the ui:// prefix (mirror the resolver
+            # grammar — a non-ui:// string would fail driveCanvas) so a malformed/absent locus simply
+            # carries no target and the item behaves exactly as today (no navigation, not an error).
+            i4_payload = {"verb": verb, "address": address, "args": args, "graph_id": graph_id}
+            if isinstance(address, str) and address.startswith("ui://"):
+                i4_payload["ui_target"] = address
+            sid = self.inbox.surface(addr_tier, i4_payload, default="reject", resolved=None)
+            outcome = {"did": "surfaced_for_approval", "verb": verb, "address": address,
+                       "tier": addr_tier, "surfaced": sid, "routed_posture": posture(addr_tier)}
+            return {"reply": self._confirmation_for(outcome), "action": outcome, "graph_id": graph_id}
+        # GOVERNANCE re-fold (verb-class fallback — the address is untiered/AUTO/None): route by the
+        # verb's action-class (the same posture routing chat()'s decide-for-me path uses). Not
+        # mode-gated — a deterministic click is not subject to the RHM presence dial; and it is safe
+        # regardless, since every RHM verb is AUTO or a CONFIRM that only SURFACES (autonomous_dispatch
+        # never calls guard() for a non-AUTO class, so nothing raises and propose/panel/extend still
+        # only surface). Unknown verb → safest class (CONFIRM).
+        cls = self.RHM_VERB_CLASS.get(verb, "register_type")
+        outcome = self.autonomous_dispatch(cls, do=lambda: self._dispatch_rhm_action(action, graph_id),
+                                           payload=action)
+        # CONFIRMATION re-fold (mirror chat() suite.py:1501–1509): consult folds its full answer; ask
+        # folds its needs-line; every other verb (incl. refused → did=="none") folds _confirmation_for.
+        if outcome and outcome.get("did") == "consult":
+            reply = "📖 " + outcome["answer"]
+        elif outcome and outcome.get("did") == "ask":
+            reply = ("❓ That needs something not in the registry, so I'm asking rather than guessing: "
+                     + outcome["needs"] + " — surfaced for you in the inbox.")
+        else:
+            reply = self._confirmation_for(outcome)
+        return {"reply": reply, "action": outcome, "graph_id": graph_id}
+
+    def route_click(self, address: str | None, graph_id: str, verb: str | None = None,
+                    text: str | None = None, args: dict | None = None,
+                    source: str = "operator") -> dict:
+        """I5 — the annotate-vs-operate ROUTER: ONE classifier that decides, per click, whether the
+        click attaches a COMMENT (annotate, I6) or proposes/runs an OPERATION (operate, I2/I4/I3) —
+        and NEVER blurs the two. It COMPOSES `act` (which carries I4's address→tier gate inside) and
+        `annotate` (I6); it does NOT re-implement or weaken either.
+
+        THE ROUTING DISTINCTION (criteria line 109; Implementation Guide I5):
+          • the SCHEME is a ROUTING HINT, not the safety gate (design-substrate CONTRACT.2, Verified):
+              - `ui://`  = a DESIGN/UI element.  A `ui://` click with NO consequential verb → ANNOTATE.
+              - `run://` = a LIVE graph-node instance.  A `run://` click → OPERATE (always).
+          • a consequential VERB at ANY address → OPERATE (a verb makes it an operation regardless of
+            scheme — e.g. the camera-driving `show` on a `ui://` element stays on the operate face).
+          • what GATES a mutating command is NOT the scheme — it is the address's governance TIER
+            (`_tier_for_address` → CONFIRM/LOCKED) + `guard()`, REUSED unchanged inside `act`. So:
+              - bare / untiered / unknown address + an immediate verb → ACTS IMMEDIATELY (U1 preserved).
+              - a CONFIRM/LOCKED-tier address + a consequential verb → PROPOSES (surfaces), never runs.
+              - a `ui://` element that resolves to a read-only-driveable target keeps working read-only
+                via the live `show` path (`show` is AUTO → operate → drives the camera; not blocked).
+
+        FAIL-LOUD over silent (rule 4): an annotate route with empty text RAISES (never a silent no-op
+        and never a silent dispatch); `annotate` itself raises on a non-`ui://` (run://) address, so a
+        live instance is STRUCTURALLY incapable of being commented — half of "never blur" for free.
+
+        Returns a tagged dict:
+          • annotate face → {"face": "annotate", "annotation": <rec>, "action": None, "graph_id": …}
+          • operate  face → {"face": "operate",  **act(...)}  (the same {reply, action, graph_id} shape)
+        The `face` tag is the never-blur marker: an annotate route never carries an `action`; an operate
+        route never carries an `annotation`."""
+        args = dict(args or {})
+        has_verb = bool(verb and str(verb).strip())
+        is_run_scheme = isinstance(address, str) and address.startswith("run://")
+        # OPERATE if there is a consequential verb OR the address is a live graph-node instance.
+        # ANNOTATE only when there is NO verb AND the address is a UI/design element (the ui:// hint).
+        if has_verb or is_run_scheme:
+            # OPERATE — hand to act(), which applies I4's ADDRESS→TIER gate FIRST (CONFIRM/LOCKED →
+            # propose/surface; bare/untiered/AUTO → act immediately, U1 preserved), then the verb-class
+            # governance posture. The 7-verb whitelist + no-self-apply ride along inside the dispatcher.
+            # A run:// click with no verb defaults to `run` (the natural verb for a live instance).
+            v = str(verb).strip() if has_verb else "run"
+            out = self.act(v, graph_id, address=address, args=args)
+            out["face"] = "operate"
+            return out
+        # ANNOTATE — a ui:// element click with no verb attaches a comment at the address (I6). FAIL
+        # LOUD if there is no text: never silently dispatch and never a silent no-op (rule 4). `annotate`
+        # validates the address against the S0 grammar and RAISES on a non-ui:// (run://) address.
+        if not text or not str(text).strip():
+            raise ValueError(
+                "I5 annotate route needs non-empty text (a ui:// element click with no verb attaches a "
+                "comment — supply text, or pass a verb to OPERATE). Fail loud — no silent no-op, no "
+                "silent dispatch.")
+        # L4 — compose the COMMENT-INGEST entry (`ingest_comment`): the pure I6 `annotate()` PLUS the
+        # one additive located-gold `append_chat` (§21.7#7, seams-rhm Seam 5). The same wired entry the
+        # FE's `/api/annotate` route uses — single-source, so a clicked comment IS the twin's located
+        # gold label whether it arrives via the I5 classifier (here) or the direct annotate API.
+        rec = self.ingest_comment(address, str(text), source=source)
+        return {"face": "annotate", "annotation": rec, "action": None, "graph_id": graph_id}
+
+    def annotate(self, address: str, text: str, source: str = "operator") -> dict:
+        """I6 — attach a comment / annotation to a `ui://` address (the `annotation://` content branch).
+
+        NET-NEW and SEPARATE from `/api/resolve`'s comment choice (which annotates a surfaced item by
+        `id`, not an arbitrary address — suite.py:3045) and from the I2 act path. Nothing else attaches
+        by ADDRESS today.
+
+        S0 GATE FIRST: `parse_ui_address` validates the address against the ONE canonical grammar and
+        RAISES on a malformed `ui://` (fail-loud, rule 4) — so the store never persists a junk key, and
+        the bridge's try/except turns the raise into a 400 for free. Validation lives HERE (the Suite
+        semantic layer), matching where `act` does its work; the store leaf stays dumb.
+
+        Then persist via the open-record store leaf (`append_annotation`), keyed by `address`. The
+        annotation is retrievable by `annotations_at(address)`. This feeds R2 (address-keyed context
+        resolution): info attached to an address auto-resolves into the RHM context at that locus, and
+        the `ts` stamped by the store leaf gives R2's relevance/recency decay its clock.
+
+        Fail loud on empty text (no silent no-op — rule 4)."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                            # S0 grammar gate (raises on malformed)
+        if not text or not str(text).strip():
+            raise ValueError("annotate needs non-empty text (fail loud — no silent no-op)")
+        rec = self.store.append_annotation(
+            {"kind": "annotation", "address": address, "text": str(text).strip(), "source": source})
+        # S2: emit an addressed event so the comment is visible on the live stream at its locus.
+        self._emit("annotation", f"comment at {address}: {rec['text'][:40]}", address=address)
+        return rec
+
+    def ingest_comment(self, address: str, text: str, source: str = "operator") -> dict:
+        """L4 — the COMMENT-INGEST entry point (§21.7#7, seams-rhm Seam 5): an addressed comment IS the
+        twin's *located* gold label. This is the ONE wired entry a clicked comment flows through (the
+        FE's `/api/annotate` route → `bridge.py` → here; and the I5 router's annotate branch composes it
+        too). It does TWO things, in order:
+
+          1. the pure I6 `annotate()` (records the comment on its OWN `annotations.jsonl` branch — that
+             leaf stays byte-for-byte pure so I6's SEPARATION preserve holds: `annotate()` itself NEVER
+             writes chat — `annotation_acceptance.py` asserts `chat_history()==[]` after a bare annotate);
+          2. ONE additive `append_chat` (the located gold label): the existing OPEN `{ts, **turn}` record
+             (`fs_store.py:357`) carries the `address` verbatim, so the comment flows the EXISTING
+             `append_chat → training_signal` pipe — NO new training pipeline, NO parallel store — and
+             surfaces in `training_signal` as a LOCATED gold label automatically (echo-guarded).
+
+        WHY a separate ingest method (not folded into `annotate`): the default lean (make `annotate()`
+        itself emit the gold turn) is impossible — `annotation_acceptance.py:131-132` asserts a bare
+        `annotate()` writes NO chat (the I6 SEPARATION preserve), an un-editable hard constraint. So
+        `annotate()` stays the PURE annotation leaf and the located-gold emit lives ONE layer up, here,
+        on the WIRED comment-ingest path — exactly the "comment-ingest entry point that grades as
+        operator-gold and stamps the address" seams-rhm:170 named.
+
+        PROVENANCE / F4 (no second grading scheme): the chat turn's role is TIED to `source` via the same
+        `_provenance_source`/`_provenance_grade` helpers `attach_chat`/`chat` use — an operator comment
+        lands user/gold/operator (trains the twin, LOCATED); ANY non-operator source lands
+        assistant/working/twin (NEVER trains, even laundered back — the F4 guard). We write through the
+        store leaf DIRECTLY (not `attach_chat`) so we do NOT emit a SECOND addressed event at this locus
+        (`annotate` already emitted the addressed `annotation` event for the live stream) — avoids
+        double-stamping the addressed history (L3)."""
+        rec = self.annotate(address, text, source=source)        # the pure I6 leaf (S0-gated, fail-loud)
+        role = "user" if source == "operator" else "assistant"  # role-tied provenance (F4)
+        self.store.append_chat({"role": role, "text": str(text).strip(), "address": address,
+                                "source": self._provenance_source(role),
+                                "grade": self._provenance_grade(role)})
+        return rec
+
+    def annotations_at(self, address: str) -> list:
+        """I6 — every annotation attached to `address`, oldest-first (the comment thread at that locus).
+
+        The address is VALIDATED first (same S0 gate as `annotate`) so a retrieval on a malformed
+        address fails loud rather than silently returning [] (which a caller could read as 'no
+        comments'). Reads through the store leaf, which reads disk every call — so this returns a prior
+        Suite's writes on the same store root (persistence-survives-reload)."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                            # S0 grammar gate (raises on malformed)
+        return self._overlay_pins(address, self.store.annotations_for(address))
+
+    def attach_chat(self, address: str, text: str, role: str = "user", source: str | None = None) -> dict:
+        """I7 — attach a chat turn to a `ui://` address (the dropped 4th attach-type, §21.1: the
+        `chat://` content branch). The INVERSE of I6: I6 (`annotate`) writes its OWN annotations.jsonl;
+        I7 RIDES the EXISTING open `append_chat` record (`rec = {"ts", **turn}`, fs_store.py:357) with
+        ONE additive `address` field — NO separate chat store (that would violate one-source; the
+        existing chat.jsonl open-record handles it additively — store constitution).
+
+        S0 GATE FIRST: `parse_ui_address` validates the address against the ONE canonical grammar and
+        RAISES on a malformed `ui://` (fail-loud, rule 4) — so the store never persists a junk key, and
+        the bridge's try/except turns the raise into a 400 for free. Validation lives HERE (the Suite
+        semantic layer), matching where `annotate`/`act` do their work; the store leaf stays dumb.
+
+        ECHO-GUARD TAGS (store constitution 'Never write a chat turn without a source'): the turn is
+        stamped with `source` + `grade` derived from `role` via `_provenance_source`/`_provenance_grade`
+        — so an operator turn lands operator/gold (trains the twin) and an assistant/twin turn lands
+        twin/working (NEVER trains, even laundered back). The turn is an ORDINARY chat turn that ALSO
+        carries an `address`: it appears in chat_history, flows through training_signal UNCHANGED (the
+        `address` rides free — seams-rhm Seam 5), and is retrievable by `chats_at(address)`. The `ts`
+        stamped by the store leaf gives R2's relevance/recency decay its clock.
+
+        Fail loud on empty text (no silent no-op — rule 4)."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                            # S0 grammar gate (raises on malformed)
+        if not text or not str(text).strip():
+            raise ValueError("attach_chat needs non-empty text (fail loud — no silent no-op)")
+        src = source if source is not None else self._provenance_source(role)
+        rec = self.store.append_chat({"role": role, "text": str(text).strip(), "address": address,
+                                      "source": src, "grade": self._provenance_grade(role)})
+        # S2: emit an addressed event so the attached chat is visible on the live stream at its locus.
+        self._emit("chat", f"chat at {address}: {rec['text'][:40]}", address=address)
+        return rec
+
+    def chats_at(self, address: str) -> list:
+        """I7 — every chat turn attached to `address`, oldest-first (the `chat://` thread at that locus).
+
+        The address is VALIDATED first (same S0 gate as `attach_chat`/`annotate`) so a retrieval on a
+        malformed address fails loud rather than silently returning [] (which a caller could read as 'no
+        chat'). Reads through the store leaf (`chats_for`), which filters the open chat.jsonl by the
+        additive `address` field and reads disk every call — so this returns a prior Suite's writes on
+        the same store root (persistence-survives-reload). This is what R2 will gather at the operator's
+        locus (address-keyed context resolution) — the retrieval R2 consumes; I7 does NOT wire R2."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                            # S0 grammar gate (raises on malformed)
+        return self._overlay_pins(address, self.store.chats_for(address))
+
+    def _overlay_pins(self, address: str, records: list) -> list:
+        """X7 — overlay the resolved pin-state onto the records `annotations_at`/`chats_at` return.
+
+        The annotation/chat stores are APPEND-ONLY immutable logs, so the operator's pin override can't
+        be written ONTO the existing line; it lives as additive control-state in `pins.jsonl`, keyed by
+        the item's `(address, ts)` handle, and is RESOLVED here on read (`pin_state_for`, last-wins). The
+        returned records keep their SAME count + text (the overlay only flips an additive `pinned` field —
+        annotation_acceptance's count/text assertions stay green); an item with no pin record reads as
+        unpinned (schema-additive default). This is the SET-path completion of the dead pin term: the
+        gather (`_r2_gather`) already reads `bool(a.get('pinned'))` / `bool(c.get('pinned'))`, so feeding
+        the real flag here makes `_r2_score`'s `pin_bonus` reachable — the scoring formula is UNCHANGED.
+
+        Non-mutating to the stored bytes (a shallow per-record copy carries the resolved flag) — the
+        store stays immutable. An item whose `ts` has no pin record is returned unchanged-but-for the
+        explicit `pinned` default, so every reader sees a uniform shape."""
+        pin_state = self.store.pin_state_for(address)
+        out = []
+        for r in records:
+            rr = dict(r)                                     # don't mutate the store's record bytes
+            rr["pinned"] = bool(pin_state.get(r.get("ts"), r.get("pinned", False)))
+            out.append(rr)
+        return out
+
+    def pin(self, address: str, target_ts: str, pinned: bool = True) -> dict:
+        """X7 (Convergence) — the SET path for the operator's "keep this in view" override.
+
+        THE DEAD TERM THIS COMPLETES (Research Synthesis, Round 4): `_r2_score` already adds
+        `R2_PIN_WEIGHT` when `item.get('pinned')`, and `_r2_gather` already surfaces `bool(a.get('pinned'))`
+        — but NOTHING ever set `pinned` True (only the `pinned:False` literals). So the pin_bonus existed
+        in the math but was unreachable. `pin` wires the missing set-path: it records a pin/unpin of the
+        attached item at (`address`, `target_ts`) so the gather's already-present read picks up the real
+        flag → a pinned item holds in the bounded R2 window even when older/farther. The scoring FORMULA
+        and `R2_PIN_WEIGHT` are UNCHANGED — only the flag becomes settable.
+
+        OPERATOR-ONLY, OFF the MCP face: this is an operator action (mirrors `annotate`/`attach_chat`,
+        surfaced via the operator-face `/api/pin` route). It is NOT in `RHM_VERBS` — the RHM/MCP face
+        gains no pin tool (no-bypass preserved).
+
+        IDENTITY: an attached item is addressed by its `(address, ts)` — the `ts` the store stamps and
+        `annotations_at`/`chats_at` return is the stable per-record handle. Pin-state persists as an
+        additive overlay in `pins.jsonl` (append-only; the annotation/chat logs are immutable, and we
+        must not write into `chat.jsonl` — that would pollute the twin training pipe / echo-guard).
+
+        FAIL LOUD (rule 4 — no silent no-op): the address is S0-gated (raises on malformed), and the
+        `target_ts` MUST match an existing attached item (annotation OR chat) at that address — pinning a
+        non-existent item RAISES rather than silently recording a pin nothing will ever read."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                            # S0 grammar gate (raises on malformed)
+        if not target_ts or not str(target_ts).strip():
+            raise ValueError("pin needs a target_ts (the item's handle) — fail loud, no silent no-op")
+        # existence guard: the (address, ts) must name a real attached item (annotation or chat).
+        existing_ts = {r.get("ts") for r in self.store.annotations_for(address)}
+        existing_ts |= {r.get("ts") for r in self.store.chats_for(address)}
+        if target_ts not in existing_ts:
+            raise ValueError(
+                f"pin: no attached item at {address} with ts={target_ts} (fail loud — nothing to pin)")
+        rec = self.store.append_pin(address, target_ts, bool(pinned))
+        # S2: emit an addressed event so the pin/unpin is visible on the live stream at its locus.
+        self._emit("pin", f"{'pinned' if pinned else 'unpinned'} item at {address}", address=address)
+        return rec
     def roles(self) -> dict:
         """The MODEL-ROLE registry as a STATUS read — the config lab's source (it NEVER hardcodes the
         role list). For each registered role: its declared contract (label/description/trigger/output/
@@ -1845,7 +3208,7 @@ class Suite:
             self.store.append_chat({"role": "user", "text": message, "grade": "gold", "source": "operator"})
             off = "The right-hand-man is off. Switch a mode on the presence dial to wake me."
             self.store.append_chat({"role": "assistant", "text": off, "grade": "working", "source": "twin"})
-            self._emit("chat", f"you: {message[:40]} (RHM off)")
+            self._emit("chat", f"you: {message[:40]} (RHM off)", address="ui://chrome/chat")   # S2: chat organ
             return {"reply": off, "action": None, "mode": mode, "history": self.store.chat_history(40)}
         from fabric import client, transport
         from fabric.client import FabricError
@@ -1866,7 +3229,7 @@ class Suite:
                        f"Select a tool-capable chat model in the RHM config.")
             self.store.append_chat({"role": "assistant", "text": refusal, "grade": "working", "source": "twin"})
             self._emit("warning", f"RHM model '{cfg['model']}' is not tool-capable — refused (no model "
-                       f"call, no fallback); select a tool-capable model")
+                       f"call, no fallback); select a tool-capable model", address="ui://chrome/chat")  # S2: chat-path locus
             return {"reply": refusal, "action": None, "mode": mode,
                     "model": cfg["model"], "history": self.store.chat_history(40)}
 
@@ -1928,10 +3291,30 @@ class Suite:
         # unchanged for OFFERED verbs, and a verb that IS offered dispatches exactly as before.
         offered = set(self.available_verbs(mode, actx))
         outcomes = []
+        proposals = []                                        # OFFER-WITH-OPTIONS: suggest-then-confirm cards (no dispatch)
         for tc in (msg.get("tool_calls") or []):
             fn = tc.get("function") or {}
             verb = fn.get("name")
             if not verb:
+                continue
+            if verb == "suggest":
+                # OFFER-WITH-OPTIONS (the consent affordance): build a PROPOSAL, do NOT dispatch. The
+                # operator sees a one-click card for ANY offered verb and approves (→ /api/act) or steers —
+                # nothing runs until then. The verb is validated against the ONE whitelist (RHM_VERBS); a
+                # non-verb offer is dropped (refused-loud-at-the-click philosophy, never a silent bad card).
+                import json as _json
+                try:
+                    sargs = _json.loads(fn.get("arguments") or "{}")
+                except Exception:
+                    sargs = {}
+                sv = str(sargs.get("verb") or "").strip().lower()
+                if sv in self.RHM_VERBS:
+                    one = {"verb": sv, "address": sargs.get("address"), "args": sargs.get("args") or {}}
+                    proposals.append({**one,
+                                      # options[]/direction: the rich layer extends to multi-option + a
+                                      # steer→refine loop + interactive-build; v1 carries the single offer.
+                                      "options": [{**one, "label": sargs.get("label") or sv}],
+                                      "direction": True})
                 continue
             if verb not in offered:
                 # not offered in THIS mode → refuse without dispatching (mode-discipline gate). Legible
@@ -1981,8 +3364,12 @@ class Suite:
         self.store.append_chat({"role": "user", "text": message, "grade": self._provenance_grade("user"), "source": self._provenance_source("user")})
         self.store.append_chat({"role": "assistant", "text": reply, "action": action_field,
                                 "grade": self._provenance_grade("assistant"), "source": self._provenance_source("assistant")})
-        self._emit("chat", f"you: {message[:48]}")
-        return {"reply": reply, "action": action_field, "mode": mode,
+        self._emit("chat", f"you: {message[:48]}", address="ui://chrome/chat")   # S2: chat organ event carries its locus
+        # OFFER-WITH-OPTIONS: a `suggest` tool_call rides back as a `proposal` (the FE renders the one-click
+        # card; approve → /api/act). Additive + back-compat: None when the turn dispatched/spoke instead of
+        # offering; the existing single-`proposal` FE consumer (useAppController r.proposal) reads it unchanged.
+        proposal = proposals[0] if proposals else None
+        return {"reply": reply, "action": action_field, "proposal": proposal, "mode": mode,
                 "model": cfg["model"], "history": self.store.chat_history(40)}
 
     def chat_history(self, limit: int = 40) -> list:
@@ -2010,7 +3397,7 @@ class Suite:
         if not out or out.upper().startswith("NOTHING"):
             return {"comment": ""}
         self.store.append_chat({"role": "assistant", "text": out, "grade": "working", "ambient": True, "source": "twin"})
-        self._emit("react", f"(watching) {out[:44]}")
+        self._emit("react", f"(watching) {out[:44]}", address="ui://chrome/chat")   # S2: watch-and-react is the chat organ
         return {"comment": out}
 
     # ============================================================================================
@@ -2082,7 +3469,9 @@ class Suite:
         if not (text or "").strip():
             raise ValueError("trial_record_turn needs non-empty text (fail loud)")
         self._emit_durable("trial.turn", f"[{character or role}] {text[:60]}",
-                           trial_session=sid, role=role, character=character, text=text)
+                           trial_session=sid, role=role, character=character, text=text,
+                           address="ui://chrome/chat")   # S2: a trial turn plays out in the chat organ
+                                                         # (additive meta; fail-loud posture unchanged)
         s = self._trial_session_record(sid, character)
         s["turns"] = s.get("turns", 0) + 1
         self.store.save_session(s)
@@ -2101,7 +3490,8 @@ class Suite:
         if not (text or "").strip():
             raise ValueError("trial_record_feedback needs non-empty text (fail loud)")
         self._emit_durable("trial.feedback", f"feedback: {text[:60]}",
-                           trial_session=sid, role="operator", character=character, text=text)
+                           trial_session=sid, role="operator", character=character, text=text,
+                           address="ui://chrome/chat")   # S2: trial feedback plays out in the chat organ
         s = self._trial_session_record(sid, character)
         s["feedback"] = s.get("feedback", 0) + 1
         self.store.save_session(s)
@@ -2118,7 +3508,8 @@ class Suite:
         if not (text or "").strip():
             raise ValueError("trial_record_reflection needs non-empty text (fail loud)")
         self._emit_durable("trial.reflection", f"[{character}] reflects: {text[:50]}",
-                           trial_session=sid, role="character", character=character, text=text)
+                           trial_session=sid, role="character", character=character, text=text,
+                           address="ui://chrome/chat")   # S2: trial reflection plays out in the chat organ
         s = self._trial_session_record(sid, character)
         s["reflections"] = s.get("reflections", 0) + 1
         self.store.save_session(s)
@@ -2185,7 +3576,8 @@ class Suite:
             surfaced.append(r["id"])
         self._emit("trial.debrief.start",
                    f"debrief started — {len(surfaced)} trial session(s) to walk",
-                   sessions=ids, surfaced=surfaced)
+                   sessions=ids, surfaced=surfaced,
+                   address="ui://chrome/inbox")   # S2: debrief items surface to the review queue (inbox)
         return self.start_session(surfaced, mode=mode)
 
     # ============================================================================================
@@ -2251,11 +3643,22 @@ class Suite:
             raise ValueError(f"node {node_id!r} has no output to surface yet — run it first (fail loud)")
         sid = self.inbox.surface("result",
                                  {"name": f"output · {node_id}", "node": node_id,
-                                  "graph_id": graph_id, "output": str(out)},
+                                  "graph_id": graph_id, "output": str(out),
+                                  # L8 (§21.7#9): the surfaced item CARRIES its navigable ui:// target so
+                                  # clicking it in the inbox drives the operator's view to the thing it is
+                                  # about (the node), via the preserved resolveUiTarget keystone. Derived
+                                  # by the EXISTING _registry_ui_target (node → ui://canvas/<node>) —
+                                  # registry-valid by construction, never fabricated. It lands inside
+                                  # `payload` (the open bag every consumer reads via .get — seams-engine
+                                  # Seam 2), so all surfaced-item consumers (inbox_lanes/escalation/wire)
+                                  # ignore it cleanly. present_current's transient stamp (2662-2664) sees
+                                  # it already present and skips re-stamping — same value, no conflict.
+                                  "ui_target": self._registry_ui_target({"node": node_id})},
                                  default="reject")
         # emit as 'ask' so the live SSE inbox-refresh path (App.tsx kinds: ask|reject|resolve|…) lights
         # up; the operator's button also poll()s for instant local feedback regardless of the stream.
-        self._emit("ask", f"a result was surfaced for your decision: {node_id}", surfaced=sid)
+        self._emit("ask", f"a result was surfaced for your decision: {node_id}", surfaced=sid,
+                   address=self._registry_ui_target({"node": node_id}))   # S2: registry-valid locus (the node)
         return {"id": sid, "node": node_id, "name": f"output · {node_id}"}
 
     # --- A: the review queue (one inbox, all sources; SEPARATE status lifecycle) ---
@@ -2270,7 +3673,8 @@ class Suite:
         sid = self.inbox.surface_review(item, origin=origin)
         # emit 'ask' so the SSE inbox-refresh lights up (same kind surface_output uses).
         self._emit("ask", f"a review item was surfaced ({origin}): {item.get('title', item.get('name', sid))}",
-                   surfaced=sid, origin=origin)
+                   surfaced=sid, origin=origin,
+                   address=self._registry_ui_target(item))   # S2: registry-valid locus (the node, or the inbox)
         return {"id": sid, "origin": origin, "status": "inbox"}
 
     def idea_capture(self, text: str) -> dict:
@@ -2337,7 +3741,8 @@ class Suite:
                    "cursor": 0, "opened": [], "done": False}
         self.store.save_session(session)
         self._emit("review.start", f"review session {session_id} started — {len(items)} item(s), mode={mode}",
-                   session=session_id, items=items, mode=mode)
+                   session=session_id, items=items, mode=mode,
+                   address="ui://chrome/chat")   # S2: the review session walks in the chat/walkthrough organ
         return self.present_current(session_id)
 
     def _load_session(self, session_id: str) -> dict:
@@ -2451,7 +3856,8 @@ class Suite:
             self.store.save_session(s)                      # commit the advance BEFORE releasing the lock
             cursor_now, done_now, total = s["cursor"], s["done"], len(s["items"])
         self._emit("review.advance", f"review session {session_id} → step {cursor_now}",
-                   session=session_id, cursor=cursor_now, total=total)
+                   session=session_id, cursor=cursor_now, total=total,
+                   address="ui://chrome/chat")   # S2: the review walk presents in the chat/walkthrough organ
         if done_now:
             return {"session": session_id, "done": True, "cursor": cursor_now, "total": total}
         return self.present_current(session_id)
@@ -2462,6 +3868,106 @@ class Suite:
         return {"session": session_id, "cursor": s["cursor"], "total": len(s["items"]),
                 "mode": s.get("mode"), "items": s["items"], "opened": s.get("opened", []),
                 "done": bool(s.get("done"))}
+
+    # --- L9: reverse journey-recording (§21.7#2-reverse, fidelity ISSUE-5) -------------------------------
+    #
+    # The FORWARD direction is done: present_current + resolveUiTarget drive the view TO an address (seam
+    # 3 CONFIRM forward). The REVERSE was dropped — no code captured a free click-path through addresses
+    # as an ordered journey. The review-session organ above (start_session/present_current/next) records
+    # a REVIEW (item-ids walked with a cursor), NOT navigation; a journey is a DISTINCT object that records
+    # an addressed PATH. So these methods are a PARALLEL record + capture wire — they do NOT repurpose or
+    # overload the review organ (which stays byte-for-byte unchanged), and they REUSE the existing forward
+    # resolver for replay (replay_journey hands the FE the ordered addresses; the FE steps through them via
+    # the preserved resolveUiTarget — no second navigation mechanism).
+    #
+    # CAPTURE-TRIGGER decision (the task asks to DECIDE + state): EXPLICIT start/stop journey-recording
+    # (the default lean). start_journey() opens a record → each subsequent append_journey_step appends one
+    # addressed step → stop_journey() finalizes; replay by id. WHY explicit over auto-capture-of-every-
+    # indicate: auto-capture would silently fold ordinary indicate-to-comment clicks (I1) into a journey
+    # the operator never asked to record — surprising, and it would couple two unrelated gestures. Explicit
+    # start/stop makes recording a deliberate operator act (a journey is a thing you choose to make), and
+    # the FE wire only appends while recording is ON — clicks outside a recording are pure indication.
+    #
+    # STORAGE decision: a NEW journeys open-record in the store (store.save_journey/load_journey), a
+    # DISTINCT directory from sessions/ — so a journey id and a session id can never collide (the journey
+    # is genuinely a different object, not a session in disguise). It mirrors save_session/load_session
+    # (the atomic tmp+replace whole-record write) rather than the append_*.jsonl logs, because a journey is
+    # RETRIEVED-WHOLE-BY-ID exactly like a session — that is the truer structural parallel. The record and
+    # each step stay OPEN dicts ({id, ts, steps:[{address, ts}], done}) per the append_* {ts,**} additive
+    # convention (store constitution: schema-additive). Each step's address is S0-validated by the SAME
+    # parse_ui_address gate every other addressed write uses (annotate/attach-chat/address-history) —
+    # registry-truth, fail-loud, no fabrication.
+    def start_journey(self) -> dict:
+        """L9: open a new journey-record (the REVERSE capture). Returns the fresh open record; the FE then
+        appends a step per indicated ui:// address while recording is ON, and stops to finalize."""
+        import time as _t
+        from datetime import datetime, timezone
+        journey_id = f"j{int(_t.time()*1000)}-{len(self.store.list_journeys())}"
+        journey = {"id": journey_id, "ts": datetime.now(timezone.utc).isoformat(), "steps": [], "done": False}
+        self.store.save_journey(journey)
+        self._emit("journey.start", f"journey {journey_id} recording started",
+                   journey=journey_id, address="ui://chrome/chat")
+        return journey
+
+    def append_journey_step(self, journey_id: str, address: str) -> dict:
+        """L9: append one addressed step to an OPEN journey. The address is S0-validated (parse_ui_address,
+        the SAME grammar gate annotate/attach-chat use) — a malformed address RAISES (fail loud, never a
+        junk step). Appending to a finalized/absent journey RAISES (no silent no-op, rule 4). Atomic under
+        the per-id lock (concurrent appends each land a distinct step). Returns the updated record."""
+        from datetime import datetime, timezone
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                              # S0 grammar gate — raises on malformed (BEFORE any mutation)
+        with self._session_lock(f"journey:{journey_id}"):     # per-id lock; namespaced so it never aliases a session lock
+            j = self.store.load_journey(journey_id)            # re-read INSIDE the lock (compare-and-set against the substrate)
+            if not j:
+                raise KeyError(f"no journey {journey_id!r} (fail loud)")
+            if j.get("done"):
+                raise ValueError(f"journey {journey_id!r} is finalized — cannot append (fail loud)")
+            j["steps"].append({"address": address, "ts": datetime.now(timezone.utc).isoformat()})
+            self.store.save_journey(j)
+        self._emit("journey.step", f"journey {journey_id} → {address}",
+                   journey=journey_id, address=address)        # the step's OWN address (so the trajectory is addressed too)
+        return j
+
+    def stop_journey(self, journey_id: str) -> dict:
+        """L9: finalize an open journey (done=True), so it becomes a replayable walkthrough. Idempotent
+        past done. Fail loud on an absent journey (no silent no-op)."""
+        with self._session_lock(f"journey:{journey_id}"):
+            j = self.store.load_journey(journey_id)
+            if not j:
+                raise KeyError(f"no journey {journey_id!r} (fail loud)")
+            if not j.get("done"):
+                j["done"] = True
+                self.store.save_journey(j)
+        self._emit("journey.stop", f"journey {journey_id} finalized — {len(j['steps'])} step(s)",
+                   journey=journey_id, address="ui://chrome/chat")
+        return j
+
+    def get_journey(self, journey_id: str) -> dict:
+        """L9: retrieve a journey-record whole, by id (reflects-never-owns: the store is authoritative)."""
+        j = self.store.load_journey(journey_id)
+        if not j:
+            raise KeyError(f"no journey {journey_id!r} (fail loud)")
+        return j
+
+    def replay_journey(self, journey_id: str) -> dict:
+        """L9: the REPLAY — hand the FE the ordered ui:// addresses so it can step the view through them
+        via the PRESERVED forward resolveUiTarget (no second navigation mechanism; this is the reverse of
+        present_current's view-drive). Returns {journey, addresses[], done}; the FE walks `addresses` one
+        resolveUiTarget at a time. Each address was S0-validated at capture, so the replay vocabulary is
+        the same registry-valid address vocabulary the forward resolver already drives (S0/S1)."""
+        j = self.get_journey(journey_id)
+        return {"journey": journey_id,
+                "addresses": [s["address"] for s in j.get("steps", [])],
+                "done": bool(j.get("done"))}
+
+    def list_journeys_meta(self) -> list:
+        """L9: the recorded journeys (id · step-count · done), newest-first — the picker the FE replays from."""
+        out = []
+        for jid in self.store.list_journeys():
+            j = self.store.load_journey(jid) or {}
+            out.append({"id": jid, "ts": j.get("ts"), "steps": len(j.get("steps", [])), "done": bool(j.get("done"))})
+        return sorted(out, key=lambda m: m.get("ts") or "", reverse=True)
 
     # --- E: the channel back — the system acts, provably from a recorded verdict (the derived-from gate) ---
     def review_verdicts(self, since: int = -1) -> list:
@@ -2490,7 +3996,8 @@ class Suite:
                 f"(kind=resolve·choice=approve·surfaced=={sid!r}) — got "
                 f"kind={ev.get('kind')!r} choice={ev.get('choice')!r} surfaced={ev.get('surfaced')!r}. Refused.")
         self._emit("criterion.commit", f"criterion {criterion_id} committed (derived from verdict seq={derived_from})",
-                   criterion=criterion_id, surfaced=sid, derived_from=derived_from)
+                   criterion=criterion_id, surfaced=sid, derived_from=derived_from,
+                   address="ui://chrome/inbox")   # S2: a criterion commit closes an inbox/review item
         return {"criterion": criterion_id, "surfaced": sid, "derived_from": derived_from, "committed": True}
 
     def resolve_verdicts_since(self, since: int = -1) -> list:
@@ -2527,7 +4034,8 @@ class Suite:
         new_sid = self.inbox.surface_review(item, origin="responsive")
         self._emit("review.requeue",
                    f"requeued {sid} ({ev.get('choice')}) → {new_sid} (derived from verdict seq={derived_from})",
-                   surfaced=new_sid, requeued_from=sid, derived_from=derived_from, verdict=ev.get("choice"))
+                   surfaced=new_sid, requeued_from=sid, derived_from=derived_from, verdict=ev.get("choice"),
+                   address="ui://chrome/inbox")   # S2: requeue surfaces a new inbox/review item
         return {"requeued_from": sid, "new_item": new_sid, "verdict": ev.get("choice"),
                 "derived_from": derived_from}
 
@@ -2570,7 +4078,10 @@ class Suite:
         return ev
 
     def surface_build_intent(self, spec: str, scope: list[str] | None = None,
-                             consequence_class: str = "decision_build", why: str = "") -> dict:
+                             consequence_class: str = "decision_build", why: str = "",
+                             address: str | None = None, symbols: list[str] | None = None,
+                             context: list[dict] | None = None,
+                             blast_radius: dict | None = None) -> dict:
         """W4 PRODUCER: mint a build-intent item — a decision that, once the operator approves it,
         AUTHORIZES an autonomous build of a DECLARED scope. It is distinguished from a plain
         criterion/review by `intent="build"` (the discriminator §W2 — `action` is the governance
@@ -2585,18 +4096,150 @@ class Suite:
         allow-all: the dispatch-time scope-diff treats empty scope as DENY-ALL (_in_any_scope returns
         False for every path), so a build with no declared scope can NEVER close `implemented` — every
         changed path reads as an overrun and surfaces back. This is the durable enforcement (the
-        vacuous-enforcement hole closed at the gate that runs, not only at surface time)."""
+        vacuous-enforcement hole closed at the gate that runs, not only at surface time).
+
+        X1/X2 (Convergence) — the PERSISTED payload widens, schema-ADDITIVELY, with the launch-context
+        truth so the build composes from disk (not a return-dict mutated AFTER persist, the old bug):
+          • `address` (X1) — the `ui://` locus the comment/build derives from. Optional; persisted into
+            the OPEN payload record (`inbox.surface` splats it) so the reloaded rec carries it. The 5
+            existing fields (intent/spec/scope/consequence_class/why) are untouched; readers that
+            `.get(...)` the old fields are unaffected (an absent `address` reads as None, as before).
+          • `symbols` (X2) — the `code://` symbol-neighbours `resolve_scope` ALREADY computed for this
+            address (the code relationships behind the locus). Reused, never recomputed here; the caller
+            (`surface_intent_at`) passes the value it already has. Optional; same additive treatment.
+          • `context` (X3) — the ATTACHED-STRATA bundle (comments/chats/history at the address + ancestors)
+            that R2's EXISTING `_r2_gather` + `_r2_score_and_cap` assembled at MINT time, bounded by the
+            same recency·proximity·pin decay + the `R2_BUDGET` cap the chat gets, deduped (X8), JSON-clean
+            ({kind,address,ts,text,pinned} only — `_r2_gather` strips its internal `_raw`). NOT gathered
+            here (this method stays a pure persister, X1/X2 character) — the caller (`surface_intent_at`)
+            resolves it at mint and passes the bounded list, so the SURFACED record == what the build's
+            prompt later composes from (the consent-time trust property, X5). Reused, never a second
+            gather; the budget cap stays. Optional; same additive treatment.
+        No `schema_ver` exists on the surfaced payload/rec (verified), so none is bumped — these are
+        purely additive optional keys on an open `.get`-read record (rule 2, schema-additive)."""
         scope = [s for s in (scope or []) if isinstance(s, str) and s.strip()]
         payload = {"intent": "build", "spec": spec, "scope": scope,
                    "consequence_class": consequence_class, "why": why or spec}
+        # X1/X2: thread the launch-context truth INTO the payload BEFORE persist (the old `out["address"]`
+        # set AFTER persist never reached disk). Additive + optional — only present when supplied.
+        if address is not None:
+            payload["address"] = address
+        if symbols is not None:
+            payload["symbols"] = list(symbols)
+        if context is not None:                       # X3: the bounded, deduped attached-strata bundle
+            payload["context"] = list(context)        # (resolved at mint by the caller; persister-only here)
+        if blast_radius is not None:                  # X16: the BLAST RADIUS (X14) the operator sees at
+            payload["blast_radius"] = dict(blast_radius)  # consent time — what the change could REACH. Persisted
+            # so (a) the FE surfaces it for reach-approval AND (b) `approve_reach` validates an approved
+            # member against the EXACT radius the operator saw (consent-time, not a fresh recompute that
+            # could disagree). Persister-only here (the caller resolves it at mint, X1/X2/X3 character).
         # action="review" so it walks the same review lifecycle/UI; the build-intent discriminator is
         # payload["intent"]=="build" (action is the governance class, which surface_review hardcodes).
         sid = self.inbox.surface("review", payload, default="reject", resolved=None,
                                  status="inbox", origin="responsive")
         self._emit("decision.intent",
                    f"build-intent surfaced ({consequence_class}, scope={scope or '∅'}) — awaiting operator approval",
-                   surfaced=sid, intent="build", consequence_class=consequence_class, scope=scope)
+                   surfaced=sid, intent="build", consequence_class=consequence_class, scope=scope,
+                   address="ui://chrome/inbox")   # S2: a build-intent surfaces in the inbox (live-registry-valid;
+                                                  # finer ui://inbox/build-review awaits S0's grammar unification)
         return {"id": sid, "intent": "build", "scope": scope, "consequence_class": consequence_class}
+
+    def surface_intent_at(self, ui_addr: str, text: str, source: str = "operator",
+                          consequence_class: str = "decision_build", why: str = "") -> dict:
+        """L1 (§21.4#2) — a COMMENT-AT-AN-ADDRESS becomes a build-intent that surfaces for approval AT
+        that address. The addressed-feedback → wire entry seam: "this run button is too loud" on
+        `ui://chat/input` becomes a build-intent scoped to the code behind that address, awaiting the
+        operator's approve.
+
+        COMPOSES three EXISTING pieces (rule 3 — one source; never a parallel intent path):
+          1. `ingest_comment` (I6) — RECORD the comment at the address (its `annotation://` branch +
+             the located-gold chat turn). The comment IS the located gold label; it persists at the
+             locus AND becomes the build's spec. This is the SAME wired comment-ingest path the FE's
+             /api/annotate uses — L1 does not duplicate it.
+          2. `resolve_scope` (S3) — JOIN `ui://` → `code://` symbol(s) → repo-relative `scope[]`. The
+             SAME corpus-side resolver L5 used (`self_changes_at`); never re-derived. So the build
+             "lands at the address you touched" — its declared scope IS the code behind that address.
+          3. `surface_build_intent` (the wire's production FRONT DOOR, suite.py:2962) — mint the
+             build-intent with that scope. REUSED UNCHANGED: empty-scope=DENY-ALL + `resolved=None`
+             (a live escalation until the operator resolves) hold exactly as they do for /api/build-intent.
+
+        EMPTY / STALE SCOPE = DENY-ALL (the headline safety property, rule 8): S3's scope is passed
+        STRAIGHT THROUGH to `surface_build_intent`. If the address has no referencing code symbol
+        (orphan / CSS-selector ref) or the corpus is unreadable (stale), S3 returns an EMPTY scope —
+        which `surface_build_intent`'s dispatch-time scope-diff treats as DENY-ALL (`_in_any_scope`
+        False for EVERY path), so the build can NEVER close `implemented`. We NEVER fabricate a broad
+        scope to "make it buildable" (= confabulation, the same failure as not acting). We mirror L5's
+        propagate-`stale`/`note`-straight-through: the gap is fail-loud-LEGIBLE in the return + folded
+        into the build-intent `why`, never a silent empty that lies "buildable anywhere."
+
+        OPERATOR-ONLY APPROVAL (no-bypass, server.py:158): the build-intent is SURFACED here
+        (`resolved=None`) but APPROVED by the OPERATOR via `/api/resolve` (operator-only, off the MCP
+        face). L1 STOPS at surfacing for approval. Dispatch-on-approve is L2 — a separate, deliberate
+        switch (this method NEVER calls dispatch_decision).
+
+        S0 GATE: `ingest_comment`/`resolve_scope` both validate the address (parse_ui_address RAISES on
+        a malformed ui://), and `ingest_comment` fails loud on empty text — so a junk comment can never
+        mint a build-intent. Returns {id, intent, scope, consequence_class, address, stale, note}."""
+        # 1. RECORD the comment at the address (I6 — fails loud on malformed address / empty text).
+        self.ingest_comment(ui_addr, text, source=source)
+        # 2. RESOLVE the code scope (S3 — reused, never duplicated). Empty/stale ⇒ DENY-ALL, carried legibly.
+        scoped = self.resolve_scope(ui_addr)
+        scope = scoped.get("scope") or []
+        symbols = scoped.get("symbols") or []   # X2: the code:// neighbours, REUSED (never recomputed)
+        stale, note = bool(scoped.get("stale")), (scoped.get("note") or "")
+        # X3: gather the ATTACHED-STRATA bundle at the address — at MINT/consent time, so the surfaced
+        # record == what the build later composes from (the consent-time trust property, X5). REUSE R2's
+        # EXISTING machinery (NO second gather): `_r2_gather` (annotations + chats + addressed events at
+        # the locus AND its ancestors, deduped by X8, `_raw` stripped → JSON-clean {kind,address,ts,text,
+        # pinned}) then `_r2_score_and_cap` (the recency·proximity·pin decay + the SAME `R2_BUDGET` cap the
+        # chat gets — the persisted bundle is the SAME bounded slice, never an unbounded dump). The mint
+        # comment was just recorded by `ingest_comment` above, so the gather picks it up (counted ONCE via
+        # X8). FAIL-LOUD-LEGIBLE, mirroring `_resolve_context_at`'s posture: an error WARNS (address-stamped)
+        # + omits the key (never persist a half-bundle silently); we must NOT crash the mint (losing the
+        # operator's build-intent over a context hiccup is the worse failure). Empty (nothing attached) →
+        # `[]` persisted (honest, parallels orphan symbols=[]); gather errored → key omitted (distinct signal).
+        from datetime import datetime as _dt, timezone as _tz
+        context = None
+        try:
+            context = self._r2_score_and_cap(self._r2_gather(ui_addr), ui_addr, _dt.now(_tz.utc))
+        except Exception as e:
+            self._emit("warning", f"X3 mint-time context gather failed ({type(e).__name__})", address=ui_addr)
+            context = None   # omit the key — never persist a partial bundle (fail-loud, not silent-partial)
+        # X16: compute the BLAST RADIUS (X14) at MINT/consent time and persist it, so the operator
+        # sees WHAT THE CHANGE COULD REACH (co-reference + structural dependents-to-verify /
+        # dependencies-to-respect + semantic) BEFORE approving, and so `approve_reach` validates an
+        # approved member against the EXACT radius surfaced (consent-time, never a fresh recompute that
+        # could disagree). REUSE `blast_radius` (X9+X14) — no parallel system, no new substrate. The
+        # method is already graceful-empty + fail-loud-legible (orphan/stale → empty kinds + a note,
+        # never a crash), so an orphan address yields an empty radius (nothing to expand → DENY-ALL
+        # stays DENY-ALL). FAIL-LOUD-LEGIBLE, mirroring the context gather above: a hiccup WARNS
+        # (address-stamped) + omits the key (never persist a half-radius silently) — never crash the
+        # mint (losing the operator's build-intent over a radius hiccup is the worse failure).
+        radius = None
+        try:
+            radius = self.blast_radius(ui_addr)
+        except Exception as e:
+            self._emit("warning", f"X16 mint-time blast_radius failed ({type(e).__name__})", address=ui_addr)
+            radius = None   # omit the key — never persist a partial radius (fail-loud, not silent-partial)
+        # legible consent (I1): the build derives from THIS address + comment. Fold the scope gap into
+        # `why` so the operator's approve sees WHY it's empty (fail-loud-legible, never a silent empty).
+        reason = why or f"comment at {ui_addr}: {str(text).strip()[:200]}"
+        if not scope:
+            reason += f" — [no resolvable code scope: {note or 'orphan/CSS-selector address'} — DENY-ALL]"
+        # 3. MINT through the wire's UNCHANGED front door (empty-scope=DENY-ALL + resolved=None reused).
+        #    X1/X2/X3: the address + the already-computed symbols + the mint-time R2 context bundle are
+        #    threaded INTO the payload here, so the PERSISTED record carries the launch-context truth
+        #    (consent-time: the surfaced record == what the build later composes from). The old
+        #    `out["address"]=ui_addr` AFTER surface_build_intent only mutated the return dict — never
+        #    reached disk; the payload threading is the durable fix.
+        out = self.surface_build_intent(str(text).strip(), scope=scope,
+                                        consequence_class=consequence_class, why=reason,
+                                        address=ui_addr, symbols=symbols, context=context,
+                                        blast_radius=radius)
+        out["address"] = ui_addr   # kept on the RETURN dict too (callers/return-readers unaffected)
+        out["stale"] = stale
+        out["note"] = note
+        return out
 
     @staticmethod
     def is_build_intent(decision: dict) -> bool:
@@ -2735,21 +4378,100 @@ class Suite:
                 out.append(p)
         return out
 
+    # F9 — where the corpus FORM lint lives. `design/_system/check.py` is a fixed part of THIS codebase
+    # (it ships beside suite.py), NOT in the build's _repo_root sandbox — so it is located off suite.py's
+    # own location, while the CHANGED files are resolved against _repo_root (the build's tree).
+    def _design_lint_corpus(self) -> str:
+        """The in-repo corpus design-lint script (design/_system/check.py). suite.py lives in
+        runtime/, the corpus in design/_system/ — both under the same source root, so derive it from
+        THIS file's location (the sandbox _repo_root has no corpus)."""
+        return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                            "design", "_system", "check.py")
+
     def _design_critic(self, changed_files: list[str]) -> tuple[bool, str]:
-        """H4 FORM slot (fail-safe seam) — where a design-critic AGENT + a design-lint will plug in
-        once the design system exists. Until then FORM is UNVERIFIABLE for any operator-facing surface,
-        so this returns (False, reason) for a surface-touching build → the build CANNOT claim 'done' and
-        surfaces for review. A pure-backend build (no surface change) has no form to grade → (True, …),
-        so it may proceed through H1/H2. This is the path-of-least-resistance default: the correct
-        action (don't auto-close an unverifiable surface) is the easy one. NAMED hook, not a comment:
-        replace the body with `design_critic_agent(changed_files)` + `design_lint(changed_files)` when
-        the design system is wired (off-token / bespoke-element → fail loud, same shape as here)."""
+        """F9 — the LIVE in-repo FORM gate (graduated from the stub, review-executability V-1).
+
+        THE MACHINE HALF of FORM lives here: it runs the corpus design-lint (design/_system/check.py
+        --target <changed canvas file> --fail-on) over the surface files this build CHANGED.
+          • A clean, token-only surface change → lint exits 0 → (True, …): the UI self-build may
+            AUTO-CLOSE (no second manual gate — approval already happened at the build-intent guard).
+          • A surface change introducing an off-token literal (raw hex/rgba instead of var(--x)) or a
+            bespoke element → lint exits non-zero → (False, reason): the build is GATED, surfaces back.
+          • FAIL-SAFE: if the lint cannot run AT ALL — corpus missing, interpreter/script error, a
+            changed file that doesn't resolve to a real file on disk, ANY exception — this returns
+            (False, reason). Unverifiable is NOT-passed; it NEVER silently returns True (rule 4).
+        A pure-backend build (no canvas/ change) has no form to grade → (True, …); it proceeds.
+
+        THE HUMAN-JUDGMENT HALF (the design-critic AGENT — browser + screenshots, the design rubric
+        its only lens) is NOT run in-process: a headless dispatch can't drive a browser, and the
+        implementer can't grade its own form (AGENTS.md rule 9). The loop dispatches that agent
+        SEPARATELY at verify time. Subjective taste it can't machine-settle → flagged for Tim, never
+        green-painted. This method is the deterministic in-repo gate; the agent is the loop's stage."""
         surface = self._touches_surface(changed_files)
-        if surface:
-            return (False, f"FORM unverifiable: this build changed operator-facing surface(s) {surface} "
-                           f"but no design system / design-critic is wired yet — FORM is half of done "
-                           f"(AGENTS.md rule 9), so it CANNOT auto-close. Surfaced for design review.")
-        return True, "no operator-facing surface touched → no FORM gate (backend build may proceed)"
+        if not surface:
+            return True, "no operator-facing surface touched → no FORM gate (backend build may proceed)"
+
+        script = self._design_lint_corpus()
+        if not os.path.exists(script):
+            # FAIL-SAFE: the corpus lint is absent → FORM is unverifiable → not-passed (never silent True).
+            return (False, f"FORM unverifiable (fail-safe): the corpus design-lint {script} is missing — "
+                           f"cannot machine-check the surface change {surface}. Surfaced for design review.")
+
+        # Lint only the surface files THIS build changed (a clean change must not be gated by pre-existing
+        # dirt elsewhere). Resolve each against _repo_root (the build's tree). The design-lint grades FORM,
+        # which lives in .tsx/.css (the styled markup) — a .ts logic file, an image, etc. carry NO
+        # lintable form (NO-FORM rule). So:
+        #   • a .tsx/.css that EXISTS → a lint target.
+        #   • a .tsx/.css the change names but that is NOT on disk → genuine can't-run → FAIL-SAFE (a
+        #     surface file that should exist but doesn't is unverifiable, never a silent pass).
+        #   • a non-.tsx/.css canvas file (.ts logic, asset) → no form to grade → skipped (not a target,
+        #     not a fail-safe miss) — so a pure-logic FE build can still auto-close, and a .tsx+.ts change
+        #     agrees with a .ts-alone change (the .ts never flips the verdict).
+        # If the change has NO lintable .tsx/.css at all (pure-logic surface) → no form to grade → PASS.
+        import subprocess, sys as _sys
+        targets, missing_form_files = [], []
+        for p in surface:
+            q = (p or "").strip().lstrip("./")
+            full = os.path.join(self._repo_root, q)
+            if q.endswith((".tsx", ".css")):
+                if os.path.exists(full):
+                    targets.append(full)
+                else:
+                    missing_form_files.append(q)        # a styled file that should exist but doesn't
+            # else: a non-form canvas file (.ts / asset) — NO-FORM, skipped (neither target nor miss).
+        if missing_form_files:
+            return (False, f"FORM unverifiable (fail-safe): surface change names .tsx/.css file(s) "
+                           f"{missing_form_files} not present under {self._repo_root} — cannot lint a "
+                           f"styled file that should exist. Surfaced for design review.")
+        if not targets:
+            # the changed surface carried NO lintable .tsx/.css (a pure-logic .ts / asset FE change) →
+            # there is no form to machine-grade → it may proceed (the human design-critic agent, run
+            # separately at verify time, still covers any judgment call).
+            return (True, f"no lintable .tsx/.css in the changed surface {surface} (pure-logic / asset "
+                          f"FE change) → no machine FORM to grade; the human design-critic agent covers "
+                          f"any judgment at verify time.")
+
+        py = _sys.executable
+        offenders = []
+        for full in targets:
+            try:
+                proc = subprocess.run([py, script, "--target", full, "--fail-on"],
+                                      capture_output=True, text=True, timeout=120)
+            except Exception as e:
+                # FAIL-SAFE: the lint could not run (interpreter/script crash, timeout) → not-passed.
+                return (False, f"FORM unverifiable (fail-safe): the corpus design-lint failed to run on "
+                               f"{full} ({type(e).__name__}: {e}) — cannot confirm FORM. Surfaced for review.")
+            if proc.returncode != 0:
+                tail = (proc.stdout or "")[-300:] + (proc.stderr or "")[-300:]
+                offenders.append(f"{os.path.relpath(full, self._repo_root)} (exit={proc.returncode}: {tail.strip()})")
+        if offenders:
+            return (False, f"FORM gate FAILED (design-lint): off-token/bespoke finding(s) in the changed "
+                           f"surface — {'; '.join(offenders)}. The surface must use corpus tokens "
+                           f"(var(--x)) + components (AGENTS.md rule 9), so it CANNOT auto-close.")
+        return (True, f"FORM gate PASSED (design-lint clean on changed surface: "
+                      f"{', '.join(os.path.relpath(t, self._repo_root) for t in targets)}) — "
+                      f"token-only; the in-repo machine half is satisfied (the human design-critic agent "
+                      f"runs separately at verify time).")
 
     def _critic_recheck(self, decision: dict, result: dict, *, critic=None) -> tuple[bool, str]:
         """H5 — an ADVERSARIAL re-check, SEPARATE from the builder's self-report (the builder defaults
@@ -2893,7 +4615,9 @@ class Suite:
                                f"dispatching build for {sid} (class={declared}, scope={scope or '∅'}, "
                                f"derived from verdict seq={derived_from})",
                                surfaced=sid, derived_from=derived_from,
-                               consequence_class=declared, scope=scope)
+                               consequence_class=declared, scope=scope,
+                               address="ui://chrome/inbox")   # S2: the dispatched build-intent's inbox item
+                                                              # (additive meta; durable fail-loud posture unchanged)
             self.inbox.set_status(sid, "presented")
 
         # 6 — launch (W1). Loud on a bad round-trip (LaunchError) — caller (W7/loop) re-queues loud.
@@ -2907,7 +4631,8 @@ class Suite:
             new_sid = self.inbox.surface_review(req, origin="responsive")
             self._emit("decision.verify",
                        f"dispatch for {sid} FAILED to launch → re-queued {new_sid} — {e}",
-                       surfaced=new_sid, requeued_from=sid, derived_from=derived_from, verify_passed=False)
+                       surfaced=new_sid, requeued_from=sid, derived_from=derived_from, verify_passed=False,
+                       address="ui://chrome/inbox")   # S2: re-queued build-intent inbox item
             return {"surfaced": sid, "dispatched": True, "launched": False, "verified": False,
                     "requeued": new_sid, "error": str(e)}
 
@@ -2961,20 +4686,24 @@ class Suite:
             self._emit("decision.verify",
                        f"build for {sid} did NOT verify ({verify_reason}) → re-queued {new_sid}; not closed",
                        surfaced=new_sid, requeued_from=sid, derived_from=derived_from,
-                       verify_passed=False)
+                       verify_passed=False,
+                       address="ui://chrome/inbox")   # S2: re-queued build-intent inbox item
             return {"surfaced": sid, "dispatched": True, "launched": True, "verified": False,
                     "requeued": new_sid, "reason": verify_reason}
 
-        # 7b — H4 FORM GATE (UNCONDITIONAL — a structural gate, like the scope-diff, NOT inside the
-        # replaceable verifier). A build that touched an operator-facing surface (canvas/) CANNOT
-        # auto-close: its FORM (design-system components+tokens, coherent layout — AGENTS.md rule 9) is
-        # the product bar, and there is NO design system / design-critic wired to machine-check it yet.
-        # So it surfaces for review REGARDLESS of how verify_passed was reached (incl. an injected
-        # scenario verifier — the WIRE-LOOP path). The surfaced item is DELIBERATELY DISPATCHER-INERT
-        # (a `build_form_review`, NOT a build-intent): re-approving it must NOT re-dispatch into a
-        # can't-verify-form loop (it would satisfy _is_dispatchable under a NEW seq, and exactly-once is
-        # keyed on the OLD seq). _design_critic is the NAMED hook where design_critic_agent + design_lint
-        # plug in once the design system exists; until then it is fail-safe (surface, never close).
+        # 7b — H4/F9 FORM GATE (UNCONDITIONAL — a structural gate, like the scope-diff, NOT inside the
+        # replaceable verifier). A build that touched an operator-facing surface (canvas/) is run through
+        # the LIVE machine FORM gate (_design_critic, graduated by F9): the corpus design-lint
+        # (design/_system/check.py --fail-on) over the CHANGED surface files. A clean token-only surface
+        # PASSES → the UI self-build AUTO-CLOSES (approval already happened at the build-intent guard; F9
+        # adds no second manual gate). An off-token/bespoke change, or an unrunnable lint (fail-safe),
+        # FAILS → it surfaces for review REGARDLESS of how verify_passed was reached (incl. an injected
+        # scenario verifier — the WIRE-LOOP path; the gate runs unconditionally here, NOT in the
+        # bypassable verifier). The surfaced item is DELIBERATELY DISPATCHER-INERT (a `build_form_review`,
+        # NOT a build-intent): re-approving it must NOT re-dispatch into a can't-verify-form loop (it
+        # would satisfy _is_dispatchable under a NEW seq, and exactly-once is keyed on the OLD seq).
+        # _design_critic is the in-repo MACHINE half; the human-judgment design-critic AGENT (browser +
+        # screenshots) is dispatched SEPARATELY by the loop at verify time (it can't run headless here).
         form_ok, form_reason = self._design_critic(result.get("changed_files", []))
         if not form_ok:
             form_item = {"kind": "build_form_review", "review_of": sid, "derived_from": derived_from,
@@ -2985,7 +4714,8 @@ class Suite:
             self._emit("decision.verify",
                        f"build for {sid} touched an operator-facing surface → cannot auto-close (FORM "
                        f"unverifiable) → surfaced {new_sid} for design review; not closed",
-                       surfaced=new_sid, review_of=sid, derived_from=derived_from, verify_passed=False)
+                       surfaced=new_sid, review_of=sid, derived_from=derived_from, verify_passed=False,
+                       address="ui://chrome/inbox")   # S2: surfaced design-review inbox item
             return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
                     "closed": False, "requeued": new_sid, "reason": form_reason,
                     "form_unverifiable": True}
@@ -3013,7 +4743,8 @@ class Suite:
                 self._emit("decision.verify",
                            f"build for {sid} OVERRAN declared scope ({overrun}) → re-queued {new_sid}; not closed",
                            surfaced=new_sid, requeued_from=sid, derived_from=derived_from,
-                           verify_passed=False, overrun=overrun)
+                           verify_passed=False, overrun=overrun,
+                           address="ui://chrome/inbox")   # S2: re-queued build-intent inbox item
                 return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
                         "closed": False, "requeued": new_sid, "overrun": overrun}
 
@@ -3043,7 +4774,8 @@ class Suite:
             self._emit("decision.implemented",
                        f"build for {sid} verified + within scope → status=implemented "
                        f"(changed {len(changed)} files; derived from seq={derived_from})",
-                       surfaced=sid, derived_from=derived_from, verify_passed=True, changed_files=changed)
+                       surfaced=sid, derived_from=derived_from, verify_passed=True, changed_files=changed,
+                       address="ui://chrome/inbox")   # S2: the implemented build-intent's inbox item
             # surface the result for the MANDATORY review (reversible/AUTO builds are non-blocking —
             # the change is made + git-reversible — but the review is ALWAYS surfaced). Reuses the
             # existing surface_review inbox + event log; no parallel review system. surface_review
@@ -3068,7 +4800,8 @@ class Suite:
                        f"build for {sid} surfaced for review → {rev['id']} "
                        f"(changed {len(changed)} files; review is mandatory, not silent close)",
                        surfaced=rev["id"], review_of=sid, derived_from=derived_from,
-                       changed_files=changed)
+                       changed_files=changed,
+                       address="ui://chrome/inbox")   # S2: the surfaced-for-review inbox item
             return True
         guard("code_build", do=_close, confirmed=verify_passed, inbox=None)
         return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
@@ -3111,7 +4844,19 @@ class Suite:
     # --- C1: the UI-component registry serialization (sibling of object_info) ---
     # Seeds the known chrome regions (DOM-resolved via data-ui-ref handles the UI lane adds) + the node
     # canvas (camera-resolved). ref = the <ref> in ui://<kind>/<ref>; dom_handle = the data-ui-ref value.
-    # (ref, kind, title, dom_handle|camera_ref, caps-dict). caps keys are the Capabilities fields.
+    # (ref, kind, title, dom_handle|camera_ref, caps-dict[, union-extras-dict]). caps keys are the
+    # Capabilities fields.
+    # S0 (Interactive Addressed Surface) — the ONE canonical grammar:
+    #   The optional 6TH tuple element is the S0 union-extras dict (additive — defaults to {} via
+    #   row[5:] slicing in every consumer), carrying the union-record join fields (represents/code/
+    #   tier/states) for entries where a 1:1 corpus join is known. The 7 live entries leave it ABSENT
+    #   (rule 8 — joining from the corpus is optional, not S0's bar; S1 grows the element-level set).
+    #   Both this live registry AND design/_system/addresses.json validate against the ONE canonical
+    #   `ui://<region>/<element>[/<sub>][/@state]` grammar via contracts.ui_info.conform_live /
+    #   conform_corpus (proven by tests/address_grammar_acceptance.py). The grammar is purely
+    #   STRUCTURAL; kind/region are RECORD fields — so the live kind-form `ui://chrome/inbox` and the
+    #   corpus region-form `ui://inbox/build-review` both conform WITHOUT migrating the live strings
+    #   (that migration is S1, not S0).
     UI_REGISTRY = [
         ("toolbar",   "chrome", "Toolbar",      {"dom_handle": "toolbar"},
          {"pointable": True, "spotlit": True}),
@@ -3125,11 +4870,27 @@ class Suite:
          {"pointable": True, "spotlit": True, "openable": True}),
         ("workshop",  "chrome", "Workshop",     {"dom_handle": "workshop"},
          {"pointable": True, "spotlit": True, "openable": True}),
+        # S1: the two app-carried bare handles that had a DOM data-ui-ref but were NOT served (fe-map §8
+        # internal inconsistency — the FE pointed at them, the registry didn't know them). Registering them
+        # as bare-key chrome regions (the same shape as the 6 above) closes the orphan: every app
+        # data-ui-ref now has a registry entry. walkthrough = the per-step review card region
+        # (regions/Walkthrough.tsx); deferred-queue = the inbox deferred lane (regions/Inbox.tsx).
+        ("walkthrough",    "chrome", "Walkthrough",    {"dom_handle": "walkthrough"},
+         {"pointable": True, "spotlit": True, "presentable": True}),
+        ("deferred-queue", "chrome", "Deferred queue", {"dom_handle": "deferred-queue"},
+         {"pointable": True, "spotlit": True, "openable": True}),
         # the node canvas itself (camera_ref="*" = the whole canvas; individual nodes are addressed live
         # as ui://canvas/<node-id> by show's canvas branch — reuse of the existing camera path).
         ("*", "canvas", "Node canvas", {"camera_ref": "*"},
          {"pointable": True, "spotlit": True, "presentable": True}),
     ]
+    # S1: GROW the registry to the 24+ ELEMENT-level addresses from the design corpus (additive — the 7
+    # bare-ref region rows above are UNCHANGED, so every existing consumer keeps resolving). The element
+    # rows are keyed by their FULL canonical string (ui://inbox/build-review), read from the corpus (never
+    # invented — rule 8). See _load_corpus_element_addresses for the projection + the preserve rationale.
+    # Built at class-definition time so /api/ui_info serves them with no per-call cost; fail-loud if the
+    # corpus file is missing/malformed (the registry never silently ships region-only).
+    UI_REGISTRY = UI_REGISTRY + _load_corpus_element_addresses()
 
     def build_ui_info(self) -> dict:
         """C1: serialize the UI-component registry for the frontend (a SIBLING of object_info — which is
@@ -3139,13 +4900,322 @@ class Suite:
         ui_info is actually called. The UI lane adds the matching data-ui-ref handles to the DOM."""
         from contracts.ui_info import UiComponentEntry, Capabilities, build_ui_info as _build
         entries = []
-        for ref, kind, title, handle, caps in self.UI_REGISTRY:
+        for row in self.UI_REGISTRY:
+            # S0-additive: a registry row is (ref, kind, title, handle, caps[, union-extras]). The
+            # 6th element (union-extras for the canonical grammar) is IGNORED by this v1 /ui_info
+            # serializer — it preserves the existing served shape (an older FE reads exactly what it
+            # did before). Slice the first five so a 6-tuple row does not break the unpack.
+            ref, kind, title, handle, caps = row[0], row[1], row[2], row[3], row[4]
             entries.append(UiComponentEntry(ref=ref, kind=kind, title=title,
                                             capabilities=Capabilities(**caps), **handle))
         return _build(entries)
 
     def ui_info(self) -> dict:
         return self.build_ui_info()
+
+    # --- S3: the backend ui://→code://→scope[] resolver (Interactive Addressed Surface) ---
+    # Establishes `code://` in the BACKEND (it was corpus-only). A resolver mapping a `ui://` address →
+    # its `code://` symbol(s) → a file `scope[]`. This is the pivot L1 (comment→build-intent needs the
+    # code scope) and L5 (self-change→element needs the file→ui join) both lean on. It READS the corpus
+    # join data on disk (design/_system/{addresses.json, code-symbols.json}); FRESHNESS coupling: that
+    # JSON is REGENERATED (by design/_system/symbols.py), not live — a stale code-symbols.json returns a
+    # stale scope. Surfaced, never pretended-live (seams-engine risk #4).
+
+    def _corpus_dir(self) -> str:
+        """The corpus _system dir holding the join data (addresses.json, code-symbols.json)."""
+        return os.path.join(self._repo_root, "design", "_system")
+
+    def resolve_scope(self, ui_addr: str) -> dict:
+        """S3 — map a `ui://` address → its `code://` symbol(s) → a file `scope[]`.
+
+        ONE-SOURCE (rule 3): the code:// ids AND the scope files come FROM the corpus code-symbol
+        registry (design/_system/code-symbols.json), NOT re-derived from the raw `addresses.json`
+        `code` string. The registry is the canonical `code://` index — keyed by the SAME
+        code://<file-stem>/<symbol> ids it mints (design/_system/symbols.py), carrying each symbol's
+        RESOLVED repo-relative file (e.g. canvas/app/src/App.tsx, not the corpus's shorthand 'App.tsx')
+        and a `referenced_by[]` listing the ui:// addresses that point at it. S3 INVERTS that
+        `referenced_by` into the forward map ui://addr → [symbols] (the guide's `files_for` design),
+        so a resolved id is a real registry key and a resolved path is the registry's resolved path —
+        BY CONSTRUCTION, never a parallel/disagreeing `code://` scheme (the two-grammars failure S0
+        exists to kill, kept out of code:// too).
+
+        Returns {address, symbols:[code://…], scope:[file,…], stale, note}:
+          • symbols — the code:// ids referencing this address (registry keys; canonical).
+          • scope   — the DISTINCT, sorted RESOLVED files those symbols live in. EMPTY ⇒ DENY-ALL
+                      downstream (matches surface_build_intent empty-scope=deny, suite.py — fail-safe,
+                      NEVER allow-all; rule 8 — an unmapped address is never a license to build anywhere).
+          • stale   — True if the corpus join data couldn't be read (regenerate it); fail-loud-legible.
+          • note    — a human-legible explanation when scope is empty / the join is stale.
+
+        The address MUST conform to the canonical grammar (S0) — a malformed ui:// raises (fail loud).
+        An address with NO referencing symbol in the registry (a CSS-selector ref like ui://tabbar, an
+        orphan, or one absent from the corpus) returns empty scope (DENY-ALL) WITHOUT raising — the gap
+        is surfaced via `note`, never fabricated.
+
+        FRESHNESS (seams-engine risk #4): code-symbols.json is REGENERATED by design/_system/symbols.py,
+        not live — a stale index returns a stale scope. The resolver reads it as-is; it does not pretend
+        the data is live. (A future rung could regenerate-then-read; for now the coupling is surfaced.)"""
+        import json as _j
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(ui_addr)                            # S0 grammar gate (raises on malformed)
+
+        symbols_path = os.path.join(self._corpus_dir(), "code-symbols.json")
+        try:
+            with open(symbols_path, encoding="utf-8") as f:
+                index = _j.load(f).get("symbols", {})
+        except (OSError, ValueError) as e:
+            return {"address": ui_addr, "symbols": [], "scope": [], "stale": True,
+                    "note": f"corpus code-symbols.json unreadable ({type(e).__name__}: {e}) — "
+                            f"regenerate design/_system (symbols.py); DENY-ALL until then"}
+
+        # INVERT referenced_by: collect every registry symbol that names this ui:// address.
+        symbols, scope = set(), set()
+        for sid, entry in index.items():
+            if ui_addr in (entry.get("referenced_by") or []):
+                symbols.add(sid)
+                f = entry.get("file")
+                if f:
+                    scope.add(f)                             # the RESOLVED repo-relative path
+
+        note = ""
+        if not symbols:
+            note = (f"{ui_addr!r} has no referencing code symbol in the corpus registry "
+                    f"(a CSS-selector/prose ref, an orphan, or absent) — DENY-ALL "
+                    f"(never fabricated — rule 8)")
+        return {"address": ui_addr, "symbols": sorted(symbols), "scope": sorted(scope),
+                "stale": False, "note": note}
+
+    # --- X9 (Convergence, Seam 2): blast_radius — the nearly-FREE co-reference ripple ---
+    # The corpus reverse index (design/_system/code-symbols.json) already encodes "which
+    # addresses/features touch the same code symbol" in each symbol's `referenced_by[]` — but
+    # NOTHING read it for this purpose (zero runtime consumers). X9 is the FREE half: invert that
+    # ALREADY-LOADED index into the sibling set. NO new substrate, NO re-parsing source.
+    #
+    # --- X14 (Convergence, Seam 3): blast_radius spans BOTH edge kinds ---
+    # X9 gives co-reference (what shares this code). X14 WIDENS the SAME method to ALSO return, all
+    # DISTINGUISHED by kind: the TRUE STRUCTURAL dependents/dependencies (X10's code-edges.json —
+    # `depended_by` = dependents-to-VERIFY, `depends_on` = dependencies-to-RESPECT, bounded by X10's
+    # DEPTH-capped reach query) AND the SEMANTIC neighbours (X11's `semantically_nearest[]`). REUSE,
+    # never reimplement: resolve_scope for addr→symbols (S0 gate + stale), codeedges.reach_report for
+    # the bounded structural walk (the dependents side reuses the SAME walk over a transposed edge
+    # view — no new BFS), and semantically_nearest[] read straight off the same code-symbols.json.
+    # Graceful-empty + fail-loud-legible: a missing/absent layer → that kind empty + a note, NEVER a
+    # crash, NEVER a fabricated edge (registry-truth, rule 4 + rule 8).
+
+    def _structural_radius(self, symbols: list[str]) -> dict:
+        """X14 structural layer — for the resolved `code://` symbols, the bounded structural
+        dependents (X10 `depended_by`, dependents-to-VERIFY) + dependencies (X10 `depends_on`,
+        dependencies-to-RESPECT) from design/_system/code-edges.json.
+
+        REUSE, NOT reimplement (rule 3): the bounded transitive walk is X10's
+        `codeedges.reach_report` (capped at its DEPTH knob; a reach that hits the bound is reported
+        `capped`, no silent truncation). Dependencies = reach over `depends_on`. Dependents = the
+        SAME reach over a TRANSPOSED edge view (depends_on↔depended_by swapped) — so the algorithm
+        is X10's bounded BFS, not a new graph computation. Bounded by X10's DEPTH (do NOT unbound).
+
+        Graceful (rule 4): code-edges.json absent/unreadable → empty dependents/dependencies + a
+        legible `note` (regenerate it), never a crash, never a fabricated edge. Returns
+        {dependents, dependencies, dependents_capped, dependencies_capped, depth, note}."""
+        import json as _j
+        empty = {"dependents": [], "dependencies": [], "dependents_capped": False,
+                 "dependencies_capped": False, "depth": None}
+        edges_path = os.path.join(self._corpus_dir(), "code-edges.json")
+        try:
+            with open(edges_path, encoding="utf-8") as f:
+                edges = _j.load(f).get("edges", {})
+        except (OSError, ValueError) as e:
+            # fail-loud-legible: the structural graph isn't there → empty structural + a note.
+            return {**empty, "note": (
+                f"structural graph unavailable (design/_system/code-edges.json: "
+                f"{type(e).__name__}: {e}) — regenerate it (design/_system/codeedges.py); "
+                f"structural dependents/dependencies EMPTY until then (never fabricated — rule 8)")}
+
+        # REUSE X10's bounded reach query (and its DEPTH cap) — import the SAME module, do not
+        # reimplement the BFS. A transposed view (swap the two edge lists) lets the SAME forward
+        # `reach_report` (which walks depends_on) compute the DEPENDENTS side. The module itself
+        # lives at the REAL design/_system path (the engine code, not the join-DATA dir which a test
+        # may shadow via _corpus_dir); code-edges.json above is read from _corpus_dir (the data).
+        import importlib.util, sys as _sys
+        ce_dir = os.path.join(self._repo_root, "design", "_system")
+        ce_path = os.path.join(ce_dir, "codeedges.py")
+        # codeedges.py does top-level `import refcheck`/`import symbols` (its sibling modules), so its
+        # own dir must be importable. Add it for the exec (idempotent) — do NOT pollute permanently.
+        added = ce_dir not in _sys.path
+        if added:
+            _sys.path.insert(0, ce_dir)
+        try:
+            spec = importlib.util.spec_from_file_location("_company_codeedges", ce_path)
+            if spec is None or spec.loader is None:
+                return {**empty, "note": (
+                    f"structural reach module design/_system/codeedges.py unavailable — "
+                    f"structural dependents/dependencies EMPTY (never fabricated — rule 8)")}
+            ce = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(ce)
+        except Exception as e:  # noqa: BLE001 — a broken module must not crash the radius
+            return {**empty, "note": (
+                f"structural reach module design/_system/codeedges.py failed to load "
+                f"({type(e).__name__}: {e}) — structural EMPTY (never fabricated — rule 8)")}
+        finally:
+            if added and ce_dir in _sys.path:
+                _sys.path.remove(ce_dir)
+        depth = ce.DEPTH                                    # X10's DEPTH cap (2–3) — the bound
+        # transposed edges: depends_on ⇄ depended_by, so reach_report (forward over depends_on)
+        # walks DEPENDENTS over the same bounded algorithm.
+        transposed = {k: {"depends_on": v.get("depended_by", []),
+                          "depended_by": v.get("depends_on", [])} for k, v in edges.items()}
+
+        dependents, dependencies = set(), set()
+        dep_capped = dee_capped = False
+        for sid in symbols:
+            deps = ce.reach_report(sid, edges, depth=depth)          # dependencies (depends_on)
+            ddts = ce.reach_report(sid, transposed, depth=depth)     # dependents (depended_by)
+            dependencies.update(deps["reached"]); dep_capped = dep_capped or deps["capped"]
+            dependents.update(ddts["reached"]); dee_capped = dee_capped or ddts["capped"]
+        # never report the queried symbols themselves as their own dependents/dependencies.
+        sset = set(symbols)
+        return {"dependents": sorted(dependents - sset),
+                "dependencies": sorted(dependencies - sset),
+                "dependents_capped": dee_capped, "dependencies_capped": dep_capped,
+                "depth": depth, "note": ""}
+
+    def _semantic_radius(self, symbols: list[str], index: dict) -> dict:
+        """X14 semantic layer — the conceptually-related symbols from X11's `semantically_nearest[]`
+        (read straight off the SAME already-loaded code-symbols.json index — no recompute, no
+        embedder call here). Each entry's `semantically_nearest[]` is `[{id, score}, …]`.
+
+        Graceful (rule 4): when the field is ABSENT on the entries (the embedder :8001 was down at
+        regen — its CURRENT real state), semantic_neighbours is EMPTY + a legible note; never a
+        crash, never a fabricated nearest. Returns {neighbours, note}."""
+        neighbours: set[str] = set()
+        any_field = False
+        for sid in symbols:
+            entry = index.get(sid) or {}
+            near = entry.get("semantically_nearest")
+            if near is None:
+                continue                                    # field absent for this symbol
+            any_field = True
+            for item in near:
+                nid = item.get("id") if isinstance(item, dict) else item
+                if nid and nid not in symbols:              # exclude the queried symbols themselves
+                    neighbours.add(nid)
+        note = ""
+        if not any_field:
+            note = ("no semantically_nearest[] in the corpus index (X11) — the embedder (BGE-M3 "
+                    "@ :8001) was down at the last regen, so the semantic edges were skipped "
+                    "(degrade-with-warning); semantic_neighbours EMPTY until design/_system "
+                    "(symbols.py) is regenerated with :8001 up (never fabricated — rule 8)")
+        return {"neighbours": sorted(neighbours), "note": note}
+
+    def blast_radius(self, ui_addr: str, shared_only: bool = False) -> dict:
+        """X9+X14 — the BLAST RADIUS of a `ui://` address, spanning BOTH edge kinds, distinguished:
+          • co_reference[]           — (X9) the OTHER addresses/features that share a `code://`
+                                       symbol (what else touches this code). Also surfaced under the
+                                       legacy `neighbours` key (X9 preserved byte-for-byte).
+          • structural_dependents[]  — (X10) the symbols that DEPEND ON the resolved symbol(s) =
+                                       dependents-to-VERIFY (what would break). Bounded by X10's reach.
+          • structural_dependencies[]— (X10) the symbols the resolved symbol(s) DEPEND ON =
+                                       dependencies-to-RESPECT (what it relies on). Bounded by reach.
+          • semantic_neighbours[]    — (X11) the conceptually-related symbols (`semantically_nearest`).
+
+        REUSES (rule 3 — no parallel system, no recomputed graph):
+          1. resolve_scope(addr) → its `code://` symbols (S0 grammar gate raises on a malformed
+             address; surfaces `stale` if the corpus join is unreadable). The SAME forward step X9 used.
+          2. co_reference: invert each symbol's `referenced_by[]` from the SAME code-symbols.json,
+             MINUS `addr` itself. `referenced_by[]` carries BOTH ui:// addresses AND feature-ids
+             (ENG-*/NODE-*/WIRE-*) — both are legitimate neighbours (no ui-only filter).
+          3. structural: `_structural_radius` → X10's `codeedges.reach_report` (bounded at DEPTH;
+             dependents via a transposed edge view, the SAME bounded walk — no new BFS).
+          4. semantic: `_semantic_radius` → X11's `semantically_nearest[]` read off the same index.
+
+        Returns {address, symbols, co_reference, neighbours, structural_dependents,
+        structural_dependencies, structural_dependents_capped, structural_dependencies_capped,
+        structural_depth, semantic_neighbours, stale, note, structural_note, semantic_note}:
+          • symbols      — the code:// ids this address resolves to (same as resolve_scope.symbols).
+          • stale        — True if the CO-REFERENCE corpus index couldn't be read (mirrors
+                           resolve_scope; fail-loud-legible — every kind empty + a regenerate note).
+          • note         — the co-reference note (distinguishes the two co-reference empty cases:
+                           (a) the address resolves to NO symbol, vs (b) symbols but no co-referrers).
+          • *_capped     — True when a structural reach hit X10's DEPTH bound (no silent truncation).
+          • structural_note / semantic_note — legible per-layer notes when a layer is absent/empty.
+
+        GRACEFUL-EMPTY + fail-loud-legible (rule 4): a missing/stale layer → that KIND empty + its own
+        note, never a crash, never a fabricated edge. code-edges.json absent → structural empty + a
+        note; semantically_nearest[] absent (embedder :8001 down) → semantic empty + a note. The
+        co-reference stale short-circuit (the corpus index itself unreadable) returns ALL kinds empty.
+
+        X17 knob (`shared_only`, default False): restricts the co_reference contribution to symbols
+        in the corpus's top-level `shared` set (a near-no-op on the result — a neighbour-bearing
+        symbol is already shared by construction). A thin method param, NOT a config substrate.
+
+        FRESHNESS: code-symbols.json + code-edges.json are REGENERATED (symbols.py / codeedges.py),
+        not live; a stale index returns a stale (honestly-flagged) radius — never pretended live."""
+        import json as _j
+        # 1 — the forward step, REUSED from resolve_scope (S0 gate + stale + canonical symbols).
+        forward = self.resolve_scope(ui_addr)
+        symbols = forward["symbols"]
+        if forward["stale"]:
+            # fail-loud-legible: the corpus join is unreadable — ALL kinds empty + the regenerate note.
+            return {"address": ui_addr, "symbols": symbols, "co_reference": [], "neighbours": [],
+                    "structural_dependents": [], "structural_dependencies": [],
+                    "structural_dependents_capped": False, "structural_dependencies_capped": False,
+                    "structural_depth": None, "semantic_neighbours": [], "stale": True,
+                    "note": forward["note"], "structural_note": forward["note"],
+                    "semantic_note": forward["note"]}
+        if not symbols:
+            # this address resolves to NO referencing symbol (CSS-selector/orphan/absent) → no shared
+            # code, no structural anchor, no semantic anchor. Honest empty across every kind.
+            none_note = (f"{ui_addr!r} resolves to no code symbol "
+                         f"(a CSS-selector/prose ref, an orphan, or absent from the corpus) — "
+                         f"no shared code, so an EMPTY blast radius across all kinds (not an error)")
+            return {"address": ui_addr, "symbols": [], "co_reference": [], "neighbours": [],
+                    "structural_dependents": [], "structural_dependencies": [],
+                    "structural_dependents_capped": False, "structural_dependencies_capped": False,
+                    "structural_depth": None, "semantic_neighbours": [], "stale": False,
+                    "note": none_note, "structural_note": none_note, "semantic_note": none_note}
+
+        # 2 — CO-REFERENCE (X9, preserved). Read each resolved symbol's referenced_by[] from the
+        # SAME already-loaded index, MINUS this address itself. Also reused below for X11's
+        # semantically_nearest[] (one read of the index for both the co-reference + semantic layers).
+        symbols_path = os.path.join(self._corpus_dir(), "code-symbols.json")
+        with open(symbols_path, encoding="utf-8") as f:
+            doc = _j.load(f)
+        index = doc.get("symbols", {})
+        shared = set(doc.get("shared") or [])               # X17: the symbols referenced by 2+ owners
+
+        co_reference: set[str] = set()
+        for sid in symbols:
+            if shared_only and sid not in shared:
+                continue                                    # X17 knob — restrict to shared symbols
+            entry = index.get(sid) or {}
+            for ref in (entry.get("referenced_by") or []):
+                if ref != ui_addr:                          # MINUS self — the load-bearing exclusion
+                    co_reference.add(ref)
+
+        note = ""
+        if not co_reference:
+            # case (b): symbols resolved, but none are referenced by anything else → honest empty.
+            note = (f"{ui_addr!r} resolves to {len(symbols)} code symbol(s) but none are referenced "
+                    f"by any OTHER address/feature — an EMPTY co-reference blast radius "
+                    f"(it touches code nothing else touches; not an error)")
+        co_ref_sorted = sorted(co_reference)
+
+        # 3 — STRUCTURAL (X10) + 4 — SEMANTIC (X11), each DISTINGUISHED, each graceful-empty.
+        struct = self._structural_radius(symbols)
+        sem = self._semantic_radius(symbols, index)
+
+        return {"address": ui_addr, "symbols": symbols,
+                # X9 (preserved): co_reference == the legacy `neighbours` field, byte-for-byte set.
+                "co_reference": co_ref_sorted, "neighbours": co_ref_sorted,
+                # X10 (bounded): dependents-to-VERIFY + dependencies-to-RESPECT, capped reported.
+                "structural_dependents": struct["dependents"],
+                "structural_dependencies": struct["dependencies"],
+                "structural_dependents_capped": struct["dependents_capped"],
+                "structural_dependencies_capped": struct["dependencies_capped"],
+                "structural_depth": struct["depth"],
+                # X11: conceptually-related (empty + note when the embedder was down at regen).
+                "semantic_neighbours": sem["neighbours"],
+                "stale": False, "note": note,
+                "structural_note": struct["note"], "semantic_note": sem["note"]}
 
     # --- self-growth: build-dispatch (the "direct its growth" half of the first purpose) ---
     @staticmethod
@@ -3186,7 +5256,8 @@ class Suite:
             return {"needs": need, "id": self._ask_operator(need, f"while building node '{name}': {spec}")}
         code = _tag_system_origin(raw)
         sid = self.inbox.surface("code_build", {"name": name, "code": code}, default="reject")
-        self._emit("grow", f"brain wrote a '{name}' node — surfaced for approval", node_name=name, surfaced=sid)
+        self._emit("grow", f"brain wrote a '{name}' node — surfaced for approval", node_name=name, surfaced=sid,
+                   address="ui://chrome/inbox")   # S2: a proposed node-type surfaces for approval in the inbox
         return {"id": sid, "name": name, "code": code}
 
     def apply_node(self, surfaced_id: str) -> str:
@@ -3207,7 +5278,8 @@ class Suite:
             sha = self._commit_or_rollback(path, f"add node-type '{name}'")  # fail loud if not git-revertible
             self.registry.discover([self.nodes_dir])        # committed -> NOW make it live
             self._emit("apply", f"approved + applied '{name}' — now a live node-type · {sha[:8]}",
-                       node_name=name, commit=sha)
+                       node_name=name, commit=sha,
+                       address="ui://chrome/workshop")   # S2: a self-change shows at the workshop self-changes surface
             self.refresh_map()
             return path
         # G1: POLICY is the single router. code_build → CONFIRM → runs only if the OPERATOR approved
@@ -3404,9 +5476,95 @@ class Suite:
         self.registry.rediscover([self.nodes_dir])          # rebuild from FS so a removed file un-registers
         head = subprocess.run(["git", "-C", self._repo_root, "rev-parse", "HEAD"],
                               capture_output=True, text=True).stdout.strip()
-        self._emit("revert", f"rolled back self-change {sha[:8]}", reverted=sha, commit=head)
+        self._emit("revert", f"rolled back self-change {sha[:8]}", reverted=sha, commit=head,
+                   address="ui://chrome/workshop")   # S2: a revert shows at the workshop self-changes surface
         self.refresh_map()
         return {"reverted": sha, "head": head}
+
+    # --- L5: self-change LOCATING (§21.7#5) — "what changed HERE?" -------------------------------
+    # ADDITIVE on top of the existing audit log: filter `self_change_log` by the ADDRESS the operator
+    # is at, then revert from there. The address→code join is S3's `resolve_scope` (corpus-side) — L5
+    # does NOT duplicate it and does NOT modify the log/revert methods (they stay byte-for-byte). The
+    # join is: address --resolve_scope--> scope[] (repo-relative files) ∩ each record's `changed_files`.
+    # FRESHNESS COUPLING (seams-engine risk #4): resolve_scope reads the REGENERATED code-symbols.json —
+    # a stale corpus returns a stale scope, hence a stale change list. We PROPAGATE `stale`/`note` from
+    # resolve_scope straight through (fail-loud-legible, rule 4) rather than collapsing to a silent empty
+    # that would falsely read "nothing changed here."
+
+    def self_changes_at(self, ui_addr: str, limit: int = 50) -> dict:
+        """"What did the system change HERE?" — the self-change audit log FILTERED to the code scope
+        the address resolves to (S3). Returns:
+          {address, scope:[file,…], stale, note, changes:[ <self_change_log record> + matched_files ]}
+
+        THE JOIN (no new revert path, no duplicated resolver):
+          1. `resolve_scope(ui_addr)` (S3) → the address's `code://` symbol(s) → repo-relative `scope[]`.
+          2. Keep each `self_change_log` record whose `changed_files` INTERSECT that scope; annotate the
+             record with `matched_files` (the subset that touched here — the operator sees WHY it matched).
+
+        STALE TRICHOTOMY (rule 4 — fail loud, never a silent-success lie):
+          • scope resolves        → filter; an empty `changes` is a legitimate "no self-changes here."
+          • scope empty, NOT stale (orphan / CSS-selector / DENY-ALL address) → `changes:[]` WITH `note`
+                                     ("this element maps to no code") — surfaced, not fabricated.
+          • corpus unreadable     → `stale:True` PROPAGATED WITH `note` ("regenerate the corpus") AND
+                                     `changes:[]` — NEVER pretended-live. A stale corpus that read
+                                     "nothing changed here" would be a silent failure (rule 4); the
+                                     surface MUST distinguish "stale" from "nothing here."
+
+        The address MUST conform to the canonical grammar (S0) — resolve_scope raises on a malformed
+        ui:// (fail loud). The audit log itself is unchanged (this calls `self_change_log`, never edits
+        it); a git failure there degrades to `[]` as documented."""
+        scoped = self.resolve_scope(ui_addr)                 # S3 — reused, never duplicated (rule 3)
+        scope = set(scoped.get("scope") or [])
+        out = {
+            "address": ui_addr,
+            "scope": scoped.get("scope") or [],
+            "stale": bool(scoped.get("stale")),
+            "note": scoped.get("note") or "",
+            "changes": [],
+        }
+        # stale OR empty scope ⇒ no scope to filter against → DENY-ALL change list, but the REASON is
+        # carried (stale vs orphan) via `stale`/`note` so the surface never reads a lie. (Matches the
+        # surface_build_intent empty-scope=deny posture — an unmapped/stale address is never a license.)
+        if scoped.get("stale") or not scope:
+            if not out["note"]:
+                out["note"] = (f"{ui_addr!r} maps to no code scope — no self-change can be located here "
+                               f"(DENY-ALL; never fabricated — rule 8)")
+            return out
+        for rec in self.self_change_log(limit):              # the EXISTING ledger, unchanged
+            touched = sorted(scope.intersection(rec.get("changed_files") or []))
+            if touched:
+                out["changes"].append(dict(rec, matched_files=touched))
+        return out
+
+    def revert_self_change_at(self, ui_addr: str, sha: str) -> dict:
+        """Revert a self-change FROM the address you're at (§21.7#5). The file→ui→sha chain resolves
+        through `self_changes_at` (the address-filtered list), then this composes the EXISTING
+        `revert_self_change(sha)` — the SAME operator-only rollback (the `/api/revert` gate is the one
+        that guards it; this adds NO new revert path and does NOT weaken the gate).
+
+        WIRING NOTE (so the next agent isn't misled): this is a TESTED backend primitive that is
+        deliberately NOT on a face — adding a `/api/revert-at` route would be the "new revert path" the
+        L5 spec forbids. The LIVE operator drive path is FE `revertSelfChangeAt` → `api.revert(sha)` →
+        POST `/api/revert` → `revert_self_change(sha)` (the existing operator-only gate), and per-address
+        SCOPING on that path is UI-level (only the address-filtered rows are clickable). This method's
+        server-side scoped-refusal is the additional belt the loop can wire to a face later if desired;
+        for now it documents + proves the composition without weakening or duplicating the live gate.
+
+        SCOPED + FAIL LOUD: you may only revert a change that actually touched THIS element. A `sha`
+        absent from the address's filtered list RAISES (never silently revert something that didn't
+        change here, never silently no-op) — rule 4. The leaf is the unchanged `revert_self_change`."""
+        located = self.self_changes_at(ui_addr)
+        if located.get("stale"):
+            raise ValueError(
+                f"cannot locate self-changes at {ui_addr!r}: the corpus join is STALE "
+                f"({located.get('note')}) — regenerate design/_system before reverting from an address.")
+        shas = {c["sha"] for c in located["changes"]}
+        if sha not in shas:
+            raise KeyError(
+                f"self-change {sha!r} did not change anything at {ui_addr!r} "
+                f"(scope {located['scope']}); refusing to revert it from here — you can only revert "
+                f"what changed at this element (the address-located changes are {sorted(shas)}).")
+        return self.revert_self_change(sha)                  # the EXISTING operator-only rollback, reused
 
     # --- UI extension point (slice 14): brain-authored DECLARATIVE panels added through the UI ---
     # Bounded by construction: the brain authors a panel DEFINITION (a generic renderer displays it),
@@ -3468,7 +5626,8 @@ class Suite:
             return {"needs": q, "id": self._ask_operator(q, f"panel '{name}': {spec}")}
         sid = self.inbox.surface("ui_panel", {"name": name, "panel": deftn}, default="reject")
         self._emit("grow", f"brain authored a '{name}' UI panel — surfaced for approval",
-                   node_name=name, surfaced=sid)
+                   node_name=name, surfaced=sid,
+                   address="ui://chrome/inbox")   # S2: a proposed panel surfaces for approval in the inbox
         return {"id": sid, "name": name, "panel": deftn}
 
     def apply_panel(self, surfaced_id: str) -> str:
@@ -3504,7 +5663,8 @@ class Suite:
             open(tmp, "w", encoding="utf-8").write(_j.dumps(clean, indent=2))
             os.replace(tmp, path)
             sha = self._commit_or_rollback(path, f"add UI panel '{name}'")
-            self._emit("apply", f"approved + applied '{name}' UI panel · {sha[:8]}", node_name=name, commit=sha)
+            self._emit("apply", f"approved + applied '{name}' UI panel · {sha[:8]}", node_name=name, commit=sha,
+                       address="ui://chrome/workshop")   # S2: a self-change shows at the workshop self-changes surface
             self.refresh_map()
             return path
         # G1: ui_panel → CONFIRM (now explicit in POLICY) → runs only if operator-approved. inbox=None
@@ -3550,7 +5710,8 @@ class Suite:
             return {"needs": need, "id": self._ask_operator(need, f"while building extension '{name}': {spec}")}
         sid = self.inbox.surface("ui_extension", {"name": name, "code": code}, default="reject")
         self._emit("grow", f"brain authored a '{name}' UI extension — surfaced for approval",
-                   node_name=name, surfaced=sid)
+                   node_name=name, surfaced=sid,
+                   address="ui://chrome/inbox")   # S2: a proposed extension surfaces for approval in the inbox
         return {"id": sid, "name": name, "code": code}
 
     def _gate_extension(self, code: str) -> str | None:
@@ -3584,7 +5745,8 @@ class Suite:
             code = d["payload"]["code"]
             err = self._gate_extension(code)                  # gate runs on a temp file, NOT in src
             if err:
-                self._emit("reject", f"extension '{name}' REJECTED by build-gate (never went live)", node_name=name)
+                self._emit("reject", f"extension '{name}' REJECTED by build-gate (never went live)", node_name=name,
+                           address="ui://chrome/workshop")   # S2: a self-mod outcome shows at the workshop surface
                 return {"applied": None, "rejected": True, "error": err}
             extdir = os.path.join(self._repo_root, "canvas", "app", "src", "extensions")
             os.makedirs(extdir, exist_ok=True)
@@ -3595,7 +5757,8 @@ class Suite:
             os.replace(tmp, path)                             # promote (gate passed) — now Vite loads it
             sha = self._commit_or_rollback(path, f"add extension '{name}'")   # fail loud if not git-revertible
             self._emit("apply", f"approved + applied '{name}' extension (gate passed) · {sha[:8]}",
-                       node_name=name, commit=sha)
+                       node_name=name, commit=sha,
+                       address="ui://chrome/workshop")   # S2: a self-change shows at the workshop self-changes surface
             self.refresh_map()
             return {"applied": path, "rejected": False, "commit": sha}
         # G1: ui_extension → CONFIRM (now explicit in POLICY) → runs only if operator-approved. inbox=None
@@ -3636,7 +5799,8 @@ class Suite:
         if choice == "skip":
             self.inbox.set_status(sid, "inbox")            # defer — still a live escalation; NOT resolved
             self._emit("review.skip", f"operator skipped {sid}" + (f" — {reason}" if reason else ""),
-                       surfaced=sid, choice="skip", reason=reason, session=session_id, position=position)
+                       surfaced=sid, choice="skip", reason=reason, session=session_id, position=position,
+                       address=self._registry_ui_target(d.get("payload") or {}))   # S2: the item's locus (node or inbox)
             return {"id": sid, "choice": "skip", "status": "inbox", "resolved": False}
         if choice == "comment":
             if reason:                                     # annotate the WHY without resolving
@@ -3644,7 +5808,8 @@ class Suite:
                 self.store.save_surfaced(d)
             self.inbox.set_status(sid, "responded")
             self._emit("review.comment", f"operator commented on {sid}" + (f" — {reason}" if reason else ""),
-                       surfaced=sid, choice="comment", reason=reason, session=session_id, position=position)
+                       surfaced=sid, choice="comment", reason=reason, session=session_id, position=position,
+                       address=self._registry_ui_target(d.get("payload") or {}))   # S2: the item's locus (node or inbox)
             return {"id": sid, "choice": "comment", "status": "responded", "resolved": False}
 
         # approve / reject / decide (or any other verb) → RESOLVE (TERMINAL). resolve() writes `resolved` +
@@ -3668,8 +5833,193 @@ class Suite:
         except KeyError:
             pass
         self._emit("resolve", f"operator {choice}d {sid}" + (f" — {reason}" if reason else ""),
-                   surfaced=sid, choice=choice, reason=reason, session=session_id, position=position)
-        return {"id": sid, "choice": choice, "status": "resolved", "resolved": True}
+                   surfaced=sid, choice=choice, reason=reason, session=session_id, position=position,
+                   address=self._registry_ui_target(d.get("payload") or {}))   # S2: the item's locus (node or inbox)
+        verdict = {"id": sid, "choice": choice, "status": "resolved", "resolved": True}
+
+        # ── L2 · the resolve→dispatch PRODUCTION TRIGGER (INERT BY DEFAULT — 🔒 built-not-armed) ──
+        # This is the seam where the LIVE loop used to STOP: resolve_surfaced wrote the verdict but
+        # nothing READ it to fire dispatch_decision, and drive_dispatchable (the watcher that does) had
+        # NO production caller — only tests. L2 adds the missing trigger: an operator approve of a
+        # build-intent, WHEN the live loop is deliberately ARMED, drives the watcher pass — which is the
+        # production caller for drive_dispatchable AND the resolve→dispatch link (both collapse into the
+        # ONE existing mechanism: the watcher reads the just-written verdict and calls dispatch_decision).
+        #
+        # SAFE-BY-DEFAULT (the headline L2 property — wire-bridge §3, AGENTS.md rule 4): this fires ONLY
+        # when implement.wire_armed() — i.e. COMPANY_WIRE_PERMISSION=acceptEdits, the deliberate opt-in.
+        # The DEFAULT posture is "plan": wire_armed() is False → this block is a no-op → resolve_surfaced
+        # behaves EXACTLY as before (the system does NOT self-modify; the lead fires the one-shot proof
+        # under the deliberate flag). Even if it DID fire under `plan`, a plan-mode `claude -p` is
+        # read-only → empty change-delta → the build can never close `implemented` (a second safety layer).
+        #
+        # NO-BYPASS PRESERVED: this is the OPERATOR face (resolve_surfaced is off the MCP face,
+        # server.py:158) — the RHM can never reach it, so dispatch stays operator-authorized only. The
+        # GOVERNED PATH IS UNCHANGED: we call drive_dispatchable, which calls dispatch_decision, which
+        # still does the full three-part bind + exactly-once decision.dispatch claim under the per-seq
+        # lock + the AUTO-posture pre-gate + the guarded close + the DENY-ALL scope-diff + surfaced-for-
+        # review. We REUSE it (the watcher also enforces the §W7 concurrency cap + re-surfaces crashed
+        # dispatches); we never re-implement or weaken it. A non-AUTO / non-build-intent approve is NOT
+        # dispatched (drive_dispatchable._is_dispatchable filters it) — it surfaces for the operator.
+        from runtime import implement      # local import (mirrors dispatch_decision) — avoid import cycle
+        if choice == "approve" and implement.wire_armed() and self.is_build_intent(d):
+            try:
+                drive = implement.drive_dispatchable(self)
+                verdict["wire_drive"] = {
+                    "dispatched": [x.get("surfaced") for x in drive.get("dispatched", [])],
+                    "deferred": [x.get("surfaced") for x in drive.get("deferred", [])],
+                    "crashed_resurfaced": drive.get("crashed_resurfaced", []),
+                }
+            except Exception as e:
+                # FAIL LOUD (rule 4): the trigger firing but the dispatch erroring must NOT pretend the
+                # approve silently did nothing — surface the failure on the verdict + a telemetry event.
+                # The operator's resolve itself already committed (above) — operator-only resolve holds.
+                self._emit("decision.verify",
+                           f"resolve→dispatch trigger for {sid} errored: {e}",
+                           surfaced=sid, derived_from=None, verify_passed=False,
+                           address="ui://chrome/inbox")
+                verdict["wire_drive_error"] = str(e)
+        return verdict
+
+    # ── X16 · operator-approves-the-reach (the propagation decision) ───────────────────────────
+    # A consequential build surfaces its BLAST RADIUS (X14, persisted at mint into payload —
+    # surface_intent_at). The OPERATOR authorizes HOW FAR the edit propagates. The build's editable
+    # scope IS payload["scope"] (dispatch_decision reads it; the scope-diff close gates on it). So:
+    #   • DEFAULT-NARROW: with NO reach-approval, payload["scope"] stays the pointed address's scope —
+    #     unchanged from today, never auto-expanded.
+    #   • EXPLICIT EXPANSION: approve_reach widens payload["scope"] to the UNION of the original scope
+    #     and the files the APPROVED blast-radius members live in. The approved members are recorded
+    #     (payload["reach_approved"]) for audit + legibility.
+    # Mutating payload["scope"] (not a separate merge-at-dispatch field) means the wire's governed path
+    # is REUSED BYTE-FOR-BYTE — dispatch_decision/_in_any_scope are untouched; an EXPANDED scope
+    # authorizes the expanded files, a NARROW one does not, by the SAME scope-diff gate. Empty-scope =
+    # DENY-ALL is preserved (an orphan address has an empty radius → nothing to expand → scope stays []).
+    def _member_to_files(self, member: str) -> list[str]:
+        """Resolve a BLAST-RADIUS MEMBER to its repo-relative file(s) — the editable-scope grain.
+        Members come in three grammars (the X14 return shape): a `code://` symbol id (structural
+        dependents/dependencies, semantic neighbours), a `ui://` address (co-reference), or a feature-id
+        (co-reference: ENG-*/NODE-*/WIRE-*). REUSE the existing resolvers, never re-derive:
+          • code://<stem>/<symbol> → its `file` field in code-symbols.json (the same registry
+            resolve_scope reads; the canonical resolved repo-relative path).
+          • ui://…                 → resolve_scope(addr).scope (the SAME S3 forward map).
+          • a feature-id (no scheme) → resolves to NO file here (it isn't a code locus) → []; the
+            caller treats an all-empty resolution as a no-op for that member (legible, never a silent
+            broadening). We NEVER fabricate a file (rule 8 — confabulation is a failure)."""
+        import json as _j
+        m = (member or "").strip()
+        if not m:
+            return []
+        if m.startswith("code://"):
+            symbols_path = os.path.join(self._corpus_dir(), "code-symbols.json")
+            try:
+                with open(symbols_path, encoding="utf-8") as f:
+                    index = _j.load(f).get("symbols", {})
+            except (OSError, ValueError):
+                return []                              # unreadable index → no file (fail-safe, not fabricated)
+            entry = index.get(m) or {}
+            f = entry.get("file")
+            return [f] if f else []
+        if m.startswith("ui://"):
+            try:
+                return list(self.resolve_scope(m).get("scope") or [])
+            except Exception:
+                return []                              # malformed/orphan → no file (never fabricated)
+        return []                                      # a feature-id (or anything else) maps to no file
+
+    def approve_reach(self, sid: str, members: list[str], reason: str = "") -> dict:
+        """X16 — the OPERATOR authorizes HOW FAR a build's edit propagates. Default is the pointed
+        address only (payload["scope"] unchanged); this widens it to include the files the APPROVED
+        blast-radius members live in. The classic case: a rename whose ripples reach the structural
+        dependents — the operator approves expanding the editable scope to that relational cluster.
+
+        OPERATOR-ONLY, OFF the MCP face: this is an operator action (mirrors resolve_surfaced / pin) —
+        NOT in RHM_VERBS, so the RHM/MCP face gains no reach-expansion (no-bypass + the 7-verb
+        whitelist + no-self-apply preserved).
+
+        THE SAFETY GATE (the load-bearing invariant): each requested member MUST be a member of the
+        PERSISTED blast_radius the operator saw at mint (consent-time — NOT a fresh recompute that could
+        disagree). A member that is not in that radius RAISES (fail loud) — so approve_reach can only
+        RATIFY what the operator actually saw; it is NEVER a scope-injection path that could defeat
+        empty-scope=DENY-ALL or smuggle in an arbitrary file. A raw repo path is not a radius member
+        either → rejected.
+
+        ORDERING / IDEMPOTENCY: valid ONLY while the item is a live, UNRESOLVED build-intent. After a
+        terminal resolve (approve/reject/decide) it RAISES — you cannot widen the reach of a build that
+        has already been decided/launched (mirrors resolve_surfaced's idempotent-per-item refusal).
+
+        DEFAULT-NARROW + NEVER-SILENT: only the NAMED members widen the scope; an un-named member is
+        never pulled in. The new scope is the UNION of the original declared scope and the approved
+        members' files (the original is never dropped). EMPTY-SCOPE=DENY-ALL is preserved: an orphan
+        address has an empty radius, so every requested member is rejected and the scope stays []
+        (never widened into allow-all).
+
+        ATOMIC: the scope widen is a re-read-then-mutate-fresh-copy under the surfaced_lock (the T1-RACE
+        pattern resolve_surfaced uses), so a concurrent set_status / build_result write can't lose-update
+        the widened scope, nor it them. Returns the verbose verdict.
+
+        FAIL LOUD on a missing item / non-build-intent / a member not in the radius / a terminal item —
+        never a silent no-op (rule 4)."""
+        d = self.inbox.get(sid)
+        if not d:
+            raise KeyError(f"no surfaced decision {sid!r}")
+        if not self.is_build_intent(d):
+            raise GovernanceError(
+                f"approve_reach: {sid!r} is not a build-intent item (payload.intent != 'build') — "
+                f"the reach is the editable scope of a BUILD; there is nothing to widen on a "
+                f"non-build review item. Refused (fail loud).")
+        # ORDERING: a terminal verdict means the build is decided/launched — too late to widen its reach.
+        prior = d.get("resolved")
+        if prior in self.RESOLVING_VERBS:
+            raise GovernanceError(
+                f"approve_reach: {sid!r} already has a terminal verdict ({prior!r}) — its reach is "
+                f"locked; you cannot widen the editable scope of a decided/launched build. Refused.")
+        members = [m for m in (members or []) if isinstance(m, str) and m.strip()]
+        if not members:
+            raise ValueError(
+                "approve_reach needs a non-empty list of blast-radius members to approve — "
+                "fail loud, no silent no-op (the default reach is the pointed address; widen explicitly).")
+        payload = d.get("payload") or {}
+        radius = payload.get("blast_radius") or {}
+        # THE SAFETY GATE: build the SET of members the operator actually saw, across all kinds, from the
+        # PERSISTED radius (consent-time). A requested member outside it RAISES — no scope injection.
+        seen = set(radius.get("co_reference") or [])
+        seen |= set(radius.get("structural_dependents") or [])
+        seen |= set(radius.get("structural_dependencies") or [])
+        seen |= set(radius.get("semantic_neighbours") or [])
+        bad = [m for m in members if m not in seen]
+        if bad:
+            raise GovernanceError(
+                f"approve_reach: {bad!r} is/are NOT in the surfaced blast radius of {sid!r} — the reach "
+                f"can only RATIFY members the operator actually saw (consent-time, fail loud). Approving "
+                f"an un-surfaced member would be a scope-injection path that defeats empty-scope=DENY-ALL; "
+                f"refused. (Surfaced members: {sorted(seen) or '∅ — empty radius, nothing to expand'}.)")
+        # resolve the approved members → their repo-relative files (REUSE the existing resolvers).
+        add_files: set[str] = set()
+        for m in members:
+            for f in self._member_to_files(m):
+                if f:
+                    add_files.add(f)
+        # ATOMIC widen: re-read the fresh record under the lock, UNION the scope, record the approval.
+        with self.store.surfaced_lock():
+            d = self.inbox.get(sid) or d
+            payload = d.get("payload") or {}
+            scope = list(payload.get("scope") or [])
+            new_scope = sorted(set(scope) | add_files)
+            payload["scope"] = new_scope
+            approved = list(payload.get("reach_approved") or [])
+            for m in members:                          # record WHAT was approved (legible consent / audit)
+                if m not in approved:
+                    approved.append(m)
+            payload["reach_approved"] = approved
+            d["payload"] = payload
+            self.store.save_surfaced(d)
+        # S2: emit an addressed event so the reach-expansion is visible on the live stream + audit log.
+        self._emit("decision.reach",
+                   f"operator approved a wider reach for {sid}: +{sorted(add_files) or '∅'} "
+                   f"(members {members})" + (f" — {reason}" if reason else ""),
+                   surfaced=sid, reach_approved=members, added_scope=sorted(add_files),
+                   address="ui://chrome/inbox")        # S2: the build-intent's inbox item
+        return {"id": sid, "reach_approved": members, "added_scope": sorted(add_files),
+                "scope": new_scope}
 
     def decision_view(self, sid: str) -> dict:
         """A decision as a VIEW derived from the event log (I2): its full trajectory — proposed →
@@ -3691,6 +6041,235 @@ class Suite:
         g = self.store.load_graph(self._session_graph_id(session_id))
         return {"session": session_id, "trajectory": evs,
                 "graph": g.model_dump(mode="json") if g else None}
+
+    def address_view(self, address: str) -> dict:
+        """L3 (§21.7#1): everything that happened AT an element's address — its addressed history.
+
+        Clicking an element shows its full trajectory. This is the addressed ANALOGUE of
+        `decision_view`: where `decision_view` filters `events_since(-1)` on `e.get("surfaced")==sid`,
+        this filters the SAME whole tail on `e.get("address")==address`. It is a SIBLING (mirroring how
+        `session_view` clones decision_view but filters on `session`) so `decision_view`'s `sid` path is
+        LITERALLY untouched — L3 WIDENS the audit-view machinery to an address key, it does not replace
+        the sid one. The store side is free: S2 already stamped the ~20 emit sites, so events carry an
+        additive `address` (event_address_acceptance.py); readers `.get()` it, so this is non-breaking.
+
+        S0 GATE FIRST: the QUERY address is validated by `parse_ui_address` (the same canonical-grammar
+        gate `annotate`/`annotations_at`/`chats_at` use) and RAISES on a malformed / non-`ui://` string
+        (fail-loud, rule 4) — so a junk query never silently returns [] (which a caller could read as 'no
+        history'), and the bridge's try/except turns the raise into a 400 for free. SCOPE: `ui://` queries
+        only — "clicking an element" is a `ui://` locus (the FE indicate flow fires only for `ui://`); the
+        stored events themselves may carry `run://` (a node-instance locus), but a `run://` event simply
+        won't equal a `ui://` query, so it is filtered out correctly — nothing to special-case.
+
+        Reads the WHOLE event tail (`events_since(-1)`), like `decision_view`/`session_view`: an audit must
+        NOT silently truncate (fail-loud). Returns the matching events in chronological (seq) order."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                              # S0 grammar gate — raises on malformed / non-ui://
+        evs = sorted((e for e in self.store.events_since(-1) if e.get("address") == address),
+                     key=lambda e: e.get("seq", 0))            # chronological path, not endpoint
+        return {"address": address, "trajectory": evs}
+
+    def ref_versions(self, address: str, limit: int = 25) -> dict:
+        """L6 (§21.7#6): the PRIOR VERSIONS of an addressed output — its temporal trail.
+
+        A portal shows the CURRENT ref live (`state()` reads `head(ref)`, the live window). This is the
+        OTHER half: every value the address has HELD over time. It reads the store's ref→version-history
+        index (`ref_history`, appended on each `set_ref`) — the cas bytes already survive (put_content is
+        write-once), so each entry's PRIOR bytes are fetched by its `cas` through `get_content` (no bytes
+        are copied; the index only MAPS the ref to its prior cas hashes). Returns NEWEST-FIRST (the FE
+        leads with the most recent), each entry carrying a short `preview` of the version's content + an
+        `is_current` flag (the cas == `head(address)`), so the operator scans the trail by sight.
+
+        THE ADDRESS THIS QUERIES (the load-bearing point):
+          versions accrue at the address a `set_ref` WROTE — a compute node's own `run://<graph>/<node>`
+          (it gets a `set_ref` every fire). A PORTAL never calls `set_ref` (RESOLVE='reference', the
+          scheduler skips it), so a portal's OWN address has NO history — the FE must query the address the
+          portal POINTS AT (its `config.ref`), which is what gets the versions. This method takes whatever
+          `run://` address is asked and returns that address's trail; the FE chooses the right one.
+
+        S0/SCOPE GATE: a versioned output is a `run://` address (mirrors how `cached` + `stale_at_address`
+        are served). Malformed / non-`run://` RAISES (fail-loud, rule 4 — the bridge turns it into a 400 so
+        a junk query never silently reads as 'no versions'). An address with NO history returns an HONEST
+        empty list (`versions: []`) — distinct from a malformed query (which raises), never a silent wrong
+        value. `lineage()` (provenance INPUTS) is a different axis and is untouched — this is the temporal
+        trail of one address, not what it was made from.
+
+        Returns {address, current, count, versions:[{cas, ts, is_current, preview}]} newest-first."""
+        import json as _json
+        from contracts.address import scheme as _scheme
+        if _scheme(address) != "run":
+            raise ValueError(
+                f"ref_versions expects a run:// output address (e.g. run://<graph>/<node>); got "
+                f"{address!r}. 'Versions at an address' is a stored-output trail — a ui:// element (or any "
+                f"non-run scheme) has no set_ref history. For a PORTAL, query the address its config.ref "
+                f"points at (the portal itself is a live window, it never writes a version).")
+        current = self.store.head(address)                       # the live current value (UNCHANGED resolve)
+        trail = self.store.ref_history(address, limit=limit)     # oldest-first {ts, cas} from the index
+        versions = []
+        for e in reversed(trail):                                # NEWEST-FIRST for the surface
+            cas = e.get("cas")
+            preview = None
+            try:
+                val = self.store.get_content(cas)                # the PRIOR bytes, fetched by cas (survive)
+                s = val if isinstance(val, str) else _json.dumps(val)
+                preview = s if len(s) <= 160 else s[:157] + "…"
+            except Exception:
+                # the index references a cas whose object is missing/unreadable — SURFACE it, do NOT pretend
+                # an empty value (rule 4: fail-loud-legible; the operator sees the version is unfetchable).
+                preview = "⚠ version bytes unavailable at this cas"
+            versions.append({"cas": cas, "ts": e.get("ts"),
+                             "is_current": (cas == current), "preview": preview})
+        return {"address": address, "current": current, "count": len(versions), "versions": versions}
+
+    def stale_at_address(self, address: str) -> dict:
+        """L10 (§21.7#10): is the cached result AT this node's address out of date vs its CURRENT inputs?
+
+        A surface shows "cached / stale at this address." **"cached" is ALREADY served** — the
+        `cached` node-state derives on reload when the output address resolves (`state()`, S5/F3).
+        **"stale" is NOT a served field, and it is NOT a free read.** Deriving it is a COSTED
+        DERIVATION (seams-engine Seam 8a): recompile the node → resolve its current input
+        content-hashes → compute the NEW `_memo_sig` → `memo_get`-compare against the STORED output
+        cas at the node's `run://` address. So this is a method the surface CALLS when it wants the
+        verdict — never an always-on key on the node dict (that would pretend staleness is free).
+
+        It LEANS ON THE EXISTING MEMO GATE — it does not add a new cache. It REUSES the scheduler's
+        `_memo_sig` (the exact formula the gate computes, port→content-hash) and `compile` (the exact
+        execution face the scheduler runs), reads `memo_get` + `head`, and COMPARES. It writes
+        nothing: NO `mod.run`, NO `put_content`, NO `memo_set`, NO `set_ref`. The memo gate
+        (scheduler.py) is UNCHANGED — L10 reads a derived comparison from it, never mutates it.
+
+        THE LOAD-BEARING RULE (one rule; both verdict cases fall out of it):
+            fresh  ⟺  memo_get(sig_now) is not None  AND  memo_get(sig_now) == head(address)
+            everything else (INCLUDING a memo miss) → stale.
+        The compare to `head(address)` (not just "does sig_now exist in memo") is essential: current
+        inputs could map to a DIFFERENT memoized output than the one written at the ref — that is
+        stale too. A memo miss (sig never computed for these inputs) is stale, NOT fresh, NOT unknown.
+
+        FAIL LOUD (rule 4) — the verdict is "unknown" (with a reason), NEVER a silent "fresh", when
+        the node CANNOT be meaningfully compared:
+          • malformed / non-`run://` address → RAISES (the bridge turns it into a 400);
+          • the node isn't in the graph → unknown;
+          • a VOLATILE node → the gate re-runs it EVERY pass by design (its output is not a pure
+            function of its inputs), so a memo comparison is misleading → flag `volatile=True`;
+          • a reference node (portal, RESOLVE='reference') → never computed/memoized → unknown;
+          • a DECLARED input port unresolved → can't form a valid sig → unknown;
+          • NO stored output at the address yet → a distinct "no cached result" (never a silent fresh).
+
+        Returns {address, graph, node, stale, unknown, reason, volatile, sig?, stored_cas?, memo_cas?}.
+        `stale` is True/False ONLY when a real comparison was made; otherwise it is None and
+        `unknown` is True (a silent `stale=False` for an unevaluable node would be a lie — rule 4)."""
+        from contracts.address import scheme as _scheme
+
+        # --- SCOPE GATE: a node-instance locus is a run:// address (matching how `cached` is served).
+        # Do NOT reuse the ui:// grammar gate (parse_ui_address) — that RAISES on non-ui:// and this
+        # key is run://<graph>/<node>. We parse the run grammar ourselves (the address module exposes
+        # the builder `run_address`/`scheme`, not a structured parser). The node-level logical form the
+        # scheduler + compile use is `run://<graph>/<node>` (main) or `run://<graph>/<node>@<branch>`
+        # (compile._addr / suite.state). Malformed / non-run:// RAISES (fail-loud; the bridge's
+        # try/except → 400 — a junk query must never silently read as a node verdict).
+        if _scheme(address) != "run":
+            raise ValueError(
+                f"stale_at_address expects a run:// node address (e.g. run://<graph>/<node>); "
+                f"got {address!r}. 'Stale at this address' is a NODE-instance verdict — a ui:// element "
+                f"(or any non-run scheme) has no memo/run semantics.")
+        rest = address[len("run://"):]
+        rest = rest.split("#", 1)[0]                       # drop a #run=<id> fragment if present
+        branch = "main"
+        if "@" in rest:
+            rest, branch = rest.rsplit("@", 1)             # run://<graph>/<node>@<branch>
+        parts = rest.split("/")
+        if len(parts) != 2 or not parts[0] or not parts[1]:
+            raise ValueError(
+                f"stale_at_address: {address!r} does not name a node (need run://<graph>/<node>"
+                f"[@<branch>]).")
+        graph_id, node_id = parts[0], parts[1]
+
+        def _unknown(reason: str, **extra) -> dict:
+            # fail-loud-legible: stale is None (NOT False) when we could not compare — never a silent fresh.
+            base = {"address": address, "graph": graph_id, "node": node_id,
+                    "stale": None, "unknown": True, "reason": reason}
+            base.update(extra)
+            return base
+
+        # --- recompile (the SAME execution face the scheduler runs). A dangling edge raises in
+        # compile → unknown (we don't let it crash a status read; rule 4 legibility).
+        from runtime.compile import compile as _compile
+        try:
+            execs = _compile(self._load(graph_id), branch=branch, node_types=self.registry)
+        except Exception as e:
+            return _unknown(f"could not recompile graph {graph_id!r}: {type(e).__name__}: {e}")
+        ex = next((e for e in execs if e.id == node_id), None)
+        if ex is None:
+            return _unknown(f"no node {node_id!r} in graph {graph_id!r}")
+
+        mod = self.registry.get(ex.type)
+        if mod is None:
+            return _unknown(f"node-type {ex.type!r} is not registered")
+
+        # --- reference nodes (portals) are never computed/memoized — a live window, not a run.
+        if getattr(mod, "RESOLVE", "compute") == "reference":
+            return _unknown(
+                f"node {node_id!r} is a reference node ({ex.type!r}, RESOLVE='reference') — it is a "
+                f"live window onto another address, never computed or memoized, so 'stale vs inputs' "
+                f"does not apply.")
+
+        # --- VOLATILE nodes: the gate re-runs them EVERY pass by design (output is not a pure
+        # function of inputs — they read external truth: repo/index/clock). A memo comparison would
+        # be misleading (their sig can be constant while their true output changes), so flag it.
+        if getattr(mod, "VOLATILE", False):
+            return _unknown(
+                f"node {node_id!r} ({ex.type!r}) is VOLATILE — the memo gate re-runs it every pass by "
+                f"design (it reads mutable external truth), so a memo-signature comparison cannot tell "
+                f"fresh from stale; it is always re-derived on run.", volatile=True)
+
+        # --- resolve CURRENT input content-hashes EXACTLY as the scheduler does (scheduler.py:80).
+        # A declared input port that is unwired or unresolved → we cannot form the sig the gate
+        # would → unknown (never a silent fresh).
+        declared = set(getattr(mod, "PORTS_IN", {}).keys())
+        if not declared <= set(ex.inputs.keys()):
+            missing = sorted(declared - set(ex.inputs.keys()))
+            return _unknown(f"node {node_id!r} has unwired input port(s) {missing} — cannot form its "
+                            f"memo signature (it would not be READY to run).")
+        input_map = {}
+        for port, a in ex.inputs.items():
+            cas = self.store.head(a)
+            if cas is None:
+                return _unknown(f"input port {port!r} of {node_id!r} is unresolved (address {a!r} holds "
+                                f"no content) — cannot form its current memo signature.")
+            input_map[port] = cas                           # port -> content-hash (the gate's form)
+
+        # --- compute the NEW signature via the scheduler's OWN formula (no reimplementation — one source).
+        from runtime.scheduler import _memo_sig
+        version = getattr(mod, "VERSION", "1")
+        sig_now = _memo_sig(ex, version, input_map)
+
+        # --- MULTI-OUTPUT nodes (gate/join/pair: >=2 declared PORTS_OUT) write to per-port FRAGMENT
+        # addresses (run://<g>/<n>#<port>, compile.py), so NOTHING is stored at the bare node address —
+        # yet the memo cas is the WHOLE multi-port result, not a single cas comparable to one output
+        # address. A bare head(address)==None here would emit a misleading "run it first" even for a node
+        # that HAS run. Flag it honestly (unknown + the real reason) rather than mis-report — fail-loud
+        # legibility (rule 4). Single-output staleness is the served contract (the FREE 'cached' half is
+        # also a single bare-address read).
+        if len(ex.outputs) > 1:
+            return _unknown(
+                f"node {node_id!r} has {len(ex.outputs)} output ports {sorted(ex.outputs)} — its memo "
+                f"entry is the WHOLE multi-port result, not a single cas comparable to one output "
+                f"address (each port writes its own run://…#<port> fragment); single-output staleness only.")
+
+        # --- the stored output cas at the node's address (the FREE 'cached' half reads this same ref).
+        stored_cas = self.store.head(address)
+        if stored_cas is None:
+            return _unknown(f"node {node_id!r} has no stored output at {address!r} yet — there is no "
+                            f"cached result to be stale (run it first).")
+
+        # --- THE COMPARISON (read-only). memo_get(sig_now) is the cas the gate WOULD reuse for the
+        # current inputs; fresh iff it exists AND equals the stored output. A miss (None) or a
+        # mismatch → stale. NO write of any kind happens here (the gate is untouched).
+        memo_cas = self.store.memo_get(sig_now)
+        fresh = (memo_cas is not None) and (memo_cas == stored_cas)
+        return {"address": address, "graph": graph_id, "node": node_id,
+                "stale": (not fresh), "unknown": False, "reason": "",
+                "volatile": False, "sig": sig_now, "stored_cas": stored_cas, "memo_cas": memo_cas}
 
     def replay(self, limit: int = 200) -> list:
         """The whole captured path, oldest-first — the trajectory that trains the twin (I1)."""

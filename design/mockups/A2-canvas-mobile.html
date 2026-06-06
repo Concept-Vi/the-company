@@ -1,0 +1,214 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>A2 · Canvas — running chain (kind-coded) · native mobile</title>
+<link rel="stylesheet" href="../design-system.css">
+<!--
+  ============================================================
+  VIEW  A2 · Canvas — running chain (kind-coded) · native mobile (390px)
+  AREA  A (canvas / operate)
+  JOURNEY-MOMENT  J7 mobile · running chain · surfaces when: operator glances at a run from the phone
+                  (J7 UX law — the FORM changes (sheet · tab-bar · thumb-reach), the FLOW doesn't.)
+  ============================================================
+  REPRESENTS[] (feature-id · what it surfaces · code ref — from the Feature & Function Inventory):
+    · NODE-kinds  — ONLY two live kinds: process(mint) + content(blue), each shown as a card with a
+                    monogram chip + a KIND label. 'model' is a CONFIG SLOT a process node binds (a pill),
+                    NOT a kind; 'presentation' is contract-allowed but has no live node → NOT drawn.
+                                                                       registry.py:15,18 (_infer_kind)
+    · RUN-status  — node status dots are ONLY idle · ran · cached · stuck (state() emits these four).
+                    "await" is INBOX/presence (the tab-bar Inbox badge), NEVER a node dot.
+                                                                       suite.py:436-453  (await = :491)
+    · ENG-resolve — reactive resolution + memo gate: ran vs cached keyed on
+                    (type,version,config,port→content-hash); VOLATILE bypasses the gate (codebase always
+                    re-runs = ran, never cached) — made legible via the codebase 'volatile→ran' pill
+                    + the activity strip.                              scheduler.py:37-133, 26-99, 87-89
+    · NODE-ports  — typed ports type-check on connect: Text · Any · Vector · Number; Any = wildcard.
+                    codebase→ask edge carries a Text port (only Text here — no embed, so no Vector;
+                    accurate, not a gap).                              suite.py:349
+    · CAN-zoom    — semantic zoom: expanded = zoom>0.5; below that nodes collapse to chips. Shown via
+                    the zoom indicator (0.8× · expanded) + one neighbour collapsed to a chip; pinch on
+                    touch (J7/G3).                                     App.tsx:396
+  ------------------------------------------------------------
+  CHAIN DEPICTED (real, from the inventory's node library — the desktop A2 chain, trimmed for the phone):
+    codebase[content · VOLATILE→ran] ──(Text)──→ ask[process · ran]
+        model = config PILL (deepseek-v4-pro), NOT a kind · NOT a node
+  No fiction: no 'presentation'/note node, no 'await'/'failed'/'running' node dot, no 4-kind legend,
+  no Vector port (no embed node in this chain).
+  ------------------------------------------------------------
+  NATIVE-MOBILE FORM (not a shrunk desktop):
+    · full-bleed canvas · bottom tab-bar (Canvas · Inbox · RHM · Run) · inspector as a BOTTOM SHEET
+      (peeked, drag-handle) · thumb RUN button (bottom-right, above the sheet).
+    · design-system.css only flips to mobile chrome below 699px; this file forces the 390px phone frame
+      in its scoped <style> so it reads as the native artifact at any viewport. Only LAYOUT is local —
+      the node/status/button language stays the system's (.node · .mono-chip · .sdot s-* · .btn.run · .tabbar).
+  ============================================================
+-->
+<style>
+/* ── force the native 390px phone frame (chrome layout only; node language stays the system's) ── */
+.app{
+  width:390px;margin:0 auto;height:100vh;
+  display:grid;grid-template-rows:50px 1fr 58px;grid-template-columns:1fr;
+  grid-template-areas:"top" "canvas" "tabbar";
+  border-left:1px solid var(--line);border-right:1px solid var(--line);position:relative;overflow:hidden
+}
+.rail,.panel,.foot{display:none}
+
+/* ── TOP — identity · presence ── */
+.top{grid-area:top;display:flex;align-items:center;gap:10px;padding:0 14px;background:linear-gradient(180deg,var(--s1),var(--s0));border-bottom:1px solid var(--line)}
+.brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:16px;letter-spacing:-.3px}
+.brand em{font-style:normal;color:var(--acc)}
+.presence{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx-2);background:var(--s2);border:1px solid var(--line-2);border-radius:99px;padding:4px 10px}
+.presence .dot{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+
+/* ── CANVAS — full-bleed, the running chain ── */
+.canvas{grid-area:canvas;position:relative;overflow:hidden;background-image:radial-gradient(var(--line) .9px,transparent .9px);background-size:24px 24px}
+.canvas .node{position:absolute;width:172px}
+.canvas .node .body{font-size:11px;padding:9px 10px}
+.node.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc-glow),0 22px 50px -22px #000}
+/* typed-port label next to the nub */
+.ptag{position:absolute;font-family:'IBM Plex Mono';font-size:8px;letter-spacing:.4px;color:var(--tx-3);background:var(--s0);border:1px solid var(--line);border-radius:4px;padding:1px 4px}
+
+/* semantic-zoom indicator (CAN-zoom) — pinch-aware on touch */
+.zoomhint{position:absolute;right:12px;top:11px;display:flex;align-items:center;gap:7px;background:var(--s1);border:1px solid var(--line-2);border-radius:99px;padding:4px 10px;font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3)}
+.zoomhint b{color:var(--tx-2);font-weight:500}
+.zoomhint .z{width:48px;height:4px;border-radius:99px;background:var(--s3);position:relative}
+.zoomhint .z::after{content:"";position:absolute;left:60%;top:50%;transform:translateY(-50%);width:8px;height:8px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+
+/* collapsed chip — what a node becomes below zoom 0.5 (semantic zoom made visible) */
+.zchip{position:absolute;display:flex;align-items:center;gap:6px;background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid var(--line-2);border-radius:99px;padding:4px 10px 4px 5px;font-size:10.5px}
+.zchip .mono-chip{width:17px;height:17px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:10px;color:var(--ink-accent);flex:none}
+.zchip[data-kind=content] .mono-chip{background:var(--kind-content)}
+.zchip .sdot{width:7px;height:7px;border-radius:99px}
+
+/* legend — ONLY the two real kinds + the real four-status vocabulary */
+.legend{position:absolute;left:12px;top:11px;display:flex;flex-direction:column;gap:6px;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);background:rgba(8,10,13,.72);border:1px solid var(--line);border-radius:var(--r);padding:7px 9px;backdrop-filter:blur(4px)}
+.legend .grp{display:flex;gap:10px;align-items:center}
+.legend b{display:inline-flex;align-items:center;gap:4px;color:var(--tx-2);font-weight:500}
+.legend i{width:8px;height:8px;border-radius:2px;font-style:normal;flex:none}
+.legend .s{display:inline-flex;align-items:center;gap:4px;color:var(--tx-2)}
+.legend .s i{border-radius:99px}
+
+/* activity strip — thin, above the sheet (frontstage outcome of the run) */
+.actrip{position:absolute;left:0;right:0;bottom:0;padding:6px 12px;background:var(--s0);border-top:1px solid var(--line);font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3);display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden}
+.actrip .live{color:var(--acc);display:inline-flex;align-items:center;gap:4px}
+.actrip .live i{width:5px;height:5px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+
+/* ── THUMB RUN BUTTON — bottom-right, above the sheet, reachable one-handed ── */
+.fab{position:absolute;right:16px;z-index:60;bottom:calc(58px + 12px);box-shadow:0 14px 30px -10px rgba(84,214,176,.5);padding:13px 18px;border-radius:99px;font-size:14px}
+
+/* ── INSPECTOR AS A BOTTOM SHEET (peeked, inspecting the ask node) ── */
+.sheet{position:absolute;left:0;right:0;bottom:58px;z-index:40;background:var(--s1);border-top:1px solid var(--line-2);border-radius:18px 18px 0 0;padding:10px 16px 16px;box-shadow:0 -18px 44px -20px #000;max-height:46%;overflow:auto}
+.sheet .grab{width:38px;height:4px;border-radius:99px;background:var(--line-2);margin:0 auto 12px}
+.sheet .h{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+.sheet .h .mono-chip{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:12px;color:var(--ink-accent);background:var(--kind-process);flex:none}
+.sheet .h .nm{font-family:'Bricolage Grotesque';font-weight:700;font-size:16px}
+.sheet .h .st{margin-left:auto;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3)}
+.sheet .fld{font-size:10.5px;color:var(--tx-3);text-transform:uppercase;letter-spacing:.6px;margin:0 0 5px}
+.sheet .box{background:var(--s2);border:1px solid var(--line-2);border-radius:var(--r);padding:9px 11px;font-size:12.5px;margin-bottom:12px}
+.sheet .box.code{font-family:'IBM Plex Mono';font-size:11px;color:var(--tx-2);line-height:1.5}
+.sheet .box.row{display:flex;justify-content:space-between;align-items:center}
+.sheet .box b{color:var(--kind-model);font-weight:500}
+.sheet .act{display:flex;gap:8px;margin-top:4px}
+.sheet .act .btn{flex:1;justify-content:center;padding:11px 6px}
+</style></head>
+<body><div class="app">
+
+  <!-- ── TOP — identity · presence (focus) ── -->
+  <header class="top" data-ui-ref="ui://toolbar">
+    <span class="brand">the&nbsp;<em>company</em></span>
+    <span class="presence"><span class="dot"></span>focus</span>
+  </header>
+
+  <!-- ── CANVAS — full-bleed, the running chain (codebase → ask) ── -->
+  <main class="canvas" data-ui-ref="ui://canvas">
+
+    <!-- wire: codebase(content blue) → ask, the freshly-fired edge -->
+    <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none">
+      <path d="M 198 148 C 250 148 246 230 220 230" fill="none" stroke="var(--kind-content)" stroke-width="1.8" opacity=".6"/>
+    </svg>
+
+    <!-- LEGEND — the two real kinds + the real four-status vocabulary (RUN-status fully shown) -->
+    <div class="legend">
+      <div class="grp">
+        <b><i style="background:var(--kind-process)"></i>process</b>
+        <b><i style="background:var(--kind-content)"></i>content</b>
+      </div>
+      <div class="grp">
+        <span class="s"><i class="s-idle"></i>idle</span>
+        <span class="s"><i class="s-ran"></i>ran</span>
+        <span class="s"><i class="s-cache"></i>cached</span>
+        <span class="s"><i class="s-stuck"></i>stuck</span>
+      </div>
+    </div>
+
+    <!-- semantic-zoom indicator (CAN-zoom) -->
+    <div class="zoomhint">⌖ <span class="z"></span> <b>0.8×</b> · expanded</div>
+
+    <!-- CONTENT · codebase — VOLATILE → bypasses memo gate → always re-runs = RAN (never cached) -->
+    <div class="node" data-kind="content" style="left:26px;top:96px">
+      <div class="bar"><span class="mono-chip">▦</span><span class="ty">codebase</span><span class="kindlabel">content</span></div>
+      <div class="body">reads the repo into context
+        <div class="cfg"><span class="pill">root <b>~/company</b></span><span class="pill">volatile→ran</span></div>
+      </div>
+      <div class="addr"><span>run://demo/code</span><span class="sdot s-ran"></span></div>
+      <span class="port out"></span><span class="ptag" style="right:-40px;top:calc(50% - 8px)">Text</span>
+    </div>
+
+    <!-- PROCESS · ask (selected → inspected in the sheet) — model is a CONFIG PILL, not a kind -->
+    <div class="node sel" data-kind="process" data-ui-ref="ui://canvas/node" style="left:192px;top:192px">
+      <div class="bar"><span class="mono-chip">A</span><span class="ty">ask</span><span class="kindlabel">process · ran</span></div>
+      <div class="body">grounded answer over the codebase
+        <div class="cfg"><span class="pill" style="border-color:var(--kind-model);color:var(--kind-model)">model <b style="color:var(--kind-model)">deepseek-v4-pro</b></span></div>
+        <div class="out">The memo gate skips re-running a node when its (type, version, config, inputs) hash is unchanged — runtime/scheduler.py…</div>
+      </div>
+      <div class="addr"><span>run://demo/ask</span><span class="sdot s-ran"></span></div>
+      <span class="port in"></span><span class="ptag" style="left:-38px;top:calc(50% - 8px)">Text</span>
+      <span class="port out"></span>
+    </div>
+
+    <!-- a collapsed (semantic-zoom) neighbour — what a node becomes below zoom 0.5 -->
+    <div class="zchip" data-kind="content" style="left:26px;top:330px"><span class="mono-chip">◑</span><span>rhm_mode</span><span class="sdot s-idle"></span></div>
+
+    <!-- thin activity strip — frontstage outcome (memo legibility: codebase volatile→ran) -->
+    <div class="actrip">
+      <span class="live"><i></i>live</span>
+      <span>ran ask · codebase volatile→ran · event-stream connected</span>
+    </div>
+  </main>
+
+  <!-- ── THUMB RUN BUTTON — one-handed reach ── -->
+  <button class="btn run fab" data-ui-ref="ui://toolbar/run">▶ run</button>
+
+  <!-- ── INSPECTOR AS A BOTTOM SHEET — peeked, inspecting the selected 'ask' node ── -->
+  <section class="sheet">
+    <div class="grab"></div>
+    <div class="h">
+      <span class="mono-chip">A</span>
+      <span class="nm">ask</span>
+      <span class="st">process · ran</span>
+    </div>
+
+    <p class="fld">Model · config slot (fabric, not a kind)</p>
+    <div class="box row"><span><b>deepseek-v4-pro</b> · cloud</span><span style="color:var(--tx-3)">▾</span></div>
+
+    <p class="fld">System prompt</p>
+    <div class="box code">Answer using ONLY the provided code. Cite file paths. Be concise.</div>
+
+    <p class="fld">Inputs · typed ports</p>
+    <div class="box code">question ← constant <span style="color:var(--tx-3)">(Text)</span><br>context&nbsp;&nbsp;← codebase <span style="color:var(--tx-3)">(Text)</span></div>
+
+    <p class="fld">Act on this output</p>
+    <div class="act">
+      <button class="btn">↻ rerun</button>
+      <button class="btn">→ inbox</button>
+      <button class="btn">⊕ build</button>
+    </div>
+  </section>
+
+  <!-- ── BOTTOM TAB-BAR — Canvas · Inbox · RHM · Run (system component; await lives here as a badge, never on a node) ── -->
+  <nav class="tabbar" data-ui-ref="ui://tabbar" style="display:flex">
+    <a class="on"><span class="ic">▦</span>Canvas</a>
+    <a><span class="ic">✦</span>Inbox</a>
+    <a><span class="ic">◈</span>RHM</a>
+    <a><span class="ic">▶</span>Run</a>
+  </nav>
+</div></body></html>

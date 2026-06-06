@@ -1,0 +1,231 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>A1 · Canvas — empty / first-run · desktop</title>
+<link rel="stylesheet" href="../design-system.css">
+<!--
+  ============================================================
+  VIEW  A1 · Canvas — empty / first-run · desktop
+  AREA  A (canvas / operate) · JOURNEY J1 (the core loop)
+  JOURNEY-MOMENT  J1 step 1 · empty / first-run · surfaces when: no nodes yet
+  ============================================================
+  REPRESENTS[] (feature-id · what it surfaces · code ref — from the Feature & Function Inventory):
+    · EVT-now      — the now-view + presence. On a fresh stage the now-view reports NOTHING
+                     RUNNING (presence = "empty"); the thin activity strip says so honestly,
+                     it does not fake activity.                                  suite.py:483
+    · CAN-compose  — create / connect / delete / set_config / set_position. The empty stage's
+                     ONE job: invite composition. The "start here" affordance is grounded to
+                     this — drag a palette node onto the stage to begin.         suite.py:316
+    · NODE-types   — the 16 self-registering node types, grouped by the ONLY two live kinds:
+                     process (11) + content (5). Palette is fed from the registry
+                     (capabilities/object_info), never a hand-list.              nodes/*.py
+  ------------------------------------------------------------
+  EMPTY-STATE HONESTY (what makes A1 distinct from A2, and where fiction would creep in):
+    · NO nodes on the canvas → therefore NO status dots (idle/ran/cached/stuck have nothing to
+      mark). The legend shows ONLY the two kinds; the status vocabulary is omitted on purpose.
+    · NO inbox badge — first-run inbox is empty (0).
+    · Activity strip presence = "empty" (EVT-now: nothing running yet) — NOT relabelling the
+      top-bar RHM presence dial; the dial still shows a real RHM mode (focus).
+    · The optional "start a demo" is the REAL DEMO graph only (the codebase Q&A chain the app
+      boots — see A2), never a fictional template gallery. First-run/onboarding is a journey
+      Tim has NOT designed yet (User Journeys "Open for Tim") → no invented wizard/tour.
+    · Right panel = empty-state (Inspector: nothing selected). No fabricated content.
+  PALETTE (all 16, by kind — the full library, since the empty stage's purpose is the palette):
+    process(11): ask·llm·embed·similarity·retrieve·gate·join·pair·uppercase·titlecase·wordcount
+    content(5):  constant·codebase·model_of_tim·portal·rhm_mode
+  ============================================================
+-->
+<style>
+.top{grid-area:top;display:flex;align-items:center;gap:16px;padding:0 16px;background:linear-gradient(180deg,var(--s1),var(--s0));border-bottom:1px solid var(--line);min-width:0}
+.brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:17px;letter-spacing:-.3px;white-space:nowrap}
+.brand em{font-style:normal;color:var(--acc)}
+.brand .tag{font-size:10.5px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:7px}
+/* presence dial — the 8-mode RHM posture control; current = focus (a real mode, NOT "empty") */
+.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--line-2);border-radius:99px;background:var(--s2);font-size:11.5px;color:var(--tx-2);white-space:nowrap;cursor:pointer}
+.presence .dot{width:7px;height:7px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.presence .ch{color:var(--tx-3);font-size:10px}
+.verbs{margin-left:auto;display:flex;gap:6px;flex:none}
+.verbs .btn{padding:7px 11px}
+.verbs .btn .lbl{white-space:nowrap}
+/* on a fresh stage there is nothing to run/force yet → run is the affordance, others are quiet */
+.verbs .btn.quiet{opacity:.45}
+@media (max-width:1280px){ .verbs .btn .lbl{display:none} .verbs .btn{padding:7px 9px} }
+
+.rail{grid-area:rail;background:var(--s0);border-right:1px solid var(--line);padding:13px 11px;overflow:auto}
+.rail .railhd{font-size:9.5px;text-transform:uppercase;letter-spacing:1.3px;color:var(--tx-3);font-weight:600;margin:0 2px 4px}
+.rail .railsub{font-size:10px;color:var(--tx-3);margin:0 2px 9px;line-height:1.4}
+.rail h4{font-size:10px;text-transform:uppercase;letter-spacing:1.1px;color:var(--tx-2);margin:15px 3px 7px;font-weight:600;display:flex;align-items:center;gap:7px}
+.rail h4 .ct{margin-left:auto;color:var(--tx-3);font-family:'IBM Plex Mono';font-size:9px;font-weight:400}
+.kdot{width:8px;height:8px;border-radius:2px;flex:none}
+.chip{display:flex;align-items:center;gap:9px;padding:6px 9px;border-radius:var(--r);background:var(--s1);border:1px solid var(--line);font-size:12px;margin-bottom:5px;cursor:grab}
+.chip:hover{border-color:var(--line-2)}
+.chip .mono-chip{width:19px;height:19px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:11px;color:var(--ink-accent);flex:none}
+.chip .label{color:var(--tx)}
+.chip .vol{margin-left:auto;font-family:'IBM Plex Mono';font-size:8px;letter-spacing:.5px;color:var(--tx-3);border:1px solid var(--line);border-radius:3px;padding:0 4px}
+
+.canvas{grid-area:canvas;position:relative;overflow:hidden;background-image:radial-gradient(var(--line) .9px,transparent .9px);background-size:26px 26px;display:grid;place-items:center}
+
+/* ── EMPTY STAGE · "start here" — grounded to CAN-compose (drag a node to begin) ── */
+.empty{display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;max-width:430px;padding:24px}
+.empty .glyph{width:74px;height:74px;border-radius:var(--r-lg);border:1.5px dashed var(--line-2);display:grid;place-items:center;color:var(--tx-3);position:relative;background:linear-gradient(180deg,var(--s1),transparent)}
+.empty .glyph svg{width:34px;height:34px}
+.empty .glyph .plus{position:absolute;right:-9px;bottom:-9px;width:26px;height:26px;border-radius:99px;background:var(--acc);color:var(--ink-accent);display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:16px;box-shadow:0 0 0 4px var(--acc-glow)}
+.empty h1{font-family:'Bricolage Grotesque';font-weight:700;font-size:21px;letter-spacing:-.4px;color:var(--tx)}
+.empty p{font-size:13px;color:var(--tx-2);line-height:1.6}
+.empty p b{color:var(--tx);font-weight:600}
+.empty .hint{display:inline-flex;align-items:center;gap:8px;font-family:'IBM Plex Mono';font-size:11px;color:var(--tx-3);background:var(--s1);border:1px solid var(--line);border-radius:var(--r-pill);padding:6px 13px}
+.empty .hint .arrow{color:var(--acc)}
+/* the start row — the ONLY two real starting moves: drag from palette, or boot the real demo */
+.startrow{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;justify-content:center}
+.start{display:flex;flex-direction:column;gap:5px;text-align:left;background:var(--s1);border:1px solid var(--line-2);border-radius:var(--r-lg);padding:12px 14px;width:200px}
+.start .st-hd{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--tx)}
+.start .st-hd .ic{width:20px;height:20px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:12px;color:var(--ink-accent)}
+.start .st-sub{font-size:11px;color:var(--tx-3);line-height:1.45}
+.start.demo{border-color:var(--acc-dim)}
+.start.demo .ic{background:var(--acc)}
+.start.compose .ic{background:var(--kind-content)}
+
+/* the kind key — ONLY the two real kinds (no status dots: nothing on the stage bears a status) */
+.kindkey{position:absolute;left:16px;bottom:12px;display:flex;gap:16px;align-items:center;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3);background:rgba(8,10,13,.7);border:1px solid var(--line);border-radius:var(--r);padding:7px 12px;backdrop-filter:blur(4px)}
+.kindkey b{display:inline-flex;align-items:center;gap:5px;color:var(--tx-2);font-weight:500}
+.kindkey i{width:9px;height:9px;border-radius:2px;flex:none;font-style:normal}
+.kindkey .note{color:var(--tx-3);font-weight:400}
+
+/* a quiet empty-graph chip top-right (mirrors A2's zoomhint slot) — names the graph, no fiction */
+.graphchip{position:absolute;right:14px;top:12px;display:flex;align-items:center;gap:8px;background:var(--s1);border:1px solid var(--line-2);border-radius:99px;padding:5px 11px;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3)}
+.graphchip b{color:var(--tx-2);font-weight:500}
+
+.foot{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--s0);border-top:1px solid var(--line);font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';overflow:hidden;white-space:nowrap}
+/* presence = "empty" → a HOLLOW idle marker, not the live mint dot (nothing is running) */
+.foot .pres{display:inline-flex;align-items:center;gap:6px;color:var(--tx-3)}
+.foot .pres i{width:6px;height:6px;border-radius:99px;background:transparent;border:1px solid var(--tx-3)}
+
+.panel{grid-area:panel;background:var(--s0);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);padding:10px 12px 0}
+.tab{padding:8px 12px;font-size:12px;color:var(--tx-3);border-bottom:2px solid transparent;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.tab.on{color:var(--tx);border-bottom-color:var(--acc)}
+/* NO inbox badge — first-run inbox is empty (0) */
+.pbody{padding:14px;overflow:auto;flex:1;min-height:0;display:flex;flex-direction:column}
+/* INSPECTOR empty-state — nothing selected (collapsed / empty, per the dock spec) */
+.empty-panel{margin:auto 0;text-align:center;color:var(--tx-3);padding:30px 8px}
+.empty-panel .pic{width:46px;height:46px;border-radius:var(--r-lg);border:1px dashed var(--line-2);display:grid;place-items:center;margin:0 auto 14px;color:var(--tx-3)}
+.empty-panel .pic svg{width:22px;height:22px}
+.empty-panel h3{font-family:'Bricolage Grotesque';font-weight:600;font-size:14px;color:var(--tx-2);margin-bottom:6px}
+.empty-panel p{font-size:11.5px;line-height:1.55;color:var(--tx-3)}
+</style></head>
+<body><div class="app">
+
+  <!-- ── TOP BAR — identity · RHM presence dial (focus) · verbs ── -->
+  <header class="top" data-ui-ref="ui://toolbar">
+    <span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
+    <span class="presence" data-ui-ref="ui://toolbar/presence"><span class="dot"></span>focus<span class="ch">· present ▾</span></span>
+    <div class="verbs">
+      <!-- on an empty stage there is nothing to layer/force/run yet → quiet until a node exists -->
+      <button class="btn quiet">◐ <span class="lbl">layers</span></button>
+      <button class="btn quiet">＋ <span class="lbl">wire</span></button>
+      <button class="btn quiet">↻ <span class="lbl">force</span></button>
+      <button class="btn quiet" disabled data-ui-ref="ui://toolbar/run">▶ <span class="lbl">run</span> <span class="k">⏎</span></button>
+    </div>
+  </header>
+
+  <!-- ── LEFT RAIL — the palette: ALL 16 node types, grouped by the TWO real kinds ── -->
+  <nav class="rail collapsible" data-ui-ref="ui://rail/palette">
+    <div class="railhd">Node palette</div>
+    <div class="railsub">Drag a node onto the stage to begin.</div>
+
+    <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span><span class="ct">11</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">L</span><span class="label">llm</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">E</span><span class="label">embed</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">≈</span><span class="label">similarity</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">⌕</span><span class="label">retrieve</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">⑂</span><span class="label">gate</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">⋈</span><span class="label">join</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">⊞</span><span class="label">pair</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">U</span><span class="label">uppercase</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">Tt</span><span class="label">titlecase</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">#</span><span class="label">wordcount</span></div>
+
+    <h4><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span><span class="ct">5</span></h4>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">C</span><span class="label">constant</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">▦</span><span class="label">codebase</span><span class="vol">VOLATILE</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">T</span><span class="label">model_of_tim</span><span class="vol">VOLATILE</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">⊕</span><span class="label">portal</span></div>
+    <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">◑</span><span class="label">rhm_mode</span></div>
+  </nav>
+
+  <!-- ── CANVAS — the empty, inviting stage ── -->
+  <main class="canvas" data-ui-ref="ui://canvas">
+
+    <!-- quiet graph marker (no nodes yet) -->
+    <div class="graphchip">graph <b>codebase</b> · 0 nodes</div>
+
+    <!-- the "start here" affordance — grounded to CAN-compose -->
+    <div class="empty">
+      <div class="glyph">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="7" height="6" rx="1.5"/><rect x="14" y="14" width="7" height="6" rx="1.5"/>
+          <path d="M10 7h2.5a1.5 1.5 0 0 1 1.5 1.5V14"/>
+        </svg>
+        <span class="plus">+</span>
+      </div>
+      <h1>An empty stage, ready to compose.</h1>
+      <p>This is the canvas. A graph here <b>is</b> the program — place nodes, wire their typed ports, and run. Nothing is running yet.</p>
+      <span class="hint"><span class="arrow">←</span> drag a node from the palette to begin</span>
+
+      <div class="startrow">
+        <!-- start move 1: compose from scratch (CAN-compose) -->
+        <div class="start compose">
+          <div class="st-hd"><span class="ic">＋</span>Start composing</div>
+          <div class="st-sub">Drag any of the 16 nodes onto the stage, then wire and run. The core loop (J1).</div>
+        </div>
+        <!-- start move 2: the REAL demo only (the codebase Q&A chain the app boots) — no fictional templates -->
+        <div class="start demo">
+          <div class="st-hd"><span class="ic">▦</span>Open the demo</div>
+          <div class="st-sub">Load the codebase&nbsp;Q&amp;A chain — ask a question of this system's own source.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KIND KEY — only the two live kinds; status vocabulary omitted (no nodes to mark) -->
+    <div class="kindkey">
+      <b><i style="background:var(--kind-process)"></i>process</b>
+      <b><i style="background:var(--kind-content)"></i>content</b>
+      <span class="note">— colour = kind</span>
+    </div>
+  </main>
+
+  <!-- ── THIN ACTIVITY STRIP — EVT-now: presence = "empty" (nothing running yet) ── -->
+  <footer class="foot" data-ui-ref="ui://activity">
+    <span class="pres"><i></i>presence · empty</span>
+    <span>nothing running yet — the now-view is quiet</span>
+    <span style="margin-left:auto">graph: codebase · 0 nodes · event-stream connected</span>
+  </footer>
+
+  <!-- ── RIGHT PANEL — docked instrument, empty-state (nothing selected; inbox 0 → no badge) ── -->
+  <aside class="panel">
+    <div class="tabs">
+      <span class="tab on">⊙ Inspector</span>
+      <span class="tab">✦ Inbox</span>
+      <span class="tab">◈ RHM</span>
+    </div>
+    <div class="pbody">
+      <div class="empty-panel">
+        <div class="pic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8 12h8"/>
+          </svg>
+        </div>
+        <h3>Nothing selected</h3>
+        <p>Select a node to inspect and configure it here. Its config fields, typed inputs and output appear in this panel.</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- mobile tab-bar (hidden on desktop; present so the responsive system from design-system.css resolves) -->
+  <nav class="tabbar">
+    <a class="on"><span class="ic">▦</span>Canvas</a>
+    <a><span class="ic">✦</span>Inbox</a>
+    <a><span class="ic">◈</span>RHM</a>
+    <a><span class="ic">▶</span>Run</a>
+  </nav>
+</div></body></html>

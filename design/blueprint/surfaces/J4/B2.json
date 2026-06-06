@@ -1,0 +1,34 @@
+{
+  "_what": "GENERATED surface-spec for view B2. Directory = journey spine (tree); journeys[]/cross_journeys[] = the address-refs that carry the web (B3). Built by a Claude Code session to the addresses below (never invent an address).",
+  "id": "B2",
+  "area": "B",
+  "title": "Voice / listening mode",
+  "platforms": [
+    "desktop",
+    "mobile"
+  ],
+  "represents": [
+    "VOICE"
+  ],
+  "status": "planned",
+  "home_journey": "J4",
+  "journeys": [
+    "J4",
+    "J7"
+  ],
+  "cross_journeys": [
+    "J7"
+  ],
+  "addresses": [
+    "ui://chat/mic",
+    "ui://walkthrough/voice"
+  ],
+  "build_to": {
+    "components": [
+      "chat",
+      "walkthrough"
+    ],
+    "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
+    "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
+  }
+}

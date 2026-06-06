@@ -1,0 +1,28 @@
+{
+  "_what": "GENERATED surface-spec for view D7. Directory = journey spine (tree); journeys[]/cross_journeys[] = the address-refs that carry the web (B3). Built by a Claude Code session to the addresses below (never invent an address).",
+  "id": "D7",
+  "area": "D",
+  "title": "Self-mod \u2014 revert latest change",
+  "platforms": [
+    "desktop"
+  ],
+  "represents": [
+    "SM-revert"
+  ],
+  "status": "quality-passed",
+  "home_journey": "J8",
+  "journeys": [
+    "J8"
+  ],
+  "cross_journeys": [],
+  "addresses": [
+    "ui://workshop/self-changes"
+  ],
+  "build_to": {
+    "components": [
+      "workshop"
+    ],
+    "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
+    "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
+  }
+}
