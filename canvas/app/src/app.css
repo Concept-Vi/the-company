@@ -207,6 +207,13 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 .rhm-cfg{display:flex;flex-direction:column;gap:5px;padding:8px 0;border-bottom:1px solid var(--line)}
 .rhm-cfg input{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:6px;font-family:inherit;font-size:10.5px}
 .rhm-cfg input:focus{outline:none;border-color:var(--sig)}
+/* V4 — the consolidated voice settings: header, voice load-status badge, voice on/off toggle (design tokens). */
+.rhm-cfg .cfg-head{font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin:2px 0 1px}
+.rhm-cfg .voice-status{font-size:9px;color:var(--dim)}
+.rhm-cfg .voice-status.ready{color:var(--sig)}
+.rhm-cfg .voice-status.down{color:var(--err)}
+.rhm-cfg .cfg-toggle{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--ink);cursor:pointer}
+.rhm-cfg .cfg-toggle input{width:auto;padding:0;border:0;background:none}
 .ibx-head{font-size:11px;margin-bottom:6px}
 .ibx-item{padding:6px 8px;margin:4px 0;background:var(--bg);border:1px solid var(--line);border-left:3px solid var(--warn);
   border-radius:3px;cursor:pointer;font-size:11px;color:var(--ink)}

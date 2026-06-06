@@ -17,7 +17,7 @@ import { registryStore } from '../registryStore'
 import { ProposeAffordance } from './ProposeAffordance'
 
 export function RhmChat() {
-  const { cfg, cfgOpen, chat, chatBusy, chatMsg, recording, indicated, personas, switchPersona, setCfg, setCfgOpen, setChatMsg, applyCfg, sendChat, recordToggle, micPressed, setVoiceInputMode, indicate } = useApp()
+  const { cfg, cfgOpen, chat, chatBusy, chatMsg, recording, indicated, personas, voiceStatus, switchPersona, setCfg, setCfgOpen, setChatMsg, applyCfg, sendChat, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, indicate } = useApp()
   // the live chat-model registry — same source the node-config model dropdown reads (MODEL_OPTIONS.chat_models).
   const registry = useSyncExternalStore(registryStore.subscribe, registryStore.getSnapshot)
   const chatModels = registry.MODEL_OPTIONS.chat_models || []
@@ -30,6 +30,9 @@ export function RhmChat() {
       </div>
       {cfgOpen && (
         <div className="rhm-cfg">
+          {/* V4.1 — the consolidated voice & brain settings home: brain model, persona+voice, input mode,
+              voice on/off — one place, all live, legible on mobile. */}
+          <div className="cfg-head">voice &amp; brain</div>
           <select data-ui-ref="ui://chat/model-field" value={curModel}
             onChange={e => setCfg({ ...cfg, model: e.target.value })}>
             {/* empty is a VALID state — "default model" (cfg.model || 'default model' in the head). */}
@@ -50,6 +53,12 @@ export function RhmChat() {
             {cfg.persona && !personas.some((p: any) => p.id === cfg.persona) &&
               <option value={cfg.persona}>{cfg.persona} (current)</option>}
           </select>
+          {/* V4.2 — the voice load status: a switch may cold-load the engine; show loading→ready so the
+              operator knows when they can talk (not just a transient notice). */}
+          {voiceStatus && <span className={'voice-status ' + voiceStatus}
+            title={'voice engine: ' + voiceStatus}>
+            {voiceStatus === 'loading' ? '⏳ loading voice…' : voiceStatus === 'ready' ? '✓ voice ready' : '⚠ voice down'}
+          </span>}
           {/* V1.3 — the voice INPUT mode: two distinct capabilities, switchable. push-to-talk (tap to
               start/stop) or auto-listen (speak; it fires the turn when you finish a thought — the judge,
               not a dumb timer). Persists via the voice_input_mode slot; takes effect on the next mic press. */}
@@ -59,6 +68,13 @@ export function RhmChat() {
             <option value="push_to_talk">🎙 push-to-talk</option>
             <option value="auto_listen">👂 auto-listen (hands-free)</option>
           </select>
+          {/* V4.3 — global voice output on/off (the voice_enabled slot), independent of mode. */}
+          <label className="cfg-toggle" data-ui-ref="ui://chat/voice-toggle"
+            title="speak replies aloud — off = text replies only">
+            <input type="checkbox" checked={(cfg.voice_enabled || 'on') === 'on'}
+              onChange={e => setVoiceEnabled(e.target.checked)} />
+            <span>{(cfg.voice_enabled || 'on') === 'on' ? '🔊 voice on' : '🔇 voice off'}</span>
+          </label>
           <button className="b" data-ui-ref="ui://chat/config" onClick={applyCfg}>apply config</button>
         </div>
       )}

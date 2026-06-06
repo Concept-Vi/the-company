@@ -125,6 +125,7 @@ export function useAppController(editor: Editor) {
   const [cfg, setCfg] = useState<any>({ model: '', persona: '' })
   const [cfgOpen, setCfgOpen] = useState(false)
   const [personas, setPersonas] = useState<any[]>([])   // Option A: the cast you can switch between (id·name·engine)
+  const [voiceStatus, setVoiceStatus] = useState<string>('')   // V4.2: '' | 'loading' | 'ready' | 'down' (the persona voice's load state)
   // U12: the /api/inbox payload is { live_escalations, resolved_for_you, batched, counts }. `batched` is a
   // SUBSET-grouping of live_escalations — NOT a third disjoint lane. We render the two real lanes.
   const [inbox, setInbox] = useState<any>({ live_escalations: [], resolved_for_you: [], batched: {}, counts: { escalations: 0, resolved: 0 } })
@@ -775,20 +776,22 @@ export function useAppController(editor: Editor) {
   async function switchPersona(id: string) {
     if (!id || id === cfg.persona) { setCfg((c: any) => ({ ...c, persona: id })); return }
     setCfg((c: any) => ({ ...c, persona: id }))
+    setVoiceStatus('loading')                            // V4.2: badge tracks the cold-load
     setNotice(`switching to ${id} — cold-loading their voice…`)
     try {
       const r = await api.voiceSwitch(id)
-      if (r.error) { setNotice('⚠ could not switch to ' + id + ': ' + r.error); return }
+      if (r.error) { setVoiceStatus('down'); setNotice('⚠ could not switch to ' + id + ': ' + r.error); return }
       if (r.service) {                                  // an engine that needs loading (not an always-on one)
         const dl = Date.now() + 240000                  // the heavy voices (orpheus) cold-load in minutes
         for (;;) {
           const sv = await api.voiceServices().catch(() => null)
           const st = sv?.services?.[r.service]?.state
           if (st === 'up') break
-          if (st === 'down' || Date.now() > dl) { setNotice(`⚠ ${id}'s voice (${r.engine}) didn't come up — open the voice panel`); break }
+          if (st === 'down' || Date.now() > dl) { setVoiceStatus('down'); setNotice(`⚠ ${id}'s voice (${r.engine}) didn't come up — open the voice panel`); break }
           await new Promise(res => setTimeout(res, 3000))
         }
       }
+      setVoiceStatus('ready')
       setNotice(`${id} is ready — talk (🎙) or type; it speaks back in listening mode`)
       setCfg(await api.rhmConfig())
     } catch (e: any) { setNotice('⚠ switch failed: ' + (e?.message || e)) }
@@ -1329,6 +1332,12 @@ export function useAppController(editor: Editor) {
     try { const c = await api.setRhmConfig({ voice_input_mode: mode }); setCfg(c); setNotice('voice input → ' + mode.replace('_', '-')) }
     catch (e: any) { setNotice('⚠ ' + (e?.message || e)) }
   }
+  // V4.3 — global voice OUTPUT on/off (the voice_enabled slot), independent of presence mode. off = text
+  // replies, no synth. Persists live.
+  async function setVoiceEnabled(on: boolean) {
+    try { const c = await api.setRhmConfig({ voice_enabled: on ? 'on' : 'off' }); setCfg(c); setNotice('voice output ' + (on ? 'on' : 'off')) }
+    catch (e: any) { setNotice('⚠ ' + (e?.message || e)) }
+  }
   function micPressed() {
     const mode = (cfg?.voice_input_mode || 'push_to_talk')
     if (mode === 'auto_listen') {
@@ -1411,7 +1420,7 @@ export function useAppController(editor: Editor) {
     // state values (read by the region components)
     edges, running, runError, runStartedAt, runElapsed, types, gname, gspec, surf, growMsg, workshop,
     oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
-    showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn, personas,
+    showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn, personas, voiceStatus,
     wtSpoke, wtBusy, selected, mobileTab, fleet, indicated, proposal, history, historyBusy,
     selfChanges, selfChangesBusy, freshness, freshnessBusy, versions, versionsBusy, journeyId, journeyReplaying,
     // refs the components read for the inspector form
@@ -1422,7 +1431,7 @@ export function useAppController(editor: Editor) {
     // handlers
     poll, openCoa, reload, fitGraph, addNode, wireSelected, doConnect, setNodeConfig, surfaceOutput,
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
-    resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, micPressed, setVoiceInputMode, fieldValue,
+    resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, fieldValue,
     setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus,
     approveProposal, dismissProposal, toggleJourneyRecording, replayJourney, switchPersona,
   }
