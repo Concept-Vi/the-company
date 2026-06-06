@@ -16,11 +16,12 @@ stamping it would be a ref the live registry can't resolve (rule 8 fabrication),
 L3's filter keys per-scheme until S0.
 
 EXCLUDED (deliberately, with reason — NOT a silent skip): the locus-LESS system-health `warning` emits —
-model-registry-unreachable (suite ~182/186/813/818), coa-failed (~1851), malformed-panel-file (~2873),
-panel-field-drop (~2934). These narrate a SYSTEM condition, not an action AT an addressable element, so
-they have no honest address to stamp. The run-failure `warning` (in run(), graph-bound) IS stamped — it
-is locus-bound to the run graph. The exclusion is asserted explicitly below so the adversary sees the
-boundary, not a gap.
+model-registry-unreachable, coa-failed, malformed-panel-file, panel-field-drop, and the embed-substrate
+health warnings (the embedder :8001 / X12 index unreachable: the X13 R2 semantic-ranking degrade + the
+CONSULT-MIGRATION semantic-retrieval degrades, both falling back to the keyword scan). These narrate a
+SYSTEM condition, not an action AT an addressable element, so they have no honest address to stamp. The
+run-failure `warning` (in run(), graph-bound) IS stamped — it is locus-bound to the run graph. The
+exclusion is asserted explicitly below so the adversary sees the boundary, not a gap.
 """
 import os, sys, tempfile, shutil
 
@@ -248,6 +249,13 @@ try:
         "coa failed for",                             # present_current (coa raised → raw payload)
         "panel file ",                                # panel load (a corrupt panel file → "panel file {fn} is malformed…")
         "panel '",                                    # panel apply (unsupported fields dropped → "panel '{name}': dropped…")
+        # locus-less embed-endpoint / index health warnings (the embedder :8001 or the X12 index is
+        # unreachable/empty → degrade-with-warning + keyword fallback). They narrate a SYSTEM condition
+        # (the semantic substrate is down), not an action at an addressable element — no honest locus.
+        "embed endpoint unreachable for R2 semantic ranking",  # _semantic_for_r2 (X13: embedder down)
+        "consult: ",                                  # consult semantic retrieval (CONSULT-MIGRATION):
+        #                                               embedder down / empty index / no resolvable match
+        #                                               → fall back to the keyword scan
     )
     import ast as _ast
     suite_src = open(os.path.join(ROOT, "runtime", "suite.py"), encoding="utf-8").read()

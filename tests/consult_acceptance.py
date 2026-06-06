@@ -38,10 +38,15 @@ try:
     r = suite._dispatch_rhm_action({"verb": "consult", "query": ""}, "g")
     check("empty consult is refused", r["did"] == "none")
 
-    # the source the RHM consults is real (the repo) and substantial
-    from nodes import codebase as cb
-    src = cb.run({}, {})
-    check("the codebase source the RHM reads is present", "scheduler" in src and len(src) > 10000)
+    # the source the RHM consults is real (the repo) — RETRIEVED, not whole-repo STUFFED. The repo
+    # outgrew stuffing (cb.run({},{}) now FAILS LOUD past the codebase node's max_chars; the repo is
+    # ~865k > 600k), so consult RETRIEVES a query-relevant slice instead. Prove the source via that
+    # bounded retrieval path (the keyword scan — the always-on fallback, no live :8001 dependency here).
+    context, sources, file_list = suite._retrieve_for_consult("how does the memo gate work in the scheduler")
+    check("the codebase source the RHM reads is RETRIEVED (bounded, relevant — not the whole repo)",
+          "scheduler" in context.lower() and 0 < len(context) <= suite.CONSULT_CAP)
+    check("the retrieval CITES the file(s) it read (scheduler.py for a memo-gate query)",
+          any("scheduler" in s for s in sources) and len(file_list) >= 1)
 
     # the invariant still holds — consult is read-only; apply/delete unreachable
     snap = set(os.listdir(NODES))

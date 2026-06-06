@@ -41,11 +41,24 @@ try:
     GRAPH = "g"
 
     # ---- 1. consult-retrieval: bounded + relevant, not the whole repo ------------------------------
-    whole_repo = cb.run({}, {})
+    # The repo OUTGREW whole-repo stuffing: cb.run({},{}) now FAILS LOUD past max_chars (the repo is
+    # ~865k > the 600k cap). So we do NOT stuff it here — we measure the repo SIZE without reading it into
+    # memory (sum of file sizes over the codebase globs) and prove the retrieved slice is a small fraction.
+    import glob as _glob
+    _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    whole_repo_chars = 0
+    for _g in cb.DEFAULT_GLOBS:
+        for _p in _glob.glob(os.path.join(_root, _g)):
+            try:
+                whole_repo_chars += os.path.getsize(_p)
+            except OSError:
+                pass
+    check("the repo genuinely outgrew stuffing (whole-repo > the codebase node's max_chars cap)",
+          whole_repo_chars > cb.CONFIG["max_chars"]["default"])
     context, sources, file_list = suite._retrieve_for_consult("how does the memo gate work in the scheduler")
     check("consult context is BOUNDED (<= CONSULT_CAP)", len(context) <= suite.CONSULT_CAP)
-    check("consult context is MUCH smaller than the whole repo",
-          len(context) < len(whole_repo) and len(context) < len(whole_repo) // 2)
+    check("consult context is MUCH smaller than the whole repo (retrieval, not stuffing)",
+          len(context) < whole_repo_chars and len(context) < whole_repo_chars // 2)
     # query is about the scheduler/memo gate — scheduler.py must be among the retrieved+cited sources
     check("a known term's file is retrieved (scheduler.py cited for a memo-gate query)",
           any("scheduler" in s for s in sources))
@@ -65,6 +78,97 @@ try:
     # empty consult still refused (not a crash) — the contract held before, holds now
     check("empty consult is refused (no query)",
           suite._dispatch_rhm_action({"verb": "consult", "query": ""}, GRAPH)["did"] == "none")
+
+    # ---- 1b. CONSULT-MIGRATION: semantic retrieval against the LIVE X12 index (model-free, hermetic) -
+    # The migration: consult RETRIEVES the query-relevant slice from the persisted X12 vector index
+    # instead of stuffing the whole repo. Model-free + deterministic like the rest of this file: we build
+    # a TINY hermetic index over REAL code:// addresses via store/vector_index.build_index with a STUB
+    # embed (the same hermetic seam X11/conv_semantic_rank use — never live :8001 or the production store),
+    # and monkeypatch the query embed (fabric.client.complete_embeddings, exactly as this file already
+    # monkeypatches fabric.client.complete). Each address gets a distinct 1024-dim one-hot vector; the
+    # query embed returns the one-hot of the TARGET address — so cosine ranks that address #1, proving the
+    # real retrieve→resolve→bounded-slice path, not just that a fallback fired.
+    from store import vector_index as vx
+    from fabric import config as _fcfg
+    DIM = _fcfg.DEFAULT_EMBED_DIM
+
+    def _onehot(i):
+        v = [0.0] * DIM
+        v[i % DIM] = 1.0
+        return v
+    # REAL code:// addresses whose file-stems exist in the worktree (scheduler.py, suite.py, store stem).
+    # The query is about the scheduler/memo gate → code://scheduler/* is the target (index 0).
+    INDEXED = ["code://scheduler/_should_run", "code://suite/chat", "code://fs_store/put_vector"]
+    corpus = [{"address": a, "text": f"meaning of {a}"} for a in INDEXED]
+    # build_index takes an embed_fn(transport, inputs, model, dim) → list[vector]; stub returns one-hots
+    # aligned to the order build_index passes them (it embeds the changed batch in INDEXED order on a cold store).
+    _ranklist = []  # the addresses in the exact order build_index hands them to the stub (== change order)
+
+    def _stub_index_embed(_t, inputs, model=None, dim=None):
+        out = []
+        for text in inputs:
+            addr = text.replace("meaning of ", "")
+            _ranklist.append(addr)
+            out.append(_onehot(INDEXED.index(addr)))
+        return out
+    res = vx.build_index(suite.store, corpus, embed_fn=_stub_index_embed, dim=DIM)
+    check("hermetic X12 index built (3 code:// addresses embedded, not degraded)",
+          res["embedded"] == 3 and res["degraded"] is False)
+    check("the index is populated + queryable (index_addresses sees the 3 entries)",
+          len(suite.store.index_addresses()) == 3)
+    # Now the SEMANTIC consult path: monkeypatch the query embed to return the scheduler one-hot (index 0)
+    from fabric import client as _fc
+    _orig_embed = _fc.complete_embeddings
+    _fc.complete_embeddings = lambda *a, **k: [_onehot(0)]      # query ranks code://scheduler/* #1
+    try:
+        sem = suite._retrieve_for_consult_semantic("how does the memo gate work in the scheduler")
+        check("semantic retrieval returns a result (index live → NOT a None fallback signal)", sem is not None)
+        sctx, ssrc, sfl = sem
+        check("semantic context is BOUNDED (<= CONSULT_CAP, never the whole repo)", len(sctx) <= suite.CONSULT_CAP)
+        check("semantic retrieval cites scheduler.py (the #1-ranked code:// address resolved to its file)",
+              any("scheduler" in s for s in ssrc))
+        check("the semantically-retrieved slice carries the relevant source", "scheduler" in sctx.lower())
+        check("semantic retrieval provides the repo orientation file-list", len(sfl) >= 1)
+        # the chooser (_retrieve_for_consult_best) returns the SEMANTIC result when the index is live
+        bctx, bsrc, _ = suite._retrieve_for_consult_best("how does the memo gate work in the scheduler")
+        check("consult chooser prefers the SEMANTIC slice when the index is live",
+              any("scheduler" in s for s in bsrc) and len(bctx) <= suite.CONSULT_CAP)
+    finally:
+        _fc.complete_embeddings = _orig_embed
+    # DEGRADE-WITH-WARNING: embedder DOWN → semantic returns None (signal) + a loud warning → chooser
+    # falls back to the proven keyword scan. Model-free: make the query embed RAISE (endpoint unreachable).
+    def _boom_embed(*a, **k):
+        raise OSError("embed endpoint down")
+    _fc.complete_embeddings = _boom_embed
+    try:
+        n_before = len(store.recent_events(50))
+        sem_down = suite._retrieve_for_consult_semantic("how does the memo gate work in the scheduler")
+        check("embedder DOWN → semantic retrieval returns None (the keyword-fallback signal)", sem_down is None)
+        evs_after = store.recent_events(50)
+        check("embedder DOWN emits a LOUD warning (never a silent zero-vector)",
+              any(e["kind"] == "warning" and "embed" in e["summary"].lower() for e in evs_after))
+        # and the chooser DEGRADES to the keyword path (still a bounded, cited slice — never the whole repo)
+        dctx, dsrc, _ = suite._retrieve_for_consult_best("how does the memo gate work in the scheduler")
+        check("embedder DOWN → chooser FALLS BACK to the keyword scan (bounded + cited, not the whole repo)",
+              len(dctx) <= suite.CONSULT_CAP and len(dsrc) >= 1 and any("scheduler" in s for s in dsrc))
+    finally:
+        _fc.complete_embeddings = _orig_embed
+    # EMPTY index (embedder was down at build) → query returns the honest empty-note → semantic returns
+    # None + warns → keyword fallback. Prove over a FRESH empty store.
+    import tempfile as _tf
+    _empty_dir = _tf.mkdtemp(prefix="rhm-empty-idx-")
+    try:
+        from store.fs_store import FsStore as _FsStore
+        s_empty = Suite(_FsStore(os.path.join(_empty_dir, "store")), reg, nodes_dir=NODES)
+        _fc.complete_embeddings = lambda *a, **k: [_onehot(0)]   # embedder UP, but the INDEX is empty
+        try:
+            sem_empty = s_empty._retrieve_for_consult_semantic("how does the memo gate work in the scheduler")
+            check("EMPTY index → semantic returns None (honest empty, falls back — not a fabricated rank)",
+                  sem_empty is None)
+        finally:
+            _fc.complete_embeddings = _orig_embed
+    finally:
+        shutil.rmtree(_empty_dir, ignore_errors=True)
 
     # ---- 2. show grounding + lenient resolver ------------------------------------------------------
     r = suite._dispatch_rhm_action({"verb": "show", "targets": ["inbox"]}, GRAPH)

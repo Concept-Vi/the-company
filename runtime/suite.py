@@ -1690,10 +1690,16 @@ class Suite:
                     continue
         else:
             picked = [(rel, text, [t for t in terms if t in text.lower()]) for _, rel, text in scored]
-        # Fill the budget ACROSS the top-ranked files (relevance order), capping each file's contribution
-        # to CONSULT_PER_FILE_CAP so no single huge file monopolizes the budget. A small file comes in
-        # whole; a big file gets a relevance-WINDOWED slice (centred on its first matching term — the
-        # brief's "files/SECTIONS"), so the slice carries the relevant code, not the header/imports.
+        context, sources = self._fill_consult_budget(picked)
+        return context, sources, file_list
+
+    def _fill_consult_budget(self, picked: list) -> tuple:
+        """Fill the CONSULT_CAP budget ACROSS the top-ranked (rel, text, hits) files in the given order,
+        capping each file's contribution to CONSULT_PER_FILE_CAP so no single huge file monopolizes the
+        budget. A small file comes in WHOLE; a big file gets a relevance-WINDOWED slice (centred on its
+        first matching term — the brief's "files/SECTIONS"), so the slice carries the relevant code, not
+        the header/imports. SHARED by both the keyword path (_retrieve_for_consult) and the semantic path
+        (_retrieve_for_consult_semantic) — one bounding discipline, never two. Returns (context, sources)."""
         parts, sources, total = [], [], 0
         for rel, text, hits in picked:
             if total >= self.CONSULT_CAP:
@@ -1711,18 +1717,143 @@ class Suite:
             if total + len(chunk) > self.CONSULT_CAP and parts:
                 break                                         # keep the overall cap hard once we have something
             parts.append(chunk); sources.append(rel); total += len(chunk)
-        context = "".join(parts)
+        return "".join(parts), sources
+
+    # ============================================================================================
+    # CONSULT-MIGRATION — semantic retrieval against the LIVE X12 vector index (retiring the stuff path)
+    # ============================================================================================
+    # WHY: the `codebase` node STUFFS the whole repo into one context and FAILS LOUD past max_chars (now
+    # 600k; the repo is 865k). STATE.md:47 named the fix: "embed-based (semantic) retrieval — the next
+    # rung." That rung is now BUILT + LIVE: the embedder (BGE-M3 @ :8001) is up, and the X12 persisted
+    # vector index (store/vector_index.py over the store `vectors/` namespace) is populated with `code://`
+    # symbol addresses. So consult RETRIEVES the query-relevant slice from the index instead of stuffing
+    # the whole repo. This AUGMENTS the proven keyword scan — it does NOT replace it: the keyword path
+    # (_retrieve_for_consult) REMAINS the fallback for no-match / no-index / embedder-down.
+    #
+    # NO PARALLEL SYSTEM: the embed call reuses the EXACT fabric path nodes/embed.py uses (mirrors
+    # _semantic_for_r2's X13 reuse), and the ranking reuses store/vector_index.query_index (which itself
+    # reuses nodes/retrieve's cosine). NO new retriever, NO new embedding transport, NO new whole-repo
+    # stuffing. DEGRADE-WITH-WARNING: an unreachable :8001 or an empty index → a LOUD warning + the
+    # keyword fallback (never a silent zero-vector, never a wrong cosine).
+    def _embed_consult_query(self, query: str):
+        """Embed ONE consult query through the EXACT fabric path nodes/embed.py + _semantic_for_r2 use
+        (NO new transport): BGE-M3 @ DEFAULT_EMBED_URL, with the SAME model/dim the X12 index was built
+        with so the cosine is dim-consistent (a mismatch is already fail-loud at retrieve._cosine). Returns
+        the query vector, or None on an unreachable endpoint — DEGRADE-WITH-WARNING (mirrors suite.py's
+        _semantic_for_r2 :8001-down guard): a LOUD warning + None so the caller falls back to keyword. NEVER
+        a fabricated/zero vector."""
+        from fabric import client, transport, config as fcfg
+        try:
+            t = transport.openai_embeddings_transport(base_url=fcfg.DEFAULT_EMBED_URL)
+            return client.complete_embeddings(t, [query], model=fcfg.DEFAULT_EMBED_MODEL,
+                                              dim=fcfg.DEFAULT_EMBED_DIM)[0]
+        except Exception as e:
+            self._emit("warning",
+                       f"consult: embed endpoint unreachable for semantic retrieval ({type(e).__name__}) — "
+                       "falling back to the keyword scan")
+            return None
+
+    @staticmethod
+    def _code_addr_parts(address: str) -> tuple:
+        """Split a `code://<file-stem>/<symbol>` index address into (file_stem, symbol). A file-only
+        `code://<file-stem>` → (stem, None). A non-code:// address → (None, None) so the caller skips it
+        (the index also holds `ui://` addresses, which have no source file to read)."""
+        if not isinstance(address, str) or not address.startswith("code://"):
+            return None, None
+        rest = address[len("code://"):]
+        if "/" in rest:
+            stem, sym = rest.split("/", 1)
+            return stem, (sym or None)
+        return rest, None
+
+    def _retrieve_for_consult_semantic(self, query: str) -> tuple | None:
+        """SEMANTIC retrieval against the LIVE X12 index (the migration path). Embeds the query → ranks the
+        persisted index by cosine (store/vector_index.query_index, reusing nodes/retrieve) → resolves the
+        top-K ranked `code://` addresses back to their SOURCE files (the SAME worktree file set the keyword
+        path reads — single-source the corpus, no runtime design/ dependency) → builds the SAME bounded
+        slice (_fill_consult_budget). Returns (context, sources, file_list) on a usable result, or None to
+        signal the caller to FALL BACK to the keyword scan. DEGRADE-WITH-WARNING (HARD CONSTRAINT):
+          • embedder :8001 unreachable  → _embed_consult_query warns + returns None → here returns None
+          • index EMPTY (embedder was down at build) → query_index's honest note → warn + return None
+          • ranked but NO code:// address resolves to a readable file → return None (keyword fallback)
+        NEVER a silent zero-vector, NEVER a fabricated nearest, NEVER a wrong cosine."""
+        import os, glob
+        from nodes import codebase as cb
+        from store import vector_index as vx
+        qvec = self._embed_consult_query(query)
+        if qvec is None:                                      # :8001 down — warned already
+            return None
+        result = vx.query_index(self.store, qvec, k=8, with_note=True)
+        ranked = result.get("ranked", [])
+        if not ranked:                                        # EMPTY index (embedder down at build) or no rank
+            self._emit("warning",
+                       f"consult: the vector index returned no ranking ({result.get('note', 'empty')}) — "
+                       "falling back to the keyword scan")
+            return None
+        # Resolve the ranked code:// addresses back to source files in the worktree (the SAME globs the
+        # keyword path + the codebase node read — one corpus). Read each candidate file ONCE.
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # ~/company (this worktree)
+        files = {}                                            # stem -> [(relpath, text), ...] (stem can collide)
+        rel_text = {}                                         # relpath -> text
+        for g in cb.DEFAULT_GLOBS:
+            for p in sorted(glob.glob(os.path.join(root, g))):
+                rel = os.path.relpath(p, root)
+                if rel in rel_text:
+                    continue
+                try:
+                    text = open(p, encoding="utf-8").read()
+                except Exception:
+                    continue
+                rel_text[rel] = text
+                stem = os.path.splitext(os.path.basename(rel))[0]
+                files.setdefault(stem, []).append(rel)
+        file_list = sorted(rel_text.keys())
+        picked, seen = [], set()                              # (rel, text, hits) in cosine-rank order, de-duped
+        for r in ranked:
+            stem, sym = self._code_addr_parts(r.get("id", ""))
+            if stem is None or stem not in files:             # ui:// address or a stem with no source file
+                continue
+            cands = files[stem]
+            # Disambiguate a stem collision by the symbol actually appearing in the file; else the first.
+            rel = None
+            if sym:
+                for c in cands:
+                    if sym in rel_text[c]:
+                        rel = c; break
+            rel = rel or cands[0]
+            if rel in seen:
+                continue
+            seen.add(rel)
+            # hits = the symbol (so the windowing centres on the relevant region for a big file)
+            picked.append((rel, rel_text[rel], [sym] if sym else []))
+        if not picked:                                        # nothing in the index resolved to a readable file
+            self._emit("warning",
+                       "consult: the index ranked addresses but none resolved to a source file — "
+                       "falling back to the keyword scan")
+            return None
+        context, sources = self._fill_consult_budget(picked)
         return context, sources, file_list
+
+    def _retrieve_for_consult_best(self, query: str) -> tuple:
+        """The consult retrieval ENTRY: SEMANTIC-first (the live X12 index), KEYWORD-fallback (the proven
+        scan). Tries _retrieve_for_consult_semantic; on its None signal (embedder down / empty index / no
+        resolvable match — each already warned) returns the keyword _retrieve_for_consult. The keyword path
+        is UNCHANGED + still directly tested; this wrapper only chooses which one grounds a real consult."""
+        sem = self._retrieve_for_consult_semantic(query)
+        if sem is not None:
+            return sem
+        return self._retrieve_for_consult(query)
 
     def consult(self, query: str) -> dict:
         """The RHM reads the system's OWN code+design (the first-purpose Q&A, as a callable) and
-        answers — so it knows how it is built. Grounded in a RETRIEVED, query-relevant slice (keyword
-        scan, bounded by CONSULT_CAP — NOT the whole repo, which overflowed/stalled); cites the files
-        used; abstains if the answer isn't there. A read (AUTO). Uses DEFAULT_CLOUD_TIMEOUT (a consult
-        can wait)."""
+        answers — so it knows how it is built. Grounded in a RETRIEVED, query-relevant slice
+        (SEMANTIC-first against the live X12 vector index, KEYWORD-fallback — bounded by CONSULT_CAP,
+        NEVER the whole repo, which overflowed/stalled); cites the files used; abstains if the answer
+        isn't there. DEGRADE-WITH-WARNING: an unreachable embedder / empty index falls back to the proven
+        keyword scan with a loud warning. A read (AUTO). Uses DEFAULT_CLOUD_TIMEOUT (a consult can wait)."""
         from fabric import client, transport, config as fcfg
         cfg = self.rhm_config()
-        context, sources, file_list = self._retrieve_for_consult(query)
+        context, sources, file_list = self._retrieve_for_consult_best(query)
         orient = ", ".join(file_list)
         sys_p = ("You answer questions about THIS system's own design and code, STRICTLY from the SOURCE "
                  "below (a RETRIEVED slice of the repo selected for this question, not the whole repo). "
