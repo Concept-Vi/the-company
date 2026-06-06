@@ -9,7 +9,8 @@
         "spotlit"
       ],
       "represents": "RUN-run",
-      "code": "canvas/app/src/regions/Toolbar.tsx (toolbar)"
+      "code": "canvas/app/src/regions/Toolbar.tsx (toolbar)",
+      "howto": "WHAT: the toolbar — the bridge's command strip across the top of the board (the Company title, the live presence light, then the act controls: run · wire · portal · delete · layers · fit · reload). WHAT YOU CAN DO: read the system's live state at a glance (running / thinking / awaiting) and reach every board-level action from one place. HOW TO CHANGE IT: the strip is the toolbar region (canvas/app/src/regions/Toolbar.tsx); adding or changing a control is a code change there, surfaced via the build-intent wire."
     },
     "ui://toolbar/run": {
       "region": "toolbar",
@@ -38,7 +39,8 @@
         "spotlit"
       ],
       "represents": "NODE-types",
-      "code": "canvas/app/src/regions/Palette.tsx (Palette)"
+      "code": "canvas/app/src/regions/Palette.tsx (Palette)",
+      "howto": "WHAT: the palette — the rack of build-blocks (every node-type the system knows, grouped by kind: process · acts, content · holds). WHAT YOU CAN DO: click a block to drop that node on the board; select two and use ＋ wire to connect them. HOW TO CHANGE IT: the rack fills itself from the live registry (/object_info) — adding a node-type (nodes/<name>.py) makes a new block appear here automatically, no palette code."
     },
     "ui://canvas": {
       "region": "canvas",
@@ -47,7 +49,8 @@
         "driven"
       ],
       "represents": "CAN-compose",
-      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil"
+      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil",
+      "howto": "WHAT: the canvas — the live board the whole composition sits on (pan, zoom, select; zoom in for more node detail — semantic zoom). WHAT YOU CAN DO: arrange and connect nodes spatially, select one to inspect it, select two to wire them; the board reflects live run-state. HOW TO CHANGE IT: the board is tldraw driven by NodeShape.tsx (the one generic node shape) + the App.tsx shell; structural canvas changes are external-agent code edits there."
     },
     "ui://canvas/node": {
       "region": "canvas",
@@ -57,7 +60,8 @@
         "driven"
       ],
       "represents": "NODE-kinds",
-      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil / runtime/suite.py:create_node"
+      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil / runtime/suite.py:create_node",
+      "howto": "WHAT: a node on the board — the one generic card every node-type renders as (its kind, status, output, address, and its input/output ports). WHAT YOU CAN DO: select it to inspect + edit its config, drag a port-nub to another node to wire it, watch its status colour change as the graph runs. HOW TO CHANGE IT: the card is the single generic NodeShape.tsx (NodeShapeUtil) — it draws every type from the registry, so a new node-type needs zero card code; what a node DOES lives in its nodes/<name>.py."
     },
     "ui://inspector": {
       "region": "inspector",
@@ -66,7 +70,8 @@
         "presentable"
       ],
       "represents": "NODE-config",
-      "code": "contracts/node_type.py / canvas/app/src/regions/Inspector.tsx (Inspector)"
+      "code": "contracts/node_type.py / canvas/app/src/regions/Inspector.tsx (Inspector)",
+      "howto": "WHAT: the inspector — the detail panel for the node you have selected (its kind, status, node-id, address, an editable config form, and its output). WHAT YOU CAN DO: read a node's full state, edit its config inline (changes commit immediately), and act on its output (rerun · surface to inbox · build from it · open in workshop). HOW TO CHANGE IT: the panel is Inspector.tsx; the config form is generic from each type's config_schema (NodeConfigForm.tsx) — a new node-type gets a form with zero extra code."
     },
     "ui://inspector/model-field": {
       "region": "inspector",
@@ -74,7 +79,8 @@
         "pointable"
       ],
       "represents": "MOD-registry",
-      "code": "canvas/app/src/components/NodeConfigForm.tsx:NodeConfigForm / runtime/suite.py:available_models"
+      "code": "canvas/app/src/components/NodeConfigForm.tsx:NodeConfigForm / runtime/suite.py:available_models",
+      "howto": "WHAT: a config field on the selected node (e.g. the model dropdown). WHAT YOU CAN DO: pick or type a value; a model field offers the REAL models registered at the fabric endpoint (not invented names), and if a saved value isn't in the live list it's shown rather than silently dropped. HOW TO CHANGE IT: the field is generated from the node-type's config_schema (NodeConfigForm.tsx); the model list comes from the live registry (suite.py:available_models) — change the field by editing the type's schema."
     },
     "ui://inspector/act": {
       "region": "inspector",
@@ -82,7 +88,8 @@
         "pointable"
       ],
       "represents": "ENG-force",
-      "code": "canvas/app/src/regions/Inspector.tsx (act) / runtime/scheduler.py:run"
+      "code": "canvas/app/src/regions/Inspector.tsx (act) / runtime/scheduler.py:run",
+      "howto": "WHAT: the ↻ force / rerun control in the inspector. WHAT YOU CAN DO: force this one node to recompute, bypassing the memo cache (run normally skips a node whose inputs haven't changed; force runs it anyway). HOW TO CHANGE IT: it drives the per-node run path (doRun([nodeId]) → the scheduler); the force-past-memo behaviour lives in runtime/scheduler.py."
     },
     "ui://inbox": {
       "region": "inbox",
@@ -91,7 +98,8 @@
         "presentable"
       ],
       "represents": "INB-lanes",
-      "code": "runtime/suite.py:inbox_lanes"
+      "code": "runtime/suite.py:inbox_lanes",
+      "howto": "WHAT: the inbox — your chief-of-staff triage deck: the decisions and approvals escalated to you, the decision→build lane, the held/deferred queue, and the resolved-for-you audit. WHAT YOU CAN DO: see what's awaiting you at a glance (by colour and shape, not by reading), drill into any item to decide it, or walk all awaiting items through the review organ. HOW TO CHANGE IT: the deck is Inbox.tsx; the lanes come from suite.py:inbox_lanes (live escalations / resolved / batched), test-pollution filtered at source."
     },
     "ui://inbox/build-review": {
       "region": "inbox",
@@ -112,7 +120,8 @@
         "spotlit"
       ],
       "represents": "WIRE-intent",
-      "code": "runtime/suite.py:surface_build_intent"
+      "code": "runtime/suite.py:surface_build_intent",
+      "howto": "WHAT: a build-intent card in the decision→build lane — a self-build the system has proposed, awaiting your approval. WHAT YOU CAN DO: read what it would build, see its declared scope + blast-radius (demonstrate-first), and approve it — your approve is consent OF THAT SCOPE, not a bare agree; it stays a live escalation until you resolve it. HOW TO CHANGE IT: minted by suite.py:surface_build_intent (intent='build' rides the payload), rendered by BuildIntentCard, resolved via /api/resolve (operator-only)."
     },
     "ui://inbox/context-bundle": {
       "region": "inbox",
@@ -121,7 +130,8 @@
         "presentable"
       ],
       "represents": "WIRE-intent",
-      "code": "runtime/suite.py:surface_build_intent (payload.context — the X3 R2 gather) / canvas/app/src/components/ContextBundle.tsx"
+      "code": "runtime/suite.py:surface_build_intent (payload.context — the X3 R2 gather) / canvas/app/src/components/ContextBundle.tsx",
+      "howto": "WHAT: the context bundle on a build-intent — the notebook the build will see at this locus (the comments, chats, history, and versions gathered at the pointed address). WHAT YOU CAN DO: see exactly what context the build's prompt will compose (a frozen snapshot taken at consent-time, so the build can't quietly resolve a different one), and click any item's address to navigate to it. HOW TO CHANGE IT: it renders payload.context, resolved by R2's gather/score/cap at mint-time (suite.py); the view is ContextBundle.tsx."
     },
     "ui://inbox/context-pin": {
       "region": "inbox",
@@ -129,7 +139,8 @@
         "pointable"
       ],
       "represents": "WIRE-intent",
-      "code": "runtime/suite.py:pin (X7 pin override) / canvas/app/src/components/ContextBundle.tsx"
+      "code": "runtime/suite.py:pin (X7 pin override) / canvas/app/src/components/ContextBundle.tsx",
+      "howto": "WHAT: the pin control on a context item. WHAT YOU CAN DO: pin an item to HOLD it in the build's bounded context window — pinned items survive the recency/proximity decay that would otherwise let them fall out; click again to unpin. HOW TO CHANGE IT: it writes a pin overlay via /api/pin (suite.py:pin) that affects FUTURE gathers; this frozen snapshot reflects the change optimistically."
     },
     "ui://inbox/coa": {
       "region": "inbox",
@@ -138,7 +149,8 @@
         "presentable"
       ],
       "represents": "INB-coa",
-      "code": "runtime/suite.py:coa"
+      "code": "runtime/suite.py:coa",
+      "howto": "WHAT: a decision card in an action lane (the ⚠ items awaiting you). WHAT YOU CAN DO: click it to compile a course-of-action — the system translates the raw technical decision into a Commander-altitude value choice (what it means, 2-3 options with trade-offs, and a recommendation); the raw payload stays drillable. HOW TO CHANGE IT: the compile is suite.py:coa (the decision-compiler); you decide on value, never the raw code fork."
     },
     "ui://inbox/target": {
       "region": "inbox",
@@ -146,7 +158,8 @@
         "pointable"
       ],
       "represents": "INB-target",
-      "code": "canvas/app/src/regions/Inbox.tsx (go to thing) / runtime/suite.py:surface_output"
+      "code": "canvas/app/src/regions/Inbox.tsx (go to thing) / runtime/suite.py:surface_output",
+      "howto": "WHAT: the ↳ go to thing link on a surfaced item. WHAT YOU CAN DO: click it to jump the view to the thing the item is about — it navigates to and spotlights that element in context (only shown when the item carries a target). HOW TO CHANGE IT: it composes resolveUiTarget (the click-to-thing keystone) off the item's payload.ui_target; the surfaced output is suite.py:surface_output."
     },
     "ui://chat": {
       "region": "chat",
@@ -155,7 +168,8 @@
         "driven"
       ],
       "represents": "RHM-chat",
-      "code": "runtime/suite.py:chat"
+      "code": "runtime/suite.py:chat",
+      "howto": "WHAT: the right-hand-man — the Company's chat about itself, the one coherent voice that answers from live system state. WHAT YOU CAN DO: ask it about the system (it answers from real state and says so when it can't see something), speak via the mic, configure its model + persona, and approve any action it proposes. HOW TO CHANGE IT: the surface is RhmChat.tsx; the brain is suite.py:chat — your turns are gold (they train the twin), its turns are working-grade inference."
     },
     "ui://chat/input": {
       "region": "chat",
@@ -163,7 +177,8 @@
         "pointable"
       ],
       "represents": "RHM-chat",
-      "code": "canvas/app/src/regions/RhmChat.tsx (chat input) / runtime/suite.py:chat"
+      "code": "canvas/app/src/regions/RhmChat.tsx (chat input) / runtime/suite.py:chat",
+      "howto": "WHAT: the chat input box. WHAT YOU CAN DO: type a question about the system and press Enter (or the → send) to ask the right-hand-man; if you've pointed at an element, your next message is about that element (the indicated locus). HOW TO CHANGE IT: it sends to suite.py:chat; the message composes with the indicated address + the live context resolved at that locus."
     },
     "ui://activity": {
       "region": "activity",
@@ -172,7 +187,8 @@
         "driven"
       ],
       "represents": "EVT-now",
-      "code": "runtime/suite.py:now"
+      "code": "runtime/suite.py:now",
+      "howto": "WHAT: the activity feed — the bridge's live-state read (the current graph, how many nodes resolved, what's awaiting you) plus the captured event trace. WHAT YOU CAN DO: see the run-state at a glance and scan the instrument trace of what the system has done (each event token-coloured by kind). HOW TO CHANGE IT: the head reads suite.py:now (live state); the feed is the captured trajectory — it reflects, it doesn't drive."
     },
     "ui://walkthrough": {
       "region": "chat",
@@ -181,7 +197,8 @@
         "spotlit"
       ],
       "represents": "WALK-present",
-      "code": "runtime/suite.py:present_current"
+      "code": "runtime/suite.py:present_current",
+      "howto": "WHAT: the walkthrough card — the visible review organ, shown while a session is active. It runs in two shapes: a REVIEW walk (give a verdict on each pending item) or a guided TOUR (show me how — narrate + spotlight each part of the interface, no verdicts). WHAT YOU CAN DO: step through the session, hear/read each item framed in plain language, and (in a review) record a verdict. HOW TO CHANGE IT: the card is Walkthrough.tsx; the session is suite.py:present_current; verdicts go through /api/resolve."
     },
     "ui://walkthrough/verdict": {
       "region": "chat",
@@ -189,7 +206,8 @@
         "pointable"
       ],
       "represents": "INB-resolve",
-      "code": "runtime/suite.py:resolve_surfaced"
+      "code": "runtime/suite.py:resolve_surfaced",
+      "howto": "WHAT: the verdict row in a review walk (approve · reject · comment · skip · decide). WHAT YOU CAN DO: give your verdict on the current item — approve it, reject with a reason, comment (capture a note, stays pending), skip (still needs you later), or let the system decide deterministically by consequence; one click = one verdict (the controls lock while a request is in flight). HOW TO CHANGE IT: each verdict goes through suite.py:resolve_surfaced via /api/resolve (operator-only); the build loop reads the verdicts on its next pass."
     },
     "ui://workshop": {
       "region": "workshop",
@@ -207,7 +225,8 @@
         "pointable"
       ],
       "represents": "CAN-compose",
-      "code": "canvas/app/src/app.css .tabbar (mobile nav — responsive chrome) / canvas/app/src/App.tsx (tabbar)"
+      "code": "canvas/app/src/app.css .tabbar (mobile nav — responsive chrome) / canvas/app/src/App.tsx (tabbar)",
+      "howto": "WHAT: the tabbar — the mobile navigation bar (the responsive chrome that lets you switch surfaces on a phone, where the side rails are hidden). WHAT YOU CAN DO: move between the board and the panels on a small screen. HOW TO CHANGE IT: it's the .tabbar in app.css + the App.tsx shell; it appears at narrow breakpoints — its layout is responsive chrome, not a backend feature."
     },
     "ui://models": {
       "region": "models",
@@ -216,7 +235,8 @@
         "presentable"
       ],
       "represents": "MOD-registry",
-      "code": "runtime/suite.py:available_models"
+      "code": "runtime/suite.py:available_models",
+      "howto": "WHAT: the models registry — the real models available to the system. WHAT YOU CAN DO: see which models actually exist at the fabric endpoint (so the brain picks from what's real, never an invented name); the list re-probes so a model that comes up later appears without a restart. HOW TO CHANGE IT: it reads suite.py:available_models (the live endpoint, fail-loud to the configured brain if it's down); add a model in fabric/config.py."
     },
     "ui://twin": {
       "region": "chat",
@@ -225,7 +245,8 @@
         "presentable"
       ],
       "represents": "RHM-twin",
-      "code": "runtime/suite.py:training_signal"
+      "code": "runtime/suite.py:training_signal",
+      "howto": "WHAT: the twin's training signal — the gold turns that teach the Company's learned model of you. WHAT YOU CAN DO: see the operator-sourced gold turns that train the twin (only your own words count — never the twin's own output, even if it was laundered back as a 'user' turn). NOTE: the learned twin is corpus-pending; this surfaces the training signal it learns FROM. HOW TO CHANGE IT: it reads suite.py:training_signal (gold + source='operator' + an echo-guard); every chat turn you write is graded gold and feeds it."
     },
     "ui://canvas/portal-window": {
       "region": "canvas",
@@ -234,7 +255,8 @@
         "driven-read-only"
       ],
       "represents": "NODE-portal",
-      "code": "nodes/portal.py"
+      "code": "nodes/portal.py",
+      "howto": "WHAT: a portal — a live window onto another address (one artefact, shown in many places at once, never copied). WHAT YOU CAN DO: see the current value at the address it points to, live — change the source and the portal reflects it, because it is resolved by reference at view-time, not computed. HOW TO CHANGE IT: it's the portal node-type (nodes/portal.py, RESOLVE='reference'); its target is its config.ref — edit that in the inspector to re-point the window."
     },
     "ui://canvas/wire-request": {
       "region": "canvas",
@@ -243,7 +265,8 @@
         "presentable"
       ],
       "represents": "WIRE-door",
-      "code": "runtime/suite.py:surface_intent_at"
+      "code": "runtime/suite.py:surface_intent_at",
+      "howto": "WHAT: the request-a-change door — the operator's entry to changing the Company through the interface. It appears when you point at a UI element. WHAT YOU CAN DO: describe the change you want to that element; it mints a build-intent (a PLAN) at that address, shows you the reach (the blast-radius of what the change could touch), and lets you approve it. Approving records your verdict — it does NOT self-modify: the wire is inert (plan-mode) by default until deliberately armed. HOW TO CHANGE IT: the door is WireRequest.tsx; minting calls /api/intent-at (suite.py:surface_intent_at) and approval calls /api/resolve — the dispatch happens off this face, posture-gated and exactly-once."
     },
     "ui://workshop/self-changes": {
       "region": "workshop",
@@ -252,7 +275,8 @@
         "openable"
       ],
       "represents": "SM-revert",
-      "code": "runtime/suite.py:revert_self_change"
+      "code": "runtime/suite.py:revert_self_change",
+      "howto": "WHAT: the self-changes audit + the ⟲ revert control. WHAT YOU CAN DO: see the last change the system made to itself, and revert it — a bounded, recoverable git-revert (the self-modification path is always git-reversible). HOW TO CHANGE IT: revert calls suite.py:revert_self_change; every self-apply is a git commit, so any change can be undone."
     },
     "ui://activity/replay": {
       "region": "activity",
@@ -261,7 +285,8 @@
         "presentable"
       ],
       "represents": "INB-replay",
-      "code": "runtime/suite.py:replay"
+      "code": "runtime/suite.py:replay",
+      "howto": "WHAT: replay — the whole captured path, oldest-first. WHAT YOU CAN DO: see the full trajectory the system has recorded (the same path that trains the twin), in order. HOW TO CHANGE IT: it reads suite.py:replay (the recent events, reversed to oldest-first); it's a read of the event log."
     },
     "ui://toolbar/wire": {
       "region": "toolbar",
@@ -269,7 +294,8 @@
         "pointable"
       ],
       "represents": "CAN-compose",
-      "code": "canvas/app/src/regions/Toolbar.tsx (wire) / runtime/suite.py:set_config"
+      "code": "canvas/app/src/regions/Toolbar.tsx (wire) / runtime/suite.py:set_config",
+      "howto": "WHAT: the ＋ wire control. WHAT YOU CAN DO: select exactly two nodes on the board (left then right) and click it to connect them — it wires the left node's first output to the right node's first input; if the types have no compatible ports it tells you, never wires blindly. HOW TO CHANGE IT: the connect gesture is wireSelected in the controller (useAppController.ts); the wire itself is type-checked and owned by the backend (/api/connect)."
     },
     "ui://toolbar/portal": {
       "region": "toolbar",
@@ -285,7 +311,8 @@
         "pointable"
       ],
       "represents": "CAN-compose",
-      "code": "canvas/app/src/regions/Toolbar.tsx (delete) / runtime/suite.py:set_config"
+      "code": "canvas/app/src/regions/Toolbar.tsx (delete) / runtime/suite.py:set_config",
+      "howto": "WHAT: the 🗑 delete control. WHAT YOU CAN DO: select node(s) and click it to remove them from the graph — it always confirms first (naming the nodes), so a single click can never irreversibly delete. HOW TO CHANGE IT: deleteSelected in the controller (useAppController.ts); the confirm guard is preserved by design — removing it would make delete a one-click destructive path."
     },
     "ui://toolbar/layers": {
       "region": "toolbar",
@@ -293,7 +320,8 @@
         "pointable"
       ],
       "represents": "CAN-layers",
-      "code": "canvas/app/src/regions/Toolbar.tsx (layers) / canvas/app/src/useAppController.ts:cycleLayers"
+      "code": "canvas/app/src/regions/Toolbar.tsx (layers) / canvas/app/src/useAppController.ts:cycleLayers",
+      "howto": "WHAT: the ◐ layers control. WHAT YOU CAN DO: click to cycle the board's focus through three views — all · origin only (operator-authored nodes, system-derived ones dimmed) · system only (the reverse). It's a viewing lens, it changes nothing in the graph. HOW TO CHANGE IT: cycleLayers in the controller (useAppController.ts) toggles the dimming classes on the body."
     },
     "ui://toolbar/fit": {
       "region": "toolbar",
@@ -301,7 +329,8 @@
         "pointable"
       ],
       "represents": "CAN-zoom",
-      "code": "canvas/app/src/regions/Toolbar.tsx (fit) / canvas/app/src/useAppController.ts:fitGraph"
+      "code": "canvas/app/src/regions/Toolbar.tsx (fit) / canvas/app/src/useAppController.ts:fitGraph",
+      "howto": "WHAT: the ⊡ fit control. WHAT YOU CAN DO: click to zoom the board so the whole graph fits in view, padded so no node hides under the side panels or the toolbar (on a phone, where the rails are hidden, it pads zero automatically). HOW TO CHANGE IT: fitGraph in the controller (useAppController.ts); the padding is measured live from the rendered chrome, not hardcoded."
     },
     "ui://toolbar/reload": {
       "region": "toolbar",
@@ -309,7 +338,8 @@
         "pointable"
       ],
       "represents": "RUN-status",
-      "code": "canvas/app/src/regions/Toolbar.tsx (reload) / runtime/suite.py:state"
+      "code": "canvas/app/src/regions/Toolbar.tsx (reload) / runtime/suite.py:state",
+      "howto": "WHAT: the reload control. WHAT YOU CAN DO: click to re-read the graph from the backend — it refetches the nodes, edges, and live status and repaints the board, without recomputing anything (that's run). HOW TO CHANGE IT: reload in the controller (useAppController.ts); it reloads the graph, polls state, and re-runs the watch-and-react probe."
     },
     "ui://chat/send": {
       "region": "chat",
@@ -317,7 +347,8 @@
         "pointable"
       ],
       "represents": "RHM-chat",
-      "code": "canvas/app/src/regions/RhmChat.tsx (send) / runtime/suite.py:chat"
+      "code": "canvas/app/src/regions/RhmChat.tsx (send) / runtime/suite.py:chat",
+      "howto": "WHAT: the → send control. WHAT YOU CAN DO: send the typed message to the right-hand-man (disabled while it's thinking, so one ask is one turn). HOW TO CHANGE IT: it calls sendChat → suite.py:chat in the controller."
     },
     "ui://chat/mic": {
       "region": "chat",
@@ -325,7 +356,8 @@
         "pointable"
       ],
       "represents": "VOICE",
-      "code": "canvas/app/src/regions/RhmChat.tsx (mic) / voice/"
+      "code": "canvas/app/src/regions/RhmChat.tsx (mic) / voice/",
+      "howto": "WHAT: the 🎙 mic control — push-to-talk. WHAT YOU CAN DO: click to record your voice as the message; in listening mode the right-hand-man speaks its reply back. HOW TO CHANGE IT: it drives the voice capture path (the voice/ stack + recordToggle); speech-to-text and the spoken reply are the voice circuit."
     },
     "ui://chat/config": {
       "region": "chat",
@@ -334,7 +366,8 @@
         "openable"
       ],
       "represents": "RHM-config",
-      "code": "canvas/app/src/regions/RhmChat.tsx (config gear) / runtime/suite.py:set_rhm_config"
+      "code": "canvas/app/src/regions/RhmChat.tsx (config gear) / runtime/suite.py:set_rhm_config",
+      "howto": "WHAT: the ⚙ config gear on the chat. WHAT YOU CAN DO: open the settings to choose the right-hand-man's model and persona, then apply — empty model is a valid 'default model' state. HOW TO CHANGE IT: it writes the RHM config (suite.py:set_rhm_config); the model + persona lists come from the live registry."
     },
     "ui://inspector/workshop": {
       "region": "inspector",
@@ -343,7 +376,8 @@
         "openable"
       ],
       "represents": "WS-workshop",
-      "code": "canvas/app/src/regions/Inspector.tsx (open workshop) / runtime/suite.py:ui_info"
+      "code": "canvas/app/src/regions/Inspector.tsx (open workshop) / runtime/suite.py:ui_info",
+      "howto": "WHAT: the open workshop control. WHAT YOU CAN DO: take this node into the Workshop — the surface for composing and editing the system itself (panels, extensions, self-changes). HOW TO CHANGE IT: it opens the workshop region for the selected node; the workshop is driven by the self-modification verbs."
     },
     "ui://inspector/surface": {
       "region": "inspector",
@@ -351,7 +385,8 @@
         "pointable"
       ],
       "represents": "INB-surface",
-      "code": "canvas/app/src/regions/Inspector.tsx (surface output) / runtime/suite.py:surface_review"
+      "code": "canvas/app/src/regions/Inspector.tsx (surface output) / runtime/suite.py:surface_review",
+      "howto": "WHAT: the → inbox control. WHAT YOU CAN DO: route this node's output to the decision surface — it becomes a decision card in the inbox you (or the review organ) can drill into and act on. HOW TO CHANGE IT: surfaceOutput in the controller → suite.py:surface_review puts the result on the inbox; the surfacing is part of the review-not-free path."
     },
     "ui://inspector/build": {
       "region": "inspector",
@@ -359,7 +394,8 @@
         "pointable"
       ],
       "represents": "SM-node",
-      "code": "canvas/app/src/regions/Inspector.tsx (build from output) / runtime/suite.py:apply_node"
+      "code": "canvas/app/src/regions/Inspector.tsx (build from output) / runtime/suite.py:apply_node",
+      "howto": "WHAT: the ⊕ build from output control. WHAT YOU CAN DO: start a new node from this output — it prefills the grow panel's spec with the result so you can name it, refine it, and dispatch a build. HOW TO CHANGE IT: buildFromOutput in the controller seeds the grow→propose→approve chain (suite.py:apply_node); the build still goes through approval, never self-applies."
     },
     "ui://inspector/history": {
       "region": "inspector",
@@ -367,7 +403,8 @@
         "pointable"
       ],
       "represents": "INB-replay",
-      "code": "canvas/app/src/regions/History.tsx (L3 addressed history) / runtime/suite.py:address_view"
+      "code": "canvas/app/src/regions/History.tsx (L3 addressed history) / runtime/suite.py:address_view",
+      "howto": "WHAT: the history view at an element — everything that has happened AT a pointed address. WHAT YOU CAN DO: when you point at a ui:// element, see its full trajectory grouped by kind (comments · chats · runs · resolves), scan the shape of what happened, and drill into a group. HOW TO CHANGE IT: it reads GET /api/address-history (suite.py:address_view); it only reads — the runtime owns the trajectory."
     },
     "ui://inspector/versions": {
       "region": "inspector",
@@ -376,7 +413,8 @@
         "driven-read-only"
       ],
       "represents": "NODE-portal",
-      "code": "canvas/app/src/regions/Versions.tsx (L6 versions at an address) / runtime/suite.py:ref_versions / store/fs_store.py:ref_history"
+      "code": "canvas/app/src/regions/Versions.tsx (L6 versions at an address) / runtime/suite.py:ref_versions / store/fs_store.py:ref_history",
+      "howto": "WHAT: the versions view — the trail of values an address has HELD over time (newest first). WHAT YOU CAN DO: when a node is selected, see every value its output address has held, with a preview and content hash each; the current value is marked, the prior bytes survive (write-once). HOW TO CHANGE IT: it reads GET /api/ref-versions (suite.py:ref_versions → store ref_history); versions accrue wherever a set_ref wrote, so a portal shows the trail of the address it points at."
     },
     "ui://inspector/freshness": {
       "region": "inspector",
@@ -384,7 +422,8 @@
         "pointable"
       ],
       "represents": "ENG-memo",
-      "code": "canvas/app/src/regions/Inspector.tsx (L10 memo stale badge) / runtime/suite.py:stale_at_address"
+      "code": "canvas/app/src/regions/Inspector.tsx (L10 memo stale badge) / runtime/suite.py:stale_at_address",
+      "howto": "WHAT: the freshness badge on the selected node (fresh ✓ / stale ⚠ / always re-derived / unknown). WHAT YOU CAN DO: see whether the node's cached result still matches its current inputs — stale means rerun to refresh; it's a derived verdict (recompile + input-hash compare), and an unevaluable node reads 'unknown — <reason>', never a false 'fresh'. HOW TO CHANGE IT: it's derived on demand via GET /api/stale-at (suite.py:stale_at_address); the memo/staleness logic lives in the engine scheduler."
     },
     "ui://grow": {
       "region": "grow",
@@ -393,7 +432,8 @@
         "presentable"
       ],
       "represents": "SM-node",
-      "code": "canvas/app/src/regions/Grow.tsx / runtime/suite.py:apply_node"
+      "code": "canvas/app/src/regions/Grow.tsx / runtime/suite.py:apply_node",
+      "howto": "WHAT: the grow panel — where you teach the system a new node + review what it proposes. WHAT YOU CAN DO: name a node and say what it should do, dispatch a build, then approve or reject the proposal the brain comes back with; you also see the live node-types and can revert the last self-change. HOW TO CHANGE IT: the panel is Grow.tsx; the build goes through propose→approve (suite.py:apply_node) — the brain never self-applies, you approve."
     },
     "ui://grow/dispatch": {
       "region": "grow",
@@ -401,7 +441,8 @@
         "pointable"
       ],
       "represents": "SM-node",
-      "code": "canvas/app/src/regions/Grow.tsx (dispatch build) / runtime/suite.py:apply_node"
+      "code": "canvas/app/src/regions/Grow.tsx (dispatch build) / runtime/suite.py:apply_node",
+      "howto": "WHAT: the dispatch build → control. WHAT YOU CAN DO: after naming a node and describing what it should do, click it to send the build — the system drafts the node and comes back with a proposal for your verdict (it does not go live until you approve). HOW TO CHANGE IT: it dispatches the build (suite.py:apply_node) into the propose→approve chain; a build error surfaces fail-loud here."
     },
     "ui://grow/approve": {
       "region": "grow",
@@ -409,7 +450,8 @@
         "pointable"
       ],
       "represents": "GOV-resolve",
-      "code": "canvas/app/src/regions/Grow.tsx (approve & apply) / runtime/governance.py:resolve"
+      "code": "canvas/app/src/regions/Grow.tsx (approve & apply) / runtime/governance.py:resolve",
+      "howto": "WHAT: the ✓ approve & apply control on a proposal. WHAT YOU CAN DO: read the brain's proposal (the plain-language draft, optionally drilling to the raw code) and approve it — this is operator-initiated and applies the change; the brain never self-applies. HOW TO CHANGE IT: it goes through resolve + apply (runtime/governance.py:resolve); operator-only approval is preserved by design."
     },
     "ui://grow/reject": {
       "region": "grow",
@@ -417,7 +459,8 @@
         "pointable"
       ],
       "represents": "INB-resolve",
-      "code": "canvas/app/src/regions/Grow.tsx (reject) / runtime/suite.py:resolve_surfaced"
+      "code": "canvas/app/src/regions/Grow.tsx (reject) / runtime/suite.py:resolve_surfaced",
+      "howto": "WHAT: the ✕ reject control on a proposal. WHAT YOU CAN DO: reject the proposal and (optionally) say why — your reason is captured into the trajectory, so the rejection teaches, not just stops. HOW TO CHANGE IT: it records a reject verdict with the reason (suite.py:resolve_surfaced); the reason-capture is the preserved reject path."
     },
     "ui://walkthrough/voice": {
       "region": "walkthrough",
@@ -425,7 +468,8 @@
         "pointable"
       ],
       "represents": "VOICE",
-      "code": "canvas/app/src/regions/Walkthrough.tsx (voice/text toggle) / voice/"
+      "code": "canvas/app/src/regions/Walkthrough.tsx (voice/text toggle) / voice/",
+      "howto": "WHAT: the voice / text toggle on the walkthrough. WHAT YOU CAN DO: choose whether each step is spoken aloud (voice-first) or shown as text only. HOW TO CHANGE IT: it sets voiceOn in the controller; voice-first speaks each step via the voice/ stack."
     },
     "ui://walkthrough/next": {
       "region": "walkthrough",
@@ -433,7 +477,8 @@
         "pointable"
       ],
       "represents": "WALK-next",
-      "code": "canvas/app/src/regions/Walkthrough.tsx (next) / runtime/suite.py:next"
+      "code": "canvas/app/src/regions/Walkthrough.tsx (next) / runtime/suite.py:next",
+      "howto": "WHAT: the next → control on the walkthrough. WHAT YOU CAN DO: advance to the next step (disabled while a request is pending, so a second click can't desync the cursor). HOW TO CHANGE IT: it calls suite.py:next (the review/guide cursor advance)."
     },
     "ui://walkthrough/reason": {
       "region": "walkthrough",
@@ -441,7 +486,8 @@
         "pointable"
       ],
       "represents": "INB-resolve",
-      "code": "canvas/app/src/regions/Walkthrough.tsx (reason) / runtime/suite.py:resolve_surfaced"
+      "code": "canvas/app/src/regions/Walkthrough.tsx (reason) / runtime/suite.py:resolve_surfaced",
+      "howto": "WHAT: the reason box on a review step. WHAT YOU CAN DO: type why — captured into the verdict (required for reject and comment), so your decision carries its rationale into the trajectory. HOW TO CHANGE IT: the reason rides the verdict to suite.py:resolve_surfaced."
     },
     "ui://walkthrough/show-again": {
       "region": "walkthrough",
@@ -449,7 +495,8 @@
         "pointable"
       ],
       "represents": "WALK-uiresolve",
-      "code": "canvas/app/src/regions/Walkthrough.tsx (show again) / runtime/suite.py:_registry_ui_target"
+      "code": "canvas/app/src/regions/Walkthrough.tsx (show again) / runtime/suite.py:_registry_ui_target",
+      "howto": "WHAT: the ↪ show again control on a step. WHAT YOU CAN DO: re-spotlight the element this step concerns — it moves the view back to that thing and highlights it. HOW TO CHANGE IT: it re-runs resolveUiTarget on the step's ui_target; the per-step target is stamped by suite.py (_registry_ui_target)."
     },
     "ui://inbox/walk": {
       "region": "inbox",
@@ -457,7 +504,8 @@
         "pointable"
       ],
       "represents": "WALK-present",
-      "code": "canvas/app/src/regions/Inbox.tsx (walk these) / runtime/suite.py:present_current"
+      "code": "canvas/app/src/regions/Inbox.tsx (walk these) / runtime/suite.py:present_current",
+      "howto": "WHAT: the ▷ walk these control on the inbox. WHAT YOU CAN DO: send all the awaiting items through the review organ as one guided walk — each item is framed in plain language and you give a verdict (approve · reject · comment · skip · decide) step by step. HOW TO CHANGE IT: it starts a review session (suite.py:present_current); the walkthrough card is the visible organ."
     },
     "ui://chat/model-field": {
       "region": "chat",
@@ -465,7 +513,8 @@
         "pointable"
       ],
       "represents": "RHM-config",
-      "code": "canvas/app/src/regions/RhmChat.tsx (model input) / runtime/suite.py:set_rhm_config"
+      "code": "canvas/app/src/regions/RhmChat.tsx (model input) / runtime/suite.py:set_rhm_config",
+      "howto": "WHAT: the right-hand-man's model dropdown. WHAT YOU CAN DO: pick which model the chat brain uses, from the REAL chat models registered at the endpoint (a saved-but-unregistered value is shown, not silently dropped; empty = the default model). HOW TO CHANGE IT: it writes the RHM config (suite.py:set_rhm_config); the list is the live MODEL_OPTIONS.chat_models from the registry."
     },
     "ui://chat/persona-field": {
       "region": "chat",
@@ -473,7 +522,8 @@
         "pointable"
       ],
       "represents": "RHM-config",
-      "code": "canvas/app/src/regions/RhmChat.tsx (persona select) / runtime/suite.py:set_rhm_config"
+      "code": "canvas/app/src/regions/RhmChat.tsx (persona select) / runtime/suite.py:set_rhm_config",
+      "howto": "WHAT: the persona dropdown on the chat. WHAT YOU CAN DO: switch the right-hand-man's persona — selecting one sets it active AND auto-loads its voice (evicting the previous one, since the card holds one voice at a time, so a switch may cold-load). HOW TO CHANGE IT: it switches persona + loads the voice (suite.py:set_rhm_config + the voice lifecycle); the persona list is the live registry."
     }
   }
 }
