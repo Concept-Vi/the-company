@@ -10,7 +10,7 @@ status: living
 
 # AGENTS.md — read this first
 
-You are an AI agent working on **company** — the Vi composition suite. There are **no human developers**; this codebase is built and grown entirely by AI. It is therefore designed to be **navigable and extensible by you**. Orientation order: **this** (the rules) → `MAP.md` (the structure + the live registry of what exists) → `STATE.md` (the current status: what's built + proven, what cannot be done yet, how to run + verify, the gotchas) → the `AGENTS.md` of whatever module you're working in. After those four you should be able to act correctly without re-deriving anything.
+You are an AI agent working on **company** — the Vi composition suite. There are **no human developers**; this codebase is built and grown entirely by AI. It is therefore designed to be **navigable and extensible by you**. Orientation order: **this** (the rules) → `MAP.md` (the structure + the live registry of what exists) → `STATE.md` (the current status: what's built + proven, what cannot be done yet, how to run + verify, the gotchas) → the `AGENTS.md` of whatever module you're working in. After those four you should be able to act correctly without re-deriving anything. **`HANDOFF.md`** (repo root) carries the most recent session's narrative + an operator how-to for the live surface (voice circuit, the `company` console, the phone path) — read it if you're picking up live/voice/ops work.
 
 ## Source of truth
 The **specs live in the vault**, not in code comments:
