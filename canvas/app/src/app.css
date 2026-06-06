@@ -204,6 +204,11 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
   padding-bottom:7px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:6px}
 .cfg-gear{margin-left:auto;cursor:pointer;color:var(--dim);font-family:inherit}
 .cfg-gear:hover{color:var(--sig)}
+.rhm-min{cursor:pointer;color:var(--dim);font-family:inherit}
+.rhm-min:hover{color:var(--sig)}
+/* minimized — collapse the chat to just its header so the canvas shows behind it (mobile esp.) */
+.rhm.min{height:auto}
+.rhm.min .rhm-log,.rhm.min .rhm-input,.rhm.min .rhm-cfg,.rhm.min .rhm-indicating,.rhm.min .rhm-afford{display:none}
 .rhm-cfg{display:flex;flex-direction:column;gap:5px;padding:8px 0;border-bottom:1px solid var(--line)}
 .rhm-cfg input{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:6px;font-family:inherit;font-size:10.5px}
 .rhm-cfg input:focus{outline:none;border-color:var(--sig)}

@@ -11,7 +11,7 @@
 // value, an empty-registry fallback, plus the RHM-specific empty "default model" state (cfg.model === '' is
 // VALID — line "{cfg.model || 'default model'}" — so a leading empty option preserves it). The rhm-config
 // write path is UNCHANGED (setCfg → applyCfg) and data-ui-ref="ui://chat/model-field" is preserved (F4).
-import { useSyncExternalStore } from 'react'
+import { useSyncExternalStore, useState } from 'react'
 import { useApp } from '../AppContext'
 import { registryStore } from '../registryStore'
 import { ProposeAffordance } from './ProposeAffordance'
@@ -22,11 +22,16 @@ export function RhmChat() {
   const registry = useSyncExternalStore(registryStore.subscribe, registryStore.getSnapshot)
   const chatModels = registry.MODEL_OPTIONS.chat_models || []
   const curModel = cfg.model || ''
+  // minimize — collapse the chat to just its header so the canvas is visible behind it (esp. on mobile,
+  // where the panel otherwise fills the screen). A plain in-component toggle (the cfgOpen pattern); the
+  // body is hidden via the `.rhm.min` CSS, the header (with the restore button) stays.
+  const [min, setMin] = useState(false)
   return (
-    <div className="hud rhm" data-ui-ref="chat">
+    <div className={'hud rhm' + (min ? ' min' : '')} data-ui-ref="chat">
       <div className="rhm-head">
         right-hand-man <span className="muted">· {cfg.model || 'default model'}</span>
         <span className="cfg-gear" data-ui-ref="ui://chat/config" title="configure model + persona" onClick={() => setCfgOpen(o => !o)}>⚙</span>
+        <span className="rhm-min" data-ui-ref="ui://chat/minimize" title={min ? 'expand the chat' : 'minimize — see the canvas'} onClick={() => setMin(m => !m)}>{min ? '▢' : '▁'}</span>
       </div>
       {cfgOpen && (
         <div className="rhm-cfg">
