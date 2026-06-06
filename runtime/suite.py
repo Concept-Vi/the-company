@@ -112,6 +112,47 @@ class VerbSpec:
     predicate: Callable             # ctx(dict) -> bool — does this verb make sense in the current context
 
 
+@dataclass(frozen=True)
+class ModeSpec:
+    """ONE source for a single TOP-LEVEL presence mode (E1 — the mode type-registry). Replaces the two
+    parallel literals `MODES` (the tuple) and `MODE_DIRECTIVES` (the prose map), which could drift: both
+    are now DERIVED from `MODE_SPECS` below (the same one-source move `VerbSpec`/`RHM_VERB_SPECS` made).
+
+    A mode-type is NOT just a behavioural label — per Tim's load-bearing correction (direction §6,
+    2026-06-06) **modes and context-resolution are ONE system**: a mode-type CARRIES its
+    context-resolution declarations, so editing a mode-type changes BOTH behaviour (the directive) AND
+    how context resolves under it (the `resolution` block). That is why `resolution` lives on the spec
+    next to `directive` — one edit, one place, both change (§6.5).
+
+    Fields:
+      label      — short operator-facing name (the surface renders it).
+      directive  — the behavioural prose injected into the RHM prompt (the OLD MODE_DIRECTIVES value).
+      resolution — the CONTEXT-RESOLUTION DECLARATION: a dict the resolver consumes AS DATA (never a
+                   mode-name branch — registry-is-truth). Keys (all optional; absent → today's default):
+                     • strata        — frozenset of gather-stratum kinds this lens admits
+                                       ({'annotation','chat','event','howto','run'}). None → admit all
+                                       (byte-for-byte today). A lens can DROP a stratum (e.g. a terse
+                                       lens that excludes 'howto').
+                     • howto_detail  — 'full' (today) | 'terse' (truncate howto harder) | 'none'
+                                       (suppress the how-to/affordance leg entirely).
+                     • budget        — int char-cap OVERRIDE for this lens (None → the instance R2_BUDGET).
+                                       A tight-attention mode (focus) resolves a SMALLER window.
+                   This is the §6.3 unification made concrete: R2 becomes mode-parameterized — the
+                   active mode-type's declarations choose which strata / how much / how, the instance
+                   parameters (sub-type + rhm_mode-node overrides) supply the specifics, over the ONE
+                   shared store.
+      subtypes   — the HIERARCHY (§6.5: '≤8 top-level, each with sub-types'). A dict {subtype-id: {...}}
+                   where each sub-type may OVERRIDE any `resolution` key for an INSTANCE. The mode-type
+                   is the lens; the sub-type (an instance parameter) refines it. None/{} → no sub-types.
+      consent    — the consent-interaction style this mode favours (§6B — descriptive declaration the
+                   later rich consent layer reads; not yet wired into dispatch, captured as data)."""
+    label: str
+    directive: str
+    resolution: dict | None = None
+    subtypes: dict | None = None
+    consent: str = "offer"
+
+
 class Suite:
     # The STATE-TYPE REGISTRY (Possibility Space Block 19) — node "state" is a REGISTERED, single-source
     # set, NOT a hardcoded enum. `state()` reads its status-id strings from HERE (one source), and
@@ -238,6 +279,16 @@ class Suite:
         self.R2_BUDGET = self._cfg_int("COMPANY_R2_BUDGET", type(self).R2_BUDGET)
         self.R2_RUN_VERSIONS = self._cfg_int("COMPANY_R2_RUN_VERSIONS", type(self).R2_RUN_VERSIONS)
         self.R2_HOWTO_MAX = self._cfg_int("COMPANY_R2_HOWTO_MAX", type(self).R2_HOWTO_MAX)   # D1 flood guard
+        self.R2_HOWTO_TERSE = self._cfg_int("COMPANY_R2_HOWTO_TERSE", type(self).R2_HOWTO_TERSE)  # E1 terse cap
+        # E2 (mode auto-detect as a CONFIG TOGGLE, not hardcoded — direction §6.5) — resolve the toggle
+        # from the env into an instance attr (the SAME X17 pattern). VALUES (fail-loud-validated by
+        # _cfg_choice): 'off' (manual only — the default, byte-for-byte today's operator-selected modes),
+        # 'suggest' (auto-detection PROPOSES a mode, never switches), 'auto' (auto-detection SWITCHES).
+        # Exposed in capabilities().composition_config so the surface reads + (later) sets it. The DETECTOR
+        # that produces a candidate is a deferred seam (§11: zero detector exists today) — `autodetect_mode`
+        # honours the toggle over a SUPPLIED candidate; it never fabricates detection (rule 4/8).
+        self.MODE_AUTODETECT = self._cfg_choice("COMPANY_MODE_AUTODETECT",
+                                                type(self).MODE_AUTODETECT, self.MODE_AUTODETECT_OPTIONS)
 
     @staticmethod
     def _cfg_float(env_name: str, default: float) -> float:
@@ -266,6 +317,18 @@ class Suite:
         except (TypeError, ValueError):
             raise ValueError(f"{env_name}={raw!r} is not a valid int — fix the env value "
                              f"(X17 composition knob; default {default!r})")
+
+    @staticmethod
+    def _cfg_choice(env_name: str, default: str, options) -> str:
+        """E2 — resolve a STRING-ENUM knob from the env (default = the class constant). FAIL LOUD on a
+        value outside `options` (rule 4 — never a silent wrong/default). Mirrors _cfg_int/_cfg_float."""
+        raw = os.environ.get(env_name)
+        if raw is None:
+            return default
+        if raw not in options:
+            raise ValueError(f"{env_name}={raw!r} is not one of {tuple(options)} — fix the env value "
+                             f"(config toggle; default {default!r})")
+        return raw
 
     def _session_lock(self, session_id: str):
         """One reentrant-safe lock per session, created on demand (threadsafe)."""
@@ -439,6 +502,30 @@ class Suite:
             # mode_directives) are now BOTH merged — registry-is-truth, PoLR honoured. Additive map
             # {mode: directive}; an older FE that ignores it is unaffected.
             "mode_directives": dict(self.MODE_DIRECTIVES),
+            # E1 — THE MODE TYPE-REGISTRY (registry-is-truth): the full HIERARCHICAL spec the surface reads
+            # so the modes-and-context-resolution-are-ONE-system is visible end-to-end. Each entry carries
+            # its label + directive (behaviour) + resolution declaration (HOW context resolves under it:
+            # strata/howto_detail/budget) + sub-types (the hierarchy, §6.5) + consent style. Editing a mode
+            # in this registry changes BOTH behaviour AND context-resolution — one edit, one place. strata
+            # is a frozenset → serialized to a sorted list (None stays None = admit-all) so it's JSON-safe.
+            "mode_registry": {
+                m: {
+                    "label": s.label,
+                    "directive": s.directive,
+                    "resolution": (None if s.resolution is None else {
+                        "strata": (None if s.resolution.get("strata") is None
+                                   else sorted(s.resolution.get("strata"))),
+                        "howto_detail": s.resolution.get("howto_detail", "full"),
+                        "budget": s.resolution.get("budget"),
+                    }),
+                    "subtypes": {
+                        st: {k: (sorted(v) if k == "strata" and v is not None else v)
+                             for k, v in (ov or {}).items()}
+                        for st, ov in (s.subtypes or {}).items()
+                    },
+                    "consent": s.consent,
+                } for m, s in self.MODE_SPECS.items()
+            },
             "rhm_verbs": list(self.RHM_VERBS),
             # The STATE-TYPE REGISTRY exposed (registry-is-truth): WHAT node-states exist + their meaning
             # + which resolve-mode each applies to, so the surface renders the status vocabulary from
@@ -467,6 +554,11 @@ class Suite:
                 "R2_BUDGET": self.R2_BUDGET,
                 "R2_RUN_VERSIONS": self.R2_RUN_VERSIONS,
                 "R2_HOWTO_MAX": self.R2_HOWTO_MAX,
+                "R2_HOWTO_TERSE": self.R2_HOWTO_TERSE,   # E1 — the terse-lens per-howto cap
+                # E2 — the mode AUTO-DETECT toggle (off/suggest/auto), a CONFIG item not hardcoded. The
+                # live resolved value + the valid options, so the surface renders + (later) sets it.
+                "MODE_AUTODETECT": self.MODE_AUTODETECT,
+                "MODE_AUTODETECT_OPTIONS": list(self.MODE_AUTODETECT_OPTIONS),
             },
             "api_verbs": ["/api/run", "/api/now", "/api/chat", "/api/graph", "/api/graphs",
                           "/api/types", "/api/object_info", "/api/events", "/api/inbox",
@@ -877,11 +969,106 @@ class Suite:
         }
 
     # --- modes / the presence dial: the mode IS a node (context-05, D1-D3) ---
-    MODES = ("listening", "text-only", "background", "focus",
-             "walkthrough", "watch-and-react", "decide-for-me", "off")
+    # E1 — THE MODE TYPE-REGISTRY (the modes-and-context-resolution-are-ONE-system criterion, direction
+    # §6/§6.5). Each entry is a `ModeSpec` carrying its directive (behaviour) AND its `resolution`
+    # declaration (how context resolves under it) AND its sub-types (the hierarchy). `MODES` (the 8-tuple,
+    # ORDER-CONTRACTED — modes_acceptance asserts len==8) and `MODE_DIRECTIVES` (the prose map) are now
+    # DERIVED from this ONE source (no parallel literal to drift — the same move RHM_VERB_SPECS made).
+    # The 8 top-level modes are UNCHANGED in NAME and ORDER (listening … off) — schema-additive: the new
+    # `resolution`/`subtypes`/`consent` data is added, no mode renamed/removed/reordered.
+    #
+    # The `resolution` blocks are the LOAD-BEARING half. They are consumed AS DATA by `resolution_spec_for`
+    # → `_resolve_context_at` (there is NO `if mode ==` anywhere in the resolution path — registry-is-truth).
+    # The seed `listening` resolution = today's full gather (strata=None admit-all, howto full, no budget
+    # override) so the DEFAULT path is byte-for-byte unchanged (every existing R2 suite stays green). The
+    # OTHER modes declare GENUINE differences over the SAME store/locus: focus resolves a tight, terse,
+    # howto-suppressed window (deep work — minimal context); background/watch drop the chatty strata; off
+    # resolves nothing (the RHM is asleep). Editing any one of these entries changes BOTH the mode's
+    # behaviour AND how context resolves under it — one edit, one place (§6.5, proven by use).
+    MODE_SPECS = {
+        "listening": ModeSpec(
+            label="Listening",
+            directive="Conversational and present; respond fully.",
+            # SEED = today's full gather: admit every stratum, full howto, no budget override.
+            resolution={"strata": None, "howto_detail": "full", "budget": None},
+            subtypes={
+                "general": {},   # the default sub-type (no override) — identical to the mode-type lens
+                # an instance can ask for a deeper, semantically-weighted read (e.g. when co-present at a
+                # node): a sub-type is an INSTANCE PARAMETER that refines the SAME mode-type lens (§6.2).
+                "deep": {"budget": 8000},
+            },
+            consent="offer"),
+        "text-only": ModeSpec(
+            label="Text-only",
+            directive="Respond in text, concisely, only to what is addressed.",
+            resolution={"strata": None, "howto_detail": "full", "budget": None},
+            consent="offer"),
+        "background": ModeSpec(
+            label="Background",
+            directive="Be minimal — surface only what genuinely needs the operator; otherwise a one-line acknowledgement.",
+            # background = low-noise: drop the chatty annotation/chat strata, keep the stable howto + events.
+            resolution={"strata": frozenset({"howto", "event", "run"}), "howto_detail": "terse", "budget": 1500},
+            consent="act"),
+        "focus": ModeSpec(
+            label="Focus",
+            directive="The operator is in deep work. Be extremely brief (one or two lines); do not elaborate unless asked.",
+            # focus = TIGHT ATTENTION: a small window, terse, NO how-to/affordance leg (it would flood deep work).
+            resolution={"strata": frozenset({"annotation", "chat", "event", "run"}), "howto_detail": "none", "budget": 800},
+            subtypes={
+                "default": {},
+                # a focus instance that still wants the structural run-trail but nothing chatty:
+                "structural": {"strata": frozenset({"event", "run"}), "budget": 600},
+            },
+            consent="act"),
+        "walkthrough": ModeSpec(
+            label="Walkthrough",
+            directive="Actively guide: narrate what you are doing and direct the operator's attention step by step.",
+            # GUIDED/show-me lens (§5): the howto/affordance leg is the POINT (narrate what-this-is /
+            # what-you-can-do), full strata so the narration has the whole picture. A wider window.
+            resolution={"strata": None, "howto_detail": "full", "budget": 6000},
+            subtypes={
+                "guided": {},                       # the operator drives, the RHM narrates each step
+                "show-me": {"budget": 8000},        # the RHM drives the sequence (a richer read per step)
+            },
+            consent="offer"),
+        "watch-and-react": ModeSpec(
+            label="Watch & react",
+            directive="Observe; comment only when relevant, and briefly.",
+            # observe lens: events + run-trail are what matters (what's HAPPENING), terse, no flood.
+            resolution={"strata": frozenset({"event", "run", "howto"}), "howto_detail": "terse", "budget": 1500},
+            consent="act"),
+        "decide-for-me": ModeSpec(
+            label="Decide for me",
+            directive="Act on what the governance posture lets you act on (the AUTO/reversible classes — propose a node, run the graph) rather than asking; surface the rest for the operator. The routing is deterministic (the action's posture decides), not a judgement call. You still cannot self-approve; anything that needs approval is surfaced.",
+            resolution={"strata": None, "howto_detail": "full", "budget": None},
+            consent="act"),
+        # D13: 'off' carries a one-line DESCRIPTION (was empty). chat() short-circuits on mode=='off'
+        # BEFORE any directive is used, so this is purely descriptive for the surface — it does NOT
+        # re-enable the RHM. modes_acceptance asserts non-empty directives only for m != 'off'.
+        # resolution = the EMPTY lens: the RHM is asleep, nothing resolves (strata=empty set).
+        "off": ModeSpec(
+            label="Off",
+            directive="The right-hand-man is asleep — no conversation, no actions. Switch any other mode on the presence dial to wake it.",
+            resolution={"strata": frozenset(), "howto_detail": "none", "budget": 0},
+            consent="none"),
+    }
+    # --- the two legacy names, DERIVED from the one registry (no drift) ---
+    # MODES: the 8-tuple in registry-insertion order (ORDER-CONTRACTED — modes_acceptance len==8 + the
+    # _M_* mode-sets below frozenset over it). MODE_DIRECTIVES: the {mode: directive} prose map the
+    # grounding context + capabilities() read. Both DERIVE — there is no second copy to fall out of sync.
+    MODES = tuple(MODE_SPECS)
+    MODE_DIRECTIVES = {m: s.directive for m, s in MODE_SPECS.items()}
     DEFAULT_MODE = "listening"
     SYSTEM_GRAPH = "system"
     MODE_NODE = "rhm"
+    # E2 — mode AUTO-DETECTION is a positionable CONFIG TOGGLE (direction §6.5: "the system CAN auto-detect
+    # the mode, but whether/how is configured" — NOT hardcoded). The class constant is the DEFAULT FLOOR;
+    # __init__ resolves the live value from COMPANY_MODE_AUTODETECT into self.MODE_AUTODETECT (X17 pattern).
+    #   'off'     — manual only (operator-selected modes — TODAY's behaviour, the safe default).
+    #   'suggest' — auto-detection PROPOSES a mode (a surfaced suggestion); never switches on its own.
+    #   'auto'    — auto-detection SWITCHES the mode (set_mode the detected candidate).
+    MODE_AUTODETECT_OPTIONS = ("off", "suggest", "auto")
+    MODE_AUTODETECT = "off"
 
     # --- the MODEL-ROLE REGISTRY (registry-is-truth; mirrors STT_PROVIDERS / the node registry) -------
     # A ROLE is a named model-FUNCTION of the collective cognition: a specific job done by a model that
@@ -969,21 +1156,8 @@ class Suite:
     _S2S_HINTS = ("omni", "moshi", "glm-voice", "glm4-voice", "mini-omni", "miniomni", "qwen2.5-omni",
                   "qwen3-omni", "ultravox", "llama-omni", "csm", "sesame")
 
-    MODE_DIRECTIVES = {
-        "listening": "Conversational and present; respond fully.",
-        "text-only": "Respond in text, concisely, only to what is addressed.",
-        "background": "Be minimal — surface only what genuinely needs the operator; otherwise a one-line acknowledgement.",
-        "focus": "The operator is in deep work. Be extremely brief (one or two lines); do not elaborate unless asked.",
-        "walkthrough": "Actively guide: narrate what you are doing and direct the operator's attention step by step.",
-        "watch-and-react": "Observe; comment only when relevant, and briefly.",
-        "decide-for-me": "Act on what the governance posture lets you act on (the AUTO/reversible classes — propose a node, run the graph) rather than asking; surface the rest for the operator. The routing is deterministic (the action's posture decides), not a judgement call. You still cannot self-approve; anything that needs approval is surfaced.",
-        # D13: 'off' now carries a one-line DESCRIPTION (was an empty string — the only mode with none,
-        # so the surface had nothing to render for it). chat() still short-circuits on mode=='off' BEFORE
-        # any directive is used, so this is purely descriptive for the surface (capabilities().
-        # mode_directives) — it does NOT re-enable the RHM. modes_acceptance asserts non-empty directives
-        # only for m != 'off', so this is schema-additive there too.
-        "off": "The right-hand-man is asleep — no conversation, no actions. Switch any other mode on the presence dial to wake it.",
-    }
+    # MODE_DIRECTIVES is now DERIVED from MODE_SPECS above (one-source; the literal here was removed when
+    # E1 folded the directive INTO the spec — see the MODE_SPECS block + `MODE_DIRECTIVES = {...}` derive).
 
     def _rhm_cfg(self) -> dict:
         """The RHM's config node (system graph) — holds mode + model + base_url + persona."""
@@ -1013,6 +1187,97 @@ class Suite:
 
     def _mode_directive(self, mode: str) -> str:
         return self.MODE_DIRECTIVES.get(mode, "")
+
+    # --- E1: the mode SUB-TYPE (the instance parameter in §6.2's (mode-type) × (instance) factoring) ---
+    # The sub-type is a SECOND rhm_mode-node config key ('submode'), edited by the SAME verb as the mode
+    # (set_config). Schema-additive: an rhm_mode node WITHOUT a 'submode' key reads as None → the
+    # mode-type's bare lens (no instance override). So old graphs keep working byte-for-byte.
+    def get_submode(self) -> str | None:
+        return self._rhm_cfg().get("submode")
+
+    def set_submode(self, submode: str | None) -> str | None:
+        """Set the instance sub-type for the CURRENT mode-type. FAIL LOUD (rule 4) if the sub-type isn't
+        declared on the current mode-type's spec — never a silent wrong value. None clears it (bare lens)."""
+        mode = self.get_mode()
+        spec = self.MODE_SPECS.get(mode)
+        valid = set((spec.subtypes or {})) if spec else set()
+        if submode is not None and submode not in valid:
+            raise ValueError(f"unknown sub-type {submode!r} for mode {mode!r} — one of {sorted(valid) or '(none declared)'}")
+        self._ensure_rhm_node()
+        self.set_config(self.SYSTEM_GRAPH, self.MODE_NODE, {"submode": submode})
+        self._emit("mode", f"sub-type → {mode}/{submode}", address="ui://chrome/toolbar")
+        return submode
+
+    def resolution_spec_for(self, mode: str | None = None, submode: str | None = None) -> dict:
+        """E1 — the LOAD-BEARING resolver: (mode-type declarations) × (instance parameters) → the
+        context-resolution spec the R2 path consumes AS DATA. This is the §6.2 relational primitive made
+        a function: `resolved context = (mode-type) × (instance) over ONE shared store`.
+
+        It is called ONCE at the resolution caller (`_chat_context`) and the resulting DICT is threaded
+        down the R2 path — so NO mode-NAME ever appears in `_resolve_context_at`/`_r2_gather`/`_r2_howto_at`
+        (registry-is-truth: the resolution shape is DATA from the spec, never an `if mode ==` branch).
+
+        Resolution order (mode-type lens, then instance override — §6.2):
+          1. start from the mode-type's `resolution` declaration (the LENS — what/how it admits);
+          2. overlay the sub-type's overrides (the INSTANCE — what specifically, this time).
+        With mode=None → the current live mode (read from the rhm_mode node); submode=None → the current
+        live sub-type. Returns {'strata','howto_detail','budget'} — every key always present (the lens'
+        default fills any the sub-type didn't override). An UNKNOWN mode degrades to the listening lens
+        with a warning (fail-loud-legible — never crash the resolver, mirroring _resolve_context_at)."""
+        if mode is None:
+            mode = self.get_mode()
+        spec = self.MODE_SPECS.get(mode)
+        if spec is None:
+            # locus-bound: the mode lives on the presence dial (ui://chrome/toolbar — same locus set_mode
+            # stamps), so this config-resolution warning is honestly addressed, not locus-less.
+            self._emit("warning", f"resolution_spec_for: unknown mode {mode!r} — defaulting to listening lens",
+                       address="ui://chrome/toolbar")
+            spec = self.MODE_SPECS["listening"]
+        base = dict(spec.resolution or {})
+        out = {"strata": base.get("strata"),
+               "howto_detail": base.get("howto_detail", "full"),
+               "budget": base.get("budget")}
+        # INSTANCE overlay: the sub-type (an instance parameter) refines the SAME mode-type lens.
+        if submode is None:
+            submode = self.get_submode()
+        if submode is not None:
+            sub = (spec.subtypes or {}).get(submode)
+            if sub is None:
+                # honest: a sub-type set on the node that isn't declared on THIS mode-type (e.g. the mode
+                # was switched after a sub-type was set) — ignore it with a warning, never a wrong read.
+                # locus-bound to the presence dial (the mode/sub-type live there).
+                self._emit("warning", f"resolution_spec_for: sub-type {submode!r} not declared on mode {mode!r} — using bare lens",
+                           address="ui://chrome/toolbar")
+            else:
+                for k in ("strata", "howto_detail", "budget"):
+                    if k in sub:
+                        out[k] = sub[k]
+        return out
+
+    def autodetect_mode(self, candidate: str) -> dict:
+        """E2-BACKEND — honour the mode AUTO-DETECT toggle (self.MODE_AUTODETECT) over a SUPPLIED candidate
+        mode. The toggle (a config item, NOT hardcoded — direction §6.5) decides what auto-detection DOES:
+          • 'off'     — NO-OP: auto-detection is disabled; the operator's mode is untouched (today's default).
+          • 'suggest' — PROPOSE the candidate (emit a surfaced 'mode' suggestion event); never switch.
+          • 'auto'    — SWITCH to the candidate via the SAME `set_mode` (no parallel path).
+        FAIL LOUD (rule 4/8): the candidate must be a real registered mode — never a fabricated/unknown one.
+        The DETECTOR that PRODUCES the candidate is a deferred seam (§11 — zero detector in the repo today);
+        this method honours the toggle over whatever candidate it's GIVEN, and never invents a detection.
+        Returns a legible {toggle, candidate, applied, action} so the caller/surface sees exactly what
+        happened (no silent no-op — rule 4)."""
+        if candidate not in self.MODES:
+            raise ValueError(f"autodetect_mode: unknown candidate {candidate!r} — one of {self.MODES} "
+                             f"(rule 8: never fabricate a mode)")
+        toggle = self.MODE_AUTODETECT
+        if toggle == "off":
+            return {"toggle": toggle, "candidate": candidate, "applied": None, "action": "noop"}
+        if toggle == "suggest":
+            self._emit("mode", f"auto-detect SUGGESTS presence → {candidate} (toggle=suggest; not switched)",
+                       address="ui://chrome/toolbar")
+            return {"toggle": toggle, "candidate": candidate, "applied": None, "action": "suggested"}
+        # 'auto' — switch via the one set_mode (validated above; the toggle was env-validated by _cfg_choice).
+        self.set_mode(candidate)
+        return {"toggle": toggle, "candidate": candidate, "applied": candidate, "action": "switched"}
 
     # --- the STT (ear) slot: a SWAPPABLE speech-to-text provider, mirroring the brain-model slot ---
     # The RHM's ear is a config slot just like its brain model — so the operator can swap providers
@@ -1370,7 +1635,13 @@ class Suite:
         # X13 (Convergence) — pass `intent` (the operator's current chat message) so the locus context is
         # SEMANTICALLY ranked (relevance to what they're asking), not just recency·proximity·pin. With no
         # intent the ranking is the pre-X13 ordering; a down embedder degrades the term to 0 with a warning.
-        ctx += self._resolve_context_at(self.current_locus(), graph_id=graph_id, intent=intent)
+        # E1 (mode-and-context-resolution-are-ONE-system) — resolve the LENS once here (mode-type × instance
+        # sub-type, read live from the rhm_mode node), then thread the resulting DATA spec into R2 so the
+        # active mode parameterizes WHAT/HOW context resolves. The mode is already in scope above (`mode`).
+        # No mode-name reaches the R2 path — the shape is the spec dict (registry-is-truth).
+        _res = self.resolution_spec_for(mode)
+        ctx += self._resolve_context_at(self.current_locus(), graph_id=graph_id, intent=intent,
+                                        resolution=_res)
         return ctx
 
     def _describe_ui_address(self, address: str) -> str:
@@ -1579,6 +1850,10 @@ class Suite:
     #                                     (legible, not silent) BEFORE scoring; the per-turn R2_BUDGET cap
     #                                     still applies on top. A named knob (D2/X17 will env-wire it), not a
     #                                     bare literal — the affordance grounds, it never floods.
+    R2_HOWTO_TERSE = 240                # E1 — the per-howto cap a mode-type's `howto_detail='terse'` lens
+    #                                     applies (a one-liner affordance for low-noise modes — background /
+    #                                     watch-and-react — that still want the help leg but not a paragraph).
+    #                                     A named knob (env-wired below), not a bare literal; ≤ R2_HOWTO_MAX.
 
     @staticmethod
     def address_tree_distance(a: str, b: str) -> int:
@@ -1698,7 +1973,7 @@ class Suite:
                 return howto if (howto and str(howto).strip()) else None
         return None
 
-    def _r2_howto_at(self, address: str, now=None) -> list:
+    def _r2_howto_at(self, address: str, now=None, detail: str = "full") -> list:
         """D1 — the HOW-TO / AFFORDANCE stratum at `address`: the FOUNDATIONAL layer that resolves the
         what-this-is / what-you-can-do / how-to-change-it help INTO the locus context, as a NEW R2 gather
         source mirroring `_r2_events_at`. It is the data half of the foundational affordance stratum (the
@@ -1720,23 +1995,31 @@ class Suite:
 
         MODE-PARAMETERIZABLE, NOT HARDWIRED (Tim's correction): the resolution is generic over ANY address
         via `_registry_howto_for` (one match rule, registry-is-truth) — there is NO per-element branch and
-        NO help text embedded in code. Later (E1) the operator's MODE can parameterize WHAT/HOW this
-        resolves (e.g. a terse vs full howto, or none in a focus mode) by threading a mode arg through this
-        method + the gather — the seam is left open; it is not foreclosed by any hardwiring here.
+        NO help text embedded in code. E1 (NOW WIRED): the `detail` arg (the mode-type's `howto_detail`
+        declaration, threaded from `resolution_spec_for` via `_r2_gather`) parameterizes WHAT/HOW the
+        how-to resolves — the seam this docstring advertised is now closed:
+          • 'full'  — today's behaviour byte-for-byte (truncate only at R2_HOWTO_MAX).
+          • 'terse' — a tighter per-howto cap (R2_HOWTO_TERSE) so a low-noise mode (background/watch)
+                      still GETS the affordance but as a one-liner, not a paragraph.
+          • 'none'  — SUPPRESS the leg entirely (focus/off — deep work / asleep: no how-to flood).
+        `detail` is DATA from the spec (a string compare on a declared value), NOT a mode-name branch.
 
         Returns a list of 0-or-1 R2 items in the common gather shape `{kind, address, ts, text, pinned}`.
         `kind='howto'` (NOT 'event' — so `_r2_dedup`'s pass-2 echo logic never mangles it) and NO `_raw`
         key (so dedup pass-1 keeps it unconditionally — it is never a comment double-count). Empty list
-        when the address has no authored howto (clean degrade)."""
+        when the address has no authored howto (clean degrade) OR when `detail=='none'` (the lens suppresses it)."""
         from datetime import datetime, timezone
         if now is None:
             now = datetime.now(timezone.utc)
+        if detail == "none":                                  # E1: the lens suppresses the how-to leg entirely
+            return []
         howto = self._registry_howto_for(address)             # generic registry read (raises on malformed addr)
         if not howto:
             return []
         text = str(howto)
-        if len(text) > self.R2_HOWTO_MAX:                     # FLOOD GUARD — truncate-with-marker (legible)
-            text = text[: self.R2_HOWTO_MAX] + " …[howto truncated]"
+        cap = self.R2_HOWTO_TERSE if detail == "terse" else self.R2_HOWTO_MAX   # E1: the lens' per-howto cap
+        if len(text) > cap:                                   # FLOOD GUARD — truncate-with-marker (legible)
+            text = text[: cap] + " …[howto truncated]"
         return [{"kind": "howto", "address": address,
                  "ts": now.isoformat(),                        # PIN-PERSISTENT: re-stamped now → recency = 1
                  "text": f"[how-to @ {address}] {text}",
@@ -1837,7 +2120,8 @@ class Suite:
                        address=ui_locus)
         return items
 
-    def _r2_gather(self, locus: str, graph_id: str | None = None, now=None) -> list:
+    def _r2_gather(self, locus: str, graph_id: str | None = None, now=None,
+                   resolution: dict | None = None) -> list:
         """GATHER every item attached to the locus AND its ancestors (I6 annotations via
         `annotations_at`, I7 chats via `chats_at`, addressed events). Each item is normalised to a
         common shape `{kind, address, ts, text, pinned}` so the decay scores them uniformly. The
@@ -1851,28 +2135,50 @@ class Suite:
         (L6 version-history + node-instance events) via `_r2_run_strata`, so at the locus BOTH schemes'
         memory resolves into one bounded window. `graph_id` is OPTIONAL (default None): with no graph_id
         the run:// step does NOT fire and the ui:// gather is byte-for-byte unchanged (preserving every
-        existing caller + addr_context_acceptance). The run:// items go through the SAME dedup/score/cap."""
+        existing caller + addr_context_acceptance). The run:// items go through the SAME dedup/score/cap.
+
+        E1 (mode-and-context-resolution-are-ONE-system) — `resolution` (optional, default None) is the
+        per-mode-type×instance lens spec from `resolution_spec_for`. `strata` (a frozenset of admitted
+        gather-kinds, or None = admit all) FILTERS which sources contribute — so a mode-type resolves a
+        DIFFERENT context SHAPE over the SAME store+locus (background drops annotation/chat; off admits
+        nothing). `howto_detail` (full/terse/none) is threaded into `_r2_howto_at`. resolution=None →
+        admit-all + full howto = byte-for-byte today (every R2 caller preserved). The filter is a DATA
+        membership test, never a mode-name branch (registry-is-truth — Tim's not-hardwired correction)."""
+        # E1: derive the admitted-strata set + howto detail FROM the resolution spec (data, no mode-name).
+        admit = None            # None = admit every stratum (today's behaviour)
+        howto_detail = "full"
+        if resolution is not None:
+            admit = resolution.get("strata")
+            howto_detail = resolution.get("howto_detail", "full")
+        def _ok(kind: str) -> bool:
+            return admit is None or kind in admit       # DATA membership test, NOT an `if mode ==` branch
         items = []
         for addr in self._r2_ancestors(locus):
-            for a in self.annotations_at(addr):
-                items.append({"kind": "annotation", "address": addr, "ts": a.get("ts"),
-                              "text": f"[comment @ {addr}] {a.get('text', '')}",
-                              "_raw": (a.get("text", "") or ""),   # X8: underlying text, for dedup identity
-                              "pinned": bool(a.get("pinned"))})
-            for c in self.chats_at(addr):
-                items.append({"kind": "chat", "address": addr, "ts": c.get("ts"),
-                              "text": f"[chat @ {addr}] {c.get('role', '')}: {c.get('text', '')}",
-                              "_raw": (c.get("text", "") or ""),   # X8: underlying text, for dedup identity
-                              "pinned": bool(c.get("pinned"))})
-            items.extend(self._r2_events_at(addr))
+            if _ok("annotation"):
+                for a in self.annotations_at(addr):
+                    items.append({"kind": "annotation", "address": addr, "ts": a.get("ts"),
+                                  "text": f"[comment @ {addr}] {a.get('text', '')}",
+                                  "_raw": (a.get("text", "") or ""),   # X8: underlying text, for dedup identity
+                                  "pinned": bool(a.get("pinned"))})
+            if _ok("chat"):
+                for c in self.chats_at(addr):
+                    items.append({"kind": "chat", "address": addr, "ts": c.get("ts"),
+                                  "text": f"[chat @ {addr}] {c.get('role', '')}: {c.get('text', '')}",
+                                  "_raw": (c.get("text", "") or ""),   # X8: underlying text, for dedup identity
+                                  "pinned": bool(c.get("pinned"))})
+            if _ok("event"):
+                items.extend(self._r2_events_at(addr))
             # D1: the FOUNDATIONAL HOW-TO / AFFORDANCE stratum at this ancestor — pin-persistent (no recency
             # decay), flood-bounded (R2_HOWTO_MAX), through the SAME dedup/score/cap as every other item.
             # `now` is threaded so the pin-persistent ts matches the scorer's `now` (deterministic in tests);
             # generic over any address (registry-is-truth), never a per-element branch (Tim's correction).
-            items.extend(self._r2_howto_at(addr, now=now))
+            # E1: `howto_detail` (the lens) parameterizes it — the seam _r2_howto_at's docstring advertised.
+            if _ok("howto"):
+                items.extend(self._r2_howto_at(addr, now=now, detail=howto_detail))
         # X6: bridge the ui:// locus to its run:// counterpart (guarded; None when the bridge doesn't apply).
+        # E1: the run:// stratum is admitted under the 'run' kind (so a lens can drop the version-trail too).
         run_addr = self._r2_run_counterpart(locus, graph_id)
-        if run_addr is not None:
+        if run_addr is not None and _ok("run"):
             items.extend(self._r2_run_strata(run_addr, locus))
         deduped = self._r2_dedup(items)
         # `_raw` is dedup-INTERNAL identity (added above for X8); strip it before returning so the gather's
@@ -1992,7 +2298,8 @@ class Suite:
             out[id(it)] = dot / (ni * nv)                      # cosine, mirror nodes/similarity.py
         return out
 
-    def _r2_score_and_cap(self, items: list, locus: str, now, intent: str | None = None) -> list:
+    def _r2_score_and_cap(self, items: list, locus: str, now, intent: str | None = None,
+                          budget: int | None = None) -> list:
         """Score each item by the decay, sort DESC, then `budget_cap` — accumulate text until R2_BUDGET
         is reached and STOP (cap the window, NEVER stuff). Returns the surviving items in score order.
         The cap is the keystone (the guide's THE-critical requirement): with more items than the budget,
@@ -2011,18 +2318,21 @@ class Suite:
         scored = sorted(items,
                         key=lambda it: self._r2_score(it, locus, now, semantic=sem.get(id(it), 0.0)),
                         reverse=True)
+        # E1: the resolution lens may OVERRIDE the window cap (focus resolves a tighter window; walkthrough
+        # a wider one). `budget=None` (every pre-E1 caller) → the instance R2_BUDGET, byte-for-byte today.
+        cap = self.R2_BUDGET if budget is None else budget
         out, total = [], 0
         for it in scored:
             t = it.get("text", "") or ""
-            if total + len(t) > self.R2_BUDGET and out:       # cap is hard once we have at least one item
+            if total + len(t) > cap and out:                  # cap is hard once we have at least one item
                 break
             out.append(it); total += len(t)
-            if total >= self.R2_BUDGET:
+            if total >= cap:
                 break
         return out
 
     def _resolve_context_at(self, locus: str | None, now=None, graph_id: str | None = None,
-                            intent: str | None = None) -> str:
+                            intent: str | None = None, resolution: dict | None = None) -> str:
         """The R2 entry point: resolve the BOUNDED, address-keyed context slice at the operator's locus.
         Returns a ready-to-inject block string, or '' when there is no locus / nothing attached (so the
         caller skips injection cleanly). FAIL-LOUD-LEGIBLE, never crash-the-turn (mirrors _chat_context's
@@ -2038,17 +2348,28 @@ class Suite:
         `_r2_score_and_cap`, which adds the SEMANTIC ranking term (R2_SEMANTIC_WEIGHT·cosine(intent,item)).
         Optional (default None): with no intent the ranking is the pre-X13 recency·proximity·pin (byte-for-
         byte). When the embedder is DOWN the semantic term degrades to 0 with a warning (handled in
-        `_r2_semantic_map`) — the score+cap still runs, never crashing the turn."""
+        `_r2_semantic_map`) — the score+cap still runs, never crashing the turn.
+
+        E1 (the mode-and-context-resolution-are-ONE-system criterion) — `resolution` (optional, default
+        None) is the CONTEXT-RESOLUTION SPEC produced by `resolution_spec_for` (mode-type × instance). It
+        parameterizes the R2 gather+cap WITHOUT any mode-name branch (registry-is-truth, the shape is
+        DATA): `strata` filters which gather-stratum kinds are admitted, `howto_detail` tunes/suppresses
+        the how-to leg, `budget` overrides the per-turn window cap. With resolution=None the gather +
+        budget are EXACTLY today's (byte-for-byte — every existing R2 caller/suite stays green). This is
+        §6.3 made real: ONE spine, the active mode-type's declarations choose the shape."""
         from datetime import datetime, timezone
         if not locus:
             return ""
         if now is None:
             now = datetime.now(timezone.utc)
         try:
-            items = self._r2_gather(locus, graph_id=graph_id, now=now)
+            items = self._r2_gather(locus, graph_id=graph_id, now=now, resolution=resolution)
             if not items:
                 return ""
-            capped = self._r2_score_and_cap(items, locus, now, intent=intent)
+            budget = None
+            if resolution is not None:
+                budget = resolution.get("budget")   # E1: the lens may resolve a tighter/wider window
+            capped = self._r2_score_and_cap(items, locus, now, intent=intent, budget=budget)
             if not capped:
                 return ""
             lines = "\n".join("  · " + (it.get("text", "") or "") for it in capped)
