@@ -11,9 +11,14 @@ THE JOIN (additive query, no new revert path):
 This suite proves:
   1. A self-change whose `changed_files` touch a scope S3 maps to `ui://workshop/self-changes`
      (→ runtime/suite.py) IS returned by the address-filtered query for that address.
-  2. ISOLATION — a change touching a DIFFERENT scope (canvas/app/src/App.tsx, which
-     `ui://chat/input` maps to) is NOT returned for `ui://workshop/self-changes`, and vice-versa.
-     Same two synthetic records prove the join BOTH ways, against the REAL corpus resolver.
+  2. ISOLATION — a change touching a DIFFERENT scope (nodes/portal.py, which
+     `ui://canvas/portal-window` maps to) is NOT returned for `ui://workshop/self-changes`, and
+     vice-versa. Same two synthetic records prove the join BOTH ways, against the REAL corpus resolver.
+     (POST-App.tsx-carve note: the old isolation partner `ui://chat/input` now resolves to
+     ['canvas/app/src/regions/RhmChat.tsx','runtime/suite.py'] — it OVERLAPS workshop's runtime/suite.py
+     scope, so it can no longer prove isolation. Switched to ui://canvas/portal-window → ['nodes/portal.py'],
+     a clean single-file ref that does NOT intersect runtime/suite.py. The carve made UI addresses commonly
+     map to suite.py (the handler) PLUS their region file; the pre-carve non-overlap assumption is gone.)
   3. PRESERVE — `self_change_log` / `last_self_change` / `revert_self_change` are unchanged: the
      query is a NEW method that calls them, never an edit to them. (We assert the existing methods
      still answer, and that the new method does not shadow/replace them.)
@@ -62,27 +67,29 @@ store = FsStore(os.path.join(tempfile.mkdtemp(prefix="l5-"), "store"))
 reg = NodeRegistry(); reg.discover([NODES])
 suite = Suite(store, reg, nodes_dir=NODES)
 
-# Two REAL corpus addresses with clean, non-overlapping scopes (verified live):
+# Two REAL corpus addresses with clean, non-overlapping scopes (verified live), POST-App.tsx-carve:
 #   ui://workshop/self-changes → ['runtime/suite.py']
-#   ui://chat/input            → ['canvas/app/src/App.tsx']
+#   ui://canvas/portal-window  → ['nodes/portal.py']   (the carve-safe isolation partner — does NOT
+#       intersect runtime/suite.py, unlike the pre-carve ui://chat/input which now maps to RhmChat.tsx
+#       + suite.py and OVERLAPS workshop on suite.py).
 WORKSHOP = "ui://workshop/self-changes"
-CHATIN = "ui://chat/input"
+PORTAL = "ui://canvas/portal-window"
 
 # sanity: the corpus resolver gives the scopes the join leans on (else the fixtures are wrong, not L5)
 check(f"{WORKSHOP} resolves to runtime/suite.py (S3, real corpus)",
       suite.resolve_scope(WORKSHOP)["scope"] == ["runtime/suite.py"])
-check(f"{CHATIN} resolves to canvas/app/src/App.tsx only (S3, real corpus)",
-      suite.resolve_scope(CHATIN)["scope"] == ["canvas/app/src/App.tsx"])
+check(f"{PORTAL} resolves to nodes/portal.py only (S3, real corpus — clean non-overlapping isolation partner)",
+      suite.resolve_scope(PORTAL)["scope"] == ["nodes/portal.py"])
 
 # Two SYNTHETIC self-change records — one per scope — so the join is provable BOTH directions.
 SUITE_CHANGE = {"sha": "aaaa1111", "subject": "[self-apply] add node-type 'foo'",
                 "ts": "2026-06-05T10:00:00+10:00", "is_revert": False,
                 "changed_files": ["runtime/suite.py", "nodes/foo.py"]}
-APP_CHANGE = {"sha": "bbbb2222", "subject": "[self-apply] tweak the canvas shell",
-              "ts": "2026-06-05T11:00:00+10:00", "is_revert": False,
-              "changed_files": ["canvas/app/src/App.tsx"]}
+PORTAL_CHANGE = {"sha": "bbbb2222", "subject": "[self-apply] tweak the portal node",
+                 "ts": "2026-06-05T11:00:00+10:00", "is_revert": False,
+                 "changed_files": ["nodes/portal.py"]}
 _real_self_change_log = suite.self_change_log
-suite.self_change_log = lambda limit=50: [APP_CHANGE, SUITE_CHANGE]   # newest-first, synthetic
+suite.self_change_log = lambda limit=50: [PORTAL_CHANGE, SUITE_CHANGE]   # newest-first, synthetic
 
 # ── 1. the change touching the address's scope IS returned ────────────────────
 ws = suite.self_changes_at(WORKSHOP)
@@ -93,11 +100,11 @@ check("a returned change carries the touched files (the operator sees WHY it mat
       "runtime/suite.py" in (ws["changes"][0].get("matched_files") or ws["changes"][0]["changed_files"]))
 
 # ── 2. ISOLATION — both directions, same two records ──────────────────────────
-check(f"{WORKSHOP} does NOT return the App.tsx change (isolation)", "bbbb2222" not in shas_ws)
-ci = suite.self_changes_at(CHATIN)
-shas_ci = [c["sha"] for c in ci["changes"]]
-check(f"{CHATIN} → returns ONLY the App.tsx change ({shas_ci})", shas_ci == ["bbbb2222"])
-check(f"{CHATIN} does NOT return the suite.py change (isolation other way)", "aaaa1111" not in shas_ci)
+check(f"{WORKSHOP} does NOT return the portal.py change (isolation)", "bbbb2222" not in shas_ws)
+pi = suite.self_changes_at(PORTAL)
+shas_pi = [c["sha"] for c in pi["changes"]]
+check(f"{PORTAL} → returns ONLY the portal.py change ({shas_pi})", shas_pi == ["bbbb2222"])
+check(f"{PORTAL} does NOT return the suite.py change (isolation other way)", "aaaa1111" not in shas_pi)
 
 # ── 4b. empty scope, NOT stale → [] WITH the note (DENY-ALL address) ──────────
 orphan = suite.self_changes_at("ui://nonexistent/thing")
@@ -157,7 +164,7 @@ check("revert-at-address returns the existing revert's result (reverted+head)",
 # a sha NOT in the address's filtered list is REFUSED (you can only revert what changed HERE) — fail loud
 refused = False
 try:
-    suite.revert_self_change_at(WORKSHOP, "bbbb2222")   # App.tsx change, not at this address
+    suite.revert_self_change_at(WORKSHOP, "bbbb2222")   # nodes/portal.py change, not at this address
 except (ValueError, KeyError):
     refused = True
 check("revert-at-address REFUSES a sha that did not change at this address (fail loud, scoped)", refused)
