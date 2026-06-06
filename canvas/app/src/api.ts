@@ -101,6 +101,11 @@ export const api = {
   voice: () => fetch('/api/voice').then(jr),
   stt: (blob: Blob) => fetch('/api/stt', { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: blob }).then(jr),
   tts: (text: string) => fetch('/api/tts', { method: 'POST', headers: J, body: JSON.stringify({ text }) }).then(r => r.blob()),
+  // Option A — switch between the personas: list them, read which voice engines are resident, and SWITCH
+  // (sets the active persona + auto-loads its voice, evicting the previous one — see /api/voice/switch).
+  personas: () => fetch('/api/personas').then(jr),
+  voiceServices: () => fetch('/api/voice/services').then(jr),
+  voiceSwitch: (persona: string) => fetch('/api/voice/switch', { method: 'POST', headers: J, body: JSON.stringify({ persona }) }).then(jr),
   // C1: the UI-component registry (sibling of object_info) — the source of truth for what's addressable.
   uiInfo: () => fetch('/api/ui_info').then(jr),
   // L3 · addressed history (§21.7#1): everything that happened AT a ui:// address. The address-keyed READ

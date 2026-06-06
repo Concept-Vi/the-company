@@ -17,7 +17,7 @@ import { registryStore } from '../registryStore'
 import { ProposeAffordance } from './ProposeAffordance'
 
 export function RhmChat() {
-  const { cfg, cfgOpen, chat, chatBusy, chatMsg, recording, indicated, setCfg, setCfgOpen, setChatMsg, applyCfg, sendChat, recordToggle, indicate } = useApp()
+  const { cfg, cfgOpen, chat, chatBusy, chatMsg, recording, indicated, personas, switchPersona, setCfg, setCfgOpen, setChatMsg, applyCfg, sendChat, recordToggle, indicate } = useApp()
   // the live chat-model registry — same source the node-config model dropdown reads (MODEL_OPTIONS.chat_models).
   const registry = useSyncExternalStore(registryStore.subscribe, registryStore.getSnapshot)
   const chatModels = registry.MODEL_OPTIONS.chat_models || []
@@ -39,8 +39,17 @@ export function RhmChat() {
             {chatModels.length === 0 && <option value="" disabled>(no registered chat models)</option>}
             {chatModels.map(m => <option key={m} value={m}>{m}</option>)}
           </select>
-          <input placeholder="persona / voice (optional)" value={cfg.persona || ''}
-            onChange={e => setCfg({ ...cfg, persona: e.target.value })} />
+          {/* Option A — switch between the cast: selecting a persona sets it active AND auto-loads its
+              voice (evicting the previous one to fit the card; a switch may cold-load). The notice tracks
+              progress to 'ready'. */}
+          <select data-ui-ref="ui://chat/persona-field" value={cfg.persona || ''}
+            title="switch persona — loads that voice (the card holds one at a time, so a switch cold-loads)"
+            onChange={e => switchPersona(e.target.value)}>
+            <option value="">(choose a persona)</option>
+            {personas.map((p: any) => <option key={p.id} value={p.id}>{p.name} · {p.engine}</option>)}
+            {cfg.persona && !personas.some((p: any) => p.id === cfg.persona) &&
+              <option value={cfg.persona}>{cfg.persona} (current)</option>}
+          </select>
           <button className="b" data-ui-ref="ui://chat/config" onClick={applyCfg}>apply config</button>
         </div>
       )}

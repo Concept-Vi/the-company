@@ -663,6 +663,28 @@ class H(BaseHTTPRequestHandler):
                 from voice import lifecycle as voice_lc
                 b = self._body()
                 self._send(200, json.dumps(voice_lc.unload(b.get("service") or b["ear"])))
+            elif self.path == "/api/voice/switch":  # Option A: pick a persona → set it AS active + auto-load its voice
+                # "switch between them all" without manual VRAM juggling: set the active persona (brain
+                # character + voice), then EVICT the previous voice engine and cold-load this persona's
+                # engine (the card can't hold them all — accepted). Returns 'warming' → poll
+                # /api/voice/services for 'up'. Fail loud on unknown persona, and (via the budget gate)
+                # if the voice won't fit even after eviction (e.g. orpheus + a big brain).
+                from voice import lifecycle as voice_lc, personas as voice_personas
+                b = self._body()
+                persona_id = (b.get("persona") or "").strip()
+                if not persona_id:
+                    raise ValueError("/api/voice/switch needs {persona} (fail loud)")
+                p = voice_personas.get_persona(persona_id)        # fail loud on an unknown persona
+                rc = SUITE.rhm_config()
+                eng = (rc.get("tts_engine") or "").strip() or p["engine"]   # override wins, else persona's engine
+                SUITE.set_rhm_config({"persona": persona_id})
+                svc = voice_lc.engine_service_for(eng)
+                if not svc:                                       # always-on engine (kokoro) — nothing to load
+                    out = {"persona": persona_id, "engine": eng, "service": None, "state": "up",
+                           "note": "always-on engine — no load step"}
+                else:
+                    out = {"persona": persona_id, "engine": eng, "service": svc, **voice_lc.switch_to(svc)}
+                self._send(200, json.dumps(out))
             elif self.path == "/api/voice/finished-thought":  # G1.3: the semantic endpoint judge (brain-side)
                 b = self._body()
                 self._send(200, json.dumps(SUITE.is_finished_thought(b.get("text", ""))))

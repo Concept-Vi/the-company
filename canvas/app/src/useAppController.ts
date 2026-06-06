@@ -124,6 +124,7 @@ export function useAppController(editor: Editor) {
   const [versionsBusy, setVersionsBusy] = useState(false)
   const [cfg, setCfg] = useState<any>({ model: '', persona: '' })
   const [cfgOpen, setCfgOpen] = useState(false)
+  const [personas, setPersonas] = useState<any[]>([])   // Option A: the cast you can switch between (id·name·engine)
   // U12: the /api/inbox payload is { live_escalations, resolved_for_you, batched, counts }. `batched` is a
   // SUBSET-grouping of live_escalations — NOT a third disjoint lane. We render the two real lanes.
   const [inbox, setInbox] = useState<any>({ live_escalations: [], resolved_for_you: [], batched: {}, counts: { escalations: 0, resolved: 0 } })
@@ -277,6 +278,7 @@ export function useAppController(editor: Editor) {
       // (RhmChat reads `chat.length`/`chat.map`). Defensive guard; the array path is unchanged.
       { const h = await api.chatHistory(); if (Array.isArray(h)) setChat(h) }
       setCfg(await api.rhmConfig())
+      api.personas().then(p => setPersonas(Array.isArray(p) ? p : [])).catch(() => {})   // the switchable cast
       const evs = await api.events(); mergeEvents(setEvents, evs)
       streamSeq.current = evs.reduce((m: number, e: any) => Math.max(m, e.seq ?? -1), -1)  // cursor = last seen
       setNow(await api.now()); setInbox(await api.inbox()); setLastChange(await api.lastChange()); setPanels(await api.panels())
@@ -753,6 +755,33 @@ export function useAppController(editor: Editor) {
     const c = await api.setRhmConfig({ model: cfg.model, persona: cfg.persona })
     setCfg(c); setCfgOpen(false); setNotice('RHM config → ' + (c.model || 'default')); await poll()
   }
+  // Option A — switch between the personas: set the chosen persona AS active and AUTO-LOAD its voice
+  // (the backend evicts the previous voice engine to fit the 16 GB card, then cold-loads this one —
+  // accepted that a switch may cold-load). We optimistically reflect the new persona, then poll the
+  // engine to 'up' so the operator sees when it's ready to speak. Fail-loud on the notice; never a
+  // silent no-op. (A persona whose voice won't fit even after eviction — e.g. orpheus beside a big
+  // brain — surfaces the budget gate's reason here.)
+  async function switchPersona(id: string) {
+    if (!id || id === cfg.persona) { setCfg((c: any) => ({ ...c, persona: id })); return }
+    setCfg((c: any) => ({ ...c, persona: id }))
+    setNotice(`switching to ${id} — cold-loading their voice…`)
+    try {
+      const r = await api.voiceSwitch(id)
+      if (r.error) { setNotice('⚠ could not switch to ' + id + ': ' + r.error); return }
+      if (r.service) {                                  // an engine that needs loading (not an always-on one)
+        const dl = Date.now() + 240000                  // the heavy voices (orpheus) cold-load in minutes
+        for (;;) {
+          const sv = await api.voiceServices().catch(() => null)
+          const st = sv?.services?.[r.service]?.state
+          if (st === 'up') break
+          if (st === 'down' || Date.now() > dl) { setNotice(`⚠ ${id}'s voice (${r.engine}) didn't come up — open the voice panel`); break }
+          await new Promise(res => setTimeout(res, 3000))
+        }
+      }
+      setNotice(`${id} is ready — talk (🎙) or type; it speaks back in listening mode`)
+      setCfg(await api.rhmConfig())
+    } catch (e: any) { setNotice('⚠ switch failed: ' + (e?.message || e)) }
+  }
   function cycleLayers() {
     const next = (layerView + 1) % 3
     setLayerView(next)
@@ -1216,7 +1245,7 @@ export function useAppController(editor: Editor) {
     // state values (read by the region components)
     edges, running, runError, runStartedAt, runElapsed, types, gname, gspec, surf, growMsg, workshop,
     oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
-    showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn,
+    showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn, personas,
     wtSpoke, wtBusy, selected, mobileTab, fleet, indicated, proposal, history, historyBusy,
     selfChanges, selfChangesBusy, freshness, freshnessBusy, versions, versionsBusy, journeyId, journeyReplaying,
     // refs the components read for the inspector form
@@ -1229,7 +1258,7 @@ export function useAppController(editor: Editor) {
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
     resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, fieldValue,
     setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus,
-    approveProposal, dismissProposal, toggleJourneyRecording, replayJourney,
+    approveProposal, dismissProposal, toggleJourneyRecording, replayJourney, switchPersona,
   }
 }
 

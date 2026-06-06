@@ -254,3 +254,34 @@ def engine_service_for(engine: str) -> str | None:
     (e.g. 'kokoro' — always up)."""
     sid = f"tts-{engine}"
     return sid if sid in _loadable() else None
+
+
+def resident_tts() -> list:
+    """The tts-* engine services currently UP (the persona voices holding VRAM). Used by switch_to to
+    evict the previous voice. STT ears are NOT included — only the persona TTS engines are juggled."""
+    loadables = _loadable()
+    return [sid for sid in loadables if sid.startswith("tts-") and is_up(loadables[sid])]
+
+
+def switch_to(service_id: str) -> dict:
+    """Make `service_id` the resident persona VOICE for a live persona switch: UNLOAD every OTHER resident
+    tts-* engine first (the 16 GB card can't hold them all — a switch EVICTS the previous voice), then
+    load the target. Cold-load is expected + accepted (Tim 2026-06-06: "if switching has to cold load them
+    that will just have to be what happens"). The STT ear + the chat brain are untouched — only persona
+    TTS engines are swapped. Returns the load result (`warming` → poll status() for `up`). Fail loud on a
+    non-tts/unknown id, and — via load()'s budget gate — if the target won't fit even after eviction
+    (e.g. orpheus ~10.5 GB cannot co-reside with a ~9.5 GB brain; the gate names what to unload)."""
+    loadables = _loadable()
+    if service_id not in loadables or not service_id.startswith("tts-"):
+        raise ValueError(f"switch_to expects a loadable tts engine id (tts-*); got {service_id!r} — "
+                         f"loadable engines: {sorted(s for s in loadables if s.startswith('tts-'))}")
+    if is_up(loadables[service_id]):
+        return {"service": service_id, "state": "up", "note": "already resident — no switch needed"}
+    evicted = []
+    for sid in resident_tts():
+        if sid != service_id:
+            unload(sid)                                        # cgroup teardown — frees the previous voice's VRAM
+            evicted.append(sid)
+    res = load(service_id)                                     # budget-gated; fail-loud if it still won't fit
+    res["evicted"] = evicted
+    return res
