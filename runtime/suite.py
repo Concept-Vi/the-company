@@ -72,7 +72,13 @@ def _load_corpus_element_addresses() -> list[tuple]:
         # I4: carry the union-record `tier` (governance action_class for COMMANDS at this address)
         # into the registry row's union-extras. ADDITIVE + OPTIONAL — None when the corpus entry
         # carries no tier (the default), so an untiered address falls back to the verb's own class.
-        extras = {"region": ur.region, "represents": ur.represents, "code": ur.code, "tier": ur.tier}
+        # D1: carry the union-record `howto` (the foundational affordance / how-to-use text) into the
+        # registry row's union-extras alongside region/represents/code/tier. ADDITIVE + OPTIONAL — None
+        # when the corpus entry authors no help (the default). The how-to stratum (`_r2_howto_at`) and
+        # `address_help` read it from row[5] GENERICALLY (mirroring how `_describe_ui_address` reads
+        # `represents`), never a per-element branch — Tim's not-hardwired correction.
+        extras = {"region": ur.region, "represents": ur.represents, "code": ur.code,
+                  "tier": ur.tier, "howto": ur.howto}
         rows.append((addr, ur.kind, (ur.title or addr), handle, dict(ur.capabilities), extras))
     return rows
 
@@ -231,6 +237,7 @@ class Suite:
         self.R2_SEMANTIC_WEIGHT = self._cfg_float("COMPANY_R2_SEMANTIC_WEIGHT", type(self).R2_SEMANTIC_WEIGHT)
         self.R2_BUDGET = self._cfg_int("COMPANY_R2_BUDGET", type(self).R2_BUDGET)
         self.R2_RUN_VERSIONS = self._cfg_int("COMPANY_R2_RUN_VERSIONS", type(self).R2_RUN_VERSIONS)
+        self.R2_HOWTO_MAX = self._cfg_int("COMPANY_R2_HOWTO_MAX", type(self).R2_HOWTO_MAX)   # D1 flood guard
 
     @staticmethod
     def _cfg_float(env_name: str, default: float) -> float:
@@ -459,6 +466,7 @@ class Suite:
                 "R2_SEMANTIC_WEIGHT": self.R2_SEMANTIC_WEIGHT,
                 "R2_BUDGET": self.R2_BUDGET,
                 "R2_RUN_VERSIONS": self.R2_RUN_VERSIONS,
+                "R2_HOWTO_MAX": self.R2_HOWTO_MAX,
             },
             "api_verbs": ["/api/run", "/api/now", "/api/chat", "/api/graph", "/api/graphs",
                           "/api/types", "/api/object_info", "/api/events", "/api/inbox",
@@ -1401,6 +1409,93 @@ class Suite:
                 return address                                 # registered, no extra descriptor available
         return f"{address} (unregistered)"                    # fail-loud-legible: gap surfaced, not dropped
 
+    def address_help(self, ui_addr: str) -> dict:
+        """D1 — the COMPOSED affordance resolver: join the THREE legs of "what can I do here?" at one
+        `ui://` address into ONE bundle, REUSING the existing resolvers (no parallel system, rule 3):
+
+          • what_this_is   — the WHAT (`_describe_ui_address`): the registry row's human title /
+                             `represents` feature-id (one-source, never invented).
+          • how_to_change  — the HOW-TO-CHANGE (`resolve_scope` → `blast_radius`): the `code://` scope this
+                             address powers + the BLAST RADIUS a change here would reach (co-reference /
+                             structural dependents+dependencies / semantic neighbours). This is the
+                             "if you change this, here's what it touches" leg — the same X1/X2/X14 join the
+                             consent/mint path uses.
+          • how_to_use     — the HOW-TO-USE (`_registry_howto_for`): the authored affordance/how-to text
+                             (the NEW D1 `howto` field). None when the address authors no help.
+
+        DEGRADE-CLEAN IF A LEG IS ABSENT (rule 4, fail-loud-LEGIBLE, never crash): each leg is resolved in
+        its own guard. `resolve_scope`/`blast_radius` ALREADY return graceful-empty + a `note` for an
+        address with no code symbol / a stale corpus join (they do not raise on absence — only a malformed
+        address raises the S0 gate). The how-to-use leg is None when unauthored. So a bare/region address
+        with no code and no howto returns a bundle with what_this_is populated and the other two legs
+        honestly empty (each carrying its own note / None) — a clean partial, never a half-crash. A
+        MALFORMED address propagates the S0 grammar raise (fail loud — an unparseable locus is a real
+        error, not a missing leg).
+
+        Returns {address, what_this_is, how_to_change:{scope, blast_radius, note}, how_to_use,
+        legs_present:{...}} — `legs_present` makes the degrade explicit so a caller (or the D2 UI later)
+        can see WHICH legs resolved without re-deriving it. GENERIC over any address (mode-parameterizable
+        later, E1); no per-element branch (Tim's not-hardwired correction)."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(ui_addr)                              # S0 grammar gate — a malformed locus IS an error
+
+        # LEG 1 — WHAT THIS IS (always resolvable for a well-formed address; '(unregistered)' if unknown).
+        what_this_is = self._describe_ui_address(ui_addr)
+
+        # LEG 2 — HOW TO CHANGE: scope (resolve_scope) + blast_radius. Both degrade graceful-empty (note),
+        # never raise on absence. Guarded so even an unexpected internal failure becomes a legible note,
+        # not a crash of the whole bundle (the leg is then honestly marked absent).
+        how_to_change = {"scope": [], "blast_radius": None, "note": None}
+        try:
+            scoped = self.resolve_scope(ui_addr)               # {address, symbols, scope, stale, note}
+            radius = self.blast_radius(ui_addr)                # {address, symbols, co_reference, …, note}
+            how_to_change = {"scope": scoped.get("scope", []),
+                             "blast_radius": radius,
+                             "note": scoped.get("note") or radius.get("note")}
+        except (ValueError, TypeError):
+            raise                                              # malformed address already raised above; re-raise
+        except Exception as e:                                 # any other internal failure → legible absent leg
+            how_to_change = {"scope": [], "blast_radius": None,
+                             "note": f"how-to-change leg unresolved ({type(e).__name__})"}
+
+        # LEG 3 — HOW TO USE: the authored affordance text (None when unauthored — a clean absent leg).
+        how_to_use = self._registry_howto_for(ui_addr)
+
+        def _howto_change_has_content(htc: dict) -> bool:
+            """The how-to-change leg has REAL content iff there is a code `scope` OR the blast_radius
+            carries at least one edge (co_reference / structural dependents+dependencies / semantic
+            neighbours). A well-formed no-code-symbol address yields an all-empty radius dict — that is an
+            ABSENT change-leg (the operator can't change code that doesn't resolve), so we report it
+            absent rather than reading the bare dict as 'present'."""
+            if htc.get("scope"):
+                return True
+            br = htc.get("blast_radius")
+            if not isinstance(br, dict):
+                return False
+            return bool(br.get("co_reference") or br.get("structural_dependents")
+                        or br.get("structural_dependencies") or br.get("semantic_neighbours")
+                        or br.get("symbols"))
+
+        return {
+            "address": ui_addr,
+            "what_this_is": what_this_is,
+            "how_to_change": how_to_change,
+            "how_to_use": how_to_use,
+            "legs_present": {
+                # what-this-is is "present" only when the address is REGISTERED (an '(unregistered)'
+                # descriptor is the honest gap, not a resolved leg).
+                "what_this_is": bool(what_this_is) and "(unregistered)" not in what_this_is,
+                # how-to-change is "present" only when it resolved REAL content — a code `scope` OR a
+                # blast_radius carrying at least one neighbour/dependent. blast_radius returns a dict for
+                # ANY well-formed address (often all-empty for a no-code-symbol address), so testing
+                # `is not None` would mark the leg present even when there is nothing to change. We check
+                # for actual edges, so the D2 UI can detect a genuinely-empty change-leg (degrade signal).
+                "how_to_change": _howto_change_has_content(how_to_change),
+                # how-to-use is "present" only when the address authored a howto.
+                "how_to_use": how_to_use is not None,
+            },
+        }
+
     def current_locus(self) -> str | None:
         """R1 — READ the backend-held current `ui://` locus (the most-recent indicated address).
 
@@ -1474,6 +1569,16 @@ class Suite:
     #                                     window (~1k tokens). attention = BUDGET; the cap is ENFORCED —
     #                                     never stuffed. Far below CONSULT_CAP: this is the always-on
     #                                     locus slice that rides EVERY turn, not a one-shot consult read.
+    R2_HOWTO_MAX = 2000                 # D1 — max CHARS of the how-to/affordance stratum that may enter the
+    #                                     gather per locus (the FLOOD GUARD, mirroring R2_RUN_VERSIONS). The
+    #                                     howto stratum is PIN-PERSISTENT (pinned=True + ts=now each gather →
+    #                                     recency never decays), so it scores at or above the operator's own
+    #                                     comments and, unbounded, a long help text could EVICT them from the
+    #                                     bounded window (the same starvation _r2_run_strata caps against). So
+    #                                     a howto longer than this is TRUNCATED-with-marker at the data seam
+    #                                     (legible, not silent) BEFORE scoring; the per-turn R2_BUDGET cap
+    #                                     still applies on top. A named knob (D2/X17 will env-wire it), not a
+    #                                     bare literal — the affordance grounds, it never floods.
 
     @staticmethod
     def address_tree_distance(a: str, b: str) -> int:
@@ -1570,6 +1675,73 @@ class Suite:
                             "pinned": False})
         return out
 
+    def _registry_howto_for(self, address: str) -> str | None:
+        """D1 — read the authored HOW-TO / affordance text for `address` from the live UI_REGISTRY,
+        GENERICALLY (rule 8 — from the registry, never invented; mode-parameterizable later, NEVER a
+        per-element branch — Tim's not-hardwired correction). The howto rides the registry row's
+        union-extras (row[5]['howto'], plumbed from the corpus `howto` field via
+        UnionAddressRecord.from_corpus → _load_corpus_element_addresses), so this resolves it with the
+        SAME two-key matching `_describe_ui_address` uses (the bare-region served-form OR the corpus
+        element full-key) — one source, one match rule.
+
+        Returns the howto string, or None when the address is unregistered OR registered-without-howto
+        (both honest absences — the caller treats a None as 'no how-to-use leg' and degrades cleanly).
+        FAIL-LOUD (rule 4): a malformed address raises (S0 grammar gate) — never a silent empty parse."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                              # S0 grammar gate — raises on malformed
+        for row in self.UI_REGISTRY:
+            ref, kind = row[0], row[1]
+            served = "ui://canvas/*" if kind == "canvas" else f"ui://{kind}/{ref}"
+            if ref == address or served == address:
+                extras = row[5] if len(row) > 5 else {}
+                howto = (extras or {}).get("howto")
+                return howto if (howto and str(howto).strip()) else None
+        return None
+
+    def _r2_howto_at(self, address: str, now=None) -> list:
+        """D1 — the HOW-TO / AFFORDANCE stratum at `address`: the FOUNDATIONAL layer that resolves the
+        what-this-is / what-you-can-do / how-to-change-it help INTO the locus context, as a NEW R2 gather
+        source mirroring `_r2_events_at`. It is the data half of the foundational affordance stratum (the
+        composed three-leg join lives in `address_help`).
+
+        PIN-PERSISTENT (the keystone of this stratum — no recency decay): unlike a comment/chat/event whose
+        relevance fades, an address's how-to text is ALWAYS true at that address, so it must not decay out
+        of the window over a long session. Achieved WITHOUT touching `_r2_score` (which would risk the
+        addr_context_acceptance byte-for-byte assertion): the item is emitted with `pinned=True` (the
+        R2_PIN_WEIGHT bonus, the same mechanism a pinned comment uses) AND `ts=now` re-stamped EVERY gather
+        (recency = exp(-LAMBDA·0) = 1 — the maximum, never decaying). So the howto holds its rank turn over
+        turn through the EXISTING scorer — a pure-data persistence, not a scorer special-case.
+
+        FLOOD-PROOF (mirrors `_r2_run_strata`'s R2_RUN_VERSIONS bound): because it is pin-persistent it
+        scores at/above the operator's own locus comments; an unbounded long help text could EVICT them
+        from the R2_BUDGET window (the same starvation the run:// versions cap guards against). So the text
+        is TRUNCATED-with-marker at R2_HOWTO_MAX here (legible, never silent), BEFORE it reaches the
+        score+cap; the per-turn R2_BUDGET cap still applies on top.
+
+        MODE-PARAMETERIZABLE, NOT HARDWIRED (Tim's correction): the resolution is generic over ANY address
+        via `_registry_howto_for` (one match rule, registry-is-truth) — there is NO per-element branch and
+        NO help text embedded in code. Later (E1) the operator's MODE can parameterize WHAT/HOW this
+        resolves (e.g. a terse vs full howto, or none in a focus mode) by threading a mode arg through this
+        method + the gather — the seam is left open; it is not foreclosed by any hardwiring here.
+
+        Returns a list of 0-or-1 R2 items in the common gather shape `{kind, address, ts, text, pinned}`.
+        `kind='howto'` (NOT 'event' — so `_r2_dedup`'s pass-2 echo logic never mangles it) and NO `_raw`
+        key (so dedup pass-1 keeps it unconditionally — it is never a comment double-count). Empty list
+        when the address has no authored howto (clean degrade)."""
+        from datetime import datetime, timezone
+        if now is None:
+            now = datetime.now(timezone.utc)
+        howto = self._registry_howto_for(address)             # generic registry read (raises on malformed addr)
+        if not howto:
+            return []
+        text = str(howto)
+        if len(text) > self.R2_HOWTO_MAX:                     # FLOOD GUARD — truncate-with-marker (legible)
+            text = text[: self.R2_HOWTO_MAX] + " …[howto truncated]"
+        return [{"kind": "howto", "address": address,
+                 "ts": now.isoformat(),                        # PIN-PERSISTENT: re-stamped now → recency = 1
+                 "text": f"[how-to @ {address}] {text}",
+                 "pinned": True}]                              # PIN-PERSISTENT: the R2_PIN_WEIGHT bonus
+
     def _r2_run_counterpart(self, locus: str, graph_id: str | None) -> str | None:
         """X6 (Convergence) — the ui://↔run:// BRIDGE: map a `ui://canvas/<node>` locus to its
         `run://<graph_id>/<node>` counterpart, the address where the SAME node's output-versions (L6,
@@ -1665,7 +1837,7 @@ class Suite:
                        address=ui_locus)
         return items
 
-    def _r2_gather(self, locus: str, graph_id: str | None = None) -> list:
+    def _r2_gather(self, locus: str, graph_id: str | None = None, now=None) -> list:
         """GATHER every item attached to the locus AND its ancestors (I6 annotations via
         `annotations_at`, I7 chats via `chats_at`, addressed events). Each item is normalised to a
         common shape `{kind, address, ts, text, pinned}` so the decay scores them uniformly. The
@@ -1693,6 +1865,11 @@ class Suite:
                               "_raw": (c.get("text", "") or ""),   # X8: underlying text, for dedup identity
                               "pinned": bool(c.get("pinned"))})
             items.extend(self._r2_events_at(addr))
+            # D1: the FOUNDATIONAL HOW-TO / AFFORDANCE stratum at this ancestor — pin-persistent (no recency
+            # decay), flood-bounded (R2_HOWTO_MAX), through the SAME dedup/score/cap as every other item.
+            # `now` is threaded so the pin-persistent ts matches the scorer's `now` (deterministic in tests);
+            # generic over any address (registry-is-truth), never a per-element branch (Tim's correction).
+            items.extend(self._r2_howto_at(addr, now=now))
         # X6: bridge the ui:// locus to its run:// counterpart (guarded; None when the bridge doesn't apply).
         run_addr = self._r2_run_counterpart(locus, graph_id)
         if run_addr is not None:
@@ -1868,7 +2045,7 @@ class Suite:
         if now is None:
             now = datetime.now(timezone.utc)
         try:
-            items = self._r2_gather(locus, graph_id=graph_id)
+            items = self._r2_gather(locus, graph_id=graph_id, now=now)
             if not items:
                 return ""
             capped = self._r2_score_and_cap(items, locus, now, intent=intent)

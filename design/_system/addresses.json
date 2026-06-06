@@ -18,7 +18,8 @@
         "openable"
       ],
       "represents": "RUN-run",
-      "code": "canvas/app/src/regions/Toolbar.tsx (run) / runtime/suite.py:run"
+      "code": "canvas/app/src/regions/Toolbar.tsx (run) / runtime/suite.py:run",
+      "howto": "WHAT: the Run control. WHAT YOU CAN DO: click it to recompute the current graph — every node whose inputs changed re-fires, cached nodes are skipped (the memo gate). HOW TO CHANGE IT: its behaviour lives in the toolbar region + the engine scheduler; changing what Run does is a code change to the run path, surfaced via the build-intent wire."
     },
     "ui://toolbar/presence": {
       "region": "toolbar",
@@ -27,7 +28,8 @@
         "openable"
       ],
       "represents": "RHM-modes",
-      "code": "runtime/suite.py:set_mode"
+      "code": "runtime/suite.py:set_mode",
+      "howto": "WHAT: the presence dial (the RHM mode selector). WHAT YOU CAN DO: pick a presence mode (focus, listening, walkthrough, …) — the mode changes which verbs the RHM is offered and how it speaks; off disables it. HOW TO CHANGE IT: modes are nodes (rhm_mode) + the MODES registry; add a mode by registering one."
     },
     "ui://rail/palette": {
       "region": "rail",
@@ -99,7 +101,8 @@
         "spotlit"
       ],
       "represents": "WIRE-review",
-      "code": "runtime/suite.py:review_verdicts"
+      "code": "runtime/suite.py:review_verdicts",
+      "howto": "WHAT: a build-result review card in the inbox. WHAT YOU CAN DO: read the result summary + the changed-files diff of a completed self-build, then approve (resolve) it — this records your verdict, it never re-triggers the build. HOW TO CHANGE IT: the review surfacing is the decision→implementation wire (guarded close + surface_review)."
     },
     "ui://inbox/build-intent": {
       "region": "inbox",
@@ -195,7 +198,8 @@
         "presentable"
       ],
       "represents": "WS-workshop",
-      "code": "runtime/suite.py:ui_info"
+      "code": "runtime/suite.py:ui_info",
+      "howto": "WHAT: the Workshop — where the operator composes and edits the system itself. WHAT YOU CAN DO: build panels, author extensions, and review self-changes. HOW TO CHANGE IT: the workshop region + the self-modification path (panel/extend verbs, build-gated, git-reversible)."
     },
     "ui://tabbar": {
       "region": "tabbar",
