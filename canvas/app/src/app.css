@@ -599,6 +599,51 @@ button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
   border-radius:4px;color:var(--ink);font-family:"IBM Plex Mono",ui-monospace,monospace;
   font-size:10.5px;padding:2px 6px}
 .journey-bar .ind-addr:disabled{color:var(--dim);cursor:default}
+/* G-4 · THE SELF-BUILD WIRE'S OPERATOR DOOR (App.tsx WireRequest) — the missing FE caller for the
+   decision→implementation wire. Point → ask → see-the-reach → approve. Floats over the canvas cell ABOVE
+   the journey-bar so the three indicated-element affordances never overlap. Sibling of .annotate-bar but
+   the WIRE-BLUE signature (--kind-content, the kit `wire` tone — matching the Inbox "decision → build"
+   lane), and a CARD (the door holds a multi-step gesture), not a one-line chip. Token-only, design-lint
+   clean: paint/layout only, every colour a corpus token. The wire tint is the recognition cue — a glance
+   ties this door to where the minted intent lands. */
+.wire-door{position:absolute;left:50%;bottom:104px;transform:translateX(-50%);z-index:7;
+  pointer-events:auto;width:min(420px,92vw);display:flex;flex-direction:column;gap:var(--sp-2);
+  padding:var(--sp-3) var(--sp-3);background:var(--s1);
+  border:1px solid var(--kind-content);border-left:3px solid var(--kind-content);
+  border-radius:var(--r-lg);box-shadow:var(--elev-2)}
+.wire-door-head{display:flex;align-items:center;gap:var(--sp-2)}
+.wire-door-head .ic{color:var(--kind-content);flex:none;font-size:var(--fs-lg)}
+.wire-door-title{font-family:var(--font-display);font-size:var(--fs-lg);color:var(--ink);flex:none}
+.wire-door-head .kit-badge{margin-left:auto}
+.wire-door-input{width:100%;resize:vertical;min-height:42px;background:var(--s0);
+  border:1px solid var(--line-2);border-radius:var(--r-sm);color:var(--ink);
+  font-family:var(--font-mono);font-size:var(--fs-body);line-height:var(--lh-body);
+  padding:var(--sp-2)}
+.wire-door-input:focus{outline:0;border-color:var(--kind-content)}
+.wire-door-input::placeholder{color:var(--dim)}
+.wire-door-foot{display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap}
+.wire-door-inert{flex:1 1 auto;min-width:0;font-family:var(--font-mono);font-size:var(--fs-tag);
+  color:var(--dim);letter-spacing:var(--tr-label)}
+.wire-door-mint,.wire-door-approve{flex:none;border:0;border-radius:var(--r-sm);cursor:pointer;
+  font-family:var(--font-mono);font-size:var(--fs-meta);font-weight:600;padding:var(--sp-1) var(--sp-3);
+  background:var(--kind-content);color:var(--ink-accent)}
+.wire-door-mint:disabled{background:var(--s3);color:var(--dim);cursor:default}
+.wire-door-approve{background:var(--sig);color:var(--ink-accent)}
+.wire-door-approve:disabled{background:var(--s3);color:var(--dim);cursor:default}
+.wire-door-dismiss{flex:none;background:transparent;border:1px solid var(--line-2);border-radius:var(--r-sm);
+  color:var(--dim);cursor:pointer;font-family:var(--font-mono);font-size:var(--fs-tag);padding:var(--sp-1) var(--sp-2)}
+.wire-door-dismiss:hover{color:var(--ink);border-color:var(--line)}
+.wire-door-minted{display:flex;flex-direction:column;gap:var(--sp-2);border-top:1px solid var(--line);
+  padding-top:var(--sp-2)}
+.wire-door-minted-head{display:flex;align-items:center;gap:var(--sp-2);font-size:var(--fs-meta)}
+.wire-door-noreach{font-family:var(--font-mono);font-size:var(--fs-meta);padding:var(--sp-2);
+  background:var(--s0);border:1px solid var(--line);border-radius:var(--r-sm)}
+.wire-door-err{color:var(--err);font-family:var(--font-mono);font-size:var(--fs-meta)}
+@media (max-width:699px){
+  /* on the phone the in-canvas overlays are display:none (they overlap at phone width — the corpus rule);
+     the door is reachable through the indicated-element flow + the Inbox builds lane on the panel sheet. */
+  .wire-door{display:none}
+}
 /* the indicating chip in the RHM chat (above the input) — shows the locus + a clear. Reuses the corpus
    panel/accent vocabulary (the same tokens the surrounding HUD uses); compact, single line. */
 .rhm-indicating{display:flex;align-items:center;gap:6px;margin:6px 8px 0;padding:4px 8px;
@@ -611,21 +656,36 @@ button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
   font-size:11px;line-height:1;padding:2px 4px;border-radius:4px}
 .rhm-indicating .ind-clear:hover{color:var(--ink);background:var(--s2)}
 
-/* I3 · propose-affordance — the CONSENT card (click #2). Built on the corpus token vocabulary
-   (mirrors .rhm-indicating: --acc-glow surface, --sig-dim border) extended into a card with the
-   proposed verb (headline) + address (monospace, exactly what will run) + approve/dismiss. The
-   action runs ONLY on approve. NO hardcoded literals (design-lint gate). */
-.rhm-afford{display:flex;flex-direction:column;gap:7px;margin:6px 8px 0;padding:8px 10px;
-  background:var(--acc-glow);border:1px solid var(--sig-dim);border-radius:6px;min-width:0}
-.rhm-afford .afford-head{display:flex;align-items:center;gap:6px;font-size:8px;text-transform:uppercase;
-  letter-spacing:.1em;color:var(--dim)}
+/* B1 · propose-affordance — the OFFER-WITH-OPTIONS surface (click #2, the rich "shall I?"). UPGRADED
+   from the binary [approve · dismiss] card into a four-channel offer: PICK an option · STEER (refine →
+   re-offer) · DEFER (set aside) · DISMISS (reject). Built on the committed commander's-bridge tokens
+   (--acc-glow surface, --sig-dim border; the option rows are kit Surfaces with the signal spine; the
+   steer field mirrors .rhm-input). NO hardcoded literals (design-lint gate). The G-25 supersede: the
+   old single-row .afford-body rule is removed (the verb/addr now live inside .afford-opt-row). */
+.rhm-afford{display:flex;flex-direction:column;gap:var(--sp-2);margin:var(--sp-2) var(--sp-2) 0;padding:var(--sp-2) var(--sp-3);
+  background:var(--acc-glow);border:1px solid var(--sig-dim);border-radius:var(--r-lg);min-width:0}
+.rhm-afford .afford-head{display:flex;align-items:center;gap:var(--sp-1);font-size:var(--fs-micro);text-transform:uppercase;
+  letter-spacing:var(--tr-tag);color:var(--dim)}
 .rhm-afford .afford-head .ic{color:var(--sig);flex:none}
-.rhm-afford .afford-body{display:flex;align-items:baseline;gap:8px;min-width:0}
-.rhm-afford .afford-verb{flex:none;font-family:"Fraunces",serif;font-size:14px;color:var(--sig)}
+.rhm-afford .afford-head .afford-label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* the offered choices — each a kit Surface (signal spine); a row reads as a click-to-run action by sight */
+.rhm-afford .afford-options{display:flex;flex-direction:column;gap:var(--sp-1)}
+.rhm-afford .afford-options .kit-surface{margin:0;padding:var(--sp-1) var(--sp-2)}
+.rhm-afford .afford-opt-row{display:flex;align-items:baseline;gap:var(--sp-2);min-width:0}
+.rhm-afford .afford-verb{flex:none;font-family:var(--font-display);font-size:var(--fs-lg);color:var(--sig)}
+.rhm-afford .afford-opt-verb{flex:none;font-family:var(--font-mono);font-size:var(--fs-micro);color:var(--dim);
+  text-transform:uppercase;letter-spacing:var(--tr-tag)}
 .rhm-afford .afford-addr{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:10.5px;color:var(--dim)}
-.rhm-afford .afford-actions{display:flex;gap:6px}
-.rhm-afford .afford-actions .b{font-size:10.5px;padding:4px 12px}
+  font-family:var(--font-mono);font-size:var(--fs-meta);color:var(--dim)}
+.rhm-afford .afford-opt-go{flex:none;color:var(--sig);font-size:var(--fs-meta)}
+/* the steer (direction) channel — mirrors the chat .rhm-input field so it's no bespoke element */
+.rhm-afford .afford-steer{display:flex;gap:var(--sp-1)}
+.rhm-afford .afford-steer-in{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);color:var(--ink);
+  border-radius:var(--r);padding:var(--sp-1) var(--sp-2);font-family:var(--font-mono);font-size:var(--fs-meta)}
+.rhm-afford .afford-steer-in:focus{outline:none;border-color:var(--sig)}
+.rhm-afford .afford-steer .b{flex:none;font-size:var(--fs-meta);padding:var(--sp-1) var(--sp-3)}
+.rhm-afford .afford-actions{display:flex;gap:var(--sp-1);justify-content:flex-end}
+.rhm-afford .afford-actions .b{font-size:var(--fs-meta);padding:var(--sp-1) var(--sp-3)}
 
 /* B-frontend: the walkthrough card — the visible review organ. A new .hud region (top-centre, under the
    toolbar) shown only while a review session is active. Reuses the panel/coa/surf vocabulary. */

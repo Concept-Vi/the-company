@@ -232,6 +232,15 @@
       "represents": "NODE-portal",
       "code": "nodes/portal.py"
     },
+    "ui://canvas/wire-request": {
+      "region": "canvas",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "WIRE-door",
+      "code": "runtime/suite.py:surface_intent_at"
+    },
     "ui://workshop/self-changes": {
       "region": "workshop",
       "capabilities": [

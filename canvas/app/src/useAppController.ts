@@ -90,7 +90,16 @@ export function useAppController(editor: Editor) {
   // approve handler fires /api/act (api.act → the I2 dispatch path — REUSE, not a new path), so the
   // action runs ONLY on approve; dismiss just drops it (a reject does nothing). Mirrors the `indicated`
   // chip pattern (separate ephemeral state beside the chat log).
-  const [proposal, setProposal] = useState<{ verb: string; address?: string | null; args?: any } | null>(null)
+  // B1 · OFFER-WITH-OPTIONS shape (mirrors the backend suite.py:3313-3317 `proposal`): the top-level
+  // {verb,address,args} is the PRIMARY offer; `options[]` are the one-click choices the operator picks
+  // among (v1 carries exactly one — the surface maps over it generically so it's ready when the backend
+  // emits several); `direction:true` means the offer accepts a steer (the operator types a refinement →
+  // it loops back to the RHM to re-offer). Each option carries a `label` (the human one-liner shown on
+  // its button). Extended from the binary {verb,address,args} card → the rich consent surface.
+  type ProposalOption = { verb: string; address?: string | null; args?: any; label?: string }
+  const [proposal, setProposal] = useState<
+    { verb: string; address?: string | null; args?: any; options?: ProposalOption[]; direction?: boolean } | null
+  >(null)
   // L3 · addressed history (§21.7#1): the trajectory of events stamped AT the indicated ui:// address —
   // "everything that happened here". Loaded by fetchHistory whenever the operator indicates an element;
   // rendered NAVIGABLE (grouped by kind) by the History region. null = nothing indicated / no history yet.
@@ -573,6 +582,31 @@ export function useAppController(editor: Editor) {
       setNotice('💬 comment attached to ' + (title || addr))     // the annotate face's "did X" (rule 4)
     } catch (e: any) { setNotice('✕ could not attach comment: ' + (e?.message || e)) }
   }
+  // G-4 · THE WIRE'S OPERATOR DOOR — mint a build-intent FROM the indicated ui:// element (the missing
+  // FE caller for the self-build wire; D1/G-4). The SIBLING of annotateLocus: where annotateLocus attaches
+  // a comment, this REQUESTS A CHANGE — it POSTs /api/intent-at, which mints a build-intent whose SCOPE is
+  // derived from the pointed address (S3) and whose X16 BLAST-RADIUS is computed at consent time, so the
+  // minted item carries the reach the operator then sees + approves (BlastRadiusReach + /api/resolve — the
+  // door's "see the reach → approve" half reuses the EXISTING components, never reimplemented). MINT-ONLY:
+  // it surfaces the intent with resolved=None; it NEVER dispatches (dispatch is dispatch_decision, off this
+  // face, posture-gated, safe-by-default `plan`). Returns the minted item (so the caller can show its reach
+  // inline) or null on failure. Fail-loud (rule 4): no locus / not a ui:// element / empty text → a visible
+  // notice, never a silent no-op. After a successful mint we poll() so the new build-intent also appears in
+  // the Inbox builds lane (the persistent home; the door is the entry, the Inbox is the standing deck).
+  async function mintBuildIntent(text: string): Promise<any | null> {
+    const addr = indicatedRef.current
+    if (!addr || !addr.startsWith('ui://')) { setNotice('✕ point at a ui:// element first, then request the change'); return null }
+    const body = (text || '').trim()
+    if (!body) { setNotice('✕ a change request needs a description (no silent no-op)'); return null }
+    try {
+      const r = await api.intentAt(addr, body)
+      if (r?.error) { setNotice('✕ ' + r.error); return null }   // fail-loud: surface the backend 400, never swallow
+      const title = getUI_INFO()[addr]?.title
+      setNotice('⚙ build-intent minted at ' + (title || addr) + ' — review the reach, then approve (plan-mode by default)')
+      await poll()                                                // the new intent joins the Inbox builds lane too
+      return r
+    } catch (e: any) { setNotice('✕ could not mint the build-intent: ' + (e?.message || e)); return null }
+  }
   // A document-level CAPTURE listener: a click on any element carrying a ui:// data-ui-ref INDICATES it.
   // Capture phase + read the nearest [data-ui-ref] ancestor so a click on an inner glyph still resolves
   // to the addressed container; we DON'T preventDefault/stopPropagation — indicating is additive, the
@@ -588,6 +622,13 @@ export function useAppController(editor: Editor) {
     function onDocClick(e: MouseEvent) {
       const tgt = e.target as HTMLElement | null
       if (tgt?.closest?.('[data-ui-ref="chat"]')) return    // inside the chat region → conversing, never indicating
+      // G-4 · the WIRE-DOOR exclusion (mirrors the chat guard above, same failure it prevents). The door
+      // (ui://canvas/wire-request) is the surface where the operator DESCRIBES a change TO the pointed
+      // element — clicking into its textarea must NOT re-indicate the door itself (which would overwrite
+      // the operator's pointed target and mint the change AGAINST the door). So a click anywhere inside the
+      // wire door leaves the current indication UNTOUCHED — you point with the rest of the surface, then
+      // describe the change in the door. (The door reads `indicated`, never becomes it.)
+      if (tgt?.closest?.('[data-ui-ref="ui://canvas/wire-request"]')) return
       const t = tgt?.closest?.('[data-ui-ref]') as HTMLElement | null
       if (!t) return
       const ref = t.getAttribute('data-ui-ref') || ''
@@ -732,12 +773,19 @@ export function useAppController(editor: Editor) {
   // (the I2 dispatch path — REUSE, never a new path). The action runs ONLY here, on the operator's
   // approve. Then drive the SAME post-dispatch reaction the chat path uses, surface the "did X"
   // confirmation as an assistant message, and clear the card. Fail-loud on a backend error (rule 4).
-  async function approveProposal() {
+  // B1 — APPROVE / PICK-AN-OPTION (click #2, the consent commit). The offer-with-options surface calls
+  // this with the chosen option; called bare it commits the PRIMARY offer (top-level verb/address/args).
+  // Either way it fires the chosen verb-at-address through /api/act (the I2 dispatch path — REUSE, never
+  // a new path). The action runs ONLY here, on the operator's pick. Then drive the SAME post-dispatch
+  // reaction the chat path uses, surface the "did X" confirmation, and clear the card. Fail-loud (rule 4).
+  async function approveProposal(opt?: { verb: string; address?: string | null; args?: any }) {
     const p = proposal
     if (!p || chatBusy) return
+    // the picked option (an explicit choice) OR the primary offer (a bare approve) — never a guess.
+    const chosen = opt ?? { verb: p.verb, address: p.address, args: p.args }
     setChatBusy(true)
     try {
-      const r = await api.act(p.verb, p.address || undefined, p.args)
+      const r = await api.act(chosen.verb, chosen.address || undefined, chosen.args)
       if (r.error) { setChat(c => [...c, { role: 'assistant', text: '⚠ ' + r.error }]) }
       else {
         if (r.reply) setChat(c => [...c, { role: 'assistant', text: '✓ ' + r.reply }])
@@ -748,6 +796,29 @@ export function useAppController(editor: Editor) {
     catch { setChat(c => [...c, { role: 'assistant', text: '(could not reach the brain to act)' }]) }
     finally { setProposal(null); setChatBusy(false) }
   }
+  // B1 — STEER/REFINE (the direction channel — not binary): the operator types a steer ("smaller scope",
+  // "the other node", "a draft first") and it loops BACK to the RHM to refine the offer. Implemented by
+  // REUSING sendChat (the voice/co-presence path stays untouched — we do NOT edit sendChat's body) with a
+  // composed message that names the standing offer so the RHM refines it rather than answering fresh. The
+  // prior offer is NOT in the chat log (suite.py:3365 persists only prose+action), so the steer carries
+  // the offer-context inline. sendChat already clears the old card (line 669); a refined offer returns as
+  // a NEW r.proposal → that IS the loop. SEAM: the RHM MAY act or answer instead of re-offering depending
+  // on mode — the FE cannot force a re-suggest; this presents the steer, the brain decides (flagged gap).
+  async function steerProposal(text: string) {
+    const p = proposal
+    const steer = text.trim()
+    if (!p || !steer || chatBusy) return
+    const at = p.address ? ` at ${p.address}` : ''
+    const composed = `Refine the offer (${p.verb}${at}) — steer: ${steer}`
+    await sendChat(composed)   // reuses the preserved chat path; the refined offer returns as a new proposal
+  }
+  // B1 — DEFER (an honest set-aside, DISTINCT from dismiss): the operator isn't rejecting the offer, just
+  // not now. There is NO proposal-level defer/queue in the backend (grep: the deferred-queue is the
+  // build-intent/escalation lane, suite.py:5800 / regions/Inbox.tsx — not a chat-proposal store), so this
+  // is an FE-only set-aside that drops the live card without acting. It reads as "not now" (no /api/act).
+  // GAP (flagged in the report): a DURABLE re-surfacing store for deferred offers is unbuilt — once the
+  // card is set aside it is gone until the RHM offers again. No fiction: we don't pretend it's queued.
+  function deferProposal() { setNotice('offer set aside — not now (it isn’t queued; ask again to revisit)'); setProposal(null) }
   // I3 — REJECT/DISMISS does nothing but drop the card (no backend call; the action never ran).
   function dismissProposal() { setProposal(null) }
   async function changeMode(mm: string) { setNotice('presence → ' + mm); await api.setMode(mm); await poll() }
@@ -1257,8 +1328,8 @@ export function useAppController(editor: Editor) {
     poll, openCoa, reload, fitGraph, addNode, wireSelected, doConnect, setNodeConfig, surfaceOutput,
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
     resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, fieldValue,
-    setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus,
-    approveProposal, dismissProposal, toggleJourneyRecording, replayJourney, switchPersona,
+    setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus, mintBuildIntent,
+    approveProposal, dismissProposal, steerProposal, deferProposal, toggleJourneyRecording, replayJourney, switchPersona,
   }
 }
 

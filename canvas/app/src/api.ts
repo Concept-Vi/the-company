@@ -60,6 +60,26 @@ export const api = {
     fetch('/api/pin', { method: 'POST', headers: J, body: JSON.stringify({ address, target_ts, pinned }) }).then(jr),
   apply: (id: string) =>
     fetch('/api/apply', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(jr),
+  // G-4 · THE WIRE'S OPERATOR DOOR (the self-build mint seam). Two entry shapes, both MINT-ONLY:
+  // they surface a build-intent with resolved=None for the operator to approve — they NEVER dispatch
+  // (dispatch is dispatch_decision, off this face + posture-gated + safe-by-default `plan`). The door
+  // is INERT-by-default: minting a build-intent is composing a PLAN, not self-modifying live.
+  //
+  //   intentAt — the RECOGNITION-BY-SIGHT path (the door the operator actually uses): from a POINTED
+  //   `ui://` element, mint a build-intent whose SCOPE is DERIVED from the address (S3 resolve_scope)
+  //   and whose X16 BLAST-RADIUS is computed at consent time (surface_intent_at, bridge.py:626). So the
+  //   minted item carries `payload.blast_radius` → BlastRadiusReach renders the ripple + reach-approval.
+  //   An orphan/CSS address → empty scope = DENY-ALL (honest, never fabricated). Backend fail-loud on a
+  //   missing address/text → 400 (normalized to {error} by jr).
+  intentAt: (address: string, text: string, consequence_class = 'decision_build', why = '') =>
+    fetch('/api/intent-at', { method: 'POST', headers: J, body: JSON.stringify({ address, text, consequence_class, why }) }).then(jr),
+  //   buildIntent — the SCOPE-DECLARED path (the wire's raw production entry seam, bridge.py:607): the
+  //   operator declares the spec + the paths the build may touch directly (no address). It carries NO
+  //   blast_radius (no address to compute a radius from) — so it surfaces with the declared scope only.
+  //   Provided additively for completeness; the door prefers intentAt (address-grounded, carries the reach).
+  //   Empty/omitted scope = DENY-ALL. Backend fail-loud on a missing spec → 400 (normalized by jr).
+  buildIntent: (spec: string, scope?: string[], consequence_class = 'decision_build', why = '') =>
+    fetch('/api/build-intent', { method: 'POST', headers: J, body: JSON.stringify({ spec, scope, consequence_class, why }) }).then(jr),
   objectInfo: () => fetch('/api/object_info').then(jr),
   // registry-is-truth: WHAT EXISTS (node-types, models, modes, mode_directives, verbs, panels). The
   // presence-mode descriptions are read from capabilities().mode_directives — one backend source, no

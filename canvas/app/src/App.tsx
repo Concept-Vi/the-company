@@ -41,6 +41,7 @@ import { RhmChat } from './regions/RhmChat'
 import { Walkthrough } from './regions/Walkthrough'
 import { Workshop } from './regions/Workshop'
 import { Fleet } from './regions/Fleet'
+import { WireRequest } from './components/WireRequest'
 import { api } from './api'
 
 // I5 · the ANNOTATE-FACE affordance. Renders ONLY when the operator has indicated a ui:// element whose
@@ -164,6 +165,16 @@ function Hud() {
              blurred. FORM: built on the corpus .rhm-indicating chip vocabulary (tokens only, no literals);
              the amber [data-click-mode="annotate"] cue + this bar are the DEFAULT mode-signal (needs-tim). */}
           <AnnotateBar />
+          {/* G-4 · THE SELF-BUILD WIRE'S OPERATOR DOOR. The missing FE caller for the decision→implementation
+             wire (REPO-KNOWLEDGE D1): when the operator has indicated a ui:// element, this door lets them
+             REQUEST A CHANGE to it → mints a build-intent (POST /api/intent-at, via ctrl.mintBuildIntent,
+             carrying the derived scope + the X16 blast-radius) → shows the reach (the reused BlastRadiusReach
+             ripple) → approve (/api/resolve). Point → ask → see-the-reach → approve. Sibling of AnnotateBar
+             (same indicated-element surface area, the wire-blue signature). SAFE-BY-DEFAULT: mint + approve
+             compose a PLAN; dispatch is inert/plan-mode unless deliberately armed (stated as honest static
+             copy — the armed state is not served to the FE). The onDocClick capture excludes this subtree so
+             clicking into it never overwrites the pointed target. */}
+          <WireRequest />
           {/* L9 · reverse journey-recording (§21.7#2-reverse). The RECORD toggle + REPLAY picker: capture
              the operator's ordered ui:// click-path as a DISTINCT journey-record (steps appended in
              ctrl.indicate while recording), replay it by stepping the view through its addresses via the
