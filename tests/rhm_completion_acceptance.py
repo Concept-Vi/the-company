@@ -263,9 +263,16 @@ try:
           bnode_r["status"] == "failed")
     check("the reloaded failed node still carries its error", "boom" in str(bnode_r.get("error", "")))
 
-    # ---- invariant: the 7-verb whitelist + no-bypass preserved -------------------------------------
-    check("RHM_VERBS unchanged (7-verb whitelist)",
-          suite.RHM_VERBS == ("run", "propose", "build", "consult", "show", "panel", "extend"))
+    # ---- invariant: the verb whitelist derives from the single spec + no-bypass preserved ----------
+    # (Derivation-based, NOT a hardcoded tuple: the whitelist grew to 10 with the config-as-tools verbs
+    # configure/load_voice/unload_voice — G8.2, commit b98db99. The real contract is: it == the spec,
+    # still holds the core acting verbs, and NEVER holds apply/delete/file-write — the no-bypass guarantee.)
+    check("RHM_VERBS = the single-source whitelist (derives from RHM_VERB_SPECS)",
+          suite.RHM_VERBS == tuple(suite.RHM_VERB_SPECS))
+    check("the core acting verbs are all whitelisted",
+          {"run", "propose", "build", "consult", "show", "panel", "extend"}.issubset(set(suite.RHM_VERBS)))
+    check("apply/delete are NOT whitelisted (no-bypass)",
+          "apply" not in suite.RHM_VERBS and "delete" not in suite.RHM_VERBS)
     check("a forbidden verb (apply) is STILL refused end-to-end",
           suite._dispatch_rhm_action({"verb": "apply", "id": "x"}, GRAPH)["did"] == "none")
     check("delete still refused", suite._dispatch_rhm_action({"verb": "delete", "id": "x"}, GRAPH)["did"] == "none")
