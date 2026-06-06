@@ -433,7 +433,22 @@ class H(BaseHTTPRequestHandler):
                 import urllib.request as _u
                 raw = self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}"
                 payload = json.loads(raw or b"{}")
-                engine = payload.get("engine")            # None/kokoro → default; unknown → fail loud
+                engine = payload.get("engine")            # explicit engine wins; unknown → fail loud
+                if not engine:
+                    # No explicit engine → speak in the CONFIGURED voice (the tts_engine override, else the
+                    # active persona's engine) — NOT a generic kokoro default. So EVERY voice-out (a text
+                    # reply via speakReply, a voice reply, walkthrough narration) uses the chosen Company
+                    # voice. Resolved the SAME way /api/voice/stream resolves it (one source — eng_override
+                    # → persona.engine). Falls back to kokoro (TTS_URL) only when nothing is configured
+                    # (no override AND no persona, or the persona declares no engine).
+                    _rc = SUITE.rhm_config()
+                    engine = (_rc.get("tts_engine") or "").strip() or None
+                    if not engine and (_rc.get("persona") or "").strip():
+                        from voice import personas as _vp
+                        try:
+                            engine = (_vp.get_persona(_rc["persona"].strip()) or {}).get("engine") or None
+                        except Exception:
+                            engine = None                 # unknown persona → kokoro fallback (never crash a reply)
                 base = _tts_base_url(engine)              # raises ValueError on an unknown engine
                 fwd = {k: v for k, v in payload.items() if k != "engine"}
                 req = _u.Request(base + "/tts", data=json.dumps(fwd).encode(),
