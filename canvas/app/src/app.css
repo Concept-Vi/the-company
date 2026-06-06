@@ -626,12 +626,31 @@ button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
 /* WAVE-4: .tg (the old comma-list live-node-type tag) was DELETED — Grow now renders the live node-types as a
    kit lane of Badge chips (navigable, counted), see the .grow-types layer below. */
 
-/* C3: ui:// DOM-spotlight — a transient ring on a chrome/panel/field/ext target the resolver scrolled to.
-   Reuses the .hud z-index plane; the outline does not reflow layout (additive, removed after the timeout). */
-.ui-spotlight{outline:2px solid var(--sig) !important;outline-offset:2px;
-  box-shadow:0 0 0 9999px var(--acc-glow), 0 0 24px -2px var(--sig) !important;
-  border-radius:6px;transition:outline-color .2s, box-shadow .2s;animation:spotlight-pulse 1.1s ease-in-out 2}
-@keyframes spotlight-pulse{0%,100%{outline-color:var(--sig)}50%{outline-color:var(--warn)}}
+/* C3 (FE show-me lane) — the SPOTLIGHT: the recognition-by-sight focus the show/walkthrough resolver
+   drives to a chrome/panel/field/ext target (incl. element-level ui://<region>/<element> addresses, which
+   the backend now resolves and the FE camera-drives to their data-ui-ref). This is the commander's-bridge
+   "look HERE" gesture — built ENTIRELY on corpus tokens (--sig accent ring, --acc-glow scrim, --r-lg
+   radius, --elev elevation language), paint-only (ring + box-shadow scrim + a brief lift; no layout reflow),
+   transient (removed after the resolver's timeout). Distinct from .ui-indicated (the PERSISTENT click-locus
+   selection): the spotlight ANNOUNCES, then settles, so the eye lands on the addressed element and the
+   surround recedes. Heavier than a thin outline on purpose — rule 9: a navigable surface the operator
+   recognises by sight. The ring is scoped HIGH in source order so it always wins over per-region kit borders
+   (G-25 legacy-override pattern). z-index nudges the spotlit element above its siblings during the gesture. */
+.ui-spotlight{position:relative;z-index:8;
+  outline:2px solid var(--sig) !important;outline-offset:3px;border-radius:var(--r-lg) !important;
+  /* the SCRIM (a near-full-screen spread shadow in the accent glow dims+tints the surround toward the
+     signal colour — the established corpus scrim token, no literal) + a bright accent halo close-in (the
+     "lit" read) + the floating-card elevation (it lifts toward the operator). All token-only, paint-only. */
+  box-shadow:0 0 0 9999px var(--acc-glow), 0 0 0 2px var(--sig),
+    0 0 28px 2px var(--acc-glow), var(--elev-2) !important;
+  animation:spotlight-land .9s cubic-bezier(.2,.9,.25,1) 1}
+/* the LAND gesture: a quick pulse-in (the announce) settling to the resting ring (no perpetual flashing —
+   it draws the eye once, then holds steady so the operator can read the framing while the view is held). */
+@keyframes spotlight-land{
+  0%{outline-color:var(--warn);box-shadow:0 0 0 9999px var(--acc-glow), 0 0 0 4px var(--warn), 0 0 40px 6px var(--acc-glow), var(--elev-2)}
+  60%{outline-color:var(--sig)}
+  100%{outline-color:var(--sig);box-shadow:0 0 0 9999px var(--acc-glow), 0 0 0 2px var(--sig), 0 0 28px 2px var(--acc-glow), var(--elev-2)}}
+@media (prefers-reduced-motion:reduce){.ui-spotlight{animation:none}}
 
 /* I1 · click-to-indicate — the PERSISTENT visible selection on the addressed element the operator has
    clicked to indicate (the locus their next chat turn is about). Distinct from .ui-spotlight (the

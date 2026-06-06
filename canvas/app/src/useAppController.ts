@@ -821,7 +821,53 @@ export function useAppController(editor: Editor) {
   function deferProposal() { setNotice('offer set aside — not now (it isn’t queued; ask again to revisit)'); setProposal(null) }
   // I3 — REJECT/DISMISS does nothing but drop the card (no backend call; the action never ran).
   function dismissProposal() { setProposal(null) }
-  async function changeMode(mm: string) { setNotice('presence → ' + mm); await api.setMode(mm); await poll() }
+  // C4 (FE show-me lane) — dial-select STARTS the organ. Selecting the guided/walkthrough presence mode
+  // must do MORE than the cosmetic set_mode: it must bind the dial to the REAL walkthrough organ. We keep
+  // the existing pure set_mode+poll (harmless+keeps the dial honest for every mode) and, ONLY for the
+  // walkthrough mode, ALSO call POST /api/walkthrough/start (the backend composer: set_mode + start_session
+  // over the pending items). The call is ASYNC with the EXISTING wtBusy spinner — a populated walk compiles
+  // a model-invoking session graph and can be slow / model-dependent (GAPS G-41), so we never block the UI
+  // thread expecting an instant return. On organ_started:true we feed the result straight into the EXISTING
+  // walk machinery via setSession (same shape start_session returns → the per-step zoom effect [~1046] and
+  // narration effect drive themselves). On organ_started:false we surface the reason as a CLEAR message
+  // (rule 4 — fail loud, never a silent no-op: the dial IS set, but there is nothing to step through).
+  async function changeMode(mm: string) {
+    setNotice('presence → ' + mm); await api.setMode(mm); await poll()
+    if (mm !== 'walkthrough') return
+    if (wtBusyRef.current) return                    // a walk start/step is already in flight — drop the extra
+    wtBusyRef.current = true; setWtBusy(true)
+    setNotice('walkthrough selected — gathering what needs you…')
+    try {
+      // G-41 — the populated walk compiles a model-invoking review-session graph; with NO model up the
+      // server-side start_walkthrough HANGS indefinitely. A bare `await` on that would NEVER resolve, so
+      // `finally` would never run and wtBusyRef (the SHARED guard for startWalk/nextStep/respondStep too)
+      // would stay TRUE forever — bricking the entire review organ until a reload, with a stuck
+      // "gathering…" notice. That is a SILENT FAILURE (rule 4). We BOUND the call: race it against a
+      // generous deadline (a LIVE model walk is legitimately slow — minutes for a cold model — so the
+      // window is wide; this only catches a true hang, never a slow-but-progressing start). On timeout we
+      // surface a LOUD, recoverable degrade and the finally releases the guard (the operator can retry).
+      const TIMEOUT_MS = 45000
+      const r: any = await Promise.race([
+        api.walkthroughStart(),                       // no item_ids → walk every PENDING unresolved inbox item
+        new Promise((_, rej) => setTimeout(() => rej(new Error('__wt_timeout__')), TIMEOUT_MS)),
+      ])
+      if (r?.error) { setNotice('✕ walkthrough: ' + r.error); return }
+      if (r.organ_started) {
+        try { localStorage.setItem('company-review-session', r.session) } catch { /* */ }
+        setSession(r); setWtReason(''); setWtSpoke('')   // → the existing per-step view-drive + narration fire
+        setNotice('walkthrough started — stepping you through ' + (r.total != null ? r.total + ' item(s)' : 'what needs you'))
+      } else {
+        // nothing-pending: the dial IS in guide mode, but there is nothing to walk — say so plainly.
+        setNotice('🛈 ' + (r.reason || 'nothing pending to walk through — surface or capture an item first, then re-select walkthrough'))
+      }
+    } catch (e: any) {
+      // The timeout reject (G-41 model-down) gets a SPECIFIC, recoverable message; anything else surfaces raw.
+      if (e?.message === '__wt_timeout__') {
+        setNotice('✕ no model responded — start a model (the walkthrough organ needs one to compile the walk), then re-select walkthrough')
+      } else { setNotice('✕ could not start the walkthrough: ' + (e?.message || e)) }
+    }
+    finally { wtBusyRef.current = false; setWtBusy(false) }   // re-enable on success OR error OR timeout — the guard is NEVER stuck
+  }
   async function applyCfg() {
     const c = await api.setRhmConfig({ model: cfg.model, persona: cfg.persona })
     setCfg(c); setCfgOpen(false); setNotice('RHM config → ' + (c.model || 'default')); await poll()

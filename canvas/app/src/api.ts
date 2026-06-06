@@ -172,6 +172,17 @@ export const api = {
     fetch('/api/review/next', { method: 'POST', headers: J, body: JSON.stringify({ session }) }).then(jr),
   reviewStatus: (session: string) =>
     fetch('/api/review/status?session=' + encodeURIComponent(session)).then(jr),
+  // C4 (FE show-me lane): the mode-selection → ORGAN-start seam. POST /api/walkthrough/start binds the
+  // cosmetic presence-dial 'walkthrough' MODE to the REAL walkthrough organ — set_mode('walkthrough')
+  // AND start_session over the pending review items, in ONE composed call. Optional item_ids pre-selects
+  // a set; absent → it walks every pending unresolved inbox item. Returns the SAME shape start_session
+  // returns (so the FE feeds it straight into the existing walk machinery via setSession) PLUS
+  // { organ_started, mode, reason? }: organ_started:true → a populated walk (carries `session`);
+  // organ_started:false → nothing pending (carries `reason` — fail-loud, the surface says so, never silent).
+  // ASYNC by contract: a populated walk compiles a review-session graph that invokes a model, so this can
+  // be slow / hang if no model is up (GAPS G-41) — the FE awaits with a spinner, never blocks the UI thread.
+  walkthroughStart: (item_ids?: string[]) =>
+    fetch('/api/walkthrough/start', { method: 'POST', headers: J, body: JSON.stringify(item_ids ? { item_ids } : {}) }).then(jr),
   // D: the per-step verdict — operator-only. Session+position tag the verdict to its walk step (additive;
   // legacy id+choice+reason callers unchanged). Reflects-never-owns: the verdict goes THROUGH the gate.
   resolveStep: (id: string, choice: string, reason: string, session: string, position: number) =>
