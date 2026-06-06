@@ -18,9 +18,10 @@
 // .fleet-head/.fleet-row markup) into the commander's-bridge language composed from the SHARED KIT
 // (components/kit.tsx, H2), following the Palette exemplar almost 1:1 (models-grouped-by-kind reads exactly
 // like Palette's node-types-grouped-by-kind). A kit SectionHead (display voice) with the live fleet size as
-// an aside Badge + the live-reprobe refresh; a kit LaneHead per kind (count chip); each model is an actionable
-// kit <Surface> card with a kind monogram (the same monogram language Palette uses) + the honest live-registry
-// dot. A failed endpoint surfaces as a kit <Surface tone="fail"> (the same fail-loud card Grow uses), never a
+// an aside Badge + the live-reprobe refresh; a kit LaneHead per kind (count chip); each model is a kit
+// <Surface> card (non-clickable — a model has no per-model action) with a kind monogram (the same monogram
+// language Palette uses) + the honest live-registry dot. A failed endpoint surfaces as a kit <Surface
+// tone="fail"> (the same fail-loud card Grow uses), never a
 // bespoke error block. The thin .fleet-* layer is LAYOUT-ONLY now (the dot, the monogram, the legend) — the
 // look lives in .kit-* (kit is the sole authority). PRESERVED (the function half): the registry source of
 // truth, the per-kind fail-loud error, the honest dot + legend (registry-membership, not a health probe),
@@ -49,8 +50,9 @@ function FleetKind({ kind, models, err }: { kind: string; models: string[]; err:
         : models.length === 0
           ? <EmptyState>no models registered at the {kind} endpoint.</EmptyState>
           : models.map(name => (
-              // each model is an actionable kit Surface card: a kind monogram + the model name + the honest
-              // live dot. The spine carries the kind tone, so the card's tint IS its kind (read by sight).
+              // each model is a kit Surface card: a kind monogram + the model name + the honest live dot. The
+              // spine carries the kind tone, so the card's tint IS its kind (read by sight). NON-clickable by
+              // design — a model has no per-model action, so no onClick/interactive (no false affordance).
               <Surface key={kind + ':' + name} tone={tone} className="fleet-row" title={name}>
                 <span className={'fleet-mono fleet-mono-' + tone}>{name.slice(0, 2).toUpperCase()}</span>
                 <span className="fleet-name">{name}</span>

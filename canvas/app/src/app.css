@@ -262,6 +262,11 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
    unstyled since then — the SectionHead conversion fixes that drift. The .ev / .hist-groups / .hist-group /
    .hist-list / .ver body vocabulary below is KEPT (shared across these three Class-A regions + the Activity
    feed — the designed, token-coloured-per-kind rows; Surface-ifying them would regress cross-region coherence). */
+/* the Class-A heads put a (possibly long) ui:// / run:// ADDRESS in the SectionHead kicker. Scope the kicker
+   inside .hist so a long address WRAPS instead of overflowing the narrow panel (the old .hist-addr had
+   break-all; this preserves that behaviour on the kit head). Scoped to .hist so other regions' kickers are
+   untouched. */
+.hist .kit-kicker{overflow-wrap:anywhere;white-space:normal;line-height:var(--lh-tight)}
 .hist-groups{display:flex;flex-direction:column;gap:5px;max-height:340px;overflow:auto}
 .hist-group{border:1px solid var(--line);border-radius:5px;background:var(--s1);overflow:hidden}
 .hist-group-head{display:flex;align-items:baseline;gap:7px;width:100%;padding:5px 8px;
