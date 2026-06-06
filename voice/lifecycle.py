@@ -24,6 +24,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import signal
 import subprocess
 import time
 import urllib.error
@@ -200,19 +201,60 @@ def poll_wake() -> list:
 
 
 def unload(service_id: str) -> dict:
-    """Free a voice service: SIGTERM its process(es) → VRAM released. Idempotent (not-running = already
-    freed). Fail loud on an unknown/non-loadable id."""
+    """Free a voice service with a GUARANTEED-no-orphan, PROCESS-GROUP teardown (researched 2026-06-06).
+    The old single-pid `os.kill(pid, SIGTERM)` was the bug for vLLM engines (orpheus): vLLM's EngineCore
+    is a spawn child with NO OS death-link and finalizer-only cleanup, so a SIGTERM to just the launcher
+    pid bypassed cleanup → EngineCore orphaned + squatted ~10GB VRAM. Fix: kill the whole PROCESS GROUP
+    (launcher + its spawn children share the group — these are launched start_new_session=True, so
+    pgid==launcher pid). Ordered: graceful group-SIGTERM (→ the launcher's SIGTERM→sys.exit handler →
+    Python finalizers → vLLM's own terminate/kill_process_tree) → bounded poll → group-SIGKILL if
+    needed → VERIFY VRAM dropped. NO blind GPU-pid sweep (other sessions share the card — never stomp
+    them); if VRAM doesn't drop, REPORT it loud (a possible orphan) rather than nuking the card.
+    Idempotent; fail loud on an unknown id."""
     loadables = _loadable()
     if service_id not in loadables:
         raise ValueError(f"unknown or non-loadable voice service {service_id!r} — loadable: {sorted(loadables)}")
-    pids = _pids(loadables[service_id])
+    spec = loadables[service_id]
+    before = None
+    try:
+        before = vram().get("used_mb")
+    except RuntimeError:
+        pass
+    pids = _pids(spec)
+    pgids = set()
     for pid in pids:
         try:
-            os.kill(pid, 15)                                   # SIGTERM — graceful
+            pgids.add(os.getpgid(pid))                         # start_new_session=True → pgid==launcher pid
         except ProcessLookupError:
             pass
-    return {"service": service_id, "state": "down", "killed_pids": pids,
-            "note": "freed" if pids else "was not running"}
+    for pg in pgids:                                           # 1. graceful group SIGTERM
+        try:
+            os.killpg(pg, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
+    deadline = time.time() + 8                                 # 2. bounded poll (graceful can hang on a dead ZMQ socket)
+    while time.time() < deadline and _pids(spec):
+        time.sleep(0.5)
+    if _pids(spec):                                            # 3. force group SIGKILL
+        for pg in pgids:
+            try:
+                os.killpg(pg, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        time.sleep(1.5)
+    after = None                                               # 4. verify VRAM actually dropped
+    try:
+        after = vram().get("used_mb")
+    except RuntimeError:
+        pass
+    leftover = bool(_pids(spec))
+    note = "freed (process-group teardown)" if pgids else "was not running"
+    if leftover:                                               # fail loud — a possible orphan; don't stomp the card
+        note = (f"WARNING: {service_id} processes still present after SIGKILL — possible orphan squatting "
+                f"VRAM (before={before}MB after={after}MB). Investigate (nvidia-smi); do NOT blind-kill "
+                f"GPU pids (other sessions share the card).")
+    return {"service": service_id, "state": "down" if not leftover else "leftover",
+            "pgids": sorted(pgids), "vram_before_mb": before, "vram_after_mb": after, "note": note}
 
 
 def engine_service_for(engine: str) -> str | None:

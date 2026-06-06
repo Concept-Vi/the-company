@@ -19,6 +19,13 @@ import os
 import sys
 import wave
 
+# TRITON_ATTN (the attention backend, see ATTN_BACKEND) JIT-compiles its kernels with `ninja`, which
+# must be on PATH. The systemd unit runs the venv's python DIRECTLY (not an activated venv), so the
+# venv's bin/ — where `ninja` lives — is NOT on PATH and Triton's compile fails with
+# FileNotFoundError: 'ninja'. Prepend the venv bin (dir of THIS interpreter) so ninja is found. This
+# propagates to the spawned EngineCore (inherits env). (Researched + hit by use 2026-06-06.)
+os.environ["PATH"] = os.path.dirname(sys.executable) + os.pathsep + os.environ.get("PATH", "")
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from voice.engines._service import serve  # noqa: E402
 
@@ -27,14 +34,21 @@ PORT = 4125
 # "orpheus-tts-0.1-finetune-prod", which isn't on disk and triggers a ~6GB DOWNLOAD at load.
 MODEL_NAME = os.environ.get("COMPANY_ORPHEUS_MODEL", "canopylabs/orpheus-3b-0.1-ft")
 # context window (tokens): MUST hold a real spoken reply — text + the MANY SNAC audio tokens a reply
-# generates (audio is token-dense). 2048 was too tight (a longer reply truncates); 4096 comfortably
-# holds a multi-sentence turn. NOT minimised — a starved context can't carry a real conversational reply.
-MAX_LEN = int(os.environ.get("COMPANY_ORPHEUS_MAXLEN", "4096"))
-GPU_UTIL = float(os.environ.get("COMPANY_ORPHEUS_GPU_UTIL", "0.6"))    # fit the 16GB card; room for the 4096 KV cache
-# graphs vs eager: DEFAULT graphs (enforce_eager=False) — Tim's priority is REAL-TIME inference after a
-# one-time pinned load, and CUDA graphs make per-token inference fast (eager was the wrong trade: fast
-# load, slow inference). COMPANY_ORPHEUS_EAGER=1 forces eager (instant load, slower synth) if ever needed.
+# generates (audio is token-dense). NOT minimised (a starved window can't carry a real reply). 8192
+# comfortably holds a multi-sentence turn at modest KV cost on a 3B. (The CONVERSATION history is held
+# by the BRAIN's 32K window — this per-utterance window only needs to fit one spoken reply.)
+MAX_LEN = int(os.environ.get("COMPANY_ORPHEUS_MAXLEN", "8192"))
+GPU_UTIL = float(os.environ.get("COMPANY_ORPHEUS_GPU_UTIL", "0.6"))    # ~9.8GB budget; weights ~6GB + 8192 KV fits
+# graphs ON by default (enforce_eager=False) — Tim's priority is REAL-TIME inference after a one-time
+# pinned load. (Earlier theory that graphs caused the gen crash was WRONG — see ATTN_BACKEND: the crash
+# was FlashInfer on CUDA-13, not the graphs. COMPANY_ORPHEUS_EAGER=1 still available as a diagnostic.)
 EAGER = os.environ.get("COMPANY_ORPHEUS_EAGER", "0") == "1"
+# THE attention backend fix (researched 2026-06-06): on sm_89/CUDA-13, vLLM falls through to FlashInfer
+# (flash-attn not installed), which crashes on the decode path (vLLM #26381). TRITON_ATTN is pure-Triton
+# (no FlashInfer, no flash-attn dep), supports bf16 + FULL cudagraph on Ada → keeps graphs ON + context
+# at 8192 and fixes the generation crash. A real AsyncEngineArgs param in vLLM 0.22.0 (the old
+# VLLM_ATTENTION_BACKEND env is DEAD here). COMPANY_ORPHEUS_ATTN overrides (e.g. FLASHINFER to reproduce).
+ATTN_BACKEND = os.environ.get("COMPANY_ORPHEUS_ATTN", "TRITON_ATTN")
 DEFAULT_VOICE = os.environ.get("COMPANY_ORPHEUS_VOICE", "tara")
 RATE = 24000
 VOICE_BANK = ["tara", "leah", "jess", "leo", "dan", "mia", "zac", "zoe"]
@@ -43,17 +57,15 @@ _model = None
 
 
 def _engine():
-    """Load Orpheus's vLLM engine FAST. Stock OrpheusModel cold-starts ~17min: its _setup_engine builds
-    vLLM with DEFAULTS — full CUDA-graph capture (+ flashinfer compile) at gpu-util 0.90 (the long pole),
-    and the configured model wasn't cached (a ~6GB download on top). We fix all three: cached model
-    (above), and PATCH _setup_engine to pass enforce_eager=True (skip the graph capture), a modest
-    gpu_memory_utilization (fit the card), and max_model_len. Trades ~10-20% inference speed for a load
-    in MINUTES not 17 — right for an on-demand voice engine. NOTE: the installed OrpheusModel.__init__ is
-    (model_name, dtype) ONLY — it does NOT accept max_model_len (a version drift; passing it TypeErrors),
-    so max_model_len rides via the patched engine args, not the constructor."""
+    """Load Orpheus's vLLM engine, configured for this box. Three fixes vs stock OrpheusModel (which
+    cold-loaded ~17min + crashed on generation): (1) CACHED model (above) — stock pointed at an
+    un-cached repo → a ~6GB download; (2) the installed OrpheusModel.__init__ is (model_name, dtype)
+    ONLY (a version drift — passing max_model_len TypeErrors), so the engine args ride via this
+    _setup_engine patch, not the constructor; (3) attention_backend=TRITON_ATTN — the real fix for the
+    generation crash (vLLM fell through to FlashInfer, which crashes on decode on CUDA-13/Ada, #26381).
+    Graphs stay ON (fast inference) + context at 8192 (adequate) — both preserved, not traded away."""
     global _model
     if _model is None:
-        os.environ.setdefault("VLLM_USE_FLASHINFER_SAMPLER", "0")   # known orpheus flashinfer workaround
         try:
             from orpheus_tts import OrpheusModel
             from vllm import AsyncLLMEngine, AsyncEngineArgs
@@ -63,7 +75,8 @@ def _engine():
 
         def _fast_setup(self):                                  # replaces OrpheusModel._setup_engine
             args = AsyncEngineArgs(model=self.model_name, dtype=self.dtype, enforce_eager=EAGER,
-                                   gpu_memory_utilization=GPU_UTIL, max_model_len=MAX_LEN)
+                                   gpu_memory_utilization=GPU_UTIL, max_model_len=MAX_LEN,
+                                   attention_backend=ATTN_BACKEND)   # TRITON_ATTN — avoid the FlashInfer cu13 crash
             return AsyncLLMEngine.from_engine_args(args)
         OrpheusModel._setup_engine = _fast_setup
         _model = OrpheusModel(model_name=MODEL_NAME)            # __init__ takes (model_name, dtype) only
@@ -97,5 +110,13 @@ def voices() -> tuple[list, str]:
 
 
 if __name__ == "__main__":
+    # PREVENT-AT-LAUNCH (the orphan fix, researched 2026-06-06): vLLM's EngineCore is a spawn Process
+    # with NO OS death-link; its cleanup is finalizer-driven and runs ONLY on graceful Python exit. A
+    # bare SIGTERM (or kill -9) bypasses it → EngineCore orphans + squats VRAM. Translating SIGTERM into
+    # sys.exit() makes THIS launcher exit gracefully → Python finalizers fire → vLLM's own
+    # terminate→join→kill_process_tree runs → EngineCore dies + VRAM frees. (systemd-unit stop also
+    # reaps the whole cgroup; this protects the non-unit / direct path too.)
+    import signal
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
     port = int(sys.argv[1]) if len(sys.argv) > 1 else PORT
     serve("orpheus", port, synth, voices, warm=_engine)
