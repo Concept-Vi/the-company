@@ -22,3 +22,6 @@ mcp_registration_debug.log
 .data/
 # build scratch
 .build/
+
+# CLI telemetry (generated runtime data)
+ops/cli/telemetry.jsonl

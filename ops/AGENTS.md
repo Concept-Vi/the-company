@@ -30,8 +30,22 @@ Do **not** build duplicate command centers. The right shape (Tim, "one substrate
 
 **What would violate it.** A service started in a way the registry doesn't know about (invisible scatter — the exact anti-pattern this replaces). A console that hides failures or drift. Hand-maintained duplicate truth (two places that both claim what runs). A "command center" that only an informed human could operate — it must be plain enough for a fresh AI session.
 
+## Status of the type-views (open-future, growing)
+- **services** — the first type-view (live since 2026-06-04).
+- **models/VRAM (the resource manager)** — instantiated 2026-06-06 as the SAME console's
+  GPU view: `company gpu`/`models`/`swap`, VRAM cost in `status`, and a hard budget gate on
+  `company up` (refuses an over-capacity start, always shows what's holding the card; `--force`
+  overrides). Lives in `cli/gpu.py`, not a separate tool. Next growth = telemetry → scheduling
+  (see `cli/UPDATING.md`). [[project-native-model-layer]]
+- **cognitive-layers · RHM/modes · data/memory · jobs/cron** — not yet instantiated; same mechanism when they are.
+
 ## Files
-- `company` — the console (Python, stdlib-only; `company help`).
-- `services.json` — the registry (the source of truth).
+- `company` — launcher (stdlib-only; runs the `cli/` package; `company help`).
+- `cli/` — the console package, one job per module:
+  - `app.py` (dispatch + the `up` resource gate) · `registry.py` (reads services.json) ·
+    `systemd.py` (start/stop/status/logs) · `gpu.py` (**the resource manager**) ·
+    `models.py` (inventory + swap) · `bench.py` · `render.py` (status/health views).
+  - `README.md` — use guide.   `UPDATING.md` — how to extend the CLI + the registry schema.
+- `services.json` — the registry (the source of truth; now also carries `vram_mb`, `serve`, `vram_ceiling_mb`).
 - `STARTUP.md` — the command table + boot behaviour + open items.
 - `systemd/` — canonical unit + target files (the muscle).
