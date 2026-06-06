@@ -911,7 +911,12 @@ class Suite:
             "output": "one word: FINISHED | MORE",
             "tools": [],                      # no tools — a pure classifier
             "context": "the utterance text only (no system grounding)",
-            "knobs": {"max_tokens": 256, "temperature": 0},
+            # max_tokens 2048: the DEFAULT judge falls to the RHM brain, which today is a THINKING model
+            # (qwen3.5) — at 256 it gets cut off mid-reasoning and emits EMPTY content (FabricError). 2048
+            # lets it finish thinking + emit the FINISHED|MORE word (verified). A no-think model (the
+            # recommended 4B) uses <50 tokens, so this ceiling never hurts it — it only unblocks the
+            # thinking default. (Snappy always-listen still WANTS the no-think 4B bound — see recommended_*.)
+            "knobs": {"max_tokens": 2048, "temperature": 0},
             "env_model": "COMPANY_JUDGE_MODEL", "env_url": "COMPANY_JUDGE_URL",
             "env_knobs": {"max_tokens": "COMPANY_JUDGE_MAX_TOKENS"},
         },
@@ -1086,6 +1091,11 @@ class Suite:
                 "tts_voice": c.get("tts_voice", ""),
                 # the VOICE PATH slot (Tier 4): 'pipeline' (default, built) or 's2s' (needs a model).
                 "voice_path": c.get("voice_path", "pipeline"),
+                # the VOICE INPUT MODE slot (V1.3): how the mic finalises a turn — 'push_to_talk' (tap to
+                # start, tap to stop — the default) or 'auto_listen' (speak; on a pause the finished-thought
+                # judge decides whether to fire the turn — "reply on a finished thought, not a silence
+                # timer"). Two DISTINCT capabilities the operator switches between. Schema-additive.
+                "voice_input_mode": c.get("voice_input_mode", "push_to_talk"),
                 # the ROLE BINDINGS — {role_id: {model?, base_url?, knobs?, ...}} per the ROLE_REGISTRY.
                 # n model-FUNCTION roles (judge first; more to come) each bind a model + config from the
                 # live registry. Stored as ONE dict so adding a role never touches the config whitelist.
@@ -1105,7 +1115,12 @@ class Suite:
     def set_rhm_config(self, updates: dict) -> dict:
         allowed = {k: v for k, v in (updates or {}).items()
                    if k in ("model", "base_url", "persona", "mode", "voice_enabled", "timeout", "stt",
-                            "roles", "tts_engine", "tts_voice", "voice_path")}
+                            "roles", "tts_engine", "tts_voice", "voice_path", "voice_input_mode")}
+        if "voice_input_mode" in allowed:                     # V1.3 — push_to_talk | auto_listen (fail-loud)
+            vim = str(allowed["voice_input_mode"]).strip()
+            if vim not in ("push_to_talk", "auto_listen"):
+                raise ValueError(f"unknown voice_input_mode {vim!r} — one of ('push_to_talk','auto_listen')")
+            allowed["voice_input_mode"] = vim
         if "voice_path" in allowed:                           # the voice-path slot (registry-is-truth)
             vp = str(allowed["voice_path"]).strip()
             if vp not in self.VOICE_PATHS:
@@ -3186,7 +3201,7 @@ class Suite:
         t0 = time.monotonic()
         out = client.complete(
             transport.openai_transport(base_url=r["base_url"], timeout=cfg["timeout"]),
-            msgs, model=r["model"], max_tokens=r["knobs"].get("max_tokens", 256),
+            msgs, model=r["model"], max_tokens=r["knobs"].get("max_tokens", 2048),
             temperature=r["knobs"].get("temperature", 0))
         ms = int((time.monotonic() - t0) * 1000)
         verdict = "FINISHED" if "finish" in (out or "").strip().lower() else "MORE"

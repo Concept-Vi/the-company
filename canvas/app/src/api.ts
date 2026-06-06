@@ -112,6 +112,12 @@ export const api = {
   voiceStream: (blob: Blob, persona: string) =>
     fetch('/api/voice/stream?persona=' + encodeURIComponent(persona),
           { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: blob }),
+  // V1.1 — the finished-thought judge: given the utterance-so-far (after a silence pause), is it a complete
+  // thought (fire the turn) or is the operator mid-ramble (keep listening)? The "not a dumb silence timer"
+  // lever. Returns {finished, verdict, ...}. Fail-loud upstream (a judge error → caller surfaces + can fall
+  // back to push-to-talk, never a silent degrade).
+  finishedThought: (text: string) =>
+    fetch('/api/voice/finished-thought', { method: 'POST', headers: J, body: JSON.stringify({ text }) }).then(jr),
   // C1: the UI-component registry (sibling of object_info) — the source of truth for what's addressable.
   uiInfo: () => fetch('/api/ui_info').then(jr),
   // L3 · addressed history (§21.7#1): everything that happened AT a ui:// address. The address-keyed READ

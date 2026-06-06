@@ -141,6 +141,10 @@ export function useAppController(editor: Editor) {
   // (and every streamed chunk, V2.2) through it — scheduled on a cursor so chunks play in order.
   const audioCtxRef = useRef<AudioContext | null>(null)
   const playCursorRef = useRef<number>(0)
+  // V1.1 — auto-listen session (hands-free): tap to start, it auto-finalises each utterance on a finished
+  // thought and re-listens, tap to stop. Distinct from push-to-talk (recordToggle). The ref holds the live
+  // session so the second tap can end it.
+  const autoListenRef = useRef<{ stop: boolean; stream: MediaStream | null }>({ stop: false, stream: null })
   // A2/A4: the selected node's live config (from /api/graph), keyed by nodeId — the inspector reads it
   // here, NOT off the tldraw shape props (which carry no config). Refreshed on every graph load.
   const configByNode = useRef<Record<string, any>>({})
@@ -1258,6 +1262,82 @@ export function useAppController(editor: Editor) {
       recorderRef.current = rec; rec.start(); setRecording(true); setNotice('listening… (click again to stop)')
     } catch { setNotice('mic unavailable — grant microphone permission') }
   }
+  // V1.1 — AUTO-LISTEN (hands-free, "reply on a finished thought, not a silence timer"). One continuous
+  // recorder; a Web Audio analyser watches RMS for a speech→silence PAUSE; on a pause the utterance-so-far
+  // is transcribed + put to the finished-thought JUDGE — if finished, the turn fires (streamed persona
+  // voice via runVoiceTurn) and the buffer resets; if not, it keeps listening (don't cut him off). The
+  // recorder is PAUSED during the reply so viv's voice isn't captured as new input (echo). Tap again to stop.
+  // The real feel (does it wait for a finished thought) is needs-tim — no mic on the server.
+  function stopAutoListen() {
+    autoListenRef.current.stop = true
+    autoListenRef.current.stream?.getTracks().forEach(t => t.stop())
+    setRecording(false); setNotice('')
+  }
+  async function startAutoListen() {
+    primeAudio()                                               // unlock audio in this gesture (V2.1)
+    let stream: MediaStream
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }) }
+    catch { setNotice('mic unavailable — grant microphone permission'); return }
+    autoListenRef.current = { stop: false, stream }
+    setRecording(true); setNotice('listening… (tap to stop)')
+    const ctx = audioCtxRef.current || new (window.AudioContext || (window as any).webkitAudioContext)()
+    audioCtxRef.current = ctx
+    const analyser = ctx.createAnalyser(); analyser.fftSize = 512
+    ctx.createMediaStreamSource(stream).connect(analyser)
+    const data = new Uint8Array(analyser.fftSize)
+    let chunks: BlobPart[] = []
+    const rec = new MediaRecorder(stream)
+    rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data) }
+    rec.start(250)                                             // periodic chunks so the buffer is fresh on a pause
+    const SILENCE_MS = 800, SPEECH_RMS = 0.015
+    let spoke = false, lastVoice = performance.now(), busy = false
+    const tick = async () => {
+      if (autoListenRef.current.stop) { try { rec.state !== 'inactive' && rec.stop() } catch {} ; stream.getTracks().forEach(t => t.stop()); setRecording(false); setNotice(''); return }
+      if (!busy && rec.state === 'recording') {
+        analyser.getByteTimeDomainData(data)
+        let sum = 0; for (let i = 0; i < data.length; i++) { const v = (data[i] - 128) / 128; sum += v * v }
+        const rms = Math.sqrt(sum / data.length); const now = performance.now()
+        if (rms > SPEECH_RMS) { spoke = true; lastVoice = now }
+        if (spoke && (now - lastVoice) > SILENCE_MS && chunks.length) {
+          busy = true
+          const blob = new Blob(chunks, { type: 'audio/webm' })
+          try {
+            const r = await api.stt(blob); const text = (r.text || '').trim()
+            if (text) {
+              const j = await api.finishedThought(text)
+              if (j && j.finished) {
+                try { rec.pause() } catch {}                   // pause capture so the reply isn't heard as input
+                setNotice('you said: ' + text); setRecording(false)
+                await runVoiceTurn(blob)                       // streamed persona-voice reply (V2.2)
+                chunks = []; spoke = false; lastVoice = performance.now()
+                if (!autoListenRef.current.stop) { try { rec.resume() } catch {} ; setRecording(true); setNotice('listening… (tap to stop)') }
+              } else { setNotice('… go on'); lastVoice = performance.now() }  // not finished — keep him talking
+            }
+          } catch (e: any) { setNotice('⚠ ' + (e?.message || e) + ' — tap to use push-to-talk') }  // fail loud → ptt fallback
+          busy = false
+        }
+      }
+      setTimeout(tick, 150)
+    }
+    tick()
+  }
+  // The mic press routes by the configured input mode (V1.3). Push-to-talk → recordToggle (tap/tap).
+  // Auto-listen → start a hands-free session, or stop it if one is live. Both unlock audio in the gesture.
+  // V1.3 — switch the voice INPUT mode (push_to_talk ↔ auto_listen); persists via the config slot.
+  async function setVoiceInputMode(mode: string) {
+    if (autoListenRef.current.stream && !autoListenRef.current.stop) stopAutoListen()   // end a live session on switch
+    try { const c = await api.setRhmConfig({ voice_input_mode: mode }); setCfg(c); setNotice('voice input → ' + mode.replace('_', '-')) }
+    catch (e: any) { setNotice('⚠ ' + (e?.message || e)) }
+  }
+  function micPressed() {
+    const mode = (cfg?.voice_input_mode || 'push_to_talk')
+    if (mode === 'auto_listen') {
+      if (autoListenRef.current.stream && !autoListenRef.current.stop) stopAutoListen()
+      else startAutoListen()
+    } else {
+      recordToggle()
+    }
+  }
   // L9 · reverse journey-recording — the explicit start/stop control. OFF → start_journey (open a record;
   // subsequent indicated ui:// addresses append as steps via `indicate`). ON → stop_journey (finalize →
   // the record becomes replayable). Distinct from the voice `recordToggle` above (the mic) — this records
@@ -1342,7 +1422,7 @@ export function useAppController(editor: Editor) {
     // handlers
     poll, openCoa, reload, fitGraph, addNode, wireSelected, doConnect, setNodeConfig, surfaceOutput,
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
-    resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, fieldValue,
+    resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, micPressed, setVoiceInputMode, fieldValue,
     setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus,
     approveProposal, dismissProposal, toggleJourneyRecording, replayJourney, switchPersona,
   }

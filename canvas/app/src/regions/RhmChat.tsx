@@ -17,7 +17,7 @@ import { registryStore } from '../registryStore'
 import { ProposeAffordance } from './ProposeAffordance'
 
 export function RhmChat() {
-  const { cfg, cfgOpen, chat, chatBusy, chatMsg, recording, indicated, personas, switchPersona, setCfg, setCfgOpen, setChatMsg, applyCfg, sendChat, recordToggle, indicate } = useApp()
+  const { cfg, cfgOpen, chat, chatBusy, chatMsg, recording, indicated, personas, switchPersona, setCfg, setCfgOpen, setChatMsg, applyCfg, sendChat, recordToggle, micPressed, setVoiceInputMode, indicate } = useApp()
   // the live chat-model registry — same source the node-config model dropdown reads (MODEL_OPTIONS.chat_models).
   const registry = useSyncExternalStore(registryStore.subscribe, registryStore.getSnapshot)
   const chatModels = registry.MODEL_OPTIONS.chat_models || []
@@ -49,6 +49,15 @@ export function RhmChat() {
             {personas.map((p: any) => <option key={p.id} value={p.id}>{p.name} · {p.engine}</option>)}
             {cfg.persona && !personas.some((p: any) => p.id === cfg.persona) &&
               <option value={cfg.persona}>{cfg.persona} (current)</option>}
+          </select>
+          {/* V1.3 — the voice INPUT mode: two distinct capabilities, switchable. push-to-talk (tap to
+              start/stop) or auto-listen (speak; it fires the turn when you finish a thought — the judge,
+              not a dumb timer). Persists via the voice_input_mode slot; takes effect on the next mic press. */}
+          <select data-ui-ref="ui://chat/input-mode" value={cfg.voice_input_mode || 'push_to_talk'}
+            title="how the mic finalises a turn — push-to-talk (tap to stop) or auto-listen (stops when you finish a thought)"
+            onChange={e => setVoiceInputMode(e.target.value)}>
+            <option value="push_to_talk">🎙 push-to-talk</option>
+            <option value="auto_listen">👂 auto-listen (hands-free)</option>
           </select>
           <button className="b" data-ui-ref="ui://chat/config" onClick={applyCfg}>apply config</button>
         </div>
@@ -83,8 +92,10 @@ export function RhmChat() {
         <input placeholder="ask the company about itself…" data-ui-ref="ui://chat/input" value={chatMsg}
           onChange={e => setChatMsg(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') sendChat() }} />
-        <button className={'b ghost mic' + (recording ? ' rec' : '')} data-ui-ref="ui://chat/mic" onClick={recordToggle}
-          title="push-to-talk (voice in; speaks back in listening mode)">{recording ? '■' : '🎙'}</button>
+        <button className={'b ghost mic' + (recording ? ' rec' : '')} data-ui-ref="ui://chat/mic" onClick={micPressed}
+          title={(cfg.voice_input_mode || 'push_to_talk') === 'auto_listen'
+            ? (recording ? 'auto-listen on — tap to stop' : 'auto-listen — tap to start hands-free; it replies when you finish a thought')
+            : 'push-to-talk — tap to start, tap to stop'}>{recording ? '■' : ((cfg.voice_input_mode || 'push_to_talk') === 'auto_listen' ? '👂' : '🎙')}</button>
         <button className="b" data-ui-ref="ui://chat/send" onClick={() => sendChat()} disabled={chatBusy}>{chatBusy ? '…' : '→'}</button>
       </div>
     </div>
