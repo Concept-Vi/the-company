@@ -7,7 +7,7 @@ import { useApp } from '../AppContext'
 export function Toolbar() {
   const {
     now, running, chatBusy, runElapsed, runError, modeDesc, layerView, notice,
-    doRun, changeMode, wireSelected, portalSelected, deleteSelected, cycleLayers, fitGraph, reload, setRunError, startGuide,
+    doRun, changeMode, wireSelected, portalSelected, deleteSelected, cycleLayers, fitGraph, reload, setRunError, startGuide, openSettings,
   } = useApp()
   return (
     <div className="hud toolbar" data-ui-ref="toolbar">
@@ -62,6 +62,12 @@ export function Toolbar() {
          NO-data-ui-ref note as ? guide (ui://toolbar/teach not yet a corpus address — flagged grown gap). */}
       <button className="b ghost kit-tone-wire" onClick={() => startGuide('request-a-change')}
         title="teach me to self-modify — a guided walk of requesting a change and approving it from inside the interface (point → ask → surface → approve)">⚙ teach me to self-modify</button>
+      {/* A3 · the SETTINGS gear — the operator entry to the consolidated Settings surface (modes/models/
+         personas/RHM-config/voice in one designed place). Opens the full-viewport Settings modal + loads its
+         read-only registries (ctrl.openSettings). Deliberately NO ui:// data-ui-ref: ui://toolbar/settings is
+         not yet a registered corpus address (the corpus is a file-disjoint lane); flagged as a grown gap,
+         mirroring the ? guide / teach-me precedent. */}
+      <button className="b ghost settings-gear" onClick={() => openSettings()} title="settings — modes, models, personas, voice, RHM config (consolidated)">⚙ settings</button>
       {notice && <span className="notice">{notice}</span>}
     </div>
   )

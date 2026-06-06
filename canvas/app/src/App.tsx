@@ -41,6 +41,7 @@ import { Activity } from './regions/Activity'
 import { RhmChat } from './regions/RhmChat'
 import { Walkthrough } from './regions/Walkthrough'
 import { Workshop } from './regions/Workshop'
+import { Settings } from './regions/Settings'
 import { Fleet } from './regions/Fleet'
 import { WireRequest } from './components/WireRequest'
 import { api } from './api'
@@ -267,6 +268,15 @@ function Hud() {
       </div>
       {/* Workshop is a full-viewport modal (position:fixed) — outside the grid so it covers everything. */}
       <Workshop />
+      {/* A3 + E2-FE/GC3 · the CONSOLIDATED SETTINGS surface. A full-viewport modal (Workshop pattern — outside
+         the grid, position:fixed) so it covers everything and works IDENTICALLY desktop + phone (no bottom-sheet
+         competition). It is the ONE designed home for every config slot (modes/models/personas/RHM-config/voice),
+         reading the SAME controller state the scattered RhmChat gear + Toolbar dial read (single source). Opened
+         from the Toolbar gear (ctrl.openSettings). Per-panel boundary: a settings render-throw degrades to a
+         contained card, never a white-screen — its own modal already covers the live canvas behind it. */}
+      <PanelErrorBoundary name="settings">
+        <Settings />
+      </PanelErrorBoundary>
     </PanelErrorBoundary>
     </AppContext.Provider>
   )

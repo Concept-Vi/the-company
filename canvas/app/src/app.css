@@ -1093,3 +1093,80 @@ button.b:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
   color:var(--dim);font-size:10px;cursor:pointer;text-decoration:none;letter-spacing:.04em}
 .tabbar a.on{color:var(--sig)}
 .tabbar a .ic{font-size:17px;line-height:1}
+
+/* ──────────────────────────────────────────────────────────────────────────────────────────────────────
+   A3 + E2-FE/GC3 · THE CONSOLIDATED SETTINGS SURFACE (the commander's-bridge control room).
+   A full-viewport modal (the Workshop pattern) — the ONE designed home for every config slot. Token-only
+   (var() + the shared kit primitives); responsive (the section rail collapses to a horizontal strip ≤699px).
+   ────────────────────────────────────────────────────────────────────────────────────────────────────── */
+/* the scrim is a full-viewport click-catcher (close-on-outside). The dimming is backdrop-filter (no colour
+   literal → design-lint clean: there is no --scrim token yet, G-45 — when it lands this can use it). */
+.settings-scrim{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;
+  padding:var(--sp-4);backdrop-filter:blur(3px) brightness(.5)}
+.settings-panel{background:var(--panel);border:1px solid var(--sig-dim);border-radius:var(--r-lg);
+  box-shadow:var(--elev-2);width:min(960px,100%);max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
+.settings-masthead{padding:var(--sp-4) var(--sp-4) var(--sp-3);border-bottom:1px solid var(--line);flex:none}
+.settings-masthead .set-err{color:var(--err);font-size:var(--fs-meta)}
+.settings-body{display:flex;min-height:0;flex:1}
+/* the section rail — navigable by sight (icon + name + blurb), one active. */
+.settings-rail{flex:none;width:220px;border-right:1px solid var(--line);padding:var(--sp-3);
+  display:flex;flex-direction:column;gap:var(--sp-1);overflow:auto;background:var(--s0)}
+.settings-navitem{display:flex;align-items:center;gap:var(--sp-2);width:100%;text-align:left;cursor:pointer;
+  background:transparent;border:1px solid transparent;border-radius:var(--r);padding:var(--sp-2);color:var(--dim)}
+.settings-navitem:hover{border-color:var(--line);color:var(--ink)}
+.settings-navitem.on{background:var(--s2);border-color:var(--sig);color:var(--ink)}
+.settings-navicon{font-size:18px;line-height:1;flex:none;width:22px;text-align:center}
+.settings-navtext{display:flex;flex-direction:column;min-width:0}
+.settings-navname{font-family:var(--font-display);font-size:var(--fs-body);font-weight:600}
+.settings-navblurb{font-size:var(--fs-micro);color:var(--dim);line-height:1.4;white-space:normal}
+/* the active section content — scrolls independently. */
+.settings-content{flex:1;min-width:0;padding:var(--sp-4);overflow:auto;display:flex;flex-direction:column;gap:var(--sp-4)}
+.set-loading{font-size:var(--fs-meta)}
+.settings-section{display:flex;flex-direction:column;gap:var(--sp-3)}
+.set-prose{font-size:var(--fs-meta);color:var(--ink);line-height:1.6;margin:0}
+/* form fields — one field shape everywhere (label over control). */
+.set-field{display:flex;flex-direction:column;gap:var(--sp-1);margin:var(--sp-1) 0}
+.set-label{font-size:var(--fs-meta);color:var(--ink)}
+.set-select,.set-input{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);
+  border-radius:var(--r);padding:var(--sp-2);font-family:var(--font-mono);font-size:var(--fs-meta)}
+.set-select:focus,.set-input:focus{outline:none;border-color:var(--sig)}
+.set-static{font-family:var(--font-mono);font-size:var(--fs-meta);color:var(--dim);
+  background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:var(--sp-2);word-break:break-all}
+.set-note{font-size:var(--fs-micro);line-height:1.5;margin-top:var(--sp-1)}
+/* persona grid — cards recognised by name + active spine. */
+.set-persona-grid,.set-engines,.set-paths{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:var(--sp-2)}
+.set-persona-head,.set-engine-head,.set-path-head,.set-mode-head,.set-role-head,.set-autodetect-head{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2)}
+.set-persona-name,.set-engine-name,.set-path-name,.set-mode-name,.set-role-name{
+  font-family:var(--font-display);font-size:var(--fs-body);font-weight:600;color:var(--ink)}
+.set-persona-meta{font-size:var(--fs-meta);color:var(--ink);margin-top:var(--sp-1)}
+.set-persona-engine,.set-engine-voices,.set-path-note,.set-role-desc,.set-role-rec,.set-mode-resolution{
+  font-size:var(--fs-micro);line-height:1.5;margin-top:var(--sp-1)}
+.set-path-detail{font-size:var(--fs-micro);color:var(--await);margin-top:var(--sp-1)}
+/* modes list (E2-FE) — the hierarchy: directive + resolution + sub-types + consent. */
+.set-modes-list{display:flex;flex-direction:column;gap:var(--sp-2)}
+.set-mode-tags{display:flex;align-items:center;gap:var(--sp-1)}
+.set-mode-directive{font-size:var(--fs-meta);color:var(--ink);margin-top:var(--sp-1);line-height:1.5}
+.set-mode-subs{display:flex;align-items:center;flex-wrap:wrap;gap:var(--sp-1);margin-top:var(--sp-2)}
+/* pills — the off/suggest/auto toggle render + sub-type tags. */
+.set-pill{font-family:var(--font-mono);font-size:var(--fs-micro);color:var(--dim);
+  border:1px solid var(--line);border-radius:var(--r-pill);padding:2px var(--sp-2)}
+.set-pill.on{color:var(--ink);border-color:var(--warn);background:var(--s2)}
+.set-pill.sm{padding:1px var(--sp-1)}
+.set-autodetect-opts{display:flex;gap:var(--sp-1);margin:var(--sp-2) 0}
+/* composition knobs — read-only rows. */
+.set-knobs{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--sp-2)}
+.set-knob{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2)}
+.set-knob-name{font-size:var(--fs-meta);color:var(--ink)}
+.set-knob-val{font-family:var(--font-mono);font-size:var(--fs-meta);color:var(--sig)}
+/* phone (≤699px): the rail becomes a horizontal scroll strip across the top; the modal fills the screen. */
+@media (max-width:699px){
+  .settings-scrim{padding:0}
+  .settings-panel{width:100%;max-height:100%;height:100%;border-radius:0;border:none}
+  .settings-body{flex-direction:column}
+  .settings-rail{width:auto;flex-direction:row;border-right:none;border-bottom:1px solid var(--line);
+    overflow-x:auto;gap:var(--sp-1);padding:var(--sp-2)}
+  .settings-navitem{flex:none;flex-direction:column;width:auto;min-width:96px;align-items:flex-start}
+  .settings-navblurb{display:none}
+  .set-persona-grid,.set-engines,.set-paths,.set-knobs{grid-template-columns:1fr}
+}

@@ -157,6 +157,30 @@ export function useAppController(editor: Editor) {
   const [cfg, setCfg] = useState<any>({ model: '', persona: '' })
   const [cfgOpen, setCfgOpen] = useState(false)
   const [personas, setPersonas] = useState<any[]>([])   // Option A: the cast you can switch between (id·name·engine)
+  // A3/E2-FE · THE CONSOLIDATED SETTINGS SURFACE state. `settingsOpen` raises the one designed Settings region
+  // (the full-viewport modal mounted in App.tsx) — the single place modes/models/personas/RHM-config/voice all
+  // live together (A3 "consolidated, not scattered"). It is INDEPENDENT of `cfgOpen` (the legacy RhmChat gear,
+  // a forbidden-file we leave working): both read the SAME cfg/personas/etc. controller state — single source,
+  // no parallel config system (rule 3). The extra read-only registries the Settings surface renders are loaded
+  // ON OPEN (loadSettingsData) so a closed surface costs nothing: `roles` (the model-FUNCTION role registry,
+  // GET /api/roles) · `voicePaths` (the pipeline/s2s registry, GET /api/voice/paths — s2s renders UNAVAILABLE,
+  // never as working, G-19) · `voiceStatus` (per-engine TTS + STT availability, GET /api/voice) · `modeRegistry`
+  // (E1 — the hierarchical mode type-registry: ≤8 modes × subtypes × per-mode context-resolution declarations,
+  // from capabilities().mode_registry) · `autodetect` (E2 — the off/suggest/auto toggle's LIVE value + options,
+  // from capabilities().composition_config; READ-ONLY here — there is no runtime setter, surfaced honestly as
+  // env-set, never a silent no-op control). reflects-never-owns: every one is READ truth off the registry.
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const settingsOpenRef = useRef(false)   // openStream's closure is stale → the ref lets the SSE branch see live open-state
+  settingsOpenRef.current = settingsOpen
+  const [settingsTab, setSettingsTab] = useState<'brain' | 'modes' | 'voice' | 'roles' | 'composition'>('brain')
+  const [roles, setRoles] = useState<Record<string, any> | null>(null)
+  const [voicePaths, setVoicePaths] = useState<any | null>(null)
+  const [voiceStatus, setVoiceStatus] = useState<any | null>(null)
+  const [modeRegistry, setModeRegistry] = useState<Record<string, any> | null>(null)
+  const [autodetect, setAutodetect] = useState<{ value: string; options: string[] } | null>(null)
+  const [compositionCfg, setCompositionCfg] = useState<Record<string, any> | null>(null)
+  const [settingsBusy, setSettingsBusy] = useState(false)
+  const [settingsErr, setSettingsErr] = useState<string | null>(null)
   // U12: the /api/inbox payload is { live_escalations, resolved_for_you, batched, counts }. `batched` is a
   // SUBSET-grouping of live_escalations — NOT a third disjoint lane. We render the two real lanes.
   const [inbox, setInbox] = useState<any>({ live_escalations: [], resolved_for_you: [], batched: {}, counts: { escalations: 0, resolved: 0 } })
@@ -394,6 +418,10 @@ export function useAppController(editor: Editor) {
         try { setNow(await api.now()) } catch (e: any) { setNotice('⚠ live update missed a refresh (' + (e?.message || e) + ')') }
       } else if (k === 'mode' || k === 'config') {
         try { setNow(await api.now()); setCfg(await api.rhmConfig()) } catch (e: any) { setNotice('⚠ mode/config update missed a refresh (' + (e?.message || e) + ')') }
+        // A3 · keep the open Settings surface LIVE: a mode/config change (from this surface, the toolbar dial,
+        // the RhmChat gear, or the RHM's own configure verb) re-loads the read-only registries so the modes/
+        // autodetect/roles/voice panels reflect the new truth without a re-open. Inert when settings are closed.
+        if (settingsOpenRef.current) void loadSettingsData()
       } else if (k === 'ask' || k === 'reject' || k === 'resolve' || k === 'apply' || k === 'grow' || k === 'revert' || k.startsWith('decision.')) {
         // WIRE-UI: the decision→implementation wire emits `decision.*` events. NONE carry a companion `ask`,
         // so without this branch a surfaced build-intent / dispatch start / `implemented` close would fall
@@ -1004,6 +1032,59 @@ export function useAppController(editor: Editor) {
       setCfg(await api.rhmConfig())
     } catch (e: any) { setNotice('⚠ switch failed: ' + (e?.message || e)) }
   }
+  // A3/E2-FE · load the read-only registries the consolidated Settings surface renders. Fire on OPEN (and on
+  // a config/mode SSE event while open, so the surface stays live). reflects-never-owns: each is READ truth off
+  // an EXISTING endpoint — NO new config endpoint, NO parallel composer (the lane law). fail-loud (rule 4): a
+  // fetch that fails sets settingsErr so the surface SAYS so, never a silent blank; partial loads still render
+  // (each setter is independent — one down endpoint doesn't blank the others). api.ts is off-limits to this
+  // lane, so the two reads without an existing api method (roles, voicePaths, voice) use an inline fetch with
+  // the same jr-style normalization the rest of the app uses (matching annotateLocus's inline-fetch precedent).
+  async function loadSettingsData() {
+    setSettingsBusy(true); setSettingsErr(null)
+    const errs: string[] = []
+    // capabilities carries the E1 mode_registry + the E2 composition_config (incl MODE_AUTODETECT). One call.
+    try {
+      const caps = await api.capabilities()
+      setModeRegistry(caps?.mode_registry || {})
+      const cc = caps?.composition_config || {}
+      setCompositionCfg(cc)
+      setAutodetect({ value: cc.MODE_AUTODETECT || 'off', options: Array.isArray(cc.MODE_AUTODETECT_OPTIONS) ? cc.MODE_AUTODETECT_OPTIONS : ['off', 'suggest', 'auto'] })
+    } catch (e: any) { errs.push('capabilities/modes (' + (e?.message || e) + ')') }
+    // roles — the model-FUNCTION role registry (judge + future) the config lab binds. GET /api/roles.
+    try { const r = await fetch('/api/roles').then(x => x.json()); if (r?.error) errs.push('roles (' + r.error + ')'); else setRoles(r || {}) }
+    catch (e: any) { errs.push('roles (' + (e?.message || e) + ')') }
+    // voice paths — the pipeline/s2s registry. GET /api/voice/paths (s2s renders UNAVAILABLE, G-19).
+    try { const r = await fetch('/api/voice/paths').then(x => x.json()); if (r?.error) errs.push('voice-paths (' + r.error + ')'); else setVoicePaths(r) }
+    catch (e: any) { errs.push('voice-paths (' + (e?.message || e) + ')') }
+    // voice status — per-engine TTS up/voices + the STT (ear) registry. api.voice() is the existing READ method.
+    try { const r = await api.voice(); if (r?.error) errs.push('voice (' + r.error + ')'); else setVoiceStatus(r) }
+    catch (e: any) { errs.push('voice (' + (e?.message || e) + ')') }
+    if (errs.length) setSettingsErr('could not load: ' + errs.join('; '))
+    setSettingsBusy(false)
+  }
+  // A3 · open the consolidated Settings surface — raises the modal AND loads its read-only registries. The
+  // writable slots (model/persona/mode) already live in cfg/now (loaded at boot + kept live by SSE), so they
+  // render instantly; loadSettingsData fills the extras. Closing just lowers the modal (state persists).
+  function openSettings(tab?: 'brain' | 'modes' | 'voice' | 'roles' | 'composition') {
+    if (tab) setSettingsTab(tab)
+    setSettingsOpen(true)
+    void loadSettingsData()
+  }
+  // A3 · write ANY whitelisted rhm-config slot through the EXISTING set_rhm_config path (the 11-slot whitelist:
+  // model/base_url/persona/mode/voice_enabled/timeout/stt/roles/tts_engine/tts_voice/voice_path). REUSE — NOT a
+  // new endpoint, NOT a new write path: it is the same api.setRhmConfig applyCfg uses, generalised to one slot.
+  // The backend fail-loud-validates (unknown slot/engine/path → 400) so an invalid value surfaces, never sets.
+  // After the write we mirror the returned fresh config (reflects-never-owns — the backend value is truth) and
+  // poll() so the live surface (presence dot, mode line) reflects the change everywhere. The mode slot keeps
+  // routing through changeMode (it also drives the walkthrough organ), so this is for the non-mode slots.
+  async function setCfgSlot(key: string, value: any) {
+    setNotice('set ' + key + ' → ' + value)
+    try {
+      const c = await api.setRhmConfig({ [key]: value })
+      if (c?.error) { setSettingsErr(c.error); setNotice('✕ ' + c.error); return }
+      setCfg(c); setNotice(key + ' → ' + value); await poll()
+    } catch (e: any) { setSettingsErr(e?.message || String(e)); setNotice('✕ could not set ' + key + ': ' + (e?.message || e)) }
+  }
   function cycleLayers() {
     const next = (layerView + 1) % 3
     setLayerView(next)
@@ -1513,6 +1594,8 @@ export function useAppController(editor: Editor) {
     edges, running, runError, runStartedAt, runElapsed, types, gname, gspec, surf, growMsg, workshop,
     oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
     showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn, personas,
+    // A3/E2-FE · the consolidated Settings surface state
+    settingsOpen, settingsTab, roles, voicePaths, voiceStatus, modeRegistry, autodetect, compositionCfg, settingsBusy, settingsErr,
     wtSpoke, wtBusy, selected, mobileTab, fleet, indicated, proposal, history, historyBusy,
     addressHelp, addressHelpBusy, addressHelpError,
     selfChanges, selfChangesBusy, freshness, freshnessBusy, versions, versionsBusy, journeyId, journeyReplaying,
@@ -1521,12 +1604,15 @@ export function useAppController(editor: Editor) {
     // setters the components call directly
     setGname, setGspec, setSurf, setWorkshop, setNotice, setCfg, setCfgOpen, setChatMsg, setShowResolved,
     setDrill, setReason, setWtReason, setVoiceOn, setRunError, setGrowMsg, setMobileTab,
+    setSettingsOpen, setSettingsTab,
     // handlers
     poll, openCoa, reload, fitGraph, addNode, wireSelected, doConnect, setNodeConfig, surfaceOutput,
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
     resolveUiTarget, startWalk, startGuide, endWalk, respondStep, nextStep, dispatch, recordToggle, fieldValue,
     setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus, mintBuildIntent,
     approveProposal, dismissProposal, steerProposal, deferProposal, toggleJourneyRecording, replayJourney, switchPersona,
+    // A3/E2-FE · the consolidated Settings handlers
+    openSettings, loadSettingsData, setCfgSlot,
   }
 }
 
