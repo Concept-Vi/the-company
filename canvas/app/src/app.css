@@ -286,17 +286,40 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 .br-reach.br-empty{opacity:.8}
 .br-reach-head{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--kind-content);margin-bottom:6px}
 .br-empty-note{font-size:10px;color:var(--dim);line-height:1.4}
-.br-ripple{display:flex;flex-direction:column;gap:6px}
-.br-centre{display:flex;align-items:center;gap:6px;padding:4px 7px;border:1px solid var(--sig-dim);
-  border-radius:9px;background:var(--acc-glow);align-self:flex-start}
-.br-centre-dot{width:8px;height:8px;border-radius:50%;background:var(--sig)}
-.br-centre-label{font-size:9.5px;letter-spacing:.04em;color:var(--sig)}
-.br-ring{padding-left:9px;border-left:2px solid var(--line-2)}
-.br-ring.br-ring-dependents{border-left-color:var(--err)}
-.br-ring.br-ring-dependencies{border-left-color:var(--warn)}
-.br-ring.br-ring-coref{border-left-color:var(--kind-content)}
-.br-ring.br-ring-semantic{border-left-color:var(--sig-dim)}
-.br-ring-label{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-bottom:3px}
+/* THE RIPPLE MAP — an actual concentric-ring SVG (the ripple SEEN, not a list). The pointed centre, the
+   relationship rings around it, members placed ON their ring. Square, fluid to the rail width, capped so it
+   stays legible at ~285px and scales up. Colour is token-only (per-ring class); geometry is px (lint-free). */
+.br-ripplemap{position:relative;width:100%;max-width:240px;margin:2px auto 8px;aspect-ratio:1/1}
+.br-rings-svg{display:block;width:100%;height:100%;overflow:visible}
+.br-ring-circle{fill:none;stroke-width:1;opacity:.5}
+.br-ring-circle.br-ring-dependents{stroke:var(--err)}
+.br-ring-circle.br-ring-dependencies{stroke:var(--warn)}
+.br-ring-circle.br-ring-coref{stroke:var(--kind-content)}
+.br-ring-circle.br-ring-semantic{stroke:var(--sig-dim)}
+.br-centre-node{fill:var(--sig);stroke:var(--bg);stroke-width:1.5}
+.br-node{stroke:var(--bg);stroke-width:1;cursor:pointer;transition:r .12s ease}
+.br-node.br-ring-dependents{fill:var(--err)}
+.br-node.br-ring-dependencies{fill:var(--warn)}
+.br-node.br-ring-coref{fill:var(--kind-content)}
+.br-node.br-ring-semantic{fill:var(--sig-dim)}
+.br-node:hover{stroke:var(--sig);stroke-width:2}
+.br-node.ticked,.br-node.in-reach{fill:var(--sig);stroke:var(--sig);stroke-width:1.5}
+.br-centre-cap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;
+  font-size:8px;letter-spacing:.04em;color:var(--bg);text-align:center;max-width:48px;line-height:1.05}
+/* THE LEGEND — each ring band named + its members as tick chips (read + tick here; the SVG is the picture). */
+.br-legend{display:flex;flex-direction:column;gap:6px}
+.br-band{padding-left:9px;border-left:2px solid var(--line-2)}
+.br-band.br-ring-dependents{border-left-color:var(--err)}
+.br-band.br-ring-dependencies{border-left-color:var(--warn)}
+.br-band.br-ring-coref{border-left-color:var(--kind-content)}
+.br-band.br-ring-semantic{border-left-color:var(--sig-dim)}
+.br-band-label{display:flex;align-items:center;gap:4px;font-size:9px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:3px}
+.br-band-swatch{width:7px;height:7px;border-radius:50%;background:var(--line-2);flex:none}
+.br-band.br-ring-dependents .br-band-swatch{background:var(--err)}
+.br-band.br-ring-dependencies .br-band-swatch{background:var(--warn)}
+.br-band.br-ring-coref .br-band-swatch{background:var(--kind-content)}
+.br-band.br-ring-semantic .br-band-swatch{background:var(--sig-dim)}
 .br-chips{display:flex;flex-wrap:wrap;gap:5px}
 .br-chip{display:inline-flex;align-items:center;gap:3px;border:1px solid var(--line);border-radius:9px;
   background:var(--panel);padding:1px 4px 1px 2px;max-width:100%}
@@ -312,6 +335,30 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 .br-approve{margin:0}
 .br-default-note{font-size:8.5px;letter-spacing:.04em}
 .br-err{margin-top:6px;font-size:10px;color:var(--err);line-height:1.4}
+/* X5 · the SURFACED CONTEXT-BUNDLE (the build's notebook) + X7 · the PIN affordance. Token-only; a
+   navigable per-item list (kind + address legible, pin control, address drives the view). */
+.cb-bundle{margin-top:8px;padding:7px 8px;background:var(--bg);border:1px solid var(--line);border-radius:3px}
+.cb-bundle.cb-empty{opacity:.8}
+.cb-head{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--kind-content);margin-bottom:6px}
+.cb-empty-note{font-size:10px;color:var(--dim);line-height:1.4}
+.cb-list{display:flex;flex-direction:column;gap:6px}
+.cb-item{border:1px solid var(--line);border-radius:4px;background:var(--panel);padding:5px 7px}
+.cb-item.pinned{border-color:var(--sig-dim);background:var(--acc-glow)}
+.cb-item-bar{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+.cb-kind{font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--kind-content);flex:none}
+.cb-pin{margin-left:auto;flex:none;border:1px solid var(--line);background:transparent;color:var(--dim);
+  cursor:pointer;font-size:8.5px;letter-spacing:.04em;border-radius:9px;padding:1px 6px;line-height:1.4}
+.cb-pin:hover{border-color:var(--sig);color:var(--sig)}
+.cb-pin.on{border-color:var(--sig-dim);color:var(--sig);background:var(--acc-glow)}
+.cb-pin:disabled{cursor:default;opacity:.6}
+.cb-ts{flex:none;font-size:8.5px}
+.cb-addr{display:block;border:none;background:transparent;color:var(--sig-dim);cursor:pointer;font-size:9px;
+  letter-spacing:.02em;word-break:break-all;text-align:left;padding:0;max-width:100%}
+.cb-addr:hover{color:var(--sig)}
+.cb-addr:disabled{cursor:default;color:var(--dim)}
+.cb-text{margin-top:3px;font-family:"Fraunces",serif;font-size:11px;line-height:1.4;color:var(--ink);
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.cb-err{margin-top:6px;font-size:10px;color:var(--err);line-height:1.4}
 .coa{font-family:"Fraunces",serif;color:var(--ink);font-size:12.5px;line-height:1.45;white-space:pre-wrap;
   background:var(--bg);border:1px solid var(--sig-dim);border-radius:3px;padding:9px;margin:6px 0}
 button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}

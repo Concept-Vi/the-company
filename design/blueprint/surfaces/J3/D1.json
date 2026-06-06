@@ -17,7 +17,9 @@
   ],
   "cross_journeys": [],
   "addresses": [
-    "ui://inbox/build-intent"
+    "ui://inbox/build-intent",
+    "ui://inbox/context-bundle",
+    "ui://inbox/context-pin"
   ],
   "build_to": {
     "components": [

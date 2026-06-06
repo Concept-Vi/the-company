@@ -111,6 +111,23 @@
       "represents": "WIRE-intent",
       "code": "runtime/suite.py:surface_build_intent"
     },
+    "ui://inbox/context-bundle": {
+      "region": "inbox",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "WIRE-intent",
+      "code": "runtime/suite.py:surface_build_intent (payload.context — the X3 R2 gather) / canvas/app/src/components/ContextBundle.tsx"
+    },
+    "ui://inbox/context-pin": {
+      "region": "inbox",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "WIRE-intent",
+      "code": "runtime/suite.py:pin (X7 pin override) / canvas/app/src/components/ContextBundle.tsx"
+    },
     "ui://inbox/coa": {
       "region": "inbox",
       "capabilities": [

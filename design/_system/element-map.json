@@ -649,6 +649,8 @@
       "ui://grow/dispatch",
       "ui://grow/reject",
       "ui://inbox/build-intent",
+      "ui://inbox/context-bundle",
+      "ui://inbox/context-pin",
       "ui://inbox/target",
       "ui://inbox/walk",
       "ui://inspector/build",
@@ -673,8 +675,8 @@
     "screens": 17,
     "addressed_elements": 79,
     "distinct_addresses_used": 25,
-    "registered_addresses": 51,
+    "registered_addresses": 53,
     "unregistered_orphans": 2,
-    "unused_orphans": 28
+    "unused_orphans": 30
   }
 }

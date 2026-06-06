@@ -58,6 +58,8 @@
         "ui://inbox/build-intent",
         "ui://inbox/build-review",
         "ui://inbox/coa",
+        "ui://inbox/context-bundle",
+        "ui://inbox/context-pin",
         "ui://inbox/target",
         "ui://inbox/walk"
       ]

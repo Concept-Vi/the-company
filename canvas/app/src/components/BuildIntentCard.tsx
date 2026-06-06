@@ -8,9 +8,11 @@
 import { useState } from 'react'
 import { buildPhase, deriveOutcome } from '../api'
 import { BlastRadiusReach } from './BlastRadiusReach'
+import { ContextBundle } from './ContextBundle'
 
-export function BuildIntentCard({ d, onOpen, onDemonstrate, liveTypes }:
-  { d: any; onOpen: (id: string) => void; onDemonstrate: (nodeType: string) => void; liveTypes: string[] }) {
+export function BuildIntentCard({ d, onOpen, onDemonstrate, liveTypes, onNavigate }:
+  { d: any; onOpen: (id: string) => void; onDemonstrate: (nodeType: string) => void; liveTypes: string[];
+    onNavigate?: (address: string) => void }) {
   const [showRecord, setShowRecord] = useState(false)
   const p = d.payload || {}
   const phase = buildPhase(d)
@@ -37,12 +39,20 @@ export function BuildIntentCard({ d, onOpen, onDemonstrate, liveTypes }:
           build's editable scope stays the pointed address only. FORM = needs-tim (a reserved design call;
           this is a sensible default, not green). */}
       {phase.cls === 'bi-inbox' && p.blast_radius && (
-        // NOTE (needs-tim): onNavigate is intentionally NOT wired to onOpen here — onOpen is openCoa,
-        // which expects a decision SID, not a ui:///code:// member address (they'd mis-fire). Where a
-        // blast-radius member navigates TO (resolve the address on the canvas / open the code locus) is
-        // a RESERVED Tim design call, like the rest of this surface. Left unbound = a visible, inert
-        // chip-label (no wrong jump), pending the reach surface's design pass.
-        <BlastRadiusReach d={d} />
+        // onNavigate is the PRESERVED resolveUiTarget keystone (the single sink that drives the view to any
+        // address, registry-validated + fail-loud) — threaded down from Inbox. A blast-radius member is a
+        // ui:///code:// address; clicking its label drives the view to that locus (NOT onOpen/openCoa, which
+        // expects a decision SID and would mis-fire). An unregistered address surfaces a notice (acceptable
+        // per the rubric — fail-loud, never a wrong silent jump). Final placement is still Tim's design call.
+        <BlastRadiusReach d={d} onNavigate={onNavigate} />
+      )}
+      {/* X5 · the SURFACED CONTEXT-BUNDLE — for an AWAITING build (consent-time, where the operator approves
+          WITH the exact context the build will see), render payload.context[] as a navigable notebook + the
+          X7 pin affordance. Shown at the awaiting phase ONLY: post-build the bundle is a read-only record and
+          the pin is inert; consent-time is where it is actionable (matches the X16 reach-approval gate).
+          FORM = needs-tim (a reserved design call; sensible default, not green). */}
+      {phase.cls === 'bi-inbox' && p.context && (
+        <ContextBundle d={d} onNavigate={onNavigate} />
       )}
       {/* DEMONSTRATE-FIRST · gated on the backend LIFECYCLE PHASE, NOT the subprocess exit code. Only a
           CLOSED build (status==='implemented' → bi-done) headlines the working outcome + offers the "show

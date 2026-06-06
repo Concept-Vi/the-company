@@ -36,7 +36,7 @@ export function Inbox() {
               <PanelErrorBoundary key={d.id} name={'build-intent ' + d.id}>
                 {/* DEMONSTRATE-FIRST: onDemonstrate places the built node-type on the canvas; liveTypes is
                    the registry truth that gates the "show me" affordance to a node-type that went live. */}
-                <BuildIntentCard d={d} onOpen={openCoa} onDemonstrate={(t: string) => { void addNode(t) }} liveTypes={types} />
+                <BuildIntentCard d={d} onOpen={openCoa} onDemonstrate={(t: string) => { void addNode(t) }} liveTypes={types} onNavigate={resolveUiTarget} />
               </PanelErrorBoundary>
             ))}
           </div>

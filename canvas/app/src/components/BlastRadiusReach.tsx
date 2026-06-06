@@ -74,21 +74,75 @@ export function BlastRadiusReach({ d, onNavigate }: { d: any; onNavigate?: (addr
     )
   }
 
+  // NAVIGATION GUARD: a blast-radius member is a `code://` address (X9/X14 read code-edges.json, keyed by
+  // code:// ids). resolveUiTarget's registry-validated + fail-loud path is for `ui://` strings ONLY — a
+  // `code://` string skips the grammar/registry gate and falls to driveCanvas (the camera path), which
+  // would mis-route to "no node on the canvas". WHERE a code:// member navigates TO (resolve the code locus
+  // on the canvas / open the source) is a RESERVED Tim design call (the original note's 2nd clause). So we
+  // only fire onNavigate for a `ui://` member; a non-ui:// member's label stays inert (no wrong jump),
+  // pending the reserved design pass. ui:// members (if any surface) get the keystone's validated drive.
+  function navigable(m: string): boolean { return typeof m === 'string' && m.startsWith('ui://') }
+
+  // a short, legible leaf name for a long ui:///code:// member address (the chip shows the tail; the full
+  // address is the title/tooltip). Keeps the ripple legible at the ~285px right-rail width.
+  function leaf(m: string): string {
+    const noState = m.split('/@')[0]
+    const tail = noState.split('/').filter(Boolean).pop() || noState
+    return tail.length > 18 ? tail.slice(0, 17) + '…' : tail
+  }
+
   return (
     <div className="br-reach" data-needs-tim="x16-reach-surface">
       <div className="br-reach-head">
         reach <span className="muted">· {total} related{approvedAll.size ? ` · ${approvedAll.size} in reach` : ''}</span>
       </div>
-      {/* the RIPPLE — the pointed address at the centre, the relationship rings around it. The default
-          reach is the centre ONLY; ticking a ring member pulls it INTO the reach (widens the scope). */}
-      <div className="br-ripple">
-        <div className="br-centre" title="the pointed address — the DEFAULT reach (always in scope)">
-          <span className="br-centre-dot" />
-          <span className="br-centre-label">pointed{scope.length ? ` · ${scope.length} file(s)` : ''}</span>
+      {/* THE RIPPLE — rendered as ACTUAL concentric rings around the pointed centre, not a flex list. Each
+          ring is a relationship KIND (innermost = the pointed address; outward = co-reference · would-break
+          dependents · relies-on dependencies · semantic). A member sits ON its ring (distinguished by ring
+          radius + kind colour-token + the legend), and the legend below maps each ring band to its members
+          as tick-able chips (the ON-ring nodes and the legend chips share state). Default reach = the centre
+          ONLY; ticking pulls a member INTO the reach (widens the scope). px geometry is lint-free; colour is
+          token-only. Legible at 285px, scales up via the SVG viewBox. */}
+      <div className="br-ripplemap" role="img"
+        aria-label={`blast radius ripple: ${total} related code members across ${rings.length} relationship rings`}>
+        <svg className="br-rings-svg" viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet">
+          {/* the concentric ring outlines — one per present kind, evenly spaced from the centre outward. */}
+          {rings.map((r, ri) => {
+            const radius = 26 + ri * ((92 - 26) / Math.max(1, rings.length)) + ((92 - 26) / Math.max(1, rings.length)) * 0.6
+            return <circle key={'c' + r.key} cx="100" cy="100" r={radius}
+              className={'br-ring-circle ' + r.cls} />
+          })}
+          {/* the pointed centre — the default reach, always in scope. */}
+          <circle cx="100" cy="100" r="13" className="br-centre-node" />
+          {/* each member placed ON its ring by angle (distributed around the circle). */}
+          {rings.map((r, ri) => {
+            const radius = 26 + ri * ((92 - 26) / Math.max(1, rings.length)) + ((92 - 26) / Math.max(1, rings.length)) * 0.6
+            return r.members.map((m, mi) => {
+              const ang = (mi / r.members.length) * Math.PI * 2 - Math.PI / 2
+              const cx = 100 + radius * Math.cos(ang)
+              const cy = 100 + radius * Math.sin(ang)
+              const inReach = approvedAll.has(m)
+              const on = ticked.has(m)
+              return (
+                <circle key={'m' + r.key + m} cx={cx} cy={cy} r={inReach ? 5 : on ? 5 : 3.5}
+                  className={'br-node ' + r.cls + (inReach ? ' in-reach' : on ? ' ticked' : '')}
+                  onClick={() => toggle(m)}>
+                  <title>{m}{inReach ? ' · in reach' : on ? ' · ticked' : ' · click to tick (widen the reach)'}</title>
+                </circle>
+              )
+            })
+          })}
+        </svg>
+        <div className="br-centre-cap" title="the pointed address — the DEFAULT reach (always in scope)">
+          pointed{scope.length ? ` · ${scope.length}` : ''}
         </div>
+      </div>
+      {/* THE LEGEND — each ring band named + its members as tick chips. The ring is the spatial picture; the
+          legend is where the operator reads + ticks. The on-ring nodes and these chips share toggle state. */}
+      <div className="br-legend">
         {rings.map(r => (
-          <div key={r.key} className={'br-ring ' + r.cls} title={r.hint}>
-            <div className="br-ring-label">{r.label} <span className="muted">· {r.members.length}</span></div>
+          <div key={r.key} className={'br-band ' + r.cls} title={r.hint}>
+            <div className="br-band-label"><span className="br-band-swatch" /> {r.label} <span className="muted">· {r.members.length}</span></div>
             <div className="br-chips">
               {r.members.map(m => {
                 const inReach = approvedAll.has(m)
@@ -102,8 +156,9 @@ export function BlastRadiusReach({ d, onNavigate }: { d: any; onNavigate?: (addr
                       {inReach ? '◉' : on ? '◉' : '○'}
                     </button>
                     <button type="button" className="br-chip-label"
-                      title={'go to ' + m}
-                      onClick={() => onNavigate && onNavigate(m)}>{m}</button>
+                      disabled={!navigable(m)}
+                      title={navigable(m) ? ('go to ' + m) : (m + ' (code locus — navigation is a reserved design call)')}
+                      onClick={() => navigable(m) && onNavigate && onNavigate(m)}>{leaf(m)}</button>
                   </span>
                 )
               })}

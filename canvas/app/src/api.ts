@@ -51,6 +51,13 @@ export const api = {
   // is refused by the backend (consent-time gate).
   approveReach: (id: string, members: string[], reason = '') =>
     fetch('/api/approve-reach', { method: 'POST', headers: J, body: JSON.stringify({ id, members, reason }) }).then(jr),
+  // X7: the pin override — pin/unpin an attached context item at a ui:// ADDRESS so it HOLDS in the
+  // bounded R2 window (the dead `pinned` term's SET path; `_r2_score` reads it, nothing set it before).
+  // OPERATOR-ONLY, OFF the MCP face (POST /api/pin, beside /api/annotate). `target_ts` is the item's
+  // handle (its `ts`); the backend (Suite.pin) S0-validates the address (→ 400) AND fails loud if
+  // (address, target_ts) names no real attached item — never a silent no-op. Default pinned=true.
+  pin: (address: string, target_ts: string, pinned = true) =>
+    fetch('/api/pin', { method: 'POST', headers: J, body: JSON.stringify({ address, target_ts, pinned }) }).then(jr),
   apply: (id: string) =>
     fetch('/api/apply', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(jr),
   objectInfo: () => fetch('/api/object_info').then(jr),
