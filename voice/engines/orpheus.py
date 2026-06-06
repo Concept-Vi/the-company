@@ -26,8 +26,15 @@ PORT = 4125
 # the model that's actually CACHED (canopylabs/orpheus-3b-0.1-ft) — NOT orpheus-speech's stock default
 # "orpheus-tts-0.1-finetune-prod", which isn't on disk and triggers a ~6GB DOWNLOAD at load.
 MODEL_NAME = os.environ.get("COMPANY_ORPHEUS_MODEL", "canopylabs/orpheus-3b-0.1-ft")
-MAX_LEN = int(os.environ.get("COMPANY_ORPHEUS_MAXLEN", "2048"))
-GPU_UTIL = float(os.environ.get("COMPANY_ORPHEUS_GPU_UTIL", "0.55"))   # fit the 16GB card; leave headroom
+# context window (tokens): MUST hold a real spoken reply — text + the MANY SNAC audio tokens a reply
+# generates (audio is token-dense). 2048 was too tight (a longer reply truncates); 4096 comfortably
+# holds a multi-sentence turn. NOT minimised — a starved context can't carry a real conversational reply.
+MAX_LEN = int(os.environ.get("COMPANY_ORPHEUS_MAXLEN", "4096"))
+GPU_UTIL = float(os.environ.get("COMPANY_ORPHEUS_GPU_UTIL", "0.6"))    # fit the 16GB card; room for the 4096 KV cache
+# graphs vs eager: DEFAULT graphs (enforce_eager=False) — Tim's priority is REAL-TIME inference after a
+# one-time pinned load, and CUDA graphs make per-token inference fast (eager was the wrong trade: fast
+# load, slow inference). COMPANY_ORPHEUS_EAGER=1 forces eager (instant load, slower synth) if ever needed.
+EAGER = os.environ.get("COMPANY_ORPHEUS_EAGER", "0") == "1"
 DEFAULT_VOICE = os.environ.get("COMPANY_ORPHEUS_VOICE", "tara")
 RATE = 24000
 VOICE_BANK = ["tara", "leah", "jess", "leo", "dan", "mia", "zac", "zoe"]
@@ -55,7 +62,7 @@ def _engine():
                                "into the orpheus venv (see voice/engines/REQUIREMENTS.md)") from e
 
         def _fast_setup(self):                                  # replaces OrpheusModel._setup_engine
-            args = AsyncEngineArgs(model=self.model_name, dtype=self.dtype, enforce_eager=True,
+            args = AsyncEngineArgs(model=self.model_name, dtype=self.dtype, enforce_eager=EAGER,
                                    gpu_memory_utilization=GPU_UTIL, max_model_len=MAX_LEN)
             return AsyncLLMEngine.from_engine_args(args)
         OrpheusModel._setup_engine = _fast_setup
