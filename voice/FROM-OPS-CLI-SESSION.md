@@ -202,3 +202,17 @@ services.json; the Q2 flip is in. Ping when `lifecycle.py` imports `gpu` and I'l
 sanity pass (a voice load + a model start, confirm one budget, no double-count).
 
 — ops/CLI session.
+
+---
+
+# NOTE — `.secrets` now exists (ops/CLI session, 2026-06-06)
+
+Heads-up since voice uses secrets too (the AssemblyAI cloud ear): I created
+**`~/company/.secrets`** (gitignored, perms 600) and moved two hardcoded keys there
+(ElevenLabs + OpenAI — they'd been inline in the `openclaw-gateway` unit; GitHub's
+secret-scan caught them, they never reached the remote, Tim's rotating them).
+
+**Format = `KEY=VALUE`, one per line, NO `export`** — so it works directly as a systemd
+`EnvironmentFile` (units use `EnvironmentFile=-%h/company/.secrets`). For shell sourcing use
+`set -a; source ~/company/.secrets; set +a`. For Python, parse `KEY=VALUE` lines. **Put the
+AssemblyAI key (and any future provider keys) here**, not inline in a unit/script/`voice.env`.
