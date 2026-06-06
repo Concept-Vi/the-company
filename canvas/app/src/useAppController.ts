@@ -1174,6 +1174,49 @@ export function useAppController(editor: Editor) {
     const blob = await api.tts(text)
     await playWavBuffer(await blob.arrayBuffer())
   }
+  function b64ToArrayBuffer(b64: string): ArrayBuffer {
+    const bin = atob(b64 || ''); const bytes = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+    return bytes.buffer
+  }
+  // V2.2 — a voice turn through the designed STREAMING circuit (/api/voice/stream): post the recorded
+  // utterance, consume the ndjson (transcript → reply → per-SENTENCE {wav_b64} chunks → done), append the
+  // turns to the chat, and play each sentence in the PERSONA's voice through the gesture-unlocked context
+  // (V2.1) AS IT ARRIVES — first audio at ~(STT+brain+one sentence), not after the whole reply. Fail-LOUD
+  // on a stream/engine error (never a silent swallow). No persona set → the simple stt→chat path (which
+  // still speaks via /api/tts's persona-default). The walk-verdict path stays on plain STT (caller-gated).
+  async function runVoiceTurn(blob: Blob) {
+    const persona = (cfg?.persona || '').trim()
+    if (!persona) {                                            // no persona → simple path (text + tts persona-default)
+      setNotice('transcribing…')
+      const r = await api.stt(blob)
+      if (r.text) { setNotice('you said: ' + r.text); await sendChat(r.text) } else setNotice('(no speech detected)')
+      return
+    }
+    playCursorRef.current = 0
+    setNotice('listening…')
+    let res: Response
+    try { res = await api.voiceStream(blob, persona) }
+    catch (e: any) { setNotice('⚠ voice circuit unreachable: ' + (e?.message || e)); return }
+    if (!res.ok || !res.body) {
+      const t = await res.text().catch(() => ''); setNotice('⚠ voice turn failed (' + res.status + '): ' + t.slice(0, 160)); return
+    }
+    const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ''
+    for (;;) {
+      const { done, value } = await reader.read(); if (done) break
+      buf += dec.decode(value, { stream: true })
+      const lines = buf.split('\n'); buf = lines.pop() || ''
+      for (const ln of lines) {
+        const s = ln.trim(); if (!s) continue
+        let ev: any; try { ev = JSON.parse(s) } catch { continue }
+        if (ev.type === 'transcript') { setNotice('you said: ' + ev.text); if (ev.text) setChat(c => [...c, { role: 'user', text: ev.text }]) }
+        else if (ev.type === 'reply') { if (ev.text) setChat(c => [...c, { role: 'assistant', text: ev.text }]) }
+        else if (ev.type === 'chunk') { try { await playWavBuffer(b64ToArrayBuffer(ev.wav_b64)) } catch { /* keep streaming the rest */ } }
+        else if (ev.type === 'error') { setNotice('⚠ ' + ev.error) }                 // fail loud (V2.3)
+        else if (ev.type === 'done') { setNotice(''); poll() }
+      }
+    }
+  }
   // voice in — push-to-talk: record → STT → send as a chat turn (which then speaks its reply)
   async function recordToggle() {
     primeAudio()                                               // V2.1: unlock audio in THIS gesture for the later reply
@@ -1184,15 +1227,17 @@ export function useAppController(editor: Editor) {
       const chunks: BlobPart[] = []
       rec.ondataavailable = e => chunks.push(e.data)
       rec.onstop = async () => {
-        stream.getTracks().forEach(t => t.stop()); setRecording(false); setNotice('transcribing…')
-        try {
-          const r = await api.stt(new Blob(chunks, { type: 'audio/webm' }))
-          if (r.text) {
-            setNotice('you said: ' + r.text)
-            // F2: when a walk is active, the mic routes to the session RESPOND path (not sendChat). A simple
-            // keyword map turns speech into a verdict; anything else becomes a comment carrying the
-            // transcript as the WHY (never a dead end — F4). Outside a walk, it's a normal chat turn.
-            if (sessionRef.current && !sessionRef.current.done) {
+        stream.getTracks().forEach(t => t.stop()); setRecording(false)
+        const blob = new Blob(chunks, { type: 'audio/webm' })
+        // F2: when a walk is active, the mic routes to the session RESPOND path (transcript-only verdict —
+        // no spoken reply). A keyword map turns speech into a verdict; anything else is a comment carrying
+        // the transcript as the WHY (never a dead end — F4). This stays on plain STT.
+        if (sessionRef.current && !sessionRef.current.done) {
+          setNotice('transcribing…')
+          try {
+            const r = await api.stt(blob)
+            if (r.text) {
+              setNotice('you said: ' + r.text)
               const t = r.text.toLowerCase()
               const choice = /\bapprove|accept|yes|approved\b/.test(t) ? 'approve'
                 : /\breject|decline|no\b/.test(t) ? 'reject'
@@ -1202,10 +1247,13 @@ export function useAppController(editor: Editor) {
               if (choice === 'reject' || choice === 'comment') setWtReason(r.text)   // capture the spoken WHY
               setWtSpoke('🎙 heard: "' + r.text + '" → ' + choice)
               await respondStep(choice)
-            } else await sendChat(r.text)
-          }
-          else setNotice('(no speech detected)')
-        } catch (e: any) { setNotice('STT error — type instead: ' + (e?.message || e)) }   // F4: fall back to text
+            } else setNotice('(no speech detected)')
+          } catch (e: any) { setNotice('STT error — type instead: ' + (e?.message || e)) }   // F4: fall back to text
+          return
+        }
+        // Outside a walk → a CONVERSATION turn through the streaming voice circuit (V2.2): transcript +
+        // reply + the persona's voice, sentence-streamed. Fail-loud inside runVoiceTurn.
+        try { await runVoiceTurn(blob) } catch (e: any) { setNotice('voice turn error — type instead: ' + (e?.message || e)) }
       }
       recorderRef.current = rec; rec.start(); setRecording(true); setNotice('listening… (click again to stop)')
     } catch { setNotice('mic unavailable — grant microphone permission') }

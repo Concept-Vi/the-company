@@ -106,6 +106,12 @@ export const api = {
   personas: () => fetch('/api/personas').then(jr),
   voiceServices: () => fetch('/api/voice/services').then(jr),
   voiceSwitch: (persona: string) => fetch('/api/voice/switch', { method: 'POST', headers: J, body: JSON.stringify({ persona }) }).then(jr),
+  // V2.2 — the streaming voice circuit: POST the recorded utterance, get back an ndjson stream
+  // (transcript → reply → per-sentence {wav_b64} chunks → done) in the persona's voice. Returns the raw
+  // Response so the caller reads `.body` (NOT jr — it's a stream, not one JSON object).
+  voiceStream: (blob: Blob, persona: string) =>
+    fetch('/api/voice/stream?persona=' + encodeURIComponent(persona),
+          { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: blob }),
   // C1: the UI-component registry (sibling of object_info) — the source of truth for what's addressable.
   uiInfo: () => fetch('/api/ui_info').then(jr),
   // L3 · addressed history (§21.7#1): everything that happened AT a ui:// address. The address-keyed READ
