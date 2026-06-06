@@ -631,6 +631,16 @@ class H(BaseHTTPRequestHandler):
                 b = self._body()
                 self._send(200, json.dumps(SUITE.start_session(
                     b["item_ids"], mode=b.get("mode", "walkthrough"))))
+            elif self.path == "/api/walkthrough/start":     # C4: the mode-selection → ORGAN-start seam.
+                # SELECTING the guided/walkthrough experience: this binds the cosmetic presence-dial
+                # 'walkthrough' MODE to the real walkthrough ORGAN (start_walkthrough sets the dial AND
+                # starts the organ over the pending items) — closing the naming trap (a dial mode that
+                # only narrated vs. the screen-driving engine). Optional `item_ids` to pre-select a set;
+                # absent → it walks every pending unresolved inbox item. FAIL LOUD (no silent no-op):
+                # nothing pending → {organ_started:False, reason} (the dial is set, the surface is told).
+                # The FE that CALLS this on dial-select + drives the per-step view is the FE show-me lane.
+                b = self._body()
+                self._send(200, json.dumps(SUITE.start_walkthrough(b.get("item_ids"))))
             elif self.path == "/api/debrief/start":         # voice-trial lane F: walk Tim back through the
                 # recorded trial sessions. start_debrief SURFACES each recorded session as a review item
                 # (carrying its real CAS transcript) then drives the SAME walkthrough organ — so the

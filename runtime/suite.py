@@ -2749,15 +2749,33 @@ class Suite:
                 if t.startswith("ui://"):
                     kind, _, ref = t[len("ui://"):].partition("/")
                     if kind == "canvas":
-                        # camera-resolved: a live node-id, or '*' = the whole canvas (registry entry)
+                        # camera-resolved: a live node-id, or '*' = the whole canvas (registry entry). This
+                        # gate is LIVE-NODE-scoped on PURPOSE (the FE can only drive the camera to a node
+                        # actually on the loaded graph) — it must stay so. NOTE a corpus element row like
+                        # ui://canvas/node IS a build_ui_info key, so it must NOT be matched by the
+                        # full-string element check below (that would bypass this live-node gate and emit a
+                        # target the FE can't drive). Keeping the element check INSIDE the else branch
+                        # ensures canvas addresses ALWAYS pass through this gate (preserved).
                         if ref == "*" or ref in ids:
                             targets.append(t)
                     else:
-                        # registry-resolved (chrome/field/panel/ext): the ref must be a known component.
-                        # build_ui_info() is keyed by ref; kind is carried for the frontend's dispatch.
+                        # registry-resolved (chrome/field/panel/ext + the S1 ELEMENT addresses):
+                        # build_ui_info() keys BOTH the bare region handles ('inbox') AND the full-string
+                        # element rows (ui://toolbar/run, ui://inbox/build-review — see
+                        # _load_corpus_element_addresses). Match EITHER:
+                        #   • t in reg   — C3 FIX: an ELEMENT-level (S1) address keyed by its FULL canonical
+                        #     string. Before this, the parse below keyed on the <element> SEGMENT ('run'),
+                        #     which is NOT a registry key, so element addresses were silently refused even
+                        #     though they ARE registered + drivable. A full-string match passes through
+                        #     UNCHANGED for the FE's resolveUiTarget (validates against /api/ui_info = the
+                        #     same build_ui_info). The canonical dual-grammar (live kind-form
+                        #     ui://chrome/inbox AND corpus region-form ui://inbox/build-review) both conform (S0).
+                        #   • ref in reg — the EXISTING region kind-form (ui://chrome/inbox → ref 'inbox' is
+                        #     a bare registry key). Kept exactly as before.
+                        # Fail-loud preserved: neither key present → not appended → the refuse-tail fires.
                         if reg is None:
                             reg = self.build_ui_info()
-                        if ref in reg:
+                        if t in reg or ref in reg:
                             targets.append(t)
                 elif t in ids:
                     targets.append(t)                           # bare node-id (kept)
@@ -3986,6 +4004,58 @@ class Suite:
                 "item": item_id, "framing": framing, "raw": raw,
                 "ui_target": f"ui://review/{item_id}",      # the step's present target (C1 addressing)
                 "done": False}
+
+    def start_walkthrough(self, item_ids: list | None = None) -> dict:
+        """C4 — the mode-selection → ORGAN-start seam (backend half). Resolves the long-standing
+        walkthrough NAMING TRAP: there is a cosmetic presence-DIAL 'walkthrough' MODE (MODE_DIRECTIVES,
+        a narration directive only) AND a separate, real walkthrough ORGAN (start_session — the
+        screen-driving review engine). Selecting the dial-mode set ONLY the cosmetic directive; it never
+        bound to / started the organ. This method UNIFIES the seam: SELECTING the guided/walkthrough
+        experience now (a) sets the presence dial to 'walkthrough' (the cosmetic mode — kept, so the RHM
+        speaks in guide register) AND (b) actually STARTS the organ over the pending review items.
+
+        REUSE-ONLY (no parallel system): it composes the EXISTING set_mode (the dial) + the EXISTING
+        pending-item gather (the same `resolved is None` predicate `_affordance_context`/`now` use) +
+        the EXISTING start_session organ (which compiles a review-session graph the scheduler runs).
+        `set_mode` stays PURE (its widely-called contract is untouched); this is the higher-level
+        COMPOSER that binds dial→organ, so callers that want only the cosmetic mode are unaffected.
+
+          • item_ids given  → walk exactly those (operator pre-selected a set).
+          • item_ids None   → walk every PENDING unresolved inbox item (the natural "guide me through
+                              what needs me" set). The gather mirrors the affordance-context predicate
+                              (registry-is-truth: the one definition of 'pending').
+
+        FAIL LOUD, never a silent no-op (rule 4): if there is NOTHING to walk, this does NOT crash and
+        does NOT pretend success — it returns {organ_started:False, reason:'…', mode:'walkthrough'} so
+        the dial is set (the operator IS in guide mode) but the surface is told plainly there is nothing
+        to step through. A populated walk returns start_session's first presentation (present_current of
+        cursor 0), tagged organ_started:True + the session id, so the FE can drive the organ view.
+
+        DEFERRED (the FE show-me lane — noted, NOT built here): the FE wiring that CALLS this when the
+        operator picks the walkthrough mode on the presence dial, and then DRIVES the organ view per
+        step (resolveUiTarget over the per-step ui_target). This is the backend binding + a reachable
+        entry; the view-drive is the FE half (would collide with the concurrent canvas/region lane)."""
+        mode = self.set_mode("walkthrough")                      # (a) the cosmetic dial — kept, pure reuse
+        if item_ids is None:
+            # (b) the pending set — the SAME 'resolved is None' predicate the affordance layer uses
+            # (one definition of 'pending', registry-is-truth — never a second notion).
+            try:
+                item_ids = [d.get("id") for d in self.inbox.list()
+                            if d.get("resolved") is None and d.get("id")]
+            except Exception:
+                item_ids = []
+        items = [i for i in (item_ids or []) if i]
+        if not items:
+            # FAIL LOUD (no silent no-op): the dial IS set, but there is nothing to walk — say so plainly.
+            self._emit("mode", "walkthrough selected — nothing pending to walk through",
+                       address="ui://chrome/chat")
+            return {"organ_started": False, "mode": mode,
+                    "reason": "no pending review items to walk through "
+                              "(surface or capture an item first, then start the walkthrough)"}
+        started = self.start_session(items, mode="walkthrough")   # the REAL organ — screen-driving engine
+        # carry the session id + the organ_started flag so the surface can drive the organ view.
+        return {**started, "organ_started": True,
+                "session": started.get("session"), "mode": mode}
 
     def respond(self, session_id: str, choice: str, reason: str = "") -> dict:
         """B→D: record the operator's verdict for the CURRENT step, tagged with the session + position
