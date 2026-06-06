@@ -824,8 +824,43 @@ button.b.sm{font-size:10px;padding:5px 9px;margin:4px 0}
   border-radius:var(--r);padding:var(--sp-1) var(--sp-2);font-family:var(--font-mono);font-size:var(--fs-meta)}
 .rhm-afford .afford-steer-in:focus{outline:none;border-color:var(--sig)}
 .rhm-afford .afford-steer .b{flex:none;font-size:var(--fs-meta);padding:var(--sp-1) var(--sp-3)}
-.rhm-afford .afford-actions{display:flex;gap:var(--sp-1);justify-content:flex-end}
+.rhm-afford .afford-actions{display:flex;gap:var(--sp-1);justify-content:flex-end;flex-wrap:wrap}
 .rhm-afford .afford-actions .b{font-size:var(--fs-meta);padding:var(--sp-1) var(--sp-3)}
+
+/* B2 · the ON-SCREEN INTERACTIVE BUILD comparison surface (consequential verbs: build/panel/extend).
+   The consequential consent is a guided conversation WITH ALTERNATIVES: the options sit side by side so the
+   operator weighs them by SIGHT (the summary is the distinguishing content), SELECTS one (visual only — no
+   act), can discuss, then makes an EXPLICIT approve commit. The frame wears the WIRE tone (the self-mod
+   signature) on its top edge so it reads as "a change is being composed", distinct from the green B1 offer.
+   Tokens only (design-lint gate) — the same --sp/--fs/--r/--font ramp the B1 card uses. */
+.rhm-afford-cmp{border-top:3px solid var(--kind-content)}   /* wire/self-mod signature edge (recognition-by-tint) */
+.rhm-afford-cmp .afford-head .ic{color:var(--kind-content)}
+/* the alternatives, side by side — auto-fit so 2-3 sit in a row on the desk, wrapping as space allows.
+   afford-cmp-single (one option) is a single full-width column (no empty comparison gutter). */
+.rhm-afford .afford-cmp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:var(--sp-2)}
+.rhm-afford .afford-cmp-grid.afford-cmp-single{grid-template-columns:1fr}
+/* each alternative is a kit Surface card — a selectable well, not a bare row. The chosen one lifts to the
+   signal spine + a faint glow so the SELECTED state reads by sight before the operator reads any text. */
+.rhm-afford .afford-cmp-card{margin:0;padding:var(--sp-2);display:flex;flex-direction:column;gap:var(--sp-1);cursor:pointer}
+.rhm-afford .afford-cmp-card.afford-cmp-chosen{box-shadow:var(--elev-2)}
+.rhm-afford .afford-cmp-card-head{display:flex;align-items:center;gap:var(--sp-1);justify-content:space-between}
+.rhm-afford .afford-cmp-name{font-family:var(--font-display);font-size:var(--fs-body);color:var(--ink);
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* the summary — THE distinguishing content the operator reads to choose (verbs are often identical across
+   panel/build options). Allowed to wrap to a few lines (it's the substance), clamped so a card stays compact. */
+.rhm-afford .afford-cmp-summary{font-family:var(--font-mono);font-size:var(--fs-meta);color:var(--dim);
+  line-height:var(--lh-body);overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.rhm-afford .afford-cmp-meta{display:flex;align-items:baseline;gap:var(--sp-2);min-width:0}
+/* the explicit approve commit — the ONLY control that runs the chosen option. The filled signal .b reads as
+   THE primary act; disabled (no selection) it dims so "select first" is obvious by sight. */
+.rhm-afford .afford-actions .b.afford-approve{font-size:var(--fs-meta);padding:var(--sp-1) var(--sp-3);margin-right:auto}
+.rhm-afford .afford-actions .b.afford-approve:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+/* PHONE (≤699px): the comparison cards STACK into a column (140px-wide cards cannot sit 3-across at 390px) —
+   a designed mobile layout, not a squeezed reflow. The card is the same well; the approve stays full-reach. */
+@media (max-width:699px){
+  .rhm-afford .afford-cmp-grid{grid-template-columns:1fr}
+  .rhm-afford .afford-actions .b.afford-approve{margin-right:0;flex:1 1 100%}
+}
 
 /* B-frontend: the walkthrough card — the visible review organ. A new .hud region (top-centre, under the
    toolbar) shown only while a review session is active. Reuses the panel/coa/surf vocabulary. */

@@ -96,9 +96,15 @@ export function useAppController(editor: Editor) {
   // emits several); `direction:true` means the offer accepts a steer (the operator types a refinement →
   // it loops back to the RHM to re-offer). Each option carries a `label` (the human one-liner shown on
   // its button). Extended from the binary {verb,address,args} card → the rich consent surface.
-  type ProposalOption = { verb: string; address?: string | null; args?: any; label?: string }
+  // B2 · an option carries a `summary` (the DISTINGUISHING line the operator reads to choose between
+  // alternatives — for build/panel/extend the verb+address are often identical across options, so the
+  // summary IS the differentiator the comparison surface renders as the primary content).
+  type ProposalOption = { verb: string; address?: string | null; args?: any; label?: string; summary?: string | null }
+  // B2 · `interactive` (from the backend, derived from the verb class build/panel/extend — registry-truth):
+  // when true the ProposeAffordance region renders the ON-SCREEN COMPARISON surface (select-then-approve +
+  // chat-until-approve), NOT B1's click-to-act list. Single-option / non-consequential offers stay B1.
   const [proposal, setProposal] = useState<
-    { verb: string; address?: string | null; args?: any; options?: ProposalOption[]; direction?: boolean } | null
+    { verb: string; address?: string | null; args?: any; options?: ProposalOption[]; direction?: boolean; interactive?: boolean } | null
   >(null)
   // D2 · the COMPOSED address-help bundle for the indicated ui:// element — the operator-facing help/altitude
   // surface (REPO-KNOWLEDGE D2). The three legs (what_this_is · how_to_use · how_to_change) of "what can I do

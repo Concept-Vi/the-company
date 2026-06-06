@@ -2539,25 +2539,53 @@ class Suite:
                 },
             })
         # OFFER-WITH-OPTIONS (the consent affordance): if the RHM can ACT in this mode, it can also OFFER
-        # — call `suggest` to surface a one-click "shall I?" card (sees-then-approves, ANY offered verb)
-        # INSTEAD of acting now. This is the convergence's propose-affordance, unified into native
-        # tool-calling (no retired AFFORD: text directive). The card carries options[]/direction so the
-        # rich layer (multi-option + steer→refine + interactive-build) extends it without a re-trigger.
+        # — call `suggest` to surface a "shall I?" card (sees-then-approves, ANY offered verb) INSTEAD of
+        # acting now. This is the convergence's propose-affordance, unified into native tool-calling (no
+        # retired AFFORD: text directive).
+        #
+        # B2 · ON-SCREEN INTERACTIVE BUILD (the rich layer, multi-option): `suggest` accepts EITHER a single
+        # `verb`/`address`/`args` (B1, the "shall I?" offer — UNCHANGED) OR an `options[]` array of two or
+        # more ALTERNATIVES the operator chooses between on a comparison surface (e.g. several panel designs,
+        # several build approaches). Each option carries a `label` + a `summary` (the DISTINGUISHING content —
+        # what makes this option different, the thing the operator reads to choose) + the verb's `args`. For
+        # the CONSEQUENTIAL verbs (build/panel/extend) the offer should come on-screen interactive (options to
+        # weigh + chat-until-approve), NOT a silent inbox-drop — that is exactly what `options[]` is for. The
+        # options are carried FAITHFULLY from the model's own tool-call (rule 8 — never fabricated here); a
+        # one-option offer renders as B1's single card, two+ render the comparison surface (the FE branches on
+        # the interactive marker derived from the verb class, never invents alternatives).
         if verbs:
+            _consequential = sorted({"build", "panel", "extend"} & set(verbs))
             tools.append({
                 "type": "function",
                 "function": {
                     "name": "suggest",
-                    "description": ("OFFER an action as a one-click suggestion the operator SEES and approves "
-                                    "(the 'shall I?' affordance) INSTEAD of doing it now. Use when proposing "
-                                    "rather than acting, or when the operator should choose/steer first."),
+                    "description": ("OFFER an action the operator SEES and approves (the 'shall I?' affordance) "
+                                    "INSTEAD of doing it now. Use when proposing rather than acting, or when the "
+                                    "operator should choose/steer first. For a CONSEQUENTIAL verb "
+                                    f"({', '.join(_consequential) or 'build/panel/extend'}) prefer `options`: offer "
+                                    "TWO OR THREE real ALTERNATIVES (e.g. different panel designs / build approaches), "
+                                    "each with a distinguishing `summary`, so the operator compares + chooses + "
+                                    "discusses on screen — never a silent queue."),
                     "parameters": {"type": "object", "properties": {
+                        # B1 single-offer shape (unchanged) — used when there is one obvious action to confirm.
                         "verb": {"type": "string", "enum": list(verbs),
-                                 "description": "the action being offered (a real RHM verb)"},
+                                 "description": "the single action being offered (a real RHM verb); omit if using `options`"},
                         "address": {"type": "string", "description": "the ui:// locus the action targets, if any"},
                         "args": {"type": "object", "description": "the offered verb's arguments"},
                         "label": {"type": "string", "description": "a short human label for the offer"},
-                    }, "required": ["verb"]},
+                        # B2 multi-option shape — used to offer alternatives on a comparison surface.
+                        "options": {"type": "array",
+                            "description": ("TWO OR THREE alternative actions the operator chooses between on a "
+                                            "comparison surface. Use for consequential verbs (build/panel/extend) so the "
+                                            "operator weighs real options + chats before approving. Nothing runs until approved."),
+                            "items": {"type": "object", "properties": {
+                                "verb": {"type": "string", "enum": list(verbs)},
+                                "address": {"type": "string"},
+                                "args": {"type": "object", "description": "the verb's arguments (the panel spec / the build steps)"},
+                                "label": {"type": "string", "description": "a short name for this alternative"},
+                                "summary": {"type": "string", "description": "what makes THIS option different — the line the operator reads to choose"},
+                            }, "required": ["verb"]}},
+                    }},
                 },
             })
         return tools
@@ -3815,22 +3843,49 @@ class Suite:
                 continue
             if verb == "suggest":
                 # OFFER-WITH-OPTIONS (the consent affordance): build a PROPOSAL, do NOT dispatch. The
-                # operator sees a one-click card for ANY offered verb and approves (→ /api/act) or steers —
-                # nothing runs until then. The verb is validated against the ONE whitelist (RHM_VERBS); a
-                # non-verb offer is dropped (refused-loud-at-the-click philosophy, never a silent bad card).
+                # operator sees a card for ANY offered verb and approves (→ /api/act) or steers — nothing
+                # runs until then. Each option's verb is validated against the ONE whitelist (RHM_VERBS); a
+                # non-verb option is dropped (refused-loud-at-the-click philosophy, never a silent bad card).
+                #
+                # B2 · the suggest call carries EITHER a single {verb,address,args} (B1) OR an `options[]`
+                # array of alternatives (the comparison surface). We normalise BOTH into one option list,
+                # carried FAITHFULLY from the model (rule 8 — we never invent an alternative). A consequential
+                # verb (build/panel/extend) among the options marks the offer INTERACTIVE so the FE renders the
+                # on-screen comparison + chat-until-approve surface; everything else stays B1's single card.
                 import json as _json
                 try:
                     sargs = _json.loads(fn.get("arguments") or "{}")
                 except Exception:
                     sargs = {}
-                sv = str(sargs.get("verb") or "").strip().lower()
-                if sv in self.RHM_VERBS:
-                    one = {"verb": sv, "address": sargs.get("address"), "args": sargs.get("args") or {}}
-                    proposals.append({**one,
-                                      # options[]/direction: the rich layer extends to multi-option + a
-                                      # steer→refine loop + interactive-build; v1 carries the single offer.
-                                      "options": [{**one, "label": sargs.get("label") or sv}],
-                                      "direction": True})
+                raw_opts = sargs.get("options")
+                if not isinstance(raw_opts, list) or not raw_opts:
+                    # B1 shape (or a malformed options) → the single top-level offer is the only option.
+                    raw_opts = [{"verb": sargs.get("verb"), "address": sargs.get("address"),
+                                 "args": sargs.get("args"), "label": sargs.get("label")}]
+                norm_opts = []
+                for o in raw_opts:
+                    if not isinstance(o, dict):
+                        continue
+                    ov = str(o.get("verb") or "").strip().lower()
+                    if ov not in self.RHM_VERBS:                  # drop a non-whitelisted option (never a bad card)
+                        continue
+                    norm_opts.append({"verb": ov, "address": o.get("address"),
+                                      "args": o.get("args") or {},
+                                      "label": o.get("label") or ov,
+                                      "summary": (str(o.get("summary")).strip() or None) if o.get("summary") else None})
+                if not norm_opts:
+                    continue                                       # no valid option survived → no card
+                primary = norm_opts[0]
+                # interactive when ANY offered option is a consequential verb (build/panel/extend) — the
+                # registry-truth marker the FE branches the comparison surface on (NOT options.length, so a
+                # single consequential offer still presents the interactive frame, and a multi-`show` offer
+                # stays the lighter B1 list). consequential = a verb whose body composes/authors, vs read/run.
+                _CONSEQUENTIAL = {"build", "panel", "extend"}
+                interactive = any(o["verb"] in _CONSEQUENTIAL for o in norm_opts)
+                proposals.append({**{k: primary[k] for k in ("verb", "address", "args")},
+                                  "options": norm_opts,
+                                  "direction": True,
+                                  "interactive": interactive})
                 continue
             if verb not in offered:
                 # not offered in THIS mode → refuse without dispatching (mode-discipline gate). Legible
