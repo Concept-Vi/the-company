@@ -39,6 +39,9 @@ Only once you've read these do you understand the place. Don't act before this.
 - **Extend-by-registration** — add a token / address / invariant / view / mechanism by *registering an entry* and running the script. Never surgery.
 - **The horizon** (design-reasoning, see the substrate) — the corpus-as-graph you can query; the convergence to real components.
 
+## The register authority (D-1 — resolved 2026-06-07)
+When `register.json`'s `produced.wave1[].status` and `views[].status` disagree, **`views[].status` is the authority** — `produced` is a build-log of what was emitted, reconciled DOWN to the view's real status, NOT an independent quality verdict. The earlier blanket `quality-passed` in `produced` over-claimed: the FE those mockups depict is prototype-grade (GAPS-REGISTER G-9), so 7 entries (A1·A2 desktop+mobile·A3·C1·C3·B3) were reconciled to `planned`/`redo-pre-audit`. `gallery.py` trusts `produced`, so `produced` MUST mirror `views[].status`; a view-variant counts DONE only at `views[].status = quality-passed`. The status ladder is `status_flow` (planned → drafting → drafted → quality-passed → approved). Keep the two in sync as part of any status change.
+
 ## Who you are — the keeper (role + behaviour)
 You are the **keeper of this substrate.** Your job: **grow it, keep it true, keep it coherent** — and keep it *self-describing* so the next agent boots into a true picture.
 

@@ -4,8 +4,8 @@
       "screen": "A1-canvas-empty-desktop.html",
       "address": "ui://toolbar",
       "region": "toolbar",
-      "feature": "F1",
-      "code": "canvas/app/src/App.tsx (toolbar)",
+      "feature": "RUN-run",
+      "code": "canvas/app/src/regions/Toolbar.tsx (toolbar)",
       "registered": true
     },
     {
@@ -21,15 +21,15 @@
       "address": "ui://toolbar/run",
       "region": "toolbar",
       "feature": "RUN-run",
-      "code": "runtime/bridge.py:184 / App.tsx:1146",
+      "code": "canvas/app/src/regions/Toolbar.tsx (run) / runtime/suite.py:run",
       "registered": true
     },
     {
       "screen": "A1-canvas-empty-desktop.html",
       "address": "ui://rail/palette",
       "region": "rail",
-      "feature": "F3",
-      "code": "canvas/app/src/App.tsx:App",
+      "feature": "NODE-types",
+      "code": "canvas/app/src/regions/Palette.tsx (Palette)",
       "registered": true
     },
     {
@@ -37,7 +37,7 @@
       "address": "ui://canvas",
       "region": "canvas",
       "feature": "CAN-compose",
-      "code": "App.tsx NodeShapeUtil:124",
+      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil",
       "registered": true
     },
     {
@@ -52,8 +52,8 @@
       "screen": "A11-portals-desktop.html",
       "address": "ui://toolbar",
       "region": "toolbar",
-      "feature": "F1",
-      "code": "canvas/app/src/App.tsx (toolbar)",
+      "feature": "RUN-run",
+      "code": "canvas/app/src/regions/Toolbar.tsx (toolbar)",
       "registered": true
     },
     {
@@ -61,15 +61,15 @@
       "address": "ui://toolbar/run",
       "region": "toolbar",
       "feature": "RUN-run",
-      "code": "runtime/bridge.py:184 / App.tsx:1146",
+      "code": "canvas/app/src/regions/Toolbar.tsx (run) / runtime/suite.py:run",
       "registered": true
     },
     {
       "screen": "A11-portals-desktop.html",
       "address": "ui://rail/palette",
       "region": "rail",
-      "feature": "F3",
-      "code": "canvas/app/src/App.tsx:App",
+      "feature": "NODE-types",
+      "code": "canvas/app/src/regions/Palette.tsx (Palette)",
       "registered": true
     },
     {
@@ -77,7 +77,7 @@
       "address": "ui://canvas",
       "region": "canvas",
       "feature": "CAN-compose",
-      "code": "App.tsx NodeShapeUtil:124",
+      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil",
       "registered": true
     },
     {
@@ -85,7 +85,7 @@
       "address": "ui://canvas/node",
       "region": "canvas",
       "feature": "NODE-kinds",
-      "code": "App.tsx:124 / suite.py:436",
+      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil / runtime/suite.py:create_node",
       "registered": true
     },
     {
@@ -117,7 +117,7 @@
       "address": "ui://inspector",
       "region": "inspector",
       "feature": "NODE-config",
-      "code": "contracts/node_type.py / App.tsx:447",
+      "code": "contracts/node_type.py / canvas/app/src/regions/Inspector.tsx (Inspector)",
       "registered": true
     },
     {
@@ -132,8 +132,8 @@
       "screen": "A2-canvas-desktop.html",
       "address": "ui://toolbar",
       "region": "toolbar",
-      "feature": "F1",
-      "code": "canvas/app/src/App.tsx (toolbar)",
+      "feature": "RUN-run",
+      "code": "canvas/app/src/regions/Toolbar.tsx (toolbar)",
       "registered": true
     },
     {
@@ -149,23 +149,23 @@
       "address": "ui://toolbar/run",
       "region": "toolbar",
       "feature": "RUN-run",
-      "code": "runtime/bridge.py:184 / App.tsx:1146",
+      "code": "canvas/app/src/regions/Toolbar.tsx (run) / runtime/suite.py:run",
       "registered": true
     },
     {
       "screen": "A2-canvas-desktop.html",
       "address": "ui://rail/palette",
       "region": "rail",
-      "feature": "F3",
-      "code": "canvas/app/src/App.tsx:App",
+      "feature": "NODE-types",
+      "code": "canvas/app/src/regions/Palette.tsx (Palette)",
       "registered": true
     },
     {
       "screen": "A2-canvas-mobile.html",
       "address": "ui://toolbar",
       "region": "toolbar",
-      "feature": "F1",
-      "code": "canvas/app/src/App.tsx (toolbar)",
+      "feature": "RUN-run",
+      "code": "canvas/app/src/regions/Toolbar.tsx (toolbar)",
       "registered": true
     },
     {
@@ -173,7 +173,7 @@
       "address": "ui://canvas",
       "region": "canvas",
       "feature": "CAN-compose",
-      "code": "App.tsx NodeShapeUtil:124",
+      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil",
       "registered": true
     },
     {
@@ -181,7 +181,7 @@
       "address": "ui://canvas/node",
       "region": "canvas",
       "feature": "NODE-kinds",
-      "code": "App.tsx:124 / suite.py:436",
+      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil / runtime/suite.py:create_node",
       "registered": true
     },
     {
@@ -189,15 +189,15 @@
       "address": "ui://toolbar/run",
       "region": "toolbar",
       "feature": "RUN-run",
-      "code": "runtime/bridge.py:184 / App.tsx:1146",
+      "code": "canvas/app/src/regions/Toolbar.tsx (run) / runtime/suite.py:run",
       "registered": true
     },
     {
       "screen": "A2-canvas-mobile.html",
       "address": "ui://tabbar",
       "region": "tabbar",
-      "feature": "G2",
-      "code": "design-system.css .tabbar (mobile nav)",
+      "feature": "CAN-compose",
+      "code": "canvas/app/src/app.css .tabbar (mobile nav \u2014 responsive chrome) / canvas/app/src/App.tsx (tabbar)",
       "registered": true
     },
     {
@@ -205,7 +205,7 @@
       "address": "ui://canvas",
       "region": "canvas",
       "feature": "CAN-compose",
-      "code": "App.tsx NodeShapeUtil:124",
+      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil",
       "registered": true
     },
     {
@@ -213,7 +213,7 @@
       "address": "ui://canvas/node",
       "region": "canvas",
       "feature": "NODE-kinds",
-      "code": "App.tsx:124 / suite.py:436",
+      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil / runtime/suite.py:create_node",
       "registered": true
     },
     {
@@ -221,7 +221,7 @@
       "address": "ui://inspector",
       "region": "inspector",
       "feature": "NODE-config",
-      "code": "contracts/node_type.py / App.tsx:447",
+      "code": "contracts/node_type.py / canvas/app/src/regions/Inspector.tsx (Inspector)",
       "registered": true
     },
     {
@@ -229,7 +229,7 @@
       "address": "ui://inspector/model-field",
       "region": "inspector",
       "feature": "MOD-registry",
-      "code": "runtime/suite.py:109 / App.tsx:134",
+      "code": "canvas/app/src/components/NodeConfigForm.tsx:NodeConfigForm / runtime/suite.py:available_models",
       "registered": true
     },
     {
@@ -237,7 +237,7 @@
       "address": "ui://inspector/act",
       "region": "inspector",
       "feature": "ENG-force",
-      "code": "canvas/app/src/App.tsx:doRun / runtime/scheduler.py:run",
+      "code": "canvas/app/src/regions/Inspector.tsx (act) / runtime/scheduler.py:run",
       "registered": true
     },
     {
@@ -308,8 +308,8 @@
       "screen": "B4-presence-dial-mobile.html",
       "address": "ui://tabbar",
       "region": "tabbar",
-      "feature": "G2",
-      "code": "design-system.css .tabbar (mobile nav)",
+      "feature": "CAN-compose",
+      "code": "canvas/app/src/app.css .tabbar (mobile nav \u2014 responsive chrome) / canvas/app/src/App.tsx (tabbar)",
       "registered": true
     },
     {
@@ -325,7 +325,7 @@
       "address": "ui://canvas",
       "region": "canvas",
       "feature": "CAN-compose",
-      "code": "App.tsx NodeShapeUtil:124",
+      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil",
       "registered": true
     },
     {
@@ -364,8 +364,8 @@
       "screen": "B6-twin-desktop.html",
       "address": "ui://tabbar",
       "region": "tabbar",
-      "feature": "G2",
-      "code": "design-system.css .tabbar (mobile nav)",
+      "feature": "CAN-compose",
+      "code": "canvas/app/src/app.css .tabbar (mobile nav \u2014 responsive chrome) / canvas/app/src/App.tsx (tabbar)",
       "registered": true
     },
     {
@@ -396,8 +396,8 @@
       "screen": "C3-build-review-desktop.html",
       "address": "ui://toolbar",
       "region": "toolbar",
-      "feature": "F1",
-      "code": "canvas/app/src/App.tsx (toolbar)",
+      "feature": "RUN-run",
+      "code": "canvas/app/src/regions/Toolbar.tsx (toolbar)",
       "registered": true
     },
     {
@@ -413,7 +413,7 @@
       "address": "ui://toolbar/run",
       "region": "toolbar",
       "feature": "RUN-run",
-      "code": "runtime/bridge.py:184 / App.tsx:1146",
+      "code": "canvas/app/src/regions/Toolbar.tsx (run) / runtime/suite.py:run",
       "registered": true
     },
     {
@@ -421,7 +421,7 @@
       "address": "ui://canvas",
       "region": "canvas",
       "feature": "CAN-compose",
-      "code": "App.tsx NodeShapeUtil:124",
+      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil",
       "registered": true
     },
     {
@@ -532,8 +532,8 @@
       "screen": "D7-selfmod-desktop.html",
       "address": "ui://toolbar",
       "region": "toolbar",
-      "feature": "F1",
-      "code": "canvas/app/src/App.tsx (toolbar)",
+      "feature": "RUN-run",
+      "code": "canvas/app/src/regions/Toolbar.tsx (toolbar)",
       "registered": true
     },
     {
@@ -549,7 +549,7 @@
       "address": "ui://toolbar/run",
       "region": "toolbar",
       "feature": "RUN-run",
-      "code": "runtime/bridge.py:184 / App.tsx:1146",
+      "code": "canvas/app/src/regions/Toolbar.tsx (run) / runtime/suite.py:run",
       "registered": true
     },
     {
@@ -557,7 +557,7 @@
       "address": "ui://canvas",
       "region": "canvas",
       "feature": "CAN-compose",
-      "code": "App.tsx NodeShapeUtil:124",
+      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil",
       "registered": true
     },
     {
@@ -589,7 +589,7 @@
       "address": "ui://canvas",
       "region": "canvas",
       "feature": "CAN-compose",
-      "code": "App.tsx NodeShapeUtil:124",
+      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil",
       "registered": true
     },
     {
@@ -597,7 +597,7 @@
       "address": "ui://canvas/node",
       "region": "canvas",
       "feature": "NODE-kinds",
-      "code": "App.tsx:124 / suite.py:436",
+      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil / runtime/suite.py:create_node",
       "registered": true
     },
     {
@@ -605,7 +605,7 @@
       "address": "ui://inspector",
       "region": "inspector",
       "feature": "NODE-config",
-      "code": "contracts/node_type.py / App.tsx:447",
+      "code": "contracts/node_type.py / canvas/app/src/regions/Inspector.tsx (Inspector)",
       "registered": true
     },
     {
@@ -613,7 +613,7 @@
       "address": "ui://inspector/model-field",
       "region": "inspector",
       "feature": "MOD-registry",
-      "code": "runtime/suite.py:109 / App.tsx:134",
+      "code": "canvas/app/src/components/NodeConfigForm.tsx:NodeConfigForm / runtime/suite.py:available_models",
       "registered": true
     },
     {
@@ -643,6 +643,7 @@
       "ui://chat/input",
       "ui://chat/mic",
       "ui://chat/model-field",
+      "ui://chat/persona-field",
       "ui://chat/send",
       "ui://grow",
       "ui://grow/approve",
@@ -675,8 +676,8 @@
     "screens": 17,
     "addressed_elements": 79,
     "distinct_addresses_used": 25,
-    "registered_addresses": 53,
+    "registered_addresses": 54,
     "unregistered_orphans": 2,
-    "unused_orphans": 30
+    "unused_orphans": 31
   }
 }

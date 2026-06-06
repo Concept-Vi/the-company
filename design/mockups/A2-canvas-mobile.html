@@ -56,28 +56,28 @@
 .top{grid-area:top;display:flex;align-items:center;gap:10px;padding:0 14px;background:linear-gradient(180deg,var(--s1),var(--s0));border-bottom:1px solid var(--line)}
 .brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:16px;letter-spacing:-.3px}
 .brand em{font-style:normal;color:var(--acc)}
-.presence{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx-2);background:var(--s2);border:1px solid var(--line-2);border-radius:99px;padding:4px 10px}
-.presence .dot{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.presence{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx-2);background:var(--s2);border:1px solid var(--line-2);border-radius:var(--r-pill);padding:4px 10px}
+.presence .dot{width:6px;height:6px;border-radius:var(--r-pill);background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
 
 /* ── CANVAS — full-bleed, the running chain ── */
 .canvas{grid-area:canvas;position:relative;overflow:hidden;background-image:radial-gradient(var(--line) .9px,transparent .9px);background-size:24px 24px}
 .canvas .node{position:absolute;width:172px}
 .canvas .node .body{font-size:11px;padding:9px 10px}
-.node.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc-glow),0 22px 50px -22px #000}
+.node.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc-glow),0 22px 50px -22px var(--shadow-color)}
 /* typed-port label next to the nub */
 .ptag{position:absolute;font-family:'IBM Plex Mono';font-size:8px;letter-spacing:.4px;color:var(--tx-3);background:var(--s0);border:1px solid var(--line);border-radius:4px;padding:1px 4px}
 
 /* semantic-zoom indicator (CAN-zoom) — pinch-aware on touch */
-.zoomhint{position:absolute;right:12px;top:11px;display:flex;align-items:center;gap:7px;background:var(--s1);border:1px solid var(--line-2);border-radius:99px;padding:4px 10px;font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3)}
+.zoomhint{position:absolute;right:12px;top:11px;display:flex;align-items:center;gap:7px;background:var(--s1);border:1px solid var(--line-2);border-radius:var(--r-pill);padding:4px 10px;font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3)}
 .zoomhint b{color:var(--tx-2);font-weight:500}
-.zoomhint .z{width:48px;height:4px;border-radius:99px;background:var(--s3);position:relative}
-.zoomhint .z::after{content:"";position:absolute;left:60%;top:50%;transform:translateY(-50%);width:8px;height:8px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.zoomhint .z{width:48px;height:4px;border-radius:var(--r-pill);background:var(--s3);position:relative}
+.zoomhint .z::after{content:"";position:absolute;left:60%;top:50%;transform:translateY(-50%);width:8px;height:8px;border-radius:var(--r-pill);background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
 
 /* collapsed chip — what a node becomes below zoom 0.5 (semantic zoom made visible) */
-.zchip{position:absolute;display:flex;align-items:center;gap:6px;background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid var(--line-2);border-radius:99px;padding:4px 10px 4px 5px;font-size:10.5px}
+.zchip{position:absolute;display:flex;align-items:center;gap:6px;background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid var(--line-2);border-radius:var(--r-pill);padding:4px 10px 4px 5px;font-size:10.5px}
 .zchip .mono-chip{width:17px;height:17px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:10px;color:var(--ink-accent);flex:none}
 .zchip[data-kind=content] .mono-chip{background:var(--kind-content)}
-.zchip .sdot{width:7px;height:7px;border-radius:99px}
+.zchip .sdot{width:7px;height:7px;border-radius:var(--r-pill)}
 
 /* legend — ONLY the two real kinds + the real four-status vocabulary */
 .legend{position:absolute;left:12px;top:11px;display:flex;flex-direction:column;gap:6px;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);background:rgba(8,10,13,.72);border:1px solid var(--line);border-radius:var(--r);padding:7px 9px;backdrop-filter:blur(4px)}
@@ -85,19 +85,19 @@
 .legend b{display:inline-flex;align-items:center;gap:4px;color:var(--tx-2);font-weight:500}
 .legend i{width:8px;height:8px;border-radius:2px;font-style:normal;flex:none}
 .legend .s{display:inline-flex;align-items:center;gap:4px;color:var(--tx-2)}
-.legend .s i{border-radius:99px}
+.legend .s i{border-radius:var(--r-pill)}
 
 /* activity strip — thin, above the sheet (frontstage outcome of the run) */
 .actrip{position:absolute;left:0;right:0;bottom:0;padding:6px 12px;background:var(--s0);border-top:1px solid var(--line);font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3);display:flex;align-items:center;gap:8px;white-space:nowrap;overflow:hidden}
 .actrip .live{color:var(--acc);display:inline-flex;align-items:center;gap:4px}
-.actrip .live i{width:5px;height:5px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.actrip .live i{width:5px;height:5px;border-radius:var(--r-pill);background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
 
 /* ── THUMB RUN BUTTON — bottom-right, above the sheet, reachable one-handed ── */
-.fab{position:absolute;right:16px;z-index:60;bottom:calc(58px + 12px);box-shadow:0 14px 30px -10px rgba(84,214,176,.5);padding:13px 18px;border-radius:99px;font-size:14px}
+.fab{position:absolute;right:16px;z-index:60;bottom:calc(58px + 12px);box-shadow:0 14px 30px -10px rgba(84,214,176,.5);padding:13px 18px;border-radius:var(--r-pill);font-size:14px}
 
 /* ── INSPECTOR AS A BOTTOM SHEET (peeked, inspecting the ask node) ── */
-.sheet{position:absolute;left:0;right:0;bottom:58px;z-index:40;background:var(--s1);border-top:1px solid var(--line-2);border-radius:18px 18px 0 0;padding:10px 16px 16px;box-shadow:0 -18px 44px -20px #000;max-height:46%;overflow:auto}
-.sheet .grab{width:38px;height:4px;border-radius:99px;background:var(--line-2);margin:0 auto 12px}
+.sheet{position:absolute;left:0;right:0;bottom:58px;z-index:40;background:var(--s1);border-top:1px solid var(--line-2);border-radius:18px 18px 0 0;padding:10px 16px 16px;box-shadow:0 -18px 44px -20px var(--shadow-color);max-height:46%;overflow:auto}
+.sheet .grab{width:38px;height:4px;border-radius:var(--r-pill);background:var(--line-2);margin:0 auto 12px}
 .sheet .h{display:flex;align-items:center;gap:9px;margin-bottom:14px}
 .sheet .h .mono-chip{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:12px;color:var(--ink-accent);background:var(--kind-process);flex:none}
 .sheet .h .nm{font-family:'Bricolage Grotesque';font-weight:700;font-size:16px}

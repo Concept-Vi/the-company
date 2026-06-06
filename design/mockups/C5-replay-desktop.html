@@ -70,8 +70,8 @@
 .brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:18px;letter-spacing:-.3px}
 .brand em{font-style:normal;color:var(--acc)}
 .brand .tag{font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:8px}
-.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--line-2);border-radius:99px;background:var(--s2);font-size:12px;color:var(--tx-2)}
-.presence .dot{width:7px;height:7px;border-radius:99px;background:var(--cache);box-shadow:0 0 0 3px rgba(107,138,168,.14)}
+.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--line-2);border-radius:var(--r-pill);background:var(--s2);font-size:12px;color:var(--tx-2)}
+.presence .dot{width:7px;height:7px;border-radius:var(--r-pill);background:var(--cache);box-shadow:0 0 0 3px rgba(107,138,168,.14)}
 .verbs{margin-left:auto;display:flex;gap:7px}
 
 .rail{grid-area:rail;background:var(--s0);border-right:1px solid var(--line);padding:14px 12px;overflow:auto}
@@ -89,7 +89,7 @@
 .audit-head{display:flex;align-items:baseline;gap:12px;margin:0 2px 4px}
 .audit-head .h{font-family:'Bricolage Grotesque';font-weight:800;font-size:21px;letter-spacing:-.4px;color:var(--tx)}
 .audit-head .sub{font-size:12px;color:var(--tx-3)}
-.audit-head .mode{margin-left:auto;font-family:'IBM Plex Mono';font-size:10px;color:var(--cache);border:1px solid var(--line-2);border-radius:99px;padding:3px 10px;background:var(--s1)}
+.audit-head .mode{margin-left:auto;font-family:'IBM Plex Mono';font-size:10px;color:var(--cache);border:1px solid var(--line-2);border-radius:var(--r-pill);padding:3px 10px;background:var(--s1)}
 .window-note{display:flex;align-items:center;gap:8px;margin:8px 2px 16px;padding:6px 10px;border:1px dashed var(--line-2);border-radius:var(--r);font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3);background:var(--s1)}
 .window-note b{color:var(--cache);font-weight:500}
 
@@ -113,7 +113,7 @@
 /* the vertical causal thread + the node on it */
 .lin-step::before{content:"";position:absolute;left:135px;top:6px;bottom:-12px;width:2px;background:var(--acc-dim)}
 .lin-step:last-child::before{display:none}
-.lin-knot{position:absolute;left:130px;top:4px;width:12px;height:12px;border-radius:99px;background:var(--s0);border:2px solid var(--acc);z-index:2}
+.lin-knot{position:absolute;left:130px;top:4px;width:12px;height:12px;border-radius:var(--r-pill);background:var(--s0);border:2px solid var(--acc);z-index:2}
 .lin-card{margin-left:14px;border:1px solid var(--line);border-radius:var(--r);background:var(--s2);padding:9px 12px}
 .lin-card .row1{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .kind{font-family:'IBM Plex Mono';font-size:10px;border-radius:5px;padding:2px 8px;border:1px solid var(--line)}
@@ -129,13 +129,13 @@
 .fld b{color:var(--acc);font-weight:500}
 .fld.bind{border-color:var(--acc-dim)} .fld.bind b{color:var(--ok)}
 .bind-tag{font-family:'IBM Plex Mono';font-size:9px;color:var(--ok);display:inline-flex;align-items:center;gap:4px}
-.choice-pill{font-family:'IBM Plex Mono';font-size:9.5px;text-transform:uppercase;letter-spacing:.6px;border-radius:99px;padding:2px 8px}
-.choice-pill.approve{color:var(--ink-accent);background:var(--ok)} .choice-pill.reject{color:#1a0a08;background:var(--fail)} .choice-pill.decide{color:var(--ink-accent);background:var(--cache)}
+.choice-pill{font-family:'IBM Plex Mono';font-size:9.5px;text-transform:uppercase;letter-spacing:.6px;border-radius:var(--r-pill);padding:2px 8px}
+.choice-pill.approve{color:var(--ink-accent);background:var(--ok)} .choice-pill.reject{color:var(--ink-fail);background:var(--fail)} .choice-pill.decide{color:var(--ink-accent);background:var(--cache)}
 
 /* ── REGISTER 2 · per-decision trajectory (decision_view) ── */
 .subject{display:flex;align-items:center;gap:10px;padding:8px 11px;border:1px solid var(--line-2);border-radius:var(--r);background:var(--s2);margin-bottom:12px}
 .subject .sid{font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3)}
-.subject .verdict{margin-left:auto;font-family:'IBM Plex Mono';font-size:9.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-accent);background:var(--ok);border-radius:99px;padding:2px 8px}
+.subject .verdict{margin-left:auto;font-family:'IBM Plex Mono';font-size:9.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-accent);background:var(--ok);border-radius:var(--r-pill);padding:2px 8px}
 .traj{display:flex;flex-direction:column;gap:1px}
 .trow{display:grid;grid-template-columns:54px 132px 110px 1fr;gap:12px;align-items:baseline;padding:7px 9px;border-radius:6px;font-size:11.5px}
 .trow:nth-child(odd){background:var(--s1)}
@@ -159,7 +159,7 @@
 .stream-foot{font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3);margin-top:9px;padding-top:8px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center}
 
 /* proposed-vs-existing legend chip */
-.proposed{font-family:'IBM Plex Mono';font-size:9px;color:var(--await);border:1px dashed var(--line-2);border-radius:99px;padding:1px 7px;margin-left:6px}
+.proposed{font-family:'IBM Plex Mono';font-size:9px;color:var(--await);border:1px dashed var(--line-2);border-radius:var(--r-pill);padding:1px 7px;margin-left:6px}
 
 /* the panel reuses the C-area right panel: here it lists OTHER auditable decisions/sessions to pivot to */
 .panel{grid-area:panel;background:var(--s0);border-left:1px solid var(--line);padding:14px;overflow:auto}
@@ -169,8 +169,8 @@
 .panel h4{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--tx-3);margin:4px 2px 9px;font-weight:600}
 .audrow{display:flex;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--s1);margin-bottom:6px;cursor:pointer}
 .audrow.on{border-color:var(--acc-dim);background:var(--s2)}
-.audrow .v{font-family:'IBM Plex Mono';font-size:9px;text-transform:uppercase;letter-spacing:.6px;padding:2px 6px;border-radius:99px;flex:none}
-.audrow .v.approve{color:var(--ink-accent);background:var(--ok)} .audrow .v.decide{color:var(--ink-accent);background:var(--cache)} .audrow .v.reject{color:#1a0a08;background:var(--fail)}
+.audrow .v{font-family:'IBM Plex Mono';font-size:9px;text-transform:uppercase;letter-spacing:.6px;padding:2px 6px;border-radius:var(--r-pill);flex:none}
+.audrow .v.approve{color:var(--ink-accent);background:var(--ok)} .audrow .v.decide{color:var(--ink-accent);background:var(--cache)} .audrow .v.reject{color:var(--ink-fail);background:var(--fail)}
 .audrow .t{font-size:11.5px;color:var(--tx-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .audrow .sid{margin-left:auto;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);flex:none}
 .panel .sess{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--tx-2);display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--s1);margin-bottom:6px}

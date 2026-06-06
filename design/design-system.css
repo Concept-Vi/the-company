@@ -22,9 +22,10 @@
   --cache:#6b8aa8;
   --ok:#54d6b0;
   /* ink on bright surfaces */
-  /* The near-black text colour that sits ON accent/await coloured chips, badges, primary buttons (legibility on bright fills). Recurs corpus-wide; promoted from hardcoded literals 2026-06-05. */
+  /* The near-black text colour that sits ON accent/await/fail coloured chips, badges, primary buttons (legibility on bright fills). Recurs corpus-wide; promoted from hardcoded literals 2026-06-05; ink-fail added 2026-06-07 (the reject-chip text ON --fail, was #1a0a08 in C5). */
   --ink-accent:#06140f;
   --ink-await:#1a1205;
+  --ink-fail:#1a0a08;
   /* node-type visual language */
   /* KIND drives colour. REALITY (audit 2026-06-03): only TWO kinds live — process & content. 'present' is contract-allowed but has no live node (future). 'model' is a config-slot accent, NOT a node kind. */
   --kind-process:#54d6b0;
@@ -36,11 +37,13 @@
   --kind-present-bg:rgba(230,171,92,.10);
   --kind-model-bg:rgba(181,140,220,.10);
   /* shape */
+  /* shadow-color added 2026-06-07 — the near-black drop-shadow colour the mockups' bespoke node/sheet box-shadows recurred (#000 ×12 across A2/A3/A11/B3/B4/B6/E1); the panel --shadow token now refs it so the shadow colour lives in one place. */
   --r:7px;
   --r-lg:11px;
   --r-pill:99px;
   --sp:8px;
-  --shadow:0 18px 40px -22px #000;
+  --shadow-color:#000;
+  --shadow:0 18px 40px -22px var(--shadow-color);
   font-size:14px;
 }
 

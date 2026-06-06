@@ -8,8 +8,8 @@
         "pointable",
         "spotlit"
       ],
-      "represents": "F1",
-      "code": "canvas/app/src/App.tsx (toolbar)"
+      "represents": "RUN-run",
+      "code": "canvas/app/src/regions/Toolbar.tsx (toolbar)"
     },
     "ui://toolbar/run": {
       "region": "toolbar",
@@ -18,7 +18,7 @@
         "openable"
       ],
       "represents": "RUN-run",
-      "code": "runtime/bridge.py:184 / App.tsx:1146"
+      "code": "canvas/app/src/regions/Toolbar.tsx (run) / runtime/suite.py:run"
     },
     "ui://toolbar/presence": {
       "region": "toolbar",
@@ -35,8 +35,8 @@
         "pointable",
         "spotlit"
       ],
-      "represents": "F3",
-      "code": "canvas/app/src/App.tsx:App"
+      "represents": "NODE-types",
+      "code": "canvas/app/src/regions/Palette.tsx (Palette)"
     },
     "ui://canvas": {
       "region": "canvas",
@@ -45,7 +45,7 @@
         "driven"
       ],
       "represents": "CAN-compose",
-      "code": "App.tsx NodeShapeUtil:124"
+      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil"
     },
     "ui://canvas/node": {
       "region": "canvas",
@@ -55,7 +55,7 @@
         "driven"
       ],
       "represents": "NODE-kinds",
-      "code": "App.tsx:124 / suite.py:436"
+      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil / runtime/suite.py:create_node"
     },
     "ui://inspector": {
       "region": "inspector",
@@ -64,7 +64,7 @@
         "presentable"
       ],
       "represents": "NODE-config",
-      "code": "contracts/node_type.py / App.tsx:447"
+      "code": "contracts/node_type.py / canvas/app/src/regions/Inspector.tsx (Inspector)"
     },
     "ui://inspector/model-field": {
       "region": "inspector",
@@ -72,7 +72,7 @@
         "pointable"
       ],
       "represents": "MOD-registry",
-      "code": "runtime/suite.py:109 / App.tsx:134"
+      "code": "canvas/app/src/components/NodeConfigForm.tsx:NodeConfigForm / runtime/suite.py:available_models"
     },
     "ui://inspector/act": {
       "region": "inspector",
@@ -80,7 +80,7 @@
         "pointable"
       ],
       "represents": "ENG-force",
-      "code": "canvas/app/src/App.tsx:doRun / runtime/scheduler.py:run"
+      "code": "canvas/app/src/regions/Inspector.tsx (act) / runtime/scheduler.py:run"
     },
     "ui://inbox": {
       "region": "inbox",
@@ -160,7 +160,7 @@
         "pointable"
       ],
       "represents": "RHM-chat",
-      "code": "App.tsx (chat input)"
+      "code": "canvas/app/src/regions/RhmChat.tsx (chat input) / runtime/suite.py:chat"
     },
     "ui://activity": {
       "region": "activity",
@@ -202,8 +202,8 @@
       "capabilities": [
         "pointable"
       ],
-      "represents": "G2",
-      "code": "design-system.css .tabbar (mobile nav)"
+      "represents": "CAN-compose",
+      "code": "canvas/app/src/app.css .tabbar (mobile nav — responsive chrome) / canvas/app/src/App.tsx (tabbar)"
     },
     "ui://models": {
       "region": "models",
@@ -453,6 +453,14 @@
       ],
       "represents": "RHM-config",
       "code": "canvas/app/src/regions/RhmChat.tsx (model input) / runtime/suite.py:set_rhm_config"
+    },
+    "ui://chat/persona-field": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "RHM-config",
+      "code": "canvas/app/src/regions/RhmChat.tsx (persona select) / runtime/suite.py:set_rhm_config"
     }
   }
 }

@@ -43,8 +43,8 @@
 .brand em{font-style:normal;color:var(--acc)}
 .brand .tag{font-size:10.5px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:7px}
 /* the toolbar presence control in its OPENED state (ui://toolbar/presence) */
-.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--acc);border-radius:99px;background:var(--s2);font-size:11.5px;color:var(--tx);white-space:nowrap;cursor:pointer;box-shadow:0 0 0 3px var(--acc-glow)}
-.presence .dot{width:7px;height:7px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--acc);border-radius:var(--r-pill);background:var(--s2);font-size:11.5px;color:var(--tx);white-space:nowrap;cursor:pointer;box-shadow:0 0 0 3px var(--acc-glow)}
+.presence .dot{width:7px;height:7px;border-radius:var(--r-pill);background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
 .presence .ch{color:var(--tx-3);font-size:10px}
 .verbs{margin-left:auto;display:flex;gap:6px;flex:none}
 .verbs .btn{padding:7px 11px}
@@ -60,11 +60,11 @@
 /* the dim "the dial governs everything" note in the canvas */
 .dimnote{max-width:430px;text-align:center;color:var(--tx-3);font-size:12.5px;line-height:1.7}
 .dimnote .display{font-size:16px;color:var(--tx-2);display:block;margin-bottom:6px}
-.dimnote .play{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:6px 12px;border:1px dashed var(--line-2);border-radius:99px;font-family:'IBM Plex Mono';font-size:11px;color:var(--acc)}
+.dimnote .play{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:6px 12px;border:1px dashed var(--line-2);border-radius:var(--r-pill);font-family:'IBM Plex Mono';font-size:11px;color:var(--acc)}
 
 .foot{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--s0);border-top:1px solid var(--line);font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';overflow:hidden;white-space:nowrap}
 .foot .live{color:var(--acc);display:inline-flex;align-items:center;gap:5px}
-.foot .live i{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.foot .live i{width:6px;height:6px;border-radius:var(--r-pill);background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
 
 /* ── THE DIAL — the right panel, the 8 modes laid out so you recognise the posture by sight ── */
 .panel{grid-area:panel;background:var(--s0);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
@@ -86,11 +86,11 @@
 
 /* a louder→quieter spine so the dial reads as a POSTURE continuum (recognise by sight) */
 .spine{display:flex;align-items:center;gap:7px;margin:0 2px 12px;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);text-transform:uppercase;letter-spacing:.8px}
-.spine .bar{flex:1;height:3px;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--cache) 55%,var(--tx-3))}
+.spine .bar{flex:1;height:3px;border-radius:var(--r-pill);background:linear-gradient(90deg,var(--acc),var(--cache) 55%,var(--tx-3))}
 
 .mode{border:1px solid var(--line);border-radius:var(--r-lg);background:linear-gradient(180deg,var(--s2),var(--s1));margin-bottom:8px;overflow:hidden;cursor:pointer}
 .mode .mhead{display:flex;align-items:center;gap:10px;padding:10px 12px}
-.mode .glyph{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:14px;flex:none;background:var(--s3);border:1px solid var(--line-2);color:var(--tx-2)}
+.mode .glyph{width:26px;height:26px;border-radius:var(--r);display:grid;place-items:center;font-size:14px;flex:none;background:var(--s3);border:1px solid var(--line-2);color:var(--tx-2)}
 .mode .mname{font-family:'IBM Plex Mono';font-size:12.5px;color:var(--tx);font-weight:500}
 .mode .vol{margin-left:auto;display:flex;gap:3px;align-items:flex-end;height:14px}
 .mode .vol i{width:3px;border-radius:2px;background:var(--tx-3)}
@@ -103,7 +103,7 @@
 .mode.loud .glyph{color:var(--await);border-color:rgba(230,171,92,.4)}
 /* decide-for-me gets a governance strip because it ACTS (deterministic by posture) */
 .gov{display:flex;align-items:center;gap:6px;margin:7px 12px 0 48px;padding:6px 9px;border:1px solid var(--line);border-radius:var(--r);background:var(--s0);font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);line-height:1.5;flex-wrap:wrap}
-.gov .t{padding:1px 6px;border-radius:99px;font-size:8.5px;letter-spacing:.4px}
+.gov .t{padding:1px 6px;border-radius:var(--r-pill);font-size:8.5px;letter-spacing:.4px}
 .gov .auto{color:var(--ink-accent);background:var(--ok)} .gov .surface{color:var(--ink-await);background:var(--await)} .gov .locked{color:var(--tx);background:var(--s3);border:1px solid var(--line-2)}
 .gov .no{color:var(--fail)}
 /* off = quiet end */

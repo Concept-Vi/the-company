@@ -77,20 +77,20 @@
 
 .canvas{grid-area:canvas;position:relative;overflow:hidden;background-image:radial-gradient(var(--line) .9px,transparent .9px);background-size:26px 26px}
 .canvas .node{position:absolute}
-.node.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc-glow),0 22px 50px -22px #000}
+.node.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc-glow),0 22px 50px -22px var(--shadow-color)}
 
 /* ── PROPOSED portal "live window" treatment — a translucent framed window, NOT a solid content node.
    Reads as a viewport onto something elsewhere. content-kind blue (portal IS content), but glassy. ── */
 .portal{position:absolute;border:1.5px dashed var(--kind-content);border-radius:var(--r);
   background:linear-gradient(180deg,var(--kind-content-bg),rgba(107,155,216,.03));
-  backdrop-filter:blur(2px);box-shadow:0 14px 40px -22px #000, inset 0 0 0 1px rgba(107,155,216,.10);width:236px}
+  backdrop-filter:blur(2px);box-shadow:0 14px 40px -22px var(--shadow-color), inset 0 0 0 1px rgba(107,155,216,.10);width:236px}
 .portal .phd{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px dashed rgba(107,155,216,.35);font-size:11px}
 .portal .phd .mono-chip{width:18px;height:18px;border-radius:5px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:10px;color:var(--ink-accent);background:var(--kind-content);flex:none}
 .portal .phd .ty{font-weight:600;color:var(--tx)}
 .portal .phd .kindlabel{font-size:9px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:2px}
 /* the LIVE badge — the honest portal status (NOT ran/cached/stuck). ref resolves → live. */
-.livebadge{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-family:'IBM Plex Mono';font-size:9px;color:var(--acc);background:var(--acc-glow);border:1px solid var(--acc);border-radius:99px;padding:2px 7px}
-.livebadge i{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.livebadge{margin-left:auto;display:inline-flex;align-items:center;gap:5px;font-family:'IBM Plex Mono';font-size:9px;color:var(--acc);background:var(--acc-glow);border:1px solid var(--acc);border-radius:var(--r-pill);padding:2px 7px}
+.livebadge i{width:6px;height:6px;border-radius:var(--r-pill);background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
 .portal .pbodywin{padding:9px 10px;font-size:12px;color:var(--tx);line-height:1.5;min-height:34px}
 .portal .pbodywin.code{font-family:'IBM Plex Mono';font-size:11px;color:var(--tx-2)}
 .portal .pref{display:flex;align-items:center;gap:6px;padding:6px 10px;border-top:1px dashed rgba(107,155,216,.25);font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3)}
@@ -100,7 +100,7 @@
 .portal.empty{border-color:var(--line-2);background:repeating-linear-gradient(135deg,var(--s1),var(--s1) 8px,var(--s0) 8px,var(--s0) 16px)}
 .portal.empty .phd{border-bottom-color:var(--line-2)}
 .portal.empty .phd .mono-chip{background:var(--tx-3)}
-.emptybadge{margin-left:auto;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);border:1px solid var(--line-2);border-radius:99px;padding:2px 7px}
+.emptybadge{margin-left:auto;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);border:1px solid var(--line-2);border-radius:var(--r-pill);padding:2px 7px}
 .portal.empty .pbodywin{color:var(--tx-3);font-style:italic;display:flex;align-items:center;gap:7px}
 
 /* the SOURCE node — a normal content/process node (house A2 .node styling from design-system.css) */
@@ -113,13 +113,13 @@
 .legend b{display:inline-flex;align-items:center;gap:5px;color:var(--tx-2);font-weight:500}
 .legend i{width:9px;height:9px;flex:none}
 .legend .win{border:1.5px dashed var(--kind-content);border-radius:3px;background:var(--kind-content-bg)}
-.legend .liv{border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.legend .liv{border-radius:var(--r-pill);background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
 .legend .emp{border:1px solid var(--line-2);background:var(--s1)}
 .legend .sep{width:1px;height:16px;background:var(--line-2)}
 
 .foot{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--s0);border-top:1px solid var(--line);font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';overflow:hidden;white-space:nowrap}
 .foot .live{color:var(--acc);display:inline-flex;align-items:center;gap:5px}
-.foot .live i{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.foot .live i{width:6px;height:6px;border-radius:var(--r-pill);background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
 
 .panel{grid-area:panel;background:var(--s0);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);padding:10px 12px 0}
