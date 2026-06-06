@@ -25,6 +25,12 @@ import wave
 # FileNotFoundError: 'ninja'. Prepend the venv bin (dir of THIS interpreter) so ninja is found. This
 # propagates to the spawned EngineCore (inherits env). (Researched + hit by use 2026-06-06.)
 os.environ["PATH"] = os.path.dirname(sys.executable) + os.pathsep + os.environ.get("PATH", "")
+# DISABLE the FlashInfer SAMPLER — THE layer-③ fix (verified by capture 2026-06-06). TRITON_ATTN moves
+# ATTENTION off FlashInfer, but vLLM still used FlashInfer for top-k/top-p SAMPLING, which nvcc-JIT-
+# compiles on first real use → "Could not find nvcc" → EngineCore DIES after the first synth. Forcing
+# the native (torch) sampler removes FlashInfer from sampling too — no JIT, no nvcc dependency. Set
+# BEFORE any vLLM import. (This was in the original orpheus.py; lost in the TRITON rewrite — restored.)
+os.environ.setdefault("VLLM_USE_FLASHINFER_SAMPLER", "0")
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from voice.engines._service import serve  # noqa: E402
@@ -43,12 +49,14 @@ GPU_UTIL = float(os.environ.get("COMPANY_ORPHEUS_GPU_UTIL", "0.6"))    # ~9.8GB 
 # pinned load. (Earlier theory that graphs caused the gen crash was WRONG — see ATTN_BACKEND: the crash
 # was FlashInfer on CUDA-13, not the graphs. COMPANY_ORPHEUS_EAGER=1 still available as a diagnostic.)
 EAGER = os.environ.get("COMPANY_ORPHEUS_EAGER", "0") == "1"
-# THE attention backend fix (researched 2026-06-06): on sm_89/CUDA-13, vLLM falls through to FlashInfer
-# (flash-attn not installed), which crashes on the decode path (vLLM #26381). TRITON_ATTN is pure-Triton
-# (no FlashInfer, no flash-attn dep), supports bf16 + FULL cudagraph on Ada → keeps graphs ON + context
-# at 8192 and fixes the generation crash. A real AsyncEngineArgs param in vLLM 0.22.0 (the old
-# VLLM_ATTENTION_BACKEND env is DEAD here). COMPANY_ORPHEUS_ATTN overrides (e.g. FLASHINFER to reproduce).
-ATTN_BACKEND = os.environ.get("COMPANY_ORPHEUS_ATTN", "TRITON_ATTN")
+# THE attention backend (root-caused over 4 layers, 2026-06-06): vLLM's priority on sm_89 is
+# [FLASH_ATTN, FLASHINFER, TRITON_ATTN]. With flash-attn ABSENT it fell to FlashInfer (decode crash on
+# CUDA-13, #26381); forcing TRITON_ATTN got past that but JIT-compiles a kernel PER sequence-shape
+# during decode → the 2nd (new-shape) synth silently killed the EngineCore. FIX: install the matching
+# prebuilt flash-attn (torch2.11/cu13 wheel) so vLLM uses FLASH_ATTN — PRECOMPILED, no per-shape JIT, no
+# FlashInfer. The whole onion traces to flash-attn having been missing; it's how orpheus is built to run.
+# Keeps graphs ON + context 8192. COMPANY_ORPHEUS_ATTN overrides (TRITON_ATTN/FLASHINFER to reproduce).
+ATTN_BACKEND = os.environ.get("COMPANY_ORPHEUS_ATTN", "FLASH_ATTN")
 DEFAULT_VOICE = os.environ.get("COMPANY_ORPHEUS_VOICE", "tara")
 RATE = 24000
 VOICE_BANK = ["tara", "leah", "jess", "leo", "dan", "mia", "zac", "zoe"]
