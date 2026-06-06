@@ -135,6 +135,16 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.ui_info()))
             elif path == "/api/scope":                     # S3: ui://→code://→scope[] (the address→code join)
                 self._send(200, json.dumps(SUITE.resolve_scope(q["address"])))
+            elif path == "/api/address-help":              # D2: the COMPOSED affordance bundle for one ui:// address
+                # The address-keyed READ that EXPOSES the existing D1 composer (Suite.address_help — committed
+                # 89f60d9, NOT rebuilt here): the JOIN of the THREE legs — what_this_is (_describe_ui_address /
+                # represents), how_to_change (resolve_scope → blast_radius/X16 reach), how_to_use (the corpus
+                # 'howto' stratum) — plus a `legs_present` flag the D2 surface reads to DEGRADE cleanly when a
+                # leg is thin (G-53: many elements author no howto yet). Mirrors /api/scope + /api/self-changes-at
+                # exactly: missing `address` → KeyError → 400 (fail loud); a MALFORMED address → ValueError from
+                # address_help's S0 grammar gate → 400 (fail loud); a well-formed-but-unregistered address returns
+                # a clean partial bundle (what_this_is tagged '(unregistered)', legs honestly false), never a crash.
+                self._send(200, json.dumps(SUITE.address_help(q["address"])))
             elif path == "/api/self-changes-at":           # L5: "what did the system change HERE?" (§21.7#5)
                 # The address-keyed READ over the self-change audit log: filters self_change_log by the
                 # S3 address→code scope join. Missing `address` → KeyError → 400 (fail loud, mirrors

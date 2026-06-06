@@ -100,6 +100,23 @@ export function useAppController(editor: Editor) {
   const [proposal, setProposal] = useState<
     { verb: string; address?: string | null; args?: any; options?: ProposalOption[]; direction?: boolean } | null
   >(null)
+  // D2 · the COMPOSED address-help bundle for the indicated ui:// element — the operator-facing help/altitude
+  // surface (REPO-KNOWLEDGE D2). The three legs (what_this_is · how_to_use · how_to_change) of "what can I do
+  // here?" joined by the EXISTING D1 composer Suite.address_help (exposed via GET /api/address-help — NOT a
+  // parallel FE composer). Loaded by fetchAddressHelp whenever the operator indicates an element (keyed on
+  // `indicated` ONLY — the help text is STATIC per address, so unlike History/SelfChanges it does NOT re-poll
+  // on events.length). Rendered AT TIM'S ALTITUDE by the AddressHelp region: plain-language what/how-to-use
+  // lead; the mechanism (code scope, file paths, blast-radius reach) drills down on demand. `legs_present`
+  // drives the per-leg DEGRADE (G-53: many elements author no howto yet → an honest "no how-to authored yet",
+  // never a blank). null = nothing indicated / not yet loaded. `addressHelpError` carries a fail-loud message
+  // (malformed address → backend 400) so the panel says so, never a silent blank.
+  const [addressHelp, setAddressHelp] = useState<{
+    address: string; what_this_is: string; how_to_use: string | null;
+    how_to_change: { scope: string[]; blast_radius: any; note: string | null };
+    legs_present: { what_this_is: boolean; how_to_change: boolean; how_to_use: boolean }
+  } | null>(null)
+  const [addressHelpBusy, setAddressHelpBusy] = useState(false)
+  const [addressHelpError, setAddressHelpError] = useState<string | null>(null)
   // L3 · addressed history (§21.7#1): the trajectory of events stamped AT the indicated ui:// address —
   // "everything that happened here". Loaded by fetchHistory whenever the operator indicates an element;
   // rendered NAVIGABLE (grouped by kind) by the History region. null = nothing indicated / no history yet.
@@ -640,6 +657,45 @@ export function useAppController(editor: Editor) {
     return () => document.removeEventListener('click', onDocClick, true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+  // D2 · the COMPOSED address-help bundle. When the operator INDICATES a ui:// element, load "what can I do
+  // here?" — the three legs (what_this_is · how_to_use · how_to_change) joined by the EXISTING D1 composer
+  // (GET /api/address-help → Suite.address_help). Reflects-never-owns: the runtime/corpus is authoritative,
+  // the surface just reads + composes the help. Keyed on `indicated` ONLY (the help text is STATIC per
+  // address — no events.length re-poke, unlike History/SelfChanges). DEGRADE-CLEAN: a well-formed-but-thin
+  // address returns a partial bundle (legs_present flags the gaps); the AddressHelp panel renders each leg's
+  // absence honestly (G-53). FAIL-LOUD (rule 4): a backend 400 (a malformed address) sets addressHelpError so
+  // the panel SAYS the address couldn't be resolved — never a silent blank.
+  async function fetchAddressHelp(addr: string | null) {
+    setAddressHelpError(null)
+    if (!addr || !addr.startsWith('ui://')) { setAddressHelp(null); return }   // only a ui:// locus has help
+    setAddressHelpBusy(true)
+    try {
+      const r = await api.addressHelp(addr)
+      if (r?.error) {                                  // backend 400 (malformed/unparseable address) — fail loud
+        setAddressHelp(null); setAddressHelpError(r.error); setNotice('✕ ' + r.error); return
+      }
+      setAddressHelp({
+        address: r.address,
+        what_this_is: r.what_this_is || addr,
+        how_to_use: r.how_to_use ?? null,
+        how_to_change: {
+          scope: Array.isArray(r?.how_to_change?.scope) ? r.how_to_change.scope : [],
+          blast_radius: r?.how_to_change?.blast_radius ?? null,
+          note: r?.how_to_change?.note ?? null,
+        },
+        legs_present: {
+          what_this_is: !!r?.legs_present?.what_this_is,
+          how_to_change: !!r?.legs_present?.how_to_change,
+          how_to_use: !!r?.legs_present?.how_to_use,
+        },
+      })
+    } catch (e: any) {
+      setAddressHelp(null); setAddressHelpError(e?.message || String(e))
+      setNotice('✕ could not load address help: ' + (e?.message || e))
+    } finally { setAddressHelpBusy(false) }
+  }
+  // Load the help whenever the indicated locus changes. STATIC per address → no events.length dependency.
+  useEffect(() => { fetchAddressHelp(indicated) /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [indicated])
   // L3 · addressed history (§21.7#1). When the operator INDICATES a ui:// element, load "everything that
   // happened here" — the GET /api/address-history trajectory for that locus. Reflects-never-owns: the
   // runtime is authoritative, the surface just reads. Clearing the indication clears the history. A
@@ -1448,6 +1504,7 @@ export function useAppController(editor: Editor) {
     oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
     showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn, personas,
     wtSpoke, wtBusy, selected, mobileTab, fleet, indicated, proposal, history, historyBusy,
+    addressHelp, addressHelpBusy, addressHelpError,
     selfChanges, selfChangesBusy, freshness, freshnessBusy, versions, versionsBusy, journeyId, journeyReplaying,
     // refs the components read for the inspector form
     configByNode,

@@ -30,6 +30,7 @@ import { PanelErrorBoundary } from './components/PanelErrorBoundary'
 import { Toolbar } from './regions/Toolbar'
 import { Palette } from './regions/Palette'
 import { Inspector } from './regions/Inspector'
+import { AddressHelp } from './regions/AddressHelp'
 import { History } from './regions/History'
 import { Versions } from './regions/Versions'
 import { SelfChanges } from './regions/SelfChanges'
@@ -188,6 +189,18 @@ function Hud() {
            F2: .as-sheet makes it a bottom-sheet (the 'inbox' tab) at <699px. */}
         <div className="as-panel as-sheet hud panel" data-ui-ref="inspector">
           <Inspector />
+          {/* D2 · the COMPOSED address-help / altitude surface (REPO-KNOWLEDGE D2): when the operator INDICATES
+             a ui:// element, "what can I do here?" leads the indicated-locus stack — the three legs of
+             address_help (what-this-is · how-to-use · how-to-change) composed AT TIM'S ALTITUDE (plain-language
+             howto leads; the mechanism — code/files/blast-radius — drills down on demand). EXPOSES the existing
+             D1 composer (GET /api/address-help → Suite.address_help, NOT a parallel composer). Degrades cleanly
+             per leg (G-53: many elements author no howto yet). Per-panel boundary (PRESERVE-LIST): a render-throw
+             degrades to a contained card, never a white-screen. Renders nothing unless a ui:// locus is
+             indicated, so it never clutters the rail; mounted BEFORE History because "what can I do here" is the
+             primary indicated-locus question. */}
+          <PanelErrorBoundary name="address-help">
+            <AddressHelp />
+          </PanelErrorBoundary>
           {/* L3 · addressed history (§21.7#1): when the operator INDICATES a ui:// element, its full
              addressed trajectory ("everything that happened here") shows here — navigable, grouped by kind
              (GET /api/address-history → Suite.address_view, the decision_view sid path untouched). Per-panel

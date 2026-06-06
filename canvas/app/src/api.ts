@@ -141,6 +141,17 @@ export const api = {
   // address → backend 400 (fail-loud, normalized to {error} by jr).
   selfChangesAt: (address: string) =>
     fetch('/api/self-changes-at?address=' + encodeURIComponent(address)).then(jr),
+  // D2 · the COMPOSED address-help bundle (the operator-facing help/altitude surface). EXPOSES the
+  // existing D1 composer Suite.address_help (committed 89f60d9 — NOT a parallel FE composer): the JOIN of
+  // the three legs at one ui:// address — what_this_is (the represents/feature label) · how_to_use (the
+  // corpus 'howto' stratum) · how_to_change (resolve_scope → blast_radius/X16 reach) — plus `legs_present`
+  // the AddressHelp panel reads to DEGRADE cleanly per leg (G-53: many elements author no howto yet).
+  // Returns { address, what_this_is, how_to_use, how_to_change:{scope,blast_radius,note}, legs_present }.
+  // A malformed address → backend 400 (S0 grammar gate, fail-loud, normalized to {error} by jr); a
+  // well-formed-but-unregistered address returns a clean partial bundle (never a crash). NOTE: this method
+  // is OUTSIDE the voice block (G-8) — it is an address-keyed read sibling of selfChangesAt/addressHistory.
+  addressHelp: (address: string) =>
+    fetch('/api/address-help?address=' + encodeURIComponent(address)).then(jr),
   // L10 · "stale at this address" (§21.7#10): is the cached result AT this NODE's run:// address out of
   // date vs its CURRENT inputs? A COSTED DERIVATION, not a served field — the surface CALLS this only when
   // it wants the verdict (the backend recompiles + resolves input-hashes + recomputes the _memo_sig +

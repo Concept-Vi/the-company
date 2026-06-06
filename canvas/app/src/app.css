@@ -287,6 +287,47 @@ button.b.ghost.kit-tone-wire:hover{border-color:var(--tone);color:var(--tone);bo
    .ev-decision = prior/content); no hardcoded colours, no bespoke element (design-lint clean). */
 .ver-row{align-items:baseline}
 .ver-cas{font-family:inherit;letter-spacing:.04em}
+/* D2 · the COMPOSED address-help / altitude surface (regions/AddressHelp.tsx). The look lives in the shared
+   kit (SectionHead/Badge/Surface/EmptyState); this is a thin LAYOUT-ONLY layer using var() tokens only
+   (design-lint clean — no off-token literal, no bespoke element). ALTITUDE: the howto prose leads in the
+   display voice (Tim's level); the mechanism (code/files/blast-radius) lives behind the .ahelp-drill collapse
+   (the same caret idiom History uses). */
+.ahelp{margin-top:var(--sp-3);padding-top:var(--sp-2);border-top:1px solid var(--line);
+  display:flex;flex-direction:column;gap:var(--sp-2)}
+.ahelp .kit-kicker{overflow-wrap:anywhere;white-space:normal;line-height:var(--lh-tight)}
+.ahelp-addr{font-family:var(--font-mono);color:var(--tx-2)}
+/* the altitude LEAD — the authored howto as prose, in the calm-authority display voice (NOT mono): this is
+   the plain-language layer Tim reads by sight. */
+.ahelp-howto{font-family:var(--font-display);font-size:var(--fs-lg);line-height:var(--lh-body);
+  color:var(--ink);white-space:pre-line}
+.ahelp-thin{display:flex;flex-direction:column;gap:var(--sp-2)}
+.ahelp-ident{font-family:var(--font-display);font-size:var(--fs-lg);line-height:var(--lh-body);color:var(--ink)}
+.ahelp-ident-k{font-family:var(--font-mono);font-size:var(--fs-tag);letter-spacing:var(--tr-tag);
+  text-transform:uppercase;color:var(--dim);margin-right:var(--sp-1)}
+.ahelp-fail{font-family:var(--font-mono);font-size:var(--fs-meta);color:var(--err);line-height:var(--lh-body)}
+/* the DRILL-DOWN head — the mechanism opens on demand (closed by default = the altitude move). */
+.ahelp-drill{display:flex;align-items:center;gap:var(--sp-2);width:100%;text-align:left;cursor:pointer;
+  background:var(--s1);border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:var(--sp-2) var(--sp-2);margin-top:var(--sp-1);color:var(--ink)}
+.ahelp-drill:hover{border-color:var(--sig);background:var(--s2)}
+.ahelp-drill-label{flex:1;font-family:var(--font-mono);font-size:var(--fs-meta);letter-spacing:var(--tr-label);
+  text-transform:uppercase;color:var(--tx-2)}
+.ahelp-caret{flex:none;width:var(--sp-3);color:var(--dim);font-size:var(--fs-tag)}
+.ahelp-mech{display:flex;flex-direction:column;gap:var(--sp-2);padding:var(--sp-1) 0 0 var(--sp-2)}
+.ahelp-mech-sub{font-family:var(--font-mono);font-size:var(--fs-tag);letter-spacing:var(--tr-tag);
+  text-transform:uppercase;color:var(--dim)}
+.ahelp-files{display:flex;flex-direction:column;gap:var(--sp-1)}
+.ahelp-file code{font-family:var(--font-mono);font-size:var(--fs-meta);color:var(--ink);overflow-wrap:anywhere}
+.ahelp-note{font-family:var(--font-mono);font-size:var(--fs-tag);line-height:var(--lh-body);color:var(--dim)}
+.ahelp-reach{display:flex;flex-direction:column;gap:var(--sp-1);margin-top:var(--sp-1)}
+.ahelp-reach-kind{display:flex;flex-direction:column;gap:var(--sp-1)}
+.ahelp-reach-head{display:flex;align-items:center;gap:var(--sp-2);width:100%;text-align:left;cursor:pointer;
+  background:transparent;border:none;padding:var(--sp-1) 0;color:var(--ink)}
+.ahelp-reach-label{flex:1;font-family:var(--font-mono);font-size:var(--fs-meta);color:var(--tx-2)}
+.ahelp-reach-members{display:flex;flex-wrap:wrap;gap:var(--sp-1);padding:0 0 var(--sp-1) var(--sp-4)}
+.ahelp-reach-member{font-family:var(--font-mono);font-size:var(--fs-tag);color:var(--tx-2);
+  background:var(--s1);border:1px solid var(--line);border-radius:var(--r-sm);padding:2px var(--sp-2);
+  overflow-wrap:anywhere}
 .palette{top:64px;left:12px;width:158px;background:var(--s1);border:1px solid var(--line);
   border-radius:var(--r-lg);padding:var(--sp-3);max-height:calc(100vh - 90px);overflow:auto;box-shadow:var(--elev-1)}
 /* WAVE-4: the palette is now a recognition-by-sight rack composed from the shared kit (kit SectionHead +
