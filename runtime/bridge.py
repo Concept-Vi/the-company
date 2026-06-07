@@ -394,6 +394,7 @@ class H(BaseHTTPRequestHandler):
         import base64 as _b64, re as _re, time as _t
         from urllib.parse import urlparse as _up, parse_qs as _pq
         from voice import loop as voice_loop, stt as voice_stt, lifecycle as voice_lc, personas as voice_personas
+        from voice import speakable as voice_speakable
         self.close_connection = True
         vq = {k: v[0] for k, v in _pq(_up(self.path).query).items()}
         persona = (vq.get("persona") or "").strip()
@@ -473,7 +474,14 @@ class H(BaseHTTPRequestHandler):
                 emit({"type": "done", "total_ms": int((_t.monotonic() - t0) * 1000), "spoke": False, "reply": reply}); return
             # split into sentences → synth + stream each AS IT'S READY (the streaming win)
             step = "tts"
-            sentences = [s.strip() for s in _re.split(r'(?<=[.!?])\s+', reply) if s.strip()] or [reply]
+            # V-C/V-D the SPEAKABLE LAYER: clean the WHOLE reply (markdown/code/urls/emoji stripped;
+            # canonical expression tags mapped to THIS engine's syntax or dropped) BEFORE the split —
+            # cleaning per-chunk would split markdown (code fences/lists span lines). The {type:reply}
+            # event above + the trial recording stay RAW (the visible/markdown-rendered text). Only
+            # what hits TTS is cleaned. Fail-loud (empty-after-clean / bad input) surfaces via the
+            # except → {type:error}. A non-fatal warn (unknown engine) becomes a {type:note}.
+            spoken = voice_speakable.speakable(reply, eng, warn=lambda w: emit({"type": "note", "text": w}))
+            sentences = [s.strip() for s in _re.split(r'(?<=[.!?])\s+', spoken) if s.strip()] or [spoken]
             voice_arg = voice_override or voice_loop._voice_arg_for(p, eng)   # G4.2: voice for the SELECTED engine (any persona × any engine)
             done_n = 0
             for idx, sent in enumerate(sentences):
@@ -571,6 +579,16 @@ class H(BaseHTTPRequestHandler):
                             engine = None                 # unknown persona → kokoro fallback (never crash a reply)
                 base = _tts_base_url(engine)              # raises ValueError on an unknown engine
                 fwd = {k: v for k, v in payload.items() if k != "engine"}
+                # V-C/V-D the SPEAKABLE LAYER on the GENERIC text→wav path too (speakReply text-replies,
+                # walkthrough narration — also "reply text → TTS"). One universal transform everywhere
+                # reply text becomes speech: clean markdown/code/urls/emoji + map canonical expression
+                # tags to THIS engine's syntax (kokoro/absent → no tags → stripped). Cleaning already-
+                # clean text is idempotent, so this is safe + complete. Empty `text` is left as-is for
+                # the downstream engine to handle; only non-empty text is run through (speakable raises
+                # on a non-empty-but-cleans-to-nothing string — that fail-loud is desirable here too).
+                if isinstance(fwd.get("text"), str) and fwd["text"].strip():
+                    from voice import speakable as _vsp
+                    fwd["text"] = _vsp.speakable(fwd["text"], engine)
                 req = _u.Request(base + "/tts", data=json.dumps(fwd).encode(),
                                  headers={"Content-Type": "application/json"})
                 try:
