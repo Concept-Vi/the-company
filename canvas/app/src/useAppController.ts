@@ -246,6 +246,26 @@ export function useAppController(editor: Editor) {
   // thought and re-listens, tap to stop. Distinct from push-to-talk (recordToggle). The ref holds the live
   // session so the second tap can end it.
   const autoListenRef = useRef<{ stop: boolean; stream: MediaStream | null }>({ stop: false, stream: null })
+  // V-B (Tim 2026-06-07) — the BARGE-IN + STREAM-CANCEL handles. Two defects fixed in this lane:
+  //  (1) re-arm: auto-listen used ONE MediaRecorder across pause()/resume() and reset `chunks=[]` after
+  //      the only chunk carrying the webm/EBML init header — so turn 2+ produced a HEADERLESS continuation
+  //      fragment that STT could not decode (proven by the on-phone trace: every autolisten_stt after the
+  //      first fire is chars:0/empty:true while vad_pause keeps firing). FIX = a FRESH recorder per listen
+  //      cycle (mirrors what makes push-to-talk reliable — recordToggle always news up a recorder).
+  //  (2) barge-in: nothing listened during playback + nothing could STOP a reply mid-stream. FIX = the
+  //      persistent analyser keeps reading RMS while SPEAKING; sustained speech cancels the reply.
+  // `voiceReaderRef` holds the in-flight /api/voice/stream reader so a barge-in can reader.cancel() it —
+  // closing the socket, which the bridge's MSG_PEEK client_gone() detects to STOP synth (no bridge change).
+  const voiceReaderRef = useRef<ReadableStreamDefaultReader<Uint8Array> | null>(null)
+  // `playSourcesRef` tracks every live AudioBufferSourceNode so a barge-in can stop() them (cut the audio
+  // already playing/queued). `playEpochRef` is a generation counter: playWavBuffer captures the epoch at
+  // schedule time and a barge-in bumps it, so a chunk that arrives AFTER the cut never gets scheduled.
+  const playSourcesRef = useRef<AudioBufferSourceNode[]>([])
+  const playEpochRef = useRef<number>(0)
+  // `bargedRef` flags that the CURRENT turn was interrupted by the operator speaking — runVoiceTurn checks
+  // it to stop consuming/playing the cancelled stream, and the auto-listen loop reads it to start the new
+  // capture immediately rather than waiting for the (now-cancelled) reply to "finish".
+  const bargedRef = useRef<boolean>(false)
   // A2/A4: the selected node's live config (from /api/graph), keyed by nodeId — the inspector reads it
   // here, NOT off the tldraw shape props (which carry no config). Refreshed on every graph load.
   const configByNode = useRef<Record<string, any>>({})
@@ -1671,17 +1691,35 @@ export function useAppController(editor: Editor) {
   // (so streamed sentence-chunks play in order — V2.2). Fail-loud-ish: if the context is blocked/absent,
   // fall back to a plain <audio> element (works on desktop; on iOS the gesture-primed context is the path).
   async function playWavBuffer(buf: ArrayBuffer) {
+    // V-B: capture the play-epoch at ENTRY. A barge-in bumps playEpochRef + stops live sources; a chunk
+    // whose decode finishes AFTER that bump must NOT schedule onto the (now-cut) timeline — so we re-check
+    // the epoch after the async decode and drop the buffer if the turn was interrupted while we decoded.
+    const epoch = playEpochRef.current
     const ctx = audioCtxRef.current
     if (ctx && ctx.state === 'running') {
       const audioBuf = await ctx.decodeAudioData(buf.slice(0))
+      if (epoch !== playEpochRef.current) return                 // barged-in mid-decode — abandon this chunk
       const src = ctx.createBufferSource(); src.buffer = audioBuf; src.connect(ctx.destination)
       const now = ctx.currentTime
       const at = Math.max(now, playCursorRef.current || now)
       src.start(at); playCursorRef.current = at + audioBuf.duration
+      // track the live source so a barge-in can stop() it; self-prune on natural end.
+      playSourcesRef.current.push(src)
+      src.onended = () => { playSourcesRef.current = playSourcesRef.current.filter(s => s !== src) }
       return
     }
     // fallback (desktop / context not unlocked): a one-shot element
+    if (epoch !== playEpochRef.current) return                   // barged-in mid-decode — don't start it
     await new Audio(URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }))).play()
+  }
+  // V-B — CUT all reply audio NOW (barge-in or a hard stop). Bump the epoch so any chunk still decoding is
+  // dropped (playWavBuffer re-checks), stop() every live source node, and reset the play cursor so the next
+  // turn starts a fresh queue. Fail-soft per-source (a node that already ended throws on stop()).
+  function stopPlayback() {
+    playEpochRef.current += 1
+    for (const s of playSourcesRef.current) { try { s.stop() } catch { /* already ended */ } }
+    playSourcesRef.current = []
+    playCursorRef.current = 0
   }
   // voice out — speak text in the configured persona voice (the bridge routes /api/tts to it). Plays through
   // the gesture-unlocked Web Audio context (V2.1) so it actually sounds on iOS. Throws on a hard failure so
@@ -1718,21 +1756,47 @@ export function useAppController(editor: Editor) {
     if (!res.ok || !res.body) {
       const t = await res.text().catch(() => ''); setNotice('⚠ voice turn failed (' + res.status + '): ' + t.slice(0, 160)); return
     }
+    // V-B: hold the reader so a barge-in (the auto-listen analyser hearing the operator speak over the
+    // reply) can reader.cancel() it — that closes the socket, which the bridge's client_gone()/MSG_PEEK
+    // detects and STOPS the per-sentence synth before the next one (no server change). bargedRef starts
+    // false for this turn; if it flips, we stop consuming + drop any remaining chunks.
+    bargedRef.current = false
     const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ''
-    for (;;) {
-      const { done, value } = await reader.read(); if (done) break
-      buf += dec.decode(value, { stream: true })
-      const lines = buf.split('\n'); buf = lines.pop() || ''
-      for (const ln of lines) {
-        const s = ln.trim(); if (!s) continue
-        let ev: any; try { ev = JSON.parse(s) } catch { continue }
-        if (ev.type === 'transcript') { setNotice('you said: ' + ev.text); if (ev.text) setChat(c => [...c, { role: 'user', text: ev.text }]) }
-        else if (ev.type === 'reply') { if (ev.text) setChat(c => [...c, { role: 'assistant', text: ev.text }]) }
-        else if (ev.type === 'chunk') { try { await playWavBuffer(b64ToArrayBuffer(ev.wav_b64)) } catch (e: any) { api.voiceLog('play_fail', { idx: ev.idx, error: String(e?.message || e) }) } }   // iOS/audio playback failure — captured, not silent
-        else if (ev.type === 'error') { api.voiceLog('stream_error', { error: ev.error, step: ev.step, turn_id: ev.turn_id }); setNotice('⚠ ' + ev.error) }   // fail loud (V2.3) + durable
-        else if (ev.type === 'done') { setNotice(''); poll() }
+    voiceReaderRef.current = reader
+    try {
+      for (;;) {
+        let chunk: ReadableStreamReadResult<Uint8Array>
+        try { chunk = await reader.read() }
+        catch { break }                                          // reader.cancel() (barge-in) rejects the pending read — exit cleanly
+        const { done, value } = chunk; if (done) break
+        if (bargedRef.current) break                             // operator spoke over the reply — stop consuming this turn
+        buf += dec.decode(value, { stream: true })
+        const lines = buf.split('\n'); buf = lines.pop() || ''
+        for (const ln of lines) {
+          if (bargedRef.current) break
+          const s = ln.trim(); if (!s) continue
+          let ev: any; try { ev = JSON.parse(s) } catch { continue }
+          if (ev.type === 'transcript') { setNotice('you said: ' + ev.text); if (ev.text) setChat(c => [...c, { role: 'user', text: ev.text }]) }
+          else if (ev.type === 'reply') { if (ev.text) setChat(c => [...c, { role: 'assistant', text: ev.text }]) }
+          else if (ev.type === 'chunk') { try { await playWavBuffer(b64ToArrayBuffer(ev.wav_b64)) } catch (e: any) { api.voiceLog('play_fail', { idx: ev.idx, error: String(e?.message || e) }) } }   // iOS/audio playback failure — captured, not silent
+          else if (ev.type === 'error') { api.voiceLog('stream_error', { error: ev.error, step: ev.step, turn_id: ev.turn_id }); setNotice('⚠ ' + ev.error) }   // fail loud (V2.3) + durable
+          else if (ev.type === 'done') { setNotice(''); poll() }
+        }
       }
+    } finally {
+      if (voiceReaderRef.current === reader) voiceReaderRef.current = null   // only clear if still ours
     }
+  }
+  // V-B — BARGE-IN: the operator started speaking over the reply. Cut the audio (stopPlayback) AND cancel
+  // the in-flight reply stream (reader.cancel → socket close → the bridge's client_gone() stops synth).
+  // Sets bargedRef so runVoiceTurn's consume loop exits. Idempotent + fail-soft (a reader already done
+  // throws on cancel). Returns nothing; the caller starts the fresh capture cycle.
+  function bargeIn() {
+    bargedRef.current = true
+    stopPlayback()
+    const r = voiceReaderRef.current
+    if (r) { try { r.cancel() } catch { /* already settled */ } ; voiceReaderRef.current = null }
+    api.voiceLog('autolisten_bargein', { input_mode: 'auto_listen' })   // durable: the reply was interrupted
   }
   // voice in — push-to-talk: record → STT → send as a chat turn (which then speaks its reply)
   async function recordToggle() {
@@ -1776,15 +1840,31 @@ export function useAppController(editor: Editor) {
       api.voiceLog('ptt_start', { input_mode: 'push_to_talk' })   // push-to-talk recording opened
     } catch { api.voiceLog('mic_denied', { mode: 'push_to_talk' }); setNotice('mic unavailable — grant microphone permission') }
   }
-  // V1.1 — AUTO-LISTEN (hands-free, "reply on a finished thought, not a silence timer"). One continuous
-  // recorder; a Web Audio analyser watches RMS for a speech→silence PAUSE; on a pause the utterance-so-far
-  // is transcribed + put to the finished-thought JUDGE — if finished, the turn fires (streamed persona
-  // voice via runVoiceTurn) and the buffer resets; if not, it keeps listening (don't cut him off). The
-  // recorder is PAUSED during the reply so viv's voice isn't captured as new input (echo). Tap again to stop.
-  // The real feel (does it wait for a finished thought) is needs-tim — no mic on the server.
+  // V1.1 / V-B — AUTO-LISTEN (hands-free, "reply on a finished thought, not a silence timer").
+  //
+  // SHAPE (V-B rewrite, Tim 2026-06-07 — fixes "works for turn 1 only, no barge-in, then doesn't register"):
+  //  · the `stream` + Web Audio `analyser` are PERSISTENT for the whole session (independent of any recorder;
+  //    the analyser tap is what watches RMS — it is alive in EVERY phase, including while the reply speaks).
+  //  · a FRESH MediaRecorder is created for EACH listen cycle (inside `listenOnce`) and fully stop()'d to
+  //    FLUSH a complete webm. ROOT-CAUSE FIX for re-arm: the old code reused ONE recorder across pause()/resume() and reset
+  //    `chunks=[]` after the only chunk carrying the webm/EBML header had been consumed — so turn 2+ produced
+  //    a HEADERLESS fragment STT could not decode (proven by the phone trace: every post-fire autolisten_stt
+  //    was chars:0/empty:true while vad_pause kept firing → the recorder WAS recording, the BLOB was junk).
+  //    A fresh recorder per cycle = a fresh header every turn (exactly why push-to-talk, which news up a
+  //    recorder per press, always worked). No pause()/resume() to fail, either.
+  //  · phases: LISTENING (recorder running, RMS end-of-speech → STT+judge → fire/keep) → SPEAKING (NO recorder;
+  //    analyser still tapping → BARGE-IN detect) → back to LISTENING. After a fired turn the loop ALWAYS
+  //    re-arms a fresh recorder (the re-arm the old code lost), unless the operator stopped the session.
+  //  · BARGE-IN: while SPEAKING, sustained speech (≥ BARGEIN_FRAMES consecutive frames over a RAISED RMS,
+  //    to reject speaker-bleed) calls bargeIn() — cut the audio + cancel the reply stream — and immediately
+  //    starts a fresh capture cycle. Echo-avoidance is preserved WITHOUT pausing a recorder: no recorder runs
+  //    during playback, so viv's own voice is never captured as input; the analyser (not a recorder) is what
+  //    listens for the interruption.
+  // The real feel (does it wait for a finished thought; barge-in sensitivity; iOS audio) is needs-tim.
   function stopAutoListen() {
     autoListenRef.current.stop = true
     autoListenRef.current.stream?.getTracks().forEach(t => t.stop())
+    if (voiceReaderRef.current) bargeIn()                      // cut a reply still speaking; no-op (no spurious log) if idle
     setRecording(false); setNotice('')
   }
   async function startAutoListen() {
@@ -1795,50 +1875,119 @@ export function useAppController(editor: Editor) {
     autoListenRef.current = { stop: false, stream }
     api.voiceLog('autolisten_start', { input_mode: 'auto_listen', silence_ms: 800, speech_rms: 0.015 })   // session opened (mic granted)
     setRecording(true); setNotice('listening… (tap to stop)')
+    // PERSISTENT analyser tap — alive across LISTENING and SPEAKING (the barge-in detector reads it too).
     const ctx = audioCtxRef.current || new (window.AudioContext || (window as any).webkitAudioContext)()
     audioCtxRef.current = ctx
     const analyser = ctx.createAnalyser(); analyser.fftSize = 512
     ctx.createMediaStreamSource(stream).connect(analyser)
     const data = new Uint8Array(analyser.fftSize)
-    let chunks: BlobPart[] = []
-    const rec = new MediaRecorder(stream)
-    rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data) }
-    rec.start(250)                                             // periodic chunks so the buffer is fresh on a pause
     const SILENCE_MS = 800, SPEECH_RMS = 0.015
-    let spoke = false, lastVoice = performance.now(), busy = false
-    const tick = async () => {
-      if (autoListenRef.current.stop) { try { rec.state !== 'inactive' && rec.stop() } catch {} ; stream.getTracks().forEach(t => t.stop()); setRecording(false); setNotice(''); return }
-      if (!busy && rec.state === 'recording') {
-        analyser.getByteTimeDomainData(data)
-        let sum = 0; for (let i = 0; i < data.length; i++) { const v = (data[i] - 128) / 128; sum += v * v }
-        const rms = Math.sqrt(sum / data.length); const now = performance.now()
-        if (rms > SPEECH_RMS) { spoke = true; lastVoice = now }
-        if (spoke && (now - lastVoice) > SILENCE_MS && chunks.length) {
-          busy = true
-          api.voiceLog('vad_pause', { silence_ms: Math.round(now - lastVoice), chunks: chunks.length })   // the loop saw a pause
-          const blob = new Blob(chunks, { type: 'audio/webm' })
-          try {
-            const r = await api.stt(blob); const text = (r.text || '').trim()
-            api.voiceLog('autolisten_stt', { chars: text.length, empty: !text, text: text.slice(0, 200) })   // what the ear heard at the pause
-            if (text) {
-              const j = await api.finishedThought(text)
-              api.voiceLog('autolisten_judge', { verdict: j && j.verdict, finished: !!(j && j.finished), text: text.slice(0, 200) })   // fire or keep listening?
-              if (j && j.finished) {
-                try { rec.pause() } catch {}                   // pause capture so the reply isn't heard as input
-                setNotice('you said: ' + text); setRecording(false)
-                api.voiceLog('autolisten_fire', { chars: text.length })   // the turn fired
-                await runVoiceTurn(blob)                       // streamed persona-voice reply (V2.2)
-                chunks = []; spoke = false; lastVoice = performance.now()
-                if (!autoListenRef.current.stop) { try { rec.resume() } catch {} ; setRecording(true); setNotice('listening… (tap to stop)') }
-              } else { setNotice('… go on'); lastVoice = performance.now() }  // not finished — keep him talking
-            }
-          } catch (e: any) { api.voiceLog('error', { where: 'autolisten', error: String(e?.message || e) }); setNotice('⚠ ' + (e?.message || e) + ' — tap to use push-to-talk') }  // fail loud → ptt fallback
-          busy = false
-        }
-      }
-      setTimeout(tick, 150)
+    // barge-in is deliberately LESS sensitive than the listen-VAD (higher RMS + sustained frames) so the
+    // speaker's own audio bleeding into the mic doesn't false-trigger a cut. These are FEEL parameters —
+    // the exact values are Tim's to tune on-device (flagged needs-tim).
+    const BARGEIN_RMS = 0.04, BARGEIN_FRAMES = 4
+
+    // read the current RMS off the persistent analyser (0..~1).
+    const readRms = () => {
+      analyser.getByteTimeDomainData(data)
+      let sum = 0; for (let i = 0; i < data.length; i++) { const v = (data[i] - 128) / 128; sum += v * v }
+      return Math.sqrt(sum / data.length)
     }
-    tick()
+
+    // ONE LISTEN CYCLE: a FRESH recorder, watch RMS for an end-of-speech pause, transcribe + judge.
+    // Resolves with the captured blob+text when a FINISHED thought fires; loops internally (re-arming a
+    // fresh recorder) while not-finished; resolves null if the session was stopped. The fresh-recorder-
+    // per-cycle is the re-arm fix.
+    // FRESH recorder per TURN (not per pause). One continuously-running recorder accumulates the WHOLE
+    // turn's audio (so chunk[0] carries the webm header → every snapshot is decodable). On a not-finished
+    // pause we SNAPSHOT the accumulated blob WHILE the recorder keeps running (header present) and KEEP
+    // listening — so a multi-segment thought ("show me the inbox" … "and then settings") is heard WHOLE,
+    // which is the entire point of the finished-thought judge over a dumb silence timer. We only stop()+
+    // discard at the TURN boundary: when a thought FIRES (flush the tail, resolve) — the session loop's
+    // next listenOnce() then news up the fresh recorder for the next turn (THAT is the cross-turn re-arm
+    // fix; the old bug was reusing one recorder ACROSS turns with a reset buffer → headerless turn-2).
+    const listenOnce = (): Promise<{ blob: Blob; text: string } | null> => new Promise((resolve) => {
+      const chunks: BlobPart[] = []
+      const rec = new MediaRecorder(stream)                    // FRESH recorder for THIS turn ⇒ chunk[0] has the header
+      rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data) }
+      rec.start(250)                                           // periodic chunks so a snapshot is fresh on a pause
+      let spoke = false, lastVoice = performance.now(), busy = false
+      const tick = async () => {
+        if (autoListenRef.current.stop) {
+          try { rec.state !== 'inactive' && rec.stop() } catch {}
+          resolve(null); return
+        }
+        if (!busy && rec.state === 'recording') {
+          const rms = readRms(); const now = performance.now()
+          if (rms > SPEECH_RMS) { spoke = true; lastVoice = now }
+          if (spoke && (now - lastVoice) > SILENCE_MS && chunks.length) {
+            busy = true
+            api.voiceLog('vad_pause', { silence_ms: Math.round(now - lastVoice), chunks: chunks.length })
+            // SNAPSHOT the accumulated utterance-so-far WITHOUT stopping the recorder. chunks[0] holds the
+            // webm header (the recorder has run continuously since the turn began), so the snapshot decodes.
+            const blob = new Blob(chunks, { type: 'audio/webm' })
+            try {
+              const r = await api.stt(blob); const text = (r.text || '').trim()
+              api.voiceLog('autolisten_stt', { chars: text.length, empty: !text, text: text.slice(0, 200) })
+              if (text) {
+                const j = await api.finishedThought(text)
+                api.voiceLog('autolisten_judge', { verdict: j && j.verdict, finished: !!(j && j.finished), text: text.slice(0, 200) })
+                if (j && j.finished) {
+                  // FIRE — stop the recorder to FLUSH the tail into a final complete blob, then resolve.
+                  const finalBlob: Blob = await new Promise((res) => {
+                    rec.onstop = () => res(new Blob(chunks, { type: 'audio/webm' }))
+                    try { rec.stop() } catch { res(new Blob(chunks, { type: 'audio/webm' })) }
+                  })
+                  api.voiceLog('autolisten_fire', { chars: text.length })
+                  resolve({ blob: finalBlob, text }); return   // caller speaks the reply, then re-arms (fresh listenOnce)
+                }
+              }
+              // not finished (or empty) → KEEP the recorder running + KEEP the accumulated chunks; just reset
+              // the VAD pause-clock so the next pause re-evaluates the (now longer) accumulated thought. This
+              // is what makes a multi-segment thought heard WHOLE — we do NOT discard the pre-pause speech.
+              if (autoListenRef.current.stop) { try { rec.state !== 'inactive' && rec.stop() } catch {} ; resolve(null); return }
+              setNotice(text ? '… go on' : 'listening… (tap to stop)')
+              lastVoice = performance.now(); busy = false
+            } catch (e: any) {
+              try { rec.state !== 'inactive' && rec.stop() } catch {}
+              api.voiceLog('error', { where: 'autolisten', error: String(e?.message || e) })
+              setNotice('⚠ ' + (e?.message || e) + ' — tap to use push-to-talk')
+              resolve(null); return                            // fail loud → operator falls back to push-to-talk
+            }
+          }
+        }
+        setTimeout(tick, 150)
+      }
+      tick()
+    })
+
+    // THE SESSION LOOP: listen → fire → SPEAK (with barge-in watch) → re-arm. Runs until the operator stops.
+    ;(async () => {
+      while (!autoListenRef.current.stop) {
+        const fired = await listenOnce()
+        if (!fired || autoListenRef.current.stop) break
+        setNotice('you said: ' + fired.text); setRecording(false)
+        // SPEAK the reply. No recorder runs now (echo-safe). A concurrent barge-in WATCH ticks the analyser;
+        // sustained speech cancels the reply (bargeIn) and unblocks immediately so we re-arm at once.
+        let watching = true
+        const watchBargeIn = async () => {
+          let hot = 0
+          while (watching && !autoListenRef.current.stop) {
+            if (readRms() > BARGEIN_RMS) { if (++hot >= BARGEIN_FRAMES) { bargeIn(); break } }
+            else hot = 0
+            await new Promise(r => setTimeout(r, 80))
+          }
+        }
+        const watcher = watchBargeIn()
+        try { await runVoiceTurn(fired.blob) }                 // streamed persona-voice reply (V2.2)
+        catch (e: any) { api.voiceLog('error', { where: 'autolisten_turn', error: String(e?.message || e) }); setNotice('⚠ ' + (e?.message || e)) }
+        watching = false; await watcher                        // stop the barge-in watch before re-listening
+        if (autoListenRef.current.stop) break
+        setRecording(true); setNotice('listening… (tap to stop)')   // RE-ARM — the loop continues to listenOnce()
+      }
+      // session ended — make sure the mic is released + state cleared.
+      stream.getTracks().forEach(t => t.stop()); setRecording(false); setNotice('')
+    })()
   }
   // The mic press routes by the configured input mode (V1.3). Push-to-talk → recordToggle (tap/tap).
   // Auto-listen → start a hands-free session, or stop it if one is live. Both unlock audio in the gesture.
