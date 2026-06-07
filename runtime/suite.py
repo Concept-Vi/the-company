@@ -1054,8 +1054,10 @@ class Suite:
         "background": ModeSpec(
             label="Background",
             directive="Be minimal — surface only what genuinely needs the operator; otherwise a one-line acknowledgement.",
-            # background = low-noise: drop the chatty annotation/chat strata, keep the stable howto + events.
-            resolution={"strata": frozenset({"howto", "event", "run"}), "howto_detail": "terse", "budget": 1500},
+            # background = low-noise: drop the chatty annotation/chat strata, keep the stable howto +
+            # presentation_pref (F1 — a learned pref is address-truth, a sibling of howto) + events.
+            resolution={"strata": frozenset({"howto", "presentation_pref", "event", "run"}),
+                        "howto_detail": "terse", "budget": 1500},
             consent="act"),
         "focus": ModeSpec(
             label="Focus",
@@ -1082,8 +1084,10 @@ class Suite:
         "watch-and-react": ModeSpec(
             label="Watch & react",
             directive="Observe; comment only when relevant, and briefly.",
-            # observe lens: events + run-trail are what matters (what's HAPPENING), terse, no flood.
-            resolution={"strata": frozenset({"event", "run", "howto"}), "howto_detail": "terse", "budget": 1500},
+            # observe lens: events + run-trail are what matters (what's HAPPENING), terse, no flood; keep
+            # the stable howto + presentation_pref (F1 — address-truth, a sibling of howto).
+            resolution={"strata": frozenset({"event", "run", "howto", "presentation_pref"}),
+                        "howto_detail": "terse", "budget": 1500},
             consent="act"),
         "decide-for-me": ModeSpec(
             label="Decide for me",
@@ -1825,7 +1829,7 @@ class Suite:
                         or br.get("structural_dependencies") or br.get("semantic_neighbours")
                         or br.get("symbols"))
 
-        return {
+        bundle = {
             "address": ui_addr,
             "what_this_is": what_this_is,
             "how_to_change": how_to_change,
@@ -1844,6 +1848,12 @@ class Suite:
                 "how_to_use": how_to_use is not None,
             },
         }
+        # F1 LEARNING LOOP — the ADAPT step: CONSULT the learned presentation pref at this address and
+        # APPLY it (model-free) so address_help (and up_translate('address'), which composes it) REFLECTS
+        # how Tim has shaped this. No pref → the bundle is returned byte-for-byte (the clean default — no
+        # error, no fabrication; every existing address_help caller + acceptance is preserved). A stored
+        # junk pref RAISES (fail loud) via the consult-read's re-validation.
+        return self._apply_presentation_pref(bundle, self.presentation_pref_at(ui_addr))
 
     def current_locus(self) -> str | None:
         """R1 — READ the backend-held current `ui://` locus (the most-recent indicated address).
@@ -2103,6 +2113,52 @@ class Suite:
                  "text": f"[how-to @ {address}] {text}",
                  "pinned": True}]                              # PIN-PERSISTENT: the R2_PIN_WEIGHT bonus
 
+    def _r2_pref_at(self, address: str, now=None) -> list:
+        """F1 LEARNING LOOP — the PRESENTATION-PREFERENCE stratum at `address`: the learned "how Tim wants
+        <this> presented" resolved INTO the locus context as a NEW R2 gather source, MIRRORING `_r2_howto_at`
+        (the affordance stratum it is a sibling of — both are pin-persistent address-truth that must not
+        decay out of the bounded window).
+
+        PIN-PERSISTENT (the keystone): a learned pref is ALWAYS true at its address until Tim re-shapes it,
+        so it must not decay like a comment. Achieved WITHOUT touching `_r2_score` (same as `_r2_howto_at`):
+        emitted `pinned=True` (the R2_PIN_WEIGHT bonus) AND `ts=now` re-stamped EVERY gather (recency =
+        exp(-LAMBDA·0) = 1 — the max, never decaying). So the pref holds its rank turn-over-turn through the
+        EXISTING scorer — pure-data persistence, not a scorer special-case.
+
+        LATEST-WINS: reads the ACTIVE pref via `presentation_pref_at` (the same consult the adapt step uses,
+        one-source) — the most-recent shaping, so the context reflects Tim's CURRENT preference, not the
+        whole pref history. None / no pref → empty list (clean degrade — the RHM just gets the default
+        framing context). NO `_raw` key (so `_r2_dedup` keeps it unconditionally — it is never a comment
+        double-count). `kind='presentation_pref'` (distinct from 'annotation' so the comment-skip in
+        `_r2_gather` + the dedup echo logic never touch it). Generic over any address (registry-is-truth) —
+        the SAME 'read context at address → structured signal' shape a future mode auto-detect detector
+        reuses (the sibling seam, left clean)."""
+        from datetime import datetime, timezone
+        if now is None:
+            now = datetime.now(timezone.utc)
+        # AMBIENT-GATHER POSTURE (mirrors `_r2_run_strata`, NOT the explicit-consult posture): this runs on
+        # EVERY chat turn via `_r2_gather`. `presentation_pref_at` RAISES on a stored junk pref (the F6
+        # explicit-consult fail-loud) — but a single junk pref at the locus/an ancestor must NOT collapse
+        # the WHOLE locus gather to '' (the silent-degrade `_resolve_context_at`'s catch-all would cause).
+        # So here we CATCH it, WARN loudly (address-stamped — fail-loud-LEGIBLE), and SKIP this one stratum,
+        # never crashing/nuking the per-turn slice. The EXPLICIT up-translate consult (address_help/coa/
+        # up_translate) keeps raising — an operator asking to up-translate THAT address wants it loud.
+        try:
+            pref = self.presentation_pref_at(address)         # latest-wins; raises on a stored junk pref
+        except Exception as e:
+            self._emit("warning",
+                       f"F1 learning loop: malformed stored presentation pref at {address} "
+                       f"({type(e).__name__}) — skipped (the pref leg degraded; other context unaffected)",
+                       address=address)
+            return []
+        if not pref:
+            return []
+        directive = self.PRESENTATION_PREFS[pref["kind"]].format(arg=pref.get("arg"))
+        return [{"kind": "presentation_pref", "address": address,
+                 "ts": now.isoformat(),                        # PIN-PERSISTENT: re-stamped now → recency = 1
+                 "text": f"[presentation pref @ {address}] {directive}",
+                 "pinned": True}]                              # PIN-PERSISTENT: the R2_PIN_WEIGHT bonus
+
     def _r2_run_counterpart(self, locus: str, graph_id: str | None) -> str | None:
         """X6 (Convergence) — the ui://↔run:// BRIDGE: map a `ui://canvas/<node>` locus to its
         `run://<graph_id>/<node>` counterpart, the address where the SAME node's output-versions (L6,
@@ -2234,10 +2290,23 @@ class Suite:
         for addr in self._r2_ancestors(locus):
             if _ok("annotation"):
                 for a in self.annotations_at(addr):
+                    # F1 LEARNING LOOP — a presentation pref rides the SAME annotations.jsonl leaf (no
+                    # parallel store) but is NOT a comment: skip it in the comment stratum so it is not
+                    # double-counted (the howto-stratum class of double-count `_r2_dedup` guards) — it is
+                    # gathered as its OWN distinct `presentation_pref` stratum below, pin-persistent.
+                    if a.get("kind") == "presentation_pref":
+                        continue
                     items.append({"kind": "annotation", "address": addr, "ts": a.get("ts"),
                                   "text": f"[comment @ {addr}] {a.get('text', '')}",
                                   "_raw": (a.get("text", "") or ""),   # X8: underlying text, for dedup identity
                                   "pinned": bool(a.get("pinned"))})
+            # F1 LEARNING LOOP — the learned presentation pref at this ancestor rides R2 resolve-at-locus
+            # as its OWN distinct stratum (so a learned "present this terser" reaches the RHM's context the
+            # SAME way everything else does). Pin-persistent like the howto leg (a pref doesn't decay) and
+            # NO `_raw` key (so `_r2_dedup`'s "no _raw → never dropped" rule keeps it — it is never a
+            # comment double-count). Admitted under its own gather-kind so a lens can drop it.
+            if _ok("presentation_pref"):
+                items.extend(self._r2_pref_at(addr, now=now))
             if _ok("chat"):
                 for c in self.chats_at(addr):
                     items.append({"kind": "chat", "address": addr, "ts": c.get("ts"),
@@ -3576,6 +3645,156 @@ class Suite:
         parse_ui_address(address)                            # S0 grammar gate (raises on malformed)
         return self._overlay_pins(address, self.store.annotations_for(address))
 
+    # ============================================================================================
+    # F1 LEARNING LOOP — "how Tim wants <this> presented" (the presentation-preference store + adapt)
+    # ============================================================================================
+    # Tim's F1 expansion: he must be able to SHAPE how the system presents to him FROM INSIDE the system
+    # ("show me this differently / more / less / lead with X"), by voice OR typing, and it must ADAPT +
+    # REMEMBER — "how it presents to him is LEARNED." This is the net-new piece of F1. It REUSES, never
+    # rebuilds:
+    #   • the addressed-feedback substrate — a presentation pref is "a comment at an address" with a
+    #     presentation INTENT, so it rides the EXISTING `annotations.jsonl` store leaf (`append_annotation`)
+    #     with one additive structured marker (`kind:"presentation_pref"`). NO parallel store (rule 3).
+    #     It deliberately rides the PURE `annotate` leaf-shape (S0-gate + fail-loud guards mirrored here),
+    #     NOT `ingest_comment` — a presentation pref is a CONTROL signal, not twin gold-training data, so it
+    #     stays OUT of the located-gold `append_chat` pipe + the R2 [comment @ addr] framing noise (the
+    #     twin's gold corpus + the RHM's framing context stay clean).
+    #   • R2 resolve-at-locus — the pref is gathered as its OWN distinct `presentation_pref` stratum (NOT
+    #     collapsed into the comment stratum) so a learned pref rides the SAME machinery as everything else,
+    #     pin-persistent like the howto leg (a pref doesn't decay).
+    #   • the up-translate organs (up_translate / coa / address_help) CONSULT the pref at the address and
+    #     APPLY it (the adapt step) — model-free for the structural part (the pref REACHES the framing
+    #     input/shape), model-dependent only in the actual WORDING the model emits when honoring it.
+    # The chat path (voice OR typing) is the input — that rides the EXISTING `chat()` + `/api/chat`; the
+    # capture seam below is what a "present this differently" message records.
+    #
+    # The pref VOCABULARY (registry-is-truth, rule 8 — a pref-kind not in this set FAILS LOUD, never a
+    # silent ignore that the operator would read as "it remembered"). Each is a deterministic presentation
+    # intent the adapt step can apply structurally and/or thread into the framing prompt:
+    PRESENTATION_PREFS = {
+        "terser":    "Present this more tersely — fewer words, the essentials only.",
+        "more":      "Present this in more detail — expand, give me the fuller picture.",
+        "lead_with": "Lead with {arg} — put that first when presenting this.",
+        "shape":     "Present this as {arg} (the shape/form Tim recognises it by).",
+    }
+
+    def _validate_presentation_pref(self, pref: dict) -> dict:
+        """FAIL LOUD on a malformed preference (rule 4/8 — a junk pref must RAISE, never be silently
+        ignored or read as 'no pref', which the operator would misread as 'it remembered'). A valid pref is
+        `{kind: <one of PRESENTATION_PREFS>, arg?: <str, REQUIRED for the arg-taking kinds>}`. The
+        arg-taking kinds (`lead_with`/`shape`) carry a non-empty `arg`; the bare kinds (`terser`/`more`)
+        must NOT carry a meaningful arg-dependence (an arg is tolerated-but-ignored). Returns the
+        normalized pref dict (kind + arg-or-None)."""
+        if not isinstance(pref, dict):
+            raise ValueError(f"presentation pref must be a dict, got {type(pref).__name__} (fail loud)")
+        kind = pref.get("kind")
+        if kind not in self.PRESENTATION_PREFS:
+            raise ValueError(
+                f"unknown presentation pref kind {kind!r} — one of {tuple(self.PRESENTATION_PREFS)} "
+                "(rule 8: never fabricate/silently-accept a pref kind)")
+        arg = pref.get("arg")
+        if "{arg}" in self.PRESENTATION_PREFS[kind]:                  # an arg-taking kind
+            if not (isinstance(arg, str) and arg.strip()):
+                raise ValueError(f"presentation pref {kind!r} needs a non-empty 'arg' (fail loud)")
+            return {"kind": kind, "arg": arg.strip()}
+        return {"kind": kind, "arg": None}
+
+    def set_presentation_pref(self, address: str, pref: dict, text: str | None = None,
+                              source: str = "operator") -> dict:
+        """F1 LEARNING LOOP — the CAPTURE seam: record "how Tim wants <this> presented" at `address`.
+
+        Mirrors `annotate`'s GUARDS (it IS the annotate-branch of the addressed-feedback channel, with a
+        presentation intent) but carries a STRUCTURED pref so the adapt step is MODEL-FREE:
+          • S0 grammar gate FIRST (`parse_ui_address` RAISES on a malformed `ui://` — fail loud, so the
+            store never persists a junk key; the bridge's try/except turns the raise into a 400 for free).
+          • the pref is VALIDATED (`_validate_presentation_pref` RAISES on an unknown kind / a missing
+            required arg — the third distinct fail-loud guard the loop names, beside malformed-address and
+            empty-text).
+          • persist through the SAME `append_annotation` store leaf (one-source, no parallel store) with
+            the additive `kind:"presentation_pref"` marker + the structured `pref` + the human `text`. The
+            store is APPEND-ONLY, so an address accrues a pref HISTORY; the consult-read takes the LATEST
+            (latest-wins = "remembers the most recent shaping"). Persistence-survives-reload comes free
+            (the leaf reads disk every call — a FRESH Suite over the same store root reads Tim's learned
+            prefs).
+          • emit an addressed `presentation_pref` event so the shaping is visible on the live stream at its
+            locus (S2), distinct from the `annotation` event so it is never mistaken for a plain comment.
+
+        `text` defaults to the human form of the pref (so a bare structured capture still records a legible
+        comment line). DELIBERATELY does NOT call `ingest_comment` (no gold `append_chat`): a presentation
+        pref is a control signal, not twin training gold — keeping it out preserves the twin's gold corpus
+        and R2's [comment] framing context (the I6 SEPARATION spirit). `annotate`/`ingest_comment` are
+        UNTOUCHED (their contract + `annotation_acceptance` hold)."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                                    # S0 grammar gate — raises on malformed
+        norm = self._validate_presentation_pref(pref)                # fail loud on a malformed pref
+        human = self.PRESENTATION_PREFS[norm["kind"]].format(arg=norm.get("arg"))
+        rec_text = (text.strip() if (text and text.strip()) else human)
+        rec = self.store.append_annotation({
+            "kind": "presentation_pref", "address": address,
+            "pref": norm, "text": rec_text, "source": source})
+        self._emit("presentation_pref",
+                   f"present @ {address}: {norm['kind']}" + (f" {norm['arg']}" if norm.get("arg") else ""),
+                   address=address)
+        return rec
+
+    def presentation_pref_at(self, address: str) -> dict | None:
+        """F1 LEARNING LOOP — the CONSULT seam: the ACTIVE presentation pref at `address` (latest-wins), or
+        None when none is recorded (a CLEAN absence the adapt step degrades to the DEFAULT framing — never
+        an error, never a fabricated pref).
+
+        S0-gated (raises on a malformed address — same gate as the capture/read siblings). Reads the SAME
+        `annotations.jsonl` leaf the capture wrote (so a FRESH Suite over the same store root reads it —
+        reload-survival), filters for the `presentation_pref` marker, and returns the LAST (most-recent)
+        one's structured pref — RE-VALIDATED on read (`_validate_presentation_pref` RAISES on a stored junk
+        pref, so a corrupted record fails loud rather than silently degrading to 'no pref'). Generic over
+        any address (registry-is-truth) — the SAME 'read context at an address → structured signal' shape a
+        future mode auto-detect detector could call (the sibling seam; left clean, not built here)."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                                    # S0 grammar gate — raises on malformed
+        active = None
+        for rec in self.store.annotations_for(address):              # oldest-first → last loop = latest-wins
+            if rec.get("kind") == "presentation_pref":
+                active = rec
+        if active is None:
+            return None
+        return self._validate_presentation_pref(active.get("pref"))  # fail loud on a stored junk pref
+
+    def _apply_presentation_pref(self, bundle: dict, pref: dict | None) -> dict:
+        """F1 LEARNING LOOP — the ADAPT step (deterministic / MODEL-FREE) for the address path: thread a
+        consulted pref INTO an `address_help`/`up_translate('address')` envelope so the presentation
+        REFLECTS Tim's recorded shaping. Returns a NEW dict (never mutates the input — the un-adapted
+        bundle stays available; reflects-never-owns).
+
+        No pref → the bundle is returned UNCHANGED (the clean default — no error, no fabrication). With a
+        pref it:
+          • ATTACHES the structured pref to the envelope (`presentation_pref`) so any surface (the FE F1
+            lane — NEXT lane) can render it + a 'learned' marker WITHOUT re-deriving it;
+          • applies the pref STRUCTURALLY where the shape allows it model-free (the strongest model-free
+            proof): `lead_with:how_to_change` REORDERS the legs so the change-leg leads (a deterministic
+            re-shape the operator can SEE in the envelope); `terser`/`more`/`shape` are carried as a
+            framing DIRECTIVE on the envelope (`presentation_directive`) that the model honors in WORDING
+            (the model-dependent half — flagged) while the MECHANISM (pref recorded → consulted → reached
+            the envelope) is proven model-free.
+        The DIRECTIVE string is the human form of the pref (the same `PRESENTATION_PREFS` text the prompt
+        consumes) — single-source between the FE marker, the prompt thread, and the live stream event."""
+        if not pref:
+            return bundle
+        out = dict(bundle)
+        out["presentation_pref"] = pref
+        out["presentation_directive"] = self.PRESENTATION_PREFS[pref["kind"]].format(arg=pref.get("arg"))
+        # STRUCTURAL adapt (model-free, SEE-able in the envelope): lead_with reorders the address legs.
+        if pref["kind"] == "lead_with" and isinstance(out.get("lead"), str):
+            arg = (pref.get("arg") or "").lower()
+            # the address envelope's drillable MECHANISM is how-to-change; "lead with the change" surfaces
+            # a one-line change-lead AHEAD of the what-this-is lead (a deterministic, observable re-shape).
+            if arg in ("how_to_change", "how-to-change", "change", "mechanism"):
+                htc = out.get("mechanism") or {}
+                scope = htc.get("scope") if isinstance(htc, dict) else None
+                if scope:
+                    out["lead"] = f"[changes: {', '.join(str(s) for s in scope)}]  " + out["lead"]
+                    out["led_with"] = "how_to_change"
+        return out
+
     def attach_chat(self, address: str, text: str, role: str = "user", source: str | None = None) -> dict:
         """I7 — attach a chat turn to a `ui://` address (the dropped 4th attach-type, §21.1: the
         `chat://` content branch). The INVERSE of I6: I6 (`annotate`) writes its OWN annotations.jsonl;
@@ -4326,6 +4545,24 @@ class Suite:
         cfg = self.rhm_config()
         user = f"Decision class: {d.get('action')}. Default if ignored: {d.get('default')}. Payload: {payload}"
 
+        # F1 LEARNING LOOP — the ADAPT step for coa: if the surfaced item carries a `ui://` address (e.g. a
+        # build-intent minted at a locus), CONSULT the learned presentation pref there and THREAD its
+        # directive into the user prompt so the model honors how Tim wants this framed. The MECHANISM (pref
+        # recorded → consulted → reached the framing prompt) is proven MODEL-FREE (the `_complete` injection
+        # seam receives the directive in its prompt args); the WORDING the model actually emits honoring it
+        # is the model-dependent half (flagged). No address / no pref → the prompt is byte-for-byte the
+        # default (the clean default — no error, no fabricated directive). A stored junk pref RAISES (fail
+        # loud) via the consult-read's re-validation.
+        _pref_addr = payload.get("address") if isinstance(payload, dict) else None
+        _pref = None
+        if isinstance(_pref_addr, str) and _pref_addr.startswith("ui://"):
+            _pref = self.presentation_pref_at(_pref_addr)            # raises on a stored junk pref (fail loud)
+        presentation_directive = None
+        if _pref:
+            presentation_directive = self.PRESENTATION_PREFS[_pref["kind"]].format(arg=_pref.get("arg"))
+            user += (f"\n\nPRESENTATION PREFERENCE (Tim has shaped how he wants things at {_pref_addr} "
+                     f"presented — honor it in your framing): {presentation_directive}")
+
         def _live_complete(sys_p, usr, model, base_url) -> CoaFraming:
             from fabric import client, transport
             # `json=True` → the transport sets response_format={type:json_object} (transport.py:37) so the
@@ -4353,9 +4590,13 @@ class Suite:
                     "framing_struct": None, "raw": payload, "grounded": True, "degraded": True}
 
         # SHAPE is code-enforced (the schema validated); project to the FE text + expose the struct.
-        return {"id": surfaced_id, "class": d.get("action"),
-                "framing": struct.to_text(), "framing_struct": struct.model_dump(),
-                "raw": payload, "grounded": True, "degraded": False}
+        out = {"id": surfaced_id, "class": d.get("action"),
+               "framing": struct.to_text(), "framing_struct": struct.model_dump(),
+               "raw": payload, "grounded": True, "degraded": False}
+        if _pref:                                                    # F1: the consulted pref reached the framing
+            out["presentation_pref"] = _pref
+            out["presentation_directive"] = presentation_directive
+        return out
 
     # ============================================================================================
     # F1 — the GENERALIZED up-translate move: "present-this-at-Tim's-altitude" for ANY artifact
@@ -4411,10 +4652,15 @@ class Suite:
             lead = "  ".join(lead_parts) if lead_parts else (wti or f"{ref} (not registered)")
             grounded = bool(lp.get("what_this_is"))             # framed from a REAL registry row, not invented
             degraded = not (lp.get("what_this_is") and lp.get("how_to_use") and lp.get("how_to_change"))
-            return {"kind": "address", "ref": ref, "lead": lead,
-                    "mechanism": b.get("how_to_change"), "legs_present": lp,
-                    "grounded": grounded, "degraded": degraded,
-                    "note": (b.get("how_to_change") or {}).get("note")}
+            env = {"kind": "address", "ref": ref, "lead": lead,
+                   "mechanism": b.get("how_to_change"), "legs_present": lp,
+                   "grounded": grounded, "degraded": degraded,
+                   "note": (b.get("how_to_change") or {}).get("note")}
+            # F1 LEARNING LOOP — the ADAPT step on the COMPOSED envelope: address_help already consulted
+            # the pref (it rides `b["presentation_pref"]`); apply it to the up_translate `lead`/`mechanism`
+            # shape so the F1 envelope REFLECTS Tim's shaping (model-free: the pref reaches the envelope +
+            # reorders the lead). No pref → byte-for-byte the pre-loop envelope (the clean default).
+            return self._apply_presentation_pref(env, b.get("presentation_pref"))
 
         if kind == "decision":
             # REUSE coa — the value-framing + grounding guard + model-degrade already live there. Map its

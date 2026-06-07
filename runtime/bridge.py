@@ -168,6 +168,12 @@ class H(BaseHTTPRequestHandler):
                 # 400 (fail loud, mirrors /api/scope). Suite.annotations_at validates the address (S0)
                 # and returns the thread oldest-first. This is what R2 will gather at the operator's locus.
                 self._send(200, json.dumps(SUITE.annotations_at(q["address"])))
+            elif path == "/api/presentation-pref":         # F1: the ACTIVE learned presentation pref at a ui:// address
+                # The address-keyed READ side of the POST capture seam (latest-wins). Missing `address` →
+                # KeyError → 400 (fail loud, mirrors /api/annotations). Suite.presentation_pref_at validates
+                # the address (S0) + re-validates a stored junk pref (raises → 400). Returns the structured
+                # pref {kind, arg} or null (a clean absence — the adapt step degrades to the default).
+                self._send(200, json.dumps(SUITE.presentation_pref_at(q["address"])))
             elif path == "/api/chats":                     # I7: the chat THREAD attached to a ui:// address
                 # The address-keyed READ side of /api/attach-chat (POST). Missing `address` → KeyError →
                 # 400 (fail loud, mirrors /api/scope + /api/annotations). Suite.chats_at validates the
@@ -800,6 +806,27 @@ class H(BaseHTTPRequestHandler):
                 # annotation rec (unchanged response shape — retrieve the comment via GET /api/annotations).
                 self._send(200, json.dumps(SUITE.ingest_comment(
                     str(addr).strip(), b.get("text", ""), source=b.get("source", "operator"))))
+            elif self.path == "/api/presentation-pref":  # F1 LEARNING LOOP: record "how Tim wants <this>
+                # presented" at a ui:// ADDRESS — the CAPTURE seam. It IS the annotate-branch of the
+                # addressed-feedback channel (a comment at an address WITH a presentation intent), so it
+                # rides the SAME annotations.jsonl store leaf, but with a STRUCTURED pref so the adapt step
+                # (up_translate/coa/address_help consult it) is MODEL-FREE. OPERATOR face. The VOICE/TYPING
+                # input that PRODUCES "show me this differently" rides the existing chat path (/api/chat);
+                # this is the recorder a parsed presentation intent calls. Suite.set_presentation_pref
+                # S0-validates the address (raises → 400) AND validates the pref kind/arg (raises → 400 on a
+                # malformed pref — fail loud, no silent ignore). Persists keyed by address; consulted via
+                # the up-translate organs; survives reload (the leaf reads disk every call). Fail loud on a
+                # missing address or pref (no silent no-op — AGENTS.md rule 4).
+                b = self._body()
+                addr = b.get("address")
+                pref = b.get("pref")
+                if not addr or not str(addr).strip():
+                    raise ValueError("/api/presentation-pref needs a non-empty 'address' (fail loud)")
+                if not isinstance(pref, dict):
+                    raise ValueError("/api/presentation-pref needs a structured 'pref' object "
+                                     "{kind, arg?} (fail loud — no silent ignore)")
+                self._send(200, json.dumps(SUITE.set_presentation_pref(
+                    str(addr).strip(), pref, text=b.get("text"), source=b.get("source", "operator"))))
             elif self.path == "/api/pin":                # X7: pin/unpin an attached item at a ui:// ADDRESS
                 # OPERATOR face (beside /api/annotate, /api/attach-chat) — the SET path for the dead pin
                 # term: `pinned` is read in `_r2_score` but nothing set it. This records a pin/unpin of the
