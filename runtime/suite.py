@@ -4261,8 +4261,19 @@ class Suite:
         actx = self._affordance_context(graph_id, focus)
         tools = self._rhm_tools(mode, actx)
 
+        # S2 — the history that FEEDS THE MODEL must be the CURRENT conversation's, not the global stream.
+        # `_current_thread` is set by new_conversation/load_conversation; read it HERE (before building msgs)
+        # so a freshly-started conversation feeds an EMPTY history (it carries no prior thread's turns) and a
+        # reopened one feeds exactly its own turns. With no thread (None) this is the legacy global stream
+        # (chat_history), byte-for-byte the prior behaviour — back-compat. (The bug it fixes: chat_history(20)
+        # here ignored the thread, so the model saw the PRIOR conversation's last 20 turns even right after
+        # "new conversation" → the first reply "defaulted to the same original one". The turns were already
+        # PERSISTED + RETURNED thread-scoped below; only this model-input read leaked. Limit matched (20) for
+        # context-window parity.)
+        _tid = getattr(self, "_current_thread", None)
+        prior = self.store.chats_in_thread(_tid, 20) if _tid else self.store.chat_history(20)
         msgs = [{"role": "system", "content": sys_p + "\n\n" + self._chat_context(graph_id, focus)}]
-        for t in self.store.chat_history(20):
+        for t in prior:
             msgs.append({"role": t["role"], "content": t["text"]})
         msgs.append({"role": "user", "content": message})
 
@@ -4394,9 +4405,9 @@ class Suite:
             action_field = outcomes
         # provenance grading (B3): Tim's words are gold (train the twin); the twin's are working.
         # S2 — thread the turn into the CURRENT conversation (the additive thread_id; None = the global/legacy
-        # stream, back-compat). The current thread is set by new_conversation/load_conversation, so chat() AND
-        # the voice paths auto-thread without a signature change.
-        _tid = getattr(self, "_current_thread", None)
+        # stream, back-compat). `_tid` was read above (the same in-memory current-thread that scoped the model
+        # input), so the turns are PERSISTED under the same thread they were REASONED in — input and storage
+        # agree by construction.
         self.store.append_chat({"role": "user", "text": message, "grade": self._provenance_grade("user"), "source": self._provenance_source("user"), **({"thread_id": _tid} if _tid else {})})
         self.store.append_chat({"role": "assistant", "text": reply, "action": action_field,
                                 "grade": self._provenance_grade("assistant"), "source": self._provenance_source("assistant"), **({"thread_id": _tid} if _tid else {})})
