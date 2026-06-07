@@ -3212,6 +3212,43 @@ class Suite:
         return {"finished": verdict == "FINISHED", "verdict": verdict, "text": t,
                 "judge_model": r["model"], "ms": ms}
 
+    # --- conversation threads (S2): new / list / reopen. A thread is a pure CONVERSATION (independent of
+    # the canvas graph). The CURRENT thread is held in-memory (single operator, like _current_locus); chat()
+    # + the voice paths tag their turns with it. Persisted via the store's chat_threads + the additive
+    # thread_id on chat.jsonl turns — one source, back-compatible (no thread = the legacy global stream). ---
+    def new_conversation(self, title: str = "") -> dict:
+        """Start a fresh conversation: mint + persist a thread record, make it current. Subsequent chat/voice
+        turns thread into it. Returns the thread record."""
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        tid = "conv-" + now.strftime("%Y%m%d-%H%M%S-%f")     # microsecond → collision-safe id (no uuid dep)
+        rec = {"id": tid, "title": (title or "").strip(), "created": now.isoformat(), "last_msg": None}
+        self.store.save_chat_thread(rec)
+        self._current_thread = tid
+        return {"thread_id": tid, **rec}
+
+    def list_conversations(self, limit: int = 30) -> list:
+        """The previous conversations, newest-active first — for the reopen list."""
+        cur = getattr(self, "_current_thread", None)
+        out = []
+        for tid in self.store.list_chat_threads():
+            t = self.store.load_chat_thread(tid) or {"id": tid}
+            out.append({"id": tid, "title": t.get("title", ""), "created": t.get("created"),
+                        "last_msg": t.get("last_msg"), "current": tid == cur})
+        out.sort(key=lambda r: (r.get("last_msg") or r.get("created") or ""), reverse=True)
+        return out[:limit]
+
+    def load_conversation(self, thread_id: str) -> dict:
+        """Reopen a conversation: make it current + return its history (the turns that carry its thread_id)."""
+        t = self.store.load_chat_thread(thread_id)
+        if not t:
+            raise ValueError(f"unknown conversation {thread_id!r} — registered: {self.store.list_chat_threads()}")
+        self._current_thread = thread_id
+        return {"id": thread_id, "title": t.get("title", ""), "history": self.store.chats_in_thread(thread_id)}
+
+    def current_conversation(self) -> str | None:
+        return getattr(self, "_current_thread", None)
+
     def chat(self, message: str, graph_id: str, focus: dict | None = None) -> dict:
         """Grounded conversation with the operator via NATIVE TOOL-CALLING. Answers from compact
         ground truth; never confabulates system facts. It ACTS only through the governed verbs offered
@@ -3375,10 +3412,25 @@ class Suite:
             action_field = outcomes[0]
         else:
             action_field = outcomes
-        # provenance grading (B3): Tim's words are gold (train the twin); the twin's are working
-        self.store.append_chat({"role": "user", "text": message, "grade": self._provenance_grade("user"), "source": self._provenance_source("user")})
+        # provenance grading (B3): Tim's words are gold (train the twin); the twin's are working.
+        # S2 — thread the turn into the CURRENT conversation (the additive thread_id; None = the global/legacy
+        # stream, back-compat). The current thread is set by new_conversation/load_conversation, so chat() AND
+        # the voice paths auto-thread without a signature change.
+        _tid = getattr(self, "_current_thread", None)
+        self.store.append_chat({"role": "user", "text": message, "grade": self._provenance_grade("user"), "source": self._provenance_source("user"), **({"thread_id": _tid} if _tid else {})})
         self.store.append_chat({"role": "assistant", "text": reply, "action": action_field,
-                                "grade": self._provenance_grade("assistant"), "source": self._provenance_source("assistant")})
+                                "grade": self._provenance_grade("assistant"), "source": self._provenance_source("assistant"), **({"thread_id": _tid} if _tid else {})})
+        if _tid:                                               # bump the thread's last_msg for the list ordering
+            try:
+                _t = self.store.load_chat_thread(_tid)
+                if _t:
+                    from datetime import datetime, timezone
+                    _t["last_msg"] = datetime.now(timezone.utc).isoformat()
+                    if not _t.get("title"):
+                        _t["title"] = message.strip()[:48]     # title from the first turn if unnamed
+                    self.store.save_chat_thread(_t)
+            except Exception:
+                pass                                           # thread metadata is best-effort, never break a turn
         self._emit("chat", f"you: {message[:48]}", address="ui://chrome/chat")   # S2: chat organ event carries its locus
         # OFFER-WITH-OPTIONS: a `suggest` tool_call rides back as a `proposal` (the FE renders the one-click
         # card; approve → /api/act). Additive + back-compat: None when the turn dispatched/spoke instead of

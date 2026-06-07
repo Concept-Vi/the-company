@@ -119,6 +119,10 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.now(gid)))
             elif path == "/api/chat":
                 self._send(200, json.dumps(SUITE.chat_history(40)))
+            elif path == "/api/conversations":               # S2: the previous threads (reopen list)
+                self._send(200, json.dumps(SUITE.list_conversations(int(q.get("limit", 30)))))
+            elif path == "/api/conversation":                 # S2: reopen one → make current + its history
+                self._send(200, json.dumps(SUITE.load_conversation(q["thread_id"])))
             elif path == "/api/rhm-config":
                 self._send(200, json.dumps(SUITE.rhm_config()))
             elif path == "/api/inbox":
@@ -578,6 +582,9 @@ class H(BaseHTTPRequestHandler):
                 b = self._body()
                 gid = b.get("graph_id", DEMO)
                 self._send(200, json.dumps(SUITE.chat(b["message"], gid, focus=b.get("focus"))))
+            elif self.path == "/api/conversation/new":    # S2: start a fresh conversation (becomes current)
+                b = self._body()
+                self._send(200, json.dumps(SUITE.new_conversation(b.get("title", ""))))
             elif self.path == "/api/mode":                # the presence dial — set the RHM mode
                 b = self._body()
                 SUITE.set_mode(b["mode"])
