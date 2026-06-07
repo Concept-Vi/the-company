@@ -1247,8 +1247,8 @@ export function useAppController(editor: Editor) {
         let ev: any; try { ev = JSON.parse(s) } catch { continue }
         if (ev.type === 'transcript') { setNotice('you said: ' + ev.text); if (ev.text) setChat(c => [...c, { role: 'user', text: ev.text }]) }
         else if (ev.type === 'reply') { if (ev.text) setChat(c => [...c, { role: 'assistant', text: ev.text }]) }
-        else if (ev.type === 'chunk') { try { await playWavBuffer(b64ToArrayBuffer(ev.wav_b64)) } catch { /* keep streaming the rest */ } }
-        else if (ev.type === 'error') { setNotice('⚠ ' + ev.error) }                 // fail loud (V2.3)
+        else if (ev.type === 'chunk') { try { await playWavBuffer(b64ToArrayBuffer(ev.wav_b64)) } catch (e: any) { api.voiceLog('play_fail', { idx: ev.idx, error: String(e?.message || e) }) } }   // iOS/audio playback failure — captured, not silent
+        else if (ev.type === 'error') { api.voiceLog('stream_error', { error: ev.error, step: ev.step, turn_id: ev.turn_id }); setNotice('⚠ ' + ev.error) }   // fail loud (V2.3) + durable
         else if (ev.type === 'done') { setNotice(''); poll() }
       }
     }
@@ -1292,7 +1292,8 @@ export function useAppController(editor: Editor) {
         try { await runVoiceTurn(blob) } catch (e: any) { setNotice('voice turn error — type instead: ' + (e?.message || e)) }
       }
       recorderRef.current = rec; rec.start(); setRecording(true); setNotice('listening… (click again to stop)')
-    } catch { setNotice('mic unavailable — grant microphone permission') }
+      api.voiceLog('ptt_start', { input_mode: 'push_to_talk' })   // push-to-talk recording opened
+    } catch { api.voiceLog('mic_denied', { mode: 'push_to_talk' }); setNotice('mic unavailable — grant microphone permission') }
   }
   // V1.1 — AUTO-LISTEN (hands-free, "reply on a finished thought, not a silence timer"). One continuous
   // recorder; a Web Audio analyser watches RMS for a speech→silence PAUSE; on a pause the utterance-so-far
@@ -1309,8 +1310,9 @@ export function useAppController(editor: Editor) {
     primeAudio()                                               // unlock audio in this gesture (V2.1)
     let stream: MediaStream
     try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }) }
-    catch { setNotice('mic unavailable — grant microphone permission'); return }
+    catch { api.voiceLog('mic_denied', { mode: 'auto_listen' }); setNotice('mic unavailable — grant microphone permission'); return }
     autoListenRef.current = { stop: false, stream }
+    api.voiceLog('autolisten_start', { input_mode: 'auto_listen', silence_ms: 800, speech_rms: 0.015 })   // session opened (mic granted)
     setRecording(true); setNotice('listening… (tap to stop)')
     const ctx = audioCtxRef.current || new (window.AudioContext || (window as any).webkitAudioContext)()
     audioCtxRef.current = ctx
@@ -1332,20 +1334,24 @@ export function useAppController(editor: Editor) {
         if (rms > SPEECH_RMS) { spoke = true; lastVoice = now }
         if (spoke && (now - lastVoice) > SILENCE_MS && chunks.length) {
           busy = true
+          api.voiceLog('vad_pause', { silence_ms: Math.round(now - lastVoice), chunks: chunks.length })   // the loop saw a pause
           const blob = new Blob(chunks, { type: 'audio/webm' })
           try {
             const r = await api.stt(blob); const text = (r.text || '').trim()
+            api.voiceLog('autolisten_stt', { chars: text.length, empty: !text, text: text.slice(0, 200) })   // what the ear heard at the pause
             if (text) {
               const j = await api.finishedThought(text)
+              api.voiceLog('autolisten_judge', { verdict: j && j.verdict, finished: !!(j && j.finished), text: text.slice(0, 200) })   // fire or keep listening?
               if (j && j.finished) {
                 try { rec.pause() } catch {}                   // pause capture so the reply isn't heard as input
                 setNotice('you said: ' + text); setRecording(false)
+                api.voiceLog('autolisten_fire', { chars: text.length })   // the turn fired
                 await runVoiceTurn(blob)                       // streamed persona-voice reply (V2.2)
                 chunks = []; spoke = false; lastVoice = performance.now()
                 if (!autoListenRef.current.stop) { try { rec.resume() } catch {} ; setRecording(true); setNotice('listening… (tap to stop)') }
               } else { setNotice('… go on'); lastVoice = performance.now() }  // not finished — keep him talking
             }
-          } catch (e: any) { setNotice('⚠ ' + (e?.message || e) + ' — tap to use push-to-talk') }  // fail loud → ptt fallback
+          } catch (e: any) { api.voiceLog('error', { where: 'autolisten', error: String(e?.message || e) }); setNotice('⚠ ' + (e?.message || e) + ' — tap to use push-to-talk') }  // fail loud → ptt fallback
           busy = false
         }
       }

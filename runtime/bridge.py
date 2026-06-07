@@ -402,6 +402,9 @@ class H(BaseHTTPRequestHandler):
             except Exception:
                 pass
             return gone[0]
+        import uuid as _uuid
+        turn_id = _uuid.uuid4().hex[:12]      # correlates every record + client event for THIS turn
+        transcript = ""; reply = ""; eng = ""; step = "init"; t0 = _t.monotonic()
         try:
             if not persona:
                 raise ValueError("/api/voice/stream needs ?persona=<id> (fail loud)")
@@ -413,7 +416,6 @@ class H(BaseHTTPRequestHandler):
             eng_override = (_rc.get("tts_engine") or "").strip() or None   # G4.2 engine/voice override slots
             voice_override = (_rc.get("tts_voice") or "").strip() or None
             eng = eng_override or p["engine"]                     # override wins; else the persona's engine
-            t0 = _t.monotonic()
             speak_reply = SUITE.voice_enabled()
             # boot-on-demand (only if we'll speak)
             if speak_reply:
@@ -422,12 +424,14 @@ class H(BaseHTTPRequestHandler):
                     emit({"type": "error", "error": f"engine {eng} ({svc}) is down — load it "
                           f"(POST /api/voice/load) or use ?boot=1 on /api/voice/turn first"}); return
             ear = SUITE.rhm_config().get("stt") or voice_stt.active_ear()
+            step = "stt"
             heard = voice_stt.transcribe(audio, provider=ear)
             transcript = (heard.get("text") or "").strip()
             stt_ms = int((_t.monotonic() - t0) * 1000)
             emit({"type": "transcript", "text": transcript, "ms": stt_ms})
             if not transcript:
                 raise RuntimeError("empty transcript — STT heard nothing (fail loud)")
+            step = "think"
             thought = SUITE.chat(transcript, gid)                 # the ONE in-process brain (full reply)
             reply = (thought.get("reply") or "").strip()
             think_ms = int((_t.monotonic() - t0) * 1000) - stt_ms
@@ -441,6 +445,7 @@ class H(BaseHTTPRequestHandler):
             if not speak_reply:
                 emit({"type": "done", "total_ms": int((_t.monotonic() - t0) * 1000), "spoke": False, "reply": reply}); return
             # split into sentences → synth + stream each AS IT'S READY (the streaming win)
+            step = "tts"
             sentences = [s.strip() for s in _re.split(r'(?<=[.!?])\s+', reply) if s.strip()] or [reply]
             voice_arg = voice_override or voice_loop._voice_arg_for(p, eng)   # G4.2: voice for the SELECTED engine (any persona × any engine)
             done_n = 0
@@ -454,16 +459,30 @@ class H(BaseHTTPRequestHandler):
                       "ms": int((_t.monotonic() - cs) * 1000)})
                 done_n = idx + 1
             total = int((_t.monotonic() - t0) * 1000)
+            step = "done"
             if gone[0]:                                       # cancelled mid-stream — record it (server-side; the socket's dead)
-                SUITE.emit_run_record("voice.stream.cancelled", total, stt_ms=stt_ms, think_ms=think_ms,
-                                      chunks_done=done_n, chunks_total=len(sentences), persona=persona, engine=eng)
+                SUITE.emit_run_record("voice.stream.cancelled", total, turn_id=turn_id, ok=False, step="cancelled",
+                                      stt_ms=stt_ms, think_ms=think_ms, chunks_done=done_n, chunks_total=len(sentences),
+                                      persona=persona, engine=eng, transcript=transcript[:2000], reply=reply[:4000])
                 return
-            SUITE.emit_run_record("voice.stream", total, stt_ms=stt_ms, think_ms=think_ms,
-                                  chunks=len(sentences), persona=persona, engine=eng, ear=ear)
-            emit({"type": "done", "total_ms": total, "spoke": True, "chunks": len(sentences), "reply": reply})
-        except Exception as e:                                     # fail loud as a stream event, then close
+            # the DETAILED, durable per-turn log line (Tim 2026-06-07): the texts + per-step timings + config,
+            # so a whole turn is investigable from the event log (op=voice.stream, keyed by turn_id).
+            SUITE.emit_run_record("voice.stream", total, turn_id=turn_id, ok=True, stt_ms=stt_ms, think_ms=think_ms,
+                                  chunks=len(sentences), persona=persona, engine=eng, ear=ear,
+                                  input_mode=SUITE.rhm_config().get("voice_input_mode"),
+                                  transcript=transcript[:2000], reply=reply[:4000])
+            emit({"type": "done", "total_ms": total, "spoke": True, "chunks": len(sentences), "reply": reply, "turn_id": turn_id})
+        except Exception as e:                                     # fail loud — to the client AND DURABLY to the log
+            # the error used to vanish with the socket. Now a durable record: WHICH step failed, the error,
+            # the texts so far, the config — everything needed to investigate a failed turn from the log.
             try:
-                emit({"type": "error", "error": f"{type(e).__name__}: {e}"})
+                SUITE.emit_run_record("voice.stream", int((_t.monotonic() - t0) * 1000), turn_id=turn_id, ok=False,
+                                      step=step, error=f"{type(e).__name__}: {e}", persona=persona, engine=eng,
+                                      ear=SUITE.rhm_config().get("stt"), transcript=transcript[:2000], reply=reply[:4000])
+            except Exception:
+                pass
+            try:
+                emit({"type": "error", "error": f"{type(e).__name__}: {e}", "step": step, "turn_id": turn_id})
             except Exception:
                 pass
 
@@ -599,9 +618,11 @@ class H(BaseHTTPRequestHandler):
                 stt_ms = marks.get("stt")
                 think_ms = (marks["think_done"] - stt_ms) if ("think_done" in marks and stt_ms is not None) else None
                 tts_ms = (total - marks["think_done"]) if "think_done" in marks else None
-                SUITE.emit_run_record("voice.turn", total, stt_ms=stt_ms, think_ms=think_ms,
+                SUITE.emit_run_record("voice.turn", total, ok=True, stt_ms=stt_ms, think_ms=think_ms,
                                       tts_ms=tts_ms, persona=persona, engine=r.get("engine"),
-                                      ear=ear, spoke=r.get("spoke", True))
+                                      ear=ear, spoke=r.get("spoke", True),
+                                      input_mode=SUITE.rhm_config().get("voice_input_mode"),
+                                      transcript=(r.get("transcript") or "")[:2000], reply=(r.get("reply") or "")[:4000])
                 wav = r.pop("wav", b"")
                 r["wav_b64"] = _b64.b64encode(wav).decode()       # the spoken reply, travels with the text
                 r["timing"] = {"total_ms": total, "stt_ms": stt_ms, "think_ms": think_ms, "tts_ms": tts_ms}
@@ -834,6 +855,15 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/voice/finished-thought":  # G1.3: the semantic endpoint judge (brain-side)
                 b = self._body()
                 self._send(200, json.dumps(SUITE.is_finished_thought(b.get("text", ""))))
+            elif self.path == "/api/voice/log":            # client-side voice trace (Tim 2026-06-07): the
+                # browser reports its half of the live loop (VAD pause, recording start/stop, judge-call,
+                # turn-fire, chunk playback ok/fail, errors) into the ONE event log so the WHOLE process is
+                # investigable. {event, turn_id?, ms?, ...} → op=voice.client. Lenient (never breaks a turn).
+                b = self._body()
+                ev = (b.pop("event", "") or "").strip()
+                if ev:
+                    SUITE.voice_log(ev, **{k: v for k, v in b.items() if k != "event"})
+                self._send(200, json.dumps({"logged": bool(ev)}))
             elif self.path == "/api/review/next":          # B: Next — open the gate, fire the step, advance
                 b = self._body()
                 self._send(200, json.dumps(SUITE.next(b["session"])))

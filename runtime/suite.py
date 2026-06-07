@@ -339,6 +339,20 @@ class Suite:
             out.append(rec)
         return {"ops": sorted(out, key=lambda r: -r["n"]), "total_records": len(evs)}
 
+    def voice_log(self, event: str, **data) -> None:
+        """Client-side voice trace (Tim 2026-06-07: "store the process to a proper log so you can
+        investigate"). The browser owns half the live voice loop — VAD pause detection, recording
+        start/stop, the finished-thought judge calls, chunk playback (iOS), errors — none of which the
+        server sees. The FE reports those steps here so the WHOLE process is reconstructable from the ONE
+        event log alongside the server-side voice.stream/voice.turn/judge records (NOT a parallel log —
+        introspective-data-building, op='voice.client'). Lenient: a trace write must never break a turn.
+        `data` carries turn_id (correlate to the server turn), ms, and event-specific fields."""
+        ms = data.pop("ms", 0)
+        try:
+            self.emit_run_record("voice.client", int(ms or 0), event=str(event), **data)
+        except Exception:
+            pass
+
     def _emit_durable(self, kind: str, summary: str, **meta) -> dict:
         """Append a DURABLE CLAIM event — FAIL LOUD (T1-EMIT). Unlike _emit (lenient telemetry), this
         does NOT swallow a failure: it returns the written record, and lets any append_event exception
@@ -3289,7 +3303,7 @@ class Suite:
         # G7 run-record: the judge is on the LIVE turn path — how long it took, on which model, the
         # verdict (the condition that matters for tuning the always-listen feel). Rollups reveal whether
         # the bound judge model is fast enough live (the deepseek-6.5s lesson, measured per use).
-        self.emit_run_record("judge", ms, model=r["model"], verdict=verdict)
+        self.emit_run_record("judge", ms, model=r["model"], verdict=verdict, text=t[:240])
         return {"finished": verdict == "FINISHED", "verdict": verdict, "text": t,
                 "judge_model": r["model"], "ms": ms}
 

@@ -123,6 +123,11 @@ export const api = {
   // and fit/no-fit + what to unload. Config-derived → tracks a resize (brain @256K vs @64K).
   fit: (services: string[]) => fetch('/api/fit?services=' + encodeURIComponent(services.join(','))).then(jr),
   modelLoad: (service: string) => fetch('/api/model/load', { method: 'POST', headers: J, body: JSON.stringify({ service }) }).then(jr),
+  // voice trace (Tim 2026-06-07): the browser reports its half of the live voice loop (VAD pause,
+  // recording, judge-call, turn-fire, playback, errors) into the ONE event log so the WHOLE process is
+  // investigable. Fire-and-forget — a trace write must NEVER break a turn; swallow any failure.
+  voiceLog: (event: string, data: any = {}) =>
+    fetch('/api/voice/log', { method: 'POST', headers: J, body: JSON.stringify({ event, ...data }) }).catch(() => {}),
   // S5 — set a serve-time model config (e.g. context window) + restart; + the per-TTS-engine knob catalog.
   modelConfig: (service: string, key: string, value: any) => fetch('/api/model/config', { method: 'POST', headers: J, body: JSON.stringify({ service, key, value }) }).then(jr),
   voiceEngineKnobs: () => fetch('/api/voice/engine-knobs').then(jr),
