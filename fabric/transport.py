@@ -25,6 +25,31 @@ def list_models(base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama", timeo
     return [m for m in ids if "gemini" not in m.lower()]
 
 
+def _apply_response_format(body: dict, opts: dict) -> None:
+    """Set body["response_format"] from opts — the ONE structured-output decision, shared by
+    openai_transport AND openai_tools_transport (single-source so the two transports agree by
+    construction; reuse, not a second copy). Precedence (schema-additive — C2 / R1-FOLD F9):
+
+      1. opts["json_schema"]  → response_format {"type":"json_schema","json_schema": <dict>}.
+         SERVER-SIDE schema-CONSTRAINED decoding (vLLM ≥0.21 guided/structured outputs). The caller
+         passes the FULL OpenAI/vLLM json_schema object — {"name": <role_id>, "schema": <JSON schema>}
+         (the actual schema nests UNDER "schema", "name" is its sibling; flattening 400s the server).
+         A role's declared output_schema (a Pydantic model) flows through as
+         {"name": role.id, "schema": role.output_schema.model_json_schema()} when the caller opts in.
+      2. opts["schema"] OR opts["json"]  → {"type":"json_object"} — the EXISTING bare-JSON path,
+         UNCHANGED, so every current json=True caller (run_role, the judge, G0/G1/G2/G3) is unaffected.
+      3. neither  → no response_format (free text), unchanged.
+
+    This is a DECODE strengthening, NOT the enforcement: fabric.client.complete()'s parse/validate/
+    retry remains the guarantee (R1-FOLD F9). If the server rejects/ignores json_schema, the call
+    raises (urlopen on a 400) → complete() retries → FabricError (fail loud, never silent — rule 4).
+    """
+    if opts.get("json_schema") is not None:
+        body["response_format"] = {"type": "json_schema", "json_schema": opts["json_schema"]}
+    elif opts.get("schema") is not None or opts.get("json"):
+        body["response_format"] = {"type": "json_object"}      # structured-output request (existing path)
+
+
 def openai_transport(base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama", timeout: int = DEFAULT_TIMEOUT):
     """Build a transport bound to an OpenAI-compatible endpoint.
 
@@ -34,8 +59,7 @@ def openai_transport(base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama", 
     def transport(model: str, messages: list, **opts) -> str:
         forbid_gemini(model)                                   # hard constraint, fail loud
         body = {"model": model, "messages": messages, "stream": False}
-        if opts.get("schema") is not None or opts.get("json"):
-            body["response_format"] = {"type": "json_object"}  # structured-output request
+        _apply_response_format(body, opts)                     # json_schema branch › json_object › off
         for k in ("temperature", "max_tokens", "top_p"):
             if k in opts:
                 body[k] = opts[k]
@@ -64,8 +88,7 @@ def openai_tools_transport(base_url: str = DEFAULT_BASE_URL, api_key: str = "oll
     def transport(model: str, messages: list, **opts) -> dict:
         forbid_gemini(model)                                   # hard constraint, fail loud, FIRST
         body = {"model": model, "messages": messages, "stream": False}
-        if opts.get("schema") is not None or opts.get("json"):
-            body["response_format"] = {"type": "json_object"}  # structured-output request
+        _apply_response_format(body, opts)                     # json_schema branch › json_object › off
         for k in ("temperature", "max_tokens", "top_p"):
             if k in opts:
                 body[k] = opts[k]
