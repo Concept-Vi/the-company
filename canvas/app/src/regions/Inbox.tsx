@@ -18,16 +18,24 @@ import { isBuildIntent } from '../api'
 import { useApp } from '../AppContext'
 
 export function Inbox() {
-  const { inbox, session, wtBusy, events, types, showResolved, startWalk, openCoa, addNode, setShowResolved, resolveUiTarget } = useApp()
+  const { inbox, session, wtBusy, events, types, showResolved, startWalk, openCoa, addNode, setShowResolved, resolveUiTarget, reviveOffer } = useApp()
 
   const escalations = inbox.counts?.escalations || 0
   const resolvedCount = inbox.counts?.resolved || 0
   const liveEsc: any[] = inbox.live_escalations || []
   const builds = liveEsc.filter(isBuildIntent)
 
-  // U12: the REMAINING (non-build) escalations grouped by ACTION into visual lanes; a `(test)` heuristic
-  // separates test-pollution so it's visible-but-distinct.
-  const others = liveEsc.filter((d: any) => !isBuildIntent(d))
+  // B3 · the DEFERRED-OFFER lane (§6B QUEUE mode): live offers the operator queued for later. They are a
+  // DISTINCT action class (`deferred_offer`) carrying the full revival state in payload.proposal, so split
+  // them out BEFORE the generic action-grouping (like builds) — each renders as a RESUME card whose click
+  // RE-OPENS the live interactive offer (reviveOffer → the ProposeAffordance card), NOT a dead queue line.
+  // NB: this is a DIFFERENT lane from the W7 `deferred-queue` below (concurrency-HELD builds read from
+  // events by seq) — own data-ui-ref, never folded into it.
+  const deferredOffers = liveEsc.filter((d: any) => d.action === 'deferred_offer')
+
+  // U12: the REMAINING (non-build, non-deferred-offer) escalations grouped by ACTION into visual lanes; a
+  // `(test)` heuristic separates test-pollution so it's visible-but-distinct.
+  const others = liveEsc.filter((d: any) => !isBuildIntent(d) && d.action !== 'deferred_offer')
   const isTest = (d: any) => /test|fixture|pollut|sample|demo/i.test(((d.payload?.name || '') + ' ' + (d.id || '')))
   const actionLanes: Record<string, any[]> = {}
   others.forEach(d => { const k = (isTest(d) ? 'test · ' : '') + (d.action || 'decision'); (actionLanes[k] = actionLanes[k] || []).push(d) })
@@ -82,6 +90,34 @@ export function Inbox() {
         </div>
       )}
 
+      {/* B3 · the DEFERRED-OFFER lane (wire-blue, like builds — these are live consent conversations the
+         operator parked). Each card RESUMES the offer: clicking re-opens the interactive ProposeAffordance
+         card (options + steer + approve) from where it was left. Nothing runs until that approve. */}
+      {/* NB: NO data-ui-ref yet — `ui://inbox/deferred-offers` is not in design/_system/addresses.json
+         (the corpus is owned by a file-disjoint lane; the orphan check ui_registry_acceptance forbids an
+         unregistered data-ui-ref). Flagged for the corpus-registration batch (same class as the pending
+         ui://settings/* · ui://inspector/help · ui://toolbar/guide). The lane works fully without it. */}
+      {deferredOffers.length > 0 && (
+        <div className="ibx-lane">
+          <LaneHead tone="wire" count={deferredOffers.length}>⏸ parked offers — resume to decide</LaneHead>
+          {deferredOffers.map((d: any) => {
+            const opts = d.payload?.proposal?.options || []
+            const isInteractive = !!d.payload?.proposal?.interactive
+            return (
+              <Surface key={d.id} tone="wire" className="ibx-defer-offer"
+                onClick={() => reviveOffer(d.id)}
+                title="reopen this offer — resume the conversation (discuss / steer / approve). nothing has run.">
+                <span className="ibx-item-name">{isInteractive ? '⚒' : '⚑'} {d.payload?.name || d.id}</span>
+                {d.payload?.note && <span className="muted ibx-defer-note">{d.payload.note}</span>}
+                <span className="muted ibx-item-cta">
+                  {opts.length > 1 ? `${opts.length} options · resume ↗` : 'resume ↗'}
+                </span>
+              </Surface>
+            )
+          })}
+        </div>
+      )}
+
       {/* U12: the action lanes — remaining escalations grouped by action; test-pollution dimmed but visible. */}
       {Object.entries(actionLanes).map(([lane, items]) => {
         const test = /^test · /.test(lane)
@@ -109,7 +145,7 @@ export function Inbox() {
         )
       })}
 
-      {/* the rest-state — honest, never a blank gap. */}
+      {/* the rest-state — honest, never a blank gap. (deferredOffers ARE escalations, so the count guards it.) */}
       {escalations === 0 && builds.length === 0 && <EmptyState>nothing awaiting you — the deck is clear.</EmptyState>}
 
       {/* W7: the DEFERRED QUEUE — held builds (dim, fail-loud-visible, not awaiting a verdict yet). */}

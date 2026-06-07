@@ -110,6 +110,14 @@ export const api = {
     fetch('/api/rhm-config', { method: 'POST', headers: J, body: JSON.stringify(updates) }).then(jr),
   inbox: () => fetch('/api/inbox').then(jr),
   coa: (id: string) => fetch('/api/coa', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(jr),
+  // B3 · the configurable interactive-inbox (§6B QUEUE mode): defer a LIVE RHM offer into the inbox as a
+  // REAL queued item (the whole proposal shape is persisted so it can be revived), and read it back to
+  // RE-OPEN the interactive conversation. Nothing dispatches on defer — the offer's verb runs only on a
+  // later approve through /api/act (the B1/B2 consent invariant: nothing-runs-until-approved).
+  deferOffer: (proposal: any, note = '') =>
+    fetch('/api/defer-offer', { method: 'POST', headers: J, body: JSON.stringify({ proposal, note }) }).then(jr),
+  reviveOffer: (id: string) =>
+    fetch('/api/revive-offer', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(jr),
   // F2: route a node's RESULT to the decision surface — backend reads the output from live state
   // (client sends only the node id; canvas reflects-never-owns), surfaces it on the EXISTING inbox path.
   surfaceOutput: (node: string) =>

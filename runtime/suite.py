@@ -4281,6 +4281,75 @@ class Suite:
             raise ValueError("idea_capture needs non-empty text (fail loud)")
         return self.surface_review({"title": t[:80], "idea": t, "kind": "idea"}, origin="generative")
 
+    # --- B3: the configurable interactive-inbox — defer a LIVE offer into the one queue, revivable ---
+    # §6B mode #4 (QUEUE, configurable): the operator can defer ANY offer/build (the B1/B2 propose-affordance
+    # — its verb/address/args/options[]/interactive/direction) into the inbox AS A REAL QUEUED ITEM (not the
+    # earlier FE-only "set aside" no-op). It lands in the SAME surfaced/inbox store every other lane uses
+    # (registry-is-truth, NO parallel queue) so a fresh process reads it back. The whole proposal shape is
+    # persisted under payload.proposal — ENOUGH TO REVIVE the interactive RHM offer (the ProposeAffordance
+    # card with its options + steer channel + approve), so revisiting RE-OPENS the live conversation, never a
+    # dead queue card. NOTHING runs here: resolved=None (a live escalation until the operator acts), no
+    # /api/act, no dispatch — the B1/B2 consent invariants (select≠approve, nothing-runs-until-approved) are
+    # preserved because reviving simply re-renders the SAME card whose approve is the only dispatch.
+    #
+    # DISTINCT action_class `deferred_offer` (NOT surface_review — that forces action="review" and would make
+    # this indistinguishable from a real review item; the Inbox splits it into its OWN resume lane by class).
+    # Schema-additive: the surfaced record gains an optional payload shape; no schema_ver bump (payload is the
+    # open bag every consumer reads via .get — an unknown class is ignored cleanly by inbox_lanes/escalation).
+    def defer_offer(self, proposal: dict, note: str = "") -> dict:
+        """Defer a live RHM offer into the inbox as a REAL queued, revivable item (§6B QUEUE mode).
+        `proposal` is the B1/B2 offer shape ({verb, address, args, options[], interactive, direction}) — the
+        revival state. Fail loud on a non-dict or a proposal carrying no verb AND no options (nothing to
+        revive). The item lands in `live_escalations` (resolved=None) until the operator revives+approves it
+        or dismisses it; only the operator-face resolve ever clears it (reflects-never-owns)."""
+        if not isinstance(proposal, dict):
+            raise TypeError(f"defer_offer needs a dict proposal, got {type(proposal).__name__} (fail loud)")
+        opts = proposal.get("options") or []
+        if not proposal.get("verb") and not opts:
+            raise ValueError("defer_offer needs a proposal carrying a verb or options[] to revive (fail loud)")
+        # the human-legible name for the queued card (the primary offer's label/verb at its address).
+        primary = (opts[0] if opts else proposal)
+        label = primary.get("label") or primary.get("verb") or "offer"
+        addr = proposal.get("address") or primary.get("address")
+        name = f"deferred offer · {label}" + (f" @ {addr}" if addr else "")
+        payload = {
+            "name": name,
+            "note": (note or "").strip(),
+            # the FULL revival state — exactly what ProposeAffordance + approveProposal need to re-open the
+            # live offer. Stored verbatim (the open bag), so a fresh Suite reads it back unchanged.
+            "proposal": {
+                "verb": proposal.get("verb"),
+                "address": proposal.get("address"),
+                "args": proposal.get("args"),
+                "options": opts,
+                "interactive": bool(proposal.get("interactive")),
+                "direction": proposal.get("direction") is not False,
+            },
+            # L8 (§21.7#9): if the offer points at a ui:// address, carry it as the click-to-thing target so
+            # the queued card can drive the operator's view to the locus the offer is about (registry-valid by
+            # construction — derived from the offer's own address, never fabricated).
+            **({"ui_target": addr} if (isinstance(addr, str) and addr.startswith("ui://")) else {}),
+        }
+        sid = self.inbox.surface("deferred_offer", payload, default="reject", resolved=None)
+        # emit 'ask' so the live SSE inbox-refresh path lights up (same kind surface_output/surface_review use).
+        self._emit("ask", f"an offer was deferred to your inbox: {name}", surfaced=sid,
+                   address=addr if (isinstance(addr, str) and addr.startswith("ui://")) else None)
+        return {"id": sid, "name": name, "proposal": payload["proposal"]}
+
+    def revive_offer(self, sid: str) -> dict:
+        """B3 — read a deferred offer back out of the inbox to RE-OPEN the live interactive conversation
+        (the ProposeAffordance card). Returns the stored revival state ({verb,address,args,options,
+        interactive,direction}) so the operator resumes discussing/steering/approving from where they left
+        off. Fail loud if the id is missing or is not a deferred_offer (never a wrong-card revive)."""
+        d = self.inbox.get(sid)
+        if not d:
+            raise KeyError(f"no surfaced item {sid!r} to revive (fail loud)")
+        if d.get("action") != "deferred_offer":
+            raise ValueError(f"surfaced {sid!r} is a {d.get('action')!r}, not a deferred_offer — cannot revive as an offer (fail loud)")
+        return {"id": sid, "proposal": (d.get("payload") or {}).get("proposal") or {},
+                "note": (d.get("payload") or {}).get("note", ""),
+                "resolved": d.get("resolved")}
+
     # --- B: the walkthrough engine — a review session IS a Graph, run by the existing scheduler ---
     # No bespoke iterator + no scheduler change: a review-item = a STEP node whose readiness waits on a
     # human-writable `go` input (the scheduler already waits on an unwired/unresolved declared port,

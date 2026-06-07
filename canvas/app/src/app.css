@@ -370,6 +370,12 @@ button.b.ghost.kit-tone-wire:hover{border-color:var(--tone);color:var(--tone);bo
 .ibx-item-cta{flex:none;font-size:var(--fs-micro)}
 .ibx .ibx-done .ibx-item-name{color:var(--dim)}
 .ibx .ibx-defer-item{opacity:.85}
+/* B3 · the parked-offer card (the deferred-offer resume lane). A kit Surface (tone="wire") so it reads as a
+   live decision-conversation parked, not a dead line; clicking it RE-OPENS the interactive offer. Name +
+   optional note stack, the resume CTA sits at the end. Tokens only (no bespoke values). */
+.ibx .ibx-defer-offer{display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;cursor:pointer}
+.ibx .ibx-defer-offer .ibx-item-name{flex:1 1 auto}
+.ibx .ibx-defer-note{flex:1 1 100%;font-size:var(--fs-micro);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* WAVE-2: the legacy .ibx-head / .ibx-item / .ibx-lane-head / .ibx-builds / .ibx-resolved / .ibx-deferred
    per-item + per-lane-head styles were DELETED — the redesigned Inbox composes the shared kit (kit LaneHead +
    Surface) for those, and the old rules (border-radius:3px, hardcoded amber spine, font-size:11px) were

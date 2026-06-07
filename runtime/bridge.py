@@ -602,6 +602,20 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/capture-idea":         # A4: capture a fleeting idea (generative review item)
                 b = self._body()
                 self._send(200, json.dumps(SUITE.idea_capture(b["text"])))
+            elif self.path == "/api/defer-offer":           # B3: defer a live RHM offer into the inbox as a
+                # REAL queued, revivable item (§6B QUEUE mode). The operator face mints it; resolved=None, so
+                # it stays a live escalation until they revive+approve or dismiss it. NOTHING dispatches here
+                # (the offer's verb runs only on a later approve through /api/act — the B1/B2 consent invariant).
+                # Fail loud on a missing proposal (no silent no-op).
+                b = self._body()
+                prop = b.get("proposal")
+                if not isinstance(prop, dict):
+                    raise ValueError("/api/defer-offer needs a 'proposal' object (fail loud)")
+                self._send(200, json.dumps(SUITE.defer_offer(prop, note=b.get("note", ""))))
+            elif self.path == "/api/revive-offer":          # B3: read a deferred offer back out to RE-OPEN the
+                # live interactive conversation (the ProposeAffordance card with its options+steer+approve).
+                b = self._body()
+                self._send(200, json.dumps(SUITE.revive_offer(b["id"])))
             elif self.path == "/api/build-intent":          # T0-WIRE: the REAL production entry seam for the
                 # decision→implementation wire. The operator (this is the OPERATOR face, not the agent
                 # face) mints a build-intent — a declared-scope decision that, once they APPROVE it via

@@ -103,8 +103,12 @@ export function useAppController(editor: Editor) {
   // B2 · `interactive` (from the backend, derived from the verb class build/panel/extend — registry-truth):
   // when true the ProposeAffordance region renders the ON-SCREEN COMPARISON surface (select-then-approve +
   // chat-until-approve), NOT B1's click-to-act list. Single-option / non-consequential offers stay B1.
+  // B3 · `_sid` — when an offer is REVIVED from the inbox (a deferred_offer surfaced item), the proposal
+  // carries the surfaced id so the round-trip closes: on approve/dismiss the revived item is RESOLVED out
+  // of `live_escalations` (it doesn't linger as a ghost after it's been acted). A fresh (non-revived) offer
+  // has no _sid. Reflects-never-owns: only the operator's approve/dismiss resolves it.
   const [proposal, setProposal] = useState<
-    { verb: string; address?: string | null; args?: any; options?: ProposalOption[]; direction?: boolean; interactive?: boolean } | null
+    { verb: string; address?: string | null; args?: any; options?: ProposalOption[]; direction?: boolean; interactive?: boolean; _sid?: string } | null
   >(null)
   // D2 · the COMPOSED address-help bundle for the indicated ui:// element — the operator-facing help/altitude
   // surface (REPO-KNOWLEDGE D2). The three legs (what_this_is · how_to_use · how_to_change) of "what can I do
@@ -884,7 +888,11 @@ export function useAppController(editor: Editor) {
       else {
         if (r.reply) setChat(c => [...c, { role: 'assistant', text: '✓ ' + r.reply }])
         await applyActionReactions(r.action)
-        await poll()
+        // B3 — round-trip integrity: if this offer was REVIVED from the inbox (_sid), the act has now run,
+        // so RESOLVE the queued item out of live_escalations (approve) — else it would linger as a ghost
+        // duplicate after the very thing it queued was done. Only AFTER a successful act (never before).
+        if (p._sid) { await api.resolve(p._sid, 'approve', 'approved from the revived offer') }
+        await poll()   // poll() refreshes the inbox → the resolved deferred-offer leaves live_escalations
       }
     }
     catch { setChat(c => [...c, { role: 'assistant', text: '(could not reach the brain to act)' }]) }
@@ -906,15 +914,59 @@ export function useAppController(editor: Editor) {
     const composed = `Refine the offer (${p.verb}${at}) — steer: ${steer}`
     await sendChat(composed)   // reuses the preserved chat path; the refined offer returns as a new proposal
   }
-  // B1 — DEFER (an honest set-aside, DISTINCT from dismiss): the operator isn't rejecting the offer, just
-  // not now. There is NO proposal-level defer/queue in the backend (grep: the deferred-queue is the
-  // build-intent/escalation lane, suite.py:5800 / regions/Inbox.tsx — not a chat-proposal store), so this
-  // is an FE-only set-aside that drops the live card without acting. It reads as "not now" (no /api/act).
-  // GAP (flagged in the report): a DURABLE re-surfacing store for deferred offers is unbuilt — once the
-  // card is set aside it is gone until the RHM offers again. No fiction: we don't pretend it's queued.
-  function deferProposal() { setNotice('offer set aside — not now (it isn’t queued; ask again to revisit)'); setProposal(null) }
-  // I3 — REJECT/DISMISS does nothing but drop the card (no backend call; the action never ran).
-  function dismissProposal() { setProposal(null) }
+  // B3 — DEFER (the configurable QUEUE arm, §6B mode #4): the operator isn't rejecting the offer, just not
+  // now — and now it is a REAL queued item, not the old no-op set-aside. Persist the WHOLE offer (its
+  // verb/address/args/options/interactive/direction) to the inbox via /api/defer-offer (the EXISTING
+  // surfaced/inbox store — registry-is-truth, no parallel queue). It lands in live_escalations (resolved=
+  // None), gets its own resume lane in the Inbox, and revisiting RE-OPENS this exact interactive card
+  // (reviveOffer below). NOTHING runs: defer dispatches no /api/act — the offer's verb runs only on a later
+  // approve (the B1/B2 consent invariant preserved). Fail-loud on a backend error (never a silent drop).
+  async function deferProposal() {
+    const p = proposal
+    if (!p || chatBusy) return
+    // already-queued (a revived offer with _sid) → deferring again is a no-op re-shelve: just drop the card.
+    if (p._sid) { setNotice('offer set aside — it’s still queued in your inbox (revisit it there)'); setProposal(null); return }
+    setChatBusy(true)
+    try {
+      const r = await api.deferOffer({ verb: p.verb, address: p.address, args: p.args,
+        options: p.options, interactive: p.interactive, direction: p.direction })
+      if (r?.error) { setNotice('✕ could not queue the offer: ' + r.error); return }   // fail-loud, keep the card
+      setNotice('⏸ offer queued to your inbox — revisit it any time to resume the conversation')
+      setProposal(null)
+      await poll()   // refresh the inbox so the new deferred-offer lane appears immediately
+    }
+    catch (e: any) { setNotice('✕ could not reach the brain to queue the offer (' + (e?.message || e) + ')') }
+    finally { setChatBusy(false) }
+  }
+  // B1 — SET ASIDE (the lighter, DISTINCT action): drop the live card WITHOUT queuing and without acting —
+  // "not now, and I don't need it kept." The honest no-op set-aside (no /api/act, no inbox item). Kept as a
+  // separate secondary from the durable QUEUE (defer) above, so the operator chooses queue-it vs forget-it.
+  function setAsideProposal() { setNotice('offer set aside — not queued (ask again to revisit)'); setProposal(null) }
+  // I3 — REJECT/DISMISS does nothing but drop the card (no backend call; the action never ran). If this is a
+  // REVIVED queued offer (_sid), resolving it rejected clears it out of the inbox (round-trip integrity —
+  // it doesn't linger after the operator has explicitly rejected it).
+  function dismissProposal() {
+    const p = proposal
+    if (p?._sid) { api.resolve(p._sid, 'reject', 'dismissed from the revived offer').then(() => poll()) }
+    setProposal(null)
+  }
+  // B3 — REVIVE a deferred offer from the inbox: read the persisted proposal back out and RE-OPEN the live
+  // interactive card (the ProposeAffordance with its options + steer + approve), carrying _sid so approve/
+  // dismiss closes the round-trip. This is the "live conversation when revisited, not a dead queue" half of
+  // B3. Reuses the SAME setProposal the chat path uses — the revived card is byte-identical to the original
+  // offer (select≠approve, nothing-runs-until-approved are preserved for free). Fail-loud on a backend error.
+  async function reviveOffer(sid: string) {
+    if (!sid) return
+    const r = await api.reviveOffer(sid)
+    if (r?.error) { setNotice('✕ could not reopen the offer: ' + r.error); return }
+    const stored = r?.proposal
+    if (!stored || (!stored.verb && !(stored.options && stored.options.length))) {
+      setNotice('✕ the deferred offer carried no revivable proposal'); return   // fail-loud, never a dead card
+    }
+    setMobileTab('rhm')   // bring the RHM surface forward (on phone the offer renders in the rhm sheet)
+    setProposal({ ...stored, _sid: sid })
+    setNotice('▷ reopened the deferred offer — discuss, steer, then approve (nothing has run)')
+  }
   // C4 (FE show-me lane) — dial-select STARTS the organ. Selecting the guided/walkthrough presence mode
   // must do MORE than the cosmetic set_mode: it must bind the dial to the REAL walkthrough organ. We keep
   // the existing pure set_mode+poll (harmless+keeps the dial honest for every mode) and, ONLY for the
@@ -1610,7 +1662,7 @@ export function useAppController(editor: Editor) {
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
     resolveUiTarget, startWalk, startGuide, endWalk, respondStep, nextStep, dispatch, recordToggle, fieldValue,
     setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus, mintBuildIntent,
-    approveProposal, dismissProposal, steerProposal, deferProposal, toggleJourneyRecording, replayJourney, switchPersona,
+    approveProposal, dismissProposal, steerProposal, deferProposal, setAsideProposal, reviveOffer, toggleJourneyRecording, replayJourney, switchPersona,
     // A3/E2-FE · the consolidated Settings handlers
     openSettings, loadSettingsData, setCfgSlot,
   }

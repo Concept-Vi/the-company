@@ -35,7 +35,7 @@ import { useApp } from '../AppContext'
 import { Surface, Badge } from '../components/kit'
 
 export function ProposeAffordance() {
-  const { proposal, chatBusy, approveProposal, steerProposal, deferProposal, dismissProposal } = useApp()
+  const { proposal, chatBusy, approveProposal, steerProposal, deferProposal, setAsideProposal, dismissProposal } = useApp()
   const [steer, setSteer] = useState('')
   // B2 · select-then-approve: which alternative is currently SELECTED (visual only — no /api/act). null =
   // none chosen yet. Reset whenever a NEW proposal arrives (a steer returns a fresh offer; a stale index
@@ -114,7 +114,10 @@ export function ProposeAffordance() {
             title={sel ? 'approve & build the selected approach (this is the consent commit — it runs now)' : 'select an approach above first'}>
             {sel ? `approve & build${sel.verb !== 'build' ? ' (' + sel.verb + ')' : ''}` : 'select an approach to approve'}
           </button>
-          <button className="b ghost" onClick={() => deferProposal()} disabled={chatBusy} title="not now — set the offer aside without acting (it isn’t queued)">defer</button>
+          {/* B3 · the configurable QUEUE arm — defer this LIVE build into the inbox as a real, revivable
+              item; revisiting re-opens THIS card (options + discuss + approve). Nothing runs on defer. */}
+          <button className="b ghost" onClick={() => deferProposal()} disabled={chatBusy} title="not now — queue this build to your inbox; revisit it any time to resume the conversation (nothing runs)">⏸ queue to inbox</button>
+          <button className="b ghost" onClick={() => setAsideProposal()} disabled={chatBusy} title="set aside without queuing — drop the card; nothing runs, nothing kept">set aside</button>
           <button className="b ghost" onClick={() => dismissProposal()} disabled={chatBusy} title="reject — drop the offer; nothing runs">dismiss</button>
         </div>
       </div>
@@ -157,9 +160,11 @@ export function ProposeAffordance() {
         </div>
       )}
 
-      {/* the graded secondaries: defer = not now (set aside, no act); dismiss = reject (drop, no act). */}
+      {/* the graded secondaries: B3 defer = QUEUE to the inbox (durable, revivable — revisiting re-opens this
+          offer); set aside = the lighter no-op (drop, not kept); dismiss = reject (drop, no act). */}
       <div className="afford-actions">
-        <button className="b ghost" onClick={() => deferProposal()} disabled={chatBusy} title="not now — set the offer aside without acting (it isn’t queued)">defer</button>
+        <button className="b ghost" onClick={() => deferProposal()} disabled={chatBusy} title="not now — queue this offer to your inbox; revisit it any time to resume (nothing runs)">⏸ queue to inbox</button>
+        <button className="b ghost" onClick={() => setAsideProposal()} disabled={chatBusy} title="set aside without queuing — drop the card; nothing kept">set aside</button>
         <button className="b ghost" onClick={() => dismissProposal()} disabled={chatBusy} title="reject — drop the offer; nothing runs">dismiss</button>
       </div>
     </div>
