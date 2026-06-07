@@ -49,25 +49,26 @@ export function Toolbar() {
       <button className="b ghost" data-ui-ref="ui://toolbar/reload" onClick={reload}>reload</button>
       {/* C1: the operator entry to the SYSTEM-INITIATED guided sequence ("show me how" tour). Steps through
          the interface's addressed elements, narrating each from its corpus how-to + spotlighting it.
-         NOTE: deliberately carries NO ui:// data-ui-ref — ui://toolbar/guide is not yet a registered corpus
-         address (design/_system/addresses.json is owned by the corpus lane, file-disjoint), and the orphan
-         check (ui_registry_acceptance) forbids an unregistered data-ui-ref. Flagged as a grown gap: register
-         ui://toolbar/guide in the corpus so the guide control itself becomes an addressable/guidable element. */}
-      <button className="b ghost" onClick={() => startGuide()} title="show me how — a guided tour of the interface, spotlighting each part with its how-to">? guide</button>
+         data-ui-ref="ui://toolbar/guide" — now a registered corpus address (design/_system/addresses.json,
+         represents WALK-present, code suite.py:start_guide), so the guide control is itself an
+         addressable/guidable element (show-me can spotlight the show-me launcher, and the default tour can
+         include itself). */}
+      <button className="b ghost" data-ui-ref="ui://toolbar/guide" onClick={() => startGuide()} title="show me how — a guided tour of the interface, spotlighting each part with its how-to">? guide</button>
       {/* C2: the BOOTSTRAP entry — the FIRST thing show-me teaches is HOW TO REQUEST A CHANGE AND APPROVE IT
          FROM INSIDE (point → ask → surface → approve), wiring the operator into self-modifying the Company.
          Same C1 guided-sequence machinery, the 'request-a-change' topic: it spotlights the real wire-door +
          inbox + approve elements (indicating an element first so the door MOUNTS) and narrates the flow.
-         The wire-blue tint ties it to the wire's signature colour (the door + the inbox build lane). Same
-         NO-data-ui-ref note as ? guide (ui://toolbar/teach not yet a corpus address — flagged grown gap). */}
-      <button className="b ghost kit-tone-wire" onClick={() => startGuide('request-a-change')}
+         The wire-blue tint ties it to the wire's signature colour (the door + the inbox build lane).
+         data-ui-ref="ui://toolbar/teach" — now a registered corpus address (represents WALK-present, code
+         suite.py:start_guide), so the teach control is itself addressable/guidable. */}
+      <button className="b ghost kit-tone-wire" data-ui-ref="ui://toolbar/teach" onClick={() => startGuide('request-a-change')}
         title="teach me to self-modify — a guided walk of requesting a change and approving it from inside the interface (point → ask → surface → approve)">⚙ teach me to self-modify</button>
       {/* A3 · the SETTINGS gear — the operator entry to the consolidated Settings surface (modes/models/
          personas/RHM-config/voice in one designed place). Opens the full-viewport Settings modal + loads its
-         read-only registries (ctrl.openSettings). Deliberately NO ui:// data-ui-ref: ui://toolbar/settings is
-         not yet a registered corpus address (the corpus is a file-disjoint lane); flagged as a grown gap,
-         mirroring the ? guide / teach-me precedent. */}
-      <button className="b ghost settings-gear" onClick={() => openSettings()} title="settings — modes, models, personas, voice, RHM config (consolidated)">⚙ settings</button>
+         read-only registries (ctrl.openSettings). data-ui-ref="ui://settings" — now a registered corpus
+         address (represents RHM-config, code Settings.tsx + suite.py:set_rhm_config), so the Settings surface
+         is addressable/guidable/help-able from the gear. */}
+      <button className="b ghost settings-gear" data-ui-ref="ui://settings" onClick={() => openSettings()} title="settings — modes, models, personas, voice, RHM config (consolidated)">⚙ settings</button>
       {notice && <span className="notice">{notice}</span>}
     </div>
   )

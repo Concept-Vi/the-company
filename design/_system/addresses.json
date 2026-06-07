@@ -524,6 +524,94 @@
       "represents": "RHM-config",
       "code": "canvas/app/src/regions/RhmChat.tsx (persona select) / runtime/suite.py:set_rhm_config",
       "howto": "WHAT: the persona dropdown on the chat. WHAT YOU CAN DO: switch the right-hand-man's persona — selecting one sets it active AND auto-loads its voice (evicting the previous one, since the card holds one voice at a time, so a switch may cold-load). HOW TO CHANGE IT: it switches persona + loads the voice (suite.py:set_rhm_config + the voice lifecycle); the persona list is the live registry."
+    },
+    "ui://toolbar/guide": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable",
+        "openable"
+      ],
+      "represents": "WALK-present",
+      "code": "canvas/app/src/regions/Toolbar.tsx (guide) / runtime/suite.py:start_guide",
+      "howto": "WHAT: the ? guide control — the operator entry to a SYSTEM-INITIATED guided tour (\"show me how\"). WHAT YOU CAN DO: click it to step through the interface's addressed elements one at a time — each part is spotlit on the board and narrated from its own corpus how-to, no verdicts (it's a tour, not a review). HOW TO CHANGE IT: it calls start_guide (suite.py) which compiles a guided sequence over the registered ui:// addresses + drives the walkthrough organ; the tour's contents come from the corpus how-tos, so authoring a how-to enriches what the tour says with zero tour code."
+    },
+    "ui://toolbar/teach": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable",
+        "openable"
+      ],
+      "represents": "WALK-present",
+      "code": "canvas/app/src/regions/Toolbar.tsx (teach) / runtime/suite.py:start_guide",
+      "howto": "WHAT: the ⚙ teach-me-to-self-modify control — the BOOTSTRAP tour that teaches the one move that unlocks everything else: how to change the Company from inside it. WHAT YOU CAN DO: click it to walk the request-a-change flow (point at an element → ask for a change → it surfaces as a build-intent → you approve), with the real wire-door, inbox lane, and approve control spotlit and narrated in turn. HOW TO CHANGE IT: it calls start_guide('request-a-change') (suite.py) — the SAME guided-sequence machinery as ? guide, on the request-a-change topic; its narration composes the teach script WITH the per-element corpus how-tos."
+    },
+    "ui://inspector/help": {
+      "region": "inspector",
+      "capabilities": [
+        "presentable"
+      ],
+      "represents": "WALK-uiresolve",
+      "code": "canvas/app/src/regions/AddressHelp.tsx (AddressHelp) / runtime/suite.py:address_help",
+      "howto": "WHAT: the address-help panel — \"what can I do here?\" for the element you've pointed at, written at your altitude. WHAT YOU CAN DO: read the plain-language WHAT and how-to-use of the indicated element up top, then drill down (it's collapsed by default) into the mechanism — the code files it powers and the blast-radius of changing it. It shows nothing until you indicate a ui:// element. HOW TO CHANGE IT: it reads GET /api/address-help (suite.py:address_help), which composes the three legs (what-this-is · how-to-use · how-to-change) from the corpus; the panel only renders the bundle — it never composes a parallel one (registry-is-truth)."
+    },
+    "ui://settings": {
+      "region": "settings",
+      "capabilities": [
+        "openable",
+        "presentable"
+      ],
+      "represents": "RHM-config",
+      "code": "canvas/app/src/regions/Settings.tsx (Settings) / runtime/suite.py:set_rhm_config",
+      "howto": "WHAT: the consolidated Settings control-room — the one designed place the system's configuration lives (the brain & persona, presence modes, voice, model roles, and the composition knobs), opened from the ⚙ settings gear. WHAT YOU CAN DO: read the live config of every section at a glance and change what's changeable in one place (the model, persona, presence mode, auto-detect, voice ear/engine/path, role bindings); read-only/unavailable settings are shown honestly, never as working. HOW TO CHANGE IT: the surface is Settings.tsx; every write goes through the existing config path (suite.py:set_rhm_config) — it is reuse-only over the real config, not a new store."
+    },
+    "ui://settings/brain": {
+      "region": "settings",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "RHM-config",
+      "code": "canvas/app/src/regions/Settings.tsx (brain) / runtime/suite.py:set_rhm_config",
+      "howto": "WHAT: the Brain & Persona section of Settings — the conscious model the right-hand-man thinks with, plus the switchable cast of personas. WHAT YOU CAN DO: pick the brain's model + base-url (empty model = the default), and switch the active persona (a switch cold-loads that persona's voice, evicting the previous). HOW TO CHANGE IT: model writes via set_rhm_config; persona switches via the persona path — the model + persona lists come from the live registry, never invented."
+    },
+    "ui://settings/modes": {
+      "region": "settings",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "RHM-modes",
+      "code": "canvas/app/src/regions/Settings.tsx (modes) / runtime/suite.py:set_rhm_config",
+      "howto": "WHAT: the Modes section of Settings — the presence type-registry (each mode's directive, how it resolves context, its sub-types and consent) plus the auto-detect toggle. WHAT YOU CAN DO: switch the active presence mode (takes live), and set whether the system auto-detects the mode (off / suggest / auto) — the auto-detect toggle is live-settable. HOW TO CHANGE IT: the mode switch is changeMode; the auto-detect toggle writes MODE_AUTODETECT through set_rhm_config (validated off/suggest/auto, persisted, re-resolved so autodetect_mode honours it)."
+    },
+    "ui://settings/voice": {
+      "region": "settings",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "VOICE",
+      "code": "canvas/app/src/regions/Settings.tsx (voice) / runtime/suite.py:set_rhm_config",
+      "howto": "WHAT: the Voice section of Settings — the ear (STT), the speaking engine (TTS), and the voice path (the pipeline). WHAT YOU CAN DO: turn voice on/off, choose the STT provider and a TTS-engine override (or clear it to use the persona default), and pick the voice path; an engine that isn't up or a path that's unwired shows as UNAVAILABLE, never as working. HOW TO CHANGE IT: each setting writes via set_rhm_config (stt / tts_engine / voice_path / voice_enabled); the engine list reflects what's actually up (s2s renders unavailable by design — no fiction)."
+    },
+    "ui://settings/roles": {
+      "region": "settings",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "RHM-config",
+      "code": "canvas/app/src/regions/Settings.tsx (roles) / runtime/suite.py:set_rhm_config",
+      "howto": "WHAT: the Model Roles section of Settings — the model-FUNCTION registry (e.g. the fast judge), where each role binds to a model. WHAT YOU CAN DO: bind a model to a role (an unbound role is shown as awaiting); binding one role never wipes a sibling (the backend deep-merges the roles map). HOW TO CHANGE IT: it writes roles via set_rhm_config (the deep-merge preserves the other bindings); the model choices come from the live registry."
+    },
+    "ui://settings/composition": {
+      "region": "settings",
+      "capabilities": [
+        "presentable"
+      ],
+      "represents": "RHM-config",
+      "code": "canvas/app/src/regions/Settings.tsx (composition) / runtime/suite.py:set_rhm_config",
+      "howto": "WHAT: the Composition section of Settings — the context-ranking knobs (X17) that tune how the system gathers and scores context. WHAT YOU CAN DO: read the live knob values; this section is READ-ONLY (the knobs are env-tuned, with no live setter) — surfaced honestly so you see the real values without a control that doesn't exist. HOW TO CHANGE IT: the knobs resolve from the composition config (env-tuned, X17); a future rung could expose live setters — until then they are read-only by design (no fiction)."
     }
   }
 }

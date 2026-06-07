@@ -32,12 +32,12 @@
 // in the right-rail .panel scroll column, so it inherits the ≤699px bottom-sheet (the 'panel' tab) for free.
 // Renders NOTHING unless a ui:// element is indicated, so it never clutters the rail.
 //
-// DELIBERATELY UN-ADDRESSED (G-47/G-49 precedent): this panel carries NO `data-ui-ref` of its own, because
-// `ui://inspector/help` is NOT yet registered in the corpus `design/_system/addresses.json` (owned by the
-// file-disjoint corpus lane; the orphan check `ui_registry_acceptance` forbids an unregistered data-ui-ref).
-// The panel works fully without being itself addressable. → FLAGGED as a corpus follow-up: register
-// `ui://inspector/help` (+ a howto) so the help panel becomes a guidable element (show-me could spotlight the
-// help surface, and address_help could describe itself). NOT edited here — corpus is another lane's file.
+// NOW ADDRESSED (G-55 closed): this panel carries `data-ui-ref="ui://inspector/help"` — a registered corpus
+// address (design/_system/addresses.json: region inspector, represents WALK-uiresolve, code
+// AddressHelp.tsx + suite.py:address_help, with an authored howto). So the help panel is itself a
+// guidable/help-able element (show-me can spotlight the help surface, and address_help can describe itself).
+// The ref is carried on EVERY render branch (fail / loading / composed) so the locus is addressable in any
+// state. The panel still renders nothing unless a ui:// element is indicated.
 //
 // G-53 NOTE (honest, surfaced not papered): when an element authors no howto, the plain-language WHAT degrades
 // to the corpus `represents` feature-id (e.g. "represents NODE-portal") — a terser machine label, not full
@@ -67,7 +67,7 @@ export function AddressHelp() {
   // STATE 5 · fail-loud: a malformed/unresolvable address. Never a blank — say what failed.
   if (addressHelpError) {
     return (
-      <div className="ahelp">
+      <div className="ahelp" data-ui-ref="ui://inspector/help">
         <SectionHead tag={shortAddr(indicated)} aside={<Badge tone="fail">unresolved</Badge>}>help</SectionHead>
         <Surface tone="fail"><span className="ahelp-fail">✕ {addressHelpError}</span></Surface>
       </div>
@@ -78,7 +78,7 @@ export function AddressHelp() {
   // before the first bundle lands (or between indications) — an honest loading cue, never a blank.
   if (!h || h.address !== indicated) {
     return (
-      <div className="ahelp">
+      <div className="ahelp" data-ui-ref="ui://inspector/help">
         <SectionHead tag={shortAddr(indicated)} aside={<Badge tone="dim">{addressHelpBusy ? 'loading…' : '—'}</Badge>}>help</SectionHead>
         {!addressHelpBusy && <EmptyState>resolving what you can do here…</EmptyState>}
       </div>
@@ -94,7 +94,7 @@ export function AddressHelp() {
   const present = [legs.what_this_is, legs.how_to_use, legs.how_to_change].filter(Boolean).length
 
   return (
-    <div className="ahelp">
+    <div className="ahelp" data-ui-ref="ui://inspector/help">
       {/* HEAD — the commander's-bridge title in the display voice. The address rides the kicker (the locus this
           help is FOR); a Badge counts how many of the 3 legs resolved (sig when full, await when partial). */}
       <SectionHead tag={shortAddr(indicated)}

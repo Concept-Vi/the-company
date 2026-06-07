@@ -220,7 +220,13 @@
         "RHM-config",
         "ui://chat/config",
         "ui://chat/model-field",
-        "ui://chat/persona-field"
+        "ui://chat/persona-field",
+        "ui://settings",
+        "ui://settings/brain",
+        "ui://settings/composition",
+        "ui://settings/modes",
+        "ui://settings/roles",
+        "ui://settings/voice"
       ]
     },
     "code://suite/_chat_context": {
@@ -563,10 +569,12 @@
         "ui://toolbar",
         "ui://toolbar/delete",
         "ui://toolbar/fit",
+        "ui://toolbar/guide",
         "ui://toolbar/layers",
         "ui://toolbar/portal",
         "ui://toolbar/reload",
         "ui://toolbar/run",
+        "ui://toolbar/teach",
         "ui://toolbar/wire"
       ]
     },
@@ -691,6 +699,15 @@
         "ui://tabbar"
       ]
     },
+    "code://suite/surface_intent_at": {
+      "file": "runtime/suite.py",
+      "symbol": "surface_intent_at",
+      "kind": "def",
+      "resolves": true,
+      "referenced_by": [
+        "ui://canvas/wire-request"
+      ]
+    },
     "code://useAppController/fitGraph": {
       "file": "canvas/app/src/useAppController.ts",
       "symbol": "fitGraph",
@@ -777,6 +794,48 @@
         "ui://walkthrough/show-again",
         "ui://walkthrough/voice"
       ]
+    },
+    "code://suite/start_guide": {
+      "file": "runtime/suite.py",
+      "symbol": "start_guide",
+      "kind": "def",
+      "resolves": false,
+      "referenced_by": [
+        "ui://toolbar/guide",
+        "ui://toolbar/teach"
+      ]
+    },
+    "code://AddressHelp": {
+      "file": "canvas/app/src/regions/AddressHelp.tsx",
+      "symbol": null,
+      "kind": "file-only",
+      "resolves": false,
+      "referenced_by": [
+        "ui://inspector/help"
+      ]
+    },
+    "code://suite/address_help": {
+      "file": "runtime/suite.py",
+      "symbol": "address_help",
+      "kind": "def",
+      "resolves": false,
+      "referenced_by": [
+        "ui://inspector/help"
+      ]
+    },
+    "code://Settings": {
+      "file": "canvas/app/src/regions/Settings.tsx",
+      "symbol": null,
+      "kind": "file-only",
+      "resolves": true,
+      "referenced_by": [
+        "ui://settings",
+        "ui://settings/brain",
+        "ui://settings/composition",
+        "ui://settings/modes",
+        "ui://settings/roles",
+        "ui://settings/voice"
+      ]
     }
   },
   "not_indexable": [
@@ -798,17 +857,20 @@
     }
   ],
   "summary": {
-    "symbols_indexed": 78,
-    "resolve": 75,
-    "do_not_resolve": 3,
-    "shared_2plus": 37,
+    "symbols_indexed": 83,
+    "resolve": 77,
+    "do_not_resolve": 6,
+    "shared_2plus": 39,
     "not_indexable": 4,
     "id_collisions": 0,
     "semantic_edges": 0
   },
   "unresolved": [
+    "code://AddressHelp",
     "code://suite/RHM_VERBS",
+    "code://suite/address_help",
     "code://suite/pin (X7 pin override)",
+    "code://suite/start_guide",
     "code://suite/surface_build_intent (payload.context \u2014 the X3 R2 gather)"
   ],
   "shared": [
@@ -819,6 +881,7 @@
     "code://NodeConfigForm/NodeConfigForm",
     "code://NodeShape/NodeShapeUtil",
     "code://RhmChat",
+    "code://Settings",
     "code://Toolbar",
     "code://Walkthrough",
     "code://bridge/do_POST",
@@ -842,6 +905,7 @@
     "code://suite/set_config",
     "code://suite/set_mode",
     "code://suite/set_rhm_config",
+    "code://suite/start_guide",
     "code://suite/state",
     "code://suite/surface_build_intent",
     "code://suite/surface_output",
