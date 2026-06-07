@@ -280,7 +280,14 @@ class FsStore:
 
     # --- provenance + lineage ---
     def write_provenance(self, prov: Provenance) -> None:
-        (self.root / "meta" / (self._safe(prov.address) + ".json")).write_text(
+        # ATOMIC (Concurrent Cognition C1.6 / R1-FOLD F8): a naked write_text TRUNCATES then re-fills,
+        # so a concurrent reader (provenance()) on the threading bridge can read torn/empty JSON, and a
+        # crash mid-write leaves a corrupt meta file. Under a concurrent swarm of role-runs each writing
+        # provenance, that race is real. tmp + fsync + os.replace makes every reader see the WHOLE old or
+        # WHOLE new record — the SAME guarantee set_ref/save_graph give. (Strictly more durable than the
+        # prior write_text; the app's serial node-runs are unaffected except for the added fsync.)
+        self._fsync_atomic_write(
+            self.root / "meta" / (self._safe(prov.address) + ".json"),
             prov.model_dump_json(indent=2))
 
     def provenance(self, address: str) -> Provenance | None:
@@ -307,7 +314,12 @@ class FsStore:
         return p.read_text() if p.exists() else None
 
     def memo_set(self, sig: str, cas: str) -> None:
-        (self.root / "memo" / self._safe(sig)).write_text(cas)
+        # ATOMIC (Concurrent Cognition C1.6 / R1-FOLD F8): like set_ref, this is a hot-path pointer
+        # write read concurrently by memo_get on the threading bridge. A naked write_text truncates
+        # then re-fills → a concurrent memo_get can read "" → the memo gate (scheduler) treats "" as a
+        # miss and re-fires (a wasted GPU hit), or get_content("") raises. tmp + fsync + os.replace
+        # gives the whole-old-or-whole-new guarantee (mirrors set_ref). Crash-durable too.
+        self._fsync_atomic_write(self.root / "memo" / self._safe(sig), cas)
 
     # --- graphs registry (S3): canvases live in the substrate, shared across faces ---
     def save_graph(self, graph) -> None:

@@ -27,6 +27,9 @@ The pinned shapes **C1–C8** (`Cn.py`), one file per contract — the **seams e
 
 For **which module governs which contract**, see [[Company Map]] — the single source; do not duplicate it here.
 
+### Net-new registries living in this spine (with their drift homes)
+- **`EDGE_KINDS` (in `contracts/node_record.py`)** — the declared edge-kind vocabulary (`data` · `injection` · `gate` · `fan_in`), added by Concurrent Cognition G1 (C1.3) alongside the `Edge.kind` field and the `SCHEMA_VER` bump to 2 (schema-additive — `kind` defaults to `data`, so every pre-v2 graph loads unchanged). An edge is a declared kind, not a bare wire; the **`injection`** kind is the cognition ref-read (a reply part reads a role's resolved `run://<turn>/<role>` output into its context — `run://` addressing only). **Drift home:** this constitution (the prose here) + `EDGE_KINDS` itself; **drift assertion:** `tests/edge_kinds_acceptance.py` fails loud if a kind isn't reflected here or if the default/old-graph-load invariant breaks. (`gate`/`fan_in` are renderable labels; their behaviour stays NODE-driven — the scheduler's gate/join nodes — never edge-driven.)
+
 ## Relates to
 
 contracts is the **spine** — everything else composes against these shapes; they are changed only deliberately (a new `Cn`, side-by-side, never edit-in-place).

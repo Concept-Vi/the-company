@@ -19,6 +19,26 @@ def _infer_kind(name: str) -> str:
     return "content" if name in CONTENT_KINDS else "process"
 
 
+def _read_output_schema(mod) -> dict:
+    """Read a module's declared OUTPUT_SCHEMA (C1.4). Accepts either a plain dict (a JSON-shape /
+    json-schema spec) OR a Pydantic BaseModel subclass (we serialize it via .model_json_schema()).
+    Anything else, or an absent attribute, → {} (the additive default — node-type unchanged). Pure
+    read, no side effects; fail loud only on a declared-but-malformed value (never a silent wrong)."""
+    decl = getattr(mod, "OUTPUT_SCHEMA", None)
+    if decl is None:
+        return {}
+    if isinstance(decl, dict):
+        return dict(decl)
+    # a Pydantic model class → its json-schema (duck-typed: has model_json_schema)
+    schema_fn = getattr(decl, "model_json_schema", None)
+    if callable(schema_fn):
+        return schema_fn()
+    raise TypeError(
+        f"register_module: OUTPUT_SCHEMA on node-type module {mod!r} must be a dict or a Pydantic "
+        f"BaseModel subclass, got {type(decl).__name__} (fail loud — never a silent wrong schema)."
+    )
+
+
 def _load_module(path: str):
     name = os.path.splitext(os.path.basename(path))[0]
     spec = importlib.util.spec_from_file_location(f"_node_{name}", path)
@@ -60,6 +80,12 @@ class NodeRegistry:
             ports=Ports(inputs=dict(getattr(mod, "PORTS_IN", {})),
                         outputs=dict(getattr(mod, "PORTS_OUT", {}))),
             config_schema=dict(getattr(mod, "CONFIG", {})),
+            # C1.4 (Concurrent Cognition G1): a module may DECLARE an OUTPUT_SCHEMA — a JSON-shape
+            # dict (or the json-schema of a Pydantic model). It is read into NodeType.output_schema
+            # so the registry carries it SINGLE-SOURCE (the cognition driver reads it to validate a
+            # role's output via complete()'s existing validate/retry — fabric/client.py). Additive:
+            # a module that declares none keeps the empty default (every existing node-type unchanged).
+            output_schema=_read_output_schema(mod),
             version=int(getattr(mod, "VERSION", "1")),
         )
 

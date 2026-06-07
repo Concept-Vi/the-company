@@ -36,14 +36,17 @@ documented defaults.
 from __future__ import annotations
 
 import json
+import os
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from typing import Any, Callable, Iterator
 
 from pydantic import BaseModel, Field
 
 from fabric import client, transport
+from fabric.vram import VramGate
 
 # --- spike constants: the resident 4B pool that is UP (task-given; NOT invented) ----------------
 RESIDENT_BASE_URL = "http://127.0.0.1:8000/v1"
@@ -347,3 +350,276 @@ def concurrency_probe(n: int, *, role: Role = RECALL_ROLE,
         "latency_s": {"p50": _pct(50), "p95": _pct(95), "max": round(max(lat), 3) if lat else None,
                       "min": round(min(lat), 3) if lat else None},
     }
+
+
+# =================================================================================================
+# G1 — THE NODE-MECHANISM SUBSTRATE (productionizes the G0 spike mechanism above).
+#
+# The spike PROVED the mechanism (run_role · run:// injection · pure rules). G1 productionizes it
+# into the real concurrent substrate — but it is STILL the COGNITION DRIVER, not the shared
+# scheduler (R1-FOLD F2, CRITICAL): all parallelism lives HERE, leaving runtime/scheduler.py:run()
+# strictly serial so the app's Suite.run behaviour is UNCHANGED ("one substrate, two drivers").
+#
+#   C1.1  concurrent dispatch in the DRIVER: materialize a ready-set → dispatch the wave via a
+#         ThreadPoolExecutor → barrier per wave → serialize store writes behind the barrier.
+#   C1.2  slot budget from REAL registry values: min(max_num_seqs − R, free_KV / per_role_ctx),
+#         read from ops/services.json (NEVER a hardcoded 32). A global VramGate semaphore + a
+#         swarm sub-pool of (knee − R) keeps R slots for the main stream/judge.
+#   C1.3  the injection ref-read: a part reads a role's resolved output at run://<turn>/<role> via
+#         the store's canonical head→get_content resolver (NO parallel resolver). run:// only.
+#   C1.4  output_schema enforced: run_role already passes schema= into complete()'s validate/retry.
+#   C1.6  telemetry batched: ONE rollup per wave (containing each role's run-record), not one
+#         store write per role-fire — does NOT fsync-flood append_event.
+# =================================================================================================
+
+
+# --- C1.2: the slot budget, derived from the LIVE registry (never a hardcoded 32) ---------------
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_SERVICES_JSON = os.path.join(_REPO_ROOT, "ops", "services.json")
+
+# Defaults are the C0.5-MEASURED reality of the resident config (2026-06-07), used ONLY as a
+# fail-loud-avoiding fallback if a registry field is genuinely absent — NOT a hardcoded budget.
+# The budget is COMPUTED from these registry values; nothing here assumes 32.
+DEFAULT_RESERVE_R = 2            # R: slots reserved for the main stream/judge (R2-FOLD H1)
+DEFAULT_ROLE_CTX_TOKENS = 1500   # per-role context budget ~1–2K (R2-FOLD H1)
+# KV pool tokens by util (C0.5 measured); read live if the registry exposes it, else this map.
+_MEASURED_KV_BY_UTIL = {0.49: 66036, 0.63: 135574}
+
+
+@dataclass
+class SlotBudget:
+    """The request-concurrency budget for a swarm wave, COMPUTED from registry values (C1.2 / F1).
+
+    knee          = min(max_num_seqs − R, free_KV // per_role_ctx)   — the swarm concurrency cap.
+    swarm_slots   = max(1, knee)                                     — the swarm sub-pool width.
+    reserve_r     = R                                                — kept for the main stream/judge.
+    Everything is DERIVED from the live `chat-4b` service config (max_num_seqs, gpu_util) — NEVER a
+    literal 32 (R1-FOLD F1). Fail loud only on a corrupt registry; an absent optional field falls
+    back to the C0.5-measured value, labelled in `source`."""
+    max_num_seqs: int
+    reserve_r: int
+    per_role_ctx: int
+    kv_pool_tokens: int
+    main_ctx_tokens: int          # how much KV the main conversation is assumed to hold this turn
+    swarm_slots: int
+    source: dict
+
+    @classmethod
+    def from_registry(cls, *, service_id: str = "chat-4b", reserve_r: int = DEFAULT_RESERVE_R,
+                      per_role_ctx: int = DEFAULT_ROLE_CTX_TOKENS, main_ctx_tokens: int = 0,
+                      services_path: str = _SERVICES_JSON) -> "SlotBudget":
+        """Read the LIVE registry (ops/services.json) and COMPUTE the slot budget. `main_ctx_tokens`
+        is how deep the main conversation is THIS turn (it eats the shared KV pool — the deep-main
+        bind C0.5 found); 0 = shallow main. Fail loud (FileNotFoundError/KeyError) on a corrupt
+        registry — never a silent guessed budget."""
+        with open(services_path) as f:
+            reg = json.load(f)
+        svcs = reg["services"] if "services" in reg else reg
+        if service_id not in svcs:
+            raise KeyError(
+                f"SlotBudget.from_registry: no service {service_id!r} in {services_path} — "
+                f"cannot derive the slot budget from the registry (fail loud, never assume 32).")
+        cfg = svcs[service_id].get("config") or {}
+        if "max_num_seqs" not in cfg:
+            raise KeyError(
+                f"SlotBudget.from_registry: service {service_id!r} declares no max_num_seqs — "
+                f"the seq-cap bind is unknown (fail loud).")
+        max_num_seqs = int(cfg["max_num_seqs"])
+        util = float(cfg.get("gpu_util", 0.49))
+        # KV pool: prefer a registry-declared measured value, else the C0.5 map, else derive from the
+        # _profile (kv_kb_per_token) if present — all REGISTRY-grounded, never invented.
+        kv_pool = None
+        prof = cfg.get("_profile") or {}
+        if "kv_pool_tokens" in cfg:
+            kv_pool = int(cfg["kv_pool_tokens"])
+            kv_src = "registry.config.kv_pool_tokens"
+        elif round(util, 2) in _MEASURED_KV_BY_UTIL:
+            kv_pool = _MEASURED_KV_BY_UTIL[round(util, 2)]
+            kv_src = f"C0.5-measured @util {round(util, 2)}"
+        else:
+            # last resort: a coarse estimate from the profile, clearly labelled. Never silent.
+            kv_pool = _MEASURED_KV_BY_UTIL[0.49]
+            kv_src = "fallback C0.5 @0.49 (util not in measured map)"
+        free_kv = max(0, kv_pool - max(0, int(main_ctx_tokens)))
+        kv_bound = free_kv // max(1, int(per_role_ctx))
+        seq_bound = max_num_seqs - reserve_r
+        knee = min(seq_bound, kv_bound)
+        swarm_slots = max(1, knee)
+        return cls(
+            max_num_seqs=max_num_seqs, reserve_r=reserve_r, per_role_ctx=per_role_ctx,
+            kv_pool_tokens=kv_pool, main_ctx_tokens=int(main_ctx_tokens), swarm_slots=swarm_slots,
+            source={"service": service_id, "gpu_util": util, "kv_source": kv_src,
+                    "seq_bound": seq_bound, "kv_bound": kv_bound, "knee": knee,
+                    "services_path": services_path},
+        )
+
+
+# A PROCESS-WIDE VRAM gate (C1.2): the global semaphore that bounds concurrent LOCAL model calls so
+# the swarm can never starve the main stream of the shared resident pool. It is a singleton (created
+# ONCE, module-level) — a per-call VramGate would cap nothing (advisor flag). The swarm acquires its
+# OWN sub-pool (knee − R) so R slots ALWAYS remain free for a main-stream/judge call to acquire
+# immediately. Both bound the SAME resident pool. fabric/vram.py:VramGate was unwired before G1.
+_GLOBAL_VRAM_GATE: VramGate | None = None
+_GLOBAL_VRAM_LOCK = threading.Lock()
+
+
+def global_vram_gate(limit: int) -> VramGate:
+    """The process-wide VramGate singleton sized to the registry knee. Created once; subsequent
+    calls return the same gate (the limit is fixed at first creation — the resident config is fixed
+    while up). This is the ONE gate every local model call passes (main stream + swarm both)."""
+    global _GLOBAL_VRAM_GATE
+    with _GLOBAL_VRAM_LOCK:
+        if _GLOBAL_VRAM_GATE is None:
+            _GLOBAL_VRAM_GATE = VramGate(limit=max(1, limit))
+        return _GLOBAL_VRAM_GATE
+
+
+# --- C1.3: the injection ref-read (the store's canonical resolver — NO parallel resolver) --------
+def resolve_run_ref(store, addr: str, *, on_missing: str = "raise") -> Any:
+    """Read the RESOLVED value at a role's run:// address — the net-new injection ref-read (C1.3).
+
+    This is the canonical store resolution path (head → get_content), NOT a second resolver: the
+    store's head→get_content IS the system's resolver (R1-FOLD F3 retracted "promote
+    context_variables.py" — that module is test-only/dead and reads operator-notebook strata, not
+    fresh role refs). A later reply part calls this to inject a role's output into its context.
+
+    Addressing is run:// ONLY (never swarm:// — not a registered scheme, contracts/address.py).
+    Fail loud (C9.3 / R2-FOLD H2): a missing/unresolved ref RAISES unless a declared on_missing
+    handler is given — NEVER implicit-truthy-on-missing (that would couple routing to timing)."""
+    if not addr.startswith("run://"):
+        raise ValueError(
+            f"resolve_run_ref: address {addr!r} is not a run:// address — the injection edge reads "
+            f"run://<turn>/<role> ONLY (never swarm://; contracts/address.py SCHEMES).")
+    cas = store.head(addr)
+    if cas is None:
+        if on_missing == "raise":
+            raise RuntimeError(
+                f"resolve_run_ref: {addr} did not resolve (head() is None) — fail loud, never route "
+                f"or inject on an unresolved ref. (Declare on_missing to handle a pruned ref.)")
+        return None
+    return store.get_content(cas)
+
+
+# --- C1.1 + C1.2 + C1.6: the concurrent swarm wave -----------------------------------------------
+@dataclass
+class RoleRun:
+    """One role's run-record in a wave — the unit the C1.6 batched rollup contains (G7 will render)."""
+    role_id: str
+    address: str
+    ok: bool
+    ms: int
+    error: str | None = None
+
+
+@dataclass
+class WaveResult:
+    """The captured artifact of one concurrent wave (the proof C1.1/C1.6 read)."""
+    turn_id: str
+    resolved: dict = field(default_factory=dict)        # role_id -> resolved value (read BACK via run://)
+    addresses: dict = field(default_factory=dict)       # role_id -> run:// address
+    runs: list = field(default_factory=list)            # list[RoleRun] (per-role records)
+    finish_order: list = field(default_factory=list)    # the order roles FINISHED (nondeterministic)
+    wall_s: float = 0.0
+    sum_role_s: float = 0.0                              # sum of role latencies (for the max-vs-sum proof)
+    budget: dict = field(default_factory=dict)
+
+
+def run_swarm(roles: list, ctx: dict, store, *, turn_id: str,
+              budget: "SlotBudget | None" = None,
+              emit: Callable[[str, dict], None] | None = None,
+              base_url: str = RESIDENT_BASE_URL, model: str = RESIDENT_MODEL,
+              max_tokens: int = 256) -> WaveResult:
+    """Dispatch a WAVE of independent role-runs CONCURRENTLY (C1.1), bounded by the registry slot
+    budget (C1.2), each writing its validated JSON to its own run://<turn>/<role> address; JOIN at
+    the wave barrier; read every role's resolved value BACK via the canonical resolver (C1.3); emit
+    ONE batched rollup containing every role's run-record (C1.6).
+
+    This is the cognition DRIVER — the concurrency lives HERE, not in scheduler.py (F2). It fires the
+    EXISTING blocking transport on pool threads (the GIL releases on socket I/O; vLLM batches
+    server-side) — NO async/httpx. Store writes (put_content/set_ref per role) are individually
+    atomic AND each role writes a DISTINCT address (no shared key) → no write race; the rollup +
+    the read-back happen AFTER the barrier (serialized). N independent roles finish in ~max(role)
+    not ~sum(role).
+
+    `roles` = list[Role] (declared data). `ctx` carries `utterance`. `budget` = SlotBudget (the
+    swarm sub-pool width = budget.swarm_slots; if None, derived from the live registry). `emit` =
+    an optional ONE-arg-per-call sink (kind, payload) — the Suite's _emit/append_event seam.
+    Fail loud: a role's failure is captured per-RoleRun AND re-raised after the barrier (the wave
+    cannot silently lose a role)."""
+    if budget is None:
+        budget = SlotBudget.from_registry()
+    # The GLOBAL gate is sized to the FULL resident seq-cap (max_num_seqs) — NOT seq-cap−R. The
+    # reservation comes from the SWARM POOL being capped at swarm_slots (= max_num_seqs − R) below:
+    # the swarm can hold at most swarm_slots gate permits, so R permits ALWAYS remain free for a
+    # concurrent main-stream/judge call to acquire immediately (it never queues behind the swarm).
+    # (Sizing the gate to seq-cap−R AND the pool to swarm_slots would leave ZERO headroom — the bug
+    # the C1.2 reserved-slot invariant forbids.)
+    gate = global_vram_gate(budget.max_num_seqs)
+    # C1.1 — MATERIALIZE THE READY-SET (the scheduler is a re-scanning loop with no ready-set; the
+    # driver builds one). A role is "ready" iff its declared inputs are available — here every role
+    # in `roles` reads only `ctx.utterance` (independent), so the whole list is the ready-set. (When
+    # roles gain inter-role deps, ready-set = roles whose run:// deps already resolved — same shape.)
+    ready_set = list(roles)
+    addresses = {r.id: f"run://{turn_id}/{r.id}" for r in ready_set}
+    result = WaveResult(turn_id=turn_id, addresses=addresses,
+                        budget={"swarm_slots": budget.swarm_slots, "reserve_r": budget.reserve_r,
+                                "knee": budget.source.get("knee"), "source": budget.source})
+    runs: dict = {}
+    finish_lock = threading.Lock()
+
+    def _one(role: Role) -> RoleRun:
+        t0 = time.monotonic()
+        # The swarm acquires the GLOBAL gate but is itself bounded to swarm_slots by the pool's
+        # max_workers (knee − R) — so R slots of the gate stay free for a main-stream call.
+        with gate.slot():
+            out = run_role(role, ctx, base_url=base_url, model=model, max_tokens=max_tokens)
+            cas = store.put_content(out)              # immutable content (write-once)
+            store.set_ref(addresses[role.id], cas)    # the run:// pointer (atomic set_ref)
+        ms = int((time.monotonic() - t0) * 1000)
+        rr = RoleRun(role_id=role.id, address=addresses[role.id], ok=True, ms=ms)
+        with finish_lock:
+            result.finish_order.append(role.id)
+        return rr
+
+    wall0 = time.monotonic()
+    errors: list[BaseException] = []
+    # C1.1/C1.2 — dispatch the wave via a ThreadPoolExecutor sized to the SWARM SUB-POOL (knee − R).
+    # max_workers caps in-flight role-runs at the budget; the global gate is the cross-driver bound.
+    if ready_set:
+        with ThreadPoolExecutor(max_workers=budget.swarm_slots,
+                                thread_name_prefix=f"swarm-{turn_id}") as pool:
+            futs = {pool.submit(_one, r): r for r in ready_set}
+            for fut in as_completed(futs):            # the BARRIER: every role joined before we proceed
+                role = futs[fut]
+                try:
+                    runs[role.id] = fut.result()
+                except BaseException as e:            # capture per-role; re-raise after the barrier
+                    runs[role.id] = RoleRun(role_id=role.id, address=addresses[role.id],
+                                            ok=False, ms=0, error=f"{type(e).__name__}: {e}")
+                    errors.append(e)
+    result.wall_s = round(time.monotonic() - wall0, 3)
+    result.runs = [runs[r.id] for r in ready_set]
+    result.sum_role_s = round(sum(rr.ms for rr in result.runs) / 1000.0, 3)
+
+    # C1.6 — ONE BATCHED ROLLUP per wave (NOT one append_event per role-fire). Contains EVERY role's
+    # run-record (so G7's render still has them) — batch the fsync, never drop the data (advisor flag).
+    if emit is not None:
+        emit("cognition.wave", {
+            "turn_id": turn_id, "n_roles": len(result.runs),
+            "wall_s": result.wall_s, "sum_role_s": result.sum_role_s,
+            "finish_order": result.finish_order,
+            "budget": result.budget,
+            "roles": [{"role": rr.role_id, "address": rr.address, "ok": rr.ok,
+                       "ms": rr.ms, **({"error": rr.error} if rr.error else {})}
+                      for rr in result.runs],
+        })
+
+    # Fail loud AFTER the rollup (so the failure is recorded) — the wave cannot silently lose a role.
+    if errors:
+        raise errors[0]
+
+    # C1.3 — read every role's resolved value BACK via the canonical resolver (head→get_content),
+    # AFTER the barrier (serialized). This is the value a later part injects. Fail loud on a missing ref.
+    for rid, addr in addresses.items():
+        result.resolved[rid] = resolve_run_ref(store, addr)
+    return result

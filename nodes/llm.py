@@ -22,6 +22,14 @@ CONFIG = {
     "retries":     {"type": "number", "label": "Retries",       "default": 3,    "min": 0, "max": 10},
     # Single-call ceiling. Default = cloud timeout (batch node can wait out a slow cloud queue).
     "timeout":     {"type": "number", "label": "Timeout (s)",   "default": fcfg.DEFAULT_CLOUD_TIMEOUT, "min": 1},
+    # Per-DRAW cache-key (Concurrent Cognition C1.5 / R1-FOLD F9). A jury/ensemble role fires N
+    # draws of the SAME prompt+model; each draw passes a DISTINCT `draw` id so the memo gate
+    # (scheduler._memo_sig hashes ex.config wholesale) gives each a DISTINCT signature → they do
+    # NOT collapse into one cached generation. This does NOT disable llm memoization app-wide:
+    # an ordinary llm node declares NO draw (default None) → its sig is byte-identical run-to-run
+    # → it still memoizes (a real app feature, preserved). `draw` is a pure cache-key differentiator
+    # — it is NOT forwarded to the model (the variation comes from temperature>0, set by the jury).
+    "draw":        {"type": "number", "label": "Draw id",       "default": None, "min": 0},
 }
 
 
@@ -34,6 +42,9 @@ def run(inputs: dict, config: dict):
                [{"role": "user", "content": str(inputs.get("prompt", ""))}]
     timeout = config.get("timeout", fcfg.DEFAULT_CLOUD_TIMEOUT)
     t = transport.openai_transport(base_url=base_url, timeout=timeout)
+    # `draw` (C1.5) is DELIBERATELY NOT in passthru — it is a memo cache-key differentiator only
+    # (varies the scheduler sig per jury draw), never a model sampling param. The actual generation
+    # variation a jury wants comes from temperature>0; with temp=0 N draws yield identical text.
     passthru = {k: config[k] for k in ("temperature", "max_tokens", "top_p") if k in config}
     return client.complete(t, messages, model=model,
                            retries=config.get("retries", 3), **passthru)
