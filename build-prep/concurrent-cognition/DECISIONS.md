@@ -45,5 +45,11 @@
 - Tools-offered-across-parts: only the **final** part carries the operator-facing tools array (intermediate parts are pure generation) unless a shape declares otherwise.
 - The exact per-mode part-grain mapping (focus=line, listening=beat, explaining=paragraph) — a config table, tuned by use.
 
-## Status: READY TO CONVERGE
+### Batch 5 — post-review decision (answered 2026-06-07)
+- **Rule grammar → RICH PREDICATES + COMPOSITION.** A routing rule is **full predicate richness over resolved values** (boolean/comparison/arithmetic/field/membership); anything heavier than a predicate becomes an **upstream role/node (composition)**, not code-in-a-rule. Keeps "full declared logic" intent (route on previous outputs) AND keeps rules deterministic + renderable (a nesting-depth cap so the edge-label stays legible). Resolves R2-FOLD H2. Enforcement: a declared AST + restricted evaluator (never `eval()`), resolved-values-only, per-rule readiness. Sub-dev-calls (resolved by the laws): a missing/pruned reference **fails loud / declared `on_missing`** (never implicit); readiness fires on **settled status, never a timeout**.
+
+## Status: BUILD-READY (2 review rounds + folds; all decisions made)
+The triad is hardened by Round-1 (R1-FOLD) + Round-2 (R2-FOLD); architecture held across both. The G0 proving spike is buildable now (it MEASURES the real co-resident concurrency ceiling + inter-part wall-clock before any fan-out). Fan-out past G0 is gated on named specs (thought-shape schema · typed-lane seam · jury evaluator · the three activation triggers' HOW · each net-new registry's drift-home). Method: sub-agent-driven, the triad as the common reference, serial spine + 3 disjoint lanes, in the `~/company-cognition` worktree.
+
+## (prior) Status: READY TO CONVERGE
 All foundational decisions captured. Next: this + the two landscapes → the loop-prep triad (Completion Criteria · Implementation Guide · Research Synthesis) = the common reference for the sub-agent-driven build in the worktree. (Spike-gated: prove a 2-role staged turn before fan-out; full-substrate node-mechanism rebuild + live view in scope.)
