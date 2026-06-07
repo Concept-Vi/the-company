@@ -284,6 +284,20 @@ class Suite:
         # durable decision.dispatch event remains the cross-process/restart guarantee.
         self._dispatch_locks_guard = _t.Lock()
         self._dispatch_locks: dict = {}
+        # WIRE-ASYNC — the resolve→dispatch trigger must NOT run the build INSIDE the approving HTTP
+        # request. `drive_dispatchable` → `dispatch_decision` → `launch` runs a BLOCKING `claude -p`
+        # subprocess (up to DEFAULT_TIMEOUT_S=900s); doing that synchronously means the whole build
+        # ran inside POST /api/resolve, so a dropped client connection (curl timeout, UI fetch timeout,
+        # phone backgrounding) abandoned the request thread → the build orphaned as a 'crashed' dispatch
+        # (a decision.dispatch claim with no terminal event), never re-launched (exactly-once). The fix:
+        # resolve_surfaced writes the operator verdict SYNCHRONOUSLY (the consent record is durable
+        # immediately), then hands the build EXECUTION to a BACKGROUND daemon thread owned HERE, and
+        # returns a prompt ack. The background thread completes + emits its terminal event + commits +
+        # surfaces via the SAME event log/SSE stream INDEPENDENTLY of the approving client connection.
+        # We TRACK the live threads so tests can join them (wire_wait_for_dispatch) and so a caller can
+        # see they exist; daemon=True so a never-finished thread can't block process shutdown.
+        self._wire_threads_guard = _t.Lock()
+        self._wire_threads: list = []
         # R1 — the BACKEND-HELD current `ui://` locus (seams-rhm Seam 4: "there is no stored
         # current-locus anywhere in suite/store" — this is the net-new piece). Today the operator's
         # locus exists ONLY FE-side, shipped per-request as `focus.selected`; nothing is remembered
@@ -399,6 +413,76 @@ class Suite:
                 lk = _t.Lock()
                 self._dispatch_locks[derived_from] = lk
             return lk
+
+    # ── WIRE-ASYNC · background dispatch (decouple the build from the approving request) ──────────
+    def _drive_dispatchable_bg(self, *, sid: str | None, launcher=None, verifier=None,
+                               suite_runner=None, critic=None, cap: int | None = None,
+                               repo: str | None = None, committer=None):
+        """Spawn a BACKGROUND daemon thread that runs ONE `drive_dispatchable` watcher pass, decoupled
+        from whatever request triggered it. The thread:
+          • runs the full GOVERNED path (drive_dispatchable → dispatch_decision: the per-seq lock + the
+            durable decision.dispatch CLAIM + the AUTO-posture gate + launch + verify + the [self-build]
+            commit + the guarded close + surface-for-review) — REUSED byte-for-byte, never re-implemented,
+            so EXACTLY-ONCE, the gates, and git-safety are preserved (the claim is emitted under the
+            SAME locks INSIDE dispatch_decision regardless of which thread runs it);
+          • emits its terminal event (decision.implemented / decision.verify) + surfaces the review via
+            the SAME store/event log → the SSE stream delivers it to the UI, INDEPENDENT of the
+            approving client connection (a dropped connection no longer orphans the build);
+          • is daemon=True so a long/never-finishing build can't block process shutdown;
+          • CATCHES every exception and emits a FAIL-LOUD decision.verify terminal (rule 4 — a silently
+            dead thread = an orphaned dispatch, exactly the bug this lane closes). resurface_crashed
+            still covers a thread that genuinely dies (e.g. the interpreter is torn down), because the
+            claim event with no terminal is its signal — but the normal-exception path fails loud HERE.
+
+        Returns the spawned threading.Thread (tracked in self._wire_threads). The injectables
+        (launcher/verifier/committer/cap/repo) are threaded through so tests inject a fake runner +
+        a no-op committer (never a real `claude -p`, never a live commit)."""
+        import threading as _t
+
+        def _run():
+            try:
+                implement = __import__("runtime.implement", fromlist=["drive_dispatchable"])
+                implement.drive_dispatchable(
+                    self, launcher=launcher, verifier=verifier, suite_runner=suite_runner,
+                    critic=critic, cap=cap, repo=repo, committer=committer)
+            except Exception as e:   # noqa: BLE001 — fail loud, never a silent thread death
+                # A silently-dead background thread would re-create the orphan bug (a claim with no
+                # terminal). Emit a loud terminal so now()'s last-event surfaces it and the SSE stream
+                # delivers it to the UI. The operator's resolve already committed (resolve_surfaced),
+                # so operator-only resolve holds; only the build EXECUTION failed.
+                try:
+                    self._emit("decision.verify",
+                               f"WIRE-ASYNC background dispatch thread errored (build not driven): {e}",
+                               surfaced=sid, derived_from=None, verify_passed=False,
+                               address="ui://chrome/inbox")
+                except Exception:
+                    pass   # the emit itself failing must not crash the daemon thread teardown
+            finally:
+                # drop ourselves from the live-thread registry (best-effort; the GC handles the rest)
+                with self._wire_threads_guard:
+                    me = _t.current_thread()
+                    if me in self._wire_threads:
+                        self._wire_threads.remove(me)
+
+        th = _t.Thread(target=_run, name=f"wire-dispatch-{sid or '?'}", daemon=True)
+        with self._wire_threads_guard:
+            self._wire_threads.append(th)
+        th.start()
+        return th
+
+    def wire_wait_for_dispatch(self, timeout: float | None = None) -> bool:
+        """TEST/OPS helper — join every live WIRE-ASYNC background dispatch thread (a SNAPSHOT taken
+        under the guard, so a thread that finishes + removes itself mid-join is fine). Returns True if
+        all joined within `timeout`, False if any is still alive. NOT used in the production request
+        path (the whole point is that the request does NOT wait) — it exists so a by-use test can prove
+        the build COMPLETES in the background after the resolve returned, and so ops can drain on demand."""
+        with self._wire_threads_guard:
+            snapshot = list(self._wire_threads)
+        for th in snapshot:
+            th.join(timeout)
+            if th.is_alive():
+                return False
+        return True
 
     def _emit(self, kind: str, summary: str, **meta) -> None:
         """Append one TELEMETRY event to the captured trajectory (I2). Lenient by design: a telemetry
@@ -7806,21 +7890,47 @@ class Suite:
         # review. We REUSE it (the watcher also enforces the §W7 concurrency cap + re-surfaces crashed
         # dispatches); we never re-implement or weaken it. A non-AUTO / non-build-intent approve is NOT
         # dispatched (drive_dispatchable._is_dispatchable filters it) — it surfaces for the operator.
+        #
+        # WIRE-ASYNC — the build EXECUTION is DECOUPLED from this request. The synchronous bug: this
+        # block used to call drive_dispatchable INLINE, so the blocking `claude -p` subprocess (up to
+        # 900s) ran INSIDE POST /api/resolve — if the approving client connection dropped, the request
+        # thread's result-handling was lost and the build orphaned as a 'crashed' dispatch. NOW the
+        # operator verdict above is the ONLY thing written synchronously (the consent record is durable
+        # immediately); the build is handed to a BACKGROUND daemon thread (_drive_dispatchable_bg) that
+        # runs the SAME governed drive_dispatchable → dispatch_decision path (per-seq lock + durable
+        # claim + gates + [self-build] commit + guarded close + surface-for-review, all UNCHANGED), and
+        # this method RETURNS PROMPTLY with an ack. The build completes + emits its terminal event +
+        # commits + surfaces via the SAME event log → the SSE stream delivers the result to the UI
+        # INDEPENDENT of this connection. EXACTLY-ONCE is preserved: the decision.dispatch claim is
+        # emitted under the locks INSIDE dispatch_decision regardless of which thread runs it, so two
+        # concurrent approves of the same seq → two threads → one claim wins, the other is refused.
         from runtime import implement      # local import (mirrors dispatch_decision) — avoid import cycle
         if choice == "approve" and implement.wire_armed() and self.is_build_intent(d):
             try:
-                drive = implement.drive_dispatchable(self)
-                verdict["wire_drive"] = {
-                    "dispatched": [x.get("surfaced") for x in drive.get("dispatched", [])],
-                    "deferred": [x.get("surfaced") for x in drive.get("deferred", [])],
-                    "crashed_resurfaced": drive.get("crashed_resurfaced", []),
-                }
+                self._drive_dispatchable_bg(sid=sid)
+                # the ACK — HONEST (rule 4, no pretending): the bg pass only DISPATCHES a build-intent
+                # whose DECLARED class has posture==AUTO (drive_dispatchable._is_dispatchable filters
+                # CONFIRM/SURFACE/LOCKED classes OUT — they surface for the operator, never auto-build).
+                # So we report THIS sid as dispatched ONLY when it is genuinely auto-dispatchable; a
+                # non-AUTO build-intent reports status="surfaced" with an EMPTY dispatched list (it was
+                # NOT dispatched — claiming it was would be the exact "pretend success" rule 4 forbids).
+                # The authoritative result (implemented / verify / surfaced-for-review) arrives via the
+                # SSE event stream, NOT this ack — the ack only says what the bg pass WILL attempt.
+                from runtime.governance import posture as _posture, AUTO as _AUTO
+                _declared = (d.get("payload") or {}).get("consequence_class", "decision_build")
+                if _posture(_declared) == _AUTO:
+                    verdict["wire_drive"] = {"dispatched": [sid], "status": "running"}
+                else:
+                    verdict["wire_drive"] = {"dispatched": [], "status": "surfaced",
+                                             "reason": f"declared class {_declared!r} is not AUTO — "
+                                                       f"surfaced for the operator, not auto-dispatched"}
             except Exception as e:
-                # FAIL LOUD (rule 4): the trigger firing but the dispatch erroring must NOT pretend the
-                # approve silently did nothing — surface the failure on the verdict + a telemetry event.
-                # The operator's resolve itself already committed (above) — operator-only resolve holds.
+                # FAIL LOUD (rule 4): failing to even SPAWN the background dispatch (e.g. thread start)
+                # must NOT pretend the approve silently did nothing — surface it on the verdict + a
+                # terminal event. The operator's resolve itself already committed (above) — operator-only
+                # resolve holds; only the build EXECUTION couldn't start.
                 self._emit("decision.verify",
-                           f"resolve→dispatch trigger for {sid} errored: {e}",
+                           f"resolve→dispatch trigger for {sid} could not start: {e}",
                            surfaced=sid, derived_from=None, verify_passed=False,
                            address="ui://chrome/inbox")
                 verdict["wire_drive_error"] = str(e)
