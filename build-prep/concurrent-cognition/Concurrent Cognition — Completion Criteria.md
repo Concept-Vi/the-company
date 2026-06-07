@@ -73,11 +73,11 @@
 
 > **NET-NEW substrate, not "generalise mode" (R1-FOLD F7).** Repo sweep found NO activation substrate — zero `.timer` units, `background` is just a directive string. Background/sense/rollup are **three net-new subsystems** (a timer/scheduler for rollups · an event-hook for sense · an idle-loop for background), each net-new build, sequenced AFTER per-turn (C5.1) works, each under a mode's slot budget.
 
-- **C5.1 · Per-turn** cognition (the live reply) works (the spine of G0–G4).  ☐ by use
-- **C5.2 · Background** cognition fires between turns (consolidating/preparing) under a mode's budget.  ☐ by use
-- **C5.3 · Sense-triggered** cognition fires on screen/app/state changes (an activation trigger, not a user turn).  ☐ by use
-- **C5.4 · Rollups** fire on schedule (the introspective-data-building loop — the swarm's own run-records consolidated).  ☐ by use
-- **C5.5 · Mode allocates** the slot budget + the active cast + whether/when to stage across all contexts.  ☐ by use
+- **C5.1 · Per-turn** cognition (the live reply) works (the spine of G0–G4).  ✅ by use (the G0–G6 spine; per-turn is the baseline activation-context)
+- **C5.2 · Background** cognition fires between turns (consolidating/preparing) under a mode's budget.  ✅ by use (fire_activation('background') fires the cast via run_swarm under SlotBudget; ZERO chat events; lands at run:// — read back resolves)
+- **C5.3 · Sense-triggered** cognition fires on screen/app/state changes (an activation trigger, not a user turn).  ◑ by use (a synthetic sense_event fires the cast, no reply, fails loud with no event) — the real event SOURCE wiring = needs-tim
+- **C5.4 · Rollups** fire on schedule (the introspective-data-building loop — the swarm's own run-records consolidated).  ◑ by use (consolidate_rollup reads the swarm's own cognition.wave run-records → per-role distributions → one record at run://rollup/<id>; reuses run_stats) — the timer SCHEDULER cadence = needs-tim
+- **C5.5 · Mode allocates** the slot budget + the active cast + whether/when to stage across all contexts.  ✅ by use (ACTIVATION_ALLOCATION per mode; ADVERSARIAL + TEETH: a non-turn cast is capped at swarm_slots=max_num_seqs−R and CANNOT consume the per-turn reserve — with all permits held the per-turn acquire blocks, proving the cap is the protection; under-reserve R fails loud)
 
 ## G6 · Voice coupling (streams as it thinks)
 

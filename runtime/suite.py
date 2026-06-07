@@ -1106,6 +1106,76 @@ class Suite:
         "off":             {"grain": "line",      "shape": "linear-stream", "stage": False},
     }
 
+    # ============================================================================================
+    # CONCURRENT COGNITION G5 — ACTIVATION-CONTEXT ALLOCATION (C5.5 · the dial generalised).
+    #
+    # A MODE allocates (L1 declared data): which activation contexts are LIVE, the slot BUDGET (reserve_r
+    # + per-role context — the SlotBudget is COMPUTED from these against the live registry, never a
+    # literal), AND the brain CONFIG (R2-FOLD H1: a swarm-heavy mode wants the higher-util swarm-brain
+    # ~16K/0.63; a voice-depth mode the 64K brain). The brain config is DECLARED here (the mode→loadout
+    # registry, H8) — it is NOT swapped by this build (driving `company up/swap` is the always-on
+    # GPU-loadout concern, needs-tim). The registry of contexts themselves lives in runtime/activation.py
+    # (ACTIVATION_CONTEXTS, the drift home in runtime/AGENTS.md). `per-turn` is ALWAYS live (the spine).
+    #
+    # THE RESERVE FLOOR (sacred, C5.5): reserve_r is the per-turn live-stream reservation; activation.py
+    # FAILS LOUD if a mode declares it below FLOOR_RESERVE_R. A non-turn cast runs under swarm_slots =
+    # max_num_seqs − reserve_r, bounded by the SAME process-wide VRAM gate → R permits always stay free.
+    # main_ctx_tokens models how deep the main conversation is assumed to be (the C0.5 deep-main KV bind).
+    # ============================================================================================
+    ACTIVATION_ALLOCATION = {
+        # voice-depth conversational modes: the 64K brain, shallow background activity, R reserved.
+        "listening":       {"live": ["per-turn", "background", "sense", "rollup"], "reserve_r": 2,
+                            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k"},
+        "text-only":       {"live": ["per-turn", "rollup"], "reserve_r": 2,
+                            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k"},
+        "walkthrough":     {"live": ["per-turn"], "reserve_r": 2,
+                            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k"},
+        "decide-for-me":   {"live": ["per-turn", "background", "rollup"], "reserve_r": 2,
+                            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k"},
+        "watch-and-react": {"live": ["per-turn", "sense"], "reserve_r": 2,
+                            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k"},
+        # BACKGROUND presence mode = the swarm-heavy loadout: the higher-util swarm-brain, background +
+        # rollup live, a deeper assumed main (the deep-main KV bind is why this mode wants the 0.63 brain).
+        "focus":           {"live": ["per-turn", "background"], "reserve_r": 2,
+                            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k"},
+        "background":      {"live": ["per-turn", "background", "sense", "rollup"], "reserve_r": 2,
+                            "per_role_ctx": 1500, "main_ctx_tokens": 40000, "brain_config": "swarm-16k"},
+        # off: nothing fires (the dial is off) — only the spine is nominally live (chat() short-circuits).
+        "off":             {"live": ["per-turn"], "reserve_r": 2,
+                            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k"},
+    }
+
+    def activation_allocation(self, mode: str) -> dict:
+        """C5.5 — the activation-context allocation for a mode: the LIVE contexts, the slot budget
+        params (reserve_r/per_role_ctx/main_ctx_tokens — the SlotBudget is COMPUTED from these), and
+        the declared brain config (the mode→loadout registry, H8). Fail loud on an unknown mode (rule
+        8 — never a fabricated allocation). `per-turn` is always present (the spine)."""
+        alloc = self.ACTIVATION_ALLOCATION.get(mode)
+        if alloc is None:
+            raise ValueError(f"activation_allocation: unknown mode {mode!r} — registered: "
+                             f"{sorted(self.ACTIVATION_ALLOCATION)} (fail loud, never a fabricated allocation).")
+        out = {k: (list(v) if isinstance(v, list) else v) for k, v in alloc.items()}
+        if "per-turn" not in out["live"]:                  # the spine is always live (defensive)
+            out["live"] = ["per-turn"] + out["live"]
+        return out
+
+    def fire_activation(self, context: str, *, mode: str | None = None,
+                        sense_event: dict | None = None, turn_id: str | None = None):
+        """C5.2/C5.3 — fire a non-turn activation context (background/sense): the mode's cast fires via
+        run_swarm under the mode-allocated budget; outputs route over the non-consequential
+        DESTINATION_KINDS (surface/address/lane — NO reply, NO resolve). Thin delegate to
+        runtime/activation.py (reuse-don't-parallel — the driver lives by run_swarm)."""
+        from runtime import activation as _act
+        return _act.fire_activation(self, context, mode=mode, sense_event=sense_event, turn_id=turn_id)
+
+    def consolidate_rollup(self, *, since: int = -1, mode: str | None = None,
+                           turn_id: str | None = None, gc: bool = False):
+        """C5.4 — the rollup trigger: consolidate the swarm's OWN run-records (cognition.wave telemetry)
+        into ONE rollup distribution at a run:// address (introspective-data-building, read-half — fires
+        no swarm). Thin delegate to runtime/activation.py."""
+        from runtime import activation as _act
+        return _act.consolidate_rollup(self, since=since, mode=mode, turn_id=turn_id, gc=gc)
+
     def shape_for(self, mode: str) -> dict:
         """The THOUGHT_SHAPE for a mode (C4.1/G4): read the per-mode grain row → its shape. Fail loud on
         an unknown mode (rule 8 — never default-fire a fabricated shape). Returns the shape dict (the

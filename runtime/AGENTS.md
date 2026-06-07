@@ -175,6 +175,51 @@ operator-notebook strata) and decide what injects into the FINAL part (which car
 coherence, C4.4, and runs the tool block, C4.5). Add a new shape/grain ⇒ add it to
 `THOUGHT_SHAPES`/`PART_GRAIN` **and reflect it here**, or `tests/chat_parts_acceptance.py` fails loud.
 
+## The activation contexts (Concurrent Cognition G5 · `runtime/activation.py` + `runtime/suite.py` · the dial generalised)
+
+The **activation contexts** generalise "mode" (the presence dial) from *presence-modes* to the named ways
+a cast can fire. Per-turn (the live reply) is the spine of G0–G4; G5 adds the **three NET-NEW non-turn
+triggers** as declared data + real entry points (R1-FOLD F7 / R2-FOLD H6 — there was NO activation
+substrate: `background` was only a presence-MODE directive, zero `.timer` units). **The always-on DRIVERS
+that *call* these entry points (the idle-loop daemon · the OS/bridge event-hook source · the timer
+scheduler) are system-lifecycle + GPU-always-on concerns → needs-tim; this build provides the MECHANISM +
+entry points, proven by USE (invoking fires the cast).**
+
+**The net-new registry (drift home — C9.4 / R2-FOLD H5; `tests/activation_contexts_acceptance.py` asserts
+it stays reflected HERE, mirroring `rules_acceptance` → `RULE_OPS`):**
+
+- **`ACTIVATION_CONTEXTS`** (`runtime/activation.py`) — the named contexts (L1 declared data). Each row
+  DECLARES its trigger kind (the needs-tim driver), whether it produces a spoken REPLY, the allowed
+  `DESTINATION_KINDS`, and whether it fires a swarm:
+  - **`per-turn`** — the live reply; trigger=turn; owned by `chat()`/`chat_parts()` (the G0–G4 spine —
+    registered as the BASELINE, NEVER fired by `fire_activation`).
+  - **`background`** — an IDLE-LOOP tick fires the mode's cast between turns; **NO reply**; destinations
+    surface/address/lane.
+  - **`sense`** — an EVENT-HOOK (screen/app/state change) fires the cast given a sense event; NO reply.
+  - **`rollup`** — a TIMER tick runs the **introspective-data-building** consolidation of the swarm's OWN
+    `run://`-addressed run-records (the `cognition.wave` telemetry) into ONE rollup distribution at a
+    `run://rollup/<id>` address (READ-HALF — fires no swarm; GC targets the superseded `run://` CAS refs,
+    NEVER the append-only event log).
+
+**Entry points (reuse-don't-parallel):** `Suite.fire_activation(context, …)` → `activation.fire_activation`
+fires the cast via `run_swarm` (G1) and routes the outputs via `rules.route` (G3) — so the **`claude -p`
+floor holds by construction** (the five `DESTINATION_KINDS` are non-consequential; `surface` goes through
+`surface_review` → an `ask`, never a `resolve`). `Suite.consolidate_rollup(…)` → `activation.consolidate_rollup`
+reuses `run_stats`' distribution math. NO second scheduler/executor/inbox.
+
+**`ACTIVATION_ALLOCATION`** (`runtime/suite.py`, C5.5) — a MODE allocates which contexts are LIVE, the slot
+BUDGET (`reserve_r`/`per_role_ctx`/`main_ctx_tokens` — the `SlotBudget` is COMPUTED from these against the
+live registry, never a literal), AND the declared brain CONFIG (the mode→loadout registry, H8/H1:
+`swarm-16k` for the swarm-heavy `background` mode, `voice-64k` for voice-depth modes — DECLARED here, NOT
+swapped by this build; driving `company up/swap` is the always-on loadout concern, needs-tim).
+
+**THE RESERVE IS SACRED (C5.5):** `reserve_r` is the per-turn live-stream reservation; `fire_activation`
+FAILS LOUD if a mode declares it below `FLOOR_RESERVE_R`. A non-turn cast runs under
+`swarm_slots = max_num_seqs − reserve_r`, bounded by the SAME process-wide `cognition.global_vram_gate`
+the per-turn stream uses → R permits ALWAYS stay free for the live per-turn call (a background swarm can
+never starve it). Add a context ⇒ add it to `ACTIVATION_CONTEXTS` **and reflect it here**, or
+`tests/activation_contexts_acceptance.py` fails loud.
+
 ## Relates to
 
 - **Called by** [[canvas — constitution]] — through the bridge (C8) — and by
