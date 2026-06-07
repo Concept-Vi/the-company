@@ -113,6 +113,19 @@ class H(BaseHTTPRequestHandler):
                     kind=q.get("kind", "chat"), base_url=q.get("base_url"))))
             elif path == "/api/chat-models":                # S1: the picker list — ollama/cloud + local vLLM (model·base_url·service·up)
                 self._send(200, json.dumps(SUITE.chat_models_detailed()))
+            elif path == "/api/fit":                        # S6 (Tim 2026-06-07): "tell me if my selection won't fit"
+                # ?services=chat-4b,tts-orpheus → the VRAM picture for that SELECTION (each budget, the sum
+                # vs the 16GB card ceiling, measured free, fit/no-fit + what to unload). Config-derived, so
+                # it tracks a resize (brain @256K vs @64K). Reuses gpu.fit_report — no parallel predictor.
+                import sys as _sys
+                _ops = os.path.join(ROOT, "ops", "cli")
+                if _ops not in _sys.path:
+                    _sys.path.insert(0, _ops)
+                import gpu as _gpu, registry as _reg
+                sel = [s for s in (q.get("services", "").split(",")) if s.strip()]
+                if not sel:
+                    raise ValueError("/api/fit needs ?services=<key>[,<key>] (fail loud: nothing selected)")
+                self._send(200, json.dumps(_gpu.fit_report(_reg.load(), sel)))
             elif path == "/api/surfaced":
                 self._send(200, json.dumps(SUITE.list_surfaced()))
             elif path == "/api/events":
@@ -623,16 +636,40 @@ class H(BaseHTTPRequestHandler):
                 if key not in reg["services"]:
                     raise ValueError(f"unknown service {key!r}")
                 _reg.set_config(reg, key, field, value)    # writes services.json (fail-loud if no config block)
+                # AUTO-UTIL (Tim 2026-06-07, "the registry knows the resource need"): when the CONTEXT WINDOW
+                # changes on a model that carries a measured `_profile`, also size gpu_util to give vLLM the KV
+                # pool that context needs — otherwise a bigger max_model_len than the current util can hold
+                # makes vLLM refuse at launch. util = (fixed + ctx·kv_per_tok + margin)/ceiling, capped 0.92.
+                auto_util = None
+                if field == "max_model_len":
+                    reg = _reg.load(); _c = reg["services"][key].get("config", {})
+                    prof = _c.get("_profile")
+                    if prof and prof.get("fixed_mb") and prof.get("kv_kb_per_token"):
+                        ctx = int(value)
+                        need_mb = prof["fixed_mb"] + ctx * prof["kv_kb_per_token"] / 1024.0 + 500  # +500 MiB margin
+                        auto_util = min(0.92, round(need_mb / _reg.ceiling_mb(reg) + 0.005, 2))
+                        _reg.set_config(reg, key, "gpu_util", str(auto_util))   # keep util consistent with the context
                 reg = _reg.load()
                 svc = reg["services"][key]
                 if _sd.is_active(svc) == "active":         # running → restart to apply the new serve-time value
-                    ok, need, free, _m = _gpu.check_fit(reg, [key])
-                    started, msg = _sd.control(svc, "restart")
-                    self._send(200, json.dumps({"service": key, "key": field, "value": value, "restarted": started,
-                                                "note": (msg if started else "restart failed: " + str(msg))}))
+                    # Budget-gate the restart on the SUM of everything that'll be on the card (the bigger
+                    # context may no longer fit beside a resident voice). check_fit treats the running service
+                    # as already-counted; we want the NEW (post-resize) budget, so compare the full need vs the
+                    # ceiling and fail loud rather than restart into an OOM.
+                    new_budget = _gpu.budget_vram(reg, key)
+                    others = sum(mb for k, mb in _gpu.running_gpu_services(reg) if k != key)
+                    if new_budget + others > _reg.ceiling_mb(reg):
+                        self._send(200, json.dumps({"service": key, "key": field, "value": value, "restarted": False,
+                            "auto_util": auto_util, "error": f"{key} at {value} needs ~{new_budget} MB; "
+                            f"{others} MB already held by other GPU services → {new_budget+others} MB > {_reg.ceiling_mb(reg)} MB card. "
+                            f"Not restarting (would OOM). Free a voice/model first, or pick a smaller context.\n" + _gpu.format_state(reg)}))
+                    else:
+                        started, msg = _sd.control(svc, "restart")
+                        self._send(200, json.dumps({"service": key, "key": field, "value": value, "restarted": started,
+                                                    "auto_util": auto_util, "note": (msg if started else "restart failed: " + str(msg))}))
                 else:                                      # not running → the new value applies on next start
                     self._send(200, json.dumps({"service": key, "key": field, "value": value, "restarted": False,
-                                                "note": "saved — applies when the service next starts"}))
+                                                "auto_util": auto_util, "note": "saved — applies when the service next starts"}))
             elif self.path == "/api/mode":                # the presence dial — set the RHM mode
                 b = self._body()
                 SUITE.set_mode(b["mode"])

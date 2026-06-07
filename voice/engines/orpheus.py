@@ -40,15 +40,36 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from voice.engines._service import serve  # noqa: E402
 
 PORT = 4125
+
+# --- ONE SOURCE OF TRUTH: the registry `config` block (ops/services.json → tts-orpheus.config) ---
+# gpu_util / max_model_len / model live in the registry config block so the SAME number the resource
+# manager budgets against (gpu.budget_vram reads config.gpu_util) is the one this engine actually
+# launches with — no drift between "what the fit-gate thinks orpheus costs" and "what orpheus grabs".
+# The COMPANY_ORPHEUS_* env vars (voice.env) remain as a FALLBACK/override when there's no config block.
+def _reg_config():
+    """tts-orpheus's `config` block from the registry, or {} (fail-soft to env). stdlib-only — this
+    runs in the orpheus venv, which has no company modules, so read the JSON directly."""
+    import json
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # ~/company
+    try:
+        reg = json.load(open(os.path.join(root, "ops", "services.json")))
+        return reg["services"]["tts-orpheus"].get("config") or {}
+    except Exception:
+        return {}
+
+
+_C = _reg_config()
 # the model that's actually CACHED (canopylabs/orpheus-3b-0.1-ft) — NOT orpheus-speech's stock default
 # "orpheus-tts-0.1-finetune-prod", which isn't on disk and triggers a ~6GB DOWNLOAD at load.
-MODEL_NAME = os.environ.get("COMPANY_ORPHEUS_MODEL", "canopylabs/orpheus-3b-0.1-ft")
+MODEL_NAME = _C.get("model") or os.environ.get("COMPANY_ORPHEUS_MODEL", "canopylabs/orpheus-3b-0.1-ft")
 # context window (tokens): MUST hold a real spoken reply — text + the MANY SNAC audio tokens a reply
-# generates (audio is token-dense). NOT minimised (a starved window can't carry a real reply). 8192
-# comfortably holds a multi-sentence turn at modest KV cost on a 3B. (The CONVERSATION history is held
-# by the BRAIN's 32K window — this per-utterance window only needs to fit one spoken reply.)
-MAX_LEN = int(os.environ.get("COMPANY_ORPHEUS_MAXLEN", "8192"))
-GPU_UTIL = float(os.environ.get("COMPANY_ORPHEUS_GPU_UTIL", "0.6"))    # ~9.8GB budget; weights ~6GB + 8192 KV fits
+# generates (audio is token-dense). NOT minimised (a starved window can't carry a real reply). The
+# value is registry-driven (config.max_model_len) so the fit-surface and the launch agree. (The
+# CONVERSATION history is held by the BRAIN's window — this per-utterance window only needs one reply.)
+MAX_LEN = int(_C.get("max_model_len") or os.environ.get("COMPANY_ORPHEUS_MAXLEN", "8192"))
+# gpu_util — config.gpu_util is authoritative (it's what gpu.budget_vram reserves against). RIGHT-SIZED
+# by measurement (orpheus's real floor = ~3B weights + KV for MAX_LEN), not an arbitrary default.
+GPU_UTIL = float(_C.get("gpu_util") or os.environ.get("COMPANY_ORPHEUS_GPU_UTIL", "0.6"))
 # graphs ON by default (enforce_eager=False) — Tim's priority is REAL-TIME inference after a one-time
 # pinned load. (Earlier theory that graphs caused the gen crash was WRONG — see ATTN_BACKEND: the crash
 # was FlashInfer on CUDA-13, not the graphs. COMPANY_ORPHEUS_EAGER=1 still available as a diagnostic.)

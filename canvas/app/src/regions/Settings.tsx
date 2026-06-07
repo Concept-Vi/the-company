@@ -8,7 +8,7 @@ import { useApp } from '../AppContext'
 import { PanelErrorBoundary } from '../components/PanelErrorBoundary'
 
 export function Settings() {
-  const { settingsOpen, setSettingsOpen, cfg, chatModelsX, personas, engineKnobs, voiceInfo,
+  const { settingsOpen, setSettingsOpen, cfg, chatModelsX, personas, engineKnobs, voiceInfo, fitReport,
           chooseModel, switchPersona, setBrainKnob, setModelCtx, applyRhm, setVoiceInputMode, setVoiceEnabled } = useApp()
   const [ctx, setCtx] = useState<string>('')
   if (!settingsOpen) return null
@@ -26,6 +26,41 @@ export function Settings() {
           <span className="close" data-ui-ref="ui://settings/close" title="close" onClick={() => setSettingsOpen(false)}>✕</span>
         </div>
         <div className="settings-body">
+          {fitReport && fitReport.items && fitReport.items.length > 0 && (() => {
+            // S6 — the fit-surface: does THIS selection (brain + voice) fit the 16GB card? A bar Tim reads by
+            // shape (each piece's share + the ceiling line) + the honest live verdict (measured free), and
+            // when it won't fit, WHY + what to unload. The live answer is fits_now (measured); fits_card is
+            // the capacity ceiling. Lead with the live one — it's what actually loads right now.
+            const f = fitReport, ceil = f.ceiling_mb || 16376
+            const ok = f.fits_now, pct = (mb: number) => Math.min(100, (mb / ceil) * 100)
+            const totalPct = Math.min(100, (f.need_mb / ceil) * 100)
+            const gb = (mb: number) => (mb / 1024).toFixed(1)
+            return (
+              <section className={'settings-sec settings-fit ' + (ok ? 'fit-ok' : 'fit-over')}>
+                <h4>resource fit · {ok ? '✓ fits the card' : '✕ won’t fit together'}</h4>
+                <div className="fit-bar" title={`${gb(f.need_mb)} GB needed of ${gb(ceil)} GB card`}>
+                  {f.items.filter((i: any) => i.gpu).map((i: any, n: number) => (
+                    <span key={i.key} className={'fit-seg fit-seg-' + (n % 4)} style={{ width: pct(i.mb) + '%' }}
+                          title={`${i.key} · ${gb(i.mb)} GB`}>{pct(i.mb) > 12 ? i.key.replace(/^(tts|chat)-/, '') : ''}</span>
+                  ))}
+                  <span className="fit-free" style={{ width: Math.max(0, 100 - totalPct) + '%' }} />
+                </div>
+                <div className="fit-line">
+                  {f.items.filter((i: any) => i.gpu).map((i: any) => `${i.key} ${gb(i.mb)} GB`).join('  +  ')}
+                  {'  =  '}<b>{gb(f.need_mb)} GB</b> of {gb(ceil)} GB card
+                </div>
+                {!ok && (
+                  <div className="fit-why">
+                    won’t fit right now — needs {gb(f.need_now_mb)} GB, {gb(f.free_mb)} GB free.
+                    {f.evict && f.evict.length ? ` Unload to make room: ${f.evict.join(', ')}.` : ' Pick a lighter voice or a smaller brain context.'}
+                  </div>
+                )}
+                {ok && !f.fits_card && (
+                  <div className="fit-why">loads now, but the two together exceed the card’s ceiling — close to the edge.</div>
+                )}
+              </section>
+            )
+          })()}
           <section className="settings-sec">
             <h4>brain</h4>
             <label>model</label>

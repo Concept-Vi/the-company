@@ -131,6 +131,7 @@ export function useAppController(editor: Editor) {
   const [settingsOpen, setSettingsOpen] = useState(false)   // S3: the dedicated settings window (modal/sheet)
   const [engineKnobs, setEngineKnobs] = useState<any>({})   // S5: per-TTS-engine knob catalog
   const [voiceInfo, setVoiceInfo] = useState<any>({})   // S5: /api/voice — stt_registry (ears) + engines (TTS up-status)
+  const [fitReport, setFitReport] = useState<any>(null)   // S6: "will my selection fit the card?" (brain+voice budgets vs ceiling)
   const [threads, setThreads] = useState<any[]>([])   // S2: previous conversations (reopen list)
   const [threadId, setThreadId] = useState<string | null>(null)   // S2: the current conversation thread ('' / null = global)
   // U12: the /api/inbox payload is { live_escalations, resolved_for_you, batched, counts }. `batched` is a
@@ -1363,6 +1364,23 @@ export function useAppController(editor: Editor) {
       api.chatModelsDetailed().then(m => setChatModelsX(Array.isArray(m) ? m : [])).catch(() => {})
     } catch (e: any) { setNotice('⚠ ' + (e?.message || e)) }
   }
+  // S6 (Tim 2026-06-07) — "if things don't fit from what I've selected, it would tell me." Compute the
+  // GPU service keys for the CURRENT selection (the local brain service + the persona's voice engine
+  // service `tts-<engine>`), ask /api/fit, and stash the picture for the settings surface to render. Only
+  // GPU-resident services count — a cloud/ollama brain has no `service` and contributes nothing to the card.
+  async function refreshFit(over?: { model?: string; base_url?: string; persona?: string; tts_engine?: string }) {
+    try {
+      const model = over?.model ?? cfg.model, base_url = over?.base_url ?? cfg.base_url
+      const persona = over?.persona ?? cfg.persona, ttsEngine = over?.tts_engine ?? cfg.tts_engine
+      const keys: string[] = []
+      const brainRow = chatModelsX.find((r: any) => r.service && r.model === model && r.base_url === base_url)
+      if (brainRow?.service) keys.push(brainRow.service)
+      const eng = ttsEngine || (personas.find((p: any) => p.id === persona) || {}).engine
+      if (eng) keys.push('tts-' + eng)                       // voice engine service key (tts-orpheus, tts-kokoro, …)
+      if (!keys.length) { setFitReport(null); return }
+      setFitReport(await api.fit(keys))
+    } catch { setFitReport(null) /* non-fatal: the surface just hides the fit line */ }
+  }
   // S1 — choose a chat model: set model + its base_url (so a local vLLM model uses its own endpoint), and
   // LOAD its service on demand if it's a company-managed model that's down (budget-gated, like a voice switch).
   async function chooseModel(row: any) {
@@ -1497,11 +1515,19 @@ export function useAppController(editor: Editor) {
     else { setSurf(null); setGrowMsg(`✓ approved + applied → ${surf.name} is now a live node-type.`); setTypes(r.types); await poll() }
   }
 
+  // S6: recompute the fit whenever the settings window is open and the selection (brain model / voice
+  // persona / engine override) or the picker rows change — so the surface always reflects the live choice.
+  useEffect(() => {
+    if (!settingsOpen) return
+    refreshFit()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settingsOpen, cfg.model, cfg.base_url, cfg.persona, cfg.tts_engine, chatModelsX.length])
+
   return {
     // state values (read by the region components)
     edges, running, runError, runStartedAt, runElapsed, types, gname, gspec, surf, growMsg, workshop,
     oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
-    showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn, personas, voiceStatus, recordingSession, threads, threadId, chatModelsX, settingsOpen, engineKnobs, voiceInfo,
+    showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn, personas, voiceStatus, recordingSession, threads, threadId, chatModelsX, settingsOpen, engineKnobs, voiceInfo, fitReport,
     wtSpoke, wtBusy, selected, mobileTab, fleet, indicated, proposal, history, historyBusy,
     selfChanges, selfChangesBusy, freshness, freshnessBusy, versions, versionsBusy, journeyId, journeyReplaying,
     // refs the components read for the inspector form
@@ -1512,7 +1538,7 @@ export function useAppController(editor: Editor) {
     // handlers
     poll, openCoa, reload, fitGraph, addNode, wireSelected, doConnect, setNodeConfig, surfaceOutput,
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
-    resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, toggleRecordConversation, startDebriefSession, newConversation, openConversation, chooseModel, setSettingsOpen, applyRhm, setBrainKnob, setModelCtx, fieldValue,
+    resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, toggleRecordConversation, startDebriefSession, newConversation, openConversation, chooseModel, setSettingsOpen, applyRhm, setBrainKnob, setModelCtx, refreshFit, fieldValue,
     setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus,
     approveProposal, dismissProposal, toggleJourneyRecording, replayJourney, switchPersona,
   }

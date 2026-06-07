@@ -118,6 +118,10 @@ export const api = {
   // S2 — conversation threads: start fresh, list previous, reopen one.
   // S1 — the chat-model picker list (ollama/cloud + local vLLM, each with base_url+service+up) + load-on-demand.
   chatModelsDetailed: () => fetch('/api/chat-models').then(jr),
+  // S6 (Tim 2026-06-07): "tell me if my selection won't fit." Given the selected GPU service keys
+  // (brain + voice), returns each one's VRAM budget, the sum vs the 16GB card ceiling, measured free,
+  // and fit/no-fit + what to unload. Config-derived → tracks a resize (brain @256K vs @64K).
+  fit: (services: string[]) => fetch('/api/fit?services=' + encodeURIComponent(services.join(','))).then(jr),
   modelLoad: (service: string) => fetch('/api/model/load', { method: 'POST', headers: J, body: JSON.stringify({ service }) }).then(jr),
   // S5 — set a serve-time model config (e.g. context window) + restart; + the per-TTS-engine knob catalog.
   modelConfig: (service: string, key: string, value: any) => fetch('/api/model/config', { method: 'POST', headers: J, body: JSON.stringify({ service, key, value }) }).then(jr),

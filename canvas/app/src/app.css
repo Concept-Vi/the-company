@@ -231,6 +231,22 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 .settings-knobs{margin-top:8px;padding:7px 9px;background:var(--bg);border:1px solid var(--line);border-radius:4px}
 .settings-knob{display:flex;gap:8px;font-size:9.5px;padding:2px 0}
 .settings-knob .kk{color:var(--ink);min-width:96px}
+/* S6 — the resource-fit surface: a bar read by shape (each piece's share of the 16GB card) + verdict. */
+.settings-fit{border:1px solid var(--line);border-radius:6px;padding:10px 12px;background:var(--bg)}
+.settings-fit.fit-ok h4{color:var(--sig)}
+.settings-fit.fit-over h4{color:var(--err)}
+.fit-bar{display:flex;height:22px;border-radius:4px;overflow:hidden;border:1px solid var(--line);margin:4px 0 8px;background:var(--s1)}
+.fit-seg{display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--bg);white-space:nowrap;overflow:hidden;min-width:0}
+.fit-seg-0{background:var(--sig)}
+.fit-seg-1{background:var(--kind-content,#6aa)}
+.fit-seg-2{background:var(--warn)}
+.fit-seg-3{background:var(--cache,#a8a)}
+.fit-free{background:transparent}
+.settings-fit.fit-over .fit-bar{border-color:var(--err)}
+.fit-line{font-size:10px;color:var(--dim);line-height:1.4}
+.fit-line b{color:var(--ink)}
+.fit-why{margin-top:6px;font-size:10px;color:var(--err);line-height:1.4}
+.settings-fit.fit-ok .fit-why{color:var(--warn)}
 @media (max-width:699px){.settings{inset:0;border-radius:0}}
 .rhm-cfg{display:flex;flex-direction:column;gap:5px;padding:8px 0;border-bottom:1px solid var(--line)}
 .rhm-cfg input{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:6px;font-family:inherit;font-size:10.5px}

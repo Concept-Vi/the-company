@@ -55,8 +55,8 @@
       "config": {
         "model": "cyankiwi/Qwen3.5-4B-AWQ-4bit",
         "port": 8000,
-        "gpu_util": 0.8,
-        "max_model_len": 32768,
+        "gpu_util": 0.52,
+        "max_model_len": 65536,
         "max_num_seqs": 16,
         "flags": [
           "--enable-prefix-caching",
@@ -70,6 +70,12 @@
         "env": {
           "VLLM_LOGGING_LEVEL": "INFO",
           "VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS": "0"
+        },
+        "max_model_len_ceiling": 262144,
+        "_profile": {
+          "fixed_mb": 5838,
+          "kv_kb_per_token": 31.7,
+          "measured": "2026-06-07 (256K solo: KV 8.37GiB/270482 tok)"
         }
       }
     },
@@ -183,7 +189,15 @@
         "port": 4125,
         "vram_mb": 10500
       },
-      "note": "trial engine (persona Pip). vLLM-backed; ~10 GB + SWAP-HOSTILE (~17min cold) → pin/pre-warm, never cold-on-demand. See voice/engines/REQUIREMENTS.md."
+      "note": "trial engine (persona Pip). vLLM-backed; ~10 GB + SWAP-HOSTILE (~17min cold) → pin/pre-warm, never cold-on-demand. See voice/engines/REQUIREMENTS.md.",
+      "config": {
+        "model": "canopylabs/orpheus-3b-0.1-ft",
+        "port": 4125,
+        "gpu_util": 0.52,
+        "max_model_len": 12288,
+        "_engine": true,
+        "_note": "engine (vLLM-backed, own unit + orpheus.py); config is the one source for gpu_util/max_model_len/model. NOT launched via serve_model.sh."
+      }
     },
     "tts-cosyvoice": {
       "group": "voice",

@@ -52,6 +52,8 @@ def save(reg):
 
 
 def _coerce(s):
+    if not isinstance(s, str):
+        return s                       # already a real value (int/float/bool from a JSON body) — keep as-is
     low = s.lower()
     if low in ("true", "false"):
         return low == "true"

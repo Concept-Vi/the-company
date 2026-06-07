@@ -37,6 +37,19 @@ Do **not** build duplicate command centers. The right shape (Tim, "one substrate
   `company up` (refuses an over-capacity start, always shows what's holding the card; `--force`
   overrides). Lives in `cli/gpu.py`, not a separate tool. Next growth = telemetry → scheduling
   (see `cli/UPDATING.md`). [[project-native-model-layer]]
+  - **Config-block sizing is the ONE source (2026-06-07).** A GPU service's `config.gpu_util` ×
+    `vram_ceiling_mb` IS its budget (`gpu.budget_vram`) AND what it launches with. Voice engines that
+    aren't `serve_model.sh`-launched (e.g. `tts-orpheus` — own unit + `orpheus.py`) now carry a `config`
+    block too; `orpheus.py` reads `config.gpu_util/max_model_len/model` (env is fallback) so the fit-gate
+    and the launch never drift. **Size by measurement, never arbitrarily** (Tim): a model carries a
+    measured `config._profile` `{fixed_mb, kv_kb_per_token}`, so `/api/model/config` auto-sizes `gpu_util`
+    from a new `max_model_len` (and `max_model_len_ceiling` records the model's real capacity, reachable solo).
+  - **The fit-surface (`gpu.fit_report` → `/api/fit`).** "Tell me if my selection won't fit" (Tim):
+    given selected GPU service keys (brain + voice), returns each budget, the sum vs the card ceiling,
+    measured free, and fit/no-fit + what to unload — config-derived, so it tracks a resize. The settings
+    window renders it as a bar. Measured on the 16GB card: the 4b (hybrid, KV ~31.7KB/tok) does 256K
+    **solo** and co-resides with light voices at 64K, but **Orpheus (~8.5GB) + 64K brain is over by
+    ~0.6GB** — a switch-on-demand pair (the gate refuses, never OOMs).
 - **cognitive-layers · RHM/modes · data/memory · jobs/cron** — not yet instantiated; same mechanism when they are.
 
 ## Files
