@@ -187,6 +187,24 @@ export function useAppController(editor: Editor) {
   // on desktop/tablet (those breakpoints display:none the tabbar+sheets), so it never changes desktop layout.
   // tldraw stays mounted under the sheet at every width — semantic-zoom/drag-to-wire (preserve-list) intact.
   const [mobileTab, setMobileTab] = useState<'canvas' | 'palette' | 'inbox' | 'rhm'>('canvas')
+  // L-fe · the live cognition VIEW state (C7.1/C7.2/C7.3). reflects-never-owns: this is folded PURELY from
+  // the `cognition.*` SSE lifecycle (the L-fe-be emit-contract) — the view NEVER writes cognition state, it
+  // only mirrors what the backend emits as a staged turn fires. `cognitionInfo` is the registry projection
+  // (/api/cognition_info) the view RENDERS FROM (roles → River tributaries, node_states → status tokens —
+  // registry-driven, rule 8). `cognitionTurn` is the LIVE turn being narrated, built event-by-event:
+  //   • turn.start  → open a fresh frame {turn_id, mode, shape, grain, cast[], address, roles{}}, every
+  //                   cast role seeded LATENT (so a role that never fires reads as a dry gap, E2 §B.2/§C).
+  //   • role.fire   → that role → FIRING (its model call is in flight).
+  //   • role.ran    → that role → RAN (ok) or FAILED (a loud silted stub, ok:false — fail-loud rule 4).
+  //   • inject      → the SOURCE role contributed `chars` into the reply → mark `injected` + sum contribution
+  //                   (the worn-channel width, E2 §C — contribution = chars, the budget=attention shape).
+  //   • part        → a reply part landed (the river fills as parts arrive); track n_parts.
+  //   • turn.done   → the frame closes (total_ms, n_roles); kept as the last turn so the Pulse stays glanceable.
+  // The PULSE (Altitude 0, default) reads the turn's shape FROM this (dilation = roles fired + chars injected,
+  // a loud notch if any role FAILED, calm when idle). The RIVER (Altitude 1, on click) draws the tributaries.
+  const [cognitionInfo, setCognitionInfo] = useState<Record<string, any>>({})
+  const [cognitionTurn, setCognitionTurn] = useState<any>(null)
+  const cognitionTurnRef = useRef<any>(null)   // the openStream closure folds into this synchronously (no stale closure)
 
   // Merge events by SEQ into the current list — an event already present (same seq) is never duplicated,
   // regardless of source. Makes `key={e.seq}` inherently unique and kills the "two children with the same
@@ -198,6 +216,46 @@ export function useAppController(editor: Editor) {
       for (const e of incoming) if (e && e.seq != null) bySeq.set(e.seq, e)
       return Array.from(bySeq.values()).sort((a, b) => b.seq - a.seq).slice(0, 200)
     })
+  }
+  // L-fe · fold ONE cognition.* event into the live turn frame (reflects-never-owns — pure projection of the
+  // emit-contract). Returns the NEXT turn object (or the current one unchanged). A role's status is DERIVED
+  // from the lifecycle (the contract IS the truth): cast → latent, fire → firing, ran(ok) → ran, ran(!ok) →
+  // failed, inject → contributed. A turn.start for a NEW turn_id opens a fresh frame (so the view always
+  // narrates the latest turn). An event for an OLDER turn than the live one is ignored (the river fills in
+  // event order for the current turn). schema-additive (rule): unknown fields are ignored; a missing field
+  // never throws (so BE/FE evolve independently).
+  function foldCognition(cur: any, ev: any): any {
+    const k = ev.kind, t = ev.turn_id
+    if (!t) return cur
+    if (k === 'cognition.turn.start') {
+      // a fresh frame — seed every fireable cast role LATENT (a role that never fires = a dry gap, E2 §B.2).
+      const roles: Record<string, any> = {}
+      for (const r of (Array.isArray(ev.cast) ? ev.cast : [])) roles[r] = { role: r, status: 'latent', chars: 0, ms: 0, ok: null, error: '' }
+      return { turn_id: t, mode: ev.mode || '', shape: ev.shape || '', grain: ev.grain || '', address: ev.address || ('ui://cognition/' + t), cast: Array.isArray(ev.cast) ? ev.cast : [], roles, parts: 0, injected_chars: 0, n_inject: 0, done: false, total_ms: 0, n_roles: 0, started_ts: ev.ts || '' }
+    }
+    // every later event must belong to the CURRENT live turn (else it's an out-of-order tail — ignore).
+    if (!cur || cur.turn_id !== t) return cur
+    const roles = { ...cur.roles }
+    const touch = (r: string) => { if (!roles[r]) roles[r] = { role: r, status: 'latent', chars: 0, ms: 0, ok: null, error: '' }; return roles[r] }
+    if (k === 'cognition.role.fire') {
+      const r = touch(ev.role); roles[ev.role] = { ...r, status: 'firing', model: ev.model || r.model || '' }
+      return { ...cur, roles }
+    }
+    if (k === 'cognition.role.ran') {
+      const r = touch(ev.role); const ok = ev.ok !== false
+      roles[ev.role] = { ...r, status: ok ? (r.status === 'injected' || r.chars > 0 ? 'injected' : 'ran') : 'failed', ok, ms: ev.ms || 0, error: ev.error || '' }
+      return { ...cur, roles }
+    }
+    if (k === 'cognition.inject') {
+      const src = ev.source || ev.role; const r = touch(src)
+      const chars = Number(ev.chars) || 0
+      // contribution lands on the SOURCE role (the worn channel) — mark injected; keep failed if it failed.
+      roles[src] = { ...r, status: r.status === 'failed' ? 'failed' : 'injected', chars: (r.chars || 0) + chars }
+      return { ...cur, roles, injected_chars: (cur.injected_chars || 0) + chars, n_inject: (cur.n_inject || 0) + 1 }
+    }
+    if (k === 'cognition.part') return { ...cur, parts: Math.max(cur.parts || 0, Number(ev.part) || 0) }
+    if (k === 'cognition.turn.done') return { ...cur, done: true, total_ms: Number(ev.total_ms) || 0, n_roles: Number(ev.n_roles) || 0, parts: Math.max(cur.parts || 0, Number(ev.n_parts) || 0) }
+    return cur
   }
   async function poll() {
     // poll() MERGES events (never replaces) so it can't reintroduce a seq the stream already showed.
@@ -296,6 +354,17 @@ export function useAppController(editor: Editor) {
         registryStore.set({ NODE_STATES: nsIndex })   // shape-reachable half (NodeShape reads via getNODE_STATES)
         setNodeStates(nsIndex)                         // React half (the Inspector region reads via context)
       } catch (e: any) { bootErrors.push('capabilities/node-states (' + (e?.message || e) + ')') }   // F7: status-by-sight + mode dial silently went blank on a swallow — surface it
+      // L-fe: load the cognition projection (the sibling of object_info) so the live cognition VIEW renders
+      // FROM the registry (roles → River tributaries, node_states → status tokens; registry-driven, rule 8).
+      // Guarded like ui_info — a missing projection MUST be visible (the view shows nothing rather than guess).
+      // Mirrored into BOTH the React state (the region reads it) AND the shape-reachable store (so the cognition
+      // node-state render-tokens read EXACTLY like NodeShape reads NODE_STATES). Fire-tolerant: a 404 (the route
+      // not yet on the bridge) records a boot error, never crashes boot.
+      try {
+        const ci = await api.cognitionInfo()
+        if (ci && !ci.error) { setCognitionInfo(ci); registryStore.set({ COGNITION_INFO: ci }) }
+        else bootErrors.push('cognition projection (' + (ci?.error || 'unavailable') + ')')
+      } catch (e: any) { bootErrors.push('cognition projection (' + (e?.message || e) + ')') }
       const g = await loadGraph(editor); setEdges(g.edges || []); setGid(g.id); syncConfig(g)
       if ((g.nodes || []).length) setTimeout(fitGraph, 120)   // U6: chrome-aware fit on first load
       setTypes(await api.types())
@@ -387,6 +456,18 @@ export function useAppController(editor: Editor) {
         try { setNow(await api.now()) } catch (e: any) { setNotice('⚠ live update missed a refresh (' + (e?.message || e) + ')') }
       } else if (k === 'mode' || k === 'config') {
         try { setNow(await api.now()); setCfg(await api.rhmConfig()) } catch (e: any) { setNotice('⚠ mode/config update missed a refresh (' + (e?.message || e) + ')') }
+      } else if (k.startsWith('cognition.')) {
+        // L-fe · the LIVE COGNITION VIEW branch (C7.2 — live + no poll). This MIRRORS the `decision.*` branch
+        // below: a `cognition.*` lifecycle event (the L-fe-be emit-contract) folds into the live turn frame so
+        // the Pulse opens / the River fills as a STAGED turn fires (turn.start → role.fire×N → part → role.ran×N
+        // → inject → part → turn.done). reflects-never-owns: we ONLY mirror the emitted events; nothing is
+        // written back. The fold is synchronous off the ref (no stale closure, no await — these events arrive
+        // fast and in-order). `cognition.wave` (the per-WAVE rollup, preserved by L-fe-be) is NOT a per-turn
+        // lifecycle kind → foldCognition ignores it (only the 6 contract kinds touch the frame). The event is
+        // already merged into the activity log at the top of onmessage (so the feed shows it too).
+        const next = foldCognition(cognitionTurnRef.current, ev)
+        cognitionTurnRef.current = next
+        setCognitionTurn(next)
       } else if (k === 'ask' || k === 'reject' || k === 'resolve' || k === 'apply' || k === 'grow' || k === 'revert' || k.startsWith('decision.')) {
         // WIRE-UI: the decision→implementation wire emits `decision.*` events. NONE carry a companion `ask`,
         // so without this branch a surfaced build-intent / dispatch start / `implemented` close would fall
@@ -1564,6 +1645,7 @@ export function useAppController(editor: Editor) {
     showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn, personas, voiceStatus, recordingSession, threads, threadId, chatModelsX, settingsOpen, engineKnobs, voiceInfo, fitReport,
     wtSpoke, wtBusy, selected, mobileTab, fleet, indicated, proposal, history, historyBusy,
     selfChanges, selfChangesBusy, freshness, freshnessBusy, versions, versionsBusy, journeyId, journeyReplaying,
+    cognitionInfo, cognitionTurn,   // L-fe: the live cognition VIEW state (projection + the folded live turn)
     // refs the components read for the inspector form
     configByNode,
     // setters the components call directly

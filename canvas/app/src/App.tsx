@@ -42,6 +42,7 @@ import { Walkthrough } from './regions/Walkthrough'
 import { Workshop } from './regions/Workshop'
 import { Settings } from './regions/Settings'
 import { Fleet } from './regions/Fleet'
+import { CognitionView } from './regions/CognitionView'
 import { api } from './api'
 
 // I5 · the ANNOTATE-FACE affordance. Renders ONLY when the operator has indicated a ui:// element whose
@@ -156,6 +157,17 @@ function Hud() {
              existing per-panel boundary discipline (PRESERVE-LIST item 1). */}
           <PanelErrorBoundary name="chat">
             <RhmChat />
+          </PanelErrorBoundary>
+          {/* L-fe · the LIVE COGNITION VIEW (the commander's bridge, E2/06). EXTEND not replace: it is one
+             MORE in-canvas overlay beside the chat/activity (removes/replaces nothing). It sits at the chat
+             lane edge so the PULSE (Altitude 0, default) breathes BESIDE the reply — the conversation's
+             heartbeat of cognition — and the RIVER/NODES expand in place on click. Driven entirely by the
+             live cognition.* SSE (reflects-never-owns) + the /api/cognition_info projection (registry-driven).
+             Per-panel boundary (PRESERVE-LIST item 1): a cognition render-throw degrades to a contained card,
+             never a white-screen. At <699px the in-canvas overlays are display:none (fe-map §4) — the pulse
+             rides the chat sheet there (the chat is the operator's reply surface on mobile). */}
+          <PanelErrorBoundary name="cognition">
+            <CognitionView />
           </PanelErrorBoundary>
           {/* I5 · the ANNOTATE FACE made reachable on the surface. When the operator has indicated a
              ui:// element that a bare click ANNOTATES (clickMode==='annotate' — the canonical route_click

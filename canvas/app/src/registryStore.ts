@@ -36,6 +36,13 @@ export type RegistryState = {
   // F3: stateId -> NodeStateDef, indexed from capabilities().node_states. The shape + inspector read label +
   // render FROM HERE (registry-is-truth, rule 3): register a state engine-side → it paints everywhere, no FE edit.
   NODE_STATES: Record<string, NodeStateDef>
+  // L-fe: the cognition projection (/api/cognition_info — the sibling of OINFO/UI_INFO), the read-truth the
+  // live cognition VIEW renders FROM. reflects-never-owns: this is the registry-generated projection the
+  // backend OWNS; the view mirrors it (roles → River tributaries, node_states → the status render-tokens),
+  // never a second source of truth. {} until the boot fetch resolves (safe — the view shows the Pulse latent).
+  // Held here (not only in React) so the cognition node-state render-tokens read EXACTLY like NodeShape reads
+  // NODE_STATES — register a cognition role/state engine-side and it appears/paints with zero FE edit (rule 8).
+  COGNITION_INFO: Record<string, any>
 }
 
 // C1: a drag from an output nub to an input nub COMMITS through this hook (the controller installs it). The
@@ -55,7 +62,7 @@ export function setDragConn(v: typeof DRAG_CONN) { DRAG_CONN = v }
 export let FORCE_RUN: (node_id: string) => void = () => {}
 export function setForceRun(fn: typeof FORCE_RUN) { FORCE_RUN = fn }
 
-let state: RegistryState = { OINFO: {}, MODEL_OPTIONS: {}, UI_INFO: {}, NODE_STATES: {} }
+let state: RegistryState = { OINFO: {}, MODEL_OPTIONS: {}, UI_INFO: {}, NODE_STATES: {}, COGNITION_INFO: {} }
 const listeners = new Set<() => void>()
 
 function emit() { for (const l of listeners) l() }
@@ -79,3 +86,7 @@ export function getUI_INFO(): Record<string, any> { return state.UI_INFO }
 // F3: imperative read for the node shape (renders inside tldraw, outside React context). Returns the live
 // node_states index — the shape reads label + render.token/shape from it to paint status by sight.
 export function getNODE_STATES(): Record<string, NodeStateDef> { return state.NODE_STATES }
+// L-fe: imperative read for the cognition view's render-token lookups (mirrors getNODE_STATES) — the
+// cognition node_states ride in COGNITION_INFO.node_states, read by the River/Nodes to paint a role's
+// status by sight from the projection (registry-is-truth, rule 3).
+export function getCOGNITION_INFO(): Record<string, any> { return state.COGNITION_INFO }

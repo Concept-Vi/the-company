@@ -762,3 +762,56 @@ button.b:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
   color:var(--dim);font-size:10px;cursor:pointer;text-decoration:none;letter-spacing:.04em}
 .tabbar a.on{color:var(--sig)}
 .tabbar a .ic{font-size:17px;line-height:1}
+
+/* ============================================================================================
+   L-fe · THE LIVE COGNITION VIEW (the commander's bridge — E2/06).
+   Built on the corpus design tokens ONLY (no bespoke hex; the SVG geometry px are layout, like the node
+   card's). EXTEND not replace: this is one more in-canvas overlay (it sits top-right of the canvas cell,
+   clear of activity/rhm at the bottom). reflects-never-owns: pure CSS over the folded live turn.
+   FORM = needs-tim (E2 §9): the iris feel / river beauty / glanceable-not-wall are NOT self-graded.
+   ============================================================================================ */
+.as-canvas .cog{position:absolute;top:0;right:0;pointer-events:auto;z-index:310}
+/* Altitude 0 — THE PULSE (default ambient). A tiny breathing glyph + a one-word label. Never a wall. */
+.cog-pulse-wrap{display:flex;align-items:center;gap:7px;background:var(--s1);border:1px solid var(--line);
+  border-radius:var(--r-pill);padding:4px 11px 4px 5px;box-shadow:var(--shadow)}
+.cog-pulse{background:none;border:0;padding:0;margin:0;cursor:pointer;display:flex;line-height:0}
+.cog-pulse:hover{filter:brightness(1.15)}
+.cog-pulse-label{font-size:10px;letter-spacing:.05em}
+/* the breathing animation — motion = content (it breathes while the turn is in flight, E2 §D). */
+@keyframes cog-breathe{0%,100%{opacity:.55}50%{opacity:1}}
+.cog-ring-breathe{animation:cog-breathe 1.6s ease-in-out infinite}
+.cog-pulse.notched{filter:drop-shadow(0 0 4px var(--fail))}
+/* Altitude 1/2 — the deep panel (river / nodes). An expand-in-place card on the corpus surface. */
+.cog-deep{width:344px;max-width:calc(100vw - 24px);background:var(--s1);border:1px solid var(--line);
+  border-radius:var(--r-lg);box-shadow:var(--shadow);padding:9px 11px;display:flex;flex-direction:column;gap:7px}
+.cog-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cog-title{font-family:"Fraunces",serif;color:var(--sig);font-weight:600;font-size:12.5px}
+.cog-alts{display:flex;gap:4px;align-items:center}
+.cog-alt{background:var(--bg);border:1px solid var(--line);color:var(--dim);border-radius:var(--r);
+  font-family:inherit;font-size:10px;padding:3px 8px;cursor:pointer}
+.cog-alt.on{color:var(--sig);border-color:var(--sig-dim)}
+.cog-alt:hover{color:var(--ink)}
+.cog-alt.close{padding:3px 7px}
+/* THE RIVER — the converging-flow SVG + a one-line foot. */
+.cog-river-svg{display:block;width:100%;max-height:240px}
+.cog-trib-label{font-family:"IBM Plex Mono",monospace;font-size:7.5px}
+.cog-brain-label{font-family:"Fraunces",serif;font-size:8px;font-weight:600}
+.cog-river-foot{font-size:9.5px;line-height:1.4;padding-top:2px;border-top:1px solid var(--line)}
+/* THE NODES — the literal role cards (inspector DOM pattern, not a tldraw board). */
+.cog-nodes{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto}
+.cog-node{background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:6px 8px}
+.cog-node.failed{border-color:var(--fail)}
+.cog-node.injected{border-color:var(--sig-dim)}
+.cog-node-bar{display:flex;align-items:center;gap:7px}
+.cog-dot{width:8px;height:8px;border-radius:50%;flex:none}
+.cog-node-title{font-size:11px;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cog-node-status{font-size:9px;flex:none}
+.cog-node-meta{font-size:9.5px;margin-top:3px;line-height:1.4}
+.cog-node-meta .cog-err{color:var(--err)}
+.cog-node-trigger{font-size:9px;margin-top:3px;line-height:1.35;color:var(--dim)}
+/* MOBILE (≤699): the PULSE stays (a shape needs no width to read — E2 §G); the DEEP panel, if opened,
+   becomes a top sheet clear of the tabbar. The default ambient pulse rides the top-right corner. */
+@media (max-width:699px){
+  .as-canvas .cog{top:auto;bottom:118px;right:8px}
+  .cog-deep{width:calc(100vw - 16px)}
+}

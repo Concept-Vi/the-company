@@ -145,6 +145,13 @@ export const api = {
     fetch('/api/voice/finished-thought', { method: 'POST', headers: J, body: JSON.stringify({ text }) }).then(jr),
   // C1: the UI-component registry (sibling of object_info) — the source of truth for what's addressable.
   uiInfo: () => fetch('/api/ui_info').then(jr),
+  // L-fe · the cognition projection (the SIBLING of object_info, built by L-fe-be): the registry-generated
+  // truth the live cognition VIEW renders FROM — roles{id,label,can_fire,is_jury,draws,mode_scope,trigger,
+  // render_hint,rules} · rules · edge_kinds · thought_shapes · activation_contexts · casts{mode:[role_id]} ·
+  // node_states (the status render-tokens, sibling of capabilities().node_states) · event_kinds (the
+  // cognition.* emit-contract). Registry-driven (rule 8): a new role/rule appears here with NO FE code, so
+  // the River draws its tributaries + the dots paint their status FROM this — never a hardcoded role list.
+  cognitionInfo: () => fetch('/api/cognition_info').then(jr),
   // L3 · addressed history (§21.7#1): everything that happened AT a ui:// address. The address-keyed READ
   // over the event tail — the addressed analogue of decision_view. Returns { address, trajectory[] }
   // chronological; a non-ui:// / malformed address → backend 400 (fail-loud, normalized to {error} by jr).
