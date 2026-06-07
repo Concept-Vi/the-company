@@ -37,6 +37,52 @@ ENGINE_PORTS = {"chatterbox": 4124, "orpheus": 4125, "cosyvoice": 4126,
                 "xtts": 4127, "qwen3tts": 4128}
 
 
+def _apply_model_ctx(key, ctx, *, restart=True):
+    """Set a config-model's context window, auto-sizing gpu_util from its measured `_profile` so vLLM
+    gets the KV pool that ctx needs, then (optionally) restart it — budget-gated (fail loud, never OOM).
+    SHARED (one source) by /api/model/config AND /api/voice/switch's co-residence shrink. Returns a dict."""
+    import sys as _sys
+    _ops = os.path.join(ROOT, "ops", "cli")
+    if _ops not in _sys.path:
+        _sys.path.insert(0, _ops)
+    import gpu as _gpu, systemd as _sd, registry as _reg
+    reg = _reg.load()
+    if key not in reg["services"]:
+        raise ValueError(f"unknown service {key!r}")
+    _reg.set_config(reg, key, "max_model_len", int(ctx))
+    reg = _reg.load(); c = reg["services"][key].get("config", {}); auto_util = None
+    prof = c.get("_profile")
+    if prof and prof.get("fixed_mb") and prof.get("kv_kb_per_token"):
+        need = prof["fixed_mb"] + int(ctx) * prof["kv_kb_per_token"] / 1024.0 + 500
+        auto_util = min(0.92, round(need / _reg.ceiling_mb(reg) + 0.005, 2))
+        _reg.set_config(reg, key, "gpu_util", auto_util)
+    reg = _reg.load(); svc = reg["services"][key]
+    if not restart or _sd.is_active(svc) != "active":
+        return {"service": key, "max_model_len": int(ctx), "auto_util": auto_util, "restarted": False,
+                "note": "saved — applies when the service next starts"}
+    new_budget = _gpu.budget_vram(reg, key)
+    others = sum(mb for k, mb in _gpu.running_gpu_services(reg) if k != key)
+    if new_budget + others > _reg.ceiling_mb(reg):
+        return {"service": key, "max_model_len": int(ctx), "auto_util": auto_util, "restarted": False,
+                "error": f"{key} at {ctx} needs ~{new_budget} MB; {others} MB held by other GPU services → "
+                         f"{new_budget+others} MB > {_reg.ceiling_mb(reg)} MB card. Not restarting (would OOM).\n"
+                         + _gpu.format_state(reg)}
+    started, msg = _sd.control(svc, "restart")
+    return {"service": key, "max_model_len": int(ctx), "auto_util": auto_util, "restarted": started,
+            "note": (msg if started else "restart failed: " + str(msg))}
+
+
+def _local_brain_key(reg, rc):
+    """The registry service key of the ACTIVE brain IF it's a local GPU model (config.model == the
+    rhm_config model, group 'brain'); else None (a cloud/ollama brain has no VRAM to size). So the
+    co-residence shrink only ever touches the local brain it's actually running."""
+    model = (rc.get("model") or "").strip()
+    if not model:
+        return None
+    return next((k for k, s in reg["services"].items()
+                 if s.get("group") == "brain" and (s.get("config") or {}).get("model") == model), None)
+
+
 def _tts_base_url(engine: str | None) -> str:
     """The base URL for a TTS engine. kokoro / None → TTS_URL (env-overridable default). A mapped
     engine → its 127.0.0.1:<port>. An unknown engine → ValueError (fail loud, names the known set —
@@ -630,47 +676,26 @@ class H(BaseHTTPRequestHandler):
                 _ops = os.path.join(ROOT, "ops", "cli")
                 if _ops not in _sys.path:
                     _sys.path.insert(0, _ops)
-                import gpu as _gpu, systemd as _sd, registry as _reg
+                import systemd as _sd, registry as _reg
                 b = self._body()
                 key, field, value = (b.get("service") or "").strip(), (b.get("key") or "").strip(), b.get("value")
                 reg = _reg.load()
                 if key not in reg["services"]:
                     raise ValueError(f"unknown service {key!r}")
-                _reg.set_config(reg, key, field, value)    # writes services.json (fail-loud if no config block)
-                # AUTO-UTIL (Tim 2026-06-07, "the registry knows the resource need"): when the CONTEXT WINDOW
-                # changes on a model that carries a measured `_profile`, also size gpu_util to give vLLM the KV
-                # pool that context needs — otherwise a bigger max_model_len than the current util can hold
-                # makes vLLM refuse at launch. util = (fixed + ctx·kv_per_tok + margin)/ceiling, capped 0.92.
-                auto_util = None
                 if field == "max_model_len":
-                    reg = _reg.load(); _c = reg["services"][key].get("config", {})
-                    prof = _c.get("_profile")
-                    if prof and prof.get("fixed_mb") and prof.get("kv_kb_per_token"):
-                        ctx = int(value)
-                        need_mb = prof["fixed_mb"] + ctx * prof["kv_kb_per_token"] / 1024.0 + 500  # +500 MiB margin
-                        auto_util = min(0.92, round(need_mb / _reg.ceiling_mb(reg) + 0.005, 2))
-                        _reg.set_config(reg, key, "gpu_util", str(auto_util))   # keep util consistent with the context
-                reg = _reg.load()
-                svc = reg["services"][key]
-                if _sd.is_active(svc) == "active":         # running → restart to apply the new serve-time value
-                    # Budget-gate the restart on the SUM of everything that'll be on the card (the bigger
-                    # context may no longer fit beside a resident voice). check_fit treats the running service
-                    # as already-counted; we want the NEW (post-resize) budget, so compare the full need vs the
-                    # ceiling and fail loud rather than restart into an OOM.
-                    new_budget = _gpu.budget_vram(reg, key)
-                    others = sum(mb for k, mb in _gpu.running_gpu_services(reg) if k != key)
-                    if new_budget + others > _reg.ceiling_mb(reg):
-                        self._send(200, json.dumps({"service": key, "key": field, "value": value, "restarted": False,
-                            "auto_util": auto_util, "error": f"{key} at {value} needs ~{new_budget} MB; "
-                            f"{others} MB already held by other GPU services → {new_budget+others} MB > {_reg.ceiling_mb(reg)} MB card. "
-                            f"Not restarting (would OOM). Free a voice/model first, or pick a smaller context.\n" + _gpu.format_state(reg)}))
-                    else:
+                    # the context window → the SHARED helper (auto-util from _profile + budget-gated restart,
+                    # one source with the co-residence shrink). "the registry knows the resource need" (Tim).
+                    self._send(200, json.dumps({"key": field, "value": value, **_apply_model_ctx(key, int(value))}))
+                else:                                      # any other serve-time field → set + restart if running
+                    _reg.set_config(reg, key, field, value)
+                    reg = _reg.load(); svc = reg["services"][key]
+                    if _sd.is_active(svc) == "active":
                         started, msg = _sd.control(svc, "restart")
-                        self._send(200, json.dumps({"service": key, "key": field, "value": value, "restarted": started,
-                                                    "auto_util": auto_util, "note": (msg if started else "restart failed: " + str(msg))}))
-                else:                                      # not running → the new value applies on next start
-                    self._send(200, json.dumps({"service": key, "key": field, "value": value, "restarted": False,
-                                                "auto_util": auto_util, "note": "saved — applies when the service next starts"}))
+                        self._send(200, json.dumps({"service": key, "key": field, "value": value,
+                                                    "restarted": started, "note": msg if started else "restart failed"}))
+                    else:
+                        self._send(200, json.dumps({"service": key, "key": field, "value": value, "restarted": False,
+                                                    "note": "saved — applies when the service next starts"}))
             elif self.path == "/api/mode":                # the presence dial — set the RHM mode
                 b = self._body()
                 SUITE.set_mode(b["mode"])
@@ -779,11 +804,32 @@ class H(BaseHTTPRequestHandler):
                 eng = (rc.get("tts_engine") or "").strip() or p["engine"]   # override wins, else persona's engine
                 SUITE.set_rhm_config({"persona": persona_id})
                 svc = voice_lc.engine_service_for(eng)
+                # CO-RESIDENCE (Tim 2026-06-07, non-negotiable): the finished-thought judge + the brain run
+                # alongside the voice — so the brain must stay RESIDENT with it, not be evicted. Size the
+                # brain's context to what the registry records as co-resident-safe for THIS voice
+                # (the voice service's config.coresident_brain_ctx — a STORED max, not auto-computed), and
+                # shrink+restart the brain BEFORE loading the voice. A voice that records nothing leaves the
+                # brain at its default context (light voices co-reside at full 64K already).
+                import sys as _sys2
+                _ops2 = os.path.join(ROOT, "ops", "cli")
+                if _ops2 not in _sys2.path:
+                    _sys2.path.insert(0, _ops2)
+                import registry as _reg2
+                _r = _reg2.load()
+                co_ctx = ((_r["services"].get(svc) or {}).get("config") or {}).get("coresident_brain_ctx") if svc else None
+                brain_recfg = None
+                if co_ctx:
+                    bkey = _local_brain_key(_r, rc)
+                    if bkey and int((_r["services"][bkey].get("config") or {}).get("max_model_len", 0)) != int(co_ctx):
+                        brain_recfg = _apply_model_ctx(bkey, int(co_ctx))      # shrink+restart the brain FIRST
                 if not svc:                                       # always-on engine (kokoro) — nothing to load
                     out = {"persona": persona_id, "engine": eng, "service": None, "state": "up",
                            "note": "always-on engine — no load step"}
                 else:
                     out = {"persona": persona_id, "engine": eng, "service": svc, **voice_lc.switch_to(svc)}
+                if brain_recfg is not None:
+                    out["brain_coresident_ctx"] = co_ctx
+                    out["brain_reconfig"] = brain_recfg
                 self._send(200, json.dumps(out))
             elif self.path == "/api/voice/finished-thought":  # G1.3: the semantic endpoint judge (brain-side)
                 b = self._body()

@@ -213,9 +213,17 @@
         "venv": "cosyvoice",
         "script": "voice/engines/cosyvoice.py",
         "port": 4126,
-        "vram_mb": 4000
+        "vram_mb": 4200
       },
-      "note": "trial engine (persona Tess). Needs CUDA_HOME + COMPANY_VOICE_REF. openai-whisper pin conflict may block install (time-boxed). See voice/engines/REQUIREMENTS.md."
+      "note": "trial engine (persona Tess). Needs CUDA_HOME + COMPANY_VOICE_REF. openai-whisper pin conflict may block install (time-boxed). See voice/engines/REQUIREMENTS.md.",
+      "config": {
+        "model_dir": "/home/tim/CosyVoice/pretrained_models/CosyVoice2-0.5B",
+        "repo": "/home/tim/CosyVoice",
+        "device": "cuda:0",
+        "_engine": true,
+        "_nonvllm": true,
+        "_note": "CosyVoice2-0.5B own repo — fixed footprint (vram_mb, no gpu_util). voice = persona voice_description (inference_instruct2)."
+      }
     },
     "tts-xtts": {
       "group": "voice",
@@ -249,9 +257,18 @@
         "venv": "qwen3tts",
         "script": "voice/engines/qwen3tts.py",
         "port": 4128,
-        "vram_mb": 4600
+        "vram_mb": 4500
       },
-      "note": "trial engine (persona Sable). VoiceDesign from a text description — NO clip needed (the trial starter). ~4.4 GB, ~25s cold. See voice/engines/REQUIREMENTS.md."
+      "note": "trial engine (persona Sable). VoiceDesign from a text description — NO clip needed (the trial starter). ~4.4 GB, ~25s cold. See voice/engines/REQUIREMENTS.md.",
+      "config": {
+        "model": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+        "device": "cuda:0",
+        "attn": "sdpa",
+        "lang": "English",
+        "_engine": true,
+        "_nonvllm": true,
+        "_note": "transformers VoiceDesign — fixed footprint (vram_mb, no gpu_util). voice = persona voice_description (instruct)."
+      }
     },
     "embed-bge": {
       "group": "models",
