@@ -55,7 +55,7 @@
       "config": {
         "model": "cyankiwi/Qwen3.5-4B-AWQ-4bit",
         "port": 8000,
-        "gpu_util": 0.52,
+        "gpu_util": 0.49,
         "max_model_len": 65536,
         "max_num_seqs": 16,
         "flags": [
@@ -191,12 +191,13 @@
       },
       "note": "trial engine (persona Pip). vLLM-backed; ~10 GB + SWAP-HOSTILE (~17min cold) → pin/pre-warm, never cold-on-demand. See voice/engines/REQUIREMENTS.md.",
       "config": {
-        "model": "canopylabs/orpheus-3b-0.1-ft",
+        "model": "Hariprasath28/orpheus-3b-4bit-AWQ",
         "port": 4125,
-        "gpu_util": 0.52,
+        "gpu_util": 0.32,
         "max_model_len": 12288,
         "_engine": true,
-        "_note": "engine (vLLM-backed, own unit + orpheus.py); config is the one source for gpu_util/max_model_len/model. NOT launched via serve_model.sh."
+        "_note": "engine (vLLM-backed, own unit + orpheus.py); config is the one source for gpu_util/max_model_len/model. NOT launched via serve_model.sh.",
+        "coresident_brain_ctx": 65536
       }
     },
     "tts-cosyvoice": {
