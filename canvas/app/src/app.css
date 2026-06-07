@@ -328,6 +328,36 @@ button.b.ghost.kit-tone-wire:hover{border-color:var(--tone);color:var(--tone);bo
 .ahelp-reach-member{font-family:var(--font-mono);font-size:var(--fs-tag);color:var(--tx-2);
   background:var(--s1);border:1px solid var(--line);border-radius:var(--r-sm);padding:2px var(--sp-2);
   overflow-wrap:anywhere}
+/* F1 ALTITUDE — the LEARNED marker + the in-system feedback affordance (ShapeHow). Token-only, kit-based,
+   the commander's-bridge language. Scoped under .ahelp so they ride the right-rail .panel bottom-sheet on
+   phone for free. The sig (mint) signal = "the system learned how you want this shown". */
+.ahelp-learned{display:flex;align-items:baseline;gap:var(--sp-2);margin-top:var(--sp-2);
+  font-family:var(--font-mono);line-height:var(--lh-body)}
+.ahelp-learned-k{flex:none;font-size:var(--fs-tag);letter-spacing:var(--tr-tag);text-transform:uppercase;
+  color:var(--sig);font-weight:600}
+.ahelp-learned-star{color:var(--sig)}
+.ahelp-learned-d{font-size:var(--fs-meta);color:var(--tx);overflow-wrap:anywhere}
+.ahelp-shape{display:flex;flex-direction:column;gap:var(--sp-2);margin-top:var(--sp-3);
+  padding-top:var(--sp-2);border-top:1px solid var(--line)}
+.ahelp-shape-head{display:flex;align-items:center;gap:var(--sp-2)}
+.ahelp-shape-title{flex:1;font-family:var(--font-mono);font-size:var(--fs-tag);letter-spacing:var(--tr-tag);
+  text-transform:uppercase;color:var(--dim)}
+.ahelp-shape-chips{display:flex;flex-wrap:wrap;gap:var(--sp-1)}
+.ahelp-chip{font-family:var(--font-mono);font-size:var(--fs-meta);color:var(--tx-2);cursor:pointer;
+  background:var(--s1);border:1px solid var(--line);border-radius:var(--r-pill);
+  padding:var(--sp-1) var(--sp-2);line-height:var(--lh-tight)}
+.ahelp-chip:hover{border-color:var(--sig);color:var(--ink);background:var(--s2)}
+.ahelp-chip:disabled{opacity:.5;cursor:default}
+.ahelp-chip-armed{border-color:var(--sig);color:var(--ink);background:var(--s2)}
+.ahelp-chip-on{border-color:var(--sig);color:var(--sig)}
+.ahelp-chip-star{color:var(--sig)}
+.ahelp-shape-arg{display:flex;align-items:center;gap:var(--sp-1)}
+.ahelp-shape-input{flex:1;font-family:var(--font-mono);font-size:var(--fs-meta);color:var(--ink);
+  background:var(--s0);border:1px solid var(--sig);border-radius:var(--r-sm);padding:var(--sp-1) var(--sp-2)}
+.ahelp-shape-go{flex:none;font-family:var(--font-mono);font-size:var(--fs-meta);cursor:pointer;color:var(--sig);
+  background:var(--s1);border:1px solid var(--sig);border-radius:var(--r-sm);padding:var(--sp-1) var(--sp-2)}
+.ahelp-shape-go:hover{background:var(--s2)}
+.ahelp-shape-go:disabled{opacity:.5;cursor:default;color:var(--dim);border-color:var(--line)}
 .palette{top:64px;left:12px;width:158px;background:var(--s1);border:1px solid var(--line);
   border-radius:var(--r-lg);padding:var(--sp-3);max-height:calc(100vh - 90px);overflow:auto;box-shadow:var(--elev-1)}
 /* WAVE-4: the palette is now a recognition-by-sight rack composed from the shared kit (kit SectionHead +

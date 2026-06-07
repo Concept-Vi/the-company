@@ -43,9 +43,33 @@
 // to the corpus `represents` feature-id (e.g. "represents NODE-portal") — a terser machine label, not full
 // prose. We render it honestly (labelled as the registry's identity for the element) and flag the gap in the
 // lane report; we do NOT edit suite.py to enrich `represents` (that file is owned by another lane).
-import { useState } from 'react'
+//
+// F1 ALTITUDE — THE GENERALIZED ALTITUDE SURFACE + THE IN-SYSTEM FEEDBACK CHANNEL (this lane, f1-fe-surface).
+// D2 (above) was the PRECURSOR; F1 makes the altitude move VISIBLE + the feedback loop USABLE on the BUILT
+// backend (up_translate foundation 5f3592b + the presentation-pref learning loop e1700b4):
+//   • CONSUME the learned pref the bundle now carries (address_help attaches presentation_pref/_directive via
+//     _apply_presentation_pref). We render off `address_help` (NOT the up_translate envelope) BY DESIGN: the
+//     envelope's `lead` FLATTENS the three legs into one prose string, which would regress D2's distinct
+//     howto-block + the STATE-2 'no how-to authored' cue (a HARD-law preserve). address_help keeps the legs
+//     distinct AND already carries the pref — so the marker renders from the source we already render.
+//   • THE LEARNED MARKER — when a pref is present, a 'learned ✦' chip + the human directive says, at a glance,
+//     "you've shaped how this is shown" (read by sight). No pref → byte-identical to the prior D2 (the clean
+//     default — proven: the bundle is returned unchanged backend-side, so the render is unchanged).
+//   • THE MODEL-FREE STRUCTURAL ADAPT — `lead_with:how_to_change` (the change-leg leads) auto-HOISTS the
+//     how-to-change drill-down OPEN (instead of closed-by-default). A deterministic, persisted, SEE-able
+//     re-render — the strongest "re-renders adapted" proof, pure FE off the pref (no model). terser/more/shape
+//     are WORDING directives the model honors in PROSE (the model-dependent half — flagged, not faked here;
+//     the surface shows the learned marker + directive, which persists, satisfying adapt+remember model-free).
+//   • THE FEEDBACK AFFORDANCE (ShapeHow, a child component) — recognition-by-sight chips ('terser' / 'more
+//     detail' / 'lead with the change') + a small input for the arg-taking kinds, pointed at "how you're shown
+//     this". Same point→ask shape as commenting at an address (annotateLocus's sibling), reused. Wired to
+//     setPresentationPrefAt → POST /api/presentation-pref → re-fetch → the surface reflects the learned pref.
+//     Lives INSIDE this panel's render tree so it shares the indicated-locus lifecycle (the right-rail .panel
+//     bottom-sheet on ≤699px for free — reachable thumb-first on phone; operator-initiated, so no auto-raise).
+import { useState, useEffect } from 'react'
 import { SectionHead, Badge, Surface, EmptyState } from '../components/kit'
 import { useApp } from '../AppContext'
+import { ShapeHow } from '../components/ShapeHow'
 
 // Strip the leading 'ui://' for a calmer kicker (the full address still rides the SectionHead tag context).
 function shortAddr(a: string): string { return a.replace(/^ui:\/\//, '') }
@@ -59,9 +83,15 @@ function representsLabel(what: string, address: string): string | null {
 }
 
 export function AddressHelp() {
-  const { indicated, addressHelp, addressHelpBusy, addressHelpError } = useApp()
-  // the mechanism drill-down is CLOSED by default — altitude: the depths hide until asked.
-  const [showMechanism, setShowMechanism] = useState(false)
+  const { indicated, addressHelp, addressHelpBusy, addressHelpError, prefBusy, setPresentationPrefAt } = useApp()
+  // the mechanism drill-down: CLOSED by default (altitude — the depths hide until asked), EXCEPT when a learned
+  // lead_with:change pref HOISTS it open. `mechOverride` is the operator's explicit toggle: null = follow the
+  // default (closed, or hoisted-open by the pref); true/false = the operator overrode it. So the caret ALWAYS
+  // works — even on a hoisted address, clicking 'hide the mechanism' sets the override false + collapses it
+  // (the "make each thing work" rule: default-open-but-collapsible MUST actually collapse). Reset per locus.
+  const [mechOverride, setMechOverride] = useState<boolean | null>(null)
+  // reset the override whenever the indicated locus changes (a fresh element follows its own default/hoist).
+  useEffect(() => { setMechOverride(null) }, [indicated])
   if (!indicated || !indicated.startsWith('ui://')) return null   // only a ui:// locus has composed help
 
   // STATE 5 · fail-loud: a malformed/unresolvable address. Never a blank — say what failed.
@@ -93,6 +123,20 @@ export function AddressHelp() {
   // how-many legs resolved — the at-a-glance completeness cue (read by sight).
   const present = [legs.what_this_is, legs.how_to_use, legs.how_to_change].filter(Boolean).length
 
+  // F1 · the LEARNED presentation pref this locus carries (null = the clean default — no marker, no adapt).
+  const pref = h.presentation_pref
+  // F1 · the MODEL-FREE STRUCTURAL ADAPT (the see-able re-render): when the operator has learned the system
+  // to "lead with the change" here, the how-to-change drill-down is HOISTED OPEN (instead of closed-by-default
+  // — the altitude move re-shaped). It's an OR with the local toggle: the operator can still collapse it.
+  const leadWithChange = pref?.kind === 'lead_with' &&
+    ['how_to_change', 'how-to-change', 'change', 'mechanism'].includes((pref.arg || '').toLowerCase())
+  // the DEFAULT open-state: hoisted-open when learned to lead-with-change (+ a change leg exists), else closed.
+  const hoistDefault = !!(leadWithChange && legs.how_to_change)
+  // the operator's explicit override wins; otherwise follow the default. So the caret always toggles (a hoisted
+  // address starts open but 'hide' sets override=false → collapses; a normal address starts closed but 'show'
+  // sets override=true → opens).
+  const showMech = mechOverride === null ? hoistDefault : mechOverride
+
   return (
     <div className="ahelp" data-ui-ref="ui://inspector/help">
       {/* HEAD — the commander's-bridge title in the display voice. The address rides the kicker (the locus this
@@ -101,6 +145,17 @@ export function AddressHelp() {
         aside={<Badge tone={present === 3 ? 'sig' : present === 0 ? 'fail' : 'await'}>{present}/3 known</Badge>}>
         what you can do here
       </SectionHead>
+
+      {/* F1 · THE LEARNED MARKER — when the operator has shaped how this locus is shown, say so at a glance
+          (read by sight: the ✦ sig chip + the human directive). The presentation REFLECTS this pref (the
+          adapt step consulted it backend-side); this marker makes the "it remembered" VISIBLE. No pref → not
+          rendered at all (the clean default — the panel is byte-identical to the prior D2). */}
+      {pref && (
+        <Surface tone="sig" className="ahelp-learned">
+          <span className="ahelp-learned-k"><span className="ahelp-learned-star">✦</span> learned</span>
+          <span className="ahelp-learned-d">{h.presentation_directive || pref.kind}</span>
+        </Surface>
+      )}
 
       {/* STATE 4 · well-formed but UNREGISTERED — say so plainly, don't show the '(unregistered)' token as a description. */}
       {!registered && (
@@ -128,16 +183,19 @@ export function AddressHelp() {
 
           {/* LEG 3 · HOW TO CHANGE IT — the MECHANISM, behind a DRILL-DOWN (closed by default = the altitude move).
               The depths (code symbols, files, blast-radius reach) surface only when the operator expands. */}
-          <button className="ahelp-drill" type="button" onClick={() => setShowMechanism(v => !v)}
-            title={showMechanism ? 'hide the mechanism' : 'show how to change it (code, files, what it touches)'}>
-            <span className="ahelp-caret">{showMechanism ? '▾' : '▸'}</span>
+          {/* F1 · the lead_with:change ADAPT — when learned, the caret defaults OPEN (showMech) and a small
+              'led here' cue marks WHY it's hoisted (the re-shape is visible + explained, not magic). */}
+          <button className="ahelp-drill" type="button" onClick={() => setMechOverride(!showMech)}
+            title={showMech ? 'hide the mechanism' : 'show how to change it (code, files, what it touches)'}>
+            <span className="ahelp-caret">{showMech ? '▾' : '▸'}</span>
             <span className="ahelp-drill-label">how to change it</span>
+            {leadWithChange && legs.how_to_change && <Badge tone="sig">led here</Badge>}
             <Badge tone={legs.how_to_change ? 'wire' : 'dim'}>
               {legs.how_to_change ? `${change.scope.length} file${change.scope.length === 1 ? '' : 's'}` : 'no code'}
             </Badge>
           </button>
 
-          {showMechanism && (
+          {showMech && (
             <div className="ahelp-mech">
               {/* STATE 3 · no-code address — honest empty using the leg note, never a fabricated scope. */}
               {!legs.how_to_change && (
@@ -159,6 +217,11 @@ export function AddressHelp() {
               )}
             </div>
           )}
+
+          {/* F1 · THE IN-SYSTEM FEEDBACK CHANNEL — reshape how THIS locus presents to you. Operator-initiated,
+              pointed at "how you're shown this" (the same point→ask shape as commenting at an address). Sets
+              the pref → re-fetches → the panel above re-renders adapted (the marker + the lead_with hoist). */}
+          <ShapeHow current={pref} busy={prefBusy} onShape={setPresentationPrefAt} />
         </>
       )}
     </div>

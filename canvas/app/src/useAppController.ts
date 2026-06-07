@@ -120,11 +120,22 @@ export function useAppController(editor: Editor) {
   // drives the per-leg DEGRADE (G-53: many elements author no howto yet → an honest "no how-to authored yet",
   // never a blank). null = nothing indicated / not yet loaded. `addressHelpError` carries a fail-loud message
   // (malformed address → backend 400) so the panel says so, never a silent blank.
+  // F1 ALTITUDE: the bundle ALSO carries the LEARNED presentation pref (the adapt step attaches it backend-
+  // side — _apply_presentation_pref, committed e1700b4): `presentation_pref` {kind, arg?} = the structured
+  // learned shaping at this locus (null when none — the clean default), `presentation_directive` = its human
+  // form. The AddressHelp panel renders these as a 'learned: …' marker + a model-free structural adapt
+  // (lead_with:change auto-hoists the how-to-change drill-down). These MUST be threaded through (the prior
+  // fixed mapping dropped them) or the marker never appears.
   const [addressHelp, setAddressHelp] = useState<{
     address: string; what_this_is: string; how_to_use: string | null;
     how_to_change: { scope: string[]; blast_radius: any; note: string | null };
-    legs_present: { what_this_is: boolean; how_to_change: boolean; how_to_use: boolean }
+    legs_present: { what_this_is: boolean; how_to_change: boolean; how_to_use: boolean };
+    presentation_pref: { kind: string; arg?: string } | null;
+    presentation_directive: string | null;
   } | null>(null)
+  // F1: a transient busy flag for the feedback affordance (so the chips disable + show 'shaping…' while the
+  // pref POSTs + the bundle re-fetches — the affordance is fail-loud + never double-fires).
+  const [prefBusy, setPrefBusy] = useState(false)
   const [addressHelpBusy, setAddressHelpBusy] = useState(false)
   const [addressHelpError, setAddressHelpError] = useState<string | null>(null)
   // L3 · addressed history (§21.7#1): the trajectory of events stamped AT the indicated ui:// address —
@@ -688,6 +699,16 @@ export function useAppController(editor: Editor) {
       // wire door leaves the current indication UNTOUCHED — you point with the rest of the surface, then
       // describe the change in the door. (The door reads `indicated`, never becomes it.)
       if (tgt?.closest?.('[data-ui-ref="ui://canvas/wire-request"]')) return
+      // F1 · the ADDRESS-HELP panel exclusion (same class as the chat + wire-door guards above). The help
+      // panel (ui://inspector/help) is where the operator READS what-this-is + DRILLS the mechanism + SHAPES
+      // how it presents (the F1 feedback affordance) — all ABOUT the currently-indicated element. A click
+      // inside it (a drill caret, a reach toggle, a 'terser'/'lead with' chip) must NOT re-indicate to the
+      // help panel itself — that would overwrite the pointed locus the help is FOR (and the shaping would be
+      // recorded against ui://inspector/help instead of the real target). So the help panel READS `indicated`,
+      // it never BECOMES it (mirrors the chat-region guard precisely). The panel still carries its data-ui-ref
+      // (so show-me/address_help can describe the help surface itself); this only stops a click INSIDE it from
+      // hijacking the indication — you point with the rest of the surface, then read/shape in the help panel.
+      if (tgt?.closest?.('[data-ui-ref="ui://inspector/help"]')) return
       const t = tgt?.closest?.('[data-ui-ref]') as HTMLElement | null
       if (!t) return
       const ref = t.getAttribute('data-ui-ref') || ''
@@ -730,6 +751,9 @@ export function useAppController(editor: Editor) {
           how_to_change: !!r?.legs_present?.how_to_change,
           how_to_use: !!r?.legs_present?.how_to_use,
         },
+        // F1: the learned presentation pref the adapt step attached (null = the clean default — no marker).
+        presentation_pref: r?.presentation_pref ?? null,
+        presentation_directive: r?.presentation_directive ?? null,
       })
     } catch (e: any) {
       setAddressHelp(null); setAddressHelpError(e?.message || String(e))
@@ -737,7 +761,43 @@ export function useAppController(editor: Editor) {
     } finally { setAddressHelpBusy(false) }
   }
   // Load the help whenever the indicated locus changes. STATIC per address → no events.length dependency.
+  // (NOT static once F1 lands: a learned pref re-shapes the bundle — but the pref is set THROUGH this same
+  // surface via setPresentationPrefAt, which re-fetches explicitly, so the effect stays keyed on `indicated`.)
   useEffect(() => { fetchAddressHelp(indicated) /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [indicated])
+  // F1 ALTITUDE · THE IN-SYSTEM FEEDBACK CHANNEL (the visible half of the learning loop, committed backend
+  // e1700b4). The SIBLING of annotateLocus/mintBuildIntent: where annotateLocus attaches a COMMENT and
+  // mintBuildIntent REQUESTS A CHANGE, this RESHAPES HOW THE LOCUS PRESENTS — "show me this terser / more
+  // detail / lead with the change". It records the pref via POST /api/presentation-pref (Suite.set_presentation_pref
+  // — the recorder, OFF the verb whitelist: a pref is a CONTROL signal, not an action), then RE-FETCHES the
+  // address-help bundle so the surface RE-RENDERS adapted (the adapt step consults the pref). The loop closes
+  // by USE: set a pref → the bundle reflects it (marker + the lead_with structural hoist) → it persists
+  // (the leaf reads disk, survives reload). The voice/typing INPUT ("show me this differently") rides the
+  // existing chat path (/api/chat, untouched per G-8); THIS is the deterministic affordance that records it.
+  //
+  // FAIL-LOUD (rule 4): no locus / not a ui:// element → a visible notice, never a silent no-op. The
+  // arg-taking kinds (lead_with/shape) REQUIRE a non-empty arg (the backend re-checks + 400s); the affordance
+  // passes the arg, and we guard it here too so the operator gets the message, not a swallowed 400. A backend
+  // 400 (malformed pref / address) surfaces via setNotice. `text` is the human phrasing kept for the thread.
+  async function setPresentationPrefAt(kind: string, arg?: string, text?: string) {
+    const addr = indicatedRef.current
+    if (!addr || !addr.startsWith('ui://')) { setNotice('✕ point at a ui:// element first, then shape how it presents'); return }
+    const a = (arg || '').trim()
+    if ((kind === 'lead_with' || kind === 'shape') && !a) {
+      setNotice('✕ "' + kind + '" needs a value (e.g. what to lead with) — no silent no-op'); return
+    }
+    const pref: { kind: string; arg?: string } = a ? { kind, arg: a } : { kind }
+    setPrefBusy(true)
+    try {
+      const r = await api.setPresentationPref(addr, pref, text)
+      if (r?.error) { setNotice('✕ ' + r.error); return }     // fail-loud: surface the backend 400, never swallow
+      // CLOSE THE LOOP: the pref is recorded; re-fetch the bundle so the surface re-renders adapted (the
+      // useEffect won't re-fire — `indicated` is unchanged — so the re-fetch is explicit here).
+      await fetchAddressHelp(addr)
+      const title = getUI_INFO()[addr]?.title
+      setNotice('✦ learned how to present ' + (title || addr) + ' — it will be shown this way from now on')
+    } catch (e: any) { setNotice('✕ could not shape the presentation: ' + (e?.message || e)) }
+    finally { setPrefBusy(false) }
+  }
   // L3 · addressed history (§21.7#1). When the operator INDICATES a ui:// element, load "everything that
   // happened here" — the GET /api/address-history trajectory for that locus. Reflects-never-owns: the
   // runtime is authoritative, the surface just reads. Clearing the indication clears the history. A
@@ -1649,7 +1709,7 @@ export function useAppController(editor: Editor) {
     // A3/E2-FE · the consolidated Settings surface state
     settingsOpen, settingsTab, roles, voicePaths, voiceStatus, modeRegistry, autodetect, compositionCfg, settingsBusy, settingsErr,
     wtSpoke, wtBusy, selected, mobileTab, fleet, indicated, proposal, history, historyBusy,
-    addressHelp, addressHelpBusy, addressHelpError,
+    addressHelp, addressHelpBusy, addressHelpError, prefBusy,
     selfChanges, selfChangesBusy, freshness, freshnessBusy, versions, versionsBusy, journeyId, journeyReplaying,
     // refs the components read for the inspector form
     configByNode,
@@ -1661,7 +1721,7 @@ export function useAppController(editor: Editor) {
     poll, openCoa, reload, fitGraph, addNode, wireSelected, doConnect, setNodeConfig, surfaceOutput,
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
     resolveUiTarget, startWalk, startGuide, endWalk, respondStep, nextStep, dispatch, recordToggle, fieldValue,
-    setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus, mintBuildIntent,
+    setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus, mintBuildIntent, setPresentationPrefAt,
     approveProposal, dismissProposal, steerProposal, deferProposal, setAsideProposal, reviveOffer, toggleJourneyRecording, replayJourney, switchPersona,
     // A3/E2-FE · the consolidated Settings handlers
     openSettings, loadSettingsData, setCfgSlot,
