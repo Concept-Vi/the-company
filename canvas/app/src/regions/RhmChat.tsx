@@ -17,7 +17,7 @@ import { registryStore } from '../registryStore'
 import { ProposeAffordance } from './ProposeAffordance'
 
 export function RhmChat() {
-  const { cfg, cfgOpen, chat, chatBusy, chatMsg, recording, indicated, personas, voiceStatus, recordingSession, switchPersona, setCfg, setCfgOpen, setChatMsg, applyCfg, sendChat, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, toggleRecordConversation, startDebriefSession, indicate } = useApp()
+  const { cfg, cfgOpen, chat, chatBusy, chatMsg, recording, indicated, personas, voiceStatus, recordingSession, threads, threadId, switchPersona, setCfg, setCfgOpen, setChatMsg, applyCfg, sendChat, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, toggleRecordConversation, startDebriefSession, newConversation, openConversation, indicate } = useApp()
   // the live chat-model registry — same source the node-config model dropdown reads (MODEL_OPTIONS.chat_models).
   const registry = useSyncExternalStore(registryStore.subscribe, registryStore.getSnapshot)
   const chatModels = registry.MODEL_OPTIONS.chat_models || []
@@ -32,6 +32,15 @@ export function RhmChat() {
         right-hand-man <span className="muted">· {cfg.model || 'default model'}</span>
         <span className="cfg-gear" data-ui-ref="ui://chat/config" title="configure model + persona" onClick={() => setCfgOpen(o => !o)}>⚙</span>
         <span className="rhm-min" data-ui-ref="ui://chat/minimize" title={min ? 'expand the chat' : 'minimize — see the canvas'} onClick={() => setMin(m => !m)}>{min ? '▢' : '▁'}</span>
+      </div>
+      {/* S2 — conversation threads: start fresh + reopen a previous one. Lives in the RHM (Tim). */}
+      <div className="rhm-threads">
+        <button className="b ghost" data-ui-ref="ui://chat/new-conversation" title="start a fresh conversation" onClick={newConversation}>+ new</button>
+        <select data-ui-ref="ui://chat/threads" value={threadId || ''} title="reopen a previous conversation"
+          onChange={e => e.target.value && openConversation(e.target.value)}>
+          <option value="">{threads.length ? 'reopen a conversation…' : '(no past conversations)'}</option>
+          {threads.map((t: any) => <option key={t.id} value={t.id}>{t.title || t.id}</option>)}
+        </select>
       </div>
       {cfgOpen && (
         <div className="rhm-cfg">

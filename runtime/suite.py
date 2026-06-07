@@ -3437,7 +3437,9 @@ class Suite:
         # offering; the existing single-`proposal` FE consumer (useAppController r.proposal) reads it unchanged.
         proposal = proposals[0] if proposals else None
         return {"reply": reply, "action": action_field, "proposal": proposal, "mode": mode,
-                "model": cfg["model"], "history": self.store.chat_history(40)}
+                "model": cfg["model"], "thread_id": _tid,
+                # thread-aware history: the reopened conversation's turns when in a thread, else the global stream
+                "history": self.store.chats_in_thread(_tid) if _tid else self.store.chat_history(40)}
 
     def chat_history(self, limit: int = 40) -> list:
         return self.store.chat_history(limit)

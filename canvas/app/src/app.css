@@ -208,7 +208,12 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 .rhm-min:hover{color:var(--sig)}
 /* minimized — collapse the chat to just its header so the canvas shows behind it (mobile esp.) */
 .rhm.min{height:auto}
-.rhm.min .rhm-log,.rhm.min .rhm-input,.rhm.min .rhm-cfg,.rhm.min .rhm-indicating,.rhm.min .rhm-afford{display:none}
+.rhm.min .rhm-log,.rhm.min .rhm-input,.rhm.min .rhm-cfg,.rhm.min .rhm-indicating,.rhm.min .rhm-afford,.rhm.min .rhm-threads{display:none}
+/* S2 — conversation thread bar (new + reopen) */
+.rhm-threads{display:flex;gap:6px;align-items:center;padding:6px 0 0}
+.rhm-threads .b{font-size:10px;padding:4px 9px}
+.rhm-threads select{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:5px;font-family:inherit;font-size:10px}
+.rhm-threads select:focus{outline:none;border-color:var(--sig)}
 .rhm-cfg{display:flex;flex-direction:column;gap:5px;padding:8px 0;border-bottom:1px solid var(--line)}
 .rhm-cfg input{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:6px;font-family:inherit;font-size:10.5px}
 .rhm-cfg input:focus{outline:none;border-color:var(--sig)}

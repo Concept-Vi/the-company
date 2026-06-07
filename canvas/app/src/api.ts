@@ -115,6 +115,10 @@ export const api = {
           { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: blob }),
   // V3 — the memory loop: list recorded trial sessions, and start a debrief over them (reuses the
   // walkthrough organ — start_debrief surfaces each session's REAL transcript through the same walk).
+  // S2 — conversation threads: start fresh, list previous, reopen one.
+  newConversation: (title?: string) => fetch('/api/conversation/new', { method: 'POST', headers: J, body: JSON.stringify({ title: title || '' }) }).then(jr),
+  listConversations: () => fetch('/api/conversations').then(jr),
+  loadConversation: (threadId: string) => fetch('/api/conversation?thread_id=' + encodeURIComponent(threadId)).then(jr),
   trialSessions: () => fetch('/api/trial/sessions').then(jr),
   startDebrief: (sessionIds: string[], hostPersona?: string) =>
     fetch('/api/debrief/start', { method: 'POST', headers: J, body: JSON.stringify({ session_ids: sessionIds, host_persona: hostPersona }) }).then(jr),
