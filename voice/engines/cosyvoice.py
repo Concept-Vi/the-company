@@ -27,8 +27,22 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from voice.engines._service import serve, wav_bytes_from_array  # noqa: E402
 
 PORT = 4126
-MODEL_DIR = os.environ.get("COMPANY_COSYVOICE_DIR", "pretrained_models/CosyVoice2-0.5B")
-REPO = os.environ.get("COMPANY_COSYVOICE_REPO", "")            # the cloned CosyVoice repo (for imports)
+
+# ONE SOURCE (2026-06-07): settings live in the registry config block (ops/services.json → tts-cosyvoice.
+# config); COMPANY_COSYVOICE_* env (voice.env) is the fallback. Mirrors orpheus.py/qwen3tts.py. CosyVoice
+# is NOT vLLM (its own repo) — a fixed footprint, so it carries vram_mb, not a gpu_util knob.
+def _reg_config():
+    import json
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    try:
+        return json.load(open(os.path.join(root, "ops", "services.json")))["services"]["tts-cosyvoice"].get("config") or {}
+    except Exception:
+        return {}
+
+
+_C = _reg_config()
+MODEL_DIR = _C.get("model_dir") or os.environ.get("COMPANY_COSYVOICE_DIR", "pretrained_models/CosyVoice2-0.5B")
+REPO = _C.get("repo") or os.environ.get("COMPANY_COSYVOICE_REPO", "")  # the cloned CosyVoice repo (for imports)
 VOICE_REF = os.environ.get("COMPANY_VOICE_REF", "")           # the refined-Australian prompt clip (not fabricated)
 # The style instruction; CosyVoice2 wants it terminated with <|endofprompt|>. The persona's
 # voice_description can be passed per-request as `voice` (loop.py does this) to steer warmth/tone.

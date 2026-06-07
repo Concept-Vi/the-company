@@ -457,6 +457,20 @@ class Suite:
             out.append(rec)
         return {"ops": sorted(out, key=lambda r: -r["n"]), "total_records": len(evs)}
 
+    def voice_log(self, event: str, **data) -> None:
+        """Client-side voice trace (Tim 2026-06-07: "store the process to a proper log so you can
+        investigate"). The browser owns half the live voice loop — VAD pause detection, recording
+        start/stop, the finished-thought judge calls, chunk playback (iOS), errors — none of which the
+        server sees. The FE reports those steps here so the WHOLE process is reconstructable from the ONE
+        event log alongside the server-side voice.stream/voice.turn/judge records (NOT a parallel log —
+        introspective-data-building, op='voice.client'). Lenient: a trace write must never break a turn.
+        `data` carries turn_id (correlate to the server turn), ms, and event-specific fields."""
+        ms = data.pop("ms", 0)
+        try:
+            self.emit_run_record("voice.client", int(ms or 0), event=str(event), **data)
+        except Exception:
+            pass
+
     def _emit_durable(self, kind: str, summary: str, **meta) -> dict:
         """Append a DURABLE CLAIM event — FAIL LOUD (T1-EMIT). Unlike _emit (lenient telemetry), this
         does NOT swallow a failure: it returns the written record, and lets any append_event exception
@@ -536,6 +550,41 @@ class Suite:
             else:
                 base_url = fcfg.DEFAULT_BASE_URL
         return transport.list_models(base_url)               # live, uncached; Gemini filtered in transport
+
+    def chat_models_detailed(self) -> list:
+        """S1 — the chat models the PICKER should show: the live models at the default (ollama/cloud)
+        endpoint PLUS the company-managed vLLM chat services (each on its OWN base_url), so the local
+        4b/2b/0.8b are selectable. Each row: {model, base_url, service?, loadable, up}. Picking a
+        service-backed model sets model+base_url and can load the service on demand (/api/model/load)."""
+        import json as _j, os as _os, socket as _sock
+        from fabric import transport, config as fcfg
+        out, seen = [], set()
+        try:                                                  # 1. the default endpoint's live models
+            for m in transport.list_models(fcfg.DEFAULT_BASE_URL):
+                out.append({"model": m, "base_url": fcfg.DEFAULT_BASE_URL, "service": None, "loadable": False, "up": True})
+                seen.add((m, fcfg.DEFAULT_BASE_URL))
+        except Exception:
+            pass
+        try:                                                  # 2. the company vLLM chat services (own base_urls)
+            repo = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+            svcs = _j.load(open(_os.path.join(repo, "ops", "services.json")))["services"]
+            for sid, spec in svcs.items():
+                c = spec.get("config") or {}
+                model, port = c.get("model"), spec.get("port")
+                if not (model and port) or "chat" not in sid or spec.get("group") not in ("brain", "models"):
+                    continue
+                base = f"http://localhost:{port}/v1"
+                if (model, base) in seen:
+                    continue
+                up = False
+                try:
+                    s = _sock.socket(); s.settimeout(0.3); up = s.connect_ex(("127.0.0.1", int(port))) == 0; s.close()
+                except Exception:
+                    pass
+                out.append({"model": model, "base_url": base, "service": sid, "loadable": True, "up": up})
+        except Exception:
+            pass
+        return out
 
     def capabilities(self) -> dict:
         """One snapshot of WHAT EXISTS — fed into every authoring prompt + every registered select,
@@ -1158,7 +1207,12 @@ class Suite:
             "output": "one word: FINISHED | MORE",
             "tools": [],                      # no tools — a pure classifier
             "context": "the utterance text only (no system grounding)",
-            "knobs": {"max_tokens": 256, "temperature": 0},
+            # max_tokens 2048: the DEFAULT judge falls to the RHM brain, which today is a THINKING model
+            # (qwen3.5) — at 256 it gets cut off mid-reasoning and emits EMPTY content (FabricError). 2048
+            # lets it finish thinking + emit the FINISHED|MORE word (verified). A no-think model (the
+            # recommended 4B) uses <50 tokens, so this ceiling never hurts it — it only unblocks the
+            # thinking default. (Snappy always-listen still WANTS the no-think 4B bound — see recommended_*.)
+            "knobs": {"max_tokens": 2048, "temperature": 0},
             "env_model": "COMPANY_JUDGE_MODEL", "env_url": "COMPANY_JUDGE_URL",
             "env_knobs": {"max_tokens": "COMPANY_JUDGE_MAX_TOKENS"},
         },
@@ -1173,6 +1227,34 @@ class Suite:
     # SAME NodeConfigForm it renders node config — one resolution, two faces (the RHM tools + the UI).
     # Load-time knobs (gpu-util/ctx) are per-service launch DATA (services.json load.env, the A mechanism),
     # not per-request — kept separate. Adding a knob = a row here; no dispatch edit.
+    # S5 — the per-TTS-engine knob catalog (the comprehensive inventory the settings window renders). Each
+    # engine row: knobs[] = {key, type, default, min/max/options?, scope: 'runtime'|'serve', note}. RUNTIME
+    # knobs ride the /tts call (voice/speed) or the tts_voice override; SERVE knobs (exaggeration/cfg/ctx/
+    # gpu_util) are env/service config — changing them restarts the engine. Sourced from each engine's code
+    # (chatterbox.py/xtts.py/qwen3tts.py/cosyvoice.py/orpheus.py/tts_service.py), 2026-06-07.
+    VOICE_ENGINE_KNOBS = {
+        "kokoro":     [{"key": "voice", "type": "text", "default": "af_heart", "scope": "runtime", "note": "a Kokoro voice id (GET /voices)"},
+                       {"key": "speed", "type": "number", "default": 1.0, "min": 0.5, "max": 2.0, "scope": "runtime", "note": "applied"}],
+        "chatterbox": [{"key": "voice", "type": "text", "default": "(COMPANY_VOICE_REF clip)", "scope": "runtime", "note": "reference clip path to clone"},
+                       {"key": "exaggeration", "type": "number", "default": 0.5, "min": 0.0, "max": 1.0, "scope": "serve", "note": "emotion intensity (COMPANY_CHATTERBOX_EXAGGERATION)"},
+                       {"key": "cfg_weight", "type": "number", "default": 0.5, "min": 0.0, "max": 1.0, "scope": "serve", "note": "guidance (COMPANY_CHATTERBOX_CFG)"}],
+        "xtts":       [{"key": "voice", "type": "text", "default": "(COMPANY_VOICE_REF clip)", "scope": "serve", "note": "speaker clip"},
+                       {"key": "speed", "type": "number", "default": 1.0, "min": 0.5, "max": 2.0, "scope": "runtime", "note": "applied"},
+                       {"key": "language", "type": "text", "default": "en", "scope": "serve", "note": "COMPANY_XTTS_LANG"}],
+        "qwen3tts":   [{"key": "voice", "type": "text", "default": "(designed Australian woman)", "scope": "runtime", "note": "a VOICE DESCRIPTION — VoiceDesign instruct"}],
+        "cosyvoice":  [{"key": "voice", "type": "text", "default": "(refined Australian woman instruct)", "scope": "runtime", "note": "an instruction (inference_instruct2)"}],
+        "orpheus":    [{"key": "voice", "type": "text", "default": "tara", "scope": "runtime", "note": "a named Orpheus voice"},
+                       {"key": "max_model_len", "type": "number", "default": 8192, "scope": "serve", "note": "vLLM ctx (COMPANY_ORPHEUS_MAXLEN)"},
+                       {"key": "gpu_util", "type": "number", "default": 0.6, "min": 0.1, "max": 0.95, "scope": "serve", "note": "vLLM (COMPANY_ORPHEUS_GPU_UTIL)"}],
+    }
+
+    def voice_engine_knobs(self, engine: str | None = None) -> dict:
+        """The TTS-engine knob catalog (S5) — all engines, or one. The settings window renders this so the
+        operator sees every engine's real knobs (runtime vs serve-time)."""
+        if engine:
+            return {engine: self.VOICE_ENGINE_KNOBS.get(engine, [])}
+        return dict(self.VOICE_ENGINE_KNOBS)
+
     MODEL_KNOBS = {
         "temperature":       {"type": "number", "label": "Temperature", "default": 0.7, "min": 0.0, "max": 2.0,
                               "applies": "always", "note": "sampling randomness"},
@@ -1411,11 +1493,19 @@ class Suite:
                 "tts_voice": c.get("tts_voice", ""),
                 # the VOICE PATH slot (Tier 4): 'pipeline' (default, built) or 's2s' (needs a model).
                 "voice_path": c.get("voice_path", "pipeline"),
+                # the VOICE INPUT MODE slot (V1.3): how the mic finalises a turn — 'push_to_talk' (tap to
+                # start, tap to stop — the default) or 'auto_listen' (speak; on a pause the finished-thought
+                # judge decides whether to fire the turn — "reply on a finished thought, not a silence
+                # timer"). Two DISTINCT capabilities the operator switches between. Schema-additive.
+                "voice_input_mode": c.get("voice_input_mode", "push_to_talk"),
                 # the ROLE BINDINGS — {role_id: {model?, base_url?, knobs?, ...}} per the ROLE_REGISTRY.
                 # n model-FUNCTION roles (judge first; more to come) each bind a model + config from the
                 # live registry. Stored as ONE dict so adding a role never touches the config whitelist.
                 # Schema-additive (absent → {}); the brain stays its OWN slot (`model`) — NOT a role here.
-                "roles": c.get("roles", {})}
+                "roles": c.get("roles", {}),
+                # S5 — the brain's runtime knobs (temperature/max_tokens/top_p), set from the settings
+                # window; reach the chat call. Absent → endpoint defaults. Schema-additive.
+                "brain_knobs": c.get("brain_knobs", {})}
 
     def voice_enabled(self) -> bool:
         """Lane H — is voice on for the current presence? Reads the rhm node's `voice_enabled`
@@ -1430,7 +1520,27 @@ class Suite:
     def set_rhm_config(self, updates: dict) -> dict:
         allowed = {k: v for k, v in (updates or {}).items()
                    if k in ("model", "base_url", "persona", "mode", "voice_enabled", "timeout", "stt",
-                            "roles", "tts_engine", "tts_voice", "voice_path", "MODE_AUTODETECT")}
+                            "roles", "tts_engine", "tts_voice", "voice_path", "voice_input_mode", "brain_knobs", "MODE_AUTODETECT")}
+        if "brain_knobs" in allowed:                          # S5 — temperature/max_tokens/top_p (numeric, fail-loud)
+            bk = allowed["brain_knobs"]
+            if not isinstance(bk, dict):
+                raise ValueError("brain_knobs must be a dict {temperature?,max_tokens?,top_p?}")
+            clean = {}
+            for k, v in bk.items():
+                if k not in ("temperature", "max_tokens", "top_p"):
+                    raise ValueError(f"unknown brain knob {k!r} — one of (temperature,max_tokens,top_p)")
+                if v is not None:
+                    try:
+                        clean[k] = int(v) if k == "max_tokens" else float(v)
+                    except (TypeError, ValueError):
+                        raise ValueError(f"brain knob {k!r} must be numeric, got {v!r}")
+            existing = dict(self.rhm_config().get("brain_knobs", {})); existing.update(clean)
+            allowed["brain_knobs"] = existing                 # merge (set one knob without resetting another)
+        if "voice_input_mode" in allowed:                     # V1.3 — push_to_talk | auto_listen (fail-loud)
+            vim = str(allowed["voice_input_mode"]).strip()
+            if vim not in ("push_to_talk", "auto_listen"):
+                raise ValueError(f"unknown voice_input_mode {vim!r} — one of ('push_to_talk','auto_listen')")
+            allowed["voice_input_mode"] = vim
         if "voice_path" in allowed:                           # the voice-path slot (registry-is-truth)
             vp = str(allowed["voice_path"]).strip()
             if vp not in self.VOICE_PATHS:
@@ -4027,16 +4137,53 @@ class Suite:
         t0 = time.monotonic()
         out = client.complete(
             transport.openai_transport(base_url=r["base_url"], timeout=cfg["timeout"]),
-            msgs, model=r["model"], max_tokens=r["knobs"].get("max_tokens", 256),
+            msgs, model=r["model"], max_tokens=r["knobs"].get("max_tokens", 2048),
             temperature=r["knobs"].get("temperature", 0))
         ms = int((time.monotonic() - t0) * 1000)
         verdict = "FINISHED" if "finish" in (out or "").strip().lower() else "MORE"
         # G7 run-record: the judge is on the LIVE turn path — how long it took, on which model, the
         # verdict (the condition that matters for tuning the always-listen feel). Rollups reveal whether
         # the bound judge model is fast enough live (the deepseek-6.5s lesson, measured per use).
-        self.emit_run_record("judge", ms, model=r["model"], verdict=verdict)
+        self.emit_run_record("judge", ms, model=r["model"], verdict=verdict, text=t[:240])
         return {"finished": verdict == "FINISHED", "verdict": verdict, "text": t,
                 "judge_model": r["model"], "ms": ms}
+
+    # --- conversation threads (S2): new / list / reopen. A thread is a pure CONVERSATION (independent of
+    # the canvas graph). The CURRENT thread is held in-memory (single operator, like _current_locus); chat()
+    # + the voice paths tag their turns with it. Persisted via the store's chat_threads + the additive
+    # thread_id on chat.jsonl turns — one source, back-compatible (no thread = the legacy global stream). ---
+    def new_conversation(self, title: str = "") -> dict:
+        """Start a fresh conversation: mint + persist a thread record, make it current. Subsequent chat/voice
+        turns thread into it. Returns the thread record."""
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc)
+        tid = "conv-" + now.strftime("%Y%m%d-%H%M%S-%f")     # microsecond → collision-safe id (no uuid dep)
+        rec = {"id": tid, "title": (title or "").strip(), "created": now.isoformat(), "last_msg": None}
+        self.store.save_chat_thread(rec)
+        self._current_thread = tid
+        return {"thread_id": tid, **rec}
+
+    def list_conversations(self, limit: int = 30) -> list:
+        """The previous conversations, newest-active first — for the reopen list."""
+        cur = getattr(self, "_current_thread", None)
+        out = []
+        for tid in self.store.list_chat_threads():
+            t = self.store.load_chat_thread(tid) or {"id": tid}
+            out.append({"id": tid, "title": t.get("title", ""), "created": t.get("created"),
+                        "last_msg": t.get("last_msg"), "current": tid == cur})
+        out.sort(key=lambda r: (r.get("last_msg") or r.get("created") or ""), reverse=True)
+        return out[:limit]
+
+    def load_conversation(self, thread_id: str) -> dict:
+        """Reopen a conversation: make it current + return its history (the turns that carry its thread_id)."""
+        t = self.store.load_chat_thread(thread_id)
+        if not t:
+            raise ValueError(f"unknown conversation {thread_id!r} — registered: {self.store.list_chat_threads()}")
+        self._current_thread = thread_id
+        return {"id": thread_id, "title": t.get("title", ""), "history": self.store.chats_in_thread(thread_id)}
+
+    def current_conversation(self) -> str | None:
+        return getattr(self, "_current_thread", None)
 
     def chat(self, message: str, graph_id: str, focus: dict | None = None) -> dict:
         """Grounded conversation with the operator via NATIVE TOOL-CALLING. Answers from compact
@@ -4075,6 +4222,18 @@ class Suite:
                     "model": cfg["model"], "history": self.store.chat_history(40)}
 
         persona = cfg["persona"]
+        # IDENTITY HOOKUP (Tim 2026-06-07: "more than just a name … fully hooked up"): expand a known
+        # persona id to its FULL character prose (personas.py `brain`). A bare id ("sable") told the model
+        # nothing — the character was names-only. The brain prose IS the identity and is engine-independent
+        # (it holds whether the voice is Orpheus, qwen3tts, or any other). Free-text / unknown persona falls
+        # through verbatim (never crash a reply over an unrecognised persona string).
+        persona_text = persona
+        if persona:
+            try:
+                from voice import personas as _vp
+                persona_text = _vp.get_persona(persona).get("brain") or persona
+            except (KeyError, ImportError):
+                persona_text = persona
         # PERSONA / GROUND-TRUTH / MODE-DIRECTIVE HEAD (the ACTION:-prose block is GONE — the verbs are
         # now offered as native function-tools, so the model invokes them through the tool API, not by
         # emitting a hand-typed `ACTION:` line). The head still tells it WHO it is, to answer only from
@@ -4084,7 +4243,7 @@ class Suite:
             "about the system ITSELF. Answer ONLY from the LIVE SYSTEM STATE below; it is ground truth. "
             "If something is not in that state, say you cannot see it — NEVER invent counts, names, or "
             "facts. Be concise and concrete.\n\n"
-            + (f"VOICE / PERSONA (hold this consistently): {persona}\n\n" if persona else "")
+            + (f"VOICE / PERSONA (hold this consistently): {persona_text}\n\n" if persona else "")
             + ("THE EXPLICIT MODEL OF TIM (the principles the Company holds itself to — reason from these "
                "for judgment/value questions, but mark such answers as YOUR inference (working-grade), "
                "never as Tim's actual words; when genuinely uncertain, say so and defer to Tim):\n"
@@ -4112,9 +4271,14 @@ class Suite:
         # guard knows this. A non-tool model never reaches here (gated above). FAIL LOUD on exhaustion:
         # complete_with_tools raises FabricError, which we let propagate (no fallback) after logging the
         # operator turn — the bridge surfaces the error rather than the system pretending success.
+        # S5 — the brain's runtime knobs (temperature/max_tokens/top_p) now REACH the call (they were in
+        # MODEL_KNOBS + /api/knobs but never passed — dead code). Set from the settings window via the
+        # brain_knobs slot; absent → the endpoint's own defaults (byte-for-byte as before).
+        _bk = cfg.get("brain_knobs") or {}
+        _bkargs = {k: _bk[k] for k in ("temperature", "max_tokens", "top_p") if k in _bk and _bk[k] is not None}
         msg = client.complete_with_tools(
             transport.openai_tools_transport(base_url=cfg["base_url"], timeout=cfg["timeout"]),
-            msgs, model=cfg["model"], tools=tools, tool_choice="auto", timeout=cfg["timeout"])
+            msgs, model=cfg["model"], tools=tools, tool_choice="auto", timeout=cfg["timeout"], **_bkargs)
         reply = msg.get("content") or ""                      # may be empty (the model called a tool)
 
         # LOOP over every tool_call the model emitted (a model may call >1). Each becomes an action via
@@ -4228,17 +4392,34 @@ class Suite:
             action_field = outcomes[0]
         else:
             action_field = outcomes
-        # provenance grading (B3): Tim's words are gold (train the twin); the twin's are working
-        self.store.append_chat({"role": "user", "text": message, "grade": self._provenance_grade("user"), "source": self._provenance_source("user")})
+        # provenance grading (B3): Tim's words are gold (train the twin); the twin's are working.
+        # S2 — thread the turn into the CURRENT conversation (the additive thread_id; None = the global/legacy
+        # stream, back-compat). The current thread is set by new_conversation/load_conversation, so chat() AND
+        # the voice paths auto-thread without a signature change.
+        _tid = getattr(self, "_current_thread", None)
+        self.store.append_chat({"role": "user", "text": message, "grade": self._provenance_grade("user"), "source": self._provenance_source("user"), **({"thread_id": _tid} if _tid else {})})
         self.store.append_chat({"role": "assistant", "text": reply, "action": action_field,
-                                "grade": self._provenance_grade("assistant"), "source": self._provenance_source("assistant")})
+                                "grade": self._provenance_grade("assistant"), "source": self._provenance_source("assistant"), **({"thread_id": _tid} if _tid else {})})
+        if _tid:                                               # bump the thread's last_msg for the list ordering
+            try:
+                _t = self.store.load_chat_thread(_tid)
+                if _t:
+                    from datetime import datetime, timezone
+                    _t["last_msg"] = datetime.now(timezone.utc).isoformat()
+                    if not _t.get("title"):
+                        _t["title"] = message.strip()[:48]     # title from the first turn if unnamed
+                    self.store.save_chat_thread(_t)
+            except Exception:
+                pass                                           # thread metadata is best-effort, never break a turn
         self._emit("chat", f"you: {message[:48]}", address="ui://chrome/chat")   # S2: chat organ event carries its locus
         # OFFER-WITH-OPTIONS: a `suggest` tool_call rides back as a `proposal` (the FE renders the one-click
         # card; approve → /api/act). Additive + back-compat: None when the turn dispatched/spoke instead of
         # offering; the existing single-`proposal` FE consumer (useAppController r.proposal) reads it unchanged.
         proposal = proposals[0] if proposals else None
         return {"reply": reply, "action": action_field, "proposal": proposal, "mode": mode,
-                "model": cfg["model"], "history": self.store.chat_history(40)}
+                "model": cfg["model"], "thread_id": _tid,
+                # thread-aware history: the reopened conversation's turns when in a thread, else the global stream
+                "history": self.store.chats_in_thread(_tid) if _tid else self.store.chat_history(40)}
 
     def chat_history(self, limit: int = 40) -> list:
         return self.store.chat_history(limit)

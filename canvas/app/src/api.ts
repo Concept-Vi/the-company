@@ -134,6 +134,43 @@ export const api = {
   personas: () => fetch('/api/personas').then(jr),
   voiceServices: () => fetch('/api/voice/services').then(jr),
   voiceSwitch: (persona: string) => fetch('/api/voice/switch', { method: 'POST', headers: J, body: JSON.stringify({ persona }) }).then(jr),
+  // V2.2 — the streaming voice circuit: POST the recorded utterance, get back an ndjson stream
+  // (transcript → reply → per-sentence {wav_b64} chunks → done) in the persona's voice. Returns the raw
+  // Response so the caller reads `.body` (NOT jr — it's a stream, not one JSON object).
+  voiceStream: (blob: Blob, persona: string, trialSession?: string) =>
+    fetch('/api/voice/stream?persona=' + encodeURIComponent(persona)
+          + (trialSession ? '&trial_session=' + encodeURIComponent(trialSession) : ''),
+          { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: blob }),
+  // V3 — the memory loop: list recorded trial sessions, and start a debrief over them (reuses the
+  // walkthrough organ — start_debrief surfaces each session's REAL transcript through the same walk).
+  // S2 — conversation threads: start fresh, list previous, reopen one.
+  // S1 — the chat-model picker list (ollama/cloud + local vLLM, each with base_url+service+up) + load-on-demand.
+  chatModelsDetailed: () => fetch('/api/chat-models').then(jr),
+  // S6 (Tim 2026-06-07): "tell me if my selection won't fit." Given the selected GPU service keys
+  // (brain + voice), returns each one's VRAM budget, the sum vs the 16GB card ceiling, measured free,
+  // and fit/no-fit + what to unload. Config-derived → tracks a resize (brain @256K vs @64K).
+  fit: (services: string[]) => fetch('/api/fit?services=' + encodeURIComponent(services.join(','))).then(jr),
+  modelLoad: (service: string) => fetch('/api/model/load', { method: 'POST', headers: J, body: JSON.stringify({ service }) }).then(jr),
+  // voice trace (Tim 2026-06-07): the browser reports its half of the live voice loop (VAD pause,
+  // recording, judge-call, turn-fire, playback, errors) into the ONE event log so the WHOLE process is
+  // investigable. Fire-and-forget — a trace write must NEVER break a turn; swallow any failure.
+  voiceLog: (event: string, data: any = {}) =>
+    fetch('/api/voice/log', { method: 'POST', headers: J, body: JSON.stringify({ event, ...data }) }).catch(() => {}),
+  // S5 — set a serve-time model config (e.g. context window) + restart; + the per-TTS-engine knob catalog.
+  modelConfig: (service: string, key: string, value: any) => fetch('/api/model/config', { method: 'POST', headers: J, body: JSON.stringify({ service, key, value }) }).then(jr),
+  voiceEngineKnobs: () => fetch('/api/voice/engine-knobs').then(jr),
+  newConversation: (title?: string) => fetch('/api/conversation/new', { method: 'POST', headers: J, body: JSON.stringify({ title: title || '' }) }).then(jr),
+  listConversations: () => fetch('/api/conversations').then(jr),
+  loadConversation: (threadId: string) => fetch('/api/conversation?thread_id=' + encodeURIComponent(threadId)).then(jr),
+  trialSessions: () => fetch('/api/trial/sessions').then(jr),
+  startDebrief: (sessionIds: string[], hostPersona?: string) =>
+    fetch('/api/debrief/start', { method: 'POST', headers: J, body: JSON.stringify({ session_ids: sessionIds, host_persona: hostPersona }) }).then(jr),
+  // V1.1 — the finished-thought judge: given the utterance-so-far (after a silence pause), is it a complete
+  // thought (fire the turn) or is the operator mid-ramble (keep listening)? The "not a dumb silence timer"
+  // lever. Returns {finished, verdict, ...}. Fail-loud upstream (a judge error → caller surfaces + can fall
+  // back to push-to-talk, never a silent degrade).
+  finishedThought: (text: string) =>
+    fetch('/api/voice/finished-thought', { method: 'POST', headers: J, body: JSON.stringify({ text }) }).then(jr),
   // C1: the UI-component registry (sibling of object_info) — the source of truth for what's addressable.
   uiInfo: () => fetch('/api/ui_info').then(jr),
   // L3 · addressed history (§21.7#1): everything that happened AT a ui:// address. The address-keyed READ

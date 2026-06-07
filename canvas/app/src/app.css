@@ -205,6 +205,7 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
    inbox decision→build lane the bootstrap tour walks. Tokens only (no literal), recognition-by-tint. */
 button.b.ghost.kit-tone-wire{border-color:var(--tone);color:var(--tone)}
 button.b.ghost.kit-tone-wire:hover{border-color:var(--tone);color:var(--tone);box-shadow:0 0 14px -6px var(--tone)}
+button.b.ghost.on{background:var(--sig);color:var(--bg);border-color:var(--sig)}   /* an active toggle (e.g. point mode ON) */
 
 /* U8: the toolbar context hint is the most instructive text — never truncate it. Allow it to wrap to a
    second line (capped width keeps the toolbar from sprawling) and clamp to 2 lines so it stays legible
@@ -389,6 +390,53 @@ button.b.ghost.kit-tone-wire:hover{border-color:var(--tone);color:var(--tone);bo
   padding-bottom:7px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:6px}
 .cfg-gear{margin-left:auto;cursor:pointer;color:var(--dim);font-family:inherit}
 .cfg-gear:hover{color:var(--sig)}
+.rhm-min{cursor:pointer;color:var(--dim);font-family:inherit}
+.rhm-min:hover{color:var(--sig)}
+/* minimized — collapse the chat to just its header so the canvas shows behind it (mobile esp.) */
+.rhm.min{height:auto}
+.rhm.min .rhm-log,.rhm.min .rhm-input,.rhm.min .rhm-cfg,.rhm.min .rhm-indicating,.rhm.min .rhm-afford,.rhm.min .rhm-threads{display:none}
+/* S2 — conversation thread bar (new + reopen) */
+.rhm-threads{display:flex;gap:6px;align-items:center;padding:6px 0 0}
+.rhm-threads .b{font-size:10px;padding:4px 9px}
+.rhm-threads select{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:5px;font-family:inherit;font-size:10px}
+.rhm-threads select:focus{outline:none;border-color:var(--sig)}
+/* S3 — the dedicated settings window (modal; full-screen on mobile). Design tokens only. */
+.settings{position:fixed;inset:48px;z-index:520;background:var(--s1);border:1px solid var(--line);border-radius:8px;display:flex;flex-direction:column;box-shadow:var(--shadow);overflow:hidden}
+.settings-head{font-family:"Fraunces",serif;color:var(--sig);font-weight:600;font-size:15px;padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center}
+.settings-head .close{margin-left:auto;cursor:pointer;color:var(--dim);font-weight:400}
+.settings-head .close:hover{color:var(--sig)}
+.settings-body{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:18px}
+.settings-sec h4{font-family:"Fraunces",serif;color:var(--ink);font-size:12px;margin:0 0 6px;text-transform:uppercase;letter-spacing:.05em}
+.settings-sec label{display:block;color:var(--dim);font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;margin:8px 0 3px}
+.settings-sec select,.settings-sec input[type=number],.settings-sec input[type=text]{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:6px;font-family:inherit;font-size:11px;box-sizing:border-box}
+.settings-sec select:focus,.settings-sec input:focus{outline:none;border-color:var(--sig)}
+.settings-toggle{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink);text-transform:none;letter-spacing:0;margin-top:10px;cursor:pointer}
+.settings-toggle input{width:auto}
+.settings-ctx{display:flex;gap:6px}
+.settings-ctx input{flex:1}
+.settings-knobs{margin-top:8px;padding:7px 9px;background:var(--bg);border:1px solid var(--line);border-radius:4px}
+.settings-knob{display:flex;gap:8px;font-size:9.5px;padding:2px 0}
+.settings-knob .kk{color:var(--ink);min-width:96px}
+/* S6 — the resource-fit surface: a bar read by shape (each piece's share of the 16GB card) + verdict. */
+.settings-fit{border:1px solid var(--line);border-radius:6px;padding:10px 12px;background:var(--bg)}
+.settings-fit.fit-ok h4{color:var(--sig)}
+.settings-fit.fit-over h4{color:var(--err)}
+.fit-bar{display:flex;height:22px;border-radius:4px;overflow:hidden;border:1px solid var(--line);margin:4px 0 8px;background:var(--s1)}
+.fit-seg{display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--bg);white-space:nowrap;overflow:hidden;min-width:0}
+.fit-seg-0{background:var(--sig)}
+.fit-seg-1{background:var(--kind-content,#6aa)}
+.fit-seg-2{background:var(--warn)}
+.fit-seg-3{background:var(--cache,#a8a)}
+.fit-free{background:transparent}
+.settings-fit.fit-over .fit-bar{border-color:var(--err)}
+.fit-line{font-size:10px;color:var(--dim);line-height:1.4}
+.fit-line b{color:var(--ink)}
+.fit-why{margin-top:6px;font-size:10px;color:var(--err);line-height:1.4}
+.settings-fit.fit-ok .fit-why{color:var(--warn)}
+.ear-status{font-size:10px;margin-top:5px;display:flex;align-items:center;line-height:1.4}
+.ear-status.ok{color:var(--sig)}
+.ear-status.down{color:var(--err)}
+@media (max-width:699px){.settings{inset:0;border-radius:0}}
 .rhm-cfg{display:flex;flex-direction:column;gap:5px;padding:8px 0;border-bottom:1px solid var(--line)}
 .rhm-cfg input{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:6px;font-family:inherit;font-size:10.5px}
 .rhm-cfg input:focus{outline:none;border-color:var(--sig)}
@@ -412,6 +460,21 @@ button.b.ghost.kit-tone-wire:hover{border-color:var(--tone);color:var(--tone);bo
    silently OVERRIDING the kit by source-order/specificity, breaking H2 "one language". The kit is now the
    sole authority for the lane-heads + item cards. .ibx-lane stays = a thin wrapper (margin only). */
 .ibx-lane{margin:var(--sp-2) 0}
+/* V4 (from main) — the RhmChat voice-settings gear: header, voice load-status badge, voice on/off toggle.
+   NOTE: still literal-px (font-size:8/9/10.5px, gap:6px) — flagged for the wide-unify re-tokenise pass
+   (GAPS §3b) and the gear itself is slated for retirement into the consolidated A3 Settings (GAPS §3d).
+   Kept AS-IS through the merge so the gear keeps rendering; the legacy .ibx-* rules main re-introduced here
+   are deliberately DROPPED (the WAVE-2 kit redesign above is the sole authority — re-adding them re-breaks
+   H2 "one language" by overriding the kit via source-order). */
+.rhm-cfg .cfg-head{font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin:2px 0 1px}
+.rhm-cfg .voice-status{font-size:9px;color:var(--dim)}
+.rhm-cfg .voice-status.ready{color:var(--sig)}
+.rhm-cfg .voice-status.down{color:var(--err)}
+.rhm-cfg .cfg-toggle{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--ink);cursor:pointer}
+.rhm-cfg .cfg-toggle input{width:auto;padding:0;border:0;background:none}
+.rhm-cfg .cfg-mem{display:flex;gap:6px}
+.rhm-cfg .cfg-mem .b{flex:1;font-size:10px}
+.rhm-cfg .cfg-mem .b.rec{border-color:var(--err);color:var(--err)}
 /* L8 (§21.7#9): the click-to-thing link on a surfaced item that carries a ui:// target — clicking it
    composes the preserved resolveUiTarget keystone to navigate+spotlight the thing the item is about.
    Reads as a subtle inline affordance (corpus tokens only, no literals); the signal accent on hover

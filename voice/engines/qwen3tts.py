@@ -27,12 +27,27 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from voice.engines._service import serve, wav_bytes_from_array  # noqa: E402
 
 PORT = 4128
-MODEL_ID = os.environ.get("COMPANY_QWEN3TTS_MODEL", "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign")
-DEVICE_MAP = os.environ.get("COMPANY_QWEN3TTS_DEVICE", "cuda:0")
+
+# ONE SOURCE (2026-06-07): settings live in the registry config block (ops/services.json → tts-qwen3tts.
+# config); the COMPANY_QWEN3TTS_* env vars (voice.env) are the fallback. Mirrors orpheus.py — the engine
+# reads the same record the resource manager budgets/sees, so settings stay in one place. (qwen3tts is
+# NOT vLLM — transformers VoiceDesign, a fixed footprint — so it carries vram_mb, not a gpu_util knob.)
+def _reg_config():
+    import json
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    try:
+        return json.load(open(os.path.join(root, "ops", "services.json")))["services"]["tts-qwen3tts"].get("config") or {}
+    except Exception:
+        return {}
+
+
+_C = _reg_config()
+MODEL_ID = _C.get("model") or os.environ.get("COMPANY_QWEN3TTS_MODEL", "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign")
+DEVICE_MAP = _C.get("device") or os.environ.get("COMPANY_QWEN3TTS_DEVICE", "cuda:0")
 # flash_attention_2 needs the flash-attn package built; default to "sdpa" which always works on CUDA.
-# Set COMPANY_QWEN3TTS_ATTN=flash_attention_2 once flash-attn is installed for best latency.
-ATTN = os.environ.get("COMPANY_QWEN3TTS_ATTN", "sdpa")
-LANGUAGE = os.environ.get("COMPANY_QWEN3TTS_LANG", "English")
+# Set config.attn (or COMPANY_QWEN3TTS_ATTN) = flash_attention_2 once flash-attn is installed.
+ATTN = _C.get("attn") or os.environ.get("COMPANY_QWEN3TTS_ATTN", "sdpa")
+LANGUAGE = _C.get("lang") or os.environ.get("COMPANY_QWEN3TTS_LANG", "English")
 # The default voice DESCRIPTION (instruct). loop.py passes the persona's voice_description as `voice`.
 DEFAULT_DESC = os.environ.get(
     "COMPANY_QWEN3TTS_DESC",

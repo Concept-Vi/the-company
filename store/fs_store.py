@@ -378,6 +378,35 @@ class FsStore:
         d = self.root / "journeys"
         return sorted(p.stem for p in d.glob("*.json")) if d.exists() else []
 
+    # --- conversation threads (S2): a thread = a CONVERSATION (new / list / reopen). Metadata mirrors
+    # save_session (atomic whole-record). The TURNS stay in the ONE append-only chat.jsonl carrying an
+    # additive `thread_id` (the same one-source pattern as the `address` field for chats_for) — no parallel
+    # chat store (store constitution). A turn with NO thread_id is the legacy/global stream (back-compat). ---
+    def save_chat_thread(self, thread: dict) -> None:
+        import json as _j
+        (self.root / "chat_threads").mkdir(parents=True, exist_ok=True)
+        path = self.root / "chat_threads" / (self._safe(thread["id"]) + ".json")
+        self._fsync_atomic_write(path, _j.dumps(thread, indent=2))
+
+    def load_chat_thread(self, tid: str) -> dict | None:
+        import json as _j
+        p = self.root / "chat_threads" / (self._safe(tid) + ".json")
+        return _j.loads(p.read_text()) if p.exists() else None
+
+    def list_chat_threads(self) -> list[str]:
+        d = self.root / "chat_threads"
+        return sorted(p.stem for p in d.glob("*.json")) if d.exists() else []
+
+    def chats_in_thread(self, thread_id: str, limit: int = 200) -> list[dict]:
+        """Every chat turn carrying `thread_id`, oldest-first, last `limit` — the reopened conversation.
+        Filters the SAME chat.jsonl by the additive thread_id field (inverse of chats_for's address)."""
+        import json as _j
+        path = self.root / "chat.jsonl"
+        if not path.exists():
+            return []
+        out = [_j.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+        return [r for r in out if r.get("thread_id") == thread_id][-limit:]
+
     def list_graphs(self) -> list[str]:
         return sorted(p.stem for p in (self.root / "graphs").glob("*.json"))
 

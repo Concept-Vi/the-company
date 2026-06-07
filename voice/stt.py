@@ -74,7 +74,7 @@ STT_PROVIDERS: dict[str, dict] = {
         "kind": "local_http", "label": "whisper.cpp (local, CPU)",
         "url": os.environ.get("COMPANY_WHISPERCPP_URL", "http://127.0.0.1:2022"),
         "route": os.environ.get("COMPANY_WHISPERCPP_ROUTE", "/v1/audio/transcriptions"),
-        "field": "file",
+        "field": "file", "service": "stt-whisper",   # registry service key (so the UI can START a down ear)
         "note": "zero-install on-machine ear; the boot default. OpenAI-compat route on this build."},
     "whisper_local": {
         "kind": "local_lib", "label": "faster-whisper (local lib)",
@@ -86,17 +86,17 @@ STT_PROVIDERS: dict[str, dict] = {
     "parakeet": {
         "kind": "local_http", "label": "NVIDIA Parakeet-TDT 0.6B v3 (GPU, NeMo)",
         "url": os.environ.get("COMPANY_PARAKEET_URL", "http://127.0.0.1:2031"),
-        "route": "/inference", "field": "file",
+        "route": "/inference", "field": "file", "service": "stt-parakeet",
         "note": "live multilingual workhorse; ~2000x; needs NeMo venv (CUDA-13 hazard)."},
     "canary": {
         "kind": "local_http", "label": "NVIDIA Canary-Qwen 2.5B (GPU, NeMo)",
         "url": os.environ.get("COMPANY_CANARY_URL", "http://127.0.0.1:2032"),
-        "route": "/inference", "field": "file",
+        "route": "/inference", "field": "file", "service": "stt-canary",
         "note": "English-max + understanding (LLM-based); needs NeMo venv."},
     "granite": {
         "kind": "local_http", "label": "IBM Granite Speech 4.0 1B (GPU, transformers)",
         "url": os.environ.get("COMPANY_GRANITE_URL", "http://127.0.0.1:2033"),
-        "route": "/inference", "field": "file",
+        "route": "/inference", "field": "file", "service": "stt-granite",
         "note": "compact top-accuracy cross-check; transformers venv (lands clean)."},
 }
 
@@ -169,7 +169,8 @@ def _probe_provider(pid: str, spec: dict) -> dict:
     """STATUS read for ONE ear — is it usable right now? NEVER raises (every branch is wrapped); a down
     ear returns available:false + a LEGIBLE detail (the UI greys it out, the RHM says why). This is the
     projection the registry-is-truth surfaces read. Returns {id,label,kind,available:bool,detail:str}."""
-    base = {"id": pid, "label": spec.get("label", pid), "kind": spec.get("kind", "?")}
+    base = {"id": pid, "label": spec.get("label", pid), "kind": spec.get("kind", "?"),
+            "service": spec.get("service")}   # registry service key (UI START affordance for a down local_http ear)
     try:
         kind = spec.get("kind")
         if kind == "cloud":

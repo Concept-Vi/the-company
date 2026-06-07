@@ -111,15 +111,24 @@ def speak(text: str, engine: str, voice: str | None = None, speed: float = 1.0) 
             f"start/load the engine's service. Refusing a silent failure (no garbage audio).") from e
 
 
-def _voice_arg_for(persona: dict) -> str | None:
-    """Map a persona record → the right `voice` arg for ITS engine (the engines differ in what `voice`
-    means — see speak()). Centralised so the picker/loop don't each re-derive it."""
-    engine = persona.get("engine")
-    if engine in ("qwen3tts", "cosyvoice"):
+# Sensible bank defaults for the named-voice engines when a persona carries no explicit assignment.
+_DEFAULT_NAMED_VOICE = {"orpheus": "tara", "kokoro": "bf_emma"}
+
+
+def _voice_arg_for(persona: dict, engine: str | None = None) -> str | None:
+    """Map a persona record → the right `voice` arg for the SELECTED engine (engines differ in what
+    `voice` means — see speak()). Keying off the SELECTED engine, NOT the persona's default engine, is
+    what lets ANY persona be voiced by ANY engine (Tim 2026-06-07: 'all personas work for all engines').
+      • qwen3tts / cosyvoice — the natural-language voice_description (the character's SOUND, designed).
+      • orpheus / kokoro     — a NAMED bank voice from the persona's `voices` map (fallback to a default).
+      • xtts / chatterbox    — None → the engine's COMPANY_VOICE_REF reference clip.
+    Centralised so the picker/loop/bridge don't each re-derive it."""
+    eng = engine or persona.get("engine")
+    if eng in ("qwen3tts", "cosyvoice"):
         return persona.get("voice_description")             # description-driven engines
-    if engine == "orpheus":
-        return persona.get("voice")                         # a named voice (e.g. "tara")
-    return persona.get("voice")                             # xtts/chatterbox: None → engine's COMPANY_VOICE_REF
+    if eng in ("orpheus", "kokoro"):
+        return (persona.get("voices") or {}).get(eng) or persona.get("voice") or _DEFAULT_NAMED_VOICE.get(eng)
+    return None                                             # xtts/chatterbox: None → engine's COMPANY_VOICE_REF
 
 
 def select_persona(persona_id: str, bridge_url: str | None = None) -> dict:
@@ -172,7 +181,7 @@ def loop_turn(audio: bytes, persona_id: str, *, graph_id: str = "codebase",
     # persona's default engine — so the operator can voice ANY persona through ANY engine live; unset
     # → the persona's own engine (qwen3tts for Sable, etc.) unchanged.
     engine = engine_override or p["engine"]
-    voice_arg = voice_override or _voice_arg_for(p)
+    voice_arg = voice_override or _voice_arg_for(p, engine)   # voice for the SELECTED engine (any persona × any engine)
     wav = speak(reply, engine, voice=voice_arg)
     return {"transcript": transcript, "reply": reply, "engine": engine,
             "voice": voice_arg, "wav": wav, "spoke": True, "action": thought.get("action"),

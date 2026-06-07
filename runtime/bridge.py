@@ -37,6 +37,52 @@ ENGINE_PORTS = {"chatterbox": 4124, "orpheus": 4125, "cosyvoice": 4126,
                 "xtts": 4127, "qwen3tts": 4128}
 
 
+def _apply_model_ctx(key, ctx, *, restart=True):
+    """Set a config-model's context window, auto-sizing gpu_util from its measured `_profile` so vLLM
+    gets the KV pool that ctx needs, then (optionally) restart it — budget-gated (fail loud, never OOM).
+    SHARED (one source) by /api/model/config AND /api/voice/switch's co-residence shrink. Returns a dict."""
+    import sys as _sys
+    _ops = os.path.join(ROOT, "ops", "cli")
+    if _ops not in _sys.path:
+        _sys.path.insert(0, _ops)
+    import gpu as _gpu, systemd as _sd, registry as _reg
+    reg = _reg.load()
+    if key not in reg["services"]:
+        raise ValueError(f"unknown service {key!r}")
+    _reg.set_config(reg, key, "max_model_len", int(ctx))
+    reg = _reg.load(); c = reg["services"][key].get("config", {}); auto_util = None
+    prof = c.get("_profile")
+    if prof and prof.get("fixed_mb") and prof.get("kv_kb_per_token"):
+        need = prof["fixed_mb"] + int(ctx) * prof["kv_kb_per_token"] / 1024.0 + 500
+        auto_util = min(0.92, round(need / _reg.ceiling_mb(reg) + 0.005, 2))
+        _reg.set_config(reg, key, "gpu_util", auto_util)
+    reg = _reg.load(); svc = reg["services"][key]
+    if not restart or _sd.is_active(svc) != "active":
+        return {"service": key, "max_model_len": int(ctx), "auto_util": auto_util, "restarted": False,
+                "note": "saved — applies when the service next starts"}
+    new_budget = _gpu.budget_vram(reg, key)
+    others = sum(mb for k, mb in _gpu.running_gpu_services(reg) if k != key)
+    if new_budget + others > _reg.ceiling_mb(reg):
+        return {"service": key, "max_model_len": int(ctx), "auto_util": auto_util, "restarted": False,
+                "error": f"{key} at {ctx} needs ~{new_budget} MB; {others} MB held by other GPU services → "
+                         f"{new_budget+others} MB > {_reg.ceiling_mb(reg)} MB card. Not restarting (would OOM).\n"
+                         + _gpu.format_state(reg)}
+    started, msg = _sd.control(svc, "restart")
+    return {"service": key, "max_model_len": int(ctx), "auto_util": auto_util, "restarted": started,
+            "note": (msg if started else "restart failed: " + str(msg))}
+
+
+def _local_brain_key(reg, rc):
+    """The registry service key of the ACTIVE brain IF it's a local GPU model (config.model == the
+    rhm_config model, group 'brain'); else None (a cloud/ollama brain has no VRAM to size). So the
+    co-residence shrink only ever touches the local brain it's actually running."""
+    model = (rc.get("model") or "").strip()
+    if not model:
+        return None
+    return next((k for k, s in reg["services"].items()
+                 if s.get("group") == "brain" and (s.get("config") or {}).get("model") == model), None)
+
+
 def _tts_base_url(engine: str | None) -> str:
     """The base URL for a TTS engine. kokoro / None → TTS_URL (env-overridable default). A mapped
     engine → its 127.0.0.1:<port>. An unknown engine → ValueError (fail loud, names the known set —
@@ -111,6 +157,21 @@ class H(BaseHTTPRequestHandler):
             elif path == "/api/models":                    # B: per-kind/per-endpoint live model list
                 self._send(200, json.dumps(SUITE.models_at(
                     kind=q.get("kind", "chat"), base_url=q.get("base_url"))))
+            elif path == "/api/chat-models":                # S1: the picker list — ollama/cloud + local vLLM (model·base_url·service·up)
+                self._send(200, json.dumps(SUITE.chat_models_detailed()))
+            elif path == "/api/fit":                        # S6 (Tim 2026-06-07): "tell me if my selection won't fit"
+                # ?services=chat-4b,tts-orpheus → the VRAM picture for that SELECTION (each budget, the sum
+                # vs the 16GB card ceiling, measured free, fit/no-fit + what to unload). Config-derived, so
+                # it tracks a resize (brain @256K vs @64K). Reuses gpu.fit_report — no parallel predictor.
+                import sys as _sys
+                _ops = os.path.join(ROOT, "ops", "cli")
+                if _ops not in _sys.path:
+                    _sys.path.insert(0, _ops)
+                import gpu as _gpu, registry as _reg
+                sel = [s for s in (q.get("services", "").split(",")) if s.strip()]
+                if not sel:
+                    raise ValueError("/api/fit needs ?services=<key>[,<key>] (fail loud: nothing selected)")
+                self._send(200, json.dumps(_gpu.fit_report(_reg.load(), sel)))
             elif path == "/api/surfaced":
                 self._send(200, json.dumps(SUITE.list_surfaced()))
             elif path == "/api/events":
@@ -119,6 +180,10 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.now(gid)))
             elif path == "/api/chat":
                 self._send(200, json.dumps(SUITE.chat_history(40)))
+            elif path == "/api/conversations":               # S2: the previous threads (reopen list)
+                self._send(200, json.dumps(SUITE.list_conversations(int(q.get("limit", 30)))))
+            elif path == "/api/conversation":                 # S2: reopen one → make current + its history
+                self._send(200, json.dumps(SUITE.load_conversation(q["thread_id"])))
             elif path == "/api/rhm-config":
                 self._send(200, json.dumps(SUITE.rhm_config()))
             elif path == "/api/inbox":
@@ -273,6 +338,8 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.run_stats(op=q.get("op"))))
             elif path == "/api/knobs":                     # G8.1: the dynamic configurable-knob surface for a (loaded) model
                 self._send(200, json.dumps(SUITE.knobs_for(model=q.get("model"), base_url=q.get("base_url"))))
+            elif path == "/api/voice/engine-knobs":        # S5: per-TTS-engine knob catalog (all, or ?engine=)
+                self._send(200, json.dumps(SUITE.voice_engine_knobs(q.get("engine"))))
             elif path == "/api/voice/paths":               # Tier-4: the swappable voice-path registry (pipeline vs s2s)
                 self._send(200, json.dumps(SUITE.voice_paths()))
             else:
@@ -331,6 +398,7 @@ class H(BaseHTTPRequestHandler):
         vq = {k: v[0] for k, v in _pq(_up(self.path).query).items()}
         persona = (vq.get("persona") or "").strip()
         gid = vq.get("graph_id", DEMO)
+        trial_session = (vq.get("trial_session") or "").strip()   # V3.1: when present, RECORD the turn
         audio = self.rfile.read(int(self.headers.get("Content-Length", 0)))
         self.send_response(200)
         self.send_header("Content-Type", "application/x-ndjson")
@@ -361,6 +429,9 @@ class H(BaseHTTPRequestHandler):
             except Exception:
                 pass
             return gone[0]
+        import uuid as _uuid
+        turn_id = _uuid.uuid4().hex[:12]      # correlates every record + client event for THIS turn
+        transcript = ""; reply = ""; eng = ""; step = "init"; t0 = _t.monotonic()
         try:
             if not persona:
                 raise ValueError("/api/voice/stream needs ?persona=<id> (fail loud)")
@@ -372,7 +443,6 @@ class H(BaseHTTPRequestHandler):
             eng_override = (_rc.get("tts_engine") or "").strip() or None   # G4.2 engine/voice override slots
             voice_override = (_rc.get("tts_voice") or "").strip() or None
             eng = eng_override or p["engine"]                     # override wins; else the persona's engine
-            t0 = _t.monotonic()
             speak_reply = SUITE.voice_enabled()
             # boot-on-demand (only if we'll speak)
             if speak_reply:
@@ -381,21 +451,30 @@ class H(BaseHTTPRequestHandler):
                     emit({"type": "error", "error": f"engine {eng} ({svc}) is down — load it "
                           f"(POST /api/voice/load) or use ?boot=1 on /api/voice/turn first"}); return
             ear = SUITE.rhm_config().get("stt") or voice_stt.active_ear()
+            step = "stt"
             heard = voice_stt.transcribe(audio, provider=ear)
             transcript = (heard.get("text") or "").strip()
             stt_ms = int((_t.monotonic() - t0) * 1000)
             emit({"type": "transcript", "text": transcript, "ms": stt_ms})
             if not transcript:
                 raise RuntimeError("empty transcript — STT heard nothing (fail loud)")
+            step = "think"
             thought = SUITE.chat(transcript, gid)                 # the ONE in-process brain (full reply)
             reply = (thought.get("reply") or "").strip()
             think_ms = int((_t.monotonic() - t0) * 1000) - stt_ms
             emit({"type": "reply", "text": reply, "ms": think_ms})
+            if trial_session:                                     # V3.1: RECORD the turn into the trial session
+                try:                                              # (the EXISTING trial_record_turn; reuse, don't reinvent)
+                    SUITE.trial_record_turn(trial_session, "operator", transcript, character=persona)
+                    SUITE.trial_record_turn(trial_session, "character", reply, character=persona)
+                except Exception as _e:
+                    emit({"type": "note", "text": f"(recording skipped: {type(_e).__name__})"})  # never break the turn
             if not speak_reply:
                 emit({"type": "done", "total_ms": int((_t.monotonic() - t0) * 1000), "spoke": False, "reply": reply}); return
             # split into sentences → synth + stream each AS IT'S READY (the streaming win)
+            step = "tts"
             sentences = [s.strip() for s in _re.split(r'(?<=[.!?])\s+', reply) if s.strip()] or [reply]
-            voice_arg = voice_override or voice_loop._voice_arg_for(p)   # G4.2: honour the engine/voice override
+            voice_arg = voice_override or voice_loop._voice_arg_for(p, eng)   # G4.2: voice for the SELECTED engine (any persona × any engine)
             done_n = 0
             for idx, sent in enumerate(sentences):
                 if client_gone():                             # Tier-2: client disconnected → STOP before the next synth (don't burn TTS)
@@ -407,16 +486,30 @@ class H(BaseHTTPRequestHandler):
                       "ms": int((_t.monotonic() - cs) * 1000)})
                 done_n = idx + 1
             total = int((_t.monotonic() - t0) * 1000)
+            step = "done"
             if gone[0]:                                       # cancelled mid-stream — record it (server-side; the socket's dead)
-                SUITE.emit_run_record("voice.stream.cancelled", total, stt_ms=stt_ms, think_ms=think_ms,
-                                      chunks_done=done_n, chunks_total=len(sentences), persona=persona, engine=eng)
+                SUITE.emit_run_record("voice.stream.cancelled", total, turn_id=turn_id, ok=False, step="cancelled",
+                                      stt_ms=stt_ms, think_ms=think_ms, chunks_done=done_n, chunks_total=len(sentences),
+                                      persona=persona, engine=eng, transcript=transcript[:2000], reply=reply[:4000])
                 return
-            SUITE.emit_run_record("voice.stream", total, stt_ms=stt_ms, think_ms=think_ms,
-                                  chunks=len(sentences), persona=persona, engine=eng, ear=ear)
-            emit({"type": "done", "total_ms": total, "spoke": True, "chunks": len(sentences), "reply": reply})
-        except Exception as e:                                     # fail loud as a stream event, then close
+            # the DETAILED, durable per-turn log line (Tim 2026-06-07): the texts + per-step timings + config,
+            # so a whole turn is investigable from the event log (op=voice.stream, keyed by turn_id).
+            SUITE.emit_run_record("voice.stream", total, turn_id=turn_id, ok=True, stt_ms=stt_ms, think_ms=think_ms,
+                                  chunks=len(sentences), persona=persona, engine=eng, ear=ear,
+                                  input_mode=SUITE.rhm_config().get("voice_input_mode"),
+                                  transcript=transcript[:2000], reply=reply[:4000])
+            emit({"type": "done", "total_ms": total, "spoke": True, "chunks": len(sentences), "reply": reply, "turn_id": turn_id})
+        except Exception as e:                                     # fail loud — to the client AND DURABLY to the log
+            # the error used to vanish with the socket. Now a durable record: WHICH step failed, the error,
+            # the texts so far, the config — everything needed to investigate a failed turn from the log.
             try:
-                emit({"type": "error", "error": f"{type(e).__name__}: {e}"})
+                SUITE.emit_run_record("voice.stream", int((_t.monotonic() - t0) * 1000), turn_id=turn_id, ok=False,
+                                      step=step, error=f"{type(e).__name__}: {e}", persona=persona, engine=eng,
+                                      ear=SUITE.rhm_config().get("stt"), transcript=transcript[:2000], reply=reply[:4000])
+            except Exception:
+                pass
+            try:
+                emit({"type": "error", "error": f"{type(e).__name__}: {e}", "step": step, "turn_id": turn_id})
             except Exception:
                 pass
 
@@ -544,6 +637,7 @@ class H(BaseHTTPRequestHandler):
                 t0 = _t.monotonic()
                 r = voice_loop.loop_turn(
                     audio, persona, graph_id=gid, stt_provider=ear, speak_reply=speak_reply,
+                    engine_override=eng_override, voice_override=voice_override,   # any persona × any engine
                     think_fn=lambda txt: SUITE.chat(txt, gid),    # the ONE in-process brain
                     on_transcript=lambda _t_, _m=marks: _m.__setitem__("stt", int((_t.monotonic()-t0)*1000)),
                     on_reply=lambda _r_, _m=marks: _m.__setitem__("think_done", int((_t.monotonic()-t0)*1000)))
@@ -551,9 +645,11 @@ class H(BaseHTTPRequestHandler):
                 stt_ms = marks.get("stt")
                 think_ms = (marks["think_done"] - stt_ms) if ("think_done" in marks and stt_ms is not None) else None
                 tts_ms = (total - marks["think_done"]) if "think_done" in marks else None
-                SUITE.emit_run_record("voice.turn", total, stt_ms=stt_ms, think_ms=think_ms,
+                SUITE.emit_run_record("voice.turn", total, ok=True, stt_ms=stt_ms, think_ms=think_ms,
                                       tts_ms=tts_ms, persona=persona, engine=r.get("engine"),
-                                      ear=ear, spoke=r.get("spoke", True))
+                                      ear=ear, spoke=r.get("spoke", True),
+                                      input_mode=SUITE.rhm_config().get("voice_input_mode"),
+                                      transcript=(r.get("transcript") or "")[:2000], reply=(r.get("reply") or "")[:4000])
                 wav = r.pop("wav", b"")
                 r["wav_b64"] = _b64.b64encode(wav).decode()       # the spoken reply, travels with the text
                 r["timing"] = {"total_ms": total, "stt_ms": stt_ms, "think_ms": think_ms, "tts_ms": tts_ms}
@@ -598,6 +694,56 @@ class H(BaseHTTPRequestHandler):
                 b = self._body()
                 gid = b.get("graph_id", DEMO)
                 self._send(200, json.dumps(SUITE.chat(b["message"], gid, focus=b.get("focus"))))
+            elif self.path == "/api/conversation/new":    # S2: start a fresh conversation (becomes current)
+                b = self._body()
+                self._send(200, json.dumps(SUITE.new_conversation(b.get("title", ""))))
+            elif self.path == "/api/model/load":          # S1: load a registered model service on demand (budget-gated)
+                import sys as _sys
+                _ops = os.path.join(ROOT, "ops", "cli")
+                if _ops not in _sys.path:
+                    _sys.path.insert(0, _ops)
+                import gpu as _gpu, systemd as _sd, registry as _reg
+                b = self._body()
+                key = (b.get("service") or "").strip()
+                reg = _reg.load()
+                if key not in reg["services"]:
+                    raise ValueError(f"unknown service {key!r}")
+                svc = reg["services"][key]
+                ok, need, free, _m = _gpu.check_fit(reg, [key])
+                if not ok:                                 # fail loud: name what to unload (no silent OOM)
+                    evict, proj = _gpu.plan_eviction(reg, [key], need, free)
+                    raise RuntimeError(f"cannot load {key!r}: needs ~{need} MB, {free} MB free on the card. "
+                                       + (f"Unload to make room — e.g. {', '.join(evict)} (→ ~{proj} MB). " if evict
+                                          else "Nothing evictable frees enough. ") + "Refusing to OOM.\n" + _gpu.format_state(reg))
+                started, msg = _sd.control(svc, "start")
+                if not started:
+                    raise RuntimeError(f"failed to start {key!r}: {msg} (journalctl --user -u {svc.get('manage',{}).get('unit')})")
+                self._send(200, json.dumps({"service": key, "state": "warming", "note": "started — model loading; poll its endpoint"}))
+            elif self.path == "/api/model/config":        # S5: set a serve-time config (e.g. context window) + restart
+                import sys as _sys
+                _ops = os.path.join(ROOT, "ops", "cli")
+                if _ops not in _sys.path:
+                    _sys.path.insert(0, _ops)
+                import systemd as _sd, registry as _reg
+                b = self._body()
+                key, field, value = (b.get("service") or "").strip(), (b.get("key") or "").strip(), b.get("value")
+                reg = _reg.load()
+                if key not in reg["services"]:
+                    raise ValueError(f"unknown service {key!r}")
+                if field == "max_model_len":
+                    # the context window → the SHARED helper (auto-util from _profile + budget-gated restart,
+                    # one source with the co-residence shrink). "the registry knows the resource need" (Tim).
+                    self._send(200, json.dumps({"key": field, "value": value, **_apply_model_ctx(key, int(value))}))
+                else:                                      # any other serve-time field → set + restart if running
+                    _reg.set_config(reg, key, field, value)
+                    reg = _reg.load(); svc = reg["services"][key]
+                    if _sd.is_active(svc) == "active":
+                        started, msg = _sd.control(svc, "restart")
+                        self._send(200, json.dumps({"service": key, "key": field, "value": value,
+                                                    "restarted": started, "note": msg if started else "restart failed"}))
+                    else:
+                        self._send(200, json.dumps({"service": key, "key": field, "value": value, "restarted": False,
+                                                    "note": "saved — applies when the service next starts"}))
             elif self.path == "/api/mode":                # the presence dial — set the RHM mode
                 b = self._body()
                 SUITE.set_mode(b["mode"])
@@ -739,15 +885,45 @@ class H(BaseHTTPRequestHandler):
                 eng = (rc.get("tts_engine") or "").strip() or p["engine"]   # override wins, else persona's engine
                 SUITE.set_rhm_config({"persona": persona_id})
                 svc = voice_lc.engine_service_for(eng)
+                # CO-RESIDENCE (Tim 2026-06-07, non-negotiable): the finished-thought judge + the brain run
+                # alongside the voice — so the brain must stay RESIDENT with it, not be evicted. Size the
+                # brain's context to what the registry records as co-resident-safe for THIS voice
+                # (the voice service's config.coresident_brain_ctx — a STORED max, not auto-computed), and
+                # shrink+restart the brain BEFORE loading the voice. A voice that records nothing leaves the
+                # brain at its default context (light voices co-reside at full 64K already).
+                import sys as _sys2
+                _ops2 = os.path.join(ROOT, "ops", "cli")
+                if _ops2 not in _sys2.path:
+                    _sys2.path.insert(0, _ops2)
+                import registry as _reg2
+                _r = _reg2.load()
+                co_ctx = ((_r["services"].get(svc) or {}).get("config") or {}).get("coresident_brain_ctx") if svc else None
+                brain_recfg = None
+                if co_ctx:
+                    bkey = _local_brain_key(_r, rc)
+                    if bkey and int((_r["services"][bkey].get("config") or {}).get("max_model_len", 0)) != int(co_ctx):
+                        brain_recfg = _apply_model_ctx(bkey, int(co_ctx))      # shrink+restart the brain FIRST
                 if not svc:                                       # always-on engine (kokoro) — nothing to load
                     out = {"persona": persona_id, "engine": eng, "service": None, "state": "up",
                            "note": "always-on engine — no load step"}
                 else:
                     out = {"persona": persona_id, "engine": eng, "service": svc, **voice_lc.switch_to(svc)}
+                if brain_recfg is not None:
+                    out["brain_coresident_ctx"] = co_ctx
+                    out["brain_reconfig"] = brain_recfg
                 self._send(200, json.dumps(out))
             elif self.path == "/api/voice/finished-thought":  # G1.3: the semantic endpoint judge (brain-side)
                 b = self._body()
                 self._send(200, json.dumps(SUITE.is_finished_thought(b.get("text", ""))))
+            elif self.path == "/api/voice/log":            # client-side voice trace (Tim 2026-06-07): the
+                # browser reports its half of the live loop (VAD pause, recording start/stop, judge-call,
+                # turn-fire, chunk playback ok/fail, errors) into the ONE event log so the WHOLE process is
+                # investigable. {event, turn_id?, ms?, ...} → op=voice.client. Lenient (never breaks a turn).
+                b = self._body()
+                ev = (b.pop("event", "") or "").strip()
+                if ev:
+                    SUITE.voice_log(ev, **{k: v for k, v in b.items() if k != "event"})
+                self._send(200, json.dumps({"logged": bool(ev)}))
             elif self.path == "/api/review/next":          # B: Next — open the gate, fire the step, advance
                 b = self._body()
                 self._send(200, json.dumps(SUITE.next(b["session"])))

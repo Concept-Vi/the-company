@@ -73,6 +73,12 @@ export function useAppController(editor: Editor) {
   // `.ui-spotlight` ring (which the show-resolver flashes and removes after a timeout).
   const [indicated, setIndicated] = useState<string | null>(null)
   const indicatedRef = useRef<string | null>(null)   // for the capture handler (avoids a stale closure)
+  // I1-gate (Tim 2026-06-07): click-to-indicate is a DELIBERATE mode, NOT a global capture. Always-on, it
+  // hijacked every tap — the Settings ✕ wouldn't close (its onClick was disrupted by the indicate re-render)
+  // and a tap on any panel painted `.ui-indicated` (translucency) revealing what's behind. OFF by default:
+  // clicks behave normally; turn it ON to point-at-things for comment/reference. Ref for the capture closure.
+  const [indicateMode, setIndicateMode] = useState(false)
+  const indicateModeRef = useRef(false)
   // L9 · reverse journey-recording (§21.7#2-reverse). The REVERSE of the forward resolveUiTarget: an
   // EXPLICIT start/stop recording of the operator's ordered ui:// click-path as a DISTINCT journey-record
   // (NOT the review-session organ — that records item-ids; this records navigation). While `journeyId` is
@@ -196,6 +202,19 @@ export function useAppController(editor: Editor) {
   const [compositionCfg, setCompositionCfg] = useState<Record<string, any> | null>(null)
   const [settingsBusy, setSettingsBusy] = useState(false)
   const [settingsErr, setSettingsErr] = useState<string | null>(null)
+  // ---- main's voice/settings state, folded in (S1/S2/S3/S5/S6/V3/V4) ----
+  // NB: main also declared `voiceStatus` (a string load-state) and `settingsOpen`. The branch already owns
+  // both names above: `voiceStatus` is the A3 per-engine availability OBJECT, and `settingsOpen` raises the
+  // consolidated A3 modal (the same toggle main's S3 opened). So main's `settingsOpen` dup is dropped
+  // (converged to the one above) and main's string load-state is renamed `personaVoiceStatus` (§3e #2).
+  const [personaVoiceStatus, setPersonaVoiceStatus] = useState<string>('')   // V4.2 (was voiceStatus): '' | 'loading' | 'ready' | 'down' — the persona voice's load state
+  const [recordingSession, setRecordingSession] = useState<string>('')   // V3.1: the active trial_session id when recording the conversation ('' = not recording)
+  const [chatModelsX, setChatModelsX] = useState<any[]>([])   // S1: detailed chat-model picker rows (ollama + local vLLM, base_url·service·up)
+  const [engineKnobs, setEngineKnobs] = useState<any>({})   // S5: per-TTS-engine knob catalog
+  const [voiceInfo, setVoiceInfo] = useState<any>({})   // S5: /api/voice — stt_registry (ears) + engines (TTS up-status)
+  const [fitReport, setFitReport] = useState<any>(null)   // S6: "will my selection fit the card?" (brain+voice budgets vs ceiling)
+  const [threads, setThreads] = useState<any[]>([])   // S2: previous conversations (reopen list)
+  const [threadId, setThreadId] = useState<string | null>(null)   // S2: the current conversation thread ('' / null = global)
   // U12: the /api/inbox payload is { live_escalations, resolved_for_you, batched, counts }. `batched` is a
   // SUBSET-grouping of live_escalations — NOT a third disjoint lane. We render the two real lanes.
   const [inbox, setInbox] = useState<any>({ live_escalations: [], resolved_for_you: [], batched: {}, counts: { escalations: 0, resolved: 0 } })
@@ -206,6 +225,16 @@ export function useAppController(editor: Editor) {
   const [panels, setPanels] = useState<any[]>([])
   const [recording, setRecording] = useState(false)
   const recorderRef = useRef<MediaRecorder | null>(null)
+  // V2.1 — iOS audio unlock. iOS only plays audio that was unlocked by a USER GESTURE; the reply plays
+  // ~5s later (post STT+brain), so a fresh `new Audio().play()` is blocked + silently dropped. We keep ONE
+  // Web Audio AudioContext, resume() it inside the mic/send gesture (primeAudio), and play every reply
+  // (and every streamed chunk, V2.2) through it — scheduled on a cursor so chunks play in order.
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const playCursorRef = useRef<number>(0)
+  // V1.1 — auto-listen session (hands-free): tap to start, it auto-finalises each utterance on a finished
+  // thought and re-listens, tap to stop. Distinct from push-to-talk (recordToggle). The ref holds the live
+  // session so the second tap can end it.
+  const autoListenRef = useRef<{ stop: boolean; stream: MediaStream | null }>({ stop: false, stream: null })
   // A2/A4: the selected node's live config (from /api/graph), keyed by nodeId — the inspector reads it
   // here, NOT off the tldraw shape props (which carry no config). Refreshed on every graph load.
   const configByNode = useRef<Record<string, any>>({})
@@ -354,6 +383,10 @@ export function useAppController(editor: Editor) {
       { const h = await api.chatHistory(); if (Array.isArray(h)) setChat(h) }
       setCfg(await api.rhmConfig())
       api.personas().then(p => setPersonas(Array.isArray(p) ? p : [])).catch(() => {})   // the switchable cast
+      api.listConversations().then(t => setThreads(Array.isArray(t) ? t : [])).catch(() => {})   // S2: reopen list
+      api.chatModelsDetailed().then(m => setChatModelsX(Array.isArray(m) ? m : [])).catch(() => {})   // S1: picker rows
+      api.voiceEngineKnobs().then(k => setEngineKnobs(k && typeof k === 'object' ? k : {})).catch(() => {})   // S5: engine knobs
+      api.voice().then(v => setVoiceInfo(v && typeof v === 'object' ? v : {})).catch(() => {})   // S5: ears + engine status
       const evs = await api.events(); mergeEvents(setEvents, evs)
       streamSeq.current = evs.reduce((m: number, e: any) => Math.max(m, e.seq ?? -1), -1)  // cursor = last seen
       setNow(await api.now()); setInbox(await api.inbox()); setLastChange(await api.lastChange()); setPanels(await api.panels())
@@ -618,6 +651,14 @@ export function useAppController(editor: Editor) {
     // so an indicate(null) never records a step. The append is S0-validated server-side (fail loud).
     if (journeyIdRef.current) recordJourneyStep(addr)
   }
+  // I1-gate: enter/leave the deliberate point-to-indicate mode. Leaving clears any live indication (+ its
+  // `.ui-indicated` DOM cue) so the surface returns fully to normal clicking.
+  function toggleIndicateMode() {
+    const next = !indicateModeRef.current
+    indicateModeRef.current = next; setIndicateMode(next)
+    if (!next) indicate(null)
+    setNotice(next ? '◎ point mode ON — tap a UI element to make it your next message’s focus' : 'point mode off')
+  }
   // L9 · the step-append, factored so `indicate` stays focused. Fire-and-surface: a backend 400 (malformed
   // address — shouldn't happen since only registered ui:// refs indicate, but fail-loud anyway) surfaces a
   // notice, never a silent swallow (rule 4). Recording continues; one bad step doesn't end the journey.
@@ -690,6 +731,7 @@ export function useAppController(editor: Editor) {
   // current indication UNTOUCHED — you point with the rest of the surface, then talk in the chat.
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
+      if (!indicateModeRef.current) return                  // I1-gate: indicate only fires in the deliberate mode (Tim) — otherwise clicks are normal
       const tgt = e.target as HTMLElement | null
       if (tgt?.closest?.('[data-ui-ref="chat"]')) return    // inside the chat region → conversing, never indicating
       // G-4 · the WIRE-DOOR exclusion (mirrors the chat guard above, same failure it prevents). The door
@@ -709,6 +751,7 @@ export function useAppController(editor: Editor) {
       // (so show-me/address_help can describe the help surface itself); this only stops a click INSIDE it from
       // hijacking the indication — you point with the rest of the surface, then read/shape in the help panel.
       if (tgt?.closest?.('[data-ui-ref="ui://inspector/help"]')) return
+      if (tgt?.closest?.('.settings, .workshop')) return    // inside a MODAL → you OPERATE it (close/config), never point at it
       const t = tgt?.closest?.('[data-ui-ref]') as HTMLElement | null
       if (!t) return
       const ref = t.getAttribute('data-ui-ref') || ''
@@ -860,6 +903,7 @@ export function useAppController(editor: Editor) {
   async function sendChat(override?: string) {
     const m = (override ?? chatMsg).trim()
     if (!m || chatBusy) return
+    primeAudio()                                               // V2.1: unlock audio in the send gesture (typed-chat voice-out)
     setChatMsg(''); setChatBusy(true)
     setChat(c => [...c, { role: 'user', text: m }])
     // I3 — consent integrity: clear any prior un-acted proposal BEFORE this turn. A card the operator
@@ -883,6 +927,7 @@ export function useAppController(editor: Editor) {
       // defensive (advisor): only replace the log with a real array. A future non-ok GET would resolve to
       // `{error}` (no `.history`); never `setChat(undefined)`.
       if (Array.isArray(r.history)) setChat(r.history)
+      if (r.thread_id) { setThreadId(r.thread_id); refreshThreads() }   // S2: keep the thread + its last_msg/title fresh
       await poll()
       if (now?.mode === 'listening' && r.reply) speakReply(r.reply).catch(() => { /* TTS hiccup is harmless here */ })   // voice out
       // I3 — the CONSENT gate: if the RHM PROPOSED an action (a structured {verb, address, args} on the
@@ -1126,20 +1171,22 @@ export function useAppController(editor: Editor) {
   async function switchPersona(id: string) {
     if (!id || id === cfg.persona) { setCfg((c: any) => ({ ...c, persona: id })); return }
     setCfg((c: any) => ({ ...c, persona: id }))
+    setPersonaVoiceStatus('loading')                            // V4.2: badge tracks the cold-load
     setNotice(`switching to ${id} — cold-loading their voice…`)
     try {
       const r = await api.voiceSwitch(id)
-      if (r.error) { setNotice('⚠ could not switch to ' + id + ': ' + r.error); return }
+      if (r.error) { setPersonaVoiceStatus('down'); setNotice('⚠ could not switch to ' + id + ': ' + r.error); return }
       if (r.service) {                                  // an engine that needs loading (not an always-on one)
         const dl = Date.now() + 240000                  // the heavy voices (orpheus) cold-load in minutes
         for (;;) {
           const sv = await api.voiceServices().catch(() => null)
           const st = sv?.services?.[r.service]?.state
           if (st === 'up') break
-          if (st === 'down' || Date.now() > dl) { setNotice(`⚠ ${id}'s voice (${r.engine}) didn't come up — open the voice panel`); break }
+          if (st === 'down' || Date.now() > dl) { setPersonaVoiceStatus('down'); setNotice(`⚠ ${id}'s voice (${r.engine}) didn't come up — open the voice panel`); break }
           await new Promise(res => setTimeout(res, 3000))
         }
       }
+      setPersonaVoiceStatus('ready')
       setNotice(`${id} is ready — talk (🎙) or type; it speaks back in listening mode`)
       setCfg(await api.rhmConfig())
     } catch (e: any) { setNotice('⚠ switch failed: ' + (e?.message || e)) }
@@ -1591,14 +1638,88 @@ export function useAppController(editor: Editor) {
     if (r.error) { setGrowMsg(''); setSurf({ error: r.error }) } else setSurf(r)
     await poll()
   }
-  // voice out — speak text (local Kokoro via the bridge). Throws on failure so callers that need a fallback
-  // (the walk, F4) can catch and degrade to text. PRESERVE-LIST: voice push-to-talk.
+  // V2.1 — prime/unlock audio. MUST be called from a synchronous user-gesture handler (the mic tap, the
+  // send click) BEFORE any await, so iOS unlocks the context for the later (post-async) reply playback.
+  // Idempotent: resume() is safe to call repeatedly. On a fresh turn it also resets the play cursor.
+  function primeAudio() {
+    try {
+      if (!audioCtxRef.current) {
+        const Ctx = (window.AudioContext || (window as any).webkitAudioContext)
+        if (Ctx) audioCtxRef.current = new Ctx()
+      }
+      audioCtxRef.current?.resume?.()
+    } catch { /* no Web Audio → speakReply falls back to <audio> below */ }
+  }
+  // Play one wav (an ArrayBuffer) through the unlocked context, SCHEDULED after anything already queued
+  // (so streamed sentence-chunks play in order — V2.2). Fail-loud-ish: if the context is blocked/absent,
+  // fall back to a plain <audio> element (works on desktop; on iOS the gesture-primed context is the path).
+  async function playWavBuffer(buf: ArrayBuffer) {
+    const ctx = audioCtxRef.current
+    if (ctx && ctx.state === 'running') {
+      const audioBuf = await ctx.decodeAudioData(buf.slice(0))
+      const src = ctx.createBufferSource(); src.buffer = audioBuf; src.connect(ctx.destination)
+      const now = ctx.currentTime
+      const at = Math.max(now, playCursorRef.current || now)
+      src.start(at); playCursorRef.current = at + audioBuf.duration
+      return
+    }
+    // fallback (desktop / context not unlocked): a one-shot element
+    await new Audio(URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }))).play()
+  }
+  // voice out — speak text in the configured persona voice (the bridge routes /api/tts to it). Plays through
+  // the gesture-unlocked Web Audio context (V2.1) so it actually sounds on iOS. Throws on a hard failure so
+  // callers that need a fallback (the walk, F4) can catch and degrade to text. PRESERVE-LIST: push-to-talk.
   async function speakReply(text: string) {
+    playCursorRef.current = 0                                   // a whole-reply utterance starts a fresh queue
     const blob = await api.tts(text)
-    await new Audio(URL.createObjectURL(blob)).play()
+    await playWavBuffer(await blob.arrayBuffer())
+  }
+  function b64ToArrayBuffer(b64: string): ArrayBuffer {
+    const bin = atob(b64 || ''); const bytes = new Uint8Array(bin.length)
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+    return bytes.buffer
+  }
+  // V2.2 — a voice turn through the designed STREAMING circuit (/api/voice/stream): post the recorded
+  // utterance, consume the ndjson (transcript → reply → per-SENTENCE {wav_b64} chunks → done), append the
+  // turns to the chat, and play each sentence in the PERSONA's voice through the gesture-unlocked context
+  // (V2.1) AS IT ARRIVES — first audio at ~(STT+brain+one sentence), not after the whole reply. Fail-LOUD
+  // on a stream/engine error (never a silent swallow). No persona set → the simple stt→chat path (which
+  // still speaks via /api/tts's persona-default). The walk-verdict path stays on plain STT (caller-gated).
+  async function runVoiceTurn(blob: Blob) {
+    const persona = (cfg?.persona || '').trim()
+    if (!persona) {                                            // no persona → simple path (text + tts persona-default)
+      setNotice('transcribing…')
+      const r = await api.stt(blob)
+      if (r.text) { setNotice('you said: ' + r.text); await sendChat(r.text) } else setNotice('(no speech detected)')
+      return
+    }
+    playCursorRef.current = 0
+    setNotice('listening…')
+    let res: Response
+    try { res = await api.voiceStream(blob, persona, recordingSession || undefined) }   // V3.1: record if a session is active
+    catch (e: any) { setNotice('⚠ voice circuit unreachable: ' + (e?.message || e)); return }
+    if (!res.ok || !res.body) {
+      const t = await res.text().catch(() => ''); setNotice('⚠ voice turn failed (' + res.status + '): ' + t.slice(0, 160)); return
+    }
+    const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ''
+    for (;;) {
+      const { done, value } = await reader.read(); if (done) break
+      buf += dec.decode(value, { stream: true })
+      const lines = buf.split('\n'); buf = lines.pop() || ''
+      for (const ln of lines) {
+        const s = ln.trim(); if (!s) continue
+        let ev: any; try { ev = JSON.parse(s) } catch { continue }
+        if (ev.type === 'transcript') { setNotice('you said: ' + ev.text); if (ev.text) setChat(c => [...c, { role: 'user', text: ev.text }]) }
+        else if (ev.type === 'reply') { if (ev.text) setChat(c => [...c, { role: 'assistant', text: ev.text }]) }
+        else if (ev.type === 'chunk') { try { await playWavBuffer(b64ToArrayBuffer(ev.wav_b64)) } catch (e: any) { api.voiceLog('play_fail', { idx: ev.idx, error: String(e?.message || e) }) } }   // iOS/audio playback failure — captured, not silent
+        else if (ev.type === 'error') { api.voiceLog('stream_error', { error: ev.error, step: ev.step, turn_id: ev.turn_id }); setNotice('⚠ ' + ev.error) }   // fail loud (V2.3) + durable
+        else if (ev.type === 'done') { setNotice(''); poll() }
+      }
+    }
   }
   // voice in — push-to-talk: record → STT → send as a chat turn (which then speaks its reply)
   async function recordToggle() {
+    primeAudio()                                               // V2.1: unlock audio in THIS gesture for the later reply
     if (recording) { recorderRef.current?.stop(); return }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -1606,15 +1727,17 @@ export function useAppController(editor: Editor) {
       const chunks: BlobPart[] = []
       rec.ondataavailable = e => chunks.push(e.data)
       rec.onstop = async () => {
-        stream.getTracks().forEach(t => t.stop()); setRecording(false); setNotice('transcribing…')
-        try {
-          const r = await api.stt(new Blob(chunks, { type: 'audio/webm' }))
-          if (r.text) {
-            setNotice('you said: ' + r.text)
-            // F2: when a walk is active, the mic routes to the session RESPOND path (not sendChat). A simple
-            // keyword map turns speech into a verdict; anything else becomes a comment carrying the
-            // transcript as the WHY (never a dead end — F4). Outside a walk, it's a normal chat turn.
-            if (sessionRef.current && !sessionRef.current.done) {
+        stream.getTracks().forEach(t => t.stop()); setRecording(false)
+        const blob = new Blob(chunks, { type: 'audio/webm' })
+        // F2: when a walk is active, the mic routes to the session RESPOND path (transcript-only verdict —
+        // no spoken reply). A keyword map turns speech into a verdict; anything else is a comment carrying
+        // the transcript as the WHY (never a dead end — F4). This stays on plain STT.
+        if (sessionRef.current && !sessionRef.current.done) {
+          setNotice('transcribing…')
+          try {
+            const r = await api.stt(blob)
+            if (r.text) {
+              setNotice('you said: ' + r.text)
               const t = r.text.toLowerCase()
               const choice = /\bapprove|accept|yes|approved\b/.test(t) ? 'approve'
                 : /\breject|decline|no\b/.test(t) ? 'reject'
@@ -1624,13 +1747,202 @@ export function useAppController(editor: Editor) {
               if (choice === 'reject' || choice === 'comment') setWtReason(r.text)   // capture the spoken WHY
               setWtSpoke('🎙 heard: "' + r.text + '" → ' + choice)
               await respondStep(choice)
-            } else await sendChat(r.text)
-          }
-          else setNotice('(no speech detected)')
-        } catch (e: any) { setNotice('STT error — type instead: ' + (e?.message || e)) }   // F4: fall back to text
+            } else setNotice('(no speech detected)')
+          } catch (e: any) { setNotice('STT error — type instead: ' + (e?.message || e)) }   // F4: fall back to text
+          return
+        }
+        // Outside a walk → a CONVERSATION turn through the streaming voice circuit (V2.2): transcript +
+        // reply + the persona's voice, sentence-streamed. Fail-loud inside runVoiceTurn.
+        try { await runVoiceTurn(blob) } catch (e: any) { setNotice('voice turn error — type instead: ' + (e?.message || e)) }
       }
       recorderRef.current = rec; rec.start(); setRecording(true); setNotice('listening… (click again to stop)')
-    } catch { setNotice('mic unavailable — grant microphone permission') }
+      api.voiceLog('ptt_start', { input_mode: 'push_to_talk' })   // push-to-talk recording opened
+    } catch { api.voiceLog('mic_denied', { mode: 'push_to_talk' }); setNotice('mic unavailable — grant microphone permission') }
+  }
+  // V1.1 — AUTO-LISTEN (hands-free, "reply on a finished thought, not a silence timer"). One continuous
+  // recorder; a Web Audio analyser watches RMS for a speech→silence PAUSE; on a pause the utterance-so-far
+  // is transcribed + put to the finished-thought JUDGE — if finished, the turn fires (streamed persona
+  // voice via runVoiceTurn) and the buffer resets; if not, it keeps listening (don't cut him off). The
+  // recorder is PAUSED during the reply so viv's voice isn't captured as new input (echo). Tap again to stop.
+  // The real feel (does it wait for a finished thought) is needs-tim — no mic on the server.
+  function stopAutoListen() {
+    autoListenRef.current.stop = true
+    autoListenRef.current.stream?.getTracks().forEach(t => t.stop())
+    setRecording(false); setNotice('')
+  }
+  async function startAutoListen() {
+    primeAudio()                                               // unlock audio in this gesture (V2.1)
+    let stream: MediaStream
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }) }
+    catch { api.voiceLog('mic_denied', { mode: 'auto_listen' }); setNotice('mic unavailable — grant microphone permission'); return }
+    autoListenRef.current = { stop: false, stream }
+    api.voiceLog('autolisten_start', { input_mode: 'auto_listen', silence_ms: 800, speech_rms: 0.015 })   // session opened (mic granted)
+    setRecording(true); setNotice('listening… (tap to stop)')
+    const ctx = audioCtxRef.current || new (window.AudioContext || (window as any).webkitAudioContext)()
+    audioCtxRef.current = ctx
+    const analyser = ctx.createAnalyser(); analyser.fftSize = 512
+    ctx.createMediaStreamSource(stream).connect(analyser)
+    const data = new Uint8Array(analyser.fftSize)
+    let chunks: BlobPart[] = []
+    const rec = new MediaRecorder(stream)
+    rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data) }
+    rec.start(250)                                             // periodic chunks so the buffer is fresh on a pause
+    const SILENCE_MS = 800, SPEECH_RMS = 0.015
+    let spoke = false, lastVoice = performance.now(), busy = false
+    const tick = async () => {
+      if (autoListenRef.current.stop) { try { rec.state !== 'inactive' && rec.stop() } catch {} ; stream.getTracks().forEach(t => t.stop()); setRecording(false); setNotice(''); return }
+      if (!busy && rec.state === 'recording') {
+        analyser.getByteTimeDomainData(data)
+        let sum = 0; for (let i = 0; i < data.length; i++) { const v = (data[i] - 128) / 128; sum += v * v }
+        const rms = Math.sqrt(sum / data.length); const now = performance.now()
+        if (rms > SPEECH_RMS) { spoke = true; lastVoice = now }
+        if (spoke && (now - lastVoice) > SILENCE_MS && chunks.length) {
+          busy = true
+          api.voiceLog('vad_pause', { silence_ms: Math.round(now - lastVoice), chunks: chunks.length })   // the loop saw a pause
+          const blob = new Blob(chunks, { type: 'audio/webm' })
+          try {
+            const r = await api.stt(blob); const text = (r.text || '').trim()
+            api.voiceLog('autolisten_stt', { chars: text.length, empty: !text, text: text.slice(0, 200) })   // what the ear heard at the pause
+            if (text) {
+              const j = await api.finishedThought(text)
+              api.voiceLog('autolisten_judge', { verdict: j && j.verdict, finished: !!(j && j.finished), text: text.slice(0, 200) })   // fire or keep listening?
+              if (j && j.finished) {
+                try { rec.pause() } catch {}                   // pause capture so the reply isn't heard as input
+                setNotice('you said: ' + text); setRecording(false)
+                api.voiceLog('autolisten_fire', { chars: text.length })   // the turn fired
+                await runVoiceTurn(blob)                       // streamed persona-voice reply (V2.2)
+                chunks = []; spoke = false; lastVoice = performance.now()
+                if (!autoListenRef.current.stop) { try { rec.resume() } catch {} ; setRecording(true); setNotice('listening… (tap to stop)') }
+              } else { setNotice('… go on'); lastVoice = performance.now() }  // not finished — keep him talking
+            }
+          } catch (e: any) { api.voiceLog('error', { where: 'autolisten', error: String(e?.message || e) }); setNotice('⚠ ' + (e?.message || e) + ' — tap to use push-to-talk') }  // fail loud → ptt fallback
+          busy = false
+        }
+      }
+      setTimeout(tick, 150)
+    }
+    tick()
+  }
+  // The mic press routes by the configured input mode (V1.3). Push-to-talk → recordToggle (tap/tap).
+  // Auto-listen → start a hands-free session, or stop it if one is live. Both unlock audio in the gesture.
+  // V1.3 — switch the voice INPUT mode (push_to_talk ↔ auto_listen); persists via the config slot.
+  async function setVoiceInputMode(mode: string) {
+    if (autoListenRef.current.stream && !autoListenRef.current.stop) stopAutoListen()   // end a live session on switch
+    try { const c = await api.setRhmConfig({ voice_input_mode: mode }); setCfg(c); setNotice('voice input → ' + mode.replace('_', '-')) }
+    catch (e: any) { setNotice('⚠ ' + (e?.message || e)) }
+  }
+  // S3/S5 — settings-window config setters. applyRhm sets any rhm_config slot live (stt/tts_engine/
+  // tts_voice/persona/brain_knobs/roles…); setModelCtx reconfigures a model's serve-time context window
+  // + restarts it (the explicit "set the context window" ask, budget-gated, fail-loud).
+  async function applyRhm(updates: any) {
+    try { const c = await api.setRhmConfig(updates); setCfg(c); setNotice('config updated') }
+    catch (e: any) { setNotice('⚠ ' + (e?.message || e)) }
+  }
+  async function setBrainKnob(key: string, value: any) {
+    await applyRhm({ brain_knobs: { [key]: value } })
+  }
+  async function setModelCtx(service: string, value: number) {
+    try {
+      setNotice('setting context window + restarting ' + service + '…')
+      const r = await api.modelConfig(service, 'max_model_len', value)
+      if (r && r.error) { setNotice('⚠ ' + r.error); return }
+      setNotice(service + ' context → ' + value + (r.restarted ? ' (restarted)' : ' (applies on next start)'))
+      api.chatModelsDetailed().then(m => setChatModelsX(Array.isArray(m) ? m : [])).catch(() => {})
+    } catch (e: any) { setNotice('⚠ ' + (e?.message || e)) }
+  }
+  // S6 (Tim 2026-06-07) — "if things don't fit from what I've selected, it would tell me." Compute the
+  // GPU service keys for the CURRENT selection (the local brain service + the persona's voice engine
+  // service `tts-<engine>`), ask /api/fit, and stash the picture for the settings surface to render. Only
+  // GPU-resident services count — a cloud/ollama brain has no `service` and contributes nothing to the card.
+  async function refreshFit(over?: { model?: string; base_url?: string; persona?: string; tts_engine?: string }) {
+    try {
+      const model = over?.model ?? cfg.model, base_url = over?.base_url ?? cfg.base_url
+      const persona = over?.persona ?? cfg.persona, ttsEngine = over?.tts_engine ?? cfg.tts_engine
+      const keys: string[] = []
+      const brainRow = chatModelsX.find((r: any) => r.service && r.model === model && r.base_url === base_url)
+      if (brainRow?.service) keys.push(brainRow.service)
+      const eng = ttsEngine || (personas.find((p: any) => p.id === persona) || {}).engine
+      if (eng) keys.push('tts-' + eng)                       // voice engine service key (tts-orpheus, tts-kokoro, …)
+      if (!keys.length) { setFitReport(null); return }
+      setFitReport(await api.fit(keys))
+    } catch { setFitReport(null) /* non-fatal: the surface just hides the fit line */ }
+  }
+  // Voice fix (Tim 2026-06-07): START a down ear/voice service FROM the interface (an offline ear had no
+  // start affordance — "can't start it through the interface"). Budget-gated + fail-loud via /api/model/load
+  // (a CPU ear like whisper.cpp costs no VRAM and just starts; a GPU ear that won't fit refuses loudly).
+  async function startVoiceService(service: string, label?: string) {
+    try {
+      setNotice('starting ' + (label || service) + '…')
+      const r = await api.modelLoad(service)
+      if (r && r.error) { setNotice('⚠ ' + r.error); return }
+      setNotice((label || service) + ' starting — give it a moment')
+      setTimeout(() => api.voice().then(v => setVoiceInfo(v && typeof v === 'object' ? v : {})).catch(() => {}), 2800)
+    } catch (e: any) { setNotice('⚠ ' + (e?.message || e)) }
+  }
+  // S1 — choose a chat model: set model + its base_url (so a local vLLM model uses its own endpoint), and
+  // LOAD its service on demand if it's a company-managed model that's down (budget-gated, like a voice switch).
+  async function chooseModel(row: any) {
+    if (!row || !row.model) return
+    try {
+      const c = await api.setRhmConfig({ model: row.model, base_url: row.base_url })
+      setCfg(c); setNotice('brain → ' + row.model)
+      if (row.service && !row.up) {                          // a local vLLM model that isn't running → load it
+        setNotice('loading ' + row.model + ' — cold start…')
+        const r = await api.modelLoad(row.service)
+        if (r && r.error) { setNotice('⚠ ' + r.error); return }
+        setNotice(row.model + ' starting — give it a moment, then talk')
+      }
+      api.chatModelsDetailed().then(m => setChatModelsX(Array.isArray(m) ? m : [])).catch(() => {})   // refresh up-status
+    } catch (e: any) { setNotice('⚠ ' + (e?.message || e)) }
+  }
+  // S2 — conversation threads (in the RHM): start fresh / list / reopen.
+  async function refreshThreads() { try { const t = await api.listConversations(); setThreads(Array.isArray(t) ? t : []) } catch { /* non-fatal */ } }
+  async function newConversation() {
+    try { const r = await api.newConversation(); setThreadId(r.thread_id || null); setChat([]); setNotice('fresh conversation'); refreshThreads() }
+    catch (e: any) { setNotice('⚠ ' + (e?.message || e)) }
+  }
+  async function openConversation(tid: string) {
+    if (!tid) return
+    try { const r = await api.loadConversation(tid); setThreadId(r.id || tid); setChat(Array.isArray(r.history) ? r.history : []); setNotice('reopened: ' + (r.title || tid)); refreshThreads() }
+    catch (e: any) { setNotice('⚠ ' + (e?.message || e)) }
+  }
+  // V3.1 — record this conversation as a TRIAL SESSION (so it can be debriefed + feeds the twin). Start
+  // mints a trial_session id (the voice stream then records each turn via trial_record_turn); stop clears
+  // it. The id format mirrors the backend's namespaced trial sessions.
+  function toggleRecordConversation() {
+    if (recordingSession) { setRecordingSession(''); setNotice('recording stopped') }
+    else {
+      const persona = (cfg?.persona || 'rhm')
+      const id = 'trial-' + persona + '-' + Math.floor(Date.now() / 1000)
+      setRecordingSession(id); setNotice('● recording this conversation — speak; turns are saved for debrief')
+    }
+  }
+  // V3.2 — debrief: walk back through the recorded session(s) via the EXISTING walkthrough organ
+  // (start_debrief surfaces each session's real transcript as review items through the same walk).
+  async function startDebriefSession() {
+    try {
+      const sessions = await api.trialSessions()
+      const ids = (Array.isArray(sessions) ? sessions : []).map((s: any) => s.session_id || s.id || s).filter(Boolean)
+      if (!ids.length) { setNotice('no recorded sessions yet — record a conversation first'); return }
+      const r = await api.startDebrief(ids)
+      if (r && r.error) { setNotice('⚠ debrief: ' + r.error); return }
+      setNotice('debrief started — review the surfaced sessions in the inbox / walk'); await poll()
+    } catch (e: any) { setNotice('⚠ debrief failed: ' + (e?.message || e)) }
+  }
+  // V4.3 — global voice OUTPUT on/off (the voice_enabled slot), independent of presence mode. off = text
+  // replies, no synth. Persists live.
+  async function setVoiceEnabled(on: boolean) {
+    try { const c = await api.setRhmConfig({ voice_enabled: on ? 'on' : 'off' }); setCfg(c); setNotice('voice output ' + (on ? 'on' : 'off')) }
+    catch (e: any) { setNotice('⚠ ' + (e?.message || e)) }
+  }
+  function micPressed() {
+    const mode = (cfg?.voice_input_mode || 'push_to_talk')
+    if (mode === 'auto_listen') {
+      if (autoListenRef.current.stream && !autoListenRef.current.stop) stopAutoListen()
+      else startAutoListen()
+    } else {
+      recordToggle()
+    }
   }
   // L9 · reverse journey-recording — the explicit start/stop control. OFF → start_journey (open a record;
   // subsequent indicated ui:// addresses append as steps via `indicate`). ON → stop_journey (finalize →
@@ -1701,6 +2013,14 @@ export function useAppController(editor: Editor) {
     else { setSurf(null); setGrowMsg(`✓ approved + applied → ${surf.name} is now a live node-type.`); setTypes(r.types); await poll() }
   }
 
+  // S6: recompute the fit whenever the settings window is open and the selection (brain model / voice
+  // persona / engine override) or the picker rows change — so the surface always reflects the live choice.
+  useEffect(() => {
+    if (!settingsOpen) return
+    refreshFit()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settingsOpen, cfg.model, cfg.base_url, cfg.persona, cfg.tts_engine, chatModelsX.length])
+
   return {
     // state values (read by the region components)
     edges, running, runError, runStartedAt, runElapsed, types, gname, gspec, surf, growMsg, workshop,
@@ -1708,6 +2028,8 @@ export function useAppController(editor: Editor) {
     showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn, personas,
     // A3/E2-FE · the consolidated Settings surface state
     settingsOpen, settingsTab, roles, voicePaths, voiceStatus, modeRegistry, autodetect, compositionCfg, settingsBusy, settingsErr,
+    // main's voice/settings state (S1/S2/S3/S5/S6/V3/V4) — voiceStatus→personaVoiceStatus; settingsOpen already above
+    personaVoiceStatus, recordingSession, threads, threadId, chatModelsX, engineKnobs, voiceInfo, fitReport,
     wtSpoke, wtBusy, selected, mobileTab, fleet, indicated, proposal, history, historyBusy,
     addressHelp, addressHelpBusy, addressHelpError, prefBusy,
     selfChanges, selfChangesBusy, freshness, freshnessBusy, versions, versionsBusy, journeyId, journeyReplaying,
@@ -1725,6 +2047,9 @@ export function useAppController(editor: Editor) {
     approveProposal, dismissProposal, steerProposal, deferProposal, setAsideProposal, reviveOffer, toggleJourneyRecording, replayJourney, switchPersona,
     // A3/E2-FE · the consolidated Settings handlers
     openSettings, loadSettingsData, setCfgSlot,
+    // main's voice/settings handlers (S1/S2/S3/S5/S6/V3/V4 + the indicate-mode toggle); setSettingsOpen already returned above
+    micPressed, setVoiceInputMode, setVoiceEnabled, toggleRecordConversation, startDebriefSession, newConversation, openConversation, chooseModel, applyRhm, setBrainKnob, setModelCtx, refreshFit, startVoiceService,
+    indicateMode, toggleIndicateMode,
   }
 }
 

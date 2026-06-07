@@ -126,6 +126,53 @@ def check_fit(reg, to_start):
     return need <= gpu["free"], need, gpu["free"], True
 
 
+def fit_report(reg, keys):
+    """The 'will THIS SELECTION fit?' picture for the settings fit-surface (Tim, 2026-06-07):
+    'if things don't fit from what I've selected then it would be able to tell me.'
+
+    Answers TWO distinct questions for a chosen set of GPU services (e.g. a brain + a voice):
+      • fits_card  — does the SUM of their config-derived budgets fit the card CEILING? This is the
+        capacity question, independent of what's loaded now, and it's what changes when you resize a
+        model (brain @ 256K vs @ 64K) — because budget_vram = config.gpu_util × ceiling.
+      • fits_now   — do the not-yet-running ones fit the MEASURED free VRAM right now? (reuses check_fit's
+        truth: measured free, not estimates.)
+    Returns a dict the surface renders directly. Each item carries its budget, group, and running state.
+    No silent rounding-away: when it won't fit, `evict` names what to unload and `reason` says why."""
+    svcs = reg["services"]
+    ceiling = ceiling_mb(reg)
+    items = []
+    for k in keys:
+        if k not in svcs:
+            raise KeyError(f"fit_report: unknown service {k!r}")
+        s = svcs[k]
+        items.append({"key": k, "mb": budget_vram(reg, k) if is_gpu_service(s) else 0,
+                      "group": s.get("group"), "gpu": is_gpu_service(s), "running": _is_running(s)})
+    need_total = sum(i["mb"] for i in items)
+    fits_card = need_total <= ceiling
+    gpu = read_gpu()
+    free = gpu["free"] if gpu else (ceiling - committed_mb(reg))
+    # the live question: only the not-yet-running selected services need NEW room
+    need_now = sum(i["mb"] for i in items if i["gpu"] and not i["running"])
+    fits_now = need_now <= free
+    evict, projected = ([], free)
+    if not fits_now:
+        evict, projected = plan_eviction(reg, keys, need_now, free)
+    return {
+        "selection": list(keys),
+        "items": items,
+        "need_mb": need_total,
+        "ceiling_mb": ceiling,
+        "fits_card": fits_card,
+        "headroom_mb": ceiling - need_total,
+        "free_mb": free,
+        "need_now_mb": need_now,
+        "fits_now": fits_now,
+        "evict": evict,
+        "projected_free_mb": projected,
+        "gpu_present": gpu is not None,
+    }
+
+
 def plan_eviction(reg, to_start, need, free):
     """Choose which running GPU services to stop to fit `need`, sparing the to-start
     set. Evicts models→brain→voice, largest first, only as many as required.

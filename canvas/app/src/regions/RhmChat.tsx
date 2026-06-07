@@ -11,34 +11,60 @@
 // value, an empty-registry fallback, plus the RHM-specific empty "default model" state (cfg.model === '' is
 // VALID — line "{cfg.model || 'default model'}" — so a leading empty option preserves it). The rhm-config
 // write path is UNCHANGED (setCfg → applyCfg) and data-ui-ref="ui://chat/model-field" is preserved (F4).
-import { useSyncExternalStore } from 'react'
+import { useSyncExternalStore, useState } from 'react'
 import { useApp } from '../AppContext'
 import { registryStore } from '../registryStore'
 import { ProposeAffordance } from './ProposeAffordance'
 
 export function RhmChat() {
-  const { cfg, cfgOpen, chat, chatBusy, chatMsg, recording, indicated, personas, switchPersona, setCfg, setCfgOpen, setChatMsg, applyCfg, sendChat, recordToggle, indicate } = useApp()
+  const { cfg, cfgOpen, chat, chatBusy, chatMsg, recording, indicated, personas, personaVoiceStatus, recordingSession, threads, threadId, chatModelsX, switchPersona, setCfg, setCfgOpen, setChatMsg, applyCfg, sendChat, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, toggleRecordConversation, startDebriefSession, newConversation, openConversation, chooseModel, indicate } = useApp()
   // the live chat-model registry — same source the node-config model dropdown reads (MODEL_OPTIONS.chat_models).
   const registry = useSyncExternalStore(registryStore.subscribe, registryStore.getSnapshot)
   const chatModels = registry.MODEL_OPTIONS.chat_models || []
   const curModel = cfg.model || ''
+  // minimize — collapse the chat to just its header so the canvas is visible behind it (esp. on mobile,
+  // where the panel otherwise fills the screen). A plain in-component toggle (the cfgOpen pattern); the
+  // body is hidden via the `.rhm.min` CSS, the header (with the restore button) stays.
+  const [min, setMin] = useState(false)
   return (
-    <div className="hud rhm" data-ui-ref="chat">
+    <div className={'hud rhm' + (min ? ' min' : '')} data-ui-ref="chat">
       <div className="rhm-head">
         right-hand-man <span className="muted">· {cfg.model || 'default model'}</span>
         <span className="cfg-gear" data-ui-ref="ui://chat/config" title="configure model + persona" onClick={() => setCfgOpen(o => !o)}>⚙</span>
+        <span className="rhm-min" data-ui-ref="ui://chat/minimize" title={min ? 'expand the chat' : 'minimize — see the canvas'} onClick={() => setMin(m => !m)}>{min ? '▢' : '▁'}</span>
+      </div>
+      {/* S2 — conversation threads: start fresh + reopen a previous one. Lives in the RHM (Tim). */}
+      <div className="rhm-threads">
+        <button className="b ghost" data-ui-ref="ui://chat/new-conversation" title="start a fresh conversation" onClick={newConversation}>+ new</button>
+        <select data-ui-ref="ui://chat/threads" value={threadId || ''} title="reopen a previous conversation"
+          onChange={e => e.target.value && openConversation(e.target.value)}>
+          <option value="">{threads.length ? 'reopen a conversation…' : '(no past conversations)'}</option>
+          {threads.map((t: any) => <option key={t.id} value={t.id}>{t.title || t.id}</option>)}
+        </select>
       </div>
       {cfgOpen && (
         <div className="rhm-cfg">
-          <select data-ui-ref="ui://chat/model-field" value={curModel}
-            onChange={e => setCfg({ ...cfg, model: e.target.value })}>
-            {/* empty is a VALID state — "default model" (cfg.model || 'default model' in the head). */}
-            <option value="">default model</option>
-            {/* surface a saved-but-unregistered value rather than silently dropping it (fail-loud, mirrors NodeConfigForm). */}
-            {curModel !== '' && !chatModels.includes(curModel) && <option value={curModel}>{curModel} (current)</option>}
-            {chatModels.length === 0 && <option value="" disabled>(no registered chat models)</option>}
-            {chatModels.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
+          {/* V4.1 — the consolidated voice & brain settings home: brain model, persona+voice, input mode,
+              voice on/off — one place, all live, legible on mobile. */}
+          <div className="cfg-head">voice &amp; brain</div>
+          {/* S1 — the model picker: ollama/cloud + the LOCAL vLLM models (4b/2b/0.8b), each with its own
+              base_url. Picking sets model+base_url and loads a local one on demand (chooseModel). Falls back
+              to the registry string list if the detailed endpoint hasn't landed. */}
+          {(() => {
+            const rows = chatModelsX.length ? chatModelsX
+              : chatModels.map((m: string) => ({ model: m, base_url: '', service: null, up: true }))
+            const sel = rows.findIndex((r: any) => r.model === cfg.model && (r.base_url === cfg.base_url || !r.base_url))
+            return (
+              <select data-ui-ref="ui://chat/model-field" value={String(sel)}
+                onChange={e => { const i = Number(e.target.value); if (rows[i]) chooseModel(rows[i]) }}>
+                <option value="-1">{cfg.model ? cfg.model + ' (current)' : 'default model'}</option>
+                {rows.length === 0 && <option value="-1" disabled>(loading models…)</option>}
+                {rows.map((r: any, i: number) => (
+                  <option key={i} value={String(i)}>{r.model}{r.service ? (r.up ? ' · local' : ' · local ⏻') : ''}</option>
+                ))}
+              </select>
+            )
+          })()}
           {/* Option A — switch between the cast: selecting a persona sets it active AND auto-loads its
               voice (evicting the previous one to fit the card; a switch may cold-load). The notice tracks
               progress to 'ready'. */}
@@ -50,6 +76,38 @@ export function RhmChat() {
             {cfg.persona && !personas.some((p: any) => p.id === cfg.persona) &&
               <option value={cfg.persona}>{cfg.persona} (current)</option>}
           </select>
+          {/* V4.2 — the voice load status: a switch may cold-load the engine; show loading→ready so the
+              operator knows when they can talk (not just a transient notice). */}
+          {personaVoiceStatus && <span className={'voice-status ' + personaVoiceStatus}
+            title={'voice engine: ' + personaVoiceStatus}>
+            {personaVoiceStatus === 'loading' ? '⏳ loading voice…' : personaVoiceStatus === 'ready' ? '✓ voice ready' : '⚠ voice down'}
+          </span>}
+          {/* V1.3 — the voice INPUT mode: two distinct capabilities, switchable. push-to-talk (tap to
+              start/stop) or auto-listen (speak; it fires the turn when you finish a thought — the judge,
+              not a dumb timer). Persists via the voice_input_mode slot; takes effect on the next mic press. */}
+          <select data-ui-ref="ui://chat/input-mode" value={cfg.voice_input_mode || 'push_to_talk'}
+            title="how the mic finalises a turn — push-to-talk (tap to stop) or auto-listen (stops when you finish a thought)"
+            onChange={e => setVoiceInputMode(e.target.value)}>
+            <option value="push_to_talk">🎙 push-to-talk</option>
+            <option value="auto_listen">👂 auto-listen (hands-free)</option>
+          </select>
+          {/* V4.3 — global voice output on/off (the voice_enabled slot), independent of mode. */}
+          <label className="cfg-toggle" data-ui-ref="ui://chat/voice-toggle"
+            title="speak replies aloud — off = text replies only">
+            <input type="checkbox" checked={(cfg.voice_enabled || 'on') === 'on'}
+              onChange={e => setVoiceEnabled(e.target.checked)} />
+            <span>{(cfg.voice_enabled || 'on') === 'on' ? '🔊 voice on' : '🔇 voice off'}</span>
+          </label>
+          {/* V3 — the memory loop: record this conversation as a trial session, then debrief over the
+              recorded sessions (reuses the walkthrough organ). */}
+          <div className="cfg-mem">
+            <button className={'b ghost' + (recordingSession ? ' rec' : '')} data-ui-ref="ui://chat/record"
+              title="record this conversation as a session (so it can be debriefed + feeds the twin)"
+              onClick={toggleRecordConversation}>{recordingSession ? '■ stop recording' : '● record'}</button>
+            <button className="b ghost" data-ui-ref="ui://chat/debrief"
+              title="walk back through the recorded sessions (debrief)"
+              onClick={startDebriefSession}>debrief</button>
+          </div>
           <button className="b" data-ui-ref="ui://chat/config" onClick={applyCfg}>apply config</button>
         </div>
       )}
@@ -83,8 +141,10 @@ export function RhmChat() {
         <input placeholder="ask the company about itself…" data-ui-ref="ui://chat/input" value={chatMsg}
           onChange={e => setChatMsg(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') sendChat() }} />
-        <button className={'b ghost mic' + (recording ? ' rec' : '')} data-ui-ref="ui://chat/mic" onClick={recordToggle}
-          title="push-to-talk (voice in; speaks back in listening mode)">{recording ? '■' : '🎙'}</button>
+        <button className={'b ghost mic' + (recording ? ' rec' : '')} data-ui-ref="ui://chat/mic" onClick={micPressed}
+          title={(cfg.voice_input_mode || 'push_to_talk') === 'auto_listen'
+            ? (recording ? 'auto-listen on — tap to stop' : 'auto-listen — tap to start hands-free; it replies when you finish a thought')
+            : 'push-to-talk — tap to start, tap to stop'}>{recording ? '■' : ((cfg.voice_input_mode || 'push_to_talk') === 'auto_listen' ? '👂' : '🎙')}</button>
         <button className="b" data-ui-ref="ui://chat/send" onClick={() => sendChat()} disabled={chatBusy}>{chatBusy ? '…' : '→'}</button>
       </div>
     </div>
