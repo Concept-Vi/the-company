@@ -98,10 +98,10 @@
 
 ## G8 · Model + capability registry (config by type)
 
-- **C8.1 · `MODEL_CAPABILITIES` keyed by model-id** (tool-calling · json_schema · thinking · context-ceiling · concurrency-knee · speed), provenance declared/probed/measured/served (live probe wins).  ☐ by use
-- **C8.2 · The JOIN** — a role binds a model-id → reads capabilities → if locally served, looks up the backing service for VRAM via `gpu.py` (reuse the resource-manager, never duplicate).  ☐ by use
-- **C8.3 · Cloud decoupled** — the swarm always runs resident; the main brain is separately selectable (resident or cloud); a mode can auto-pick cloud; cloud can run background roles. The swarm is never lost by a cloud choice.  ☐ by use
-- **C8.4 · Residency fail-loud** — model not resident when needed → surface + offer to load (no silent degrade).  ☐ by use
+- **C8.1 · `MODEL_CAPABILITIES` keyed by model-id** (tool-calling · json_schema · thinking · context-ceiling · concurrency-knee · speed), provenance declared/probed/measured/served (live probe wins).  ✅ by use (ops/cli/capabilities.py MODEL_CAPABILITIES keyed by model-id, 6 fields; LIVE probe upgraded tools→served over declared; model_capabilities_acceptance 60✓)
+- **C8.2 · The JOIN** — a role binds a model-id → reads capabilities → if locally served, looks up the backing service for VRAM via `gpu.py` (reuse the resource-manager, never duplicate).  ◑ by use (capabilities_for→service_key_for→gpu.py budget/fit JOIN proven in ops, reused not duplicated; concurrency-knee is DATA from max_num_seqs+KV per C0.5) — suite-side adoption (capability_providers reads the catalog) is the one lead follow-up wire, pending G6 freeing suite.py
+- **C8.3 · Cloud decoupled** — the swarm always runs resident; the main brain is separately selectable (resident or cloud); a mode can auto-pick cloud; cloud can run background roles. The swarm is never lost by a cloud choice.  ✅ by use (COGNITION_PLACEMENT_POLICY as data+queries: swarm=resident-always, main_brain=selectable, mode-may-pick-cloud, cloud=background; swarm never lost)
+- **C8.4 · Residency fail-loud** — model not resident when needed → surface + offer to load (no silent degrade).  ✅ by use (is_resident reuses gpu.py running-view; require_resident → loud 'not resident, offer company up' structured result; no auto-load, no silent degrade)
 
 ## G9 · Governance & safety (binds everything)
 

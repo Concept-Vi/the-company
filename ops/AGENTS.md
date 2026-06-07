@@ -50,6 +50,20 @@ Do **not** build duplicate command centers. The right shape (Tim, "one substrate
     window renders it as a bar. Measured on the 16GB card: the 4b (hybrid, KV ~31.7KB/tok) does 256K
     **solo** and co-resides with light voices at 64K, but **Orpheus (~8.5GB) + 64K brain is over by
     ~0.6GB** — a switch-on-demand pair (the gate refuses, never OOMs).
+- **model-TYPE capabilities (the capability registry — `cli/capabilities.py`, G8/C8.1–C8.4, 2026-06-08).**
+  The THIRD keying (B4): intrinsic capability **by model-id** (tool-calling · json_schema · thinking ·
+  context-ceiling · concurrency-knee · speed), each with explicit provenance `declared|probed|measured|served`
+  (live/served wins). It owns ONLY model-intrinsic facts — it NEVER stores gpu_util/vram (rule 3); for those
+  it **JOINs to `gpu.py`** (`service_key_for(model_id)` matches `config.model`, then `budget_vram`/residency —
+  REUSED, never duplicated). Queries: `capabilities_for(model_id)` (the row + the JOIN), `role_can_bind(requires,
+  model_id)` / `suitable_models(requires)` (the `requires ⊆ provides` binding query — the `provides` TAG set
+  matches `suite.py`'s `capability_providers()` exactly: chat·json·tools·fast·no-think), `placement_for(track)` +
+  `swarm_survives_cloud_brain()` (C8.3 cloud-decoupling policy as DATA), `is_resident`/`require_resident` (C8.4
+  fail-loud, loud `OFFER_LOAD` on a miss, NEVER auto-loads). **Self-description / DRIFT HOME (C9.4):** this section
+  + the `cli/capabilities.py` module docstring are the registry's self-description home; the drift assertion is
+  `tests/model_capabilities_acceptance.py`. It COMPLEMENTS `suite.py`'s `MODEL_KNOBS` (per-request knobs, also by
+  model-id) — knobs = "dials a request turns"; capabilities = "what the model can do." The DOWNSTREAM consumer is
+  `suite.py:capability_providers()` (C2.5), which the lead wires to read this catalog (the one suite-side wire).
 - **cognitive-layers · RHM/modes · data/memory · jobs/cron** — not yet instantiated; same mechanism when they are.
 
 ## Files
@@ -57,7 +71,7 @@ Do **not** build duplicate command centers. The right shape (Tim, "one substrate
 - `cli/` — the console package, one job per module:
   - `app.py` (dispatch + the `up` resource gate) · `registry.py` (reads services.json) ·
     `systemd.py` (start/stop/status/logs) · `gpu.py` (**the resource manager**) ·
-    `models.py` (inventory + swap) · `bench.py` · `render.py` (status/health views).
+    `models.py` (inventory + swap) · `capabilities.py` (**the model-TYPE capability registry**, by model-id; JOINs to gpu.py) · `bench.py` · `render.py` (status/health views).
   - `README.md` — use guide.   `UPDATING.md` — how to extend the CLI + the registry schema.
 - `services.json` — the registry (the source of truth; now also carries `vram_mb`, `serve`, `vram_ceiling_mb`).
 - `STARTUP.md` — the command table + boot behaviour + open items.
