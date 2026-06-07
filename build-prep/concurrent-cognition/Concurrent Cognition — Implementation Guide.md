@@ -1,6 +1,8 @@
 # Concurrent Cognition — Implementation Guide
 
-*Document 2 of the triad. HOW to make each Completion-Criteria group true, with the seams the research mapped (file:line in `00-LANDSCAPE.md` + `02`/`03`/`04`/`05`/`06` + `broader/B1–B5`). All paths are in the worktree `~/company-cognition`. Principle throughout: reuse the node-graph substrate; the cognition layer is a thin driver, not a parallel system.*
+*Document 2 of the triad. HOW to make each Completion-Criteria group true, with the seams the research mapped. All paths are in the worktree `~/company-cognition`. Principle throughout: reuse the node-graph substrate; the cognition layer is a thin driver, not a parallel system.*
+
+> **⚠ Hardened by Round-1 review — `review/R1-FOLD.md` is binding.** Corrections that change the HOW below: injection is a **net-new ref-read** (the existing resolve path reads operator-notebook strata, not fresh role refs) addressed via **`run://`** (never `swarm://`); **`chat_parts` is a hot-path refactor** (extract `chat()`'s body to a shared core), not additive; **parallelism lives in `_run_swarm`/the in-turn runner, NOT the shared `scheduler.py`**; the concurrency budget reads `max_num_seqs`(=16)+KV, never 32; `MODEL_CAPABILITIES` **extends the existing `MODEL_KNOBS`/`knobs_for()`**; the rule evaluator enforces determinism (post-barrier, resolved-values-only). **Locate by symbol** — line refs drifted ~+14; `node_record.py` is in `contracts/`.
 
 ---
 
@@ -8,7 +10,7 @@
 
 1. **Role = node, chain = edge, view = canvas, the judge = role #0.** The node-graph engine already gives ports/config/registry/render; we extend it, never fork it. (`02-graph-substrate-reuse.md`.)
 2. **Rule-based routing, not model judgment (L2).** A model only ever runs *inside a role*; a *rule* is declared, deterministic logic that routes a role's structured output. This is why the design is registry-driven and inspectable — and why "can a 4B aggregate 32" isn't central (aggregation is one optional role).
-3. **Injection = the Company's own primitive.** A role writes JSON to `swarm://<turn>/<role>`; the next part's prompt *resolves* that address through the existing `_chat_context → _resolve_context_at` path (`suite.py:1322,1461,1943`). No mid-generation injection; parts are sequential fresh requests.
+3. **Injection = a NET-NEW ref-read (corrected, R1-FOLD F3).** A role writes JSON to **`run://<turn>/<role>`**; the next part's prompt reads the resolved value there. This is a **new branch in part-context assembly** — the existing `_resolve_context_at`/`_r2_gather` resolves operator-notebook strata (annotations/chats/events), NOT freshly-written role refs, so it does NOT do this for free (and `context_variables.py` is test-only/dead — do not "promote" it). It is still the Company's address→resolve→inject *shape*; just build the role-ref read. No mid-generation injection; parts are sequential fresh requests.
 4. **The swarm = concurrent requests to ONE resident model**, vLLM-batched — not N models. The resource question is "one 4B with a KV pool for the main context + 32 short role contexts," not "fit a fleet" (`03`).
 5. **One shared substrate + two thin drivers** — app `Suite.run` (governed, persistent) and cognition `_run_swarm` (off-MCP, ephemeral); diverge on persistence/trigger/governance/namespace/render (`B2`).
 6. **Mode is the dial** — gates whether to stage, picks the cast + the part-grain, sets the slot budget, and (generalised) selects the activation-context. Budget = attention, literal.
@@ -22,7 +24,7 @@
 ## G1 · Node-mechanism substrate (the make-or-break)
 
 **Principle:** the scheduler has the right *readiness shape* but is strictly serial (`scheduler.py:60-153`). The single highest-risk change is parallel dispatch — do it wave-synchronous so store writes stay safe.
-- **C1.1 parallel wave executor** — MODIFY `runtime/scheduler.py`: dispatch the ready-set via a `ThreadPoolExecutor` firing the *existing* blocking transport (GIL releases on socket I/O; vLLM batches server-side — `03`). Keep a barrier per wave; serialize store writes (the store is the single-writer truth). DON'T introduce async/httpx (heavier, rejected in `03`).
+- **C1.1 concurrent dispatch in the DRIVER (corrected, R1-FOLD F2)** — put the `ThreadPoolExecutor` in `_run_swarm`/the in-turn part runner, NOT in the shared `runtime/scheduler.py` (modifying the shared scheduler would make every app `Suite.run` concurrent — a behaviour change to the governed app face the "two thin drivers" framing avoids). First **materialize a ready-set** (the scheduler is a re-scanning loop, no ready-set today). Fire the *existing* blocking transport (GIL releases on socket I/O; vLLM batches server-side). Barrier per wave; serialize store writes. DON'T introduce async/httpx; DON'T make the shared executor concurrent.
 - **C1.2 slot budget** — wire `fabric/vram.py:VramGate` (exists, `limit=1`, unwired) into the dispatch path as a global `Semaphore(concurrency_knee)` + a swarm sub-pool of `knee − R`. `R` + `knee` are registry values (G8), never hardcoded 32.
 - **C1.3 edge types** — MODIFY `node_record.py:35-40` (`Edge`): add a declared `kind`; register edge-kinds in the registry; the injection/resolve edge wraps C6's `context_variables.py:49-95` promoted from RHM-turn scope to a graph-edge. DON'T turn gate/join into edges — keep them as nodes; add the *injection* edge as the net-new kind.
 - **C1.4 output_schema** — MODIFY `registry.py:57-64` (`register_module`) to read the declared `output_schema`; enforce via `complete()`'s existing validate/retry (`client.py:75-87`).
@@ -47,7 +49,7 @@
 ## G4 · Staged-response queue
 
 **Principle:** a part is a node, a role-output is an address, a part fires when its inputs resolve — the reactive scheduler relationship applied intra-turn (`04`). Cleanest as a small in-turn runner speaking the same "fires-when-deps-resolve" language (not necessarily the full `runtime/` scheduler — open, see `04`).
-- MODIFY `suite.py`: `chat_parts()` beside `chat()` (`chat():3333` is the single-shot path — preserve it; additive). A `THOUGHT_SHAPES` registry (per-mode part templates). `shape_for(mode)` (mirrors `_mode_directive`). Part 1 deps=[] (fires instant); later parts dep on `swarm://` addresses.
+- MODIFY `suite.py`: this is a **hot-path REFACTOR, not additive (corrected, R1-FOLD F4)** — `chat_parts()` can't loop `chat()` (re-runs the capability-gate, emits N chat events) nor copy it (forks the brain), so **extract `chat()`'s body into a shared core** that both `chat()` (one part) and `chat_parts()` (N parts) call. This touches the `rhm_*`-gated hot path → gate the change on the `rhm_*` regression suites + a "what still works" enumeration. A `THOUGHT_SHAPES` registry (per-mode part templates); `shape_for(mode)`. Part 1 deps=[] (fires instant); later parts dep on **`run://`** role addresses (F3 read).
 - Part grain (C4.1): a per-mode config table. Brevity bypass (C4.3): a cheap `brevity_judge` role; `focus`/`background` modes → never stage.
 - Coherence (C4.4): each part's prompt prefills the prior parts + "continue naturally."
 - DON'T stream brain tokens (out of scope; the PART is the unit). DON'T offer tools on intermediate parts (C4.5).
@@ -74,7 +76,7 @@
 ## G8 · Model + capability registry
 
 **Principle:** three keyings kept distinct + JOINED (`B4`): intrinsic capability (by model-id, net-new) ⨝ service deployment (by service-key, `services.json`, exists) ⨝ telemetry (exists).
-- NEW: `MODEL_CAPABILITIES` + `model_capabilities()` resolver (provenance declared/probed/measured/served; live probe wins). A role `requires` field; computed suitability replaces `recommended_model` prose.
+- EXTEND, don't duplicate (corrected, R1-FOLD F9): `suite.py` already has `MODEL_KNOBS` + `knobs_for()` (tagged "G8.1" in-code) with declared/probed provenance + a live tools-probe — grow THAT into the capability registry (tool-calling · json_schema · thinking · context-ceiling · **`max_num_seqs` + KV-derived concurrency** · speed), don't stand up a parallel `MODEL_CAPABILITIES` surface (L1 one-source). A role `requires` field; computed suitability replaces `recommended_model` prose.
 - REUSE unchanged: `ops/cli/gpu.py` (VRAM authority — point at it, never copy), the co-residence work, `model_supports_tools`. The swarm `Semaphore` reads `concurrency_knee` from here. `resident_capable` is DERIVED from the join, never declared.
 
 ## G9 · Governance & safety

@@ -1,6 +1,8 @@
 # Concurrent Cognition — Research Synthesis
 
-*Document 3 of the triad — the evidence base the Criteria + Guide rest on. Consolidates two research waves (11 thread docs) into what was explored, what was found, and what it means for the build. Detailed evidence lives in the per-thread docs; this is the navigable map + the verified facts + the design deltas.*
+*Document 3 of the triad — the evidence base the Criteria + Guide rest on. Consolidates two research waves (11 thread docs) into what was explored, what was found, and what it means for the build.*
+
+> **⚠ Hardened by Round-1 review — `review/R1-FOLD.md` is binding.** Ledger correction: **injection, `chat_parts` (a hot-path refactor), the G5 activation substrate, and the jury flow move from "reuse" to NET-NEW.** Resource correction: the resident 4B's `max_num_seqs=16` and its KV pool is shared with the main context → **real co-resident concurrency is well below 32 at usable context** (the c=32/2241 tok/s figure was 4K-context, not the voice config). The architecture + spine still hold; the reuse just shrank.
 
 ---
 
@@ -35,7 +37,7 @@
 
 ## Verified hardware facts (the foundation)
 - The 4B is **resident-capable at 64K** co-resident with a 4-bit voice (the 2026-06-07 co-residence work); the swarm's 32-concurrency lives on this one resident model. Slot budget + co-residence are owned by `gpu.py`.
-- The 4B does json_schema + tool-calls reliably, ~100 tok/s decode, concurrency-knee ~32 (`BENCHMARK_FACTSHEET.md`).
+- The 4B does tool-calls reliably + valid JSON (`json_object`; true `json_schema` server-side is a separate change — F9), ~100 tok/s decode. **Concurrency: `max_num_seqs=16` (services.json), KV pool SHARED with the main context** — the c=32/2241 tok/s benchmark was 4K-context on a higher util, NOT the co-resident voice config; the real swarm ceiling at the voice config is well below 16 at usable per-role context (measure at C0.5).
 
 ## Open dev-calls (carried; see DECISIONS.md)
 Address scheme (reuse `run://`) · `swarm://` lifecycle (persist+GC) · tools-on-final-part · per-mode grain table. Decided as developer calls; surfaced, not buried.

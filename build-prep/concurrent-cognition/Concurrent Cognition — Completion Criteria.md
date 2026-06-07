@@ -2,6 +2,8 @@
 
 *The truth table for the build. Document 1 of the loop-prep triad (see also the Implementation Guide + Research Synthesis). Every criterion is two-faced — FUNCTION and FORM — and green only when BOTH are verified by USE. This is the common reference the sub-agent-driven build reads; it is registry-driven by Tim's law L1, rule-based-routing by L2 (see `DECISIONS.md`).*
 
+> **⚠ Hardened by Round-1 review — `review/R1-FOLD.md` is the binding correction layer.** Key folds woven below: the **resource ceiling is real** (the resident 4B serves `max_num_seqs=16`, KV shared with the main 64K context → the true co-resident swarm cap is **well below 32 at usable context**; "32" was a 4K-context throughput number, not the voice config); **parallelism lives in the cognition driver, not the shared scheduler**; **addressing is `run://` throughout** (never `swarm://`); **injection, `chat_parts`, the activation substrate, and the jury flow are NET-NEW** (not free reuse); **rule-determinism and the `claude -p` floor are enforced invariants with tests**, not assertions. Locate code **by symbol** (the line refs drifted ~+14).
+
 ---
 
 ## Verification rules (how a criterion goes green)
@@ -20,22 +22,24 @@
 
 - **C0.1 · A 2-role staged turn, end-to-end.**
   FUNCTION — a real utterance → `focus` fires → Part 1 emits from base context instantly → one auxiliary role (`recall` or `ground`) runs concurrently, writes structured JSON to an address → its rule injects into Part 2's context → Part 2 emits enriched → both parts stream as one reply. Demonstrated by use (the event log shows the role fire, the injection, the two parts).  ☐ by use
-- **C0.2 · Routing is rule-based + deterministic.** The injection happens because a *declared rule* resolved an address — re-running the same inputs routes identically (no model judged the routing). Proven by running twice → identical routing trace.  ☐ by use
+- **C0.2 · Routing is rule-based + deterministic — tested on a NON-TRIVIAL rule (R1-FOLD F5).** A *declared rule* (one that reads multiple resolved fields, not a one-liner) resolves a `run://` address; re-running identical inputs routes identically — even though the wave's roles finished in nondeterministic order. Proven: run twice → identical routing trace, with the rule reading values that completed in different orders.  ☐ by use
 - **C0.3 · The 4B-as-aggregator question, answered.** If the spike includes a fusing role (combine 2 role outputs), measure whether the 4B's fused result is coherent; if routing-only suffices (per L2), record that aggregation is optional. → `needs-tim` on quality; FUNCTION = it runs.  ☐ by use / needs-tim
 - **C0.4 · No starve, fail loud.** The main stream keeps its reserved slots; if the resident model is down, the turn fails loud + offers to load (never silent).  ☐ by use
+- **C0.5 · MEASURE the real resource ceiling (the gate that matters most — R1-FOLD F1).** On the actual co-resident voice config (4B @ util 0.49 + the 4-bit voice resident), with a staged main reply running, MEASURE: how many concurrent role-runs actually serve before latency thrashes (bounded by `max_num_seqs=16` AND KV/per-role-context), and the real **inter-part wall-clock** (slowest dep role + JSON-retries). The spike must PRODUCE these numbers — not assume 32. The swarm cap is then `min(max_num_seqs−R, KV-budget/per-role-ctx)` from the registry.  ☐ by use (measured)
 
-*Spike passes → fan-out unlocks. Spike fails → redesign before building further.*
+*Spike passes → fan-out unlocks. Spike fails → redesign before building further. (Per R1-FOLD: as originally worded G0 could pass without testing the thing most likely to break — C0.5 fixes that.)*
 
 ## G1 · Node-mechanism substrate rebuild (THE make-or-break · serial spine)
 
 > The dual-use spine (app surface + cognition). Full registry-driven rebuild (Tim: "full substrate now"). The concurrent executor is the one genuinely net-new engine piece.
 
-- **C1.1 · Parallel wave executor.** The scheduler runs a ready-set CONCURRENTLY (was strictly serial). A wave of N ready nodes dispatches in parallel; store writes serialize safely. Proven: a graph of N independent LLM nodes runs in ~max(node) not ~sum(node).  ☐ by use
-- **C1.2 · Request-concurrency budget.** A global semaphore sized from the model's `concurrency_knee` (registry, not hardcoded 32) + a swarm cap of `knee − R` reserving R for the main stream/judge. Proven: 30+ concurrent role-runs complete; the main stream never blocks.  ☐ by use
-- **C1.3 · Edge type system.** Edges carry a declared `kind` (data-wire · injection/resolve · gate/branch · fan-in) — not a bare wire. Registry-declared. Proven: an injection edge resolves an address into a downstream node's context.  ☐ by use
-- **C1.4 · `output_schema` enforced.** A node/role's declared output schema is read + validated (was decorative). Proven: a malformed role output is caught + retried (the `complete()` validate/retry path), not silently passed.  ☐ by use
-- **C1.5 · `llm` node volatile / per-draw variation.** Identical role+config draws no longer collapse to one memo-cached result; a jury of N produces N varied draws. Proven: a 3-run quorum role returns 3 distinct generations.  ☐ by use
-  FORM (whole group) — the substrate stays one shared lower layer + two thin drivers (app `Suite.run`, cognition `_run_swarm`); no parallel system; drift_acceptance passes.  ☐ design-rubric
+- **C1.1 · Concurrent dispatch in the COGNITION DRIVER (not the shared scheduler — R1-FOLD F2).** Parallelism is a property of `_run_swarm` / the in-turn part runner, leaving the app's `Suite.run` serial (no behaviour change to the governed app face). It first builds a **materialized ready-set** (the scheduler is a re-scanning loop today, no ready-set), then dispatches it via a thread pool; store writes serialize safely behind the wave barrier. Proven: N independent role-runs run in ~max(role) not ~sum(role); a concurrent app `Suite.run` is unaffected.  ☐ by use
+- **C1.2 · Request-concurrency budget from the REAL registry values (R1-FOLD F1).** The semaphore = `min(max_num_seqs − R, KV-budget / per-role-context)` read from the registry — **NOT a hardcoded/assumed 32** (`max_num_seqs=16`; KV is shared with the main context). Roles are short-context so many fit. Reserve R for the main stream/judge. Proven: the measured-max concurrent role-runs (C0.5) complete; the main stream never blocks AND never just waits in vLLM's admit queue behind the swarm.  ☐ by use
+- **C1.3 · Edge type system + the injection edge (NET-NEW read — R1-FOLD F3).** Edges carry a declared `kind` (data-wire · **injection** · gate/branch · fan-in) — not a bare wire. Adding `kind` to `contracts/node_record.py` is a **CONFIRM-level contract edit** (bump `schema_ver`; default-kind for existing edges; vault-spec update). The injection edge is a **net-new ref-read branch** in part-context assembly (the existing `_resolve_context_at`/`_r2_gather` reads operator-notebook strata, NOT fresh role refs — it does NOT do this). Role outputs live at **`run://<turn>/<role>`** (never `swarm://` — not a registered scheme). Proven: a later part reads the resolved value at a role's `run://` address.  ☐ by use
+- **C1.4 · Output schema enforced via client-side validate/retry (R1-FOLD F9).** The transport sets `json_object` (valid JSON, not schema-conformant); enforcement is `complete()`'s validate/retry (`client.py`), which catches a malformed role output + retries (counts toward inter-part latency — C0.5). True server-side schema-constrained decoding is a separate, optional transport change.  ☐ by use
+- **C1.5 · Per-draw cache-key (NOT blanket VOLATILE — R1-FOLD F9).** A jury's N draws each get a distinct draw-id so they don't collapse at the memo gate — WITHOUT disabling `llm` memoization app-wide (memoization is a real app feature). Proven: a 3-run quorum returns 3 distinct generations; ordinary `llm` nodes still memoize.  ☐ by use
+- **C1.6 · Swarm telemetry batched + store writes atomic (R1-FOLD F8).** The swarm's per-role run-records do NOT fsync-flood `append_event` (one batched rollup per turn, not one fsync per role-fire); `memo_set`/`write_provenance` are atomic-ized like `set_ref`. Proven: a concurrent in-process store test; no event-log thrash under a full swarm.  ☐ by use
+  FORM (whole group) — the substrate stays one shared lower layer + two thin drivers (app `Suite.run` serial-governed, cognition `_run_swarm` concurrent-ephemeral); no parallel system; drift_acceptance passes.  ☐ design-rubric
 
 ## G2 · Role registry (file-discovered, declarative, mode-scoped)
 
@@ -47,7 +51,7 @@
 
 ## G3 · The rule engine (full declared logic · the L2 core)
 
-- **C3.1 · A rule is declared logic over a role's output** + may chain (depend on a prior output to route onward). Full expression, but **declarative-by-inspection · deterministic · no model inside a rule**.  ☐ by use
+- **C3.1 · Full declared logic, with determinism ENFORCED not asserted (R1-FOLD F5).** A rule is declared logic over a role's output + may chain. The evaluator runs **post-barrier, as a pure function of fully-resolved address values only**, against a **referenceable-input whitelist** (resolved role outputs). BANNED in a rule: `now()`/random/wave-completion-order/partial-results/any model call. Proven adversarially: a rule that tries to read order/time/partials is rejected by the evaluator.  ☐ by use
 - **C3.2 · A rule routes to any destination:** inject-into-reply · chain/trigger another role · land-at-address · surface-to-inbox/decisions · typed-lane/channel. All five demonstrated.  ☐ by use
 - **C3.3 · Routing is renderable** — every rule + its firing is addressable data the live view (G7) can draw.  ☐ by use
 - **C3.4 · New/changed rules ride the normal change path** (no special gate; review/commit like any change).  ☐ by use
@@ -61,6 +65,8 @@
 - **C4.5 · Tools on the final part only** (intermediate parts pure generation) unless a shape declares otherwise.  ☐ by use
 
 ## G5 · Activation contexts (mode = the dial, generalised)
+
+> **NET-NEW substrate, not "generalise mode" (R1-FOLD F7).** Repo sweep found NO activation substrate — zero `.timer` units, `background` is just a directive string. Background/sense/rollup are **three net-new subsystems** (a timer/scheduler for rollups · an event-hook for sense · an idle-loop for background), each net-new build, sequenced AFTER per-turn (C5.1) works, each under a mode's slot budget.
 
 - **C5.1 · Per-turn** cognition (the live reply) works (the spine of G0–G4).  ☐ by use
 - **C5.2 · Background** cognition fires between turns (consolidating/preparing) under a mode's budget.  ☐ by use
@@ -89,7 +95,7 @@
 ## G9 · Governance & safety (binds everything)
 
 - **C9.1 · Roles act only within the existing governance posture** — in permitted modes a role may trigger reversible/AUTO-class actions (like `decide-for-me`); never bypasses the deterministic gates.  ☐ by use (incl. adversarial: a role cannot escalate past its posture)
-- **C9.2 · Autonomous build-dispatch / `claude -p` stays LEAD-ONLY** — no role ever fires a build agent. Structural floor (adversarially verified).  ☐ by use
+- **C9.2 · The `claude -p` floor as an unforgeable-event INVARIANT + a regression test (R1-FOLD F6).** Restated precisely: **no role path may emit a `resolve`/`approve` event** (the sole dispatch trigger; today only the operator-only `resolve_surfaced` emits it). A regression test asserts no role/`_run_swarm` path can emit it — so the floor holds even if a future role-reachable AUTO verb is added. Adversarially verified.  ☐ by use
 - **C9.3 · Fail loud everywhere** — a down model, a starved turn, a malformed output, a bad rule → loud legible surface, never a silent swallow.  ☐ by use
 
 ## PRODUCT-FACE group (FORM across all surfaces)
