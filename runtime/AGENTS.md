@@ -70,6 +70,23 @@ proposes/surfaces, never dispatches" — only `dispatch_decision` stays off-face
 telemetry `_emit`, so a swallowed claim can never silently allow a double-launch. The live capability list
 lives in [[Company Map]] — traverse there rather than re-listing it here (the rule in [[Vault Conventions]]).
 
+**The conversational → self-build bridge** (`request_change`, an `RHM_VERBS` whitelist verb) is the
+chat entry to the wire. The dispatcher only acts on `intent=="build"` items (`is_build_intent`), which
+were minted ONLY by the wire-DOOR (`/api/build-intent` → `surface_build_intent`, `/api/intent-at` →
+`surface_intent_at`); the RHM's `build` composes canvas nodes and `propose`/`panel`/`extend` author
+NET-NEW components via `/api/apply`, so conversing could not drive an edit-existing-code build.
+`request_change` routes a conversational change-request into the EXISTING `surface_intent_at` producer
+(REUSED — no parallel intent path), minting an `intent=="build"` item that surfaces for approval through
+the SAME inbox/build-intent card + operator-only `/api/resolve` approve. **Nothing builds until the
+operator approves** — the approve→dispatch trigger (`resolve_surfaced` + `drive_dispatchable`) is
+operator-only, off the MCP face, and UNCHANGED; the wire still only dispatches when armed
+(`COMPANY_WIRE_PERMISSION`). Address resolution (`resolve_change_target`, reusing `UI_REGISTRY` +
+`parse_ui_address` + `_describe_ui_address`): an explicit RESOLVABLE target (a registered `ui://` or an
+unambiguous named element, via a custom confident-single-match-else-ASK matcher) WINS over the held
+locus (`current_locus()` is session-held, not this-turn — a stale click must never override a target the
+operator named this turn); else the indicated locus; else it ASKS which element — never a guessed scope
+(rule 8 — a wrong scope is a wrong build). Proven by `tests/conversational_build_acceptance.py`.
+
 ## Relates to
 
 - **Called by** [[canvas — constitution]] — through the bridge (C8) — and by

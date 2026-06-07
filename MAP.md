@@ -70,7 +70,7 @@ flowchart TD
 ## Live registry — the system's current capabilities
 <!--REGISTRY:START--> (auto-maintained by Suite.refresh_self_description on every apply — do not hand-edit)
 - **node-types** (16): ask, codebase, constant, embed, gate, join, llm, model_of_tim, pair, portal, retrieve, rhm_mode, similarity, titlecase, uppercase, wordcount
-- **RHM verbs**: run, propose, build, consult, show, panel, extend, configure, load_voice, unload_voice
+- **RHM verbs**: run, propose, build, consult, show, panel, extend, configure, load_voice, unload_voice, request_change
 - **modes**: listening, text-only, background, focus, walkthrough, watch-and-react, decide-for-me, off
 - **panels**: settings
 - **models** (from the fabric registry): qwen3.5-9b-q8:latest, qwen3.6-35b-a3b-iq3s:latest, minimax-m3:cloud, gemma4-26b-a4b-q3km:latest, qwen3.6-27b-q3km:latest, nomic-embed-text:latest, gemma4:31b-cloud, nemotron-3-super:cloud, deepseek-v4-flash:cloud, deepseek-v4-pro:cloud, kimi-k2.6:cloud, glm-5.1:cloud, glm-5:cloud, qwen3.5:397b-cloud, kimi-k2.5:cloud

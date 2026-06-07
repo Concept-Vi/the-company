@@ -1965,6 +1965,113 @@ class Suite:
         # junk pref RAISES (fail loud) via the consult-read's re-validation.
         return self._apply_presentation_pref(bundle, self.presentation_pref_at(ui_addr))
 
+    def _resolve_named_target(self, target: str | None) -> dict | None:
+        """Resolve a MODEL-SUPPLIED change target → a confident ui:// address, or an ASK. Returns None
+        when no target was supplied at all (so the caller falls back to the indicated locus). REUSES the
+        existing address machinery (parse_ui_address + _describe_ui_address + the UI_REGISTRY) — this is
+        a CUSTOM confident-single-match-else-ASK resolver (there is no existing name→address resolver to
+        reuse: `show`'s handle_map is handle→address, not name→address), deliberately conservative:
+          • a ui:// address → accepted iff grammar-valid AND REGISTERED (an unregistered/malformed ui://
+            is NOT silently accepted — it would mint a DENY-ALL or raise — it returns an ASK).
+          • a plain name ("the run button") → token-matched against the registry's OWN titles/refs
+            (registry-truth, never a fabricated address). CONFIDENT iff exactly ONE registry row matches;
+            ZERO or AMBIGUOUS (>1) → ASK, never pick one (rule 8 — a wrong scope = a wrong build).
+        Returns {address, source:'named'} on a confident match, {address:None, source:'ask', ask, candidates}
+        on an unconfident one, or None when target is empty."""
+        from contracts.ui_info import parse_ui_address
+        t = (target or "").strip()
+        if not t:
+            return None                                        # no target supplied → caller uses the locus
+        if t.startswith("ui://"):
+            try:
+                parse_ui_address(t)
+                if "(unregistered)" not in self._describe_ui_address(t):
+                    return {"address": t, "source": "named", "ask": None, "candidates": []}
+            except Exception:
+                pass                                           # malformed/unregistered ui:// → ASK below
+            return {"address": None, "source": "ask", "candidates": [],
+                    "ask": (f"I can't confidently resolve {t!r} to a known UI element. Point at the "
+                            f"element (click it) or name one of the registered elements so I scope the "
+                            f"change correctly — I won't guess a scope.")}
+        # plain name → token-match against the registry's OWN titles + refs. Tokenise both sides; a row
+        # matches when every salient query token is a substring of the row's title-or-ref token bag.
+        import re
+        stop = {"the", "a", "an", "this", "that", "button", "panel", "field", "area", "element",
+                "section", "view", "to", "in", "on", "of", "for"}
+        q_tokens = [w for w in re.findall(r"[a-z0-9]+", t.lower()) if w not in stop and len(w) >= 2]
+        matches = []                                           # (served_address, label)
+        if q_tokens:
+            for row in self.UI_REGISTRY:
+                ref, kind, title = row[0], row[1], row[2]
+                served = "ui://canvas/*" if kind == "canvas" else (
+                    ref if str(ref).startswith("ui://") else f"ui://{kind}/{ref}")
+                hay = (str(title or "") + " " + str(ref or "")).lower()
+                hay_tokens = set(re.findall(r"[a-z0-9]+", hay))
+                if all(any(qt in ht for ht in hay_tokens) or qt in hay for qt in q_tokens):
+                    matches.append((served, str(title or ref)))
+        seen, uniq = set(), []                                 # de-dup by address (a region may surface once)
+        for addr, label in matches:
+            if addr not in seen:
+                seen.add(addr); uniq.append((addr, label))
+        if len(uniq) == 1:
+            return {"address": uniq[0][0], "source": "named", "ask": None, "candidates": []}
+        if len(uniq) > 1:                                      # AMBIGUOUS → ASK, never pick one
+            cand = [f"{label} ({addr})" for addr, label in uniq[:8]]
+            return {"address": None, "source": "ask", "candidates": cand,
+                    "ask": (f"{t!r} could mean more than one element: " + "; ".join(cand) +
+                            ". Which one should I scope the change to? (Or click the element.)")}
+        return {"address": None, "source": "ask", "candidates": [],   # zero matches → ASK
+                "ask": (f"I couldn't match {t!r} to a known UI element. Click the element you mean, "
+                        f"or name a registered one, so I scope the change correctly — I won't guess.")}
+
+    def resolve_change_target(self, target: str | None, indicated: str | None = None) -> dict:
+        """CONVO→SELF-BUILD BRIDGE — resolve WHICH ui:// element/scope a conversational change-request
+        is about (rule 8 — never guess a scope; a wrong scope = a wrong/over-broad build). REUSES the
+        EXISTING address machinery (UI_REGISTRY + parse_ui_address + _describe_ui_address) via the
+        custom `_resolve_named_target` resolver above.
+
+        PRECEDENCE (the correctness-critical order):
+          1. EXPLICIT RESOLVABLE TARGET WINS. If the model supplied a `target` that resolves CONFIDENTLY
+             (a registered ui:// OR an unambiguous named element), use it — even if an indicated locus is
+             also present. Rationale: `indicated` is the backend-held `current_locus()`, which is the
+             most-recent indication ACROSS THE SESSION (set `if indicated:` in _chat_context, never
+             cleared — locus_acceptance proves a no-focus turn does NOT clobber it). It is therefore NOT
+             reliably "this turn." A stale earlier click must NEVER silently override a target the operator
+             named THIS turn (that is the exact wrong-scope failure the task warns against). An explicit,
+             resolvable target is itself evidence the operator is not leaning on a click this turn.
+          2. INDICATED LOCUS. Else, if the operator has a held ui:// locus (they pointed at an element)
+             and it is grammar-valid + REGISTERED, use it — this is the "operator pointed and didn't
+             restate the address" case (mirrors the wire-door using the pointed element).
+          3. ASK. Else fail loud: return an ASK message and resolve NO address (no fiction, no guessed
+             scope). If the model supplied a target that did NOT resolve confidently, the ASK carries
+             that named-target failure reason (its candidate list / no-match), which is more useful than
+             a generic prompt — but ONLY after step 2 declined (so a stale locus can't suppress a useful
+             ASK either, and a present locus is preferred over an unresolvable named target).
+
+        Returns {address, source:'named'|'indicated'|'ask', ask:str|None, candidates:[...]}.
+        `address` is None exactly when `source=='ask'`."""
+        from contracts.ui_info import parse_ui_address
+        # 1. EXPLICIT RESOLVABLE TARGET WINS (never let a stale session locus override a named target).
+        named = self._resolve_named_target(target)
+        if named is not None and named["source"] == "named":
+            return named
+        # 2. INDICATED LOCUS — the operator pointed at an element; use it if registered + valid.
+        if indicated and isinstance(indicated, str) and indicated.startswith("ui://"):
+            try:
+                parse_ui_address(indicated)                    # grammar gate (an indicated address should be valid)
+                if "(unregistered)" not in self._describe_ui_address(indicated):
+                    return {"address": indicated, "source": "indicated", "ask": None, "candidates": []}
+            except Exception:
+                pass                                           # a malformed held locus → fall through to ASK
+        # 3. ASK — no resolvable target, no usable locus. Prefer the named-target failure reason (its
+        #    candidate list is more useful than a generic prompt) when the model DID supply a target.
+        if named is not None:                                  # named was supplied but unconfident → its ASK
+            return named
+        return {"address": None, "source": "ask", "candidates": [],   # no target + no usable locus → generic ASK
+                "ask": ("Which UI element should this change apply to? Click the element (so I use that "
+                        "exact locus) or name it — I won't guess a scope, because a wrong scope is a "
+                        "wrong build.")}
+
     def current_locus(self) -> str | None:
         """R1 — READ the backend-held current `ui://` locus (the most-recent indicated address).
 
@@ -2693,6 +2800,24 @@ class Suite:
                                  _M_BUILDISH, lambda ctx: True),
         "unload_voice": VerbSpec("unload a voice service to free VRAM", "configure",
                                  _M_BUILDISH, lambda ctx: True),
+        # CONVO→SELF-BUILD BRIDGE — the conversational entry to the claude -p self-build wire. The
+        # wire's dispatcher only acts on payload intent=="build" items (is_build_intent), which until
+        # now were minted ONLY by the wire-DOOR (/api/build-intent, /api/intent-at). The RHM's existing
+        # consequential verbs (propose/panel/extend) create NET-NEW components via /api/apply — they do
+        # NOT reach the edit-existing-code wire. `request_change` closes that gap: it routes a
+        # conversational change-request ("make the run button confirm before recomputing", "this panel
+        # is too cramped, fix it") into the EXISTING `surface_intent_at` producer, which mints an
+        # intent=="build" item that surfaces for approval through the SAME inbox/build-intent card +
+        # /api/resolve approve the wire-door uses. CONSEQUENCE CLASS = the same SURFACE-then-approve
+        # consent shape the wire-door has: it SURFACES a build-intent for the operator's approval —
+        # NOTHING builds until the operator approves it (the wire only dispatches an approved
+        # decision_build, and resolve_surfaced stays operator-only + off the MCP face). So the safe,
+        # consent-respecting action this verb performs IS the surfacing (action_class register_type =
+        # CONFIRM/SURFACE posture, like propose — it surfaces a draft for the operator, never auto-acts).
+        "request_change": VerbSpec("surface a build-intent to CHANGE existing code at a ui:// element "
+                                   "(routes a conversational change-request to the self-build wire; "
+                                   "nothing builds until the operator approves)", "register_type",
+                                   _M_BUILDISH, lambda ctx: True),
     }
 
     # --- the three legacy names, DERIVED from the one registry (no drift) ---
@@ -2744,6 +2869,25 @@ class Suite:
                          "required": ["service"]},
         "unload_voice": {"type": "object",
                          "properties": {"service": {"type": "string"}}, "required": ["service"]},
+        # CONVO→SELF-BUILD BRIDGE: the change description is REQUIRED; the target is the ui:// element/scope
+        # the change is about. The target is OPTIONAL in the schema because address resolution has THREE
+        # tiers in the dispatcher (indicated locus → named-element lookup → ASK) — if the operator has
+        # pointed at an element this turn, the dispatcher uses that indicated locus and the model need not
+        # restate the address. When neither an indicated locus nor a resolvable named target exists, the
+        # verb ASKS which element rather than guessing a scope (a wrong scope = a wrong/over-broad build).
+        "request_change": {"type": "object",
+                           "properties": {
+                               "change": {"type": "string",
+                                          "description": "what to change, in plain words (becomes the "
+                                                         "build-intent's spec) — e.g. 'make the run button "
+                                                         "confirm before recomputing'"},
+                               "target": {"type": "string",
+                                          "description": "the ui:// element/scope the change is about "
+                                                         "(e.g. ui://toolbar/run), OR a recognizable element "
+                                                         "name ('the run button'). OMIT if the operator has "
+                                                         "pointed at the element this turn (the indicated "
+                                                         "locus is used)."}},
+                           "required": ["change"]},
     }
 
     def _affordance_context(self, graph_id: str, focus: dict | None = None) -> dict:
@@ -3172,6 +3316,15 @@ class Suite:
                     "spec": str(merged.get("spec") or merged.get("description") or "").strip()}
         if verb == "run":
             return {"verb": "run"}
+        if verb == "request_change":
+            # the change description (accept a few synonyms a model might emit) + the optional target
+            # (the ui:// element/scope, or a named element). Both normalised to clean strings; the
+            # address-resolution tiers + the ASK live in the dispatcher (not here — this is shape-only).
+            return {"verb": "request_change",
+                    "change": str(merged.get("change") or merged.get("description")
+                                  or merged.get("spec") or merged.get("text") or "").strip(),
+                    "target": str(merged.get("target") or merged.get("address")
+                                  or merged.get("element") or "").strip() or None}
         return {"verb": verb}
 
     # --- I3: propose-affordance — the CONSENT gate (click #2 of the two-click model) ----------
@@ -3301,6 +3454,16 @@ class Suite:
             return f"drafted panel '{outcome.get('name')}' — awaiting your approval in the inbox"
         if did == "extend":
             return f"authored UI component '{outcome.get('name')}' (build-gated) — awaiting your approval"
+        if did == "request_change":
+            # CONVO→SELF-BUILD BRIDGE: a build-intent was SURFACED for approval — nothing built yet.
+            scope = outcome.get("scope") or []
+            scope_note = (" (scope: " + ", ".join(scope) + ")") if scope else \
+                         " (no resolvable code scope yet — DENY-ALL until the address maps to code)"
+            return (f"I've surfaced a build-intent to change {outcome.get('address')}{scope_note} — "
+                    f"approve it in the inbox to build; nothing runs until you do.")
+        if did == "ask_target":
+            # the change could NOT be confidently scoped → the verb ASKED rather than guessing (rule 8).
+            return outcome.get("ask") or ("Which element should this change apply to? I won't guess a scope.")
         if did == "surfaced_for_approval":
             # I4: the click hit an address whose governance tier is CONFIRM/LOCKED — the command was
             # SURFACED for see-and-approve and did NOT act (no silent success, rule 4).
@@ -3448,6 +3611,42 @@ class Suite:
             except Exception as e:                           # the lifecycle fail-loud (unknown/won't-fit) → structured, not a crash
                 return {"did": verb, "error": f"{type(e).__name__}: {e}"}
             return {"did": verb, **r}
+        if verb == "request_change":
+            # CONVO→SELF-BUILD BRIDGE: route a conversational change-request into the EXISTING
+            # surface_intent_at producer (which mints an intent=="build" item via the wire's UNCHANGED
+            # surface_build_intent front door, deriving the code scope from the address per S3). This is
+            # the ONLY conversational path to the claude -p self-build wire; the wire-door (/api/build-intent,
+            # /api/intent-at) is unchanged, and NOTHING builds until the operator approves the surfaced item
+            # via /api/resolve (operator-only, off the MCP face — resolve_surfaced + the approve→dispatch
+            # trigger are untouched). REUSE, never reinvent: surface_intent_at composes ingest_comment +
+            # resolve_scope + surface_build_intent — we add no parallel intent path.
+            change = (action.get("change") or "").strip()
+            if not change:
+                return {"did": "none", "refused": "request_change needs a 'change' description"}
+            # ADDRESS RESOLUTION (the one real design point): (a) the indicated locus the operator
+            # pointed at this turn (held backend-side by current_locus(), SET in _chat_context from the
+            # widened focus.selected), else (b) the model-supplied target (a ui:// address or a named
+            # element matched against the registry), else (c) ASK. resolve_change_target is fail-loud:
+            # an unresolvable target NEVER mints a build-intent (rule 8 — no guessed scope).
+            resolved = self.resolve_change_target(action.get("target"), indicated=self.current_locus())
+            if resolved["source"] == "ask" or not resolved.get("address"):
+                # fail-loud, NO fiction: surface NO build-intent; return the ASK so the model voices it.
+                return {"did": "ask_target", "ask": resolved["ask"],
+                        "candidates": resolved.get("candidates", [])}
+            address = resolved["address"]
+            # MINT via the EXISTING producer (reused exactly; consequence_class=decision_build — the
+            # one AUTO-posture class the wire dispatches on the operator's approve; surface_intent_at
+            # derives the scope from the address per S3, empty scope = DENY-ALL). It only SURFACES
+            # (resolved=None) — the operator approves via /api/resolve; this method NEVER dispatches.
+            try:
+                out = self.surface_intent_at(address, change, source="operator",
+                                             consequence_class="decision_build")
+            except Exception as e:                           # malformed address / corpus error → fail loud, no half-claim
+                return {"did": "none", "refused": f"request_change could not surface a build-intent: "
+                                                   f"{type(e).__name__}: {e}"}
+            return {"did": "request_change", "surfaced": out["id"], "address": address,
+                    "scope": out.get("scope", []), "source": resolved["source"],
+                    "stale": out.get("stale"), "note": out.get("note") or ""}
         return {"did": "none",
                 "refused": f"verb {verb!r} is not permitted from the RHM — only {self.RHM_VERBS} "
                            "(apply/delete/file-write are operator-gated)"}
