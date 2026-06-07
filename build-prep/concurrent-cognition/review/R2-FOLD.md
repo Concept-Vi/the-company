@@ -35,6 +35,18 @@
 - **C0.2 (replay-identical routing) vs C1.5 (jury draws intentionally varied)** read as contradictory — clarify the scopes: **ROUTING is deterministic; a jury role's DRAWS are intentionally varied** (the verdict over them is then deterministic). FIX: a one-line scope note on both.
 - The through-the-scheduler-or-a-separate-runner fork (F2) is decided (driver-located) but should be stated once, unambiguously, in the Guide.
 
+## H8 · TIM-DIRECTIVE (2026-06-07): per-mode MODEL LOADOUT is a configurable registry concern, NOT a fixed pick — and C0.5 is now MEASURED
+
+- **Tim's words:** "some modes can't run Orpheus and the big concurrency at once — that's known and should be supported by the registries. There's auto-loading… the cli so most of the code to switch to a different mode should be there for you to extend. What's loaded for different modes should be configurable — I may run the 9b and 4b together, might run 4b on its own, might run 4b and 2b — I should be able to experiment, that's meant to be the nature of the companion."
+- **Reframing:** the Orpheus-vs-swarm tradeoff is NOT an obstacle to engineer away — it is a **known, expected tradeoff the mode→loadout registry must hold as a first-class, EXPERIMENTABLE config.** Mode selects not just the brain CONFIG (H1) but the whole **resident LOADOUT** (which models are up: 9b+4b / 4b solo / 4b+2b / 4b+Orpheus / swarm-mode-4b-no-voice…).
+- **Reuse, don't parallel (binding):** the spine already exists — `company` CLI `combos` · `groups` · `up [--evict]` · `swap` · `config` · auto-load + the `gpu.py` budget gate (refuse/evict). **Extend these** for mode→loadout; do NOT build a second switcher. This is the L-model / G8 home, joined to the mode system. A mode declares its loadout; switching modes drives `company up/down/swap` under the existing budget gate.
+- **C0.5 IS NOW MEASURED (2026-06-07, lead-supervised, Tim-authorized):** the numbers PROVE why the tradeoff is real and must be a configurable loadout:
+  - **util 0.49 (voice-coresident default):** KV pool **66,036 tokens**, max-concurrency for a 64K request **1.01×** → a deep (64K) main conversation consumes ~the whole pool → co-resident swarm collapses to **~1–2** at depth (KV binds). Shallow-main: all 16 seq-slots usable.
+  - **util 0.63 (swarm-mode, Orpheus evicted):** KV pool **135,574 tokens**, max-concurrency for a 64K request **2.07×** → a 64K main still leaves ~71K for roles → **`max_num_seqs`=16 becomes the SOLE bind**, KV no longer constrains.
+  - **By use:** both configs complete **32/32** concurrent VARIED short roles, 0 fail, sub-1.3s (short roles are seq-cap-bound at both — the config difference lives entirely in the KV pool, i.e. the deep-main bind). **Inter-part gap ~0.26–0.29s.**
+  - **Feeds G1 slot-budget:** `slots = min(max_num_seqs=16, free_KV / role_ctx)`. swarm-mode brain (0.63, no Orpheus) → ~16 concurrent roles even at a deep main; voice-mode brain (0.49 + Orpheus) → shallow-main swarm only. **→ C0.5/C1.2/C1.7 + G5 + G8 + the new mode→loadout criterion.**
+- **Gate:** **G0 is VERIFIED** — mechanism proven by use AND ceiling measured. Fan-out (G1+) is OPEN.
+
 ## Net effect
 - **G0 spike is buildable after H4** (the cheap propagation pass) + the H1 swarm-mode-config + the H7 scope note.
 - **Fan-out is blocked on H5 (drift homes) + H6 (the HOW/schema specs).**
