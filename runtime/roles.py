@@ -155,6 +155,14 @@ def _build_role(name: str, decl: dict) -> Role:
     draws = decl.get("draws", 1)
     if not isinstance(draws, int) or draws < 1:
         raise ValueError(f"role {rid!r}: draws must be an int >= 1, got {draws!r} — fail loud.")
+    # G3 commit gate (C3.1/C3.4): STATICALLY WHITELIST-WALK every AST-shaped declared rule at role
+    # DISCOVERY — so a malformed/out-of-grammar/over-nested rule dropped in a roles/*.py file FAILS
+    # LOUD here, riding the normal change path (no special gate). The existing descriptive rule shape
+    # ({id,reads,effect,kind}) is NOT an AST rule (is_ast_rule) → passed through unchanged
+    # (schema-additive; the G2 role files load untouched). Imported lazily to avoid any import-order
+    # coupling (rules.py is stdlib + this module only — no cycle).
+    from runtime.rules import validate_role_rules
+    validate_role_rules(rid, decl.get("rules"))
     vrule = decl.get("verdict_rule")
     if draws > 1 and not callable(vrule):
         raise ValueError(

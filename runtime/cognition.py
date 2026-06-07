@@ -127,34 +127,64 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
 RULE_INPUTS = ("recall", "ground")
 
 
+# G3 GENERALIZATION (the L2 core): the spike's hand-written `injection_rule` Python is now a DECLARED
+# DATA-AST rule interpreted by the restricted evaluator in runtime/rules.py (NEVER eval/exec). The
+# condition `recall.relevant AND ground.in_scope` is the declared op-tree below; the spike's behaviour
+# is preserved by DELEGATION (reuse-don't-parallel) — `injection_rule` now calls the rule engine, and
+# tests/rules_acceptance.py proves the declared rule evaluates IDENTICALLY to the old hand-written one.
+# The G0 spike's chat_parts_spike/C0.2 replay-identical stay green (the rule reads the same two resolved
+# fields, deterministically). This is C3.1: the hand-written rule becomes the first DECLARED rule.
+from runtime import rules as _rules  # noqa: E402  (the G3 rule engine — the declared-AST evaluator)
+
+# The declared condition AST for the spike injection rule (recall.relevant AND ground.in_scope):
+INJECTION_RULE_AST: dict = {
+    "op": "and",
+    "args": [
+        {"op": "field", "path": "recall.relevant"},
+        {"op": "field", "path": "ground.in_scope"},
+    ],
+}
+# The declared Rule (validated at build — the commit-time static walk). destination=inject (C3.2);
+# params.value_path names the routed value (the recalled snippet). on_missing=raise (fail loud — a
+# missing declared input never routes; never gate.py's implicit-truthy).
+INJECTION_RULE = _rules.build_rule({
+    "id": "recall-injects",
+    "label": "recall.relevant AND ground.in_scope",
+    "when": INJECTION_RULE_AST,
+    "destination": "inject",
+    "params": {"value_path": "recall.snippet"},
+    "on_missing": "raise",
+})
+
+
 def injection_rule(resolved: dict) -> dict:
-    """The routing RULE for Part 2. PURE function of the RESOLVED `recall` AND `ground` values.
+    """The routing RULE for Part 2 — now a DECLARED DATA-AST rule (G3), evaluated by the restricted
+    rule engine (runtime/rules.py). PURE function of the RESOLVED `recall` AND `ground` values.
 
     LOGIC (multi-field, F5): INJECT the recalled snippet iff `recall.relevant AND ground.in_scope`.
-    Reads multiple fields across BOTH roles' resolved outputs.
+    Reads multiple fields across BOTH roles' resolved outputs. Generalized from hand-written Python
+    into the declared AST `INJECTION_RULE` (C3.1) — proven identical in tests/rules_acceptance.py.
 
-    DETERMINISM (C0.2 / R1-FOLD F5): reads ONLY fully-resolved address values from the declared
-    whitelist (RULE_INPUTS) — NO now()/random/wave-completion-order/partial-results/model-call. So
-    identical resolved inputs route identically regardless of the order recall vs ground finished in.
+    DETERMINISM (C0.2 / R1-FOLD F5): the evaluator reads ONLY fully-resolved address values from the
+    declared whitelist — NO now()/random/wave-completion-order/partial-results/model-call (those ops
+    are not in the grammar). So identical resolved inputs route identically regardless of finish order.
 
-    FAIL LOUD (C0.4 / R2-FOLD H2): a missing declared input RAISES — never implicit-truthy-on-missing.
+    FAIL LOUD (C0.4 / R2-FOLD H2): a missing declared input RAISES (rules.RuleError) — never implicit-
+    truthy-on-missing. (KeyError-compatible: RuleError is raised, the spike's callers treat any raise
+    as fail-loud.)
 
-    Returns the routing decision: {inject: bool, snippet: str|None, reason: str}."""
-    for key in RULE_INPUTS:
-        if key not in resolved:                  # a declared input did not resolve → fail loud
-            raise KeyError(
-                f"injection_rule: no resolved {key!r} value — its ref did not resolve. "
-                f"Fail loud (never implicit-skip): a routing rule must see ALL its declared inputs "
-                f"({list(RULE_INPUTS)}).")
+    Returns the spike's routing-decision shape: {inject: bool, snippet: str|None, reason: str} —
+    derived from the rule engine's decision (so the spike's chat_parts_spike is UNCHANGED)."""
+    # the engine raises RuleError on a missing declared input (fail loud, on_missing=raise)
+    decision = INJECTION_RULE.decide(resolved)
+    fire = bool(decision["fire"])
+    if fire:
+        return {"inject": True, "snippet": decision["value"],
+                "reason": "recall.relevant AND ground.in_scope"}
     rec = resolved["recall"]
     grd = resolved["ground"]
-    relevant = bool(rec.get("relevant"))
-    in_scope = bool(grd.get("in_scope"))
-    if relevant and in_scope:
-        return {"inject": True, "snippet": rec["snippet"],
-                "reason": "recall.relevant AND ground.in_scope"}
     return {"inject": False, "snippet": None,
-            "reason": f"recall.relevant={relevant} ground.in_scope={in_scope}"}
+            "reason": f"recall.relevant={bool(rec.get('relevant'))} ground.in_scope={bool(grd.get('in_scope'))}"}
 
 
 # --- the staged 2-part turn (C0.1) --------------------------------------------------------------

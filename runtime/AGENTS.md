@@ -70,6 +70,62 @@ proposes/surfaces, never dispatches" — only `dispatch_decision` stays off-face
 telemetry `_emit`, so a swallowed claim can never silently allow a double-launch. The live capability list
 lives in [[Company Map]] — traverse there rather than re-listing it here (the rule in [[Vault Conventions]]).
 
+## The rule engine (Concurrent Cognition G3 · `runtime/rules.py` · the L2 core)
+
+A **rule** is the deterministic routing primitive of the collective cognition (L2): a role emits
+structured output; **declared rules** decide what happens to it — route/inject/chain/land/surface.
+*"That is the main mechanism that all of this application is aimed at."* A rule is a **declared
+data-AST interpreted by a RESTRICTED evaluator — NEVER `eval`/`exec`/`compile`** (a dict tree with a
+closed op-set, authored AS data, never a parsed string). This generalizes the G0 spike's hand-written
+`cognition.injection_rule` into declared data (the spike rule is now the first declared AST, proven
+identical). **A model runs ONLY inside a role, NEVER inside a rule** — a rule is a pure decision over
+resolved values; the **driver** (cognition.py/suite.py) performs the effect (mirrors `gate.py`: the
+node returns `{port:value}`, the scheduler does the `set_ref`).
+
+Determinism is **structural** (R1-FOLD F5 / R2-FOLD H2): the grammar has only boolean/comparison/
+arithmetic/field-access/membership over resolved `run://` values + static literals — `now`/`random`/
+`call`/IO/wave-completion-order/partial-results **cannot appear** (they are not ops). Field-access is
+dict-key traversal on the resolved values only (never `getattr`/dunder reach). The evaluator is handed
+ONLY fully-resolved values (the `gate.py` purity discipline) → identical inputs route identically
+regardless of role finish-order. **Per-rule readiness** (no global barrier, **never a timeout**): a
+rule fires only when every declared input is **settled** (resolved OR provably pruned/failed). A
+missing/pruned reference **fails loud OR hits a declared `on_missing`** — never `gate.py`'s implicit
+truthy-on-missing. Heavier-than-a-predicate computation → a **role/node (composition)**, not a richer
+rule (the rule-vs-role classifier). A **static AST whitelist-walk at commit-time** — wired into role
+discovery (`roles._build_role` → `validate_role_rules`, so a malformed rule in a dropped-in `roles/*.py`
+fails loud at discovery) AND at `Rule` construction (`Rule.__post_init__` → `validate_ast`, so any built
+rule rides import) — rejects anything outside the grammar or past the **renderability nesting-cap**
+(`MAX_RULE_DEPTH` — the edge-badge must stay legible, C3.3) — so a new/changed rule rides the **normal
+change path** (no special gate, C3.4). A rule + each firing are **addressable, renderable data** (the
+live view G7 draws them; reflects-never-owns).
+
+**The two net-new registries (drift homes — C9.4 / R2-FOLD H5; `tests/rules_acceptance.py` asserts both
+stay reflected HERE, mirroring `edge_kinds_acceptance` → `contracts/AGENTS.md`):**
+
+- **`RULE_OPS`** — the closed grammar (the only ops a rule AST may use; whitelist by construction):
+  - leaves: `field` (dot-path read of a resolved value) · `lit` (a static literal).
+  - boolean: `and` · `or` · `not`.
+  - comparison: `eq` · `ne` · `lt` · `le` · `gt` · `ge`.
+  - arithmetic: `add` · `sub` · `mul`.
+  - membership: `in` · `contains`.
+- **`DESTINATION_KINDS`** — the five destinations a rule routes to (C3.2 · DECISIONS Batch 3 Q4).
+  **CRITICAL LAW:** none of these is — and none may ever be — `resolve`/`approve`/`dispatch`
+  (`FORBIDDEN_DESTINATION_VERBS`); a rule **surfaces** for the operator, it can NEVER forge an operator
+  approve (the `claude -p`/build-dispatch floor is **lead-only**, C9.2 — held by construction):
+  - **`inject`** — inject the routed value into a later reply part (write→`run://` address, read back
+    by the C1.3 canonical resolver at part-assembly; the spike's recall-injection is this kind).
+  - **`chain`** — chain/trigger a dependent role (the rule names the next role; the driver fires
+    `run_role` on it — the model runs in the ROLE, never the rule). The `check` case.
+  - **`address`** — land the routed value at a `run://` address for later (a durable write, no reply impact).
+  - **`surface`** — surface to the inbox/decisions for the operator — **REUSES `Suite.surface_review`**
+    (an `ask` event, `resolved=None`; a live escalation until the operator resolves). Never a `resolve`.
+  - **`lane`** — write the routed value to a named **typed lane/channel** (a `cognition.lane` typed
+    run-record on the ONE event log — a named stream, NOT a parallel channel subsystem).
+
+`route()` is the only place a decision becomes an effect; the evaluator (`evaluate`) is pure. Add a new
+op or destination ⇒ add it to `RULE_OPS`/`DESTINATION_KINDS` **and reflect it here** (the drift home),
+or `tests/rules_acceptance.py` fails loud.
+
 ## Relates to
 
 - **Called by** [[canvas — constitution]] — through the bridge (C8) — and by
