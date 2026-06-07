@@ -72,9 +72,9 @@
         "ui://inspector/model-field"
       ]
     },
-    "code://suite/_emit_durable": {
+    "code://suite/voice_log": {
       "file": "runtime/suite.py",
-      "symbol": "_emit_durable",
+      "symbol": "voice_log",
       "kind": "def",
       "resolves": true,
       "referenced_by": [
@@ -219,8 +219,10 @@
       "referenced_by": [
         "RHM-config",
         "ui://chat/config",
+        "ui://chat/input-mode",
         "ui://chat/model-field",
         "ui://chat/persona-field",
+        "ui://chat/voice-toggle",
         "ui://settings",
         "ui://settings/brain",
         "ui://settings/composition",
@@ -571,6 +573,7 @@
         "ui://toolbar/fit",
         "ui://toolbar/guide",
         "ui://toolbar/layers",
+        "ui://toolbar/point",
         "ui://toolbar/portal",
         "ui://toolbar/reload",
         "ui://toolbar/run",
@@ -674,11 +677,18 @@
       "resolves": true,
       "referenced_by": [
         "ui://chat/config",
+        "ui://chat/debrief",
         "ui://chat/input",
+        "ui://chat/input-mode",
         "ui://chat/mic",
+        "ui://chat/minimize",
         "ui://chat/model-field",
+        "ui://chat/new-conversation",
         "ui://chat/persona-field",
-        "ui://chat/send"
+        "ui://chat/record",
+        "ui://chat/send",
+        "ui://chat/threads",
+        "ui://chat/voice-toggle"
       ]
     },
     "code://app": {
@@ -715,6 +725,105 @@
       "resolves": true,
       "referenced_by": [
         "ui://toolbar/fit"
+      ]
+    },
+    "code://useAppController/toggleIndicateMode": {
+      "file": "canvas/app/src/useAppController.ts",
+      "symbol": "toggleIndicateMode",
+      "kind": "def",
+      "resolves": true,
+      "referenced_by": [
+        "ui://toolbar/point"
+      ]
+    },
+    "code://useAppController/newConversation": {
+      "file": "canvas/app/src/useAppController.ts",
+      "symbol": "newConversation",
+      "kind": "def",
+      "resolves": true,
+      "referenced_by": [
+        "ui://chat/new-conversation"
+      ]
+    },
+    "code://suite/new_conversation": {
+      "file": "runtime/suite.py",
+      "symbol": "new_conversation",
+      "kind": "def",
+      "resolves": true,
+      "referenced_by": [
+        "ui://chat/new-conversation"
+      ]
+    },
+    "code://useAppController/openConversation": {
+      "file": "canvas/app/src/useAppController.ts",
+      "symbol": "openConversation",
+      "kind": "def",
+      "resolves": true,
+      "referenced_by": [
+        "ui://chat/threads"
+      ]
+    },
+    "code://suite/load_conversation": {
+      "file": "runtime/suite.py",
+      "symbol": "load_conversation",
+      "kind": "def",
+      "resolves": true,
+      "referenced_by": [
+        "ui://chat/threads"
+      ]
+    },
+    "code://useAppController/setVoiceInputMode": {
+      "file": "canvas/app/src/useAppController.ts",
+      "symbol": "setVoiceInputMode",
+      "kind": "def",
+      "resolves": true,
+      "referenced_by": [
+        "ui://chat/input-mode"
+      ]
+    },
+    "code://useAppController/setVoiceEnabled": {
+      "file": "canvas/app/src/useAppController.ts",
+      "symbol": "setVoiceEnabled",
+      "kind": "def",
+      "resolves": true,
+      "referenced_by": [
+        "ui://chat/voice-toggle"
+      ]
+    },
+    "code://useAppController/toggleRecordConversation": {
+      "file": "canvas/app/src/useAppController.ts",
+      "symbol": "toggleRecordConversation",
+      "kind": "def",
+      "resolves": true,
+      "referenced_by": [
+        "ui://chat/record"
+      ]
+    },
+    "code://suite/trial_record_turn": {
+      "file": "runtime/suite.py",
+      "symbol": "trial_record_turn",
+      "kind": "def",
+      "resolves": true,
+      "referenced_by": [
+        "ui://chat/record"
+      ]
+    },
+    "code://useAppController/startDebriefSession": {
+      "file": "canvas/app/src/useAppController.ts",
+      "symbol": "startDebriefSession",
+      "kind": "def",
+      "resolves": true,
+      "referenced_by": [
+        "ui://chat/debrief"
+      ]
+    },
+    "code://suite/start_debrief": {
+      "file": "runtime/suite.py",
+      "symbol": "start_debrief",
+      "kind": "def",
+      "resolves": true,
+      "referenced_by": [
+        "ui://chat/debrief"
       ]
     },
     "code://History": {
@@ -831,10 +940,20 @@
       "referenced_by": [
         "ui://settings",
         "ui://settings/brain",
+        "ui://settings/close",
         "ui://settings/composition",
         "ui://settings/modes",
         "ui://settings/roles",
         "ui://settings/voice"
+      ]
+    },
+    "code://useAppController/setSettingsOpen": {
+      "file": "canvas/app/src/useAppController.ts",
+      "symbol": "setSettingsOpen",
+      "kind": "def",
+      "resolves": false,
+      "referenced_by": [
+        "ui://settings/close"
       ]
     }
   },
@@ -857,9 +976,9 @@
     }
   ],
   "summary": {
-    "symbols_indexed": 83,
-    "resolve": 77,
-    "do_not_resolve": 6,
+    "symbols_indexed": 95,
+    "resolve": 88,
+    "do_not_resolve": 7,
     "shared_2plus": 39,
     "not_indexable": 4,
     "id_collisions": 0,
@@ -871,7 +990,8 @@
     "code://suite/address_help",
     "code://suite/pin (X7 pin override)",
     "code://suite/start_guide",
-    "code://suite/surface_build_intent (payload.context \u2014 the X3 R2 gather)"
+    "code://suite/surface_build_intent (payload.context \u2014 the X3 R2 gather)",
+    "code://useAppController/setSettingsOpen"
   ],
   "shared": [
     "code://ContextBundle",

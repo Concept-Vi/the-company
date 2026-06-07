@@ -1,8 +1,8 @@
 {
   "should_use_var": [
     {
-      "literal": "8px",
-      "count": 197,
+      "literal": "5px",
+      "count": 284,
       "screens": [
         "A1-canvas-empty-desktop.html",
         "A11-portals-desktop.html",
@@ -22,12 +22,12 @@
         "E1-fleet-desktop.html",
         "F4-activity-desktop.html"
       ],
-      "matches_token": "sp",
+      "matches_token": "r-sm",
       "kind": "size"
     },
     {
-      "literal": "7px",
-      "count": 188,
+      "literal": "8px",
+      "count": 197,
       "screens": [
         "A1-canvas-empty-desktop.html",
         "A11-portals-desktop.html",
@@ -51,8 +51,8 @@
       "kind": "size"
     },
     {
-      "literal": "11px",
-      "count": 176,
+      "literal": "12px",
+      "count": 121,
       "screens": [
         "A1-canvas-empty-desktop.html",
         "A11-portals-desktop.html",
@@ -73,6 +73,110 @@
         "F4-activity-desktop.html"
       ],
       "matches_token": "r-lg",
+      "kind": "size"
+    },
+    {
+      "literal": "4px",
+      "count": 90,
+      "screens": [
+        "A1-canvas-empty-desktop.html",
+        "A11-portals-desktop.html",
+        "A12-workshop-desktop.html",
+        "A2-canvas-desktop.html",
+        "A2-canvas-mobile.html",
+        "A3-inspector-desktop.html",
+        "B3-walkthrough-desktop.html",
+        "B4-presence-dial-desktop.html",
+        "B4-presence-dial-mobile.html",
+        "B6-twin-desktop.html",
+        "C1-inbox-desktop.html",
+        "C3-build-review-desktop.html",
+        "C5-replay-desktop.html",
+        "D7-selfmod-desktop.html",
+        "E1-fleet-desktop.html",
+        "F4-activity-desktop.html"
+      ],
+      "matches_token": "sp-1",
+      "kind": "size"
+    },
+    {
+      "literal": "16px",
+      "count": 69,
+      "screens": [
+        "A1-canvas-empty-desktop.html",
+        "A11-portals-desktop.html",
+        "A12-workshop-desktop.html",
+        "A2-canvas-desktop.html",
+        "A2-canvas-mobile.html",
+        "A3-inspector-desktop.html",
+        "B3-walkthrough-desktop.html",
+        "B4-presence-dial-desktop.html",
+        "B4-presence-dial-mobile.html",
+        "B6-twin-desktop.html",
+        "C1-inbox-desktop.html",
+        "C3-build-review-desktop.html",
+        "C5-replay-desktop.html",
+        "D6-wire-states-desktop.html",
+        "D7-selfmod-desktop.html",
+        "E1-fleet-desktop.html",
+        "F4-activity-desktop.html"
+      ],
+      "matches_token": "sp-4",
+      "kind": "size"
+    },
+    {
+      "literal": "15px",
+      "count": 26,
+      "screens": [
+        "A1-canvas-empty-desktop.html",
+        "A11-portals-desktop.html",
+        "A12-workshop-desktop.html",
+        "A2-canvas-desktop.html",
+        "A3-inspector-desktop.html",
+        "B3-walkthrough-desktop.html",
+        "B4-presence-dial-desktop.html",
+        "B4-presence-dial-mobile.html",
+        "B6-twin-desktop.html",
+        "C1-inbox-desktop.html",
+        "C3-build-review-desktop.html",
+        "D6-wire-states-desktop.html",
+        "D7-selfmod-desktop.html",
+        "E1-fleet-desktop.html",
+        "F4-activity-desktop.html"
+      ],
+      "matches_token": "fs-title",
+      "kind": "size"
+    },
+    {
+      "literal": "19px",
+      "count": 19,
+      "screens": [
+        "A1-canvas-empty-desktop.html",
+        "A11-portals-desktop.html",
+        "A12-workshop-desktop.html",
+        "A2-canvas-desktop.html",
+        "A3-inspector-desktop.html",
+        "B3-walkthrough-desktop.html",
+        "B4-presence-dial-desktop.html",
+        "B6-twin-desktop.html",
+        "E1-fleet-desktop.html"
+      ],
+      "matches_token": "fs-display",
+      "kind": "size"
+    },
+    {
+      "literal": "24px",
+      "count": 12,
+      "screens": [
+        "A1-canvas-empty-desktop.html",
+        "A12-workshop-desktop.html",
+        "A2-canvas-mobile.html",
+        "A3-inspector-desktop.html",
+        "B4-presence-dial-mobile.html",
+        "D6-wire-states-desktop.html",
+        "E1-fleet-desktop.html"
+      ],
+      "matches_token": "sp-5",
       "kind": "size"
     }
   ],
@@ -101,12 +205,20 @@
       "run://system/model_of_tim"
     ],
     "unused": [
+      "ui://canvas/wire-request",
       "ui://chat/config",
+      "ui://chat/debrief",
       "ui://chat/input",
+      "ui://chat/input-mode",
       "ui://chat/mic",
+      "ui://chat/minimize",
       "ui://chat/model-field",
+      "ui://chat/new-conversation",
       "ui://chat/persona-field",
+      "ui://chat/record",
       "ui://chat/send",
+      "ui://chat/threads",
+      "ui://chat/voice-toggle",
       "ui://grow",
       "ui://grow/approve",
       "ui://grow/dispatch",
@@ -118,15 +230,26 @@
       "ui://inbox/walk",
       "ui://inspector/build",
       "ui://inspector/freshness",
+      "ui://inspector/help",
       "ui://inspector/history",
       "ui://inspector/surface",
       "ui://inspector/versions",
       "ui://inspector/workshop",
+      "ui://settings",
+      "ui://settings/brain",
+      "ui://settings/close",
+      "ui://settings/composition",
+      "ui://settings/modes",
+      "ui://settings/roles",
+      "ui://settings/voice",
       "ui://toolbar/delete",
       "ui://toolbar/fit",
+      "ui://toolbar/guide",
       "ui://toolbar/layers",
+      "ui://toolbar/point",
       "ui://toolbar/portal",
       "ui://toolbar/reload",
+      "ui://toolbar/teach",
       "ui://toolbar/wire",
       "ui://walkthrough/next",
       "ui://walkthrough/reason",
@@ -140,11 +263,11 @@
   },
   "summary": {
     "screens": 17,
-    "literals_should_use_var": 3,
+    "literals_should_use_var": 8,
     "candidate_new_colour_tokens": 1,
     "coverage_gaps": 6,
     "address_orphans_unregistered": 2,
-    "address_orphans_unused": 31,
+    "address_orphans_unused": 50,
     "mockups_missing_css": 0,
     "mockups_missing_address": 0
   }

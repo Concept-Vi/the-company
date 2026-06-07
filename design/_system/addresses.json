@@ -341,6 +341,15 @@
       "code": "canvas/app/src/regions/Toolbar.tsx (reload) / runtime/suite.py:state",
       "howto": "WHAT: the reload control. WHAT YOU CAN DO: click to re-read the graph from the backend — it refetches the nodes, edges, and live status and repaints the board, without recomputing anything (that's run). HOW TO CHANGE IT: reload in the controller (useAppController.ts); it reloads the graph, polls state, and re-runs the watch-and-react probe."
     },
+    "ui://toolbar/point": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "RHM-copresence",
+      "code": "canvas/app/src/regions/Toolbar.tsx (◎ point) / useAppController.ts:toggleIndicateMode",
+      "howto": "WHAT: the ◎ point toggle in the toolbar. WHAT YOU CAN DO: turn point mode on or off — when it's ON, tapping any element of the interface marks that element as the focus of your next message, so you can ask 'what is this?' about exactly what you tapped; when it's OFF, taps behave as normal clicks. WHEN YOU'D REACH FOR IT: turn it on when you want to point at parts of the surface and talk about them, off when you just want to operate the buttons normally. HOW IT WORKS: it flips the deliberate indicate gate (useAppController.ts:toggleIndicateMode); while on, a tapped element ships its ui:// address to the chat as the indicated locus."
+    },
     "ui://chat/send": {
       "region": "chat",
       "capabilities": [
@@ -368,6 +377,69 @@
       "represents": "RHM-config",
       "code": "canvas/app/src/regions/RhmChat.tsx (config gear) / runtime/suite.py:set_rhm_config",
       "howto": "WHAT: the ⚙ config gear on the chat. WHAT YOU CAN DO: open the settings to choose the right-hand-man's model and persona, then apply — empty model is a valid 'default model' state. HOW TO CHANGE IT: it writes the RHM config (suite.py:set_rhm_config); the model + persona lists come from the live registry."
+    },
+    "ui://chat/minimize": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "RHM-chat",
+      "code": "canvas/app/src/regions/RhmChat.tsx (rhm-min toggle)",
+      "howto": "WHAT: the ▁ / ▢ minimize toggle in the chat's header. WHAT YOU CAN DO: collapse the chat down to just its header bar so you can see the canvas behind it — handy on a phone where the chat otherwise fills the screen — then click again to expand it back. WHEN YOU'D REACH FOR IT: when the chat is in the way of the graph you're looking at. HOW IT WORKS: it's a view-only toggle on the chat panel (the `.rhm.min` collapse) — it hides nothing, changes no config, and the restore button stays visible in the header."
+    },
+    "ui://chat/new-conversation": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "RHM-chat",
+      "code": "canvas/app/src/regions/RhmChat.tsx (+ new) / useAppController.ts:newConversation / runtime/suite.py:new_conversation",
+      "howto": "WHAT: the + new button above the chat. WHAT YOU CAN DO: start a fresh conversation with the right-hand-man — it clears the visible chat and opens a new thread, so a new topic doesn't pile onto the last one. WHEN YOU'D REACH FOR IT: when you want a clean slate without losing the old conversation (the previous thread is still there to reopen). HOW IT WORKS: it mints a new thread (suite.py:new_conversation) and makes it the current one; the old thread is kept and listed in the reopen picker beside it."
+    },
+    "ui://chat/threads": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "RHM-chat",
+      "code": "canvas/app/src/regions/RhmChat.tsx (thread select) / useAppController.ts:openConversation / runtime/suite.py:load_conversation",
+      "howto": "WHAT: the reopen-a-conversation dropdown beside + new. WHAT YOU CAN DO: pick one of your past conversations to reopen it — its history loads back into the chat so you can pick up where you left off. WHEN YOU'D REACH FOR IT: when you want to return to an earlier thread rather than start fresh. HOW IT WORKS: choosing a thread loads its saved history (suite.py:load_conversation) and makes it the current conversation; the list is the real saved threads (empty until you've had more than one)."
+    },
+    "ui://chat/input-mode": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "VOICE",
+      "code": "canvas/app/src/regions/RhmChat.tsx (input-mode select) / useAppController.ts:setVoiceInputMode / runtime/suite.py:set_rhm_config",
+      "howto": "WHAT: the 🎙 push-to-talk / 👂 auto-listen picker in the chat's voice settings. WHAT YOU CAN DO: choose HOW the mic finishes a spoken turn — push-to-talk (you tap to start and tap to stop) or auto-listen hands-free (you just speak, and it ends the turn when it judges you've finished a thought, not on a dumb timer). WHEN YOU'D REACH FOR IT: switch to auto-listen for a flowing hands-free conversation; keep push-to-talk when you want exact control of when it's listening. HOW IT WORKS: it writes the voice_input_mode slot (suite.py:set_rhm_config, fail-loud on an unknown mode) and takes effect on your next mic press."
+    },
+    "ui://chat/voice-toggle": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "VOICE",
+      "code": "canvas/app/src/regions/RhmChat.tsx (voice on/off) / useAppController.ts:setVoiceEnabled / runtime/suite.py:set_rhm_config",
+      "howto": "WHAT: the 🔊 voice on / 🔇 voice off switch in the chat's voice settings. WHAT YOU CAN DO: turn spoken replies on or off — on, the right-hand-man speaks its answers aloud; off, you get text replies only. WHEN YOU'D REACH FOR IT: turn it off when you want to read in silence, on when you want a spoken conversation; it's independent of which listening mode you're in. HOW IT WORKS: it writes the voice_enabled slot (suite.py:set_rhm_config) and persists; voice is also silenced when the presence dial is off."
+    },
+    "ui://chat/record": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "VOICE",
+      "code": "canvas/app/src/regions/RhmChat.tsx (record) / useAppController.ts:toggleRecordConversation / runtime/suite.py:trial_record_turn",
+      "howto": "WHAT: the ● record / ■ stop-recording button in the chat's voice settings. WHAT YOU CAN DO: record this conversation as a session — each turn is saved so you can debrief it afterwards, and it feeds the model-of-you (the twin). WHEN YOU'D REACH FOR IT: when you want to keep a conversation for later review, not just chat-and-forget. HOW IT WORKS: starting it mints a trial session and saves each spoken turn (suite.py:trial_record_turn); stopping it ends the session — which you can then walk back through with debrief."
+    },
+    "ui://chat/debrief": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "VOICE",
+      "code": "canvas/app/src/regions/RhmChat.tsx (debrief) / useAppController.ts:startDebriefSession / runtime/suite.py:start_debrief",
+      "howto": "WHAT: the debrief button in the chat's voice settings. WHAT YOU CAN DO: walk back through the conversations you recorded — each recorded session is surfaced for review with its real transcript, and you step through them the same way as a guided walkthrough. WHEN YOU'D REACH FOR IT: after recording one or more conversations, when you want to review what was said and give your verdict. HOW IT WORKS: it gathers your recorded sessions and starts a debrief over them (suite.py:start_debrief), reusing the walkthrough organ; the sessions appear in the inbox / walk to review."
     },
     "ui://inspector/workshop": {
       "region": "inspector",
@@ -563,6 +635,15 @@
       "represents": "RHM-config",
       "code": "canvas/app/src/regions/Settings.tsx (Settings) / runtime/suite.py:set_rhm_config",
       "howto": "WHAT: the consolidated Settings control-room — the one designed place the system's configuration lives (the brain & persona, presence modes, voice, model roles, and the composition knobs), opened from the ⚙ settings gear. WHAT YOU CAN DO: read the live config of every section at a glance and change what's changeable in one place (the model, persona, presence mode, auto-detect, voice ear/engine/path, role bindings); read-only/unavailable settings are shown honestly, never as working. HOW TO CHANGE IT: the surface is Settings.tsx; every write goes through the existing config path (suite.py:set_rhm_config) — it is reuse-only over the real config, not a new store."
+    },
+    "ui://settings/close": {
+      "region": "settings",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "RHM-config",
+      "code": "canvas/app/src/regions/Settings.tsx (✕ close) / useAppController.ts:setSettingsOpen",
+      "howto": "WHAT: the ✕ close control in the Settings masthead. WHAT YOU CAN DO: close the Settings control-room and return to the canvas — clicking the dimmed area around the panel does the same thing. WHEN YOU'D REACH FOR IT: when you're done changing config and want the surface out of the way; any change you made is already saved (each section writes as you change it), so closing loses nothing. HOW IT WORKS: it just dismisses the modal (useAppController.ts:setSettingsOpen(false)) — it is view-only, it does not save or discard, because the settings sections write live."
     },
     "ui://settings/brain": {
       "region": "settings",
