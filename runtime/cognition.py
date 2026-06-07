@@ -54,74 +54,36 @@ RESIDENT_MODEL = "cyankiwi/Qwen3.5-4B-AWQ-4bit"
 ROLE_TIMEOUT = 60
 
 
-# --- output schemas (a role declares its output_schema; complete() validate/retries against it) --
-class FocusOut(BaseModel):
-    """`focus` reads the utterance → the turn's intent + which auxiliary roles to run."""
-    intent: str
-    which_roles: list[str] = Field(default_factory=list)
+# --- the ROLE notion + the spike roles are now FILE-DISCOVERED (G2 · C2.1) ----------------------
+# The G0 spike defined `Role` + FocusOut/RecallOut/GroundOut + FOCUS/RECALL/GROUND_ROLE INLINE here.
+# G2 promotes roles into a FILE-DISCOVERED registry (runtime/roles.py + roles/*.py) — ONE role notion,
+# not two. The CANONICAL definitions now live in roles/focus.py · roles/recall.py · roles/ground.py;
+# cognition.py imports them FROM the registry (no duplicate definition). `Role` is re-exported from
+# roles.py (the superset dataclass) so existing `run_role(role, ...)` / type hints are unchanged —
+# roles.Role exposes the SAME .id/.prompt_template/.output_schema the spike's dataclass did.
+from runtime.roles import Role, RoleRegistry  # noqa: E402  (the ONE role notion, file-discovered)
+
+_ROLES_DIR = os.path.join(_REPO_ROOT, "roles") if "_REPO_ROOT" in dir() else os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "roles")
 
 
-class RecallOut(BaseModel):
-    """`recall` reads the utterance → a memory snippet + whether it is relevant enough to inject."""
-    snippet: str
-    relevant: bool
+def role_registry() -> RoleRegistry:
+    """Discover the file-based role registry (roles/*.py). The cognition driver + the Suite share this
+    ONE registry (reuse-don't-parallel). Re-discovered fresh so a removed/added role file is picked up."""
+    return RoleRegistry().discover([_ROLES_DIR])
 
 
-class GroundOut(BaseModel):
-    """`ground` reads the utterance → whether it is IN SCOPE for this system + a one-line grounding note.
-    (The second concurrent role — so the C0.2 rule reads TWO roles' resolved outputs.)"""
-    in_scope: bool
-    note: str
-
-
-# --- a ROLE is declared data (L1) ---------------------------------------------------------------
-@dataclass
-class Role:
-    """A declared role: {id, prompt_template, output_schema}. A model runs ONLY inside a role (L2).
-    `prompt_template` is a system prompt; the utterance is the user message. `output_schema` is the
-    Pydantic model the role's JSON is validated against (client-side validate/retry — C1.4/F9)."""
-    id: str
-    prompt_template: str
-    output_schema: type[BaseModel]
-
-
-FOCUS_ROLE = Role(
-    id="focus",
-    prompt_template=(
-        "You are the FOCUS role. Read the operator's utterance and return ONLY JSON with two fields:\n"
-        '  "intent": a short phrase naming what the operator wants,\n'
-        '  "which_roles": a JSON array of auxiliary role names to run for this turn.\n'
-        'Available auxiliary roles: ["recall"]. Include "recall" when the utterance refers to past '
-        "decisions, prior context, or memory; otherwise return an empty array.\n"
-        'Example: {"intent": "recall a past decision", "which_roles": ["recall"]}'
-    ),
-    output_schema=FocusOut,
-)
-
-RECALL_ROLE = Role(
-    id="recall",
-    prompt_template=(
-        "You are the RECALL role — the cognition's memory. Read the operator's utterance and return "
-        "ONLY JSON with two fields:\n"
-        '  "snippet": a short (one or two sentence) recalled note that would help answer the utterance,\n'
-        '  "relevant": a boolean — true if the snippet is genuinely useful for THIS utterance, false if not.\n'
-        'Example: {"snippet": "We decided the storage layer stays content-addressed on ext4.", "relevant": true}'
-    ),
-    output_schema=RecallOut,
-)
-
-GROUND_ROLE = Role(
-    id="ground",
-    prompt_template=(
-        "You are the GROUND role — you check whether the operator's utterance is IN SCOPE for the "
-        "Company system (a composition/cognition suite the operator builds with AI). Return ONLY JSON "
-        "with two fields:\n"
-        '  "in_scope": a boolean — true if answering this is a legitimate task for the system,\n'
-        '  "note": a one-line grounding note.\n'
-        'Example: {"in_scope": true, "note": "A question about a past architecture decision is in scope."}'
-    ),
-    output_schema=GroundOut,
-)
+# The spike's three roles, sourced FROM the file-discovered registry (canonical defs in roles/*.py).
+# Built at import so the spike's chat_parts_spike/concurrency_probe keep working UNCHANGED, and so a
+# missing role file FAILS LOUD at import (never a silently-absent spike role).
+_SPIKE_REG = role_registry()
+FOCUS_ROLE: Role = _SPIKE_REG["focus"]
+RECALL_ROLE: Role = _SPIKE_REG["recall"]
+GROUND_ROLE: Role = _SPIKE_REG["ground"]
+# the output schema classes, re-exported from the role files for any caller that referenced them.
+FocusOut = FOCUS_ROLE.output_schema
+RecallOut = RECALL_ROLE.output_schema
+GroundOut = GROUND_ROLE.output_schema
 
 SPIKE_ROLES: dict[str, Role] = {FOCUS_ROLE.id: FOCUS_ROLE, RECALL_ROLE.id: RECALL_ROLE,
                                 GROUND_ROLE.id: GROUND_ROLE}
@@ -130,14 +92,18 @@ SPIKE_ROLES: dict[str, Role] = {FOCUS_ROLE.id: FOCUS_ROLE, RECALL_ROLE.id: RECAL
 # --- run_role: fire ONE request at the resident 4B (mirrors is_finished_thought's fabric path) ---
 def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
              model: str = RESIDENT_MODEL, timeout: int = ROLE_TIMEOUT,
-             max_tokens: int = 256) -> dict:
+             max_tokens: int = 256, temperature: float = 0.0) -> dict:
     """Fire ONE request at the resident 4B for `role`, returning VALIDATED JSON (a dict).
 
     Mirrors `Suite.is_finished_thought`/the judge EXACTLY: `client.complete(openai_transport(...))`.
     `json=True` makes the transport set `response_format: {"type": "json_object"}` (verified the
     resident vLLM honours it); `schema=` makes `complete()` parse + validate + retry on a malformed
-    role output (client-side enforcement — C1.4/F9). temperature=0 for routing-stable outputs.
+    role output (client-side enforcement — C1.4/F9). temperature defaults to 0 for routing-stable
+    outputs; a JURY's draws (C2.4) pass temperature>0 to get VARIED draws (the draws are intentionally
+    varied — C0.2/R2-FOLD H7 scope: it's the VERDICT over them that is deterministic, not the draws).
 
+    `role` is a roles.Role (file-discovered, G2) OR the cognition dataclass Role — both expose
+    `.prompt_template`/`.output_schema`/`.id` (duck-compatible; ONE role notion, the G2 superset).
     `ctx` must carry `utterance`. Fail loud: a transport/empty/parse/schema failure PROPAGATES as
     FabricError after retries (never a silent empty dict)."""
     utterance = ctx["utterance"]
@@ -148,7 +114,7 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
     t = transport.openai_transport(base_url=base_url, timeout=timeout)
     validated = client.complete(
         t, msgs, model=model, schema=role.output_schema, json=True,
-        temperature=0, max_tokens=max_tokens,
+        temperature=temperature, max_tokens=max_tokens,
     )
     return validated.model_dump()
 
@@ -622,4 +588,98 @@ def run_swarm(roles: list, ctx: dict, store, *, turn_id: str,
     # AFTER the barrier (serialized). This is the value a later part injects. Fail loud on a missing ref.
     for rid, addr in addresses.items():
         result.resolved[rid] = resolve_run_ref(store, addr)
+    return result
+
+
+# --- C2.4: the JURY/ensemble primitive (first-class) --------------------------------------------
+@dataclass
+class JuryResult:
+    """The captured artifact of one jury run (the proof C2.4/C1.5 read)."""
+    turn_id: str
+    role_id: str
+    draws: list = field(default_factory=list)           # the N resolved draw values (read back via run://)
+    addresses: list = field(default_factory=list)       # the N distinct per-draw run:// addresses
+    signatures: list = field(default_factory=list)       # the N content signatures (prove they're DISTINCT)
+    verdict: dict = field(default_factory=dict)          # the deterministic verdict over the draws
+    wall_s: float = 0.0
+
+
+def run_jury(role: "Role", ctx: dict, store, *, turn_id: str,
+             base_url: str = RESIDENT_BASE_URL, model: str = RESIDENT_MODEL,
+             max_tokens: int = 256, temperature: float = 1.0,
+             emit: Callable[[str, dict], None] | None = None) -> JuryResult:
+    """Run a JURY role's N VARIED draws → a deterministic verdict (C2.4, building on C1.5).
+
+    `role` MUST be a jury (role.is_jury — draws > 1) declaring a callable verdict_rule. Each of the N
+    draws fires the SAME role at temperature>0 (so the draws VARY) and writes its validated JSON to a
+    DISTINCT per-draw address `run://<turn>/<role>#<i>` (C1.5's per-draw key — they do NOT collapse at
+    one ref). After the barrier, the draws are read BACK via the canonical resolver and the role's PURE
+    verdict_rule (a deterministic function over the draws — quorum/vote; L2, no model call) decides.
+
+    E4 caveat (documented in roles/verify_jury.py): N draws on ONE model are CORRELATED — variance, not
+    independent error. The verdict_rule call shape (list[draw dict] → verdict dict) accepts a future
+    2nd-model/cloud tiebreak slotting in. v1 = single-model with the limit documented.
+
+    Fail loud: a non-jury role, an absent verdict_rule, or a missing draw ref RAISES. Returns a
+    JuryResult capturing the N draws, their distinct addresses + signatures (proving variation), and
+    the verdict. The draws fire concurrently (a wave of N) bounded by the global VRAM gate."""
+    if not role.is_jury:
+        raise ValueError(
+            f"run_jury: role {role.id!r} is not a jury (draws={role.draws}) — declare draws>1 + a "
+            f"verdict_rule to make it a jury (C2.4). Fail loud.")
+    vrule = role.verdict_rule
+    if not callable(vrule):
+        raise ValueError(
+            f"run_jury: jury role {role.id!r} has no callable verdict_rule — a jury's verdict MUST be "
+            f"a PURE declared function over the draws (L2). Fail loud.")
+    n = role.draws
+    budget = SlotBudget.from_registry()
+    gate = global_vram_gate(budget.max_num_seqs)
+    addresses = [f"run://{turn_id}/{role.id}#{i}" for i in range(n)]
+    result = JuryResult(turn_id=turn_id, role_id=role.id, addresses=addresses)
+    draws: dict = {}
+    errors: list[BaseException] = []
+
+    def _draw(i: int):
+        # C1.5 — each draw is a DISTINCT run:// address (#i) so the N draws don't collapse at one ref;
+        # temperature>0 makes them VARY (the draws are intentionally varied — the verdict is deterministic).
+        with gate.slot():
+            out = run_role(role, ctx, base_url=base_url, model=model, max_tokens=max_tokens,
+                           temperature=temperature)
+            cas = store.put_content(out)
+            store.set_ref(addresses[i], cas)
+        return i, out
+
+    wall0 = time.monotonic()
+    with ThreadPoolExecutor(max_workers=max(1, min(n, budget.swarm_slots)),
+                            thread_name_prefix=f"jury-{turn_id}") as pool:
+        futs = {pool.submit(_draw, i): i for i in range(n)}
+        for fut in as_completed(futs):                    # the BARRIER — all draws joined before verdict
+            try:
+                i, out = fut.result()
+                draws[i] = out
+            except BaseException as e:
+                errors.append(e)
+    result.wall_s = round(time.monotonic() - wall0, 3)
+    if errors:                                            # fail loud — a jury cannot silently lose a draw
+        raise errors[0]
+
+    # read every draw BACK via the canonical resolver (proving the distinct per-draw addresses resolve),
+    # capture content signatures to PROVE the draws are distinct, then apply the PURE verdict rule.
+    import hashlib
+    ordered = []
+    for i, addr in enumerate(addresses):
+        val = resolve_run_ref(store, addr)
+        ordered.append(val)
+        result.signatures.append(hashlib.sha256(
+            json.dumps(val, sort_keys=True).encode()).hexdigest()[:12])
+    result.draws = ordered
+    result.verdict = vrule(ordered)                       # the deterministic verdict OVER the draws (L2)
+
+    if emit is not None:                                  # ONE batched rollup (C1.6 discipline)
+        emit("cognition.jury", {
+            "turn_id": turn_id, "role": role.id, "n_draws": n, "wall_s": result.wall_s,
+            "distinct_signatures": len(set(result.signatures)), "verdict": result.verdict,
+            "addresses": addresses,
+        })
     return result

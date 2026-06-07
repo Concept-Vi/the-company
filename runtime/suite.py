@@ -14,6 +14,7 @@ from contracts.node_record import NodeInstance, Edge, Graph, XY, WH
 from runtime import scheduler
 from runtime.governance import Inbox, GovernanceError, guard, posture, AUTO
 from runtime.registry import NodeRegistry
+from runtime.roles import RoleRegistry, resolve_binding
 from store.fs_store import FsStore
 
 CONTENT_KINDS = ("constant", "document", "code", "file", "image", "source", "portal")
@@ -178,13 +179,22 @@ class Suite:
          "render": {"token": "--tx-3", "icon": "circle-dashed", "shape": "ring"}},
     )
 
-    def __init__(self, store: FsStore, registry: NodeRegistry, nodes_dir: str | None = None):
+    def __init__(self, store: FsStore, registry: NodeRegistry, nodes_dir: str | None = None,
+                 role_registry: "RoleRegistry | None" = None):
         self.store = store
         self.registry = registry
         self.inbox = Inbox(store)
         self.nodes_dir = nodes_dir or os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "nodes")
         self.panels_dir = os.path.join(os.path.dirname(self.nodes_dir), "panels")  # UI extension point
+        # G2 (C2.1) — the FILE-DISCOVERED role registry. Derived from the repo root like nodes_dir (the
+        # `roles/` sibling of `nodes/`), discovered INTERNALLY so the required Suite(store, reg, nodes_dir)
+        # signature every test uses is unchanged (an optional injection param at most). `ROLE_REGISTRY` is
+        # built as {role_id: role.spec} so resolve_role/roles() read the SAME dict-view they read from the
+        # old class constant — the judge's effective binding is byte-identical (C2.2).
+        self.roles_dir = os.path.join(os.path.dirname(self.nodes_dir), "roles")
+        self.role_registry = role_registry or RoleRegistry().discover([self.roles_dir])
+        self.ROLE_REGISTRY = {rid: self.role_registry[rid].spec for rid in self.role_registry}
         # The bridge is a ThreadingHTTPServer → concurrent POST /api/review/next run in separate threads of
         # ONE process over this one Suite. The session-cursor advance is a read-modify-write (load→run→save)
         # with no lock → concurrent calls dropped advances (lost update). A per-session in-process lock
@@ -495,6 +505,12 @@ class Suite:
             # crash, no fabrication). Schema-additive key; an older surface ignoring it is unaffected.
             "stt": self.available_stt(),
             "panel_field_targets": list(self.PANEL_TARGETS),
+            # G2 (C2.1/C2.3) — the file-discovered COGNITION role registry as a status read: WHAT roles
+            # exist + each role's facet (fireable/jury/mode_scope/requires) + the cast per mode + the
+            # juries. Registry-is-truth: the surface/RHM read the cast from here, never a hardcoded list.
+            # Additive key; an older reader that ignores it is unaffected (rule 2). The roles' drift home
+            # is roles/AGENTS.md (asserted by tests/roles_acceptance.py), NOT the MAP REGISTRY block.
+            "cognition": self.cognition_capabilities(),
             # X17 (Convergence, D2) — THE COMPOSITION IS CONFIGURABLE. The R2 ranking knobs (the recency
             # λ · proximity · pin · semantic WEIGHTS, the window BUDGET cap, the run-versions bound) read
             # from the env (resolved in __init__; defaults = the class constants), so retuning the context
@@ -940,36 +956,13 @@ class Suite:
     # trigger is the voice circuit calling /api/voice/finished-thought); a general event→role trigger
     # engine, and per-role arbitrary tool-binding, come as their consuming code is built. `env_*` give
     # the resolution precedence: a config binding > env override > the declared default.
-    ROLE_REGISTRY = {
-        "judge": {
-            "label": "Finished-thought judge",
-            "description": "Decides whether a spoken utterance is a COMPLETE thought (fire the turn) or "
-                           "mid-ramble (keep listening) — the voice circuit's semantic endpoint.",
-            "trigger": "voice circuit: a VAD pause during always-listen (POST /api/voice/finished-thought)",
-            "default_model": None,            # None → falls to the RHM brain (rhm_config.model) — always
-                                              # available. The hard default stays safe; the data-driven
-                                              # PREFERENCE is `recommended_*` below (binding it live needs
-                                              # the 4B resident → the resource manager owns that).
-            "default_base_url": None,         # None → the brain's base_url
-            "recommended_model": "cyankiwi/Qwen3.5-4B-AWQ-4bit",      # MEASURED day-one pick (Tim 2026-06-05)
-            "recommended_base_url": "http://localhost:8000/v1",
-            "recommended_reason": ("local 4B no-think judged FINISHED in 463ms / a fragment in 49ms vs "
-                                   "deepseek-cloud 2113–6500ms (measured) — a reasoning cloud model is the "
-                                   "wrong tool on the always-listen hot path. Bind when the 4B is resident."),
-            "thinking": False,                # WANTS a fast non-reasoning model (a reasoner stalls the hot path)
-            "output": "one word: FINISHED | MORE",
-            "tools": [],                      # no tools — a pure classifier
-            "context": "the utterance text only (no system grounding)",
-            # max_tokens 2048: the DEFAULT judge falls to the RHM brain, which today is a THINKING model
-            # (qwen3.5) — at 256 it gets cut off mid-reasoning and emits EMPTY content (FabricError). 2048
-            # lets it finish thinking + emit the FINISHED|MORE word (verified). A no-think model (the
-            # recommended 4B) uses <50 tokens, so this ceiling never hurts it — it only unblocks the
-            # thinking default. (Snappy always-listen still WANTS the no-think 4B bound — see recommended_*.)
-            "knobs": {"max_tokens": 2048, "temperature": 0},
-            "env_model": "COMPANY_JUDGE_MODEL", "env_url": "COMPANY_JUDGE_URL",
-            "env_knobs": {"max_tokens": "COMPANY_JUDGE_MAX_TOKENS"},
-        },
-    }
+    # G2 (C2.1/C2.2): ROLE_REGISTRY is no longer a HARDCODED class dict — it is now a FILE-DISCOVERED
+    # registry (runtime/roles.py + roles/*.py), mirroring how node-types self-register (registry.py).
+    # The judge moved to roles/judge.py (role #0) UNCHANGED IN BEHAVIOUR: `self.ROLE_REGISTRY` is built
+    # in __init__ as `{role_id: role.spec}` from the discovered registry — so resolve_role/roles() read
+    # the SAME judge dict, only from the registry instead of this constant. Adding a role = adding a
+    # roles/*.py file (the self-extending path). The `roles` rhm_config slot stays the per-binding
+    # override. See roles/AGENTS.md (the drift home) + tests/roles_acceptance.py.
 
     # --- the MODEL KNOB CATALOG (G8.1 — dynamic knob resolution; mirrors STT_PROVIDERS/ROLE_REGISTRY) --
     # "all the configurable knobs for whatever is loaded" (Tim): a declarative catalog of the per-request
@@ -3208,6 +3201,73 @@ class Suite:
                 "thinking": binding.get("thinking", spec.get("thinking")),
                 "output": spec.get("output"), "tools": spec.get("tools", []),
                 "context": spec.get("context")}
+
+    # --- G2 · C2.3: the mode-scoped CAST + C2.5: the capability-query binding ----------------------
+    def cast_for_mode(self, mode: str) -> list:
+        """The CAST for a mode (C2.3) — every file-discovered role whose mode_scope includes `mode`.
+        An UNKNOWN mode yields an EMPTY cast (never a crash, never a default-fire). The active cast is a
+        function of mode (DECISIONS Q2: roles are mode-scoped registry data)."""
+        return self.role_registry.cast_for_mode(mode)
+
+    def capability_providers(self) -> dict:
+        """C2.5 — the thin capability-registry SEAM a role binds against (role.requires ⊆ provider.provides).
+
+        Returns {provider_id: {model, base_url, provides:[caps]}}. TODAY the Company's only live provider is
+        the RESIDENT model read from ops/services.json (the `chat-4b` service) — so the binding resolves
+        against ONE provider. The SHAPE is the query (NOT hand-written prose); G8/L-model will POPULATE this
+        with the full capability catalog (the model registry by type) — that catalog is the DOWNSTREAM DEP
+        (flagged for the lead). The `provides` set here is derived from the resident service's known traits
+        (a chat model that serves JSON + tool-calling + is the fast no-think judge pick), registry-grounded.
+        """
+        import json as _json
+        providers = {}
+        try:
+            with open(self.cognition_services_path()) as f:
+                reg = _json.load(f)
+            svcs = reg.get("services", reg)
+            svc = svcs.get("chat-4b") or {}
+            cfg = svc.get("config") or {}
+            model = cfg.get("model")
+            if model:
+                # resident traits the resident vLLM config attests (registry-grounded, not invented):
+                # chat + json (response_format honoured) + tool-calling (--enable-auto-tool-choice) +
+                # fast/no-think (the --chat-template chat_template_nothink.jinja + the day-one judge pick).
+                provides = ["chat", "json", "tools", "fast", "no-think"]
+                providers[f"resident:chat-4b"] = {
+                    "model": model, "base_url": f"http://127.0.0.1:{cfg.get('port', 8000)}/v1",
+                    "provides": provides}
+        except (OSError, ValueError, KeyError):
+            pass
+        return providers
+
+    def cognition_services_path(self) -> str:
+        return os.path.join(self._repo_root, "ops", "services.json")
+
+    def resolve_role_binding(self, role_id: str) -> dict:
+        """C2.5 — resolve a role's model BINDING via the capability QUERY (role.requires ⊆ provider.provides)
+        against the live providers. The SHAPE is the query, not hardcoded prose. Fail loud on an unknown
+        role; a role whose requires no provider satisfies falls to its declared hard default (the judge's
+        None→brain floor) or RAISES. Distinct from resolve_role (which resolves the EFFECTIVE config binding
+        incl. the operator's rhm_config override) — this is the capability-derived suitability."""
+        if role_id not in self.role_registry:
+            raise ValueError(f"unknown role {role_id!r} — registered: {sorted(self.role_registry)}")
+        return resolve_binding(self.role_registry[role_id], self.capability_providers())
+
+    def cognition_capabilities(self) -> dict:
+        """The cognition registries as a STATUS read (registry-is-truth, exposed in capabilities()): the
+        file-discovered roles + each role's facet (fireable/jury/mode_scope/requires), the cast per mode,
+        and the juries. So the surface/RHM read WHAT roles exist + which fire in which mode from the
+        registry, never a hardcoded list."""
+        roles = {}
+        for rid in sorted(self.role_registry):
+            r = self.role_registry[rid]
+            roles[rid] = {"id": rid, "label": r.spec.get("label"), "can_fire": r.can_fire,
+                          "is_jury": r.is_jury, "draws": r.draws,
+                          "mode_scope": sorted(r.mode_scope), "requires": r.requires}
+        casts = {m: [r.id for r in self.role_registry.cast_for_mode(m)] for m in self.MODES}
+        return {"roles": roles, "casts": casts,
+                "juries": [r.id for r in self.role_registry.juries()],
+                "fireable": [r.id for r in self.role_registry.fireable()]}
 
     def knobs_for(self, model: str | None = None, base_url: str | None = None) -> dict:
         """G8.1 — DYNAMIC knob resolution: the configurable per-request surface for a (loaded) model,
