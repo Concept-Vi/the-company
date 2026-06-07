@@ -126,6 +126,55 @@ stay reflected HERE, mirroring `edge_kinds_acceptance` → `contracts/AGENTS.md`
 op or destination ⇒ add it to `RULE_OPS`/`DESTINATION_KINDS` **and reflect it here** (the drift home),
 or `tests/rules_acceptance.py` fails loud.
 
+## The staged-response queue (Concurrent Cognition G4 · `runtime/suite.py` · the reply as PARTS)
+
+The **staged-response queue** is the LAST piece of the spine: `chat()`'s body is **extracted into a
+shared core** that BOTH `chat()` (one part) and `chat_parts()` (N parts) call (R1-FOLD F4 / R2-FOLD H3
+— `chat_parts()` can neither LOOP `chat()`, which re-runs the gate + emits N chat events, nor COPY it,
+which forks the brain). The shape is **prologue ONCE · part-core PER PART · epilogue ONCE**:
+
+- **`_chat_prologue`** — the `mode=="off"` early-return (4-key) + the fail-loud capability-gate refusal
+  (5-key). Both keep their OWN append+emit and do NOT reach the epilogue. The **three return shapes stay
+  distinct** (off=4 · refusal=5 · normal=7) with the provenance asymmetry (off/refusal hardcode
+  gold/twin; normal uses `_provenance_grade`/`_source`) — **never normalized.** The gate is an
+  **instance-method call on `self`** (`self._model_supports_tools`) — the `rhm_*` tests monkeypatch that
+  exact seam; break it and the gate goes green on a forked brain (the silent killer).
+- **`_chat_part_core`** — one model generation + (on the **final part only**, C4.5) the tool block.
+  Calls `client.complete_with_tools` **via the module ref** (`from fabric import client` — never
+  `from fabric.client import complete_with_tools`; the second monkeypatch seam). Assembles
+  `_chat_context` **ONCE PER PART** (it is NOT side-effect-free — emits a `warning` on a down endpoint;
+  per-part is the tested behavior). **ALL parts** route through `complete_with_tools` (intermediate →
+  `tools=[]`) so the seam check has teeth on every part. Returns `{text, outcomes, proposals}`; never
+  appends history, never emits `chat`.
+- **`_chat_epilogue`** — ONCE: `action_field` shaping · the SINGLE user+assistant append · thread bump ·
+  the SINGLE `_emit("chat")`. For `chat_parts()` the reply is the JOINED parts.
+
+**The two net-new registries (drift homes — C9.4 / R2-FOLD H5; `tests/chat_parts_acceptance.py` asserts
+both stay reflected HERE, mirroring `rules_acceptance` → `RULE_OPS`/`DESTINATION_KINDS`):**
+
+- **`THOUGHT_SHAPES`** — the ~5 archetypes (E1 / E0-EXPLORE-SYNTHESIS), built ONCE. Net-new shape fields
+  `archetype` · `fanout` (wave-width policy) · `join` (the barrier-dep role, `None` = no reduce) ·
+  `render_from` (which role's output G7 draws the reply from):
+  - **`linear-stream`** — a sequence of reply parts, each enriched by the role wave (voice's shape).
+  - **`reduce-tree`** — fan-out the cast → a `join` role reduces → one answer.
+  - **`jury-select`** — N candidate draws → a deterministic verdict picks the winner (the C2.4 jury).
+  - **`scatter-route`** — N classifications routed to their own lanes (no reduce, no reply).
+  - **`scatter-write`** — N consolidations written to sinks (background; no reply).
+- **`PART_GRAIN`** — the per-MODE config table (C4.1): mode → `{grain (line/beat/paragraph), shape, stage}`.
+  `shape_for(mode)`/`grain_for(mode)` read it (fail loud on an unknown mode); `mode_stages(mode)` is the
+  C4.3 never-stage flag (**`focus`/`background`/`off` never stage** — a trivial turn or a never-stage mode
+  BYPASSES the swarm entirely, NO `cognition.wave` fires). Switching mode changes the grain by reading
+  this table — never a per-mode branch.
+
+`chat_parts()` (a generator yielding parts) wires the **G3 declared rules into part-assembly** (the job
+the spike deferred, C4.2): Part 1 fires from base context instantly (`is_final=False`, pure generation);
+the mode's cast fires CONCURRENTLY via `run_swarm` (G1) writing `run://<turn>/<role>`; the declared rules
+(`cognition.INJECTION_RULE` + any AST-shaped role `rules`) read those resolved values back via
+`resolve_run_ref` (the canonical resolver — NOT `_chat_context`/`_resolve_context_at`, which read
+operator-notebook strata) and decide what injects into the FINAL part (which carries the prior parts for
+coherence, C4.4, and runs the tool block, C4.5). Add a new shape/grain ⇒ add it to
+`THOUGHT_SHAPES`/`PART_GRAIN` **and reflect it here**, or `tests/chat_parts_acceptance.py` fails loud.
+
 ## Relates to
 
 - **Called by** [[canvas — constitution]] — through the bridge (C8) — and by

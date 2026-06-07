@@ -1052,6 +1052,86 @@ class Suite:
         "off": "The right-hand-man is asleep — no conversation, no actions. Switch any other mode on the presence dial to wake it.",
     }
 
+    # ============================================================================================
+    # CONCURRENT COGNITION G4 — the staged-response queue (the reply as PARTS).
+    #
+    # Two net-new registries, both L1 DATA (not control-flow), with their DRIFT HOME declared in
+    # runtime/AGENTS.md (alongside RULE_OPS/DESTINATION_KINDS — the rule-engine registries) and a
+    # drift assertion in tests/chat_parts_acceptance.py (mirrors EDGE_KINDS→contracts/AGENTS.md,
+    # RULE_OPS→runtime/AGENTS.md). No net-new registry ships without its drift home (C9.4 / R2-FOLD H5).
+    #
+    # THOUGHT_SHAPES = the ~5 archetypes (E1 / E0-EXPLORE-SYNTHESIS), built ONCE. A shape declares HOW
+    # a turn's cognition is shaped — net-new fields: `archetype` · `fanout` (the wave width policy) ·
+    # `join` (the barrier-dep role, run://<turn>/<role>/* — None = no reduce) · `render_from` (which
+    # role's output G7 draws the reply from). shape_for(mode) maps a presence mode → its shape.
+    # ============================================================================================
+    THOUGHT_SHAPES = {
+        # linear-stream (voice): a sequence of parts, each enriched by the prior + the role wave; no
+        # reduce/join. The DEFAULT conversational shape (listening/text-only/walkthrough/decide-for-me).
+        "linear-stream": {"archetype": "linear-stream", "fanout": "cast",  "join": None,
+                          "render_from": None,
+                          "desc": "a sequence of reply parts, each enriched by the role wave (voice's shape)"},
+        # reduce-tree (codebase map-reduce): fan-out → a `join` role reduces → ONE answer part.
+        "reduce-tree":   {"archetype": "reduce-tree",   "fanout": "cast",  "join": "reduce",
+                          "render_from": "reduce",
+                          "desc": "fan-out the cast → a join role reduces their outputs → one answer"},
+        # jury-select (altitude-translation): N candidate draws → score → winner (the C2.4 jury).
+        "jury-select":   {"archetype": "jury-select",   "fanout": "draws", "join": "verdict",
+                          "render_from": "verdict",
+                          "desc": "N candidate draws → a deterministic verdict picks the winner"},
+        # scatter-route (typed-triage): N classifications → own lanes, NO reduce, NO reply part.
+        "scatter-route": {"archetype": "scatter-route", "fanout": "cast",  "join": None,
+                          "render_from": None,
+                          "desc": "N classifications routed to their own lanes (no reduce, no reply)"},
+        # scatter-write (background): N consolidations → sinks (address/lane), NO spoken reply.
+        "scatter-write": {"archetype": "scatter-write", "fanout": "cast",  "join": None,
+                          "render_from": None,
+                          "desc": "N consolidations written to sinks (background; no reply)"},
+    }
+
+    # PART-GRAIN table (C4.1): a per-MODE config mapping mode → {grain, shape, stage}. `grain` is the
+    # unit a reply part spans (line / beat / paragraph) — the staged reply is chunked at this grain so
+    # the part follows the mode. `shape` names the THOUGHT_SHAPE. `stage` = whether this mode STAGES at
+    # all (focus/background NEVER stage — C4.3); a non-staging mode falls through to the one-part path.
+    # L1 DATA: switching mode changes the grain by reading THIS table, never a branch per mode.
+    PART_GRAIN = {
+        "listening":       {"grain": "beat",      "shape": "linear-stream", "stage": True},
+        "text-only":       {"grain": "paragraph", "shape": "linear-stream", "stage": True},
+        "walkthrough":     {"grain": "paragraph", "shape": "linear-stream", "stage": True},
+        "decide-for-me":   {"grain": "paragraph", "shape": "linear-stream", "stage": True},
+        "watch-and-react": {"grain": "line",      "shape": "linear-stream", "stage": True},
+        # NEVER-STAGE modes (C4.3): focus = deep work, one-or-two lines; background = minimal surface.
+        "focus":           {"grain": "line",      "shape": "linear-stream", "stage": False},
+        "background":      {"grain": "line",      "shape": "scatter-write", "stage": False},
+        "off":             {"grain": "line",      "shape": "linear-stream", "stage": False},
+    }
+
+    def shape_for(self, mode: str) -> dict:
+        """The THOUGHT_SHAPE for a mode (C4.1/G4): read the per-mode grain row → its shape. Fail loud on
+        an unknown mode (rule 8 — never default-fire a fabricated shape). Returns the shape dict (the
+        archetype + fanout/join/render_from + desc)."""
+        row = self.PART_GRAIN.get(mode)
+        if row is None:
+            raise ValueError(f"shape_for: unknown mode {mode!r} — registered modes: {sorted(self.PART_GRAIN)}")
+        sid = row["shape"]
+        shape = self.THOUGHT_SHAPES.get(sid)
+        if shape is None:
+            raise ValueError(f"shape_for: mode {mode!r} names unknown shape {sid!r} — registered shapes: "
+                             f"{sorted(self.THOUGHT_SHAPES)} (fail loud, never a fabricated shape).")
+        return dict(shape)
+
+    def grain_for(self, mode: str) -> str:
+        """The part GRAIN for a mode (C4.1) — line / beat / paragraph. Fail loud on an unknown mode."""
+        row = self.PART_GRAIN.get(mode)
+        if row is None:
+            raise ValueError(f"grain_for: unknown mode {mode!r} — registered modes: {sorted(self.PART_GRAIN)}")
+        return row["grain"]
+
+    def mode_stages(self, mode: str) -> bool:
+        """Whether `mode` STAGES a multi-part reply at all (C4.3): focus/background/off never stage."""
+        row = self.PART_GRAIN.get(mode)
+        return bool(row and row.get("stage"))
+
     def _rhm_cfg(self) -> dict:
         """The RHM's config node (system graph) — holds mode + model + base_url + persona."""
         g = self.store.load_graph(self.SYSTEM_GRAPH)
@@ -3404,31 +3484,51 @@ class Suite:
     def current_conversation(self) -> str | None:
         return getattr(self, "_current_thread", None)
 
-    def chat(self, message: str, graph_id: str, focus: dict | None = None) -> dict:
-        """Grounded conversation with the operator via NATIVE TOOL-CALLING. Answers from compact
-        ground truth; never confabulates system facts. It ACTS only through the governed verbs offered
-        as native function-tools for this mode×context — and the dispatcher's whitelist still REFUSES
-        anything off it (E6). The RHM model MUST support native tools: a non-tool model is refused
-        FAIL-LOUD (no model call, no fallback, rule 4)."""
-        mode = self.get_mode()
-        if mode == "off":                                     # the dial disables the RHM entirely
+    # ============================================================================================
+    # CONCURRENT COGNITION G4 — chat() refactored into prologue + parameterized part-core + epilogue.
+    #
+    # R1-FOLD F4 / R2-FOLD H3 (BINDING): chat_parts() can neither LOOP chat() (re-runs the gate, emits
+    # N chat events) nor COPY it (forks the brain). So chat()'s body is EXTRACTED into a shared core that
+    # BOTH chat() (one part) and chat_parts() (N parts) call:
+    #   • _chat_prologue  — ONCE: mode=='off' early-return (4-key) + the fail-loud capability-gate
+    #                       refusal (5-key). Both keep their OWN append+emit; neither reaches the
+    #                       epilogue. The THREE return shapes stay DISTINCT (off=4 · refusal=5 · normal=7)
+    #                       with the provenance asymmetry preserved (off/refusal hardcode gold/twin;
+    #                       normal uses _provenance_grade/_source). DON'T normalize.
+    #   • _chat_part_core — PER PART, parameterized: assembles _chat_context (ONCE PER PART — it is NOT
+    #                       side-effect-free; emits a `warning` on a down endpoint), builds msgs (prior
+    #                       parts prefilled for coherence, C4.4), calls client.complete_with_tools VIA
+    #                       THE MODULE REF (the monkeypatch seam — never `from fabric.client import
+    #                       complete_with_tools`), and runs the tool block ONLY when is_final (C4.5).
+    #                       ALL parts route through complete_with_tools (intermediate → tools=[]) so the
+    #                       capability-gate/seam check has teeth on every part. Does NOT append history,
+    #                       does NOT emit `chat` — the epilogue owns those (once).
+    #   • the epilogue    — ONCE (in chat()/chat_parts()): action_field shaping · the SINGLE user+
+    #                       assistant append · thread bump · the SINGLE _emit("chat").
+    #
+    # THE SILENT KILLER (R2-FOLD H3 pt 5): an off/refusal short-circuit must NEVER leak into the core —
+    # they are PROLOGUE early-returns, verified independently (tests/chat_parts_acceptance.py patches the
+    # seams and asserts BOTH chat() and chat_parts() honor them — no listed rhm_* test catches a leak).
+    # react() (a separate client.complete path) is NOT entangled.
+    # ============================================================================================
+
+    def _chat_prologue(self, message: str, mode: str, cfg: dict) -> dict | None:
+        """The ONCE-only prologue both chat() and chat_parts() run BEFORE the part-core. Returns an
+        EARLY-RETURN dict (and does its own append+emit) when the turn must short-circuit, else None
+        (proceed to the part-core). The two short-circuits keep their EXACT distinct return shapes +
+        provenance asymmetry — preserving them here is the gate (R2-FOLD H3 pt 2)."""
+        if mode == "off":                                     # the dial disables the RHM entirely (4-key)
             self.store.append_chat({"role": "user", "text": message, "grade": "gold", "source": "operator"})
             off = "The right-hand-man is off. Switch a mode on the presence dial to wake me."
             self.store.append_chat({"role": "assistant", "text": off, "grade": "working", "source": "twin"})
             self._emit("chat", f"you: {message[:40]} (RHM off)", address="ui://chrome/chat")   # S2: chat organ
             return {"reply": off, "action": None, "mode": mode, "history": self.store.chat_history(40)}
-        from fabric import client, transport
-        from fabric.client import FabricError
-        cfg = self.rhm_config()
-
-        # CAPABILITY-GATE FIRST (before any model call): the RHM acts through NATIVE tools, so the
-        # selected model MUST support tool-calling. A non-tool model (e.g. an embedder mis-selected, or
-        # a chat model the endpoint reports without "tools") is a CONFIGURATION error — refuse it FAIL
-        # LOUD: a legible turn + a warning event, and NO model call and NO fallback (rule 4 — never
-        # silently degrade to a non-acting path). _model_supports_tools translates a cannot-determine
-        # (endpoint down) into False, so an unreachable endpoint is ALSO a loud refusal, never an
-        # assume-capable call.
-        if not self._model_supports_tools(cfg["model"], cfg["base_url"]):
+        # CAPABILITY-GATE (before any model call): the RHM acts through NATIVE tools, so the selected
+        # model MUST support tool-calling. A non-tool model is a CONFIGURATION error — refuse it FAIL
+        # LOUD (rule 4). The gate is an INSTANCE-METHOD CALL ON self (`self._model_supports_tools`) — the
+        # rhm_* tests monkeypatch `suite._model_supports_tools`; keep it an instance call or the gate goes
+        # green on a forked brain. _model_supports_tools translates cannot-determine (endpoint down) → False.
+        if not self._model_supports_tools(cfg["model"], cfg["base_url"]):    # 5-key refusal
             self.store.append_chat({"role": "user", "text": message, "grade": "gold", "source": "operator"})
             refusal = (f"I can't act right now: the selected model '{cfg['model']}' does not report "
                        f"native tool-calling support (or its endpoint is unreachable), and I act ONLY "
@@ -3439,13 +3539,11 @@ class Suite:
                        f"call, no fallback); select a tool-capable model", address="ui://chrome/chat")  # S2: chat-path locus
             return {"reply": refusal, "action": None, "mode": mode,
                     "model": cfg["model"], "history": self.store.chat_history(40)}
+        return None                                           # gate passed → proceed to the part-core
 
-        persona = cfg["persona"]
-        # IDENTITY HOOKUP (Tim 2026-06-07: "more than just a name … fully hooked up"): expand a known
-        # persona id to its FULL character prose (personas.py `brain`). A bare id ("sable") told the model
-        # nothing — the character was names-only. The brain prose IS the identity and is engine-independent
-        # (it holds whether the voice is Orpheus, qwen3tts, or any other). Free-text / unknown persona falls
-        # through verbatim (never crash a reply over an unrecognised persona string).
+    def _persona_text(self, persona: str | None) -> str | None:
+        """Expand a known persona id to its FULL character prose (the IDENTITY hookup, Tim 2026-06-07).
+        Free-text / unknown persona falls through verbatim (never crash a reply over an unknown string)."""
         persona_text = persona
         if persona:
             try:
@@ -3453,11 +3551,13 @@ class Suite:
                 persona_text = _vp.get_persona(persona).get("brain") or persona
             except (KeyError, ImportError):
                 persona_text = persona
-        # PERSONA / GROUND-TRUTH / MODE-DIRECTIVE HEAD (the ACTION:-prose block is GONE — the verbs are
-        # now offered as native function-tools, so the model invokes them through the tool API, not by
-        # emitting a hand-typed `ACTION:` line). The head still tells it WHO it is, to answer only from
-        # ground truth, the persona, the model-of-Tim, and the current mode's behavioral directive.
-        sys_p = (
+        return persona_text
+
+    def _chat_sys_head(self, mode: str, persona: str | None, persona_text: str | None,
+                       extra: str = "") -> str:
+        """The PERSONA / GROUND-TRUTH / MODE-DIRECTIVE system head (shared by one-part + staged parts).
+        `extra` carries a per-part coherence directive (the prior parts + 'continue naturally', C4.4)."""
+        return (
             "You are the right-hand-man — the coherent voice of the Company, speaking to its operator "
             "about the system ITSELF. Answer ONLY from the LIVE SYSTEM STATE below; it is ground truth. "
             "If something is not in that state, say you cannot see it — NEVER invent counts, names, or "
@@ -3468,31 +3568,59 @@ class Suite:
                "never as Tim's actual words; when genuinely uncertain, say so and defer to Tim):\n"
                f"{self._model_of_tim_digest()}\n\n" if self._model_of_tim_digest() else "")
             + f"CURRENT MODE — {mode}: {self._mode_directive(mode)}\n\n"
-            "You can ACT on the system, but ONLY by CALLING one of the governed tools provided to you "
+            + (extra + "\n\n" if extra else "")
+            + "You can ACT on the system, but ONLY by CALLING one of the governed tools provided to you "
             "(they are the verbs you are permitted in this mode/context). Call a tool ONLY when the "
             "operator actually asks you to act — otherwise just answer in text. Describing an action in "
             "prose does NOTHING; to act you must CALL the tool. You CANNOT apply, delete, or write files "
             "(those are operator-gated and are not offered as tools)."
         )
 
-        # the affordance context for THIS turn → the native tools array (mode-primary, context-refines),
-        # built from the ONE registry (same available_verbs the grounding context renders).
-        actx = self._affordance_context(graph_id, focus)
-        tools = self._rhm_tools(mode, actx)
+    def _chat_part_core(self, message: str, graph_id: str, focus: dict | None, mode: str, cfg: dict,
+                        persona: str | None, persona_text: str | None, *, is_final: bool = True,
+                        prior_parts: list | None = None, inject: str | None = None) -> dict:
+        """The PER-PART core (R2-FOLD H3): one model generation + (on the FINAL part only) the tool block.
+        Returns {text, outcomes, proposals} — it NEVER appends history nor emits `chat` (the epilogue
+        owns those, ONCE). Both chat() (one part, is_final=True) and chat_parts() (N parts) call this.
 
+        Preservation invariants:
+          • client.complete_with_tools is called VIA THE MODULE REF (`client.` — the monkeypatch seam).
+          • _chat_context is assembled HERE, so it runs ONCE PER PART (it emits a `warning` on a down
+            endpoint — per-part is the documented, tested behavior; R2-FOLD H3 pt 3).
+          • ALL parts route through complete_with_tools; an intermediate part passes tools=[] (C4.5 —
+            pure generation, no tool block) so the seam check has teeth on every part.
+        `prior_parts` (C4.4 coherence) prefills the parts already emitted this turn; `inject` is the
+        run:// role value (C4.2) folded into THIS part's user content."""
+        from fabric import client, transport
+        prior_parts = prior_parts or []
+
+        # COHERENCE (C4.4): a staged later part carries the prior parts + a 'continue naturally' directive
+        # so the reply reads as ONE voice. The one-part path (chat()) passes no prior_parts → no extra.
+        coherence = ""
+        if prior_parts:
+            joined = "\n".join(f"  [part {i+1}] {p}" for i, p in enumerate(prior_parts))
+            coherence = ("CONTINUE THE SAME REPLY — you have already said the parts below to the operator. "
+                         "Continue NATURALLY from them as ONE coherent voice; do NOT repeat them, do NOT "
+                         "re-greet, do NOT restate. Add the NEXT part only.\n" + joined)
+        sys_p = self._chat_sys_head(mode, persona, persona_text, extra=coherence)
+
+        # the affordance context for THIS turn → the native tools array (mode-primary, context-refines).
+        # INTERMEDIATE parts (not is_final) are PURE GENERATION (C4.5): no tools offered (tools=[]) and
+        # the tool block below is skipped — but they STILL route through complete_with_tools (the seam).
+        actx = self._affordance_context(graph_id, focus)
+        tools = self._rhm_tools(mode, actx) if is_final else []
+
+        # _chat_context ONCE PER PART (NOT side-effect-free — emits a warning on a down endpoint).
         msgs = [{"role": "system", "content": sys_p + "\n\n" + self._chat_context(graph_id, focus)}]
         for t in self.store.chat_history(20):
             msgs.append({"role": t["role"], "content": t["text"]})
-        msgs.append({"role": "user", "content": message})
+        user_content = message
+        if inject:                                            # C4.2 — the resolved run:// role value, folded in
+            user_content = (f"{message}\n\n[CONTEXT recalled this turn (use it if relevant): {inject}]")
+        msgs.append({"role": "user", "content": user_content})
 
         # NATIVE tool-calling: complete_with_tools returns the whole message dict {content, tool_calls}.
-        # A tool_call with empty content is SUCCESS (the model chose to act, not to speak) — the fabric
-        # guard knows this. A non-tool model never reaches here (gated above). FAIL LOUD on exhaustion:
-        # complete_with_tools raises FabricError, which we let propagate (no fallback) after logging the
-        # operator turn — the bridge surfaces the error rather than the system pretending success.
-        # S5 — the brain's runtime knobs (temperature/max_tokens/top_p) now REACH the call (they were in
-        # MODEL_KNOBS + /api/knobs but never passed — dead code). Set from the settings window via the
-        # brain_knobs slot; absent → the endpoint's own defaults (byte-for-byte as before).
+        # FAIL LOUD on exhaustion (FabricError propagates, no fallback). S5 — the brain's runtime knobs.
         _bk = cfg.get("brain_knobs") or {}
         _bkargs = {k: _bk[k] for k in ("temperature", "max_tokens", "top_p") if k in _bk and _bk[k] is not None}
         msg = client.complete_with_tools(
@@ -3500,84 +3628,64 @@ class Suite:
             msgs, model=cfg["model"], tools=tools, tool_choice="auto", timeout=cfg["timeout"], **_bkargs)
         reply = msg.get("content") or ""                      # may be empty (the model called a tool)
 
-        # LOOP over every tool_call the model emitted (a model may call >1). Each becomes an action via
-        # the EXISTING _json_obj_to_action (it JSON-decodes the `arguments` string) → the EXISTING
-        # _dispatch_rhm_action (the ONE whitelist — a forbidden verb is refused end-to-end, E6 holds).
-        # In decide-for-me each call routes per its governance posture via autonomous_dispatch.
-        # MODE-DISCIPLINE GATE (defense-in-depth ATOP the whitelist): the affordance set is a REAL gate
-        # at dispatch, not merely a hint to the model. A forged/confused tool_call for a verb that is
-        # whitelisted but NOT OFFERED in this mode×context (e.g. `build` in watch-and-react) must NOT
-        # execute. We re-validate each call against the SAME available_verbs(mode, actx) that built the
-        # tools array — so the OFFER and the DISPATCH agree by construction. A not-offered verb is
-        # refused here (did=='none', a legible note folded into the reply) and never reaches the
-        # dispatcher. This is purely additive: the dispatcher's whitelist still refuses non-RHM_VERBS
-        # (E6), the catastrophic apply/delete/file-write wall is untouched, decide-for-me routing is
-        # unchanged for OFFERED verbs, and a verb that IS offered dispatches exactly as before.
-        offered = set(self.available_verbs(mode, actx))
         outcomes = []
-        proposals = []                                        # OFFER-WITH-OPTIONS: suggest-then-confirm cards (no dispatch)
-        for tc in (msg.get("tool_calls") or []):
-            fn = tc.get("function") or {}
-            verb = fn.get("name")
-            if not verb:
-                continue
-            if verb == "suggest":
-                # OFFER-WITH-OPTIONS (the consent affordance): build a PROPOSAL, do NOT dispatch. The
-                # operator sees a one-click card for ANY offered verb and approves (→ /api/act) or steers —
-                # nothing runs until then. The verb is validated against the ONE whitelist (RHM_VERBS); a
-                # non-verb offer is dropped (refused-loud-at-the-click philosophy, never a silent bad card).
-                import json as _json
-                try:
-                    sargs = _json.loads(fn.get("arguments") or "{}")
-                except Exception:
-                    sargs = {}
-                sv = str(sargs.get("verb") or "").strip().lower()
-                if sv in self.RHM_VERBS:
-                    one = {"verb": sv, "address": sargs.get("address"), "args": sargs.get("args") or {}}
-                    proposals.append({**one,
-                                      # options[]/direction: the rich layer extends to multi-option + a
-                                      # steer→refine loop + interactive-build; v1 carries the single offer.
-                                      "options": [{**one, "label": sargs.get("label") or sv}],
-                                      "direction": True})
-                continue
-            if verb not in offered:
-                # not offered in THIS mode → refuse without dispatching (mode-discipline gate). Legible
-                # reason; same {did:none, refused} shape _confirmation_for folds into the reply.
-                outcomes.append({"did": "none",
-                                 "refused": f"{verb} not available in mode {mode}"})
-                continue
-            action = self._json_obj_to_action({"name": verb, "arguments": fn.get("arguments")}, verb)
-            if mode == "decide-for-me":
-                # G3 wiring: route the ACT-vs-SURFACE decision DETERMINISTICALLY by the verb's governance
-                # action-class (no confidence) through autonomous_dispatch. The verb BODY performs it
-                # either way — AUTO verbs run; CONFIRM verbs run their body whose action is to SURFACE a
-                # consumable applyable draft. Outcome carries routed_posture for audit.
-                cls = self.RHM_VERB_CLASS.get(verb, "register_type")   # unknown verb → safest (CONFIRM)
-                outcome = self.autonomous_dispatch(
-                    cls, do=lambda a=action: self._dispatch_rhm_action(a, graph_id), payload=action)
-            else:
-                outcome = self._dispatch_rhm_action(action, graph_id)
-            outcomes.append(outcome)
+        proposals = []
+        # THE TOOL BLOCK — FINAL PART ONLY (C4.5). Intermediate parts are pure generation: skip entirely
+        # (and they were offered no tools above, so a well-behaved model emits none regardless).
+        if is_final:
+            offered = set(self.available_verbs(mode, actx))
+            for tc in (msg.get("tool_calls") or []):
+                fn = tc.get("function") or {}
+                verb = fn.get("name")
+                if not verb:
+                    continue
+                if verb == "suggest":
+                    # OFFER-WITH-OPTIONS (the consent affordance): build a PROPOSAL, do NOT dispatch.
+                    import json as _json
+                    try:
+                        sargs = _json.loads(fn.get("arguments") or "{}")
+                    except Exception:
+                        sargs = {}
+                    sv = str(sargs.get("verb") or "").strip().lower()
+                    if sv in self.RHM_VERBS:
+                        one = {"verb": sv, "address": sargs.get("address"), "args": sargs.get("args") or {}}
+                        proposals.append({**one,
+                                          "options": [{**one, "label": sargs.get("label") or sv}],
+                                          "direction": True})
+                    continue
+                if verb not in offered:
+                    # not offered in THIS mode → refuse without dispatching (mode-discipline gate).
+                    outcomes.append({"did": "none",
+                                     "refused": f"{verb} not available in mode {mode}"})
+                    continue
+                action = self._json_obj_to_action({"name": verb, "arguments": fn.get("arguments")}, verb)
+                if mode == "decide-for-me":
+                    cls = self.RHM_VERB_CLASS.get(verb, "register_type")   # unknown verb → safest (CONFIRM)
+                    outcome = self.autonomous_dispatch(
+                        cls, do=lambda a=action: self._dispatch_rhm_action(a, graph_id), payload=action)
+                else:
+                    outcome = self._dispatch_rhm_action(action, graph_id)
+                outcomes.append(outcome)
 
-        # ACTION-CONFIRMATION: fold a concise confirmation into `reply` for EVERY dispatched verb so the
-        # operator ALWAYS sees what happened — CRITICAL with native tool-calls (the model often emits NO
-        # prose, only the call → reply would otherwise be blank). consult/ask keep their richer folds
-        # (the full answer / the needs-line); all others get _confirmation_for. A confirmation appends to
-        # existing prose, or BECOMES the reply when there is none (handles empty-content + tool_call).
-        for outcome in outcomes:
-            if outcome and outcome.get("did") == "consult":   # fold the looked-up answer into the turn
-                reply = (reply + "\n\n📖 " + outcome["answer"]).strip()
-            elif outcome and outcome.get("did") == "ask":     # asked instead of fabricating (PoLR)
-                reply = (reply + "\n\n❓ That needs something not in the registry, so I'm asking rather "
-                         "than guessing: " + outcome["needs"] + " — surfaced for you in the inbox.").strip()
-            else:
-                confirm = self._confirmation_for(outcome)
-                if confirm:
-                    reply = (reply + "\n\n" + confirm).strip() if reply.strip() else confirm
+            # ACTION-CONFIRMATION: fold a concise confirmation into reply for EVERY dispatched verb.
+            for outcome in outcomes:
+                if outcome and outcome.get("did") == "consult":
+                    reply = (reply + "\n\n📖 " + outcome["answer"]).strip()
+                elif outcome and outcome.get("did") == "ask":
+                    reply = (reply + "\n\n❓ That needs something not in the registry, so I'm asking rather "
+                             "than guessing: " + outcome["needs"] + " — surfaced for you in the inbox.").strip()
+                else:
+                    confirm = self._confirmation_for(outcome)
+                    if confirm:
+                        reply = (reply + "\n\n" + confirm).strip() if reply.strip() else confirm
 
-        # the persisted/returned `action`: a LIST of outcomes (a turn may now carry several). Kept
-        # backward-compatible for the single-action consumers (bridge/mcp passthrough): None when nothing
-        # was dispatched, the single dict when exactly one (the prior shape), the list when several.
+        return {"text": reply, "outcomes": outcomes, "proposals": proposals}
+
+    def _chat_epilogue(self, message: str, mode: str, cfg: dict, reply: str, outcomes: list,
+                       proposals: list) -> dict:
+        """The ONCE-only epilogue both paths run AFTER the part-core(s): action_field shaping · the SINGLE
+        user+assistant append · the thread bump · the SINGLE _emit('chat'). Returns the normal 7-key shape.
+        For chat_parts() `reply` is the JOINED parts; `outcomes` are the final part's (tools-on-final, C4.5)."""
         if not outcomes:
             action_field = None
         elif len(outcomes) == 1:
@@ -3585,9 +3693,6 @@ class Suite:
         else:
             action_field = outcomes
         # provenance grading (B3): Tim's words are gold (train the twin); the twin's are working.
-        # S2 — thread the turn into the CURRENT conversation (the additive thread_id; None = the global/legacy
-        # stream, back-compat). The current thread is set by new_conversation/load_conversation, so chat() AND
-        # the voice paths auto-thread without a signature change.
         _tid = getattr(self, "_current_thread", None)
         self.store.append_chat({"role": "user", "text": message, "grade": self._provenance_grade("user"), "source": self._provenance_source("user"), **({"thread_id": _tid} if _tid else {})})
         self.store.append_chat({"role": "assistant", "text": reply, "action": action_field,
@@ -3604,14 +3709,203 @@ class Suite:
             except Exception:
                 pass                                           # thread metadata is best-effort, never break a turn
         self._emit("chat", f"you: {message[:48]}", address="ui://chrome/chat")   # S2: chat organ event carries its locus
-        # OFFER-WITH-OPTIONS: a `suggest` tool_call rides back as a `proposal` (the FE renders the one-click
-        # card; approve → /api/act). Additive + back-compat: None when the turn dispatched/spoke instead of
-        # offering; the existing single-`proposal` FE consumer (useAppController r.proposal) reads it unchanged.
         proposal = proposals[0] if proposals else None
         return {"reply": reply, "action": action_field, "proposal": proposal, "mode": mode,
                 "model": cfg["model"], "thread_id": _tid,
-                # thread-aware history: the reopened conversation's turns when in a thread, else the global stream
                 "history": self.store.chats_in_thread(_tid) if _tid else self.store.chat_history(40)}
+
+    def chat(self, message: str, graph_id: str, focus: dict | None = None) -> dict:
+        """Grounded conversation with the operator via NATIVE TOOL-CALLING. Answers from compact
+        ground truth; never confabulates system facts. It ACTS only through the governed verbs offered
+        as native function-tools for this mode×context — and the dispatcher's whitelist still REFUSES
+        anything off it (E6). The RHM model MUST support native tools: a non-tool model is refused
+        FAIL-LOUD (no model call, no fallback, rule 4).
+
+        G4 REFACTOR: chat() is now prologue → ONE part-core (is_final=True) → epilogue — the SAME shared
+        core chat_parts() runs N times. The contract + the three return shapes are byte-identical to the
+        pre-refactor chat() (the rhm_* guard suites are the gate). chat() does NOT stage (one part)."""
+        mode = self.get_mode()
+        cfg = self.rhm_config()
+        early = self._chat_prologue(message, mode, cfg)        # ONCE: off (4-key) / refusal (5-key)
+        if early is not None:
+            return early
+        persona = cfg["persona"]
+        persona_text = self._persona_text(persona)
+        part = self._chat_part_core(message, graph_id, focus, mode, cfg, persona, persona_text,
+                                    is_final=True)             # the ONE part (one-part path)
+        return self._chat_epilogue(message, mode, cfg, part["text"], part["outcomes"], part["proposals"])
+
+    # --- C4.3: the brevity bypass (a trivial turn does NOT spin the swarm) ---------------------------
+    def _should_stage(self, message: str, mode: str) -> dict:
+        """Decide whether THIS turn stages a multi-part reply (C4.3 — conditional staging is MANDATORY).
+        A trivial one-liner BYPASSES the whole machine; focus/background/off modes NEVER stage. Returns
+        {stage: bool, reason: str}. PURE/cheap — it must NOT fire the swarm (proof: no cognition.wave
+        emit when stage is False). The brevity check is a deterministic length/shape heuristic (a
+        'brevity_judge' role-style check, mode-biased) — NOT a model call, so a trivial turn costs nothing."""
+        if not self.mode_stages(mode):                        # focus/background/off never stage (mode-biased)
+            return {"stage": False, "reason": f"mode {mode!r} does not stage (PART_GRAIN.stage=False)"}
+        t = (message or "").strip()
+        # a trivial turn: short AND not multi-sentence AND not an obvious deep ask. Cheap heuristic — no
+        # model call (the swarm must not spin for a one-liner). A long / multi-clause / question-laden
+        # message is worth staging; a greeting / yes-no / one-liner is not.
+        words = t.split()
+        sentences = [s for s in t.replace("!", ".").replace("?", ".").split(".") if s.strip()]
+        trivial = (len(words) <= 6 and len(sentences) <= 1)
+        if trivial:
+            return {"stage": False, "reason": f"trivial turn ({len(words)} words, {len(sentences)} sentence) — brevity bypass"}
+        return {"stage": True, "reason": f"substantive turn ({len(words)} words, {len(sentences)} sentences)"}
+
+    def chat_parts(self, message: str, graph_id: str, focus: dict | None = None,
+                   *, turn_id: str | None = None):
+        """CONCURRENT COGNITION G4 — the STAGED reply: a generator yielding the reply as PARTS, each a
+        node whose inputs resolve at a run:// address (the reactive-scheduler relationship applied
+        INTRA-TURN). It shares chat()'s prologue + part-core + epilogue (R1-FOLD F4 — never loops/copies
+        chat()).
+
+        The flow:
+          • PROLOGUE ONCE (off/refusal short-circuit — same as chat(); yields the one early text, runs no
+            epilogue). The capability-gate is the SAME instance-method seam → patching it refuses BOTH paths.
+          • C4.3 brevity/never-stage check — a trivial turn / focus·background·off mode BYPASSES the swarm
+            entirely (NO cognition.wave fires) and degrades to the ONE-part path (chat()'s core, is_final).
+          • STAGED: grain + shape from shape_for(mode)/PART_GRAIN (C4.1). Part 1 fires from BASE context
+            INSTANTLY (is_final=False; pure generation). The mode's CAST fires CONCURRENTLY via run_swarm
+            (G1) writing run://<turn>/<role>; the roles' DECLARED G3 rules decide what injects (C4.2 — the
+            net-new ref-read, NOT _chat_context/_resolve_context_at). Part 2 (FINAL) reads the injected
+            run:// value + carries the prior parts (C4.4) + runs the tool block (C4.5 — tools on final only).
+          • EPILOGUE ONCE — the SINGLE user+assistant append (the joined reply) · thread bump · the SINGLE
+            _emit('chat'). Runs at end-of-stream (so G6 can adopt this generator without re-refactoring).
+
+        Yields each part's text as it is produced; the final yield completes the epilogue. The caller
+        (G6 voice stream / a test) consumes the generator and reads the joined turn from the store."""
+        import time as _time
+        from runtime import cognition as _cog
+        mode = self.get_mode()
+        cfg = self.rhm_config()
+        turn_id = turn_id or "turn-" + _time.strftime("%Y%m%d-%H%M%S-") + str(int(_time.monotonic() * 1000) % 100000)
+
+        early = self._chat_prologue(message, mode, cfg)        # ONCE: off (4-key) / refusal (5-key)
+        if early is not None:
+            # an early-return short-circuit: yield its one text + STOP (the prologue did its own append+emit;
+            # the epilogue does NOT run — the off/refusal shape is the prologue's, never the core's).
+            yield {"part": 1, "text": early["reply"], "final": True, "staged": False,
+                   "early_return": early}
+            return
+
+        persona = cfg["persona"]
+        persona_text = self._persona_text(persona)
+        decision = self._should_stage(message, mode)
+
+        # ---- the BYPASS path (C4.3): NOT staging → the ONE-part path (chat()'s core). NO swarm fires. ----
+        if not decision["stage"]:
+            part = self._chat_part_core(message, graph_id, focus, mode, cfg, persona, persona_text,
+                                        is_final=True)
+            res = self._chat_epilogue(message, mode, cfg, part["text"], part["outcomes"], part["proposals"])
+            yield {"part": 1, "text": part["text"], "final": True, "staged": False,
+                   "stage_reason": decision["reason"], "result": res}
+            return
+
+        # ---- the STAGED path: grain/shape (C4.1) → Part 1 instant → wave → run:// inject → Part 2 ----
+        shape = self.shape_for(mode)
+        grain = self.grain_for(mode)
+        parts_emitted: list[str] = []
+
+        # PART 1 — from BASE context, INSTANTLY (is_final=False → pure generation, no tools). Emitted
+        # before the wave completes (the wave fires concurrently below).
+        cast = self.cast_for_mode(mode)
+        # fire the cast CONCURRENTLY (G1 run_swarm) — but only the FIREABLE roles (a prompt+schema), and
+        # only those that read just the utterance (independent ready-set). The declared rules on those
+        # roles (G3) decide what injects into the FINAL part.
+        fireable = [r for r in cast if getattr(r, "can_fire", False) and not getattr(r, "is_jury", False)]
+        wave_holder: dict = {}
+        wave_err: dict = {}
+        import threading as _thr
+        def _fire_wave():
+            try:
+                wave_holder["wave"] = _cog.run_swarm(
+                    fireable, {"utterance": message}, self.store, turn_id=turn_id,
+                    emit=self._emit)                          # C1.6 ONE cognition.wave rollup per wave
+            except BaseException as e:                        # captured; surfaced after Part 1 (fail loud)
+                wave_err["err"] = e
+        wave_thread = None
+        if fireable:
+            wave_thread = _thr.Thread(target=_fire_wave, name=f"chat_parts-wave-{turn_id}", daemon=True)
+            wave_thread.start()
+
+        part1 = self._chat_part_core(message, graph_id, focus, mode, cfg, persona, persona_text,
+                                     is_final=False)           # Part 1: base context, no tools
+        parts_emitted.append(part1["text"])
+        yield {"part": 1, "text": part1["text"], "final": False, "staged": True,
+               "grain": grain, "shape": shape["archetype"]}
+
+        # JOIN the wave; the DECLARED G3 RULES on the cast roles decide what injects (C4.2). We read the
+        # roles' resolved outputs at run://<turn>/<role> via resolve_run_ref (the canonical resolver, the
+        # net-new ref-read — NOT _chat_context/_resolve_context_at, which read operator-notebook strata).
+        inject_text = None
+        inject_provenance = []
+        if wave_thread is not None:
+            wave_thread.join(timeout=_cog.ROLE_TIMEOUT + 5)
+            if wave_err.get("err") is not None:
+                raise wave_err["err"]                         # fail loud — a wave failure is not swallowed
+            wave = wave_holder.get("wave")
+            resolved = dict(wave.resolved) if wave else {}
+            # The G3 DECLARED RULES decide what injects (C4.2 — the G4 job the spike deferred). We gather
+            # the buildable AST rules from TWO sources (reuse-don't-parallel — both are the SAME G3 engine):
+            #   (a) the canonical declared rule(s) the cognition driver already built (cognition.INJECTION_RULE
+            #       — the spike's recall.relevant AND ground.in_scope, generalized to a declared AST in G3);
+            #   (b) any AST-shaped `rules` a cast role declares (the general path — descriptive {id,reads,
+            #       effect,kind} role entries are NOT AST rules → skipped; when a role adds a `when` rule it
+            #       wires automatically).
+            from runtime import cognition as _cog2
+            candidate_rules = []
+            if getattr(_cog2, "INJECTION_RULE", None) is not None:
+                candidate_rules.append((None, _cog2.INJECTION_RULE))
+            for role in fireable:
+                rspecs = (role.spec.get("rules") if hasattr(role, "spec") else None) or []
+                for rspec in rspecs:
+                    rule = self._rule_from_spec(rspec)
+                    if rule is not None:
+                        candidate_rules.append((role.id, rule))
+            for role_id, rule in candidate_rules:
+                # PER-RULE READINESS (R2-FOLD H2 / G3): a rule fires only when EVERY declared input is
+                # SETTLED. A rule referencing a role NOT in this turn's wave is "not ready this turn" —
+                # skip it cleanly (the readiness contract, NOT a violation). When all inputs ARE present
+                # we call decide() and let it FAIL LOUD (never swallow a genuine rule error — the law).
+                if not (rule.inputs <= set(resolved)):
+                    continue
+                decision_r = rule.decide(resolved)             # fail loud on a real error (no broad except)
+                if decision_r.get("fire") and rule.destination == "inject" and decision_r.get("value"):
+                    inject_text = str(decision_r["value"])
+                    inject_provenance.append({"role": role_id, "rule": getattr(rule, "id", "?")})
+
+        # PART 2 (FINAL) — reads the injected run:// value (C4.2), carries the prior parts (C4.4), runs
+        # the tool block (C4.5 — tools on the FINAL part only).
+        part2 = self._chat_part_core(message, graph_id, focus, mode, cfg, persona, persona_text,
+                                     is_final=True, prior_parts=parts_emitted, inject=inject_text)
+        parts_emitted.append(part2["text"])
+
+        # EPILOGUE ONCE — the joined reply (one coherent voice), the SINGLE append + emit.
+        joined = "\n\n".join(p for p in parts_emitted if p.strip())
+        res = self._chat_epilogue(message, mode, cfg, joined, part2["outcomes"], part2["proposals"])
+        yield {"part": 2, "text": part2["text"], "final": True, "staged": True,
+               "grain": grain, "shape": shape["archetype"], "joined": joined,
+               "injected": inject_text, "inject_provenance": inject_provenance,
+               "turn_id": turn_id, "result": res}
+
+    def _rule_from_spec(self, rspec):
+        """Build a G3 Rule from a role's declared `rules` entry, for the G4 part-assembly (C4.2). Only an
+        AST-shaped rule (has a `when` op-tree) is buildable here; a descriptive (non-AST) rule entry
+        returns None (skipped — not a routing rule). Reuses the G3 rule engine (runtime/rules.py); never
+        a parallel evaluator. A malformed rule fails loud at ROLE DISCOVERY (validate_role_rules), so by
+        the time we see it here it is already grammar-valid."""
+        from runtime import rules as _rules
+        if not isinstance(rspec, dict):
+            return None
+        if not _rules.is_ast_rule(rspec):                     # descriptive {id,reads,effect,kind} → not a routing rule
+            return None
+        try:
+            return _rules.build_rule(rspec)
+        except Exception:
+            return None
 
     def chat_history(self, limit: int = 40) -> list:
         return self.store.chat_history(limit)
