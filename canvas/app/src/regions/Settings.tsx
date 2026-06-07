@@ -77,7 +77,7 @@ export function Settings() {
           <div className="settings-content">
             {settingsBusy && <span className="muted set-loading">loading registries…</span>}
             {settingsTab === 'brain' && <BrainSection cfg={cfg} chatModels={chatModels} personas={personas} setCfgSlot={setCfgSlot} switchPersona={switchPersona} />}
-            {settingsTab === 'modes' && <ModesSection curMode={curMode} modeDesc={modeDesc} modeRegistry={modeRegistry} autodetect={autodetect} changeMode={changeMode} />}
+            {settingsTab === 'modes' && <ModesSection curMode={curMode} modeDesc={modeDesc} modeRegistry={modeRegistry} autodetect={autodetect} changeMode={changeMode} setCfgSlot={setCfgSlot} />}
             {settingsTab === 'voice' && <VoiceSection cfg={cfg} voiceStatus={voiceStatus} voicePaths={voicePaths} setCfgSlot={setCfgSlot} />}
             {settingsTab === 'roles' && <RolesSection roles={roles} chatModels={chatModels} cfg={cfg} setCfgSlot={setCfgSlot} />}
             {settingsTab === 'composition' && <CompositionSection compositionCfg={compositionCfg} />}
@@ -138,29 +138,36 @@ function BrainSection({ cfg, chatModels, personas, setCfgSlot, switchPersona }: 
 
 // — MODES (E2-FE/GC3) — the hierarchical mode type-registry + the auto-detect toggle. The mode is SWITCHABLE
 // (changeMode — takes live). Each mode shows directive (behaviour) + resolution (HOW context resolves) +
-// sub-types + consent. The off/suggest/auto toggle renders its LIVE value READ-ONLY (no runtime setter, G-19).
-function ModesSection({ curMode, modeDesc, modeRegistry, autodetect, changeMode }: any) {
+// sub-types + consent. The off/suggest/auto toggle is now LIVE-SETTABLE (GC6/E2-live): selecting an option
+// writes MODE_AUTODETECT through the EXISTING config path (setCfgSlot → set_rhm_config), which persists +
+// re-resolves the toggle so autodetect_mode honours it; the SSE config event re-loads this surface's value.
+function ModesSection({ curMode, modeDesc, modeRegistry, autodetect, changeMode, setCfgSlot }: any) {
   const modes = modeRegistry ? Object.entries(modeRegistry) : []
+  const adValue = autodetect?.value || 'off'
   return (
     <div className="settings-section" data-ui-ref="ui://settings/modes">
       <SectionHead tag="presence" aside={<Badge tone="sig">{curMode}</Badge>}>Modes</SectionHead>
       <p className="set-prose">A mode is presence AND how context resolves under it — one system. Selecting a mode switches it live.</p>
 
-      {/* the AUTO-DETECT toggle (E2): renders its LIVE value. READ-ONLY — there is no runtime setter for
-         MODE_AUTODETECT (env-resolved at boot), so per rule 4 / G-19 it is shown UNAVAILABLE-to-edit, never a
-         control that silently no-ops. The three options render so the operator sees the design (off/suggest/auto). */}
-      <Surface tone="await">
+      {/* the AUTO-DETECT toggle (E2/GC6): renders its LIVE value AND is settable. Selecting an option writes
+         MODE_AUTODETECT through the SAME config path the other slots use (setCfgSlot → /api/rhm-config →
+         set_rhm_config), which validates (off/suggest/auto, fail-loud), persists, and re-resolves the live
+         toggle so autodetect_mode honours it immediately. The active pill reflects the live value. */}
+      <Surface tone="sig">
         <div className="set-autodetect-head">
           <span className="set-label">Mode auto-detect</span>
-          <Badge tone="await">{autodetect?.value || 'off'}</Badge>
+          <Badge tone="sig">{adValue}</Badge>
         </div>
         <div className="set-autodetect-opts">
           {(autodetect?.options || ['off', 'suggest', 'auto']).map((o: string) => (
-            <span key={o} className={'set-pill' + (o === (autodetect?.value || 'off') ? ' on' : '')}>{o}</span>
+            <button key={o} type="button"
+              className={'set-pill' + (o === adValue ? ' on' : '')}
+              onClick={() => o !== adValue && setCfgSlot('MODE_AUTODETECT', o)}
+              title={o === adValue ? 'current auto-detect mode' : 'set auto-detect → ' + o}>{o}</button>
           ))}
         </div>
         <div className="muted set-note">off = manual only · suggest = propose a mode · auto = switch automatically.
-          Set via the COMPANY_MODE_AUTODETECT env at boot — no live setter yet (a flagged gap).</div>
+          Selecting an option sets it live (persists across reload).</div>
       </Surface>
 
       {modes.length === 0

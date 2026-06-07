@@ -1150,7 +1150,10 @@ button.b:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
 .set-mode-subs{display:flex;align-items:center;flex-wrap:wrap;gap:var(--sp-1);margin-top:var(--sp-2)}
 /* pills — the off/suggest/auto toggle render + sub-type tags. */
 .set-pill{font-family:var(--font-mono);font-size:var(--fs-micro);color:var(--dim);
-  border:1px solid var(--line);border-radius:var(--r-pill);padding:2px var(--sp-2)}
+  border:1px solid var(--line);border-radius:var(--r-pill);padding:2px var(--sp-2);
+  background:none;line-height:inherit}
+button.set-pill{cursor:pointer}
+button.set-pill:hover{border-color:var(--sig);color:var(--ink)}
 .set-pill.on{color:var(--ink);border-color:var(--warn);background:var(--s2)}
 .set-pill.sm{padding:1px var(--sp-1)}
 .set-autodetect-opts{display:flex;gap:var(--sp-1);margin:var(--sp-2) 0}

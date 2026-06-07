@@ -284,11 +284,22 @@ class Suite:
         # from the env into an instance attr (the SAME X17 pattern). VALUES (fail-loud-validated by
         # _cfg_choice): 'off' (manual only — the default, byte-for-byte today's operator-selected modes),
         # 'suggest' (auto-detection PROPOSES a mode, never switches), 'auto' (auto-detection SWITCHES).
-        # Exposed in capabilities().composition_config so the surface reads + (later) sets it. The DETECTOR
+        # Exposed in capabilities().composition_config so the surface reads + SETS it. The DETECTOR
         # that produces a candidate is a deferred seam (§11: zero detector exists today) — `autodetect_mode`
         # honours the toggle over a SUPPLIED candidate; it never fabricates detection (rule 4/8).
-        self.MODE_AUTODETECT = self._cfg_choice("COMPANY_MODE_AUTODETECT",
-                                                type(self).MODE_AUTODETECT, self.MODE_AUTODETECT_OPTIONS)
+        # GC6 (E2-live) — MODE_AUTODETECT is now a RUNTIME-SETTABLE slot (set_rhm_config), so it must
+        # SURVIVE a reload like every other config slot. PRECEDENCE on a fresh Suite: the PERSISTED store
+        # value (MODE_NODE config, written by set_rhm_config) wins → else the env (_cfg_choice, X17) → else
+        # the class default. So a value set through the surface is honoured by a fresh Suite re-running
+        # __init__ (the reload test), while an unset slot still byte-for-byte resolves the env/class default
+        # (every preserve suite stays green). The persisted value is fail-loud-validated by set_rhm_config
+        # before it lands, so reading it here needs no re-validation; _rhm_cfg() returns {} safely at first
+        # boot (no rhm node yet) → the env/class path. self.store is assigned above (line 229), so the
+        # _rhm_cfg() read here is safe.
+        _persisted_autodetect = self._rhm_cfg().get("mode_autodetect")
+        self.MODE_AUTODETECT = (_persisted_autodetect if _persisted_autodetect in self.MODE_AUTODETECT_OPTIONS
+                                else self._cfg_choice("COMPANY_MODE_AUTODETECT",
+                                                      type(self).MODE_AUTODETECT, self.MODE_AUTODETECT_OPTIONS))
 
     @staticmethod
     def _cfg_float(env_name: str, default: float) -> float:
@@ -1378,7 +1389,7 @@ class Suite:
     def set_rhm_config(self, updates: dict) -> dict:
         allowed = {k: v for k, v in (updates or {}).items()
                    if k in ("model", "base_url", "persona", "mode", "voice_enabled", "timeout", "stt",
-                            "roles", "tts_engine", "tts_voice", "voice_path")}
+                            "roles", "tts_engine", "tts_voice", "voice_path", "MODE_AUTODETECT")}
         if "voice_path" in allowed:                           # the voice-path slot (registry-is-truth)
             vp = str(allowed["voice_path"]).strip()
             if vp not in self.VOICE_PATHS:
@@ -1419,6 +1430,20 @@ class Suite:
             allowed["roles"] = existing
         if "mode" in allowed and allowed["mode"] not in self.MODES:
             raise ValueError(f"unknown mode {allowed['mode']!r}")
+        if "MODE_AUTODETECT" in allowed:                      # GC6 (E2-live): the auto-detect toggle slot
+            # The FE writes the SAME key composition_config exposes (`MODE_AUTODETECT`); we persist it
+            # under the node-config slot `mode_autodetect` (lowercase, matching the slot convention so
+            # _rhm_cfg/__init__ read it back). FAIL LOUD (rule 4/8) on a value outside the registered
+            # options — mirrors _cfg_choice's validation discipline (off/suggest/auto only; never invent).
+            ad = str(allowed.pop("MODE_AUTODETECT")).strip()
+            if ad not in self.MODE_AUTODETECT_OPTIONS:
+                raise ValueError(f"MODE_AUTODETECT must be one of {tuple(self.MODE_AUTODETECT_OPTIONS)}, "
+                                 f"got {ad!r} (rule 8: never fabricate a value)")
+            allowed["mode_autodetect"] = ad                   # persist under the lowercase slot key
+            # X17 re-resolve — set the LIVE instance attr so autodetect_mode() + capabilities() honour
+            # the new value IMMEDIATELY (this turn), without waiting for a reload. Persistence (below,
+            # via set_config) carries it across a reload; __init__ re-seeds self.MODE_AUTODETECT from it.
+            self.MODE_AUTODETECT = ad
         if "stt" in allowed:                                  # the ear slot — validate against voice/stt.py's
             # source of truth (never fabricate a provider id, rule 8). When the stt lane's registry has
             # shipped we validate ∈ its ids; until then (registry absent → no ids) we accept any non-empty

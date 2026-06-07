@@ -17,9 +17,10 @@ WHAT THIS PROVES (by USE — real Suite, real corpus/registries, NO live model):
      label + directive (behaviour) + a per-mode context-RESOLUTION declaration (strata/howto_detail/budget) +
      sub-types (the hierarchy) + a consent style — JSON-safe (strata serialised to a sorted list | None).
   B. capabilities().composition_config carries the E2 MODE_AUTODETECT toggle: a live value ∈ its options
-     (off/suggest/auto). (The surface renders it READ-ONLY — there is NO runtime setter; see C, the flagged gap.)
-  C. MODE_AUTODETECT is NOT a writable rhm-config slot (set_rhm_config rejects it) — the surface honestly
-     renders it env-set, never a control that silently no-ops. This pins the E2-FE "render, not fake" contract.
+     (off/suggest/auto). The surface renders it as a LIVE-SETTABLE control (see C — GC6 closed the read-only gap).
+  C. MODE_AUTODETECT IS a writable rhm-config slot (GC6/E2-live): set_rhm_config('MODE_AUTODETECT', v) validates
+     against the options (fail-loud on an off-options value), persists, and RE-RESOLVES the live toggle so the
+     next capabilities() reflects it. The surface writes through the EXISTING config path — no parallel setter.
   D. rhm_config() exposes the slots the surface reads (model/base_url/persona/timeout/voice_enabled/stt/
      tts_engine/voice_path/roles); set_rhm_config ROUND-TRIPS the writable ones the surface edits — model,
      persona, voice_enabled, voice_path — and the value TAKES (the next rhm_config reflects it).
@@ -92,14 +93,21 @@ opts = cc.get("MODE_AUTODETECT_OPTIONS")
 check("B2 · MODE_AUTODETECT_OPTIONS = (off, suggest, auto)", list(opts) == ["off", "suggest", "auto"])
 check("B3 · the live MODE_AUTODETECT value ∈ its options", cc.get("MODE_AUTODETECT") in opts)
 
-# ── C · MODE_AUTODETECT has NO runtime setter (the surface renders it read-only, honestly) ───────────
-# the set_rhm_config whitelist must NOT accept it — proving the surface is right to render it env-set,
-# never a control that silently no-ops (rule 4 / G-19). This is the FLAGGED gap, pinned as a contract.
-before_ad = su.capabilities()["composition_config"]["MODE_AUTODETECT"]
-out = su.set_rhm_config({"MODE_AUTODETECT": "auto"})   # an UNKNOWN slot → silently dropped by the whitelist
+# ── C · MODE_AUTODETECT IS a runtime-settable slot (GC6/E2-live) ─────────────────────────────────────
+# the set_rhm_config whitelist now accepts it (via the existing config path), validates fail-loud,
+# persists, and re-resolves the live toggle — the surface writes the toggle through this path.
+su.set_rhm_config({"MODE_AUTODETECT": "auto"})         # the FE-facing key, the same composition_config exposes
 after_ad = su.capabilities()["composition_config"]["MODE_AUTODETECT"]
-check("C1 · MODE_AUTODETECT is NOT a writable rhm-config slot (whitelist drops it)", before_ad == after_ad)
-check("C2 · 'MODE_AUTODETECT' never leaks into rhm_config", "MODE_AUTODETECT" not in su.rhm_config())
+check("C1 · MODE_AUTODETECT IS a writable rhm-config slot (set takes + re-resolves live)", after_ad == "auto")
+rejected = False
+try:
+    su.set_rhm_config({"MODE_AUTODETECT": "nonsense"})   # fail-loud on an off-options value (rule 4/8)
+except ValueError:
+    rejected = True
+check("C2 · an off-options MODE_AUTODETECT value is REJECTED fail-loud", rejected)
+check("C3 · the FE-facing key never leaks into rhm_config (persisted under the lowercase slot)",
+      "MODE_AUTODETECT" not in su.rhm_config() and su._rhm_cfg().get("mode_autodetect") == "auto")
+su.set_rhm_config({"MODE_AUTODETECT": "off"})           # reset so downstream D-checks see the default floor
 
 # ── D · rhm_config exposes + round-trips the slots the surface reads/writes ──────────────────────────
 rc = su.rhm_config()
