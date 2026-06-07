@@ -230,7 +230,25 @@
         "A3-settings-elevated.html",
         "SCENARIO-PLAYER.html"
       ],
-      "matches_token": "kind-present",
+      "matches_token": "gold-mid",
+      "kind": "colour"
+    },
+    {
+      "literal": "#d2913f",
+      "count": 6,
+      "screens": [
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": "gold-deep",
+      "kind": "colour"
+    },
+    {
+      "literal": "#f2d08a",
+      "count": 4,
+      "screens": [
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": "gold-hi",
       "kind": "colour"
     },
     {
@@ -245,6 +263,24 @@
       "kind": "colour"
     },
     {
+      "literal": "#dba26f",
+      "count": 3,
+      "screens": [
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": "persona-atlas-deep",
+      "kind": "colour"
+    },
+    {
+      "literal": "#dd9f8a",
+      "count": 3,
+      "screens": [
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": "persona-nova-deep",
+      "kind": "colour"
+    },
+    {
       "literal": "#ec6a5e",
       "count": 3,
       "screens": [
@@ -256,195 +292,133 @@
       "kind": "colour"
     },
     {
-      "literal": "#06140f",
+      "literal": "#eebfae",
       "count": 2,
       "screens": [
-        "A2-rhm-mobile-elevated.html",
-        "A3-settings-elevated.html"
+        "SCENARIO-PLAYER.html"
       ],
-      "matches_token": "ink-accent",
+      "matches_token": "persona-nova",
       "kind": "colour"
     },
     {
-      "literal": "#080a0d",
+      "literal": "#f0c49a",
       "count": 2,
       "screens": [
-        "A2-rhm-mobile-elevated.html",
-        "A3-settings-elevated.html"
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": "persona-atlas",
+      "kind": "colour"
+    },
+    {
+      "literal": "#0c0a08",
+      "count": 1,
+      "screens": [
+        "SCENARIO-PLAYER.html"
       ],
       "matches_token": "bg",
       "kind": "colour"
     },
     {
-      "literal": "#0d1116",
-      "count": 2,
+      "literal": "#13110d",
+      "count": 1,
       "screens": [
-        "A2-rhm-mobile-elevated.html",
-        "A3-settings-elevated.html"
+        "SCENARIO-PLAYER.html"
       ],
       "matches_token": "s0",
       "kind": "colour"
     },
     {
-      "literal": "#12171d",
-      "count": 2,
+      "literal": "#191611",
+      "count": 1,
       "screens": [
-        "A2-rhm-mobile-elevated.html",
-        "A3-settings-elevated.html"
+        "SCENARIO-PLAYER.html"
       ],
       "matches_token": "s1",
       "kind": "colour"
     },
     {
-      "literal": "#171e25",
-      "count": 2,
+      "literal": "#1c1304",
+      "count": 1,
       "screens": [
-        "A2-rhm-mobile-elevated.html",
-        "A3-settings-elevated.html"
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": "ink-accent",
+      "kind": "colour"
+    },
+    {
+      "literal": "#211d17",
+      "count": 1,
+      "screens": [
+        "SCENARIO-PLAYER.html"
       ],
       "matches_token": "s2",
       "kind": "colour"
     },
     {
-      "literal": "#1d262e",
-      "count": 2,
+      "literal": "#2a241c",
+      "count": 1,
       "screens": [
-        "A2-rhm-mobile-elevated.html",
-        "A3-settings-elevated.html"
+        "SCENARIO-PLAYER.html"
       ],
       "matches_token": "s3",
       "kind": "colour"
     },
     {
-      "literal": "#232c35",
-      "count": 2,
+      "literal": "#332c22",
+      "count": 1,
       "screens": [
-        "A2-rhm-mobile-elevated.html",
-        "A3-settings-elevated.html"
+        "SCENARIO-PLAYER.html"
       ],
       "matches_token": "line",
       "kind": "colour"
     },
     {
-      "literal": "#2c3742",
-      "count": 2,
+      "literal": "#403729",
+      "count": 1,
       "screens": [
-        "A2-rhm-mobile-elevated.html",
-        "A3-settings-elevated.html"
+        "SCENARIO-PLAYER.html"
       ],
       "matches_token": "line-2",
       "kind": "colour"
     },
     {
-      "literal": "#2c6b5c",
-      "count": 2,
+      "literal": "#6f6555",
+      "count": 1,
       "screens": [
-        "A2-rhm-mobile-elevated.html",
-        "A3-settings-elevated.html"
-      ],
-      "matches_token": "acc-dim",
-      "kind": "colour"
-    },
-    {
-      "literal": "#3fb595",
-      "count": 2,
-      "screens": [
-        "A2-rhm-mobile-elevated.html",
-        "A3-settings-elevated.html"
-      ],
-      "matches_token": "acc-deep",
-      "kind": "colour"
-    },
-    {
-      "literal": "#54d6b0",
-      "count": 2,
-      "screens": [
-        "A2-rhm-mobile-elevated.html",
-        "A3-settings-elevated.html"
-      ],
-      "matches_token": "kind-process",
-      "kind": "colour"
-    },
-    {
-      "literal": "#5e6b78",
-      "count": 2,
-      "screens": [
-        "A2-rhm-mobile-elevated.html",
-        "A3-settings-elevated.html"
+        "SCENARIO-PLAYER.html"
       ],
       "matches_token": "tx-3",
       "kind": "colour"
     },
     {
-      "literal": "#6b8aa8",
-      "count": 2,
+      "literal": "#9c8f78",
+      "count": 1,
       "screens": [
-        "A2-rhm-mobile-elevated.html",
-        "A3-settings-elevated.html"
+        "SCENARIO-PLAYER.html"
       ],
       "matches_token": "cache",
       "kind": "colour"
     },
     {
-      "literal": "#6b9bd8",
-      "count": 2,
+      "literal": "#b3a692",
+      "count": 1,
       "screens": [
-        "A2-rhm-mobile-elevated.html",
-        "A3-settings-elevated.html"
-      ],
-      "matches_token": "kind-content",
-      "kind": "colour"
-    },
-    {
-      "literal": "#9aa7b4",
-      "count": 2,
-      "screens": [
-        "A2-rhm-mobile-elevated.html",
-        "A3-settings-elevated.html"
+        "SCENARIO-PLAYER.html"
       ],
       "matches_token": "tx-2",
       "kind": "colour"
     },
     {
-      "literal": "#b58cdc",
-      "count": 2,
+      "literal": "#f3ece1",
+      "count": 1,
       "screens": [
-        "A2-rhm-mobile-elevated.html",
-        "A3-settings-elevated.html"
-      ],
-      "matches_token": "kind-model",
-      "kind": "colour"
-    },
-    {
-      "literal": "#e8eef4",
-      "count": 2,
-      "screens": [
-        "A2-rhm-mobile-elevated.html",
-        "A3-settings-elevated.html"
+        "SCENARIO-PLAYER.html"
       ],
       "matches_token": "tx",
       "kind": "colour"
     }
   ],
   "candidate_new_colour_tokens": [
-    {
-      "literal": "#d2913f",
-      "count": 6,
-      "screens": [
-        "SCENARIO-PLAYER.html"
-      ],
-      "matches_token": null,
-      "kind": "colour"
-    },
-    {
-      "literal": "#f2d08a",
-      "count": 4,
-      "screens": [
-        "SCENARIO-PLAYER.html"
-      ],
-      "matches_token": null,
-      "kind": "colour"
-    },
     {
       "literal": "#fff",
       "count": 4,
@@ -464,24 +438,6 @@
       "kind": "colour"
     },
     {
-      "literal": "#dba26f",
-      "count": 3,
-      "screens": [
-        "SCENARIO-PLAYER.html"
-      ],
-      "matches_token": null,
-      "kind": "colour"
-    },
-    {
-      "literal": "#dd9f8a",
-      "count": 3,
-      "screens": [
-        "SCENARIO-PLAYER.html"
-      ],
-      "matches_token": null,
-      "kind": "colour"
-    },
-    {
       "literal": "#05070a",
       "count": 2,
       "screens": [
@@ -492,7 +448,67 @@
       "kind": "colour"
     },
     {
+      "literal": "#06140f",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#080a0d",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#0d1116",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#12171d",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#171e25",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
       "literal": "#1c8e74",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#1d262e",
       "count": 2,
       "screens": [
         "A2-rhm-mobile-elevated.html",
@@ -520,9 +536,89 @@
       "kind": "colour"
     },
     {
+      "literal": "#232c35",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#2c3742",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#2c6b5c",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#3fb595",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
       "literal": "#4a76ab",
       "count": 2,
       "screens": [
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#54d6b0",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#5e6b78",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#6b8aa8",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#6b9bd8",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
         "A3-settings-elevated.html"
       ],
       "matches_token": null,
@@ -538,19 +634,31 @@
       "kind": "colour"
     },
     {
-      "literal": "#eebfae",
+      "literal": "#9aa7b4",
       "count": 2,
       "screens": [
-        "SCENARIO-PLAYER.html"
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
       ],
       "matches_token": null,
       "kind": "colour"
     },
     {
-      "literal": "#f0c49a",
+      "literal": "#b58cdc",
       "count": 2,
       "screens": [
-        "SCENARIO-PLAYER.html"
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#e8eef4",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
       ],
       "matches_token": null,
       "kind": "colour"
@@ -649,8 +757,8 @@
   },
   "summary": {
     "screens": 20,
-    "literals_should_use_var": 30,
-    "candidate_new_colour_tokens": 16,
+    "literals_should_use_var": 31,
+    "candidate_new_colour_tokens": 27,
     "coverage_gaps": 6,
     "address_orphans_unregistered": 2,
     "address_orphans_unused": 45,
