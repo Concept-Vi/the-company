@@ -526,7 +526,7 @@ class Suite:
                 "R2_RUN_VERSIONS": self.R2_RUN_VERSIONS,
             },
             "api_verbs": ["/api/run", "/api/now", "/api/chat", "/api/graph", "/api/graphs",
-                          "/api/types", "/api/object_info", "/api/events", "/api/inbox",
+                          "/api/types", "/api/object_info", "/api/cognition_info", "/api/events", "/api/inbox",
                           "/api/panels", "/api/models", "/api/stream", "/api/move",
                           "/api/ui_info", "/api/surface-review", "/api/capture-idea",
                           "/api/build-intent",
@@ -3423,17 +3423,65 @@ class Suite:
         """The cognition registries as a STATUS read (registry-is-truth, exposed in capabilities()): the
         file-discovered roles + each role's facet (fireable/jury/mode_scope/requires), the cast per mode,
         and the juries. So the surface/RHM read WHAT roles exist + which fire in which mode from the
-        registry, never a hardcoded list."""
+        registry, never a hardcoded list.
+
+        REUSE-DON'T-PARALLEL (L-fe-be): the per-role serialization is the SAME projection
+        build_cognition_info uses — both go through contracts.cognition_info._serialize_role, so the
+        capabilities() block and the /cognition_info view can NEVER drift into two role serializers
+        (Tim's "built like the rest of the system"). This block is the compact STATUS subset; the full
+        render-truth (rules/render_hint/thought-shapes/edge-kinds/event-contract) is cognition_info()."""
+        from contracts.cognition_info import _serialize_role
         roles = {}
         for rid in sorted(self.role_registry):
-            r = self.role_registry[rid]
-            roles[rid] = {"id": rid, "label": r.spec.get("label"), "can_fire": r.can_fire,
-                          "is_jury": r.is_jury, "draws": r.draws,
-                          "mode_scope": sorted(r.mode_scope), "requires": r.requires}
+            full = _serialize_role(rid, self.role_registry[rid])   # the ONE role serializer (no fork)
+            roles[rid] = {k: full[k] for k in
+                          ("id", "label", "can_fire", "is_jury", "draws", "mode_scope", "requires")}
         casts = {m: [r.id for r in self.role_registry.cast_for_mode(m)] for m in self.MODES}
         return {"roles": roles, "casts": casts,
                 "juries": [r.id for r in self.role_registry.juries()],
                 "fireable": [r.id for r in self.role_registry.fireable()]}
+
+    def cognition_info(self) -> dict:
+        """C5 (sibling) — SERIALIZE the cognition registries for the live cognition VIEW (the SIBLING of
+        object_info(); 06-rendering.md §F#1 names it exactly). Mirrors object_info()/ui_info(): a thin
+        method that hands the live registries to the contract serializer (build_cognition_info), which is
+        GENERATED FROM the registries — never hand-written — and FAILS LOUD on a key/id disagreement
+        (mirrors build_object_info). Served at /api/cognition_info (sibling of /api/object_info).
+
+        DYNAMIC + REUSABLE (Tim's directive): the projection reads the LIVE registries — a role file
+        dropped in roles/*.py, a declared rule, an edge-kind, an activation context all appear in the
+        projection with no FE code (the ComfyUI generic-renderer pattern, rule 3). The cognition.*
+        event-kind EMIT-CONTRACT (what the staged turn emits on /api/stream) ships in the projection so
+        the FE (L-fe) binds to a real contract, not an invented one (06 §F#3)."""
+        from contracts.cognition_info import build_cognition_info
+        from contracts.node_record import EDGE_KINDS
+        from runtime import rules as _rules
+        from runtime import activation as _act
+        # The declared rules registry: the canonical cognition INJECTION_RULE + any AST-shaped rules the
+        # cast roles declare (the SAME G3 engine chat_parts/activation use — never a second evaluator).
+        from runtime import cognition as _cog
+        rules_map: dict = {}
+        canon = getattr(_cog, "INJECTION_RULE", None)
+        if canon is not None:
+            rules_map[canon.id] = canon
+        for rid in self.role_registry:
+            role = self.role_registry[rid]
+            for rspec in (role.spec.get("rules") or []):
+                rule = self._rule_from_spec(rspec)               # reuse the Suite's G3 builder (one engine)
+                if rule is not None and rule.id not in rules_map:
+                    rules_map[rule.id] = rule
+        casts = {m: [r.id for r in self.role_registry.cast_for_mode(m)] for m in self.MODES}
+        return build_cognition_info(
+            roles=self.role_registry,                            # the file-discovered RoleRegistry (dict-like)
+            rules=rules_map,
+            edge_kinds=EDGE_KINDS,
+            thought_shapes=self.THOUGHT_SHAPES,
+            activation_contexts=_act.ACTIVATION_CONTEXTS,
+            rule_ops=_rules.RULE_OPS,
+            destination_kinds=_rules.DESTINATION_KINDS,
+            casts=casts,
+            node_states=[dict(s, applies_to=list(s["applies_to"])) for s in self.NODE_STATES],
+        )
 
     def knobs_for(self, model: str | None = None, base_url: str | None = None) -> dict:
         """G8.1 — DYNAMIC knob resolution: the configurable per-request surface for a (loaded) model,
@@ -3894,6 +3942,18 @@ class Suite:
         shape = self.shape_for(mode)
         grain = self.grain_for(mode)
         parts_emitted: list[str] = []
+        # L-fe-be — the live cognition view (06-rendering.md §F#3) lights up from per-turn cognition.*
+        # LIFECYCLE events on /api/stream (the existing cognition.wave is a per-WAVE ROLLUP, kept intact).
+        # These are NARRATION (lenient _emit telemetry — reflects-never-owns; never a resolve/approve/
+        # dispatch — the claude -p floor holds, C9.2). Each carries a TOP-LEVEL `address` (the locus, C7.2)
+        # so the view is addressable: ui://cognition/<turn> for the turn frame, run://<turn>/<role> for a
+        # role instance (run:// reuse, NOT a net-new cog:// scheme — §H default lean). The contract is
+        # declared in contracts/cognition_info.COGNITION_EVENT_KINDS (the FE binds to it). EMITTED
+        # SYNCHRONOUSLY at TRUE points (not from the wave threads) so the causal order is honest:
+        # turn.start → role.fire×N (pre-wave) → part(1) (early, before join) → role.ran×N (post-join) →
+        # inject → part(2) → turn.done. (A flat fire/ran/part order would MISREPRESENT the concurrency.)
+        _cog_addr = f"ui://cognition/{turn_id}"
+        _turn_t0 = _time.monotonic()
 
         # PART 1 — from BASE context, INSTANTLY (is_final=False → pure generation, no tools). Emitted
         # before the wave completes (the wave fires concurrently below).
@@ -3902,6 +3962,18 @@ class Suite:
         # only those that read just the utterance (independent ready-set). The declared rules on those
         # roles (G3) decide what injects into the FINAL part.
         fireable = [r for r in cast if getattr(r, "can_fire", False) and not getattr(r, "is_jury", False)]
+
+        # cognition.turn.start — the view opens a turn frame (carries the mode + shape + the cast).
+        self._emit("cognition.turn.start", f"turn {turn_id} · {mode} · {len(fireable)} roles",
+                   turn_id=turn_id, mode=mode, shape=shape["archetype"], grain=grain,
+                   cast=[r.id for r in fireable], address=_cog_addr)
+        # cognition.role.fire ×N — emitted SYNCHRONOUSLY before the wave starts (deterministic, one per
+        # fireable role); the role dot goes 'firing'. Address = the role's run:// instance locus.
+        for r in fireable:
+            self._emit("cognition.role.fire", f"role {r.id} fires",
+                       turn_id=turn_id, role=r.id, model=cfg["model"],
+                       address=f"run://{turn_id}/{r.id}")
+
         wave_holder: dict = {}
         wave_err: dict = {}
         import threading as _thr
@@ -3920,6 +3992,9 @@ class Suite:
         part1 = self._chat_part_core(message, graph_id, focus, mode, cfg, persona, persona_text,
                                      is_final=False)           # Part 1: base context, no tools
         parts_emitted.append(part1["text"])
+        # cognition.part part=1 — the instant base part (the river fills); genuinely early (before join).
+        self._emit("cognition.part", f"turn {turn_id} part 1 (base)",
+                   turn_id=turn_id, part=1, final=False, staged=True, address=_cog_addr)
         yield {"part": 1, "text": part1["text"], "final": False, "staged": True,
                "grain": grain, "shape": shape["archetype"]}
 
@@ -3934,6 +4009,14 @@ class Suite:
                 raise wave_err["err"]                         # fail loud — a wave failure is not swallowed
             wave = wave_holder.get("wave")
             resolved = dict(wave.resolved) if wave else {}
+            # cognition.role.ran ×N — read off the wave's RoleRun records AFTER the barrier (the honest
+            # point: roles finished concurrently, so we narrate completion post-join). Each carries its
+            # run:// address + ok + ms (straight off RoleRun). A failed role narrates loud (carries error).
+            for rr in (wave.runs if wave else []):
+                self._emit("cognition.role.ran",
+                           f"role {rr.role_id} {'ok' if rr.ok else 'FAILED'} · {rr.ms}ms",
+                           turn_id=turn_id, role=rr.role_id, ok=rr.ok, ms=rr.ms,
+                           address=rr.address, **({"error": rr.error} if rr.error else {}))
             # The G3 DECLARED RULES decide what injects (C4.2 — the G4 job the spike deferred). We gather
             # the buildable AST rules from TWO sources (reuse-don't-parallel — both are the SAME G3 engine):
             #   (a) the canonical declared rule(s) the cognition driver already built (cognition.INJECTION_RULE
@@ -3962,6 +4045,18 @@ class Suite:
                 if decision_r.get("fire") and rule.destination == "inject" and decision_r.get("value"):
                     inject_text = str(decision_r["value"])
                     inject_provenance.append({"role": role_id, "rule": getattr(rule, "id", "?")})
+                    # cognition.inject — a declared rule injected a role's output into the FINAL part (the
+                    # injection edge SOURCE→brain lights up — 06 §C/§D). The source role is recoverable from
+                    # the rule even when role_id is None (the canonical INJECTION_RULE is appended with
+                    # role_id=None): the value_path's FIRST segment names the source role (e.g.
+                    # "recall.snippet" → "recall"). So the injection edge always identifies its source.
+                    src = role_id or ((getattr(rule, "params", {}) or {}).get("value_path") or "").split(".")[0] or None
+                    self._emit("cognition.inject",
+                               f"rule {getattr(rule, 'id', '?')} injects {src} → part 2",
+                               turn_id=turn_id, rule=getattr(rule, "id", "?"),
+                               source=src, role=src,                 # `source` = the 06 §F field name; `role` kept for back-compat
+                               into=2, chars=len(inject_text),
+                               address=(f"run://{turn_id}/{src}" if src else _cog_addr))
 
         # PART 2 (FINAL) — reads the injected run:// value (C4.2), carries the prior parts (C4.4), runs
         # the tool block (C4.5 — tools on the FINAL part only).
@@ -3969,9 +4064,18 @@ class Suite:
                                      is_final=True, prior_parts=parts_emitted, inject=inject_text)
         parts_emitted.append(part2["text"])
 
+        # cognition.part part=2 — the FINAL enriched part (the river completes). final=True.
+        self._emit("cognition.part", f"turn {turn_id} part 2 (final)",
+                   turn_id=turn_id, part=2, final=True, staged=True, address=_cog_addr)
+
         # EPILOGUE ONCE — the joined reply (one coherent voice), the SINGLE append + emit.
         joined = "\n\n".join(p for p in parts_emitted if p.strip())
         res = self._chat_epilogue(message, mode, cfg, joined, part2["outcomes"], part2["proposals"])
+        # cognition.turn.done — the view closes the turn frame + shows the total.
+        self._emit("cognition.turn.done",
+                   f"turn {turn_id} done · {int((_time.monotonic() - _turn_t0) * 1000)}ms",
+                   turn_id=turn_id, total_ms=int((_time.monotonic() - _turn_t0) * 1000),
+                   n_parts=len(parts_emitted), n_roles=len(fireable), address=_cog_addr)
         yield {"part": 2, "text": part2["text"], "final": True, "staged": True,
                "grain": grain, "shape": shape["archetype"], "joined": joined,
                "injected": inject_text, "inject_provenance": inject_provenance,

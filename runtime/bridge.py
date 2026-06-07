@@ -287,6 +287,8 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.list_graphs()))
             elif path == "/api/object_info":
                 self._send(200, json.dumps(SUITE.object_info()))
+            elif path == "/api/cognition_info":            # L-fe-be: the COGNITION registry (sibling of object_info)
+                self._send(200, json.dumps(SUITE.cognition_info()))
             elif path == "/api/types":
                 self._send(200, json.dumps(sorted(SUITE.list_types())))
             elif path == "/api/models":                    # B: per-kind/per-endpoint live model list

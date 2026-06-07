@@ -220,6 +220,60 @@ the per-turn stream uses → R permits ALWAYS stay free for the live per-turn ca
 never starve it). Add a context ⇒ add it to `ACTIVATION_CONTEXTS` **and reflect it here**, or
 `tests/activation_contexts_acceptance.py` fails loud.
 
+## The live cognition VIEW backend (Concurrent Cognition L-fe-be · `contracts/cognition_info.py` + `runtime/suite.py` + `runtime/bridge.py` · §F net-new backend)
+
+The live cognition VIEW (`build-prep/concurrent-cognition/06-rendering.md`) is a **generic
+reflects-never-owns renderer** of the collective-cognition layer — exactly as the canvas is a generic
+renderer of node-types. The backend it renders from is **a SIBLING projection, not new machinery** (06
+§B.3): the cognition registries serialize through `build_cognition_info` (the sibling of
+`build_object_info`), and the view lights up from per-turn `cognition.*` LIFECYCLE events on the existing
+`/api/stream` SSE (mirroring the `decision.*` precedent).
+
+**The projection (`contracts/cognition_info.build_cognition_info` → `Suite.cognition_info()` →
+`/api/cognition_info`):** GENERATED FROM the live registries (rule 3, one source) — never hand-written —
+and FAILS LOUD on a key/id disagreement (mirrors `object_info.py:79-83`). Serializes the file-discovered
+roles + each role's declared rules/render-hint/facet, the declared G3 rules (`as_record`), and the
+net-new cognition registries `EDGE_KINDS` · `THOUGHT_SHAPES` · `ACTIVATION_CONTEXTS` · `RULE_OPS` ·
+`DESTINATION_KINDS` · the cast-per-mode · the cognition node-state vocabulary. **DYNAMIC + REUSABLE
+(Tim's directive):** drop a role file / a rule / an edge-kind → it appears in the projection live, no FE
+code (the ComfyUI generic-renderer pattern). `cognition_capabilities()` and `cognition_info()` share the
+SAME role serializer (`contracts.cognition_info._serialize_role`) — never two role serializers that can
+drift (reuse-don't-parallel).
+
+**The net-new registry (drift home — C9.4 / R2-FOLD H5; `tests/cognition_info_acceptance.py` asserts it
+stays reflected HERE, mirroring `rules_acceptance` → `RULE_OPS` and `edge_kinds_acceptance` →
+`contracts/AGENTS.md`):**
+
+- **`COGNITION_EVENT_KINDS`** (`contracts/cognition_info.py`) — the per-turn cognition.* LIFECYCLE
+  emit-contract the staged-turn path (`Suite.chat_parts`) writes onto the ONE event log (lenient `_emit`
+  telemetry — NARRATION/visibility, reflects-never-owns, never a safety claim) and `/api/stream` serves.
+  The FE (L-fe) binds to THIS contract, not an invented one (06 §F#3). Each carries a TOP-LEVEL `address`
+  (the locus, C7.2): `ui://cognition/<turn>` for the turn frame, `run://<turn>/<role>` for a role
+  instance (run:// reuse — NOT a net-new `cog://` scheme; §H default lean). The kinds, EMITTED
+  SYNCHRONOUSLY at true causal points (the honest order under concurrency: `turn.start` →
+  `role.fire`×N pre-wave → `part`(1) early → `role.ran`×N post-join → `inject` → `part`(2) →
+  `turn.done`):
+  - **`cognition.turn.start`** `{turn_id, mode, shape, grain, cast[], address}` — the swarm is about
+    to fire; the view opens a turn frame.
+  - **`cognition.role.fire`** `{turn_id, role, model, address=run://<turn>/<role>}` — a role's model
+    call is launched (the dot goes 'firing'). Synchronous + deterministic, one per fireable role.
+  - **`cognition.role.ran`** `{turn_id, role, ok, ms, error?, address=run://<turn>/<role>}` — a role
+    returned (read off the wave's `RoleRun` records after the barrier).
+  - **`cognition.inject`** `{turn_id, rule, source, role(=source alias), into, chars, address=run://<turn>/<source>}` —
+    a declared G3 rule injected a role's output into the final reply part (the injection edge SOURCE→brain
+    lights up). The `source` role is always identified (recovered from the rule's `value_path` when the
+    rule isn't role-attached). `cost` (the edge weight) is DEFERRED until C6 faculty injections exist.
+  - **`cognition.part`** `{turn_id, part, final, staged, address=ui://cognition/<turn>}` — a staged
+    reply part was emitted (the river fills).
+  - **`cognition.turn.done`** `{turn_id, total_ms, n_parts, n_roles, address=ui://cognition/<turn>}` —
+    the turn completed; the view closes the frame.
+
+  **PRESERVED:** the per-WAVE `cognition.wave` rollup (`run_swarm`, C1.6) is UNCHANGED — these per-TURN
+  lifecycle events are ADDITIVE narration alongside it. **THE FLOOR (C9.2):** no cognition.* kind is —
+  and none may ever be — a `resolve`/`approve`/`dispatch`; a cognition.* event NARRATES backend truth,
+  it can never forge an operator action. Add an event kind ⇒ add it to `COGNITION_EVENT_KINDS` **and
+  reflect it here**, or `tests/cognition_info_acceptance.py` fails loud.
+
 ## Relates to
 
 - **Called by** [[canvas — constitution]] — through the bridge (C8) — and by
