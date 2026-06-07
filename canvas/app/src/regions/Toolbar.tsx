@@ -8,6 +8,7 @@ export function Toolbar() {
   const {
     now, running, chatBusy, runElapsed, runError, modeDesc, layerView, notice,
     doRun, changeMode, wireSelected, portalSelected, deleteSelected, cycleLayers, fitGraph, reload, setRunError, setSettingsOpen,
+    indicateMode, toggleIndicateMode,
   } = useApp()
   return (
     <div className="hud toolbar" data-ui-ref="toolbar">
@@ -46,6 +47,8 @@ export function Toolbar() {
       <button className="b ghost" data-ui-ref="ui://toolbar/layers" onClick={cycleLayers}>◐ layers: {['all', 'origin', 'system'][layerView]}</button>
       {/* U6: fit the graph with padding for the fixed panels so nothing tucks under the chrome */}
       <button className="b ghost" data-ui-ref="ui://toolbar/fit" onClick={fitGraph} title="zoom to fit — padded so no node hides under the panels">⊡ fit</button>
+      <button className={'b ghost' + (indicateMode ? ' on' : '')} data-ui-ref="ui://toolbar/point" onClick={toggleIndicateMode}
+        title="point mode — when ON, tapping a UI element marks it as your next message's focus. OFF: normal clicks.">◎ point{indicateMode ? ': on' : ''}</button>
       <button className="b ghost" data-ui-ref="ui://toolbar/reload" onClick={reload}>reload</button>
       <button className="b ghost" data-ui-ref="ui://toolbar/settings" title="settings — models, voice, context window, knobs" onClick={() => setSettingsOpen(true)}>⚙ settings</button>
       {notice && <span className="notice">{notice}</span>}

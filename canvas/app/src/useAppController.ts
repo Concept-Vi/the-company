@@ -73,6 +73,12 @@ export function useAppController(editor: Editor) {
   // `.ui-spotlight` ring (which the show-resolver flashes and removes after a timeout).
   const [indicated, setIndicated] = useState<string | null>(null)
   const indicatedRef = useRef<string | null>(null)   // for the capture handler (avoids a stale closure)
+  // I1-gate (Tim 2026-06-07): click-to-indicate is a DELIBERATE mode, NOT a global capture. Always-on, it
+  // hijacked every tap — the Settings ✕ wouldn't close (its onClick was disrupted by the indicate re-render)
+  // and a tap on any panel painted `.ui-indicated` (translucency) revealing what's behind. OFF by default:
+  // clicks behave normally; turn it ON to point-at-things for comment/reference. Ref for the capture closure.
+  const [indicateMode, setIndicateMode] = useState(false)
+  const indicateModeRef = useRef(false)
   // L9 · reverse journey-recording (§21.7#2-reverse). The REVERSE of the forward resolveUiTarget: an
   // EXPLICIT start/stop recording of the operator's ordered ui:// click-path as a DISTINCT journey-record
   // (NOT the review-session organ — that records item-ids; this records navigation). While `journeyId` is
@@ -562,6 +568,14 @@ export function useAppController(editor: Editor) {
     // so an indicate(null) never records a step. The append is S0-validated server-side (fail loud).
     if (journeyIdRef.current) recordJourneyStep(addr)
   }
+  // I1-gate: enter/leave the deliberate point-to-indicate mode. Leaving clears any live indication (+ its
+  // `.ui-indicated` DOM cue) so the surface returns fully to normal clicking.
+  function toggleIndicateMode() {
+    const next = !indicateModeRef.current
+    indicateModeRef.current = next; setIndicateMode(next)
+    if (!next) indicate(null)
+    setNotice(next ? '◎ point mode ON — tap a UI element to make it your next message’s focus' : 'point mode off')
+  }
   // L9 · the step-append, factored so `indicate` stays focused. Fire-and-surface: a backend 400 (malformed
   // address — shouldn't happen since only registered ui:// refs indicate, but fail-loud anyway) surfaces a
   // notice, never a silent swallow (rule 4). Recording continues; one bad step doesn't end the journey.
@@ -609,8 +623,10 @@ export function useAppController(editor: Editor) {
   // current indication UNTOUCHED — you point with the rest of the surface, then talk in the chat.
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
+      if (!indicateModeRef.current) return                  // I1-gate: indicate only fires in the deliberate mode (Tim) — otherwise clicks are normal
       const tgt = e.target as HTMLElement | null
       if (tgt?.closest?.('[data-ui-ref="chat"]')) return    // inside the chat region → conversing, never indicating
+      if (tgt?.closest?.('.settings, .workshop')) return    // inside a MODAL → you OPERATE it (close/config), never point at it
       const t = tgt?.closest?.('[data-ui-ref]') as HTMLElement | null
       if (!t) return
       const ref = t.getAttribute('data-ui-ref') || ''
@@ -1540,6 +1556,7 @@ export function useAppController(editor: Editor) {
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
     resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, toggleRecordConversation, startDebriefSession, newConversation, openConversation, chooseModel, setSettingsOpen, applyRhm, setBrainKnob, setModelCtx, refreshFit, fieldValue,
     setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus,
+    indicateMode, toggleIndicateMode,
     approveProposal, dismissProposal, toggleJourneyRecording, replayJourney, switchPersona,
   }
 }
