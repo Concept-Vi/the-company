@@ -12,9 +12,9 @@
 
 **Verified findings (the reuse spine):**
 - **Role = node, chain = edge, view = canvas; the judge is role #0.** `ROLE_REGISTRY` (`suite.py:929`) already defines a role as "a named model-function of the collective cognition" and names this generalisation as intended growth. → *Criteria G2; Guide G2.*
-- **The injection path EXISTS:** `_chat_context → _resolve_context_at` (`suite.py:1322,1461,1943`) is address→resolve→inject; the judge currently bypasses it (utterance-only). → *G3/G4; the `swarm://` resolution.*
+- **The address→resolve→inject SHAPE exists, but injection is NET-NEW (R1-FOLD F3 / R2-FOLD H4):** `_chat_context`/`_resolve_context_at` resolves operator-notebook strata, NOT freshly-written role refs — so a role's `run://<turn>/<role>` JSON is invisible to it. Injection needs a net-new ref-read branch; addressing is `run://` (never `swarm://`). → *G3/G4.*
 - **The scheduler has the right readiness shape but is STRICTLY SERIAL** (`scheduler.py:60-153`; zero async/threadpool). → *the make-or-break, G1.1.*
-- **Concurrency is feasible on one resident model:** blocking transport + GIL-releases-on-IO + vLLM server-side batching → a ThreadPoolExecutor of ~32 requests; `fabric/vram.py:VramGate` exists unwired (`limit=1`). → *G1.2.*
+- **Concurrency mechanism is feasible on one resident model:** blocking transport + GIL-releases-on-IO + vLLM server-side batching → a ThreadPoolExecutor in the cognition driver; `fabric/vram.py:VramGate` exists unwired (`limit=1`). **But the WIDTH is KV-pool-bound, not 32** (R2-FOLD H1): `max_num_seqs=16` AND the shared KV pool → ~1–5 roles at the 64K voice brain, ~16 with a leaner swarm-mode config. → *G1.1/G1.2/C1.7.*
 - **`json_schema` is one transport branch away** (`transport.py:37` does `json_object`; the 4B does strict schemas reliably — `BENCHMARK_FACTSHEET.md §5`); validate/retry exists (`client.py:75-87`). → *G1.4.*
 - **The voice circuit today:** STT-batch → full-reply → per-sentence synth (`bridge.py:357-468`); the only overlap is synth↔playback. The PART becomes the synth unit with near-zero change to `speak()`. → *G6.*
 - **The canvas is a generic reflects-never-owns renderer**; `decision.*` SSE branch (`useAppController.ts:384`) is the exact extension point for `cognition.*`; `build_object_info`/`ui_info` projects registries→UI. → *G7.*
@@ -36,7 +36,7 @@
 - **Net-new (the build):** parallel wave executor + slot semaphore (G1.1-1.2) · edge `kind`/injection edge (G1.3) · enforced `output_schema` (G1.4) · `llm` volatile + per-draw (G1.5) · file-discovered role registry (G2) · the declared-rule engine (G3) · the staged-part queue + thought-shapes + brevity bypass (G4) · activation-context triggers (G5) · parts-as-TTS-units (G6) · the cognition view + `cognition.*` events (G7) · `MODEL_CAPABILITIES` join (G8).
 
 ## Verified hardware facts (the foundation)
-- The 4B is **resident-capable at 64K** co-resident with a 4-bit voice (the 2026-06-07 co-residence work); the swarm's 32-concurrency lives on this one resident model. Slot budget + co-residence are owned by `gpu.py`.
+- The 4B is **resident-capable at 64K** co-resident with a 4-bit voice (the 2026-06-07 co-residence work). The swarm lives on this one resident model, but its **width is bound by the shared KV pool** (R2-FOLD H1): ~1–5 roles overlapping a 64K main context; ~16 with a mode-selected leaner swarm-brain config (~16K/util ~0.6). Slot budget + co-residence are owned by `gpu.py`.
 - The 4B does tool-calls reliably + valid JSON (`json_object`; true `json_schema` server-side is a separate change — F9), ~100 tok/s decode. **Concurrency: `max_num_seqs=16` (services.json), KV pool SHARED with the main context** — the c=32/2241 tok/s benchmark was 4K-context on a higher util, NOT the co-resident voice config; the real swarm ceiling at the voice config is well below 16 at usable per-role context (measure at C0.5).
 
 ## Open dev-calls (carried; see DECISIONS.md)
