@@ -9,7 +9,7 @@ import { PanelErrorBoundary } from '../components/PanelErrorBoundary'
 
 export function Settings() {
   const { settingsOpen, setSettingsOpen, cfg, chatModelsX, personas, engineKnobs, voiceInfo, fitReport,
-          chooseModel, switchPersona, setBrainKnob, setModelCtx, applyRhm, setVoiceInputMode, setVoiceEnabled } = useApp()
+          chooseModel, switchPersona, setBrainKnob, setModelCtx, applyRhm, setVoiceInputMode, setVoiceEnabled, startVoiceService } = useApp()
   const [ctx, setCtx] = useState<string>('')
   if (!settingsOpen) return null
   const bk = cfg.brain_knobs || {}
@@ -88,6 +88,20 @@ export function Settings() {
             <select value={cfg.stt || ''} onChange={e => applyRhm({ stt: e.target.value })}>
               {ears.length ? ears.map(id => <option key={id} value={id}>{id}</option>) : <option value={cfg.stt || ''}>{cfg.stt || '(default)'}</option>}
             </select>
+            {(() => {
+              // Ear status + START affordance (Tim 2026-06-07: a down ear had no way to start from the UI).
+              const earStat = voiceInfo && voiceInfo.stt && cfg.stt ? voiceInfo.stt[cfg.stt] : undefined
+              const earReg = (voiceInfo && voiceInfo.stt_registry && cfg.stt) ? voiceInfo.stt_registry[cfg.stt] : null
+              if (earStat === undefined) return null
+              if (earStat) return <div className="ear-status ok">● {cfg.stt} online</div>
+              const svc = earReg && earReg.service
+              return (
+                <div className="ear-status down">
+                  ✕ {cfg.stt} offline — {earReg && earReg.detail ? earReg.detail : 'not running'}
+                  {svc && <button className="b sm" style={{ marginLeft: 8 }} onClick={() => startVoiceService(svc, cfg.stt)}>▶ start</button>}
+                </div>
+              )
+            })()}
             <label>listening style</label>
             <select value={cfg.voice_input_mode || 'push_to_talk'} onChange={e => setVoiceInputMode(e.target.value)}>
               <option value="push_to_talk">🎙 push-to-talk</option>

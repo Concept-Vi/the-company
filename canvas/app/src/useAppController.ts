@@ -1397,6 +1397,18 @@ export function useAppController(editor: Editor) {
       setFitReport(await api.fit(keys))
     } catch { setFitReport(null) /* non-fatal: the surface just hides the fit line */ }
   }
+  // Voice fix (Tim 2026-06-07): START a down ear/voice service FROM the interface (an offline ear had no
+  // start affordance — "can't start it through the interface"). Budget-gated + fail-loud via /api/model/load
+  // (a CPU ear like whisper.cpp costs no VRAM and just starts; a GPU ear that won't fit refuses loudly).
+  async function startVoiceService(service: string, label?: string) {
+    try {
+      setNotice('starting ' + (label || service) + '…')
+      const r = await api.modelLoad(service)
+      if (r && r.error) { setNotice('⚠ ' + r.error); return }
+      setNotice((label || service) + ' starting — give it a moment')
+      setTimeout(() => api.voice().then(v => setVoiceInfo(v && typeof v === 'object' ? v : {})).catch(() => {}), 2800)
+    } catch (e: any) { setNotice('⚠ ' + (e?.message || e)) }
+  }
   // S1 — choose a chat model: set model + its base_url (so a local vLLM model uses its own endpoint), and
   // LOAD its service on demand if it's a company-managed model that's down (budget-gated, like a voice switch).
   async function chooseModel(row: any) {
@@ -1554,7 +1566,7 @@ export function useAppController(editor: Editor) {
     // handlers
     poll, openCoa, reload, fitGraph, addNode, wireSelected, doConnect, setNodeConfig, surfaceOutput,
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
-    resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, toggleRecordConversation, startDebriefSession, newConversation, openConversation, chooseModel, setSettingsOpen, applyRhm, setBrainKnob, setModelCtx, refreshFit, fieldValue,
+    resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, toggleRecordConversation, startDebriefSession, newConversation, openConversation, chooseModel, setSettingsOpen, applyRhm, setBrainKnob, setModelCtx, refreshFit, startVoiceService, fieldValue,
     setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus,
     indicateMode, toggleIndicateMode,
     approveProposal, dismissProposal, toggleJourneyRecording, replayJourney, switchPersona,

@@ -248,6 +248,9 @@ button.b.ghost.on{background:var(--sig);color:var(--bg);border-color:var(--sig)}
 .fit-line b{color:var(--ink)}
 .fit-why{margin-top:6px;font-size:10px;color:var(--err);line-height:1.4}
 .settings-fit.fit-ok .fit-why{color:var(--warn)}
+.ear-status{font-size:10px;margin-top:5px;display:flex;align-items:center;line-height:1.4}
+.ear-status.ok{color:var(--sig)}
+.ear-status.down{color:var(--err)}
 @media (max-width:699px){.settings{inset:0;border-radius:0}}
 .rhm-cfg{display:flex;flex-direction:column;gap:5px;padding:8px 0;border-bottom:1px solid var(--line)}
 .rhm-cfg input{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:6px;font-family:inherit;font-size:10.5px}
