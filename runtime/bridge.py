@@ -111,6 +111,8 @@ class H(BaseHTTPRequestHandler):
             elif path == "/api/models":                    # B: per-kind/per-endpoint live model list
                 self._send(200, json.dumps(SUITE.models_at(
                     kind=q.get("kind", "chat"), base_url=q.get("base_url"))))
+            elif path == "/api/chat-models":                # S1: the picker list — ollama/cloud + local vLLM (model·base_url·service·up)
+                self._send(200, json.dumps(SUITE.chat_models_detailed()))
             elif path == "/api/surfaced":
                 self._send(200, json.dumps(SUITE.list_surfaced()))
             elif path == "/api/events":
@@ -585,6 +587,28 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/conversation/new":    # S2: start a fresh conversation (becomes current)
                 b = self._body()
                 self._send(200, json.dumps(SUITE.new_conversation(b.get("title", ""))))
+            elif self.path == "/api/model/load":          # S1: load a registered model service on demand (budget-gated)
+                import sys as _sys
+                _ops = os.path.join(ROOT, "ops", "cli")
+                if _ops not in _sys.path:
+                    _sys.path.insert(0, _ops)
+                import gpu as _gpu, systemd as _sd, registry as _reg
+                b = self._body()
+                key = (b.get("service") or "").strip()
+                reg = _reg.load()
+                if key not in reg["services"]:
+                    raise ValueError(f"unknown service {key!r}")
+                svc = reg["services"][key]
+                ok, need, free, _m = _gpu.check_fit(reg, [key])
+                if not ok:                                 # fail loud: name what to unload (no silent OOM)
+                    evict, proj = _gpu.plan_eviction(reg, [key], need, free)
+                    raise RuntimeError(f"cannot load {key!r}: needs ~{need} MB, {free} MB free on the card. "
+                                       + (f"Unload to make room — e.g. {', '.join(evict)} (→ ~{proj} MB). " if evict
+                                          else "Nothing evictable frees enough. ") + "Refusing to OOM.\n" + _gpu.format_state(reg))
+                started, msg = _sd.control(svc, "start")
+                if not started:
+                    raise RuntimeError(f"failed to start {key!r}: {msg} (journalctl --user -u {svc.get('manage',{}).get('unit')})")
+                self._send(200, json.dumps({"service": key, "state": "warming", "note": "started — model loading; poll its endpoint"}))
             elif self.path == "/api/mode":                # the presence dial — set the RHM mode
                 b = self._body()
                 SUITE.set_mode(b["mode"])

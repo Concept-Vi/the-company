@@ -116,6 +116,9 @@ export const api = {
   // V3 — the memory loop: list recorded trial sessions, and start a debrief over them (reuses the
   // walkthrough organ — start_debrief surfaces each session's REAL transcript through the same walk).
   // S2 — conversation threads: start fresh, list previous, reopen one.
+  // S1 — the chat-model picker list (ollama/cloud + local vLLM, each with base_url+service+up) + load-on-demand.
+  chatModelsDetailed: () => fetch('/api/chat-models').then(jr),
+  modelLoad: (service: string) => fetch('/api/model/load', { method: 'POST', headers: J, body: JSON.stringify({ service }) }).then(jr),
   newConversation: (title?: string) => fetch('/api/conversation/new', { method: 'POST', headers: J, body: JSON.stringify({ title: title || '' }) }).then(jr),
   listConversations: () => fetch('/api/conversations').then(jr),
   loadConversation: (threadId: string) => fetch('/api/conversation?thread_id=' + encodeURIComponent(threadId)).then(jr),

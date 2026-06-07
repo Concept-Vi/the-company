@@ -419,6 +419,41 @@ class Suite:
                 base_url = fcfg.DEFAULT_BASE_URL
         return transport.list_models(base_url)               # live, uncached; Gemini filtered in transport
 
+    def chat_models_detailed(self) -> list:
+        """S1 — the chat models the PICKER should show: the live models at the default (ollama/cloud)
+        endpoint PLUS the company-managed vLLM chat services (each on its OWN base_url), so the local
+        4b/2b/0.8b are selectable. Each row: {model, base_url, service?, loadable, up}. Picking a
+        service-backed model sets model+base_url and can load the service on demand (/api/model/load)."""
+        import json as _j, os as _os, socket as _sock
+        from fabric import transport, config as fcfg
+        out, seen = [], set()
+        try:                                                  # 1. the default endpoint's live models
+            for m in transport.list_models(fcfg.DEFAULT_BASE_URL):
+                out.append({"model": m, "base_url": fcfg.DEFAULT_BASE_URL, "service": None, "loadable": False, "up": True})
+                seen.add((m, fcfg.DEFAULT_BASE_URL))
+        except Exception:
+            pass
+        try:                                                  # 2. the company vLLM chat services (own base_urls)
+            repo = _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__)))
+            svcs = _j.load(open(_os.path.join(repo, "ops", "services.json")))["services"]
+            for sid, spec in svcs.items():
+                c = spec.get("config") or {}
+                model, port = c.get("model"), spec.get("port")
+                if not (model and port) or "chat" not in sid or spec.get("group") not in ("brain", "models"):
+                    continue
+                base = f"http://localhost:{port}/v1"
+                if (model, base) in seen:
+                    continue
+                up = False
+                try:
+                    s = _sock.socket(); s.settimeout(0.3); up = s.connect_ex(("127.0.0.1", int(port))) == 0; s.close()
+                except Exception:
+                    pass
+                out.append({"model": model, "base_url": base, "service": sid, "loadable": True, "up": up})
+        except Exception:
+            pass
+        return out
+
     def capabilities(self) -> dict:
         """One snapshot of WHAT EXISTS — fed into every authoring prompt + every registered select,
         so the correct values are the easy path and nothing is guessed. The reflective fold."""

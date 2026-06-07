@@ -17,7 +17,7 @@ import { registryStore } from '../registryStore'
 import { ProposeAffordance } from './ProposeAffordance'
 
 export function RhmChat() {
-  const { cfg, cfgOpen, chat, chatBusy, chatMsg, recording, indicated, personas, voiceStatus, recordingSession, threads, threadId, switchPersona, setCfg, setCfgOpen, setChatMsg, applyCfg, sendChat, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, toggleRecordConversation, startDebriefSession, newConversation, openConversation, indicate } = useApp()
+  const { cfg, cfgOpen, chat, chatBusy, chatMsg, recording, indicated, personas, voiceStatus, recordingSession, threads, threadId, chatModelsX, switchPersona, setCfg, setCfgOpen, setChatMsg, applyCfg, sendChat, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, toggleRecordConversation, startDebriefSession, newConversation, openConversation, chooseModel, indicate } = useApp()
   // the live chat-model registry — same source the node-config model dropdown reads (MODEL_OPTIONS.chat_models).
   const registry = useSyncExternalStore(registryStore.subscribe, registryStore.getSnapshot)
   const chatModels = registry.MODEL_OPTIONS.chat_models || []
@@ -47,15 +47,24 @@ export function RhmChat() {
           {/* V4.1 — the consolidated voice & brain settings home: brain model, persona+voice, input mode,
               voice on/off — one place, all live, legible on mobile. */}
           <div className="cfg-head">voice &amp; brain</div>
-          <select data-ui-ref="ui://chat/model-field" value={curModel}
-            onChange={e => setCfg({ ...cfg, model: e.target.value })}>
-            {/* empty is a VALID state — "default model" (cfg.model || 'default model' in the head). */}
-            <option value="">default model</option>
-            {/* surface a saved-but-unregistered value rather than silently dropping it (fail-loud, mirrors NodeConfigForm). */}
-            {curModel !== '' && !chatModels.includes(curModel) && <option value={curModel}>{curModel} (current)</option>}
-            {chatModels.length === 0 && <option value="" disabled>(no registered chat models)</option>}
-            {chatModels.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
+          {/* S1 — the model picker: ollama/cloud + the LOCAL vLLM models (4b/2b/0.8b), each with its own
+              base_url. Picking sets model+base_url and loads a local one on demand (chooseModel). Falls back
+              to the registry string list if the detailed endpoint hasn't landed. */}
+          {(() => {
+            const rows = chatModelsX.length ? chatModelsX
+              : chatModels.map((m: string) => ({ model: m, base_url: '', service: null, up: true }))
+            const sel = rows.findIndex((r: any) => r.model === cfg.model && (r.base_url === cfg.base_url || !r.base_url))
+            return (
+              <select data-ui-ref="ui://chat/model-field" value={String(sel)}
+                onChange={e => { const i = Number(e.target.value); if (rows[i]) chooseModel(rows[i]) }}>
+                <option value="-1">{cfg.model ? cfg.model + ' (current)' : 'default model'}</option>
+                {rows.length === 0 && <option value="-1" disabled>(loading models…)</option>}
+                {rows.map((r: any, i: number) => (
+                  <option key={i} value={String(i)}>{r.model}{r.service ? (r.up ? ' · local' : ' · local ⏻') : ''}</option>
+                ))}
+              </select>
+            )
+          })()}
           {/* Option A — switch between the cast: selecting a persona sets it active AND auto-loads its
               voice (evicting the previous one to fit the card; a switch may cold-load). The notice tracks
               progress to 'ready'. */}

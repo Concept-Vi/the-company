@@ -127,6 +127,7 @@ export function useAppController(editor: Editor) {
   const [personas, setPersonas] = useState<any[]>([])   // Option A: the cast you can switch between (id·name·engine)
   const [voiceStatus, setVoiceStatus] = useState<string>('')   // V4.2: '' | 'loading' | 'ready' | 'down' (the persona voice's load state)
   const [recordingSession, setRecordingSession] = useState<string>('')   // V3.1: the active trial_session id when recording the conversation ('' = not recording)
+  const [chatModelsX, setChatModelsX] = useState<any[]>([])   // S1: detailed chat-model picker rows (ollama + local vLLM, base_url·service·up)
   const [threads, setThreads] = useState<any[]>([])   // S2: previous conversations (reopen list)
   const [threadId, setThreadId] = useState<string | null>(null)   // S2: the current conversation thread ('' / null = global)
   // U12: the /api/inbox payload is { live_escalations, resolved_for_you, batched, counts }. `batched` is a
@@ -294,6 +295,7 @@ export function useAppController(editor: Editor) {
       setCfg(await api.rhmConfig())
       api.personas().then(p => setPersonas(Array.isArray(p) ? p : [])).catch(() => {})   // the switchable cast
       api.listConversations().then(t => setThreads(Array.isArray(t) ? t : [])).catch(() => {})   // S2: reopen list
+      api.chatModelsDetailed().then(m => setChatModelsX(Array.isArray(m) ? m : [])).catch(() => {})   // S1: picker rows
       const evs = await api.events(); mergeEvents(setEvents, evs)
       streamSeq.current = evs.reduce((m: number, e: any) => Math.max(m, e.seq ?? -1), -1)  // cursor = last seen
       setNow(await api.now()); setInbox(await api.inbox()); setLastChange(await api.lastChange()); setPanels(await api.panels())
@@ -1337,6 +1339,22 @@ export function useAppController(editor: Editor) {
     try { const c = await api.setRhmConfig({ voice_input_mode: mode }); setCfg(c); setNotice('voice input → ' + mode.replace('_', '-')) }
     catch (e: any) { setNotice('⚠ ' + (e?.message || e)) }
   }
+  // S1 — choose a chat model: set model + its base_url (so a local vLLM model uses its own endpoint), and
+  // LOAD its service on demand if it's a company-managed model that's down (budget-gated, like a voice switch).
+  async function chooseModel(row: any) {
+    if (!row || !row.model) return
+    try {
+      const c = await api.setRhmConfig({ model: row.model, base_url: row.base_url })
+      setCfg(c); setNotice('brain → ' + row.model)
+      if (row.service && !row.up) {                          // a local vLLM model that isn't running → load it
+        setNotice('loading ' + row.model + ' — cold start…')
+        const r = await api.modelLoad(row.service)
+        if (r && r.error) { setNotice('⚠ ' + r.error); return }
+        setNotice(row.model + ' starting — give it a moment, then talk')
+      }
+      api.chatModelsDetailed().then(m => setChatModelsX(Array.isArray(m) ? m : [])).catch(() => {})   // refresh up-status
+    } catch (e: any) { setNotice('⚠ ' + (e?.message || e)) }
+  }
   // S2 — conversation threads (in the RHM): start fresh / list / reopen.
   async function refreshThreads() { try { const t = await api.listConversations(); setThreads(Array.isArray(t) ? t : []) } catch { /* non-fatal */ } }
   async function newConversation() {
@@ -1459,7 +1477,7 @@ export function useAppController(editor: Editor) {
     // state values (read by the region components)
     edges, running, runError, runStartedAt, runElapsed, types, gname, gspec, surf, growMsg, workshop,
     oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
-    showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn, personas, voiceStatus, recordingSession, threads, threadId,
+    showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn, personas, voiceStatus, recordingSession, threads, threadId, chatModelsX,
     wtSpoke, wtBusy, selected, mobileTab, fleet, indicated, proposal, history, historyBusy,
     selfChanges, selfChangesBusy, freshness, freshnessBusy, versions, versionsBusy, journeyId, journeyReplaying,
     // refs the components read for the inspector form
@@ -1470,7 +1488,7 @@ export function useAppController(editor: Editor) {
     // handlers
     poll, openCoa, reload, fitGraph, addNode, wireSelected, doConnect, setNodeConfig, surfaceOutput,
     buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
-    resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, toggleRecordConversation, startDebriefSession, newConversation, openConversation, fieldValue,
+    resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, toggleRecordConversation, startDebriefSession, newConversation, openConversation, chooseModel, fieldValue,
     setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus,
     approveProposal, dismissProposal, toggleJourneyRecording, replayJourney, switchPersona,
   }
