@@ -6361,7 +6361,8 @@ class Suite:
                       + why)
 
     def dispatch_decision(self, sid: str, derived_from: int, *, launcher=None,
-                          verifier=None, suite_runner=None, critic=None, repo: str | None = None) -> dict:
+                          verifier=None, suite_runner=None, critic=None, repo: str | None = None,
+                          committer=None) -> dict:
         """W2·W4·W1·W3·W5 — the governed dispatch verb. Run an implementation job ONLY when bound to
         a real operator approve via `derived_from` = the resolve event's unique `seq`, and ONLY once.
 
@@ -6381,6 +6382,14 @@ class Suite:
              item does NOT close (no `implemented`). Do NOT reuse requeue_from_verdict (it needs
              choice!=approve; a build follows an approve).
           8. W4 scope-diff: changed paths outside the declared scope → surface back, do NOT close.
+          8b. GIT CHECKPOINT (Tim's safety mandate): commit EXACTLY the build's changed_delta paths as a
+             single `[self-build] <sid>: <intent>` commit so the accepted build is REVERTIBLE
+             (`git revert <sha>`, the same operator path as a self-apply). Path-scoped, so the
+             concurrent writer's unstaged dirty files are NEVER swept in. FAIL LOUD: a commit failure
+             (or an empty delta at this point) surfaces the build BACK as a retryable build-intent —
+             it does NOT mark implemented (a build that can't be checkpointed is not safe-closed). The
+             resulting sha is threaded into the close (the `decision.implemented` event + the review
+             item) so the operator/a revert path can `git revert <sha>`.
           9. CLOSE + SURFACE-FOR-REVIEW (guarded): write status='implemented' AND surface a review item
              through guard("code_build",…, confirmed=verify_passed) — an unverified close RAISES
              (mirrors apply_node). `implemented` means "done AND surfaced for review", NEVER a silent
@@ -6577,6 +6586,74 @@ class Suite:
                 return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
                         "closed": False, "requeued": new_sid, "overrun": overrun}
 
+        # 8b — GIT CHECKPOINT (Tim's safety mandate before arming the wire): commit EXACTLY the build's
+        # changed_delta paths as a SINGLE revertible commit, BEFORE the close marks it implemented. This
+        # turns each accepted autonomous build into a `git revert <sha>` away from undone — the property
+        # that makes arming the wire acceptable. It runs ONLY here, on the verified + in-scope + FORM-ok
+        # success branch (every earlier gate already surfaced its own failures back), so a
+        # failed/denied/out-of-scope/plan-mode build NEVER reaches a commit.
+        #
+        # PROPERTIES, each load-bearing:
+        #  • PATH-SCOPED: we commit `changed` (= the build's changed_delta — git ground truth, isolated
+        #    by launch()'s baseline_snapshot from any pre-existing dirty files). `_self_build_commit` →
+        #    `_git_self_commit` does `git add <changed>` (named paths only), so the concurrent writer's
+        #    UNSTAGED dirty files (design/blueprint/*.json) are NEVER swept in.
+        #  • EMPTY-DELTA GUARD: a verified build with an EMPTY change-set is a no-op (the default critic
+        #    already vetoes it; a plan-mode run yields an empty delta and fails verify upstream). If we
+        #    still arrive here with nothing to commit (only reachable via an injected verifier that
+        #    passes on empty), we DO NOT create an empty commit — we surface back, fail loud.
+        #  • FAIL LOUD: a commit failure (sha is None) surfaces the build BACK as a RETRYABLE build-intent
+        #    (the same shape as the verify/scope-overrun re-queues, a `decision.verify`/verify_passed=False
+        #    terminal event so the watcher does NOT read it as a crashed mid-flight dispatch) and returns
+        #    closed=False. It must NOT mark `implemented` — a build that can't be checkpointed is NOT
+        #    safe-closed (Tim's mandate). The sha is threaded into the close so the close can record it.
+        #  • INJECTABLE: `committer(paths, msg) -> sha|None` defaults to the real `_self_build_commit`;
+        #    a test injects a stub so no real commit hits the live repo and the exact staged paths can be
+        #    asserted. (NOT `_commit_or_rollback` — that os.remove()s its path on failure, which would
+        #    DELETE the build's own work across a multi-file delta.)
+        commit = committer or self._self_build_commit
+        if not changed:
+            # a verified, in-scope build that changed NOTHING — no-op masquerading as done. Surface back
+            # (do not create an empty checkpoint commit). (Unreachable on the default path: the critic
+            # vetoes an empty change-set; reachable only via an injected verifier that passes on empty.)
+            empty_item = dict(payload)
+            empty_item.update({"requeued_from": sid, "intent": "build", "derived_from": derived_from,
+                               "why": "git checkpoint: nothing to commit (empty change-set) — a build with "
+                                      "no changed files cannot be checkpointed/closed (no-op is not a build)",
+                               "build_result": d.get("build_result")})
+            new_sid = self.inbox.surface_review(empty_item, origin="responsive")
+            self._emit("decision.verify",
+                       f"build for {sid} had an EMPTY change-set at checkpoint → re-queued {new_sid}; not closed",
+                       surfaced=new_sid, requeued_from=sid, derived_from=derived_from, verify_passed=False,
+                       address="ui://chrome/inbox")
+            return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
+                    "closed": False, "requeued": new_sid, "reason": "empty change-set at checkpoint"}
+        intent_summary = (payload.get("spec") or payload.get("instruction") or payload.get("why") or "").strip()
+        intent_summary = " ".join(intent_summary.split())[:120] or "(no intent summary)"
+        commit_msg = f"{sid}: {intent_summary}"
+        commit_sha = commit(changed, commit_msg)
+        if not commit_sha:
+            # FAIL LOUD: the checkpoint did not commit → the build is NOT git-revertible → it is NOT
+            # safe-closed. Surface back as a retryable build-intent (the operator may re-approve after the
+            # tree is sorted); emit a recognized terminal kind (decision.verify) so resurface_crashed does
+            # NOT later read this dispatch as crashed-mid-flight and double-surface it.
+            fail_item = dict(payload)
+            fail_item.update({"requeued_from": sid, "intent": "build", "derived_from": derived_from,
+                              "why": (f"git checkpoint FAILED: could not commit the build's changed files "
+                                      f"{changed} — the build is NOT git-revertible, so it is NOT safe to "
+                                      f"close (Tim's safety mandate). Re-surfaced for the operator."),
+                              "checkpoint_failed": True, "build_result": d.get("build_result")})
+            new_sid = self.inbox.surface_review(fail_item, origin="responsive")
+            self._emit("decision.verify",
+                       f"build for {sid} could NOT be git-checkpointed (commit failed) → re-queued "
+                       f"{new_sid}; not closed (a build that can't be checkpointed is not safe-closed)",
+                       surfaced=new_sid, requeued_from=sid, derived_from=derived_from, verify_passed=False,
+                       checkpoint_failed=True,
+                       address="ui://chrome/inbox")
+            return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
+                    "closed": False, "requeued": new_sid, "reason": "git checkpoint failed",
+                    "checkpoint_failed": True}
+
         # 9 — CLOSE + SURFACE-FOR-REVIEW (the conceptual correction). guarded on the verification
         # verdict (W4 Hole 4). guard("code_build", …, confirmed=verify_passed): code_build is
         # CONFIRM-posture, so an unverified close (confirmed False) RAISES instead of silently writing
@@ -6600,10 +6677,18 @@ class Suite:
         review_holder = {}
         def _close():
             self.inbox.set_status(sid, "implemented")
+            # record the checkpoint sha on the item so the operator (or a revert path) can find it
+            # without re-deriving it from the log. T1-RACE: re-read + mutate under the surfaced lock.
+            with self.store.surfaced_lock():
+                _it = self.inbox.get(sid) or d
+                _it["commit"] = commit_sha
+                self.store.save_surfaced(_it)
             self._emit("decision.implemented",
-                       f"build for {sid} verified + within scope → status=implemented "
+                       f"build for {sid} verified + within scope → checkpointed [self-build] "
+                       f"{commit_sha[:8]} → status=implemented "
                        f"(changed {len(changed)} files; derived from seq={derived_from})",
                        surfaced=sid, derived_from=derived_from, verify_passed=True, changed_files=changed,
+                       commit=commit_sha,                 # the revertible checkpoint sha (`git revert <sha>`)
                        address="ui://chrome/inbox")   # S2: the implemented build-intent's inbox item
             # surface the result for the MANDATORY review (reversible/AUTO builds are non-blocking —
             # the change is made + git-reversible — but the review is ALWAYS surfaced). Reuses the
@@ -6617,11 +6702,13 @@ class Suite:
                 "derived_from": derived_from,
                 "summary": br.get("summary", ""),
                 "changed_files": changed,                # git ground truth = the diff manifest
+                "commit": commit_sha,                    # the revertible checkpoint sha (`git revert <sha>`)
                 "consequence_class": declared,
                 "scope": scope,
                 "why": (f"a build for {sid} was implemented (verified + in scope) and is surfaced for "
-                        f"MANDATORY review — AI-operated is NOT review-free. The change is "
-                        f"git-reversible; review it in the RHM walkthrough."),
+                        f"MANDATORY review — AI-operated is NOT review-free. The change was checkpointed "
+                        f"as [self-build] commit {commit_sha[:8]} and is git-reversible "
+                        f"(`git revert {commit_sha}`); review it in the RHM walkthrough."),
             }
             rev = self.surface_review(review_payload, origin="responsive")
             review_holder["id"] = rev["id"]
@@ -6635,6 +6722,7 @@ class Suite:
         guard("code_build", do=_close, confirmed=verify_passed, inbox=None)
         return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
                 "closed": True, "status": "implemented", "changed_files": changed,
+                "commit": commit_sha,                    # the revertible [self-build] checkpoint sha
                 "derived_from": derived_from, "review_surfaced": review_holder.get("id")}
 
     @classmethod
@@ -7121,19 +7209,48 @@ class Suite:
     def _repo_root(self) -> str:
         return os.path.dirname(self.nodes_dir)
 
-    def _git_self_commit(self, paths: list[str], msg: str) -> str | None:
+    def _git_self_commit(self, paths: list[str], msg: str, *, prefix: str = "[self-apply]") -> str | None:
         """Commit a self-authored change so it is ALWAYS one `git revert` away (the real safety
-        net — not the operator gate). Path-scoped; tagged [self-apply]. None if commit fails."""
+        net — not the operator gate). Path-scoped; tagged with `prefix` (default `[self-apply]` for
+        the self-mod streams; the wire's accepted-build close passes `[self-build]` so the two
+        revertible-commit streams stay DISTINCT in the log without a parallel git path). None if the
+        commit fails. `revert_self_change(sha)` is prefix-agnostic (it just `git revert`s a sha), so a
+        `[self-build]` commit reverts via the SAME operator path as a `[self-apply]` one.
+
+        Path-scoped (`git add <paths>`): only the named paths are staged here, so a concurrent
+        writer's unstaged dirty files are NEVER swept in — this is the concurrent-writer isolation the
+        wire's checkpoint rests on (the wire passes EXACTLY the build's `changed_delta`)."""
         import subprocess
         try:
             subprocess.run(["git", "-C", self._repo_root, "add", *paths], check=True, capture_output=True)
-            subprocess.run(["git", "-C", self._repo_root, "commit", "-m", f"[self-apply] {msg}"],
+            # PATHSPEC-SCOPED commit (`commit -- <paths>`): commit ONLY the named paths, NOT whatever
+            # else happens to be in the shared index. The bridge is ONE process; apply_node's
+            # `[self-apply]` path also does an unlocked add+commit on the SAME index, and the wire's
+            # commit runs outside the per-seq dispatch lock — so without the pathspec a concurrent
+            # `[self-apply]` add could be swept into THIS commit (wrong attribution + lost update +
+            # the other path's os.remove-on-fail deleting a just-committed file). The pathspec makes the
+            # "concurrent writer's files are NEVER swept in" guarantee UNCONDITIONAL (not just "they're
+            # usually unstaged"). Strictly safe for the [self-apply] caller too (it writes one file then
+            # commits exactly it — a partial commit of a just-added new/modified path works).
+            subprocess.run(["git", "-C", self._repo_root, "commit", "-m", f"{prefix} {msg}", "--", *paths],
                            check=True, capture_output=True)
             out = subprocess.run(["git", "-C", self._repo_root, "rev-parse", "HEAD"],
                                  check=True, capture_output=True, text=True)
             return out.stdout.strip()
         except Exception:
             return None
+
+    def _self_build_commit(self, paths: list[str], msg: str) -> str | None:
+        """The wire's accepted-build CHECKPOINT — commit EXACTLY the build's changed_delta paths so
+        each autonomous build the wire accepts is a single revertible git commit (`git revert <sha>`,
+        the SAME operator path as a self-apply). Tagged `[self-build]` (DISTINCT from `[self-apply]`
+        self-mod), path-scoped (so a concurrent writer's unstaged dirty files — design/blueprint/*.json
+        — are NEVER swept in). Returns the resulting sha, or None if the commit fails (the caller then
+        surfaces the build back, never marking it implemented — a build that can't be checkpointed is
+        not safe-closed). This is a thin reuse of `_git_self_commit` with the wire prefix — NOT a
+        parallel git path — and is the default `committer` injected into dispatch_decision (a test
+        supplies a stub so no real commit hits the live repo)."""
+        return self._git_self_commit(list(paths), msg, prefix="[self-build]")
 
     def _commit_or_rollback(self, path: str, msg: str) -> str:
         """Commit a just-written self-change; if the commit FAILS, roll the file back and raise —
