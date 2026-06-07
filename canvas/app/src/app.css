@@ -400,43 +400,14 @@ button.b.ghost.on{background:var(--sig);color:var(--bg);border-color:var(--sig)}
 .rhm-threads .b{font-size:10px;padding:4px 9px}
 .rhm-threads select{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:5px;font-family:inherit;font-size:10px}
 .rhm-threads select:focus{outline:none;border-color:var(--sig)}
-/* S3 — the dedicated settings window (modal; full-screen on mobile). Design tokens only. */
-.settings{position:fixed;inset:48px;z-index:520;background:var(--s1);border:1px solid var(--line);border-radius:8px;display:flex;flex-direction:column;box-shadow:var(--shadow);overflow:hidden}
-.settings-head{font-family:"Fraunces",serif;color:var(--sig);font-weight:600;font-size:15px;padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center}
-.settings-head .close{margin-left:auto;cursor:pointer;color:var(--dim);font-weight:400}
-.settings-head .close:hover{color:var(--sig)}
-.settings-body{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:18px}
-.settings-sec h4{font-family:"Fraunces",serif;color:var(--ink);font-size:12px;margin:0 0 6px;text-transform:uppercase;letter-spacing:.05em}
-.settings-sec label{display:block;color:var(--dim);font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;margin:8px 0 3px}
-.settings-sec select,.settings-sec input[type=number],.settings-sec input[type=text]{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:6px;font-family:inherit;font-size:11px;box-sizing:border-box}
-.settings-sec select:focus,.settings-sec input:focus{outline:none;border-color:var(--sig)}
-.settings-toggle{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink);text-transform:none;letter-spacing:0;margin-top:10px;cursor:pointer}
-.settings-toggle input{width:auto}
-.settings-ctx{display:flex;gap:6px}
-.settings-ctx input{flex:1}
-.settings-knobs{margin-top:8px;padding:7px 9px;background:var(--bg);border:1px solid var(--line);border-radius:4px}
-.settings-knob{display:flex;gap:8px;font-size:9.5px;padding:2px 0}
-.settings-knob .kk{color:var(--ink);min-width:96px}
-/* S6 — the resource-fit surface: a bar read by shape (each piece's share of the 16GB card) + verdict. */
-.settings-fit{border:1px solid var(--line);border-radius:6px;padding:10px 12px;background:var(--bg)}
-.settings-fit.fit-ok h4{color:var(--sig)}
-.settings-fit.fit-over h4{color:var(--err)}
-.fit-bar{display:flex;height:22px;border-radius:4px;overflow:hidden;border:1px solid var(--line);margin:4px 0 8px;background:var(--s1)}
-.fit-seg{display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--bg);white-space:nowrap;overflow:hidden;min-width:0}
-.fit-seg-0{background:var(--sig)}
-.fit-seg-1{background:var(--kind-content,#6aa)}
-.fit-seg-2{background:var(--warn)}
-.fit-seg-3{background:var(--cache,#a8a)}
-.fit-free{background:transparent}
-.settings-fit.fit-over .fit-bar{border-color:var(--err)}
-.fit-line{font-size:10px;color:var(--dim);line-height:1.4}
-.fit-line b{color:var(--ink)}
-.fit-why{margin-top:6px;font-size:10px;color:var(--err);line-height:1.4}
-.settings-fit.fit-ok .fit-why{color:var(--warn)}
-.ear-status{font-size:10px;margin-top:5px;display:flex;align-items:center;line-height:1.4}
-.ear-status.ok{color:var(--sig)}
-.ear-status.down{color:var(--err)}
-@media (max-width:699px){.settings{inset:0;border-radius:0}}
+/* NOTE (LANE B fold, MERGE-PLAN section 2.7): main's bespoke single-scroll Settings modal CSS was DELETED
+   here -- the legacy .settings / .settings-head / .settings-body / .settings-sec / .settings-ctx /
+   .settings-knob / .settings-toggle modal rules, the .settings-fit + .fit-* + .ear-status block, and the
+   max-width-699 phone override on .settings. The A3 full-viewport modal (.settings-scrim / .settings-panel
+   below, with its own phone media-query) is the structural keeper; main's functional pieces (fit bar,
+   per-engine knobs, ear-start, context-window) folded INTO the A3 sections, re-skinned to the kit + tokens
+   (.fit-*, .set-ear-*, .set-ctx-row, .set-knob-row live in the A3 settings block below). The off-token
+   literals (sub-token font-sizes, raw-hex segment-colour fallbacks, the phone inset override) are gone. */
 .rhm-cfg{display:flex;flex-direction:column;gap:5px;padding:8px 0;border-bottom:1px solid var(--line)}
 .rhm-cfg input{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:6px;font-family:inherit;font-size:10.5px}
 .rhm-cfg input:focus{outline:none;border-color:var(--sig)}
@@ -1256,6 +1227,36 @@ button.set-pill:hover{border-color:var(--sig);color:var(--ink)}
 .set-pill.on{color:var(--ink);border-color:var(--warn);background:var(--s2)}
 .set-pill.sm{padding:1px var(--sp-1)}
 .set-autodetect-opts{display:flex;gap:var(--sp-1);margin:var(--sp-2) 0}
+/* — FOLD (§2.7): brain context-window control — a number input + a "set & restart" button on one row
+   (shown only for a local vLLM model). Kit-tokens only; the .b button styling comes from the shared button. */
+.set-ctx-row{display:flex;gap:var(--sp-2);align-items:center}
+.set-ctx-row .set-input{flex:1;min-width:0}
+.set-ctx-row .b{flex:none}
+/* — FOLD (§2.7): the resource-fit bar — a segmented bar read by SHAPE inside a kit Surface. Segment colours
+   are the lifecycle/kind tokens; the segment widths are computed live (inline %). Reads under the Surface's
+   tone spine (sig=fits / fail=won't). */
+.fit-bar{display:flex;height:var(--sp-5);border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--line);
+  margin:var(--sp-1) 0 var(--sp-2);background:var(--s1)}
+.fit-seg{display:flex;align-items:center;justify-content:center;font-size:var(--fs-micro);color:var(--bg);
+  white-space:nowrap;overflow:hidden;min-width:0}
+.fit-seg-0{background:var(--sig)}
+.fit-seg-1{background:var(--kind-content)}
+.fit-seg-2{background:var(--warn)}
+.fit-seg-3{background:var(--cache)}
+.fit-free{background:transparent}
+.fit-line{font-size:var(--fs-meta);color:var(--dim);line-height:var(--lh-body)}
+.fit-line b{color:var(--ink)}
+.fit-why{margin-top:var(--sp-1);font-size:var(--fs-meta);color:var(--err);line-height:var(--lh-body)}
+.kit-surface.kit-tone-sig .fit-why{color:var(--warn)}
+/* — FOLD (§2.7): ear (STT) status line + the START affordance for a down ear. */
+.set-ear-status{font-size:var(--fs-meta);margin-top:var(--sp-1);display:flex;align-items:center;gap:var(--sp-2);line-height:var(--lh-body)}
+.set-ear-status.on{color:var(--sig)}
+.set-ear-status.down{color:var(--err)}
+.set-ear-start{flex:none}
+/* — FOLD (§2.7): per-engine TTS knob rows (the engine's own serve/live knobs), inside a kit Surface. */
+.set-knob-row{display:flex;align-items:baseline;gap:var(--sp-2);padding:var(--sp-1) 0}
+.set-knob-key{flex:none;min-width:96px;font-family:var(--font-mono);font-size:var(--fs-meta);color:var(--ink)}
+.set-knob-note{font-size:var(--fs-meta);line-height:var(--lh-body)}
 /* composition knobs — read-only rows. */
 .set-knobs{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--sp-2)}
 .set-knob{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2)}
