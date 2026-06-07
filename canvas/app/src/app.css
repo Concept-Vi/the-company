@@ -388,18 +388,23 @@ button.b.ghost.on{background:var(--sig);color:var(--bg);border-color:var(--sig)}
   border:1px solid var(--line);border-radius:6px;padding:11px 13px;display:flex;flex-direction:column}
 .rhm-head{font-family:"Fraunces",serif;color:var(--sig);font-weight:600;font-size:13px;
   padding-bottom:7px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:6px}
-.cfg-gear{margin-left:auto;cursor:pointer;color:var(--dim);font-family:inherit}
-.cfg-gear:hover{color:var(--sig)}
-.rhm-min{cursor:pointer;color:var(--dim);font-family:inherit}
+/* L4-GEAR-RETIRE: the .cfg-gear trigger (the ⚙ in the chat header) is GONE — the .rhm-cfg config panel it
+   opened is retired into the consolidated A3 Settings (rule 3, single config home). The chat header now
+   carries only the title + the minimize toggle. */
+.rhm-min{margin-left:auto;cursor:pointer;color:var(--dim);font-family:inherit}
 .rhm-min:hover{color:var(--sig)}
 /* minimized — collapse the chat to just its header so the canvas shows behind it (mobile esp.) */
 .rhm.min{height:auto}
-.rhm.min .rhm-log,.rhm.min .rhm-input,.rhm.min .rhm-cfg,.rhm.min .rhm-indicating,.rhm.min .rhm-afford,.rhm.min .rhm-threads{display:none}
-/* S2 — conversation thread bar (new + reopen) */
-.rhm-threads{display:flex;gap:6px;align-items:center;padding:6px 0 0}
-.rhm-threads .b{font-size:10px;padding:4px 9px}
-.rhm-threads select{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:5px;font-family:inherit;font-size:10px}
+.rhm.min .rhm-log,.rhm.min .rhm-input,.rhm.min .rhm-mem,.rhm.min .rhm-indicating,.rhm.min .rhm-afford,.rhm.min .rhm-threads{display:none}
+/* S2 — conversation thread bar (new + reopen). Tokenised (L4: re-tokenise what stays). */
+.rhm-threads{display:flex;gap:var(--sp-2);align-items:center;padding:var(--sp-2) 0 0}
+.rhm-threads .b{font-size:var(--fs-meta);padding:var(--sp-1) var(--sp-2)}
+.rhm-threads select{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:var(--r-sm);padding:var(--sp-1);font-family:inherit;font-size:var(--fs-meta)}
 .rhm-threads select:focus{outline:none;border-color:var(--sig)}
+/* V3 — the record / debrief memory loop (chat-local; lifted out of the retired gear). Tokenised. */
+.rhm-mem{display:flex;gap:var(--sp-2);padding:var(--sp-2) 0 0}
+.rhm-mem .b{flex:1;font-size:var(--fs-meta)}
+.rhm-mem .b.rec{border-color:var(--err);color:var(--err)}
 /* NOTE (LANE B fold, MERGE-PLAN section 2.7): main's bespoke single-scroll Settings modal CSS was DELETED
    here -- the legacy .settings / .settings-head / .settings-body / .settings-sec / .settings-ctx /
    .settings-knob / .settings-toggle modal rules, the .settings-fit + .fit-* + .ear-status block, and the
@@ -407,10 +412,11 @@ button.b.ghost.on{background:var(--sig);color:var(--bg);border-color:var(--sig)}
    below, with its own phone media-query) is the structural keeper; main's functional pieces (fit bar,
    per-engine knobs, ear-start, context-window) folded INTO the A3 sections, re-skinned to the kit + tokens
    (.fit-*, .set-ear-*, .set-ctx-row, .set-knob-row live in the A3 settings block below). The off-token
-   literals (sub-token font-sizes, raw-hex segment-colour fallbacks, the phone inset override) are gone. */
-.rhm-cfg{display:flex;flex-direction:column;gap:5px;padding:8px 0;border-bottom:1px solid var(--line)}
-.rhm-cfg input{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:6px;font-family:inherit;font-size:10.5px}
-.rhm-cfg input:focus{outline:none;border-color:var(--sig)}
+   literals (sub-token font-sizes, raw-hex segment-colour fallbacks, the phone inset override) are gone.
+   L4-GEAR-RETIRE: the RhmChat .rhm-cfg config-gear rules + the V4 voice-gear block (.cfg-head / .voice-status
+   / .cfg-toggle / .cfg-mem) that lived here are now DELETED too — the gear is retired into A3 (its config
+   duplicated A3's Brain/Voice sections; voice on/off converged to A3's single voice_enabled SELECT, rule 3).
+   The record/debrief memory loop it hosted moved to the tokenised .rhm-mem control above (chat-local). */
 /* WAVE-2: the Inbox layer — LAYOUT ONLY, composing the shared kit (the look lives in .kit-*). The triage
    reads by sight: an awaiting-count headline, kit lanes per group, kit Surface cards per item. */
 .ibx-stat{display:flex;align-items:center;gap:var(--sp-1);margin-bottom:var(--sp-2);font-size:var(--fs-meta)}
@@ -431,21 +437,9 @@ button.b.ghost.on{background:var(--sig);color:var(--bg);border-color:var(--sig)}
    silently OVERRIDING the kit by source-order/specificity, breaking H2 "one language". The kit is now the
    sole authority for the lane-heads + item cards. .ibx-lane stays = a thin wrapper (margin only). */
 .ibx-lane{margin:var(--sp-2) 0}
-/* V4 (from main) — the RhmChat voice-settings gear: header, voice load-status badge, voice on/off toggle.
-   NOTE: still literal-px (font-size:8/9/10.5px, gap:6px) — flagged for the wide-unify re-tokenise pass
-   (GAPS §3b) and the gear itself is slated for retirement into the consolidated A3 Settings (GAPS §3d).
-   Kept AS-IS through the merge so the gear keeps rendering; the legacy .ibx-* rules main re-introduced here
-   are deliberately DROPPED (the WAVE-2 kit redesign above is the sole authority — re-adding them re-breaks
-   H2 "one language" by overriding the kit via source-order). */
-.rhm-cfg .cfg-head{font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);margin:2px 0 1px}
-.rhm-cfg .voice-status{font-size:9px;color:var(--dim)}
-.rhm-cfg .voice-status.ready{color:var(--sig)}
-.rhm-cfg .voice-status.down{color:var(--err)}
-.rhm-cfg .cfg-toggle{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--ink);cursor:pointer}
-.rhm-cfg .cfg-toggle input{width:auto;padding:0;border:0;background:none}
-.rhm-cfg .cfg-mem{display:flex;gap:6px}
-.rhm-cfg .cfg-mem .b{flex:1;font-size:10px}
-.rhm-cfg .cfg-mem .b.rec{border-color:var(--err);color:var(--err)}
+/* L4-GEAR-RETIRE: the V4 RhmChat voice-settings gear block (.rhm-cfg .cfg-head / .voice-status / .cfg-toggle /
+   .cfg-mem — all off-token literal-px) was DELETED with the gear. Its config (model/persona/voice-status/
+   input-mode/voice on-off) lives in A3 Settings now; its record/debrief moved to the tokenised .rhm-mem. */
 /* L8 (§21.7#9): the click-to-thing link on a surfaced item that carries a ui:// target — clicking it
    composes the preserved resolveUiTarget keystone to navigate+spotlight the thing the item is about.
    Reads as a subtle inline affordance (corpus tokens only, no literals); the signal accent on hover

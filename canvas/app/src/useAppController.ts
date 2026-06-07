@@ -73,12 +73,21 @@ export function useAppController(editor: Editor) {
   // `.ui-spotlight` ring (which the show-resolver flashes and removes after a timeout).
   const [indicated, setIndicated] = useState<string | null>(null)
   const indicatedRef = useRef<string | null>(null)   // for the capture handler (avoids a stale closure)
-  // I1-gate (Tim 2026-06-07): click-to-indicate is a DELIBERATE mode, NOT a global capture. Always-on, it
-  // hijacked every tap — the Settings ✕ wouldn't close (its onClick was disrupted by the indicate re-render)
-  // and a tap on any panel painted `.ui-indicated` (translucency) revealing what's behind. OFF by default:
-  // clicks behave normally; turn it ON to point-at-things for comment/reference. Ref for the capture closure.
-  const [indicateMode, setIndicateMode] = useState(false)
-  const indicateModeRef = useRef(false)
+  // I1-gate / L4-COHERENCE (Tim 2026-06-07, unify-wave2): click-to-indicate is the DEFAULT (ON), with the
+  // `◎ point` toolbar toggle as an explicit OPT-OUT for pure navigation. WHY ON by default: the branch's
+  // verified-by-use flows — show-me (C1/C2), address-help (D2), altitude (F1) — ALL assume that clicking a UI
+  // element INDICATES it (so the help panel / show-me / shaping target the clicked element). With indicate
+  // defaulting OFF (the merge carried main's a89dab1 over-broad gate), a click indicated nothing and those
+  // flows silently broke. Main's REAL a89dab1 fix was the MODAL EXCLUSION in onDocClick (don't indicate inside
+  // a modal — which fixed the Settings ✕-close + translucency bug); the global default-OFF gate was an
+  // over-broad way to get there. So: indicate ON by default (C/D/F work out of the box), the modal-exclusion
+  // guards in onDocClick KEPT (main's fix holds — a click inside the A3 Settings / Workshop modal does NOT
+  // indicate, the ✕ closes, no translucency), and the toggle still lets the operator switch indicate OFF.
+  // BOTH the state (drives the toolbar button visual) and the ref (drives the onDocClick behavior — the gate
+  // reads indicateModeRef.current, and the ref is NEVER synced from state, only flipped in toggleIndicateMode)
+  // must start true, or the gate would early-return until the toggle was pressed (the silent break, build-clean).
+  const [indicateMode, setIndicateMode] = useState(true)
+  const indicateModeRef = useRef(true)
   // L9 · reverse journey-recording (§21.7#2-reverse). The REVERSE of the forward resolveUiTarget: an
   // EXPLICIT start/stop recording of the operator's ordered ui:// click-path as a DISTINCT journey-record
   // (NOT the review-session organ — that records item-ids; this records navigation). While `journeyId` is
@@ -176,7 +185,9 @@ export function useAppController(editor: Editor) {
                versions: { cas: string; ts: string; is_current: boolean; preview: string }[] } | null>(null)
   const [versionsBusy, setVersionsBusy] = useState(false)
   const [cfg, setCfg] = useState<any>({ model: '', persona: '' })
-  const [cfgOpen, setCfgOpen] = useState(false)
+  // L4-GEAR-RETIRE: `cfgOpen`/`applyCfg` (the legacy RhmChat .rhm-cfg gear's open-state + apply) are GONE —
+  // the gear is retired (its config duplicated A3). The consolidated A3 Settings (settingsOpen below) is the
+  // single config home; it writes via setCfgSlot → set_rhm_config. No parallel config surface remains (rule 3).
   const [personas, setPersonas] = useState<any[]>([])   // Option A: the cast you can switch between (id·name·engine)
   // A3/E2-FE · THE CONSOLIDATED SETTINGS SURFACE state. `settingsOpen` raises the one designed Settings region
   // (the full-viewport modal mounted in App.tsx) — the single place modes/models/personas/RHM-config/voice all
@@ -751,7 +762,15 @@ export function useAppController(editor: Editor) {
       // (so show-me/address_help can describe the help surface itself); this only stops a click INSIDE it from
       // hijacking the indication — you point with the rest of the surface, then read/shape in the help panel.
       if (tgt?.closest?.('[data-ui-ref="ui://inspector/help"]')) return
-      if (tgt?.closest?.('.settings, .workshop')) return    // inside a MODAL → you OPERATE it (close/config), never point at it
+      // L4-COHERENCE: the MODAL exclusion (main's REAL a89dab1 fix — keep it; it is what makes indicate-ON
+      // safe). A click inside a modal OPERATES it (close/config), it never points AT it. NB the A3 consolidated
+      // Settings modal root is `.settings-scrim`/`.settings-panel` (Settings.tsx:71-72) — NOT `.settings` — so
+      // the merged `.settings` selector was a NO-OP for A3 (it matched only main's retired bespoke modal). With
+      // indicate now defaulting ON, that no-op would resurrect the exact bug a89dab1 fixed (the Settings ✕
+      // wouldn't close + a tap painted `.ui-indicated` translucency). So the guard matches the A3 classes
+      // explicitly. `.workshop` (Workshop.tsx:18, exact class) is kept. This is the ONLY in-territory lever for
+      // the A3 modal (Settings.tsx/App.tsx are out of this lane).
+      if (tgt?.closest?.('.settings-scrim, .settings-panel, .workshop')) return    // inside a MODAL → operate it, never indicate
       const t = tgt?.closest?.('[data-ui-ref]') as HTMLElement | null
       if (!t) return
       const ref = t.getAttribute('data-ui-ref') || ''
@@ -1158,10 +1177,8 @@ export function useAppController(editor: Editor) {
     }
     finally { wtBusyRef.current = false; setWtBusy(false) }   // re-enable on success OR error OR timeout — never stuck
   }
-  async function applyCfg() {
-    const c = await api.setRhmConfig({ model: cfg.model, persona: cfg.persona })
-    setCfg(c); setCfgOpen(false); setNotice('RHM config → ' + (c.model || 'default')); await poll()
-  }
+  // L4-GEAR-RETIRE: `applyCfg` (the legacy gear's model+persona apply) is GONE — A3 Settings writes each slot
+  // live via setCfgSlot → set_rhm_config (the same backend path), so there is no batched apply gesture anymore.
   // Option A — switch between the personas: set the chosen persona AS active and AUTO-LOAD its voice
   // (the backend evicts the previous voice engine to fit the 16 GB card, then cold-loads this one —
   // accepted that a switch may cold-load). We optimistically reflect the new persona, then poll the
@@ -2024,7 +2041,7 @@ export function useAppController(editor: Editor) {
   return {
     // state values (read by the region components)
     edges, running, runError, runStartedAt, runElapsed, types, gname, gspec, surf, growMsg, workshop,
-    oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
+    oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, inbox,
     showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn, personas,
     // A3/E2-FE · the consolidated Settings surface state
     settingsOpen, settingsTab, roles, voicePaths, voiceStatus, modeRegistry, autodetect, compositionCfg, settingsBusy, settingsErr,
@@ -2036,12 +2053,12 @@ export function useAppController(editor: Editor) {
     // refs the components read for the inspector form
     configByNode,
     // setters the components call directly
-    setGname, setGspec, setSurf, setWorkshop, setNotice, setCfg, setCfgOpen, setChatMsg, setShowResolved,
+    setGname, setGspec, setSurf, setWorkshop, setNotice, setCfg, setChatMsg, setShowResolved,
     setDrill, setReason, setWtReason, setVoiceOn, setRunError, setGrowMsg, setMobileTab,
     setSettingsOpen, setSettingsTab,
     // handlers
     poll, openCoa, reload, fitGraph, addNode, wireSelected, doConnect, setNodeConfig, surfaceOutput,
-    buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
+    buildFromOutput, deleteSelected, sendChat, changeMode, cycleLayers, portalSelected,
     resolveUiTarget, startWalk, startGuide, endWalk, respondStep, nextStep, dispatch, recordToggle, fieldValue,
     setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus, mintBuildIntent, setPresentationPrefAt,
     approveProposal, dismissProposal, steerProposal, deferProposal, setAsideProposal, reviveOffer, toggleJourneyRecording, replayJourney, switchPersona,
