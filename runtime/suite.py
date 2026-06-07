@@ -3379,10 +3379,26 @@ class Suite:
             cfg = svc.get("config") or {}
             model = cfg.get("model")
             if model:
-                # resident traits the resident vLLM config attests (registry-grounded, not invented):
-                # chat + json (response_format honoured) + tool-calling (--enable-auto-tool-choice) +
-                # fast/no-think (the --chat-template chat_template_nothink.jinja + the day-one judge pick).
-                provides = ["chat", "json", "tools", "fast", "no-think"]
+                # G8 WIRE (single source): the `provides` set comes from the L-model capability catalog
+                # (ops/cli/capabilities.py:provides_for — keyed by model-id, provenance declared/probed/served).
+                # ops/cli is stdlib-only with BARE imports + no __init__.py (do NOT add one — it breaks the
+                # siblings), so we read the catalog by inserting ops/cli on sys.path for the import only.
+                # Fail-soft to the registry-grounded resident traits if the catalog can't be read (never a
+                # silent WRONG set — the fallback is the same attested resident traits, documented).
+                provides = None
+                try:
+                    import sys as _sys
+                    _opscli = os.path.join(self._repo_root, "ops", "cli")
+                    if _opscli not in _sys.path:
+                        _sys.path.insert(0, _opscli)
+                    import capabilities as _caps  # ops/cli/capabilities.py (bare import)
+                    provides = list(_caps.provides_for(model))
+                except Exception:
+                    provides = None
+                if not provides:
+                    # fallback = the resident vLLM config's attested traits (registry-grounded, not invented):
+                    # chat + json (response_format) + tool-calling (--enable-auto-tool-choice) + fast/no-think.
+                    provides = ["chat", "json", "tools", "fast", "no-think"]
                 providers[f"resident:chat-4b"] = {
                     "model": model, "base_url": f"http://127.0.0.1:{cfg.get('port', 8000)}/v1",
                     "provides": provides}
