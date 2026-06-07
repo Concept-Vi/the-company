@@ -8,6 +8,8 @@ status: living
 
 # HANDOFF.md — live session handoff (2026-06-06, the merge + voice-live session)
 
+> **⏭️ NEWER SESSION:** `HANDOFF-2026-06-07-model-layer-and-cognition.md` supersedes this for the latest work — the model/VRAM resource layer, voice co-residence (4-bit AWQ Orpheus → 64K co-resident brain), persona identity hookup, the settings/indicate fix, and **the Concurrent Cognition loop now in `build-prep/concurrent-cognition/`**. Read it after this one; it lists the exact merge-conflict files + the upcoming loop's territory.
+
 **Read order for a fresh agent:** `AGENTS.md` (the rules) → `MAP.md` (structure + live registry) → `STATE.md` (canonical status) → **this** (what the most recent session did, how the live voice surface works, and where the seams are to add more). This file is the *narrative* of one session's work + an operator's how-to; `STATE.md` stays the canonical fact-of-record. If they ever disagree, `STATE.md` + the tests win — fix this file.
 
 > **For the next session:** everything below is on `main` and pushed (`github.com/Concept-Vi/the-company`). The headline is: the big interactive-surface branch is merged, voice is converged onto one VRAM authority, and the **full live voice circuit works end-to-end** (you can talk to a persona and hear it reply). Operate it via the `company` console + the bridge; extend it at the seams in §8. Add your stuff on `main` (no branches — see AGENTS.md rule 10).
