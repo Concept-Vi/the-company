@@ -40,6 +40,7 @@ import { Activity } from './regions/Activity'
 import { RhmChat } from './regions/RhmChat'
 import { Walkthrough } from './regions/Walkthrough'
 import { Workshop } from './regions/Workshop'
+import { Settings } from './regions/Settings'
 import { Fleet } from './regions/Fleet'
 import { api } from './api'
 
@@ -228,6 +229,7 @@ function Hud() {
       </div>
       {/* Workshop is a full-viewport modal (position:fixed) — outside the grid so it covers everything. */}
       <Workshop />
+      <Settings />
     </PanelErrorBoundary>
     </AppContext.Provider>
   )

@@ -214,6 +214,24 @@ button.b.ghost:hover{border-color:var(--sig);color:var(--sig);box-shadow:none}
 .rhm-threads .b{font-size:10px;padding:4px 9px}
 .rhm-threads select{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:5px;font-family:inherit;font-size:10px}
 .rhm-threads select:focus{outline:none;border-color:var(--sig)}
+/* S3 — the dedicated settings window (modal; full-screen on mobile). Design tokens only. */
+.settings{position:fixed;inset:48px;z-index:520;background:var(--s1);border:1px solid var(--line);border-radius:8px;display:flex;flex-direction:column;box-shadow:var(--shadow);overflow:hidden}
+.settings-head{font-family:"Fraunces",serif;color:var(--sig);font-weight:600;font-size:15px;padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center}
+.settings-head .close{margin-left:auto;cursor:pointer;color:var(--dim);font-weight:400}
+.settings-head .close:hover{color:var(--sig)}
+.settings-body{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:18px}
+.settings-sec h4{font-family:"Fraunces",serif;color:var(--ink);font-size:12px;margin:0 0 6px;text-transform:uppercase;letter-spacing:.05em}
+.settings-sec label{display:block;color:var(--dim);font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;margin:8px 0 3px}
+.settings-sec select,.settings-sec input[type=number],.settings-sec input[type=text]{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:6px;font-family:inherit;font-size:11px;box-sizing:border-box}
+.settings-sec select:focus,.settings-sec input:focus{outline:none;border-color:var(--sig)}
+.settings-toggle{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--ink);text-transform:none;letter-spacing:0;margin-top:10px;cursor:pointer}
+.settings-toggle input{width:auto}
+.settings-ctx{display:flex;gap:6px}
+.settings-ctx input{flex:1}
+.settings-knobs{margin-top:8px;padding:7px 9px;background:var(--bg);border:1px solid var(--line);border-radius:4px}
+.settings-knob{display:flex;gap:8px;font-size:9.5px;padding:2px 0}
+.settings-knob .kk{color:var(--ink);min-width:96px}
+@media (max-width:699px){.settings{inset:0;border-radius:0}}
 .rhm-cfg{display:flex;flex-direction:column;gap:5px;padding:8px 0;border-bottom:1px solid var(--line)}
 .rhm-cfg input{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:3px;padding:6px;font-family:inherit;font-size:10.5px}
 .rhm-cfg input:focus{outline:none;border-color:var(--sig)}

@@ -966,6 +966,34 @@ class Suite:
     # SAME NodeConfigForm it renders node config — one resolution, two faces (the RHM tools + the UI).
     # Load-time knobs (gpu-util/ctx) are per-service launch DATA (services.json load.env, the A mechanism),
     # not per-request — kept separate. Adding a knob = a row here; no dispatch edit.
+    # S5 — the per-TTS-engine knob catalog (the comprehensive inventory the settings window renders). Each
+    # engine row: knobs[] = {key, type, default, min/max/options?, scope: 'runtime'|'serve', note}. RUNTIME
+    # knobs ride the /tts call (voice/speed) or the tts_voice override; SERVE knobs (exaggeration/cfg/ctx/
+    # gpu_util) are env/service config — changing them restarts the engine. Sourced from each engine's code
+    # (chatterbox.py/xtts.py/qwen3tts.py/cosyvoice.py/orpheus.py/tts_service.py), 2026-06-07.
+    VOICE_ENGINE_KNOBS = {
+        "kokoro":     [{"key": "voice", "type": "text", "default": "af_heart", "scope": "runtime", "note": "a Kokoro voice id (GET /voices)"},
+                       {"key": "speed", "type": "number", "default": 1.0, "min": 0.5, "max": 2.0, "scope": "runtime", "note": "applied"}],
+        "chatterbox": [{"key": "voice", "type": "text", "default": "(COMPANY_VOICE_REF clip)", "scope": "runtime", "note": "reference clip path to clone"},
+                       {"key": "exaggeration", "type": "number", "default": 0.5, "min": 0.0, "max": 1.0, "scope": "serve", "note": "emotion intensity (COMPANY_CHATTERBOX_EXAGGERATION)"},
+                       {"key": "cfg_weight", "type": "number", "default": 0.5, "min": 0.0, "max": 1.0, "scope": "serve", "note": "guidance (COMPANY_CHATTERBOX_CFG)"}],
+        "xtts":       [{"key": "voice", "type": "text", "default": "(COMPANY_VOICE_REF clip)", "scope": "serve", "note": "speaker clip"},
+                       {"key": "speed", "type": "number", "default": 1.0, "min": 0.5, "max": 2.0, "scope": "runtime", "note": "applied"},
+                       {"key": "language", "type": "text", "default": "en", "scope": "serve", "note": "COMPANY_XTTS_LANG"}],
+        "qwen3tts":   [{"key": "voice", "type": "text", "default": "(designed Australian woman)", "scope": "runtime", "note": "a VOICE DESCRIPTION — VoiceDesign instruct"}],
+        "cosyvoice":  [{"key": "voice", "type": "text", "default": "(refined Australian woman instruct)", "scope": "runtime", "note": "an instruction (inference_instruct2)"}],
+        "orpheus":    [{"key": "voice", "type": "text", "default": "tara", "scope": "runtime", "note": "a named Orpheus voice"},
+                       {"key": "max_model_len", "type": "number", "default": 8192, "scope": "serve", "note": "vLLM ctx (COMPANY_ORPHEUS_MAXLEN)"},
+                       {"key": "gpu_util", "type": "number", "default": 0.6, "min": 0.1, "max": 0.95, "scope": "serve", "note": "vLLM (COMPANY_ORPHEUS_GPU_UTIL)"}],
+    }
+
+    def voice_engine_knobs(self, engine: str | None = None) -> dict:
+        """The TTS-engine knob catalog (S5) — all engines, or one. The settings window renders this so the
+        operator sees every engine's real knobs (runtime vs serve-time)."""
+        if engine:
+            return {engine: self.VOICE_ENGINE_KNOBS.get(engine, [])}
+        return dict(self.VOICE_ENGINE_KNOBS)
+
     MODEL_KNOBS = {
         "temperature":       {"type": "number", "label": "Temperature", "default": 0.7, "min": 0.0, "max": 2.0,
                               "applies": "always", "note": "sampling randomness"},
@@ -1135,7 +1163,10 @@ class Suite:
                 # n model-FUNCTION roles (judge first; more to come) each bind a model + config from the
                 # live registry. Stored as ONE dict so adding a role never touches the config whitelist.
                 # Schema-additive (absent → {}); the brain stays its OWN slot (`model`) — NOT a role here.
-                "roles": c.get("roles", {})}
+                "roles": c.get("roles", {}),
+                # S5 — the brain's runtime knobs (temperature/max_tokens/top_p), set from the settings
+                # window; reach the chat call. Absent → endpoint defaults. Schema-additive.
+                "brain_knobs": c.get("brain_knobs", {})}
 
     def voice_enabled(self) -> bool:
         """Lane H — is voice on for the current presence? Reads the rhm node's `voice_enabled`
@@ -1150,7 +1181,22 @@ class Suite:
     def set_rhm_config(self, updates: dict) -> dict:
         allowed = {k: v for k, v in (updates or {}).items()
                    if k in ("model", "base_url", "persona", "mode", "voice_enabled", "timeout", "stt",
-                            "roles", "tts_engine", "tts_voice", "voice_path", "voice_input_mode")}
+                            "roles", "tts_engine", "tts_voice", "voice_path", "voice_input_mode", "brain_knobs")}
+        if "brain_knobs" in allowed:                          # S5 — temperature/max_tokens/top_p (numeric, fail-loud)
+            bk = allowed["brain_knobs"]
+            if not isinstance(bk, dict):
+                raise ValueError("brain_knobs must be a dict {temperature?,max_tokens?,top_p?}")
+            clean = {}
+            for k, v in bk.items():
+                if k not in ("temperature", "max_tokens", "top_p"):
+                    raise ValueError(f"unknown brain knob {k!r} — one of (temperature,max_tokens,top_p)")
+                if v is not None:
+                    try:
+                        clean[k] = int(v) if k == "max_tokens" else float(v)
+                    except (TypeError, ValueError):
+                        raise ValueError(f"brain knob {k!r} must be numeric, got {v!r}")
+            existing = dict(self.rhm_config().get("brain_knobs", {})); existing.update(clean)
+            allowed["brain_knobs"] = existing                 # merge (set one knob without resetting another)
         if "voice_input_mode" in allowed:                     # V1.3 — push_to_talk | auto_listen (fail-loud)
             vim = str(allowed["voice_input_mode"]).strip()
             if vim not in ("push_to_talk", "auto_listen"):
@@ -3358,9 +3404,14 @@ class Suite:
         # guard knows this. A non-tool model never reaches here (gated above). FAIL LOUD on exhaustion:
         # complete_with_tools raises FabricError, which we let propagate (no fallback) after logging the
         # operator turn — the bridge surfaces the error rather than the system pretending success.
+        # S5 — the brain's runtime knobs (temperature/max_tokens/top_p) now REACH the call (they were in
+        # MODEL_KNOBS + /api/knobs but never passed — dead code). Set from the settings window via the
+        # brain_knobs slot; absent → the endpoint's own defaults (byte-for-byte as before).
+        _bk = cfg.get("brain_knobs") or {}
+        _bkargs = {k: _bk[k] for k in ("temperature", "max_tokens", "top_p") if k in _bk and _bk[k] is not None}
         msg = client.complete_with_tools(
             transport.openai_tools_transport(base_url=cfg["base_url"], timeout=cfg["timeout"]),
-            msgs, model=cfg["model"], tools=tools, tool_choice="auto", timeout=cfg["timeout"])
+            msgs, model=cfg["model"], tools=tools, tool_choice="auto", timeout=cfg["timeout"], **_bkargs)
         reply = msg.get("content") or ""                      # may be empty (the model called a tool)
 
         # LOOP over every tool_call the model emitted (a model may call >1). Each becomes an action via

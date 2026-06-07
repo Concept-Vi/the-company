@@ -252,6 +252,8 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.run_stats(op=q.get("op"))))
             elif path == "/api/knobs":                     # G8.1: the dynamic configurable-knob surface for a (loaded) model
                 self._send(200, json.dumps(SUITE.knobs_for(model=q.get("model"), base_url=q.get("base_url"))))
+            elif path == "/api/voice/engine-knobs":        # S5: per-TTS-engine knob catalog (all, or ?engine=)
+                self._send(200, json.dumps(SUITE.voice_engine_knobs(q.get("engine"))))
             elif path == "/api/voice/paths":               # Tier-4: the swappable voice-path registry (pipeline vs s2s)
                 self._send(200, json.dumps(SUITE.voice_paths()))
             else:
@@ -609,6 +611,28 @@ class H(BaseHTTPRequestHandler):
                 if not started:
                     raise RuntimeError(f"failed to start {key!r}: {msg} (journalctl --user -u {svc.get('manage',{}).get('unit')})")
                 self._send(200, json.dumps({"service": key, "state": "warming", "note": "started — model loading; poll its endpoint"}))
+            elif self.path == "/api/model/config":        # S5: set a serve-time config (e.g. context window) + restart
+                import sys as _sys
+                _ops = os.path.join(ROOT, "ops", "cli")
+                if _ops not in _sys.path:
+                    _sys.path.insert(0, _ops)
+                import gpu as _gpu, systemd as _sd, registry as _reg
+                b = self._body()
+                key, field, value = (b.get("service") or "").strip(), (b.get("key") or "").strip(), b.get("value")
+                reg = _reg.load()
+                if key not in reg["services"]:
+                    raise ValueError(f"unknown service {key!r}")
+                _reg.set_config(reg, key, field, value)    # writes services.json (fail-loud if no config block)
+                reg = _reg.load()
+                svc = reg["services"][key]
+                if _sd.is_active(svc) == "active":         # running → restart to apply the new serve-time value
+                    ok, need, free, _m = _gpu.check_fit(reg, [key])
+                    started, msg = _sd.control(svc, "restart")
+                    self._send(200, json.dumps({"service": key, "key": field, "value": value, "restarted": started,
+                                                "note": (msg if started else "restart failed: " + str(msg))}))
+                else:                                      # not running → the new value applies on next start
+                    self._send(200, json.dumps({"service": key, "key": field, "value": value, "restarted": False,
+                                                "note": "saved — applies when the service next starts"}))
             elif self.path == "/api/mode":                # the presence dial — set the RHM mode
                 b = self._body()
                 SUITE.set_mode(b["mode"])

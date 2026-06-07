@@ -7,7 +7,7 @@ import { useApp } from '../AppContext'
 export function Toolbar() {
   const {
     now, running, chatBusy, runElapsed, runError, modeDesc, layerView, notice,
-    doRun, changeMode, wireSelected, portalSelected, deleteSelected, cycleLayers, fitGraph, reload, setRunError,
+    doRun, changeMode, wireSelected, portalSelected, deleteSelected, cycleLayers, fitGraph, reload, setRunError, setSettingsOpen,
   } = useApp()
   return (
     <div className="hud toolbar" data-ui-ref="toolbar">
@@ -47,6 +47,7 @@ export function Toolbar() {
       {/* U6: fit the graph with padding for the fixed panels so nothing tucks under the chrome */}
       <button className="b ghost" data-ui-ref="ui://toolbar/fit" onClick={fitGraph} title="zoom to fit — padded so no node hides under the panels">⊡ fit</button>
       <button className="b ghost" data-ui-ref="ui://toolbar/reload" onClick={reload}>reload</button>
+      <button className="b ghost" data-ui-ref="ui://toolbar/settings" title="settings — models, voice, context window, knobs" onClick={() => setSettingsOpen(true)}>⚙ settings</button>
       {notice && <span className="notice">{notice}</span>}
     </div>
   )

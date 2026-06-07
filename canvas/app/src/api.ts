@@ -119,6 +119,9 @@ export const api = {
   // S1 — the chat-model picker list (ollama/cloud + local vLLM, each with base_url+service+up) + load-on-demand.
   chatModelsDetailed: () => fetch('/api/chat-models').then(jr),
   modelLoad: (service: string) => fetch('/api/model/load', { method: 'POST', headers: J, body: JSON.stringify({ service }) }).then(jr),
+  // S5 — set a serve-time model config (e.g. context window) + restart; + the per-TTS-engine knob catalog.
+  modelConfig: (service: string, key: string, value: any) => fetch('/api/model/config', { method: 'POST', headers: J, body: JSON.stringify({ service, key, value }) }).then(jr),
+  voiceEngineKnobs: () => fetch('/api/voice/engine-knobs').then(jr),
   newConversation: (title?: string) => fetch('/api/conversation/new', { method: 'POST', headers: J, body: JSON.stringify({ title: title || '' }) }).then(jr),
   listConversations: () => fetch('/api/conversations').then(jr),
   loadConversation: (threadId: string) => fetch('/api/conversation?thread_id=' + encodeURIComponent(threadId)).then(jr),
