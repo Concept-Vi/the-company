@@ -96,6 +96,141 @@ def _tts_base_url(engine: str | None) -> str:
     return f"http://127.0.0.1:{ENGINE_PORTS[engine]}"
 
 
+# --- Concurrent Cognition G6: voice coupling — the PART is the TTS streaming unit ----------------
+# The streaming core, FACTORED OUT of the HTTP handler so it is testable WITHOUT a socket (same path,
+# not a parallel one — reuse-don't-parallel). It drives a `chat_parts()` GENERATOR through a
+# brain-producer THREAD into a thread-safe queue while the CALLING thread (the one that owns the
+# socket) synthesises + emits each completed part's sentences. THAT is the brain↔TTS OVERLAP (C6.1):
+# a naive `for part in gen: synth(part)` gives ZERO overlap — yielding suspends the generator, so
+# part N+1 isn't generated until part N's synth returns (sequential). The producer thread keeps the
+# brain running AHEAD of synthesis.
+#
+# Contract with chat_parts() (G4, already built — we CONSUME it, never re-implement staging):
+#   • each yield is {"part": N, "text": <complete sub-generation>, "final": bool, "staged": bool, ...}
+#   • the epilogue (the SINGLE chat-history append + the SINGLE _emit("chat") for the WHOLE turn) runs
+#     INSIDE the generator, right before its FINAL yield. So draining to the final yield gives us the
+#     "ONE chat event regardless of N parts" preserve-item FOR FREE — we must NOT emit our own chat
+#     event and must NOT call SUITE.chat. A cancelled turn that stops draining never reaches the
+#     epilogue → records no chat turn (a speculative turn the operator interrupted — stated, not silent).
+#   • the assembled FULL reply lives in: final["result"]["reply"] (staged + bypass paths) OR
+#     final["early_return"]["reply"] (off/refusal prologue short-circuit). We read it from THERE (what
+#     the epilogue actually wrote to history), never a manual re-join of part texts.
+def _stream_parts(parts_gen, *, speak_fn, emit_fn, gone, split_sentences, on_part=None, should_stop=None):
+    """Drive a chat_parts() generator with brain↔TTS overlap. Pure of HTTP — the caller passes:
+      • parts_gen      — an iterator of part dicts (SUITE.chat_parts(...) or a test stub)
+      • speak_fn(text) — synth ONE sentence → wav bytes (voice_loop.speak bound to engine+voice)
+      • emit_fn(obj)   — emit ONE ndjson event (the SINGLE emitter — owns ordering; the producer never emits)
+      • gone           — a 1-element mutable [bool]: True ⇒ client disconnected, STOP (cancellation)
+      • split_sentences(text) -> [str]  — the per-part sentence split (the existing re.split)
+      • on_part(text)  — optional callback per completed part (e.g. a {type:part} event)
+      • should_stop()  — optional PROACTIVE disconnect probe (the handler's client_gone — select+MSG_PEEK).
+                         The consumer polls it before each synth and folds its verdict into gone[0], so a
+                         disconnect during a long part-GENERATION (no emits in flight) is noticed promptly
+                         — preserving the original synth-loop's proactive cancel, not just reactive
+                         emit-failure detection. Both the consumer (before synth) and the producer (before
+                         the next part) read gone[0].
+    Returns {"reply": <assembled full reply>, "parts_done": int, "parts_total": int,
+             "chunks_done": int, "chunks_total": int, "cancelled": bool, "staged": bool}.
+    FAIL LOUD: a brain exception on the producer thread is re-raised on THIS thread (so the handler's
+    try/except surfaces {type:error} + the durable log) — never swallowed into a silent short stream."""
+    import queue as _q
+    import threading as _thr
+    SENTINEL = object()
+    q: "_q.Queue" = _q.Queue()
+    prod_err: dict = {}
+    final_holder: dict = {}
+
+    def _produce():
+        # Pull parts AHEAD of synthesis. Between parts, honour cancellation: BEFORE pulling the next part
+        # (which is where the brain spends its compute — generating part N+1), check gone[0]; if the
+        # client went away, close the generator (unwinding chat_parts' own daemon wave thread) and STOP
+        # — the next part is NEVER generated (C6.1 cancel gates part-GEN). The brain keeps generating
+        # part N+1 while the consumer synths part N — the overlap.
+        try:
+            while True:
+                if gone[0]:                                  # client gone → do NOT generate the next part
+                    break
+                try:
+                    part = next(parts_gen)                   # pull (generate) the next part — the brain compute
+                except StopIteration:
+                    break
+                if part.get("final"):
+                    final_holder["final"] = part            # carries result/early_return → the full reply
+                q.put(part)
+        except BaseException as e:                           # a brain failure → re-raise on the consumer (fail loud)
+            prod_err["err"] = e
+        finally:
+            try:
+                parts_gen.close()                            # idempotent; unwinds a suspended generator
+            except Exception:
+                pass
+            q.put(SENTINEL)
+
+    producer = _thr.Thread(target=_produce, name="voice-brain-producer", daemon=True)
+    producer.start()
+
+    import queue as _q2
+    idx = 0                                                  # MONOTONIC chunk index ACROSS ALL parts (playCursorRef ordering)
+    parts_done = 0
+    cancelled = False
+    staged = False
+    while True:
+        # Poll for the next part; while WAITING (a long part-GENERATION with no sentences flowing) keep
+        # the PROACTIVE disconnect probe live so a mid-generation disconnect is noticed promptly (it folds
+        # into gone[0] → the producer stops generating the next part). select+MSG_PEEK is read-only — the
+        # consumer is the only thread that probes the socket (no cross-thread socket race).
+        while True:
+            try:
+                item = q.get(timeout=0.4)
+                break
+            except _q2.Empty:
+                if should_stop is not None and should_stop():
+                    gone[0] = True
+                continue
+        if item is SENTINEL:
+            break
+        part = item
+        parts_done += 1
+        if part.get("staged"):
+            staged = True
+        text = (part.get("text") or "").strip()
+        if on_part is not None and text:
+            on_part(text)
+        if text:
+            for sent in split_sentences(text):
+                if should_stop is not None and should_stop():  # PROACTIVE probe (select+MSG_PEEK) → folds into gone[0]
+                    gone[0] = True
+                if gone[0]:                                  # client gone → STOP before the next synth (existing tier-2)
+                    cancelled = True
+                    break
+                wav = speak_fn(sent)
+                emit_fn({"idx": idx, "text": sent, "wav": wav})
+                idx += 1
+        if gone[0]:
+            cancelled = True
+            # client gone → DRAIN the rest of the queue to the SENTINEL (so the producer never blocks on
+            # put()) then STOP the consumer (the producer closes the generator → the next part is never
+            # generated; cancellation gates part-GEN, C6.1). Break the OUTER loop too — the sentinel is
+            # consumed HERE, so returning to the outer q.get() would block forever (the deadlock).
+            while q.get() is not SENTINEL:
+                pass
+            break
+
+    producer.join(timeout=5)
+    if prod_err.get("err") is not None:
+        raise prod_err["err"]                                # FAIL LOUD on the handler thread
+
+    final = final_holder.get("final") or {}
+    if "result" in final and isinstance(final["result"], dict):
+        reply = (final["result"].get("reply") or "")
+    elif "early_return" in final and isinstance(final["early_return"], dict):
+        reply = (final["early_return"].get("reply") or "")
+    else:
+        reply = ""
+    return {"reply": reply, "parts_done": parts_done, "parts_total": parts_done,
+            "chunks_done": idx, "chunks_total": idx, "cancelled": cancelled, "staged": staged}
+
+
 SUITE = Suite(FsStore(fcfg.STORE_DIR),
               NodeRegistry().discover([os.path.join(ROOT, "nodes")]))
 DEMO = "codebase"
@@ -355,15 +490,26 @@ class H(BaseHTTPRequestHandler):
             return                                          # client closed — done, not an error
 
     def _voice_stream(self):
-        """Tier-1 STREAMING voice turn: hear → think → SPEAK SENTENCE-BY-SENTENCE. The win over
+        """Tier-1 STREAMING voice turn: hear → think-IN-PARTS → SPEAK part-by-part. The win over
         /api/voice/turn: instead of synthesising the WHOLE reply before any audio (the ~28s-on-a-long-
-        reply wall), we split the reply into sentences and stream each one's audio AS IT'S SYNTHESISED —
-        so the first words play at ~(silence+STT+brain+TTS-of-one-short-sentence), and the rest flows
-        behind. Response = newline-delimited JSON events the FE reads + plays incrementally:
-          {type:transcript,text} · {type:chunk,idx,text,wav_b64,ms} (per sentence) · {type:done,total_ms,reply}
-        Engine-agnostic (sentence-chunking works with the CURRENT qwen3tts — no engine change; each
-        sentence is a short, fast synth). Brain-token streaming is a later refinement; chunking the TTS
-        (the dominant cost) is most of the win. Fail-loud surfaces as a {type:error} event then closes."""
+        reply wall), we drive the brain as a SEQUENCE OF PARTS (SUITE.chat_parts, G4) and stream each
+        completed part's sentences AS THE NEXT PART IS STILL GENERATING — so first audio plays at
+        ~(silence+STT+PART_1-gen+TTS-of-one-short-sentence), and the brain runs CONCURRENTLY with synth.
+
+        CONCURRENT COGNITION G6 — the PART is the TTS streaming unit (C6.1): the multi-part design IS
+        the voice-streams-as-it-thinks mechanism. Two overlaps now COMPOSE: parts overlap brain↔TTS
+        (this), sentences overlap synth↔playback (the FE's playCursorRef). A brain-PRODUCER thread runs
+        chat_parts() ahead of the SYNTH-CONSUMER (the handler thread, the single emitter) — see
+        _stream_parts. A trivial one-liner → ONE part (chat_parts' brevity bypass) → a single synth,
+        no regression.
+
+        Response = newline-delimited JSON events the FE reads + plays incrementally (SUPERSET of the old
+        contract — additive, no FE change required):
+          {type:transcript,text} · {type:part,idx,text} (NEW, per completed part) ·
+          {type:chunk,idx,text,wav_b64,ms} (per sentence, MONOTONIC idx ACROSS parts — UNCHANGED shape) ·
+          {type:reply,text} (the ASSEMBLED full reply, emitted ONCE before done — the FE's single append) ·
+          {type:done,total_ms,reply,parts,chunks}
+        Engine-agnostic. Fail-loud surfaces as a {type:error} event then closes."""
         import base64 as _b64, re as _re, time as _t
         from urllib.parse import urlparse as _up, parse_qs as _pq
         from voice import loop as voice_loop, stt as voice_stt, lifecycle as voice_lc, personas as voice_personas
@@ -432,46 +578,79 @@ class H(BaseHTTPRequestHandler):
             if not transcript:
                 raise RuntimeError("empty transcript — STT heard nothing (fail loud)")
             step = "think"
-            thought = SUITE.chat(transcript, gid)                 # the ONE in-process brain (full reply)
-            reply = (thought.get("reply") or "").strip()
-            think_ms = int((_t.monotonic() - t0) * 1000) - stt_ms
-            emit({"type": "reply", "text": reply, "ms": think_ms})
-            if trial_session:                                     # V3.1: RECORD the turn into the trial session
-                try:                                              # (the EXISTING trial_record_turn; reuse, don't reinvent)
+            think_t0 = _t.monotonic()
+            voice_arg = voice_override or voice_loop._voice_arg_for(p, eng)   # G4.2: voice for the SELECTED engine (any persona × any engine)
+
+            def _split(text):                                 # the existing per-part sentence split (unchanged shape)
+                return [s.strip() for s in _re.split(r'(?<=[.!?])\s+', text) if s.strip()] or ([text] if text.strip() else [])
+
+            def _speak(sent):
+                cs = _t.monotonic()
+                wav = voice_loop.speak(sent, eng, voice=voice_arg)   # `eng` honours the override; short sentence → fast synth
+                _speak.last_ms = int((_t.monotonic() - cs) * 1000)
+                return wav
+            _speak.last_ms = 0
+
+            def _emit_chunk(c):                               # the SINGLE emitter — ndjson line ordering is safe (one thread)
+                emit({"type": "chunk", "idx": c["idx"], "text": c["text"],
+                      "wav_b64": _b64.b64encode(c["wav"]).decode(), "ms": _speak.last_ms})
+
+            def _emit_part(text):                             # NEW additive event: a completed part (the current FE ignores it)
+                emit({"type": "part", "idx": -1, "text": text})
+
+            # G6: drive chat_parts() with the brain↔TTS overlap. The brain produces parts AHEAD while
+            # the synth-consumer (this thread) speaks+emits each part's sentences (C6.1). chat_parts'
+            # epilogue (the SINGLE chat append + SINGLE _emit('chat')) runs inside the generator → we get
+            # "one chat event regardless of N parts" for free; we never emit our own chat event.
+            parts_gen = SUITE.chat_parts(transcript, gid, turn_id=turn_id)
+            if not speak_reply:
+                step = "think"                                # voice off → still DRAIN the generator (the epilogue MUST run
+                res = _stream_parts(                          # to record the turn) but synth NOTHING.
+                    parts_gen, speak_fn=lambda s: b"", emit_fn=lambda c: None, gone=gone,
+                    split_sentences=_split, should_stop=client_gone)
+                reply = (res["reply"] or "").strip()
+                think_ms = int((_t.monotonic() - think_t0) * 1000)
+                if trial_session:
+                    try:
+                        SUITE.trial_record_turn(trial_session, "operator", transcript, character=persona)
+                        SUITE.trial_record_turn(trial_session, "character", reply, character=persona)
+                    except Exception as _e:
+                        emit({"type": "note", "text": f"(recording skipped: {type(_e).__name__})"})
+                emit({"type": "reply", "text": reply, "ms": think_ms})
+                emit({"type": "done", "total_ms": int((_t.monotonic() - t0) * 1000), "spoke": False,
+                      "reply": reply, "parts": res["parts_done"], "turn_id": turn_id})
+                return
+
+            step = "tts"
+            res = _stream_parts(parts_gen, speak_fn=_speak, emit_fn=_emit_chunk, gone=gone,
+                                split_sentences=_split, on_part=_emit_part, should_stop=client_gone)
+            reply = (res["reply"] or "").strip()
+            think_ms = int((_t.monotonic() - think_t0) * 1000)
+            total = int((_t.monotonic() - t0) * 1000)
+            step = "done"
+            if res["cancelled"] or gone[0]:                   # cancelled mid-stream — record it (server-side; the socket's dead)
+                SUITE.emit_run_record("voice.stream.cancelled", total, turn_id=turn_id, ok=False, step="cancelled",
+                                      stt_ms=stt_ms, think_ms=think_ms, chunks_done=res["chunks_done"],
+                                      chunks_total=res["chunks_total"], parts_done=res["parts_done"],
+                                      persona=persona, engine=eng, transcript=transcript[:2000], reply=reply[:4000])
+                return
+            # trial recording ONCE at turn end, with the ASSEMBLED reply the epilogue wrote to history
+            if trial_session:                                 # V3.1: RECORD the turn into the trial session
+                try:                                          # (the EXISTING trial_record_turn; reuse, don't reinvent)
                     SUITE.trial_record_turn(trial_session, "operator", transcript, character=persona)
                     SUITE.trial_record_turn(trial_session, "character", reply, character=persona)
                 except Exception as _e:
                     emit({"type": "note", "text": f"(recording skipped: {type(_e).__name__})"})  # never break the turn
-            if not speak_reply:
-                emit({"type": "done", "total_ms": int((_t.monotonic() - t0) * 1000), "spoke": False, "reply": reply}); return
-            # split into sentences → synth + stream each AS IT'S READY (the streaming win)
-            step = "tts"
-            sentences = [s.strip() for s in _re.split(r'(?<=[.!?])\s+', reply) if s.strip()] or [reply]
-            voice_arg = voice_override or voice_loop._voice_arg_for(p, eng)   # G4.2: voice for the SELECTED engine (any persona × any engine)
-            done_n = 0
-            for idx, sent in enumerate(sentences):
-                if client_gone():                             # Tier-2: client disconnected → STOP before the next synth (don't burn TTS)
-                    break
-                cs = _t.monotonic()
-                wav = voice_loop.speak(sent, eng, voice=voice_arg)   # `eng` honours the override; short sentence → fast synth
-                emit({"type": "chunk", "idx": idx, "text": sent,
-                      "wav_b64": _b64.b64encode(wav).decode(),
-                      "ms": int((_t.monotonic() - cs) * 1000)})
-                done_n = idx + 1
-            total = int((_t.monotonic() - t0) * 1000)
-            step = "done"
-            if gone[0]:                                       # cancelled mid-stream — record it (server-side; the socket's dead)
-                SUITE.emit_run_record("voice.stream.cancelled", total, turn_id=turn_id, ok=False, step="cancelled",
-                                      stt_ms=stt_ms, think_ms=think_ms, chunks_done=done_n, chunks_total=len(sentences),
-                                      persona=persona, engine=eng, transcript=transcript[:2000], reply=reply[:4000])
-                return
             # the DETAILED, durable per-turn log line (Tim 2026-06-07): the texts + per-step timings + config,
             # so a whole turn is investigable from the event log (op=voice.stream, keyed by turn_id).
             SUITE.emit_run_record("voice.stream", total, turn_id=turn_id, ok=True, stt_ms=stt_ms, think_ms=think_ms,
-                                  chunks=len(sentences), persona=persona, engine=eng, ear=ear,
+                                  chunks=res["chunks_done"], parts=res["parts_done"], staged=res["staged"],
+                                  persona=persona, engine=eng, ear=ear,
                                   input_mode=SUITE.rhm_config().get("voice_input_mode"),
                                   transcript=transcript[:2000], reply=reply[:4000])
-            emit({"type": "done", "total_ms": total, "spoke": True, "chunks": len(sentences), "reply": reply, "turn_id": turn_id})
+            emit({"type": "reply", "text": reply, "ms": think_ms})   # the FE's single assistant-append (moved to end)
+            emit({"type": "done", "total_ms": total, "spoke": True, "chunks": res["chunks_done"],
+                  "parts": res["parts_done"], "reply": reply, "turn_id": turn_id})
         except Exception as e:                                     # fail loud — to the client AND DURABLY to the log
             # the error used to vanish with the socket. Now a durable record: WHICH step failed, the error,
             # the texts so far, the config — everything needed to investigate a failed turn from the log.

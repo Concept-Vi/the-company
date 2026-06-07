@@ -81,8 +81,8 @@
 
 ## G6 · Voice coupling (streams as it thinks)
 
-- **C6.1 · Each completed part is the TTS streaming unit** — synth part N while the brain generates part N+1 (overlap brain↔TTS). Proven: audio of Part 1 plays before Part 2 is generated.  ☐ by use
-- **C6.2 · The `/api/voice/stream` circuit consumes a sequence of parts** (not one full reply); in-order playback + iOS unlock + trial recording preserved.  ☐ by use / needs-tim (on-device)
+- **C6.1 · Each completed part is the TTS streaming unit** — synth part N while the brain generates part N+1 (overlap brain↔TTS). Proven: audio of Part 1 plays before Part 2 is generated.  ✅ by use (live staged turn: parts=2, first-part@4.2s, first-chunk@13.3s — overlap proven; _stream_parts drives chat_parts with brain↔TTS overlap; voice_parts_acceptance 24/24)
+- **C6.2 · The `/api/voice/stream` circuit consumes a sequence of parts** (not one full reply); in-order playback + iOS unlock + trial recording preserved.  ◑ by use (monotonic idx across parts; ONE chat event for N parts — deterministic PRESERVE-4 = exactly 2 chat rows via the REAL _stream_parts over chat_parts; trial-record once at turn end; cancellation gates part-gen; brevity single-part path; rhm_completion 74✓ + chat_parts 65✓ guard green) — needs-tim: the on-device AUDIO + iOS unlock HEARD + the streaming FEEL (no speaker on the server)
 
 ## G7 · The live cognition view (in the first build)
 
