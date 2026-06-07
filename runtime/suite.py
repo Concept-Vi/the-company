@@ -3367,6 +3367,18 @@ class Suite:
                     "model": cfg["model"], "history": self.store.chat_history(40)}
 
         persona = cfg["persona"]
+        # IDENTITY HOOKUP (Tim 2026-06-07: "more than just a name … fully hooked up"): expand a known
+        # persona id to its FULL character prose (personas.py `brain`). A bare id ("sable") told the model
+        # nothing — the character was names-only. The brain prose IS the identity and is engine-independent
+        # (it holds whether the voice is Orpheus, qwen3tts, or any other). Free-text / unknown persona falls
+        # through verbatim (never crash a reply over an unrecognised persona string).
+        persona_text = persona
+        if persona:
+            try:
+                from voice import personas as _vp
+                persona_text = _vp.get_persona(persona).get("brain") or persona
+            except (KeyError, ImportError):
+                persona_text = persona
         # PERSONA / GROUND-TRUTH / MODE-DIRECTIVE HEAD (the ACTION:-prose block is GONE — the verbs are
         # now offered as native function-tools, so the model invokes them through the tool API, not by
         # emitting a hand-typed `ACTION:` line). The head still tells it WHO it is, to answer only from
@@ -3376,7 +3388,7 @@ class Suite:
             "about the system ITSELF. Answer ONLY from the LIVE SYSTEM STATE below; it is ground truth. "
             "If something is not in that state, say you cannot see it — NEVER invent counts, names, or "
             "facts. Be concise and concrete.\n\n"
-            + (f"VOICE / PERSONA (hold this consistently): {persona}\n\n" if persona else "")
+            + (f"VOICE / PERSONA (hold this consistently): {persona_text}\n\n" if persona else "")
             + ("THE EXPLICIT MODEL OF TIM (the principles the Company holds itself to — reason from these "
                "for judgment/value questions, but mark such answers as YOUR inference (working-grade), "
                "never as Tim's actual words; when genuinely uncertain, say so and defer to Tim):\n"

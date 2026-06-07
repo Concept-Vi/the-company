@@ -396,7 +396,7 @@ class H(BaseHTTPRequestHandler):
                 emit({"type": "done", "total_ms": int((_t.monotonic() - t0) * 1000), "spoke": False, "reply": reply}); return
             # split into sentences → synth + stream each AS IT'S READY (the streaming win)
             sentences = [s.strip() for s in _re.split(r'(?<=[.!?])\s+', reply) if s.strip()] or [reply]
-            voice_arg = voice_override or voice_loop._voice_arg_for(p)   # G4.2: honour the engine/voice override
+            voice_arg = voice_override or voice_loop._voice_arg_for(p, eng)   # G4.2: voice for the SELECTED engine (any persona × any engine)
             done_n = 0
             for idx, sent in enumerate(sentences):
                 if client_gone():                             # Tier-2: client disconnected → STOP before the next synth (don't burn TTS)
@@ -545,6 +545,7 @@ class H(BaseHTTPRequestHandler):
                 t0 = _t.monotonic()
                 r = voice_loop.loop_turn(
                     audio, persona, graph_id=gid, stt_provider=ear, speak_reply=speak_reply,
+                    engine_override=eng_override, voice_override=voice_override,   # any persona × any engine
                     think_fn=lambda txt: SUITE.chat(txt, gid),    # the ONE in-process brain
                     on_transcript=lambda _t_, _m=marks: _m.__setitem__("stt", int((_t.monotonic()-t0)*1000)),
                     on_reply=lambda _r_, _m=marks: _m.__setitem__("think_done", int((_t.monotonic()-t0)*1000)))

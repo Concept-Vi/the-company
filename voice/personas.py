@@ -49,6 +49,9 @@ PERSONAS: dict[str, dict] = {
         "voice_description": VOICE_BASE + (
             " For Viv: hold the composed, unhurried register; the dry wit is in the restraint, not the "
             "delivery. Steady and self-assured."),
+        # named-voice engines (no description input) — the closest bank voice per character. Design engines
+        # (qwen3tts/cosyvoice) use voice_description; clip engines (xtts/chatterbox) use the ref clip.
+        "voices": {"orpheus": "leah", "kokoro": "bf_emma"},
     },
     "tess": {
         "name": "Tess",
@@ -65,6 +68,7 @@ PERSONAS: dict[str, dict] = {
         "voice_description": VOICE_BASE + (
             " For Tess: a touch brighter and lighter than the base; warmth carried in the voice, an easy "
             "smile audible under the words — still refined, never bubbly."),
+        "voices": {"orpheus": "jess", "kokoro": "bf_isabella"},
     },
     "sable": {
         "name": "Sable",
@@ -81,6 +85,7 @@ PERSONAS: dict[str, dict] = {
         "voice_description": VOICE_BASE + (
             " For Sable: lower and slower than the base, with a cool warmth. Self-possessed and unhurried, "
             "a little mysterious — she makes you lean in."),
+        "voices": {"orpheus": "zoe", "kokoro": "bf_alice"},
     },
     "pip": {
         "name": "Pip",
@@ -98,6 +103,7 @@ PERSONAS: dict[str, dict] = {
         "voice_description": VOICE_BASE + (
             " For Pip: energy up — quicker, brighter, ready with a well-timed line — but the SAME refined "
             "voice underneath (that polish is what stops 'wacky' tipping into grating). Never cartoonish."),
+        "voices": {"orpheus": "tara", "kokoro": "af_bella"},
     },
     "wren": {
         "name": "Wren",
@@ -115,6 +121,7 @@ PERSONAS: dict[str, dict] = {
         "voice_description": VOICE_BASE + (
             " For Wren: the refined base with a current of aliveness under it — the pace quickens a touch "
             "when she's onto something, then settles back to composed. Present and engaged."),
+        "voices": {"orpheus": "mia", "kokoro": "bf_lily"},
     },
 }
 
