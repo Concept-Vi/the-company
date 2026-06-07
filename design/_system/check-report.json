@@ -2,14 +2,16 @@
   "should_use_var": [
     {
       "literal": "5px",
-      "count": 284,
+      "count": 340,
       "screens": [
         "A1-canvas-empty-desktop.html",
         "A11-portals-desktop.html",
         "A12-workshop-desktop.html",
         "A2-canvas-desktop.html",
         "A2-canvas-mobile.html",
+        "A2-rhm-mobile-elevated.html",
         "A3-inspector-desktop.html",
+        "A3-settings-elevated.html",
         "B3-walkthrough-desktop.html",
         "B4-presence-dial-desktop.html",
         "B4-presence-dial-mobile.html",
@@ -20,21 +22,24 @@
         "D6-wire-states-desktop.html",
         "D7-selfmod-desktop.html",
         "E1-fleet-desktop.html",
-        "F4-activity-desktop.html"
+        "F4-activity-desktop.html",
+        "SCENARIO-PLAYER.html"
       ],
       "matches_token": "r-sm",
       "kind": "size"
     },
     {
       "literal": "8px",
-      "count": 197,
+      "count": 229,
       "screens": [
         "A1-canvas-empty-desktop.html",
         "A11-portals-desktop.html",
         "A12-workshop-desktop.html",
         "A2-canvas-desktop.html",
         "A2-canvas-mobile.html",
+        "A2-rhm-mobile-elevated.html",
         "A3-inspector-desktop.html",
+        "A3-settings-elevated.html",
         "B3-walkthrough-desktop.html",
         "B4-presence-dial-desktop.html",
         "B4-presence-dial-mobile.html",
@@ -45,21 +50,24 @@
         "D6-wire-states-desktop.html",
         "D7-selfmod-desktop.html",
         "E1-fleet-desktop.html",
-        "F4-activity-desktop.html"
+        "F4-activity-desktop.html",
+        "SCENARIO-PLAYER.html"
       ],
       "matches_token": "r",
       "kind": "size"
     },
     {
       "literal": "12px",
-      "count": 121,
+      "count": 145,
       "screens": [
         "A1-canvas-empty-desktop.html",
         "A11-portals-desktop.html",
         "A12-workshop-desktop.html",
         "A2-canvas-desktop.html",
         "A2-canvas-mobile.html",
+        "A2-rhm-mobile-elevated.html",
         "A3-inspector-desktop.html",
+        "A3-settings-elevated.html",
         "B3-walkthrough-desktop.html",
         "B4-presence-dial-desktop.html",
         "B4-presence-dial-mobile.html",
@@ -70,21 +78,24 @@
         "D6-wire-states-desktop.html",
         "D7-selfmod-desktop.html",
         "E1-fleet-desktop.html",
-        "F4-activity-desktop.html"
+        "F4-activity-desktop.html",
+        "SCENARIO-PLAYER.html"
       ],
       "matches_token": "r-lg",
       "kind": "size"
     },
     {
       "literal": "4px",
-      "count": 90,
+      "count": 111,
       "screens": [
         "A1-canvas-empty-desktop.html",
         "A11-portals-desktop.html",
         "A12-workshop-desktop.html",
         "A2-canvas-desktop.html",
         "A2-canvas-mobile.html",
+        "A2-rhm-mobile-elevated.html",
         "A3-inspector-desktop.html",
+        "A3-settings-elevated.html",
         "B3-walkthrough-desktop.html",
         "B4-presence-dial-desktop.html",
         "B4-presence-dial-mobile.html",
@@ -94,21 +105,24 @@
         "C5-replay-desktop.html",
         "D7-selfmod-desktop.html",
         "E1-fleet-desktop.html",
-        "F4-activity-desktop.html"
+        "F4-activity-desktop.html",
+        "SCENARIO-PLAYER.html"
       ],
       "matches_token": "sp-1",
       "kind": "size"
     },
     {
       "literal": "16px",
-      "count": 69,
+      "count": 99,
       "screens": [
         "A1-canvas-empty-desktop.html",
         "A11-portals-desktop.html",
         "A12-workshop-desktop.html",
         "A2-canvas-desktop.html",
         "A2-canvas-mobile.html",
+        "A2-rhm-mobile-elevated.html",
         "A3-inspector-desktop.html",
+        "A3-settings-elevated.html",
         "B3-walkthrough-desktop.html",
         "B4-presence-dial-desktop.html",
         "B4-presence-dial-mobile.html",
@@ -119,20 +133,23 @@
         "D6-wire-states-desktop.html",
         "D7-selfmod-desktop.html",
         "E1-fleet-desktop.html",
-        "F4-activity-desktop.html"
+        "F4-activity-desktop.html",
+        "SCENARIO-PLAYER.html"
       ],
       "matches_token": "sp-4",
       "kind": "size"
     },
     {
       "literal": "15px",
-      "count": 26,
+      "count": 38,
       "screens": [
         "A1-canvas-empty-desktop.html",
         "A11-portals-desktop.html",
         "A12-workshop-desktop.html",
         "A2-canvas-desktop.html",
+        "A2-rhm-mobile-elevated.html",
         "A3-inspector-desktop.html",
+        "A3-settings-elevated.html",
         "B3-walkthrough-desktop.html",
         "B4-presence-dial-desktop.html",
         "B4-presence-dial-mobile.html",
@@ -142,10 +159,51 @@
         "D6-wire-states-desktop.html",
         "D7-selfmod-desktop.html",
         "E1-fleet-desktop.html",
-        "F4-activity-desktop.html"
+        "F4-activity-desktop.html",
+        "SCENARIO-PLAYER.html"
       ],
       "matches_token": "fs-title",
       "kind": "size"
+    },
+    {
+      "literal": "99px",
+      "count": 36,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html",
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": "r-pill",
+      "kind": "size"
+    },
+    {
+      "literal": "24px",
+      "count": 25,
+      "screens": [
+        "A1-canvas-empty-desktop.html",
+        "A12-workshop-desktop.html",
+        "A2-canvas-mobile.html",
+        "A2-rhm-mobile-elevated.html",
+        "A3-inspector-desktop.html",
+        "A3-settings-elevated.html",
+        "B4-presence-dial-mobile.html",
+        "D6-wire-states-desktop.html",
+        "E1-fleet-desktop.html",
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": "sp-5",
+      "kind": "size"
+    },
+    {
+      "literal": "#000",
+      "count": 23,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html",
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": "shadow-color",
+      "kind": "colour"
     },
     {
       "literal": "19px",
@@ -165,27 +223,352 @@
       "kind": "size"
     },
     {
-      "literal": "24px",
-      "count": 12,
+      "literal": "#e6ab5c",
+      "count": 8,
       "screens": [
-        "A1-canvas-empty-desktop.html",
-        "A12-workshop-desktop.html",
-        "A2-canvas-mobile.html",
-        "A3-inspector-desktop.html",
-        "B4-presence-dial-mobile.html",
-        "D6-wire-states-desktop.html",
-        "E1-fleet-desktop.html"
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html",
+        "SCENARIO-PLAYER.html"
       ],
-      "matches_token": "sp-5",
-      "kind": "size"
+      "matches_token": "kind-present",
+      "kind": "colour"
+    },
+    {
+      "literal": "#1a1205",
+      "count": 3,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html",
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": "ink-await",
+      "kind": "colour"
+    },
+    {
+      "literal": "#ec6a5e",
+      "count": 3,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html",
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": "fail",
+      "kind": "colour"
+    },
+    {
+      "literal": "#06140f",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": "ink-accent",
+      "kind": "colour"
+    },
+    {
+      "literal": "#080a0d",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": "bg",
+      "kind": "colour"
+    },
+    {
+      "literal": "#0d1116",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": "s0",
+      "kind": "colour"
+    },
+    {
+      "literal": "#12171d",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": "s1",
+      "kind": "colour"
+    },
+    {
+      "literal": "#171e25",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": "s2",
+      "kind": "colour"
+    },
+    {
+      "literal": "#1d262e",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": "s3",
+      "kind": "colour"
+    },
+    {
+      "literal": "#232c35",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": "line",
+      "kind": "colour"
+    },
+    {
+      "literal": "#2c3742",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": "line-2",
+      "kind": "colour"
+    },
+    {
+      "literal": "#2c6b5c",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": "acc-dim",
+      "kind": "colour"
+    },
+    {
+      "literal": "#3fb595",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": "acc-deep",
+      "kind": "colour"
+    },
+    {
+      "literal": "#54d6b0",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": "kind-process",
+      "kind": "colour"
+    },
+    {
+      "literal": "#5e6b78",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": "tx-3",
+      "kind": "colour"
+    },
+    {
+      "literal": "#6b8aa8",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": "cache",
+      "kind": "colour"
+    },
+    {
+      "literal": "#6b9bd8",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": "kind-content",
+      "kind": "colour"
+    },
+    {
+      "literal": "#9aa7b4",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": "tx-2",
+      "kind": "colour"
+    },
+    {
+      "literal": "#b58cdc",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": "kind-model",
+      "kind": "colour"
+    },
+    {
+      "literal": "#e8eef4",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": "tx",
+      "kind": "colour"
     }
   ],
   "candidate_new_colour_tokens": [
+    {
+      "literal": "#d2913f",
+      "count": 6,
+      "screens": [
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#f2d08a",
+      "count": 4,
+      "screens": [
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#fff",
+      "count": 4,
+      "screens": [
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#0a0806",
+      "count": 3,
+      "screens": [
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#dba26f",
+      "count": 3,
+      "screens": [
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#dd9f8a",
+      "count": 3,
+      "screens": [
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#05070a",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#1c8e74",
+      "count": 2,
+      "screens": [
+        "A2-rhm-mobile-elevated.html",
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
     {
       "literal": "#214",
       "count": 2,
       "screens": [
         "F4-activity-desktop.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#221c12",
+      "count": 2,
+      "screens": [
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#4a76ab",
+      "count": 2,
+      "screens": [
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#8a5fbf",
+      "count": 2,
+      "screens": [
+        "A3-settings-elevated.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#eebfae",
+      "count": 2,
+      "screens": [
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#f0c49a",
+      "count": 2,
+      "screens": [
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#f6d8cc",
+      "count": 2,
+      "screens": [
+        "SCENARIO-PLAYER.html"
+      ],
+      "matches_token": null,
+      "kind": "colour"
+    },
+    {
+      "literal": "#f7d8b8",
+      "count": 2,
+      "screens": [
+        "SCENARIO-PLAYER.html"
       ],
       "matches_token": null,
       "kind": "colour"
@@ -206,19 +589,14 @@
     ],
     "unused": [
       "ui://canvas/wire-request",
-      "ui://chat/config",
       "ui://chat/debrief",
       "ui://chat/input",
-      "ui://chat/input-mode",
       "ui://chat/mic",
       "ui://chat/minimize",
-      "ui://chat/model-field",
       "ui://chat/new-conversation",
-      "ui://chat/persona-field",
       "ui://chat/record",
       "ui://chat/send",
       "ui://chat/threads",
-      "ui://chat/voice-toggle",
       "ui://grow",
       "ui://grow/approve",
       "ui://grow/dispatch",
@@ -258,17 +636,25 @@
     ]
   },
   "hygiene": {
-    "missing_css_link": [],
-    "missing_any_data_ui_ref": []
+    "missing_css_link": [
+      "A2-rhm-mobile-elevated.html",
+      "A3-settings-elevated.html",
+      "SCENARIO-PLAYER.html"
+    ],
+    "missing_any_data_ui_ref": [
+      "A2-rhm-mobile-elevated.html",
+      "A3-settings-elevated.html",
+      "SCENARIO-PLAYER.html"
+    ]
   },
   "summary": {
-    "screens": 17,
-    "literals_should_use_var": 8,
-    "candidate_new_colour_tokens": 1,
+    "screens": 20,
+    "literals_should_use_var": 30,
+    "candidate_new_colour_tokens": 16,
     "coverage_gaps": 6,
     "address_orphans_unregistered": 2,
-    "address_orphans_unused": 50,
-    "mockups_missing_css": 0,
-    "mockups_missing_address": 0
+    "address_orphans_unused": 45,
+    "mockups_missing_css": 3,
+    "mockups_missing_address": 3
   }
 }

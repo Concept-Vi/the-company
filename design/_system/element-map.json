@@ -640,19 +640,14 @@
     ],
     "unused": [
       "ui://canvas/wire-request",
-      "ui://chat/config",
       "ui://chat/debrief",
       "ui://chat/input",
-      "ui://chat/input-mode",
       "ui://chat/mic",
       "ui://chat/minimize",
-      "ui://chat/model-field",
       "ui://chat/new-conversation",
-      "ui://chat/persona-field",
       "ui://chat/record",
       "ui://chat/send",
       "ui://chat/threads",
-      "ui://chat/voice-toggle",
       "ui://grow",
       "ui://grow/approve",
       "ui://grow/dispatch",
@@ -692,11 +687,11 @@
     ]
   },
   "summary": {
-    "screens": 17,
+    "screens": 20,
     "addressed_elements": 79,
     "distinct_addresses_used": 25,
-    "registered_addresses": 73,
+    "registered_addresses": 68,
     "unregistered_orphans": 2,
-    "unused_orphans": 50
+    "unused_orphans": 45
   }
 }

@@ -218,11 +218,6 @@
       "resolves": true,
       "referenced_by": [
         "RHM-config",
-        "ui://chat/config",
-        "ui://chat/input-mode",
-        "ui://chat/model-field",
-        "ui://chat/persona-field",
-        "ui://chat/voice-toggle",
         "ui://settings",
         "ui://settings/brain",
         "ui://settings/composition",
@@ -676,19 +671,14 @@
       "kind": "file-only",
       "resolves": true,
       "referenced_by": [
-        "ui://chat/config",
         "ui://chat/debrief",
         "ui://chat/input",
-        "ui://chat/input-mode",
         "ui://chat/mic",
         "ui://chat/minimize",
-        "ui://chat/model-field",
         "ui://chat/new-conversation",
-        "ui://chat/persona-field",
         "ui://chat/record",
         "ui://chat/send",
-        "ui://chat/threads",
-        "ui://chat/voice-toggle"
+        "ui://chat/threads"
       ]
     },
     "code://app": {
@@ -770,24 +760,6 @@
       "resolves": true,
       "referenced_by": [
         "ui://chat/threads"
-      ]
-    },
-    "code://useAppController/setVoiceInputMode": {
-      "file": "canvas/app/src/useAppController.ts",
-      "symbol": "setVoiceInputMode",
-      "kind": "def",
-      "resolves": true,
-      "referenced_by": [
-        "ui://chat/input-mode"
-      ]
-    },
-    "code://useAppController/setVoiceEnabled": {
-      "file": "canvas/app/src/useAppController.ts",
-      "symbol": "setVoiceEnabled",
-      "kind": "def",
-      "resolves": true,
-      "referenced_by": [
-        "ui://chat/voice-toggle"
       ]
     },
     "code://useAppController/toggleRecordConversation": {
@@ -955,6 +927,15 @@
       "referenced_by": [
         "ui://settings/close"
       ]
+    },
+    "code://useAppController/setVoiceInputMode": {
+      "file": "canvas/app/src/useAppController.ts",
+      "symbol": "setVoiceInputMode",
+      "kind": "def",
+      "resolves": true,
+      "referenced_by": [
+        "ui://settings/voice"
+      ]
     }
   },
   "not_indexable": [
@@ -976,8 +957,8 @@
     }
   ],
   "summary": {
-    "symbols_indexed": 95,
-    "resolve": 88,
+    "symbols_indexed": 94,
+    "resolve": 87,
     "do_not_resolve": 7,
     "shared_2plus": 39,
     "not_indexable": 4,

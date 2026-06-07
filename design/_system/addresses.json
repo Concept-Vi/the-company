@@ -368,16 +368,6 @@
       "code": "canvas/app/src/regions/RhmChat.tsx (mic) / voice/",
       "howto": "WHAT: the 🎙 mic control — push-to-talk. WHAT YOU CAN DO: click to record your voice as the message; in listening mode the right-hand-man speaks its reply back. HOW TO CHANGE IT: it drives the voice capture path (the voice/ stack + recordToggle); speech-to-text and the spoken reply are the voice circuit."
     },
-    "ui://chat/config": {
-      "region": "chat",
-      "capabilities": [
-        "pointable",
-        "openable"
-      ],
-      "represents": "RHM-config",
-      "code": "canvas/app/src/regions/RhmChat.tsx (config gear) / runtime/suite.py:set_rhm_config",
-      "howto": "WHAT: the ⚙ config gear on the chat. WHAT YOU CAN DO: open the settings to choose the right-hand-man's model and persona, then apply — empty model is a valid 'default model' state. HOW TO CHANGE IT: it writes the RHM config (suite.py:set_rhm_config); the model + persona lists come from the live registry."
-    },
     "ui://chat/minimize": {
       "region": "chat",
       "capabilities": [
@@ -404,24 +394,6 @@
       "represents": "RHM-chat",
       "code": "canvas/app/src/regions/RhmChat.tsx (thread select) / useAppController.ts:openConversation / runtime/suite.py:load_conversation",
       "howto": "WHAT: the reopen-a-conversation dropdown beside + new. WHAT YOU CAN DO: pick one of your past conversations to reopen it — its history loads back into the chat so you can pick up where you left off. WHEN YOU'D REACH FOR IT: when you want to return to an earlier thread rather than start fresh. HOW IT WORKS: choosing a thread loads its saved history (suite.py:load_conversation) and makes it the current conversation; the list is the real saved threads (empty until you've had more than one)."
-    },
-    "ui://chat/input-mode": {
-      "region": "chat",
-      "capabilities": [
-        "pointable"
-      ],
-      "represents": "VOICE",
-      "code": "canvas/app/src/regions/RhmChat.tsx (input-mode select) / useAppController.ts:setVoiceInputMode / runtime/suite.py:set_rhm_config",
-      "howto": "WHAT: the 🎙 push-to-talk / 👂 auto-listen picker in the chat's voice settings. WHAT YOU CAN DO: choose HOW the mic finishes a spoken turn — push-to-talk (you tap to start and tap to stop) or auto-listen hands-free (you just speak, and it ends the turn when it judges you've finished a thought, not on a dumb timer). WHEN YOU'D REACH FOR IT: switch to auto-listen for a flowing hands-free conversation; keep push-to-talk when you want exact control of when it's listening. HOW IT WORKS: it writes the voice_input_mode slot (suite.py:set_rhm_config, fail-loud on an unknown mode) and takes effect on your next mic press."
-    },
-    "ui://chat/voice-toggle": {
-      "region": "chat",
-      "capabilities": [
-        "pointable"
-      ],
-      "represents": "VOICE",
-      "code": "canvas/app/src/regions/RhmChat.tsx (voice on/off) / useAppController.ts:setVoiceEnabled / runtime/suite.py:set_rhm_config",
-      "howto": "WHAT: the 🔊 voice on / 🔇 voice off switch in the chat's voice settings. WHAT YOU CAN DO: turn spoken replies on or off — on, the right-hand-man speaks its answers aloud; off, you get text replies only. WHEN YOU'D REACH FOR IT: turn it off when you want to read in silence, on when you want a spoken conversation; it's independent of which listening mode you're in. HOW IT WORKS: it writes the voice_enabled slot (suite.py:set_rhm_config) and persists; voice is also silenced when the presence dial is off."
     },
     "ui://chat/record": {
       "region": "chat",
@@ -579,24 +551,6 @@
       "code": "canvas/app/src/regions/Inbox.tsx (walk these) / runtime/suite.py:present_current",
       "howto": "WHAT: the ▷ walk these control on the inbox. WHAT YOU CAN DO: send all the awaiting items through the review organ as one guided walk — each item is framed in plain language and you give a verdict (approve · reject · comment · skip · decide) step by step. HOW TO CHANGE IT: it starts a review session (suite.py:present_current); the walkthrough card is the visible organ."
     },
-    "ui://chat/model-field": {
-      "region": "chat",
-      "capabilities": [
-        "pointable"
-      ],
-      "represents": "RHM-config",
-      "code": "canvas/app/src/regions/RhmChat.tsx (model input) / runtime/suite.py:set_rhm_config",
-      "howto": "WHAT: the right-hand-man's model dropdown. WHAT YOU CAN DO: pick which model the chat brain uses, from the REAL chat models registered at the endpoint (a saved-but-unregistered value is shown, not silently dropped; empty = the default model). HOW TO CHANGE IT: it writes the RHM config (suite.py:set_rhm_config); the list is the live MODEL_OPTIONS.chat_models from the registry."
-    },
-    "ui://chat/persona-field": {
-      "region": "chat",
-      "capabilities": [
-        "pointable"
-      ],
-      "represents": "RHM-config",
-      "code": "canvas/app/src/regions/RhmChat.tsx (persona select) / runtime/suite.py:set_rhm_config",
-      "howto": "WHAT: the persona dropdown on the chat. WHAT YOU CAN DO: switch the right-hand-man's persona — selecting one sets it active AND auto-loads its voice (evicting the previous one, since the card holds one voice at a time, so a switch may cold-load). HOW TO CHANGE IT: it switches persona + loads the voice (suite.py:set_rhm_config + the voice lifecycle); the persona list is the live registry."
-    },
     "ui://toolbar/guide": {
       "region": "toolbar",
       "capabilities": [
@@ -672,8 +626,8 @@
         "presentable"
       ],
       "represents": "VOICE",
-      "code": "canvas/app/src/regions/Settings.tsx (voice) / runtime/suite.py:set_rhm_config",
-      "howto": "WHAT: the Voice section of Settings — the ear (STT), the speaking engine (TTS), and the voice path (the pipeline). WHAT YOU CAN DO: turn voice on/off, choose the STT provider and a TTS-engine override (or clear it to use the persona default), and pick the voice path; an engine that isn't up or a path that's unwired shows as UNAVAILABLE, never as working. HOW TO CHANGE IT: each setting writes via set_rhm_config (stt / tts_engine / voice_path / voice_enabled); the engine list reflects what's actually up (s2s renders unavailable by design — no fiction)."
+      "code": "canvas/app/src/regions/Settings.tsx (voice) / useAppController.ts:setVoiceInputMode / runtime/suite.py:set_rhm_config",
+      "howto": "WHAT: the Voice section of Settings — voice on/off, the listening style (push-to-talk vs auto-listen), the ear (STT), the speaking engine (TTS), and the voice path (the pipeline). WHAT YOU CAN DO: turn spoken replies on or off (voice_enabled); choose HOW the mic finishes a spoken turn — 🎙 push-to-talk (tap to start, tap to stop) or 👂 auto-listen hands-free (it ends the turn when it judges you've finished a thought, not on a dumb timer); choose the STT provider and a TTS-engine override (or clear it to use the persona default); and pick the voice path. An engine that isn't up or a path that's unwired shows as UNAVAILABLE, never as working. HOW TO CHANGE IT: voice on/off + stt + tts_engine + voice_path write via set_rhm_config; the listening style writes the voice_input_mode slot (useAppController.ts:setVoiceInputMode → set_rhm_config, fail-loud on an unknown mode, takes effect on your next mic press); the engine list reflects what's actually up (s2s renders unavailable by design — no fiction)."
     },
     "ui://settings/roles": {
       "region": "settings",

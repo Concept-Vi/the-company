@@ -1,7 +1,7 @@
 {
   "_what": "Drift findings for every code: ref in register.json (features[].code) + addresses.json (addresses.*.code). Produced by _system/refcheck.py (read ~/company READ-ONLY). drift[] is the lead's repair worklist; the lead repairs the registries centrally. 'points_at' = what the ref now lands on; 'expected' = the symbol hint derived from the owner's label. NOTE: represents[] in views[] are feature-ids, not code refs \u2014 code refs live in features[].code, so THAT is what this validates (see report (d)).",
   "snapshot": "~/company @ 72c72368a74cfc0fb850c80489398920a58af022 2026-06-07 16:34:07 +1000 \u2014 line numbers are as-of this revision (the repo is under an active build loop; re-run after the registries are repaired).",
-  "checked": 199,
+  "checked": 188,
   "ok": [
     {
       "ref": "scheduler.py:37",
@@ -1606,30 +1606,6 @@
       "repair_target": null
     },
     {
-      "ref": "canvas/app/src/regions/RhmChat.tsx (config gear)",
-      "full_code": "canvas/app/src/regions/RhmChat.tsx (config gear) / runtime/suite.py:set_rhm_config",
-      "source": "addresses",
-      "owner": "ui://chat/config",
-      "represents": "RHM-config",
-      "candidates": [],
-      "points_at": "file canvas/app/src/regions/RhmChat.tsx exists (no line given)",
-      "resolved": "canvas/app/src/regions/RhmChat.tsx",
-      "line_content": null,
-      "repair_target": null
-    },
-    {
-      "ref": "runtime/suite.py:set_rhm_config",
-      "full_code": "canvas/app/src/regions/RhmChat.tsx (config gear) / runtime/suite.py:set_rhm_config",
-      "source": "addresses",
-      "owner": "ui://chat/config",
-      "represents": "RHM-config",
-      "candidates": [],
-      "points_at": "file runtime/suite.py exists (no line given)",
-      "resolved": "runtime/suite.py",
-      "line_content": null,
-      "repair_target": null
-    },
-    {
       "ref": "canvas/app/src/regions/RhmChat.tsx (rhm-min toggle)",
       "full_code": "canvas/app/src/regions/RhmChat.tsx (rhm-min toggle)",
       "source": "addresses",
@@ -1714,90 +1690,6 @@
       "owner": "ui://chat/threads",
       "represents": "RHM-chat",
       "candidates": [],
-      "points_at": "file runtime/suite.py exists (no line given)",
-      "resolved": "runtime/suite.py",
-      "line_content": null,
-      "repair_target": null
-    },
-    {
-      "ref": "canvas/app/src/regions/RhmChat.tsx (input-mode select)",
-      "full_code": "canvas/app/src/regions/RhmChat.tsx (input-mode select) / useAppController.ts:setVoiceInputMode / runtime/suite.py:set_rhm_config",
-      "source": "addresses",
-      "owner": "ui://chat/input-mode",
-      "represents": "VOICE",
-      "candidates": [
-        "mode"
-      ],
-      "points_at": "file canvas/app/src/regions/RhmChat.tsx exists (no line given)",
-      "resolved": "canvas/app/src/regions/RhmChat.tsx",
-      "line_content": null,
-      "repair_target": null
-    },
-    {
-      "ref": "useAppController.ts:setVoiceInputMode",
-      "full_code": "canvas/app/src/regions/RhmChat.tsx (input-mode select) / useAppController.ts:setVoiceInputMode / runtime/suite.py:set_rhm_config",
-      "source": "addresses",
-      "owner": "ui://chat/input-mode",
-      "represents": "VOICE",
-      "candidates": [
-        "mode"
-      ],
-      "points_at": "file canvas/app/src/useAppController.ts exists; defines mode @ line 560",
-      "resolved": "canvas/app/src/useAppController.ts",
-      "line_content": null,
-      "repair_target": null
-    },
-    {
-      "ref": "runtime/suite.py:set_rhm_config",
-      "full_code": "canvas/app/src/regions/RhmChat.tsx (input-mode select) / useAppController.ts:setVoiceInputMode / runtime/suite.py:set_rhm_config",
-      "source": "addresses",
-      "owner": "ui://chat/input-mode",
-      "represents": "VOICE",
-      "candidates": [
-        "mode"
-      ],
-      "points_at": "file runtime/suite.py exists; defines get_mode @ line 1077",
-      "resolved": "runtime/suite.py",
-      "line_content": null,
-      "repair_target": null
-    },
-    {
-      "ref": "canvas/app/src/regions/RhmChat.tsx (voice on/off)",
-      "full_code": "canvas/app/src/regions/RhmChat.tsx (voice on/off) / useAppController.ts:setVoiceEnabled / runtime/suite.py:set_rhm_config",
-      "source": "addresses",
-      "owner": "ui://chat/voice-toggle",
-      "represents": "VOICE",
-      "candidates": [
-        "toggle"
-      ],
-      "points_at": "file canvas/app/src/regions/RhmChat.tsx exists (no line given)",
-      "resolved": "canvas/app/src/regions/RhmChat.tsx",
-      "line_content": null,
-      "repair_target": null
-    },
-    {
-      "ref": "useAppController.ts:setVoiceEnabled",
-      "full_code": "canvas/app/src/regions/RhmChat.tsx (voice on/off) / useAppController.ts:setVoiceEnabled / runtime/suite.py:set_rhm_config",
-      "source": "addresses",
-      "owner": "ui://chat/voice-toggle",
-      "represents": "VOICE",
-      "candidates": [
-        "toggle"
-      ],
-      "points_at": "file canvas/app/src/useAppController.ts exists; defines toggleIndicateMode @ line 573",
-      "resolved": "canvas/app/src/useAppController.ts",
-      "line_content": null,
-      "repair_target": null
-    },
-    {
-      "ref": "runtime/suite.py:set_rhm_config",
-      "full_code": "canvas/app/src/regions/RhmChat.tsx (voice on/off) / useAppController.ts:setVoiceEnabled / runtime/suite.py:set_rhm_config",
-      "source": "addresses",
-      "owner": "ui://chat/voice-toggle",
-      "represents": "VOICE",
-      "candidates": [
-        "toggle"
-      ],
       "points_at": "file runtime/suite.py exists (no line given)",
       "resolved": "runtime/suite.py",
       "line_content": null,
@@ -2240,62 +2132,6 @@
       "repair_target": null
     },
     {
-      "ref": "canvas/app/src/regions/RhmChat.tsx (model input)",
-      "full_code": "canvas/app/src/regions/RhmChat.tsx (model input) / runtime/suite.py:set_rhm_config",
-      "source": "addresses",
-      "owner": "ui://chat/model-field",
-      "represents": "RHM-config",
-      "candidates": [
-        "field"
-      ],
-      "points_at": "file canvas/app/src/regions/RhmChat.tsx exists (no line given)",
-      "resolved": "canvas/app/src/regions/RhmChat.tsx",
-      "line_content": null,
-      "repair_target": null
-    },
-    {
-      "ref": "runtime/suite.py:set_rhm_config",
-      "full_code": "canvas/app/src/regions/RhmChat.tsx (model input) / runtime/suite.py:set_rhm_config",
-      "source": "addresses",
-      "owner": "ui://chat/model-field",
-      "represents": "RHM-config",
-      "candidates": [
-        "field"
-      ],
-      "points_at": "file runtime/suite.py exists (no line given)",
-      "resolved": "runtime/suite.py",
-      "line_content": null,
-      "repair_target": null
-    },
-    {
-      "ref": "canvas/app/src/regions/RhmChat.tsx (persona select)",
-      "full_code": "canvas/app/src/regions/RhmChat.tsx (persona select) / runtime/suite.py:set_rhm_config",
-      "source": "addresses",
-      "owner": "ui://chat/persona-field",
-      "represents": "RHM-config",
-      "candidates": [
-        "field"
-      ],
-      "points_at": "file canvas/app/src/regions/RhmChat.tsx exists (no line given)",
-      "resolved": "canvas/app/src/regions/RhmChat.tsx",
-      "line_content": null,
-      "repair_target": null
-    },
-    {
-      "ref": "runtime/suite.py:set_rhm_config",
-      "full_code": "canvas/app/src/regions/RhmChat.tsx (persona select) / runtime/suite.py:set_rhm_config",
-      "source": "addresses",
-      "owner": "ui://chat/persona-field",
-      "represents": "RHM-config",
-      "candidates": [
-        "field"
-      ],
-      "points_at": "file runtime/suite.py exists (no line given)",
-      "resolved": "runtime/suite.py",
-      "line_content": null,
-      "repair_target": null
-    },
-    {
       "ref": "canvas/app/src/regions/Toolbar.tsx (guide)",
       "full_code": "canvas/app/src/regions/Toolbar.tsx (guide) / runtime/suite.py:start_guide",
       "source": "addresses",
@@ -2453,7 +2289,7 @@
     },
     {
       "ref": "canvas/app/src/regions/Settings.tsx (voice)",
-      "full_code": "canvas/app/src/regions/Settings.tsx (voice) / runtime/suite.py:set_rhm_config",
+      "full_code": "canvas/app/src/regions/Settings.tsx (voice) / useAppController.ts:setVoiceInputMode / runtime/suite.py:set_rhm_config",
       "source": "addresses",
       "owner": "ui://settings/voice",
       "represents": "VOICE",
@@ -2464,8 +2300,20 @@
       "repair_target": null
     },
     {
+      "ref": "useAppController.ts:setVoiceInputMode",
+      "full_code": "canvas/app/src/regions/Settings.tsx (voice) / useAppController.ts:setVoiceInputMode / runtime/suite.py:set_rhm_config",
+      "source": "addresses",
+      "owner": "ui://settings/voice",
+      "represents": "VOICE",
+      "candidates": [],
+      "points_at": "file canvas/app/src/useAppController.ts exists (no line given)",
+      "resolved": "canvas/app/src/useAppController.ts",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
       "ref": "runtime/suite.py:set_rhm_config",
-      "full_code": "canvas/app/src/regions/Settings.tsx (voice) / runtime/suite.py:set_rhm_config",
+      "full_code": "canvas/app/src/regions/Settings.tsx (voice) / useAppController.ts:setVoiceInputMode / runtime/suite.py:set_rhm_config",
       "source": "addresses",
       "owner": "ui://settings/voice",
       "represents": "VOICE",
@@ -2592,8 +2440,8 @@
     }
   ],
   "summary": {
-    "checked": 199,
-    "ok": 194,
+    "checked": 188,
+    "ok": 183,
     "drift": 0,
     "unverifiable": 5
   }
