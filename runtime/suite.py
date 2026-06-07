@@ -1616,10 +1616,26 @@ class Suite:
         graphs_s = (f"{len(all_graphs)} total — current: {nowv['graph']}"
                     + (f"; others incl. {', '.join(others[:5])}" + ("…" if len(others) > 5 else "") if others else ""))
         panels_s = ", ".join(p.get("id", "?") for p in self.list_panels()) or "(none)"
-        # the valid ui:// show-targets, from the UI_REGISTRY (single-source; chrome refs as full ui:// refs).
-        show_targets_s = ", ".join(
-            ("ui://canvas/*" if kind == "canvas" else f"ui://{kind}/{ref}")
-            for ref, kind, *_ in self.UI_REGISTRY) or "(none)"
+        # the valid ui:// show-targets, from the UI_REGISTRY (single-source). MUST mirror
+        # _describe_ui_address's served-form logic (S1's TWO key conventions): the corpus ELEMENT rows are
+        # ALREADY full-keyed (`ref="ui://inbox/build-review"`) → emit `ref` AS-IS; only the bare-keyed REGION
+        # rows (`ref="inbox"`) get the `ui://{kind}/{ref}` served form (canvas-kind → `ui://canvas/*`). The
+        # OLD builder applied the served form UNCONDITIONALLY, producing the malformed double-prefix
+        # `ui://chrome/ui://inbox/build-review` (the exact bug _describe_ui_address's docstring warns against)
+        # for every element row — fabricated, non-resolvable grounding the RHM was told were valid targets.
+        # G-61-class drift: waves added ~60 full-keyed element rows to UI_REGISTRY but this builder was never
+        # lifted past the bare-region vocabulary it was written for. De-malforming it also collapses the
+        # repeated `ui://canvas/*` (dedupe, order-preserving) — together this dropped the line 2262→~1487
+        # chars (the whole RHM-grounding budget overflow, len 4039>4000). One-source/never-fabricated (rule 8).
+        _seen_targets: set[str] = set()
+        _targets = []
+        for row in self.UI_REGISTRY:
+            ref, kind = row[0], row[1]
+            t = ref if ref.startswith("ui://") else ("ui://canvas/*" if kind == "canvas" else f"ui://{kind}/{ref}")
+            if t not in _seen_targets:
+                _seen_targets.add(t)
+                _targets.append(t)
+        show_targets_s = ", ".join(_targets) or "(none)"
 
         ctx = (
             "LIVE SYSTEM STATE (ground truth — answer only from this):\n"

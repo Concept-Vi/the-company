@@ -63,12 +63,39 @@ def fresh_suite():
 # the matching shape — the assertions test the BUNDLE STRUCTURE + the legs_present flags, not the prose.
 RICH = "ui://toolbar/run"            # all 3 legs authored (rich howto + code scope + represents)
 THIN = "ui://toolbar/portal"         # code scope present, NO authored howto (G-53 — the thin how-to-use leg)
-NOCODE = "ui://canvas/wire-request"  # registered (represents) but resolves to NO code symbol (DENY-ALL scope)
 UNREG = "ui://nope/notathing"        # well-formed grammar, NOT in the registry
 MALFORMED = "not-a-ui-address"       # violates the S0 grammar → raises
 
+# NO-CODE fixture — SYNTHETIC (G-61/GC1 style). The C-section proves a real DEFENSIVE property: that
+# address_help DEGRADES CLEAN on a registered-but-codeless address — what-this-is still present, the
+# how-to-change scope honestly EMPTY (DENY-ALL) with a legible note, NO fabricated scope (rule 8). That
+# property still matters as a regression guard. BUT no REAL registered address triggers it anymore:
+#   • GC5 (wave 15, commit 22eef13) CORRECTLY gave ui://canvas/wire-request a resolving code scope — it
+#     indexed surface_intent_at as a code symbol (the whole point of GC5), flipping its scope EMPTY→
+#     ['runtime/suite.py']. So the former NO-CODE fixture now resolves a real scope.
+#   • The connect+unify corpus work then resolved EVERY registered address — ZERO registered addresses
+#     now resolve to an empty scope. The "registered-but-codeless" shape is EXTINCT in the real corpus.
+# This is the corpus being MORE correct, not a bug. So we drive the degrade path on a SYNTHETIC no-code
+# input constructed INSIDE this test (NOT added to design/_system/addresses.json — kept local): a
+# well-formed ui:// address injected into su.UI_REGISTRY with a `represents` (so what-this-is resolves
+# present) but referenced by NO code symbol in code-symbols.json (so resolve_scope returns empty DENY-ALL
+# with a note — never a fabricated scope). This proves the SAME degrade-clean shape on a genuinely-no-code
+# input WITHOUT relying on a now-resolving real address, and WITHOUT weakening any assertion.
+NOCODE = "ui://canvas/synthetic-nocode-probe"  # SYNTHETIC, injected below — registered, NO code symbol
+
 print("D2 · composed address-help / altitude surface (backend bundle + degrade + fail-loud)")
 su = fresh_suite()
+
+# Inject the SYNTHETIC no-code fixture (see NOCODE above): a well-formed ui:// row registered in the LIVE
+# UI_REGISTRY (so _describe_ui_address resolves what-this-is via its `represents`) but referenced by NO
+# code symbol in code-symbols.json (so resolve_scope returns empty DENY-ALL + a note — never fabricated).
+# A UI_REGISTRY row is (ref, kind, title, dom_handle, capabilities, extras{represents,code,howto}). We give
+# it `represents` (→ what-this-is present) and NO `howto` (the C-section tests the change-leg, not how-to-use).
+# This stays INSIDE the test — design/_system/addresses.json is NOT touched (corpus is a file-disjoint lane).
+su.UI_REGISTRY = list(su.UI_REGISTRY) + [
+    (NOCODE, "canvas", NOCODE, {"dom_handle": NOCODE},
+     {"pointable": True}, {"region": "canvas", "represents": "PROBE-nocode", "code": None}),
+]
 
 # ── A · the FULL bundle — three legs for a fully-authored address ────────────────────────────────
 b = su.address_help(RICH)
@@ -96,7 +123,9 @@ check("B4: legs_present.how_to_use is False (the surface renders 'no how-to auth
 check("B5: leg HOW-TO-CHANGE still present (the element has a code scope to change)",
       (b.get("legs_present") or {}).get("how_to_change") is True)
 
-# ── C · DEGRADE — a NO-CODE address: how-to-change honestly empty WITH a note, never a fabricated scope ─
+# ── C · DEGRADE — a (SYNTHETIC) NO-CODE address: how-to-change honestly empty WITH a note, never fabricated ─
+# Driven on the synthetic registered-but-codeless fixture injected above (the real ui://canvas/wire-request
+# now resolves a code scope post-GC5/connect+unify — see NOCODE). Proves the SAME degrade-clean property.
 b = su.address_help(NOCODE)
 check("C1: a NO-CODE address still returns a bundle (no crash)", isinstance(b, dict) and b.get("address") == NOCODE)
 check("C2: leg WHAT-THIS-IS still present (the address IS registered — represents a feature)",
