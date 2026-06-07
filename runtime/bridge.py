@@ -145,6 +145,17 @@ class H(BaseHTTPRequestHandler):
                 # address_help's S0 grammar gate → 400 (fail loud); a well-formed-but-unregistered address returns
                 # a clean partial bundle (what_this_is tagged '(unregistered)', legs honestly false), never a crash.
                 self._send(200, json.dumps(SUITE.address_help(q["address"])))
+            elif path == "/api/up-translate":              # F1: the GENERALIZED up-translate move (reach face)
+                # The reusable "present-this-at-Tim's-altitude" resolver (Suite.up_translate — composes the
+                # EXISTING organs, NOT rebuilt): ANY artifact → its altitude envelope {lead, mechanism,
+                # legs_present, grounded, degraded}. `kind` ∈ address|decision|finding|event. For the read-face
+                # we expose the two FIRST-CLASS reachable kinds keyed by a string `ref`: 'address' (ref = a
+                # ui:// address → composes address_help) and 'decision' (ref = a surfaced_id → composes coa).
+                # finding/event take a dict the caller holds (the G2/FE-surface lane will POST those) — not on
+                # this GET read. Mirrors /api/address-help exactly: missing `kind`/`ref` → KeyError → 400; an
+                # unknown kind / malformed address → ValueError → 400 (fail loud); a missing surfaced_id →
+                # KeyError → 400. The grounding guard means the body is honestly grounded/degraded, never faked.
+                self._send(200, json.dumps(SUITE.up_translate(q["kind"], q["ref"])))
             elif path == "/api/self-changes-at":           # L5: "what did the system change HERE?" (§21.7#5)
                 # The address-keyed READ over the self-change audit log: filters self_change_log by the
                 # S3 address→code scope join. Missing `address` → KeyError → 400 (fail loud, mirrors

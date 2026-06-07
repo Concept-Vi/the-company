@@ -93,6 +93,43 @@ def _strip_fences(code: str) -> str:
     return c.strip()
 
 
+# ── F1 up-translate: the code-enforced SHAPE of a commander-altitude framing ──────────────────────
+# coa() up-translates a raw technical decision into a Commander-altitude VALUE choice. The brief's bar
+# splits STRUCTURE (prove model-free) from WORDING-QUALITY (live-model-dependent). That split only
+# holds if the SHAPE is code-enforced — otherwise a test degenerates to "framing is a non-empty
+# string". So the framing is a SCHEMA (`fabric.client.complete(..., schema=CoaFraming)` retries+raises
+# on a shape miss): a plain-language meaning, 2-3 options each with a trade-off, and a recommendation.
+# The struct is PROJECTED to a `framing` TEXT string for FE compat (Grow.tsx renders surf.coa as text)
+# and also exposed verbatim as `framing_struct`. A live model that can't satisfy the schema degrades
+# (framed=False + raw) rather than emitting malformed prose — MORE honest, not less. (pydantic is a
+# hard dep of fabric/client.py — already imported there; importing it here adds no new dependency.)
+from pydantic import BaseModel, Field
+
+
+class CoaOption(BaseModel):
+    """One value-option the operator could choose, at their altitude — never the raw code fork."""
+    label: str = Field(description="the option in plain commander terms (a value choice, not code)")
+    tradeoff: str = Field(description="what you gain / give up by choosing this option")
+
+
+class CoaFraming(BaseModel):
+    """The CODE-ENFORCED shape of an up-translated decision (the structural bar coa must hit).
+    SHAPE is proven model-free (an injected canned response validates against this); the WORDING
+    quality is the live-model-dependent half (flagged for a model-up check)."""
+    meaning: str = Field(description="what this decision means for the system, in plain terms")
+    options: list[CoaOption] = Field(description="2-3 value options the operator could choose")
+    recommendation: str = Field(description="a clear recommendation + a one-line why")
+
+    def to_text(self) -> str:
+        """Project the struct to the plain-language `framing` string the FE (Grow.tsx) renders.
+        The struct is the proven shape; this is the human-legible lead the operator reads."""
+        lines = [self.meaning, ""]
+        for i, o in enumerate(self.options, 1):
+            lines.append(f"{i}. {o.label} — {o.tradeoff}")
+        lines += ["", f"Recommendation: {self.recommendation}"]
+        return "\n".join(lines)
+
+
 @dataclass(frozen=True)
 class VerbSpec:
     """ONE source for a single RHM verb (replaces the 3 parallel tables RHM_VERBS / RHM_VERB_DESC /
@@ -4204,25 +4241,219 @@ class Suite:
                        "test_origin_excluded": excluded},
         }
 
-    def coa(self, surfaced_id: str) -> dict:
-        """Decision-compiler UP: translate a raw technical decision into a Commander-altitude
-        value-choice — what it means, 2-3 options with trade-offs, + a recommendation. The raw
-        payload stays DRILLABLE (F2); the operator decides on value, never the raw fork (C2)."""
+    # COA framing — the system prompt is module-level so the grounding guard, the live path, and the
+    # acceptance suite all reference the SAME contract (one source). It hard-instructs grounding: frame
+    # ONLY from the supplied payload, never invent — the prompt half of the guard (the code half below
+    # is the real enforcement: abstain-on-empty + degrade-on-model-absent, neither prompt-dependent).
+    # SCHEMA-AWARE: the live path is `client.complete(schema=CoaFraming)`, which retrieves the model's
+    # CONTENT and validates it against CoaFraming — it does NOT auto-emit JSON for us (the schema kwarg is
+    # not threaded into the transport's response_format; `json=True` in _live_complete sets the endpoint's
+    # json_object mode, and THIS prompt names the exact shape). So the prompt MUST instruct the model to
+    # return ONLY the CoaFraming JSON — otherwise prose comes back, _parse fails, and coa degrades on a
+    # healthy model. The shape named here is the CoaFraming contract (one source — keep in sync if it
+    # changes; the schema validation is the backstop that fails loud if it drifts).
+    _COA_SYS = (
+        "You are the right-hand-man's decision-compiler. Translate the raw technical decision BELOW into a "
+        "COMMANDER-ALTITUDE value choice for the operator. Ground EVERY part STRICTLY in the supplied "
+        "payload — never invent a decision the payload does not contain. Never make raw code the choice — "
+        "the operator decides on value, not implementation.\n\n"
+        "Respond with ONLY a JSON object of this exact shape (no prose, no markdown fences):\n"
+        '{"meaning": "<what this decision means for the system, in plain terms>", '
+        '"options": [{"label": "<a value option in plain commander terms>", '
+        '"tradeoff": "<what you gain / give up choosing it>"}, ... 2-3 options], '
+        '"recommendation": "<a clear recommendation + a one-line why>"}')
+
+    def coa(self, surfaced_id: str, _complete=None) -> dict:
+        """Decision-compiler UP (F1's core up-translate organ): translate a raw technical decision into a
+        Commander-altitude VALUE choice — what it means, 2-3 options with trade-offs, + a recommendation.
+        The raw payload stays DRILLABLE (F2); the operator decides on value, never the raw fork (C2).
+
+        SHAPE is CODE-ENFORCED via the `CoaFraming` schema (proven model-free by an injected canned
+        response); the WORDING quality is the live-model-dependent half (flagged for a model-up check).
+
+        GROUNDING GUARD (soft-spot #5, code-enforced — NOT prompt-only):
+          • ABSTAIN-ON-EMPTY — if the surfaced item carries no real payload there is nothing true to
+            frame, so coa does NOT call the model (a model given no payload would CONFABULATE a decision).
+            It returns an honest "can't frame this — here's the raw" with grounded=False, raw still
+            attached. No silent fabrication from emptiness.
+          • DEGRADE-ON-MODEL-ABSENT — the live model call is wrapped: a FabricError (model down /
+            unreachable / a shape it could not satisfy) is NOT swallowed and is NOT faked into a story.
+            `framing` becomes a LEGIBLE "model unavailable" line, the raw stays drillable, degraded=True,
+            and a loud warning is emitted (fail-loud-legible, rule 4). The operator never sees an invented
+            framing in place of a real one.
+          • RAW ALWAYS ATTACHED — every return path keeps `raw` (the structural drill-to-ground), so the
+            operator can always reach the true payload behind the altitude lead.
+
+        FE CONTRACT (additive-only — Grow.tsx + useAppController.ts:272 read these, canvas/** is out of
+        this lane's file set): `id`, `raw` (the payload dict — .name/.code read off it), and `framing` (a
+        STRING rendered in the grow-coa div). NEW alongside: `framing_struct` (the CoaFraming dict or
+        None), `grounded` (bool), `degraded` (bool) — unknown keys the FE ignores.
+
+        `_complete` is the test injection seam (default None → the real fabric path): a callable
+        (sys_prompt, user_prompt, model, base_url) -> CoaFraming, so the structure/guard/degrade can all
+        be driven deterministically with NO live model."""
         d = self.inbox.get(surfaced_id)
-        if not d:
+        if not d:                                              # asked to frame a thing that doesn't exist → RAISE
             raise KeyError(f"no surfaced decision {surfaced_id!r}")
-        from fabric import client, transport
+
+        payload = d.get("payload")
+        # GROUNDING GUARD (a) — ABSTAIN-ON-EMPTY: no real payload → do not call the model (it would
+        # confabulate). Honest "can't frame, here's the raw", grounded=False, raw still attached.
+        if not payload or (isinstance(payload, (dict, list, str)) and len(payload) == 0):
+            self._emit("warning", f"coa: surfaced {surfaced_id!r} has no payload to frame — abstaining "
+                       "(no confabulation)", surfaced=surfaced_id)
+            return {"id": surfaced_id, "class": d.get("action"),
+                    "framing": "Can't frame this at your altitude — the decision carries no payload to "
+                               "ground a framing in. The raw is attached for inspection.",
+                    "framing_struct": None, "raw": payload, "grounded": False, "degraded": False}
+
         cfg = self.rhm_config()
-        sys_p = (
-            "You are the right-hand-man's decision-compiler. Translate a raw technical decision into a "
-            "COMMANDER-ALTITUDE value choice for the operator: (1) what it means for the system in plain "
-            "terms, (2) 2-3 options with their trade-offs, (3) a clear RECOMMENDATION with a one-line why. "
-            "Never make raw code the choice — the operator decides on value, not implementation. Be concise.")
-        user = f"Decision class: {d['action']}. Default if ignored: {d.get('default')}. Payload: {d['payload']}"
-        framing = client.complete(transport.openai_transport(base_url=cfg["base_url"]),
-                                  [{"role": "system", "content": sys_p},
-                                   {"role": "user", "content": user}], model=cfg["model"])
-        return {"id": surfaced_id, "class": d["action"], "framing": framing, "raw": d["payload"]}
+        user = f"Decision class: {d.get('action')}. Default if ignored: {d.get('default')}. Payload: {payload}"
+
+        def _live_complete(sys_p, usr, model, base_url) -> CoaFraming:
+            from fabric import client, transport
+            # `json=True` → the transport sets response_format={type:json_object} (transport.py:37) so the
+            # endpoint emits a JSON object; `schema=CoaFraming` → complete() validates the content against
+            # the schema (retries+raises on a shape miss). The prompt (_COA_SYS) names the exact shape. All
+            # three together make the LIVE path emit + validate the struct — WITHOUT the prompt+json the
+            # schema kwarg alone does NOT request JSON from the endpoint, so a healthy model would return
+            # prose and coa would always degrade (the regression this guards against).
+            return client.complete(transport.openai_transport(base_url=base_url),
+                                   [{"role": "system", "content": sys_p},
+                                    {"role": "user", "content": usr}],
+                                   model=model, schema=CoaFraming, json=True)
+
+        run = _complete or _live_complete
+        # GROUNDING GUARD (b) — DEGRADE-ON-MODEL-ABSENT: wrap the model call. FabricError (down /
+        # unreachable / schema-unsatisfiable) → legible degrade, raw kept, NEVER a fabricated framing.
+        try:
+            struct: CoaFraming = run(self._COA_SYS, user, cfg["model"], cfg["base_url"])
+        except Exception as e:
+            self._emit("warning", f"coa: framing model unavailable ({type(e).__name__}) — degrading "
+                       "to raw-only, no fabricated framing", surfaced=surfaced_id)
+            return {"id": surfaced_id, "class": d.get("action"),
+                    "framing": (f"Can't up-translate this right now — the framing model is unavailable "
+                                f"({type(e).__name__}). The raw decision is attached so you can still act on it."),
+                    "framing_struct": None, "raw": payload, "grounded": True, "degraded": True}
+
+        # SHAPE is code-enforced (the schema validated); project to the FE text + expose the struct.
+        return {"id": surfaced_id, "class": d.get("action"),
+                "framing": struct.to_text(), "framing_struct": struct.model_dump(),
+                "raw": payload, "grounded": True, "degraded": False}
+
+    # ============================================================================================
+    # F1 — the GENERALIZED up-translate move: "present-this-at-Tim's-altitude" for ANY artifact
+    # ============================================================================================
+    # address_help up-translates ONE address (3 legs); coa up-translates ONE surfaced decision. The
+    # foundation "up-translate everywhere" needs the SAME move callable on ANY system artifact — an
+    # address, a surfaced decision, a drift/coherence finding, an event — returning its Tim-altitude
+    # framing (a plain-language LEAD + a drillable MECHANISM). This is the reusable resolver F1's
+    # surface + G2 (detectors-as-RHM-signal) will CONSUME.
+    #
+    # It is a THIN COMPOSER, never a rebuild (rule 3, one-source): each kind DISPATCHES to the existing
+    # proven organ and the result is NORMALIZED to one envelope. It REUSES:
+    #   • address_help (D2) — already returns the altitude shape (legs + legs_present + degrade-clean);
+    #   • coa — the value-framing + grounding guard + model-degrade (above);
+    #   • the surfaced/inbox store — the same artifacts coa/the inbox read (no parallel store);
+    #   • resolution_spec_for (modes E1) — the active mode's lens tunes verbosity where it helps.
+    # The ONE envelope every kind returns:
+    #   {kind, ref, lead, mechanism, legs_present, grounded, degraded, note}
+    #   • lead       — the plain-language altitude line (what this IS / MEANS at Tim's level).
+    #   • mechanism  — the drillable ground (the raw payload / the address legs / the finding detail).
+    #   • legs_present — which parts resolved (the address_help degrade pattern, generalized).
+    #   • grounded   — framed ONLY from real resolved content (the grounding guard, generalized).
+    #   • degraded   — a leg/the model was unavailable (legible, never fabricated).
+    UPTRANSLATE_KINDS = ("address", "decision", "finding", "event")
+
+    def up_translate(self, kind: str, ref, _complete=None) -> dict:
+        """F1 — up-translate ANY system artifact to Tim's altitude (plain-language LEAD + drillable
+        MECHANISM), composing the existing organs. `kind` ∈ UPTRANSLATE_KINDS; `ref` is the artifact
+        handle (a ui:// address string for 'address'; a surfaced_id for 'decision'; a finding dict for
+        'finding'; an event dict for 'event'). FAIL LOUD on an unknown kind (rule 8 — never guess). The
+        grounding guard is generalized: every kind frames ONLY from real resolved content and marks
+        degraded/grounded honestly rather than confabulating. `_complete` is threaded to coa for the
+        model-free decision proof."""
+        if kind not in self.UPTRANSLATE_KINDS:
+            raise ValueError(f"up_translate: unknown kind {kind!r} — one of {self.UPTRANSLATE_KINDS} "
+                             "(rule 8: never fabricate a kind)")
+
+        if kind == "address":
+            # REUSE address_help (D2) — it already IS the altitude shape. Normalize its 3 legs into the
+            # one envelope: the lead is the plain-language what-this-is + how-to-use (the altitude lead);
+            # the mechanism is how-to-change (the code scope + blast radius — the drill-to-ground).
+            # A MALFORMED address propagates address_help's S0 raise (fail loud); an UNREGISTERED /
+            # no-code / unauthored address degrades clean (the legs_present flags carry which legs landed).
+            b = self.address_help(ref)                          # raises on malformed (S0) — fail loud
+            lp = b.get("legs_present") or {}
+            wti = b.get("what_this_is")
+            htu = b.get("how_to_use")
+            lead_parts = []
+            if lp.get("what_this_is"):
+                lead_parts.append(wti)
+            if lp.get("how_to_use") and htu:
+                lead_parts.append(htu)
+            lead = "  ".join(lead_parts) if lead_parts else (wti or f"{ref} (not registered)")
+            grounded = bool(lp.get("what_this_is"))             # framed from a REAL registry row, not invented
+            degraded = not (lp.get("what_this_is") and lp.get("how_to_use") and lp.get("how_to_change"))
+            return {"kind": "address", "ref": ref, "lead": lead,
+                    "mechanism": b.get("how_to_change"), "legs_present": lp,
+                    "grounded": grounded, "degraded": degraded,
+                    "note": (b.get("how_to_change") or {}).get("note")}
+
+        if kind == "decision":
+            # REUSE coa — the value-framing + grounding guard + model-degrade already live there. Map its
+            # return into the one envelope: lead = the framing (the altitude value-choice text), mechanism
+            # = raw (the drillable payload). coa's grounded/degraded carry straight through. A missing
+            # surfaced_id propagates coa's KeyError (fail loud — asked to frame a thing that isn't there).
+            c = self.coa(ref, _complete=_complete)              # raises KeyError on a missing item — fail loud
+            return {"kind": "decision", "ref": ref, "lead": c.get("framing"),
+                    "mechanism": c.get("raw"),
+                    "legs_present": {"meaning": c.get("framing_struct") is not None,
+                                     "raw": c.get("raw") is not None},
+                    "grounded": bool(c.get("grounded")), "degraded": bool(c.get("degraded")),
+                    "note": None, "framing_struct": c.get("framing_struct")}
+
+        if kind == "finding":
+            # A drift/coherence finding (the shape G2 will feed — NOT wired here, that's a later lane). We
+            # up-translate a finding DICT the caller already holds (e.g. {address, what, detail, touches}).
+            # GROUNDING GUARD: frame ONLY from the supplied finding — an empty/non-dict finding abstains
+            # rather than inventing one. If the finding names a ui:// address, ENRICH the mechanism with
+            # that address's blast-radius (REUSE resolve_scope/blast_radius — the same "what it touches"
+            # join address_help uses), so a drift lead can drill to what a fix would reach. Best-effort:
+            # an unreachable/absent address degrades the enrichment, never fabricates it.
+            if not isinstance(ref, dict) or not (ref.get("what") or ref.get("detail")):
+                return {"kind": "finding", "ref": ref, "grounded": False, "degraded": False,
+                        "lead": "Can't frame this finding — it carries no content to ground a framing in.",
+                        "mechanism": ref, "legs_present": {"finding": False, "touches": False},
+                        "note": "empty/malformed finding — abstained (no confabulation)"}
+            what = ref.get("what") or ref.get("detail")
+            addr = ref.get("address")
+            lead = (f"{what}" + (f" (at {addr})" if addr else ""))
+            mechanism = {"detail": ref.get("detail"), "address": addr, "touches": None}
+            degraded = False
+            note = None
+            if isinstance(addr, str) and addr.startswith("ui://"):
+                try:
+                    mechanism["touches"] = self.blast_radius(addr)   # REUSE — what a fix here would reach
+                except Exception as e:                               # best-effort enrichment, never fabricate
+                    degraded = True
+                    note = f"could not resolve what this touches ({type(e).__name__})"
+            return {"kind": "finding", "ref": ref, "lead": lead, "mechanism": mechanism,
+                    "legs_present": {"finding": True, "touches": mechanism["touches"] is not None},
+                    "grounded": True, "degraded": degraded, "note": note}
+
+        # kind == "event" — up-translate one recorded event (kind/summary/address/ts) to a plain line.
+        # GROUNDING GUARD: an event with no summary has nothing true to frame → abstain. The mechanism is
+        # the raw event dict (drillable); if it carries a ui:// address, that's the locus to drill to.
+        if not isinstance(ref, dict) or not ref.get("summary"):
+            return {"kind": "event", "ref": ref, "grounded": False, "degraded": False,
+                    "lead": "Can't frame this event — it carries no summary to ground a framing in.",
+                    "mechanism": ref, "legs_present": {"event": False},
+                    "note": "empty/malformed event — abstained (no confabulation)"}
+        ek = ref.get("kind", "event")
+        lead = f"[{ek}] {ref.get('summary')}" + (f"  (at {ref['address']})" if ref.get("address") else "")
+        return {"kind": "event", "ref": ref, "lead": lead, "mechanism": ref,
+                "legs_present": {"event": True}, "grounded": True, "degraded": False, "note": None}
 
     def surface_output(self, graph_id: str, node_id: str) -> dict:
         """F2: route a node's RESULT to the decision surface. Composes the EXISTING surfaced/inbox
