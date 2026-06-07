@@ -47,10 +47,12 @@
 - **C2.1 · Roles are file-discovered registry data**, not a hardcoded dict. A role declares {id · prompt template · input addresses · output schema · trigger · model binding · mode-scope · rule(s) · render hint}. Adding a role = adding a file; it self-registers + is queryable.  ☐ by use
 - **C2.2 · The judge is a role in the registry** (role #0), bound to its resident-4B recommendation, unchanged in behaviour.  ☐ by use
 - **C2.3 · The `listening` cast exists + fires:** focus · recall · ground · connect · check · voice (mode-scoped). Proven: in `listening`, these fire; in another mode, a different/empty cast.  ☐ by use
-- **C2.4 · Jury/ensemble is first-class.** Any role may declare `draws: N` + a verdict rule (quorum/vote). Proven by use (C1.5).  ☐ by use
+- **C2.4 · Jury/ensemble is first-class.** Any role may declare `draws: N` + a verdict rule (quorum/vote). Proven by use (C1.5). *(Caveat, E4 epistemic-monoculture: N draws on ONE model measure variance, not independent error — a correctness-jury that truly matters needs model diversity; the verdict-rule is designed so a 2nd small model / cloud tiebreak can slot in. v1 may accept single-model with the limit documented — Tim-fork F-a.)*  ☐ by use
 - **C2.5 · Roles bind models from the capability registry** (G8) — suitability is a query (`role.requires ⊆ model.provides`), not hand-written prose.  ☐ by use
 
-## G3 · The rule engine (full declared logic · the L2 core)
+## G3 · The rule engine (rich predicates over resolved values · the L2 core)
+
+> **Rule-vs-role classifier (E3 — the unifier):** every combine/aggregate/route pattern decomposes by one test — deterministic over resolved values → a **rule** (the predicate grammar); needs model judgment → a **role** the rules wire. So vote/threshold/weighted-quorum/veto are rules; rank-then-fuse = rule-rank + a fuse *role*; generative MoA-aggregation = a role, quarantined off the spine. This keeps every aggregation option L2-legal by construction.
 
 - **C3.1 · Full declared logic, with determinism ENFORCED not asserted (R1-FOLD F5).** A rule is declared logic over a role's output + may chain. The evaluator runs **post-barrier, as a pure function of fully-resolved address values only**, against a **referenceable-input whitelist** (resolved role outputs). BANNED in a rule: `now()`/random/wave-completion-order/partial-results/any model call. Proven adversarially: a rule that tries to read order/time/partials is rejected by the evaluator.  ☐ by use
 - **C3.2 · A rule routes to any destination:** inject-into-reply · chain/trigger another role · land-at-address · surface-to-inbox/decisions · typed-lane/channel. All five demonstrated.  ☐ by use
@@ -58,6 +60,8 @@
 - **C3.4 · New/changed rules ride the normal change path** (no special gate; review/commit like any change).  ☐ by use
 
 ## G4 · Staged-response queue (the reply as parts)
+
+> **`THOUGHT_SHAPES` = ~5 archetypes, built once (E1 / E0-EXPLORE-SYNTHESIS):** `linear-stream` (voice) · `reduce-tree` (fan-out→`join`→one answer) · `jury-select` (N candidates→score→winner) · `scatter-route` (N classifications→own lanes, no reduce) · `scatter-write` (N consolidations→sinks, no reply). The four post-voice applications each instantiate one + force one of R1–R4 (jury · typed-lane · activation-budget · join/fanout) — so building them realizes the reshapes. Net-new shape fields: `archetype` · `fanout` · `join:<role>/*` barrier-dep · `render_from`. **Overlap-vs-between-parts is a per-role choice** (E3), warmed shared prefix makes re-prefill near-free.
 
 - **C4.1 · Part grain follows the mode** (a config table: e.g. focus=line · listening=beat · explaining=paragraph). Proven: switching mode changes the grain.  ☐ by use
 - **C4.2 · Part 1 fires from base context instantly**; later parts read the resolved values at the concurrent roles' **`run://<turn>/<role>`** addresses via the **net-new ref-read branch** (NOT `swarm://`; NOT the existing `_chat_context`/`_resolve_context_at`, which reads operator-notebook strata, not fresh role refs — R1-FOLD F3 / R2-FOLD H4).  ☐ by use

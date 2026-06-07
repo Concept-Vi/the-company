@@ -17,7 +17,7 @@
 - `chat-4b.config`: `gpu_util = 0.49`, `max_model_len = 65536`, `max_num_seqs = 16`
 - `chat-4b.config._profile` (measured 2026-06-07): `fixed_mb = 5838` (weights+activations+cudagraphs), `kv_kb_per_token = 31.7`, from a **256K solo run: KV 8.37 GiB / 270,482 tokens**.
 
-**Verified** the KV-per-token figure: `8.37 GiB × 1024² / 270,482 = 32.45 KB/tok` raw → registry's `31.7` is the corroborated effective figure (the small gap is block/overhead rounding). **I treat 31.7 KB/tok as ground truth.**
+**Verified** the KV-per-token figure two ways: (a) `8.37 GiB × 1024² / 270,482 = 32.45 KB/tok` raw → registry's `31.7` is the corroborated effective figure (the small gap is block/overhead rounding); (b) independent cross-check against the factsheet's 32K-context server ("drops concurrency to 7–8×"): `7.5 seqs × 32,768 tok × 31.7 KB ≈ 7.4 GiB` of KV pool — consistent with a higher-util long-context server, no contradiction. **I treat 31.7 KB/tok as ground truth.**
 
 **Observed** in `ops/cli/gpu.py`: `budget_vram()` reserves `gpu_util × ceiling` for a config-driven model — i.e. `gpu_util` IS the literal VRAM slice vLLM carves, and the KV pool is *that slice minus the fixed weights*. This is the authority the resource manager already uses.
 
@@ -55,6 +55,8 @@ The width is `N = (KV_pool − main_ctx·kv) / (role_ctx·kv)`, then **capped at
 
 **Temporal nuance (don't over-claim the collapse):** parts are sequential. In the *between-parts* window, the prior part's request has completed and vLLM can reclaim its KV blocks — so a swarm that runs strictly between parts can use ~the full pool (→ 16-cap even with a 64K brain). The cost then moves to **Part-2 re-prefill** of the main context, which IS the inter-part wall-clock C0.5 must measure (see §5). The 1–5 collapse is the *overlap* case (swarm fired while Part-1 is still generating with a large base context) — which the design explicitly wants for latency-hiding. So the honest statement is a **trade: swarm width ⟷ main-context-resident-during-overlap**, not a flat hardware floor.
 
+**In-flight width ≠ per-turn role count (don't conflate them).** Every number above is *simultaneous* width — how many role-runs are admitted at once. Roles are short and decode at ~100 tok/s, so they finish in well under a second and **free their slot for the next role**. A single turn can therefore rotate **many more than 16 roles** through the ≤16-wide window sequentially. The width caps the *wave shape* (how much latency a fan-out hides), not the *total roles per turn*. `--enable-prefix-caching` (ON in the config flags) further softens the floor: roles in a wave that share a system-prompt/world-state prefix store it **once**, so the per-role KV counts above are the conservative no-shared-prefix figures — real width runs higher.
+
 ---
 
 ## 4. The lever: a swarm-mode brain config (util is unpriced headroom)
@@ -84,7 +86,7 @@ From the factsheet: per-request decode is **~100 tok/s** steady; prefill is subl
 
 ## 6. Design implications
 
-1. **The swarm width number for C1.2's semaphore is `min(16 − R, KV_pool/kv − main_ctx/kv ÷ role_ctx)`** — exactly R1-FOLD's formula, now with concrete inputs: at util 0.49 it is **~12–16 for short roles, but only 1–5 if the 64K main is resident during overlap.** The semaphore MUST read live `gpu_util`, `max_model_len`, `max_num_seqs` and the `_profile` KV figure from the registry (all present) — never a constant.
+1. **The swarm width number for C1.2's semaphore is `min(max_num_seqs − R, (KV_pool/kv − main_ctx/kv) ÷ role_ctx)`** — exactly R1-FOLD's formula, now with concrete inputs: at util 0.49 it is **~12–16 for short roles, but only 1–5 if the 64K main is resident during overlap.** Reserve **R = 2** (one slot for the main stream, one for the fast finished-thought judge), so the seq term is `16 − 2 = 14`. The semaphore MUST read live `gpu_util`, `max_model_len`, `max_num_seqs` and the `_profile` KV figure from the registry (all present) — never a constant.
 2. **A leaner brain config IS needed for swarm-heavy modes.** The 64K voice brain and a wide concurrent swarm cannot share one 2.13 GB pool. Resolution options, in preference order: (a) a **mode-bound swarm config** (`util 0.60–0.66`, `max_model_len 16K`) that `company config`/`company swap` selects when a staging mode activates; (b) keep 64K but **cap the main-context-resident-during-overlap** to ≤16K (run the swarm between parts, accept Part-2 re-prefill); (c) accept a narrow (2–5) overlap swarm at the literal voice config for short modes. Mode = the attention budget already chooses this (per `project-concurrent-cognition`).
 3. **Roles MUST be short-context** (≤2K prompt+output). A single 4K role costs ~124 MB — three of them at 64K-main leave nothing. This is a registry-enforced contract, not a guideline.
 4. **C0.5 is correctly the gate.** This math is the *predicted* answer; the spike must MEASURE it on the live config with qwen3tts resident, because effective KV block allocation, preemption thresholds, and prefix-cache hit-rate are vLLM-internal and only the running system produces the true knee. **Predicted realistic usable width: ~12–16 with a swarm-mode config and short roles; ~2–5 at the literal 64K-voice-brain under overlap.**
