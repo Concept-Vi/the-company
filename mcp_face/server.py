@@ -164,11 +164,15 @@ def capabilities() -> dict:
 # propose_role/…) OR the `runtime/cognition.py` engine functions (run_role/run_items/run_reduce/
 # resolve_address). NO parallel engine, NO re-implementation.
 #
-# THE FLOOR (C9.2, the operator-only invariant): the MCP is the AGENT face — NO tool here self-applies /
-# resolves / approves / dispatches. Create = PROPOSE → surfaces for the operator (who resolves via
-# `/api/resolve`, operator-only + OFF this face — kept off, exactly as `resolve_surfaced`/`apply_role`
-# are). Running a role/chain produces run:// outputs (computation, not governance) — fine. No tool below
-# calls resolve_surfaced/apply/dispatch.
+# THE FLOOR (C9.2, reframed by #58 — Tim's correction): the propose→surface→operator-approval gate on
+# AUTHORING (creating a role/skill/context) was the AI's DEFAULT, not Tim's constraint. So the agent
+# CREATES roles/skills/contexts DIRECTLY + LIVE here (`create_role`/`create_skill`/`create_context` →
+# the direct Suite methods), no operator approval. What STILL holds: (1) the CORRECTNESS gate — a
+# malformed entry is REFUSED fail-loud (validate-in-tempdir), never written; (2) the BUILD-DISPATCH
+# floor — NO tool here emits `dispatch_decision` or launches `claude -p` (the wire's autonomous
+# repo-mutation stays operator-gated, OFF this face, UNCHANGED). `propose_role`/`edit_role`/`delete_role`
+# STAY available (surfacing remains an option). Running a role/chain produces run:// outputs
+# (computation, not governance). No tool below calls resolve_surfaced/dispatch_decision/launches claude -p.
 # =================================================================================================
 from runtime import cognition as _cog          # the ONE engine (run_role/run_items/run_reduce/resolve_address)
 import time as _time
@@ -241,10 +245,8 @@ def list_skills_contexts() -> dict:
     runtime.cognition.skill_registry()/context_registry() (the SAME registries resolve_address reads via
     skill://<id> / context://<id>). Read-only. Returns {skills:[{id,label,description}], contexts:[…]}.
 
-    NOTE: CREATE (propose) of a skill/context is the separate #52 authoring path (the skill-writing-skill,
-    propose-not-apply) — NOT yet built; there is no propose→surface path to reuse, so it is deliberately
-    NOT exposed here (reuse-don't-parallel — never author inside the MCP face). READ is exposed; CREATE
-    pends #52. (Authoring a ROLE — the cognition author surface — IS exposed: propose_role.)"""
+    CREATE: skills/contexts are now authored DIRECTLY + LIVE via create_skill/create_context (#56/#58 —
+    the skill-writing-skill, no operator approval; correctness-gated). This is READ; CREATE is those tools."""
     sk = _cog.skill_registry()
     cx = _cog.context_registry()
     def _rows(reg):
@@ -412,14 +414,51 @@ def preview_turn(utterance: str, mode: str = "") -> dict:
     return SUITE.preview_turn(utterance, mode or None)
 
 
-# --- CREATE (PROPOSE — the operator-only floor: propose→surface, NEVER self-apply) ---------------
+# --- CREATE (#58 DIRECT — the agent authors LIVE, no operator approval; correctness gate + build-dispatch floor kept) ---
+@mcp.tool()
+def create_role(spec: dict) -> dict:
+    """CREATE a NEW role DIRECTLY — applies LIVE, NO operator approval (#58: authoring is the agent's,
+    not gated). Renders the role module from the FULL schema, runs the CORRECTNESS gate (import in a
+    temp dir — a malformed spec is REFUSED fail-loud, never written), writes + git-commits (revertible),
+    re-discovers → the role is LIVE in cognition_info immediately. REUSES Suite.create_role (apply_role's
+    render+gate+write path MINUS the approval check — never a parallel author path).
+
+    `spec` exposes EVERY role field the agent can set: id · label · description · prompt_template ·
+    output_fields ([{name,type,description}] → the structured output BaseModel) · op (generate|embed) ·
+    thinking · tools · knobs (max_tokens/temperature/…) · model_binding/requires · input_addresses
+    (incl skill://context://run://cas://) · mode_scope · rules · context · render_hint.
+
+    Returns {role_id, path, live: True, source}. The build-dispatch floor is UNTOUCHED — this writes a
+    roles/ file (authoring), it NEVER dispatches claude -p. (propose_role stays available for surfacing.)"""
+    return SUITE.create_role(spec, model=spec.get("model"))
+
+
+@mcp.tool()
+def create_skill(spec: dict) -> dict:
+    """CREATE a NEW skill DIRECTLY — applies LIVE, NO operator approval (#56 write-half, #58 direct: the
+    skill-writing-skill). Renders `skills/<id>.py` (id + content + label/description), runs the
+    CORRECTNESS gate, writes + git-commits, → LIVE (readable via skill://<id> + list_skills_contexts).
+    REUSES Suite.create_skill. Returns {skill_id, path, live: True}."""
+    return SUITE.create_skill(spec)
+
+
+@mcp.tool()
+def create_context(spec: dict) -> dict:
+    """CREATE a NEW context DIRECTLY — applies LIVE, NO operator approval (#56 write-half, #58 direct).
+    Renders `contexts/<id>.py` (id + content + label/description), runs the CORRECTNESS gate, writes +
+    git-commits, → LIVE (readable via context://<id> + list_skills_contexts). REUSES Suite.create_context.
+    Returns {context_id, path, live: True}."""
+    return SUITE.create_context(spec)
+
+
+# --- CREATE (PROPOSE — surfacing STAYS available for when an operator wants it; not the default path) ---
 @mcp.tool()
 def propose_role(spec: dict) -> dict:
-    """CREATE a NEW role — PROPOSE (the floor): renders + GATES the role module, then SURFACES it for the
-    OPERATOR to approve (it is NOT applied here; apply is operator-only, off this face). REUSES
-    Suite.propose_role (the /api/cognition/role/propose path). `spec` carries id + output_fields +
-    prompt_template (or a natural-language `brief` the brain drafts from). Returns {id (surfaced id),
-    role_id, source}. The agent CANNOT self-approve — approval is /api/resolve (operator-only)."""
+    """CREATE a NEW role — PROPOSE (surfacing path, kept available alongside the direct create_role):
+    renders + GATES the role module, then SURFACES it for the OPERATOR to approve (it is NOT applied
+    here). REUSES Suite.propose_role (the /api/cognition/role/propose path). `spec` carries id +
+    output_fields + prompt_template (or a natural-language `brief` the brain drafts from). Returns
+    {id (surfaced id), role_id, source}. Use create_role for the direct, no-approval path (#58)."""
     return SUITE.propose_role(spec, model=spec.get("model"))
 
 
@@ -462,11 +501,13 @@ def attach_rule(role_id: str, rule: dict) -> dict:
     return SUITE.attach_rule(role_id, rule)
 
 
-# NOTE: resolve_surfaced (operator approval) is deliberately NOT exposed on this face — only the
-# UI/operator channel may approve a CONFIRM, so the proposing agent cannot self-approve its code-build.
-# This binds the COGNITION engine face too (#53): create = propose→surface; NO MCP tool above
-# self-applies/resolves/dispatches. apply_role/apply_role_delete/resolve_surfaced stay off this face
-# (on /api/apply + /api/resolve, operator-only) — the C9.2 operator-only floor, held by construction.
+# NOTE (the floor, reframed by #58): AUTHORING (create_role/create_skill/create_context) applies
+# DIRECTLY here — Tim's call: the create-approval gate was the AI's default, not his constraint. What
+# stays operator-only is the WIRE's autonomous repo-mutation: NO MCP tool emits dispatch_decision or
+# launches `claude -p` (the build-dispatch floor), and resolve_surfaced (the build-dispatch trigger via
+# an operator approve) stays OFF this face (on /api/resolve, operator-only). So an agent can author a
+# role/skill/context, but it can NEVER trigger an autonomous code-build of the repo. The CORRECTNESS
+# gate (validate-in-tempdir, fail-loud on malformed) is kept on every create — a bad entry never writes.
 
 
 if __name__ == "__main__":

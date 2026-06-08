@@ -65,6 +65,12 @@ Roles fire model calls through `fabric/` guards (a model runs only INSIDE a role
   reduce DRIVER also offers `mode="rule"` (a pure L2 verdict over the N values, mirroring `run_jury`) and
   `mode="cluster"` (the embed-cluster "which of these are the same" discovery join, reusing
   `nodes/retrieve._cosine`).
+- **`repo_digest`** — the demonstrative **DIRECT-CREATE fixture** (#58): authored LIVE by the agent via
+  `create_role` (no operator approval — the authoring-apply reframe), it reads a supplied file's content
+  → a 1-sentence `{digest, kind}` of what the file is + its role in the system. `op:generate`, in no
+  cast (fired explicitly via `run_role`/`run_items`); the repo-processing test fixture (map a folder of
+  files through it). Proof that authoring is the agent's: written + git-committed `[self-apply]` + live
+  in `cognition_info` with NO surfaced item.
 
 **Where new things go:** a new role = a new file `roles/<id>.py` declaring its `ROLE` dict (its `id`
 MUST equal the file name). Put it in a mode's cast by adding that mode to its `mode_scope`. Make it a

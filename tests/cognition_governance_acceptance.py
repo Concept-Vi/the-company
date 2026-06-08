@@ -82,6 +82,69 @@ if floor_breach:
     for b in floor_breach:
         print("      breach:", b)
 
+# #58 FLOOR RECONCILE — the BUILD-DISPATCH floor, made EXPLICIT (was implicit via the resolve proxy).
+# Tim's reframe (2026-06-09): AUTHORING-apply (create_role/create_skill/create_context applying a
+# role/skill/context LIVE) is now ALLOWED from the agent/cognition face — the create-approval gate was
+# the AI's default, NOT Tim's constraint. What MAINTAINS UNCHANGED (Tim CONFIRMED) is the wire's
+# autonomous repo-mutation: NO cognition/engine/MCP path may emit `dispatch_decision` or launch the
+# `claude -p` build-dispatch. We assert it as a STANDING explicit token-scan over COG_SOURCES (AST for
+# CALLs — robust to docstrings/comments that legitimately DESCRIBE the floor; a code-only string-scan
+# for the `claude -p` launch). The wire's own files (runtime/implement.py, the suite.py dispatch path)
+# are NOT in COG_SOURCES — the build-dispatch lives there, operator-gated, never on a cognition path.
+import ast as _ast
+dispatch_breach = []
+for src in COG_SOURCES:
+    code = open(src).read()
+    # AST: any CALL named dispatch_decision (the wire's autonomous dispatch) is forbidden on a cog path.
+    try:
+        tree = _ast.parse(code)
+    except SyntaxError:
+        continue
+    for node in _ast.walk(tree):
+        if isinstance(node, _ast.Call):
+            fn = node.func
+            nm = fn.attr if isinstance(fn, _ast.Attribute) else (fn.id if isinstance(fn, _ast.Name) else None)
+            if nm == "dispatch_decision":
+                dispatch_breach.append(f"{src}: CALL dispatch_decision")
+    # code-only string scan (strip end-of-line comments) for a `claude -p` / implement.py launch.
+    code_no_comments = "\n".join(l.split("#", 1)[0] for l in code.splitlines())
+    # docstrings still survive the comment-strip; but a real LAUNCH would be a subprocess/run call with
+    # the string as an arg — scan for the launch invocation pattern, not the bare mention.
+    if "implement.py" in code_no_comments and ("subprocess" in code_no_comments or "Popen" in code_no_comments):
+        dispatch_breach.append(f"{src}: launches implement.py (the claude -p build-dispatch)")
+check("C9.2/#58 the BUILD-DISPATCH floor MAINTAINS: NO cognition/engine/MCP path emits dispatch_decision "
+      "or launches the claude -p build-dispatch (the wire's autonomous repo-mutation stays operator-gated)",
+      not dispatch_breach)
+if dispatch_breach:
+    for b in dispatch_breach:
+        print("      dispatch-breach:", b)
+
+# #58 the CORRECTNESS GATE is KEPT (a malformed role/skill/context is REFUSED fail-loud, never written).
+# Assert the gate functions exist + that a malformed spec is refused (not silently written) — the
+# non-negotiable correctness floor that survives the authoring-apply reframe.
+print("\n[C9.2/#58] authoring-apply ALLOWED + the CORRECTNESS gate KEPT (malformed refused, never written)")
+from runtime import authoring as _auth
+check("#58 the role correctness gate exists (gate_role_source — validate-in-tempdir)",
+      callable(getattr(_auth, "gate_role_source", None)))
+check("#58 the skill/context correctness gate exists (gate_entry_source — validate-in-tempdir)",
+      callable(getattr(_auth, "gate_entry_source", None)))
+# a malformed rendered role module → the gate RETURNS an error (so the write-half REFUSES it).
+_bad_role = "ROLE = {'id': 'x', 'output_schema': 'not a basemodel'}\n"  # bad: output_schema not a BaseModel
+check("#58 the gate BITES: a malformed role module is REFUSED (gate returns an error, never written)",
+      _auth.gate_role_source("x", _bad_role) is not None)
+_bad_skill = "SKILL = {'id': 'y'}\n"  # bad: no content
+check("#58 the gate BITES: a malformed skill module is REFUSED (gate returns an error, never written)",
+      _auth.gate_entry_source("y", _bad_skill, kind="skill") is not None)
+# a WELL-FORMED entry passes the gate (the gate refuses MALFORMED, not all — it's correctness, not approval).
+_good_skill = "SKILL = {'id': 'z', 'content': 'do the thing'}\n"
+check("#58 the gate PASSES a well-formed skill (correctness gate, not an approval gate)",
+      _auth.gate_entry_source("z", _good_skill, kind="skill") is None)
+# the DIRECT create methods exist on the Suite (authoring-apply is reachable — the reframe).
+from runtime.suite import Suite as _Suite
+for m in ("create_role", "create_skill", "create_context", "_write_role_file", "_write_entry_file"):
+    check(f"#58 authoring-apply reachable: Suite.{m} exists (direct create, no approval)",
+          callable(getattr(_Suite, m, None)))
+
 # ── C9.1 — a model runs only inside a role; the cognition layer has no consequential verb ─────────
 print("\n[C9.1] roles act only within posture — no gate-bypassing action reachable from cognition")
 # the rule engine routes; the ONLY effects are the declared destination kinds (all non-consequential:

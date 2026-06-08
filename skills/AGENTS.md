@@ -30,6 +30,12 @@ change to the resolver, the cognition driver, or the UI.**
   (keep load-bearing detail + relationships, add nothing, no preamble). The demonstrative first member
   (like `roles/judge.py` was the seed role) — real + usable, so `skill://summarize` resolves to actual
   instructions a role can take as its primary input.
+- **`extract_decisions`** — the demonstrative **DIRECT-CREATE skill** (#56 write-half · #58): authored
+  LIVE by the agent via `create_skill` (no operator approval — the skill-writing-skill, direct), it is
+  reusable instructions to list every DECISION a document records (one per line, `<decision> -
+  <rationale>`). `skill://extract_decisions` resolves to those instructions; readable via
+  `list_skills_contexts`. Proof the skill write-half is the agent's: written + git-committed `[self-apply]`
+  + live with NO surfaced item.
 
 **How it resolves (the address seam — C 3b is its FIRST real extension):** `skill://<id>` is resolved
 by `runtime/cognition.py:resolve_address` (the C 3/4 scheme-dispatching seam). It dispatches `skill://`

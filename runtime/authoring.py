@@ -151,37 +151,65 @@ def render_role_source(spec: dict) -> str:
         field_lines.append("    ok: bool = True   # minimal schema (no fields declared) — still a valid BaseModel")
 
     # --- the ROLE declared dict (DATA — verbatim what the file consumers read) ---
+    # #58 DIRECT-CREATE: the renderer now emits the FULL role schema the agent can set — every
+    # ROLE_FIELDS key (roles.py), not the original C7.5 subset. A field present in the spec lands
+    # verbatim in the written module; an UNKNOWN spec key FAILS LOUD (rule 8 — never a silent typo'd
+    # field that no consumer reads; mirrors roles._build_role's own unknown-field fail-loud). The
+    # output_schema is rendered by NAME below (a class ref, not JSON) — so it is NOT a JSON-spec key.
+    from runtime.roles import ROLE_FIELDS
+    # The spec keys that are AUTHORING-TIME params (mapped/handled specially), NOT verbatim ROLE_FIELDS:
+    #   id            → set above (the file/ROLE id)
+    #   output_fields → rendered into the BaseModel + spliced as output_schema (the class ref)
+    #   output_schema → un-authorable as JSON (a class object); set by NAME below. A spec that passes
+    #                   it (e.g. round-tripping a serialized role) is IGNORED here — output_fields is
+    #                   the authoring surface for the schema.
+    #   requires      → mapped to model_binding.requires (the C2.5 capability query)
+    #   model / brief → propose-time params (the model override / the brain-draft brief), NOT role fields
+    _AUTHORING_ONLY = {"id", "output_fields", "output_schema", "requires", "model", "brief"}
     role_dict: dict[str, Any] = {"id": rid}
-    for k in ("label", "description", "prompt_template", "input_addresses", "trigger"):
-        if spec.get(k) is not None:
-            role_dict[k] = spec[k]
-    ms = spec.get("mode_scope")
-    if ms:
-        role_dict["mode_scope"] = list(ms)
+    for k, v in spec.items():
+        if k in _AUTHORING_ONLY:
+            continue
+        if k not in ROLE_FIELDS:
+            raise AuthoringError(
+                f"role {rid!r}: unknown role-schema field {k!r} — the authorable role schema is "
+                f"{sorted(set(ROLE_FIELDS) - {'output_schema'}) + ['output_fields', 'requires']} "
+                f"(rule 8 — never an invented field that no consumer reads). Fail loud.")
+        if v is not None:
+            role_dict[k] = list(v) if k == "mode_scope" else v
+    # `requires` → the C2.5 model_binding query shape. If the spec ALSO declares an explicit
+    # model_binding (the full nested binding), that WINS (no silent merge — fail loud on conflict).
     requires = spec.get("requires")
     if requires:
-        role_dict["model_binding"] = {"requires": list(requires)}
-    rules = spec.get("rules")
-    if rules:
-        role_dict["rules"] = list(rules)
+        if "model_binding" in role_dict and "requires" in (role_dict["model_binding"] or {}):
+            raise AuthoringError(
+                f"role {rid!r}: both top-level `requires` and `model_binding.requires` declared — "
+                f"these conflict (one source). Declare requires in ONE place. Fail loud.")
+        role_dict.setdefault("model_binding", {})
+        role_dict["model_binding"] = {**role_dict["model_binding"], "requires": list(requires)}
     # output_schema is set by NAME below (the class object reference, not JSON) — handled in the template.
 
-    # json.dumps gives us a safe literal for everything EXCEPT output_schema (a class ref). We render
-    # the dict literal then splice the output_schema key in as a bare class reference.
-    body = json.dumps(role_dict, indent=4, ensure_ascii=False)
+    # The role module is PYTHON, not JSON — the FULL schema now carries booleans (thinking),
+    # nested dicts (knobs/model_binding/tools/context), etc. `json.dumps` would emit `false`/`true`/
+    # `null` (invalid Python — the gate would (correctly) refuse the module). `pprint.pformat` emits a
+    # valid PYTHON literal (False/True/None) for any JSON-shaped value. We render that, then splice the
+    # output_schema key in as a bare class reference (output_schema is a class object, not a literal).
+    import pprint as _pprint
+    body = _pprint.pformat(role_dict, indent=1, width=100, sort_dicts=False)
     # turn the closing brace into ", 'output_schema': <cls>}" so output_schema is the class object.
     assert body.rstrip().endswith("}")
     body = body.rstrip()[:-1].rstrip()
     if body.rstrip().endswith("{"):                       # only the id was present (no trailing comma needed)
-        body = body + f'\n    "output_schema": {cls},\n}}'
+        body = body + f"\n    'output_schema': {cls},\n}}"
     else:
-        body = body + f',\n    "output_schema": {cls},\n}}'
+        body = body + f",\n    'output_schema': {cls},\n}}"
 
     src = (
-        f'"""roles/{rid}.py — operator-authored cognition role (Concurrent Cognition C7.4/C7.5).\n'
-        f'Authored through the surface (propose_role → operator approve → apply_role); validated by\n'
-        f'import-in-a-temp-dir before it ever reached the live roles/ tree. A declared role: the\n'
-        f'output_schema is a real BaseModel subclass (fail-loud requirement), rules are declared ASTs."""\n'
+        f'"""roles/{rid}.py — authored cognition role (Concurrent Cognition C7.4/C7.5 · #58 direct-create).\n'
+        f'Authored through the cognition surface — DIRECTLY via create_role (the agent authors live, #58)\n'
+        f'OR via propose_role→operator-approve→apply_role (surfacing, kept available). Either way validated\n'
+        f'by import-in-a-temp-dir (the correctness gate) before it reached the live roles/ tree. A declared\n'
+        f'role: the output_schema is a real BaseModel subclass (fail-loud requirement); rules are declared ASTs."""\n'
         f"from pydantic import BaseModel, Field\n\n\n"
         f"class {cls}(BaseModel):\n"
         + "\n".join(field_lines) + "\n\n\n"
@@ -236,6 +264,97 @@ def load_role_from_source(rid: str, source: str):
         raise
     except Exception as e:
         raise AuthoringError(f"draft role {rid!r} failed to load: {type(e).__name__}: {e}") from e
+    finally:
+        import shutil
+        shutil.rmtree(d, ignore_errors=True)
+
+
+# ── #56/#58 · skill + context AUTHORING (the write-half of the skill://context:// registries) ─────
+# The same PURE pattern as roles: a fields→SOURCE renderer + an import-in-a-tempdir GATE. A skill/
+# context is a registry ROW (`runtime/skills.py:ENTRY_FIELDS` = id·content·label·description) — far
+# simpler than a role (no BaseModel, no rules), but the CORRECTNESS GATE is the same #1 constraint:
+# a malformed `skills/*.py` makes the registry's `.discover` RAISE (skills.py `_build_entry` fail-loud),
+# which would brick skill:// resolution for the whole cognition layer. So a bad entry is validated
+# OUTSIDE the live tree and NEVER reaches the live skills/contexts dir. reuse-don't-parallel: the gate
+# IS the real SkillRegistry/ContextRegistry discovery, never a second validator.
+
+def _safe_entry_id(eid: Any, kind: str) -> str:
+    """A skill/context id must be a plain lower identifier (it becomes the file name AND the id, which
+    skills._build_entry asserts equals the module name). Mirrors _safe_role_id. Fail loud."""
+    if not isinstance(eid, str) or not eid:
+        raise AuthoringError(f"{kind} id must be a non-empty string, got {eid!r}")
+    if "/" in eid or "\\" in eid or ".." in eid:
+        raise AuthoringError(f"unsafe {kind} id {eid!r} — looks like a path, not a name")
+    if not eid.isidentifier() or eid.startswith("_") or eid != eid.lower():
+        raise AuthoringError(
+            f"{kind} id {eid!r} must be a plain lower-case identifier (no '_'-prefix, no caps, no "
+            f"spaces/paths) — it is the file name AND the {kind} id (skills._build_entry asserts they "
+            f"match). Fail loud.")
+    return eid
+
+
+def render_entry_source(spec: dict, *, kind: str) -> str:
+    """RENDER a `skills/<id>.py` (kind='skill') or `contexts/<id>.py` (kind='context') module SOURCE
+    from a declared spec. The ONE renderer for the entry registries (create_skill/create_context
+    commit this string). `kind` selects the module-level dict name (SKILL|CONTEXT — the only difference
+    between the two registries, exactly mirroring `runtime/skills.py`).
+
+    Spec: {id (plain lower identifier), content (the resolvable value — required), label?, description?}.
+    Fail loud (AuthoringError) on a bad id / missing content / unknown field — never write a broken
+    entry to the live tree (it would brick the registry's discover)."""
+    from runtime.skills import ENTRY_FIELDS
+    if not isinstance(spec, dict):
+        raise AuthoringError(f"{kind} spec must be a dict, got {type(spec).__name__}")
+    if kind not in ("skill", "context"):
+        raise AuthoringError(f"render_entry_source: kind must be 'skill'|'context', got {kind!r}")
+    attr = "SKILL" if kind == "skill" else "CONTEXT"
+    eid = _safe_entry_id(spec.get("id"), kind)
+    content = spec.get("content")
+    if not isinstance(content, str) or not content:
+        raise AuthoringError(
+            f"{kind} {eid!r}: must declare a non-empty string `content` (what {kind}://{eid} resolves "
+            f"TO — the instructions/blob a role reads). Got {content!r} — fail loud.")
+    unknown = [k for k in spec if k not in ENTRY_FIELDS and k != "model"]
+    if unknown:
+        raise AuthoringError(
+            f"{kind} {eid!r}: unknown {kind}-schema field(s) {unknown} — the schema is "
+            f"{list(ENTRY_FIELDS)} (rule 8 — never an invented field). Fail loud.")
+    entry_dict: dict[str, Any] = {"id": eid, "content": content}
+    for k in ("label", "description"):
+        if spec.get(k) is not None:
+            entry_dict[k] = spec[k]
+    body = json.dumps(entry_dict, indent=4, ensure_ascii=False)
+    src = (
+        f'"""{kind}s/{eid}.py — agent-authored {kind} (Concurrent Cognition C 3b · #56/#58 write-half).\n'
+        f'Authored DIRECTLY through the agent surface (create_{kind}); validated by import-in-a-temp-dir\n'
+        f'before it ever reached the live {kind}s/ tree. A registry ROW: {kind}://{eid} resolves to its\n'
+        f'declared `content` (the reusable {"instructions" if kind == "skill" else "context blob"} a role reads)."""\n'
+        f"{attr} = {body}\n"
+    )
+    return src
+
+
+def gate_entry_source(eid: str, source: str, *, kind: str) -> str | None:
+    """THE GATE for a skill/context (the #1 constraint, mirroring gate_role_source): validate a
+    generated entry module by DISCOVERING it in a temp dir OUTSIDE the live tree — so a bad entry NEVER
+    reaches the live skills/contexts dir and bricks the registry's discover. Returns an error string if
+    it would not discover cleanly, else None. reuse-don't-parallel: the gate IS the real
+    SkillRegistry/ContextRegistry discovery (the SAME fail-loud `_build_entry`), never a second validator."""
+    from runtime.skills import SkillRegistry, ContextRegistry
+    Reg = SkillRegistry if kind == "skill" else ContextRegistry
+    d = tempfile.mkdtemp(prefix=f"{kind}-gate-")
+    try:
+        path = os.path.join(d, eid + ".py")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(source)
+        reg = Reg().discover([d])
+        if eid not in reg:
+            return (f"{kind} {eid!r} did not register from the generated module (no {kind.upper()} dict "
+                    f"discovered) — a {kind} module must declare a module-level "
+                    f"{'SKILL' if kind == 'skill' else 'CONTEXT'} dict whose id equals the file name.")
+        return None
+    except Exception as e:
+        return f"{type(e).__name__}: {e}"
     finally:
         import shutil
         shutil.rmtree(d, ignore_errors=True)

@@ -277,6 +277,12 @@ class Suite:
         # built as {role_id: role.spec} so resolve_role/roles() read the SAME dict-view they read from the
         # old class constant — the judge's effective binding is byte-identical (C2.2).
         self.roles_dir = os.path.join(os.path.dirname(self.nodes_dir), "roles")
+        # #56/#58 — the skill/context registry dirs (siblings of roles/, mirroring how cognition.py
+        # derives them). Suite-instance-relative so a test Suite over a throwaway repo writes + reads
+        # its OWN skills/contexts (not the live tree); in production these coincide with
+        # cognition._SKILLS_DIR/_CONTEXTS_DIR (the global readers — list_skills_contexts/resolve_address).
+        self.skills_dir = os.path.join(os.path.dirname(self.nodes_dir), "skills")
+        self.contexts_dir = os.path.join(os.path.dirname(self.nodes_dir), "contexts")
         self.role_registry = role_registry or RoleRegistry().discover([self.roles_dir])
         self.ROLE_REGISTRY = {rid: self.role_registry[rid].spec for rid in self.role_registry}
         # The bridge is a ThreadingHTTPServer → concurrent POST /api/review/next run in separate threads of
@@ -8383,24 +8389,144 @@ class Suite:
         def _do():                                          # consequential body — runs ONLY if approved
             rid = _auth._safe_role_id(d["payload"]["id"])   # re-validate at apply
             source = d["payload"]["source"]
-            err = _auth.gate_role_source(rid, source)       # RE-GATE before any write (defense-in-depth)
-            if err:
-                raise RuntimeError(
-                    f"apply_role({rid!r}): the role module failed the gate at apply ({err}) — REFUSED to "
-                    f"write it to roles/ (a bad role would brick RoleRegistry.discover). Fail loud.")
-            path = self._roles_dir_path(rid)
-            os.makedirs(self.roles_dir, exist_ok=True)
-            tmp = path + ".tmp"
-            with open(tmp, "w", encoding="utf-8") as f:
-                f.write(source if source.endswith("\n") else source + "\n")
-            os.replace(tmp, path)                           # atomic; no partial file
-            sha = self._commit_or_rollback(path, f"add cognition role '{rid}'")  # fail loud if not git-revertible
-            self._rediscover_roles()                        # committed → NOW make it live (appears in cognition_info)
-            self._emit("apply", f"approved + applied role '{rid}' — now a live cognition role · {sha[:8]}",
-                       node_name=rid, commit=sha, address="ui://chrome/workshop")
-            self.refresh_map()
-            return path
+            # REUSE the shared write-half (gate → atomic write → commit → rediscover → emit), the SAME
+            # body create_role uses (reuse-don't-parallel: ONE write path; this is "minus the approve").
+            return self._write_role_file(
+                rid, source, f"add cognition role '{rid}'",
+                emit_msg=f"approved + applied role '{rid}' — now a live cognition role")
         return guard("role_build", do=_do, confirmed=self.inbox.is_approved(surfaced_id))
+
+    def _write_role_file(self, rid: str, source: str, commit_msg: str, *, emit_msg: str) -> str:
+        """The shared CONSEQUENTIAL write-half of role authoring — the factored body BOTH the
+        approval-gated `apply_role` AND the DIRECT `create_role` (#58) call. RE-GATES the rendered
+        module (import in a temp dir — defense-in-depth: a bad role NEVER reaches the live roles/ tree,
+        the #1 constraint that a malformed roles/*.py would brick RoleRegistry.discover and the whole
+        cognition layer), writes atomically, git-commits (revert-able via _commit_or_rollback), then
+        re-discovers so the role goes LIVE in /api/cognition_info. Returns the written path.
+
+        This factoring IS the #58 law made structural: create_role reuses apply_role's exact write+gate
+        path MINUS the inbox `resolved=='approve'` check — not a parallel author path."""
+        from runtime import authoring as _auth
+        err = _auth.gate_role_source(rid, source)           # THE CORRECTNESS GATE — non-negotiable
+        if err:
+            raise RuntimeError(
+                f"_write_role_file({rid!r}): the role module failed the gate ({err}) — REFUSED to write "
+                f"it to roles/ (a bad role would brick RoleRegistry.discover). Fail loud.")
+        path = self._roles_dir_path(rid)
+        os.makedirs(self.roles_dir, exist_ok=True)
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.write(source if source.endswith("\n") else source + "\n")
+        os.replace(tmp, path)                               # atomic; no partial file
+        sha = self._commit_or_rollback(path, commit_msg)    # fail loud if not git-revertible
+        self._rediscover_roles()                            # committed → NOW make it live
+        self._emit("apply", f"{emit_msg} · {sha[:8]}",
+                   node_name=rid, commit=sha, address="ui://chrome/workshop")
+        self.refresh_map()
+        return path
+
+    def create_role(self, spec: dict, *, model: str | None = None) -> dict:
+        """#58 DIRECT autonomous create — the agent CREATES a role LIVE, with NO operator approval.
+        Tim's correction: the propose→surface→approve gate on CREATE was the AI's default, NOT his
+        constraint. So this is `apply_role`'s render+GATE+write+commit+rediscover path MINUS the
+        `resolved=='approve'` inbox check (reuse-don't-parallel — the SAME `_write_role_file`, no
+        parallel author path; `propose_role` STAYS available for when an operator wants surfacing).
+
+        EXPOSES THE FULL ROLE SCHEMA (`render_role_source` now emits every ROLE_FIELDS the spec sets:
+        prompt_template · output_fields/output_schema · op · thinking · tools · knobs · model_binding ·
+        input_addresses · mode_scope · rules · context · render_hint · …). The CORRECTNESS GATE is KEPT
+        (a malformed/un-importable spec is REFUSED fail-loud, never written). The build-dispatch floor
+        is UNTOUCHED — this writes a roles/ file (authoring), it never dispatches `claude -p`.
+
+        Returns {role_id, path, live: True, source}. Fail loud on a malformed spec / an existing id."""
+        from runtime import authoring as _auth
+        if not isinstance(spec, dict):
+            raise TypeError(f"create_role needs a dict spec, got {type(spec).__name__}")
+        spec = dict(spec)
+        # Brain-draft path (same as propose_role): a free-text brief → the brain drafts a field-set.
+        if "brief" in spec and not spec.get("output_fields") and not spec.get("prompt_template"):
+            drafted = self._draft_role_fields(spec["brief"], spec.get("id"), model=model)
+            if "needs" in drafted:
+                return drafted
+            spec.update(drafted)
+        rid = _auth._safe_role_id(spec.get("id"))
+        if rid in self.role_registry:
+            raise ValueError(
+                f"role {rid!r} already exists — create_role is for a NEW role (use edit_role to replace "
+                f"an existing one). Fail loud.")
+        source = _auth.render_role_source(spec)             # the ONE renderer — the FULL schema
+        path = self._write_role_file(                       # gate + write + commit + rediscover (DIRECT)
+            rid, source, f"create cognition role '{rid}' (direct)",
+            emit_msg=f"created role '{rid}' DIRECTLY — now a live cognition role")
+        return {"role_id": rid, "path": path, "live": rid in self.role_registry, "source": source}
+
+    def _entry_dir(self, kind: str) -> str:
+        return self.skills_dir if kind == "skill" else self.contexts_dir
+
+    def _entry_registry(self, kind: str):
+        """Discover the skill/context registry over THIS Suite's dir (registry-is-truth, instance-local
+        — so the live check + the create read the SAME dir the write targets; production dirs coincide
+        with cognition._SKILLS_DIR/_CONTEXTS_DIR, so the global readers see it too)."""
+        from runtime.skills import SkillRegistry, ContextRegistry
+        Reg = SkillRegistry if kind == "skill" else ContextRegistry
+        return Reg().discover([self._entry_dir(kind)])
+
+    def _write_entry_file(self, kind: str, eid: str, source: str, commit_msg: str, *, emit_msg: str) -> str:
+        """The shared CONSEQUENTIAL write-half of skill/context authoring (#56 write-half, #58 DIRECT).
+        Mirrors `_write_role_file`: RE-GATE the rendered entry module (import in a temp dir — a bad
+        entry NEVER reaches the live skills/contexts dir, which would brick the registry's discover),
+        write atomically, git-commit (revert-able), then the entry goes LIVE (skill_registry()/
+        context_registry() re-discover fresh each call, so no in-memory rediscover is needed). Returns
+        the written path."""
+        from runtime import authoring as _auth
+        err = _auth.gate_entry_source(eid, source, kind=kind)   # THE CORRECTNESS GATE — non-negotiable
+        if err:
+            raise RuntimeError(
+                f"_write_entry_file({kind} {eid!r}): the module failed the gate ({err}) — REFUSED to "
+                f"write it (a bad {kind} would brick the registry's discover). Fail loud.")
+        base = self._entry_dir(kind)
+        os.makedirs(base, exist_ok=True)
+        path = os.path.join(base, _auth._safe_entry_id(eid, kind) + ".py")
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.write(source if source.endswith("\n") else source + "\n")
+        os.replace(tmp, path)                               # atomic; no partial file
+        sha = self._commit_or_rollback(path, commit_msg)    # fail loud if not git-revertible
+        self._emit("apply", f"{emit_msg} · {sha[:8]}",
+                   node_name=eid, commit=sha, address="ui://chrome/workshop")
+        self.refresh_map()
+        return path
+
+    def create_skill(self, spec: dict) -> dict:
+        """#56 write-half · #58 DIRECT — the agent CREATES a skill LIVE, no operator approval (the
+        skill-writing-skill, direct). Renders `skills/<id>.py` (id + content + label/description) →
+        the CORRECTNESS GATE (import in a temp dir; a bad entry refused fail-loud) → write → commit →
+        live (readable via skill://<id> + list_skills_contexts). reuse-don't-parallel: the SAME
+        gate+write+commit path as create_role, over the skill registry. Returns {skill_id, path, live}."""
+        from runtime import authoring as _auth
+        if not isinstance(spec, dict):
+            raise TypeError(f"create_skill needs a dict spec, got {type(spec).__name__}")
+        eid = _auth._safe_entry_id(spec.get("id"), "skill")
+        if eid in self._entry_registry("skill"):
+            raise ValueError(f"skill {eid!r} already exists — create_skill is for a NEW skill. Fail loud.")
+        source = _auth.render_entry_source(spec, kind="skill")
+        path = self._write_entry_file("skill", eid, source, f"create skill '{eid}' (direct)",
+                                      emit_msg=f"created skill '{eid}' DIRECTLY — now a live skill")
+        return {"skill_id": eid, "path": path, "live": eid in self._entry_registry("skill")}
+
+    def create_context(self, spec: dict) -> dict:
+        """#56 write-half · #58 DIRECT — the agent CREATES a context LIVE, no operator approval. Mirrors
+        create_skill over the context registry (context://<id>). Returns {context_id, path, live}."""
+        from runtime import authoring as _auth
+        if not isinstance(spec, dict):
+            raise TypeError(f"create_context needs a dict spec, got {type(spec).__name__}")
+        eid = _auth._safe_entry_id(spec.get("id"), "context")
+        if eid in self._entry_registry("context"):
+            raise ValueError(f"context {eid!r} already exists — create_context is for a NEW context. Fail loud.")
+        source = _auth.render_entry_source(spec, kind="context")
+        path = self._write_entry_file("context", eid, source, f"create context '{eid}' (direct)",
+                                      emit_msg=f"created context '{eid}' DIRECTLY — now a live context")
+        return {"context_id": eid, "path": path, "live": eid in self._entry_registry("context")}
 
     def edit_role(self, rid: str, spec: dict, *, model: str | None = None) -> dict:
         """C7.4 — RE-PROPOSE an existing role (edit = author a replacement that surfaces for approval).
