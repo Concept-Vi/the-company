@@ -172,7 +172,8 @@ def capabilities() -> dict:
 # floor — NO tool here emits `dispatch_decision` or launches `claude -p` (the wire's autonomous
 # repo-mutation stays operator-gated, OFF this face, UNCHANGED). `propose_role`/`edit_role`/`delete_role`
 # STAY available (surfacing remains an option). Running a role/chain produces run:// outputs
-# (computation, not governance). No tool below calls resolve_surfaced/dispatch_decision/launches claude -p.
+# (computation, not governance). resolve_surfaced is NOT exposed as a tool here — not exposed on this
+# face (operator-only, on /api/resolve). No tool below calls resolve_surfaced/dispatch_decision/launches claude -p.
 # =================================================================================================
 from runtime import cognition as _cog          # the ONE engine (run_role/run_items/run_reduce/resolve_address)
 import time as _time
