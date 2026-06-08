@@ -1182,83 +1182,164 @@ class Suite:
     # howto-suppressed window (deep work — minimal context); background/watch drop the chatty strata; off
     # resolves nothing (the RHM is asleep). Editing any one of these entries changes BOTH the mode's
     # behaviour AND how context resolves under it — one edit, one place (§6.5, proven by use).
-    MODE_SPECS = {
-        "listening": ModeSpec(
-            label="Listening",
-            directive="Conversational and present; respond fully.",
+    # ============================================================================================
+    # MODE_REGISTRY — THE MODE DIAL, ONE SOURCE (the mode-dial join, 2026-06-08). Two AI sessions built
+    # the dial in two halves; this is the unified declaration. ONE entry per mode carries ALL of its axes:
+    #   • the RESOLUTION/CONTEXT half (was MODE_SPECS/ModeSpec — the interface session's):
+    #       label · directive · resolution · subtypes · consent
+    #   • the THOUGHT-SHAPE/STAGING half (was PART_GRAIN — cognition's): grain · shape · stage
+    #   • the ACTIVATION/BUDGET half (was ACTIVATION_ALLOCATION — cognition's):
+    #       live · reserve_r · per_role_ctx · main_ctx_tokens · brain_config
+    # The 3 OLD NAMES (MODE_SPECS, PART_GRAIN, ACTIVATION_ALLOCATION) are now DERIVED VIEWS of this one
+    # source (immediately below + at their original sites) — NO parallel tables (the law). Every consumer
+    # + the `ModeSpec` interface + the `mode_registry()` accessor read the SAME values, value-for-value.
+    # The 8 top-level modes are UNCHANGED in NAME and ORDER (listening … off) — modes_acceptance asserts
+    # len==8 + this exact order; MODES = tuple(MODE_REGISTRY) so insertion order here IS the contract.
+    #
+    # PER-AXIS NOTES (moved here from the 3 old tables):
+    #   resolution — the CONTEXT-RESOLUTION DECLARATION the resolver consumes AS DATA (never a mode-name
+    #     branch — registry-is-truth). Keys (all optional; absent → today's default): strata (frozenset of
+    #     admitted gather-stratum kinds, None → admit all) · howto_detail ('full'|'terse'|'none') · budget
+    #     (int char-cap override, None → instance R2_BUDGET). The seed `listening` resolution = today's
+    #     full gather → the DEFAULT path is byte-for-byte unchanged (every R2 suite stays green).
+    #   subtypes — the HIERARCHY (§6.5: each mode-type may have sub-types that OVERRIDE a resolution key
+    #     for an INSTANCE). A mode WITHOUT sub-types omits the key (→ ModeSpec.subtypes default None today).
+    #   consent — the consent-interaction style this mode favours (§6B descriptive declaration).
+    #   grain — the unit a reply part spans (line/beat/paragraph); the staged reply is chunked at this grain.
+    #   shape — names the THOUGHT_SHAPE archetype (THOUGHT_SHAPES below, the shape-definition catalog —
+    #     keyed by archetype, NOT per-mode; modes reference a shape by id, it stays as-is).
+    #   stage — whether this mode STAGES a multi-part reply at all (focus/background/off NEVER stage, C4.3).
+    #   live — which ACTIVATION CONTEXTS are live (C5.5); `per-turn` is always the spine.
+    #   reserve_r — the per-turn live-stream reservation (sacred FLOOR, C5.5 — activation.py fails loud
+    #     below FLOOR_RESERVE_R). per_role_ctx — per-role context tokens (the SlotBudget is COMPUTED from
+    #     these against the live registry, never a literal). main_ctx_tokens — assumed main-conversation
+    #     depth (the C0.5 deep-main KV bind). brain_config — the declared brain loadout (mode→loadout
+    #     registry, H8; a swarm-heavy mode wants the higher-util swarm-brain ~16K/0.63, a voice-depth mode
+    #     the 64K brain — DECLARED here, NOT swapped by this build).
+    # ============================================================================================
+    MODE_REGISTRY = {
+        "listening": {
+            "label": "Listening",
+            "directive": "Conversational and present; respond fully.",
             # SEED = today's full gather: admit every stratum, full howto, no budget override.
-            resolution={"strata": None, "howto_detail": "full", "budget": None},
-            subtypes={
+            "resolution": {"strata": None, "howto_detail": "full", "budget": None},
+            "subtypes": {
                 "general": {},   # the default sub-type (no override) — identical to the mode-type lens
                 # an instance can ask for a deeper, semantically-weighted read (e.g. when co-present at a
                 # node): a sub-type is an INSTANCE PARAMETER that refines the SAME mode-type lens (§6.2).
                 "deep": {"budget": 8000},
             },
-            consent="offer"),
-        "text-only": ModeSpec(
-            label="Text-only",
-            directive="Respond in text, concisely, only to what is addressed.",
-            resolution={"strata": None, "howto_detail": "full", "budget": None},
-            consent="offer"),
-        "background": ModeSpec(
-            label="Background",
-            directive="Be minimal — surface only what genuinely needs the operator; otherwise a one-line acknowledgement.",
+            "consent": "offer",
+            # thought-shape/staging half (was PART_GRAIN):
+            "grain": "beat", "shape": "linear-stream", "stage": True,
+            # activation/budget half (was ACTIVATION_ALLOCATION) — voice-depth conversational: 64K brain,
+            # shallow background activity, R reserved.
+            "live": ["per-turn", "background", "sense", "rollup"], "reserve_r": 2,
+            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k",
+        },
+        "text-only": {
+            "label": "Text-only",
+            "directive": "Respond in text, concisely, only to what is addressed.",
+            "resolution": {"strata": None, "howto_detail": "full", "budget": None},
+            "consent": "offer",
+            "grain": "paragraph", "shape": "linear-stream", "stage": True,
+            "live": ["per-turn", "rollup"], "reserve_r": 2,
+            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k",
+        },
+        "background": {
+            "label": "Background",
+            "directive": "Be minimal — surface only what genuinely needs the operator; otherwise a one-line acknowledgement.",
             # background = low-noise: drop the chatty annotation/chat strata, keep the stable howto +
             # presentation_pref (F1 — a learned pref is address-truth, a sibling of howto) + events.
-            resolution={"strata": frozenset({"howto", "presentation_pref", "event", "run"}),
-                        "howto_detail": "terse", "budget": 1500},
-            consent="act"),
-        "focus": ModeSpec(
-            label="Focus",
-            directive="The operator is in deep work. Be extremely brief (one or two lines); do not elaborate unless asked.",
+            "resolution": {"strata": frozenset({"howto", "presentation_pref", "event", "run"}),
+                           "howto_detail": "terse", "budget": 1500},
+            "consent": "act",
+            "grain": "line", "shape": "scatter-write", "stage": False,   # NEVER stage (C4.3) — minimal surface
+            # BACKGROUND presence mode = the swarm-heavy loadout: the higher-util swarm-brain, a deeper
+            # assumed main (the deep-main KV bind is why this mode wants the 0.63 brain).
+            "live": ["per-turn", "background", "sense", "rollup"], "reserve_r": 2,
+            "per_role_ctx": 1500, "main_ctx_tokens": 40000, "brain_config": "swarm-16k",
+        },
+        "focus": {
+            "label": "Focus",
+            "directive": "The operator is in deep work. Be extremely brief (one or two lines); do not elaborate unless asked.",
             # focus = TIGHT ATTENTION: a small window, terse, NO how-to/affordance leg (it would flood deep work).
-            resolution={"strata": frozenset({"annotation", "chat", "event", "run"}), "howto_detail": "none", "budget": 800},
-            subtypes={
+            "resolution": {"strata": frozenset({"annotation", "chat", "event", "run"}), "howto_detail": "none", "budget": 800},
+            "subtypes": {
                 "default": {},
                 # a focus instance that still wants the structural run-trail but nothing chatty:
                 "structural": {"strata": frozenset({"event", "run"}), "budget": 600},
             },
-            consent="act"),
-        "walkthrough": ModeSpec(
-            label="Walkthrough",
-            directive="Actively guide: narrate what you are doing and direct the operator's attention step by step.",
+            "consent": "act",
+            "grain": "line", "shape": "linear-stream", "stage": False,   # NEVER stage (C4.3) — deep work, one/two lines
+            "live": ["per-turn", "background"], "reserve_r": 2,
+            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k",
+        },
+        "walkthrough": {
+            "label": "Walkthrough",
+            "directive": "Actively guide: narrate what you are doing and direct the operator's attention step by step.",
             # GUIDED/show-me lens (§5): the howto/affordance leg is the POINT (narrate what-this-is /
             # what-you-can-do), full strata so the narration has the whole picture. A wider window.
-            resolution={"strata": None, "howto_detail": "full", "budget": 6000},
-            subtypes={
+            "resolution": {"strata": None, "howto_detail": "full", "budget": 6000},
+            "subtypes": {
                 "guided": {},                       # the operator drives, the RHM narrates each step
                 "show-me": {"budget": 8000},        # the RHM drives the sequence (a richer read per step)
             },
-            consent="offer"),
-        "watch-and-react": ModeSpec(
-            label="Watch & react",
-            directive="Observe; comment only when relevant, and briefly.",
+            "consent": "offer",
+            "grain": "paragraph", "shape": "linear-stream", "stage": True,
+            "live": ["per-turn"], "reserve_r": 2,
+            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k",
+        },
+        "watch-and-react": {
+            "label": "Watch & react",
+            "directive": "Observe; comment only when relevant, and briefly.",
             # observe lens: events + run-trail are what matters (what's HAPPENING), terse, no flood; keep
             # the stable howto + presentation_pref (F1 — address-truth, a sibling of howto).
-            resolution={"strata": frozenset({"event", "run", "howto", "presentation_pref"}),
-                        "howto_detail": "terse", "budget": 1500},
-            consent="act"),
-        "decide-for-me": ModeSpec(
-            label="Decide for me",
-            directive="Act on what the governance posture lets you act on (the AUTO/reversible classes — propose a node, run the graph) rather than asking; surface the rest for the operator. The routing is deterministic (the action's posture decides), not a judgement call. You still cannot self-approve; anything that needs approval is surfaced.",
-            resolution={"strata": None, "howto_detail": "full", "budget": None},
-            consent="act"),
+            "resolution": {"strata": frozenset({"event", "run", "howto", "presentation_pref"}),
+                           "howto_detail": "terse", "budget": 1500},
+            "consent": "act",
+            "grain": "line", "shape": "linear-stream", "stage": True,
+            "live": ["per-turn", "sense"], "reserve_r": 2,
+            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k",
+        },
+        "decide-for-me": {
+            "label": "Decide for me",
+            "directive": "Act on what the governance posture lets you act on (the AUTO/reversible classes — propose a node, run the graph) rather than asking; surface the rest for the operator. The routing is deterministic (the action's posture decides), not a judgement call. You still cannot self-approve; anything that needs approval is surfaced.",
+            "resolution": {"strata": None, "howto_detail": "full", "budget": None},
+            "consent": "act",
+            "grain": "paragraph", "shape": "linear-stream", "stage": True,
+            "live": ["per-turn", "background", "rollup"], "reserve_r": 2,
+            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k",
+        },
         # D13: 'off' carries a one-line DESCRIPTION (was empty). chat() short-circuits on mode=='off'
         # BEFORE any directive is used, so this is purely descriptive for the surface — it does NOT
         # re-enable the RHM. modes_acceptance asserts non-empty directives only for m != 'off'.
         # resolution = the EMPTY lens: the RHM is asleep, nothing resolves (strata=empty set).
-        "off": ModeSpec(
-            label="Off",
-            directive="The right-hand-man is asleep — no conversation, no actions. Switch any other mode on the presence dial to wake it.",
-            resolution={"strata": frozenset(), "howto_detail": "none", "budget": 0},
-            consent="none"),
+        "off": {
+            "label": "Off",
+            "directive": "The right-hand-man is asleep — no conversation, no actions. Switch any other mode on the presence dial to wake it.",
+            "resolution": {"strata": frozenset(), "howto_detail": "none", "budget": 0},
+            "consent": "none",
+            "grain": "line", "shape": "linear-stream", "stage": False,   # NEVER stage (C4.3) — the dial is off
+            # off: nothing fires (the dial is off) — only the spine is nominally live (chat() short-circuits).
+            "live": ["per-turn"], "reserve_r": 2,
+            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k",
+        },
     }
-    # --- the two legacy names, DERIVED from the one registry (no drift) ---
+    # --- the 3 OLD NAMES, now DERIVED VIEWS of MODE_REGISTRY (no parallel tables — the join's law) ------
+    # MODE_SPECS: the ModeSpec interface every resolution-half consumer + MODES/MODE_DIRECTIVES read. Each
+    # ModeSpec is built from the registry entry's resolution-half fields → the SAME frozen objects as before
+    # (subtypes absent → r.get("subtypes") is None → ModeSpec.subtypes default None, byte-for-byte today).
+    MODE_SPECS = {
+        m: ModeSpec(label=r["label"], directive=r["directive"], resolution=r["resolution"],
+                    subtypes=r.get("subtypes"), consent=r["consent"])
+        for m, r in MODE_REGISTRY.items()
+    }
     # MODES: the 8-tuple in registry-insertion order (ORDER-CONTRACTED — modes_acceptance len==8 + the
     # _M_* mode-sets below frozenset over it). MODE_DIRECTIVES: the {mode: directive} prose map the
-    # grounding context + capabilities() read. Both DERIVE — there is no second copy to fall out of sync.
-    MODES = tuple(MODE_SPECS)
-    MODE_DIRECTIVES = {m: s.directive for m, s in MODE_SPECS.items()}
+    # grounding context + capabilities() read. Both DERIVE from the one source — no copy to fall out of sync.
+    MODES = tuple(MODE_REGISTRY)
+    MODE_DIRECTIVES = {m: r["directive"] for m, r in MODE_REGISTRY.items()}
     DEFAULT_MODE = "listening"
     SYSTEM_GRAPH = "system"
     MODE_NODE = "rhm"
@@ -1407,22 +1488,14 @@ class Suite:
                           "desc": "N consolidations written to sinks (background; no reply)"},
     }
 
-    # PART-GRAIN table (C4.1): a per-MODE config mapping mode → {grain, shape, stage}. `grain` is the
-    # unit a reply part spans (line / beat / paragraph) — the staged reply is chunked at this grain so
-    # the part follows the mode. `shape` names the THOUGHT_SHAPE. `stage` = whether this mode STAGES at
-    # all (focus/background NEVER stage — C4.3); a non-staging mode falls through to the one-part path.
-    # L1 DATA: switching mode changes the grain by reading THIS table, never a branch per mode.
-    PART_GRAIN = {
-        "listening":       {"grain": "beat",      "shape": "linear-stream", "stage": True},
-        "text-only":       {"grain": "paragraph", "shape": "linear-stream", "stage": True},
-        "walkthrough":     {"grain": "paragraph", "shape": "linear-stream", "stage": True},
-        "decide-for-me":   {"grain": "paragraph", "shape": "linear-stream", "stage": True},
-        "watch-and-react": {"grain": "line",      "shape": "linear-stream", "stage": True},
-        # NEVER-STAGE modes (C4.3): focus = deep work, one-or-two lines; background = minimal surface.
-        "focus":           {"grain": "line",      "shape": "linear-stream", "stage": False},
-        "background":      {"grain": "line",      "shape": "scatter-write", "stage": False},
-        "off":             {"grain": "line",      "shape": "linear-stream", "stage": False},
-    }
+    # PART-GRAIN view (C4.1): a per-MODE {grain, shape, stage} — `grain` is the unit a reply part spans
+    # (line / beat / paragraph; the staged reply is chunked at this grain so the part follows the mode),
+    # `shape` names the THOUGHT_SHAPE, `stage` = whether this mode STAGES at all (focus/background/off
+    # NEVER stage — C4.3; a non-staging mode falls through to the one-part path). L1 DATA: switching mode
+    # changes the grain by reading THIS view, never a branch per mode. Now a DERIVED VIEW of MODE_REGISTRY
+    # (the mode-dial join — these axes live on the one source above; no parallel table).
+    PART_GRAIN = {m: {"grain": r["grain"], "shape": r["shape"], "stage": r["stage"]}
+                  for m, r in MODE_REGISTRY.items()}
 
     # ============================================================================================
     # CONCURRENT COGNITION G5 — ACTIVATION-CONTEXT ALLOCATION (C5.5 · the dial generalised).
@@ -1440,27 +1513,12 @@ class Suite:
     # max_num_seqs − reserve_r, bounded by the SAME process-wide VRAM gate → R permits always stay free.
     # main_ctx_tokens models how deep the main conversation is assumed to be (the C0.5 deep-main KV bind).
     # ============================================================================================
+    # Now a DERIVED VIEW of MODE_REGISTRY (the mode-dial join — these axes live on the one source above;
+    # no parallel table). Each entry = the activation/budget axes of the registry row: which contexts are
+    # LIVE, the slot budget params (reserve_r/per_role_ctx/main_ctx_tokens), and the declared brain config.
     ACTIVATION_ALLOCATION = {
-        # voice-depth conversational modes: the 64K brain, shallow background activity, R reserved.
-        "listening":       {"live": ["per-turn", "background", "sense", "rollup"], "reserve_r": 2,
-                            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k"},
-        "text-only":       {"live": ["per-turn", "rollup"], "reserve_r": 2,
-                            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k"},
-        "walkthrough":     {"live": ["per-turn"], "reserve_r": 2,
-                            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k"},
-        "decide-for-me":   {"live": ["per-turn", "background", "rollup"], "reserve_r": 2,
-                            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k"},
-        "watch-and-react": {"live": ["per-turn", "sense"], "reserve_r": 2,
-                            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k"},
-        # BACKGROUND presence mode = the swarm-heavy loadout: the higher-util swarm-brain, background +
-        # rollup live, a deeper assumed main (the deep-main KV bind is why this mode wants the 0.63 brain).
-        "focus":           {"live": ["per-turn", "background"], "reserve_r": 2,
-                            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k"},
-        "background":      {"live": ["per-turn", "background", "sense", "rollup"], "reserve_r": 2,
-                            "per_role_ctx": 1500, "main_ctx_tokens": 40000, "brain_config": "swarm-16k"},
-        # off: nothing fires (the dial is off) — only the spine is nominally live (chat() short-circuits).
-        "off":             {"live": ["per-turn"], "reserve_r": 2,
-                            "per_role_ctx": 1500, "main_ctx_tokens": 0, "brain_config": "voice-64k"},
+        m: {k: r[k] for k in ("live", "reserve_r", "per_role_ctx", "main_ctx_tokens", "brain_config")}
+        for m, r in MODE_REGISTRY.items()
     }
 
     def activation_allocation(self, mode: str) -> dict:
@@ -1476,6 +1534,20 @@ class Suite:
         if "per-turn" not in out["live"]:                  # the spine is always live (defensive)
             out["live"] = ["per-turn"] + out["live"]
         return out
+
+    def mode_registry(self, mode: str) -> dict:
+        """The mode-dial join's SINGLE QUERY: ALL axes of a mode in one read — the resolution/context half
+        (label/directive/resolution/subtypes/consent), the thought-shape/staging half (grain/shape/stage),
+        and the activation/budget half (live/reserve_r/per_role_ctx/main_ctx_tokens/brain_config). The 3
+        old views (MODE_SPECS/PART_GRAIN/ACTIVATION_ALLOCATION) DERIVE from this same source, so the FE /
+        cognition can read the whole mode declaration from ONE place. Returns a COPY (the caller cannot
+        mutate the class constant). Fail loud on an unknown mode (rule 8 — never a fabricated declaration)."""
+        row = self.MODE_REGISTRY.get(mode)
+        if row is None:
+            raise ValueError(f"mode_registry: unknown mode {mode!r} — registered: "
+                             f"{sorted(self.MODE_REGISTRY)} (fail loud, never a fabricated declaration).")
+        return {k: (list(v) if isinstance(v, list) else dict(v) if isinstance(v, dict) else v)
+                for k, v in row.items()}
 
     def fire_activation(self, context: str, *, mode: str | None = None,
                         sense_event: dict | None = None, turn_id: str | None = None):
