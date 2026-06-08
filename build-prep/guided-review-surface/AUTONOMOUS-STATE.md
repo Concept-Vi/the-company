@@ -77,3 +77,8 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
 - Committed the 6-role cast. Gate GREEN (119 suites, 0 red). cast_for_mode("walkthrough")={the 6}; listening preserved. Claim released.
 - The deadlock that needed Tim's morning call → RESOLVED autonomously (cognition flipped it). No Tim action needed on it now.
 - NEXT FIRE: build the screen_reader role (roles/screen_reader.py — the mockup→at-altitude-comprehension role, on the C seam, op=generate over a mockup:// input) OR the FE show-me lane (A1/A3). screen_reader is the natural next (same seam, my lane, ungated).
+
+## 2026-06-09 fire — ✅ screen_reader role LANDED (f77e6a2)
+- Built roles/screen_reader.py (walkthrough cast, at-altitude mockup comprehension, reads A's mockup:// injection). Hit the drift-home red (new role must be in roles/AGENTS.md) → fixed (added it). Gate GREEN 120/0. By-use proven (dry-run: inbox mockup → plain "what this is / what you can do"). Claim released.
+- TWO pieces landed: the walkthrough cast (5b8c08e) + screen_reader. The enriched guided turn + the screen-comprehension are live.
+- NEXT FIRE: the FE show-me lane (A1 guided overlay / A3 next-back-dwell controls — purely my FE in canvas/app/src, backend start_walkthrough/present_current/next READY). Bigger build (FE + chrome verify); FORM feel = needs-tim.

@@ -263,3 +263,26 @@ The MCP (`mcp_face/server.py`) is node-graph-ONLY + predates the cognition engin
 ---
 ## § CLAIMS RELEASE — guided-review walkthrough cast (2026-06-09)
 - roles/{recall,ground,voice,connect,focus,check}.py — walkthrough cast: **RELEASED, committed 5b8c08e** (gate green 119/0). The enriched walkthrough turn now fires the cast.
+
+---
+## § CLAIMS — #53 MCP engine-exposure (cognition, STARTING 2026-06-09 overnight)
+`mcp_face/server.py` (the agent face — add engine tools) + thin additive Suite engine-wrappers in `runtime/suite.py` IF needed (run_items/run_reduce not yet /api-exposed) + new `tests/mcp_engine_acceptance.py`. REUSE the Suite methods the /api/cognition/* endpoints call + the cognition.py engine — NO parallel engine. The FLOOR: MCP is the AGENT face — no tool self-applies/resolves/dispatches (create=propose→surface). Other sessions: hold `mcp_face/`. Post on commit.
+
+---
+## § CLAIMS — guided-review: screen_reader role (2026-06-09)
+| file / area | what | session | started | released |
+|---|---|---|---|---|
+| `roles/screen_reader.py` (NEW) | the at-altitude screen-comprehension role (walkthrough cast; reads the mockup:// injection) | guided-review | 2026-06-09 | — |
+
+---
+## § CLAIMS — #53 MCP engine-exposure DONE (cognition, b931bdb)
+`mcp_face/server.py` (+15 cognition tools, additive) + `tests/mcp_engine_acceptance.py` (30) RELEASED, committed b931bdb. Floor 18/18, reuse-not-parallel (every tool → the /api Suite method or the cognition.py engine fn). needs-tim: live embed-via-MCP pends a safe GPU window (worker refused to evict another session's resident brain — correct).
+**→ guided-review heads-up:** `roles_acceptance` is currently RED on `drift: ['screen_reader']` — your uncommitted `roles/screen_reader.py` is discovered but not yet in `roles/AGENTS.md` (its drift home). Not mine (my #53 touched zero roles/). Add the screen_reader line to roles/AGENTS.md to clear it (the same drift-home rule your other walkthrough roles follow).
+
+---
+## DISCOVERED-UNBUILT (#53 surfaced, 2026-06-09): skill/context AUTHORING (#56)
+MCP #53 exposed skill/context READ (list_skills_contexts + inspect_address) but NOT CREATE — "write skills" (the #53 headline + Tim's "you have skill writing skills") needs the propose→surface authoring path, which doesn't exist (roles have it via propose_role/authoring.py; skills/contexts don't). #56: build propose_skill/propose_context (+edit/delete)→surface→operator-approve→apply (mirror role authoring, operator-only floor) + the MCP propose_skill tool + /api/cognition/skill/*. Sequenced in the post-#51 fix pass (skills.py/mcp_face are being exercised by the running #51 adversarial worker — no concurrent edit). Reuse the role-authoring pattern, never parallel.
+
+---
+## § CLAIMS RELEASE — guided-review screen_reader (2026-06-09)
+- roles/screen_reader.py + roles/AGENTS.md — **RELEASED, committed f77e6a2** (gate green 120/0, by-use proven). The at-altitude screen-comprehension role is live on the walkthrough cast.
