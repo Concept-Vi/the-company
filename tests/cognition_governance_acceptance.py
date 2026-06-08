@@ -57,8 +57,16 @@ for verb in ("resolve", "approve", "dispatch"):
 # legitimate token occurrences are run_ref RESOLUTION (resolve_run_ref / resolved values), the
 # FORBIDDEN list itself, and comments/docstrings. A bare resolve_surfaced/governance.resolve CALL,
 # or emitting a {"kind":"resolve"} event, from cognition code would open the floor.
-COG_SOURCES = ["runtime/cognition.py", "runtime/rules.py", "runtime/roles.py"] + \
+# Extended (2026-06-09, #51 round-1 finding): COVER the NEW cognition-reachable surfaces — the MCP
+# AGENT face (`mcp_face/server.py`) and the skills/contexts registry (`runtime/skills.py`) — so a
+# FUTURE edit emitting a forbidden verb on either fails loud, not just the original engine. (The floor
+# already HELD on both; this guards it standing — defense-in-depth for "a future edit opens the floor".)
+COG_SOURCES = ["runtime/cognition.py", "runtime/rules.py", "runtime/roles.py",
+               "mcp_face/server.py", "runtime/skills.py"] + \
     [f"roles/{f}" for f in os.listdir("roles") if f.endswith(".py")]
+# coverage-regression guard: the new surfaces MUST stay scanned (so the guard can't silently shrink).
+check("C9.2 the floor source-invariant COVERS the MCP agent face + the skills registry (new surfaces)",
+      "mcp_face/server.py" in COG_SOURCES and "runtime/skills.py" in COG_SOURCES)
 floor_breach = []
 for src in COG_SOURCES:
     with open(src) as fh:

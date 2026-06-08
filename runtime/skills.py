@@ -150,9 +150,11 @@ class _BaseEntryRegistry:
     def read(self, entry_id: str) -> str:
         """Read an id → its declared `content` (the READ the address scheme answers — the floor:
         no resolve/dispatch, just return the declared value). NAMED `read` (not `resolve`) on purpose:
-        resolving a skill/context IS a read, and the cognition layer keeps `.resolve(` as a
-        forbidden-only token (the C9.2 source-invariant — `resolve_run_ref` is a function, not a
-        `.resolve()` method, for the same reason). FAIL LOUD on an unknown id (registry-is-truth —
+        reading a skill/context IS a read, and the cognition layer keeps a dotted-resolve call a
+        forbidden-only token (the C9.2 source-invariant — `resolve_run_ref` is a plain function, never
+        a dotted-resolve method, for the same reason). So this file is now COVERED by that standing
+        source-invariant scan (cognition_governance_acceptance COG_SOURCES) — a future edit here that
+        emitted a forbidden verb would fail loud. FAIL LOUD on an unknown id (registry-is-truth —
         NEVER fabricate a missing skill/context)."""
         if entry_id not in self.entries:
             raise ValueError(
