@@ -54,3 +54,9 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
       (mode text-only subtypes JSON-safe), cognition's mode territory, not mine.
 - HELD: the 6 roles/ edits are UNCOMMITTED (gate red). Claim kept. Flagged cognition. Committed docs only.
 - NEXT FIRE: if both reds cleared → company suites green → COMMIT the 6 roles + release claim. Else keep holding.
+
+## 2026-06-09 fire — HOLD (settings cleared; only cognition's cast-flip blocks)
+- settings_surface: GREEN now (was a flaky/environmental red earlier, same HEAD) → NOT a blocker. (Flagged coherence re: gate determinism.)
+- cast_beyond_listening: still RED (my held edit + cognition's stale "empty walkthrough cast" assertion). cognition hasn't flipped yet (HEAD unchanged).
+- ACTION: HOLD the 6-role cast edit (verified, uncommitted). No code commit (gate red on cast). Docs only. Not spinning.
+- NEXT FIRE: if cognition flipped cast_beyond_listening → company suites green → COMMIT the cast + release claim. Else keep holding.
