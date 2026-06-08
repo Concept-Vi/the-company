@@ -44,6 +44,7 @@ import { Workshop } from './regions/Workshop'
 import { Settings } from './regions/Settings'
 import { Fleet } from './regions/Fleet'
 import { CognitionView } from './regions/CognitionView'
+import { Review } from './regions/Review'
 import { WireRequest } from './components/WireRequest'
 import { api } from './api'
 
@@ -123,6 +124,13 @@ function Hud() {
   // the CSS reveal exactly one bottom-sheet (or none for 'canvas'). On desktop/tablet the tabbar + sheet
   // behaviour is display:none, so this attribute is inert above 699px — desktop layout is untouched.
   const { mobileTab, setMobileTab } = ctrl
+  // VIEW SWITCH (Tim 2026-06-08: "a separate workspace, separate from the canvas"). The app had ONE view
+  // (the tldraw canvas). This is the net-new structural piece: a top-level mode that renders EITHER the
+  // canvas shell OR the Review workspace — both inside the SAME AppContext.Provider, so the right-hand-man
+  // (and every region) is literally the same machinery in both. The tldraw board keeps running underneath
+  // either way (App() owns <Tldraw>); in 'review' we simply don't render the canvas shell over it and the
+  // Review view covers it. Minimal by design — no router, just a mode + a switch chip.
+  const [view, setView] = useState<'canvas' | 'review'>('canvas')
   // G-57 · PHONE: a CONSEQUENTIAL offer (the B2 interactive proposal — build/panel/extend) lands in the RHM
   // chat, but on phone the chat is a bottom-sheet hidden unless the 'rhm' tab is raised — so a fresh
   // consequential offer could be MISSED. When `ctrl.proposal.interactive` flips true (the registry-truth flag
@@ -147,10 +155,24 @@ function Hud() {
          (the tldraw board behind the grid keeps running) instead of a blank document. The chat path itself no
          longer throws (api.ts jr + the sendChat guard), so this is defense-in-depth, not the primary fix. */}
     <PanelErrorBoundary name="surface">
+      {/* VIEW SWITCH chip — top-left, always visible, toggles canvas ↔ review. Plain in-shell control
+         (no router); single-source `view` state above drives which workspace renders below. */}
+      <div className="view-switch" data-ui-ref="ui://view-switch">
+        <button className={view === 'canvas' ? 'on' : ''} onClick={() => setView('canvas')} title="the operating canvas">◧ canvas</button>
+        <button className={view === 'review' ? 'on' : ''} onClick={() => setView('review')} title="review the design mockups with the right-hand-man">▦ review</button>
+      </div>
+      {/* REVIEW WORKSPACE — separate from the canvas, same machinery (the live RhmChat brain mounted inside
+         this same AppContext). Covers the canvas when active. */}
+      {view === 'review' && (
+        <PanelErrorBoundary name="review">
+          <Review />
+        </PanelErrorBoundary>
+      )}
       {/* The top-level layout shell — one grid container, not absolute-px islands. The `canvas` cell is
          transparent + pointer-events:none so the tldraw board underneath stays interactive.
-         F2: data-mtab = the active mobile sheet; data-bp on the breakpoints does the column/row collapse. */}
-      <div className="app-shell" data-mtab={mobileTab}>
+         F2: data-mtab = the active mobile sheet; data-bp on the breakpoints does the column/row collapse.
+         Hidden in 'review' so the canvas chrome doesn't bleed over the review workspace. */}
+      <div className="app-shell" data-mtab={mobileTab} style={view === 'review' ? { display: 'none' } : undefined}>
         {/* F2: as-rail/as-panel get .as-sheet so that at <699px they become bottom-sheets the tabbar toggles
            (instead of fixed-px islands that overlap the canvas). Above 699px .as-sheet is inert. */}
         <div className="as-top"><Toolbar /></div>

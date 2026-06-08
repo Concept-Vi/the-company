@@ -64,6 +64,64 @@ export function useAppController(editor: Editor) {
   const [chat, setChat] = useState<any[]>([])
   const [chatMsg, setChatMsg] = useState('')
   const [chatBusy, setChatBusy] = useState(false)
+  // REVIEW WORKSPACE — the mockup the operator is reviewing (a filename, e.g. "IA-mobile.html"), or null.
+  // Held here (NOT via indicate(), which paints a same-document DOM class + clears on an unresolvable
+  // address — a mockup lives in an iframe and mockup:// is not a registry address). When set, sendChat
+  // ships `mockup://<file>` in focus.selected so the brain reads the mockup as ground truth and explains
+  // it at the operator's altitude. A ref mirrors it for sendChat's non-stale read (like indicatedRef).
+  const [reviewMockup, setReviewMockupState] = useState<string | null>(null)
+  const reviewMockupRef = useRef<string | null>(null)
+  // STUDIO · the reviewed-surface ui:// address of the currently-open mockup (from the corpus index's
+  // per-item `address`). Held so the Stage/Composer/RhmPanel can show + bind the locus even when the
+  // gallery Card's DOM element isn't the click target (e.g. a programmatic open). The LOAD-BEARING locus
+  // binding is still `indicate(address)` (below in setReviewMockup) → it sets indicatedRef, which sendChat/
+  // annotateLocus/fetchAddressHelp all read. This is just the mirror the studio regions display.
+  const [reviewAddress, setReviewAddress] = useState<string | null>(null)
+  function setReviewMockup(file: string | null, address?: string | null) {
+    reviewMockupRef.current = file
+    setReviewMockupState(file)
+    // STUDIO locus binding: opening a mockup INDICATES the surface it depicts (its ui:// address), so the
+    // RhmPanel's chat, the address-help, and the Composer's annotate all bind to that locus for free — the
+    // focus→locus→context-at-address channel (capability-map §0). null address → clear the indication (the
+    // mockup has no mapped surface yet — honest, the chat still grounds on mockup:// content). reflects-
+    // never-owns: indicate() is the one locus sink; we don't hold a parallel locus.
+    const addr = address ?? null
+    setReviewAddress(addr)
+    if (addr) indicate(addr); else indicate(null)
+  }
+  // STUDIO (G4) · the gallery corpus, bound from /api/corpus (registry-is-truth — the disk listing, never a
+  // hardcoded FE list). Each item {file,title,platform,group,address}. fail-loud: a fetch failure carries
+  // its error into `corpusErr` so the Rail surfaces it, never a silently empty gallery. reflects-never-owns.
+  const [corpus, setCorpus] = useState<{ file: string; title: string; platform: string; group: string; address: string | null }[]>([])
+  const [corpusErr, setCorpusErr] = useState<string>('')
+  async function refreshCorpus() {
+    try {
+      const r = await api.corpus()
+      if (r && r.error) { setCorpusErr(String(r.error)); return }
+      setCorpus(Array.isArray(r?.items) ? r.items : [])
+      setCorpusErr('')
+    } catch (e: any) { setCorpusErr(e?.message || String(e)) }
+  }
+  // STUDIO · the comment THREAD at the indicated locus — the read-back half of annotate, from the SHARED
+  // address-keyed annotation store (GET /api/annotations?address=), NOT the bespoke mockup-feedback jsonl
+  // (retired for the in-app surface). The Composer posts via annotateLocus (POST /api/annotate) and reads
+  // back here, proving the persist-to-shared-store. Keyed on `indicated`; re-poked by events.length so a
+  // fresh comment at this locus appears live. null = nothing indicated / no thread yet.
+  const [annotations, setAnnotations] = useState<{ address: string; thread: any[] } | null>(null)
+  const [annotationsBusy, setAnnotationsBusy] = useState(false)
+  async function fetchAnnotations(addr: string | null) {
+    if (!addr || !addr.startsWith('ui://')) { setAnnotations(null); return }   // only ui:// loci carry a thread
+    setAnnotationsBusy(true)
+    try {
+      const r = await api.annotations(addr)
+      if (r?.error) { setAnnotations({ address: addr, thread: [] }); setNotice('✕ ' + r.error); return }   // fail-loud
+      // the store returns the thread as a list (oldest-first); tolerate either a bare list or {thread:[…]}.
+      const thread = Array.isArray(r) ? r : (Array.isArray(r?.thread) ? r.thread : (Array.isArray(r?.annotations) ? r.annotations : []))
+      setAnnotations({ address: addr, thread })
+    } catch (e: any) {
+      setAnnotations({ address: addr, thread: [] }); setNotice('✕ could not load comments: ' + (e?.message || e))
+    } finally { setAnnotationsBusy(false) }
+  }
   // I1 · click-to-indicate: the ui:// address of the element the operator has CLICKED to indicate (the
   // locus their next chat turn is about). null = nothing indicated. This is the WIDENED `focus`
   // vocabulary (seams-rhm Seam 4): a ui:// address rides in the SAME `focus.selected` list as canvas
@@ -803,6 +861,10 @@ export function useAppController(editor: Editor) {
       if (r?.error) { setNotice('✕ ' + r.error); return }       // fail-loud: surface the backend 400, never swallow
       const title = getUI_INFO()[addr]?.title
       setNotice('💬 comment attached to ' + (title || addr))     // the annotate face's "did X" (rule 4)
+      // STUDIO · close the loop by USE: the comment is in the SHARED annotation store → re-read the thread
+      // so the Composer's thread view shows it immediately (the persist-to-shared-store proof). The
+      // events.length poke would also refresh it, but the explicit re-read makes the round-trip atomic.
+      await fetchAnnotations(addr)
     } catch (e: any) { setNotice('✕ could not attach comment: ' + (e?.message || e)) }
   }
   // G-4 · THE WIRE'S OPERATOR DOOR — mint a build-intent FROM the indicated ui:// element (the missing
@@ -863,6 +925,14 @@ export function useAppController(editor: Editor) {
       // (so show-me/address_help can describe the help surface itself); this only stops a click INSIDE it from
       // hijacking the indication — you point with the rest of the surface, then read/shape in the help panel.
       if (tgt?.closest?.('[data-ui-ref="ui://inspector/help"]')) return
+      // STUDIO · the COMPOSER exclusion (same class as the chat + wire-door + help-panel guards above). The
+      // studio Composer (ui://studio/composer) is where the operator types a comment/change-request ABOUT
+      // the currently-indicated reviewed surface. A click into its textarea/buttons must NOT re-indicate the
+      // composer itself — that would overwrite the pointed locus and record the comment against
+      // ui://studio/composer instead of the real surface. So the Composer READS `indicated`, never BECOMES
+      // it (mirrors the chat-region guard precisely). The same applies to the studio RhmPanel's own help
+      // surface (ui://studio/rhm/help) — a drill there is ABOUT the locus, not a new locus.
+      if (tgt?.closest?.('[data-ui-ref="ui://studio/composer"], [data-ui-ref="ui://studio/rhm/help"]')) return
       // L4-COHERENCE: the MODAL exclusion (main's REAL a89dab1 fix — keep it; it is what makes indicate-ON
       // safe). A click inside a modal OPERATES it (close/config), it never points AT it. NB the A3 consolidated
       // Settings modal root is `.settings-scrim`/`.settings-panel` (Settings.tsx:71-72) — NOT `.settings` — so
@@ -1010,6 +1080,13 @@ export function useAppController(editor: Editor) {
     } finally { setSelfChangesBusy(false) }
   }
   useEffect(() => { fetchSelfChanges(indicated) /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [indicated, events.length])
+  // STUDIO · load the comment thread whenever the indicated locus changes (and on a live event at this
+  // locus — events.length is the cheap poke, mirroring History/SelfChanges). Read-back of the SHARED store.
+  useEffect(() => { fetchAnnotations(indicated) /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [indicated, events.length])
+  // STUDIO (G4) · bind the gallery corpus once on mount (registry-is-truth). Fire-and-forget — refreshCorpus
+  // OWNS its fail-loud path (it writes corpusErr the Rail surfaces), so a slow/failed corpus fetch never
+  // stalls the rest of boot. The Studio surface also re-binds on mount as a belt-and-braces (cheap GET).
+  useEffect(() => { void refreshCorpus() /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [])
   // Revert a self-change FROM the indicated element — reuses the EXISTING operator-only api.revert(sha)
   // (the /api/revert gate; no new revert path). After it lands, re-read the located list so the row clears.
   async function revertSelfChangeAt(sha: string) {
@@ -1036,7 +1113,11 @@ export function useAppController(editor: Editor) {
       // (the widened vocabulary; the backend branches on each value). The indicated address goes first so
       // the INDICATING block leads when both are present.
       const nodeIds = (editor.getSelectedShapes().filter(s => s.type === 'node') as NodeShape[]).map(s => s.props.nodeId)
-      const selected = indicatedRef.current ? [indicatedRef.current, ...nodeIds] : nodeIds
+      // REVIEW WORKSPACE: when a mockup is open, ship it as `mockup://<file>` so the brain reads it as
+      // ground truth (the backend _chat_context injects the mockup's content into the LIVE-STATE block).
+      // It rides FIRST so the "mockup under review" framing leads the focus block (like the indicated addr).
+      const reviewPrefix = reviewMockupRef.current ? ['mockup://' + reviewMockupRef.current] : []
+      const selected = [...reviewPrefix, ...(indicatedRef.current ? [indicatedRef.current] : []), ...nodeIds]
       const r = await api.chat(m, { selected })
       // F5 · the named bug. On a backend 400 (model unreachable — the literal first thing an operator hits)
       // api.chat now resolves to a normalized `{error}` (api.ts jr). BEFORE F5 this did `setChat(r.history)`
@@ -2298,6 +2379,10 @@ export function useAppController(editor: Editor) {
     // main's voice/settings handlers (S1/S2/S3/S5/S6/V3/V4 + the indicate-mode toggle); setSettingsOpen already returned above
     micPressed, setVoiceInputMode, setVoiceEnabled, toggleRecordConversation, startDebriefSession, newConversation, openConversation, chooseModel, applyRhm, setBrainKnob, setModelCtx, refreshFit, startVoiceService,
     indicateMode, toggleIndicateMode,
+    // REVIEW WORKSPACE / STUDIO — the mockup-studio organ folded into the main app (the scaffolded surface)
+    reviewMockup, setReviewMockup, reviewAddress,
+    corpus, corpusErr, refreshCorpus,
+    annotations, annotationsBusy, fetchAnnotations,
   }
 }
 

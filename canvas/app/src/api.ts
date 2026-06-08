@@ -180,6 +180,20 @@ export const api = {
   // cognition.* emit-contract). Registry-driven (rule 8): a new role/rule appears here with NO FE code, so
   // the River draws its tributaries + the dots paint their status FROM this — never a hardcoded role list.
   cognitionInfo: () => fetch('/api/cognition_info').then(jr),
+  // STUDIO (G4) · the review-corpus index — every reviewable mockup file actually on disk + its curated
+  // meta {file,title,platform,group,address}. The studio gallery binds THIS (registry-is-truth: the disk
+  // listing is the source), never a hardcoded FE list, so a new mockup appears the moment its file lands.
+  // The per-item `address` is the reviewed-surface ui:// the mockup depicts (the gallery Card carries it as
+  // data-ui-ref so selecting a card indicates that locus — the chat/help/annotate seams bind to it).
+  // Returns { items:[…] }; a thrown/non-ok response → {error} (jr), surfaced fail-loud by the caller.
+  corpus: () => fetch('/api/corpus').then(jr),
+  // I6 · the comment THREAD at a ui:// address (the read-back half of annotate). The studio's "comment at
+  // an element" posts via /api/annotate (annotateLocus) into the SHARED address-keyed annotation store and
+  // reads it back HERE — NOT the bespoke /api/mockup-feedback jsonl (retired for the in-app surface). The
+  // backend S0-validates the address (→ 400, fail-loud, normalized to {error} by jr). Returns the thread
+  // (oldest-first) keyed by the address; disk-backed (survives reload) — this proves the persist-to-shared-store.
+  annotations: (address: string) =>
+    fetch('/api/annotations?address=' + encodeURIComponent(address)).then(jr),
   // L3 · addressed history (§21.7#1): everything that happened AT a ui:// address. The address-keyed READ
   // over the event tail — the addressed analogue of decision_view. Returns { address, trajectory[] }
   // chronological; a non-ui:// / malformed address → backend 400 (fail-loud, normalized to {error} by jr).

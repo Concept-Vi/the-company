@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Mockup Studio — the design-review portal · The Company</title>
+<!--
+  ============================================================
+  MOCKUP STUDIO — Tim's design-review portal (a TOOL, not a mockup).
+  Stand-alone, self-contained. Opens in a browser (file:// or vite).
+  Three parts: GALLERY RAIL (left) · DEVICE STAGE (center) · FEEDBACK/RHM PANEL (right).
+  Tim VIEWS each mockup → gives feedback conversationally to the right-hand-man →
+  the feedback is CAPTURED as structured data (POST) so the RHM/an agent can update
+  the mockups. This is the review-over-the-mockups loop, BEFORE the real build.
+  NOTHING here is built into the real app — it iterates the MOCKUP CORPUS.
+
+  BACKEND CONTRACT (the lead wires the route + file + the feedback→edit dispatch):
+    POST /api/mockup-feedback
+      body  { mockup:<filename>, element:<string|null>, text:<string>, ts:<iso8601> }
+      resp  { ok:true, entry:{ id, mockup, element, text, ts, status:"pending" } }
+      side  appends ONE jsonl line to design/mockups/.feedback/<mockup>.jsonl
+    GET  /api/mockup-feedback?mockup=<filename>
+      resp  { entries:[ { id, mockup, element, text, ts, status } ] }
+              status ∈ pending | applied | dismissed
+  KEY  the mockup id IS the FILENAME (A2 maps to BOTH desktop+mobile files; the
+       view-id would collide). Feedback pins to a specific rendered FILE.
+  DEGRADE  file:// (and absent route) make fetch THROW (not a 404). The catch treats
+       ANY failure as "backend unavailable": local-only entry + localStorage + the
+       copy-paste JSON + the contract note. Happy path is contract-defined, wired by lead.
+  ============================================================
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400;9..144,0,500;9..144,0,600;9..144,1,400;9..144,0,900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Link the generated corpus CSS too (resolves on file:// since STUDIO sits in mockups/).
+     The :root below INLINES the gold tokens so the tool is genuinely self-contained even
+     if the linked sheet is missing. -->
+<link rel="stylesheet" href="../design-system.css">
+<style>
+/* ════════════════════════════════════════════════════════════
+   GOLD LIVING-INSTRUMENT TOKENS (inlined from tokens.json / SCENARIO-PLAYER.html)
+   — recognition-by-sight: warm charcoal base, gold the primary, serif display.
+   ════════════════════════════════════════════════════════════ */
+:root{
+  --bg:#0c0a08; --s0:#13110d; --s1:#191611; --s2:#211d17; --s3:#2a241c;
+  --line:#332c22; --line-2:#403729;
+  --tx:#f3ece1; --tx-2:#b3a692; --tx-3:#6f6555;
+
+  --gold-hi:#f2d08a; --gold:#e6ab5c; --gold-deep:#d2913f;
+  --acc:#e6ab5c; --acc-dim:#8a6a35; --acc-deep:#d2913f; --acc-glow:rgba(230,171,92,.16);
+  --acc-flow:linear-gradient(120deg,#f2d08a 0%,#e6ab5c 52%,#d2913f 100%);
+  --orb-hi:rgba(255,248,233,.62);
+
+  --await:#e08a3c; --fail:#ec6a5e; --cache:#9c8f78;
+  --ink-accent:#1c1304;
+  --kind-content:#b89a6e; --kind-model:#c0a0c8;
+
+  --font-display:'Fraunces',Georgia,serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',monospace;
+  --font-sans:'IBM Plex Sans',system-ui,sans-serif;
+
+  --r-sm:5px; --r:8px; --r-lg:12px; --r-pill:99px;
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px;
+  --shadow-color:#000;
+  --elev-1:0 1px 0 rgba(255,255,255,.02), 0 8px 24px -16px var(--shadow-color);
+  --elev-2:0 1px 0 rgba(255,255,255,.03), 0 24px 60px -28px var(--shadow-color);
+
+  --rail-w:268px; --panel-w:380px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--font-mono);
+  color:var(--tx);
+  background:radial-gradient(120% 90% at 50% -10%, #15110b 0%, #0a0806 60%, #070504 100%);
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+
+/* ─── shell: three columns ─── */
+.studio{
+  display:grid;
+  grid-template-columns:var(--rail-w) 1fr var(--panel-w);
+  grid-template-rows:auto 1fr;
+  height:100vh;
+}
+
+/* ─── top bar (spans all) ─── */
+.topbar{
+  grid-column:1 / -1;
+  display:flex; align-items:center; gap:var(--sp-3);
+  padding:0 var(--sp-5); height:54px;
+  border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(25,22,17,.85), rgba(12,10,8,.6));
+  backdrop-filter:blur(8px);
+}
+.topbar .orb{
+  width:22px; height:22px; border-radius:50%;
+  background:var(--acc-flow);
+  box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 0 18px -2px var(--acc);
+  position:relative; flex:none;
+  animation:breathe 4.2s ease-in-out infinite;
+}
+.topbar .orb::after{
+  content:""; position:absolute; inset:0; border-radius:50%;
+  background:radial-gradient(circle at 32% 28%, var(--orb-hi), transparent 46%);
+}
+@keyframes breathe{0%,100%{transform:scale(1);opacity:.92}50%{transform:scale(1.08);opacity:1}}
+.topbar h1{
+  font-family:var(--font-display); font-weight:500; font-size:17px;
+  letter-spacing:-.2px; color:var(--tx);
+}
+.topbar h1 em{font-style:italic; color:var(--acc)}
+.topbar .tag{
+  font-family:var(--font-mono); font-size:9.5px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--tx-3);
+  border:1px solid var(--line); border-radius:var(--r-pill);
+  padding:3px 9px;
+}
+.topbar .portal-note{
+  margin-left:auto; font-size:10px; color:var(--tx-2);
+  display:flex; align-items:center; gap:6px; max-width:430px; line-height:1.4;
+}
+.topbar .portal-note b{color:var(--acc); font-weight:500}
+
+/* ─── GALLERY RAIL (left) ─── */
+.rail{
+  border-right:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(19,17,13,.5), rgba(12,10,8,.2));
+  overflow-y:auto; padding:var(--sp-4) 0 var(--sp-6);
+}
+.rail .rail-h{
+  font-family:var(--font-mono); font-size:9.5px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--tx-3);
+  padding:0 var(--sp-4) var(--sp-2);
+}
+.rail .group{margin-bottom:var(--sp-3)}
+.rail .group-h{
+  font-family:var(--font-display); font-style:italic; font-size:12px;
+  color:var(--tx-2); padding:var(--sp-3) var(--sp-4) var(--sp-1);
+  display:flex; align-items:baseline; gap:7px;
+}
+.rail .group-h .ct{font-family:var(--font-mono); font-style:normal; font-size:9px; color:var(--tx-3)}
+.rail .item{
+  display:flex; align-items:center; gap:8px;
+  padding:7px var(--sp-4); cursor:pointer;
+  border-left:2px solid transparent;
+  transition:background .14s, border-color .14s;
+}
+.rail .item:hover{background:rgba(230,171,92,.05)}
+.rail .item.active{
+  background:rgba(230,171,92,.10);
+  border-left-color:var(--acc);
+}
+.rail .item .dot{
+  width:6px; height:6px; border-radius:50%; flex:none;
+  background:var(--tx-3);
+}
+.rail .item.active .dot{background:var(--acc); box-shadow:0 0 8px -1px var(--acc)}
+.rail .item .nm{font-size:11.5px; color:var(--tx); line-height:1.25; flex:1}
+.rail .item.active .nm{color:var(--gold-hi)}
+.rail .item .pf{
+  font-size:8.5px; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--tx-3); border:1px solid var(--line); border-radius:3px;
+  padding:1px 4px; flex:none;
+}
+.rail .item .pf.mobile{color:var(--acc)}
+.rail .item .pf.tool{color:var(--kind-model)}
+.rail .item .fb-ct{
+  font-family:var(--font-mono); font-size:8.5px; color:var(--ink-accent);
+  background:var(--acc); border-radius:var(--r-pill); padding:1px 6px;
+  min-width:16px; text-align:center; flex:none;
+}
+
+/* ─── DEVICE STAGE (center) ─── */
+.stage{
+  display:flex; flex-direction:column; min-width:0;
+  background:radial-gradient(140% 120% at 50% 0%, rgba(25,22,17,.4), transparent 70%);
+}
+.stage-bar{
+  display:flex; align-items:center; gap:var(--sp-3);
+  padding:var(--sp-3) var(--sp-5); border-bottom:1px solid var(--line);
+}
+.stage-bar .now{
+  font-family:var(--font-display); font-size:13.5px; color:var(--tx);
+  flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.stage-bar .now small{font-family:var(--font-mono); font-size:9.5px; color:var(--tx-3); margin-left:8px}
+.seg{
+  display:flex; border:1px solid var(--line); border-radius:var(--r-pill);
+  overflow:hidden; background:var(--s0);
+}
+.seg button{
+  font-family:var(--font-mono); font-size:9.5px; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--tx-2);
+  background:transparent; border:0; cursor:pointer;
+  padding:6px 13px; transition:background .14s,color .14s;
+}
+.seg button.on{background:var(--acc); color:var(--ink-accent); font-weight:600}
+.icon-btn{
+  font-family:var(--font-mono); font-size:11px; color:var(--tx-2);
+  background:var(--s0); border:1px solid var(--line); border-radius:var(--r);
+  cursor:pointer; padding:6px 10px; transition:border-color .14s,color .14s;
+  display:flex; align-items:center; gap:6px;
+}
+.icon-btn:hover{border-color:var(--acc-dim); color:var(--tx)}
+
+.stage-body{
+  flex:1; min-height:0; overflow:auto;
+  display:grid; place-items:start center;
+  padding:var(--sp-6) var(--sp-5);
+}
+.device{
+  position:relative;
+  border-radius:18px;
+  background:#000;
+  box-shadow:var(--elev-2), 0 0 0 1px var(--line-2);
+  transition:width .2s ease;
+}
+.device.phone{
+  width:390px; padding:11px;
+  border-radius:34px;
+  box-shadow:var(--elev-2), 0 0 0 1px var(--line-2), inset 0 0 0 2px #1a1712;
+}
+.device.phone::before{ /* notch */
+  content:""; position:absolute; top:14px; left:50%; transform:translateX(-50%);
+  width:96px; height:6px; border-radius:99px; background:#0c0a08; z-index:2;
+}
+.device .screen{
+  position:relative; overflow:hidden; background:var(--bg);
+  border-radius:8px;
+}
+.device.phone .screen{border-radius:24px}
+.device iframe{
+  border:0; display:block; background:var(--bg);
+  transform-origin:top left;
+}
+.stage-empty{
+  align-self:center; text-align:center; color:var(--tx-3);
+  font-family:var(--font-display); font-style:italic; font-size:15px;
+}
+.stage-empty span{display:block; font-family:var(--font-mono); font-style:normal; font-size:10px; margin-top:8px}
+
+/* ─── FEEDBACK / RHM PANEL (right) ─── */
+.panel{
+  border-left:1px solid var(--line);
+  background:linear-gradient(180deg, rgba(19,17,13,.55), rgba(12,10,8,.25));
+  display:flex; flex-direction:column; min-height:0;
+}
+.panel-h{
+  padding:var(--sp-4) var(--sp-4) var(--sp-3);
+  border-bottom:1px solid var(--line);
+}
+.panel-h .who{display:flex; align-items:center; gap:9px}
+.panel-h .who .orb-sm{
+  width:16px;height:16px;border-radius:50%;background:var(--acc-flow);flex:none;
+  box-shadow:0 0 12px -2px var(--acc); position:relative;
+}
+.panel-h .who .orb-sm::after{content:"";position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle at 32% 28%,var(--orb-hi),transparent 46%)}
+.panel-h .who .ttl{font-family:var(--font-display); font-size:14px; color:var(--tx)}
+.panel-h .lede{font-size:10.5px; color:var(--tx-2); line-height:1.5; margin-top:7px}
+.panel-h .lede b{color:var(--acc); font-weight:500}
+
+/* thread */
+.thread{flex:1; min-height:0; overflow-y:auto; padding:var(--sp-4)}
+.thread .empty{
+  font-family:var(--font-display); font-style:italic; font-size:12.5px;
+  color:var(--tx-3); text-align:center; padding:var(--sp-6) var(--sp-3); line-height:1.6;
+}
+.fb{
+  border:1px solid var(--line); border-radius:var(--r);
+  background:var(--s1); padding:var(--sp-3); margin-bottom:var(--sp-3);
+  position:relative;
+}
+.fb.local{border-style:dashed; border-color:var(--acc-dim)}
+.fb .fb-top{display:flex; align-items:center; gap:7px; margin-bottom:6px}
+.fb .st{
+  font-family:var(--font-mono); font-size:8px; letter-spacing:.1em; text-transform:uppercase;
+  padding:2px 7px; border-radius:var(--r-pill);
+}
+.fb .st.pending{color:var(--await); border:1px solid var(--await); background:rgba(224,138,60,.08)}
+.fb .st.applied{color:var(--acc); border:1px solid var(--acc-dim); background:var(--acc-glow)}
+.fb .st.dismissed{color:var(--tx-3); border:1px solid var(--line)}
+.fb .st.local{color:var(--kind-model); border:1px solid var(--kind-model); background:rgba(192,160,200,.08)}
+.fb .ts{font-family:var(--font-mono); font-size:8.5px; color:var(--tx-3); margin-left:auto}
+.fb .el{
+  font-family:var(--font-mono); font-size:9.5px; color:var(--acc-deep);
+  background:var(--s0); border:1px solid var(--line); border-radius:4px;
+  padding:2px 6px; margin-bottom:6px; display:inline-block; word-break:break-all;
+}
+.fb .tx{font-size:12px; color:var(--tx); line-height:1.5; white-space:pre-wrap}
+
+/* composer */
+.composer{border-top:1px solid var(--line); padding:var(--sp-3) var(--sp-4) var(--sp-4)}
+.composer .lab{
+  font-family:var(--font-mono); font-size:8.5px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--tx-3); margin-bottom:5px; display:block;
+}
+.composer input.el-in, .composer textarea{
+  width:100%; font-family:var(--font-mono); color:var(--tx);
+  background:var(--s0); border:1px solid var(--line); border-radius:var(--r);
+  padding:9px 11px; resize:none; line-height:1.5;
+  transition:border-color .14s;
+}
+.composer input.el-in{font-size:10.5px; margin-bottom:var(--sp-3)}
+.composer textarea{font-size:12px; min-height:78px; font-family:var(--font-sans)}
+.composer input.el-in::placeholder,.composer textarea::placeholder{color:var(--tx-3)}
+.composer input.el-in:focus,.composer textarea:focus{outline:0; border-color:var(--acc-dim)}
+.composer .send-row{display:flex; align-items:center; gap:var(--sp-3); margin-top:var(--sp-3)}
+.composer .hint{font-size:9px; color:var(--tx-3); flex:1; line-height:1.4}
+.send{
+  font-family:var(--font-mono); font-size:11px; font-weight:600; letter-spacing:.04em;
+  color:var(--ink-accent); background:var(--acc-flow); background-size:160% 100%;
+  border:0; border-radius:var(--r); cursor:pointer; padding:9px 18px;
+  box-shadow:0 4px 14px -6px var(--acc); transition:background-position .3s, transform .1s;
+}
+.send:hover{background-position:100% 0}
+.send:active{transform:translateY(1px)}
+.send:disabled{opacity:.4; cursor:not-allowed; box-shadow:none}
+
+/* degraded copy-paste block */
+.degraded{
+  margin-top:var(--sp-3); border:1px solid var(--await); border-radius:var(--r);
+  background:rgba(224,138,60,.06); padding:var(--sp-3);
+}
+.degraded .dh{
+  font-family:var(--font-mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--await); margin-bottom:6px; display:flex; align-items:center; gap:6px;
+}
+.degraded .body{font-size:10px; color:var(--tx-2); line-height:1.55; margin-bottom:8px}
+.degraded pre{
+  font-family:var(--font-mono); font-size:9.5px; color:var(--gold-hi);
+  background:var(--s0); border:1px solid var(--line); border-radius:var(--r-sm);
+  padding:8px 10px; overflow-x:auto; white-space:pre; line-height:1.5;
+}
+.degraded .copy{
+  margin-top:7px; font-family:var(--font-mono); font-size:9.5px; color:var(--tx-2);
+  background:var(--s1); border:1px solid var(--line); border-radius:var(--r-sm);
+  cursor:pointer; padding:5px 11px; transition:border-color .14s,color .14s;
+}
+.degraded .copy:hover{border-color:var(--acc-dim); color:var(--tx)}
+
+/* scrollbars (subtle warm) */
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--s3); border-radius:99px; border:2px solid transparent; background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:var(--line-2); background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+</style>
+</head>
+<body>
+<div class="studio" id="root">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="orb"></div>
+    <h1>mockup&nbsp;<em>studio</em></h1>
+    <span class="tag">design-review portal</span>
+    <div class="portal-note">
+      <span>Review the mockups, tell the right-hand-man what to change. <b>Nothing here is built into the real app</b> — this iterates the mockup corpus before the build.</span>
+    </div>
+  </div>
+
+  <!-- GALLERY RAIL -->
+  <nav class="rail" id="rail">
+    <div class="rail-h">the mockup corpus</div>
+    <!-- groups injected by JS -->
+  </nav>
+
+  <!-- DEVICE STAGE -->
+  <section class="stage">
+    <div class="stage-bar">
+      <div class="now" id="nowTitle">Select a mockup to begin<small></small></div>
+      <div class="seg" id="frameSeg">
+        <button data-frame="phone">Phone · 390</button>
+        <button data-frame="desktop" class="on">Desktop · 1440</button>
+      </div>
+      <button class="icon-btn" id="reloadBtn" title="Reload the mockup">↻ Reload</button>
+    </div>
+    <div class="stage-body" id="stageBody">
+      <div class="stage-empty">Choose a mockup from the rail<span>it loads live in the device frame</span></div>
+    </div>
+  </section>
+
+  <!-- FEEDBACK / RHM PANEL -->
+  <aside class="panel">
+    <div class="panel-h">
+      <div class="who"><div class="orb-sm"></div><div class="ttl">Right-hand-man</div></div>
+      <div class="lede" id="panelLede">Pick a mockup, then tell the right-hand-man what to change. Each note is captured as <b>structured feedback</b> tied to this mockup — so an agent can update it.</div>
+    </div>
+
+    <div class="thread" id="thread">
+      <div class="empty">No mockup selected.<br>The feedback thread for the chosen mockup appears here.</div>
+    </div>
+
+    <div class="composer" id="composer" style="display:none">
+      <label class="lab" for="elIn">About element <span style="color:var(--tx-3);text-transform:none;letter-spacing:0">(optional · ui:// address or a description)</span></label>
+      <input class="el-in" id="elIn" type="text" placeholder="ui://inbox/build-review  ·  or: the run strip at the top" autocomplete="off"/>
+      <label class="lab" for="txtIn">Your feedback to the right-hand-man</label>
+      <textarea id="txtIn" placeholder="e.g. This is too loud at the build-review card — pull the density back and let the gold breathe."></textarea>
+      <div class="send-row">
+        <div class="hint">Submitted as structured data <span style="color:var(--tx-3)">{ mockup · element · text · ts }</span></div>
+        <button class="send" id="sendBtn" disabled>Send →</button>
+      </div>
+      <div id="degradeSlot"></div>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   MOCKUP STUDIO — logic
+   ════════════════════════════════════════════════════════════ */
+
+/* ---- the corpus list (hardcoded; file:// can't fetch sibling JSON).
+        id == FILENAME (the durable key; A2 maps to BOTH desktop+mobile). ---- */
+const GROUPS = [
+  { name: "IA proposals", note: "commander's-bridge information architecture", items: [
+    { f:"IA-desktop.html",                title:"Information architecture — desktop", pf:"desktop" },
+    { f:"IA-mobile.html",                 title:"Information architecture — mobile",  pf:"mobile" },
+  ]},
+  { name: "Elevated / living instrument", note: "the motion + presence aesthetic", items: [
+    { f:"SCENARIO-PLAYER.html",           title:"Scenario player — RHM presence (interactive)", pf:"tool" },
+    { f:"A2-rhm-mobile-elevated.html",    title:"RHM — mobile, elevated",            pf:"mobile" },
+    { f:"A3-settings-elevated.html",      title:"Settings — elevated",               pf:"desktop" },
+  ]},
+  { name: "A · operating surface", note: "the canvas", items: [
+    { f:"A1-canvas-empty-desktop.html",   title:"Canvas — empty / first-run",        pf:"desktop" },
+    { f:"A2-canvas-desktop.html",         title:"Canvas — running chain",            pf:"desktop" },
+    { f:"A2-canvas-mobile.html",          title:"Canvas — running chain",            pf:"mobile" },
+    { f:"A3-inspector-desktop.html",      title:"Node selected → inspector",         pf:"desktop" },
+    { f:"A11-portals-desktop.html",       title:"Portals — live transclusion",       pf:"desktop" },
+    { f:"A12-workshop-desktop.html",      title:"Workshop — full-detail node",       pf:"desktop" },
+  ]},
+  { name: "B · right-hand-man + review", note: "presence, walkthrough, twin", items: [
+    { f:"B3-walkthrough-desktop.html",    title:"Walkthrough — RHM drives the view", pf:"desktop" },
+    { f:"B4-presence-dial-desktop.html",  title:"Presence dial — 8 modes",           pf:"desktop" },
+    { f:"B4-presence-dial-mobile.html",   title:"Presence dial — 8 modes",           pf:"mobile" },
+    { f:"B6-twin-desktop.html",           title:"The twin — model-of-Tim",           pf:"desktop" },
+  ]},
+  { name: "C · inbox + decisions", note: "chief-of-staff", items: [
+    { f:"C1-inbox-desktop.html",          title:"Inbox — three lanes",               pf:"desktop" },
+    { f:"C3-build-review-desktop.html",   title:"Demonstrate-first build-review",    pf:"desktop" },
+    { f:"C5-replay-desktop.html",         title:"Replay / decision trajectory",      pf:"desktop" },
+  ]},
+  { name: "D · self-build / the wire", note: "act on outputs", items: [
+    { f:"D6-wire-states-desktop.html",    title:"Wire failure & lifecycle states",   pf:"desktop" },
+    { f:"D7-selfmod-desktop.html",        title:"Self-mod — revert latest change",   pf:"desktop" },
+  ]},
+  { name: "E · models · F · frame", note: "fleet + activity", items: [
+    { f:"E1-fleet-desktop.html",          title:"Live model fleet — chat + embed",   pf:"desktop" },
+    { f:"F4-activity-desktop.html",       title:"Activity / now + event stream",     pf:"desktop" },
+  ]},
+];
+
+/* ---- backend contract ---- */
+const API = "/api/mockup-feedback";   // relative; lead serves it same-origin
+const LS_KEY = "studio.feedback.v1";  // local fallback store, keyed by mockup filename
+
+/* ---- state ---- */
+let current = null;     // current mockup filename
+let frame = "desktop";  // phone | desktop
+
+const FRAMES = { phone: 390, desktop: 1440 };
+
+/* ---- local store helpers (degraded path) ---- */
+function lsAll(){ try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}"); } catch { return {}; } }
+function lsFor(m){ return lsAll()[m] || []; }
+function lsPush(m, entry){
+  const all = lsAll();
+  (all[m] = all[m] || []).push(entry);
+  localStorage.setItem(LS_KEY, JSON.stringify(all));
+}
+
+/* ---- build the rail ---- */
+function buildRail(){
+  const rail = document.getElementById("rail");
+  GROUPS.forEach(g => {
+    const grp = document.createElement("div"); grp.className = "group";
+    const h = document.createElement("div"); h.className = "group-h";
+    h.innerHTML = `${g.name} <span class="ct">${g.items.length}</span>`;
+    grp.appendChild(h);
+    g.items.forEach(it => {
+      const row = document.createElement("div");
+      row.className = "item"; row.dataset.file = it.f; row.title = it.f;
+      row.innerHTML =
+        `<span class="dot"></span>` +
+        `<span class="nm">${it.title}</span>` +
+        `<span class="pf ${it.pf}">${it.pf}</span>` +
+        `<span class="fb-ct" data-ct="${it.f}" style="display:none">0</span>`;
+      row.addEventListener("click", () => selectMockup(it.f, it.title));
+      grp.appendChild(row);
+    });
+    rail.appendChild(grp);
+  });
+}
+
+/* ---- select + load a mockup ---- */
+function selectMockup(file, title){
+  current = file;
+  document.querySelectorAll(".rail .item").forEach(el =>
+    el.classList.toggle("active", el.dataset.file === file));
+  document.getElementById("nowTitle").innerHTML =
+    `${title}<small>${file}</small>`;
+  document.getElementById("composer").style.display = "";
+  document.getElementById("panelLede").innerHTML =
+    `Tell the right-hand-man what to change about <b>${title}</b>. Each note is captured as structured feedback tied to <span style="font-family:var(--font-mono);color:var(--acc-deep)">${file}</span>.`;
+  document.getElementById("degradeSlot").innerHTML = "";
+  renderStage();
+  loadThread();
+}
+
+/* ---- render the device stage ---- */
+function renderStage(){
+  const body = document.getElementById("stageBody");
+  if(!current){ return; }
+  body.innerHTML = "";
+  body.style.placeItems = "start center";
+
+  const w = FRAMES[frame];
+  const dev = document.createElement("div");
+  dev.className = "device " + frame;
+
+  const screen = document.createElement("div");
+  screen.className = "screen";
+
+  const iframe = document.createElement("iframe");
+  iframe.id = "stageFrame";
+  // allow the mockup's own JS (steppers/animation) but BLOCK top-navigation,
+  // so a mockup can never replace the studio. allow-scripts runs the iframe's
+  // scripts; omitting allow-top-navigation prevents it escaping the frame.
+  // allow-same-origin keeps localStorage/relative-asset behaviour for the mockups.
+  iframe.setAttribute("sandbox", "allow-scripts allow-same-origin");
+  iframe.src = current;
+
+  if(frame === "phone"){
+    // native width, native scale — phone is already 390
+    screen.style.width = w + "px";
+    iframe.style.width = w + "px";
+    iframe.style.height = "780px";
+  } else {
+    // desktop: render at 1440, scale down to the available stage width
+    const avail = Math.max(360, body.clientWidth - 80); // padding allowance
+    const scale = Math.min(1, avail / w);
+    const h = 900; // logical desktop viewport height
+    iframe.style.width = w + "px";
+    iframe.style.height = h + "px";
+    iframe.style.transform = `scale(${scale})`;
+    // collapse the wrapper to the scaled box so it doesn't overflow
+    screen.style.width = (w * scale) + "px";
+    screen.style.height = (h * scale) + "px";
+  }
+
+  screen.appendChild(iframe);
+  dev.appendChild(screen);
+  body.appendChild(dev);
+}
+
+/* ---- frame toggle ---- */
+document.getElementById("frameSeg").addEventListener("click", e => {
+  const b = e.target.closest("button"); if(!b) return;
+  frame = b.dataset.frame;
+  document.querySelectorAll("#frameSeg button").forEach(x =>
+    x.classList.toggle("on", x === b));
+  if(current) renderStage();
+});
+
+/* ---- reload ---- */
+document.getElementById("reloadBtn").addEventListener("click", () => {
+  const f = document.getElementById("stageFrame");
+  if(f) f.src = f.src;
+});
+
+/* re-scale desktop on window resize */
+let rzT;
+window.addEventListener("resize", () => {
+  clearTimeout(rzT);
+  rzT = setTimeout(() => { if(current && frame === "desktop") renderStage(); }, 120);
+});
+
+/* ---- render a thread (entries: [{element,text,ts,status,...}]) ---- */
+function renderThread(entries, fromLocalSet){
+  const t = document.getElementById("thread");
+  if(!entries.length){
+    t.innerHTML = `<div class="empty">No feedback yet for this mockup.<br>Tell the right-hand-man what to change below — your notes will gather here and get resolved.</div>`;
+    return;
+  }
+  t.innerHTML = "";
+  entries.forEach(e => {
+    const isLocal = e._local || (fromLocalSet && fromLocalSet.has(e.ts));
+    const st = isLocal ? "local" : (e.status || "pending");
+    const stLabel = isLocal ? "local · not yet captured" : st;
+    const card = document.createElement("div");
+    card.className = "fb" + (isLocal ? " local" : "");
+    let when = "";
+    try { when = new Date(e.ts).toLocaleString(); } catch { when = e.ts || ""; }
+    card.innerHTML =
+      `<div class="fb-top"><span class="st ${isLocal ? "local" : st}">${stLabel}</span>` +
+      `<span class="ts">${when}</span></div>` +
+      (e.element ? `<div class="el">${escapeHtml(e.element)}</div>` : "") +
+      `<div class="tx">${escapeHtml(e.text)}</div>`;
+    t.appendChild(card);
+  });
+  t.scrollTop = t.scrollHeight;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+
+/* update the rail feedback count badge */
+function setRailCount(file, n){
+  const b = document.querySelector(`.fb-ct[data-ct="${CSS.escape(file)}"]`);
+  if(b){ b.textContent = n; b.style.display = n > 0 ? "" : "none"; }
+}
+
+/* ---- load the thread for current mockup (GET; degrade to local) ---- */
+async function loadThread(){
+  const file = current;
+  document.getElementById("thread").innerHTML =
+    `<div class="empty">Loading the thread…</div>`;
+  let serverEntries = [];
+  let serverOk = false;
+  try {
+    const r = await fetch(`${API}?mockup=${encodeURIComponent(file)}`, { method:"GET" });
+    if(r.ok){
+      const data = await r.json();
+      serverEntries = (data && data.entries) || [];
+      serverOk = true;
+    }
+  } catch(_){ /* route absent / file:// → fall through to local-only */ }
+
+  // merge: server entries (authoritative) + any local-only entries not yet captured
+  const localEntries = lsFor(file);
+  let merged;
+  if(serverOk){
+    // keep local entries that the server doesn't yet know about (by ts+text)
+    const known = new Set(serverEntries.map(e => e.ts + "|" + e.text));
+    const pendingLocal = localEntries
+      .filter(e => !known.has(e.ts + "|" + e.text))
+      .map(e => ({ ...e, _local:true }));
+    merged = [...serverEntries, ...pendingLocal];
+  } else {
+    merged = localEntries.map(e => ({ ...e, _local:true }));
+  }
+  // sort by ts ascending
+  merged.sort((a,b) => (a.ts < b.ts ? -1 : 1));
+  renderThread(merged);
+  setRailCount(file, merged.length);
+}
+
+/* ---- compose enable/disable ---- */
+const txtIn = document.getElementById("txtIn");
+const sendBtn = document.getElementById("sendBtn");
+txtIn.addEventListener("input", () => { sendBtn.disabled = !txtIn.value.trim(); });
+txtIn.addEventListener("keydown", e => {
+  if((e.metaKey || e.ctrlKey) && e.key === "Enter" && txtIn.value.trim()) submitFeedback();
+});
+
+/* ---- submit feedback (POST; degrade to local on ANY failure) ---- */
+document.getElementById("sendBtn").addEventListener("click", submitFeedback);
+
+async function submitFeedback(){
+  if(!current) return;
+  const text = txtIn.value.trim();
+  if(!text) return;
+  const element = document.getElementById("elIn").value.trim() || null;
+  const payload = { mockup: current, element, text, ts: new Date().toISOString() };
+
+  sendBtn.disabled = true;
+
+  let captured = false;
+  try {
+    const r = await fetch(API, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(payload)
+    });
+    if(r.ok){ captured = true; }      // 2xx → backend captured it
+    // non-2xx (e.g. 404) is treated as NOT captured → degrade
+  } catch(_){ /* throw (file:// / connection refused / CORS) → degrade */ }
+
+  if(captured){
+    // happy path: clear composer, reload the authoritative thread
+    txtIn.value = ""; document.getElementById("elIn").value = "";
+    sendBtn.disabled = true;
+    document.getElementById("degradeSlot").innerHTML = "";
+    loadThread();
+  } else {
+    // degraded path: store locally, optimistic-append, show contract + copy-paste
+    lsPush(current, payload);
+    txtIn.value = ""; document.getElementById("elIn").value = "";
+    showDegraded(payload);
+    loadThread();
+  }
+}
+
+/* ---- the degraded copy-paste + contract block ---- */
+function showDegraded(payload){
+  const slot = document.getElementById("degradeSlot");
+  const json = JSON.stringify(payload, null, 2);
+  slot.innerHTML =
+    `<div class="degraded">
+       <div class="dh">⚠ captured locally — backend route not wired</div>
+       <div class="body">The feedback route isn't responding (running standalone, or
+         <code style="color:var(--gold-hi)">POST ${API}</code> isn't served yet). Your note is saved
+         in this browser and shown in the thread. The durable capture is a file the lead wires:
+         <code style="color:var(--gold-hi)">design/mockups/.feedback/${escapeHtml(payload.mockup)}.jsonl</code>.
+         Here is the exact structured entry:</div>
+       <pre id="degradeJson">${escapeHtml(json)}</pre>
+       <button class="copy" id="copyBtn">⧉ Copy JSON</button>
+     </div>`;
+  document.getElementById("copyBtn").addEventListener("click", () => {
+    const btn = document.getElementById("copyBtn");
+    const done = () => { btn.textContent = "✓ Copied"; setTimeout(() => btn.textContent = "⧉ Copy JSON", 1400); };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(json).then(done, () => fallbackCopy(json, done));
+    } else { fallbackCopy(json, done); }
+  });
+}
+function fallbackCopy(text, done){
+  const ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); done(); } catch(_){}
+  document.body.removeChild(ta);
+}
+
+/* ---- boot ---- */
+buildRail();
+// preselect the aesthetic reference so the studio opens populated
+selectMockup("SCENARIO-PLAYER.html", "Scenario player — RHM presence (interactive)");
+</script>
+</body>
+</html>

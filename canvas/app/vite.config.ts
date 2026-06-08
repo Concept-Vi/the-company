@@ -12,6 +12,12 @@ export default defineConfig({
     port: Number(process.env.VITE_DEV_PORT) || 5173,
     // Allow the device to reach the dev server over Tailscale HTTPS (tailnet-only; phone access).
     allowedHosts: ['.tail777bc2.ts.net'],
-    proxy: { '/api': process.env.VITE_API_TARGET || 'http://localhost:8770' },
+    // /api = the Suite face; /mockups + /design-system.css = the bridge's static review-corpus serving
+    // (the Review workspace's iframe stages mockups same-origin via the bridge). Same target as /api.
+    proxy: {
+      '/api': process.env.VITE_API_TARGET || 'http://localhost:8770',
+      '/mockups': process.env.VITE_API_TARGET || 'http://localhost:8770',
+      '/design-system.css': process.env.VITE_API_TARGET || 'http://localhost:8770',
+    },
   },
 })

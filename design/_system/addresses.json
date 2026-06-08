@@ -677,6 +677,94 @@
       "represents": "COGNITION",
       "code": "canvas/app/src/regions/CognitionView.tsx (river)",
       "howto": "WHAT: the River — altitude 1 of the Cognition view, the per-role tributaries of a staged turn (each role a channel whose width is its contribution — the worn-channel/budget=attention shape; a failed role reads as a loud silted gap). This is the STATIC fallback address; a LIVE turn carries its own run:// turn address (turn.address) as the data-ui-ref, so the River addresses the actual turn when one is flowing. WHAT YOU CAN DO: read which roles fired and how much each shaped the reply, by sight. reflects-never-owns — it mirrors the cognition.* lifecycle; it never drives cognition. HOW TO CHANGE IT: the River is part of the CognitionView region; what it renders FROM is the live turn frame (foldCognition) + the cognition_info projection; changing it is a code change there, surfaced via the build-intent wire."
+    },
+    "ui://studio": {
+      "region": "studio",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "STUDIO-review",
+      "code": "canvas/app/src/regions/Review.tsx (studio) / runtime/bridge.py:_corpus_index",
+      "howto": "WHAT: the studio — the design-review surface (a Rail gallery, a device Stage, a right-hand-man RhmPanel) where you review the design mockups with the real right-hand-man. WHAT YOU CAN DO: pick a mockup from the rail to load it in the stage; ask the right-hand-man what you are looking at and what to do (it reads the surface at its locus); comment on a surface or request a change. HOW TO CHANGE IT: the surface is composed from named primitives (components/StudioKit.tsx); its look is filled by Claude Design via the --studio-* token-slots; its seams are declared in components/StudioSeams.ts."
+    },
+    "ui://studio/rail": {
+      "region": "studio",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "STUDIO-gallery",
+      "code": "canvas/app/src/components/StudioKit.tsx (Rail) / runtime/bridge.py:_corpus_index",
+      "howto": "WHAT: the gallery rail — the corpus of reviewable mockups, grouped, bound from the live corpus index (registry-is-truth, never a hardcoded list). WHAT YOU CAN DO: click a card to indicate that surface's locus and load it in the stage (a click INDICATES, it never runs anything). HOW TO CHANGE IT: the corpus is the mockup files on disk (design/mockups/) joined to curated meta in runtime/bridge.py:_CORPUS_META."
+    },
+    "ui://studio/stage": {
+      "region": "studio",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "STUDIO-stage",
+      "code": "canvas/app/src/components/StudioKit.tsx (Stage)",
+      "howto": "WHAT: the device stage — the chosen mockup rendered in a sandboxed iframe, at phone (390) or desktop (1440) width. WHAT YOU CAN DO: toggle the device width; the stage reflects the open mockup (a pure view, it holds no state). HOW TO CHANGE IT: the stage is structure-only; its frame styling is filled by Claude Design via the --studio-stage-* token-slots."
+    },
+    "ui://studio/stage/device-desktop": {
+      "region": "studio",
+      "capabilities": [
+        "pointable",
+        "openable"
+      ],
+      "represents": "STUDIO-stage",
+      "code": "canvas/app/src/components/StudioKit.tsx (Stage device toggle)",
+      "howto": "WHAT: the desktop-width device toggle for the stage. WHAT YOU CAN DO: click to render the open mockup at desktop width (1440). HOW TO CHANGE IT: a local presentation control in the Stage primitive (no backend write)."
+    },
+    "ui://studio/stage/device-phone": {
+      "region": "studio",
+      "capabilities": [
+        "pointable",
+        "openable"
+      ],
+      "represents": "STUDIO-stage",
+      "code": "canvas/app/src/components/StudioKit.tsx (Stage device toggle)",
+      "howto": "WHAT: the phone-width device toggle for the stage. WHAT YOU CAN DO: click to render the open mockup at phone width (390). HOW TO CHANGE IT: a local presentation control in the Stage primitive (no backend write)."
+    },
+    "ui://studio/composer": {
+      "region": "studio",
+      "capabilities": [
+        "pointable",
+        "openable"
+      ],
+      "represents": "STUDIO-feedback",
+      "code": "canvas/app/src/components/StudioKit.tsx (Composer) / runtime/suite.py:annotate / runtime/bridge.py:surface_intent_at",
+      "howto": "WHAT: the addressed-feedback composer — comment on the pointed surface, or request a change. WHAT YOU CAN DO: with a surface indicated, type a comment (it attaches at the locus in the SHARED annotation store, read back inline) or describe a change (it mints a build-intent in plan-mode, which you approve the reach of later). It NEVER executes — comment attaches, request mints a plan. HOW TO CHANGE IT: comment posts via /api/annotate (annotate), request posts via /api/intent-at (surface_intent_at); the look is filled via --studio-composer-* token-slots."
+    },
+    "ui://studio/rhm": {
+      "region": "studio",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "RHM-modes",
+      "code": "canvas/app/src/components/StudioKit.tsx (RhmPanel) / canvas/app/src/regions/RhmChat.tsx / runtime/suite.py:chat",
+      "howto": "WHAT: the right-hand-man panel — the REAL conversational organ (same brain, persona, threads as the canvas), bound to the indicated surface's locus. WHAT YOU CAN DO: ask what you are looking at and what to do; it reads the surface at its locus and explains at your altitude; it PROPOSES actions which you approve (it never acts on a bare click). HOW TO CHANGE IT: it reuses the chat organ (/api/chat with focus={selected:[ui://…]}); the look is filled via --studio-rhm-* token-slots."
+    },
+    "ui://studio/rhm/help": {
+      "region": "studio",
+      "capabilities": [
+        "presentable"
+      ],
+      "represents": "REPO-knowledge",
+      "code": "canvas/app/src/components/StudioKit.tsx (RhmPanel help) / runtime/suite.py:address_help",
+      "howto": "WHAT: the locus help strip — what the pointed surface IS and what a change here would touch (the composed address-help). WHAT YOU CAN DO: read what the surface represents and how many files a change would reach. HOW TO CHANGE IT: it reflects the address-help bundle (/api/address-help → address_help/resolve_scope); read-only."
+    },
+    "ui://view-switch": {
+      "region": "chrome",
+      "capabilities": [
+        "pointable",
+        "openable"
+      ],
+      "represents": "VIEW-switch",
+      "code": "canvas/app/src/App.tsx (Hud view-switch chip)",
+      "howto": "WHAT: the top-level view switch — toggles the app between the operating CANVAS and the design-REVIEW workspace (both share the one AppContext, the same right-hand-man). WHAT YOU CAN DO: click 'canvas' for the tldraw operating surface, 'review' for the mockup-studio surface. HOW TO CHANGE IT: the switch is a single `view` state in App.tsx Hud; it has no backend — it picks which workspace renders."
     }
   }
 }

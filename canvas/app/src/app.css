@@ -1380,3 +1380,172 @@ button.set-pill:hover{border-color:var(--sig);color:var(--ink)}
   .settings-navblurb{display:none}
   .set-persona-grid,.set-engines,.set-paths,.set-knobs{grid-template-columns:1fr}
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   REVIEW WORKSPACE — the mockup-studio organ folded into the main app (Tim 2026-06-08).
+   Three columns: gallery rail · device stage · the REAL right-hand-man. On the corpus tokens.
+   ════════════════════════════════════════════════════════════════════════ */
+.view-switch{position:fixed;top:var(--sp-2);left:var(--sp-2);z-index:60;display:flex;gap:2px;
+  background:var(--s1);border:1px solid var(--line);border-radius:var(--r-pill);padding:3px;
+  box-shadow:var(--elev-1)}
+.view-switch button{font:var(--fs-meta)/1 var(--font-mono);color:var(--dim);background:transparent;
+  border:none;border-radius:var(--r-pill);padding:5px 12px;cursor:pointer;letter-spacing:.04em}
+.view-switch button.on{color:var(--ink-accent);background:var(--acc)}
+.view-switch button:not(.on):hover{color:var(--ink)}
+
+.review-shell{position:fixed;inset:0;z-index:40;display:grid;
+  grid-template-columns:300px 1fr 380px;background:var(--bg);color:var(--ink);overflow:hidden}
+
+/* GALLERY RAIL */
+.review-rail{border-right:1px solid var(--line);overflow-y:auto;padding:var(--sp-3) 0;
+  padding-top:calc(var(--sp-3) + 40px)}   /* clear the view-switch chip */
+.review-rail-head{font:var(--fs-tag)/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--acc-deep);padding:0 var(--sp-3) var(--sp-2)}
+.review-group{margin-bottom:var(--sp-2)}
+.review-group-h{font:var(--fs-micro)/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--dim);padding:var(--sp-2) var(--sp-3) 4px}
+.review-item{display:flex;align-items:center;gap:8px;padding:7px var(--sp-3);cursor:pointer;
+  font:var(--fs-body)/1.2 var(--font-sans);color:var(--tx-2);border-left:2px solid transparent}
+.review-item:hover{background:var(--s1);color:var(--ink)}
+.review-item.active{background:var(--acc-glow);color:var(--ink);border-left-color:var(--acc)}
+.review-dot{width:6px;height:6px;border-radius:50%;background:var(--line-2);flex:none}
+.review-item.active .review-dot{background:var(--acc)}
+.review-nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.review-pf{font:var(--fs-micro)/1 var(--font-mono);padding:2px 6px;border-radius:var(--r-sm);
+  color:var(--dim);border:1px solid var(--line)}
+.review-pf.mobile{color:var(--kind-content)}
+.review-pf.tool{color:var(--kind-model)}
+
+/* DEVICE STAGE */
+.review-stage{display:flex;flex-direction:column;overflow:hidden;background:var(--s0)}
+.review-stage-head{font:var(--fs-body)/1.2 var(--font-display);color:var(--ink);
+  padding:var(--sp-3);border-bottom:1px solid var(--line);flex:none}
+.review-stage-head .muted{font-family:var(--font-mono);font-size:var(--fs-meta);color:var(--acc-deep)}
+.review-stage-body{flex:1;overflow:auto;display:flex;justify-content:center;padding:var(--sp-3)}
+.review-frame{width:100%;max-width:1440px;height:100%;min-height:760px;border:1px solid var(--line);
+  border-radius:var(--r);background:#fff}
+
+/* RIGHT-HAND-MAN COLUMN — wraps the real <RhmChat/> */
+.review-rhm{border-left:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden;
+  background:var(--panel)}
+.review-rhm-lede{font:var(--fs-meta)/1.5 var(--font-sans);color:var(--tx-2);padding:var(--sp-3);
+  border-bottom:1px solid var(--line);flex:none}
+.review-rhm-lede b{color:var(--gold-hi);font-weight:600}
+/* the mounted RhmChat fills the rest of the column (its own .rhm is normally absolutely placed on the
+   canvas; in here we let it flow in the column). */
+.review-rhm .rhm{position:static;inset:auto;width:auto;height:auto;flex:1;display:flex;
+  flex-direction:column;min-height:0;border:none;box-shadow:none;background:transparent}
+.review-rhm .rhm-log{flex:1;min-height:0}
+
+@media (max-width:980px){
+  .review-shell{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .review-rail{display:none}   /* phone: stage + rhm; rail collapses (corpus bottom-sheet pattern is a later pass) */
+  .review-rhm{border-left:none;border-top:1px solid var(--line)}
+}
+
+/* ════════════════════════════════════════════════════════════════════════════════════════════════════
+   THE STUDIO — layer ④ TOKEN-SLOTS + neutral STRUCTURAL defaults (the Application-Structure Pack).
+
+   This is the styling INTERFACE Claude Design fills. Every studio look-value is read from a --studio-*
+   CSS variable declared HERE with a NEUTRAL default (mapped to a sensible system token so the scaffold is
+   legible out of the box — NOT a bespoke aesthetic, NOT a gold-look). Claude Design REDEFINES these
+   variables (its design system drops into these slots); the STRUCTURE (the grid, the flex, what-goes-where)
+   never moves. Reskinning the studio = redefining --studio-* ; the layout is untouched. The clean membrane
+   between MINE (structure) and YOURS (look) is exactly this variable list.
+   ──────────────────────────────────────────────────────────────────────────────────────────────────── */
+.studio-shell{
+  /* THE TOKEN-SLOT CONTRACT — the named styling interface (neutral defaults; Claude Design owns the values) */
+  --studio-bg: var(--bg);
+  --studio-gap: 0;
+  --studio-rail-w: 300px;
+  --studio-rail-bg: transparent;
+  --studio-rail-pad: var(--sp-3);
+  --studio-group-label-color: var(--dim);
+  --studio-card-bg: transparent;
+  --studio-card-border: var(--line);
+  --studio-card-radius: var(--r-sm);
+  --studio-card-pad: 7px var(--sp-3);
+  --studio-card-active-accent: var(--acc, currentColor);
+  --studio-stage-bg: var(--s0);
+  --studio-stage-pad: var(--sp-3);
+  --studio-stage-frame-shadow: none;
+  --studio-stage-phone-w: 390px;
+  --studio-stage-desktop-w: 1440px;
+  --studio-rhm-w: 380px;
+  --studio-rhm-bg: var(--panel);
+  --studio-rhm-help-bg: var(--s1);
+  --studio-rhm-lede-color: var(--tx-2);
+  --studio-composer-bg: var(--s1);
+  --studio-composer-input-border: var(--line);
+  --studio-composer-thread-gap: 6px;
+
+  /* STRUCTURE (the skeleton — [ Rail │ Stage │ RhmPanel ]; this does not move when the look changes) */
+  position:fixed; inset:0; z-index:40; display:grid;
+  grid-template-columns: var(--studio-rail-w) 1fr var(--studio-rhm-w);
+  gap: var(--studio-gap);
+  background: var(--studio-bg); color: var(--ink); overflow:hidden;
+}
+
+/* ① RAIL */
+.studio-rail{background:var(--studio-rail-bg);border-right:1px solid var(--studio-card-border);
+  overflow-y:auto;padding:var(--studio-rail-pad) 0;padding-top:calc(var(--studio-rail-pad) + 40px)}
+.studio-group{margin-bottom:var(--sp-2)}
+.studio-group-label{font:var(--fs-micro)/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--studio-group-label-color);padding:var(--sp-2) var(--studio-rail-pad) 4px}
+/* the Card composes the kit <Surface>; these are STRUCTURAL layout rules, the look rides the kit + slots */
+.studio-card{display:flex;flex-direction:column;gap:2px;margin:0 var(--sp-2) 4px;
+  padding:var(--studio-card-pad);border-radius:var(--studio-card-radius);cursor:pointer}
+.studio-card.is-active{border-left:2px solid var(--studio-card-active-accent)}
+.studio-card-title{font:var(--fs-body)/1.2 var(--font-sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.studio-card-meta{display:flex;align-items:center;gap:6px}
+.studio-card-addr{font:var(--fs-micro)/1 var(--font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ② STAGE */
+.studio-stage{display:flex;flex-direction:column;overflow:hidden;background:var(--studio-stage-bg)}
+.studio-stage-head{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);
+  padding:var(--studio-stage-pad);border-bottom:1px solid var(--studio-card-border);flex:none}
+.studio-stage-title{font:var(--fs-body)/1.2 var(--font-display);color:var(--ink)}
+.studio-stage-title .muted{font-family:var(--font-mono);font-size:var(--fs-meta)}
+.studio-stage-tools{display:flex;align-items:center;gap:6px}
+.studio-dev{font:var(--fs-micro)/1 var(--font-mono);padding:3px 8px;border-radius:var(--r-sm);
+  border:1px solid var(--studio-card-border);background:transparent;color:var(--tx-2);cursor:pointer}
+.studio-dev.on{border-color:var(--studio-card-active-accent);color:var(--ink)}
+.studio-stage-body{flex:1;overflow:auto;display:flex;justify-content:center;padding:var(--studio-stage-pad)}
+.studio-frame{height:100%;min-height:760px;border:1px solid var(--studio-card-border);
+  border-radius:var(--r);background:#fff;box-shadow:var(--studio-stage-frame-shadow)}
+.studio-stage-body.dev-desktop .studio-frame{width:100%;max-width:var(--studio-stage-desktop-w)}
+.studio-stage-body.dev-phone .studio-frame{width:var(--studio-stage-phone-w);max-width:var(--studio-stage-phone-w);min-height:740px}
+
+/* ③ RHM-PANEL — wraps the real <RhmChat/> + the locus help + the Composer */
+.studio-rhm{background:var(--studio-rhm-bg);border-left:1px solid var(--studio-card-border);
+  display:flex;flex-direction:column;overflow:hidden}
+.studio-rhm-lede{font:var(--fs-meta)/1.5 var(--font-sans);color:var(--studio-rhm-lede-color);
+  padding:var(--studio-stage-pad);border-bottom:1px solid var(--studio-card-border);flex:none}
+.studio-rhm-help{background:var(--studio-rhm-help-bg);padding:var(--sp-2) var(--studio-stage-pad);
+  border-bottom:1px solid var(--studio-card-border);flex:none;font:var(--fs-meta)/1.4 var(--font-sans)}
+.studio-help-change{font-family:var(--font-mono);font-size:var(--fs-micro);margin-top:3px}
+/* let the mounted RhmChat flow in the column (it is normally absolutely-placed over the canvas) */
+.studio-rhm .rhm{position:static;inset:auto;width:auto;height:auto;flex:1;display:flex;
+  flex-direction:column;min-height:0;border:none;box-shadow:none;background:transparent}
+.studio-rhm .rhm-log{flex:1;min-height:0}
+
+/* ③b COMPOSER — the addressed-feedback input (comment-at-locus + request-a-change) */
+.studio-composer{background:var(--studio-composer-bg);border-top:1px solid var(--studio-card-border);
+  padding:var(--sp-2) var(--studio-stage-pad);flex:none;display:flex;flex-direction:column;gap:6px}
+.studio-composer-locus{font:var(--fs-micro)/1.3 var(--font-mono);color:var(--tx-2)}
+.studio-composer-thread{display:flex;flex-direction:column;gap:var(--studio-composer-thread-gap);
+  max-height:140px;overflow-y:auto}
+.studio-comment{display:flex;flex-direction:column;gap:1px;font:var(--fs-meta)/1.4 var(--font-sans)}
+.studio-comment-src{font-family:var(--font-mono);font-size:var(--fs-micro)}
+.studio-composer-input{width:100%;resize:vertical;border:1px solid var(--studio-composer-input-border);
+  border-radius:var(--r-sm);background:var(--s0);color:var(--ink);padding:6px 8px;font:var(--fs-body)/1.4 var(--font-sans)}
+.studio-composer-actions{display:flex;gap:6px}
+.studio-act{font:var(--fs-meta)/1 var(--font-sans);padding:5px 10px;border-radius:var(--r-sm);
+  border:1px solid var(--studio-card-border);background:transparent;color:var(--ink);cursor:pointer}
+.studio-act:disabled{opacity:.45;cursor:not-allowed}
+
+@media (max-width:980px){
+  .studio-shell{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  .studio-rail{display:none}   /* phone: stage + rhm-panel; rail collapses (a bottom-sheet corpus picker is a later design pass) */
+  .studio-rhm{border-left:none;border-top:1px solid var(--studio-card-border)}
+}

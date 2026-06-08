@@ -1,0 +1,263 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Settings — elevated · the control surface, less form / more instrument</title>
+<!--
+  ============================================================
+  TARGET MOCKUP (exploration lane · NOT a corpus addition · NOT registered)
+  SURFACE  Consolidated Settings — re-imagined as an INSTRUMENT, not form-rows
+  ELEVATES FROM  canvas/app/src/regions/Settings.tsx (the A3 consolidated surface)
+  DIRECTION  "Living Instrument" — Tim's exact complaint is "form-row after form-row".
+             This answers it: the brain is a glowing slot you SET, the cast is faces
+             you pick, the fit bar is a single legible meter you read by SHAPE, modes
+             are presence cards, voice is the ear+mouth+circuit shown as state-by-light.
+             Fraunces display headings, IBM Plex Mono instrument body, aurora depth,
+             staggered reveal, advanced knobs FOLD AWAY (progressive disclosure).
+  ------------------------------------------------------------
+  NO FICTION — every control traces to Settings.tsx:
+    · section rail              Brain · Modes · Voice · Roles · Composition          Settings:41-47
+    · resource fit bar          segmented GPU meter + honest verdict (fits / won't)   Settings:115-151
+    · brain model slot          load-on-pick (a local model cold-loads)               Settings:170-180
+    · brain knobs               temperature · max tokens · context window · endpoint  Settings:181-210  (FOLDED)
+    · persona cast              switch persona (cold-loads voice) · engine            Settings:213-231
+    · modes                     directive + context-resolution + consent · switch     Settings:266-300
+    · mode auto-detect          off / suggest / auto (live-settable)                  Settings:247-262
+    · voice                     voice on/off · listening style 🎙/👂 · ear up/down    Settings:329-364
+    · model is a config SLOT, NOT a node kind. No node statuses depicted here.
+  Palette + type = REAL tokens (hexes + the exact Google Fonts link from tokens.json).
+  ============================================================
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080a0d; --s0:#0d1116; --s1:#12171d; --s2:#171e25; --s3:#1d262e;
+  --line:#232c35; --line-2:#2c3742;
+  --tx:#e8eef4; --tx-2:#9aa7b4; --tx-3:#5e6b78;
+  --acc:#54d6b0; --acc-dim:#2c6b5c; --acc-glow:rgba(84,214,176,.14); --acc-deep:#3fb595;
+  --await:#e6ab5c; --fail:#ec6a5e; --cache:#6b8aa8;
+  --ink-accent:#06140f; --ink-await:#1a1205;
+  --kind-content:#6b9bd8; --kind-model:#b58cdc;
+  --font-display:'Fraunces',Georgia,serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',monospace;
+  --font-sans:'IBM Plex Sans',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:#05070a; color:var(--tx); font-family:var(--font-sans); letter-spacing:.1px;
+  min-height:100vh; display:grid; place-items:center; padding:34px 20px;
+}
+/* the living field behind the modal — the surface is inhabited, not a flat scrim */
+body::before{content:"";position:fixed;inset:-30%;z-index:0;filter:blur(80px);opacity:.5;
+  background:
+    radial-gradient(34% 30% at 22% 24%, rgba(84,214,176,.22), transparent 70%),
+    radial-gradient(40% 34% at 84% 18%, rgba(107,155,216,.16), transparent 72%),
+    radial-gradient(46% 40% at 70% 90%, rgba(181,140,220,.12), transparent 70%);
+  animation:drift 30s ease-in-out infinite alternate}
+@keyframes drift{0%{transform:translate3d(0,0,0) scale(1)}100%{transform:translate3d(26px,-18px,0) scale(1.07)}}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z-index:999;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* ─── THE PANEL ─── */
+.panel{position:relative;z-index:1;width:1040px;max-width:100%;height:712px;display:flex;flex-direction:column;
+  background:linear-gradient(168deg,rgba(20,26,33,.92),rgba(11,15,20,.96));
+  border:1px solid var(--line-2);border-radius:22px;overflow:hidden;
+  box-shadow:0 60px 140px -40px #000, inset 0 1px 0 rgba(255,255,255,.04);
+  backdrop-filter:blur(20px);animation:rise .7s cubic-bezier(.2,.8,.2,1) both}
+
+/* ── masthead ── */
+.masthead{display:flex;align-items:flex-end;gap:14px;padding:24px 30px 18px;border-bottom:1px solid var(--line)}
+.masthead .tag{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin-bottom:6px}
+.masthead h1{font-family:var(--font-display);font-weight:500;font-size:34px;letter-spacing:-.5px;line-height:.95}
+.masthead .close{margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--tx-2);
+  border:1px solid var(--line-2);background:var(--s2);border-radius:9px;padding:8px 13px;cursor:pointer}
+
+.body{flex:1;display:grid;grid-template-columns:218px 1fr;overflow:hidden}
+
+/* ── SECTION RAIL — navigable by sight (icon + name, the active one lit) ── */
+.rail{padding:18px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:5px;overflow:auto}
+.navitem{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;cursor:pointer;
+  border:1px solid transparent;color:var(--tx-2);text-align:left;background:none;animation:rise .5s both}
+.navitem:nth-child(1){animation-delay:.04s}.navitem:nth-child(2){animation-delay:.08s}
+.navitem:nth-child(3){animation-delay:.12s}.navitem:nth-child(4){animation-delay:.16s}.navitem:nth-child(5){animation-delay:.2s}
+.navitem .ico{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:15px;
+  background:var(--s2);border:1px solid var(--line);color:var(--tx-2);flex:none}
+.navitem .nm{font-family:var(--font-mono);font-size:12px;letter-spacing:.02em}
+.navitem .bl{display:block;font-family:var(--font-sans);font-size:9.5px;color:var(--tx-3);margin-top:2px;line-height:1.3}
+.navitem.on{background:linear-gradient(165deg,rgba(84,214,176,.12),rgba(84,214,176,.03));border-color:var(--acc-dim);color:var(--tx)}
+.navitem.on .ico{background:rgba(84,214,176,.14);border-color:transparent;color:var(--acc);box-shadow:0 0 14px -4px var(--acc-glow)}
+
+/* ── CONTENT ── */
+.content{padding:22px 30px 30px;overflow:auto}
+.shead{display:flex;align-items:baseline;gap:12px;margin:24px 0 14px}
+.shead:first-of-type{margin-top:0}
+.shead .stag{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx-3)}
+.shead h2{font-family:var(--font-display);font-weight:500;font-size:22px;letter-spacing:-.3px}
+.shead .badge{margin-left:auto;font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 9px;border-radius:99px;border:1px solid var(--line-2);color:var(--tx-2);background:var(--s2)}
+.badge.sig{color:var(--acc);border-color:var(--acc-dim);background:rgba(84,214,176,.08)}
+
+/* ── THE FIT METER — read by SHAPE, one honest verdict (not a wall of numbers) ── */
+.fit{background:linear-gradient(165deg,var(--s2),var(--s1));border:1px solid var(--acc-dim);border-radius:16px;padding:18px 20px;
+  box-shadow:0 0 0 1px rgba(84,214,176,.05), 0 20px 50px -30px #000}
+.fit .ftop{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:13px}
+.fit .fttl{font-family:var(--font-display);font-size:17px}
+.fit .fverdict{font-family:var(--font-mono);font-size:10px;color:var(--acc);letter-spacing:.06em}
+.fit .fverdict b{color:var(--tx)}
+.meter{height:16px;border-radius:99px;background:var(--s0);border:1px solid var(--line);display:flex;overflow:hidden;
+  box-shadow:inset 0 2px 6px -2px #000}
+.meter span{display:flex;align-items:center;padding-left:9px;font-family:var(--font-mono);font-size:8.5px;
+  color:var(--ink-accent);font-weight:600;white-space:nowrap;overflow:hidden}
+.seg-brain{background:linear-gradient(180deg,var(--acc),var(--acc-deep))}
+.seg-voice{background:linear-gradient(180deg,var(--kind-content),#4a76ab);color:#fff}
+.seg-embed{background:linear-gradient(180deg,var(--kind-model),#8a5fbf);color:#fff}
+.seg-free{flex:1;background:repeating-linear-gradient(135deg,transparent,transparent 5px,rgba(94,107,120,.12) 5px,rgba(94,107,120,.12) 10px)}
+.fit .fline{font-family:var(--font-mono);font-size:10px;color:var(--tx-3);margin-top:11px}
+.fit .fline b{color:var(--tx-2)}
+
+/* ── THE BRAIN SLOT — a glowing instrument, not a <select> row ── */
+.brainslot{display:flex;align-items:center;gap:16px;margin-top:16px;
+  background:linear-gradient(165deg,var(--s2),var(--s1));border:1px solid var(--line-2);border-radius:16px;padding:16px 18px;
+  position:relative;overflow:hidden}
+.brainslot::before{content:"";position:absolute;left:-30%;top:-60%;width:60%;height:220%;
+  background:radial-gradient(circle,var(--acc-glow),transparent 70%);filter:blur(20px)}
+.brainslot .core{width:52px;height:52px;border-radius:50%;flex:none;z-index:1;
+  background:radial-gradient(circle at 38% 34%,rgba(255,255,255,.5),transparent 42%),radial-gradient(circle at 50% 50%,var(--acc),#1c8e74 78%);
+  box-shadow:0 0 26px -4px var(--acc-glow), inset 0 0 18px -4px rgba(255,255,255,.3);
+  animation:breathe 3.6s ease-in-out infinite;display:grid;place-items:center;font-size:20px;color:var(--ink-accent)}
+.brainslot .meta{z-index:1;flex:1}
+.brainslot .lbl{font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx-3)}
+.brainslot .mdl{font-family:var(--font-display);font-size:21px;letter-spacing:-.3px;margin:2px 0 4px}
+.brainslot .sub{font-family:var(--font-mono);font-size:10px;color:var(--acc)}
+.brainslot .swap{z-index:1;font-family:var(--font-mono);font-size:11px;color:var(--tx-2);
+  border:1px solid var(--line-2);background:var(--s3);border-radius:10px;padding:9px 14px;cursor:pointer}
+@keyframes breathe{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.05);filter:brightness(1.14)}}
+
+/* ── ADVANCED KNOBS — FOLD AWAY (progressive disclosure: the answer to "form-row after form-row") ── */
+.fold{margin-top:12px;border:1px solid var(--line);border-radius:14px;background:rgba(13,17,22,.5);overflow:hidden}
+.fold summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:13px 16px;
+  font-family:var(--font-mono);font-size:11px;color:var(--tx-2);letter-spacing:.04em}
+.fold summary::-webkit-details-marker{display:none}
+.fold summary .chev{margin-left:auto;color:var(--tx-3);transition:transform .25s}
+.fold[open] summary .chev{transform:rotate(90deg)}
+.fold summary:hover{color:var(--tx)}
+.knobs{padding:4px 16px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
+.knob{display:flex;flex-direction:column;gap:4px}
+.knob .kl{font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx-3)}
+.knob .kv{font-family:var(--font-mono);font-size:13px;color:var(--tx);background:var(--s2);border:1px solid var(--line);
+  border-radius:8px;padding:8px 11px;display:flex;justify-content:space-between;align-items:center}
+.knob .kv .u{color:var(--tx-3);font-size:10px}
+
+/* ── THE CAST — faces you pick, not a list (persona switch) ── */
+.cast{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:6px}
+.face{background:linear-gradient(165deg,var(--s2),var(--s1));border:1px solid var(--line-2);border-radius:16px;padding:15px;
+  cursor:pointer;position:relative;overflow:hidden;transition:transform .2s,border-color .2s;animation:rise .5s both}
+.face:nth-child(2){animation-delay:.06s}.face:nth-child(3){animation-delay:.12s}
+.face:hover{transform:translateY(-3px);border-color:var(--line-2)}
+.face .av{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-family:var(--font-display);
+  font-size:20px;color:var(--ink-accent);margin-bottom:11px}
+.face .nm{font-family:var(--font-display);font-size:17px;letter-spacing:-.2px}
+.face .sh{font-family:var(--font-sans);font-size:11px;color:var(--tx-2);margin:3px 0 8px;line-height:1.35}
+.face .eng{font-family:var(--font-mono);font-size:9px;letter-spacing:.06em;color:var(--tx-3)}
+.face.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc-glow),0 18px 44px -26px #000}
+.face.on::after{content:"active";position:absolute;top:13px;right:13px;font-family:var(--font-mono);font-size:8px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--acc);background:rgba(84,214,176,.1);
+  border:1px solid var(--acc-dim);border-radius:99px;padding:3px 8px}
+.face.p1 .av{background:linear-gradient(150deg,var(--acc),var(--acc-deep))}
+.face.p2 .av{background:linear-gradient(150deg,var(--kind-content),#4a76ab);color:#fff}
+.face.p3 .av{background:linear-gradient(150deg,var(--kind-model),#8a5fbf);color:#fff}
+
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+</style></head>
+<body>
+<div class="panel">
+  <!-- masthead -->
+  <div class="masthead">
+    <div>
+      <div class="tag">the company · control</div>
+      <h1>Settings</h1>
+    </div>
+    <button class="close">✕ close</button>
+  </div>
+
+  <div class="body">
+    <!-- SECTION RAIL — recognition by sight -->
+    <nav class="rail">
+      <button class="navitem on"><span class="ico">◈</span><span><span class="nm">Brain &amp; persona</span><span class="bl">the model that thinks · the voice · the fit</span></span></button>
+      <button class="navitem"><span class="ico">◐</span><span><span class="nm">Modes</span><span class="bl">presence + how context resolves</span></span></button>
+      <button class="navitem"><span class="ico">🎙</span><span><span class="nm">Voice</span><span class="bl">the ear, the engine, the path</span></span></button>
+      <button class="navitem"><span class="ico">⚖</span><span><span class="nm">Model roles</span><span class="bl">the model-function bindings</span></span></button>
+      <button class="navitem"><span class="ico">⚙</span><span><span class="nm">Composition</span><span class="bl">the context-ranking knobs</span></span></button>
+    </nav>
+
+    <!-- CONTENT — Brain section, re-imagined -->
+    <div class="content">
+
+      <!-- THE FIT METER — one legible meter + an honest verdict -->
+      <div class="shead"><span class="stag">resource fit</span><h2>The card</h2><span class="badge sig">fits the card</span></div>
+      <div class="fit">
+        <div class="ftop">
+          <span class="fttl">16 GB · RTX 4080</span>
+          <span class="fverdict"><b>11.4 GB</b> of 16.0 GB committed</span>
+        </div>
+        <div class="meter">
+          <span class="seg-brain" style="width:46%">brain</span>
+          <span class="seg-voice" style="width:18%">voice</span>
+          <span class="seg-embed" style="width:7%"></span>
+          <span class="seg-free"></span>
+        </div>
+        <div class="fline">brain <b>7.3 GB</b> &nbsp;+&nbsp; voice <b>2.9 GB</b> &nbsp;+&nbsp; embed <b>1.2 GB</b> &nbsp;=&nbsp; <b>11.4 GB</b> · 4.6 GB free</div>
+      </div>
+
+      <!-- THE BRAIN SLOT — a glowing core, load-on-pick -->
+      <div class="shead"><span class="stag">conscious role</span><h2>The brain</h2></div>
+      <div class="brainslot">
+        <div class="core">◈</div>
+        <div class="meta">
+          <div class="lbl">model · thinks with</div>
+          <div class="mdl">deepseek-v4-pro</div>
+          <div class="sub">● local · loaded · 32k context</div>
+        </div>
+        <button class="swap">swap ▾</button>
+      </div>
+
+      <!-- ADVANCED KNOBS fold away — the direct answer to "form-row after form-row" -->
+      <details class="fold">
+        <summary>◇ tuning · temperature · tokens · context · endpoint <span class="chev">›</span></summary>
+        <div class="knobs">
+          <div class="knob"><span class="kl">temperature</span><span class="kv">0.7 <span class="u">spread</span></span></div>
+          <div class="knob"><span class="kl">max output tokens</span><span class="kv">1024 <span class="u">cap</span></span></div>
+          <div class="knob"><span class="kl">context window</span><span class="kv">32768 <span class="u">restart</span></span></div>
+          <div class="knob"><span class="kl">reply timeout</span><span class="kv">180 <span class="u">sec</span></span></div>
+          <div class="knob" style="grid-column:1/-1"><span class="kl">endpoint · provider base url</span><span class="kv">http://localhost:11434/v1</span></div>
+        </div>
+      </details>
+
+      <!-- THE CAST — faces you pick -->
+      <div class="shead"><span class="stag">the cast</span><h2>Persona</h2><span class="badge">3 personas</span></div>
+      <div class="cast">
+        <div class="face p1 on">
+          <div class="av">V</div>
+          <div class="nm">Vi</div>
+          <div class="sh">calm-authority · the default right-hand-man</div>
+          <div class="eng">voice engine · qwen3tts</div>
+        </div>
+        <div class="face p2">
+          <div class="av">A</div>
+          <div class="nm">Atlas</div>
+          <div class="sh">analytic · precise · low-affect read</div>
+          <div class="eng">voice engine · xtts</div>
+        </div>
+        <div class="face p3">
+          <div class="av">N</div>
+          <div class="nm">Nova</div>
+          <div class="sh">warm · expressive · briefing voice</div>
+          <div class="eng">voice engine · chatterbox</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body></html>

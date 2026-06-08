@@ -24,6 +24,119 @@ from fabric import config as fcfg
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CANVAS = os.path.join(ROOT, "canvas", "index.html")
+MOCKUPS_DIR = os.path.join(ROOT, "design", "mockups")           # the design-review portal + corpus
+FEEDBACK_DIR = os.path.join(MOCKUPS_DIR, ".feedback")           # one JSONL per mockup (filename-keyed)
+DESIGN_CSS = os.path.join(ROOT, "design", "design-system.css")  # the generated corpus stylesheet
+
+
+def _safe_mockup_path(name):
+    """Resolve a mockup FILENAME (e.g. 'IA-mobile.html') to its absolute path under MOCKUPS_DIR,
+    path-safe. A bare basename only — `..`, slashes, backslashes are refused BEFORE realpath; then a
+    realpath-contains check is the second wall (defence in depth, never one gate). Returns the abs path
+    or raises ValueError (→ 400, fail loud). The caller still checks os.path.isfile for a 404."""
+    import re as _re
+    if not isinstance(name, str) or not _re.fullmatch(r"[A-Za-z0-9._-]+\.html", name):
+        raise ValueError(f"refused mockup name {name!r}: must be a bare <file>.html basename (no path)")
+    p = os.path.realpath(os.path.join(MOCKUPS_DIR, name))
+    if os.path.commonpath([p, os.path.realpath(MOCKUPS_DIR)]) != os.path.realpath(MOCKUPS_DIR):
+        raise ValueError(f"refused mockup name {name!r}: resolves outside the mockups dir (traversal)")
+    return p
+
+
+def _feedback_path(mockup):
+    """The JSONL path for a mockup's feedback thread — design/mockups/.feedback/<mockup>.jsonl, where
+    <mockup> is the FULL filename incl. .html (contract §21). Validates the mockup name the same way as
+    static serving (one gate, reused) so a junk `?mockup=` can never escape FEEDBACK_DIR. Raises ValueError
+    (→ 400) on a bad name. Does NOT require the mockup file to exist (feedback can predate a render)."""
+    import re as _re
+    if not isinstance(mockup, str) or not _re.fullmatch(r"[A-Za-z0-9._-]+\.html", mockup):
+        raise ValueError(f"refused mockup name {mockup!r}: must be a bare <file>.html basename (no path)")
+    p = os.path.realpath(os.path.join(FEEDBACK_DIR, mockup + ".jsonl"))
+    if os.path.commonpath([p, os.path.realpath(FEEDBACK_DIR)]) != os.path.realpath(FEEDBACK_DIR):
+        raise ValueError(f"refused mockup name {mockup!r}: resolves outside the feedback dir (traversal)")
+    return p
+
+
+def _read_feedback(mockup):
+    """Read a mockup's feedback thread → list of entries (oldest-first), [] if no file. Each line is one
+    JSON entry {id,mockup,element,text,ts,status}. A malformed line is SKIPPED with a stderr warn (never a
+    silent total loss — one bad line shouldn't blank the thread; the warn surfaces it for repair)."""
+    path = _feedback_path(mockup)
+    if not os.path.isfile(path):
+        return []
+    out = []
+    with open(path, "r", encoding="utf-8") as f:
+        for ln in f:
+            ln = ln.strip()
+            if not ln:
+                continue
+            try:
+                out.append(json.loads(ln))
+            except json.JSONDecodeError as e:
+                print(f"[bridge] WARN skipping malformed feedback line in {path}: {e}", file=sys.stderr, flush=True)
+    return out
+
+
+# STUDIO CORPUS (G4 fix) — the gallery binds the REAL corpus, never a hardcoded FE list. The corpus IS
+# the set of mockup files ACTUALLY on disk under design/mockups/ (so it can never drift from reality — a
+# new mockup file appears the moment it lands; a removed one disappears). `_CORPUS_META` is the curated
+# join layer: per file, its human title, its platform tag (desktop|mobile|tool), its group label (for the
+# rail's sections), and the REVIEWED-SURFACE `ui://` address the mockup depicts (so a gallery Card carries
+# that address as its data-ui-ref → the document-level capture listener indicates it → chat/address-help/
+# annotate all bind to that locus for free). A file with NO meta entry STILL appears (honest, never
+# dropped) with a derived title + an UNGROUPED bucket — the corpus is truth, the meta is only enrichment.
+# STUDIO.html itself is excluded (it is the legacy standalone tool, not a reviewable surface).
+_CORPUS_META = {
+    "IA-desktop.html":            ("Information architecture — desktop", "desktop", "IA proposals",                 "ui://chrome"),
+    "IA-mobile.html":             ("Information architecture — mobile",  "mobile",  "IA proposals",                 "ui://chrome"),
+    "SCENARIO-PLAYER.html":       ("Scenario player — RHM presence",     "tool",    "Elevated / living instrument", "ui://chat"),
+    "A2-rhm-mobile-elevated.html":("RHM — mobile, elevated",             "mobile",  "Elevated / living instrument", "ui://chat"),
+    "A3-settings-elevated.html":  ("Settings — elevated",                "desktop", "Elevated / living instrument", "ui://settings"),
+    "A1-canvas-empty-desktop.html":("Canvas — empty / first-run",        "desktop", "A · operating surface",        "ui://canvas"),
+    "A2-canvas-desktop.html":     ("Canvas — running chain",             "desktop", "A · operating surface",        "ui://canvas"),
+    "A2-canvas-mobile.html":      ("Canvas — running chain",             "mobile",  "A · operating surface",        "ui://canvas"),
+    "A3-inspector-desktop.html":  ("Node selected → inspector",          "desktop", "A · operating surface",        "ui://inspector"),
+    "A11-portals-desktop.html":   ("Portals — live transclusion",        "desktop", "A · operating surface",        "ui://canvas"),
+    "A12-workshop-desktop.html":  ("Workshop — full-detail node",        "desktop", "A · operating surface",        "ui://canvas"),
+    "B3-walkthrough-desktop.html":("Walkthrough — RHM drives the view",  "desktop", "B · right-hand-man + review",  "ui://chat"),
+    "B4-presence-dial-desktop.html":("Presence dial — 8 modes",          "desktop", "B · right-hand-man + review",  "ui://toolbar/presence"),
+    "B4-presence-dial-mobile.html":("Presence dial — 8 modes",           "mobile",  "B · right-hand-man + review",  "ui://toolbar/presence"),
+    "B6-twin-desktop.html":       ("The twin — model-of-Tim",            "desktop", "B · right-hand-man + review",  "ui://chat"),
+    "C1-inbox-desktop.html":      ("Inbox — three lanes",                "desktop", "C · inbox + decisions",        "ui://inbox"),
+    "C3-build-review-desktop.html":("Demonstrate-first build-review",    "desktop", "C · inbox + decisions",        "ui://inbox/build-review"),
+    "C5-replay-desktop.html":     ("Replay / decision trajectory",       "desktop", "C · inbox + decisions",        "ui://inbox"),
+    "D6-wire-states-desktop.html":("Wire failure & lifecycle states",    "desktop", "D · self-build / the wire",    "ui://inbox/build-review"),
+    "D7-selfmod-desktop.html":    ("Self-mod — revert latest change",    "desktop", "D · self-build / the wire",    "ui://inbox"),
+    "E1-fleet-desktop.html":      ("Live model fleet — chat + embed",    "desktop", "E · models · F · frame",       "ui://settings"),
+    "F4-activity-desktop.html":   ("Activity / now + event stream",      "desktop", "E · models · F · frame",       "ui://canvas"),
+}
+
+
+def _corpus_index():
+    """The studio gallery's corpus (G4): every reviewable mockup file actually present under
+    design/mockups/, joined to its curated meta. Registry-is-truth — the disk listing is the source, the
+    FE never carries a hardcoded list. Returns a list of {file, title, platform, group, address}, sorted
+    by (group, file) so the rail's sections are stable. A file with no meta still appears (group
+    'ungrouped', a title derived from the filename, address None) — fail-loud-friendly: a new mockup is
+    visible immediately, never silently absent. STUDIO.html is excluded (the legacy tool, not a surface)."""
+    out = []
+    try:
+        names = sorted(n for n in os.listdir(MOCKUPS_DIR)
+                       if n.endswith(".html") and n != "STUDIO.html")
+    except FileNotFoundError:
+        names = []
+    for n in names:
+        meta = _CORPUS_META.get(n)
+        if meta:
+            title, platform, group, address = meta
+        else:
+            title = n[:-5].replace("-", " ")   # derived, honest title for an un-curated file
+            platform, group, address = "desktop", "ungrouped", None
+        out.append({"file": n, "title": title, "platform": platform, "group": group, "address": address})
+    out.sort(key=lambda r: (r["group"], r["file"]))
+    return out
+
+
 TTS_URL = os.environ.get("COMPANY_TTS_URL", "http://127.0.0.1:4123")   # local Kokoro service (default engine)
 
 # voice-trial lane B — multi-engine TTS routing. The voice-module builder writes each engine as an
@@ -296,6 +409,43 @@ class H(BaseHTTPRequestHandler):
             if path in ("/", "/index.html"):
                 with open(CANVAS, "rb") as f:
                     self._send(200, f.read(), "text/html; charset=utf-8")
+            elif path == "/studio":                        # MOCKUP STUDIO — clean URL → the portal.
+                # A 302 (NOT a byte-alias): the studio's iframe srcs are BARE filenames (src="IA-mobile.html"),
+                # so they resolve against the DOCUMENT url. Served at /studio they'd resolve to /IA-mobile.html
+                # (unserved → dead stage); redirecting to /mockups/STUDIO.html makes the document live IN
+                # /mockups/, so both the iframe (→ /mockups/<file>.html) and ../design-system.css (→
+                # /design-system.css) resolve correctly. Keeps the clean URL, touches nothing in the studio.
+                self.send_response(302)
+                self.send_header("Location", "/mockups/STUDIO.html")
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+            elif path == "/design-system.css":             # the generated corpus stylesheet (../design-system.css from a mockup)
+                if not os.path.isfile(DESIGN_CSS):
+                    self._send(404, "{}")
+                else:
+                    with open(DESIGN_CSS, "rb") as f:
+                        self._send(200, f.read(), "text/css; charset=utf-8")
+            elif path.startswith("/mockups/") and path.endswith(".html"):
+                # STATIC, READ-ONLY mockup serving (the studio + every mockup it stages, same-origin). The
+                # name after /mockups/ is path-safe-resolved (bare basename only; realpath-contained). A
+                # bad name → ValueError → 400 (the wrapper); a well-formed but missing file → explicit 404
+                # HERE (the generic except→400 would otherwise mask a missing mockup as a malformed-request).
+                fp = _safe_mockup_path(path[len("/mockups/"):])
+                if not os.path.isfile(fp):
+                    self._send(404, "{}")
+                else:
+                    with open(fp, "rb") as f:
+                        self._send(200, f.read(), "text/html; charset=utf-8")
+            elif path == "/api/mockup-feedback":           # MOCKUP STUDIO: read a mockup's feedback thread
+                # GET ?mockup=<filename> → {entries:[{id,mockup,element,text,ts,status}]}, [] if none.
+                # Missing `mockup` → KeyError → 400 (fail loud, mirrors the address-keyed reads). A junk
+                # name → ValueError from _read_feedback's gate → 400. status ∈ pending|applied|dismissed.
+                self._send(200, json.dumps({"entries": _read_feedback(q["mockup"])}))
+            elif path == "/api/corpus":                     # STUDIO (G4): the gallery's corpus, registry-is-truth
+                # The reviewable mockup files actually on disk + their curated meta (title/platform/group/
+                # reviewed-surface ui:// address). The studio gallery binds THIS, never a hardcoded FE list,
+                # so a new mockup appears the moment its file lands. {items:[{file,title,platform,group,address}]}.
+                self._send(200, json.dumps({"items": _corpus_index()}))
             elif path == "/api/graph":
                 self._send(200, json.dumps(SUITE.state(gid)))
             elif path == "/api/graphs":                    # C4: list every graph in the substrate
@@ -1340,6 +1490,60 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps({"ok": not r.get("rejected"), "path": r.get("applied"),
                                             "kind": r["kind"], "error": r.get("error"),
                                             "types": sorted(SUITE.list_types())}))
+            elif self.path == "/api/mockup-feedback":   # MOCKUP STUDIO: capture one feedback note (durable)
+                # body {mockup,element,text,ts} → appends ONE JSONL line to .feedback/<mockup>.jsonl and
+                # returns {ok:true, entry:{id,mockup,element,text,ts,status:"pending"}}. The id is a
+                # file-scoped sequence (len of the existing thread + 1, zero-padded) PLUS a uuid4 stub so
+                # it's unique even across an out-of-band edit — no Date.now/random in app code, but the
+                # bridge is infra (a uuid here is fine). Fail loud: a non-string/empty `text` → 400; a
+                # junk `mockup` name → 400 (the path gate); a write failure → propagates → 400/500 (never
+                # a silent success). status starts "pending" (the lead's edit-loop flips it).
+                import uuid as _uuid
+                b = self._body()
+                mockup = b.get("mockup")
+                text = b.get("text")
+                if not isinstance(mockup, str) or not mockup.strip():
+                    raise ValueError("/api/mockup-feedback needs a 'mockup' filename (fail loud)")
+                if not isinstance(text, str) or not text.strip():
+                    raise ValueError("/api/mockup-feedback needs non-empty 'text' (fail loud)")
+                path = _feedback_path(mockup)            # validates the name (→ 400 on junk) + path-safe
+                element = b.get("element")
+                if element is not None and not isinstance(element, str):
+                    raise ValueError("/api/mockup-feedback 'element' must be a string or null (fail loud)")
+                ts = b.get("ts")
+                if not isinstance(ts, str) or not ts.strip():
+                    ts = SUITE.now_iso() if hasattr(SUITE, "now_iso") else time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+                seq = len(_read_feedback(mockup)) + 1    # file-scoped sequence (human-legible ordering)
+                entry = {"id": f"{seq:04d}-{_uuid.uuid4().hex[:8]}", "mockup": mockup,
+                         "element": (element.strip() if isinstance(element, str) and element.strip() else None),
+                         "text": text, "ts": ts, "status": "pending"}
+                os.makedirs(FEEDBACK_DIR, exist_ok=True)
+                with open(path, "a", encoding="utf-8") as f:   # append ONE line — write failure raises → fail loud
+                    f.write(json.dumps(entry) + "\n")
+                self._send(200, json.dumps({"ok": True, "entry": entry}))
+            elif self.path == "/api/mockup-feedback/status":  # MOCKUP STUDIO: the lead's edit-loop flips an entry
+                # body {mockup,id,status} → rewrites the JSONL flipping that entry's status. status ∈
+                # pending|applied|dismissed (anything else → 400). A missing mockup/id/unknown id → 400
+                # (fail loud, no silent no-op). The rewrite is whole-file (the thread is small); a failure
+                # propagates. This is how the lead marks a note done after editing the mockup.
+                b = self._body()
+                mockup = b.get("mockup"); fid = b.get("id"); status = b.get("status")
+                if not isinstance(mockup, str) or not mockup.strip():
+                    raise ValueError("/api/mockup-feedback/status needs a 'mockup' filename (fail loud)")
+                if not isinstance(fid, str) or not fid.strip():
+                    raise ValueError("/api/mockup-feedback/status needs an entry 'id' (fail loud)")
+                if status not in ("pending", "applied", "dismissed"):
+                    raise ValueError("/api/mockup-feedback/status 'status' must be pending|applied|dismissed (fail loud)")
+                path = _feedback_path(mockup)            # validates the name
+                entries = _read_feedback(mockup)
+                hit = next((e for e in entries if e.get("id") == fid), None)
+                if hit is None:
+                    raise ValueError(f"no feedback entry {fid!r} for mockup {mockup!r} (fail loud — no silent no-op)")
+                hit["status"] = status
+                with open(path, "w", encoding="utf-8") as f:   # whole-file rewrite (thread is small)
+                    for e in entries:
+                        f.write(json.dumps(e) + "\n")
+                self._send(200, json.dumps({"ok": True, "entry": hit}))
             else:
                 self._send(404, "{}")
         except Exception as e:                          # fail loud to the UI

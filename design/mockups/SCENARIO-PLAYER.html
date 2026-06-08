@@ -1,0 +1,750 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>The Company — Scenario Player · the living instrument IN USE</title>
+<!--
+  ============================================================
+  TARGET MOCKUP — INTERACTIVE SCENARIO PLAYER (exploration lane · NOT corpus · NOT registered)
+  PURPOSE  Tim judges by sight + MOTION. A still frame can't convey a living instrument.
+           So this is the RHM presence surface you can DRIVE: step through every live
+           state, switch persona, flip phone↔desktop — and FEEL it move.
+  EVOLVES FROM  A2-rhm-mobile-elevated.html + A3-settings-elevated.html
+  STEERS BUILT IN (from design-mockup.report.json):
+    (a) the presence ORB morphs colour per persona  — Vi · Atlas · Nova
+    (b) the AURORA intensifies with activity         — calm idle → alive running
+  TWO TIM-DIRECTIVES THIS PASS:
+    · WARMER base (warm charcoal, not cold blue-black)
+    · GOLD is the primary colour + theme (no green); personas are pastel sub-families
+    · personas = pastel sub colour families (apricot / rose-gold) within the gold world
+  ARCHITECTURE  state is orthogonal: root carries data-scenario + data-persona + data-frame.
+                CSS keys off the attributes; persona = a swap of --acc* custom props (tokens).
+                Ambient motion = always-on infinite keyframes. Entrance stagger replays on switch.
+  NO FICTION — every element traces to real capability (RhmChat.tsx / Settings.tsx):
+    gold/working grading ◆◇ · auto_listen/push_to_talk voice modes · threads · record/debrief ·
+    indicate chip ⌖ · propose→approve/not-now consent card · minimize · model config-slot pill ·
+    persona cast (Vi/Atlas/Nova + voice engines, Settings:213-231).
+  ============================================================
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400;9..144,0,500;9..144,0,600;9..144,1,400;9..144,1,500;9..144,0,900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════════════════
+   WARM GOLD THEME  (CSS custom properties = a token re-skin;
+   maps back to tokens.json in the real sweep)
+   ════════════════════════════════════════════════════════════ */
+:root{
+  /* — WARMED dark base (warm charcoal, faint warm/umber undertone — NOT blue-black) — */
+  --bg:#0c0a08; --s0:#13110d; --s1:#191611; --s2:#211d17; --s3:#2a241c;
+  --line:#332c22; --line-2:#403729;
+  --tx:#f3ece1; --tx-2:#b3a692; --tx-3:#6f6555;
+
+  /* — THE SIGNAL: GOLD is the primary colour + theme (Tim, 2026-06-07: "no green, proper
+       change of primary colour and theme"). The gold-grade ◆ / present / await colour —
+       "the system's value" — is now the identity colour. The flow is a GOLD RANGE
+       (light gold → gold → deep bronze-gold), no green anywhere. — */
+  --gold-hi:#f2d08a;       /* light warm gold (the bright end of the flow) */
+  --gold:#e6ab5c;          /* the primary gold — the gold-grade (tokens: await/kind-present) */
+  --gold-deep:#d2913f;     /* deep bronze-gold (the grounded end) */
+
+  /* — primary accent = GOLD (default = Vi); personas vary WITHIN the gold family — */
+  --acc:#e6ab5c; --acc-deep:#d2913f; --acc-glow:rgba(230,171,92,.18);
+  --acc-flow:linear-gradient(120deg,#f2d08a 0%,#e6ab5c 52%,#d2913f 100%);
+  --orb-hi:rgba(255,248,233,.62);
+
+  /* — warm semantic — */
+  --await:#e6ab5c; --fail:#ec6a5e; --cache:#9c8f78;
+  --ink-accent:#1c1304;    /* warm near-black — the legible ink ON gold fills */
+
+  --kind-content:#d9b46a;  /* warmed content accent (was cold blue) */
+
+  --font-display:'Fraunces',Georgia,serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',monospace;
+  --font-sans:'IBM Plex Sans',system-ui,sans-serif;
+
+  /* — activity intensity (driven by scenario; the aurora reads it) — */
+  --activity:0;            /* 0 calm … 1 alive */
+}
+
+/* ── PERSONA RE-SKINS — GOLD is the primary identity (Vi); the OTHER personas are
+     PASTEL sub colour families (Tim, 2026-06-07: "pastels for sub colour families"),
+     each a soft warm tint within the gold world — no green, no olive. ── */
+#root[data-persona="vi"]{              /* the canonical identity — primary GOLD */
+  --acc:#e6ab5c; --acc-deep:#d2913f; --acc-glow:rgba(230,171,92,.18);
+  --acc-flow:linear-gradient(120deg,#f2d08a 0%,#e6ab5c 52%,#d2913f 100%);
+  --orb-hi:rgba(255,248,233,.62);
+}
+#root[data-persona="atlas"]{           /* grounded — a soft APRICOT pastel sub-family */
+  --acc:#f0c49a; --acc-deep:#dba26f; --acc-glow:rgba(240,196,154,.20);
+  --acc-flow:linear-gradient(120deg,#f7d8b8 0%,#f0c49a 52%,#dba26f 100%);
+  --orb-hi:rgba(255,249,240,.66);
+}
+#root[data-persona="nova"]{            /* expressive — a soft ROSE-GOLD pastel sub-family */
+  --acc:#eebfae; --acc-deep:#dd9f8a; --acc-glow:rgba(238,191,174,.20);
+  --acc-flow:linear-gradient(120deg,#f6d8cc 0%,#eebfae 50%,#dd9f8a 100%);
+  --orb-hi:rgba(255,250,246,.66);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:radial-gradient(120% 90% at 50% -10%, #15110b 0%, #0a0806 60%, #070504 100%);
+  color:var(--tx); font-family:var(--font-sans); letter-spacing:.1px;
+  min-height:100vh; display:flex; flex-direction:column; align-items:center;
+  padding:26px 16px 60px; overflow-x:hidden;
+}
+
+/* ════════════════════════════════════════════════════════════
+   THE CONTROL RAIL (the stepper + persona switcher + frame toggle)
+   ════════════════════════════════════════════════════════════ */
+.player-head{width:100%;max-width:980px;margin-bottom:22px;
+  display:flex;flex-direction:column;gap:16px;animation:fadein .8s both}
+.title-row{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.title-row h1{font-family:var(--font-display);font-weight:600;font-size:30px;letter-spacing:-.6px;line-height:1}
+.title-row h1 em{font-style:italic;font-weight:500;
+  background:var(--acc-flow);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.title-row .sub{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx-3)}
+
+.controls{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start}
+.ctl-group{display:flex;flex-direction:column;gap:7px}
+.ctl-label{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx-3)}
+
+/* scenario stepper — a horizontal rail of state buttons */
+.stepper{display:flex;flex-wrap:wrap;gap:6px;max-width:660px}
+.step{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--tx-2);background:rgba(33,29,23,.7);border:1px solid var(--line);border-radius:99px;
+  padding:8px 13px;cursor:pointer;transition:transform .16s,border-color .2s,color .2s,box-shadow .2s;
+  display:inline-flex;align-items:center;gap:6px;backdrop-filter:blur(8px)}
+.step .sd{width:6px;height:6px;border-radius:99px;background:var(--tx-3);transition:background .2s,box-shadow .2s}
+.step:hover{transform:translateY(-2px);border-color:var(--line-2);color:var(--tx)}
+.step.active{color:var(--ink-accent);background:var(--acc-flow);border-color:transparent;
+  box-shadow:0 8px 22px -8px var(--acc-glow)}
+.step.active .sd{background:var(--ink-accent);box-shadow:none}
+
+/* persona switcher — three faces, recolour the orb */
+.personas{display:flex;gap:8px}
+.face{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;
+  padding:7px 9px;border-radius:13px;border:1px solid var(--line);background:rgba(25,22,17,.6);
+  transition:transform .16s,border-color .2s,background .2s}
+.face:hover{transform:translateY(-2px)}
+.face .pdisc{width:26px;height:26px;border-radius:50%;
+  box-shadow:inset 0 0 8px -2px rgba(255,255,255,.4)}
+.face .pn{font-family:var(--font-mono);font-size:9px;letter-spacing:.08em;color:var(--tx-3)}
+.face.on{border-color:var(--line-2);background:rgba(42,36,28,.75)}
+.face.on .pn{color:var(--tx)}
+.face[data-p="vi"]    .pdisc{background:linear-gradient(135deg,#f2d08a,#d2913f)}
+.face[data-p="atlas"] .pdisc{background:linear-gradient(135deg,#f7d8b8,#dba26f)}
+.face[data-p="nova"]  .pdisc{background:linear-gradient(135deg,#f6d8cc,#dd9f8a)}
+
+/* frame toggle */
+.frame-toggle{display:flex;border:1px solid var(--line);border-radius:99px;overflow:hidden;background:rgba(25,22,17,.6)}
+.frame-toggle button{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--tx-3);background:none;border:none;padding:8px 15px;cursor:pointer;transition:color .2s,background .2s}
+.frame-toggle button.on{color:var(--ink-accent);background:var(--acc-flow)}
+
+/* the now-showing caption — tells you what state you're in, in Fraunces */
+.now-showing{font-family:var(--font-display);font-style:italic;font-size:15px;color:var(--tx-2);min-height:20px}
+.now-showing b{color:var(--acc);font-style:normal;font-weight:500}
+
+/* ════════════════════════════════════════════════════════════
+   THE STAGE — device sits center; frame toggles phone↔desktop
+   ════════════════════════════════════════════════════════════ */
+.stage-wrap{position:relative;display:grid;place-items:center;width:100%}
+
+.device{position:relative;overflow:hidden;background:var(--bg);
+  transition:width .5s cubic-bezier(.4,0,.2,1),height .5s cubic-bezier(.4,0,.2,1),border-radius .5s;}
+/* PHONE 390 */
+#root[data-frame="phone"] .device{
+  width:390px;height:844px;border-radius:42px;
+  box-shadow:0 50px 120px -30px #000, 0 0 0 1px var(--line-2), 0 0 0 11px #0a0806, 0 0 0 12px #221c12;}
+/* DESKTOP 1440 (scaled to fit) — same moment, wide framing */
+#root[data-frame="desktop"] .device{
+  width:1180px;height:680px;border-radius:16px;
+  box-shadow:0 50px 120px -30px #000, 0 0 0 1px var(--line-2), 0 0 0 8px #0a0806, 0 0 0 9px #221c12;}
+
+/* ── THE LIVING FIELD — aurora (warm gold range) that INTENSIFIES with activity ── */
+.bgfield{position:absolute;inset:0;overflow:hidden}
+.aurora{position:absolute;inset:-40% -20%;filter:blur(60px);
+  opacity:calc(.42 + var(--activity) * .42);
+  background:
+    radial-gradient(40% 36% at 28% 30%, rgba(230,171,92,.32), transparent 70%),
+    radial-gradient(44% 40% at 80% 24%, rgba(210,145,63,.24), transparent 72%),
+    radial-gradient(52% 46% at 60% 88%, rgba(230,171,92,.22), transparent 70%);
+  animation:drift calc(28s - var(--activity) * 16s) ease-in-out infinite alternate;
+  transition:opacity .8s ease}
+@keyframes drift{
+  0%{transform:translate3d(0,0,0) scale(1)}
+  50%{transform:translate3d(-22px,18px,0) scale(1.08)}
+  100%{transform:translate3d(18px,-14px,0) scale(1.05)}}
+/* a second, faster aurora layer that only shows when alive (running) */
+.aurora-hot{position:absolute;inset:-30% -15%;filter:blur(48px);
+  opacity:calc(var(--activity) * .55);
+  background:
+    radial-gradient(38% 34% at 62% 40%, rgba(230,171,92,.46), transparent 66%),
+    radial-gradient(40% 36% at 32% 70%, rgba(230,171,92,.42), transparent 68%);
+  animation:swirl 7s ease-in-out infinite alternate;transition:opacity .8s ease}
+@keyframes swirl{0%{transform:translate3d(0,0,0) scale(1) rotate(0deg)}
+  100%{transform:translate3d(24px,-20px,0) scale(1.14) rotate(8deg)}}
+.dotgrid{position:absolute;inset:0;opacity:.5;
+  background-image:radial-gradient(rgba(150,135,110,.10) .9px,transparent .9px);background-size:26px 26px;
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,transparent 52%);mask-image:linear-gradient(180deg,#000 0%,transparent 52%)}
+.ghost{position:absolute;opacity:.16;font-family:var(--font-mono);font-size:9px;color:var(--tx-2);
+  border:1px solid var(--line-2);border-radius:9px;padding:6px 9px;background:rgba(25,22,17,.4);
+  display:flex;align-items:center;gap:6px;animation:bob 14s ease-in-out infinite}
+.ghost i{width:6px;height:6px;border-radius:99px;flex:none}
+.ghost.g1{left:30px;top:118px;animation-delay:-2s}
+.ghost.g2{right:26px;top:168px;animation-delay:-7s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.grain{position:absolute;inset:0;pointer-events:none;opacity:.035;z-index:30;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* ════════════════════════════════════════════════════════════
+   THE SHELL
+   ════════════════════════════════════════════════════════════ */
+.shell{position:absolute;inset:0;display:flex;flex-direction:column;z-index:10}
+
+/* desktop framing: shell becomes a centered column with a canvas gutter */
+#root[data-frame="desktop"] .device .shell{
+  display:grid;grid-template-columns:1fr 460px 1fr;align-items:stretch}
+#root[data-frame="desktop"] .device .shell > .gutter{display:block}
+.gutter{display:none;position:relative}
+.gutter .gtitle{position:absolute;top:24px;left:24px;right:24px;font-family:var(--font-mono);
+  font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx-3)}
+.gutter.right .gtitle{text-align:right}
+.gutter .canvas-ghost{position:absolute;inset:64px 24px 24px;border:1px dashed var(--line-2);border-radius:14px;
+  opacity:.5;display:grid;place-items:center;font-family:var(--font-mono);font-size:10px;color:var(--tx-3)}
+.col{display:flex;flex-direction:column;min-width:0;position:relative}
+#root[data-frame="desktop"] .device .col{border-left:1px solid var(--line);border-right:1px solid var(--line);
+  background:rgba(19,17,13,.4);backdrop-filter:blur(2px)}
+
+/* ── TOP — identity + presence (status by light) ── */
+.top{display:flex;align-items:center;gap:11px;padding:20px 22px 10px;animation:rise .6s cubic-bezier(.2,.8,.2,1) both}
+.brand{font-family:var(--font-display);font-weight:600;font-size:22px;letter-spacing:-.4px;line-height:1}
+.brand em{font-style:italic;font-weight:500;
+  background:var(--acc-flow);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.presence{margin-left:auto;display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:9.5px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--tx-2);background:rgba(25,22,17,.6);
+  border:1px solid var(--line-2);border-radius:99px;padding:6px 12px 6px 9px;backdrop-filter:blur(8px)}
+.presence .pdot{width:7px;height:7px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow);
+  animation:breathe 3.4s ease-in-out infinite}
+.minim{margin-left:2px;width:30px;height:30px;display:grid;place-items:center;color:var(--tx-3);
+  border:1px solid var(--line);border-radius:9px;background:rgba(25,22,17,.5);cursor:pointer;font-size:13px;
+  transition:transform .15s,color .2s}
+.minim:hover{transform:translateY(-1px);color:var(--acc)}
+
+/* ── THE PRESENCE STAGE — the orb you talk to ── */
+.stage{padding:8px 22px 4px;text-align:center;animation:rise .7s .05s cubic-bezier(.2,.8,.2,1) both}
+.orbwrap{position:relative;width:108px;height:108px;margin:8px auto 14px}
+.orb{position:absolute;inset:0;border-radius:50%;
+  background:
+    radial-gradient(circle at 38% 32%, var(--orb-hi), transparent 42%),
+    radial-gradient(circle at 60% 66%, var(--gold), transparent 58%),
+    conic-gradient(from 200deg at 50% 50%, var(--acc), var(--gold), var(--acc-deep), var(--acc));
+  box-shadow:0 0 40px -4px var(--acc-glow), inset 0 0 30px -6px rgba(255,247,232,.28);
+  animation:breathe 3.4s ease-in-out infinite, orbflow 9s linear infinite}
+@keyframes orbflow{to{filter:hue-rotate(0deg)}} /* placeholder; real flow is the bg-rotate below */
+.orb::after{content:"";position:absolute;inset:0;border-radius:50%;mix-blend-mode:screen;opacity:.0;
+  background:var(--acc-flow);background-size:240% 240%;animation:sheen 6s ease-in-out infinite;transition:opacity .6s}
+@keyframes sheen{0%,100%{background-position:0% 50%;opacity:.18}50%{background-position:100% 50%;opacity:.4}}
+/* the listening rings (auto_listen) */
+.ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--acc);opacity:0}
+.ringtxt{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink-accent);
+  font-family:var(--font-mono);font-size:22px}
+@keyframes ripple{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.9);opacity:0}}
+@keyframes breathe{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.05);filter:brightness(1.14)}}
+.stage .say{font-family:var(--font-display);font-size:16px;font-style:italic;color:var(--tx-2);letter-spacing:.2px;
+  transition:opacity .4s;min-height:22px}
+.stage .mode{margin-top:5px;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--acc)}
+
+/* ── THE CONVERSATION ── */
+.log{flex:1;overflow:auto;padding:14px 18px 8px;display:flex;flex-direction:column;gap:15px;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 28px);mask-image:linear-gradient(180deg,transparent 0,#000 28px)}
+.turn{max-width:84%}
+.turn.you{align-self:flex-end;text-align:right}
+.turn.vi{align-self:flex-start}
+.turn .who{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:8.5px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--tx-3);margin-bottom:6px}
+.grade{font-size:9px}
+.grade.gold{color:var(--acc)} .grade.work{color:var(--cache)}
+.bubble{font-size:13.5px;line-height:1.55;padding:13px 15px;border-radius:16px;position:relative}
+.turn.you .bubble{background:linear-gradient(165deg,var(--acc-glow),rgba(230,171,92,.05));
+  border:1px solid var(--acc-glow);border-bottom-right-radius:5px;color:var(--tx)}
+.turn.vi .bubble{background:linear-gradient(165deg,var(--s2),var(--s1));border:1px solid var(--line-2);
+  border-bottom-left-radius:5px;color:var(--tx);font-family:var(--font-display);font-weight:400;
+  box-shadow:0 12px 30px -20px #000}
+.turn.vi .bubble code{font-family:var(--font-mono);font-size:11.5px;color:var(--acc);
+  background:var(--acc-glow);padding:1px 5px;border-radius:5px}
+.thinking{align-self:flex-start;display:flex;align-items:center;gap:9px;padding:6px 2px}
+.thinking .who{margin:0}
+.thinking .dots{display:flex;gap:5px}
+.thinking .dots i{width:7px;height:7px;border-radius:99px;background:var(--acc);animation:bounce 1.2s ease-in-out infinite}
+.thinking .dots i:nth-child(2){animation-delay:.15s}.thinking .dots i:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-5px);opacity:1}}
+
+/* indicate chip ⌖ */
+.indicate{align-self:flex-end;display:inline-flex;align-items:center;gap:7px;background:rgba(230,168,74,.12);
+  border:1px solid rgba(230,168,74,.4);border-radius:99px;padding:5px 7px 5px 11px;font-family:var(--font-mono);
+  font-size:10px;color:var(--await)}
+.indicate .x{width:18px;height:18px;display:grid;place-items:center;border-radius:99px;background:rgba(230,168,74,.18);color:var(--await);cursor:pointer;font-size:9px}
+
+/* consent card */
+.propose{align-self:flex-start;width:90%;background:linear-gradient(165deg,var(--s2),var(--s1));
+  border:1px solid var(--acc-deep);border-radius:16px;border-bottom-left-radius:5px;padding:14px;
+  box-shadow:0 14px 36px -22px #000, 0 0 0 1px var(--acc-glow)}
+.propose .ph{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--acc);margin-bottom:9px}
+.propose .ph .spark{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow);
+  animation:breathe 2.4s ease-in-out infinite}
+.propose .pbody{font-family:var(--font-display);font-size:14.5px;line-height:1.45;color:var(--tx);margin-bottom:5px}
+.propose .pbody b{color:var(--acc)}
+.propose .ptarget{font-family:var(--font-mono);font-size:10px;color:var(--tx-3);margin-bottom:12px}
+.propose .pacts{display:flex;gap:9px}
+.propose .pacts button{flex:1;border:none;cursor:pointer;font-family:var(--font-mono);font-size:11.5px;font-weight:600;
+  padding:10px;border-radius:10px;letter-spacing:.04em;transition:transform .15s}
+.propose .pacts button:hover{transform:translateY(-1px)}
+.propose .approve{background:var(--acc-flow);color:var(--ink-accent);box-shadow:0 10px 24px -10px var(--acc-glow)}
+.propose .decline{background:var(--s3);border:1px solid var(--line-2)!important;color:var(--tx-2)}
+
+/* running banner — the alive state, a live progress strip */
+.runbar{align-self:stretch;margin:2px 0;display:flex;align-items:center;gap:10px;padding:11px 14px;
+  background:linear-gradient(165deg,var(--s2),var(--s1));border:1px solid var(--acc-deep);border-radius:13px;
+  box-shadow:0 0 0 1px var(--acc-glow), 0 14px 36px -22px #000}
+.runbar .spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--acc-glow);border-top-color:var(--acc);
+  animation:spin .8s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.runbar .rmeta{flex:1;min-width:0}
+.runbar .rt{font-family:var(--font-display);font-size:13.5px;color:var(--tx)}
+.runbar .rt b{color:var(--acc)}
+.runbar .rprog{margin-top:7px;height:4px;border-radius:99px;background:var(--s3);overflow:hidden}
+.runbar .rprog i{display:block;height:100%;width:40%;background:var(--acc-flow);border-radius:99px;
+  animation:fill 2.4s ease-in-out infinite}
+@keyframes fill{0%{width:8%}50%{width:70%}100%{width:96%}}
+.runbar .rpct{font-family:var(--font-mono);font-size:10px;color:var(--acc)}
+
+/* empty / first-run */
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:0 30px;text-align:center}
+.empty .et{font-family:var(--font-display);font-size:18px;font-style:italic;color:var(--tx-2)}
+.empty .es{font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;color:var(--tx-3);line-height:1.7}
+
+/* ── DOCK + INPUT ── */
+.dock{padding:6px 16px 0;display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.06em}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:99px;background:rgba(25,22,17,.6);
+  border:1px solid var(--line);color:var(--tx-2);cursor:pointer;backdrop-filter:blur(8px);transition:transform .15s,color .2s}
+.chip:hover{transform:translateY(-1px);color:var(--tx)}
+.chip .rdot{width:7px;height:7px;border-radius:99px;background:var(--fail);box-shadow:0 0 0 3px rgba(236,106,94,.18);
+  animation:breathe 1.8s ease-in-out infinite}
+.chip.thread{margin-left:auto;color:var(--tx-3)}
+.chip.thread b{color:var(--acc);font-weight:500}
+
+.inputwrap{padding:12px 16px 22px;animation:rise .7s .15s cubic-bezier(.2,.8,.2,1) both}
+.inputbar{display:flex;align-items:center;gap:9px;background:rgba(25,22,17,.78);border:1px solid var(--line-2);
+  border-radius:99px;padding:7px 7px 7px 18px;backdrop-filter:blur(12px);
+  box-shadow:0 -10px 40px -24px #000, inset 0 1px 0 rgba(255,255,255,.03)}
+.inputbar input{flex:1;background:none;border:none;outline:none;color:var(--tx);font-family:var(--font-sans);font-size:13.5px}
+.inputbar input::placeholder{color:var(--tx-3)}
+.iconbtn{width:42px;height:42px;border-radius:99px;display:grid;place-items:center;cursor:pointer;
+  border:1px solid var(--line-2);background:var(--s2);color:var(--tx-2);font-size:16px;flex:none;
+  transition:transform .15s,box-shadow .2s,background .2s,color .2s;position:relative}
+.iconbtn:hover{transform:translateY(-2px)}
+.iconbtn:active{transform:scale(.92)}
+.send{background:var(--acc-flow);color:var(--ink-accent);border-color:transparent;box-shadow:0 10px 26px -10px var(--acc-glow)}
+
+/* AUTO-LISTEN mic — passive hands-free glow + breathe */
+.mic.autolisten{border-color:var(--acc);color:var(--acc);background:var(--acc-glow);
+  animation:micpulse 2.6s ease-in-out infinite}
+@keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(230,171,92,0)}50%{box-shadow:0 0 0 9px rgba(230,171,92,.10)}}
+
+/* PUSH-TO-TALK — HELD gesture: solid filled, level-meter bars, "release to send" */
+.ptt{position:relative;display:flex;align-items:center;gap:10px;flex:1;
+  background:var(--acc-flow);border:none;border-radius:99px;padding:9px 16px;cursor:pointer;
+  box-shadow:0 0 0 4px var(--acc-glow), 0 10px 30px -10px var(--acc-glow);
+  animation:held 1.1s ease-in-out infinite}
+@keyframes held{0%,100%{box-shadow:0 0 0 4px var(--acc-glow),0 10px 30px -10px var(--acc-glow)}
+  50%{box-shadow:0 0 0 7px var(--acc-glow),0 10px 30px -10px var(--acc-glow)}}
+.ptt .pttlabel{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-accent)}
+.ptt .levels{display:flex;align-items:center;gap:3px;height:22px;margin-left:auto}
+.ptt .levels b{width:3px;border-radius:99px;background:var(--ink-accent);opacity:.85;animation:lvl .6s ease-in-out infinite}
+.ptt .levels b:nth-child(1){animation-delay:0s}.ptt .levels b:nth-child(2){animation-delay:.08s}
+.ptt .levels b:nth-child(3){animation-delay:.16s}.ptt .levels b:nth-child(4){animation-delay:.24s}
+.ptt .levels b:nth-child(5){animation-delay:.32s}.ptt .levels b:nth-child(6){animation-delay:.18s}
+.ptt .levels b:nth-child(7){animation-delay:.10s}
+@keyframes lvl{0%,100%{height:5px}50%{height:20px}}
+
+/* ── TAB-BAR ── */
+.tabbar{display:flex;background:rgba(19,17,13,.85);border-top:1px solid var(--line);backdrop-filter:blur(14px)}
+.tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  padding:10px 0 22px;color:var(--tx-3);text-decoration:none;font-family:var(--font-mono);font-size:8.5px;
+  letter-spacing:.1em;text-transform:uppercase;position:relative;cursor:pointer}
+#root[data-frame="desktop"] .tabbar a{padding:10px 0 12px}
+.tabbar a.on{color:var(--acc)}
+.tabbar a .ic{font-size:18px}
+.tabbar a.on .ic{filter:drop-shadow(0 0 8px var(--acc-glow))}
+.tabbar a .badge{position:absolute;top:6px;left:calc(50% + 9px);min-width:15px;height:15px;padding:0 4px;
+  border-radius:99px;background:var(--await);color:#1a1205;font-size:8px;font-weight:700;display:grid;place-items:center;
+  box-shadow:0 0 0 3px rgba(230,168,74,.18)}
+
+/* ── MINIMIZED — collapse to header, canvas visible behind ── */
+#root[data-scenario="minimized"] .stage,
+#root[data-scenario="minimized"] .log,
+#root[data-scenario="minimized"] .dock,
+#root[data-scenario="minimized"] .inputwrap,
+#root[data-scenario="minimized"] .tabbar{display:none}
+#root[data-scenario="minimized"] .minim-canvas{display:flex}
+.minim-canvas{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:0 30px;text-align:center}
+.minim-canvas .mc-nodes{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;max-width:300px}
+.minim-canvas .mc-node{font-family:var(--font-mono);font-size:9px;color:var(--tx-2);border:1px solid var(--line-2);
+  border-radius:10px;padding:9px 12px;background:rgba(25,22,17,.5);display:flex;align-items:center;gap:7px;
+  animation:bob 12s ease-in-out infinite}
+.minim-canvas .mc-node i{width:7px;height:7px;border-radius:99px}
+.minim-canvas .mc-hint{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx-3)}
+.minim-pill{display:none;position:absolute;left:50%;bottom:28px;transform:translateX(-50%);z-index:20;
+  align-items:center;gap:9px;background:rgba(25,22,17,.85);border:1px solid var(--acc-deep);border-radius:99px;
+  padding:9px 16px 9px 12px;backdrop-filter:blur(12px);box-shadow:0 14px 40px -16px #000;cursor:pointer}
+#root[data-scenario="minimized"] .minim-pill{display:flex}
+.minim-pill .mp-orb{width:22px;height:22px;border-radius:50%;
+  background:conic-gradient(from 200deg,var(--acc),var(--gold),var(--acc-deep),var(--acc));
+  box-shadow:0 0 14px -2px var(--acc-glow);animation:breathe 3.4s ease-in-out infinite}
+.minim-pill .mp-tx{font-family:var(--font-display);font-style:italic;font-size:13px;color:var(--tx)}
+
+/* ════════════════════════════════════════════════════════════
+   SCENARIO-DRIVEN VISIBILITY  (what each state shows / hides)
+   The ambient keyframes never stop; we toggle which elements are present.
+   ════════════════════════════════════════════════════════════ */
+/* listening rings active only in auto-listen */
+#root[data-scenario="listening"] .ring{animation:ripple 3.4s ease-out infinite}
+#root[data-scenario="listening"] .ring.r2{animation-delay:1.13s}
+#root[data-scenario="listening"] .ring.r3{animation-delay:2.26s}
+/* the orb sheen only kicks up when thinking/running (intensified) */
+#root[data-scenario="thinking"] .orb::after,
+#root[data-scenario="running"] .orb::after{opacity:.4}
+
+/* per-scenario element gating */
+.only{display:none}
+#root[data-scenario="idle"]      .o-idle,
+#root[data-scenario="listening"] .o-listening,
+#root[data-scenario="ptt"]       .o-ptt,
+#root[data-scenario="thinking"]  .o-thinking,
+#root[data-scenario="reply"]     .o-reply,
+#root[data-scenario="consent"]   .o-consent,
+#root[data-scenario="running"]   .o-running,
+#root[data-scenario="empty"]     .o-empty{display:flex}
+/* the log itself hides for empty + minimized */
+#root[data-scenario="empty"] .log{display:none}
+
+/* the standard input bar hides in PTT (replaced by held control) and minimized */
+#root[data-scenario="ptt"] .std-input{display:none}
+#root[data-scenario="ptt"] .ptt-input{display:flex}
+.ptt-input{display:none}
+
+/* ENTRANCE STAGGER replays on scenario change via .replay class (JS re-adds) */
+.replay .stage,.replay .top,.replay .log>*,.replay .inputwrap{animation:none}
+.replay.go .top{animation:rise .55s cubic-bezier(.2,.8,.2,1) both}
+.replay.go .stage{animation:rise .6s .06s cubic-bezier(.2,.8,.2,1) both}
+.replay.go .log>*{animation:rise .55s cubic-bezier(.2,.8,.2,1) both}
+.replay.go .log>*:nth-child(2){animation-delay:.10s}
+.replay.go .log>*:nth-child(3){animation-delay:.16s}
+.replay.go .log>*:nth-child(4){animation-delay:.22s}
+.replay.go .log>*:nth-child(5){animation-delay:.28s}
+.replay.go .inputwrap{animation:rise .6s .14s cubic-bezier(.2,.8,.2,1) both}
+
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+
+/* responsive: shrink the desktop frame on small screens */
+@media (max-width:1240px){
+  #root[data-frame="desktop"] .device{transform:scale(.82);transform-origin:top center}
+}
+@media (max-width:760px){
+  #root[data-frame="desktop"] .device{transform:scale(.6);transform-origin:top center}
+}
+</style></head>
+<body>
+
+<div id="root" data-scenario="listening" data-persona="vi" data-frame="phone">
+
+  <!-- ─────────── CONTROL RAIL ─────────── -->
+  <div class="player-head">
+    <div class="title-row">
+      <h1>the <em>company</em></h1>
+      <span class="sub">scenario player · the living instrument in use</span>
+    </div>
+    <div class="controls">
+      <div class="ctl-group">
+        <span class="ctl-label">scenario — step the surface through its states</span>
+        <div class="stepper" id="stepper">
+          <button class="step" data-s="idle"><span class="sd"></span>idle</button>
+          <button class="step" data-s="listening"><span class="sd"></span>auto-listen</button>
+          <button class="step" data-s="ptt"><span class="sd"></span>push-to-talk</button>
+          <button class="step" data-s="thinking"><span class="sd"></span>thinking</button>
+          <button class="step" data-s="reply"><span class="sd"></span>reply</button>
+          <button class="step" data-s="consent"><span class="sd"></span>consent</button>
+          <button class="step" data-s="running"><span class="sd"></span>running</button>
+          <button class="step" data-s="minimized"><span class="sd"></span>minimized</button>
+          <button class="step" data-s="empty"><span class="sd"></span>empty</button>
+        </div>
+      </div>
+      <div class="ctl-group">
+        <span class="ctl-label">persona — recolours the orb</span>
+        <div class="personas" id="personas">
+          <div class="face on" data-p="vi"><span class="pdisc"></span><span class="pn">Vi</span></div>
+          <div class="face" data-p="atlas"><span class="pdisc"></span><span class="pn">Atlas</span></div>
+          <div class="face" data-p="nova"><span class="pdisc"></span><span class="pn">Nova</span></div>
+        </div>
+      </div>
+      <div class="ctl-group">
+        <span class="ctl-label">framing</span>
+        <div class="frame-toggle" id="frameToggle">
+          <button class="on" data-f="phone">phone 390</button>
+          <button data-f="desktop">desktop 1440</button>
+        </div>
+      </div>
+    </div>
+    <div class="now-showing" id="nowShowing"></div>
+  </div>
+
+  <!-- ─────────── THE STAGE ─────────── -->
+  <div class="stage-wrap">
+    <div class="device">
+
+      <!-- living field -->
+      <div class="bgfield">
+        <div class="aurora"></div>
+        <div class="aurora-hot"></div>
+        <div class="dotgrid"></div>
+        <div class="ghost g1"><i style="background:var(--acc)"></i>ask · ran</div>
+        <div class="ghost g2"><i style="background:var(--kind-content)"></i>codebase</div>
+      </div>
+
+      <!-- minimized floating re-open pill -->
+      <div class="minim-pill" title="tap to restore — vi stays present"><span class="mp-orb"></span><span class="mp-tx">vi is here</span></div>
+
+      <div class="shell">
+
+        <!-- desktop-only: left canvas gutter -->
+        <div class="gutter left">
+          <span class="gtitle">canvas — the graph behind</span>
+          <div class="canvas-ghost">the composition canvas</div>
+        </div>
+
+        <!-- THE CONVERSATION COLUMN (the same on phone + desktop) -->
+        <div class="col">
+          <header class="top">
+            <span class="brand">the&nbsp;<em>company</em></span>
+            <span class="presence"><span class="pdot"></span><span id="presenceTxt">listening</span></span>
+            <span class="minim" id="minimBtn" title="minimize — see the canvas behind">▁</span>
+          </header>
+
+          <section class="stage">
+            <div class="orbwrap">
+              <span class="ring"></span><span class="ring r2"></span><span class="ring r3"></span>
+              <span class="orb"></span>
+              <span class="ringtxt" id="orbGlyph">👂</span>
+            </div>
+            <div class="say" id="sayTxt">I'm listening — go ahead.</div>
+            <div class="mode" id="modeTxt">auto-listen · deepseek-v4-pro</div>
+          </section>
+
+          <!-- THE LOG — turns + scenario-specific blocks -->
+          <div class="log" id="log">
+            <div class="turn you">
+              <span class="who">you<span class="grade gold" title="gold — your own words, trains the twin">◆</span></span>
+              <div class="bubble">How does the memo gate decide whether a node re-runs?</div>
+            </div>
+
+            <div class="turn vi">
+              <span class="who">vi<span class="grade work" title="working-grade — the twin's inference">◇</span></span>
+              <div class="bubble">It hashes <code>(type, version, config, inputs)</code>. Unchanged, it skips and serves the cached result. A <em>volatile</em> node like <code>codebase</code> bypasses the gate, so it always re-runs.</div>
+            </div>
+
+            <!-- REPLY scenario: a clean speakable answer in Fraunces (not raw markdown) -->
+            <div class="turn vi only o-reply">
+              <span class="who">vi<span class="grade work">◇</span></span>
+              <div class="bubble">Three nodes feed your inbox right now. The codebase scan finished, the model brief is ready to read, and the cost rollup is still waiting on this morning's runs. Want me to open the brief, or hold until the rollup lands?</div>
+            </div>
+
+            <!-- indicate chip (auto-listen / idle context) -->
+            <div class="indicate only o-listening o-idle" title="your next message is about this element">
+              <span class="ic">⌖</span><span>ui://canvas/node/ask</span><span class="x">✕</span>
+            </div>
+
+            <!-- THINKING -->
+            <div class="thinking only o-thinking">
+              <span class="who">vi<span class="grade work">◇</span></span>
+              <span class="dots"><i></i><i></i><i></i></span>
+            </div>
+
+            <!-- CONSENT card -->
+            <div class="propose only o-consent">
+              <div class="ph"><span class="spark"></span>vi proposes</div>
+              <div class="pbody">Rerun <b>ask</b>, then route its output to your inbox.</div>
+              <div class="ptarget">↻ run://demo/ask  →  ✦ inbox</div>
+              <div class="pacts">
+                <button class="approve">approve</button>
+                <button class="decline">not now</button>
+              </div>
+            </div>
+
+            <!-- RUNNING strip (alive) -->
+            <div class="runbar only o-running">
+              <span class="spin"></span>
+              <div class="rmeta">
+                <div class="rt">Running <b>ask</b> → routing to inbox</div>
+                <div class="rprog"><i></i></div>
+              </div>
+              <span class="rpct">64%</span>
+            </div>
+          </div>
+
+          <!-- EMPTY / first-run -->
+          <div class="empty only o-empty">
+            <div class="orbwrap" style="margin:0 auto 4px"><span class="orb"></span></div>
+            <div class="et">Nothing here yet.</div>
+            <div class="es">Ask the company about itself, point at a node,<br>or just start talking — vi is listening.</div>
+          </div>
+
+          <!-- MINIMIZED canvas-behind -->
+          <div class="minim-canvas">
+            <div class="mc-hint">conversation minimized — the canvas is yours</div>
+            <div class="mc-nodes">
+              <div class="mc-node"><i style="background:var(--acc)"></i>ask · ran</div>
+              <div class="mc-node" style="animation-delay:-4s"><i style="background:var(--kind-content)"></i>codebase</div>
+              <div class="mc-node" style="animation-delay:-8s"><i style="background:var(--await)"></i>rollup · await</div>
+            </div>
+          </div>
+
+          <!-- DOCK -->
+          <div class="dock">
+            <span class="chip" id="recordChip"><span class="rdot"></span>recording</span>
+            <span class="chip">debrief</span>
+            <span class="chip thread">thread · <b>memo-gate</b></span>
+          </div>
+
+          <!-- INPUT -->
+          <div class="inputwrap">
+            <div class="inputbar std-input">
+              <input placeholder="ask the company about itself…" />
+              <span class="iconbtn mic autolisten" id="micBtn" title="auto-listen on — tap to stop">👂</span>
+              <span class="iconbtn send">→</span>
+            </div>
+            <!-- PUSH-TO-TALK held control (distinct from auto-listen) -->
+            <div class="inputbar ptt-input" style="background:none;border:none;padding:0;box-shadow:none">
+              <button class="ptt">
+                <span class="pttlabel">release to send</span>
+                <span class="levels"><b></b><b></b><b></b><b></b><b></b><b></b><b></b></span>
+              </button>
+              <span class="iconbtn" title="switch to auto-listen">👂</span>
+            </div>
+          </div>
+
+          <!-- TAB-BAR -->
+          <nav class="tabbar">
+            <a><span class="ic">▦</span>Canvas</a>
+            <a><span class="ic">✦</span>Inbox<span class="badge">3</span></a>
+            <a class="on"><span class="ic">◈</span>RHM</a>
+            <a><span class="ic">▶</span>Run</a>
+          </nav>
+        </div>
+
+        <!-- desktop-only: right inbox/run gutter -->
+        <div class="gutter right">
+          <span class="gtitle">inbox · run — outputs land here</span>
+          <div class="canvas-ghost">3 awaiting · 1 ready</div>
+        </div>
+
+      </div>
+      <div class="grain"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const root = document.getElementById('root');
+  const orbGlyph = document.getElementById('orbGlyph');
+  const sayTxt = document.getElementById('sayTxt');
+  const modeTxt = document.getElementById('modeTxt');
+  const presenceTxt = document.getElementById('presenceTxt');
+  const nowShowing = document.getElementById('nowShowing');
+
+  // each scenario: glyph in orb, the "say" line, the mode line, presence pill,
+  // activity intensity (drives aurora), and a one-line caption.
+  const SCENES = {
+    idle:      {glyph:'◈', say:'Here when you need me.',         mode:'idle · deepseek-v4-pro',         presence:'idle',      act:.08, cap:'Calm. Aurora drifts slow, the orb rests — vi present, not waiting on you.'},
+    listening: {glyph:'👂', say:"I'm listening — go ahead.",       mode:'auto-listen · deepseek-v4-pro',  presence:'listening', act:.35, cap:'Hands-free auto-listen — concentric ripples, mic glowing, no button to hold.'},
+    ptt:       {glyph:'🎙', say:'Hold and speak.',                 mode:'push-to-talk · deepseek-v4-pro', presence:'recording', act:.30, cap:'Push-to-talk — the held gesture: filled control, live level bars, release to send.'},
+    thinking:  {glyph:'◌', say:'Working it through…',             mode:'thinking · deepseek-v4-pro',     presence:'thinking',  act:.55, cap:'Breathing dots, the orb intensifies — vi is forming the answer.'},
+    reply:     {glyph:'◈', say:'Here is what I found.',           mode:'speaking · deepseek-v4-pro',     presence:'speaking',  act:.40, cap:'vi answers in Fraunces — clean speakable prose, never raw markdown.'},
+    consent:   {glyph:'◈', say:'May I run this?',                 mode:'proposing · deepseek-v4-pro',    presence:'awaiting',  act:.30, cap:'The consent gate — vi proposes, runs ONLY on approve. The signature move.'},
+    running:   {glyph:'⟳', say:'On it — running now.',            mode:'running · deepseek-v4-pro',      presence:'running',   act:1.0, cap:'Alive. Aurora energised, a second hot layer swirls, the run strip fills.'},
+    minimized: {glyph:'◈', say:'',                                mode:'',                               presence:'minimized', act:.20, cap:'Collapsed to a floating presence pill — the canvas behind is yours.'},
+    empty:     {glyph:'◈', say:'',                                mode:'',                               presence:'ready',     act:.12, cap:'First run — nothing yet. How presence reads with an empty stage.'}
+  };
+
+  function setScenario(s){
+    const sc = SCENES[s]; if(!sc) return;
+    root.setAttribute('data-scenario', s);
+    root.style.setProperty('--activity', sc.act);
+    orbGlyph.textContent = sc.glyph;
+    sayTxt.textContent = sc.say;
+    modeTxt.textContent = sc.mode;
+    presenceTxt.textContent = sc.presence;
+    nowShowing.innerHTML = '<b>'+labelFor(s)+'</b> — '+sc.cap;
+    // active button
+    document.querySelectorAll('#stepper .step').forEach(b=>b.classList.toggle('active', b.dataset.s===s));
+    replayStagger();
+  }
+  function labelFor(s){
+    return {idle:'IDLE',listening:'AUTO-LISTEN',ptt:'PUSH-TO-TALK',thinking:'THINKING',
+            reply:'REPLY',consent:'CONSENT PENDING',running:'RUNNING',minimized:'MINIMIZED',empty:'EMPTY'}[s];
+  }
+
+  // replay the entrance stagger without stopping ambient loops
+  function replayStagger(){
+    root.classList.add('replay'); root.classList.remove('go');
+    // force reflow so the animation restarts
+    void root.offsetWidth;
+    root.classList.add('go');
+  }
+
+  function setPersona(p){
+    root.setAttribute('data-persona', p);
+    document.querySelectorAll('#personas .face').forEach(f=>f.classList.toggle('on', f.dataset.p===p));
+  }
+
+  function setFrame(f){
+    root.setAttribute('data-frame', f);
+    document.querySelectorAll('#frameToggle button').forEach(b=>b.classList.toggle('on', b.dataset.f===f));
+  }
+
+  // wire controls
+  document.getElementById('stepper').addEventListener('click', e=>{
+    const b = e.target.closest('.step'); if(b) setScenario(b.dataset.s);
+  });
+  document.getElementById('personas').addEventListener('click', e=>{
+    const f = e.target.closest('.face'); if(f) setPersona(f.dataset.p);
+  });
+  document.getElementById('frameToggle').addEventListener('click', e=>{
+    const b = e.target.closest('button'); if(b) setFrame(b.dataset.f);
+  });
+  // minimize affordances inside the device
+  document.getElementById('minimBtn').addEventListener('click', ()=>setScenario('minimized'));
+  document.querySelector('.minim-pill').addEventListener('click', ()=>setScenario('listening'));
+
+  // keyboard: arrow keys step through scenarios
+  const order = Object.keys(SCENES);
+  document.addEventListener('keydown', e=>{
+    if(e.key!=='ArrowRight' && e.key!=='ArrowLeft') return;
+    const cur = root.getAttribute('data-scenario');
+    let i = order.indexOf(cur);
+    i = e.key==='ArrowRight' ? (i+1)%order.length : (i-1+order.length)%order.length;
+    setScenario(order[i]);
+  });
+
+  // boot
+  setScenario('listening');
+  setPersona('vi');
+  setFrame('phone');
+})();
+</script>
+</body></html>

@@ -631,12 +631,177 @@
       "feature": "EVT-now",
       "code": "runtime/suite.py:now",
       "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://toolbar",
+      "region": "toolbar",
+      "feature": "RUN-run",
+      "code": "canvas/app/src/regions/Toolbar.tsx (toolbar)",
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://toolbar/run",
+      "region": "toolbar",
+      "feature": "RUN-run",
+      "code": "canvas/app/src/regions/Toolbar.tsx (run) / runtime/suite.py:run",
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://palette",
+      "region": null,
+      "feature": null,
+      "code": null,
+      "registered": false
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas",
+      "region": "canvas",
+      "feature": "CAN-compose",
+      "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil",
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/node/codebase",
+      "region": null,
+      "feature": null,
+      "code": null,
+      "registered": false
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/node/model_of_tim",
+      "region": null,
+      "feature": null,
+      "code": null,
+      "registered": false
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/node/ask",
+      "region": null,
+      "feature": null,
+      "code": null,
+      "registered": false
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/node/join",
+      "region": null,
+      "feature": null,
+      "code": null,
+      "registered": false
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/node/rollup",
+      "region": null,
+      "feature": null,
+      "code": null,
+      "registered": false
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/node/embed-corpus",
+      "region": null,
+      "feature": null,
+      "code": null,
+      "registered": false
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/node/new-panel",
+      "region": null,
+      "feature": null,
+      "code": null,
+      "registered": false
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://inspector",
+      "region": "inspector",
+      "feature": "NODE-config",
+      "code": "contracts/node_type.py / canvas/app/src/regions/Inspector.tsx (Inspector)",
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://grow",
+      "region": "grow",
+      "feature": "SM-node",
+      "code": "canvas/app/src/regions/Grow.tsx / runtime/suite.py:apply_node",
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://address-help",
+      "region": null,
+      "feature": null,
+      "code": null,
+      "registered": false
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://inbox",
+      "region": "inbox",
+      "feature": "INB-lanes",
+      "code": "runtime/suite.py:inbox_lanes",
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://inbox/build-result",
+      "region": null,
+      "feature": null,
+      "code": null,
+      "registered": false
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://inbox/decision",
+      "region": null,
+      "feature": null,
+      "code": null,
+      "registered": false
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://rhm",
+      "region": null,
+      "feature": null,
+      "code": null,
+      "registered": false
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://tune",
+      "region": null,
+      "feature": null,
+      "code": null,
+      "registered": false
     }
   ],
   "orphans": {
     "unregistered": [
       "run://demo/ask",
-      "run://system/model_of_tim"
+      "run://system/model_of_tim",
+      "ui://address-help",
+      "ui://canvas/node/ask",
+      "ui://canvas/node/codebase",
+      "ui://canvas/node/embed-corpus",
+      "ui://canvas/node/join",
+      "ui://canvas/node/model_of_tim",
+      "ui://canvas/node/new-panel",
+      "ui://canvas/node/rollup",
+      "ui://inbox/build-result",
+      "ui://inbox/decision",
+      "ui://palette",
+      "ui://rhm",
+      "ui://tune"
     ],
     "unused": [
       "ui://canvas/wire-request",
@@ -651,7 +816,6 @@
       "ui://cognition",
       "ui://cognition/pulse",
       "ui://cognition/river",
-      "ui://grow",
       "ui://grow/approve",
       "ui://grow/dispatch",
       "ui://grow/reject",
@@ -674,6 +838,14 @@
       "ui://settings/modes",
       "ui://settings/roles",
       "ui://settings/voice",
+      "ui://studio",
+      "ui://studio/composer",
+      "ui://studio/rail",
+      "ui://studio/rhm",
+      "ui://studio/rhm/help",
+      "ui://studio/stage",
+      "ui://studio/stage/device-desktop",
+      "ui://studio/stage/device-phone",
       "ui://toolbar/delete",
       "ui://toolbar/fit",
       "ui://toolbar/guide",
@@ -683,6 +855,7 @@
       "ui://toolbar/reload",
       "ui://toolbar/teach",
       "ui://toolbar/wire",
+      "ui://view-switch",
       "ui://walkthrough/next",
       "ui://walkthrough/reason",
       "ui://walkthrough/show-again",
@@ -690,11 +863,11 @@
     ]
   },
   "summary": {
-    "screens": 17,
-    "addressed_elements": 79,
-    "distinct_addresses_used": 25,
-    "registered_addresses": 71,
-    "unregistered_orphans": 2,
-    "unused_orphans": 48
+    "screens": 23,
+    "addressed_elements": 98,
+    "distinct_addresses_used": 39,
+    "registered_addresses": 80,
+    "unregistered_orphans": 15,
+    "unused_orphans": 56
   }
 }

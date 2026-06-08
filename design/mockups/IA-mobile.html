@@ -1,0 +1,1031 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>The Company — Mobile IA · ◈ Board · ◇ Talk · ▤ Queue · ⚙ Tune</title>
+<!--
+  ============================================================
+  TARGET MOCKUP — MOBILE INFORMATION ARCHITECTURE (interactive · NOT corpus · NOT registered)
+  PURPOSE  Realise the PROPOSED mobile IA so Tim can DRIVE it before the real build.
+           THE CORE FIX: one focused view at a time, gated by a bottom tabbar, over an
+           always-live board. No region floats over another (.view{display:none} gate —
+           NOT a transform-sheet held on-screen by fill-mode:both, which is the exact S1
+           bug this design exists to kill).
+  REALISES  .build/interface/IA-PROPOSAL.md (mobile section) — 4 tabs, toolbar collapse,
+            show-me-on-clean-board, status-as-light. TIM'S LOCKED DECISIONS: 4th tab = TUNE
+            (Run is a thumb action on Board); SURFACE EVERYTHING POSSIBLE (latent caps in
+            their new homes, maximal exposure).
+  AESTHETIC inherits design/mockups/SCENARIO-PLAYER.html: warm-charcoal base, GOLD primary,
+            breathing orb, Fraunces (real ital axis) + IBM Plex Mono/Sans, depth, motion,
+            status-as-light. Palette = design/_system/tokens.json (gold theme).
+  LATENT CAPABILITIES SURFACED (★ = the buried gold, now visible):
+    BOARD  node-state-by-colour (idle/ran/cached/stuck/failed/live) · show element-resolver spotlight
+    TALK   build/panel/extend OFFER card · F1 terser/more/lead-with-X chips · consult
+    QUEUE  capture-idea / surface-output routing · approve/reject/comment per card · count badge
+    TUNE   ★panel/extend self-grow · ★/api/knobs dynamic per-model knobs · ★R2 live setters ·
+           ★run-stats rollup · ★voice-trial record→debrief · ★full self-change-log ledger ·
+           mode sub-types selectable · + fleet/activity/grow/versions/journey sections
+  NO FICTION — every element traces to a real capability in capability-map.md / REDESIGN-REFERENCE.md.
+  ============================================================
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400;9..144,0,500;9..144,0,600;9..144,1,400;9..144,1,500;9..144,0,900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════════════════
+   WARM GOLD THEME — a token re-skin mapping to _system/tokens.json
+   ════════════════════════════════════════════════════════════ */
+:root{
+  /* warm charcoal base (warm/umber undertone, never blue-black) */
+  --bg:#0c0a08; --s0:#13110d; --s1:#191611; --s2:#211d17; --s3:#2a241c;
+  --line:#332c22; --line-2:#403729;
+  --tx:#f3ece1; --tx-2:#b3a692; --tx-3:#6f6555;
+
+  /* GOLD is the primary identity colour + theme */
+  --gold-hi:#f2d08a; --gold:#e6ab5c; --gold-deep:#d2913f;
+  --acc:#e6ab5c; --acc-deep:#d2913f; --acc-glow:rgba(230,171,92,.18);
+  --acc-flow:linear-gradient(120deg,#f2d08a 0%,#e6ab5c 52%,#d2913f 100%);
+  --orb-hi:rgba(255,248,233,.62);
+
+  /* the TWO-VIVID + ONE-MUTED status split (status-by-colour, kept apart) */
+  --await:#e08a3c;          /* vivid orange-amber — leans away from gold */
+  --fail:#ec6a5e;           /* coral — failure */
+  --cache:#9c8f78;          /* the lone neutral taupe-grey */
+  --kind-content:#b89a6e;   /* desaturated bronze — 'building/structural', muted */
+  --kind-model:#c0a0c8;     /* soft warm mauve — the config accent */
+  --live:#8ad0c0;           /* reference/live (portal) — a single cool tint, off the warm axis */
+  --ink-accent:#1c1304; --ink-await:#1a1205; --ink-fail:#1a0a08;
+
+  --font-display:'Fraunces',Georgia,serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',monospace;
+  --font-sans:'IBM Plex Sans',system-ui,sans-serif;
+
+  --activity:.18;           /* aurora intensity, 0 calm … 1 alive */
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:radial-gradient(120% 90% at 50% 4%, #15110b 0%, #0a0806 58%, #060403 100%);
+  color:var(--tx); font-family:var(--font-sans); letter-spacing:.1px;
+  min-height:100vh; display:flex; flex-direction:column; align-items:center;
+  padding:30px 16px 60px; overflow-x:hidden;
+}
+
+/* ── the small caption above the device (the only chrome OUTSIDE the phone) ── */
+.intro{width:100%;max-width:430px;margin-bottom:18px;animation:fadein .8s both}
+.intro h1{font-family:var(--font-display);font-weight:600;font-size:25px;letter-spacing:-.5px;line-height:1.05}
+.intro h1 em{font-style:italic;font-weight:500;
+  background:var(--acc-flow);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.intro .sub{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--tx-3);margin-top:7px;line-height:1.7}
+.intro .sub b{color:var(--tx-2);font-weight:500}
+
+/* ════════════════════════════════════════════════════════════
+   THE DEVICE — a 390px phone, the whole instrument lives inside
+   ════════════════════════════════════════════════════════════ */
+.device{position:relative;width:390px;height:844px;border-radius:42px;overflow:hidden;background:var(--bg);
+  box-shadow:0 50px 120px -30px #000, 0 0 0 1px var(--line-2), 0 0 0 11px #0a0806, 0 0 0 12px #221c12}
+
+/* ── THE LIVING FIELD — warm-gold aurora behind everything; intensifies with --activity ── */
+.bgfield{position:absolute;inset:0;overflow:hidden;z-index:0}
+.aurora{position:absolute;inset:-40% -20%;filter:blur(60px);
+  opacity:calc(.34 + var(--activity) * .42);
+  background:
+    radial-gradient(40% 36% at 26% 26%, rgba(230,171,92,.30), transparent 70%),
+    radial-gradient(44% 40% at 82% 22%, rgba(210,145,63,.22), transparent 72%),
+    radial-gradient(52% 46% at 60% 90%, rgba(230,171,92,.20), transparent 70%);
+  animation:drift calc(30s - var(--activity) * 16s) ease-in-out infinite alternate;transition:opacity .8s ease}
+@keyframes drift{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(-20px,16px,0) scale(1.07)}100%{transform:translate3d(16px,-12px,0) scale(1.04)}}
+.aurora-hot{position:absolute;inset:-30% -15%;filter:blur(48px);opacity:calc(var(--activity) * .5);
+  background:radial-gradient(38% 34% at 62% 42%, rgba(230,171,92,.42), transparent 66%),radial-gradient(40% 36% at 34% 72%, rgba(230,171,92,.38), transparent 68%);
+  animation:swirl 8s ease-in-out infinite alternate;transition:opacity .8s ease}
+@keyframes swirl{0%{transform:translate3d(0,0,0) scale(1) rotate(0)}100%{transform:translate3d(20px,-16px,0) scale(1.12) rotate(7deg)}}
+.dotgrid{position:absolute;inset:0;opacity:.45;
+  background-image:radial-gradient(rgba(150,135,110,.09) .9px,transparent .9px);background-size:26px 26px;
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,transparent 60%);mask-image:linear-gradient(180deg,#000 0%,transparent 60%)}
+.grain{position:absolute;inset:0;pointer-events:none;opacity:.035;z-index:60;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* a thin presence WISP at the very top edge (status-as-light, not a bar, not text) */
+.wisp{position:absolute;top:0;left:0;right:0;height:3px;z-index:40;
+  background:linear-gradient(90deg,transparent,var(--acc) 30%,var(--gold-hi) 50%,var(--acc) 70%,transparent);
+  opacity:.5;filter:blur(.4px);animation:wispbreathe 4s ease-in-out infinite}
+@keyframes wispbreathe{0%,100%{opacity:.32}50%{opacity:.7}}
+
+/* ── THE SHELL — a column: [view-stack] then [tabbar]. Top edge stays empty. ── */
+.shell{position:absolute;inset:0;display:flex;flex-direction:column;z-index:10}
+.viewstack{position:relative;flex:1;min-height:0}
+
+/* ════════════════════════════════════════════════════════════
+   THE GATE — one view at a time. display:none on inactive (NOT a held
+   transform). This is the literal fix for S1: no stacking, ever.
+   ════════════════════════════════════════════════════════════ */
+.view{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden}
+.view.active{display:flex}
+/* entrance stagger replays on the NOW-VISIBLE view only (motion without stacking) */
+.view.active.go > *{animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
+.view.active.go > *:nth-child(2){animation-delay:.05s}
+.view.active.go > *:nth-child(3){animation-delay:.10s}
+.view.active.go > *:nth-child(4){animation-delay:.15s}
+.view.active.go > *:nth-child(5){animation-delay:.20s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+
+/* a scrolling region inside a full-viewport view (Tune) */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{width:0}
+
+/* ─── shared atoms (the kit) ─── */
+.sect-head{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:8.5px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--tx-3);margin:0 0 9px}
+.sect-head .star{color:var(--acc);font-size:9px}
+.sect-head .tag{margin-left:auto;font-size:8px;letter-spacing:.1em;color:var(--tx-3);
+  border:1px solid var(--line);border-radius:99px;padding:2px 7px}
+.sect-head .tag.latent{color:var(--acc);border-color:var(--acc-deep)}
+.surface{background:linear-gradient(165deg,var(--s2),var(--s1));border:1px solid var(--line-2);
+  border-radius:13px;box-shadow:0 12px 30px -22px #000}
+.dim{color:var(--tx-3);font-family:var(--font-mono);font-size:9.5px;letter-spacing:.04em}
+
+/* ════════════════════════════════════════════════════════════
+   ◈ BOARD — a clean full-bleed tldraw board. Nodes coloured BY STATE.
+   Floating thumb cluster. Inspector sheet on select. Spotlight overlay.
+   ════════════════════════════════════════════════════════════ */
+#board{padding:0}
+.board-canvas{position:absolute;inset:0;overflow:hidden}
+/* the clean stage — a faint board grid, no toolbar, no prose */
+.board-grid{position:absolute;inset:0;
+  background-image:linear-gradient(rgba(150,135,110,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(150,135,110,.05) 1px,transparent 1px);
+  background-size:34px 34px;
+  -webkit-mask-image:radial-gradient(140% 100% at 50% 40%,#000 55%,transparent);mask-image:radial-gradient(140% 100% at 50% 40%,#000 55%,transparent)}
+
+/* a node card — colour = state, read by sight. The 6-state vocabulary, all distinct. */
+.node{position:absolute;width:128px;border-radius:12px;padding:11px 12px 10px;cursor:pointer;
+  background:linear-gradient(165deg,var(--s2),var(--s1));border:1px solid var(--line-2);
+  box-shadow:0 14px 32px -22px #000;transition:transform .18s,box-shadow .2s,border-color .2s;
+  animation:nodefloat 14s ease-in-out infinite}
+@keyframes nodefloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.node:hover,.node:active{transform:translateY(-3px);box-shadow:0 20px 40px -20px #000}
+.node.sel{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc),0 20px 44px -18px var(--acc-glow)}
+.node .nstate{display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:8px;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--tx-3);margin-bottom:7px}
+.node .nstate .led{width:7px;height:7px;border-radius:99px;flex:none}
+.node .nname{font-family:var(--font-display);font-size:15px;font-weight:500;color:var(--tx);line-height:1}
+.node .nkind{font-family:var(--font-mono);font-size:8.5px;color:var(--tx-3);margin-top:4px;letter-spacing:.06em}
+/* the wire threads between nodes */
+.wires{position:absolute;inset:0;pointer-events:none;z-index:1}
+.wires path{fill:none;stroke:var(--kind-content);stroke-width:1.4;opacity:.45;stroke-dasharray:3 4;
+  animation:wiredash 22s linear infinite}
+@keyframes wiredash{to{stroke-dashoffset:-120}}
+
+/* node-state colours — the surfaced latent vocabulary (Suite.NODE_STATES) */
+.led.idle  {background:var(--tx-3)}
+.led.ran   {background:var(--acc);box-shadow:0 0 8px -1px var(--acc)}
+.led.cached{background:var(--cache)}
+.led.stuck {background:var(--await);box-shadow:0 0 8px -1px var(--await)}
+.led.failed{background:var(--fail);box-shadow:0 0 8px -1px var(--fail)}
+.led.live  {background:var(--live);box-shadow:0 0 8px -1px var(--live);animation:breathe 2.4s ease-in-out infinite}
+.led.empty {background:transparent;border:1px solid var(--line-2)}
+.node[data-st="ran"]   {border-color:rgba(230,171,92,.4)}
+.node[data-st="stuck"] {border-color:rgba(224,138,60,.45)}
+.node[data-st="failed"]{border-color:rgba(236,106,94,.45)}
+.node[data-st="live"]  {border-color:rgba(138,208,192,.4)}
+
+/* a tiny legend chip-row so the colour vocabulary reads as deliberate (status-as-light key) */
+.state-key{position:absolute;left:14px;top:16px;z-index:3;display:flex;flex-wrap:wrap;gap:5px 9px;max-width:200px}
+.state-key .sk{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:8px;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--tx-3)}
+.state-key .sk i{width:6px;height:6px;border-radius:99px}
+
+/* the floating THUMB CLUSTER, bottom-right — Run + FAB (＋) */
+.thumb-cluster{position:absolute;right:16px;bottom:18px;z-index:8;display:flex;flex-direction:column;gap:11px;align-items:flex-end}
+.fab{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;cursor:pointer;font-size:25px;
+  border:none;color:var(--ink-accent);background:var(--acc-flow);
+  box-shadow:0 14px 34px -10px var(--acc-glow),0 0 0 1px rgba(255,255,255,.06);
+  transition:transform .16s}
+.fab:active{transform:scale(.92)}
+.fab.run{width:50px;height:50px;font-size:18px;background:var(--s2);color:var(--acc);
+  border:1px solid var(--acc-deep);box-shadow:0 12px 28px -14px #000}
+.fab.run.running{background:var(--acc-flow);color:var(--ink-accent);border-color:transparent;animation:runpulse 1.4s ease-in-out infinite}
+@keyframes runpulse{0%,100%{box-shadow:0 0 0 0 rgba(230,171,92,0)}50%{box-shadow:0 0 0 10px rgba(230,171,92,.12)}}
+/* when running, the board edge pulses (status-as-light, not "running… 4s") */
+.run-edge{position:absolute;inset:0;z-index:7;pointer-events:none;border-radius:0;opacity:0;
+  box-shadow:inset 0 0 0 2px var(--acc);transition:opacity .3s}
+#board.is-running .run-edge{opacity:.5;animation:edgepulse 1.6s ease-in-out infinite}
+@keyframes edgepulse{0%,100%{opacity:.22}50%{opacity:.6}}
+
+/* a small "show me" entry — bottom-LEFT, low-weight (the on-ramp) */
+.showme-entry{position:absolute;left:16px;bottom:20px;z-index:8;display:inline-flex;align-items:center;gap:8px;
+  cursor:pointer;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx-2);
+  background:rgba(25,22,17,.7);border:1px solid var(--line-2);border-radius:99px;padding:9px 14px 9px 11px;backdrop-filter:blur(10px)}
+.showme-entry .gl{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10px;
+  background:var(--acc-glow);color:var(--acc)}
+.showme-entry:active{transform:scale(.96)}
+
+/* ── PALETTE SHORT-SHEET — rises from ＋ FAB; contextual to Board ── */
+.palette-sheet{position:absolute;left:0;right:0;bottom:0;z-index:14;transform:translateY(112%);
+  transition:transform .34s cubic-bezier(.3,.9,.3,1);
+  background:linear-gradient(180deg,var(--s2),var(--s1));border-top:1px solid var(--line-2);
+  border-radius:22px 22px 0 0;padding:14px 16px 22px;box-shadow:0 -24px 60px -28px #000}
+#board.show-palette .palette-sheet{transform:translateY(0)}
+.sheet-grip{width:38px;height:4px;border-radius:99px;background:var(--line-2);margin:0 auto 13px}
+.palette-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.pal-chip{display:flex;flex-direction:column;align-items:center;gap:6px;padding:11px 4px;border-radius:11px;cursor:pointer;
+  background:rgba(42,36,28,.5);border:1px solid var(--line);transition:transform .15s,border-color .2s}
+.pal-chip:active{transform:scale(.94)}
+.pal-chip .mono{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-family:var(--font-mono);
+  font-size:13px;font-weight:600;color:var(--ink-accent)}
+.pal-chip.process .mono{background:var(--acc-flow)}
+.pal-chip.content .mono{background:linear-gradient(135deg,#cbab7a,#b89a6e);color:#1c1304}
+.pal-chip.model   .mono{background:linear-gradient(135deg,#d4bdd9,#c0a0c8);color:#1c1304}
+.pal-chip .pl{font-family:var(--font-mono);font-size:8px;letter-spacing:.05em;color:var(--tx-2)}
+.pal-search{display:flex;align-items:center;gap:8px;background:rgba(12,10,8,.6);border:1px solid var(--line);
+  border-radius:99px;padding:8px 14px;margin-bottom:13px;font-family:var(--font-mono);font-size:11px;color:var(--tx-3)}
+
+/* ── INSPECTOR SHEET — rises on node SELECT; THAT node only ── */
+.inspector-sheet{position:absolute;left:0;right:0;bottom:0;z-index:15;transform:translateY(112%);
+  transition:transform .34s cubic-bezier(.3,.9,.3,1);max-height:74%;
+  background:linear-gradient(180deg,var(--s2),var(--s1));border-top:1px solid var(--acc-deep);
+  border-radius:22px 22px 0 0;padding:14px 18px 20px;box-shadow:0 -24px 60px -28px #000,0 0 0 1px var(--acc-glow);
+  display:flex;flex-direction:column;overflow:hidden}
+#board.show-inspector .inspector-sheet{transform:translateY(0)}
+.insp-head{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+.insp-head .ititle{font-family:var(--font-display);font-size:20px;font-weight:500;color:var(--tx);line-height:1}
+.insp-head .istate{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:8.5px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--tx-2)}
+.insp-head .istate i{width:7px;height:7px;border-radius:99px}
+.insp-head .iclose{margin-left:auto;width:30px;height:30px;display:grid;place-items:center;cursor:pointer;
+  border-radius:9px;border:1px solid var(--line);color:var(--tx-3);background:rgba(12,10,8,.4)}
+.insp-body{overflow-y:auto;display:flex;flex-direction:column;gap:13px}
+.insp-body::-webkit-scrollbar{width:0}
+.insp-block .il{font-family:var(--font-mono);font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx-3);margin-bottom:7px}
+.cfg-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;border-radius:9px;
+  background:rgba(12,10,8,.45);border:1px solid var(--line);margin-bottom:6px}
+.cfg-row .k{font-family:var(--font-mono);font-size:10px;color:var(--tx-2)}
+.cfg-row .v{font-family:var(--font-mono);font-size:10px;color:var(--acc)}
+.out-card{padding:12px 13px;border-radius:11px;background:rgba(12,10,8,.5);border:1px solid var(--line);
+  font-family:var(--font-display);font-size:13px;line-height:1.5;color:var(--tx)}
+.insp-acts{display:flex;gap:8px;margin-top:4px}
+.insp-acts button{flex:1;cursor:pointer;font-family:var(--font-mono);font-size:10px;font-weight:500;letter-spacing:.04em;
+  padding:11px 6px;border-radius:10px;border:1px solid var(--line-2);background:var(--s3);color:var(--tx-2);transition:transform .14s,color .2s}
+.insp-acts button:active{transform:translateY(1px)}
+.insp-acts .wire{color:var(--kind-content);border-color:rgba(184,154,110,.4)}
+.insp-acts .portal{color:var(--live);border-color:rgba(138,208,192,.4)}
+.insp-acts .del{color:var(--fail);border-color:rgba(236,106,94,.4)}
+
+/* scrim behind a raised sheet */
+.scrim{position:absolute;inset:0;z-index:13;background:rgba(6,4,3,.55);opacity:0;pointer-events:none;transition:opacity .3s}
+#board.show-palette .scrim,#board.show-inspector .scrim{opacity:1;pointer-events:auto}
+
+/* ── SPOTLIGHT OVERLAY — show-me runs HERE, on the clean board ── */
+.spotlight{position:absolute;inset:0;z-index:20;display:none;flex-direction:column;justify-content:flex-end;
+  padding:0 0 130px}
+#board.spotlight-on .spotlight{display:flex}
+.spot-dim{position:absolute;inset:0;background:rgba(6,4,3,.74);backdrop-filter:blur(1px)}
+/* the ring around ONE element — positioned per-step via JS */
+.spot-ring{position:absolute;border-radius:16px;border:2px solid var(--acc);box-shadow:0 0 0 4px var(--acc-glow),0 0 30px -2px var(--acc-glow);
+  transition:all .5s cubic-bezier(.3,.9,.3,1);animation:ringbreathe 2.2s ease-in-out infinite}
+@keyframes ringbreathe{0%,100%{box-shadow:0 0 0 4px var(--acc-glow),0 0 24px -2px var(--acc-glow)}50%{box-shadow:0 0 0 7px var(--acc-glow),0 0 40px 0 var(--acc-glow)}}
+.spot-caption{position:relative;z-index:2;align-self:center;max-width:300px;text-align:center;cursor:pointer}
+.spot-caption .sc-txt{font-family:var(--font-display);font-style:italic;font-size:18px;line-height:1.4;color:var(--tx)}
+.spot-caption .sc-txt b{color:var(--acc);font-style:normal;font-weight:500}
+.spot-caption .sc-adv{margin-top:14px;font-family:var(--font-mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx-3)}
+.spot-caption .sc-prog{display:flex;gap:6px;justify-content:center;margin-top:11px}
+.spot-caption .sc-prog i{width:6px;height:6px;border-radius:99px;background:var(--line-2)}
+.spot-caption .sc-prog i.on{background:var(--acc)}
+.spot-exit{position:absolute;top:18px;right:18px;z-index:2;width:34px;height:34px;display:grid;place-items:center;cursor:pointer;
+  border-radius:99px;border:1px solid var(--line-2);background:rgba(25,22,17,.7);color:var(--tx-2);font-size:13px}
+
+/* ════════════════════════════════════════════════════════════
+   ◇ TALK — the breathing orb front+centre, the thread, push-to-talk,
+   the offer card, the F1 feedback chips. status-as-light (no mode words).
+   ════════════════════════════════════════════════════════════ */
+#talk{padding:0}
+.orb-stage{padding:34px 22px 6px;text-align:center;flex:none}
+.orbwrap{position:relative;width:120px;height:120px;margin:0 auto}
+.orb{position:absolute;inset:0;border-radius:50%;
+  background:
+    radial-gradient(circle at 38% 32%, var(--orb-hi), transparent 42%),
+    radial-gradient(circle at 60% 66%, var(--gold), transparent 58%),
+    conic-gradient(from 200deg at 50% 50%, var(--acc), var(--gold), var(--acc-deep), var(--acc));
+  box-shadow:0 0 44px -4px var(--acc-glow), inset 0 0 32px -6px rgba(255,247,232,.28);
+  animation:breathe 3.4s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.05);filter:brightness(1.14)}}
+.orb::after{content:"";position:absolute;inset:0;border-radius:50%;mix-blend-mode:screen;
+  background:var(--acc-flow);background-size:240% 240%;animation:sheen 6s ease-in-out infinite;opacity:.2}
+@keyframes sheen{0%,100%{background-position:0% 50%;opacity:.16}50%{background-position:100% 50%;opacity:.4}}
+/* listening rings — only when the orb is in listening state */
+.ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--acc);opacity:0}
+#talk.listening .ring{animation:ripple 3.4s ease-out infinite}
+#talk.listening .ring.r2{animation-delay:1.13s}
+#talk.listening .ring.r3{animation-delay:2.26s}
+@keyframes ripple{0%{transform:scale(1);opacity:.45}100%{transform:scale(1.95);opacity:0}}
+/* thinking state — the orb's sheen intensifies + dots show */
+#talk.thinking .orb::after{opacity:.42}
+.orb-glyph{position:absolute;inset:0;display:grid;place-items:center;font-size:30px}
+.say-line{font-family:var(--font-display);font-style:italic;font-size:17px;color:var(--tx-2);margin-top:18px;min-height:24px;transition:opacity .4s}
+
+/* the conversation thread — reads like speech, vi in Fraunces serif */
+.thread{flex:1;overflow-y:auto;padding:18px 18px 6px;display:flex;flex-direction:column;gap:15px;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 26px);mask-image:linear-gradient(180deg,transparent 0,#000 26px)}
+.thread::-webkit-scrollbar{width:0}
+.turn{max-width:86%}
+.turn.you{align-self:flex-end;text-align:right}
+.turn.vi{align-self:flex-start}
+.turn .who{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:8px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--tx-3);margin-bottom:6px}
+.grade{font-size:9px}.grade.gold{color:var(--acc)}.grade.work{color:var(--cache)}
+.bubble{font-size:13.5px;line-height:1.55;padding:13px 15px;border-radius:16px}
+.turn.you .bubble{background:linear-gradient(165deg,var(--acc-glow),rgba(230,171,92,.04));
+  border:1px solid var(--acc-glow);border-bottom-right-radius:5px;color:var(--tx)}
+.turn.vi .bubble{background:linear-gradient(165deg,var(--s2),var(--s1));border:1px solid var(--line-2);
+  border-bottom-left-radius:5px;color:var(--tx);font-family:var(--font-display);font-weight:400;box-shadow:0 12px 30px -20px #000}
+.turn.vi .bubble code{font-family:var(--font-mono);font-size:11.5px;color:var(--acc);background:var(--acc-glow);padding:1px 5px;border-radius:5px}
+.thinking-row{align-self:flex-start;display:flex;align-items:center;gap:9px;padding:4px 2px}
+.thinking-row .dots{display:flex;gap:5px}
+.thinking-row .dots i{width:7px;height:7px;border-radius:99px;background:var(--acc);animation:bounce 1.2s ease-in-out infinite}
+.thinking-row .dots i:nth-child(2){animation-delay:.15s}.thinking-row .dots i:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-5px);opacity:1}}
+
+/* consult chip — ask the system about itself (surfaced latent: consult verb) */
+.consult-chip{align-self:flex-start;display:inline-flex;align-items:center;gap:7px;
+  background:rgba(192,160,200,.1);border:1px solid rgba(192,160,200,.34);border-radius:99px;padding:5px 11px;
+  font-family:var(--font-mono);font-size:9.5px;color:var(--kind-model)}
+
+/* the build/panel/extend OFFER card — auto-raises (the surfaced self-mod) */
+.offer{align-self:stretch;background:linear-gradient(165deg,var(--s2),var(--s1));border:1px solid var(--acc-deep);
+  border-radius:16px;border-bottom-left-radius:5px;padding:15px;box-shadow:0 14px 36px -22px #000,0 0 0 1px var(--acc-glow)}
+.offer .oh{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:8.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--acc);margin-bottom:10px}
+.offer .oh .spark{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow);animation:breathe 2.4s ease-in-out infinite}
+.offer .oh .kind{margin-left:auto;color:var(--kind-content);border:1px solid rgba(184,154,110,.4);border-radius:99px;padding:2px 8px;letter-spacing:.1em}
+.offer .obody{font-family:var(--font-display);font-size:15px;line-height:1.45;color:var(--tx);margin-bottom:5px}
+.offer .obody b{color:var(--acc)}
+.offer .otarget{font-family:var(--font-mono);font-size:9.5px;color:var(--tx-3);margin-bottom:13px}
+.offer .oacts{display:flex;gap:9px}
+.offer .oacts button{flex:1;border:none;cursor:pointer;font-family:var(--font-mono);font-size:11px;font-weight:600;
+  padding:11px;border-radius:10px;letter-spacing:.04em;transition:transform .15s}
+.offer .oacts button:active{transform:translateY(1px)}
+.offer .approve{background:var(--acc-flow);color:var(--ink-accent);box-shadow:0 10px 24px -10px var(--acc-glow)}
+.offer .decline{background:var(--s3);border:1px solid var(--line-2)!important;color:var(--tx-2)}
+
+/* dock above the input — F1 feedback chips (surfaced latent: terser/more/lead-with-X) */
+.talk-dock{flex:none;padding:8px 16px 0;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.f1-chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.03em;
+  padding:6px 11px;border-radius:99px;background:rgba(25,22,17,.6);border:1px solid var(--line);color:var(--tx-2);cursor:pointer;transition:transform .15s,color .2s,border-color .2s}
+.f1-chip:active{transform:scale(.95)}
+.f1-chip.on{color:var(--acc);border-color:var(--acc-deep);background:var(--acc-glow)}
+.f1-chip .ic{font-size:11px;color:var(--acc)}
+.f1-label{font-family:var(--font-mono);font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx-3);width:100%;margin-bottom:1px}
+
+/* the big PUSH-TO-TALK control — the dominant thumb target */
+.talk-input{flex:none;padding:11px 16px 24px}
+.ptt-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:13px;cursor:pointer;
+  background:var(--acc-flow);border:none;border-radius:20px;padding:18px;
+  box-shadow:0 0 0 4px var(--acc-glow),0 14px 34px -12px var(--acc-glow);transition:transform .14s}
+.ptt-btn:active{transform:scale(.98)}
+.ptt-btn .pl{font-family:var(--font-mono);font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-accent)}
+.ptt-btn .ic{font-size:20px}
+.ptt-btn .levels{display:flex;align-items:center;gap:3px;height:24px}
+.ptt-btn .levels b{width:3px;border-radius:99px;background:var(--ink-accent);opacity:.85;animation:lvl .6s ease-in-out infinite}
+.ptt-btn .levels b:nth-child(2){animation-delay:.08s}.ptt-btn .levels b:nth-child(3){animation-delay:.16s}
+.ptt-btn .levels b:nth-child(4){animation-delay:.24s}.ptt-btn .levels b:nth-child(5){animation-delay:.32s}
+@keyframes lvl{0%,100%{height:6px}50%{height:22px}}
+.talk-input .alt{margin-top:11px;display:flex;align-items:center;justify-content:center;gap:7px;
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx-3)}
+.talk-input .alt .typ{cursor:pointer;color:var(--tx-2);border:1px solid var(--line);border-radius:99px;padding:5px 12px}
+
+/* ════════════════════════════════════════════════════════════
+   ▤ QUEUE — one scannable list of cards, lane-by-tint, thumb actions.
+   ════════════════════════════════════════════════════════════ */
+#queue{padding:0}
+.queue-head{flex:none;padding:26px 20px 8px}
+.queue-head h2{font-family:var(--font-display);font-size:23px;font-weight:500;color:var(--tx);line-height:1}
+.queue-head .qmeta{font-family:var(--font-mono);font-size:9px;letter-spacing:.06em;color:var(--tx-3);margin-top:6px}
+.queue-head .qmeta b{color:var(--await)}
+.qlist{flex:1;overflow-y:auto;padding:8px 16px 24px;display:flex;flex-direction:column;gap:12px}
+.qlist::-webkit-scrollbar{width:0}
+.qcard{border-radius:14px;padding:14px;background:linear-gradient(165deg,var(--s2),var(--s1));
+  border:1px solid var(--line-2);border-left-width:3px;box-shadow:0 12px 30px -24px #000}
+/* lane-by-tint — the left border carries the lane */
+.qcard.decision    {border-left-color:var(--await)}
+.qcard.build-review{border-left-color:var(--kind-content)}
+.qcard.question    {border-left-color:var(--kind-model)}
+.qcard .qtop{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.qcard .qlane{font-family:var(--font-mono);font-size:8px;letter-spacing:.13em;text-transform:uppercase}
+.qcard.decision .qlane{color:var(--await)}.qcard.build-review .qlane{color:var(--kind-content)}.qcard.question .qlane{color:var(--kind-model)}
+.qcard .qwhen{margin-left:auto;font-family:var(--font-mono);font-size:8.5px;color:var(--tx-3)}
+.qcard .qwhat{font-family:var(--font-display);font-size:15px;line-height:1.4;color:var(--tx);margin-bottom:4px}
+.qcard .qsub{font-family:var(--font-mono);font-size:9.5px;color:var(--tx-3);margin-bottom:12px;line-height:1.6}
+.qcard .qsub code{color:var(--acc)}
+.qcard .qacts{display:flex;gap:8px}
+.qcard .qacts button{flex:1;cursor:pointer;font-family:var(--font-mono);font-size:10px;font-weight:500;letter-spacing:.04em;
+  padding:10px 6px;border-radius:9px;border:1px solid var(--line-2);background:var(--s3);color:var(--tx-2);transition:transform .14s}
+.qcard .qacts button:active{transform:translateY(1px)}
+.qcard .qacts .ok{background:var(--acc-flow);color:var(--ink-accent);border-color:transparent}
+.qcard .qacts .rej{color:var(--fail);border-color:rgba(236,106,94,.35)}
+/* the capture/surface-output footer — route an output INTO the queue (surfaced latent) */
+.qfoot{flex:none;padding:10px 16px 20px;display:flex;gap:9px}
+.qfoot .cap{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.05em;color:var(--tx-2);
+  background:rgba(25,22,17,.6);border:1px dashed var(--line-2);border-radius:12px;padding:12px}
+.qfoot .cap .ic{color:var(--acc);font-size:13px}
+
+/* ════════════════════════════════════════════════════════════
+   ⚙ TUNE — full viewport. Consolidated settings + EVERY latent cap
+   as a recognisable section (recognition-by-sight, not dense forms).
+   ════════════════════════════════════════════════════════════ */
+#tune{padding:0}
+.tune-head{flex:none;padding:26px 20px 10px}
+.tune-head h2{font-family:var(--font-display);font-size:23px;font-weight:500;color:var(--tx);line-height:1}
+.tune-head .tsub{font-family:var(--font-mono);font-size:9px;letter-spacing:.06em;color:var(--tx-3);margin-top:6px}
+.tune-scroll{flex:1;overflow-y:auto;padding:6px 16px 30px;display:flex;flex-direction:column;gap:18px}
+.tune-scroll::-webkit-scrollbar{width:0}
+.tcard{border-radius:14px;padding:14px 15px;background:linear-gradient(165deg,var(--s2),var(--s1));
+  border:1px solid var(--line-2);box-shadow:0 12px 30px -24px #000}
+.tcard.gold{border-color:var(--acc-deep);box-shadow:0 12px 30px -24px #000,0 0 0 1px var(--acc-glow)}
+/* a live config slot row — one representative control, status-as-light */
+.slot{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(64,55,41,.4)}
+.slot:last-child{border-bottom:none}
+.slot .sk{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.04em;color:var(--tx-2);min-width:74px}
+.slot .sv{margin-left:auto;display:inline-flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:10px;color:var(--acc)}
+.slot .sv .led{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 7px -1px var(--acc)}
+/* selectable pills (mode sub-types, persona — surfaced: sub-types now SELECTABLE) */
+.pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.pill{font-family:var(--font-mono);font-size:9px;letter-spacing:.05em;padding:6px 11px;border-radius:99px;cursor:pointer;
+  background:rgba(42,36,28,.5);border:1px solid var(--line);color:var(--tx-2);transition:transform .14s,color .2s,border-color .2s}
+.pill:active{transform:scale(.95)}
+.pill.on{background:var(--acc-glow);border-color:var(--acc-deep);color:var(--acc)}
+.pill.sub{color:var(--kind-model);border-color:rgba(192,160,200,.3)}
+.pill.sub.on{background:rgba(192,160,200,.12);border-color:var(--kind-model);color:var(--kind-model)}
+/* a knob slider (the /api/knobs dynamic surface + R2 live setters) */
+.knob{margin:9px 0}
+.knob .kl{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:9px;color:var(--tx-2);margin-bottom:6px}
+.knob .kl b{color:var(--acc)}
+.knob .track{height:5px;border-radius:99px;background:var(--s3);position:relative}
+.knob .track .fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--acc-flow)}
+.knob .track .thumb{position:absolute;top:50%;width:15px;height:15px;border-radius:50%;background:var(--gold-hi);
+  transform:translate(-50%,-50%);box-shadow:0 2px 8px -1px #000,0 0 0 3px var(--acc-glow);cursor:pointer}
+.knob.r2 .track .fill{background:linear-gradient(120deg,#d4bdd9,#c0a0c8)}
+.knob.r2 .track .thumb{background:#dcc6e0}
+/* run-stats distribution bars (surfaced latent: introspective rollup) */
+.dist{display:flex;align-items:flex-end;gap:5px;height:46px;margin-top:6px}
+.dist b{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(180deg,var(--acc),var(--acc-deep));opacity:.85}
+.dist-x{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:7.5px;color:var(--tx-3);margin-top:5px}
+.stat-row{display:flex;gap:8px;margin-top:11px}
+.stat{flex:1;text-align:center;padding:10px 4px;border-radius:10px;background:rgba(12,10,8,.4);border:1px solid var(--line)}
+.stat .n{font-family:var(--font-display);font-size:19px;color:var(--acc);line-height:1}
+.stat .t{font-family:var(--font-mono);font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx-3);margin-top:5px}
+/* the SELF-GROW affordance — the #1 latent: build a panel / write a component */
+.grow-acts{display:flex;gap:9px;margin-top:11px}
+.grow-acts button{flex:1;cursor:pointer;font-family:var(--font-mono);font-size:10px;font-weight:500;letter-spacing:.03em;
+  padding:13px 6px;border-radius:11px;border:1px solid var(--acc-deep);background:rgba(230,171,92,.08);color:var(--acc);
+  display:flex;flex-direction:column;align-items:center;gap:6px;transition:transform .14s}
+.grow-acts button:active{transform:translateY(1px)}
+.grow-acts button .gic{font-size:17px}
+.grow-acts button .gd{font-size:8px;color:var(--tx-3);letter-spacing:.04em;text-transform:none}
+/* voice trial record→debrief */
+.trial{display:flex;align-items:center;gap:11px;margin-top:10px}
+.trial .rec{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;cursor:pointer;flex:none;
+  border:1px solid var(--fail);background:rgba(236,106,94,.1);color:var(--fail);font-size:14px}
+.trial .rec .rdot{width:12px;height:12px;border-radius:50%;background:var(--fail);box-shadow:0 0 0 3px rgba(236,106,94,.18);animation:breathe 1.8s ease-in-out infinite}
+.trial .tm{flex:1}
+.trial .tm .tt{font-family:var(--font-display);font-size:13px;color:var(--tx)}
+.trial .tm .ts{font-family:var(--font-mono);font-size:9px;color:var(--tx-3);margin-top:3px}
+.trial .deb{cursor:pointer;font-family:var(--font-mono);font-size:9.5px;color:var(--tx-2);border:1px solid var(--line-2);border-radius:99px;padding:8px 13px}
+/* self-change-log ledger */
+.ledger .lrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(64,55,41,.4);font-family:var(--font-mono)}
+.ledger .lrow:last-child{border-bottom:none}
+.ledger .lrow .lsha{font-size:9px;color:var(--kind-content);min-width:52px}
+.ledger .lrow .lsub{font-size:10px;color:var(--tx-2);flex:1;font-family:var(--font-sans)}
+.ledger .lrow .lwhen{font-size:8px;color:var(--tx-3)}
+.ledger .lrow.revert .lsha{color:var(--fail)}
+/* fleet / activity small status rows */
+.frow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(64,55,41,.4)}
+.frow:last-child{border-bottom:none}
+.frow .fled{width:7px;height:7px;border-radius:99px;flex:none}
+.frow .fn{font-family:var(--font-mono);font-size:10px;color:var(--tx-2)}
+.frow .fs{margin-left:auto;font-family:var(--font-mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx-3)}
+.fled.up{background:var(--acc);box-shadow:0 0 7px -1px var(--acc)}
+.fled.loading{background:var(--await);animation:breathe 1.6s ease-in-out infinite}
+.fled.down{background:var(--tx-3)}
+/* a tiny inline activity sparkline (demoted ambient) */
+.spark-row{display:flex;align-items:flex-end;gap:2px;height:24px;margin-top:8px}
+.spark-row b{flex:1;background:var(--acc-deep);opacity:.5;border-radius:2px}
+
+/* ════════════════════════════════════════════════════════════
+   THE TAB BAR — gates ONE view. carries the count badge on QUEUE.
+   ════════════════════════════════════════════════════════════ */
+.tabbar{flex:none;display:flex;background:rgba(15,13,10,.9);border-top:1px solid var(--line);backdrop-filter:blur(16px);z-index:30}
+.tabbar .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  padding:11px 0 24px;color:var(--tx-3);background:none;border:none;cursor:pointer;
+  font-family:var(--font-mono);font-size:8.5px;letter-spacing:.11em;text-transform:uppercase;position:relative;transition:color .22s}
+.tabbar .tab .ic{font-size:19px;transition:filter .22s,transform .18s}
+.tabbar .tab.on{color:var(--acc)}
+.tabbar .tab.on .ic{filter:drop-shadow(0 0 9px var(--acc-glow));transform:translateY(-1px)}
+.tabbar .tab .badge{position:absolute;top:7px;left:calc(50% + 10px);min-width:16px;height:16px;padding:0 4px;border-radius:99px;
+  background:var(--await);color:var(--ink-await);font-size:8.5px;font-weight:700;display:grid;place-items:center;
+  box-shadow:0 0 0 3px rgba(224,138,60,.16);animation:breathe 3s ease-in-out infinite}
+</style></head>
+<body>
+
+<div class="intro">
+  <h1>the <em>company</em> — mobile</h1>
+  <div class="sub">the calm focused instrument · <b>one thing at a time</b>, gated by the tab bar.<br>tap a tab below to drive it · ◈ board · ◇ talk · ▤ queue · ⚙ tune</div>
+</div>
+
+<div class="device" id="device">
+  <!-- the living field, behind everything -->
+  <div class="bgfield">
+    <div class="aurora"></div>
+    <div class="aurora-hot"></div>
+    <div class="dotgrid"></div>
+  </div>
+  <div class="wisp"></div>
+
+  <div class="shell">
+    <div class="viewstack">
+
+      <!-- ═══════════ ◈ BOARD ═══════════ -->
+      <section class="view active" id="board" data-view="board">
+        <div class="board-canvas">
+          <div class="board-grid"></div>
+
+          <!-- node-state colour key (status-as-light, read by sight) -->
+          <div class="state-key">
+            <span class="sk"><i class="led ran"></i>ran</span>
+            <span class="sk"><i class="led cached"></i>cached</span>
+            <span class="sk"><i class="led stuck"></i>stuck</span>
+            <span class="sk"><i class="led failed"></i>failed</span>
+            <span class="sk"><i class="led live"></i>live</span>
+            <span class="sk"><i class="led idle"></i>idle</span>
+          </div>
+
+          <!-- the wires between nodes -->
+          <svg class="wires" viewBox="0 0 390 700" preserveAspectRatio="none">
+            <path d="M120,168 C150,210 190,210 214,250"/>
+            <path d="M214,300 C214,360 150,370 120,420"/>
+            <path d="M120,168 C90,260 250,300 270,420"/>
+          </svg>
+
+          <!-- the nodes — coloured BY STATE (the surfaced node-state vocabulary) -->
+          <div class="node" data-st="ran" style="left:24px;top:120px;animation-delay:-2s" data-name="codebase" data-kind="content · volatile" data-state="ran">
+            <div class="nstate"><span class="led ran"></span>ran</div>
+            <div class="nname">codebase</div><div class="nkind">content · reads the repo</div>
+          </div>
+          <div class="node" data-st="ran" style="left:170px;top:202px;animation-delay:-6s" data-name="ask" data-kind="process" data-state="ran">
+            <div class="nstate"><span class="led ran"></span>ran</div>
+            <div class="nname">ask</div><div class="nkind">process · llm q&amp;a</div>
+          </div>
+          <div class="node" data-st="cached" style="left:24px;top:372px;animation-delay:-9s" data-name="embed" data-kind="process" data-state="cached">
+            <div class="nstate"><span class="led cached"></span>cached</div>
+            <div class="nname">embed</div><div class="nkind">process · memo-cached</div>
+          </div>
+          <div class="node" data-st="stuck" style="left:230px;top:372px;animation-delay:-4s" data-name="rollup" data-kind="process" data-state="stuck">
+            <div class="nstate"><span class="led stuck"></span>stuck</div>
+            <div class="nname">rollup</div><div class="nkind">process · awaiting input</div>
+          </div>
+          <div class="node" data-st="live" style="left:120px;top:476px;animation-delay:-11s" data-name="portal" data-kind="reference" data-state="live">
+            <div class="nstate"><span class="led live"></span>live</div>
+            <div class="nname">portal</div><div class="nkind">reference · resolved live</div>
+          </div>
+          <div class="node" data-st="failed" style="left:248px;top:212px;animation-delay:-7s" data-name="retrieve" data-kind="process" data-state="failed">
+            <div class="nstate"><span class="led failed"></span>failed</div>
+            <div class="nname">retrieve</div><div class="nkind">process · no corpus</div>
+          </div>
+
+          <!-- running edge pulse (status-as-light when Run fires) -->
+          <div class="run-edge"></div>
+
+          <!-- the "show me" entry (bottom-left, low weight) -->
+          <div class="showme-entry" id="showmeBtn"><span class="gl">?</span>show me</div>
+
+          <!-- the floating thumb cluster (bottom-right): Run + ＋ FAB -->
+          <div class="thumb-cluster">
+            <button class="fab run" id="runBtn" title="run the graph">▶</button>
+            <button class="fab" id="fabBtn" title="add a node">＋</button>
+          </div>
+
+          <!-- scrim + palette short-sheet + inspector sheet (contextual to Board only) -->
+          <div class="scrim" id="boardScrim"></div>
+
+          <div class="palette-sheet">
+            <div class="sheet-grip"></div>
+            <div class="sect-head">add a node <span class="tag">16 types · auto-discovered</span></div>
+            <div class="pal-search">⌕&nbsp; filter node types…</div>
+            <div class="palette-grid">
+              <div class="pal-chip process"><span class="mono">A</span><span class="pl">ask</span></div>
+              <div class="pal-chip process"><span class="mono">L</span><span class="pl">llm</span></div>
+              <div class="pal-chip content"><span class="mono">C</span><span class="pl">codebase</span></div>
+              <div class="pal-chip content"><span class="mono">K</span><span class="pl">constant</span></div>
+              <div class="pal-chip process"><span class="mono">E</span><span class="pl">embed</span></div>
+              <div class="pal-chip process"><span class="mono">R</span><span class="pl">retrieve</span></div>
+              <div class="pal-chip process"><span class="mono">S</span><span class="pl">similar</span></div>
+              <div class="pal-chip process"><span class="mono">G</span><span class="pl">gate</span></div>
+              <div class="pal-chip process"><span class="mono">J</span><span class="pl">join</span></div>
+              <div class="pal-chip content"><span class="mono">P</span><span class="pl">portal</span></div>
+              <div class="pal-chip model"><span class="mono">◑</span><span class="pl">rhm_mode</span></div>
+              <div class="pal-chip content"><span class="mono">T</span><span class="pl">model_of_tim</span></div>
+            </div>
+          </div>
+
+          <div class="inspector-sheet">
+            <div class="insp-head">
+              <span class="ititle" id="inspName">ask</span>
+              <span class="istate" id="inspState"><i style="background:var(--acc)"></i>ran</span>
+              <span class="iclose" id="inspClose">✕</span>
+            </div>
+            <div class="insp-body">
+              <div class="insp-block">
+                <div class="il">config</div>
+                <div class="cfg-row"><span class="k">model</span><span class="v">deepseek-v4-pro</span></div>
+                <div class="cfg-row"><span class="k">base_url</span><span class="v">localhost:8000</span></div>
+              </div>
+              <div class="insp-block">
+                <div class="il">output</div>
+                <div class="out-card">It hashes <code>(type, version, config, inputs)</code> — unchanged, it serves the cached result; a volatile node always re-runs.</div>
+              </div>
+              <div class="insp-acts">
+                <button class="wire">＋ wire</button>
+                <button class="portal">⊕ portal</button>
+                <button class="del">🗑 delete</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- spotlight overlay (show-me runs HERE, on the clean board) -->
+          <div class="spotlight" id="spotlight">
+            <div class="spot-dim"></div>
+            <div class="spot-ring" id="spotRing"></div>
+            <div class="spot-exit" id="spotExit">✕</div>
+            <div class="spot-caption" id="spotCaption">
+              <div class="sc-txt" id="spotTxt"></div>
+              <div class="sc-prog" id="spotProg"></div>
+              <div class="sc-adv">tap to continue →</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════ ◇ TALK ═══════════ -->
+      <section class="view listening" id="talk" data-view="talk">
+        <div class="orb-stage">
+          <div class="orbwrap">
+            <span class="ring"></span><span class="ring r2"></span><span class="ring r3"></span>
+            <span class="orb"></span>
+            <span class="orb-glyph" id="orbGlyph">👂</span>
+          </div>
+          <div class="say-line" id="sayLine">I'm listening — go ahead.</div>
+        </div>
+
+        <div class="thread">
+          <div class="turn you">
+            <span class="who">you<span class="grade gold" title="gold — your own words">◆</span></span>
+            <div class="bubble">How does the memo gate decide whether a node re-runs?</div>
+          </div>
+          <div class="consult-chip">◆ consult · the system read its own code</div>
+          <div class="turn vi">
+            <span class="who">vi<span class="grade work" title="working-grade">◇</span></span>
+            <div class="bubble">It hashes <code>(type, version, config, inputs)</code>. Unchanged, it skips and serves the cached result. A volatile node like <code>codebase</code> bypasses the gate, so it always re-runs.</div>
+          </div>
+
+          <!-- the build/panel/extend OFFER card — auto-raises (surfaced self-mod) -->
+          <div class="offer">
+            <div class="oh"><span class="spark"></span>vi offers<span class="kind">panel</span></div>
+            <div class="obody">I can grow a <b>memo-gate settings panel</b> so you can tune the hash inputs without code.</div>
+            <div class="otarget">⊕ ui://settings/panels · 1 new field-group · reversible</div>
+            <div class="oacts"><button class="approve">approve</button><button class="decline">not now</button></div>
+          </div>
+
+          <div class="thinking-row">
+            <span class="who">vi<span class="grade work">◇</span></span>
+            <span class="dots"><i></i><i></i><i></i></span>
+          </div>
+        </div>
+
+        <!-- F1 feedback chips — shape how vi presents (surfaced latent) -->
+        <div class="talk-dock">
+          <span class="f1-label">shape how vi presents — it remembers</span>
+          <span class="f1-chip"><span class="ic">↧</span>terser</span>
+          <span class="f1-chip on"><span class="ic">↥</span>more</span>
+          <span class="f1-chip"><span class="ic">→</span>lead with the why</span>
+        </div>
+
+        <!-- the big push-to-talk control (dominant thumb target) -->
+        <div class="talk-input">
+          <button class="ptt-btn" id="pttBtn">
+            <span class="ic">🎙</span>
+            <span class="pl" id="pttLabel">hold to speak</span>
+            <span class="levels"><b></b><b></b><b></b><b></b><b></b></span>
+          </button>
+          <div class="alt"><span>or</span><span class="typ">type instead ⌨</span></div>
+        </div>
+      </section>
+
+      <!-- ═══════════ ▤ QUEUE ═══════════ -->
+      <section class="view" id="queue" data-view="queue">
+        <div class="queue-head">
+          <h2>Queue</h2>
+          <div class="qmeta"><b>3</b> need you · pre-triaged · lane by tint</div>
+        </div>
+        <div class="qlist">
+          <div class="qcard decision">
+            <div class="qtop"><span class="qlane">decision</span><span class="qwhen">2m ago</span></div>
+            <div class="qwhat">Route the model brief to your reading list, or hold for the cost rollup?</div>
+            <div class="qsub">framed as a value-choice · <code>coa</code> · the rollup lands ~next run</div>
+            <div class="qacts"><button class="ok">route it</button><button>hold</button><button>say more</button></div>
+          </div>
+          <div class="qcard build-review">
+            <div class="qtop"><span class="qlane">build · review</span><span class="qwhen">8m ago</span></div>
+            <div class="qwhat">Built the memo-gate panel you approved — 2 files changed.</div>
+            <div class="qsub">implemented · surfaced for review · <code>[self-apply]</code> · revert recovers</div>
+            <div class="qacts"><button class="ok">accept</button><button class="rej">send back</button><button>diff</button></div>
+          </div>
+          <div class="qcard question">
+            <div class="qtop"><span class="qlane">question</span><span class="qwhen">14m ago</span></div>
+            <div class="qwhat">The retrieve node failed — no corpus wired. Want me to add an embed step?</div>
+            <div class="qsub">abstained rather than guess · points at <code>ui://canvas/node/retrieve</code></div>
+            <div class="qacts"><button class="ok">yes, add it</button><button>not now</button><button>show me</button></div>
+          </div>
+        </div>
+        <!-- capture / surface-output footer — route something INTO the queue (surfaced latent) -->
+        <div class="qfoot">
+          <div class="cap"><span class="ic">✦</span>capture an idea</div>
+          <div class="cap"><span class="ic">⇢</span>surface an output</div>
+        </div>
+      </section>
+
+      <!-- ═══════════ ⚙ TUNE ═══════════ -->
+      <section class="view" id="tune" data-view="tune">
+        <div class="tune-head">
+          <h2>Tune</h2>
+          <div class="tsub">everything · consolidated · one decision at a time</div>
+        </div>
+        <div class="tune-scroll">
+
+          <!-- live config slots -->
+          <div class="tcard">
+            <div class="sect-head">live config <span class="tag">from live registries</span></div>
+            <div class="slot"><span class="sk">brain</span><span class="sv"><span class="led"></span>deepseek-v4-pro</span></div>
+            <div class="slot"><span class="sk">persona</span>
+              <span class="sv" style="margin-left:auto"></span>
+              <div class="pills" style="margin-top:0">
+                <span class="pill on">Vi</span><span class="pill">Atlas</span><span class="pill">Nova</span>
+              </div>
+            </div>
+            <div class="slot"><span class="sk">ear · stt</span><span class="sv"><span class="led"></span>assemblyai</span></div>
+            <div class="slot"><span class="sk">engine · tts</span><span class="sv"><span class="led"></span>kokoro</span></div>
+          </div>
+
+          <!-- modes + SUB-TYPES (surfaced: sub-types now SELECTABLE, not static pills) -->
+          <div class="tcard">
+            <div class="sect-head">presence mode <span class="tag latent">★ sub-types selectable</span></div>
+            <div class="pills">
+              <span class="pill on">listening</span><span class="pill">focus</span><span class="pill">walkthrough</span>
+              <span class="pill">watch &amp; react</span><span class="pill">decide for me</span><span class="pill">off</span>
+            </div>
+            <div class="sect-head" style="margin:13px 0 7px">sub-type · refines the resolution</div>
+            <div class="pills">
+              <span class="pill sub on">general</span><span class="pill sub">deep</span><span class="pill sub">structural</span><span class="pill sub">guided</span><span class="pill sub">show-me</span>
+            </div>
+          </div>
+
+          <!-- ★ the SELF-GROW affordance — the #1 latent (was RHM-only) -->
+          <div class="tcard gold">
+            <div class="sect-head"><span class="star">★</span>grow the interface <span class="tag latent">the #1 latent</span></div>
+            <div class="dim" style="line-height:1.6">the interface that can grow itself — now with direct controls. propose → see → approve → reversible.</div>
+            <div class="grow-acts">
+              <button><span class="gic">⊞</span>new panel<span class="gd">a settings group</span></button>
+              <button><span class="gic">◆</span>new component<span class="gd">real .tsx, build-gated</span></button>
+              <button><span class="gic">⋔</span>new node-type<span class="gd">writes nodes/*.py</span></button>
+            </div>
+          </div>
+
+          <!-- ★ /api/knobs dynamic per-model knob surface ("all the knobs") -->
+          <div class="tcard gold">
+            <div class="sect-head"><span class="star">★</span>all the knobs <span class="tag latent">/api/knobs · per loaded model</span></div>
+            <div class="dim" style="margin-bottom:9px">resolved live for whatever model is loaded — tool-capability probed.</div>
+            <div class="knob"><div class="kl"><span>temperature</span><b>0.7</b></div><div class="track"><div class="fill" style="width:35%"></div><div class="thumb" style="left:35%"></div></div></div>
+            <div class="knob"><div class="kl"><span>max_tokens</span><b>4096</b></div><div class="track"><div class="fill" style="width:50%"></div><div class="thumb" style="left:50%"></div></div></div>
+            <div class="knob"><div class="kl"><span>top_p</span><b>0.95</b></div><div class="track"><div class="fill" style="width:92%"></div><div class="thumb" style="left:92%"></div></div></div>
+            <div class="knob"><div class="kl"><span>context window</span><b>32k</b></div><div class="track"><div class="fill" style="width:64%"></div><div class="thumb" style="left:64%"></div></div></div>
+          </div>
+
+          <!-- ★ R2 composition LIVE tuning (now SETTERS, not display-only) -->
+          <div class="tcard gold">
+            <div class="sect-head"><span class="star">★</span>context composition <span class="tag latent">R2 · live setter</span></div>
+            <div class="dim" style="margin-bottom:9px">tune how the system composes its own context — from the interface, not just at boot.</div>
+            <div class="knob r2"><div class="kl"><span>recency λ</span><b>0.42</b></div><div class="track"><div class="fill" style="width:42%"></div><div class="thumb" style="left:42%"></div></div></div>
+            <div class="knob r2"><div class="kl"><span>proximity weight</span><b>0.6</b></div><div class="track"><div class="fill" style="width:60%"></div><div class="thumb" style="left:60%"></div></div></div>
+            <div class="knob r2"><div class="kl"><span>semantic weight</span><b>0.3</b></div><div class="track"><div class="fill" style="width:30%"></div><div class="thumb" style="left:30%"></div></div></div>
+            <div class="knob r2"><div class="kl"><span>budget · chars</span><b>2400</b></div><div class="track"><div class="fill" style="width:40%"></div><div class="thumb" style="left:40%"></div></div></div>
+          </div>
+
+          <!-- ★ run-stats rollup (introspective distributions) -->
+          <div class="tcard gold">
+            <div class="sect-head"><span class="star">★</span>run stats <span class="tag latent">/api/run-stats · learning by use</span></div>
+            <div class="dist">
+              <b style="height:38%"></b><b style="height:60%"></b><b style="height:90%"></b><b style="height:72%"></b><b style="height:48%"></b><b style="height:30%"></b><b style="height:18%"></b>
+            </div>
+            <div class="dist-x"><span>0s</span><span>run latency distribution</span><span>12s</span></div>
+            <div class="stat-row">
+              <div class="stat"><div class="n">148</div><div class="t">runs</div></div>
+              <div class="stat"><div class="n">2.4s</div><div class="t">median</div></div>
+              <div class="stat"><div class="n">71%</div><div class="t">cache hit</div></div>
+            </div>
+          </div>
+
+          <!-- ★ voice trial record → debrief -->
+          <div class="tcard gold">
+            <div class="sect-head"><span class="star">★</span>voice trial <span class="tag latent">record → debrief</span></div>
+            <div class="trial">
+              <div class="rec"><span class="rdot"></span></div>
+              <div class="tm"><div class="tt">record a spoken turn</div><div class="ts">turn · feedback · reflection → transcript</div></div>
+              <div class="deb">debrief →</div>
+            </div>
+          </div>
+
+          <!-- ★ full self-change-log ledger -->
+          <div class="tcard gold">
+            <div class="sect-head"><span class="star">★</span>self-change log <span class="tag latent">full ledger</span></div>
+            <div class="ledger">
+              <div class="lrow"><span class="lsha">a3f1c0</span><span class="lsub">[self-apply] grow memo-gate panel</span><span class="lwhen">8m</span></div>
+              <div class="lrow"><span class="lsha">9b27ee</span><span class="lsub">[self-apply] add judge role binding</span><span class="lwhen">1h</span></div>
+              <div class="lrow revert"><span class="lsha">↺ c41d</span><span class="lsub">revert surface panel</span><span class="lwhen">3h</span></div>
+            </div>
+          </div>
+
+          <!-- fleet (model layer) -->
+          <div class="tcard">
+            <div class="sect-head">fleet · model layer <span class="tag">status by light</span></div>
+            <div class="frow"><span class="fled up"></span><span class="fn">deepseek-v4-pro</span><span class="fs">up · brain</span></div>
+            <div class="frow"><span class="fled up"></span><span class="fn">bge-m3 · embed</span><span class="fs">up</span></div>
+            <div class="frow"><span class="fled loading"></span><span class="fn">kokoro · tts</span><span class="fs">loading</span></div>
+            <div class="frow"><span class="fled down"></span><span class="fn">xtts · tts</span><span class="fs">down</span></div>
+          </div>
+
+          <!-- activity feed (demoted ambient) + grow approvals + versions + journey -->
+          <div class="tcard">
+            <div class="sect-head">activity <span class="tag">ambient · demoted here</span></div>
+            <div class="dim">last run finished · embed cached · rollup awaiting input</div>
+            <div class="spark-row"><b style="height:30%"></b><b style="height:55%"></b><b style="height:80%"></b><b style="height:45%"></b><b style="height:62%"></b><b style="height:90%"></b><b style="height:38%"></b><b style="height:20%"></b><b style="height:70%"></b><b style="height:50%"></b></div>
+          </div>
+          <div class="tcard">
+            <div class="sect-head">versions · journeys</div>
+            <div class="frow"><span class="fled up"></span><span class="fn">ask output</span><span class="fs">3 versions</span></div>
+            <div class="frow"><span class="fled up"></span><span class="fn">first-contact tour</span><span class="fs">replay</span></div>
+          </div>
+
+        </div>
+      </section>
+
+    </div><!-- /viewstack -->
+
+    <!-- ═══════════ THE TAB BAR ═══════════ -->
+    <nav class="tabbar" id="tabbar">
+      <button class="tab on" data-tab="board"><span class="ic">◈</span>board</button>
+      <button class="tab" data-tab="talk"><span class="ic">◇</span>talk</button>
+      <button class="tab" data-tab="queue"><span class="ic">▤</span>queue<span class="badge">3</span></button>
+      <button class="tab" data-tab="tune"><span class="ic">⚙</span>tune</button>
+    </nav>
+  </div>
+
+  <div class="grain"></div>
+</div>
+
+<script>
+(function(){
+  const device = document.getElementById('device');
+  const board  = document.getElementById('board');
+  const talk   = document.getElementById('talk');
+  const root   = document.documentElement;
+
+  // ─── THE GATE: one view at a time, display:none on inactive (the S1 fix) ───
+  function showView(name){
+    document.querySelectorAll('.view').forEach(v=>{
+      const on = v.dataset.view===name;
+      v.classList.toggle('active', on);
+      v.classList.remove('go');
+      if(on){ void v.offsetWidth; v.classList.add('go'); } // replay entrance stagger on the NOW-VISIBLE view
+    });
+    document.querySelectorAll('.tabbar .tab').forEach(t=>t.classList.toggle('on', t.dataset.tab===name));
+    // closing Board sheets when leaving (no sheet survives a tab switch)
+    board.classList.remove('show-palette','show-inspector','spotlight-on');
+    // aurora calms on Talk-rest / Queue, lifts a touch on Board
+    root.style.setProperty('--activity', name==='talk' ? '.30' : name==='board' ? '.18' : '.12');
+  }
+  document.getElementById('tabbar').addEventListener('click', e=>{
+    const t = e.target.closest('.tab'); if(t) showView(t.dataset.tab);
+  });
+
+  // ─── BOARD: FAB → palette, node select → inspector, scrim closes ───
+  document.getElementById('fabBtn').addEventListener('click', ()=>{
+    board.classList.remove('show-inspector');
+    board.classList.toggle('show-palette');
+  });
+  document.getElementById('boardScrim').addEventListener('click', ()=>{
+    board.classList.remove('show-palette','show-inspector');
+  });
+  document.getElementById('inspClose').addEventListener('click', ()=>{
+    board.classList.remove('show-inspector');
+    document.querySelectorAll('.node').forEach(n=>n.classList.remove('sel'));
+  });
+  // tap a node → inspector rises for THAT node only
+  const stateColor = {idle:'var(--tx-3)',ran:'var(--acc)',cached:'var(--cache)',stuck:'var(--await)',failed:'var(--fail)',live:'var(--live)'};
+  document.querySelectorAll('#board .node').forEach(node=>{
+    node.addEventListener('click', ()=>{
+      document.querySelectorAll('.node').forEach(n=>n.classList.remove('sel'));
+      node.classList.add('sel');
+      const st = node.dataset.state;
+      document.getElementById('inspName').textContent = node.dataset.name;
+      const istate = document.getElementById('inspState');
+      istate.innerHTML = '<i style="background:'+(stateColor[st]||'var(--tx-3)')+'"></i>'+st;
+      board.classList.remove('show-palette');
+      board.classList.add('show-inspector');
+    });
+  });
+
+  // ─── BOARD: Run → edge pulse + FAB running state (status-as-light, no text timer) ───
+  const runBtn = document.getElementById('runBtn');
+  runBtn.addEventListener('click', ()=>{
+    board.classList.add('is-running'); runBtn.classList.add('running');
+    root.style.setProperty('--activity','1');
+    setTimeout(()=>{ board.classList.remove('is-running'); runBtn.classList.remove('running');
+      root.style.setProperty('--activity','.18'); }, 2600);
+  });
+
+  // ─── BOARD: SHOW-ME spotlight — dim, ring ONE element, one caption, advance on tap ───
+  const spotlight = document.getElementById('spotlight');
+  const spotRing  = document.getElementById('spotRing');
+  const spotTxt   = document.getElementById('spotTxt');
+  const spotProg  = document.getElementById('spotProg');
+  // each step targets one real element on the clean board; ring positions to its rect
+  const STEPS = [
+    {sel:'.node[data-name="ask"]',  txt:'This is a <b>node</b>. Its colour is its state — gold means it <b>ran</b>.'},
+    {sel:'.node[data-name="retrieve"]', txt:'Coral means it <b>failed</b>. You read state by light, never by reading.'},
+    {sel:'#runBtn', txt:'Tap <b>Run</b> to fire the graph — the board edge pulses while it works.'},
+    {sel:'#fabBtn', txt:'The <b>＋</b> opens the palette. Tap a node any time to inspect just that one.'}
+  ];
+  let step = 0;
+  function placeRing(sel){
+    const el = document.querySelector(sel); if(!el) return;
+    const cr = board.getBoundingClientRect(), r = el.getBoundingClientRect();
+    const pad = 8;
+    spotRing.style.left   = (r.left - cr.left - pad)+'px';
+    spotRing.style.top    = (r.top  - cr.top  - pad)+'px';
+    spotRing.style.width  = (r.width  + pad*2)+'px';
+    spotRing.style.height = (r.height + pad*2)+'px';
+  }
+  function renderStep(){
+    const s = STEPS[step]; if(!s) return;
+    placeRing(s.sel);
+    spotTxt.innerHTML = s.txt;
+    spotProg.innerHTML = STEPS.map((_,i)=>'<i class="'+(i<=step?'on':'')+'"></i>').join('');
+  }
+  function startShowme(){ step=0; board.classList.remove('show-palette','show-inspector');
+    board.classList.add('spotlight-on'); renderStep(); }
+  function advance(){ step++; if(step>=STEPS.length){ board.classList.remove('spotlight-on'); }
+    else renderStep(); }
+  document.getElementById('showmeBtn').addEventListener('click', startShowme);
+  document.getElementById('spotCaption').addEventListener('click', advance);
+  document.getElementById('spotExit').addEventListener('click', ()=>board.classList.remove('spotlight-on'));
+
+  // ─── TALK: orb states (listening / thinking / rest) + push-to-talk press feel ───
+  const orbGlyph = document.getElementById('orbGlyph');
+  const sayLine  = document.getElementById('sayLine');
+  const pttBtn   = document.getElementById('pttBtn');
+  const pttLabel = document.getElementById('pttLabel');
+  function talkState(s){
+    talk.classList.remove('listening','thinking');
+    if(s==='listening'){ talk.classList.add('listening'); orbGlyph.textContent='👂'; sayLine.textContent='I’m listening — go ahead.'; }
+    else if(s==='thinking'){ talk.classList.add('thinking'); orbGlyph.textContent='◌'; sayLine.textContent='Working it through…'; }
+    else { orbGlyph.textContent='◈'; sayLine.textContent='Here when you need me.'; }
+  }
+  // hold-to-speak: held = recording feel, release = thinking, then back to listening
+  let held=false;
+  function pttDown(){ held=true; pttLabel.textContent='release to send'; talk.classList.remove('listening'); orbGlyph.textContent='🎙'; sayLine.textContent='Hold and speak.'; }
+  function pttUp(){ if(!held)return; held=false; pttLabel.textContent='hold to speak'; talkState('thinking');
+    setTimeout(()=>talkState('listening'), 1800); }
+  pttBtn.addEventListener('mousedown', pttDown);
+  pttBtn.addEventListener('touchstart', e=>{e.preventDefault();pttDown();},{passive:false});
+  document.addEventListener('mouseup', pttUp);
+  document.addEventListener('touchend', pttUp);
+  // F1 chips toggle (the learned-presentation feel)
+  document.querySelectorAll('.f1-chip').forEach(c=>c.addEventListener('click',()=>{
+    document.querySelectorAll('.f1-chip').forEach(x=>x.classList.remove('on')); c.classList.add('on');
+  }));
+  // TUNE pill toggles (mode + sub-type + persona)
+  document.querySelectorAll('#tune .pills').forEach(group=>{
+    group.addEventListener('click', e=>{
+      const p = e.target.closest('.pill'); if(!p) return;
+      group.querySelectorAll('.pill').forEach(x=>x.classList.remove('on')); p.classList.add('on');
+    });
+  });
+
+  // boot — honour ?tab= / #tab so a screenshot can land directly on a view
+  const params = new URLSearchParams(location.search);
+  const boot = (location.hash||'').replace('#','') || params.get('tab') || 'board';
+  showView(['board','talk','queue','tune'].includes(boot) ? boot : 'board');
+  talkState('listening');
+  // ?show=1 / #show — boot straight into the show-me spotlight on the clean Board (for capture)
+  if(params.get('show')==='1' || boot==='show'){ showView('board'); setTimeout(startShowme, 60); }
+})();
+</script>
+</body></html>

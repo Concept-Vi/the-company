@@ -1,0 +1,838 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=1440,initial-scale=1"/>
+<title>The Company — Desktop IA · the commander's bridge (proposed)</title>
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  TARGET MOCKUP — DESKTOP INFORMATION ARCHITECTURE (the commander's bridge)
+  exploration lane · NOT corpus · NOT registered (precedent: SCENARIO-PLAYER.html)
+  PURPOSE  Tim reacts by sight BEFORE the real build. This renders the PROPOSED
+           desktop IA from .build/interface/IA-PROPOSAL.md (the DESKTOP section):
+           three zones + a thin grouped top toolbar + a docked RHM pane.
+  THE NATIVE DESKTOP VALUE = SIMULTANEITY. One subject (the `ask` node) is
+           threaded LEGIBLY through all three regions AT ONCE:
+             · selected on the BOARD (gold ring, state=ran)
+             · its config + output in the INSPECTOR (right rail, top)
+             · a conversation ABOUT it in the RHM pane (bottom)
+           the same address — ui://canvas/node/ask — is visible in all three,
+           so the eye threads them. That coherence IS the demonstration.
+  SURFACE-EVERYTHING (Tim's locked decision) — every LATENT capability gets a
+           desktop home, but as a RECOGNISABLE COLLAPSED AFFORDANCE (chip / count /
+           sparkline / one-row ledger w/ chevron) — progressively disclosed, NOT an
+           8-deep junk-drawer (the S3 failure we design against).
+  NO FICTION — every surfaced cap is real-but-latent per capability-map.md, named by
+           its real route: /api/knobs · /api/run-stats · R2 composition · panel/extend ·
+           annotations/chats readback · self-change-log · voice trial debrief.
+  AESTHETIC — borrows the SCENARIO-PLAYER living-instrument layer (aurora, orb,
+           gold range, status-by-light, Fraunces display w/ the ITAL axis loaded,
+           IBM Plex Mono instrument body). Built full-width at 1440, not a scaled device.
+  ════════════════════════════════════════════════════════════════════════════
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,ital,wght@9..144,0,400;9..144,0,500;9..144,0,600;9..144,1,400;9..144,1,500;9..144,0,900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ════ WARM GOLD THEME — mirrors design/_system/tokens.json (the gold registry) ════ */
+:root{
+  --bg:#0c0a08; --s0:#13110d; --s1:#191611; --s2:#211d17; --s3:#2a241c;
+  --line:#332c22; --line-2:#403729;
+  --tx:#f3ece1; --tx-2:#b3a692; --tx-3:#6f6555;
+
+  /* gold range — the living-instrument flow */
+  --gold-hi:#f2d08a; --gold:#e6ab5c; --gold-deep:#d2913f;
+
+  /* signal — gold is the identity/alive/done signal */
+  --acc:#e6ab5c; --acc-deep:#d2913f; --acc-glow:rgba(230,171,92,.16);
+  --acc-flow:linear-gradient(120deg,#f2d08a 0%,#e6ab5c 52%,#d2913f 100%);
+  --orb-hi:rgba(255,248,233,.62);
+
+  /* status-by-colour — the TWO-VIVID + ONE-MUTED split keeps node states apart */
+  --await:#e08a3c;          /* vivid orange-amber — needs-you / awaiting */
+  --fail:#ec6a5e;           /* coral — failed */
+  --cache:#9c8f78;          /* taupe-grey neutral — cached */
+  --kind-content:#b89a6e;   /* DESATURATED bronze — building/structural (off the vivid axis) */
+  --kind-model:#c0a0c8;     /* soft warm mauve — the one off-warm config accent */
+
+  --ink-accent:#1c1304; --ink-await:#1a1205;
+
+  --font-display:'Fraunces',Georgia,serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',monospace;
+  --font-sans:'IBM Plex Sans',system-ui,sans-serif;
+
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px;
+  --r-sm:5px; --r:8px; --r-lg:12px; --r-pill:99px;
+  --elev-1:0 1px 0 rgba(255,255,255,.02), 0 8px 24px -16px #000;
+  --elev-2:0 1px 0 rgba(255,255,255,.03), 0 24px 60px -28px #000;
+
+  --activity:.32;           /* ambient intensity — 0 calm … 1 alive */
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:radial-gradient(120% 90% at 50% -8%, #15110b 0%, #0a0806 60%, #070504 100%);
+  color:var(--tx); font-family:var(--font-mono); letter-spacing:.1px;
+  width:1440px; min-height:100vh; margin:0 auto; overflow-x:hidden;
+}
+
+/* ════ THE BRIDGE — the full instrument: toolbar / 3 zones / RHM pane ════ */
+.bridge{position:relative;display:grid;height:100vh;min-height:840px;
+  grid-template-rows:48px 1fr 232px;
+  grid-template-columns:auto 1fr 360px;
+  grid-template-areas:
+    "toolbar toolbar toolbar"
+    "rail    board   inspect"
+    "rail    rhm     rhm";
+  overflow:hidden;background:var(--bg);
+  box-shadow:0 0 0 1px var(--line);
+}
+
+/* ── ambient living field (sits behind the board) ── */
+.field{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.aurora{position:absolute;inset:-30% -15%;filter:blur(70px);opacity:calc(.30 + var(--activity)*.34);
+  background:
+    radial-gradient(38% 34% at 30% 28%, rgba(230,171,92,.26), transparent 70%),
+    radial-gradient(42% 38% at 78% 22%, rgba(210,145,63,.20), transparent 72%),
+    radial-gradient(50% 44% at 58% 86%, rgba(230,171,92,.18), transparent 70%);
+  animation:drift 30s ease-in-out infinite alternate}
+@keyframes drift{0%{transform:translate3d(0,0,0) scale(1)}
+  50%{transform:translate3d(-20px,16px,0) scale(1.06)}
+  100%{transform:translate3d(16px,-12px,0) scale(1.04)}}
+.dotgrid{position:absolute;inset:0;opacity:.45;
+  background-image:radial-gradient(rgba(150,135,110,.10) .9px,transparent .9px);background-size:30px 30px;
+  -webkit-mask-image:radial-gradient(80% 60% at 50% 40%,#000,transparent 90%);
+  mask-image:radial-gradient(80% 60% at 50% 40%,#000,transparent 90%)}
+.grain{position:absolute;inset:0;pointer-events:none;opacity:.03;z-index:60;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* ════ TOP — the thin GROUPED toolbar (NOT 12 flat peers) ════ */
+.toolbar{grid-area:toolbar;z-index:20;display:flex;align-items:center;gap:var(--sp-3);
+  padding:0 var(--sp-4);background:rgba(19,17,13,.86);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line)}
+.tb-brand{font-family:var(--font-display);font-weight:600;font-size:16px;letter-spacing:-.3px;line-height:1;
+  display:flex;align-items:center;gap:8px;padding-right:var(--sp-2)}
+.tb-brand em{font-style:italic;font-weight:500;
+  background:var(--acc-flow);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.tb-brand .seat{font-family:var(--font-mono);font-size:8px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--tx-3);font-weight:400;border-left:1px solid var(--line-2);padding-left:8px}
+
+.tb-sep{width:1px;height:20px;background:var(--line-2);margin:0 2px}
+.tb-spacer{flex:1}
+
+/* a toolbar GROUP — a single pill that holds related verbs, with a tiny group label */
+.tb-group{display:flex;align-items:center;gap:2px;background:rgba(33,29,23,.62);
+  border:1px solid var(--line);border-radius:var(--r-pill);padding:3px;position:relative}
+.tb-group::before{content:attr(data-g);position:absolute;top:-13px;left:9px;
+  font-family:var(--font-mono);font-size:7px;letter-spacing:.18em;text-transform:uppercase;color:var(--tx-3)}
+.tb-btn{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:10px;
+  letter-spacing:.06em;color:var(--tx-2);background:none;border:none;border-radius:var(--r-pill);
+  padding:6px 11px;cursor:pointer;transition:transform .14s,color .2s,background .2s}
+.tb-btn .g{font-size:12px;line-height:1}
+.tb-btn:hover{transform:translateY(-1px);color:var(--tx);background:rgba(64,55,41,.5)}
+/* the ONE primary verb — Run — carries the gold, the rest are demoted */
+.tb-btn.primary{background:var(--acc-flow);color:var(--ink-accent);font-weight:600;
+  box-shadow:0 6px 18px -8px var(--acc-glow);padding:6px 14px}
+.tb-btn.primary:hover{transform:translateY(-1px);color:var(--ink-accent)}
+
+/* presence dial — status BY LIGHT, with one dense readout (desktop affords both) */
+.tb-presence{display:flex;align-items:center;gap:8px;background:rgba(25,22,17,.6);
+  border:1px solid var(--line-2);border-radius:var(--r-pill);padding:5px 12px 5px 9px;cursor:pointer}
+.tb-presence .pdot{width:8px;height:8px;border-radius:99px;background:var(--acc);
+  box-shadow:0 0 0 3px var(--acc-glow);animation:breathe 3.4s ease-in-out infinite}
+.tb-presence .pl{font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx-2)}
+.tb-presence .pl b{color:var(--acc);font-weight:500}
+@keyframes breathe{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.08);filter:brightness(1.16)}}
+
+.tb-gear{width:32px;height:32px;display:grid;place-items:center;border-radius:var(--r);color:var(--tx-3);
+  border:1px solid var(--line);background:rgba(25,22,17,.5);cursor:pointer;font-size:14px;transition:color .2s,transform .14s}
+.tb-gear:hover{color:var(--acc);transform:translateY(-1px)}
+
+/* ════ LEFT RAIL — the PALETTE (build blocks), collapsible to an icon strip ════ */
+.rail{grid-area:rail;z-index:15;width:212px;background:rgba(19,17,13,.72);backdrop-filter:blur(8px);
+  border-right:1px solid var(--line);display:flex;flex-direction:column;transition:width .3s cubic-bezier(.4,0,.2,1)}
+.bridge.rail-collapsed .rail{width:56px}
+.rail-head{display:flex;align-items:center;gap:8px;padding:14px 14px 10px}
+.rail-head .rt{font-family:var(--font-display);font-style:italic;font-size:14px;color:var(--tx-2);flex:1;white-space:nowrap;overflow:hidden}
+.rail-head .collapse{width:24px;height:24px;display:grid;place-items:center;border-radius:6px;color:var(--tx-3);
+  border:1px solid var(--line);background:rgba(25,22,17,.5);cursor:pointer;font-size:11px;flex:none;transition:color .2s}
+.rail-head .collapse:hover{color:var(--acc)}
+.bridge.rail-collapsed .rail-head .rt{opacity:0}
+
+.rail-search{margin:0 14px 10px;display:flex;align-items:center;gap:7px;background:rgba(25,22,17,.6);
+  border:1px solid var(--line);border-radius:var(--r);padding:6px 9px;font-size:10px;color:var(--tx-3)}
+.bridge.rail-collapsed .rail-search{display:none}
+.rail-grp{font-family:var(--font-mono);font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx-3);
+  padding:8px 16px 5px}
+.bridge.rail-collapsed .rail-grp{opacity:0;height:0;padding:0;overflow:hidden}
+.palette{flex:1;overflow:auto;padding:0 10px 14px;display:flex;flex-direction:column;gap:5px}
+/* a palette chip = the same Surface card (a kind monogram + name) */
+.chip{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:var(--r);cursor:grab;
+  border:1px solid var(--line);background:rgba(25,22,17,.5);transition:transform .14s,border-color .2s,background .2s}
+.chip:hover{transform:translateX(2px);border-color:var(--line-2);background:rgba(42,36,28,.6)}
+.chip .mono{width:24px;height:24px;border-radius:6px;display:grid;place-items:center;font-family:var(--font-mono);
+  font-size:11px;font-weight:600;flex:none;color:var(--ink-accent)}
+.chip .cn{font-family:var(--font-mono);font-size:11px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip .ck{font-family:var(--font-mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx-3);margin-left:auto}
+.bridge.rail-collapsed .chip{padding:8px;justify-content:center}
+.bridge.rail-collapsed .chip .cn,.bridge.rail-collapsed .chip .ck{display:none}
+.mono.process{background:linear-gradient(135deg,var(--gold-hi),var(--gold-deep))}
+.mono.content{background:linear-gradient(135deg,#cdb487,var(--kind-content));color:var(--bg)}
+.mono.model{background:linear-gradient(135deg,#d4bcda,var(--kind-model));color:var(--bg)}
+
+/* ════ CENTRE — THE BOARD (largest zone, always live) ════ */
+.board{grid-area:board;position:relative;overflow:hidden}
+.board-inner{position:absolute;inset:0;z-index:5}
+/* board chrome corner: zoom / fit hint, marquee affordance */
+.board-hint{position:absolute;left:16px;bottom:14px;z-index:8;display:flex;gap:8px;align-items:center;
+  font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;color:var(--tx-3)}
+.board-hint .hk{background:rgba(25,22,17,.7);border:1px solid var(--line);border-radius:5px;padding:3px 7px;
+  display:inline-flex;align-items:center;gap:5px;backdrop-filter:blur(6px)}
+.board-hint .hk b{color:var(--tx-2);font-weight:500}
+.zoomctl{position:absolute;right:16px;bottom:14px;z-index:8;display:flex;flex-direction:column;
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:rgba(25,22,17,.7);backdrop-filter:blur(6px)}
+.zoomctl button{width:30px;height:28px;display:grid;place-items:center;border:none;background:none;color:var(--tx-3);
+  cursor:pointer;font-size:13px;transition:color .2s,background .2s}
+.zoomctl button:hover{color:var(--acc);background:rgba(64,55,41,.4)}
+.zoomctl button+button{border-top:1px solid var(--line)}
+
+/* SVG wires between nodes */
+.wires{position:absolute;inset:0;z-index:4;pointer-events:none}
+.wire{fill:none;stroke:var(--line-2);stroke-width:1.6;opacity:.7}
+.wire.live{stroke:var(--acc);stroke-width:2;opacity:.9;stroke-dasharray:4 5;animation:flow 1.2s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-18}}
+
+/* a node card — gold instrument card, COLOUR-BY-STATE (the surfaced node-state vocabulary) */
+.node{position:absolute;width:172px;border-radius:var(--r-lg);padding:11px 12px 10px;cursor:pointer;
+  background:linear-gradient(168deg,var(--s2),var(--s1));border:1px solid var(--line-2);
+  box-shadow:var(--elev-1);transition:transform .16s,box-shadow .2s,border-color .2s;z-index:5}
+.node:hover{transform:translateY(-2px);box-shadow:var(--elev-2)}
+.node .nh{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.node .nk{width:18px;height:18px;border-radius:5px;flex:none}
+.node .nn{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--tx);letter-spacing:.02em}
+.node .naddr{font-family:var(--font-mono);font-size:7.5px;letter-spacing:.04em;color:var(--tx-3);margin-left:auto}
+.node .nbody{font-family:var(--font-display);font-size:11px;font-style:italic;color:var(--tx-2);line-height:1.4;
+  margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.node .nstate{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:8px;
+  letter-spacing:.12em;text-transform:uppercase}
+.node .sdot{width:7px;height:7px;border-radius:99px}
+/* ports (drag-to-wire affordance hints) */
+.node .port{position:absolute;width:9px;height:9px;border-radius:99px;background:var(--s3);border:1.5px solid var(--line-2);
+  top:50%;transform:translateY(-50%)}
+.node .port.in{left:-5px}.node .port.out{right:-5px}
+.node:hover .port{border-color:var(--acc);background:var(--acc-glow)}
+
+/* STATE skins — the two-vivid + one-muted split read by sight */
+.node[data-st="ran"]    .nk{background:linear-gradient(135deg,var(--gold-hi),var(--gold-deep))}
+.node[data-st="ran"]    .sdot{background:var(--gold);box-shadow:0 0 0 3px var(--acc-glow)}
+.node[data-st="ran"]    .nstate{color:var(--gold)}
+.node[data-st="cached"] .nk{background:var(--cache)}
+.node[data-st="cached"] .sdot{background:var(--cache)}
+.node[data-st="cached"] .nstate{color:var(--cache)}
+.node[data-st="await"]  .nk{background:linear-gradient(135deg,#f0a55a,var(--await))}
+.node[data-st="await"]  .sdot{background:var(--await);box-shadow:0 0 0 3px rgba(224,138,60,.18);animation:breathe 2.2s ease-in-out infinite}
+.node[data-st="await"]  .nstate{color:var(--await)}
+.node[data-st="failed"] .nk{background:var(--fail)}
+.node[data-st="failed"] .sdot{background:var(--fail);box-shadow:0 0 0 3px rgba(236,106,94,.2)}
+.node[data-st="failed"] .nstate{color:var(--fail)}
+.node[data-st="failed"]{border-color:rgba(236,106,94,.4)}
+.node[data-st="building"] .nk{background:var(--kind-content)}
+.node[data-st="building"] .sdot{background:var(--kind-content)}
+.node[data-st="building"] .nstate{color:var(--kind-content)}
+.node[data-st="idle"]   .nk{background:var(--s3)}
+.node[data-st="idle"]   .sdot{background:var(--tx-3)}
+.node[data-st="idle"]   .nstate{color:var(--tx-3)}
+.node[data-st="live"]   .nk{background:linear-gradient(135deg,var(--gold-hi),var(--gold))}
+.node[data-st="live"]   .sdot{background:var(--gold-hi);box-shadow:0 0 0 3px var(--acc-glow);animation:breathe 2.8s ease-in-out infinite}
+.node[data-st="live"]   .nstate{color:var(--gold-hi)}
+.node[data-st="empty"]  .nk{background:var(--s3);border:1px dashed var(--line-2)}
+.node[data-st="empty"]  .sdot{background:transparent;border:1.5px solid var(--tx-3)}
+.node[data-st="empty"]  .nstate{color:var(--tx-3)}
+
+/* THE SELECTED node — the simultaneity binding subject. Gold ring + lift. */
+.node.selected{border-color:transparent;box-shadow:0 0 0 1.5px var(--acc), 0 0 0 6px var(--acc-glow), var(--elev-2);
+  transform:translateY(-2px)}
+
+/* right-click context menu hint (shown statically as a small floating menu near selected node) */
+.ctxmenu{position:absolute;z-index:9;background:rgba(25,22,17,.94);border:1px solid var(--line-2);
+  border-radius:var(--r);box-shadow:var(--elev-2);backdrop-filter:blur(12px);padding:5px;min-width:148px}
+.ctxmenu .ci{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:6px;cursor:pointer;
+  font-family:var(--font-mono);font-size:10px;color:var(--tx-2);transition:background .15s,color .15s}
+.ctxmenu .ci:hover{background:rgba(64,55,41,.5);color:var(--tx)}
+.ctxmenu .ci .g{width:14px;text-align:center;color:var(--tx-3)}
+.ctxmenu .ci.danger:hover{color:var(--fail)}
+.ctxmenu .sep{height:1px;background:var(--line);margin:4px 6px}
+
+/* hover-preview bubble (pointer-only affordance: hover a node = preview its output) */
+.preview{position:absolute;z-index:9;width:184px;background:rgba(19,17,13,.95);border:1px solid var(--line-2);
+  border-radius:var(--r);box-shadow:var(--elev-2);backdrop-filter:blur(12px);padding:10px 11px}
+.preview .pvh{font-family:var(--font-mono);font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx-3);margin-bottom:6px;
+  display:flex;align-items:center;gap:6px}
+.preview .pvh i{width:6px;height:6px;border-radius:99px;background:var(--cache)}
+.preview .pvb{font-family:var(--font-display);font-style:italic;font-size:11px;color:var(--tx-2);line-height:1.45}
+
+/* show-me spotlight (a ring on the board + caption) — runs HERE on the clean board */
+.spotlight{position:absolute;z-index:7;border-radius:var(--r-lg);border:1.5px solid var(--acc);
+  box-shadow:0 0 0 9999px rgba(8,6,4,.0);pointer-events:none;opacity:.0}
+.show-cap{position:absolute;z-index:9;max-width:230px;background:rgba(25,22,17,.92);border:1px solid var(--acc-deep);
+  border-radius:var(--r);padding:9px 12px;backdrop-filter:blur(10px);box-shadow:var(--elev-2);opacity:.0}
+.show-cap .sct{font-family:var(--font-mono);font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin-bottom:4px}
+.show-cap .scb{font-family:var(--font-display);font-style:italic;font-size:12px;color:var(--tx);line-height:1.4}
+.bridge.show-on .spotlight{opacity:1;box-shadow:0 0 0 9999px rgba(8,6,4,.62);transition:box-shadow .4s,opacity .4s}
+.bridge.show-on .show-cap{opacity:1;transition:opacity .4s .1s}
+
+/* ════ RIGHT RAIL — Inspector (top) · Address-help (mid) · Queue/Review (bottom) ════ */
+.inspect{grid-area:inspect;z-index:15;background:rgba(19,17,13,.74);backdrop-filter:blur(8px);
+  border-left:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.rail-col{display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;flex:1}
+/* each region carries a clear header so the rail is THREE jobs, not one junk-drawer */
+.region{border-bottom:1px solid var(--line)}
+.region-h{display:flex;align-items:center;gap:8px;padding:11px 14px 9px;position:sticky;top:0;
+  background:rgba(19,17,13,.94);backdrop-filter:blur(8px);z-index:2}
+.region-h .rh-ic{font-size:12px;color:var(--acc)}
+.region-h .rh-t{font-family:var(--font-display);font-style:italic;font-size:13px;color:var(--tx);flex:1}
+.region-h .rh-meta{font-family:var(--font-mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx-3)}
+.region-b{padding:2px 14px 14px}
+
+/* INSPECTOR — the selected node's config + output (status-by-light + dense readout) */
+.insp-subject{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--r);
+  background:linear-gradient(165deg,rgba(230,171,92,.10),rgba(230,171,92,.03));border:1px solid var(--acc-glow);margin-bottom:11px}
+.insp-subject .ik{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--gold-hi),var(--gold-deep));flex:none}
+.insp-subject .it{flex:1}
+.insp-subject .itn{font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--tx)}
+.insp-subject .ita{font-family:var(--font-mono);font-size:8px;letter-spacing:.04em;color:var(--acc)}
+.insp-subject .ist{font-family:var(--font-mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);
+  display:flex;align-items:center;gap:5px}
+.insp-subject .ist .d{width:6px;height:6px;border-radius:99px;background:var(--gold);box-shadow:0 0 0 3px var(--acc-glow)}
+
+.cfg-grp-l{font-family:var(--font-mono);font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--tx-3);margin:4px 0 7px}
+/* config rows (NodeConfigForm — the type's declared config) */
+.cfg-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.cfg-row .cl{font-family:var(--font-mono);font-size:10px;color:var(--tx-3);width:62px;flex:none}
+.cfg-row .cv{flex:1;font-family:var(--font-mono);font-size:10px;color:var(--tx);background:rgba(25,22,17,.6);
+  border:1px solid var(--line);border-radius:6px;padding:6px 9px;display:flex;align-items:center;gap:6px}
+.cfg-row .cv.model{color:var(--kind-model)}
+.cfg-row .cv .mdot{width:6px;height:6px;border-radius:99px;background:var(--kind-model)}
+/* output block — rendered, not a raw dump */
+.outp{margin-top:9px;background:rgba(25,22,17,.55);border:1px solid var(--line);border-radius:var(--r);padding:10px 11px}
+.outp .ol{font-family:var(--font-mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx-3);margin-bottom:6px;
+  display:flex;align-items:center;gap:6px}
+.outp .ol .od{width:6px;height:6px;border-radius:99px;background:var(--gold)}
+.outp .ob{font-family:var(--font-display);font-size:11.5px;color:var(--tx);line-height:1.5}
+.outp .ob code{font-family:var(--font-mono);font-size:10px;color:var(--acc);background:var(--acc-glow);padding:1px 5px;border-radius:5px}
+
+/* the latent panel/extend "grow this surface" affordance — first-class, in the Inspector foot */
+.grow-aff{margin-top:11px;border:1px dashed var(--acc-deep);border-radius:var(--r);padding:10px 11px;
+  background:linear-gradient(165deg,rgba(230,171,92,.07),transparent)}
+.grow-aff .gt{font-family:var(--font-mono);font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);
+  display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.grow-aff .gt .star{color:var(--gold-hi)}
+.grow-aff .gbtns{display:flex;gap:7px}
+.grow-aff .gb{flex:1;font-family:var(--font-mono);font-size:9.5px;color:var(--tx-2);background:rgba(25,22,17,.6);
+  border:1px solid var(--line-2);border-radius:7px;padding:8px 6px;cursor:pointer;text-align:center;transition:transform .14s,color .2s,border-color .2s}
+.grow-aff .gb:hover{transform:translateY(-1px);color:var(--acc);border-color:var(--acc-deep)}
+.grow-aff .gn{font-family:var(--font-mono);font-size:7.5px;color:var(--tx-3);margin-top:6px;letter-spacing:.04em}
+
+/* ADDRESS-HELP — "what can I do here?" + the progressively-disclosed addressed-locus family */
+.ahelp .ah-3{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.ahelp .ah-leg{display:flex;gap:9px}
+.ahelp .ah-leg .lh{font-family:var(--font-mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--tx-3);
+  width:46px;flex:none;padding-top:2px}
+.ahelp .ah-leg .lb{font-family:var(--font-display);font-size:11.5px;font-style:italic;color:var(--tx-2);line-height:1.4;flex:1}
+.ahelp .ah-leg .lb b{font-style:normal;color:var(--tx);font-weight:500}
+/* a disclosure row — collapsed by default, a chevron + a count/light (NOT an 8-deep scroll) */
+.disc{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:7px;cursor:pointer;
+  border:1px solid var(--line);background:rgba(25,22,17,.45);transition:border-color .2s,background .2s;margin-top:6px}
+.disc:hover{border-color:var(--line-2);background:rgba(42,36,28,.5)}
+.disc .di{font-size:11px;color:var(--tx-3);width:14px;text-align:center}
+.disc .dl{font-family:var(--font-mono);font-size:10px;color:var(--tx-2);flex:1}
+.disc .dc{font-family:var(--font-mono);font-size:8px;letter-spacing:.06em;color:var(--tx-3);
+  background:rgba(64,55,41,.5);border-radius:99px;padding:2px 7px}
+.disc .dc.live{color:var(--gold);background:var(--acc-glow)}
+.disc .chev{color:var(--tx-3);font-size:10px;transition:transform .2s}
+.disc.open .chev{transform:rotate(90deg);color:var(--acc)}
+.disc-body{display:none;padding:8px 9px 4px 32px;flex-direction:column;gap:7px}
+.disc.open + .disc-body{display:flex}
+/* a thread of comments-at-address (the WRITE-only readback, surfaced) */
+.thread-turn{font-family:var(--font-display);font-size:11px;color:var(--tx-2);line-height:1.45;
+  border-left:2px solid var(--acc-deep);padding-left:9px}
+.thread-turn .tw{font-family:var(--font-mono);font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--tx-3);display:block;margin-bottom:2px}
+/* a ledger row (self-change-log · versions) */
+.ledger{font-family:var(--font-mono);font-size:9px;color:var(--tx-2);display:flex;align-items:center;gap:8px}
+.ledger .sha{color:var(--acc);font-size:8.5px}
+.ledger .when{color:var(--tx-3);margin-left:auto;font-size:8px}
+.ledger .rev{color:var(--kind-content)}
+
+/* QUEUE / REVIEW — the inbox docked as a column (a build-result waits IN VIEW) */
+.queue-card{border:1px solid var(--line-2);border-radius:var(--r);padding:10px 11px;margin-bottom:8px;
+  background:linear-gradient(168deg,var(--s2),var(--s1));position:relative;overflow:hidden}
+.queue-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px}
+.queue-card.lane-review::before{background:var(--gold)}
+.queue-card.lane-decision::before{background:var(--await)}
+.queue-card.lane-question::before{background:var(--kind-content)}
+.queue-card .qh{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.queue-card .qlane{font-family:var(--font-mono);font-size:7.5px;letter-spacing:.14em;text-transform:uppercase}
+.lane-review .qlane{color:var(--gold)}.lane-decision .qlane{color:var(--await)}.lane-question .qlane{color:var(--kind-content)}
+.queue-card .qwhen{font-family:var(--font-mono);font-size:7.5px;color:var(--tx-3);margin-left:auto}
+.queue-card .qbody{font-family:var(--font-display);font-size:12px;color:var(--tx);line-height:1.4;margin-bottom:9px}
+.queue-card .qbody b{color:var(--acc)}
+.queue-card .qmeta{font-family:var(--font-mono);font-size:8.5px;color:var(--tx-3);margin-bottom:9px;display:flex;align-items:center;gap:6px}
+.queue-card .qacts{display:flex;gap:6px}
+.queue-card .qacts button{flex:1;font-family:var(--font-mono);font-size:9.5px;font-weight:600;border:none;cursor:pointer;
+  border-radius:7px;padding:7px;letter-spacing:.04em;transition:transform .14s}
+.queue-card .qacts button:hover{transform:translateY(-1px)}
+.qa-ok{background:var(--acc-flow);color:var(--ink-accent)}
+.qa-no{background:var(--s3);border:1px solid var(--line-2)!important;color:var(--tx-2)}
+.qa-cm{background:rgba(25,22,17,.6);border:1px solid var(--line)!important;color:var(--tx-3)}
+
+/* ════ BOTTOM — the RHM CONVERSATION docked pane (always-on) + activity strip ════ */
+.rhm{grid-area:rhm;z-index:15;background:rgba(15,13,10,.9);backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);display:grid;grid-template-columns:auto 1fr auto;overflow:hidden}
+
+/* the presence orb stage — the RHM's living face, docked left */
+.rhm-orb{width:188px;border-right:1px solid var(--line);padding:16px 18px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:9px;position:relative}
+.orbwrap{position:relative;width:72px;height:72px}
+.orb{position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle at 38% 32%, var(--orb-hi), transparent 42%),
+    radial-gradient(circle at 60% 66%, var(--gold), transparent 58%),
+    conic-gradient(from 200deg at 50% 50%, var(--acc), var(--gold), var(--acc-deep), var(--acc));
+  box-shadow:0 0 34px -4px var(--acc-glow), inset 0 0 22px -6px rgba(255,247,232,.28);
+  animation:breathe 3.4s ease-in-out infinite}
+.orb-ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--acc);opacity:0;animation:ripple 3.4s ease-out infinite}
+.orb-ring.r2{animation-delay:1.7s}
+@keyframes ripple{0%{transform:scale(1);opacity:.4}100%{transform:scale(1.7);opacity:0}}
+.rhm-orb .say{font-family:var(--font-display);font-style:italic;font-size:12px;color:var(--tx-2);text-align:center;line-height:1.35}
+.rhm-orb .mode{font-family:var(--font-mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--acc)}
+
+/* the conversation column (centre of the RHM pane) */
+.rhm-conv{display:flex;flex-direction:column;min-width:0;padding:14px 18px 12px}
+.rhm-log{flex:1;overflow:auto;display:flex;flex-direction:column;gap:11px;
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 22px);mask-image:linear-gradient(180deg,transparent 0,#000 22px)}
+.turn{max-width:80%}
+.turn.you{align-self:flex-end;text-align:right}
+.turn .who{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:8px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--tx-3);margin-bottom:5px}
+.grade.gold{color:var(--acc)}.grade.work{color:var(--cache)}
+.bubble{font-size:12px;line-height:1.5;padding:10px 13px;border-radius:14px}
+.turn.you .bubble{background:linear-gradient(165deg,var(--acc-glow),rgba(230,171,92,.04));
+  border:1px solid var(--acc-glow);border-bottom-right-radius:5px;color:var(--tx)}
+.turn.vi .bubble{background:linear-gradient(165deg,var(--s2),var(--s1));border:1px solid var(--line-2);
+  border-bottom-left-radius:5px;color:var(--tx);font-family:var(--font-display);box-shadow:0 10px 26px -20px #000}
+.turn.vi .bubble code{font-family:var(--font-mono);font-size:10.5px;color:var(--acc);background:var(--acc-glow);padding:1px 5px;border-radius:5px}
+/* the indicate chip — proves the RHM SEES the selected node (co-presence) */
+.indicate{align-self:flex-end;display:inline-flex;align-items:center;gap:7px;background:rgba(230,171,92,.12);
+  border:1px solid rgba(230,171,92,.4);border-radius:99px;padding:4px 6px 4px 10px;font-family:var(--font-mono);
+  font-size:9.5px;color:var(--acc);margin-bottom:2px}
+.indicate .x{width:16px;height:16px;display:grid;place-items:center;border-radius:99px;background:var(--acc-glow);font-size:8px}
+.rhm-input{margin-top:10px;display:flex;align-items:center;gap:8px;background:rgba(25,22,17,.78);
+  border:1px solid var(--line-2);border-radius:var(--r-pill);padding:6px 6px 6px 16px}
+.rhm-input input{flex:1;background:none;border:none;outline:none;color:var(--tx);font-family:var(--font-sans);font-size:12px}
+.rhm-input input::placeholder{color:var(--tx-3)}
+.rhm-input .ib{width:34px;height:34px;border-radius:99px;display:grid;place-items:center;cursor:pointer;flex:none;
+  border:1px solid var(--line-2);background:var(--s2);color:var(--tx-2);font-size:14px;transition:transform .14s}
+.rhm-input .ib:hover{transform:translateY(-1px)}
+.rhm-input .ib.mic{border-color:var(--acc);color:var(--acc);background:var(--acc-glow);animation:micpulse 2.6s ease-in-out infinite}
+@keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(230,171,92,0)}50%{box-shadow:0 0 0 7px rgba(230,171,92,.10)}}
+.rhm-input .ib.send{background:var(--acc-flow);color:var(--ink-accent);border-color:transparent}
+
+/* RIGHT of the RHM pane = the docked TUNE strip + ambient activity (settings-resident latent caps,
+   surfaced as peeking instrument readouts so they don't hide the simultaneity hero) */
+.rhm-tune{width:300px;border-left:1px solid var(--line);padding:13px 15px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+.tune-h{font-family:var(--font-mono);font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--tx-3);
+  display:flex;align-items:center;gap:7px}
+.tune-h .more{margin-left:auto;font-family:var(--font-mono);font-size:8px;color:var(--acc);cursor:pointer}
+/* a knob readout (the /api/knobs dynamic surface — "all the knobs") */
+.knob-row{display:flex;align-items:center;gap:9px}
+.knob-row .kl{font-family:var(--font-mono);font-size:9px;color:var(--tx-3);width:64px;flex:none}
+.knob-row .ktrack{flex:1;height:4px;border-radius:99px;background:var(--s3);position:relative}
+.knob-row .ktrack i{position:absolute;top:0;bottom:0;left:0;border-radius:99px;background:var(--acc-flow)}
+.knob-row .kv{font-family:var(--font-mono);font-size:8.5px;color:var(--acc);width:34px;text-align:right;flex:none}
+/* run-stats sparkline (the introspective rollup) */
+.spark{display:flex;align-items:flex-end;gap:2px;height:24px}
+.spark b{flex:1;background:var(--acc-flow);border-radius:2px 2px 0 0;opacity:.85}
+.stat-line{font-family:var(--font-mono);font-size:8px;color:var(--tx-3);display:flex;justify-content:space-between}
+.stat-line b{color:var(--tx-2);font-weight:500}
+/* activity strip — ambient, always-on (room for it on desktop) */
+.act-strip{display:flex;flex-direction:column;gap:5px}
+.act-row{display:flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:8.5px;color:var(--tx-3)}
+.act-row i{width:6px;height:6px;border-radius:99px;flex:none}
+.act-row .at{color:var(--tx-2)}
+.act-row .aw{margin-left:auto;color:var(--tx-3);font-size:7.5px}
+
+.tune-divider{height:1px;background:var(--line);margin:1px 0}
+.tune-chip{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:9px;color:var(--tx-2);
+  padding:6px 8px;border-radius:6px;border:1px solid var(--line);background:rgba(25,22,17,.4);cursor:pointer;transition:border-color .2s,color .2s}
+.tune-chip:hover{border-color:var(--line-2);color:var(--tx)}
+.tune-chip .tg{color:var(--gold-hi);font-size:10px}
+.tune-chip .tn{margin-left:auto;font-size:7.5px;color:var(--tx-3);letter-spacing:.06em}
+</style></head>
+<body>
+<div class="bridge" id="bridge">
+
+  <!-- ═══════════ TOP — the thin GROUPED toolbar ═══════════ -->
+  <div class="toolbar" data-ui-ref="ui://toolbar">
+    <span class="tb-brand">the&nbsp;<em>company</em><span class="seat">commander's bridge</span></span>
+    <span class="tb-sep"></span>
+
+    <div class="tb-group" data-g="run">
+      <button class="tb-btn primary" data-ui-ref="ui://toolbar/run"><span class="g">▶</span>run</button>
+    </div>
+
+    <div class="tb-group" data-g="view">
+      <button class="tb-btn" title="layers"><span class="g">◐</span>layers</button>
+      <button class="tb-btn" title="fit to view"><span class="g">⊡</span>fit</button>
+    </div>
+
+    <div class="tb-group" data-g="mode · presence">
+      <span class="tb-presence" id="presence" title="presence dial — status by light"><span class="pdot"></span>
+        <span class="pl">mode · <b>listening</b></span></span>
+    </div>
+
+    <div class="tb-group" data-g="teach">
+      <button class="tb-btn" id="teachBtn" title="show me / be taught"><span class="g">☆</span>teach</button>
+    </div>
+
+    <span class="tb-spacer"></span>
+    <span class="tb-gear" title="settings — full config lab">⚙</span>
+  </div>
+
+  <!-- ═══════════ LEFT RAIL — the PALETTE ═══════════ -->
+  <aside class="rail" data-ui-ref="ui://palette">
+    <div class="rail-head">
+      <span class="rt">palette</span>
+      <span class="collapse" id="collapseBtn" title="collapse to an icon strip">‹</span>
+    </div>
+    <div class="rail-search"><span>⌕</span><span>filter blocks…</span></div>
+
+    <div class="rail-grp">process</div>
+    <div class="palette">
+      <div class="chip" draggable="true"><span class="mono process">A</span><span class="cn">ask</span><span class="ck">proc</span></div>
+      <div class="chip" draggable="true"><span class="mono process">L</span><span class="cn">llm</span><span class="ck">proc</span></div>
+      <div class="chip" draggable="true"><span class="mono process">E</span><span class="cn">embed</span><span class="ck">proc</span></div>
+      <div class="chip" draggable="true"><span class="mono process">R</span><span class="cn">retrieve</span><span class="ck">proc</span></div>
+      <div class="chip" draggable="true"><span class="mono process">G</span><span class="cn">gate</span><span class="ck">proc</span></div>
+      <div class="chip" draggable="true"><span class="mono process">J</span><span class="cn">join</span><span class="ck">proc</span></div>
+      <div class="rail-grp">content</div>
+      <div class="chip" draggable="true"><span class="mono content">C</span><span class="cn">codebase</span><span class="ck">cont</span></div>
+      <div class="chip" draggable="true"><span class="mono content">P</span><span class="cn">portal</span><span class="ck">ref</span></div>
+      <div class="chip" draggable="true"><span class="mono content">K</span><span class="cn">constant</span><span class="ck">cont</span></div>
+      <div class="chip" draggable="true"><span class="mono content">M</span><span class="cn">model_of_tim</span><span class="ck">cont</span></div>
+      <div class="rail-grp">config slot</div>
+      <div class="chip" draggable="true"><span class="mono model">◑</span><span class="cn">rhm_mode</span><span class="ck">dial</span></div>
+    </div>
+  </aside>
+
+  <!-- ═══════════ CENTRE — THE BOARD (the largest zone, always live) ═══════════ -->
+  <main class="board" data-ui-ref="ui://canvas">
+    <div class="field">
+      <div class="aurora"></div>
+      <div class="dotgrid"></div>
+    </div>
+    <div class="board-inner">
+
+      <!-- wires between the nodes -->
+      <svg class="wires" viewBox="0 0 868 540" preserveAspectRatio="none">
+        <path class="wire" d="M 196 132 C 270 132, 250 250, 318 250"/>
+        <path class="wire live" d="M 196 250 C 260 250, 270 250, 318 250"/>
+        <path class="wire" d="M 490 250 C 560 250, 560 132, 628 132"/>
+        <path class="wire" d="M 490 250 C 560 250, 560 392, 628 392"/>
+      </svg>
+
+      <!-- the codebase content node (volatile) -->
+      <div class="node" data-st="live" style="left:24px;top:96px" data-ui-ref="ui://canvas/node/codebase">
+        <span class="port out"></span>
+        <div class="nh"><span class="nk"></span><span class="nn">codebase</span><span class="naddr">·live</span></div>
+        <div class="nbody">reads the live repo into one context — volatile, always re-runs</div>
+        <span class="nstate"><span class="sdot"></span>live</span>
+      </div>
+
+      <!-- the model_of_tim node (cached) -->
+      <div class="node" data-st="cached" style="left:24px;top:214px" data-ui-ref="ui://canvas/node/model_of_tim">
+        <span class="port out"></span>
+        <div class="nh"><span class="nk"></span><span class="nn">model_of_tim</span><span class="naddr">·cache</span></div>
+        <div class="nbody">principles.md — the explicit model of Tim</div>
+        <span class="nstate"><span class="sdot"></span>cached</span>
+      </div>
+
+      <!-- THE SELECTED NODE — ask — the simultaneity binding subject -->
+      <div class="node selected" data-st="ran" style="left:318px;top:206px" data-ui-ref="ui://canvas/node/ask">
+        <span class="port in"></span><span class="port out"></span>
+        <div class="nh"><span class="nk"></span><span class="nn">ask</span><span class="naddr">ui://…/ask</span></div>
+        <div class="nbody">How does the memo gate decide whether a node re-runs?</div>
+        <span class="nstate"><span class="sdot"></span>ran · 1.4s</span>
+      </div>
+
+      <!-- the join node (idle) -->
+      <div class="node" data-st="idle" style="left:628px;top:88px" data-ui-ref="ui://canvas/node/join">
+        <span class="port in"></span><span class="port out"></span>
+        <div class="nh"><span class="nk"></span><span class="nn">join</span><span class="naddr">·idle</span></div>
+        <div class="nbody">merge two inputs to one text</div>
+        <span class="nstate"><span class="sdot"></span>idle</span>
+      </div>
+
+      <!-- the rollup ask node (awaiting) -->
+      <div class="node" data-st="await" style="left:628px;top:348px" data-ui-ref="ui://canvas/node/rollup">
+        <span class="port in"></span><span class="port out"></span>
+        <div class="nh"><span class="nk"></span><span class="nn">cost-rollup</span><span class="naddr">·await</span></div>
+        <div class="nbody">awaiting this morning's runs</div>
+        <span class="nstate"><span class="sdot"></span>awaiting you</span>
+      </div>
+
+      <!-- a failed node (so the full state vocabulary reads by sight) -->
+      <div class="node" data-st="failed" style="left:318px;top:392px" data-ui-ref="ui://canvas/node/embed-corpus">
+        <span class="port in"></span><span class="port out"></span>
+        <div class="nh"><span class="nk"></span><span class="nn">embed-corpus</span><span class="naddr">·fail</span></div>
+        <div class="nbody">embedding service :8001 unreachable — fails loud</div>
+        <span class="nstate"><span class="sdot"></span>failed</span>
+      </div>
+
+      <!-- a building node (the desaturated bronze 'structural' tone) -->
+      <div class="node" data-st="building" style="left:318px;top:80px" data-ui-ref="ui://canvas/node/new-panel">
+        <span class="port in"></span><span class="port out"></span>
+        <div class="nh"><span class="nk"></span><span class="nn">retrieve</span><span class="naddr">·build</span></div>
+        <div class="nbody">wiring — top-k cosine ranking</div>
+        <span class="nstate"><span class="sdot"></span>building</span>
+      </div>
+
+      <!-- the right-click context menu, shown statically beside the selected node (pointer affordance) -->
+      <div class="ctxmenu" style="left:498px;top:214px">
+        <div class="ci"><span class="g">↻</span>run from here</div>
+        <div class="ci"><span class="g">＋</span>wire to…</div>
+        <div class="ci"><span class="g">⊕</span>portal this output</div>
+        <div class="ci"><span class="g">✦</span>surface output → queue</div>
+        <div class="sep"></div>
+        <div class="ci"><span class="g">◈</span>ask vi about this</div>
+        <div class="ci danger"><span class="g">🗑</span>delete</div>
+      </div>
+
+      <!-- a hover-preview bubble on another node (pointer-only: hover = preview output, no click) -->
+      <div class="preview" style="left:184px;top:60px">
+        <div class="pvh"><i></i>hover preview · codebase</div>
+        <div class="pvb">19,361 files · 600k char cap — the live repo as one context.</div>
+      </div>
+
+      <!-- show-me spotlight (off by default; the teach button rings the selected node) -->
+      <div class="spotlight" id="spotlight" style="left:310px;top:198px;width:188px;height:96px"></div>
+      <div class="show-cap" id="showCap" style="left:512px;top:200px">
+        <div class="sct">show me · step 2 of 4</div>
+        <div class="scb">This is the <b>ask</b> node — it fired because its inputs resolved. Its answer is in the inspector. →</div>
+      </div>
+    </div>
+
+    <!-- board chrome: pointer affordance hints + zoom -->
+    <div class="board-hint">
+      <span class="hk"><b>drag</b> a chip to wire</span>
+      <span class="hk"><b>marquee</b> to multi-select</span>
+      <span class="hk"><b>right-click</b> a node for verbs</span>
+    </div>
+    <div class="zoomctl"><button>＋</button><button>−</button><button title="fit">⊡</button></div>
+  </main>
+
+  <!-- ═══════════ RIGHT RAIL — Inspector · Address-help · Queue ═══════════ -->
+  <aside class="inspect">
+    <div class="rail-col">
+
+      <!-- ── INSPECTOR (top) — the SELECTED node's config + output ── -->
+      <section class="region" data-ui-ref="ui://inspector">
+        <div class="region-h"><span class="rh-ic">▣</span><span class="rh-t">inspector</span><span class="rh-meta">selected</span></div>
+        <div class="region-b">
+          <div class="insp-subject">
+            <span class="ik"></span>
+            <span class="it"><span class="itn">ask</span><span class="ita">ui://canvas/node/ask</span></span>
+            <span class="ist"><span class="d"></span>ran</span>
+          </div>
+
+          <div class="cfg-grp-l">config — the type's declared slots</div>
+          <div class="cfg-row"><span class="cl">model</span><span class="cv model"><span class="mdot"></span>deepseek-v4-pro</span></div>
+          <div class="cfg-row"><span class="cl">base_url</span><span class="cv">local · :8000</span></div>
+          <div class="cfg-row"><span class="cl">question</span><span class="cv">↳ from selection</span></div>
+
+          <div class="outp">
+            <div class="ol"><span class="od"></span>output</div>
+            <div class="ob">It hashes <code>(type,version,config,inputs)</code>. Unchanged → it serves the cached result. A volatile node like <code>codebase</code> bypasses the gate, so it always re-runs.</div>
+          </div>
+
+          <!-- ★ the LATENT panel/extend self-grow affordance — first-class, NOT RHM-only -->
+          <div class="grow-aff" data-ui-ref="ui://grow">
+            <div class="gt"><span class="star">★</span>grow the interface itself</div>
+            <div class="gbtns">
+              <span class="gb">＋ add a panel</span>
+              <span class="gb">⌗ extend w/ component</span>
+            </div>
+            <div class="gn">propose → review diff → approve · git-reversible · the controls to grow the UI, surfaced</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ADDRESS-HELP (mid) — "what can I do here?" + the addressed-locus family ── -->
+      <section class="region ahelp" data-ui-ref="ui://address-help">
+        <div class="region-h"><span class="rh-ic">⌖</span><span class="rh-t">what can I do here?</span><span class="rh-meta">at · ask</span></div>
+        <div class="region-b">
+          <div class="ah-3">
+            <div class="ah-leg"><span class="lh">is</span><span class="lb">An <b>ask</b> node — LLM Q&amp;A over its resolved inputs.</span></div>
+            <div class="ah-leg"><span class="lh">you can</span><span class="lb">Re-run it · change its <b>model</b> · wire its answer onward · ask vi about it.</span></div>
+            <div class="ah-leg"><span class="lh">how</span><span class="lb">Right-click for verbs, or say <b>"rerun ask and route to my inbox."</b></span></div>
+          </div>
+
+          <!-- progressively-disclosed addressed-locus family — chips, NOT an 8-deep scroll -->
+          <div class="disc"><span class="di">💬</span><span class="dl">comments &amp; chat here</span><span class="dc">2</span><span class="chev">›</span></div>
+          <div class="disc-body">
+            <div class="thread-turn"><span class="tw">tim · pinned</span>Keep this on the local model — latency matters here.</div>
+            <div class="thread-turn"><span class="tw">vi · chat-at-address</span>Noted — base_url pinned to :8000.</div>
+          </div>
+
+          <div class="disc"><span class="di">⧗</span><span class="dl">history at this address</span><span class="dc">7</span><span class="chev">›</span></div>
+          <div class="disc-body">
+            <div class="ledger"><span>ran → cached → ran</span><span class="when">3 events today</span></div>
+            <div class="ledger"><span>last output changed</span><span class="when">14:22</span></div>
+          </div>
+
+          <div class="disc"><span class="di">⎘</span><span class="dl">versions of this output</span><span class="dc">3</span><span class="chev">›</span></div>
+          <div class="disc-body">
+            <div class="ledger"><span>v3 · current</span><span class="when">now</span></div>
+            <div class="ledger"><span>v2</span><span class="when">13:40</span></div>
+          </div>
+
+          <div class="disc"><span class="di">⟲</span><span class="dl">self-changes here</span><span class="dc">1</span><span class="chev">›</span></div>
+          <div class="disc-body">
+            <div class="ledger"><span class="sha">a3f1c2</span><span>added model slot</span><span class="when">yest.</span></div>
+          </div>
+
+          <div class="disc"><span class="di">⟢</span><span class="dl">code behind this</span><span class="dc">scope</span><span class="chev">›</span></div>
+          <div class="disc-body">
+            <div class="ledger"><span class="sha">code://ask/run</span><span class="when">nodes/ask.py</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── QUEUE / REVIEW (bottom) — the inbox docked as a column, a build-result IN VIEW ── -->
+      <section class="region" data-ui-ref="ui://inbox">
+        <div class="region-h"><span class="rh-ic">✦</span><span class="rh-t">queue · review</span><span class="rh-meta" style="color:var(--await)">3 need you</span></div>
+        <div class="region-b">
+
+          <!-- a build-result waiting for review — the wire's surfaced-for-review item -->
+          <div class="queue-card lane-review" data-ui-ref="ui://inbox/build-result">
+            <div class="qh"><span class="qlane">build result · review</span><span class="qwhen">2m</span></div>
+            <div class="qbody">The self-build added a <b>retrieve</b> node + wired it. Verified by use.</div>
+            <div class="qmeta">⌗ 2 files changed · diff ready · git-reversible</div>
+            <div class="qacts"><button class="qa-ok">accept</button><button class="qa-no">send back</button><button class="qa-cm">diff</button></div>
+          </div>
+
+          <div class="queue-card lane-decision" data-ui-ref="ui://inbox/decision">
+            <div class="qh"><span class="qlane">decision</span><span class="qwhen">8m</span></div>
+            <div class="qbody">Cost rollup is ready — open it now, or hold for the 15:00 runs?</div>
+            <div class="qacts"><button class="qa-ok">open</button><button class="qa-no">hold</button></div>
+          </div>
+
+          <div class="queue-card lane-question">
+            <div class="qh"><span class="qlane">question</span><span class="qwhen">12m</span></div>
+            <div class="qbody">embed-corpus failed — :8001 down. Retry, or switch the ear?</div>
+            <div class="qacts"><button class="qa-ok">retry</button><button class="qa-cm">comment</button></div>
+          </div>
+
+        </div>
+      </section>
+
+    </div>
+  </aside>
+
+  <!-- ═══════════ BOTTOM — the RHM CONVERSATION docked pane + Tune/activity ═══════════ -->
+  <section class="rhm" data-ui-ref="ui://rhm">
+
+    <!-- the presence orb (the RHM's living face) -->
+    <div class="rhm-orb">
+      <div class="orbwrap">
+        <span class="orb-ring"></span><span class="orb-ring r2"></span>
+        <span class="orb"></span>
+      </div>
+      <div class="say">I'm here — and I see the <em>ask</em> node you've selected.</div>
+      <div class="mode">listening · deepseek-v4-pro</div>
+    </div>
+
+    <!-- the conversation — ABOUT the selected ask node (the simultaneity thread) -->
+    <div class="rhm-conv">
+      <div class="rhm-log">
+        <div class="indicate" title="your message is about this element"><span>⌖</span>ui://canvas/node/ask<span class="x">✕</span></div>
+        <div class="turn you">
+          <span class="who">you<span class="grade gold" title="gold — your own words">◆</span></span>
+          <div class="bubble">Why did the ask node re-run this time?</div>
+        </div>
+        <div class="turn vi">
+          <span class="who">vi<span class="grade work" title="working-grade inference">◇</span></span>
+          <div class="bubble">Its <code>codebase</code> input is volatile, so the memo gate couldn't skip it — that forced <code>ask</code> to recompute. Want me to pin the model so the answer stays on the local engine?</div>
+        </div>
+      </div>
+      <div class="rhm-input">
+        <input placeholder="ask vi about the selected node…"/>
+        <span class="ib mic" title="auto-listen on">👂</span>
+        <span class="ib send">→</span>
+      </div>
+    </div>
+
+    <!-- the Tune/activity strip — settings-resident latent caps as peeking readouts (not a modal that hides the hero) -->
+    <div class="rhm-tune" data-ui-ref="ui://tune">
+      <div class="tune-h">★ /api/knobs · live model knobs<span class="more">all knobs ›</span></div>
+      <div class="knob-row"><span class="kl">temperature</span><span class="ktrack"><i style="width:42%"></i></span><span class="kv">0.6</span></div>
+      <div class="knob-row"><span class="kl">max_tokens</span><span class="ktrack"><i style="width:70%"></i></span><span class="kv">4k</span></div>
+      <div class="knob-row"><span class="kl">top_p</span><span class="ktrack"><i style="width:88%"></i></span><span class="kv">0.9</span></div>
+
+      <div class="tune-divider"></div>
+
+      <div class="tune-h">★ run-stats · learning by use<span class="more">rollup ›</span></div>
+      <div class="spark">
+        <b style="height:40%"></b><b style="height:62%"></b><b style="height:48%"></b><b style="height:80%"></b>
+        <b style="height:55%"></b><b style="height:94%"></b><b style="height:70%"></b><b style="height:86%"></b>
+        <b style="height:60%"></b><b style="height:100%"></b><b style="height:74%"></b><b style="height:88%"></b>
+      </div>
+      <div class="stat-line"><span>runs today <b>41</b></span><span>cache hit <b>63%</b></span><span>p50 <b>1.2s</b></span></div>
+
+      <div class="tune-divider"></div>
+
+      <div class="tune-h">activity · ambient<span class="more">feed ›</span></div>
+      <div class="act-strip">
+        <div class="act-row"><i style="background:var(--gold)"></i><span class="at">ask · ran</span><span class="aw">1.4s</span></div>
+        <div class="act-row"><i style="background:var(--kind-content)"></i><span class="at">retrieve · building</span><span class="aw">now</span></div>
+        <div class="act-row"><i style="background:var(--fail)"></i><span class="at">embed-corpus · failed</span><span class="aw">2m</span></div>
+      </div>
+
+      <div class="tune-divider"></div>
+
+      <!-- the remaining settings-resident latent caps, collapsed as one-tap chips -->
+      <div class="tune-chip"><span class="tg">★</span>R2 composition · live tuning<span class="tn">setter</span></div>
+      <div class="tune-chip"><span class="tg">★</span>voice trial · debrief<span class="tn">record→reflect</span></div>
+      <div class="tune-chip"><span class="tg">★</span>self-change-log · full ledger<span class="tn">[self-apply]</span></div>
+    </div>
+  </section>
+
+  <div class="grain"></div>
+</div>
+
+<script>
+(function(){
+  var bridge = document.getElementById('bridge');
+
+  // left rail collapse ↔ icon strip
+  var cb = document.getElementById('collapseBtn');
+  cb.addEventListener('click', function(){
+    bridge.classList.toggle('rail-collapsed');
+    cb.textContent = bridge.classList.contains('rail-collapsed') ? '›' : '‹';
+  });
+
+  // disclosure rows in address-help (progressive disclosure, not an 8-deep scroll)
+  document.querySelectorAll('.disc').forEach(function(d){
+    d.addEventListener('click', function(){ d.classList.toggle('open'); });
+  });
+
+  // teach → toggle the show-me spotlight on the board (rings the selected node)
+  var teach = document.getElementById('teachBtn');
+  teach.addEventListener('click', function(){ bridge.classList.toggle('show-on'); });
+
+  // selecting any node re-binds the simultaneity subject (visual only — the demo subject is `ask`)
+  document.querySelectorAll('.node').forEach(function(n){
+    n.addEventListener('click', function(){
+      document.querySelectorAll('.node').forEach(function(x){ x.classList.remove('selected'); });
+      n.classList.add('selected');
+    });
+  });
+})();
+</script>
+</body></html>
