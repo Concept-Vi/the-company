@@ -152,6 +152,51 @@ run pre-merge, not part of the graph.
 
 ---
 
+## 3.5 · Who runs the loop — it is Claude Code, today and eventually (plan for both as one)
+
+A correction that reorganizes the whole loop story, and the thing to hold before §4–§6: **the loop's agent
+is Claude Code reading the coherence model as its worklist. There is no other "autonomous builder" — the
+in-built one is *still just Claude Code*.** So this design does not fork into two systems; it is one design
+with one consumer (a Claude Code agent), invoked two ways:
+
+```
+THE LOOP'S AGENT  =  a Claude Code agent that reads the model → picks a finding → fixes it →
+                     the gates verify → commit-or-revert → the detector re-runs → repeat.
+
+  invocation NOW (real, running):   the INTERACTIVE Claude Code lead session — exactly the session
+                                    that did this whole arc (the merge, the gates, the studio, this
+                                    research wave), dispatching subagents and coordinating with the
+                                    cognition session (another Claude Code) through MERGE-COORDINATION.md,
+                                    with Tim relaying. The loop today IS Claude-Code-sessions-coordinating.
+
+  invocation EVENTUALLY (plumbing exists, not built for this):  the in-app wire firing `claude -p`
+                                    (headless Claude Code) against the model on a tick. SAME agent kind,
+                                    same model, same gates, same consent — only the invocation differs
+                                    (a terminal lead vs a wire-spawned subprocess).
+```
+
+Two consequences that make the design *simpler and nearer-term*, not more speculative:
+
+1. **The substrate does not wait on the in-app loop to be useful.** Its first and current consumer is
+   Claude Code *sessions* — me and the cognition session. And we need it now, demonstrably: in this very
+   session main drifted under the lead (HEAD advanced to commits the lead didn't recognise; a worktree's
+   studio-landing was committed by a continuation the lead had lost the thread of), the **mode dial got
+   built twice**, and the lead **wrongly deleted `/status`** unable to see it was a half-migration. Every
+   one is a Claude Code session losing coherence with what other Claude Code sessions did. The model is the
+   thing that lets a session read *one live picture* instead of re-discovering the state by hand each time —
+   value on the first `company coherence` read, long before any in-app loop exists.
+
+2. **"Operator-by-proxy" is already how it works.** When Tim said "you have approval, fire it" this session
+   and the lead approved build-intents on his behalf, *that was a Claude Code agent acting as operator under
+   Tim's standing grant.* So the consent mechanism (§5) is not a future abstraction — it is the present
+   reality, today verbal-to-the-lead, eventually a scoped config grant the wire reads. Same mechanism, two
+   invocations.
+
+So everywhere below that says "the loop" / "the agent," read: *a Claude Code agent — the interactive lead
+now, the wire's `claude -p` later.* Plan for both; they are one thing.
+
+---
+
 ## 4 · The convergence claim, downgraded honestly (and made stronger for it)
 
 Area 4 stress-tested "always completes / stays together" and the honest answer is: **it cannot be proven,
@@ -192,28 +237,38 @@ completes" is exactly the green-paint the business stakes forbid.
 
 ## 5 · The one genuinely consequential decision — and it's Tim's
 
-This is the thing the loop dream quietly depends on, surfaced by Area 4 and not to be papered over:
+This is the thing the loop quietly depends on, surfaced by Area 4 and not to be papered over — but it is
+*not* a check-in mechanism, and §3.5 already shows why. The loop does not page Tim. A Claude Code agent
+runs it; findings it can't auto-resolve *surface* in the interface (passively, where Tim already looks),
+they never interrupt him. The real knob is narrower:
 
-> **Autonomous burn-down to zero is *blocked* by the operator-only consent floor — unless a standing,
-> scoped, revocable pre-authorization exists. It does not exist today.**
+> **How much may a Claude Code agent approve + dispatch on Tim's behalf, without a per-build human approve?**
 
-The consent floor is real and load-bearing: `resolve_surfaced` is operator-only, off the agent face; the
-agent cannot self-approve. So either (a) every finding gets a per-finding operator approve — which makes the
-loop *human-paced*, not autonomous — or (b) Tim grants a standing license: *"AUTO-finish `to_wire` findings
-whose scope ⊆ X and blast-radius ≤ K, until I revoke."* Option (b) is the switch that converts the
-human-paced loop into the autonomous one, and it is **correctly the most consequential thing in the whole
-design** — it is governance over a *class* of future self-modifications. It should itself be a
-consequence-classed, operator-only, scoped, revocable grant.
+The consent floor is real and load-bearing: `resolve_surfaced` is operator-only, off the *agent* face (the
+MCP/headless face) — so a Claude Code agent can't self-approve *through that face*. Approval is an
+**operator** act. The whole question is therefore: who holds the operator grant, and how scoped is it?
 
-**This is the decision that defines how autonomous "trusted in the morning" actually is. It is not the AI's
-call to make — it is yours, and it deserves its own deliberate conversation.** Everything else the machine
-can hold and burn down; this is the one knob that says how far it may go between your check-ins.
+- **Today this is verbal and total-to-the-lead.** Tim said "you have approval, fire it," and the
+  interactive Claude Code lead approved build-intents as operator-by-proxy. That works for a supervised
+  session; it does not scale to an unattended in-app loop (the grant lives in a sentence, not a record).
+- **Eventually it is a scoped, revocable config grant the wire reads.** The same idea, made durable:
+  *"a Claude Code agent may AUTO-finish `to_wire` findings whose scope ⊆ X and blast-radius ≤ K, until I
+  revoke"* — a record, consequence-classed, operator-only to set, that the wire's `claude -p` honors. This
+  is the present `COMPANY_WIRE_PERMISSION=acceptEdits` arming flag **made scoped** (today it's all-or-
+  nothing; the grant gives it bounds), not a net-new channel.
 
-Where Tim stays structurally essential, concretely: the **standing-authorization grants** (above); the
-**dispositions** the system can't classify by a standing rule; the **design/creative calls** (e.g. "what
-should the screen for the 12 authoring endpoints *be*" — the FORM gate already refuses to auto-close surface
-builds, so this is enforced, not hoped); and the **loud escalations** (stall-halts, retry-cap escalations,
-build-says-done/detector-disagrees anomalies).
+So the consequential decision is not "will it check in with me" (it won't) — it is **how wide the standing
+grant is**: a sentence to a supervised lead now, a bounded durable record for the unattended wire later.
+That width is what defines how autonomous "trusted in the morning" actually is, and it is **Tim's to set,
+deliberately** — because it is governance over a *class* of future self-modifications by a Claude Code agent.
+
+Where Tim stays structurally essential, concretely (none of these are interrupts — they are where a Claude
+Code agent *defers to* him): the **width of the standing grant** (above); the **dispositions** the system
+can't classify by a standing rule (they wait in the interface, unsettled, the loop skips them — §4); the
+**design/creative calls** (e.g. "what should the screen for the 12 authoring endpoints *be*" — the FORM gate
+already refuses to auto-close surface builds, so this is enforced, not hoped); and the **loud escalations**
+(stall-halts, retry-cap escalations, build-says-done/detector-disagrees anomalies) — which *surface*, where
+he looks, when he looks.
 
 ---
 
@@ -318,8 +373,11 @@ Reasoning-partner framing — these are the forks the research surfaced, not a r
    (mostly unifying what exists) and unusually *high-leverage* (it's the keystone for trusted autonomous
    builds). But it's also a real body of work, and there's an active completion campaign + a studio + a
    mode-dial join already in flight. Sequence question, yours.
-2. **The standing pre-authorization (§5)** — the one genuinely consequential design call. How far may the
-   loop go between your check-ins? This deserves its own conversation whenever this is pursued.
+2. **The width of the standing grant (§5)** — the one genuinely consequential design call. Not "will it
+   check in" (it won't — a Claude Code agent runs it; unresolved findings surface where you look, never
+   interrupt). The knob is *how much a Claude Code agent may approve+dispatch on your behalf without a
+   per-build approve* — a sentence to a supervised lead today, a bounded revocable config grant for the
+   unattended wire later. This deserves its own conversation whenever it's pursued.
 3. **Sibling vs eventual shared abstraction** — build Coherence as a sibling of CognitionView (the
    recommendation), and only extract a shared "live-model" abstraction later *if* the two surfaces prove they
    share enough by use. (Premature unification is the thing that's easy to regret.)
