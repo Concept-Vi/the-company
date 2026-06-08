@@ -104,6 +104,16 @@
 - **E4 (🟡) · `build_coherence_info`** — the third sibling projection (beside `object_info` +
   `build_cognition_info`); the coherence model's read-face; reflects-never-owns. FUNCTION: 🟡 Designed (mine;
   co-design the projection machinery with cognition).
+- **E5 (🟡) · END-STATE: actions COMPOSE + RUN across MODELS *and* EMBEDDINGS** (Tim, explicit) — a saved
+  action can be composed from steps that each declare a model OR an embedding op (embed/similarity/retrieve),
+  run end-to-end, and be re-run under a different model/embedding config (the experiment axis, D2). This is the
+  whole point landing: chains-as-actions that actually exercise the LLM layer + the embedding layer, swappably.
+  FUNCTION: 🟡 Designed. **CO-DESIGN + DEPENDENCY:** I own compose+declare+save+calibrate; the RUN half needs
+  cognition's engine (`run_items`/`run_reduce` + the **embed op**, C 2-3/4) AND the model/embedding
+  **launch/select/evict** capability (cognition's B + the resident-model capability — load BGE-M3 @ :8001 on
+  demand, not a hand-evict). My calibration (D) is what proves a composed model+embedding action is trustworthy
+  per config. Until the engine + on-demand-embed land, E5 builds on the existing `run_graph` + embed nodes
+  single-config; the full swappable model+embedding form lands when they do.
 
 ## Group F — The substrate as the shared honesty instrument  (the convergence-round lens)
 - **F1 (🟡) · the detectors run cross-fork over the merged whole** — one-seam / unconsumed-output / law-break
@@ -129,5 +139,6 @@
 Every line ✅ or 🟡-needs-tim-with-a-note (none 🔴/unbuilt-silently); the shared pre-commit suite assembled +
 ratified; the disposition store live with the detectors writing into it + the burn-down readable; the
 calibration harness producing a per-class number on the real incidents; the Action declaration/registry built
-(runner co-designed); `build_coherence_info` projecting; and the substrate proven as the convergence-round's
-structural honesty half. Verified by use, no green-paint, the laws held.
+(runner co-designed); **actions that compose + run across models AND embeddings, swappable per config (E5)**;
+`build_coherence_info` projecting; and the substrate proven as the convergence-round's structural honesty half.
+Verified by use, no green-paint, the laws held.
