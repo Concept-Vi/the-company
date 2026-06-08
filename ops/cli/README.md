@@ -21,6 +21,7 @@ up exactly what a task needs with `company up` and free it with `company down`. 
 | `company health` | quick ✓/✗ port ping of every service |
 | `company models` | what's on disk (HF cache for vLLM + Ollama's own store) |
 | `company swap SERVICE MODEL_ID` | point a model service at another model + restart |
+| `company ensure MODEL\|SERVICE [--evict] [--no-wait]` | the gated launch/select actuator: make a model resident on demand (no-op if up; load if it fits; `--evict` makes room largest-first; fail-loud if it can't fit even after evict). The ONE mechanism the engine + CLI share — reuses the `up`/`--evict` resource-manager. |
 | `company bench chat\|embed\|suite\|long-ctx [args]` | run a stack benchmark |
 | `company telemetry` | learned model load times + measured VRAM vs the registry estimates |
 | `company help` | the built-in summary |
@@ -49,6 +50,15 @@ The card is 16 GB and the models don't all fit at once, so `company up`:
   time + **measured** VRAM to telemetry. Over time the gate budgets against measured
   numbers, not guesses — see `company telemetry`. Detection of "what's running" uses the
   per-unit `systemctl is-active`, never the port (model services share ports).
+
+`company ensure MODEL|SERVICE` is the **gated launch/select actuator** built on the same
+manager — the ONE mechanism the cognition engine *and* the CLI share to make a model
+resident on demand (`capabilities.ensure_resident`). It reuses `check_fit` + the
+largest-first `plan_eviction` + the `systemctl start` path — it is **not** a second
+resource-manager. No-op if already up; loads if it fits; `--evict` authorizes
+largest-first room-making; **fail-loud** (raises) if it can't fit even after evicting.
+It unifies the three load-on-demand consumers: the embed-op load, the `brain_config`
+loadout, and the mode-loadout swap.
 
 Examples:
 ```

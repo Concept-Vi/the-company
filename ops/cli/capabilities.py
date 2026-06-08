@@ -30,10 +30,12 @@ An unknown model-id returns an explicit "unknown — ASK" result, never a fabric
 """
 import json
 import os
+import time
 import urllib.request
 
 import registry
 import gpu
+import systemd
 
 # Provenance vocabulary (reuses MODEL_KNOBS' applies-vocab + B4's additions). LIVE wins over declared.
 #   declared — asserted from a doc / known trait, not verified by execution
@@ -309,3 +311,187 @@ def require_resident(model_id, reg=None):
                     f"Offer to load via `company up {key}` (~{gpu.budget_vram(reg, key)/1000:.1f} GB). "
                     f"NOT auto-loaded (no silent degrade; the operator/lead decides)."),
     }
+
+
+# --- #50 · ensure_resident: THE GATED LAUNCH/SELECT/EVICT ACTUATOR ---------------------------------
+# The deliberate ACTUATOR sibling of require_resident (the fail-loud surface above). require_resident
+# SURFACES + OFFERS; ensure_resident ACTS (loads, evicting largest-first if asked). ONE gated capability
+# the cognition engine + the CLI both call, UNIFYING the three load-on-demand consumers (the embed-op
+# load · B brain_config · the mode-loadout swap) — see COGNITION-REVIEW.md "TIM CORRECTIONS" §2.
+#
+# REUSE-DON'T-PARALLEL (the GPU-shared law): it reuses the EXISTING ONE resource-manager primitives —
+#   gpu.check_fit (the fit math) · gpu.plan_eviction (the largest-first, models→brain→voice eviction
+#   plan, identical to `company up --evict`) · gpu.teardown (orphan-safe stop) · systemd.control(...,
+#   "start") (the SAME start path `_act` uses) · gpu.budget_vram (the reservation).
+# It does NOT call app.py:_act (that `print`s + `sys.exit(2)`s on refuse — it is the CLI front, not a
+# library; calling it from the engine would crash the process). It reuses _act's PRIMITIVES, not _act —
+# so there is exactly ONE resource-manager (gpu.py), no second start path, no duplicated fit math.
+#
+# GATED / operator-AUTO class: loading a model is reversible/internal (an AUTO-class action) — it does
+# NOT bypass the operator-only governance floor (it never resolves/approves/dispatches a Tim decision).
+# It is the explicit, deliberate actuator: callable when a run/operator GATES it (evict=True is an
+# explicit authorization to make room), never auto-fired on every mode-switch.
+#
+# FAIL-LOUD: if it cannot fit even after the full eviction plan, it RAISES EnsureResidentError — never
+# a silent half-load, never a blind over-budget --force stomp (that stays a separate CLI-only override).
+
+class EnsureResidentError(RuntimeError):
+    """Raised when a model CANNOT be made resident (no local service, or won't fit even after the full
+    largest-first eviction plan). Fail-loud: the caller never sees a silent half-load."""
+
+
+def _resolve_service_key(reg, model_or_service):
+    """Disambiguate the arg → a local service-key (the thing the resource-manager loads).
+    A service-key (in services.json) is used directly; otherwise treat it as a model-id and JOIN via
+    service_key_for. Returns the key, or None (cloud/ollama/unregistered — no local card slot)."""
+    if model_or_service in reg["services"]:
+        return model_or_service
+    return service_key_for(reg, model_or_service)
+
+
+def _wait_until_serving(svc, timeout=420):
+    """Block until the service's port serves (reuses systemd.port_open / is_active — the SAME poll
+    `company up --wait` uses, app.py:_wait_and_record:56-63). Returns True if it came up, False on
+    timeout/unit-failure. WHY this matters: an embedder cold-loads; returning before :8001 serves makes
+    the very next complete_embeddings fail-loud RAISE on a not-yet-ready endpoint (misread as a load
+    failure). So ensure_resident is not 'done' until the port answers."""
+    port = svc.get("port")
+    if not port:
+        return True  # no port to wait on (non-serving) — control() success is the signal
+    t0 = time.time()
+    while time.time() - t0 < timeout:
+        if systemd.port_open(port) is True:
+            return True
+        if systemd.is_active(svc) == "failed":
+            return False
+        time.sleep(3)
+    return systemd.port_open(port) is True
+
+
+def ensure_resident(model_or_service, *, evict=False, reg=None, wait=True, timeout=420):
+    """#50 — THE GATED LAUNCH/SELECT/EVICT ACTUATOR. Make a model/service RESIDENT on demand.
+
+    Args:
+      model_or_service — a service-key (services.json) OR a model-id (JOINed via service_key_for).
+      evict            — if True AND the start doesn't fit, make room via the EXISTING largest-first
+                         eviction plan (gpu.plan_eviction — models→brain→voice, identical to
+                         `company up --evict`), then load. If False and it doesn't fit → RAISE.
+      reg              — the registry (loaded if None).
+      wait/timeout     — block until the service's port serves before returning (default True).
+
+    Returns a structured dict (mirrors require_resident's shape) describing what happened:
+      {resident, model_or_service, served_by, action, evicted, vram_budget_mb, message}
+        action ∈ {"already-resident", "loaded", "evicted-and-loaded"}.
+
+    RAISES EnsureResidentError on: no local service (cloud/unregistered); won't fit and evict=False;
+    won't fit even after the full eviction plan; the start command failed; or (when wait=True) the
+    service never came up. NEVER a silent half-load (fail-loud law)."""
+    reg = reg or registry.load()
+    key = _resolve_service_key(reg, model_or_service)
+    if key is None:
+        raise EnsureResidentError(
+            f"ensure_resident: {model_or_service!r} has NO local service (cloud/ollama or unregistered) "
+            f"— it cannot be made resident on this card. Register a service for it to run locally, or "
+            f"route via the cloud brain (C8.3). Known services: {sorted(reg['services'])}.")
+    svc = reg["services"][key]
+    budget = gpu.budget_vram(reg, key)
+
+    # 1. ALREADY RESIDENT → no-op (idempotent).
+    if key in {k for k, _ in gpu.running_gpu_services(reg)}:
+        return {"resident": True, "model_or_service": model_or_service, "served_by": key,
+                "action": "already-resident", "evicted": [], "vram_budget_mb": budget,
+                "message": f"{key} is already resident (~{budget/1000:.1f} GB) — no-op."}
+
+    # 2. FIT? — reuse gpu.check_fit (the ONE fit math: measured free vs the budget sum).
+    ok, need, free, _present = gpu.check_fit(reg, [key])
+    evicted = []
+    if not ok:
+        if not evict:
+            raise EnsureResidentError(
+                f"ensure_resident: loading {key} needs ~{need/1000:.1f} GB but only ~{free/1000:.1f} GB "
+                f"is free, and evict=False. Pass evict=True to make room (largest-first), free space "
+                f"first, or use `company up {key} --evict`. (Fail-loud: no silent over-budget load.)")
+        # 3. EVICT — reuse the EXISTING largest-first plan (gpu.plan_eviction), sparing the to-start key.
+        plan, projected = gpu.plan_eviction(reg, [key], need, free)
+        if not plan or projected < need:
+            raise EnsureResidentError(
+                f"ensure_resident: CANNOT fit {key} (need ~{need/1000:.1f} GB) even after evicting "
+                f"{plan or 'nothing evictable'} (frees only ~{projected/1000:.1f} GB). Fail-loud — "
+                f"the card cannot hold this model alongside what must stay. No half-load.")
+        for k in plan:
+            okk, msg = gpu.teardown(svc=reg["services"][k])   # orphan-safe stop (cgroup teardown)
+            if not okk:
+                raise EnsureResidentError(
+                    f"ensure_resident: eviction of {k} FAILED ({msg}) while making room for {key} — "
+                    f"aborting before any load (fail-loud; never a partial-evict half-state).")
+            evicted.append(k)
+        time.sleep(2)  # let VRAM release (matches _act's post-stop settle)
+
+    # 4. LOAD — the SAME start path `_act` uses (systemd.control(svc, "start")). One start mechanism.
+    okk, msg = systemd.control(svc, "start")
+    if not okk:
+        raise EnsureResidentError(
+            f"ensure_resident: starting {key} FAILED ({msg}). evicted={evicted}. See `company logs {key}`. "
+            f"Fail-loud (never report resident when the start did not take).")
+
+    # 5. WAIT until it actually serves (so a downstream embed/chat call hits a ready endpoint).
+    if wait and not _wait_until_serving(svc, timeout=timeout):
+        raise EnsureResidentError(
+            f"ensure_resident: {key} was started but its port did not serve within {timeout}s "
+            f"(evicted={evicted}). See `company logs {key}`. Fail-loud — not a half-load to ignore.")
+
+    action = "evicted-and-loaded" if evicted else "loaded"
+    return {
+        "resident": True, "model_or_service": model_or_service, "served_by": key, "action": action,
+        "evicted": evicted, "vram_budget_mb": budget,
+        "message": (f"{key} loaded (~{budget/1000:.1f} GB)"
+                    + (f" after evicting {', '.join(evicted)} (largest-first)" if evicted else "")
+                    + (" and serving." if wait else ".")),
+    }
+
+
+# --- #50 · the B / mode-loadout consumer (lightweight) — the deliberate mode→loadout actuator --------
+def ensure_loadout_for_mode(mode, *, evict=False, reg=None, mode_registry=None):
+    """B / mode-loadout consumer: read a mode's declared `brain_config` (the mode→loadout name, e.g.
+    'swarm-16k' | 'voice-64k') and ensure_resident the brain SERVICE it wants — the deliberate
+    mode→loadout actuator. GATED: NOT auto-fired on a mode switch; an explicit, authorized call.
+
+    `mode_registry` is the callable `Suite.mode_registry` (passed in to keep this lane file-disjoint
+    from suite.py — registry-is-truth, read the declared row, never a parallel mode table here). If
+    omitted it is imported from runtime.suite.
+
+    THE HONEST GAP (surfaced, never silently bridged — anti-hardcoding law): a `brain_config` value is
+    a LOADOUT NAME that encodes a gpu_util VARIANT of the brain (swarm-16k @ 0.63 vs voice-64k @ 0.49),
+    NOT a service-key. suite.py:1513 already declares the gpu_util-variant SWAP out-of-scope / needs-tim.
+    So this consumer ensures the brain SERVICE is resident and RETURNS the requested variant + a loud
+    `variant_applied=False` flag — it does NOT silently drop a hardcoded {name→service} map (that would
+    break registry-is-truth). The brain service is resolved from the registry (the `brain` group), never
+    a literal. Applying the gpu_util variant (a `company config`/`swap` + restart) stays the needs-tim
+    deeper action."""
+    reg = reg or registry.load()
+    if mode_registry is None:
+        from runtime.suite import Suite          # lazy — keeps the import off the stdlib CLI path
+        mode_registry = Suite.__new__(Suite).mode_registry
+    row = mode_registry(mode)                     # the declared mode row (fail-loud on unknown mode)
+    wanted = row.get("brain_config")
+    if not wanted:
+        raise EnsureResidentError(
+            f"ensure_loadout_for_mode: mode {mode!r} declares no brain_config — nothing to ensure "
+            f"(fail-loud; a mode that wants a loadout must declare it).")
+    # Resolve the brain SERVICE from the registry (the `brain` group member) — never a hardcoded map.
+    brain_keys = [k for k, s in reg["services"].items() if s.get("group") == "brain"]
+    if not brain_keys:
+        raise EnsureResidentError(
+            "ensure_loadout_for_mode: no service in the `brain` group to make resident (registry has "
+            "no brain service). Fail-loud.")
+    brain_key = brain_keys[0]
+    res = ensure_resident(brain_key, evict=evict, reg=reg)
+    # Surface the variant gap loudly — the gpu_util variant is NOT applied here (needs-tim, suite.py:1513).
+    cur_util = (reg["services"][brain_key].get("config") or {}).get("gpu_util")
+    res["loadout_requested"] = wanted
+    res["variant_applied"] = False
+    res["variant_note"] = (
+        f"brain service {brain_key} is resident; the loadout VARIANT {wanted!r} (a gpu_util change, "
+        f"current gpu_util={cur_util}) is NOT applied by ensure (a `company config {brain_key} gpu_util "
+        f"<v>` + restart — flagged needs-tim at suite.py:1513). Residency ensured; variant surfaced.")
+    return res

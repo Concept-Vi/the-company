@@ -168,9 +168,26 @@ def _embed_text_for(role: "Role", ctx: dict, store) -> str:
 
 
 # --- run_role: fire ONE request at the resident 4B (mirrors is_finished_thought's fabric path) ---
+def _ensure_embedder_resident(*, evict: bool = False) -> dict:
+    """#50 consumer wiring — the OPT-IN deliberate load for an embed role (the embed-op's
+    load-on-demand). DELEGATES to the ONE gated capability (ops/cli/capabilities.ensure_resident) —
+    no parallel resource-manager here. ops/cli is a bare-import package, so add it to sys.path then
+    import (the same way the CLI loads it). Resolves the embedder by its model-id (DEFAULT_EMBED_MODEL)
+    so it JOINs to whatever service serves BGE-M3. Raises (EnsureResidentError) if it can't be made
+    resident — fail-loud, never a silent half-load. Returns the structured result dict."""
+    import sys as _sys
+    _ops_cli = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ops", "cli")
+    if _ops_cli not in _sys.path:
+        _sys.path.insert(0, _ops_cli)
+    import capabilities as _cap          # the gated actuator (reuses gpu.py — the one resource-manager)
+    from fabric import config as _fcfg
+    return _cap.ensure_resident(_fcfg.DEFAULT_EMBED_MODEL, evict=evict)
+
+
 def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
              model: str = RESIDENT_MODEL, timeout: int = ROLE_TIMEOUT,
-             max_tokens: int = 256, temperature: float = 0.0, store=None) -> dict:
+             max_tokens: int = 256, temperature: float = 0.0, store=None,
+             ensure: bool = False, ensure_evict: bool = False) -> dict:
     """Fire ONE request at the resident 4B for `role`, returning VALIDATED JSON (a dict).
 
     Mirrors `Suite.is_finished_thought`/the judge EXACTLY: `client.complete(openai_transport(...))`.
@@ -193,6 +210,13 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
         vector path (reuse — zero new plumbing), returning `{"vector", "dim", "model"}` (LOCAL embedder
         only, no cloud). An embed role needs NO prompt_template/output_schema (it embeds, doesn't generate).
 
+    #50 CONSUMER WIRING (opt-in, behaviour-preserving): `ensure=False` (DEFAULT) keeps the embed-op
+    fail-loud-when-down — a down embedder PROPAGATES FabricError, exactly as before (no auto-load, no
+    silent degrade). A DELIBERATE caller may pass `ensure=True` to first request the GATED actuator
+    (capabilities.ensure_resident — the ONE resource-manager) to make the embedder resident before the
+    embed; `ensure_evict=True` additionally authorizes largest-first eviction to make room. ensure only
+    affects op="embed". This makes the load a DECLARED, authorized request — never an implicit one.
+
     `ctx` must carry `utterance` for the default input axis. Fail loud: a transport/empty/parse/schema
     failure PROPAGATES as FabricError after retries (never a silent empty dict); a missing/unresolvable
     declared input RAISES (never a silent skip)."""
@@ -204,6 +228,10 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
         # complete_embeddings is the fail-loud guarded path: a down/empty/dim-mismatch embedder RAISES
         # FabricError after retries — NEVER a silent [] (C law: an embed with no embedder RAISES).
         from fabric import config as _fcfg
+        if ensure:
+            # OPT-IN deliberate load (#50): make the embedder resident via the gated capability BEFORE
+            # the embed. Default (ensure=False) skips this entirely → the existing fail-loud-when-down.
+            _ensure_embedder_resident(evict=ensure_evict)
         text = _embed_text_for(role, ctx, store)
         et = transport.openai_embeddings_transport(base_url=_fcfg.DEFAULT_EMBED_URL)
         vecs = client.complete_embeddings(

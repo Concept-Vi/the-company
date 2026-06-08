@@ -59,7 +59,17 @@ Do **not** build duplicate command centers. The right shape (Tim, "one substrate
   model_id)` / `suitable_models(requires)` (the `requires ⊆ provides` binding query — the `provides` TAG set
   matches `suite.py`'s `capability_providers()` exactly: chat·json·tools·fast·no-think), `placement_for(track)` +
   `swarm_survives_cloud_brain()` (C8.3 cloud-decoupling policy as DATA), `is_resident`/`require_resident` (C8.4
-  fail-loud, loud `OFFER_LOAD` on a miss, NEVER auto-loads). **Self-description / DRIFT HOME (C9.4):** this section
+  fail-loud, loud `OFFER_LOAD` on a miss, NEVER auto-loads), and **`ensure_resident(model_or_service, *, evict=False)`**
+  (#50, 2026-06-08) — the **gated launch/select/evict ACTUATOR**: the deliberate sibling of the fail-loud
+  `require_resident`. No-op if resident; loads if it fits; `evict=True` makes room via the EXISTING largest-first
+  `gpu.plan_eviction` then loads; **RAISES `EnsureResidentError`** if it can't fit even after evict (no silent
+  half-load). It REUSES the ONE resource-manager primitives (`check_fit`/`plan_eviction`/`teardown`/
+  `systemd.control(...,"start")`/`budget_vram`) — it does NOT call `app.py:_act` (the CLI front that `sys.exit`s)
+  and is NOT a second start path. Reachable as **`company ensure MODEL|SERVICE [--evict] [--no-wait]`** and called
+  by the cognition engine (the embed-op's opt-in `run_role(..., ensure=True)`). `ensure_loadout_for_mode(mode, ...)`
+  is the B/mode-loadout consumer (reads `mode_registry(mode)["brain_config"]`, ensures the brain service resident,
+  surfaces the gpu_util-variant gap loudly — never a hardcoded loadout→service map). GATED/operator-AUTO class:
+  reversible/internal, does NOT bypass the operator-only floor. **Self-description / DRIFT HOME (C9.4):** this section
   + the `cli/capabilities.py` module docstring are the registry's self-description home; the drift assertion is
   `tests/model_capabilities_acceptance.py`. It COMPLEMENTS `suite.py`'s `MODEL_KNOBS` (per-request knobs, also by
   model-id) — knobs = "dials a request turns"; capabilities = "what the model can do." The DOWNSTREAM consumer is

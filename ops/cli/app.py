@@ -18,6 +18,11 @@ stdlib-only. See README.md (use) and UPDATING.md (extend). Constitution: ../AGEN
                            require green (live-dep skips classified) — pre-merge/pre-deploy
   company models           what's on disk (HF cache + Ollama)
   company swap SERVICE MODEL_ID   point a model service at another model + restart
+  company ensure MODEL|SERVICE [--evict] [--no-wait]
+                           the GATED launch/select actuator: make a model resident on demand
+                           (already-up → no-op; fits → load; over-budget + --evict → evict
+                           largest-first then load; can't-fit-after-evict → fail loud). The ONE
+                           mechanism the engine + CLI share — reuses the up/--evict resource-manager.
   company config SERVICE [KEY VAL] show / edit a model's serve config (gpu_util, model, ctx…)
   company combos           list runnable combinations (`company up @<name>` to start one)
   company bench KIND [args]       chat|embed|suite|long-ctx
@@ -185,6 +190,27 @@ def main():
         ok, msg = models.swap(reg, rest[0], rest[1])
         print(("  ✓ " if ok else "  ✗ ") + msg)
         sys.exit(0 if ok else 1)
+    if cmd == "ensure":
+        # #50 — the GATED launch/select actuator from the CLI (the engine calls the same
+        # capabilities.ensure_resident; this is its operator face). Reuses the resource-manager
+        # (gpu.check_fit/plan_eviction) — NOT a second start path. --evict = authorize largest-first
+        # room-making; default refuses an over-budget load (fail-loud), matching `company up`'s policy.
+        import capabilities as _cap
+        flags = {a for a in args[1:] if a.startswith("--")}
+        rest = [a for a in args[1:] if not a.startswith("--")]
+        if not rest:
+            sys.exit("usage: company ensure MODEL|SERVICE [--evict] [--no-wait]")
+        print(gpu.format_state(reg))   # always show what's holding the card (the up/refuse ritual)
+        try:
+            res = _cap.ensure_resident(rest[0], evict="--evict" in flags, reg=reg,
+                                       wait="--no-wait" not in flags)
+        except _cap.EnsureResidentError as e:
+            print(f"  ✖ {e}")
+            sys.exit(2)
+        print(f"  ✓ {res['message']}")
+        if res.get("evicted"):
+            print(f"    (evicted, largest-first: {', '.join(res['evicted'])})")
+        sys.exit(0)
     if cmd == "bench":
         ok, msg = bench.run([a for a in args[1:] if not a.startswith("-")])
         if msg:
