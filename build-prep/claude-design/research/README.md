@@ -1,0 +1,1 @@
+Evidence base for the claude-design pack. Where BACKEND-SEAM-PACK.md addresses the same seam/placement findings as the deep-reads in this directory, the seam pack is the one-source — do not update the deep-reads independently.

@@ -1,0 +1,52 @@
+diff --git a/runtime/suite.py b/runtime/suite.py
+index f888996..46d22d1 100644
+--- a/runtime/suite.py
++++ b/runtime/suite.py
+@@ -1784,7 +1784,46 @@ class Suite:
+         # "(unregistered)" marker — surfaced honestly, never dropped.
+         raw_selected = (focus or {}).get("selected", [])
+         indicated = [s for s in raw_selected if isinstance(s, str) and s.startswith("ui://")]
+-        selected = [s for s in raw_selected if s not in indicated and s in by]
++        # REVIEW WORKSPACE (the mockup-studio organ): a `mockup://<file>` value rides in the SAME
++        # `focus.selected` list as a ui:// address (the WIDENED focus vocabulary, seams-rhm Seam 4 — never a
++        # new mechanism). It means "the operator is REVIEWING this mockup; its content IS ground truth for
++        # this turn". The mockups are static developer-authored HTML the operator (Tim) does NOT read — the
++        # right-hand-man reads it FOR him and explains at his altitude. So the mockup's actual content must be
++        # in the LIVE-STATE block (the grounding rule REFUSES to answer about anything not in that block — a
++        # filename alone would correctly draw "I can't see that"). Path-safe (bare <file>.html basename only,
++        # realpath-contained) so a junk value can never read outside design/mockups/ (mirrors the bridge's
++        # _safe_mockup_path). Checked BEFORE the node-id filter so it's never swallowed as a (non-existent) node.
++        mockups = [s for s in raw_selected if isinstance(s, str) and s.startswith("mockup://")]
++        selected = [s for s in raw_selected if s not in indicated and s not in mockups and s in by]
++        if mockups:
++            import re as _re
++            for mk in mockups:
++                name = mk[len("mockup://"):]
++                if not _re.fullmatch(r"[A-Za-z0-9._-]+\.html", name):
++                    ctx += (f"\nMOCKUP UNDER REVIEW: {name!r} — (refused: not a bare <file>.html name; "
++                            f"cannot read it)\n")
++                    continue
++                _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # repo root (single-source w/ codebase node)
++                fp = os.path.realpath(os.path.join(_root, "design", "mockups", name))
++                mroot = os.path.realpath(os.path.join(_root, "design", "mockups"))
++                if os.path.commonpath([fp, mroot]) != mroot or not os.path.isfile(fp):
++                    ctx += (f"\nMOCKUP UNDER REVIEW: {name!r} — (cannot see it: no such mockup file)\n")
++                    continue
++                with open(fp, "r", encoding="utf-8", errors="replace") as _f:
++                    html = _f.read()
++                # Inject the RAW content (advisor: don't pre-build an extraction pipeline — the model reading
++                # raw HTML may be fine; only add cleaning IF a real test comes back truncated/junk). Cap the
++                # bytes so one large mockup can't blow the window; the cap is generous and fail-loud-legible
++                # (the model is TOLD it was truncated, never silently fed a partial as if whole — rule 4).
++                CAP = 14000
++                body = html if len(html) <= CAP else (html[:CAP] + f"\n…[truncated — mockup is {len(html)} chars, "
++                                                                   f"showing first {CAP}]")
++                ctx += ("\nMOCKUP UNDER REVIEW (the operator is looking at this design mockup RIGHT NOW; it is "
++                        "a static HTML design artifact, NOT the live running app. The operator does not read "
++                        "code — read this FOR them and explain, at a plain-language altitude, what this screen "
++                        "IS, what they are looking at, and what they could do here. When they ask 'what am I "
++                        "looking at', ground your answer in THIS content):\n"
++                        f"  file: {name}\n  ---\n{body}\n  ---\n")
+         if indicated:
+             ilines = []
+             for addr in indicated:
