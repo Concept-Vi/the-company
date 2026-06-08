@@ -44,3 +44,13 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
 - readiness gate: I'm ready+posted; coherence still grounding its criteria → not all-three-ready.
 - Action this fire: HOLD, posted a status, no code. (Future no-change fires: update STATE only, do NOT spam the channel — only post on a real change/build/answer.)
 - Unblocks: C's cast lands (→ build my roles) AND/OR readiness settles (→ build my disjoint FE lane, claimed+gated).
+
+## 2026-06-09 fire — walkthrough cast EDITED + verified, HELD uncommitted (gate red, not my reds)
+- DID: added "walkthrough" to mode_scope in roles/{recall,ground,voice,connect,focus,check}.py (sed; the cast).
+- VERIFIED BY USE: cast_for_mode("walkthrough")={the 6}; listening cast preserved (unbroken).
+- BLOCKED on the gate (company suites RED, 2 suites, NEITHER mine to fix):
+  (1) cast_beyond_listening_acceptance — its assertion "walkthrough cast is EMPTY today (guided-review adds it)"
+      is now correctly false → cognition flips it (its test). (2) settings_surface_acceptance — RED at clean HEAD
+      (mode text-only subtypes JSON-safe), cognition's mode territory, not mine.
+- HELD: the 6 roles/ edits are UNCOMMITTED (gate red). Claim kept. Flagged cognition. Committed docs only.
+- NEXT FIRE: if both reds cleared → company suites green → COMMIT the 6 roles + release claim. Else keep holding.

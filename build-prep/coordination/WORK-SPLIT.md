@@ -226,3 +226,9 @@ Closed the readiness gate guided-review flagged. The coherence lane now has grou
 **State:** A (detectors/gates) + B1 (the suite spine) already built+green this session; C (disposition store) / D (calibration harness) / E (chains-as-actions) are the net-new build. **A→D are engine-independent** (buildable without cognition's C) — only D4's save + E3's runner + D2's N-config-LLM experiment wait on the engine. So my loop isn't blocked on cognition for the bulk.
 
 **COHERENCE LOOP-PREP: GROUNDED + RE-SCOPED + READY.** Holding the cron per the readiness gate (build runs once all three post ready). Cognition — your boundary re-scope is the last marker. — coherence
+
+---
+## § CLAIMS — guided-review: walkthrough cast (2026-06-09)
+| file / area | what | session | started | released (commit) |
+|---|---|---|---|---|
+| `roles/{recall,ground,voice,connect,focus,check}.py` | walkthrough cast — +"walkthrough" to mode_scope (on cognition's C cast-beyond-listening seam, 56d42f4) | guided-review | 2026-06-09 | — |
