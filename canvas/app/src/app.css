@@ -1455,7 +1455,7 @@ button.set-pill:hover{border-color:var(--sig);color:var(--ink)}
    ──────────────────────────────────────────────────────────────────────────────────────────────────── */
 .studio-shell{
   /* THE TOKEN-SLOT CONTRACT — the named styling interface (neutral defaults; Claude Design owns the values) */
-  --studio-bg: var(--bg);
+  --studio-bg: var(--s0);   /* opaque corpus surface — the review view must COVER the dev canvas, not let the tldraw board bleed through (FORM fix 2026-06-09) */
   --studio-gap: 0;
   --studio-rail-w: 300px;
   --studio-rail-bg: transparent;
@@ -1480,7 +1480,7 @@ button.set-pill:hover{border-color:var(--sig);color:var(--ink)}
   --studio-composer-thread-gap: 6px;
 
   /* STRUCTURE (the skeleton — [ Rail │ Stage │ RhmPanel ]; this does not move when the look changes) */
-  position:fixed; inset:0; z-index:40; display:grid;
+  position:fixed; inset:0; z-index:600; display:grid;
   grid-template-columns: var(--studio-rail-w) 1fr var(--studio-rhm-w);
   gap: var(--studio-gap);
   background: var(--studio-bg); color: var(--ink); overflow:hidden;
