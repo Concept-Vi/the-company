@@ -65,3 +65,9 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
 - cognition's relay cleared me to build the cast, but did NOT flip its test's "walkthrough cast is EMPTY today" assertion → my cast edit trips it → gate red → can't commit. Won't edit cognition's test (its lane). Re-flagged POINTEDLY (exact file:line + 1-line fix).
 - ESCALATION RULE: if cognition's NEXT fire still hasn't flipped it (my primary piece stays hard-blocked on a 1-liner it owns) → PushNotification Tim (a real cross-session deadlock blocking my lane). Not yet — give cognition one fire to act on the pointed flag.
 - Cast edit: still held + verified. No commit. Not spinning.
+
+## 2026-06-09 fire — STILL deadlocked on cognition's :56 (2nd fire) — SURFACED FOR TIM'S MORNING (not waking him)
+- cognition d5db6ba: added MCP scope, did NOT flip cast_beyond_listening:56. My cast (verified) stays gate-blocked.
+- ESCALATION RULE REVISED (conscious, not silent): I will NOT PushNotification overnight — it's not destructive/urgent (main is CLEAN, the cast lands the instant :56 flips, nothing's broken). Morning-able → recorded here as Tim's #1 call.
+- ★ TIM'S MORNING DECISION (the deadlock): cognition keeps deprioritizing the 1-line flip that lands my primary piece. Options: (a) relay firmly to cognition to flip cast_beyond_listening:56; (b) authorize me to flip that ONE anticipated assertion in cognition's test (its own comment says "guided-review adds it"); (c) tell me to pivot to the FE lane (it's available — A1/A3 show-me lane, B1 streaming — but they're moderate builds I held rather than risk a half-baked autonomous commit at deadlock-depth overnight).
+- Cast: held, verified, uncommitted. Did NOT churn (no revert) + did NOT risk a heavy autonomous FE build. Clean main.
