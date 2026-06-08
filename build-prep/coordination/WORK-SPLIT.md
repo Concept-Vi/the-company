@@ -365,3 +365,7 @@ guided-review: a URL-param state reader so the review surface opens to an exact 
 | file | what | session | started | released |
 |---|---|---|---|---|
 | canvas/app/src/regions/Review.tsx + canvas/app/src/app.css | review view = opaque full-cover over the tldraw board (no dev node-graph bleed-through) | guided-review | 2026-06-09 | — |
+
+---
+## § RELEASED (2026-06-09) — guided-review layering fix
+studio-shell now covers the dev canvas (dfed2ed). app.css released.
