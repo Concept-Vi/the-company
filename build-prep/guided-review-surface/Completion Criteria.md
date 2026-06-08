@@ -408,6 +408,307 @@ each it reuses, it may force an improvement — these are captured as criteria, 
 
 ---
 
+# ════════ ADDED BY COVERAGE ROUND 1 (2026-06-08) ════════
+
+> **What this section is.** The full-directory COVERAGE ROUND swept eight territories (runtime, canvas,
+> substrate, cognition, voice, design, ops, design-corpus) + verified the two big claims against current
+> `main`. Every relation that surfaced is appended below as a real two-faced criterion — **never filtered
+> out as "out of scope"** (the standing law). Groups continue the existing A–I lettering as **J–N**.
+> Refinements that sharpen an *existing* criterion are recorded as `+refine` cross-refs (NOT new parallel
+> criteria — that would violate I5 at the document level). Each appended criterion carries its honest
+> status target; **none is verified-by-use, so none is ✅.**
+>
+> **The two verified claims (the frame this round grounds):**
+> - **Claim 1 — VERIFIED Y (the organ-realization is real).** This surface IS the vault's *RHM
+>   Walkthrough & Review Organ*. The vault organ's own thesis is verbatim Tim's: *"the one organ through
+>   which Tim and the system meet … Build-review is its first consumer … built general, not as
+>   build-review's UI."* The merge is a **UNION, not a congruence** — the vault contributes load-bearing
+>   criteria the GRS set LACKS (the review-queue + origin/status lifecycle, the human go-gate, branching,
+>   actionable-WHY, the three-part derived-from bind, `guard()`-actually-wired, modes-drive, and the
+>   S1–S7 acceptance scenarios), while the GRS set uniquely owns comprehension-at-altitude (C),
+>   generate-for-mockups (F), and scoped temporal deixis (G). The grown criteria below = the union.
+> - **Claim 2 — OVER-INFERRED (IAS Phase 0 is NOT a hard prerequisite; it is mostly already-there).**
+>   Verified against `main`: the FE is **already F0-modular** (`App.tsx` 338 lines; `regions/` +
+>   `components/` dirs; `Review.tsx` 62 lines — NOT a 1660-line monolith; `app.css` carries the F0/F1
+>   carve comments as DONE). The **address floor exists** (`design/_system/addresses.json`, `tokens.json`,
+>   `design/design-system.css` imported via `main.tsx`; `indicate`/`address_help`/`route_click`/`ui_info`
+>   all present in `suite.py`). The genuine still-needed-first remainder is small: **(a)** register
+>   `mockup://` in `SCHEMES` (one line — Observed `contracts/address.py:32` `SCHEMES = ("run","cas",
+>   "blob","vec","ui","code")`, `mockup` ABSENT), and **(b)** CONFIRM (trace, not assume) that the
+>   corpus-import + FORM-gate is actually wired end-to-end (the `app.css` comments assert the import; an
+>   end-to-end render trace is not yet done). Everything else the agent called "Phase 0 prerequisite" is
+>   on main already.
+
+---
+
+## Group J — The organ-merge: the vault criteria the GRS set lacks (UNION half)
+
+**Claim 1 verified.** These are the vault *RHM Walkthrough & Review Organ* criteria that have **no GRS
+equivalent** and must come in for the merged organ to be whole. They are the OUTER CIRCUIT (queue →
+present → respond → act → lifecycle); the existing A–I groups are the inner mechanics + the
+mockup/comprehension extensions.
+
+### J1 · One review queue, all sources, with `origin` polarity · NET-NEW
+- **FUNCTION:** Any source needing Tim surfaces into the **one** inbox as a first-class `review`
+  decision, carrying an `origin` field — `responsive` (system-awaiting-Tim) vs `generative` (Tim's
+  ideas) — one queue, not two (vault A1/A2). Reuses `inbox.surface` (governance.py:68); `review` is
+  added to `governance.POLICY`. Verified by use: a build-loop "needs-Tim" item and a captured idea BOTH
+  land in the same queue, distinguishable by `origin`.
+- **FORM:** The queue is ONE navigable lane on corpus tokens, with `origin` legible as a visible polarity
+  (responsive vs generative), not two parallel inboxes. design-lint pass.
+- *Status target:* 🟡 NET-NEW (additive field + POLICY row; reuses the surface primitive). The
+  generative-entry (idea-capture) is its own future consumer.
+
+### J2 · A distinct `status` lifecycle field (NEVER overloaded onto `resolved`) · NET-NEW · **bug-guard**
+- **FUNCTION:** `inbox → presented → responded → resolved | requeue` is a **separate `status` field**,
+  never written into `resolved` (vault A3). Observed hazard on main: `inbox_lanes`/`now`/`is_approved`
+  read `resolved is None` (suite.py:777,378; governance.py:95) — so a lifecycle value placed in
+  `resolved` would silently DROP the item from the queue. Verified: an item walked through all four
+  states stays correctly queued/closed; a `requeue` returns it to `inbox`, never to `resolved`.
+- **FORM:** The item's lifecycle state is a visible stage marker (corpus tokens) the operator reads —
+  where it is in the circuit. design-lint pass.
+- *Status target:* 🟡 NET-NEW (a distinct field + the read-sites updated). This is a **silent-drop guard**
+  — verify the `resolved is None` readers are not confused by a lifecycle value.
+
+### J3 · "Next" is a human go-gate (the walk cannot cascade past Tim) · MODERATE
+- **FUNCTION:** Each review-node carries a **human-writable `go` input** that only resolves on Tim's
+  action; **Next writes it → the node fires** (vault B2). The scheduler already waits on unresolved
+  inputs (scheduler.py:49,97) — so each node MUST carry its own gate or the run cascades past the human.
+  Verified: a multi-item session holds at item N until Tim advances; it never auto-runs ahead.
+- **FORM:** The "Next" affordance reads as the operator's own go-control (corpus tokens), with "item N of
+  M" progress visible (vault B4). design-lint pass.
+- *Status target:* 🟡 MODERATE (the go-gate per node; the stepper engine + progress already exist —
+  A1/A3, `start_session`/`present_current`/`next`). Cross-ref A3 (pace controls).
+
+### J4 · Branching — a verdict routes to a different next item · NET-NEW
+- **FUNCTION:** A verdict routes the walk: reject → insert a remediation sub-walk; approve → skip ahead
+  (vault B5). Observed genuinely net-new on main: today it is one-address-per-node + resolution-only
+  (compile.py:51-57); branching needs **per-port addresses + a `gate` node** (vault Guide). Verified
+  (vault S4): the next item Tim sees depends on his verdict, not a fixed order; the not-taken branch's
+  items never appear.
+- **FORM:** The walk's path is legible — the operator sees the branch taken (a relational/temporal
+  shape), not a hidden re-order. design-critic pass.
+- *Status target:* 🟡 NET-NEW (per-port addresses + a `gate` node). The highest-lift vault addition.
+
+### J5 · Record the verdict + WHY; the WHY is itself actionable · MODERATE
+- **FUNCTION:** approve/reject/comment/skip/decide(option) + the WHY are recorded, tied to the item +
+  session position (vault D2 — reuses `resolve_surfaced` suite.py:1153; **skip → back to inbox, not
+  resolved**). A "needs-change" WHY becomes **directly a new criterion/edit**, not only twin-training
+  (vault D4). Resolve stays operator-only (vault D3, governance.py:82-84 — invariant). Verified: a
+  rejected item's WHY surfaces as a new queue item the loop can pick up.
+- **FORM:** The verdict + WHY present as a recorded mark at the item (corpus tokens), replayable; the
+  WHY-becomes-work is a visible new queue entry. design-lint pass.
+- *Status target:* 🟡 MODERATE (`resolve_surfaced` exists; add comment/skip + session tagging + the
+  WHY→criterion path). Cross-ref D1/D2/E2.
+
+### J6 · The channel back — system acts, provably DERIVED-FROM the verdict (three-part bind) · MODERATE
+- **FUNCTION:** Recorded verdicts flow to the loop from `events_since(seq)` filtered to `resolve` events
+  — no human relay (vault E1). The criterion-write is a governed action REQUIRING `derived_from = the
+  resolve event's seq`, and **refuses unless that event is `kind=resolve · choice=approve ·
+  surfaced==this sid`** (the three-part structural bind, vault E2 — bind to `seq` not `sid`). Verified
+  (vault S6, adversarial): a write with no `derived_from` refuses; a verdict for X used to authorize Y
+  refuses; re-resolving (new `seq`) binds to the new event, not the stale one.
+- **FORM:** The derived-from provenance is a visible chain at the dispatched change (corpus tokens) — the
+  operator sees WHICH verdict authorized WHICH act. design-lint pass.
+- *Status target:* 🟡 MODERATE (mirrors `apply_node`→`is_approved`→`GovernanceError` suite.py:880-882;
+  the wire E1 is verified by the prior build). This is the **safety invariant** — extends E1/E2.
+
+### J7 · `guard()`/POLICY actually WIRED into the production apply paths · NET-NEW
+- **FUNCTION:** Routing goes through `guard()` by consequence/reversibility — **not** hardcoded class
+  strings — wired into the apply paths + AUTO mutators (vault G1). Observed on main: `guard()` is
+  **never called today** — the real CONFIRM gate is hand-rolled in `apply_*` (suite.py:880-882). The two
+  load-bearing principles hold: **deterministic gates, not confidence** (the twin never decides
+  permissions); **all in scope**. Verified (vault S5): the same item routes identically twice
+  (deterministic), the RHM can SAY why in consequence terms, and no confidence value appears in the path.
+- **FORM:** The gate's decision is explainable in plain consequence language ("acted because reversible /
+  asking because irreversible") on corpus tokens — never a confidence number. design-critic pass.
+- *Status target:* 🟡 NET-NEW (wire the existing `guard()`/POLICY into the hand-rolled gate sites). A
+  foundation criterion (vault build-order puts G1 first).
+
+### J8 · The walkthrough/decide-for-me MODES drive the engine · MODERATE
+- **FUNCTION:** Entering `walkthrough` mode actually starts/steers the session (emitting `show ui://…`
+  sequences); `decide-for-me` acts on what `posture(class)==AUTO` permits (reversible) and surfaces the
+  rest — no confidence field (vault G2/G3/G4). Observed: `walkthrough` mode exists (suite.py:1278) and
+  `start_walkthrough` binds dial→organ (suite.py:6287); the gap is the modes *behaviourally* driving
+  present-vs-act. Verified: switching mode reconfigures present-vs-act and persists. Cross-ref I1 (the
+  surface IS the walkthrough mode).
+- **FORM:** The mode is the dial; entering it visibly shifts the surface (I1 FORM). design-lint pass.
+- *Status target:* 🟡 MODERATE (mode rows exist; the drive-behaviour is the lift). Extends I1.
+
+### J9 · The S1–S7 by-use acceptance scenarios are the organ's gate · cross-cutting
+- **FUNCTION:** A criterion is green only inside a passing multi-part SCENARIO (the seams, not the
+  units): **S1** the first real walk end-to-end (voice + look, four verdict kinds, the loop acts);
+  **S2** an unscripted question resolving to a MIX of targets incl. non-node chrome (the keystone);
+  **S3** a newly-grown component is walkable the instant it registers (zero new walk code); **S4**
+  branching (J4); **S5** deterministic governance, no confidence (J7); **S6** the no-bypass /
+  derived-from integrity, adversarial (J6); **S7** never a dead end (voice→text fallback, `coa`-error→raw
+  payload, device-switch resume). Verified by USE per scenario on the live canvas, Tim-driven (browser +
+  voice + the adversarial S6). 
+- **FORM:** N/A as a single screen — these are the cross-circuit proofs; each scenario's FORM is the
+  FORM of the criteria it exercises.
+- *Status target:* 🔴 needs-tim for S1/S5/S7 feel-and-drive legs; 🟡 for the mechanically-checkable
+  scenarios (S2/S3/S4/S6). This is the **acceptance suite** the merged organ checks against.
+
+---
+
+## Group K — Cognition-cast enrichment (the guided turn can think richer) · TIM-DECISION
+
+**The top cognition unification — but a posture DECISION, not a foregone criterion.** Verified on main:
+all six roles (focus/recall/ground/connect/check/voice) carry `mode_scope: {"listening"}` ONLY —
+`walkthrough` is absent (roles/*.py). So `cast_for_mode("walkthrough")` returns `[]`: the enrichment
+swarm is idle during guided turns. The companion itself flags that walkthrough may be **deliberately
+lean** ("GUIDE/OBSERVE modes — show+consult only," suite.py:3140-3141). Populating the cast is an
+OPPORTUNITY, not an obvious fix.
+
+### K1 · The walkthrough-cast posture (does the guided turn fire the enrichment swarm?) · 🔴 needs-tim
+- **FUNCTION (the decision):** Whether the guided dialogue wants the enrichment swarm (memory-recall +
+  live-state grounding, etc.) firing on every conversational turn at a stop — vs staying lean. If YES:
+  add `"walkthrough"` to the `mode_scope` of the six roles (six one-line edits). Calibrated payoff
+  (Observed): focus/recall/ground/connect/check/voice all fire concurrently + light up the
+  CognitionView; recall+ground INJECT into Part 2 immediately via the canonical `INJECTION_RULE`
+  (suite.py:5402-5409); connect/check/voice fire+write but do NOT inject until G3/G4 (their rules are
+  descriptive, not AST-shaped — suite.py:5397-5399; voice's rule is `kind:"route"`). Verified once
+  decided: a guided turn shows a populated cast in `cognition_info()` and recall/ground shape the reply.
+- **FORM:** The cast's concurrent thinking is visible (the CognitionView Pulse/River beside the guided
+  reply — see canvas U-thread). design-lint pass when populated.
+- *Status target:* 🔴 **needs-tim on the POSTURE** (lean vs enriched — the guided RHM having memory of
+  past decisions about the same screen is exactly what a right-hand-man should have, but it is Tim's
+  call); 🟡 on the six trivial edits **once decided**.
+
+### K2 · A `screen_reader` cognition role for guided/mockup stops · NET-NEW
+- **FUNCTION:** Move the "read this screen FOR the operator" logic out of the ad-hoc `_chat_context` HTML
+  injection (Observed suite.py:2086-2125) into a **declared role** — `screen_reader`/`locus_brief`:
+  `input_addresses: (mockup_html, ui_address)`, `output_schema: {summary, zones, focus_point}`,
+  `mode_scope: {"walkthrough"}`. **Trigger (a coherence choice, see UNIFICATION-MAP D-IV):** EITHER
+  within-the-turn (a concurrent Part-0 when Tim asks at the stop — no new activation model, rides
+  per-turn) OR on-stop-ARRIVAL (the brief is ready the moment Tim lands, before he asks — a
+  navigation-triggered enrichment, which would use a non-turn activation context). Default lean:
+  within-the-turn Part-0 (no new context); arrival-enrichment is the richer option Tim can pick. Verified:
+  at a mockup stop the role fires, produces a structured brief, and Part 1 builds the narration from it.
+- **FORM:** No new operator surface — judged via C1/F1 (the mockup explains itself); but the role is now
+  visible in `cognition_info()` (the operator can SEE it firing at each stop). design-lint pass.
+- *Status target:* 🟡 NET-NEW (one role file). Benefits: visible in CognitionView, re-bindable to a
+  faster/embed model, and it IS the C4 14KB pre-digest done properly (html→structured brief via a model).
+  Composes with `check` (check reads `screen_reader.summary` vs `ground.note`). Cross-ref C1/C4/F1.
+
+---
+
+## Group L — Substrate + grammar one-liners (the coordinate system stays self-consistent)
+
+### L1 · Register `mockup://` in the address SCHEMES · NET-NEW · prerequisite-ish
+- **FUNCTION:** Add `mockup` to `SCHEMES` (Observed `contracts/address.py:32` — today
+  `("run","cas","blob","vec","ui","code")`, `mockup` ABSENT though it is already in operational use in
+  suite.py). The docstring states adding a scheme is "purely additive" (address.py:16); schema-ver stays
+  unchanged. Verified: `scheme("mockup://A2-canvas-desktop.html")` returns `"mockup"` truthfully (it
+  doesn't today), which the mockup-aware stop (F1) + generate-for-mockups (F2) depend on. Optionally also
+  add `doc`/`area` (forward — enables RHM walking vault notes as tour stops; NOT a prerequisite).
+- **FORM:** N/A (substrate) — verified structurally (the grammar is self-describing of the full build
+  vocabulary). The form-level expression is that every address the surface uses parses truthfully.
+- *Status target:* 🟡 NET-NEW (one line). **Lands before F1/F2 dispatch.** Cross-ref F1/F2.
+
+---
+
+## Group M — The live coherence oracle (drift detection becomes operator-facing) · NET-NEW
+
+### M1 · The drift mechanisms surface as a live coherence oracle in the walk · NET-NEW
+- **FUNCTION:** The existing coherence mechanisms — `design/_system/check.py` + `refcheck.py` +
+  `symbols.py` + `codeedges.py` (all Observed present on main) — become a LIVE coherence oracle the
+  walkthrough can run on-demand and surface as actionable findings (the RHM can SAY "this mockup uses
+  ad-hoc colours / references a dead address" and SURFACE it as a queue item). Verified: running the
+  oracle mid-walk on a mockup yields findings the RHM narrates + can turn into a `review` item.
+- **FORM:** Findings present as a navigable coherence checklist at the locus (corpus tokens) — a
+  relational view of "what's consistent / what drifted," not a raw report dump. design-critic pass.
+- *Status target:* 🟡 NET-NEW (wire the existing check/refcheck/symbols/codeedges into the walk as an
+  on-demand oracle + the finding→queue path). Cross-ref J5 (WHY→work), the design/ops companions.
+
+### M2 · A verify-gate WRAPS guide-generated builds (verify-by-use before commit) · NET-NEW
+- **FUNCTION:** A new gate — `verify_guide_output(generated_graph, test_suite_ref)` — asserts a
+  guide-initiated build (operator clicks generate → RHM autonomously builds) produces a committed graph
+  that the suite can verify was NOT fabricated, BEFORE git commit. Observed on main: the standing
+  all-green gate exists (`tests/suite_health_acceptance.py`, shelled via `company suites` —
+  ops/cli/app.py:135-144) but it runs acceptance suites over the WHOLE codebase, NOT the
+  generated-output-only verify-by-use (`verify_build`/`verify_guide_output` do NOT exist in suite.py).
+  Reuses the gate's subprocess + TEMP-store isolation pattern (app.py:133-149) over the generated graph.
+  Verified: a generate-for-mockups (F2) or batch (E2) build runs through the gate and only a verified
+  output reaches commit. Cross-ref ops U2/U3/U4 (pre-guide capability + address-reachability + resident
+  lints) as companion gates.
+- **FORM:** The gate's pass/fail presents as a visible verification mark on the generated change (corpus
+  tokens) — the operator SEES it was proven, not just "built." design-lint pass.
+- *Status target:* 🟡 NET-NEW (the verify-gate + the bridge↔`company` shared interface). This operationalises
+  "verify before claiming" for autonomous builds. Cross-ref E2/F2/J6.
+
+---
+
+## Group N — Refinements to EXISTING criteria (sharpen, do NOT parallel — the I5 doc-level guard)
+
+> These coverage threads already have a home in A–I. Recorded here as **`+refine`** so the loop sharpens
+> the existing criterion with the new evidence — it must **NOT** create a second parallel criterion.
+
+- **N·B1 (+refine text-streaming):** Canvas companion gives the EXACT FE wiring for B1 — add
+  `api.chatStream(m, focus)` → `fetch('/api/chat/stream', …)` returning a raw Response; in `sendChat`
+  branch to open the stream and append parts (mirror the voice NDJSON reader at
+  useAppController.ts:1900). Observed: `api.chat()` is a full-wait POST (api.ts:97); no SSE/NDJSON text
+  consumer exists yet. This activates the already-built backend `chat_parts()` generator. **Sharpens B1;
+  no new criterion.**
+- **N·G2 (+refine temporal deixis):** Canvas companion gives the journey-store SEED path for G2 —
+  auto-emit `navigate` events on `indicate()` calls (not only on record) → a `recent_loci()` reader →
+  inject the trail into chat context; the existing `journeyStep` API call pattern is the template, lives
+  entirely in the controller. **Sharpens G2; no new criterion.**
+- **N·I3 (+refine walkthrough↔chat composition):** Canvas companion confirms the exact gap + fix —
+  advancing a guide step does NOT call `indicate(session.raw?.guide_address)`, so the locus stays stale;
+  after useAppController.ts:1683 (`const tgt = session.raw?.ui_target`) add the `indicate(...)` call so
+  every guide stop auto-grounds the chat. **Sharpens I3 (~5 FE lines); no new criterion.**
+- **N·H1 (+refine voice focus-passthrough):** Voice companion confirms the one-line fix — bridge.py:848
+  calls `chat_parts` with NO focus; `chat_parts` already accepts focus (suite.py:5264). Pass
+  `focus.selected` through so voice is locus-aware. **Sharpens H1; lands in the same pass as N·I3.**
+- **N·B3 (+refine streaming cancel):** Voice companion confirms the cancel primitive — the
+  `gone[0]`/`client_gone` SELECT+MSG_PEEK barge-in pattern (bridge.py:780-793) is generic and reusable
+  for the text-streaming cancel path. **Sharpens B3; reuses the voice primitive.**
+### Forward-notes — surfaced threads that get a HOME (never filtered), low-urgency / explicitly-deferred
+
+> The "never filter" law: every thread the coverage surfaced gets a criterion OR an explicit forward-note.
+> These are real but tangential or low-urgency; recorded so none is silently dropped.
+
+- **FWD·doc/area-scheme (substrate TOUCH):** Optionally add `doc`/`area` to SCHEMES (enables the RHM
+  walking vault notes / directory-areas as tour stops). FORWARD design point, NOT a prerequisite —
+  carried inside L1.
+- **FWD·cognition-ADDRESS_KINDS (substrate UNIFY #2):** `ui://cognition/<turn>` addresses fail
+  `validate_address_record`'s kind check — `cognition` is missing from `ADDRESS_KINDS`
+  (contracts/cognition_info.py). Needed only IF annotations are placed at cognition loci. One-line
+  additive fix; deferred until that path is exercised.
+- **FWD·MCP-annotate-verbs (substrate UNIFY #5):** The agent (MCP) face has no `AnnotateAddress`/`ChatsAt`
+  verb-pair — only the HTTP bridge does. If the agent face is later used for automated reasoning over
+  annotations, expose the same store primitives through both faces (one source). Tangential to the human
+  surface; deferred, not dropped.
+- **FWD·resolver-Protocol-width (substrate TOUCH #5 / UNIFY #4):** `contracts/resolver.py`'s Protocol is
+  narrower than the actual `FsStore` contract (`append_annotation`/`chats_for`/`save_session`/
+  `save_journey`/`put_vector` absent). Flag for the future Supabase backend swap; not a build-blocker now.
+- **FWD·NodeType-howto (substrate UNIFY #7):** D1 affordance text lives on `UnionAddressRecord` but not on
+  `NodeType`, so live-app NODE narration is always LLM-generated. A corpus `howto` on NodeType would make
+  node narration corpus-grounded (model-free) like element narration. Quality refinement; deferred.
+- **FWD·index-auto-rebuild (substrate UNIFY #8):** The semantic-R2 index has a staleness check but no
+  auto-rebuild trigger; a boot-time stale-check + async rebuild would make semantic R2 live without manual
+  steps. Quality-of-life; deferred.
+- **FWD·dynamic-review-FORM (design UNIFY #2/#3):** The walkthrough should read `component-inventory.json`
+  + the per-view `surface-specs` to BUILD THE REVIEW FORM DYNAMICALLY — marking `run://` vs `ui://`
+  addresses, absent-component gaps ("view correct, build when ready"), and orphan addresses. This extends
+  M1 (the coherence oracle reads the same registries); recorded as M1's inventory/coverage dimension, not
+  a separate criterion.
+
+- **N·I1 (+refine the role+activation-context framing):** Runtime companion frames the surface as a
+  COMPOSITION — a role fired under an activation context, "zero new execution model." Verified-against-main
+  nuance: the guided dialogue already fires under the **existing `per-turn` activation context**
+  (chat_parts), NOT a missing non-turn context; `walkthrough` is already a MODE (suite.py:1278) bound via
+  `start_walkthrough` (suite.py:6287). So the runtime companion's "add a `guided-review` ACTIVATION_CONTEXTS
+  row + a `roles/guided_review.py` file" is **one framing that partly conflicts with the GRS-grounded
+  view** — the engine already exists; what's actually missing is the walkthrough CAST (Group K) and the FE
+  show-me lane (H2). **Recorded as a +refine note on I1, NOT adopted as a build-a-new-role criterion**
+  (would violate I5 — the engine is not re-built). The honest net is: NO new activation context is needed
+  for the guided dialogue's per-turn chat; a non-turn context would only be needed if the RHM is to walk
+  *autonomously* (system-initiated) — a forward decision, see UNIFICATION-MAP.
+
+---
+
 ## Priority order (dependency order, not a schedule)
 
 Reuses the synthesis §5 ordering — already dependency-ordered, each unblocks the next:
@@ -430,3 +731,21 @@ Threaded throughout: **I1/I2/I5** (mode-integration + the anti-parallel guard) h
 build; **C3** (confirm altitude-shaping is FE-wired) is checked early; consent stays simple (one approve
 + git, `approve_reach` dropped); steal the tour *mechanism* from commodity libraries (Driver.js /
 Shepherd.js) — our `ui://` registry already solves their #1 selector-reliability failure.
+
+### Coverage-round-1 additions slotted into the order
+
+The J–N groups are dependency-placed (the refinements N· fold into the steps that own them):
+
+- **L1 (`mockup://` SCHEMES one-liner)** — lands BEFORE F1/F2 dispatch (prerequisite-ish).
+- **J7 (`guard()`/POLICY wired) → J1/J2 (queue + origin/status lifecycle) → J5/J6 (record + derived-from
+  bind)** — the OUTER CIRCUIT foundation, vault build-order (G1 first). These can build in parallel with
+  the inner B1/H2 lane (file-disjoint: governance/queue vs FE).
+- **N·B1, N·G2, N·I3, N·H1, N·B3** — fold into their owners (B1, G2, I3, H1, B3) as the exact wiring; no
+  separate scheduling.
+- **J3 (go-gate) + J8 (modes-drive)** — fold into H2 (the FE show-me lane) + I1 (mode-integration).
+- **J4 (branching)** — net-new, after the linear walk works (post-H2/E2).
+- **M1 (coherence oracle) + M2 (verify-gate wraps generated builds)** — M2 lands with E2/F2 (it gates
+  what they dispatch); M1 is a quality-of-review addition, low urgency.
+- **K1 (cast posture)** — a Tim-DECISION gate, not scheduled as a build step until decided; **K2
+  (screen_reader role)** can build once K1's posture is set (or independently as the C4 pre-digest).
+- **J9 (S1–S7 scenarios)** — the standing acceptance suite the loop checks every criterion against.
