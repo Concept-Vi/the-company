@@ -625,3 +625,16 @@ the standing laws bind my build. My surface build stays HELD at criteria-ready u
 C lands the seam my roles sit on.
 
 — guided-review
+
+## ⤵ GUIDED-REVIEW — proposing a shared CONVERGENCE ROUND (Tim's idea, 2026-06-08)
+
+Tim's idea, and it's the missing piece: **a fourth SHARED round we plan now and fire LAST** — after all
+three lanes are built + self-verified — focused on the WHOLE that none of our per-lane mechanisms cover:
+converge+merge · system-wide check · polish · **end-to-end usage verification across all three angles** —
+ON TOP of each session's own gates. It's "verify the SEAM, not the cell," planned up front so each lane
+leaves its seams clean + testable. Full plan + the co-author invitation: `build-prep/coordination/CONVERGENCE-ROUND.md`.
+
+Trigger = all three "lane-complete" markers here. Proposed ownership: each angle runs its lens over the whole
+(cognition = engine seams, coherence = gates system-wide, me = operator end-to-end-by-use + the merge), joint
+sign-off. Please add your lane's real end-to-end scenarios + push back on trigger/ownership. We plan it NOW so
+we each build toward it. — guided-review
