@@ -23,7 +23,7 @@
 // REUSE: composes the shared kit (Surface/SectionHead/Badge/EmptyState) inside these shells, and the REAL
 // controller fns (indicate via setReviewMockup, sendChat, annotateLocus, mintBuildIntent, fetchAddressHelp).
 // It does NOT reinvent the chat box (that was the standalone studio's sin) — the RhmPanel mounts <RhmChat/>.
-import { useState, type ReactNode } from 'react'
+import { useState, useEffect, useRef, type ReactNode } from 'react'
 import { useApp } from '../AppContext'
 import { Surface, SectionHead, Badge, EmptyState } from './kit'
 import { RhmChat } from '../regions/RhmChat'
@@ -98,15 +98,40 @@ export function Rail() {
 //   emits:   nothing to the backend (a pure VIEW — reflects-never-owns). The device toggle is local presentation.
 //   token-slots: --studio-stage-bg · --studio-stage-frame-shadow · --studio-stage-phone-w (390) ·
 //                --studio-stage-desktop-w (1440) · --studio-stage-pad.
-//   PENDING SEAM (declared, not faked): IN-MOCKUP ELEMENT DEIXIS. The document-level capture listener does
-//   NOT reach inside the sandboxed iframe, so clicking a control INSIDE a mockup cannot yet indicate that
-//   sub-element's ui:// address — capturing in-frame clicks needs injecting a listener into the iframe's
-//   contentDocument and posting the ui:// up via postMessage. Until that bind exists, the locus is the
-//   WHOLE reviewed surface (the Card's address), which is the correct studio-scaffold granularity. See
-//   StudioSeams.PENDING_IN_FRAME_DEIXIS.
+//   IN-MOCKUP ELEMENT DEIXIS (BUILT): clicking a control INSIDE a staged mockup indicates THAT element's
+//   ui:// address (not just the whole reviewed surface). MECHANISM: the bridge serves the mockup with a tiny
+//   sandboxed capture script (only on the studio `?studio=1` serving path) that, on a click inside the mockup,
+//   finds the nearest element carrying a full-ui:// `data-ui-ref` and postMessages it to the parent window.
+//   The Stage listens for that {type:'studio-deixis', address} message and calls setReviewMockup(currentFile,
+//   address) — the SAME locus sink the gallery uses: it leaves the open file unchanged (no iframe remount, the
+//   `key={reviewMockup}` is stable) and sets reviewAddress + indicate(address), so the Composer/RhmPanel/
+//   AddressHelp all re-bind to the clicked element's locus. NO parallel store. FAIL-SOFT: a click on an element
+//   with no ui:// data-ui-ref posts nothing → the locus stays at the whole-mockup address (today's behaviour).
+//   GUARDS (load-bearing): only same-origin messages, only the studio-deixis envelope, only ui:// addresses —
+//   so vite/devtools' own dev-time postMessages can never move the locus.
 export function Stage({ titleFor }: { titleFor: (f: string | null) => string }) {
-  const { reviewMockup, reviewAddress } = useApp()
+  const { reviewMockup, reviewAddress, setReviewMockup } = useApp()
   const [device, setDevice] = useState<'desktop' | 'phone'>('desktop')
+  // non-stale read of the open file inside the (mount-once) message listener — mirrors useAppController's
+  // indicatedRef pattern, so the deixis re-indicate keeps the SAME file open and only swaps the address.
+  const reviewMockupRef = useRef<string | null>(reviewMockup)
+  reviewMockupRef.current = reviewMockup
+  useEffect(() => {
+    function onMsg(e: MessageEvent) {
+      if (e.origin !== location.origin) return                     // only our own served mockups (not vite/devtools)
+      const d: any = e.data
+      if (!d || d.type !== 'studio-deixis') return                 // only the deixis envelope
+      const addr = typeof d.address === 'string' ? d.address : ''
+      if (!addr.startsWith('ui://')) return                        // only a full ui:// address is a locus
+      // re-indicate the CLICKED element at the SAME open file: setReviewMockup(file, addr) keeps the iframe
+      // (file unchanged → key unchanged → no remount) and runs setReviewAddress(addr)+indicate(addr) — the
+      // one locus sink. A no-ref click posts nothing, so the locus simply stays where it was (fail-soft).
+      setReviewMockup(reviewMockupRef.current, addr)
+    }
+    window.addEventListener('message', onMsg)
+    return () => window.removeEventListener('message', onMsg)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   return (
     <div className="studio-stage" data-ui-ref="ui://studio/stage">
       <div className="studio-stage-head">
@@ -126,7 +151,7 @@ export function Stage({ titleFor }: { titleFor: (f: string | null) => string }) 
       <div className={'studio-stage-body dev-' + device}>
         {reviewMockup
           ? <iframe key={reviewMockup} className="studio-frame" title={reviewMockup}
-              src={'/mockups/' + reviewMockup} sandbox="allow-scripts allow-same-origin" />
+              src={'/mockups/' + reviewMockup + '?studio=1'} sandbox="allow-scripts allow-same-origin" />
           : <EmptyState>no mockup open.</EmptyState>}
       </div>
     </div>

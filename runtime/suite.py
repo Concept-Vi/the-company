@@ -3085,6 +3085,48 @@ class Suite:
             self._emit("warning", f"R2 context resolution failed ({type(e).__name__})", address=locus)
             return ""
 
+    def context_at(self, address: str) -> dict:
+        """R2 STANDALONE READ — the addressed-context inspector. EXPOSES the SAME R2 engine the chat
+        runs inside `_resolve_context_at`, but for an ARBITRARY ui:// address (not just the live locus)
+        and as a STRUCTURED bundle (not the inject-string). It is the read-face of "what context is
+        resolved AT this address?" — annotations + chats + addressed events at the locus AND its
+        ancestors, scored + budget-capped by the recency·proximity·pin decay.
+
+        REUSES, never reimplements (rule 3 — one scoring source): `_r2_gather` (the address-keyed
+        gather, ancestors walked, deduped by X8, `_raw` stripped → JSON-clean {kind,address,ts,text,
+        pinned}) → `_r2_score_and_cap` (the SAME decay + the SAME `R2_BUDGET` cap the chat gets — this
+        is the BYTE-FOR-BYTE pattern `surface_intent_at` uses at mint-time, suite.py:6831). The scoring
+        is NOT touched here; this method only calls it for a given address.
+
+        FAIL-LOUD on a malformed address (S0 grammar gate): we validate the address EXPLICITLY here
+        (`parse_ui_address` RAISES on a malformed ui:// like 'not-a-ui-address'), mirroring how
+        `annotations_at` / `_registry_howto_for` / `resolve_scope` all front their reads with the gate.
+        WHY explicit and not relied-on-from-the-gather: `_r2_gather` walks `_r2_ancestors`, which is
+        deliberately SILENT-SKIP on a malformed candidate (suite.py:2573 — it must never crash the live
+        turn), so the gather would return [] for a malformed address — an empty-200 that LIES "no
+        context here" instead of "that is not an address". The standalone READ-face wants the raise to
+        surface as a 400 (mirroring `/api/scope` + `/api/address-help`), so we gate up-front. A
+        missing-address is the bridge's KeyError (also a 400).
+
+        DENY-ALL / honest-empty on a well-formed-but-UNREGISTERED address: `annotations_at` /
+        `chats_at` are address-keyed STORAGE (not registry-gated) — an unattached well-formed address
+        returns `[]` (nothing was ever attached there), so the bundle is honestly empty. We NEVER
+        fabricate context for an address that has none (the no-confabulation law).
+
+        Returns {address, items:[{kind,address,ts,text,pinned}], count, budget} — `items` is the
+        scored+capped slice (highest-relevance first, bounded by R2_BUDGET), `count` its length,
+        `budget` the cap that bounded it (so the reader can see the window was applied)."""
+        from datetime import datetime as _dt, timezone as _tz
+        from contracts.ui_info import parse_ui_address
+        # S0 grammar gate FIRST — a malformed address MUST raise (→ the route's 400), because the gather
+        # below silent-skips it (via `_r2_ancestors`) and would otherwise return a lying empty-200. NO
+        # try/except around the gather: a well-formed-but-empty address flows through cleanly
+        # (gather → [] → cap → []), the honest-empty DENY-ALL bundle.
+        parse_ui_address(address)
+        items = self._r2_score_and_cap(self._r2_gather(address), address, _dt.now(_tz.utc))
+        return {"address": address, "items": list(items), "count": len(items),
+                "budget": self.R2_BUDGET}
+
     # ════════════════════════════════════════════════════════════════════════════════════════════
     # THE SINGLE-SOURCE RHM VERB REGISTRY (replaces the old 3 parallel tables RHM_VERBS /
     # RHM_VERB_DESC / RHM_VERB_CLASS, which could drift). ONE VerbSpec per verb carries everything:

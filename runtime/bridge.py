@@ -435,7 +435,36 @@ class H(BaseHTTPRequestHandler):
                     self._send(404, "{}")
                 else:
                     with open(fp, "rb") as f:
-                        self._send(200, f.read(), "text/html; charset=utf-8")
+                        body = f.read()
+                    # IN-FRAME ELEMENT DEIXIS (studio only): when the studio Stage stages a mockup it
+                    # requests it with `?studio=1`. ONLY on that path we inject a tiny sandboxed click-
+                    # capture script before </body>. On a click inside the mockup it finds the nearest
+                    # element carrying a `data-ui-ref` that is a full ui:// address and postMessages that
+                    # address up to the parent window (the studio FE), which sets the review locus to the
+                    # clicked ELEMENT (not just the whole mockup). FAIL-SOFT: a click on an element with no
+                    # ui:// data-ui-ref posts nothing → the locus stays at the whole-mockup address (today's
+                    # behaviour). The flag is read from the QUERY (q), while the file is resolved from the
+                    # query-STRIPPED path (line 402) — so `?studio=1` never reaches `_safe_mockup_path`, and a
+                    # standalone mockup view (no flag) is served byte-for-byte un-injected. The sandbox is
+                    # `allow-scripts allow-same-origin` (set on the iframe FE-side) so this script runs AND
+                    # can postMessage to the parent. STRUCTURE only — no styling (the feel is a later pass).
+                    if q.get("studio"):
+                        inject = (
+                            b"<script>(function(){try{"
+                            b"document.addEventListener('click',function(e){try{"
+                            b"var t=e.target&&e.target.closest?e.target.closest('[data-ui-ref]'):null;"
+                            b"if(!t)return;"                                   # no ref ancestor → fail-soft (whole-mockup locus)
+                            b"var a=t.getAttribute('data-ui-ref')||'';"
+                            b"if(a.indexOf('ui://')!==0)return;"              # only full ui:// addresses are loci
+                            b"parent.postMessage({type:'studio-deixis',address:a},location.origin);"
+                            b"}catch(_){}}, true);"                            # capture phase, like the FE onDocClick
+                            b"}catch(_){}})();</script>"
+                        )
+                        if b"</body>" in body:
+                            body = body.replace(b"</body>", inject + b"</body>", 1)
+                        else:
+                            body = body + inject                              # no </body> → append (still runs)
+                    self._send(200, body, "text/html; charset=utf-8")
             elif path == "/api/mockup-feedback":           # MOCKUP STUDIO: read a mockup's feedback thread
                 # GET ?mockup=<filename> → {entries:[{id,mockup,element,text,ts,status}]}, [] if none.
                 # Missing `mockup` → KeyError → 400 (fail loud, mirrors the address-keyed reads). A junk
@@ -512,6 +541,17 @@ class H(BaseHTTPRequestHandler):
                 # address_help's S0 grammar gate → 400 (fail loud); a well-formed-but-unregistered address returns
                 # a clean partial bundle (what_this_is tagged '(unregistered)', legs honestly false), never a crash.
                 self._send(200, json.dumps(SUITE.address_help(q["address"])))
+            elif path == "/api/context":                   # R2: the addressed-context inspector (the R2 read-face)
+                # The standalone read that EXPOSES the EXISTING R2 engine (Suite.context_at — composes
+                # `_r2_gather` + `_r2_score_and_cap`, the SAME scoring the chat runs at the live locus,
+                # NOT a reimplementation). Returns the context bundle resolved AT a given ui:// address:
+                # {address, items:[{kind,address,ts,text,pinned}], count, budget} — annotations + chats +
+                # addressed events at the locus AND its ancestors, scored + budget-capped. Mirrors
+                # /api/scope + /api/address-help exactly: missing `address` → KeyError → 400 (fail loud);
+                # a MALFORMED address → ValueError from the S0 grammar gate inside context_at → 400 (fail
+                # loud); a well-formed-but-UNREGISTERED address returns an HONEST EMPTY bundle (items=[],
+                # DENY-ALL — never fabricated), not a crash.
+                self._send(200, json.dumps(SUITE.context_at(q["address"])))
             elif path == "/api/up-translate":              # F1: the GENERALIZED up-translate move (reach face)
                 # The reusable "present-this-at-Tim's-altitude" resolver (Suite.up_translate — composes the
                 # EXISTING organs, NOT rebuilt): ANY artifact → its altitude envelope {lead, mechanism,

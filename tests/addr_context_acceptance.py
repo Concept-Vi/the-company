@@ -219,6 +219,35 @@ try:
     check("FALLBACK: no locus → context still built (no crash), other blocks intact",
           "presence modes:" in ctx_no_locus)
 
+    # ============================================================================================
+    # PART 6 — THE STANDALONE READ-FACE: Suite.context_at(address) (behind GET /api/context).
+    # The R2 engine, exposed for an ARBITRARY address as a structured bundle (annotations+chats+events
+    # at the locus, scored+capped). This is what the bridge route calls — it must (a) return a bundle
+    # for a well-formed address with attached info, (b) RAISE on a malformed address (→ the route's
+    # 400 — it must NOT catch-and-empty like _resolve_context_at), (c) return an HONEST EMPTY bundle
+    # (never fabricated) for a well-formed-but-UNREGISTERED address (DENY-ALL).
+    # ============================================================================================
+    check("context_at exists (the R2 read-face Suite method)", hasattr(suite2, "context_at"))
+    bundle = suite2.context_at(LOCUS)
+    check("context_at: returns a structured bundle {address,items,count,budget}",
+          isinstance(bundle, dict) and bundle.get("address") == LOCUS
+          and isinstance(bundle.get("items"), list) and "count" in bundle and "budget" in bundle)
+    check("context_at: REUSES the engine — the addressed annotation resolves into the bundle",
+          any("REVIEW-NOTE" in (it.get("text", "") or "") for it in bundle["items"]))
+    check("context_at: REUSES the engine — the addressed chat resolves into the bundle",
+          any("CHAT-NOTE" in (it.get("text", "") or "") for it in bundle["items"]))
+    check("context_at: a SIBLING-address item does NOT leak into the locus bundle (address is the key)",
+          not any("SIBLING-NOTE" in (it.get("text", "") or "") for it in bundle["items"]))
+    check("context_at: the bundle is BOUNDED by R2_BUDGET (the cap is the same as the chat's)",
+          len("\n".join(it.get("text", "") for it in bundle["items"])) <= suite2.R2_BUDGET)
+    # (b) MALFORMED address → RAISES (the route turns this into a 400). It must NOT silently return ''/empty.
+    expect_raises("context_at: a MALFORMED address RAISES (→ the route's 400, not a silent empty)",
+                  lambda: suite2.context_at("not-a-ui-address"))
+    # (c) well-formed but UNREGISTERED/unattached → an HONEST EMPTY bundle (DENY-ALL — never fabricated).
+    empty = suite2.context_at("ui://chrome/never-attached-here")
+    check("context_at: a well-formed-but-unattached address → an HONEST EMPTY bundle (no fabrication)",
+          isinstance(empty, dict) and empty.get("items") == [] and empty.get("count") == 0)
+
     print(f"\nALL {PASS} CHECKS PASS — R2 keys retrieval by the operator's locus, the relevance/recency "
           f"decay CAPS the window (lowest-scored dropped), the addressed gather resolves at the locus, "
           f"and the other _chat_context blocks + I1 INDICATING + the keyword fallback are preserved.")

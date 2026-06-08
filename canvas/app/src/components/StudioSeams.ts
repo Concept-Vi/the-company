@@ -32,6 +32,15 @@ export const STUDIO_WIRED = {
   // the build-intent door — mint a change-request FROM a locus (resolved=None, plan-mode). WIRED (stale brief);
   // surface_intent_at is built. The L1 ADDRESSED-FEEDBACK→INTENT *single resolver* is the pending leg (below).
   intentAt:          { route: 'POST /api/intent-at',        via: 'mintBuildIntent → api.intentAt(addr,text)',  backend: 'runtime/bridge.py:626 surface_intent_at' },
+  // IN-FRAME ELEMENT DEIXIS (BUILT this lane, moved up from PENDING per this file's contract): clicking a
+  // sub-element INSIDE the staged mockup indicates ITS ui:// address (not just the whole reviewed surface).
+  // NOT an /api route — a postMessage bridge: the bridge injects a sandboxed capture script before </body> on
+  // the studio serving path (iframe src '/mockups/<file>?studio=1'), which postMessages the nearest ui://
+  // data-ui-ref up to the parent; the Stage (StudioKit.tsx) listens (same-origin + envelope-type + ui:// guards)
+  // and calls the EXISTING setReviewMockup(file, addr) locus sink (no parallel store, no iframe remount).
+  // Fail-soft: a no-ui://-ref click posts nothing → the locus stays at the whole-mockup address. Proven by-use
+  // (click ui://toolbar/run inside the mockup → Stage badge + Composer locus updated; no-ref click → unchanged).
+  inFrameDeixis:     { route: 'postMessage {type:studio-deixis,address} (no /api route)', via: 'Stage window message listener → setReviewMockup(file, addr) → indicate(addr)', backend: 'runtime/bridge.py mockup-serving ?studio=1 capture-script injection' },
 } as const
 
 // ── PENDING SEAMS (genuinely net-new — declared, NOT faked) ──────────────────────────────────────────
@@ -46,14 +55,18 @@ export type PendingSeam = {
 }
 
 export const STUDIO_PENDING: Record<string, PendingSeam> = {
-  // R2 — the single address-keyed context resolver. annotate's docstring says it FEEDS R2, but a standalone
-  // GET /api/context?address= resolver (recency·proximity·pins·semantic, decayed, replacing context-stuffing)
-  // does NOT exist (verified: zero hits for /api/context in bridge.py). The studio reads the annotation
-  // thread + address-help directly today; the unified resolver is the net-new bind.
+  // R2 — the addressed-context READ-face. The BACKEND RESOLVER is now BUILT (Suite.context_at composes the
+  // EXISTING `_r2_gather` + `_r2_score_and_cap` — the same R2 engine the chat runs — behind GET /api/context;
+  // malformed→400, well-formed-but-unattached→honest-empty/DENY-ALL). What remains PENDING is the FE CONSUMER:
+  // no studio region calls /api/context yet (the per-leg reads — annotation thread + address-help — serve the
+  // panel today). So this stays a declared seam until an addressed-context INSPECTOR region (on AddressHelp /
+  // RhmPanel) binds api.context(address). Catalogued as `to_wire` in Suite._ORPHAN_ROUTES for that connect-it
+  // backlog. NB the GET /api/context literal here is what keeps the route reachability-WIRED (a real FE
+  // declaration referencing it) without a false "calls it today" claim.
   R2_CONTEXT_AT_ADDRESS: {
     id: 'R2',
-    what: 'GET /api/context?address= — the unified address-keyed context bundle (the one resolver that composes annotations + chats + howto + scope + semantic neighbours at a locus, with relevance/recency decay)',
-    why_pending: 'no single /api/context resolver exists on the worktree backend (only the per-leg reads). annotate FEEDS it; the resolver is unbuilt.',
+    what: 'GET /api/context?address= — the address-keyed context bundle (annotations + chats + addressed events at the locus AND its ancestors, scored + budget-capped by the recency·proximity·pin decay)',
+    why_pending: 'the BACKEND resolver is BUILT (Suite.context_at / GET /api/context, proven by addr_context_acceptance + by-use curl); the pending leg is the FE CONSUMER — an addressed-context inspector region binding api.context(address). DESIGNED, ☐.',
     designed_test: 'addr_context_acceptance.py',
   },
   // I4 — a click's governance TIER resolved by the address's union-record governance field (not the verb),
@@ -83,15 +96,9 @@ export const STUDIO_PENDING: Record<string, PendingSeam> = {
     why_pending: 'the explicit "request a change" door (intentAt) IS wired; the AUTO promotion of a plain comment into an intent is unbuilt. DESIGNED, ☐.',
     designed_test: '(L1 — Interactive Addressed Surface criteria)',
   },
-  // IN-FRAME DEIXIS — clicking a control INSIDE the sandboxed mockup iframe to indicate that sub-element's
-  // ui:// address. The document-level capture listener cannot reach into the iframe; this needs a listener
-  // injected into the iframe's contentDocument that postMessage()s the clicked ui:// up to the parent.
-  PENDING_IN_FRAME_DEIXIS: {
-    id: 'L7-deixis',
-    what: 'in-mockup element deixis — clicking a sub-element INSIDE the staged mockup indicates ITS ui:// address (not just the whole reviewed surface)',
-    why_pending: 'the parent document-level capture listener does not reach into the sandboxed iframe; needs an injected in-frame listener + postMessage bridge. Until then the locus is the whole reviewed surface (the Card\'s address).',
-    designed_test: '(L7 voice-deixis / element-addressing — Interactive Addressed Surface criteria)',
-  },
+  // (IN-FRAME DEIXIS — was here — is now BUILT and moved into STUDIO_WIRED above as `inFrameDeixis` (the
+  //  bridge ?studio=1 capture-script → postMessage → Stage listener → setReviewMockup locus sink). Per this
+  //  file's contract: "when the backend bind lands, move the entry into STUDIO_WIRED.")
 }
 
 // Invoking a pending seam FAILS LOUD (rule 4 — never a silent no-op, never a fake success). A region that
