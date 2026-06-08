@@ -245,3 +245,17 @@ Disjoint from cognition (`cognition.py`/`roles.py`) + guided-review (FE/surface)
 ---
 ## SCOPE ADDED (Tim 2026-06-09): MCP engine-exposure — the AGENT face (after the loop + adversarial rounds)
 The MCP (`mcp_face/server.py`) is node-graph-ONLY + predates the cognition engine (last touched 2026-06-04; exposes ZERO engine ops — confirmed by grep). The engine is reachable by the HUMAN (FE/`/api`) but NOT by AGENTS (MCP). **Phase: research the stale MCPs → update so agents configure/run/inspect/CREATE chains+runs through the MCP using ALL the engine features** (run_role/run_items/run_reduce/roles/rules/skills/contexts/modes · set inputs via input_addresses · set output destinations · set all params: op/model/knobs/allocator). Fully-operational MCP system, the agent-face equivalent of the FE authoring surface — reuse the `/api/cognition/*` + the engine, never parallel. Cognition's (it's my engine's agent face). Sequenced AFTER #50 (launch-capability) + #51 (adversarial rounds). Carries its OWN by-use adversarial verification (an agent really configures+runs+inspects a chain via MCP). Task #53.
+
+---
+## § CLAIMS — A DONE (b79ce03) · #50 launch-capability STARTING (ops/cli — cognition)
+- A mode-reach: committed `b79ce03` (13-axis serve + consent-routing + mockup://-already-in-main + the settings_surface fix). suite.py RELEASED.
+- **#50 launch/select/evict-models capability (cognition, ops/cli — claimed):** a gated `ensure_resident` unifying the embed-op load + B(brain_config) + mode-loadout, reusing `company up/swap --evict`/`budget_vram`/`is_resident`/`require_resident`. Other sessions: hold `ops/cli`. The live embed-vector gets proven here (Tim authorized the GPU). Post on commit.
+
+---
+## SCOPE EXPANDED (Tim 2026-06-09): MCP exposure is FULL + the storage substrate underneath
+
+**#53 MCP engine-exposure — expanded explicitly to ALL of it:** agents (via MCP) **configure · run · VIEW · RE-RUN · create** — every engine op including **EMBED** (op=embed as a first-class MCP op), the configurability (set op/model/knobs/allocator/input_addresses/destinations), AND **view past runs + outputs + re-run** them. The agent-face equal of the FE authoring surface. Reuse `/api/cognition/*` + the engine, never parallel.
+
+**#54 STORAGE/persistence model (NEW — the substrate the whole capability + MCP view/re-run sit ON):** so **outputs can be used as input** (a run output is a durable, DISCOVERABLE, addressed artifact), **things can be embedded** (op=embed → put_vector, persisted + k-NN queryable), and **the address system applies to all of them** (run://cas://vec://skill://context://). GROUNDED: CAS content durable+write-once+addressed ✓, vectors persist+query ✓, the address resolver applies ✓ — the GAP is a **discovery/query/lifecycle layer** over runs/chains/configs (no list-runs, no chain-result persistence, no gc/ttl). Reuse fs_store + vector_index — NOT a parallel DB. The address system is the spine; outputs→inputs is the keystone. Cognition's (it's the engine's storage), co-considered with the structural/coherence sessions (they query artifacts too).
+
+**Sequencing unchanged:** #50 (launch-capability, in flight) → #51 (adversarial rounds) → then #54 (storage model) + #53 (MCP exposure, sits on #54). #54 before #53's view/re-run (re-run needs durable listable runs+configs).
