@@ -840,6 +840,8 @@
       "ui://settings/voice",
       "ui://studio",
       "ui://studio/composer",
+      "ui://studio/generate",
+      "ui://studio/generate/result",
       "ui://studio/rail",
       "ui://studio/rhm",
       "ui://studio/rhm/help",
@@ -866,8 +868,8 @@
     "screens": 23,
     "addressed_elements": 98,
     "distinct_addresses_used": 39,
-    "registered_addresses": 80,
+    "registered_addresses": 82,
     "unregistered_orphans": 15,
-    "unused_orphans": 56
+    "unused_orphans": 58
   }
 }

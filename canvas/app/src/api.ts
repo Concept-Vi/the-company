@@ -222,6 +222,13 @@ export const api = {
   // (oldest-first) keyed by the address; disk-backed (survives reload) — this proves the persist-to-shared-store.
   annotations: (address: string) =>
     fetch('/api/annotations?address=' + encodeURIComponent(address)).then(jr),
+  // GENERATE FOLLOW-ON · the studio "generate" step. POSTs ONE reviewed mockup to the committed
+  // generate-for-mockups ENGINE (bridge /api/mockup-generate → runtime/generate_mockup). mode defaults
+  // to 'plan' — SAFE/read-only: the engine's claude -p run PROPOSES the edit (returns a summary/diff) and
+  // changes NOTHING (changed_files == []). Returns the proposed result; a backend 400 (missing mockup / no
+  // actionable feedback / engine raise) is normalized to {error} by jr (fail-loud, never a silent no-op).
+  mockupGenerate: (mockup: string, mode: 'plan' | 'apply' = 'plan') =>
+    fetch('/api/mockup-generate', { method: 'POST', headers: J, body: JSON.stringify({ mockup, mode }) }).then(jr),
   // L3 · addressed history (§21.7#1): everything that happened AT a ui:// address. The address-keyed READ
   // over the event tail — the addressed analogue of decision_view. Returns { address, trajectory[] }
   // chronological; a non-ui:// / malformed address → backend 400 (fail-loud, normalized to {error} by jr).

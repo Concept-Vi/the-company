@@ -81,6 +81,13 @@ export function useAppController(editor: Editor) {
   // binding is still `indicate(address)` (below in setReviewMockup) → it sets indicatedRef, which sendChat/
   // annotateLocus/fetchAddressHelp all read. This is just the mirror the studio regions display.
   const [reviewAddress, setReviewAddress] = useState<string | null>(null)
+  // GENERATE FOLLOW-ON · the live state for the studio "generate" step. `generateBusy` gates the button
+  // (a plan-mode dispatch is a real round-trip — the engine spawns claude -p), and `generateResult` holds
+  // the PROPOSED result the engine returns (its summary + changed_files, which are [] in safe plan mode) so
+  // the surface can SHOW what it WOULD change. reflects-never-owns: this is a display mirror of the backend's
+  // returned proposal, not authoritative state.
+  const [generateBusy, setGenerateBusy] = useState(false)
+  const [generateResult, setGenerateResult] = useState<any | null>(null)
   function setReviewMockup(file: string | null, address?: string | null) {
     reviewMockupRef.current = file
     setReviewMockupState(file)
@@ -870,6 +877,25 @@ export function useAppController(editor: Editor) {
       // events.length poke would also refresh it, but the explicit re-read makes the round-trip atomic.
       await fetchAnnotations(addr)
     } catch (e: any) { setNotice('✕ could not attach comment: ' + (e?.message || e)) }
+  }
+  // GENERATE FOLLOW-ON · the studio "generate" step — wire the committed generate-for-mockups ENGINE to the
+  // surface. For the MOCKUP under review (the whole file, NOT the ui:// locus — generate operates on the
+  // file, comment/request operate on the locus), POST /api/mockup-generate in PLAN mode (api.mockupGenerate
+  // defaults to 'plan' = SAFE/read-only: the engine PROPOSES the edit and changes NOTHING). The RHM then
+  // SHOWS what it would change (the returned summary + changed_files==[] proof). MINT/PROPOSE-only — plan
+  // mode never applies a change. Fail-loud (rule 4): no mockup open, or a backend 400 (no actionable
+  // feedback / engine raise normalized to {error} by jr) → a visible notice, never a silent no-op.
+  async function mockupGenerate(mockup: string | null) {
+    if (!mockup) { setNotice('✕ open a mockup to review first, then generate'); return }
+    setGenerateBusy(true)
+    try {
+      const r = await api.mockupGenerate(mockup, 'plan')
+      if (r?.error) { setGenerateResult(null); setNotice('✕ ' + r.error); return }   // fail-loud: surface the backend 400
+      setGenerateResult(r)
+      const n = Array.isArray(r.changed_files) ? r.changed_files.length : 0
+      setNotice('⚙ generate (plan) proposed an edit for ' + mockup + ' — ' + n + ' file(s) would change (nothing applied)')
+    } catch (e: any) { setGenerateResult(null); setNotice('✕ generate failed: ' + (e?.message || e)) }
+    finally { setGenerateBusy(false) }
   }
   // G-4 · THE WIRE'S OPERATOR DOOR — mint a build-intent FROM the indicated ui:// element (the missing
   // FE caller for the self-build wire; D1/G-4). The SIBLING of annotateLocus: where annotateLocus attaches
@@ -2434,6 +2460,8 @@ export function useAppController(editor: Editor) {
     reviewMockup, setReviewMockup, reviewAddress,
     corpus, corpusErr, refreshCorpus,
     annotations, annotationsBusy, fetchAnnotations,
+    // GENERATE FOLLOW-ON — the studio "generate" step (the committed engine wired to the surface)
+    mockupGenerate, generateBusy, generateResult,
   }
 }
 

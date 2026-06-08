@@ -173,12 +173,17 @@ export function Stage({ titleFor }: { titleFor: (f: string | null) => string }) 
 //   LAW: this is the ANNOTATE/REQUEST face (attach-a-comment / request-a-change). It NEVER executes — a
 //   request mints a build-intent (resolved=None, plan-mode); dispatch is off this face (consent gate).
 export function Composer() {
-  const { reviewAddress, annotations, annotationsBusy, annotateLocus, mintBuildIntent } = useApp()
+  const { reviewMockup, reviewAddress, annotations, annotationsBusy, annotateLocus, mintBuildIntent,
+          mockupGenerate, generateBusy, generateResult } = useApp()
   const [text, setText] = useState('')
   const thread = annotations?.thread || []
   const hasLocus = !!(reviewAddress && reviewAddress.startsWith('ui://'))
   async function comment() { const t = text.trim(); if (!t) return; await annotateLocus(t); setText('') }
   async function request() { const t = text.trim(); if (!t) return; await mintBuildIntent(t); setText('') }
+  // GENERATE FOLLOW-ON — gated on a MOCKUP being open (the whole file), NOT on hasLocus: generate refines
+  // the file from its captured feedback; comment/request act at the ui:// locus. plan-mode is safe (proposes,
+  // changes nothing). The engine PROPOSES — the surface SHOWS what it would change (generateResult below).
+  const generated = generateResult && reviewMockup && generateResult.mockup_file === reviewMockup ? generateResult : null
   return (
     <div className="studio-composer" data-ui-ref="ui://studio/composer">
       <div className="studio-composer-locus">
@@ -207,7 +212,25 @@ export function Composer() {
           title="attach this as a comment at the locus (shared annotation store)">💬 comment</button>
         <button type="button" className="studio-act" disabled={!hasLocus || !text.trim()} onClick={request}
           title="request a change here — mints a build-intent (plan-mode; you approve the reach later)">⚙ request a change</button>
+        {/* GENERATE FOLLOW-ON — runs the committed generate-for-mockups engine on the OPEN mockup (plan-mode,
+            safe). Gated on a mockup being open, NOT on the locus. The RHM PROPOSES; nothing is applied. */}
+        <button type="button" className="studio-act" data-ui-ref="ui://studio/generate"
+          disabled={!reviewMockup || generateBusy} onClick={() => mockupGenerate(reviewMockup)}
+          title="generate (plan) — refine this mockup from its captured feedback; proposes the edit, changes nothing">
+          {generateBusy ? '… generating' : '✨ generate'}</button>
       </div>
+      {/* the PROPOSED result the engine returned — what it WOULD change (plan-mode: changed_files is [] = nothing applied). */}
+      {generated && (
+        <div className="studio-generate-result" data-ui-ref="ui://studio/generate/result">
+          <div className="studio-generate-head muted">
+            proposed edit for <b>{generated.mockup_file}</b> · mode {generated.mode} ·
+            {' '}{Array.isArray(generated.changed_files) ? generated.changed_files.length : 0} file(s) would change
+          </div>
+          {generated.proposed_summary
+            ? <div className="studio-generate-summary">{generated.proposed_summary}</div>
+            : <span className="muted">the engine returned no summary text.</span>}
+        </div>
+      )}
     </div>
   )
 }

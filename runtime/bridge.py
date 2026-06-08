@@ -20,6 +20,7 @@ from contracts.node_record import NodeInstance, Edge, Graph
 from store.fs_store import FsStore
 from runtime.registry import NodeRegistry
 from runtime.suite import Suite
+from runtime import generate_mockup            # the committed generate-for-mockups ENGINE (own-test green)
 from fabric import config as fcfg
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -1691,6 +1692,24 @@ class H(BaseHTTPRequestHandler):
                     for e in entries:
                         f.write(json.dumps(e) + "\n")
                 self._send(200, json.dumps({"ok": True, "entry": hit}))
+            elif self.path == "/api/mockup-generate":   # MOCKUP STUDIO: the GENERATE FOLLOW-ON.
+                # body {mockup, mode?} → calls the COMMITTED generate_for_mockup ENGINE (own-test green) to
+                # refine ONE reviewed mockup from its captured feedback. mode defaults to 'plan' (SAFE/read-
+                # only: the engine's claude -p run changes NOTHING, commits NOTHING — changed_files == []).
+                # We import the module FUNCTION and call it directly — NOT through suite.py/surface_intent_at:
+                # the engine calls implement.launch itself (the scope-enforced dispatch wire). We return the
+                # PROPOSED result (the RHM showing what it WOULD change). Fail loud (no silent no-op): a
+                # missing/junk mockup, no actionable feedback, or any engine raise propagates → the outer
+                # try/except turns it into a 400 {error} — never a fabricated success.
+                b = self._body()
+                mockup = b.get("mockup")
+                if not isinstance(mockup, str) or not mockup.strip():
+                    raise ValueError("/api/mockup-generate needs a 'mockup' filename (fail loud)")
+                mode = b.get("mode")
+                if mode is not None and mode not in ("plan", "apply"):
+                    raise ValueError("/api/mockup-generate 'mode' must be 'plan' or 'apply' (fail loud)")
+                result = generate_mockup.generate_for_mockup(mockup.strip(), mode=mode)
+                self._send(200, json.dumps(result))
             else:
                 self._send(404, "{}")
         except Exception as e:                          # fail loud to the UI

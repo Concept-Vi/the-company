@@ -756,6 +756,25 @@
       "code": "canvas/app/src/components/StudioKit.tsx (RhmPanel help) / runtime/suite.py:address_help",
       "howto": "WHAT: the locus help strip — what the pointed surface IS and what a change here would touch (the composed address-help). WHAT YOU CAN DO: read what the surface represents and how many files a change would reach. HOW TO CHANGE IT: it reflects the address-help bundle (/api/address-help → address_help/resolve_scope); read-only."
     },
+    "ui://studio/generate": {
+      "region": "studio",
+      "capabilities": [
+        "pointable",
+        "openable"
+      ],
+      "represents": "STUDIO-feedback",
+      "code": "canvas/app/src/components/StudioKit.tsx (generate button) / runtime/bridge.py:/api/mockup-generate / runtime/generate_mockup.py:generate_for_mockup",
+      "howto": "WHAT: the generate control — turns the mockup's captured feedback into a proposed design edit. WHAT YOU CAN DO: with a mockup under review, click generate; the right-hand-man reads the feedback notes and proposes the edit (plan-mode = it shows what it WOULD change, it does not apply on a bare click). HOW TO CHANGE IT: it posts to /api/mockup-generate which calls the configurable generate engine (runtime/generate_mockup.py); the behaviour (template, model, plan-vs-apply, routing) is declared data in design/_system/generate-config.json — edit the config, no code change."
+    },
+    "ui://studio/generate/result": {
+      "region": "studio",
+      "capabilities": [
+        "presentable"
+      ],
+      "represents": "STUDIO-feedback",
+      "code": "canvas/app/src/components/StudioKit.tsx (generate result) / runtime/generate_mockup.py:generate_for_mockup",
+      "howto": "WHAT: the proposed-edit result — what the generate engine proposes to change on the mockup (plan-mode summary/diff). WHAT YOU CAN DO: read the proposed edit before any apply. HOW TO CHANGE IT: it reflects the generate engine's returned result; read-only (apply is a later, approved step)."
+    },
     "ui://view-switch": {
       "region": "chrome",
       "capabilities": [
