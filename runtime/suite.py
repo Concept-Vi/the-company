@@ -695,27 +695,33 @@ class Suite:
             "mode_directives": dict(self.MODE_DIRECTIVES),
             # E1 — THE MODE TYPE-REGISTRY (registry-is-truth): the full HIERARCHICAL spec the surface reads
             # so the modes-and-context-resolution-are-ONE-system is visible end-to-end. Each entry carries
-            # its label + directive (behaviour) + resolution declaration (HOW context resolves under it:
-            # strata/howto_detail/budget) + sub-types (the hierarchy, §6.5) + consent style. Editing a mode
-            # in this registry changes BOTH behaviour AND context-resolution — one edit, one place. strata
-            # is a frozenset → serialized to a sorted list (None stays None = admit-all) so it's JSON-safe.
+            # ALL declared mode axes from the ONE source — the resolution/context half (label/directive/
+            # resolution/subtypes/consent), the thought-shape/staging half (grain/shape/stage), AND the
+            # activation/budget half (live/reserve_r/per_role_ctx/main_ctx_tokens/brain_config). Editing a
+            # mode in this registry changes ALL of them — one edit, one place.
+            #
+            # SEAM 1 (A · mode reach-extension, 2026-06-09): this block used to be hand-built from
+            # MODE_SPECS and served only ~5 axes (label/directive/resolution/subtypes/consent), DROPPING the
+            # cognition half (grain/shape/stage/live/reserve_r/per_role_ctx/main_ctx_tokens/brain_config) —
+            # so the FE could not see or tune the cognition half of each mode (lost-opportunity #2). It now
+            # serves the WHOLE declaration via the unified `mode_registry()` accessor (lost-opportunity #1 —
+            # that accessor had ZERO callers). Registry-is-truth: serve what `mode_registry()` returns, never
+            # a hand-picked subset — a 14th axis added to MODE_REGISTRY rides to the FE for free, no edit here.
+            #
+            # `capabilities()` is `json.dumps`'d raw by the bridge (bridge.py:529 — no `default=` set-handler),
+            # so the served value MUST be JSON-safe. `mode_registry()` returns frozensets nested in
+            # `resolution.strata` and `subtypes.*.strata` (focus/background/watch-and-react/off declare them) —
+            # `_mode_axes_jsonsafe` recursively coerces every set/frozenset → a sorted list (the SAME
+            # frozenset→sorted-list conversion the old hand-built block did for `strata`, now applied
+            # whole-tree so no axis can leak a non-serializable value). None stays None (admit-all). This
+            # preserves the exact serialized SHAPE of the 5 keys the FE already reads + adds the 8 missing.
             "mode_registry": {
-                m: {
-                    "label": s.label,
-                    "directive": s.directive,
-                    "resolution": (None if s.resolution is None else {
-                        "strata": (None if s.resolution.get("strata") is None
-                                   else sorted(s.resolution.get("strata"))),
-                        "howto_detail": s.resolution.get("howto_detail", "full"),
-                        "budget": s.resolution.get("budget"),
-                    }),
-                    "subtypes": {
-                        st: {k: (sorted(v) if k == "strata" and v is not None else v)
-                             for k, v in (ov or {}).items()}
-                        for st, ov in (s.subtypes or {}).items()
-                    },
-                    "consent": s.consent,
-                } for m, s in self.MODE_SPECS.items()
+                # FE/settings contract: `subtypes` is ALWAYS a JSON-safe dict (the old MODE_SPECS serve gave
+                # {} for a no-subtypes mode; mode_registry() keeps None for byte-for-byte MODE_SPECS parity, so
+                # coerce None→{} HERE at the serve only — never in mode_registry()). settings_surface A5.
+                m: {**(_r := self._mode_axes_jsonsafe(self.mode_registry(m))),
+                    "subtypes": _r.get("subtypes") or {}}
+                for m in self.MODES
             },
             "rhm_verbs": list(self.RHM_VERBS),
             # The STATE-TYPE REGISTRY exposed (registry-is-truth): WHAT node-states exist + their meaning
@@ -1548,6 +1554,24 @@ class Suite:
                              f"{sorted(self.MODE_REGISTRY)} (fail loud, never a fabricated declaration).")
         return {k: (list(v) if isinstance(v, list) else dict(v) if isinstance(v, dict) else v)
                 for k, v in row.items()}
+
+    @staticmethod
+    def _mode_axes_jsonsafe(axes):
+        """SEAM 1 helper (A · mode reach-extension): recursively coerce a `mode_registry()` declaration into
+        a JSON-safe form so `capabilities()` can serve the WHOLE row (capabilities() is `json.dumps`'d raw by
+        the bridge with no set-handler). The ONLY non-serializable values in a mode row are sets/frozensets —
+        `resolution.strata` and `subtypes.*.strata` (a frozenset of gather-strata; None → admit-all). Every
+        set/frozenset → a sorted list (deterministic order); dicts/lists recurse; everything else passes
+        through unchanged. None stays None. This applies the SAME frozenset→sorted-list conversion the old
+        hand-built capabilities block did, but whole-tree — so adding a future set-valued axis to
+        MODE_REGISTRY can never leak a non-serializable value to the bridge (registry-is-truth, fail-safe)."""
+        if isinstance(axes, (set, frozenset)):
+            return sorted(axes)
+        if isinstance(axes, dict):
+            return {k: Suite._mode_axes_jsonsafe(v) for k, v in axes.items()}
+        if isinstance(axes, (list, tuple)):
+            return [Suite._mode_axes_jsonsafe(v) for v in axes]
+        return axes
 
     def fire_activation(self, context: str, *, mode: str | None = None,
                         sense_event: dict | None = None, turn_id: str | None = None):
@@ -5145,7 +5169,22 @@ class Suite:
                                      "refused": f"{verb} not available in mode {mode}"})
                     continue
                 action = self._json_obj_to_action({"name": verb, "arguments": fn.get("arguments")}, verb)
-                if mode == "decide-for-me":
+                # SEAM 2 (A · mode reach-extension, 2026-06-09): route the ACT-vs-SURFACE decision off the
+                # DECLARED `consent` axis (registry-is-truth) instead of the hardcoded `if mode=="decide-for-me"`
+                # name-branch (lost-opportunity #4 — `consent` was captured as data but unwired). The mode
+                # declares consent ∈ {offer, act, none}; consent=="act" → route through autonomous_dispatch.
+                #   • BEHAVIOUR-PRESERVING for decide-for-me: it declares consent="act" → routes EXACTLY as the
+                #     name-branch did.
+                #   • THE GENERALIZATION (intended, FLAGGED): background/focus/watch-and-react ALSO declare
+                #     consent="act" (MODE_REGISTRY) → they NOW auto-route too — consent becomes operative. A
+                #     mode that should NOT auto-act has its consent VALUE changed in MODE_REGISTRY (a separate
+                #     registry data-call), never a branch here.
+                #   • THE FLOOR IS UNTOUCHED: autonomous_dispatch routes by posture — AUTO-class → run
+                #     (reversible/whitelisted RHM verbs only); CONFIRM-class → the verb body SURFACES a draft.
+                #     It NEVER self-approves (apply still needs operator is_approved; resolve_surfaced stays
+                #     operator-only). consent=="offer"/"none" (listening/text-only/walkthrough/off) route the
+                #     normal dispatch, unchanged.
+                if self.mode_registry(mode)["consent"] == "act":
                     # G3 wiring: route the ACT-vs-SURFACE decision DETERMINISTICALLY by the verb's governance
                     # action-class (no confidence) through autonomous_dispatch. The verb BODY performs it
                     # either way — AUTO verbs run; CONFIRM verbs run their body whose action is to SURFACE a
