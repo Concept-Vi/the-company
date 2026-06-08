@@ -4442,9 +4442,30 @@ class Suite:
         tools/context/thinking/knobs) + the current binding + the EFFECTIVE resolution (what would
         actually be used right now). Mirrors available_stt()'s registry-as-status shape."""
         bindings = self.rhm_config().get("roles", {})
+        # JSON-safe coercion (this is a STATUS read the bridge json.dumps for /api/roles + the FE config
+        # lab consumes): a file-discovered cognition role (G2) carries `output_schema` (a Pydantic model
+        # CLASS) + `mode_scope` (a set) — neither is JSON-serializable, so a raw copy 400s the endpoint.
+        # Coerce to the FE-USEFUL form: the schema → its renderable json-schema (what an authoring/config
+        # surface draws the output fields from); the set → a sorted list. Everything else passes through.
+        import json as _json
+        def _json_safe(k, v):
+            if k == "output_schema" and v is not None and hasattr(v, "model_json_schema"):
+                try:
+                    return v.model_json_schema()        # the FE-renderable output-field schema
+                except Exception:
+                    return getattr(v, "__name__", str(v))
+            if isinstance(v, (set, frozenset)):
+                return sorted(v)                        # mode_scope
+            if callable(v):
+                return getattr(v, "__name__", str(v))   # verdict_rule (a jury's verdict fn) → its name
+            try:
+                _json.dumps(v)                          # defensive: a future non-JSON field never 400s
+                return v                                #   the status endpoint — it degrades to a string
+            except (TypeError, ValueError):
+                return str(v)
         out = {}
         for rid, spec in self.ROLE_REGISTRY.items():
-            out[rid] = {"id": rid, **{k: spec[k] for k in spec
+            out[rid] = {"id": rid, **{k: _json_safe(k, spec[k]) for k in spec
                                       if k not in ("env_model", "env_url", "env_knobs")},
                         "binding": bindings.get(rid, {}),
                         "effective": self.resolve_role(rid)}
