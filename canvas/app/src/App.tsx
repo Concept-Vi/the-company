@@ -143,6 +143,19 @@ function Hud() {
     if (ctrl.proposal?.interactive) setMobileTab('rhm')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ctrl.proposal?.interactive])
+  // DEEP-LINK / capture (Tim 2026-06-09): open the surface to an EXACT state by URL param, so it can be
+  // screenshot deterministically (no fragile chrome clicks) AND shared as a state link (aligns with the
+  // address system — a link IS an address into the surface). Runs once on mount. Purely additive: no param
+  // → today's behaviour (canvas). ?review → review view · ?mockup=<file> → review + that mockup in the stage
+  // · ?guide[=topic] → start the guided tour.
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search)
+    if (p.has('review') || p.has('mockup')) setView('review')
+    const mk = p.get('mockup')
+    if (mk) ctrl.setReviewMockup(mk)
+    if (p.has('guide')) ctrl.startGuide(p.get('guide') || undefined)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   return (
     <AppContext.Provider value={ctrl}>
       {/* Edges paints over the whole viewport (pointer-events:none); kept outside the grid so it overlays
