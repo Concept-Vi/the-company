@@ -245,6 +245,35 @@ def dispose_finding(store, kind: str, address: str, disposition: str, *,
     return {"ok": True, "applied": True, "escalated": False, "disposition": disposition}
 
 
+def structural_signoff(repo_root: str, live_types: set | None = None) -> dict:
+    """F — coherence's STRUCTURAL half of the convergence-round sign-off, run tree-wide (cross-fork, over all
+    three lanes' merged work — the honesty instrument as a gate, not goodwill). The whole-system sign-off pairs
+    THIS (exact, re-derivable, can't-be-green-painted) with guided-review's by-use operator path. Conditions:
+      · reachability: NO new (uncatalogued) unwired route across the whole tree;
+      · registry-vs-live: node-type files on disk == the live registry (no drift).
+    Each reason is a concrete structural fact. Returns {pass, reasons, evidence} — a hard boolean that can
+    BLOCK the convergence merge. (live_types: pass capabilities().node_types for the registry check; if None,
+    the registry check is reported as not-run rather than silently passed — fail-loud, no green-paint.)"""
+    reasons = []
+    routes, wired = route_reachability(repo_root)
+    import json
+    cat = json.load(open(os.path.join(repo_root, "design", "_system", "orphan-routes.json"), encoding="utf-8"))["routes"]
+    new_orphans = sorted(r for r in routes if not wired.get(r) and r not in cat)
+    if new_orphans:
+        reasons.append(f"NEW unwired routes (built, no caller, uncatalogued): {new_orphans}")
+    if live_types is not None:
+        rvl = registry_vs_live(repo_root, live_types)
+        registry_drift = {"disk_not_live": rvl["disk_not_live"], "live_not_disk": rvl["live_not_disk"]}
+        if not rvl["ok"]:
+            reasons.append(f"registry-vs-live drift: {registry_drift}")
+    else:
+        registry_drift = "not-run (pass live_types to check; not silently passed)"
+    return {"pass": not reasons and live_types is not None,
+            "reasons": reasons,
+            "evidence": {"new_orphans": new_orphans, "registry_drift": registry_drift,
+                         "routes": len(routes), "wired": sum(1 for v in wired.values() if v)}}
+
+
 def scan(repo_root: str, store=None) -> dict:
     """The on-demand coherence READ (the `company coherence` face). RE-DERIVES the model fresh (own/reflect:
     no maintained graph — detection is recomputed each call), recording the structural findings into `store`
