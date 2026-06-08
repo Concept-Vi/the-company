@@ -383,3 +383,5 @@ studio-shell now covers the dev canvas (dfed2ed). app.css released.
 | file | what | session | started | released |
 |---|---|---|---|---|
 | canvas/app/src/components/StudioKit.tsx (Composer) | the composer should invite comment/request when a mockup+locus is OPEN, not stay on "select a mockup first" | guided-review | 2026-06-09 | — |
+
+## § RELEASED (2026-06-09) — stage-header jargon (56dc61c). StudioKit released.
