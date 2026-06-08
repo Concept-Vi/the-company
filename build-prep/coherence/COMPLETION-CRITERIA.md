@@ -46,7 +46,7 @@
 - **A5 · drift gate** — self-description (MAP/STATE) matches the live registry. FUNCTION: ✅ Verified (green).
 - **A6 · the orphan catalogue is a DECLARED registry** (not a hardcoded dict) — `design/_system/orphan-routes.json`
   read via `_orphan_routes()`. FUNCTION: ✅ Verified (`2707b79`; no-hardcoding dogfooded).
-- **A7 (🟡) · the hardcoding detector escalates from candidate → law** — once the disposition store exists (C),
+- **A7 (✅) · the hardcoding detector escalates from candidate → law** — once the disposition store exists (C),
   a hardcoding candidate dispositioned `must-fix` is tracked to closure (not just printed). FUNCTION: 🟡 Designed.
 
 ## Group B — The shared pre-commit suite  (I own assembling it; unblocks all three loops)
@@ -69,7 +69,7 @@
 - **C3 (✅) · the reconcile is `(kind, address)` upsert → known/new/resolved** (generalizing reachability's
   documented/new/stale, AREA-2); net-burn-down computable; a finding closes only when its detector agrees
   (structural) or the confirming authority agrees (semantic — never by a swarm re-read, SEM-4). FUNCTION: 🟡.
-- **C4 (🟡) · findings are NOT operator-inbox items** — own agent-disposable lane; only `by-design` escalates
+- **C4 (✅) · findings are NOT operator-inbox items** — own agent-disposable lane; only `by-design` escalates
   through the consent gate (AREA-1: the inbox is operator-only + already-drowned). FUNCTION: 🟡 Designed.
 - **C5 (✅) · the burn-down rollup** — read-time fold (the `run_stats` pattern), open-by-kind/owner/over-time.
   FUNCTION: 🟡 Designed. FORM(CLI): `company coherence` shows the burn-down scannably.
@@ -78,33 +78,33 @@
   declared-registry step; this is the store step).
 
 ## Group D — The calibration harness  (the "first real artefact" — experiment + save)
-- **D1 (🟡) · a labelled eval set from the system's OWN named incidents** — `/status` half-migration (TP for
+- **D1 (✅) · a labelled eval set from the system's OWN named incidents** — `/status` half-migration (TP for
   half-migration), mode-dial-built-twice (TP for concept-coherence), `/api/knobs` (TP for intent-drift), the 3
   measured false-wires (structural truths to check agreement), + deliberate true-negatives (clean migration /
   rename / additive). FUNCTION: 🟡 Designed (the incidents are real + documented; the set is the build).
-- **D2 (🟡) · run an action/detector under N model configs against the eval set** — swap the worker/synth model
+- **D2 (✅·framework) · run an action/detector under N model configs against the eval set** — swap the worker/synth model
   (from the registry); the experiment axis. FUNCTION: 🟡 Designed (the structural detectors prove the framework
   single-config now; the N-config LLM experiment lands when cognition's engine + the semantic detectors land).
-- **D3 (🟡) · measure precision/recall/cost/latency PER config** — turns the S1/S2/S3 trust tiering (SEM-3)
+- **D3 (✅) · measure precision/recall/cost/latency PER config** — turns the S1/S2/S3 trust tiering (SEM-3)
   from assertion into a number-per-class. FUNCTION: 🟡 Designed. FORM(CLI): a scannable per-config table.
-- **D4 (🟡) · the winning config is SAVED as the action's default** (experiment → calibrate → save) — the
+- **D4 (✅) · the winning config is SAVED as the action's default** (experiment → calibrate → save) — the
   closed loop Tim named; positive-only (a class ships to the panel only if its calibrated precision clears the
   threshold). FUNCTION: 🟡 Designed (the save side is mine; depends on the Action registry, E).
 
 ## Group E — Chains/graphs as configurable saveable actions  (CO-DESIGN — my declaration half)
-- **E1 (🟡) · the Action declaration schema + ONE `build_action` validator** — a saved graph/chain promoted to
+- **E1 (✅) · the Action declaration schema + ONE `build_action` validator** — a saved graph/chain promoted to
   a declared, named, configurable action `{steps, per-step model from the registry, inputs(addressed),
   output_schema}`; one validator gates declared/compiled/saved instances (CC-1). FUNCTION: 🟡 Designed. LAW:
   registry-is-truth (the action registry, discovered like roles/nodes — not a hardcoded list).
-- **E2 (🟡) · the action registry (the SAVING side)** — saved actions are declared rows, reusable/fireable;
+- **E2 (✅) · the action registry (the SAVING side)** — saved actions are declared rows, reusable/fireable;
   the LLM config is part of the declaration (→ configurable + experimentable via D). FUNCTION: 🟡 Designed.
 - **E3 (co-design, NOT mine to build) · the runner** — `run_graph` (exists) + cognition's `run_items`/
   `run_reduce` (their C, in flight) execute an action. I declare + validate + save; they run. Marked here so
   the seam is explicit; built in cognition's lane.
-- **E4 (🟡) · `build_coherence_info`** — the third sibling projection (beside `object_info` +
+- **E4 (✅) · `build_coherence_info`** — the third sibling projection (beside `object_info` +
   `build_cognition_info`); the coherence model's read-face; reflects-never-owns. FUNCTION: 🟡 Designed (mine;
   co-design the projection machinery with cognition).
-- **E5 (🟡) · END-STATE: actions COMPOSE + RUN across MODELS *and* EMBEDDINGS** (Tim, explicit) — a saved
+- **E5 (🟡·gated) · END-STATE: actions COMPOSE + RUN across MODELS *and* EMBEDDINGS** (Tim, explicit) — a saved
   action can be composed from steps that each declare a model OR an embedding op (embed/similarity/retrieve),
   run end-to-end, and be re-run under a different model/embedding config (the experiment axis, D2). This is the
   whole point landing: chains-as-actions that actually exercise the LLM layer + the embedding layer, swappably.
@@ -116,10 +116,10 @@
   single-config; the full swappable model+embedding form lands when they do.
 
 ## Group F — The substrate as the shared honesty instrument  (the convergence-round lens)
-- **F1 (🟡) · the detectors run cross-fork over the merged whole** — one-seam / unconsumed-output / law-break
+- **F1 (✅) · the detectors run cross-fork over the merged whole** — one-seam / unconsumed-output / law-break
   as gates over all three lanes' work (not goodwill); my lens in the convergence round. FUNCTION: 🟡 Designed
   (realized in the convergence round; the detectors already run tree-wide).
-- **F2 (🟡) · the structural half of the convergence sign-off** — the gate battery green over the integrated
+- **F2 (✅) · the structural half of the convergence sign-off** — the gate battery green over the integrated
   whole (adversarial-to-appearance, can't be green-painted); paired with guided-review's by-use operator path.
   FUNCTION: 🟡 Designed (the convergence round).
 
