@@ -90,3 +90,11 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
 - SCOPING CORRECTION: my earlier STATE assumed the show-me lane unbuilt (it conflated Review.tsx-the-studio, which lacks it, with Walkthrough.tsx-the-region, which IS it). A1/A3 are done-by-existing-code (code-read; verify-by-use next).
 - NO CODE this fire — the investigation was the round + prevented a duplicate. Not spinning.
 - NEXT FIRE: VERIFY-BY-USE the show-me lane actually runs (temp bridge + chrome: Toolbar `?guide` → tour drives the view + narrates + steps; confirm A1/A3 live, not just code-present) — verify-by-use not code-read. THEN the genuine net-new: generate-for-mockups (the make-or-break, the wire) + B1 text-streaming (reuse chat_parts) + the cast_posture DECLARATION (MODE_REGISTRY — cognition's A window, claim-gated). Re-scope my Completion Criteria to mark A1/A3 met.
+
+## 2026-06-09 fire — ✅ show-me lane VERIFIED BY USE (seam) — A1/A3 FUNCTION done; FORM=needs-tim
+- Temp-store bridge :8795 (model-free guide, no :8000 needed; live :8770/store untouched).
+- /api/walkthrough/start (empty store) → organ_started:False + clean fail-loud reason (no silent no-op). ✓
+- /api/guide/start → organ_started:True, session, cursor 0/3, narration "WHAT: the Run control. WHAT YOU CAN DO: click it to recompute…" (at-altitude, model-free, corpus how-to), ui_target ui://toolbar/run. ✓
+- → A1 (guided overlay) + A3 (next/dwell) FUNCTION = VERIFIED-BY-USE at the seam: the tour starts/steps/narrates-at-altitude/targets; Walkthrough.tsx (mounted App.tsx:186 + wired) consumes exactly this (framing→narration, ui_target→resolveUiTarget, nextStep→advance). The comprehension-at-altitude (the original-failure fix) PROVEN live for ui:// elements.
+- HONEST: full browser render-drive + the FORM feel = needs-tim (the visual is Tim's call per the FORM bar) — NOT green-painted. Seam is the autonomous-closeable half; done.
+- NEXT FIRE: the genuine NET-NEW. Priority: B1 text-streaming (reuse voice chat_parts() as /api/chat/stream + FE sendChat branch — ~bounded, mine: api.ts+useAppController+bridge route additive) OR generate-for-mockups (the make-or-break — heavier, the wire; scope first, may need the suite.py window/claim). Lean B1 first (cleaner one-fire, mine, file-disjoint). Scope B1 next fire: confirm chat_parts() signature + the voice stream route to mirror.
