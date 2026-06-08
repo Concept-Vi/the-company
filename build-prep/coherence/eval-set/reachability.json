@@ -1,0 +1,11 @@
+{
+  "_doc": "Calibration fixtures for the reachability CONSUMER detector — captured-incident text with STABLE ground truth (NOT live routes, which churn as other lanes wire them — that's the burn-down's job, not calibration's). Each fixture is a controlled (fe, tests) snippet + the route + expected_orphan. These capture the false-wire incident as a permanent regression case: a comment-mention / existence-assertion / prose-in-string must read ORPHAN; a real fetch/EventSource/HTTP call must read WIRED. The detector's LOGIC is scored against these — stable forever, immune to the live tree changing.",
+  "fixtures": [
+    {"id": "real-fetch-consumer",            "route": "/api/alpha",   "fe": "const r = await fetch('/api/alpha', {method:'POST'})", "tests": "", "orphan": false},
+    {"id": "eventsource-consumer (stream shape)", "route": "/api/beta", "fe": "const es = new EventSource('/api/beta?since=0')", "tests": "", "orphan": false},
+    {"id": "real-test-call",                 "route": "/api/gamma",   "fe": "", "tests": "r = requests.post(base + '/api/gamma', json={})", "orphan": false},
+    {"id": "comment-mention (mockup-feedback bug)", "route": "/api/delta", "fe": "// RETIRED: /api/delta is no longer called by this surface", "tests": "", "orphan": true},
+    {"id": "existence-assertion (scope bug)", "route": "/api/epsilon", "fe": "", "tests": "check('has the route', '/api/epsilon' in bridge_src)", "orphan": true},
+    {"id": "prose-in-string (voice/turn bug)", "route": "/api/zeta",  "fe": "", "tests": "print('the /api/zeta path cleans the reply before speak')", "orphan": true}
+  ]
+}
