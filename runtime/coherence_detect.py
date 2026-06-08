@@ -111,3 +111,113 @@ def route_reachability(repo_root: str) -> tuple[set[str], dict[str, bool]]:
                       if os.path.basename(f) not in _meta)
     fe, tests = _strip_comments(fe), _strip_comments(tests)
     return routes, {r: route_is_wired(r, fe, tests) for r in routes}
+
+
+# ── #4a registry-vs-live (TRUSTWORTHY — gate-able): node files on disk vs the live registry ──────────
+def registry_vs_live(repo_root: str, live_types: set[str]) -> dict:
+    """Set-difference of the node-types DISCOVERABLE on disk (nodes/*.py declaring KIND + run()) vs the LIVE
+    registry (`live_types`, from capabilities().node_types). A file on disk not live, or a live type with no
+    file, is a real drift. Trustworthy (no model, no heuristic — two declared sets). Returns
+    {on_disk, live, disk_not_live, live_not_disk, ok}."""
+    # A node-type's identity is the MODULE FILENAME STEM (registry.discover registers `name`=stem for any
+    # nodes/*.py with a run() attr — KIND is a category process|content, NOT the type name). So the disk set
+    # is {stem : nodes/<stem>.py (non-_) defines run()}.
+    on_disk: set[str] = set()
+    nodes_dir = os.path.join(repo_root, "nodes")
+    for f in glob.glob(os.path.join(nodes_dir, "*.py")):
+        stem = os.path.basename(f)[:-3]
+        if stem.startswith("_"):
+            continue
+        try:
+            tree = ast.parse(open(f, errors="ignore").read())
+        except SyntaxError:
+            continue
+        if any(isinstance(n, ast.FunctionDef) and n.name == "run" for n in ast.walk(tree)):
+            on_disk.add(stem)
+    disk_not_live = sorted(on_disk - live_types)
+    live_not_disk = sorted(live_types - on_disk)
+    return {"on_disk": sorted(on_disk), "live": sorted(live_types),
+            "disk_not_live": disk_not_live, "live_not_disk": live_not_disk,
+            "ok": not disk_not_live and not live_not_disk}
+
+
+# ── #4b capability-with-no-consumer (CANDIDATE-only — positive-only, never auto-acted) ───────────────
+def capability_no_consumer(repo_root: str) -> list[str]:
+    """Public Suite methods reachable from NO face (bridge/MCP `SUITE.<m>(`) or test, even transitively via
+    internal `self.<m>(` edges. CANDIDATE-only: dynamic dispatch (the RHM verb whitelist, the rules engine,
+    getattr) is invisible to AST, so an unreached method may still be live — this PROPOSES, never declares.
+    Returns the candidate method names (sorted)."""
+    suite_src = open(os.path.join(repo_root, "runtime", "suite.py"), errors="ignore").read()
+    tree = ast.parse(suite_src)
+    # the Suite class + its method defs
+    methods: dict[str, ast.FunctionDef] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef) and node.name == "Suite":
+            for item in node.body:
+                if isinstance(item, ast.FunctionDef):
+                    methods[item.name] = item
+    public = {m for m in methods if not m.startswith("_")}
+    # internal edges: method -> {self.<m> it calls}
+    edges: dict[str, set[str]] = {}
+    for name, fn in methods.items():
+        called = set()
+        for n in ast.walk(fn):
+            if (isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+                    and isinstance(n.func.value, ast.Name) and n.func.value.id == "self"):
+                called.add(n.func.attr)
+        edges[name] = called
+    # entry points: methods named as SUITE.<m>( in the faces, or s.<m>(/.<m>( in tests
+    # faces = the things that consume Suite methods: the HTTP bridge, the MCP face, AND the wire/loop
+    # (implement.py) + cognition driver — all real callers. (Still CANDIDATE-only: dynamic dispatch via the
+    # RHM verb whitelist / the rules engine / getattr is invisible to AST, so an unreached method may be live.)
+    faces = ""
+    for rel in ("runtime/bridge.py", "mcp_face/server.py", "runtime/implement.py", "runtime/cognition.py"):
+        p = os.path.join(repo_root, rel)
+        if os.path.exists(p):
+            faces += open(p, errors="ignore").read()
+    tests = "\n".join(open(f, errors="ignore").read()
+                      for f in glob.glob(os.path.join(repo_root, "tests", "*.py")))
+    # broad `.method(` over faces+tests (the faces call via SUITE./suite./self.; tests via s./instance.) —
+    # inclusive on purpose: a method called any of those ways is a consumer; over-inclusion only SHRINKS the
+    # candidate set, the safe direction for a positive-only detector that must not over-claim "unconsumed".
+    called = set(re.findall(r"\.([a-zA-Z_][a-zA-Z0-9_]*)\s*\(", faces + "\n" + tests))
+    entry = called & set(methods)
+    # reachability over internal edges from the entry set
+    reached, stack = set(entry), list(entry)
+    while stack:
+        m = stack.pop()
+        for nxt in edges.get(m, ()):
+            if nxt in methods and nxt not in reached:
+                reached.add(nxt); stack.append(nxt)
+    return sorted(public - reached)
+
+
+# ── #3 hardcoding candidates (CANDIDATE-only) — literals that mirror a registry ──────────────────────
+def hardcoding_candidates(repo_root: str, min_entries: int = 6) -> list[dict]:
+    """Module/class-level literal dict/list/tuple/set assigned to an UPPER_CASE name in runtime/*.py, with
+    >= min_entries — a candidate hardcoded vocabulary that may belong in a registry (the pattern the
+    no-hardcoding rule forbids; the _ORPHAN_ROUTES dict was exactly this until 2026-06-08). CANDIDATE-only:
+    a big literal can be a legitimate constant (a grammar, an enum the registry derives FROM) — this
+    PROPOSES for review, never declares. Returns [{file, name, kind, n, line}]."""
+    out = []
+    for f in glob.glob(os.path.join(repo_root, "runtime", "*.py")):
+        src = open(f, errors="ignore").read()
+        try:
+            tree = ast.parse(src)
+        except SyntaxError:
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Assign):
+                continue
+            names = [t.id for t in node.targets if isinstance(t, ast.Name)]
+            up = [n for n in names if n.isupper() or (n[:1].isupper() and "_" in n)]
+            if not up:
+                continue
+            v = node.value
+            n_entries = (len(v.keys) if isinstance(v, ast.Dict)
+                         else len(v.elts) if isinstance(v, (ast.List, ast.Tuple, ast.Set)) else 0)
+            if n_entries >= min_entries:
+                out.append({"file": os.path.relpath(f, repo_root), "name": up[0],
+                            "kind": type(v).__name__, "n": n_entries, "line": node.lineno})
+    return sorted(out, key=lambda d: (-d["n"], d["file"]))
+
