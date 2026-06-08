@@ -30,7 +30,7 @@ ROLE = {
     "input_addresses": ("persona", "answer"),
     "trigger": "fires in the listening cast when focus.which_roles includes 'voice'.",
     "model_binding": {"requires": ["chat", "json"], "default_model": None, "default_base_url": None},
-    "mode_scope": {"listening"},
+    "mode_scope": {"listening", "walkthrough"},
     "rules": [
         {"id": "voice-tones-answer", "reads": "voice.toned",
          "effect": "deliver the toned phrasing as the reply", "kind": "route"},

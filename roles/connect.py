@@ -27,7 +27,7 @@ ROLE = {
     "input_addresses": ("utterance", "thread"),
     "trigger": "fires in the listening cast when focus.which_roles includes 'connect'.",
     "model_binding": {"requires": ["chat", "json"], "default_model": None, "default_base_url": None},
-    "mode_scope": {"listening"},
+    "mode_scope": {"listening", "walkthrough"},
     "rules": [
         {"id": "connect-surfaces", "reads": "connect.worth_surfacing",
          "effect": "surface connect.link as a related-thread note in a later part", "kind": "inject"},

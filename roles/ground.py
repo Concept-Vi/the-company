@@ -30,7 +30,7 @@ ROLE = {
     "input_addresses": ("utterance", "live_state"),
     "trigger": "fires in the listening cast when focus.which_roles includes 'ground'.",
     "model_binding": {"requires": ["chat", "json"], "default_model": None, "default_base_url": None},
-    "mode_scope": {"listening"},
+    "mode_scope": {"listening", "walkthrough"},
     "rules": [
         {"id": "ground-gates-inject", "reads": "ground.in_scope",
          "effect": "co-determines recall injection (recall.relevant AND ground.in_scope)", "kind": "gate"},

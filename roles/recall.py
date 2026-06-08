@@ -28,7 +28,7 @@ ROLE = {
     "input_addresses": ("utterance", "memory"),
     "trigger": "fires in the listening cast when focus.which_roles includes 'recall' (a memory turn).",
     "model_binding": {"requires": ["chat", "json"], "default_model": None, "default_base_url": None},
-    "mode_scope": {"listening"},
+    "mode_scope": {"listening", "walkthrough"},
     "rules": [
         # DECLARED injection rule (DATA; the rule ENGINE is G3, the staged-part injection is G4). The
         # recalled snippet injects into a later reply part iff recall.relevant AND ground.in_scope —

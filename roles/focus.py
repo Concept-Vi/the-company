@@ -33,7 +33,7 @@ ROLE = {
     "input_addresses": ("utterance",),
     "trigger": "every listening turn — focus fires FIRST, gating the rest of the cast (the selector).",
     "model_binding": {"requires": ["chat", "json"], "default_model": None, "default_base_url": None},
-    "mode_scope": {"listening"},
+    "mode_scope": {"listening", "walkthrough"},
     "rules": [
         # DECLARED routing rule (DATA; the rich rule ENGINE is G3). focus.which_roles selects the
         # cast members that fire this turn — a pure read of focus's resolved output.

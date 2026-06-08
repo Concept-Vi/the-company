@@ -37,7 +37,7 @@ ROLE = {
     "input_addresses": ("run://<turn>/part-1", "ground"),
     "trigger": "CHAINS after a reply part starts: reads the forming answer vs ground (G3/G4 chainer).",
     "model_binding": {"requires": ["chat", "json"], "default_model": None, "default_base_url": None},
-    "mode_scope": {"listening"},
+    "mode_scope": {"listening", "walkthrough"},
     "rules": [
         {"id": "check-flags-contradiction", "reads": "check.contradicts",
          "effect": "flag/correct the forming answer in a later part", "kind": "route",
