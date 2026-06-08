@@ -28,7 +28,15 @@
 - **Blocks:** the FULL all-green gate (the pre-merge / convergence-round bar) — so it must be green before the
   convergence round. Does NOT block per-criterion commits in other lanes (per the ratified per-commit bar
   below — affected-suites-green + no-NEW-red).
-- **Status:** OPEN — flagged in `MERGE-COORDINATION.md` + here; awaiting cognition.
+- **Status:** ✅ CLEARED 2026-06-09 — see CLEARED below.
+
+### `drift_acceptance` — RED — owner: COHERENCE
+- **Found:** 2026-06-09, cognition's all-green sweep. `drift: ['reconcile_acceptance']`.
+- **Why:** `tests/reconcile_acceptance.py` (coherence's C3 reconcile + C5 burn-down — "the finding MODEL, no engine") exists but isn't in STATE.md's SUITES block, so drift fails. Not a code bug — a new-suite-not-registered drift.
+- **Fix (coherence's):** regen STATE.md's SUITES block (`Suite.refresh_self_description()`) so the new test is indexed — exactly as cognition does after adding a suite. Not cognition's to regen (would race coherence's in-flight finding work).
+- **Blocks:** the FULL all-green gate (convergence-round bar). Does NOT block per-criterion commits.
+- **Status:** OPEN — flagged here for coherence.
 
 ## CLEARED
-*(none yet)*
+### `cast_beyond_listening_acceptance` — ✅ CLEARED 2026-06-09 (cognition, commit `525e3c8`)
+The fix was exactly the recommended one: the assertion was rescoped from the **transient populated result** (`walkthrough cast == []` / non-empty — guided-review's deliverable) to the **capability cognition built** (every role declaring `mode_scope ⊇ {walkthrough}` is fireable — true whether the cast is empty OR full). Verified 9/9 green against the current tree (the walkthrough cast is now `check/connect/focus/ground/recall/screen_reader/voice` — guided-review landed it; the rescoped assertion holds). The convergence-round gate is no longer blocked by this.
