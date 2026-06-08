@@ -274,6 +274,50 @@ stays reflected HERE, mirroring `rules_acceptance` → `RULE_OPS` and `edge_kind
   it can never forge an operator action. Add an event kind ⇒ add it to `COGNITION_EVENT_KINDS` **and
   reflect it here**, or `tests/cognition_info_acceptance.py` fails loud.
 
+## The authoring backend (Concurrent Cognition C7.4/C7.5 · `runtime/authoring.py` + `runtime/suite.py` · the WRITE-side)
+
+The cognition layer is now **authored from the surface**, not only viewed. The write-side **GENERALIZES
+`propose_node`/`apply_node`** (the propose-not-apply governance path) to **roles + rules** — never a parallel
+authoring system:
+
+- **`runtime/authoring.py`** — the PURE half: the **ONE fields→source renderer** (`render_role_source`:
+  operator field-set → a real `roles/<id>.py` module declaring `class <Name>Out(BaseModel)` + `ROLE = {…}`
+  — C7.5's "dynamically define structured outputs"), the **closed field-type registry** (`FIELD_TYPES`:
+  str·int·float·bool·list[str]·list[int]; an unknown type fails loud — rule 8), and **THE GATE**
+  (`gate_role_source` / `load_role_from_source`): validate a generated module by **discovering it in a temp
+  dir OUTSIDE the live tree** (mirrors `Suite._gate_extension`). This is the #1 constraint — a malformed
+  `roles/*.py` makes `RoleRegistry.discover` RAISE, which would brick the WHOLE cognition layer; so a bad
+  role fails loud at propose/apply and NEVER reaches the live `roles/` dir.
+- **`Suite` role write-path** (suite.py, propose-not-apply): `propose_role` (operator field-set OR a
+  brain-drafted `brief`; renders + GATES + SURFACES) → operator approves via the existing operator-only
+  `resolve_surfaced` → `apply_role` writes the file ONLY on `inbox.is_approved` (authorization READ from the
+  inbox, never a caller flag), git-commits (revert-able), re-discovers → the role appears in
+  `/api/cognition_info` LIVE. `edit_role` (re-propose) · `delete_role`/`apply_role_delete` (surfaced removal).
+  A **`role_build`/`role_delete`** action class (declared CONFIRM in `governance.py POLICY`) routes
+  `apply_surfaced` to `apply_role`/`apply_role_delete` — a role is a `roles/` file, NEVER mis-written to
+  `nodes/`. **`PROTECTED_ROLES`** (the roles `cognition.py` imports by name — focus·recall·ground·judge·
+  verify_jury·voice·check·connect) are REFUSED for edit/delete even on approve (a brick is never an
+  acceptable approve outcome — surfaced as needs-tim instead).
+- **Rule authoring** (exposes the `runtime/rules.py` primitives — never a second evaluator): `validate_rule`
+  (wraps `validate_ast` + the destination check → `{ok, errors, references, destination_ok, renderable,
+  when_text, depth}`) · `dry_run_rule` (wraps `Rule.decide` over sample values → the routing decision, no
+  effect) · `attach_rule`/`detach_rule` (constrained `edit_role` mutating `ROLE['rules']`, propose-not-apply).
+- **Test/preview**: `dry_run_role` (fire ONE role — registered OR a draft field-set — via `cognition.run_role`,
+  the SAME fire path the swarm uses) · `preview_turn` (fire `chat_parts` → the parts + the per-turn
+  `cognition.*` lifecycle, mode set+restored; never a parallel turn engine).
+- **The SELECTs** (every FE dropdown from truth): `models_for_role` (wraps `capabilities.suitable_models` —
+  models whose provides ⊇ requires) · `available_inputs` (utterance + roles' run:// addresses + context vars)
+  · `field_types` (the closed registry).
+
+**THE FLOOR (C9.2) HOLDS:** no authoring method emits `resolve`/`approve`/`dispatch` — authoring SURFACES,
+the OPERATOR approves. None is in `RHM_VERBS` (operator-face only, like `/api/build-intent`; no
+self-author-and-approve). Endpoints: `POST /api/cognition/{role/propose,role/edit,role/delete,role/dry_run,
+rule/validate,rule/dry_run,rule/attach,rule/detach,preview_turn}` + `GET /api/cognition/{models_for_role,
+inputs,field_types}`; apply rides the existing operator-only `/api/apply` (+ `/api/resolve`). Proven by
+`tests/authoring_acceptance.py` (the create→approve→live loop, the gate, validate good+bad, the dry-runs,
+the selects, delete + protected-refuse, the floor source-invariant). The FE design brief is
+`build-prep/concurrent-cognition/AUTHORING-FE-HANDOFF.md`.
+
 ## Relates to
 
 - **Called by** [[canvas — constitution]] — through the bridge (C8) — and by

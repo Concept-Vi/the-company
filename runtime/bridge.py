@@ -442,6 +442,14 @@ class H(BaseHTTPRequestHandler):
                 for w in voice_lc.poll_wake():                # G7-loadcost: a service just became up → record its WAKE-TIME
                     SUITE.emit_run_record("voice.load", w["wake_ms"], service=w["service"], vram_used_mb=w.get("vram_used_mb"))
                 self._send(200, json.dumps(voice_lc.status()))
+            elif path == "/api/cognition/models_for_role":   # AUTHORING SELECT: models whose provides ⊇ requires
+                q = parse_qs(urlparse(self.path).query)       # module-level import (bridge.py:15) — no local shadow
+                requires = q.get("requires", [""])[0]
+                self._send(200, json.dumps(SUITE.models_for_role(requires)))
+            elif path == "/api/cognition/inputs":          # AUTHORING SELECT: the addresses a role/rule can read
+                self._send(200, json.dumps(SUITE.available_inputs()))
+            elif path == "/api/cognition/field_types":     # AUTHORING SELECT: the closed output-schema field types
+                self._send(200, json.dumps(SUITE.field_types()))
             elif path == "/api/roles":                     # G4.2: the model-ROLE registry (judge + future) the config lab binds
                 self._send(200, json.dumps(SUITE.roles()))
             elif path == "/api/run-stats":                 # G7 rollup: op.run run-records → distributions (learning by use)
@@ -1069,6 +1077,44 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/propose":          # agent/operator dispatches a build
                 b = self._body()
                 self._send(200, json.dumps(SUITE.propose_node(b["name"], b["spec"])))
+            # === AUTHORING BACKEND (Concurrent Cognition C7.4/C7.5) — OPERATOR face ===
+            # The write/validate/test endpoints the authoring FE lives on. Mirror the node propose/apply
+            # endpoints exactly (propose-not-apply): propose/edit/delete SURFACE for approval; apply is the
+            # EXISTING operator-only /api/apply (routes by action class to apply_role/apply_role_delete);
+            # approval is /api/resolve (operator-only). validate/dry_run/preview are pure/read-only.
+            elif self.path == "/api/cognition/role/propose":   # author a NEW role → surfaces for approval
+                b = self._body()
+                self._send(200, json.dumps(SUITE.propose_role(b.get("spec") or b, model=b.get("model"))))
+            elif self.path == "/api/cognition/role/edit":      # re-propose an existing role → surfaces
+                b = self._body()
+                self._send(200, json.dumps(SUITE.edit_role(b["role_id"], b.get("spec") or {},
+                                                            model=b.get("model"))))
+            elif self.path == "/api/cognition/role/delete":    # request removal → surfaces for approval
+                b = self._body()
+                self._send(200, json.dumps(SUITE.delete_role(b["role_id"])))
+            elif self.path == "/api/cognition/role/dry_run":   # TEST a role (or a draft field-set) in isolation
+                b = self._body()
+                self._send(200, json.dumps(SUITE.dry_run_role(
+                    b.get("role_id") or b.get("fields"), b["utterance"],
+                    model=b.get("model"), base_url=b.get("base_url"))))
+            elif self.path == "/api/cognition/rule/validate":  # live AST validation for the rule-builder
+                b = self._body()
+                self._send(200, json.dumps(SUITE.validate_rule(b["ast"], destination=b.get("destination"))))
+            elif self.path == "/api/cognition/rule/dry_run":   # routing decision over sample resolved values
+                b = self._body()
+                self._send(200, json.dumps(SUITE.dry_run_rule(
+                    b["ast"], b.get("sample_resolved") or {}, destination=b.get("destination", "inject"),
+                    params=b.get("params"), on_missing=b.get("on_missing", "raise"))))
+            elif self.path == "/api/cognition/rule/attach":    # attach a rule onto a role → surfaces (edit)
+                b = self._body()
+                self._send(200, json.dumps(SUITE.attach_rule(b["role_id"], b["rule"])))
+            elif self.path == "/api/cognition/rule/detach":    # detach a rule from a role → surfaces (edit)
+                b = self._body()
+                self._send(200, json.dumps(SUITE.detach_rule(b["role_id"], b["rule_id"])))
+            elif self.path == "/api/cognition/preview_turn":   # PREVIEW a full staged turn (read-only)
+                b = self._body()
+                self._send(200, json.dumps(SUITE.preview_turn(
+                    b["utterance"], b.get("mode"), graph_id=b.get("graph_id"))))
             elif self.path == "/api/act":               # I2: the click-emission seam — a DETERMINISTIC
                 # human click ships a STRUCTURED {verb, address, args} that drives _dispatch_rhm_action
                 # DIRECTLY (bypassing the unreliable model-prose parse) — the emission RELOCATION

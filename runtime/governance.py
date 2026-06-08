@@ -35,6 +35,15 @@ POLICY = {
     # it makes the intent explicit + single-source (G1). `review` = a surfaced item the
     # operator walks/decides; only Tim resolves it (no-bypass), so CONFIRM is its posture.
     "ui_panel": CONFIRM, "ui_extension": CONFIRM, "review": CONFIRM,
+    # CONFIRM — AUTHORING (Concurrent Cognition C7.4/C7.5). `role_build` = an operator-authored
+    # cognition ROLE (a roles/<id>.py file) written through the surface. It mirrors code_build/
+    # ui_extension exactly: propose-not-apply, surfaced for the operator, applied ONLY on
+    # `resolved=='approve'` (authorization READ from the inbox, never a caller flag). Declared here
+    # so apply_role's guard("role_build", ...) is single-source + so it routes to apply_role (NOT the
+    # generic apply_node) via apply_surfaced's distinct action branch — a role is NOT a node-type. The
+    # role module is GATED (imported in a temp dir) before any write, so a bad approve can never brick
+    # RoleRegistry.discover (the whole cognition layer). `role_delete` is its removal sibling.
+    "role_build": CONFIRM, "role_delete": CONFIRM,
 }
 # never graduate to AUTO, no matter the earned trust (D4/D7 forever-confirm)
 LOCKED = {"source_data", "external", "frozen_contract"}

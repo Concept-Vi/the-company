@@ -3646,16 +3646,22 @@ class Suite:
     # react() (a separate client.complete path) is NOT entangled.
     # ============================================================================================
 
-    def _chat_prologue(self, message: str, mode: str, cfg: dict) -> dict | None:
+    def _chat_prologue(self, message: str, mode: str, cfg: dict, *, persist: bool = True) -> dict | None:
         """The ONCE-only prologue both chat() and chat_parts() run BEFORE the part-core. Returns an
         EARLY-RETURN dict (and does its own append+emit) when the turn must short-circuit, else None
         (proceed to the part-core). The two short-circuits keep their EXACT distinct return shapes +
-        provenance asymmetry — preserving them here is the gate (R2-FOLD H3 pt 2)."""
+        provenance asymmetry — preserving them here is the gate (R2-FOLD H3 pt 2).
+
+        `persist` (default True — every existing caller is UNCHANGED): when False (preview_turn, the
+        non-mutating test path) the short-circuit does NOT append to chat.jsonl / emit `chat` — a preview
+        must not inject phantom turns into the live conversation + training_signal pipe (AGENTS.md rule 4:
+        a 'read-only' affordance that secretly writes is a silent failure)."""
         if mode == "off":                                     # the dial disables the RHM entirely (4-key)
-            self.store.append_chat({"role": "user", "text": message, "grade": "gold", "source": "operator"})
             off = "The right-hand-man is off. Switch a mode on the presence dial to wake me."
-            self.store.append_chat({"role": "assistant", "text": off, "grade": "working", "source": "twin"})
-            self._emit("chat", f"you: {message[:40]} (RHM off)", address="ui://chrome/chat")   # S2: chat organ
+            if persist:
+                self.store.append_chat({"role": "user", "text": message, "grade": "gold", "source": "operator"})
+                self.store.append_chat({"role": "assistant", "text": off, "grade": "working", "source": "twin"})
+                self._emit("chat", f"you: {message[:40]} (RHM off)", address="ui://chrome/chat")   # S2: chat organ
             return {"reply": off, "action": None, "mode": mode, "history": self.store.chat_history(40)}
         # CAPABILITY-GATE (before any model call): the RHM acts through NATIVE tools, so the selected
         # model MUST support tool-calling. A non-tool model is a CONFIGURATION error — refuse it FAIL
@@ -3663,14 +3669,15 @@ class Suite:
         # rhm_* tests monkeypatch `suite._model_supports_tools`; keep it an instance call or the gate goes
         # green on a forked brain. _model_supports_tools translates cannot-determine (endpoint down) → False.
         if not self._model_supports_tools(cfg["model"], cfg["base_url"]):    # 5-key refusal
-            self.store.append_chat({"role": "user", "text": message, "grade": "gold", "source": "operator"})
             refusal = (f"I can't act right now: the selected model '{cfg['model']}' does not report "
                        f"native tool-calling support (or its endpoint is unreachable), and I act ONLY "
                        f"through governed tools — I won't silently fall back to a non-acting path. "
                        f"Select a tool-capable chat model in the RHM config.")
-            self.store.append_chat({"role": "assistant", "text": refusal, "grade": "working", "source": "twin"})
-            self._emit("warning", f"RHM model '{cfg['model']}' is not tool-capable — refused (no model "
-                       f"call, no fallback); select a tool-capable model", address="ui://chrome/chat")  # S2: chat-path locus
+            if persist:
+                self.store.append_chat({"role": "user", "text": message, "grade": "gold", "source": "operator"})
+                self.store.append_chat({"role": "assistant", "text": refusal, "grade": "working", "source": "twin"})
+                self._emit("warning", f"RHM model '{cfg['model']}' is not tool-capable — refused (no model "
+                           f"call, no fallback); select a tool-capable model", address="ui://chrome/chat")  # S2: chat-path locus
             return {"reply": refusal, "action": None, "mode": mode,
                     "model": cfg["model"], "history": self.store.chat_history(40)}
         return None                                           # gate passed → proceed to the part-core
@@ -3816,33 +3823,40 @@ class Suite:
         return {"text": reply, "outcomes": outcomes, "proposals": proposals}
 
     def _chat_epilogue(self, message: str, mode: str, cfg: dict, reply: str, outcomes: list,
-                       proposals: list) -> dict:
+                       proposals: list, *, persist: bool = True) -> dict:
         """The ONCE-only epilogue both paths run AFTER the part-core(s): action_field shaping · the SINGLE
         user+assistant append · the thread bump · the SINGLE _emit('chat'). Returns the normal 7-key shape.
-        For chat_parts() `reply` is the JOINED parts; `outcomes` are the final part's (tools-on-final, C4.5)."""
+        For chat_parts() `reply` is the JOINED parts; `outcomes` are the final part's (tools-on-final, C4.5).
+
+        `persist` (default True — every existing caller is UNCHANGED): when False (preview_turn, the
+        non-mutating test path) the append + thread-bump + `_emit('chat')` are SKIPPED — a preview fires a
+        real staged turn but must NOT persist phantom turns into the live chat history / training_signal pipe
+        (AGENTS.md rule 4). The cognition.* lifecycle telemetry is NARRATION and still fires (it is what the
+        preview returns)."""
         if not outcomes:
             action_field = None
         elif len(outcomes) == 1:
             action_field = outcomes[0]
         else:
             action_field = outcomes
-        # provenance grading (B3): Tim's words are gold (train the twin); the twin's are working.
         _tid = getattr(self, "_current_thread", None)
-        self.store.append_chat({"role": "user", "text": message, "grade": self._provenance_grade("user"), "source": self._provenance_source("user"), **({"thread_id": _tid} if _tid else {})})
-        self.store.append_chat({"role": "assistant", "text": reply, "action": action_field,
-                                "grade": self._provenance_grade("assistant"), "source": self._provenance_source("assistant"), **({"thread_id": _tid} if _tid else {})})
-        if _tid:                                               # bump the thread's last_msg for the list ordering
-            try:
-                _t = self.store.load_chat_thread(_tid)
-                if _t:
-                    from datetime import datetime, timezone
-                    _t["last_msg"] = datetime.now(timezone.utc).isoformat()
-                    if not _t.get("title"):
-                        _t["title"] = message.strip()[:48]     # title from the first turn if unnamed
-                    self.store.save_chat_thread(_t)
-            except Exception:
-                pass                                           # thread metadata is best-effort, never break a turn
-        self._emit("chat", f"you: {message[:48]}", address="ui://chrome/chat")   # S2: chat organ event carries its locus
+        if persist:
+            # provenance grading (B3): Tim's words are gold (train the twin); the twin's are working.
+            self.store.append_chat({"role": "user", "text": message, "grade": self._provenance_grade("user"), "source": self._provenance_source("user"), **({"thread_id": _tid} if _tid else {})})
+            self.store.append_chat({"role": "assistant", "text": reply, "action": action_field,
+                                    "grade": self._provenance_grade("assistant"), "source": self._provenance_source("assistant"), **({"thread_id": _tid} if _tid else {})})
+            if _tid:                                           # bump the thread's last_msg for the list ordering
+                try:
+                    _t = self.store.load_chat_thread(_tid)
+                    if _t:
+                        from datetime import datetime, timezone
+                        _t["last_msg"] = datetime.now(timezone.utc).isoformat()
+                        if not _t.get("title"):
+                            _t["title"] = message.strip()[:48]     # title from the first turn if unnamed
+                        self.store.save_chat_thread(_t)
+                except Exception:
+                    pass                                       # thread metadata is best-effort, never break a turn
+            self._emit("chat", f"you: {message[:48]}", address="ui://chrome/chat")   # S2: chat organ event carries its locus
         proposal = proposals[0] if proposals else None
         return {"reply": reply, "action": action_field, "proposal": proposal, "mode": mode,
                 "model": cfg["model"], "thread_id": _tid,
@@ -3890,7 +3904,7 @@ class Suite:
         return {"stage": True, "reason": f"substantive turn ({len(words)} words, {len(sentences)} sentences)"}
 
     def chat_parts(self, message: str, graph_id: str, focus: dict | None = None,
-                   *, turn_id: str | None = None):
+                   *, turn_id: str | None = None, persist: bool = True):
         """CONCURRENT COGNITION G4 — the STAGED reply: a generator yielding the reply as PARTS, each a
         node whose inputs resolve at a run:// address (the reactive-scheduler relationship applied
         INTRA-TURN). It shares chat()'s prologue + part-core + epilogue (R1-FOLD F4 — never loops/copies
@@ -3917,10 +3931,10 @@ class Suite:
         cfg = self.rhm_config()
         turn_id = turn_id or "turn-" + _time.strftime("%Y%m%d-%H%M%S-") + str(int(_time.monotonic() * 1000) % 100000)
 
-        early = self._chat_prologue(message, mode, cfg)        # ONCE: off (4-key) / refusal (5-key)
+        early = self._chat_prologue(message, mode, cfg, persist=persist)   # ONCE: off (4-key) / refusal (5-key)
         if early is not None:
-            # an early-return short-circuit: yield its one text + STOP (the prologue did its own append+emit;
-            # the epilogue does NOT run — the off/refusal shape is the prologue's, never the core's).
+            # an early-return short-circuit: yield its one text + STOP (the prologue did its own append+emit
+            # unless persist=False; the epilogue does NOT run — the off/refusal shape is the prologue's).
             yield {"part": 1, "text": early["reply"], "final": True, "staged": False,
                    "early_return": early}
             return
@@ -3933,7 +3947,8 @@ class Suite:
         if not decision["stage"]:
             part = self._chat_part_core(message, graph_id, focus, mode, cfg, persona, persona_text,
                                         is_final=True)
-            res = self._chat_epilogue(message, mode, cfg, part["text"], part["outcomes"], part["proposals"])
+            res = self._chat_epilogue(message, mode, cfg, part["text"], part["outcomes"], part["proposals"],
+                                      persist=persist)
             yield {"part": 1, "text": part["text"], "final": True, "staged": False,
                    "stage_reason": decision["reason"], "result": res}
             return
@@ -4070,7 +4085,8 @@ class Suite:
 
         # EPILOGUE ONCE — the joined reply (one coherent voice), the SINGLE append + emit.
         joined = "\n\n".join(p for p in parts_emitted if p.strip())
-        res = self._chat_epilogue(message, mode, cfg, joined, part2["outcomes"], part2["proposals"])
+        res = self._chat_epilogue(message, mode, cfg, joined, part2["outcomes"], part2["proposals"],
+                                  persist=persist)
         # cognition.turn.done — the view closes the turn frame + shows the total.
         self._emit("cognition.turn.done",
                    f"turn {turn_id} done · {int((_time.monotonic() - _turn_t0) * 1000)}ms",
@@ -6012,6 +6028,432 @@ class Suite:
         # the blocked path just raises GovernanceError — it must NOT re-surface (the item already exists).
         return guard("code_build", do=_do, confirmed=self.inbox.is_approved(surfaced_id))
 
+    # =============================================================================================
+    # AUTHORING BACKEND — Concurrent Cognition C7.4/C7.5 (the write-side of the cognition layer).
+    # GENERALIZES propose_node/apply_node to ROLES + RULES: the operator authors a role/rule on the
+    # surface → it SURFACES for approval (propose-not-apply) → apply writes the file ONLY on the
+    # operator's `resolved=='approve'` (authorization READ from the inbox, never a caller flag) → the
+    # RoleRegistry re-discovers → it appears in /api/cognition_info live (DYNAMIC).
+    #
+    # THE FLOOR (C9.2): NO authoring method emits resolve/approve/dispatch. Authoring SURFACES; the
+    # OPERATOR approves (via the existing operator-only resolve_surfaced). None of these go in RHM_VERBS
+    # — they are OPERATOR-face (like /api/build-intent), off the agent face (no self-author-and-approve).
+    # =============================================================================================
+
+    # Roles the runtime imports BY NAME at module import (cognition.py:80-82 + the load-bearing config
+    # roles): deleting/renaming one breaks `import runtime.cognition` system-wide. We REFUSE to delete
+    # these even on operator approve — a brick is never an acceptable outcome of an approve (advisor E).
+    PROTECTED_ROLES = ("focus", "recall", "ground", "judge", "verify_jury", "voice", "check", "connect")
+
+    def _roles_dir_path(self, rid: str) -> str:
+        from runtime.authoring import _safe_role_id
+        return os.path.join(self.roles_dir, _safe_role_id(rid) + ".py")
+
+    def _rediscover_roles(self) -> None:
+        """Rebuild the live role registry from the FS so a written/removed role file reflects immediately
+        (rediscover clears+discovers — a removed file actually un-registers, mirroring revert_self_change's
+        registry.rediscover). Also refresh ROLE_REGISTRY (the dict-view suite consumers read)."""
+        self.role_registry.rediscover([self.roles_dir])
+        self.ROLE_REGISTRY = {rid: self.role_registry[rid].spec for rid in self.role_registry}
+
+    def propose_role(self, spec: dict, *, model: str | None = None) -> dict:
+        """C7.4 — AUTHOR a role: either the operator supplies the field-set (`spec` carries
+        output_fields/prompt_template/…) OR the brain drafts from a natural-language `spec['brief']`.
+        RENDER the role module source (runtime.authoring — the ONE renderer), GATE it (import in a temp
+        dir — a bad role can NEVER brick RoleRegistry.discover, the #1 constraint), then SURFACE it for
+        the operator (propose-not-apply, mirrors propose_node). It is NOT applied here. Returns
+        {id, source, role_id} or {needs, id} if the brain hit unregistered ground (asks, never invents).
+
+        Distinct action class `role_build` (CONFIRM) so apply routes to apply_role, NOT the generic
+        apply_node (a role is a roles/<id>.py file, never a node-type)."""
+        from runtime import authoring as _auth
+        if not isinstance(spec, dict):
+            raise TypeError(f"propose_role needs a dict spec, got {type(spec).__name__}")
+        spec = dict(spec)
+        # Brain-draft path: a free-text brief → the brain proposes a field-set (asks if it needs an
+        # unregistered value). Reuses the propose_node authoring discipline (registry preamble + NEEDS:).
+        if "brief" in spec and not spec.get("output_fields") and not spec.get("prompt_template"):
+            drafted = self._draft_role_fields(spec["brief"], spec.get("id"), model=model)
+            if "needs" in drafted:
+                return drafted
+            spec.update(drafted)
+        rid = _auth._safe_role_id(spec.get("id"))
+        if rid in self.role_registry:
+            raise ValueError(
+                f"role {rid!r} already exists — use edit_role to re-propose it (propose_role is for a NEW "
+                f"role; editing an existing one re-surfaces a replacement). Fail loud.")
+        source = _auth.render_role_source(spec)             # the ONE renderer (fields → BaseModel module)
+        err = _auth.gate_role_source(rid, source)           # THE GATE — validate OUTSIDE the live tree
+        if err:
+            raise ValueError(
+                f"propose_role({rid!r}): the rendered role module would NOT discover cleanly — {err}. "
+                f"Refused to surface a broken role (a bad approve must never brick RoleRegistry.discover). "
+                f"Fail loud.")
+        sid = self.inbox.surface("role_build", {"id": rid, "source": source, "spec": spec},
+                                 default="reject")
+        self._emit("grow", f"a '{rid}' cognition role was authored — surfaced for approval",
+                   node_name=rid, surfaced=sid, address="ui://chrome/inbox")
+        return {"id": sid, "role_id": rid, "source": source}
+
+    def _draft_role_fields(self, brief: str, rid: str | None = None, *, model: str | None = None) -> dict:
+        """Brain-draft a role field-set from a natural-language brief (the optional brain-author path of
+        propose_role). Reuses propose_node's authoring discipline: the registry preamble on the easy path
+        + NEEDS: → ask, never fabricate. Returns a field-spec dict OR {needs, id}."""
+        from fabric import client, transport, config as fcfg
+        from runtime import authoring as _auth
+        sys_p = (
+            "You design ONE cognition ROLE for the 'company' collective-cognition layer. A role is a small "
+            "model-function: it reads the utterance and emits a STRUCTURED output. Output ONLY a JSON object "
+            "with keys: id (a plain lower identifier), label, description, prompt_template (the system "
+            "prompt), output_fields (a list of {name, type, description}; type ∈ "
+            f"{sorted(_auth.FIELD_TYPES)}), and optionally mode_scope (a list of modes), requires "
+            "(capability tags). No prose, no fences.\n\n"
+            + self._authoring_preamble())
+        user_p = "Design a role" + (f" named '{rid}'" if rid else "") + f" that: {brief}"
+        t = transport.openai_transport(base_url=fcfg.DEFAULT_BASE_URL, timeout=fcfg.DEFAULT_CLOUD_TIMEOUT)
+        raw = _strip_fences(client.complete(
+            t, [{"role": "system", "content": sys_p}, {"role": "user", "content": user_p}],
+            model=model or fcfg.DEFAULT_BRAIN))
+        need = self._needs(raw)
+        if need:
+            return {"needs": need, "id": self._ask_operator(need, f"while drafting a role: {brief}")}
+        import json as _json
+        try:
+            drafted = _json.loads(raw)
+        except Exception as e:
+            raise ValueError(f"_draft_role_fields: the brain did not return valid JSON ({e}). Fail loud.")
+        if rid:
+            drafted["id"] = rid
+        return drafted
+
+    def apply_role(self, surfaced_id: str) -> str:
+        """Apply a proposed role — ONLY if the OPERATOR approved its surfaced decision (authorization
+        READ from the inbox, resolved=='approve', never a caller flag — the agent that proposed it cannot
+        self-approve). RE-GATES the module (import in a temp dir) BEFORE the write — a bad role NEVER
+        reaches the live roles/ tree (the #1 constraint: discovery fail-loud would brick the cognition
+        layer). Writes atomically + git-commits (revert-able) + re-discovers → it appears in
+        /api/cognition_info live. (role_build → CONFIRM.) Returns the written path."""
+        d = self.inbox.get(surfaced_id)
+        if not d:
+            raise KeyError(f"no surfaced decision {surfaced_id!r}")
+        if d.get("action") != "role_build":
+            raise ValueError(
+                f"apply_role: surfaced {surfaced_id!r} is a {d.get('action')!r}, not a role_build. Fail loud.")
+        from runtime import authoring as _auth
+        def _do():                                          # consequential body — runs ONLY if approved
+            rid = _auth._safe_role_id(d["payload"]["id"])   # re-validate at apply
+            source = d["payload"]["source"]
+            err = _auth.gate_role_source(rid, source)       # RE-GATE before any write (defense-in-depth)
+            if err:
+                raise RuntimeError(
+                    f"apply_role({rid!r}): the role module failed the gate at apply ({err}) — REFUSED to "
+                    f"write it to roles/ (a bad role would brick RoleRegistry.discover). Fail loud.")
+            path = self._roles_dir_path(rid)
+            os.makedirs(self.roles_dir, exist_ok=True)
+            tmp = path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                f.write(source if source.endswith("\n") else source + "\n")
+            os.replace(tmp, path)                           # atomic; no partial file
+            sha = self._commit_or_rollback(path, f"add cognition role '{rid}'")  # fail loud if not git-revertible
+            self._rediscover_roles()                        # committed → NOW make it live (appears in cognition_info)
+            self._emit("apply", f"approved + applied role '{rid}' — now a live cognition role · {sha[:8]}",
+                       node_name=rid, commit=sha, address="ui://chrome/workshop")
+            self.refresh_map()
+            return path
+        return guard("role_build", do=_do, confirmed=self.inbox.is_approved(surfaced_id))
+
+    def edit_role(self, rid: str, spec: dict, *, model: str | None = None) -> dict:
+        """C7.4 — RE-PROPOSE an existing role (edit = author a replacement that surfaces for approval).
+        A PROTECTED role (one the runtime imports by name) is REFUSED — surfaced as a needs-tim question
+        rather than risk a brick. Otherwise renders+gates the replacement source and surfaces role_build."""
+        from runtime import authoring as _auth
+        rid = _auth._safe_role_id(rid)
+        if rid not in self.role_registry:
+            raise ValueError(f"edit_role: unknown role {rid!r} — registered: {sorted(self.role_registry)}")
+        if rid in self.PROTECTED_ROLES:
+            q = (f"role {rid!r} is imported by name by the runtime (cognition.py / config) — editing its "
+                 f"shape could break system import. This needs your eyes before any change.")
+            return {"protected": True, "needs": q, "id": self._ask_operator(q, f"edit_role({rid})")}
+        spec = dict(spec); spec["id"] = rid
+        source = _auth.render_role_source(spec)
+        err = _auth.gate_role_source(rid, source)
+        if err:
+            raise ValueError(f"edit_role({rid!r}): the replacement would not discover — {err}. Fail loud.")
+        sid = self.inbox.surface("role_build", {"id": rid, "source": source, "spec": spec, "edit": True},
+                                 default="reject")
+        self._emit("grow", f"a replacement for role '{rid}' was authored — surfaced for approval",
+                   node_name=rid, surfaced=sid, address="ui://chrome/inbox")
+        return {"id": sid, "role_id": rid, "source": source, "edit": True}
+
+    def delete_role(self, rid: str) -> dict:
+        """C7.4 — SURFACE the removal of a role for the operator's approval (propose-not-apply applies to
+        deletes too). A PROTECTED role is REFUSED (a brick is never an acceptable approve outcome).
+        apply_role_delete performs the removal ONLY on operator approve. Returns the surfaced id."""
+        from runtime import authoring as _auth
+        rid = _auth._safe_role_id(rid)
+        if rid not in self.role_registry:
+            raise ValueError(f"delete_role: unknown role {rid!r} — registered: {sorted(self.role_registry)}")
+        if rid in self.PROTECTED_ROLES:
+            q = (f"role {rid!r} is imported by name by the runtime — DELETING it would break system import. "
+                 f"Refused to surface a brick. This needs your eyes (a code-level migration, not a delete).")
+            return {"protected": True, "needs": q, "id": self._ask_operator(q, f"delete_role({rid})")}
+        sid = self.inbox.surface("role_delete", {"id": rid}, default="reject")
+        self._emit("grow", f"removal of role '{rid}' was requested — surfaced for approval",
+                   node_name=rid, surfaced=sid, address="ui://chrome/inbox")
+        return {"id": sid, "role_id": rid, "delete": True}
+
+    def apply_role_delete(self, surfaced_id: str) -> dict:
+        """Remove a role file — ONLY on the OPERATOR's approve (authorization READ from the inbox).
+        Re-checks PROTECTED (defense-in-depth), removes the file, git-commits the removal (revert-able),
+        re-discovers (the role un-registers). (role_delete → CONFIRM.)"""
+        d = self.inbox.get(surfaced_id)
+        if not d:
+            raise KeyError(f"no surfaced decision {surfaced_id!r}")
+        if d.get("action") != "role_delete":
+            raise ValueError(f"apply_role_delete: {surfaced_id!r} is not a role_delete. Fail loud.")
+        from runtime import authoring as _auth
+        def _do():
+            rid = _auth._safe_role_id(d["payload"]["id"])
+            if rid in self.PROTECTED_ROLES:
+                raise RuntimeError(f"apply_role_delete: role {rid!r} is PROTECTED (runtime imports it). Refused.")
+            path = self._roles_dir_path(rid)
+            if not os.path.exists(path):
+                raise FileNotFoundError(f"apply_role_delete: role file {path} does not exist. Fail loud.")
+            os.remove(path)
+            sha = self._git_self_commit([path], f"remove cognition role '{rid}'")
+            self._rediscover_roles()
+            self._emit("apply", f"approved + removed role '{rid}' · {(sha or '?')[:8]}",
+                       node_name=rid, commit=sha, address="ui://chrome/workshop")
+            self.refresh_map()
+            return {"removed": rid, "commit": sha}
+        return guard("role_delete", do=_do, confirmed=self.inbox.is_approved(surfaced_id))
+
+    # --- RULE authoring (expose the runtime/rules.py primitives — never a parallel evaluator) ---
+    def validate_rule(self, ast: dict, *, destination: str | None = None) -> dict:
+        """C7.4 — VALIDATE a rule's condition AST + (optionally) its destination for the FE rule-builder.
+        Wraps runtime/rules.py's static whitelist-walk (validate_ast) + the destination check, so the FE
+        gets LIVE validation: is this AST legal/deterministic, what role-inputs does it reference, is the
+        destination one of the 5 kinds (never a forbidden resolve/approve/dispatch), is it renderable
+        (depth-capped)? Returns {ok, errors[], references[], destination_ok, renderable, when_text, depth}.
+        PURE — no write, no approval (read-only)."""
+        from runtime import rules as _rules
+        out = {"ok": True, "errors": [], "references": [], "destination": destination,
+               "destination_ok": None, "renderable": True, "when_text": None, "depth": None}
+        try:
+            _rules.validate_ast(ast)                        # the static grammar walk (fail loud on bad op/arity/depth)
+            out["references"] = sorted(_rules.declared_inputs(ast))
+            out["when_text"] = _rules._render_ast(ast)
+            out["depth"] = _rules._ast_depth(ast)
+            out["renderable"] = out["depth"] <= _rules.MAX_RULE_DEPTH
+        except _rules.RuleError as e:
+            out["ok"] = False
+            out["errors"].append(str(e))
+        if destination is not None:
+            ok_dest = destination in _rules.DESTINATION_KINDS and \
+                destination not in _rules.FORBIDDEN_DESTINATION_VERBS
+            out["destination_ok"] = ok_dest
+            if not ok_dest:
+                out["ok"] = False
+                out["errors"].append(
+                    f"destination {destination!r} must be one of {sorted(_rules.DESTINATION_KINDS)} and "
+                    f"NEVER one of {_rules.FORBIDDEN_DESTINATION_VERBS} (the claude -p floor is lead-only).")
+        return out
+
+    def dry_run_rule(self, ast: dict, sample_resolved: dict, *, destination: str = "inject",
+                     params: dict | None = None, on_missing: str = "raise") -> dict:
+        """C7.4 — DRY-RUN a rule over SAMPLE resolved values → the routing DECISION (no effect). Builds a
+        Rule (validated at construction) and calls its PURE decide() over the sample — so the FE can show
+        'with these inputs → this fires → routes to <dest>'. Wraps rules.Rule.decide; never executes the
+        destination effect (no route()). Returns the decision {fire, destination, value, reason} (or an
+        {error} on a malformed AST / missing sample input — fail loud, surfaced as data for the builder)."""
+        from runtime import rules as _rules
+        try:
+            rule = _rules.build_rule({"id": "dry-run", "when": ast, "destination": destination,
+                                      "params": params or {}, "on_missing": on_missing})
+            decision = rule.decide(sample_resolved)
+            return {"ok": True, "decision": decision, "when_text": rule._render_when()}
+        except _rules.RuleError as e:
+            return {"ok": False, "error": str(e)}
+
+    def attach_rule(self, role_id: str, rule: dict) -> dict:
+        """C7.4 — ATTACH a declared rule onto a role (a constrained edit_role that appends to ROLE['rules']).
+        Validates the rule (build_rule — fail loud on a bad AST/destination) THEN re-proposes the role with
+        the rule added (propose-not-apply: surfaces role_build for the operator). Reuses edit_role (one
+        writer; never a parallel role-file mutator). A PROTECTED role is refused (via edit_role)."""
+        from runtime import rules as _rules
+        from runtime import authoring as _auth
+        role_id = _auth._safe_role_id(role_id)
+        if role_id not in self.role_registry:
+            raise ValueError(f"attach_rule: unknown role {role_id!r}. Fail loud.")
+        _rules.build_rule(rule)                             # VALIDATE the rule (fail loud) BEFORE attaching
+        spec = self._role_spec_to_authoring_fields(dict(self.role_registry[role_id].spec))
+        existing = list(spec.get("rules") or [])
+        existing = [r for r in existing if r.get("id") != rule.get("id")] + [rule]   # replace-or-add by id
+        spec["rules"] = existing
+        return self.edit_role(role_id, spec)
+
+    def detach_rule(self, role_id: str, rule_id: str) -> dict:
+        """C7.4 — DETACH a rule from a role (constrained edit_role removing it from ROLE['rules']).
+        Re-proposes the role without the rule (propose-not-apply). PROTECTED role refused via edit_role."""
+        from runtime import authoring as _auth
+        role_id = _auth._safe_role_id(role_id)
+        if role_id not in self.role_registry:
+            raise ValueError(f"detach_rule: unknown role {role_id!r}. Fail loud.")
+        spec = self._role_spec_to_authoring_fields(dict(self.role_registry[role_id].spec))
+        spec["rules"] = [r for r in (spec.get("rules") or []) if r.get("id") != rule_id]
+        return self.edit_role(role_id, spec)
+
+    @staticmethod
+    def _role_spec_to_authoring_fields(spec: dict) -> dict:
+        """Project a discovered role's `spec` dict back into the AUTHORING field-shape render_role_source
+        expects (output_schema CLASS → output_fields LIST). So an edit/attach round-trips through the ONE
+        renderer (never hand-editing the file). Reads the Pydantic model's fields back to field-defs."""
+        out = {k: spec[k] for k in
+               ("id", "label", "description", "prompt_template", "input_addresses", "trigger", "rules")
+               if k in spec}
+        if spec.get("mode_scope"):
+            out["mode_scope"] = list(spec["mode_scope"])
+        mb = spec.get("model_binding") or {}
+        if mb.get("requires"):
+            out["requires"] = list(mb["requires"])
+        osch = spec.get("output_schema")
+        fields = []
+        if osch is not None and hasattr(osch, "model_fields"):
+            _known = {"str", "int", "float", "bool", "list[str]", "list[int]"}
+            for fname, finfo in osch.model_fields.items():
+                # str(annotation) yields EXACTLY 'list[int]'/'list[str]'/'<class 'int'>' — match the list
+                # forms verbatim (so list[int] does NOT silently become list[str] on an edit round-trip),
+                # else fall back to the scalar __name__. Any unknown annotation → 'str' (never invent a type).
+                sann = str(finfo.annotation)
+                if sann in _known:
+                    ftype = sann
+                else:
+                    nm = getattr(finfo.annotation, "__name__", None) or sann
+                    ftype = nm if nm in _known else "str"
+                fd = {"name": fname, "type": ftype}
+                if finfo.description:
+                    fd["description"] = finfo.description
+                fields.append(fd)
+        if fields:
+            out["output_fields"] = fields
+        return out
+
+    # --- TEST / preview (so the FE can test a draft before saving) ---
+    def dry_run_role(self, role_or_fields, utterance: str, *, model: str | None = None,
+                     base_url: str | None = None) -> dict:
+        """C7.4 — FIRE one role with `utterance` → the validated structured output (test a role in
+        isolation, no full turn). `role_or_fields` is EITHER a registered role id (str) OR a draft
+        field-spec (dict — render + load from a temp module, the never-yet-written case). Reuses
+        cognition.run_role (the SAME fire path run_swarm uses — a dry-run behaves identically to live).
+        Fires the resident 4B by default (read-only USE). Returns {role_id, output} or fail-loud error."""
+        from runtime import cognition as _cog
+        from runtime import authoring as _auth
+        if isinstance(role_or_fields, str):
+            rid = _auth._safe_role_id(role_or_fields)
+            if rid not in self.role_registry:
+                raise ValueError(f"dry_run_role: unknown role {rid!r} — registered: {sorted(self.role_registry)}")
+            role = self.role_registry[rid]
+        elif isinstance(role_or_fields, dict):
+            rid = _auth._safe_role_id(role_or_fields.get("id"))
+            source = _auth.render_role_source(role_or_fields)
+            role = _auth.load_role_from_source(rid, source)   # the SAME RoleRegistry discovery (no fork)
+        else:
+            raise TypeError("dry_run_role needs a role id (str) or a draft field-spec (dict)")
+        if not role.can_fire:
+            raise ValueError(f"dry_run_role: role {rid!r} cannot fire (no prompt_template/output_schema).")
+        kw = {}
+        if base_url:
+            kw["base_url"] = base_url
+        if model:
+            kw["model"] = model
+        output = _cog.run_role(role, {"utterance": utterance}, **kw)
+        return {"role_id": rid, "output": output}
+
+    def preview_turn(self, utterance: str, mode: str | None = None, *, graph_id: str | None = None) -> dict:
+        """C7.4 — PREVIEW a full STAGED turn for a draft config: fire chat_parts and return the parts +
+        the per-turn cognition.* lifecycle (the cast that fired, the injections, the staging). Reuses
+        chat_parts (the G4 staged-turn path — never a parallel turn engine) with persist=False, so the
+        preview FIRES A REAL STAGED TURN but does NOT append phantom turns to the live chat history /
+        training_signal pipe / thread (the non-mutating test path — AGENTS.md rule 4: a 'read-only'
+        affordance that secretly wrote would be a silent failure). The cognition.* lifecycle telemetry is
+        narration and still fires (it is what the preview returns). If `mode` is given it is set for the
+        preview then RESTORED (a preview never leaves the dial moved). Returns {parts[], mode,
+        cognition_events[], n_parts}. Non-mutating USE of the resident swarm."""
+        # default to the first live graph (registry-driven — never a hardcoded literal); fail loud if
+        # there are none (a preview needs SOME graph for context; chat_parts reads it like chat() does).
+        if not graph_id:
+            graphs = self.list_graphs()
+            if not graphs:
+                raise ValueError("preview_turn: no graph exists to provide context — create one first (fail loud).")
+            graph_id = graphs[0]
+        gid = graph_id
+        prev_mode = self.get_mode()
+        restore = False
+        if mode is not None and mode != prev_mode:
+            if mode not in self.MODES:
+                raise ValueError(f"preview_turn: unknown mode {mode!r} — one of {self.MODES}")
+            self.set_mode(mode)
+            restore = True
+        try:
+            since = self.store.events_since(-1)
+            cursor = since[-1]["seq"] if since else -1
+            parts = []
+            for p in self.chat_parts(utterance, gid, persist=False):   # non-mutating: no chat-history append
+                parts.append({k: p.get(k) for k in ("part", "text", "final", "staged")})
+            # event records carry the kind on the `kind` field (store.append_event schema), NOT `op`.
+            new_events = [e for e in self.store.events_since(cursor)
+                          if str(e.get("kind", "")).startswith("cognition.")]
+            return {"utterance": utterance, "mode": (mode or prev_mode), "parts": parts,
+                    "cognition_events": new_events, "n_parts": len(parts)}
+        finally:
+            if restore:
+                self.set_mode(prev_mode)
+
+    # --- the SELECT queries (so the FE populates every dropdown from truth, never hardcoded) ---
+    def models_for_role(self, requires) -> dict:
+        """C7.4 — the MODEL-SELECT: the model-ids whose `provides` ⊇ `requires` (wraps
+        capabilities.suitable_models — registry-is-truth; a NEW model with the right provides is
+        automatically a candidate). Plus the live providers the swarm actually binds against. Returns
+        {requires, models[], providers{}}. Read-only."""
+        reqs = list(requires) if isinstance(requires, (list, tuple, set)) else \
+            ([r.strip() for r in str(requires).split(",") if r.strip()] if requires else [])
+        providers = self.capability_providers()
+        try:
+            import sys as _sys
+            _opscli = os.path.join(self._repo_root, "ops", "cli")
+            if _opscli not in _sys.path:
+                _sys.path.insert(0, _opscli)
+            import capabilities as _caps
+            models = _caps.suitable_models(reqs)
+        except Exception:
+            # fail-soft to the live providers (never a silent WRONG set — the resident is the truth that
+            # always holds; the full catalog is the ops/cli capability registry, flagged if unreadable).
+            models = [p["model"] for p in providers.values() if set(reqs) <= set(p.get("provides", []))]
+        return {"requires": reqs, "models": sorted(set(models)), "providers": providers}
+
+    def available_inputs(self, turn_context: dict | None = None) -> dict:
+        """C7.4 — the INPUT-WIRING SELECT: the addresses a role/rule can READ. The utterance (always),
+        the OTHER roles' run:// outputs (a rule reads run://<turn>/<role>, declared as the role id), and
+        the notebook strata (the C6 context variables) — so the FE rule-builder/role-editor populates the
+        'reads' dropdown from truth, not a hardcoded list. Returns {utterance, roles[], role_addresses[],
+        context_variables[]}. Read-only."""
+        roles = sorted(rid for rid in self.role_registry if self.role_registry[rid].can_fire)
+        ctx_vars = []
+        try:
+            from runtime import context_variables as _cv
+            ctx_vars = sorted(getattr(_cv, "REGISTRY", {}).keys())
+        except Exception:
+            ctx_vars = []
+        return {"utterance": "utterance", "roles": roles,
+                "role_addresses": [f"run://<turn>/{r}" for r in roles],
+                "context_variables": ctx_vars}
+
+    def field_types(self) -> dict:
+        """C7.5 — the closed field-type registry the FE schema-editor reads (registry-is-truth — the
+        output_schema field-type dropdown comes from here, never a hardcoded FE list)."""
+        from runtime import authoring as _auth
+        return _auth.field_types()
+
     # --- self-modification safety net (slice 13): additive + git-reversible ---
     @property
     def _repo_root(self) -> str:
@@ -6408,6 +6850,13 @@ class Suite:
             r = self.apply_extension(surfaced_id)
             r["kind"] = "ui_extension"
             return r
+        # AUTHORING (C7.4): a role is a roles/<id>.py file — route to apply_role, NEVER the generic
+        # apply_node (which would mis-write it to nodes/). The distinct action class is the router.
+        if d.get("action") == "role_build":
+            return {"applied": self.apply_role(surfaced_id), "kind": "role_build"}
+        if d.get("action") == "role_delete":
+            r = self.apply_role_delete(surfaced_id)
+            return {"applied": r.get("removed"), "kind": "role_delete", "commit": r.get("commit")}
         return {"applied": self.apply_node(surfaced_id), "kind": "code_build"}
 
     # --- the self-coding subsystem (slice 15): arbitrary brain-authored extensions, BUILD-GATED ---
