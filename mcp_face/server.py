@@ -253,6 +253,27 @@ def list_skills_contexts() -> dict:
 
 
 @mcp.tool()
+def list_runs(op: str = "", run_op: str = "", limit: int = 50) -> dict:
+    """DISCOVER past engine runs — the agent-face RUN INDEX (#54 storage-discovery). Lists past
+    run_role / run_items / run_reduce runs + their run:// output addresses, NEWEST-FIRST, so an agent can
+    feed a discovered output as an INPUT (run_role inputs=/run_items items=, resolved via inspect_address/
+    resolve_address) or re-run it — instead of only reading a run whose address it already KNOWS. REUSES
+    Suite.list_runs (a READ-TIME projection over the op.run event log — the log IS the index, no parallel
+    store). `op` filters to one engine run-op (cognition.run_role|run_items|run_reduce); `run_op` filters by
+    the operation (generate|embed|role|rule|cluster). Read-only. Returns {runs:[{address, op, run_op,
+    turn_id, role, duration_ms, seq, ts}], total_records}."""
+    return SUITE.list_runs(op=(op or None), run_op=(run_op or None), limit=limit)
+
+
+@mcp.tool()
+def find_runs(role: str = "", op: str = "", run_op: str = "", limit: int = 50) -> dict:
+    """DISCOVER past engine runs FILTERED by role (and/or op/run_op) — the query face of the run index
+    (#54). REUSES Suite.find_runs (thin reuse of list_runs). E.g. find_runs(role='ground') → the past runs
+    of the 'ground' role + their run:// addresses. Read-only. Returns the same {runs, total_records} shape."""
+    return SUITE.find_runs(role=(role or None), op=(op or None), run_op=(run_op or None), limit=limit)
+
+
+@mcp.tool()
 def inspect_address(address: str, turn_id: str = "") -> dict:
     """INSPECT a RUN OUTPUT (or any addressed content) by address — reads a PAST run's output back.
     REUSES runtime.cognition.resolve_address (the engine's canonical read path): run:// (an upstream
@@ -304,11 +325,23 @@ def run_role(role: str, utterance: str = "", op: str = "generate", model: str = 
           "ensure": ensure, "ensure_evict": ensure_evict}
     if model:
         kw["model"] = model
+    _t0 = _time.monotonic()
     out = _cog.run_role(r, ctx, **kw)
+    _ms = int((_time.monotonic() - _t0) * 1000)
     # PERSIST the output to run://<turn>/<role> so it is inspectable/feedable (reuse the store primitives).
     address = f"run://{turn_id}/{r.id}"
     cas = SUITE.store.put_content(out)
     SUITE.store.set_ref(address, cas)
+    # #54 STORAGE-DISCOVERY — the op.run RUN INDEX. Engine run_role has NO emit + does NOT persist (the
+    # CALLER assigns the run:// address — and it's reused INTERNALLY per-cast-role by run_swarm / per-draw
+    # by run_jury / by chat_parts), so the op.run emit lives HERE, colocated with the discoverable persist —
+    # exactly one record per agent-facing run, NEVER flooding the index with internal cast/draw fires.
+    # Reuses Suite.emit_run_record (the introspective-data op.run path; run_stats rolls duration_ms up).
+    # Additive + behaviour-preserving (the output persists to run:// exactly as before); a run record
+    # NARRATES backend truth — NO resolve/approve/dispatch (the operator-only floor).
+    SUITE.emit_run_record("cognition.run_role", _ms,
+                          run_op=getattr(r, "op", "generate"), turn_id=turn_id,
+                          role=r.id, addresses=[address])
     return {"role": r.id, "op": getattr(r, "op", "generate"), "output": out,
             "address": address, "turn_id": turn_id}
 

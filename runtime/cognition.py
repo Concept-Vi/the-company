@@ -1012,6 +1012,23 @@ def run_items(role: "Role", items: list, store, *, turn_id: str,
                        "ms": rr.ms, **({"error": rr.error} if rr.error else {})}
                       for rr in result.runs],
         })
+        # #54 STORAGE-DISCOVERY — the op.run RUN INDEX (introspective-data law: a run self-instruments).
+        # ONE op.run per FAN (the C1.6 fsync discipline — never one append_event per unit), carrying the
+        # per-unit run:// `addresses` (the discoverable inputs). list_runs EXPANDS this into one discovered
+        # row per address at READ time. `duration_ms` reuses the introspective-data field-convention on the
+        # SHARED op.run kind (run_stats rolls it up for free); op=cognition.run_items keys the run-projection.
+        # Telemetry — additive, behaviour-preserving (the fan's outputs persist to run:// exactly as before);
+        # NO resolve/approve/dispatch verb (the operator-only floor — a run record narrates, never governs).
+        emit("op.run", {
+            "summary": f"cognition.run_items · {role.id} · {len(result.runs)} units · {int(result.wall_s*1000)}ms",
+            "op": "cognition.run_items", "run_op": getattr(role, "op", "generate"),
+            "turn_id": turn_id, "role": role.id,
+            "duration_ms": int(result.wall_s * 1000),
+            # ONLY the OK units' addresses — a failed unit's address was never set_ref'd, so listing it would
+            # break the run-index contract ("list an address you can FEED"). The fan re-raises below, but the
+            # op.run is emitted first (telemetry records the attempt); index only the resolvable outputs.
+            "addresses": [rr.address for rr in result.runs if rr.ok],
+        })
 
     # Fail loud AFTER the rollup (so the failure is recorded) — the fan cannot silently lose a unit.
     if errors:
@@ -1290,6 +1307,18 @@ def run_reduce(addresses, store, *, turn_id: str, mode: str,
             "turn_id": turn_id, "mode": mode, "n_units": len(values),
             "skipped": [uid for (uid, _a) in skipped], "wall_s": result.wall_s,
             "detail": result.detail,
+        })
+        # #54 STORAGE-DISCOVERY — the op.run RUN INDEX (see run_items). The reduce's joined output is NOT
+        # persisted to a run:// address (the caller decides whether to land it), so this records THAT a
+        # reduce happened (mode/inputs/turn_id) with an EMPTY `addresses` — list_runs lists it as a run
+        # with no feedable output (flagged: a reduce output is not addressed today). Telemetry — additive,
+        # behaviour-preserving; NO resolve/approve/dispatch (the operator-only floor — narrates, never governs).
+        emit("op.run", {
+            "summary": f"cognition.run_reduce · {mode} · {len(values)} units · {int(result.wall_s*1000)}ms",
+            "op": "cognition.run_reduce", "run_op": mode,
+            "turn_id": turn_id, "role": (role.id if role is not None else mode),
+            "duration_ms": int(result.wall_s * 1000),
+            "addresses": [],
         })
     return result
 

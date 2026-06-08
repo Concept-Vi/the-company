@@ -551,6 +551,61 @@ class Suite:
             out.append(rec)
         return {"ops": sorted(out, key=lambda r: -r["n"]), "total_records": len(evs)}
 
+    # the closed op-set of the ENGINE runs that emit the op.run RUN INDEX (#54 storage-discovery). A
+    # run-projection lists ONLY these (NOT every op.run telemetry record — voice.client, voice.turn, etc.
+    # also ride op.run). registry-is-truth: the emit sites (run_items/run_reduce in cognition.py, run_role
+    # in the MCP wrapper) and this filter both name the SAME closed set; a new engine run-op is added here.
+    ENGINE_RUN_OPS = ("cognition.run_role", "cognition.run_items", "cognition.run_reduce")
+
+    def list_runs(self, op: str | None = None, run_op: str | None = None,
+                  since: int = -1, limit: int = 50) -> dict:
+        """#54 STORAGE-DISCOVERY — the RUN INDEX: make past engine runs DISCOVERABLE as inputs (not just
+        known-by-address). A READ-TIME projection over the `op.run` event log (the run_stats pattern — no
+        maintained index, no new store; reuse-don't-parallel — the op.run log IS the index). The discovery:
+        an agent/FE can now LIST past runs + their run:// addresses → feed one as an input (resolve_address)
+        or re-run, instead of only reading a run it already KNOWS the address of.
+
+        Filters to the closed ENGINE_RUN_OPS (the engine runs — NOT the voice/etc. op.run telemetry). One
+        op.run event carries the per-fan `addresses` list (the C1.6 one-emit-per-fan discipline); this
+        EXPANDS it into one discovered ROW PER concrete run:// address (run://<turn>/<role>[/<i>]), each a
+        RESOLVABLE address (the prefix is never set_ref'd, only the per-unit address is). A reduce records
+        with no address (its joined output is not landed) → one row with address=None.
+
+        Each row: {address, op, run_op, turn_id, role, duration_ms, seq, ts}. Newest-first. `op` filters to
+        one ENGINE_RUN_OP; `run_op` filters by the operation (generate|embed|role|rule|cluster); `since` is
+        an event seq (-1 = all); `limit` caps the returned rows. Returns {runs:[...], total_records:int}."""
+        if op is not None and op not in self.ENGINE_RUN_OPS:
+            raise ValueError(
+                f"list_runs: unknown engine run-op {op!r} — the run index covers {list(self.ENGINE_RUN_OPS)} "
+                f"(the engine runs that emit the op.run index). Fail loud (never project a fabricated op).")
+        evs = [e for e in self.events_since(since)
+               if e.get("kind") == "op.run" and e.get("op") in self.ENGINE_RUN_OPS]
+        if op:
+            evs = [e for e in evs if e.get("op") == op]
+        if run_op:
+            evs = [e for e in evs if e.get("run_op") == run_op]
+        rows = []
+        for e in reversed(evs):                               # newest-first (events_since is oldest-first)
+            addrs = e.get("addresses") or [None]              # a reduce records with no feedable address
+            for addr in addrs:
+                rows.append({
+                    "address": addr, "op": e.get("op"), "run_op": e.get("run_op"),
+                    "turn_id": e.get("turn_id"), "role": e.get("role"),
+                    "duration_ms": e.get("duration_ms"), "seq": e.get("seq"), "ts": e.get("ts"),
+                })
+        return {"runs": rows[:limit], "total_records": len(evs)}
+
+    def find_runs(self, role: str | None = None, op: str | None = None,
+                  run_op: str | None = None, since: int = -1, limit: int = 50) -> dict:
+        """#54 — the FILTERED run index (the discovery's query face): list_runs narrowed by `role` (the
+        discovered runs OF a given role) and/or `op`/`run_op`. Thin reuse of list_runs (no second
+        projection). Returns the same {runs, total_records} shape."""
+        res = self.list_runs(op=op, run_op=run_op, since=since, limit=10_000)
+        runs = res["runs"]
+        if role:
+            runs = [r for r in runs if r.get("role") == role]
+        return {"runs": runs[:limit], "total_records": len(runs)}
+
     def voice_log(self, event: str, **data) -> None:
         """Client-side voice trace (Tim 2026-06-07: "store the process to a proper log so you can
         investigate"). The browser owns half the live voice loop — VAD pause detection, recording

@@ -220,13 +220,26 @@ for i in range(3):
 check("run_items read every unit's output BACK into .resolved (the after-barrier read)",
       set(res.resolved) == {0, 1, 2} and all("intent" in res.resolved[i] for i in range(3)))
 
-# the DRIVER / batched-rollup discipline (mirrors run_swarm/run_reduce): ONE rollup, no operator verbs.
-check("run_items emits ONE cognition.items rollup (C1.6 batched discipline)",
-      len(events) == 1 and events[0][0] == "cognition.items")
+# the DRIVER / batched-rollup discipline (mirrors run_swarm/run_reduce): ONE cognition.items rollup +
+# ONE op.run RUN-INDEX emit per fan (#54 storage-discovery), NEVER one append_event per unit. C1.6 holds:
+# the emit count is PER-FAN (here 2), never per-unit (would be 3+). No operator verbs on either.
+items_rollups = [e for e in events if e[0] == "cognition.items"]
+oprun_emits = [e for e in events if e[0] == "op.run"]
+check("run_items emits exactly ONE cognition.items rollup + ONE op.run index per FAN (C1.6 per-fan, "
+      "never per-unit — #54 additive)",
+      len(events) == 2 and len(items_rollups) == 1 and len(oprun_emits) == 1)
 check("the items rollup carries NO resolve/approve/dispatch (operator-only floor — driver, not agent)",
-      all(k not in events[0][1] for k in ("resolve", "approve", "dispatch", "verb")))
+      all(k not in items_rollups[0][1] for k in ("resolve", "approve", "dispatch", "verb")))
 check("the items rollup records the N units + their per-unit addresses",
-      events[0][1]["n_units"] == 3 and len(events[0][1]["units"]) == 3)
+      items_rollups[0][1]["n_units"] == 3 and len(items_rollups[0][1]["units"]) == 3)
+# the #54 op.run RUN-INDEX emit: one per fan, carrying the per-unit run:// addresses (list_runs expands
+# these into discovered rows) + the introspective duration_ms; NO operator verb (telemetry, not governance).
+check("the op.run run-index emit carries op=cognition.run_items + the per-unit run:// addresses (#54)",
+      oprun_emits[0][1]["op"] == "cognition.run_items" and len(oprun_emits[0][1]["addresses"]) == 3
+      and all(a.startswith(f"run://{FAN_TURN}/focus/") for a in oprun_emits[0][1]["addresses"]))
+check("the op.run index emit carries NO resolve/approve/dispatch (the floor — a run record narrates, "
+      "never governs)",
+      all(k not in oprun_emits[0][1] for k in ("resolve", "approve", "dispatch", "verb")))
 
 
 # =================================================================================================

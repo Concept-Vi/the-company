@@ -216,6 +216,32 @@ context / any upstream output, set by address); `op: generate|embed` selects the
 `complete_embeddings`, local-resident only). Add a new shape/grain ⇒ add it to
 `THOUGHT_SHAPES`/`PART_GRAIN` **and reflect it here**, or `tests/chat_parts_acceptance.py` fails loud.
 
+**The run INDEX — runs are DISCOVERABLE as inputs, not just known-by-address (#54 storage-discovery).**
+Run outputs are already durable + addressed (`run_role`/`run_items`/`run_reduce` write `run://<turn>/<role>`
+via CAS, immutable, cross-session) and read back by `resolve_address` — but there was **no list/query over
+them**, so an agent could only read a run it already KNEW the address of. The keystone of "outputs→inputs"
+composability is **discovery**: each engine run now emits ONE cheap `op.run` RUN-INDEX event to the store —
+`run_items`/`run_reduce` inside the engine fns (next to their `cognition.items`/`cognition.reduce` rollup,
+through the SAME `emit` sink), `run_role` in its MCP wrapper (engine `run_role` has no emit + does not
+persist — the CALLER assigns the address — and it's reused INTERNALLY per-cast-role/per-draw, so emitting
+there would flood the index; the emit lives colocated with the discoverable persist, exactly ONE per
+agent-facing run). The event carries `op` (the closed `Suite.ENGINE_RUN_OPS` = `cognition.run_role`/
+`run_items`/`run_reduce`) · `run_op` (generate|embed|role|rule|cluster) · `turn_id` · `role` · the
+introspective `duration_ms` (the SHARED `op.run` field — `run_stats` rolls it up for free, this is the
+**introspective-data law**: a run self-instruments) · and the per-fan `addresses` list (the C1.6
+**one-emit-per-fan** discipline — never one `append_event` per unit). **`Suite.list_runs`/`find_runs`** are
+a READ-TIME PROJECTION over that log (`events_since`, the `run_stats` sibling — the op.run log IS the index,
+**no maintained index, no new store, NO `fs_store` edit, no parallel DB**), EXPANDING the per-fan addresses
+into one discovered ROW PER concrete `run://` address; `find_runs(role=…|op=…|run_op=…)` filters. The MCP
+`list_runs`/`find_runs` tools expose the same to agents. **Behaviour-preserving** (a run's output persists
+to `run://` exactly as before — the index is purely additive) and **the floor holds** (the `op.run` emit is
+telemetry — `append_event(kind='op.run')`, NEVER a resolve/approve/dispatch; `cognition_governance` stays
+19/19). Proven by `tests/run_discovery_acceptance.py` (the run index + projection + MCP tools + the full
+outputs→inputs-**by-discovery** loop, live against the resident 4B). **NOT built (deliberate follow-up):**
+lifecycle — `run://` outputs are **unbounded** (no gc/ttl); discovery is the keystone, gc is a later call.
+A reduce's joined output is not landed at a `run://` address today (its `op.run` row carries empty
+`addresses`), so a reduce is discoverable-as-having-happened but not yet feedable-by-address.
+
 ## The activation contexts (Concurrent Cognition G5 · `runtime/activation.py` + `runtime/suite.py` · the dial generalised)
 
 The **activation contexts** generalise "mode" (the presence dial) from *presence-modes* to the named ways

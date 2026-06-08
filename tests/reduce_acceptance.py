@@ -320,10 +320,20 @@ else:
 events = []
 run_reduce(vote_addrs, store2, turn_id="t2", mode="rule", reduce_rule=majority_label,
            emit=lambda kind, payload: events.append((kind, payload)))
-check("run_reduce emits ONE cognition.reduce rollup (C1.6 batched discipline)",
-      len(events) == 1 and events[0][0] == "cognition.reduce")
+# ONE cognition.reduce rollup + ONE op.run RUN-INDEX emit per reduce (#54 storage-discovery), NEVER a
+# per-input flood. C1.6 holds (per-reduce, not per-unit). No operator verbs on either.
+reduce_rollups = [e for e in events if e[0] == "cognition.reduce"]
+oprun_emits = [e for e in events if e[0] == "op.run"]
+check("run_reduce emits exactly ONE cognition.reduce rollup + ONE op.run index per reduce (C1.6; #54 additive)",
+      len(events) == 2 and len(reduce_rollups) == 1 and len(oprun_emits) == 1)
 check("the reduce rollup carries NO resolve/approve/dispatch (operator-only floor)",
-      all(k not in events[0][1] for k in ("resolve", "approve", "dispatch", "verb")))
+      all(k not in reduce_rollups[0][1] for k in ("resolve", "approve", "dispatch", "verb")))
+# the #54 op.run RUN-INDEX emit for a reduce: op=cognition.run_reduce, EMPTY addresses (a reduce's joined
+# output is not landed at a run:// address today — flagged), NO operator verb (telemetry, not governance).
+check("the op.run run-index emit carries op=cognition.run_reduce + EMPTY addresses (reduce output not "
+      "addressed today — #54 flagged) + NO operator verb",
+      oprun_emits[0][1]["op"] == "cognition.run_reduce" and oprun_emits[0][1]["addresses"] == []
+      and all(k not in oprun_emits[0][1] for k in ("resolve", "approve", "dispatch", "verb")))
 
 
 print(f"\nALL {PASS} CHECKS PASS — run_reduce: read-back (shared with jury) · rule (deterministic) · "
