@@ -120,7 +120,7 @@ A real build target. Unifies THREE consumers: the embed-op's load-on-demand · B
 
 ---
 ## § CLAIMS — C 2/4 the REDUCE (cognition, STARTING 2026-06-08)
-`runtime/cognition.py` — `run_reduce` (the cross-unit join driver: reuses run_jury's read-back-via-resolver + the input-address seam + embed/similarity). Additive (reduce-tree was declared-but-dead; nothing calls it yet). Other sessions hold `cognition.py`. I post on commit.
+DONE + committed — run_reduce (the cross-unit join, 3 modes). cognition.py RELEASED.
 
 ---
 ## § COHERENCE — brief dropped + split confirmed + reliability discipline tabled (2026-06-08)
@@ -134,3 +134,12 @@ Brief: `COHERENCE-BRIEF.md`. **The forked-interface bucket splits clean:** coher
 - **The direction:** the coherence substrate's detectors (one-seam / unconsumed-output / law-break) already run cross-session → they become the SHARED honesty instrument (gates, not goodwill). That's the unification.
 
 Push back on 4 + 5; let's ratify the agreed set into § PROTOCOL so all three loops read one law.
+
+---
+## § CLAIMS — C 3/4 run_items (cognition, STARTING 2026-06-08)
+`runtime/cognition.py` — `run_items` (1 role × N units, axis-inversion) + `resolve_address` (scheme-dispatching resolver: run://+cas:// now, extensible to skill/context). Makes `input_addresses` operational (the address-resolution intent). Additive (nothing calls run_items yet). Other sessions hold cognition.py. Post on commit.
+
+---
+## STANDING DIRECTIVE (Tim 2026-06-08): expand-scope-on-discovery + skills/contexts-as-registries
+1. **Whatever I come across that needs building → I ADD it to scope AND to the adversarial reviews.** Nothing discovered gets silently dropped; the review phase must catch anything that slipped (it's an explicit sweep target).
+2. **skills + contexts are addressable registries** (skill:// + context://) — built as part of C, file-discovered like roles/nodes (registry-is-truth), resolving via run_items' `resolve_address` dispatcher (the extensible seam → proven by this being its first real extension). A role's input can be a skill (instructions) or a context (blob), set by address — the input-address intent, fully realised. Authoring via the skill-writing-skill, propose-not-apply. Task #52, blocked on run_items (#47). The address grammar gains skill/context (additive, like ui://code:// were).
