@@ -222,6 +222,29 @@ def reconcile(current: list[dict], prior: list[dict]) -> dict:
             "counts": {"known": len(known), "new": len(new), "resolved": len(resolved)}}
 
 
+# C4 — the disposition policy: which dispositions an AGENT may set vs which ESCALATE to the operator.
+_VALID_DISPOSITIONS = ("to_wire", "to_build_ui", "voice_owned", "backend_only", "defer", "resolved", "by-design")
+_OPERATOR_ONLY_DISPOSITIONS = ("by-design",)   # permanently ACCEPTING a gap = a consequential operator decision
+
+
+def dispose_finding(store, kind: str, address: str, disposition: str, *,
+                    by: str = "", reason: str = "", confirmed: bool = False) -> dict:
+    """C4 — set a finding's disposition under the consent policy. Findings live in their OWN agent-disposable
+    lane (the dispositions overlay, NOT the operator inbox). Most dispositions are agent-settable (the loop
+    burns the backlog down). `by-design` (permanently accepting a gap as fine) ESCALATES: an agent cannot
+    self-accept a gap — without operator `confirmed`, it is NOT applied; it surfaces for the operator (the
+    operator-only floor). Unknown dispositions fail loud. Returns {ok, applied, escalated, disposition}."""
+    if disposition not in _VALID_DISPOSITIONS:
+        return {"ok": False, "applied": False, "escalated": False,
+                "error": f"unknown disposition {disposition!r} (valid: {_VALID_DISPOSITIONS})"}
+    if disposition in _OPERATOR_ONLY_DISPOSITIONS and not confirmed:
+        # escalate — surface for the operator, do NOT apply (the consent floor; never silently dropped)
+        return {"ok": True, "applied": False, "escalated": True, "disposition": disposition,
+                "note": "by-design accepts a gap permanently — operator confirmation required (escalated)"}
+    store.append_disposition(kind, address, disposition, reason=reason, by=by)
+    return {"ok": True, "applied": True, "escalated": False, "disposition": disposition}
+
+
 def scan(repo_root: str, store=None) -> dict:
     """The on-demand coherence READ (the `company coherence` face). RE-DERIVES the model fresh (own/reflect:
     no maintained graph — detection is recomputed each call), recording the structural findings into `store`
