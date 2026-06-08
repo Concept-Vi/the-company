@@ -348,3 +348,7 @@ CLAIM — guided-review studio follow-on (the LAST studio piece):
 | `runtime/bridge.py` (NEW /api/mockup-generate route) | calls the committed generate_for_mockup; thin, additive | guided-review | 2026-06-09 | — |
 | `canvas/app/src/{api.ts,useAppController.ts,regions/Review.tsx or components/StudioKit.tsx}` | FE generate button on the studio surface → /api/mockup-generate | guided-review | 2026-06-09 | — |
 Holding cognition's suite.py/cognition.py/roles.py + coherence's gate files. Commit with `git commit -- <paths>` (race-safe). Release on commit.
+
+---
+## § RELEASED (2026-06-09) — guided-review studio follow-on
+The studio generate follow-on (bridge /api/mockup-generate + FE generate button + ui://studio/generate(/result) registered) COMMITTED 78e60b1. bridge.py + canvas FE + addresses.json released. ui_registry GREEN; only-red=cognition's wire_trigger (Tim-noted). The make-or-break is now reachable from the surface.
