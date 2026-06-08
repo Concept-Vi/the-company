@@ -91,3 +91,45 @@ By USE, never code-reading. FUNCTION: the real behaviour moves, at scale where r
 
 ## NO-REGRESSION COVERAGE STATEMENT
 Every prior item is accounted for: the original G0–G9 (✅ proven, by reference) · C1.7-deep + C2.5-catalog (carried → C + B5-catalog) · the perceptual feels (carried → needs-tim) · G5 background/sense/rollup (→ Group H) · the mode-map lost-opportunities #5/#6/#8 (→ H/I/J) · #3 brain_config (→ C) · #2/#4/#7 (✅ done: A served 13 axes + consent-routing; cast-beyond-listening). The NEW layer (Part 1, Groups A–G) is the product/corpus/composition/robustness extension. **Nothing from before is dropped; this triad is the single complete bar.**
+
+---
+# PART 3 — THE CORPUS/DISCOVERY PILLAR (rides the cognition spine; registry-driven; from run-1 + the inspection)
+> Built-ready criteria. See IMPLEMENTATION-GUIDE Part 3 for the run-1→real-code mapping. Everything dynamic/contextual/compositional/registry-loaded — NO static values.
+
+## GROUP K — Multi-projection capture
+- **K1** a `projections` registry (file-discovered, add-a-row) declares the lens set; a `capture` role's output_schema is built FROM it. 🔴
+- **K2** `run_items(role=capture, items=corpus)` renders each unit at many lenses → per-projection records on the store (cas://) + code projections (lifters registry). 🔴 (reuses run_items)
+- **K3** render-NOT-judge (the prompt); a unit is DESCRIBED (map), judged later (reduce) — the 4B is a describer not a judge. 🔴
+
+## GROUP L — Multi-space embedding + the inversion-finder
+- **L1** each embeddable projection → op=embed → put_vector space-keyed (vec://<item>#space=<proj>). 🔴 (reuses op=embed)
+- **L2** query_index gains a space filter; `find_relations(item, near_space, far_space)` = near∩¬far = the inversion-finder (same principle, different subject). 🔴
+- **L3** composed/typed/directional relations via a relation-type registry (principle-beneath/fragment-of/contradicts/sibling). 🔴
+
+## GROUP M — The marks layer (= the finding/disposition store, REUSED) + corroboration + fingerprint
+- **M1** marks = `append_finding` (coherence's store; mark_type from a registry); a mark-pass = a run_role/run_reduce pass. 🔴 (reuses the finding store)
+- **M2** the gold-likelihood PROFILE = findings_for(item) composed with evidence (a read, never a stored score; Tim sees-why, overrules). 🔴
+- **M3** corroboration = run_reduce(cluster) over principle-space, cross-SESSION (lineage); positive-only (rare→flag, NEVER discard; frequency only promotes). 🔴
+- **M4** fingerprint = coined-vocab vs an AI-tics registry → ai-fingerprint marks; denoising = surfacing, opposite direction. 🔴
+
+## GROUP N — The tiered cascade (REUSE the ActionRegistry)
+- **N1** a cascade = a saved Action (coherence_actions.build_action/ActionRegistry — EXISTS); multi-hop, per-step model/tier, looping. 🔴 (wire the runner)
+- **N2** MODEL_CAPABILITIES += cloud-reasoner models; run_role(model=cloud) routes via the fabric (reasoning-field + headroom + multi-turn). 🔴
+- **N3** `run_cascade(action_id, inputs)` executes the declared Action; the engine routes each sub-question to the tier that fits. 🔴
+
+## GROUP O — Generation robustness (cognition.py; the engine's reliability — could fold into F)
+- **O1** json_schema (grammar-constrained), NOT json_object. 🔴 (CHANGE run_role)
+- **O2** repetition_penalty ladder (1.1→1.2→fail-loud degenerate-loop), per-content via the generation-policy registry; frequency_penalty is wrong. 🔴 · **OPEN: rep_penalty can censor legitimate enumeration → diff-against-source, never silent (Tim-decision).**
+- **O3** persist finish_reason + tokens (op.run); the adaptive large-file handler (raise/split/chunk-overlap/route), never an arbitrary cap. 🔴
+
+## GROUP P — Everything-registry (the dynamic/compositional law made concrete)
+- **P1** new registries file-discovered + projecting (cognition_info pattern): projections·lifters·mark-types·AI-tics·relation-types·generation-policies·forms — add-a-row, no code. 🔴
+- **P2** the agent authors them (create_projection/create_mark_type/...) like create_role; the system composes its own discovery passes. 🔴
+- **P3** the B inspection fixes: _REDUCE_RULES/api_verbs/ENGINE_RUN_OPS/PROTECTED_ROLES → projected not hardcoded; selects hang off the capabilities umbrella; guard-consistency pass. 🔴
+
+## GROUP Q — Patterned-visibility render (the interactive renderer; = #55/G2)
+- **Q1** the FE renders the network (nodes=items+projections+marks, typed edges, clusters, gold-profiles, rare-flags, inversions) from the projections over /api, on kit.tsx. 🔴
+- **Q2** the loop: render→grab→annotate(write a disposition/mark)→steers the next run_items. Patterned-visibility, rendered. 🔴 FORM: navigable-not-text, design-system, design-lint.
+
+## OPEN DECISIONS (Tim's — captured for him + the adversaries)
+1. rep_penalty vs legitimate enumeration (O2) · 2. node-authoring line: declarative-direct/code-gated (the inspection) · 3. pillar-relationship: distinct pillar on the spine (lean) vs deeper GROUP D.

@@ -95,3 +95,67 @@ LANE-BRIDGE is a MY-SIDE prerequisite for G2 (the FE/#55). It's file-disjoint (b
 - **B2 de-risked:** `field_types` IS projected; `output_schema` is already real Pydantic (nested/enum/optional work). Richer types = new rows in `authoring.py:48` + a recursive renderer (nested→sub-BaseModel·enum→Literal·optional→T|None·list[dict]→list[SubModel]), import-gated. NOT a Pydantic change, NOT a new registry — widen the grammar + renderer.
 - **GROUP D de-risked:** almost all WIRING. Only D1 (thin `runtime/corpus.py`) is net-new. The saved-chain validator/registry ALREADY EXISTS (`runtime/coherence_actions.py:build_action`/`ActionRegistry`) — D6 wires the runner to it, doesn't build it. CORPUS-CHAIN.md is stale (ignore its "net-new reduce/seam" claims). NEVER edit fs_store.py (coherence's).
 - **B-discoverability fixes (registry research):** cognition_inputs += skill://·context://·SCHEMES · op-select + capability-check at create (B5) · dedup run_reduce-mode (docstring vs gate) · project _REDUCE_RULES to /api.
+
+---
+# PART 3 — THE CORPUS/DISCOVERY PILLAR + the run-1 → real-code engineering spec
+> From mining `~/wizard-run-1/` (the by-hand prototype) + the deep MCP-tool inspection. The pillar RIDES the cognition engine; it is **~3 real new things + composition of code that already exists.** Everything registry-driven, dynamic, contextual — NO static values (Tim's law). Build-ready; adversary-reviewable against the real code at the file:line refs.
+
+## 3.0 The mapping (run-1 hand-code → my real engine) — the spine of the build
+```
+run-1 (~/wizard-run-1/)        →  my real code (NEW | CHANGE | REUSE)
+projections.json (registry)    →  NEW runtime/projections.py (file-discovered, mirrors skills.py/roles.py)
+build_schema() from PROJ        →  a "capture" ROLE whose output_schema is built FROM the projections registry
+fleet.local4b(json_schema,rep)  →  CHANGE run_role (cognition.py): json_object→json_schema + rep_penalty ladder
+capture2.run() resume-safe      →  REUSE run_items (1 role × N units); the runs table = the #54 run-index
+db.projections table            →  NEW thin runtime/corpus.py: per-projection records on the STORE (cas://); NO new DB
+db.marks table                  →  REUSE coherence finding/disposition store (append_finding) — SAME shape
+db.call_log.finish_reason       →  CHANGE the op.run emit (#54): persist finish_reason + tokens
+embed.jsonl (bge-m3)            →  REUSE op=embed→put_vector, CHANGE to space-keyed (vec://<item>#space=<proj>)
+lift.py + markdown_lifters.json →  NEW runtime/lifters.py + a lifters registry (code projections: frontmatter/links/blocks)
+fleet.kimi (cloud reasoner)     →  MODEL_CAPABILITIES += cloud models; fabric routes; reasoning-field handling
+the cascade (multi-hop)         →  REUSE coherence_actions.ActionRegistry/build_action (the saved-cascade validator EXISTS)
+patterned-visibility loop       →  the FE interactive renderer (#55/G2) — render→grab→annotate→steers-next-run
+```
+
+## 3.1 The new registries (file-discovered, the skills.py pattern; add-a-row = no code) — Tim's "everything from registries"
+`runtime/projections.py` (lens set: {name,level,produced_by,embeds,field,desc}) · `runtime/lifters.py` (code-extractors) · mark-types · AI-tics (seed: framework-imposition/versioning/false-finality/silent-fallback/agent-arch/closure-form/MVP, extensible) · relation-types (principle-beneath/fragment-of/contradicts/sibling) · generation-policies (per-content rep_penalty/json_schema/budget — NOT static knobs) · forms (file-shape→routing). Each projects via the `cognition_info`/`build_cognition_info` pattern. The agent authors them via `create_*` (like create_role).
+
+## 3.2 run_role generation-robustness (cognition.py — GROUP F, the engine's reliability)
+- `json=True`(json_object) → **`json_schema` response_format** (grammar-constrained; json_object lets the 4B freelance/return-empty — run-1 + the inspection both). Verified working on the resident 4B.
+- **`repetition_penalty` ladder**: 1.1 default → 1.2 on `finish=length` → **fail-loud `degenerate-loop`** (greedy temp0 + grammar-constrained long arrays is the trigger surface; ~20% of real files loop; `frequency_penalty` is WRONG — penalises JSON structure). Declared per-content via the generation-policy registry. **OPEN (Tim-decision): rep_penalty can silently under-capture legitimate enumeration → a diff-against-source check, never a silent penalty.**
+- Persist `finish_reason`+tokens in the op.run emit (the field run-1 kept needing; `finish=length` = truncated-invalid grammar output).
+- Large files: the adaptive handler (raise-budget / split-by-projection / chunk-with-overlap [capture2.py CHUNK_CHARS/OVERLAP+merge] / route-to-bigger) — a ROUTING decision per file, NEVER an arbitrary cap (silent-loss).
+
+## 3.3 Multi-projection capture + multi-space embedding + the inversion-finder
+- **Capture:** `run_items(role='capture', items=[corpus addresses])` → the capture-role (output_schema = the embeddable projections) renders each unit at many lenses → `runtime/corpus.py` writes per-projection records on the store (cas://) + the code projections (lifters).
+- **Embed:** per embeddable projection → `run_role(op=embed)` → `put_vector(vec://<item>#space=<projection>)`. `query_index` gains a **space filter** (thin add).
+- **Cross-level query = `find_relations(item, near_space, far_space)`** = `query_index(near)` ∩ ¬`query_index(far)` — the inversion-finder (same principle, different subject), a few set-ops over the existing index. + typed/directional edges via the relation-type registry.
+
+## 3.4 The marks layer = the finding store (REUSE) + corroboration + fingerprint
+- A **mark-pass** = a `run_role`/`run_reduce` pass that `append_finding` (coherence's store = the marks table; `mark_type` from the mark-types registry). The **gold-likelihood PROFILE** = `findings_for(item)` composed with evidence (a read, never a stored score; Tim sees-why, can overrule).
+- **Corroboration** = `run_reduce(mode='cluster')` over principle-space → high-recurrence-across-SESSIONS (lineage projection) = `corroboration` finding; **rare → `rare-flag` finding, NEVER discarded (positive-only: frequency only promotes).**
+- **Fingerprint (the inversion)** = a mark-pass matching the coined-vocab projection vs the AI-tics registry → `ai-fingerprint` findings (idiosyncratic+recurring=gold; generic+recurring=tic-to-subtract). Denoising = surfacing, opposite direction.
+
+## 3.5 The cascade (REUSE the ActionRegistry — it EXISTS)
+- A cascade = a saved **Action** (`coherence_actions.build_action(decl{steps:[{op,model}]})` + `ActionRegistry` — the one-door validator + store, ALREADY BUILT). Multi-hop, per-step model/tier, looping.
+- `MODEL_CAPABILITIES += cloud-reasoner models` (kimi-k2.6:cloud etc.) → `run_role(model=<cloud>)` routes via the fabric (+ reasoning-field handling, token headroom, multi-turn). me/the-agent = the orchestrating reduce-reasoner tier.
+- MCP `run_cascade(action_id, inputs)` → the runner executes the declared Action (wire the runner to the existing validator — the one genuine cognition↔coherence co-design).
+
+## 3.6 The new MCP tools (thin wrappers over the above — the agent face)
+`capture` · `find_relations` · `mark` · `findings_for` · `run_cascade` · `create_projection`/`create_mark_type`/`create_prompt`/etc. (the agent authors the new registries). All REUSE run_items/run_reduce/op=embed/query_index/the finding store/the ActionRegistry. + the /api routes (LANE-BRIDGE) + the FE render (#55/G2).
+
+## 3.7 Patterned-visibility = the interactive renderer (not a static pipeline)
+The chains are NOT fixed saved pipelines — they're the loop: run → the FE renders the network (nodes=items+projections+marks, typed edges, clusters, gold-profiles, rare-flags, inversions) → Tim sees-by-shape, grabs, annotates (writes a disposition/mark) → that steers the next `run_items`. The interface IS the loop's render (the #55/G2 human face, on kit.tsx/Fleet.tsx).
+
+## 3.8 Honest shape of the pillar work
+**~3 genuinely NEW:** the registries (projections/lifters/mark-types/AI-tics/relation-types/generation-policies/forms) · the `run_role` generation-robustness change · the thin `corpus.py` + space-keyed embedding.
+**REUSE (no rebuild):** run_items · run_reduce-cluster · op=embed/put_vector/query_index · the finding/disposition store (=marks) · the ActionRegistry (=cascades) · the run-index (=runs) · MODEL_CAPABILITIES (+cloud rows).
+**Then:** thin MCP/API wrappers + the FE render. **Connected, not duplicated — run-1 hand-coded what the engine already does.**
+
+## 3.9 LANE assignment for the pillar (file-disjoint, parallel)
+LANE-NEWMOD: the registries (runtime/projections.py·lifters.py·etc.) + runtime/corpus.py · LANE-ENGINE (cognition.py): the generation-robustness + space-keyed embed + run_cascade-runner · LANE-SUITE: the corpus/mark/find_relations Suite methods + the selects projecting the new registries · LANE-SURFACE (mcp_face): the new tools · LANE-CONFIG: MODEL_CAPABILITIES+=cloud · LANE-BRIDGE: the /api routes · LANE-FE: the patterned-visibility render. Cross-lane order: registries land first → consumers follow.
+
+## 3.10 OPEN DECISIONS (Tim's — flagged in-file for him + the adversaries)
+1. **rep_penalty vs legitimate enumeration** (3.2) — robust vs quietly-lossy; my lean: ladder + diff-against-source, never silent.
+2. **node-authoring line** (the inspection) — declarative-direct / executable-code-gated (my recommendation), or node-creation direct too?
+3. **pillar-relationship** — the corpus/discovery engine as a distinct pillar ON the cognition spine (my lean), vs folded into a deeper GROUP D.
