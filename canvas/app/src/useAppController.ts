@@ -1132,7 +1132,8 @@ export function useAppController(editor: Editor) {
         // (the parts are display-incremental; the persisted reply is the source of truth — never a re-join).
         let assistantIdx = -1
         let acc = ''
-        await api.chatStream(m, { selected },
+        let captured: any = null                               // the done event — handled AFTER the stream closes (so its
+        await api.chatStream(m, { selected },                  // poll()/proposal/action run INSIDE this try's error coverage)
           (text) => {                                          // onPart — the incremental display
             acc = acc ? acc + ' ' + text : text
             setChat(c => {
@@ -1140,18 +1141,21 @@ export function useAppController(editor: Editor) {
               const nc = c.slice(); nc[assistantIdx] = { role: 'assistant', text: acc }; return nc
             })
           },
-          (done) => {                                          // onDone — reconcile to canonical state
+          (done) => {                                          // onDone — reconcile the bubble to the CANONICAL reply
+            captured = done
             if (done.reply) {                                  // overwrite the incremental bubble with the canonical reply
               setChat(c => {
                 if (assistantIdx < 0) return [...c, { role: 'assistant', text: done.reply }]
                 const nc = c.slice(); nc[assistantIdx] = { role: 'assistant', text: done.reply }; return nc
               })
             }
-            // the done event IS the /api/chat-shaped return → reuse the shared handler (proposal/action/
-            // thread/history/poll/voice-out), but DO NOT let it replace the chat array (we already rendered
-            // the parts incrementally; history would duplicate the just-streamed turn).
-            handleChatResult(done, { applyHistory: false })
           })
+        // the done event IS the /api/chat-shaped return → reuse the shared handler (proposal/action/thread/
+        // poll/voice-out). AWAITED HERE (not in onDone, which chatStream runs un-awaited inside its read loop)
+        // so a post-turn poll()/reaction rejection is caught by THIS try (fail-loud, no unhandled rejection) +
+        // chatBusy clears AFTER it settles. applyHistory:false — the parts already rendered; re-setting history
+        // would double the turn.
+        if (captured) await handleChatResult(captured, { applyHistory: false })
         return
       }
       const r = await api.chat(m, { selected })
@@ -1161,8 +1165,10 @@ export function useAppController(editor: Editor) {
       // backend's error text as a VISIBLE assistant message (fail-loud, rule 4 — never a silent swallow) and
       // return WITHOUT touching the chat array. `finally` clears chatBusy. No throw, no undefined setChat.
       if (r.error) { setChat(c => [...c, { role: 'assistant', text: '⚠ ' + r.error }]); return }
-      // the shared post-turn handler (proposal/action/thread/history/poll/voice-out) — reused by the stream path.
-      handleChatResult(r, { applyHistory: true })
+      // the shared post-turn handler (proposal/action/thread/history/poll/voice-out) — reused by the stream
+      // path. AWAITED so a post-turn poll()/reaction rejection stays inside this try (the preserved non-stream
+      // path's original behaviour: poll/applyActionReactions were awaited directly in sendChat's try).
+      await handleChatResult(r, { applyHistory: true })
     }
     catch (e: any) { setChat(c => [...c, { role: 'assistant', text: '⚠ ' + (e?.message || '(could not reach the brain)') }]) }
     finally { setChatBusy(false) }
