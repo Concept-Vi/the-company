@@ -6912,6 +6912,89 @@ class Suite:
                 "counts": {"green": len(green), "needs_dep": len(needs_dep), "red": len(red),
                            "total": len(suites)}}
 
+    # ── the REACHABILITY registry: /api routes that reach NO front-end or test caller (built-but-unwired) ──
+    # The disconnection class the all-green gate CANNOT catch: a route that works fine but nothing calls it
+    # has no failing test — it just sits there invisible (the X16 seam was a cousin; the latent gold + the
+    # cognition authoring endpoints are live instances). This CATALOGUES every current orphan with a tag, so
+    # the orphan set is ACCOUNTED-FOR (the gate passes) but the registry doubles as the connect-it BACKLOG;
+    # a NEW orphan not listed here = the gate FAILS (a fresh built-but-unwired disconnection, caught the
+    # moment it appears). Tags: to_build_ui (needs a screen — a Claude Design target) · to_wire (built,
+    # should have an FE caller — a real connect-it item) · voice_owned (the concurrent voice session's lane)
+    # · backend_only (legitimately no FE — an agent/operator/internal entry point).
+    _ORPHAN_ROUTES = {
+        # — cognition authoring (the authoring UI; built backend, no FE — a Claude Design target) —
+        "/api/cognition/role/propose": ("to_build_ui", "authoring UI — propose a role"),
+        "/api/cognition/role/edit": ("to_build_ui", "authoring UI — edit a role"),
+        "/api/cognition/role/delete": ("to_build_ui", "authoring UI — delete a role"),
+        "/api/cognition/role/dry_run": ("to_build_ui", "authoring UI — dry-run a role in isolation"),
+        "/api/cognition/rule/validate": ("to_build_ui", "authoring UI — validate a rule (closed grammar)"),
+        "/api/cognition/rule/dry_run": ("to_build_ui", "authoring UI — dry-run a rule"),
+        "/api/cognition/rule/attach": ("to_build_ui", "authoring UI — attach a rule"),
+        "/api/cognition/rule/detach": ("to_build_ui", "authoring UI — detach a rule"),
+        "/api/cognition/preview_turn": ("to_build_ui", "authoring UI — preview a full turn"),
+        "/api/cognition/models_for_role": ("to_build_ui", "authoring UI — model-picker select"),
+        "/api/cognition/inputs": ("to_build_ui", "authoring UI — input-address select"),
+        "/api/cognition/field_types": ("to_build_ui", "authoring UI — output-schema field-type select"),
+        # — the latent gold + addressed surfaces (built, should be wired — the integration backlog) —
+        "/api/knobs": ("to_wire", "G8.1 dynamic per-model knob surface — a CognitionView/config input"),
+        "/api/run-stats": ("to_wire", "G7 run-record rollups (learning-by-use) — a CognitionView input"),
+        "/api/graphs": ("to_wire", "C4 list every graph — a graph-picker FE"),
+        "/api/chats": ("to_wire", "I7 the chat thread at a ui:// address — an addressed-thread view"),
+        "/api/attach-chat": ("to_wire", "I7 attach a chat turn to a ui:// address"),
+        "/api/capture-idea": ("to_wire", "A4 capture a fleeting idea — a capture affordance"),
+        "/api/decision": ("to_wire", "a decision as an audit view over the log — an audit surface"),
+        "/api/self-change-log": ("to_wire", "the self-modification audit ledger — an audit surface"),
+        "/api/checkpoint": ("to_wire", "operator restore point — an undo/restore affordance (or operator/CLI)"),
+        # — agent/backend entry points (legitimately no FE button) —
+        "/api/surface-review": ("backend_only", "agents/flows surface a review item here; not an FE action"),
+        # — the concurrent voice session's lane (theirs to wire) —
+        "/api/voice/load": ("voice_owned", "load a TTS voice — voice session"),
+        "/api/voice/unload": ("voice_owned", "unload a TTS voice — voice session"),
+        "/api/voice/ears": ("voice_owned", "list STT ears — voice session"),
+        "/api/voice/ear/load": ("voice_owned", "load an STT ear — voice session"),
+        "/api/voice/ear/unload": ("voice_owned", "unload an STT ear — voice session"),
+        "/api/voice/stt-partial": ("voice_owned", "partial STT stream — voice session"),
+        "/api/trial/turn": ("voice_owned", "a voice-trial turn — voice session"),
+        "/api/trial/feedback": ("voice_owned", "voice-trial feedback — voice session"),
+        "/api/trial/reflection": ("voice_owned", "voice-trial reflection — voice session"),
+        "/api/trial/transcript": ("voice_owned", "voice-trial transcript — voice session"),
+    }
+
+    def reachability(self) -> dict:
+        """THE REACHABILITY GATE (added 2026-06-08). Catches the disconnection class the all-green gate
+        cannot: a built `/api` route that reaches NO front-end or test caller — it works, so no test fails,
+        but nothing uses it (built-but-unwired). Extracts every `/api/...` route literal from bridge.py and
+        checks each for a caller in the canvas FE (`canvas/app/src`) or a test (`tests/`). An orphan in
+        `_ORPHAN_ROUTES` is ACCOUNTED-FOR (catalogued backlog); an orphan NOT listed is a NEW disconnection
+        → the gate fails. Also flags STALE registry entries (now wired or removed) so the catalogue self-
+        corrects. Heuristic (literal-string match — a route called only via a computed path reads as orphan;
+        add it to the registry with a note if so). Returns {wired, documented:[(route,tag,note)], new_orphans,
+        stale, all_accounted, counts, backlog}."""
+        import re, glob
+        bridge = open(os.path.join(self._repo_root, "runtime", "bridge.py"), encoding="utf-8").read()
+        routes = sorted(set(re.findall(r'"(/api/[a-zA-Z0-9_\-/]+)"', bridge)))
+        fe = "\n".join(open(f, errors="ignore").read()
+                       for f in glob.glob(os.path.join(self._repo_root, "canvas/app/src/**/*.ts*"), recursive=True))
+        # exclude the meta-gates themselves: their DOCSTRINGS mention routes as examples (e.g. the latent
+        # gold /api/knobs) — a doc mention is not a caller, so counting it would falsely 'wire' an orphan.
+        _meta = ("reachability_acceptance.py", "suite_health_acceptance.py")
+        tests = "\n".join(open(f, errors="ignore").read()
+                          for f in glob.glob(os.path.join(self._repo_root, "tests", "*.py"))
+                          if os.path.basename(f) not in _meta)
+        wired, orphan = [], []
+        for r in routes:
+            (wired if (r in fe or r in tests) else orphan).append(r)
+        documented = [(r, *self._ORPHAN_ROUTES[r]) for r in orphan if r in self._ORPHAN_ROUTES]
+        new_orphans = [r for r in orphan if r not in self._ORPHAN_ROUTES]
+        stale = [r for r in self._ORPHAN_ROUTES if r not in orphan]   # listed but now wired/removed
+        backlog = {tag: sorted(r for r, t, _ in documented if t == tag)
+                   for tag in ("to_build_ui", "to_wire", "voice_owned", "backend_only")}
+        return {"wired": sorted(wired), "documented": sorted(documented),
+                "new_orphans": sorted(new_orphans), "stale": sorted(stale),
+                "all_accounted": not new_orphans, "backlog": backlog,
+                "counts": {"routes": len(routes), "wired": len(wired), "orphan": len(orphan),
+                           "new": len(new_orphans), "stale": len(stale)}}
+
     def _make_live_and_refresh(self) -> tuple[bool, str]:
         """H3 + H2a — re-discover into the RUNNING system so a new node-type is LIVE (in self.registry,
         not just on disk), THEN regenerate the factual self-description blocks FROM the now-current
