@@ -76,12 +76,18 @@ operator approve is REFUSED (HTTP 400, `GovernanceError`).
 | `POST /api/cognition/rule/attach` | `{"role_id": str, "rule": <RuleDecl>}` | same as `role/edit` (surfaces a `role_build` with the rule added). |
 | `POST /api/cognition/rule/detach` | `{"role_id": str, "rule_id": str}` | same as `role/edit` (surfaces a `role_build` with the rule removed). |
 
-### B.4 · TEST / preview (pure; fire the resident swarm read-only)
+### B.4 · TEST / preview (fire the resident swarm; non-mutating to conversation state)
+
+> **Note:** `preview_turn` does NOT touch chat history/thread/training-signal, but it IS a real staged turn —
+> it emits the `cognition.*` events to the event log and writes role outputs to `run://<turn>/<role>` CAS
+> (turn-scoped, exactly like a live turn). So a preview is **observable on the live `/api/stream` SSE + the
+> cognition view** (it lights the river/dots). That's intended (it's what `cognition_events` reflects), just
+> not zero-side-effect on the stream. `dry_run_role` is fully isolated (one role, no turn, no events).
 
 | Endpoint | Request body | Response |
 |---|---|---|
 | `POST /api/cognition/role/dry_run` | `{"role_id": str}` OR `{"fields": <RoleFieldSpec>}` + `{"utterance": str, "model"?, "base_url"?}` | `{"role_id": str, "output": {<the validated structured output>}}`. **Test a role (registered OR a never-saved draft) in isolation.** No file written. |
-| `POST /api/cognition/preview_turn` | `{"utterance": str, "mode"?: str, "graph_id"?: str}` | `{"utterance": str, "mode": str, "parts": [{part, text, final, staged}], "cognition_events": [<cognition.* events>], "n_parts": int}`. **Preview a full staged turn** (mode set + restored; the cast that fired + the injections + the parts). |
+| `POST /api/cognition/preview_turn` | `{"utterance": str, "mode"?: str, "graph_id"?: str}` | `{"utterance": str, "mode": str, "parts": [{part, text, final, staged}], "cognition_events": [<cognition.* events>], "n_parts": int}`. **Preview a full staged turn** (mode set + restored; the cast that fired + the injections + the parts). **NON-MUTATING:** it fires a REAL staged turn (`chat_parts(persist=False)`) but does NOT append to the live chat history / thread / training_signal — safe to call repeatedly while authoring. (Verified live: chat-history delta = 0.) |
 
 ### B.5 · SELECT (populate every dropdown from truth — never hardcode)
 
