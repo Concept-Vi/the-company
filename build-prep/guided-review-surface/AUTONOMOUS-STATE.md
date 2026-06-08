@@ -165,3 +165,5 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
 - THE STUDIO IS BUILT END-TO-END: view-switch→show-me tour (narrates at altitude) · click+talk RHM at locus · comment→annotate · generate→RHM proposes edit (plan-safe, configurable engine) · streaming replies. Remaining = the by-use confirms (Tim's eye) + apply-mode (Tim's approval) + back-control (cognition). All flagged. The gateway works; the polish + the apply-trigger are Tim's.
 
 ## 2026-06-09 fire — critical-review stalled (chrome flakiness); landing=dev-canvas (corroborates Tim); robust capture re-dispatched (programmatic nav). cognition cleared wire_trigger. NEXT: read review screenshots -> honest scorecard -> BUILD the FORM gaps.
+
+## 2026-06-09 fire — CRITICAL-REVIEW.md written (honest scorecard). FORM not-done/unverified = the real remaining work (wrongly deferred). Verified problems: dev-canvas default, jargon-void review state, leaked tldraw toolbar, no guided overlay, chat-box-not-led. Populated state UNVERIFIED (capture agent green-painted; chrome flaky). HOLD FORM build for Tim steer: reliable-capture-first vs build. Not spinning.
