@@ -7077,6 +7077,9 @@ class Suite:
         "/api/decision": ("to_wire", "a decision as an audit view over the log — an audit surface"),
         "/api/self-change-log": ("to_wire", "the self-modification audit ledger — an audit surface"),
         "/api/checkpoint": ("to_wire", "operator restore point — an undo/restore affordance (or operator/CLI)"),
+        # — the mockup-studio review loop (the in-app studio surface uses /api/annotate; this is the
+        #   legacy feedback-edit marker the lead/RHM feedback->edit loop POSTs to flip applied/dismissed) —
+        "/api/mockup-feedback/status": ("to_wire", "studio feedback-edit loop — flip a feedback entry applied/dismissed"),
         # — agent/backend entry points (legitimately no FE button) —
         "/api/surface-review": ("backend_only", "agents/flows surface a review item here; not an FE action"),
         # — the concurrent voice session's lane (theirs to wire) —

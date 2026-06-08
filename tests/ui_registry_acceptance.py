@@ -129,10 +129,21 @@ run_used = {r for r in all_used if r.startswith("run://")}
 print(f"  used data-ui-ref: app={len(app_used)} mockups={len(mock_used)} "
       f"ui://-ish={len(ui_used)} run://(excluded)={len(run_used)}")
 
-# the app carries BARE handles (inbox, walkthrough, deferred-queue); mockups carry FULL ui:// strings.
-# BOTH forms must be registered (the bare handles as bare keys, the full strings as full keys).
-orphans = sorted(r for r in ui_used if r not in served_keys)
-check(f"ORPHAN CHECK: zero used-but-unregistered data-ui-ref (orphans: {orphans or 'none'})", not orphans)
+# the app carries BARE handles (inbox, walkthrough, deferred-queue) + FULL ui:// strings — ALL must be
+# registered. The orphan GATE is the LIVE app (canvas/app/src): every data-ui-ref the RUNNING UI carries
+# resolves to a registry entry.
+# The redesign MOCKUPS legitimately PROPOSE future-surface addresses (surfaces not yet built — that is what
+# a redesign mockup IS). Like run://, a proposed address is NOT a live-registry entry and must NOT gate the
+# live registry — registering one would mint a canonical entry for an unbuilt surface (a never-invent
+# violation, AGENTS rule 8). Mockup-proposed-but-unregistered addresses are REPORTED as info (visible, never
+# silently passed), not failed. (Studio brought the redesign corpus onto main 2026-06-08.)
+app_ui_used = {r for r in app_used if not r.startswith("run://")}
+orphans = sorted(r for r in app_ui_used if r not in served_keys)
+mock_proposed = sorted(r for r in mock_used if not r.startswith("run://") and r not in served_keys and r not in app_ui_used)
+if mock_proposed:
+    print(f"  (info) {len(mock_proposed)} mockup-PROPOSED addresses not yet in the live registry "
+          f"(future surfaces — illustrative, not gated): {mock_proposed}")
+check(f"ORPHAN CHECK: zero LIVE-app used-but-unregistered data-ui-ref (orphans: {orphans or 'none'})", not orphans)
 # the fe-map §8 inconsistency S1 closes — the app's previously-unserved handles are now registered.
 for handle in ("walkthrough", "deferred-queue"):
     if handle in app_used:
