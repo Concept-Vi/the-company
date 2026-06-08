@@ -5593,7 +5593,7 @@ class Suite:
         # confabulate). Honest "can't frame, here's the raw", grounded=False, raw still attached.
         if not payload or (isinstance(payload, (dict, list, str)) and len(payload) == 0):
             self._emit("warning", f"coa: surfaced {surfaced_id!r} has no payload to frame — abstaining "
-                       "(no confabulation)", surfaced=surfaced_id)
+                       "(no confabulation)", surfaced=surfaced_id, address="ui://chrome/inbox")
             return {"id": surfaced_id, "class": d.get("action"),
                     "framing": "Can't frame this at your altitude — the decision carries no payload to "
                                "ground a framing in. The raw is attached for inspection.",
@@ -5640,7 +5640,7 @@ class Suite:
             struct: CoaFraming = run(self._COA_SYS, user, cfg["model"], cfg["base_url"])
         except Exception as e:
             self._emit("warning", f"coa: framing model unavailable ({type(e).__name__}) — degrading "
-                       "to raw-only, no fabricated framing", surfaced=surfaced_id)
+                       "to raw-only, no fabricated framing", surfaced=surfaced_id, address="ui://chrome/inbox")
             return {"id": surfaced_id, "class": d.get("action"),
                     "framing": (f"Can't up-translate this right now — the framing model is unavailable "
                                 f"({type(e).__name__}). The raw decision is attached so you can still act on it."),

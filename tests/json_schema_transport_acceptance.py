@@ -19,8 +19,14 @@ live checks are reported SKIPPED-server-down (fail-loud distinction), the unit c
 """
 from __future__ import annotations
 import json
+import os
 import sys
 import urllib.error
+
+# self-bootstrap the repo root onto sys.path (every acceptance suite does this) so the suite is
+# runnable STANDALONE — `python tests/json_schema_transport_acceptance.py` — not only with an external
+# PYTHONPATH. Without it `import fabric` fails (ModuleNotFoundError) and a bare sweep/drift run skips it.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from fabric import transport, client
 from roles.focus import FocusOut
