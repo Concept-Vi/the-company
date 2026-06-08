@@ -377,3 +377,9 @@ studio-shell now covers the dev canvas (dfed2ed). app.css released.
 | canvas/app/src/components/StudioKit.tsx | rail cards stop showing raw ui:// addresses; RHM header stops showing the raw model name (plain operator face) | guided-review | 2026-06-09 | — |
 
 ## § RELEASED (2026-06-09) — rail jargon fix (7374c41). StudioKit.tsx released.
+
+---
+## § CLAIM (2026-06-09) — guided-review FORM: Composer context-aware guidance
+| file | what | session | started | released |
+|---|---|---|---|---|
+| canvas/app/src/components/StudioKit.tsx (Composer) | the composer should invite comment/request when a mockup+locus is OPEN, not stay on "select a mockup first" | guided-review | 2026-06-09 | — |
