@@ -192,6 +192,71 @@ def capability_no_consumer(repo_root: str) -> list[str]:
     return sorted(public - reached)
 
 
+# ── C3 the reconcile + C5 the burn-down rollup (the finding MODEL — read-time folds over the store) ──
+_ACCEPTED_DISPOSITIONS = ("by-design", "backend_only", "voice_owned")   # dispositioned-accepted ≠ open
+_FINISH_DISPOSITIONS = ("to_wire", "to_build_ui")                       # open-finish (still the backlog)
+_CLOSED_DISPOSITIONS = ("resolved",)
+
+
+def _handle(f: dict) -> tuple:
+    """The stable finding handle = (kind, address). Structural findings dedup on this; the reconcile and the
+    rollup both key on it (own/reflect: a re-detection re-appends, the read folds to the distinct handle)."""
+    return (f.get("kind"), f.get("address"))
+
+
+def reconcile(current: list[dict], prior: list[dict]) -> dict:
+    """The universal (kind,address) upsert — generalizes reachability's documented/new/stale to ANY detector.
+    Given THIS run's findings (`current`) vs the PRIOR set (`prior`):
+      known    = current ∩ prior   (the gap still stands — carry its disposition forward)
+      new      = current − prior   (a fresh disconnection — surfaces, default-open)
+      resolved = prior − current   (the detector no longer emits it — the gap closed; auto-close)
+    Returns the three handle-lists (sorted) + net_change (|new|−|resolved|, the burn-down direction; a
+    sustained net_change>0 over a window is the thrash signal). Pure — no store, no model."""
+    cur = {_handle(f) for f in current}
+    pri = {_handle(f) for f in prior}
+    known = sorted(cur & pri)
+    new = sorted(cur - pri)
+    resolved = sorted(pri - cur)
+    return {"known": known, "new": new, "resolved": resolved,
+            "net_change": len(new) - len(resolved),
+            "counts": {"known": len(known), "new": len(new), "resolved": len(resolved)}}
+
+
+def burn_down(store) -> dict:
+    """C5 — the burn-down model: a READ-TIME fold over the finding store ⨝ the disposition overlay (the
+    run_stats pattern — no maintained graph; own/reflect). Dedups the append-only findings by (kind,address)
+    (a re-detection does not inflate the model), then classifies each distinct finding by its resolved
+    disposition:
+      open     = undispositioned OR a finish-disposition (to_wire/to_build_ui) — the burn-down-toward-zero set
+      accepted = a dispositioned-accepted (by-design/backend_only/voice_owned) — acknowledged, not a defect
+      closed   = resolved
+    Returns {total, open, accepted, closed, by_kind, by_disposition, open_findings}. `(open)` is the
+    by_disposition key for undispositioned findings (the honest default — never silently dropped)."""
+    findings = store.all_findings()
+    distinct: dict = {}
+    for f in findings:
+        distinct[_handle(f)] = f            # last record per handle (re-detection folds away)
+    by_kind: dict = {}
+    by_disposition: dict = {}
+    open_count = accepted = closed = 0
+    open_findings = []
+    for (kind, address), f in distinct.items():
+        by_kind[kind] = by_kind.get(kind, 0) + 1
+        d = store.disposition_for(kind, address)
+        disp = d["disposition"] if d else "(open)"
+        by_disposition[disp] = by_disposition.get(disp, 0) + 1
+        if disp in _ACCEPTED_DISPOSITIONS:
+            accepted += 1
+        elif disp in _CLOSED_DISPOSITIONS:
+            closed += 1
+        else:                                # undispositioned or a finish-disposition → open
+            open_count += 1
+            open_findings.append({"kind": kind, "address": address, "disposition": disp})
+    return {"total": len(distinct), "open": open_count, "accepted": accepted, "closed": closed,
+            "by_kind": by_kind, "by_disposition": by_disposition,
+            "open_findings": sorted(open_findings, key=lambda x: (x["kind"], x["address"]))}
+
+
 # ── #3 hardcoding candidates (CANDIDATE-only) — literals that mirror a registry ──────────────────────
 def hardcoding_candidates(repo_root: str, min_entries: int = 6) -> list[dict]:
     """Module/class-level literal dict/list/tuple/set assigned to an UPPER_CASE name in runtime/*.py, with
