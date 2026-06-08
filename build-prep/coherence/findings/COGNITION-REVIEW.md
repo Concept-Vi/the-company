@@ -36,3 +36,13 @@ The same generalized engine serves: **cognition** (the swarm) · **the semantic 
 
 ## BUILD ORDER (rounds + Tim converge): seam → op-axis → reduce → cognition-beyond-listening → (then A: mode reach). The compiler is later, separate.
 — cognition
+
+---
+## TIM CORRECTIONS (2026-06-08) — the input-address INTENT + the launch/select capability
+**1. The input-address is the POINT, not a future nicety.** `input_addresses` resolves CONTENT FROM AN ADDRESS through the address system — so a role's input can be **any skill, any context, or the output of anything else**, set by address (run:// an upstream output · cas:// a content blob · a skill/context address · etc.). The `Utterance:` colon-input stays as the convenience DEFAULT; the **address-resolution is the real capability**. This elevates **C 3/4 (`run_items`)**: it must resolve a role's input from anywhere in the address system (broadly — not just `run://`), so you can wire "the output of node X" or "this skill/context" as what a role reads. Both paths coexist: supplied-utterance (default) AND address-resolved (the intent).
+
+**2. The launch/select-models capability is a real build target (system + CLI).** "Nothing is *using* the GPU" (no active inference) but the card is physically full (3 resident idle services, ~1.1 GB free). The right mechanism to load an embedder / swap a brain is a **gated launch/select/evict capability**, not a hand-evict. This UNIFIES three consumers into one capability:
+   - **the embed-op's need-to-load** (an embed role fires → ensure the embedder is resident, gated);
+   - **B** (`brain_config` → the mode's wanted loadout);
+   - **the mode-loadout swap** (swarm-16k / voice-64k per mode).
+   → ONE capability: *the system can launch/select/evict resident models, deliberately, from the system AND the CLI* (extends the existing `company up/swap --evict` resource-manager — reuse, not parallel). The **live embed vector is its FIRST by-use test** (verified when the capability loads BGE-M3 on demand) — NOT a manual teardown of the live stack. This is the proper home for B + the embed-load + the loadout, built once.

@@ -107,3 +107,13 @@ split is confirmed + C releases):
 - `roles/*` — the `walkthrough` cast + `screen_reader` role, added ON cognition's C seam AFTER release.
 HOLDING per the board: `runtime/cognition.py` + `runtime/roles.py` (cognition's C). NOT touching coherence's
 gate files. `mockup://` handed to cognition's A window.
+
+---
+## § CLAIMS — C seam (1/4) RELEASED, committed
+- **C seam (run_role input-axis + op-axis): DONE + committed** (`60672b6`). Behaviour-preserving (7 suites green). `runtime/cognition.py`+`runtime/roles.py` RELEASED. Design note: discriminates on supplied-ctx (not the descriptive `input_addresses` field — that stays descriptive until `run_items` materializes it). op=embed reuses the live embed plumbing; local-resident only.
+- **NEXT (still cognition's, will reclaim):** C 2/4 the REDUCE (cross-unit join + the embed-cluster over the existing `vector_index.py` — the built-twice-discovery primitive) · C 3/4 `run_items` (the N-unit fan-driver + materialize input_addresses→ctx) · C 4/4 cast-beyond-listening (suite.py — the guided-review walkthrough consumer; needs the suite.py window) · then A (mode reach).
+- needs-tim: the live embed vector (fire an embed role when BGE-M3 @ :8001 is up — won't evict the resident brain to force it).
+
+---
+## CAPABILITY ADDED (Tim 2026-06-08): launch/select/evict resident models (system + CLI)
+A real build target. Unifies THREE consumers: the embed-op's load-on-demand · B (brain_config loadout) · the mode-loadout swap. ONE gated capability extending `company up/swap --evict` (reuse). The live embed-vector is its first by-use test (load BGE-M3 on demand — NOT a hand-evict of the resident stack). Cognition's, sequenced with/after B. The input-address INTENT (resolve content from any address — skill/context/upstream-output) is now central to C 3/4 (`run_items`), not a future nicety — see COGNITION-REVIEW.md "TIM CORRECTIONS".
