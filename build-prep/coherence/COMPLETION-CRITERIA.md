@@ -60,20 +60,20 @@
   three-way binding is the pending agreement).
 
 ## Group C — The disposition store + finding model  (net-new — the substrate spine)
-- **C1 (🟡) · a persisted, ADDRESSED finding record** — `{kind, address(ui://|code://), state, evidence,
+- **C1 (✅) · a persisted, ADDRESSED finding record** — `{kind, address(ui://|code://), state, evidence,
   source:structural|semantic, since}` on the append-only event log (rides `append_event`/`_emit`, per AREA-1).
   FUNCTION: 🟡 Designed.
-- **C2 (🟡) · the disposition is OWNED, mutable, separate from detection** (own/reflect) — finish/defer/
+- **C2 (✅) · the disposition is OWNED, mutable, separate from detection** (own/reflect) — finish/defer/
   by-design + reason, on a last-wins overlay (the pin-overlay pattern, AREA-1), NOT in the append-only record;
   detection re-derived, disposition kept. FUNCTION: 🟡 Designed.
-- **C3 (🟡) · the reconcile is `(kind, address)` upsert → known/new/resolved** (generalizing reachability's
+- **C3 (✅) · the reconcile is `(kind, address)` upsert → known/new/resolved** (generalizing reachability's
   documented/new/stale, AREA-2); net-burn-down computable; a finding closes only when its detector agrees
   (structural) or the confirming authority agrees (semantic — never by a swarm re-read, SEM-4). FUNCTION: 🟡.
 - **C4 (🟡) · findings are NOT operator-inbox items** — own agent-disposable lane; only `by-design` escalates
   through the consent gate (AREA-1: the inbox is operator-only + already-drowned). FUNCTION: 🟡 Designed.
-- **C5 (🟡) · the burn-down rollup** — read-time fold (the `run_stats` pattern), open-by-kind/owner/over-time.
+- **C5 (✅) · the burn-down rollup** — read-time fold (the `run_stats` pattern), open-by-kind/owner/over-time.
   FUNCTION: 🟡 Designed. FORM(CLI): `company coherence` shows the burn-down scannably.
-- **C6 (🟡) · `_ORPHAN_ROUTES`→registry is step 1; the catalogue becomes finding-records** — the orphan
+- **C6 (✅) · `_ORPHAN_ROUTES`→registry is step 1; the catalogue becomes finding-records** — the orphan
   catalogue migrates into the finding store (the first real findings; the recursion). FUNCTION: 🟡 (A6 was the
   declared-registry step; this is the store step).
 
