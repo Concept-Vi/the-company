@@ -64,3 +64,30 @@
 
 ## Verification bar (every criterion)
 By USE, never code-reading. FUNCTION: the real behaviour moves, at scale where relevant, no stub. FORM (where a surface exists): registry-projected (no hardcoding), discoverable, navigable — graded separately. Honest status only — a needs-tim/gap stays a gap; nothing green-painted. New findings from the use→assess→reason loop land here as new criteria.
+
+---
+# PART 2 — NO-REGRESSION: the foundation + all carried-forward + the mode-reach groups
+> Tim's mandate (2026-06-09): this is NOT a pivot — it's the continuation of what was always meant to happen, so **everything from before must be present, nothing dropped.** This part makes that explicit: the original build is the proven base (by reference), and every still-open prior item is carried forward as a criterion here.
+
+## FOUNDATION — the original Concurrent Cognition build (G0–G9), PROVEN by use
+**Source (the proven base, persists, no regression):** `build-prep/concurrent-cognition/Concurrent Cognition — Completion Criteria.md` (+ its Guide/Synthesis) + the engine commits `[cognition]` + `.build/OVERNIGHT-WALKTHROUGH.md`. Status there: G0 spike · G1 substrate · G2 roles · G3 rule-engine · G4 staged-reply · G5 per-turn · G6 voice-coupling · G7 view · G9 governance — **✅ by use** (verified across this session: the engine quartet, the floor, the suites). This triad **supersedes by reference + extends** — it does not re-derive the done base; it carries the OPEN items below + adds the product/corpus/surface layer (Part 1).
+
+## CARRIED-FORWARD (the original's still-open items — folded into this triad, NOT dropped)
+- **C1.7-deep · the deep-main concurrency knee at util 0.63** — proven at 0.49 (knee=14); the 0.63 swarm-brain deep-64K-main knee is computed-not-measured. → folds into **GROUP C** (the loadout — the 16→32 work proves this too; needs the GPU reconfig + a real deep-main wave). needs-tim on the live measure.
+- **C2.5 · the model CATALOG (the original G8/L-model)** — the role↔model query is built, but the provider set is resident-chat-4b-only; the capability catalog needs widening (the original G8). → **new criterion (Group B5 extends to the catalog):** MODEL_CAPABILITIES projects the full live catalog (chat·embed·vision·...), so role-binding + the op/thinking/tools selects project real model capabilities. 🔴.
+- **C0.3 (fusing-quality) · C4.4 (one-voice feel) · staged-stream feel · on-device voice audio · the view's aesthetics** — perceptual needs-tim, carried (never loop-green; yours to judge). Listed in Part-1 needs-tim.
+
+## GROUP H — Activation drivers (the original G5 background/sense/rollup — built-but-UNDRIVEN)
+*Verified outstanding: `fire_activation`/`consolidate_rollup` exist but have NO route/timer driver — the between-turns cognition the modes allocate never fires.*
+- **H1 · background driver** — an idle-loop tick fires the mode's cast → destinations (surface/address/lane), no reply, under the mode's budget. 🔴 (the substrate exists in `activation.py`; the driver is net-new — a timer/idle-loop). FORM: the surfaced output is navigable, not noise.
+- **H2 · sense driver** — an event-hook fires the cast on a screen/app/state-change (the cast sees the event as its utterance). 🔴.
+- **H3 · rollup driver** — a timer tick runs the introspective-data consolidation of the swarm's run-records → a rollup. 🔴. (The activation contexts are declared registry-data; the DRIVERS are the gap. Connect: a scheduler/timer + the resource budget — never a parallel loop.)
+
+## GROUP I — Mode auto-detector (the toggle exists, no detector)
+- **I1 · a detector PRODUCES a mode candidate** — `autodetect_mode` honors off/suggest/auto over a SUPPLIED candidate; nothing produces one. Build the detector (reads the live signal → a candidate mode), feeding the existing toggle. 🔴. Connect: the mode registry + the signal source; deterministic where possible. FORM: the suggestion surfaces legibly (suggest-mode), never silently auto-switches without the declared posture.
+
+## GROUP J — Cognition↔resolution feedback loop (the system sees its own thinking)
+- **J1 · the swarm's run:// outputs feed R2's next-turn resolution** — today R2 resolves operator-notebook strata; the swarm's thinking (run://<turn>/<role>) is a parallel edge that never converges back. Wire the prior turn's cognition into what the next turn resolves (the system's own thinking becomes context). 🔴. Connect: R2 (`_r2_gather`) + the run-index (#54) + resolve_address. (The cleanest "the system sees itself" wire; relates to the corpus D — cognition output as retrievable context.)
+
+## NO-REGRESSION COVERAGE STATEMENT
+Every prior item is accounted for: the original G0–G9 (✅ proven, by reference) · C1.7-deep + C2.5-catalog (carried → C + B5-catalog) · the perceptual feels (carried → needs-tim) · G5 background/sense/rollup (→ Group H) · the mode-map lost-opportunities #5/#6/#8 (→ H/I/J) · #3 brain_config (→ C) · #2/#4/#7 (✅ done: A served 13 axes + consent-routing; cast-beyond-listening). The NEW layer (Part 1, Groups A–G) is the product/corpus/composition/robustness extension. **Nothing from before is dropped; this triad is the single complete bar.**

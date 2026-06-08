@@ -51,3 +51,34 @@
 
 ## REVIEW HISTORY
 - Round 0 (this doc, from current knowledge): the scaffold above. **Next: the parallel research wave + the reference-session file enrich/correct each ?open + verify each ~recall.**
+
+---
+# ROUND 1 ENRICHMENT — the parallel research wave (2026-06-09, 4 read-only agents)
+*Resolves the ?open + corrects the ~recall. Reports: .build/prep-{registry,surface,design,corpus}.report.json.*
+
+## REGISTRY audit (prep-registry) — CORRECTION + the real gaps
+- **CORRECTION to ROUND 1:** `field_types` is NOT "the one un-projected/hardcoded select" — it IS projected (MCP + /api/cognition/field_types). The real issue: its **SET is wrongly-CLOSED (flat scalars)**. Distinguish "closed grammar, correct" (RULE_OPS/SCHEMES/op) from "closed set, too narrow" (FIELD_TYPES). So B2 isn't "make it a registry" — it's **widen the type grammar** (rows in `authoring.py:48` + a recursive renderer, lines 115-151).
+- **`output_schema` is ALREADY real Pydantic** — nested/enum/optional/list[dict]/defaults ALL work today. Richer types = new FIELD_TYPES rows + a richer field-spec grammar + a recursive renderer (nested→sub-BaseModel · enum→Literal · optional→T|None · list[dict]→list[SubModel]), import-gated. **NOT a Pydantic change.** (Big de-risk for B2.)
+- **The real registry gaps (mostly DISCOVERABILITY, two duplication):** (1) `available_inputs`/cognition_inputs OMITS skill://·context://·SCHEMES (B3). (2) `op` enum gated at roles.py:173, no projecting select, not capability-checked (B5). (3) `thinking`/`tools` on create_role NOT validated vs MODEL_CAPABILITIES.provides (B5 unbuilt at create). (4) `run_reduce` mode re-typed in the MCP docstring (two sources — dedup). (5) `_REDUCE_RULES` (count|concat|first) lives only in server.py:371, invisible to /api/FE (project it). `models_for_role` is fail-SOFT (not pure).
+- **Exemplars to mirror:** MODE_REGISTRY (gold standard one-source) · the cognition_info projection · MODEL_KNOBS→/api/knobs (live-probes the tools knob — add to ROUND 1).
+
+## SURFACE matrix (prep-surface) — the bridge is the G2 bottleneck + a name-collision
+- **`fe_reads_backend` = reflects-never-owns, VERIFIED by code** (registryStore inits {} + populates only from backend; no client-side hardcoded list). ✓ upgraded from ~recall.
+- **THE LANE-CUT GAP:** because the FE only renders what /api serves, and **/api does NOT serve run_role/run_items/run_reduce/embed/DIRECT-create/list_runs**, a **`runtime/bridge.py` /api-route expansion is a MY-SIDE prerequisite for G2** — it needs its OWN lane (the guide's LANE-SURFACE owned only mcp_face). → **add LANE-BRIDGE.**
+- **NAME COLLISION:** `/api/corpus` + the FE "corpus" vocabulary = the **mockup/design gallery**, NOT the Group-D cognition corpus. D1 MUST use `/api/cognition/corpus` (or it clobbers the gallery). (Don't-duplicate ledger += this.)
+- create is an ASYMMETRY: MCP=direct+propose · /api=role-propose-ONLY (no skill/context author route) · FE=nothing. The loadout (C) is the BEST-covered (all 4 faces) — confirms the one-resource-manager principle.
+
+## DESIGN system (prep-design) — ROUND 3 ?open RESOLVED: usable-now, no bespoke FE permitted
+- **Tokens (source of truth):** `design/_system/tokens.json` → `emit.py` → `design/design-system.css` (GENERATED, never hand-edit); app imports it in main.tsx; `app.css` legacy vars are ALIASES. Theme **FINAL (Tim 2026-06-07)** — gold-primary; rule: TWO-VIVID + ONE-MUTED status colour (lifecycle reads apart by sight).
+- **Components:** `canvas/app/src/components/kit.tsx` (Surface·SectionHead·LaneHead·Badge·EmptyState) + `StudioKit.tsx` (Card/Rail/Stage/Composer/RhmPanel, mounted as regions/Review.tsx) — the composition-workspace precedent.
+- **The G2 pattern (a new surface MUST follow):** import kit → SectionHead/LaneHead → every row a `Surface` card with tone + data-ui-ref (never a bare line) → state-by-Badge-colour → loud EmptyState → data from a registry via /api (reflects-never-owns) → tokens only (zero raw hex/px). **Closest exemplar: `Fleet.tsx` (the live model layer as kit-cards) — G2 EXTENDS it (add GPU/runs), don't parallel.** `Settings.tsx` = the configure/switch precedent; `CognitionView.tsx` = legit bespoke-SVG for a flow-not-a-list.
+- **The FORM gate:** `python3 design/_system/check.py --target canvas/app/src --fail-on` (off-token/bespoke → build fails) + a separate design-critic + the operator. The implementer cannot self-grade FORM.
+
+## CORPUS pieces (prep-corpus) — GROUP D is almost entirely WIRING; the saved-chain validator EXISTS
+- **BUILT (wire, don't rebuild):** the store sink (put_content/get_content·set_ref/head/ref_history·put_vector/get_vector/index_corpus·append_event) · `vector_index.py` (build_index incremental + query_index k-NN, dim=1024/BGE-M3, fail-loud) · op=embed (full, MCP-exposed, ensure-gated) · **run_reduce(cluster) FULLY built** (the built-twice primitive) · run_items · **the saved-chain type: `runtime/coherence_actions.py` `build_action(decl,*,models)` IS the one-door validator** (decl={name,steps:[{op,model}],output_schema}) + `ActionRegistry` (saved type + persistence + save_calibration) + `build_coherence_info` projection.
+- **Net-new vs wiring (D1-D6):** ONLY **D1** is meaningfully net-new (thin `runtime/corpus.py` tying put_content+append_event+put_vector + a corpus.write event-kind). D2/D3 = pure wiring (mirror `suite._retrieve_for_consult_semantic` for D3). D4 = built (needs live embedder). D5 = wiring + a small invalidation policy (content_hash + index_staleness give it). D6 = wire the runner to fire a saved Action (validator/registry built) — cognition↔coherence co-design.
+- **CORPUS-CHAIN.md is STALE** (its "reduce doesn't exist / the seam is net-new / build_chain needed" claims are contradicted by current code — the engine generalization already happened). The cognition-engine synthesis (this doc) is correct; don't over-correct it. fs_store.py MUST NOT be edited (coherence-contended + Supabase-portability seam).
+- **Flags:** op.run seq not cross-process-unique (matters if a corpus index keys on seq) · list_runs O(events) reparse (E2 — any corpus projection inherits) · dim consistency across embed paths = the one silent-correctness hazard (fails loud at cosine — correct).
+
+## REVIEW HISTORY
+- Round 0: the scaffold (current knowledge). Round 1: this enrichment (4 parallel research waves) — design-system RESOLVED · field_types reframed (projected-but-narrow, Pydantic-ready) · LANE-BRIDGE added · corpus = wiring + saved-chain-exists · the /api/cognition/corpus name-collision. **Next: the reference-session file (Tim's path) + any contradiction-resolution round.**

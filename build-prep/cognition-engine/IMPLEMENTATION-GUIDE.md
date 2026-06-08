@@ -80,3 +80,18 @@ Batch: one suite-run per lane-completion (governance/floor + the lane's suites +
 - ?the surface-coverage matrix (per criterion × MCP/FE/CLI).
 - ?the corpus-chain saved-chain shape (declared type) — cross-ref CORPUS-CHAIN.md.
 - ?what the reference-session learned directly-using concurrent runs (Tim's file).
+
+---
+## LANE-CUT UPDATE (from the surface research) — add LANE-BRIDGE
+The FE is reflects-never-owns (verified) → it can only render what `/api` serves, and `/api` does NOT serve run/create/embed/list_runs. So the lane-cut needs a SIXTH lane:
+```
+LANE-BRIDGE (runtime/bridge.py, sole owner) → the /api routes the human face needs:
+   /api/cognition/{run_role,run_items,run_reduce,embed} · the DIRECT create routes · list_runs/find_runs
+   · /api/cognition/corpus (NOT /api/corpus — that's the mockup gallery, NAME-COLLISION)
+```
+LANE-BRIDGE is a MY-SIDE prerequisite for G2 (the FE/#55). It's file-disjoint (bridge.py, sole owner) → parallel with ENGINE/SUITE/SURFACE/NEWMOD/CONFIG.
+
+## CORRECTIONS folded (from the research)
+- **B2 de-risked:** `field_types` IS projected; `output_schema` is already real Pydantic (nested/enum/optional work). Richer types = new rows in `authoring.py:48` + a recursive renderer (nested→sub-BaseModel·enum→Literal·optional→T|None·list[dict]→list[SubModel]), import-gated. NOT a Pydantic change, NOT a new registry — widen the grammar + renderer.
+- **GROUP D de-risked:** almost all WIRING. Only D1 (thin `runtime/corpus.py`) is net-new. The saved-chain validator/registry ALREADY EXISTS (`runtime/coherence_actions.py:build_action`/`ActionRegistry`) — D6 wires the runner to it, doesn't build it. CORPUS-CHAIN.md is stale (ignore its "net-new reduce/seam" claims). NEVER edit fs_store.py (coherence's).
+- **B-discoverability fixes (registry research):** cognition_inputs += skill://·context://·SCHEMES · op-select + capability-check at create (B5) · dedup run_reduce-mode (docstring vs gate) · project _REDUCE_RULES to /api.
