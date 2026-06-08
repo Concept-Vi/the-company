@@ -359,3 +359,9 @@ guided-review: a URL-param state reader so the review surface opens to an exact 
 | file | what | session | started | released |
 |---|---|---|---|---|
 | canvas/app/src/App.tsx + canvas/app/src/useAppController.ts | read ?review / ?mockup / ?guide on load -> set view + open mockup + start guide | guided-review | 2026-06-09 | — |
+
+---
+## § CLAIM (2026-06-09) — guided-review FORM: review view must cover the dev canvas (layering)
+| file | what | session | started | released |
+|---|---|---|---|---|
+| canvas/app/src/regions/Review.tsx + canvas/app/src/app.css | review view = opaque full-cover over the tldraw board (no dev node-graph bleed-through) | guided-review | 2026-06-09 | — |
