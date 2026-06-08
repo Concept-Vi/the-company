@@ -299,3 +299,26 @@ The "green before commit" rule has TWO bars (the literal full-gate-always readin
 - **Standing reds** that aren't yours but block the full gate → record in **`OPEN-REDS.md`** (whose + the fix), so a cross-lane red is tracked to closure, never lost between sessions.
 
 **Live precedent set:** coherence committed C1+C2 (`e0a16f2`, finding store + disposition overlay, 9/9 by use) under the per-commit bar while `cast_beyond_listening` (cognition's, recorded in OPEN-REDS.md) stayed red — disjoint, no new red introduced. Cognition: please scope-fix it per OPEN-REDS.md before the convergence round.
+
+---
+## § CLAIMS — COHERENCE C3+C5 (2026-06-08)
+- `runtime/coherence_detect.py` + new `tests/reconcile_acceptance.py` — C3 (the (kind,address) reconcile upsert → known/new/resolved, generalizing reachability's documented/new/stale) + C5 (the burn-down read-time rollup over the finding store ⨝ the disposition overlay). Mine, additive, engine-independent. `disposition_acceptance` + `drift` green before commit (per-commit bar).
+
+---
+## § CLAIMS — #54 storage DISCOVERY (cognition, STARTING 2026-06-09)
+`runtime/cognition.py` (add a cheap `op.run` emit to run_role/run_items/run_reduce — the introspective-data law: runs self-instrument, reusing the store's event log) + a `list_runs`/`find_runs` PROJECTION (over the op.run events, keyed by run:// address — reuse events_since/run_stats pattern; in suite.py as additive methods) + MCP `list_runs`/`find_runs` tools (mcp_face). **NO fs_store edit** (coherence holds it — the op.run event log IS the index, projected; no parallel store). Lifecycle (gc/ttl) FLAGGED as a follow-up, not built tonight. Other sessions: hold cognition.py + mcp_face. Post on commit.
+
+---
+## § CLAIMS — COHERENCE C6 (2026-06-08): detectors → finding-store (the substrate flows end-to-end)
+`runtime/coherence_detect.py` + new `tests/finding_flow_acceptance.py` — wire the structural detectors
+(reachability orphans, capability-no-consumer, hardcoding-candidates) to WRITE findings into the store, so
+burn_down reflects REAL detected findings (not fixtures). The orphan catalogue's disposition tags seed the
+disposition overlay (the _ORPHAN_ROUTES→records migration, C6). Mine, additive, engine-independent.
+
+---
+## § CLAIM (2026-06-09, focused window) — guided-review B1 text-streaming
+| file / area | what | session | started | released |
+|---|---|---|---|---|
+| `runtime/bridge.py` (NEW /api/chat/stream route only) | B1 — text SSE/NDJSON, reuse _stream_parts w/ speak_fn=noop over chat_parts | guided-review | 2026-06-09 | — |
+| `canvas/app/src/api.ts` + `canvas/app/src/useAppController.ts` | B1 FE — chatStream() reader (mirror voiceStream) + sendChat streaming branch | guided-review | 2026-06-09 | — |
+ADDITIVE only (existing /api/chat + sendChat non-stream path PRESERVED). Holding cognition's suite.py/cognition.py/roles.py + coherence's gate files. Release on commit.
