@@ -369,3 +369,9 @@ guided-review: a URL-param state reader so the review surface opens to an exact 
 ---
 ## § RELEASED (2026-06-09) — guided-review layering fix
 studio-shell now covers the dev canvas (dfed2ed). app.css released.
+
+---
+## § CLAIM (2026-06-09) — guided-review FORM: hide raw jargon from the operator face
+| file | what | session | started | released |
+|---|---|---|---|---|
+| canvas/app/src/components/StudioKit.tsx | rail cards stop showing raw ui:// addresses; RHM header stops showing the raw model name (plain operator face) | guided-review | 2026-06-09 | — |
