@@ -319,6 +319,32 @@ disposition overlay (the _ORPHAN_ROUTES→records migration, C6). Mine, additive
 ## § CLAIM (2026-06-09, focused window) — guided-review B1 text-streaming
 | file / area | what | session | started | released |
 |---|---|---|---|---|
-| `runtime/bridge.py` (NEW /api/chat/stream route only) | B1 — text SSE/NDJSON, reuse _stream_parts w/ speak_fn=noop over chat_parts | guided-review | 2026-06-09 | — |
-| `canvas/app/src/api.ts` + `canvas/app/src/useAppController.ts` | B1 FE — chatStream() reader (mirror voiceStream) + sendChat streaming branch | guided-review | 2026-06-09 | — |
+| `runtime/bridge.py` (NEW /api/chat/stream route only) | B1 — text SSE/NDJSON, reuse _stream_parts w/ speak_fn=noop over chat_parts | guided-review | 2026-06-09 | 2d8bb0a |
+| `canvas/app/src/api.ts` + `canvas/app/src/useAppController.ts` | B1 FE — chatStream() reader (mirror voiceStream) + sendChat streaming branch | guided-review | 2026-06-09 | 2d8bb0a |
 ADDITIVE only (existing /api/chat + sendChat non-stream path PRESERVED). Holding cognition's suite.py/cognition.py/roles.py + coherence's gate files. Release on commit.
+
+**RELEASED 2026-06-09 — B1 text-streaming DONE + committed `2d8bb0a`, then `526c815` (await-handleChatResult error-handling fix on both paths).** All 3 files released. Gate GREEN (127 green / 0 red), npm build exit 0, no NEW tsc errors (the two TS2367 rec.state errors pre-exist). By-use: curl proved multiple {type:part} lines stream live then {type:done} (superset carries reply/proposal/action/thread_id/history) + non-stream /api/chat still works. suite.py UNTOUCHED (chat_parts CALLED through a tee capturing the final part dict). FE live incremental-render flagged needs-tim (tldraw intercepts the send-button click in chrome automation — not a code bug; the streamed turns DO render correctly via the proxy). proposal/action superset is plumbed but not exercised by the test turns (same needs-tim bucket). Report: `.build/interface/lanes/b1-stream.report.json`.
+
+---
+## § CLAIMS — COHERENCE C4/D/E/F (2026-06-08, continuing through the lane)
+Building the rest of the coherence lane, all additive + engine-independent (E's runner half is cognition's; E5 compose-run-models+embeddings gated on engine — built single-config now):
+- C4 — dispose_finding policy (by-design escalates through the consent gate; finish/defer agent-settable). `runtime/coherence_detect.py` + `tests/dispose_policy_acceptance.py`.
+- D — the calibration harness (eval-set from real incidents + calibrate(detector, eval_set) → precision/recall). `runtime/coherence_calibrate.py` + `build-prep/coherence/eval-set/` + `tests/calibration_acceptance.py`.
+- E — Action declaration + build_action validator + action registry + build_coherence_info (the saving side; runner is cognition's). `runtime/coherence_actions.py` + `tests/actions_acceptance.py`.
+- F — the convergence lens (the detectors run cross-fork tree-wide; realized IN the convergence round, documented).
+All disjoint from cognition's engine + guided-review's FE. Per-commit bar each.
+
+---
+## § CLAIMS — #58 DIRECT autonomous create (cognition, STARTING 2026-06-09) — FLOOR REFRAME (cross-session, read this)
+Tim's correction: the propose→surface→operator-approval gate on CREATE was the AI's default, NOT his constraint. The agent CREATES directly, no approval. Building: a DIRECT `create_role` (+ create_skill/context) that applies LIVE (no operator-approval) with the FULL schema, + MCP tools. Files: `runtime/suite.py` (a direct-apply create path) + `mcp_face/server.py` (create_role/create_skill tools) + `runtime/skills.py` (skill/context write) + `tests/cognition_governance_acceptance.py` (the floor reconcile).
+**★ FLOOR REFRAME — coherence/convergence READ THIS:** C9.2 changes meaning. **AUTHORING (apply a created role/skill/rule) becomes ALLOWED from the agent face** (Tim's call). What STILL holds: (1) the **correctness gate** (validate-in-tempdir, fail-loud on malformed — a bad role can't brick discovery); (2) the **wire's `claude -p` build-dispatch floor** (`dispatch_decision` — autonomous repo-mutation) — Tim CONFIRMED this MAINTAINS as set earlier (unchanged). So the floor test will assert: no cognition path emits `dispatch_decision`/the build-dispatch (kept) + the correctness gate (kept); it will NO LONGER forbid `apply_role` from the agent face (authoring freed). If your gates assert "no self-apply for authoring," update them — author-apply is now intended. Post on commit.
+
+---
+## § NOTED RED + CLAIM (2026-06-09, Tim-authorized "note the red and continue")
+NOTED: `tests/wire_trigger_acceptance.py` RED (resolve_surfaced MCP-floor) is cognition's, isolation-proven NOT mine. Tim authorized proceeding past it. My gate bar for the studio follow-on = NO NEW red beyond this noted one (not green-paint — documented, not mine, Tim-authorized).
+CLAIM — guided-review studio follow-on (the LAST studio piece):
+| file / area | what | session | started | released |
+|---|---|---|---|---|
+| `runtime/bridge.py` (NEW /api/mockup-generate route) | calls the committed generate_for_mockup; thin, additive | guided-review | 2026-06-09 | — |
+| `canvas/app/src/{api.ts,useAppController.ts,regions/Review.tsx or components/StudioKit.tsx}` | FE generate button on the studio surface → /api/mockup-generate | guided-review | 2026-06-09 | — |
+Holding cognition's suite.py/cognition.py/roles.py + coherence's gate files. Commit with `git commit -- <paths>` (race-safe). Release on commit.
