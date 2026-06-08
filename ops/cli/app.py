@@ -14,6 +14,8 @@ stdlib-only. See README.md (use) and UPDATING.md (extend). Constitution: ../AGEN
 
   company gpu              measured GPU VRAM + what's holding it
   company health           ping every service's port
+  company suites           the ALL-GREEN GATE: run every acceptance suite standalone,
+                           require green (live-dep skips classified) — pre-merge/pre-deploy
   company models           what's on disk (HF cache + Ollama)
   company swap SERVICE MODEL_ID   point a model service at another model + restart
   company config SERVICE [KEY VAL] show / edit a model's serve config (gpu_util, model, ctx…)
@@ -128,6 +130,23 @@ def main():
         print(gpu.format_state(reg)); return
     if cmd == "health":
         print(render.health(reg)); return
+    if cmd == "suites":
+        # THE ALL-GREEN GATE (on-demand, option C). Runs the standing suite-health check — every
+        # acceptance suite STANDALONE, green-or-documented-live-dep-skip-or-red (Suite.suite_health). The
+        # repo's single source of truth for "is the whole suite green"; this console is the one place to
+        # run it by hand (pre-merge / pre-deploy / whenever). SLOW — it spawns every suite (a few minutes).
+        # Thin wiring: shells the gate suite (no logic duplicated) under a TEMP store so it never touches
+        # the live data, and propagates its exit code (0 = all green, non-zero = a real red, named).
+        import os as _os, subprocess as _sp, tempfile as _tf
+        repo = _os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+        venv_py = _os.path.join(repo, ".venv", "bin", "python")
+        py = venv_py if _os.path.exists(venv_py) else sys.executable
+        gate = _os.path.join(repo, "tests", "suite_health_acceptance.py")
+        if not _os.path.exists(gate):
+            sys.exit(f"  ✗ the all-green gate is missing: {gate}")
+        env = dict(_os.environ, COMPANY_STORE=_tf.mkdtemp(prefix="company-suites-"))
+        print("running the all-green gate — every acceptance suite, standalone. This takes a few minutes…\n")
+        sys.exit(_sp.run([py, gate], cwd=repo, env=env).returncode)
     if cmd == "models":
         print(models.inventory()); return
     if cmd == "telemetry":

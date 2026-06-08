@@ -6841,6 +6841,77 @@ class Suite:
             return False, f"exit={proc.returncode}; tail={tail!r}"
         return True, "exit=0"
 
+    # ── the live-dependency REGISTRY: suites KNOWN to need an external service to pass ──────────────
+    # This is the gate's safeguard against BOTH false alarms AND masked reds. A suite NOT in this map is
+    # NEVER auto-excused — ANY failure = red (loud), so a genuinely-new broken suite always surfaces. A
+    # suite IN this map is excused ONLY when its failure output shows a down-signal — so a REAL assertion
+    # bug inside a live-dep suite (no down-signal) still surfaces as red, never masked. The map GROWS
+    # DELIBERATELY (a new live-integration suite is added here on purpose), never silently — so it doubles
+    # as the documentation of which suites have external deps + what each needs.
+    _LIVE_DEP_SUITES = {
+        "embeddings_acceptance":     "the embed server (:8001)",
+        "stt_models_acceptance":     "an STT model endpoint",
+        "stt_whispercpp_acceptance": "whisper.cpp + Kokoro TTS (:4123) to synth a clip to transcribe",
+        "voice_circuit_acceptance":  "a running bridge (:8771) for the live STT→chat→TTS hops",
+    }
+    # the signals (anywhere in a suite's FULL output) that mean 'a live dependency is down' — the
+    # deliberate `SKIP (LOUD)` / `unreachable` convention + the connection-error shapes. A real
+    # AssertionError matches none of these, so an in-registry suite that fails for a REAL reason is red.
+    _DOWN_SIGNALS = ("skip (loud)", "unreachable", "connection refused", "max retries", "newconnectionerror",
+                     "econnrefused", "server-down", "skipped-server-down", "selected-but-down",
+                     ":8001", ":8002", ":4123", ":4125", ":8771", "11434", "no module named 'torch'")
+
+    def _full_suite_runner(self, suite: str) -> tuple[bool, str]:
+        """Like _default_suite_runner but returns the FULL output (not a 400-char tail) so the down-signal
+        classification sees a `SKIP (LOUD)` line wherever it occurs in the run, not only at the end."""
+        import subprocess, sys as _sys
+        venv_py = os.path.join(self._repo_root, ".venv", "bin", "python")
+        py = venv_py if os.path.exists(venv_py) else _sys.executable
+        path = os.path.join(self._repo_root, "tests", suite + ".py")
+        if not os.path.exists(path):
+            return False, f"suite file missing: {path}"
+        proc = subprocess.run([py, path], cwd=self._repo_root, capture_output=True, text=True, timeout=600)
+        return proc.returncode == 0, (proc.stdout or "") + (proc.stderr or "")
+
+    def suite_health(self, *, runner=None, exclude=("suite_health_acceptance",)) -> dict:
+        """THE STANDING ALL-GREEN GATE (added 2026-06-08, after the cross-session unification proved this
+        catch missing: 3 reds slipped the gate layer — conv_reach + event_address sat RED undetected, and
+        json_schema_transport false-greened by INVOCATION [passed with PYTHONPATH, failed standalone]).
+
+        WHY the old gates missed them: `doc_drift` checks every suite is LISTED in STATE — not that it
+        PASSES; `_affected_suites`/`_run_suites` (the wire's per-build gate) runs ONLY the suites a build
+        touches — so a red in an untouched suite accumulates silently forever; and nothing ran suites
+        STANDALONE, so an invocation-dependent false-green was invisible.
+
+        This runs EVERY acceptance suite STANDALONE (the same fail-loud subprocess pattern, so
+        invocation-dependent false-greens are caught too) and CLASSIFIES each: green / needs-live-dep
+        (a DOCUMENTED external-service skip via `_LIVE_DEP_SUITES` — NOT a code red) / red. The registry
+        bounds the excuse: only listed suites can be excused, and only when their output shows a
+        down-signal, so neither a false alarm NOR a masked real red gets through. Fail-loud source of
+        truth for 'is the whole suite green'. SLOW (spawns every suite) → a PRE-MERGE / PRE-DEPLOY /
+        periodic standing gate, not a per-build one. EXCLUDES itself (recursion guard). `runner` injectable.
+        Returns {green, needs_dep, red:[(suite, detail)], all_green, counts}."""
+        run = runner or self._full_suite_runner
+        suites = [s for s in self._acceptance_suites()
+                  if s.endswith("_acceptance") and s not in exclude]
+        green, needs_dep, red = [], [], []
+        for s in suites:
+            try:
+                ok, out = run(s)
+            except Exception as e:                          # a runner crash is RED, never a silent pass
+                ok, out = False, f"runner crashed: {type(e).__name__}: {e}"
+            out = out or ""
+            if ok:
+                green.append(s)
+            elif s in self._LIVE_DEP_SUITES and any(sig in out.lower() for sig in self._DOWN_SIGNALS):
+                needs_dep.append(s)                         # KNOWN live-dep + down-signal → documented skip
+            else:
+                red.append((s, out.strip()[-300:]))         # everything else = red (loud), never excused
+        return {"green": sorted(green), "needs_dep": sorted(needs_dep),
+                "red": sorted(red), "all_green": not red,
+                "counts": {"green": len(green), "needs_dep": len(needs_dep), "red": len(red),
+                           "total": len(suites)}}
+
     def _make_live_and_refresh(self) -> tuple[bool, str]:
         """H3 + H2a — re-discover into the RUNNING system so a new node-type is LIVE (in self.registry,
         not just on disk), THEN regenerate the factual self-description blocks FROM the now-current
