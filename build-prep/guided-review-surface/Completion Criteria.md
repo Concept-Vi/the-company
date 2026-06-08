@@ -551,29 +551,31 @@ mockup/comprehension extensions.
 
 ---
 
-## Group K — Cognition-cast enrichment (the guided turn can think richer) · TIM-DECISION
+## Group K — Cognition-cast enrichment (the guided turn can think richer)
 
-**The top cognition unification — but a posture DECISION, not a foregone criterion.** Verified on main:
-all six roles (focus/recall/ground/connect/check/voice) carry `mode_scope: {"listening"}` ONLY —
-`walkthrough` is absent (roles/*.py). So `cast_for_mode("walkthrough")` returns `[]`: the enrichment
-swarm is idle during guided turns. The companion itself flags that walkthrough may be **deliberately
-lean** ("GUIDE/OBSERVE modes — show+consult only," suite.py:3140-3141). Populating the cast is an
-OPPORTUNITY, not an obvious fix.
+**The posture is now DECIDED (Round 2): enriched by default.** Verified on main: all six roles
+(focus/recall/ground/connect/check/voice) carry `mode_scope: {"listening"}` ONLY — `walkthrough` is
+absent (roles/*.py). So `cast_for_mode("walkthrough")` returns `[]` today: the enrichment swarm is idle
+during guided turns. Round 2 decision: the guided turn SHOULD fire the swarm (a right-hand-man reviewing
+a screen must have memory of past decisions about it). Posture is CONFIGURABLE — see K3. The decision
+changes K1's status from a posture-gate to a mechanism criterion.
 
-### K1 · The walkthrough-cast posture (does the guided turn fire the enrichment swarm?) · 🔴 needs-tim
-- **FUNCTION (the decision):** Whether the guided dialogue wants the enrichment swarm (memory-recall +
-  live-state grounding, etc.) firing on every conversational turn at a stop — vs staying lean. If YES:
-  add `"walkthrough"` to the `mode_scope` of the six roles (six one-line edits). Calibrated payoff
-  (Observed): focus/recall/ground/connect/check/voice all fire concurrently + light up the
-  CognitionView; recall+ground INJECT into Part 2 immediately via the canonical `INJECTION_RULE`
-  (suite.py:5402-5409); connect/check/voice fire+write but do NOT inject until G3/G4 (their rules are
-  descriptive, not AST-shaped — suite.py:5397-5399; voice's rule is `kind:"route"`). Verified once
-  decided: a guided turn shows a populated cast in `cognition_info()` and recall/ground shape the reply.
+### K1 · The walkthrough-cast activation — add `"walkthrough"` to the six role mode_scopes · MODERATE
+*(Round 2 refine: posture RESOLVED → mechanism criterion; 🔴 needs-tim on posture is retired.)*
+- **FUNCTION:** Add `"walkthrough"` to the `mode_scope` of the six roles — focus, recall, ground,
+  connect, check, voice (six one-line edits in roles/*.py). With this, `cast_for_mode("walkthrough")`
+  returns the full swarm for guided turns instead of `[]`. Calibrated payoff (Observed): all six fire
+  concurrently + light up the CognitionView; recall + ground INJECT into Part 2 immediately via the
+  canonical `INJECTION_RULE` (suite.py:5402-5409) — this is ~80% of an enriched guided turn on day 1
+  of K1, zero additional code. Connect/check/voice fire and write to `run://<turn>/<role>` but their
+  outputs go dormant until K4 (their rules are descriptive, not AST-shaped — suite.py:5397-5399;
+  voice's rule is `kind:"route"` — the ~20%). The `cast_posture` config axis (K3) gates whether the
+  swarm fires at all — default `"enriched"` means K1 is active unless the operator flips the axis.
+  Verified: a guided turn shows a populated cast in `cognition_info()` and recall/ground shape the reply.
 - **FORM:** The cast's concurrent thinking is visible (the CognitionView Pulse/River beside the guided
   reply — see canvas U-thread). design-lint pass when populated.
-- *Status target:* 🔴 **needs-tim on the POSTURE** (lean vs enriched — the guided RHM having memory of
-  past decisions about the same screen is exactly what a right-hand-man should have, but it is Tim's
-  call); 🟡 on the six trivial edits **once decided**.
+- *Status target:* 🟡 MODERATE (six one-line edits once K3 axis exists). Cross-ref K3 (axis),
+  K4 (injection completion).
 
 ### K2 · A `screen_reader` cognition role for guided/mockup stops · NET-NEW
 - **FUNCTION:** Move the "read this screen FOR the operator" logic out of the ad-hoc `_chat_context` HTML
@@ -590,6 +592,89 @@ OPPORTUNITY, not an obvious fix.
 - *Status target:* 🟡 NET-NEW (one role file). Benefits: visible in CognitionView, re-bindable to a
   faster/embed model, and it IS the C4 14KB pre-digest done properly (html→structured brief via a model).
   Composes with `check` (check reads `screen_reader.summary` vs `ground.note`). Cross-ref C1/C4/F1.
+
+---
+
+# ════════ ADDED/REFINED BY ROUND 2 (2026-06-08) ════════
+
+> **What this section is.** Round 2 was a targeted follow-up (three bounded scopes: injection-state +
+> config axis; FORM-gate wiring; second-consumer generality). It adds K3, K4, M3, and Group O to the
+> criteria; refines K1 in place (posture resolved → mechanism). The net-new build remainder is UNCHANGED
+> by these additions — K3/K4 are config and injection-completion (both within the already-scoped cognition
+> lane); M3 is a one-file pre-commit hook; Group O names the organ's general shape and deferred
+> consumers, which the build was already targeting. Round 2 reframes and sharpens; it does not grow the
+> scope.
+>
+> **Evidence convention.** Same standing law. *Observed(file:line)* = read directly on `main`.
+> *Inferred* = pattern-matched, NOT execution-verified. Round 2 findings are at
+> `findings/round2/{injection-and-config,form-gate,second-consumer}.md`.
+
+---
+
+### K3 · The `cast_posture` config axis — MODE_REGISTRY + `rhm_config` slot + `fireable` filter · MODERATE
+*(Round 2 addition: the cast posture is a configurable axis, not a hardwired choice.)*
+- **FUNCTION:** Declare `cast_posture` as a per-mode/per-subtype axis in MODE_REGISTRY (sibling to
+  `grain`, `shape`, `stage`, `brain_config`), following the same subtype-override pattern the `budget`
+  axis already uses (e.g. `show-me` overrides `budget` from 6000→8000 — Observed suite.py:1284-1286).
+  Declaration:
+  ```python
+  "walkthrough": {
+      ...
+      "cast_posture": "enriched",       # "enriched" | "lean" | "off"
+      "subtypes": {
+          "guided":  {"cast_posture": "enriched"},
+          "show-me": {"cast_posture": "lean"},   # show-me drives; lighter cast
+      },
+      ...
+  }
+  ```
+  Add a `cast_posture` slot to `rhm_config()` (default `"enriched"`) and to `set_rhm_config`'s
+  whitelist — following the `MODE_AUTODETECT`/`brain_knobs` precedent (Observed suite.py:1821,
+  1807-1836). Read the posture once in `chat_parts()` at the `fireable` derivation (a one-place filter,
+  Observed suite.py:5333-5340 — no other code changes):
+  ```python
+  posture = self.rhm_config().get("cast_posture", "enriched")
+  if posture == "off":    fireable = []
+  elif posture == "lean": fireable = [r for r in cast if r.id in ("recall", "ground") and ...]
+  # "enriched" = all fireable (current behavior after K1)
+  ```
+  `"enriched"` = full swarm (K1 active). `"lean"` = recall + ground only. `"off"` = empty cast
+  (today's default before K1). Runtime-tunable via `set_rhm_config` without a redeploy. **Net-new
+  work:** (a) `cast_posture` axis in MODE_REGISTRY row + subtypes, (b) slot in
+  `rhm_config()`/`set_rhm_config()`, (c) posture filter in `chat_parts()` — all small;
+  (d) thread subtype resolution into `cast_for_mode()` (Observed gap: `cast_for_mode()` keys on
+  top-level mode string only, Observed roles.py:210-214 — net-new/moderate, only needed if
+  guided vs show-me want different casts out of the box). Verified: setting `cast_posture="lean"` via
+  `set_rhm_config` results in only recall/ground firing on the next guided turn.
+- **FORM:** The axis is surfaceable via the configure verb (the same path that sets brain_knobs
+  today — corpus tokens, settings surface). The operator can see the current posture and change it.
+  design-lint pass on the settings surface.
+- *Status target:* 🟡 MODERATE (precedent clear; (a)–(c) are small; (d) is the moderate net-new if
+  per-subtype posture is needed immediately). Cross-ref K1 (the mechanism this axis governs), K4
+  (injection completion).
+
+### K4 · Injection completion — promote connect/check/voice rules to AST with `destination="inject"` · NET-NEW
+*(Round 2 addition: the ~20% G3/G4 follow-on, a separate bounded criterion.)*
+- **FUNCTION:** Connect, check, and voice carry **descriptive** `{id, reads, effect, kind}` rule dicts,
+  not AST-shaped rules (Observed from roles/connect.py, roles/check.py, roles/voice.py — confirmed
+  injection-and-config §3). These are explicitly skipped at the `chat_parts()` fireable-rule loop
+  (suite.py:5397-5399: *"descriptive {id,reads,effect,kind} role entries are NOT AST rules → skipped"*).
+  Voice's rule additionally carries `kind:"route"` — not `destination:"inject"` — so even if promoted to
+  AST it would not reach the inject path without also setting the destination.
+  To make connect/check/voice OUTPUTS land in Part 2: author AST rules with `when` op-trees and
+  `destination="inject"` for each role; the existing `chat_parts()` loop then picks them up with no
+  further engine changes (Observed suite.py:5419-5438 — the consume leg is already general). **Bound:**
+  the current `inject_text` slot is a scalar (suite.py:5419 — assigns, not appends); when 2+ roles have
+  inject rules, successive fires overwrite. Accumulation logic (appending multiple injections into one
+  coherent context block) is also net-new and must ship alongside the AST rule promotion — otherwise only
+  the last inject-rule to fire contributes to Part 2. Verified: after authoring the AST rules, a guided
+  turn's Part 2 user content contains structured outputs from connect + check (plus recall/ground from K1)
+  as a single coherent injected block.
+- **FORM:** The richer injected context produces Part 2 replies that visibly draw on connection and
+  check outputs (references past design decisions, flags live inconsistencies) — judged via 🔴 needs-tim
+  on the felt altitude improvement.
+- *Status target:* 🟡 NET-NEW (three AST rule blocks + accumulation logic). Depends on K1 (swarm fires)
+  and K3 (posture is enriched). Cross-ref K1, K3, and the G3/G4 designators in the Implementation Guide.
 
 ---
 
@@ -636,6 +721,35 @@ OPPORTUNITY, not an obvious fix.
   tokens) — the operator SEES it was proven, not just "built." design-lint pass.
 - *Status target:* 🟡 NET-NEW (the verify-gate + the bridge↔`company` shared interface). This operationalises
   "verify before claiming" for autonomous builds. Cross-ref E2/F2/J6.
+
+### M3 · Tracked pre-commit hook — FORM gate fires on ALL canvas commits, not only wire-routed ones · NET-NEW
+*(Round 2 addition: the gate-gap finding — FE written outside dispatch_decision has no FORM check.)*
+- **FUNCTION:** The existing `_design_critic` (suite.py:7515) fires UNCONDITIONALLY inside
+  `dispatch_decision` for all wire-routed canvas builds — Observed. The gap: FE written by any path
+  bypassing `dispatch_decision` (a raw worktree session, a direct agent edit) commits canvas files
+  never checked by design-lint. Proof of gap: `.git/hooks/` contains only `.sample` files (Observed,
+  none active); `canvas/app/package.json` has no lint step (Observed :5). Existing off-token debt:
+  `canvas/app/src/app.css:1426` and `app.css:1515` both carry `#fff` — Verified by executing
+  `python3 design/_system/check.py --target canvas/app/src` (2 off-token literals, 0 bespoke). These
+  are cleanup candidates (`var(--white)` or `var(--surface)` likely correct).
+  Close the gap with a **tracked** `hooks/pre-commit` (not `.git/hooks/` — tracked, version-controlled,
+  ephemeral `.git/` side-stepped) that: lints only STAGED canvas `.tsx`/`.css` files per-file, not the
+  whole tree (mirrors the wire's constraint at suite.py:7219 — *"Lint only the surface files THIS
+  build changed — a clean change must not be gated by pre-existing dirt elsewhere"*); exits non-zero on
+  any off-token literal; fails-safe if the design-lint script is missing. Wire via
+  `git config core.hooksPath hooks` (persists in `.git/config`). Add one line to root `AGENTS.md`:
+  *"After cloning, run `git config core.hooksPath hooks` to activate the FORM gate."* This is the
+  AI-native equivalent of a CI gate: self-describing, traceable, picked up by fresh sessions that read
+  `AGENTS.md`. Verified: staging a `.tsx` file with an off-token literal, committing, triggers the
+  hook and the commit is refused; staging a clean file succeeds.
+- **FORM:** When the hook fires, the rejection message names the offending file:line and the literal —
+  actionable on corpus tokens (plain-language `FORM pre-commit: canvas/app/src/app.css:1426 #fff —
+  replace with var(--…)` style). Not a silent exit-1 with no message. design-lint pass (the error
+  message itself reads like the design system wants it to).
+- *Status target:* 🟡 NET-NEW (hook text is proposed in round-2 finding but NOT yet written to disk,
+  NOT yet `chmod +x`, NOT yet end-to-end tested by a real `git commit` with a staged off-token file —
+  hook code-complete-proposed, not code-complete-tested). Cross-ref M2 (verify-gate family);
+  `app.css:1426,1515` are the two named cleanup items that unblock the pre-existing-dirt constraint.
 
 ---
 
@@ -709,6 +823,84 @@ OPPORTUNITY, not an obvious fix.
 
 ---
 
+## Group O — The general human-interaction organ and its 7 consumers
+*(Round 2 addition: the second-consumer analysis confirms the organ is already general. Build-review is
+INSTANCE 1. The 6 other consumers are near-free framing-branches, deferred post-instance-1.)*
+
+**The organ IS already general.** The sequencer (`start_session`, `next`, `present_current`), the
+cursor + go-gate graph, the inbox queue (`inbox.list()` filtered `resolved is None`), addressed markup
+(`ui_target` stamped in `raw`, `resolveUiTarget` on FE drives view), the resolve path
+(`resolve_surfaced(sid, choice, reason)`), and the mode dial (`set_mode("walkthrough")`) are all
+SHARED across every consumer — Observed in second-consumer §5 (suite.py). Per-consumer variation is
+confined to one place: the framing branch in `present_current`. The rest needs NO change per consumer.
+
+### O1 · The sequencer + resolve path are shared, verified as general · READY / Observed
+- **FUNCTION:** The shared organ (start_session / next / present_current / go-gate graph / cursor /
+  ui_target-markup / resolve_surfaced / mode-dial) works for ANY inbox item type — the `present_current`
+  branch dispatches on `action` to handle each consumer differently; the stepper, cursor,
+  gate-writes, and resolve path require no modification per consumer. Verified by: build-review
+  (instance-1) already exercises every shared leg; adding a new consumer requires only a new branch
+  case in `present_current` + a resolve handler for its specific post-approval effect (Observed
+  second-consumer §7: one branch + one handler per consumer, no new organ). Cross-ref A1/A3/J3 (the
+  shared mechanics already criterionised there).
+- **FORM:** N/A as a discrete screen — this is structural confirmation. Its FORM-face is expressed as
+  every consumer presenting through the same guided overlay, corpus tokens, spotlight idiom (the
+  general organ surfaces every consumer identically to the operator's eye).
+- *Status target:* 🟡 Observed for the shared legs; Inferred for the per-consumer branch generality
+  (the branches do not exist in code yet — second-consumer §198-199 marks the per-consumer framing
+  as Inferred/design). Cross-ref O2.
+
+### O2 · The 7 consumers — instance-1 built, the other 6 are near-free framing-branches · cross-cutting
+- **FUNCTION (the definitive consumer map):** The organ serves 7 named consumers; build-review is
+  instance-1; the others are each ONE branch case in `present_current` + one resolve handler, deferred
+  to post-instance-1:
+
+  | # | Consumer | Action class | Framing in `present_current` | Resolve effect |
+  |---|---|---|---|---|
+  | 1 | **Build Review** (instance-1) | `"review"`, `intent="build"` | COA (model-dependent up-translate) | `dispatch_decision` fires on approve |
+  | 2 | **Deferred Offers** | `"deferred_offer"` | offer name + options direct (no COA — it's already commander-altitude) | `revive_offer(sid)` → ProposeAffordance re-opens |
+  | 3 | **Node Results** | `"result"` | COA or raw (COA degrades gracefully; probably fine for value-choice results) | acknowledge (approve) / dismiss (reject); no dispatch |
+  | 4 | **Questions** | `"question"` | question text direct (raw) | operator's free-text answer injected back via `resolve_surfaced(sid, choice="custom", reason=<answer>)` |
+  | 5 | **Authoring** | `"code_build"`,`"role_build"`,`"role_delete"`,`"ui_panel"`,`"ui_extension"` | asset content direct (code/panel/spec) | `apply_surfaced` (already class-routing, no change) |
+  | 6 | **Governance Escalations** | addr-tier I4 class | COA or raw | approve/reject governance consent |
+  | 7 | **System-Initiated Tour** | `ui://` element addresses (start_guide) | corpus how-to, model-free | already built and working — no delta |
+
+  Verified (instance-1): build-review exercises the full organ end-to-end. Inferred (consumers 2–6):
+  the per-consumer `present_current` branch strategy is design-level; the branches do not yet exist
+  in code (second-consumer §198-199). Consumer 7 is ✅ working (start_guide already built — second-
+  consumer §4). The near-free claim rests on the shared organ requiring no change; only the
+  branch + handler vary.
+- **FORM:** Every consumer presents through the same guided overlay on corpus tokens — the organ's
+  general shape is consistent regardless of which consumer is active. The action-class label (e.g.
+  "Build Intent" / "Deferred Offer" / "Question") is a legible type marker in the overlay.
+  design-lint pass per consumer as built.
+- *Status target:* ✅ consumer 7 (start_guide); 🟡 consumer 1 (instance-1, the current build target);
+  🟡 Inferred for consumers 2–6 (design-level; post-instance-1). Cross-ref J1 (queue + origin),
+  J2 (lifecycle), J3 (go-gate), J5 (record verdict + WHY).
+
+### O3 · INSTANCE-1-ONLY machinery — NOT generalized into the organ · INVARIANT
+- **FUNCTION (the anti-bleed guard):** These mechanisms are specific to the build-review consumer
+  (instance-1) and MUST NOT be built into the shared organ — generalising them would introduce an
+  I5-class parallel-system. Per second-consumer §6, these are instance-1-only:
+  1. **`dispatch_decision` wired to resolve** — only build-intents dispatch autonomous implementation
+     on approve; all other consumers use class-specific handlers (apply / answer / acknowledge / revive).
+  2. **`surface_build_intent` / scope declaration** — the scope + `consequence_class` machinery is
+     build-specific.
+  3. **`decision_build` consequence class** — the governance class tied to the build wire.
+  4. **Build-gate + scope-diff at dispatch time (DENY-ALL for empty scope)** — the safety property of
+     the build wire; not a general walkthrough concern.
+  5. **`surface_intent_at` as the comment→intent entry seam (L1)** — the addressed-feedback-to-wire
+     path is build-specific.
+  The invariant: the loop checks that no implementation of a new consumer bleeds any of these five
+  into the shared sequencer/resolver path. Verified structurally at build-time (grep-confirm that
+  `dispatch_decision` is never called from the shared `present_current` branch logic, only from the
+  build-review resolve handler).
+- **FORM:** N/A as a screen — a structural invariant held by the anti-parallel system guard (I5).
+  Cross-ref I5 (the anti-parallel guard); all consumers in O2.
+- *Status target:* 🟡 (standing invariant the loop re-checks when a new consumer is added).
+
+---
+
 ## Priority order (dependency order, not a schedule)
 
 Reuses the synthesis §5 ordering — already dependency-ordered, each unblocks the next:
@@ -746,6 +938,25 @@ The J–N groups are dependency-placed (the refinements N· fold into the steps 
 - **J4 (branching)** — net-new, after the linear walk works (post-H2/E2).
 - **M1 (coherence oracle) + M2 (verify-gate wraps generated builds)** — M2 lands with E2/F2 (it gates
   what they dispatch); M1 is a quality-of-review addition, low urgency.
-- **K1 (cast posture)** — a Tim-DECISION gate, not scheduled as a build step until decided; **K2
-  (screen_reader role)** can build once K1's posture is set (or independently as the C4 pre-digest).
+- **K1 (cast posture)** *(Round 2: posture DECIDED enriched, K1 is now a build step)* — six one-line
+  mode_scope edits; depends on K3 axis existing first. **K2 (screen_reader role)** — can build once
+  K1 is active (or independently as the C4 pre-digest).
 - **J9 (S1–S7 scenarios)** — the standing acceptance suite the loop checks every criterion against.
+
+### Coverage-round-2 additions slotted into the order
+
+Round 2 additions are dependency-placed; they do NOT reorder the existing sequence:
+
+- **M3 (tracked pre-commit hook + `core.hooksPath`)** — lands EARLY (file-disjoint from the main build
+  lanes; blocks no other criterion). The 2 existing `#fff` literals in `app.css:1426,1515` are named
+  cleanup items; fix them before or alongside the hook so the whole-tree scan is clean for future
+  reference (though the hook lints staged-only, so they do not gate today's commits).
+- **K3 (`cast_posture` axis in MODE_REGISTRY + `rhm_config` slot + `fireable` filter)** — lands BEFORE
+  K1 (the axis is the prerequisite for K1 to behave correctly). Items (a)–(c) small; (d) per-subtype
+  threading moderate, needed if guided vs show-me want different cast defaults immediately.
+- **K4 (injection completion: AST rules + accumulation logic)** — lands AFTER K1 + K3 are active.
+  Delivers the ~20% G3/G4 payoff (connect/check/voice outputs fold into Part 2). Cross-ref the
+  G3/G4 designators in the Implementation Guide.
+- **O1/O2/O3 (general organ + 7 consumers)** — these are structural recognition criteria; O1/O3 are
+  invariants the loop re-checks throughout; O2 consumers 2–6 land AFTER instance-1 (build-review) is
+  proven working. Consumer 7 (system-tour) is already ✅.

@@ -1,15 +1,51 @@
-# UNIFICATION MAP — the grown picture after Coverage Round 1
+# UNIFICATION MAP — the grown picture after Coverage Rounds 1 + 2
 
 > **What this is.** The synthesized output of the full-directory COVERAGE ROUND (8 territories: runtime,
 > canvas, substrate, cognition, voice, design, ops, design-corpus) over the guided-review-surface. It
 > grounds the convergent thesis against current `main`, verifies the two big claims, names the genuine
 > net-new remainder, and surfaces the decisions for Tim. The grown criteria live in
-> `Completion Criteria.md` (the "ADDED BY COVERAGE ROUND 1" section, Groups J–N); this map is the picture
-> behind them.
+> `Completion Criteria.md` (the "ADDED BY COVERAGE ROUND 1" section, Groups J–N; the "ADDED/REFINED BY
+> ROUND 2" section, K1 refine + K3/K4/M3/O); this map is the picture behind them.
 >
 > **Evidence convention (Tim's standing law).** *Observed(file:line)* = read directly on `main`.
 > *Inferred* = pattern-matched, NOT execution-verified. *Verified* = confirmed by a run. Nothing here is
 > painted green; the appended criteria are status-marked honestly in the criteria doc.
+
+---
+
+## Round 2 — finalized scope
+
+**Organ is already general.** The sequencer (`start_session`/`next`/`present_current`), cursor,
+go-gate graph, inbox queue, addressed markup (`ui_target`), resolve path, and mode dial are SHARED by
+every consumer — Observed throughout suite.py (second-consumer §5, §7). This was implicit in Round 1
+(vault thesis: "built general, not as build-review's UI"); Round 2 confirms it from the code and names
+the exact architecture: per-consumer variation is ONE branch in `present_current` + ONE resolve handler.
+Nothing else changes per consumer.
+
+**The 7 consumers (Group O, Completion Criteria).** Build-review = instance-1 (current build). The
+other six — deferred-offers, node-results, questions, authoring, governance-escalations, system-tour —
+are near-free framing-branches, deferred post-instance-1. System-tour (consumer 7, `start_guide`)
+is already built and working. The five instance-1-only mechanisms (`dispatch_decision`/scope-machinery/
+`decision_build` class/DENY-ALL scope-diff/`surface_intent_at`) must NOT bleed into the shared organ
+(anti-bleed guard, O3 / I5).
+
+**The `cast_posture` config axis (K3, K1 refine).** Posture DECIDED enriched by default. The axis is
+declared in MODE_REGISTRY as a per-mode/per-subtype default (sibling to grain/shape/stage), runtime-
+tunable via `rhm_config.cast_posture` (MODE_AUTODETECT/brain_knobs precedent), read once at the
+`fireable` filter in `chat_parts()`. K1's six mode_scope edits are now a build step (not a decision-gate).
+K4 adds injection completion (connect/check/voice AST rules + accumulation logic) as a bounded
+follow-on once K1+K3 are active.
+
+**The FORM-gate hook (M3).** The wire's `_design_critic` gate fires for all `dispatch_decision`-routed
+builds — Observed. Gap: FE written outside the wire has no gate (no git hook, no CI, no npm lint step
+— Observed). Fix: tracked `hooks/pre-commit` linting staged canvas `.tsx`/`.css` per-file + `git config
+core.hooksPath hooks` + one AGENTS.md activation line. Existing off-token debt: `app.css:1426,1515`
+(`#fff` ×2) — Verified. Status: proposed/code-complete-untested; 🟡 at most.
+
+**Net-new remainder unchanged.** Round 2 adds config (K3), injection-completion (K4), a one-file hook
+(M3), and structural consumer-map criteria (O1–O3). It does NOT grow the build's core deliverables.
+The net-new list from Round 1 (F2, H2, E2, J4/J7, K2, M1, M2, J1–J6) stands intact. Round 2 reframes
+and sharpens; it is not scope creep.
 
 ---
 
