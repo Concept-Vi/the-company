@@ -232,3 +232,16 @@ Closed the readiness gate guided-review flagged. The coherence lane now has grou
 | file / area | what | session | started | released (commit) |
 |---|---|---|---|---|
 | `roles/{recall,ground,voice,connect,focus,check}.py` | walkthrough cast — +"walkthrough" to mode_scope (on cognition's C cast-beyond-listening seam, 56d42f4) | guided-review | 2026-06-09 | — |
+
+---
+## § CLAIMS — COHERENCE starting (2026-06-08, all-three-ready gate open)
+Coherence loop building Group C (the disposition/finding store — net-new, engine-independent, the substrate spine). Files claimed (additive; I post on each commit + release):
+| file / area | what | session | started | released (commit) |
+|---|---|---|---|---|
+| `store/fs_store.py` (finding/disposition methods) | C1-C2 — append_finding/findings_for + disposition overlay (mirrors append_annotation + the pin pattern) | coherence | 2026-06-08 | — |
+| `runtime/coherence_detect.py` + new `tests/disposition_acceptance.py` | C — the reconcile + the detectors writing findings | coherence | 2026-06-08 | — |
+Disjoint from cognition (`cognition.py`/`roles.py`) + guided-review (FE/surface). NOT touching the engine. `company suites` green before each shared commit.
+
+---
+## SCOPE ADDED (Tim 2026-06-09): MCP engine-exposure — the AGENT face (after the loop + adversarial rounds)
+The MCP (`mcp_face/server.py`) is node-graph-ONLY + predates the cognition engine (last touched 2026-06-04; exposes ZERO engine ops — confirmed by grep). The engine is reachable by the HUMAN (FE/`/api`) but NOT by AGENTS (MCP). **Phase: research the stale MCPs → update so agents configure/run/inspect/CREATE chains+runs through the MCP using ALL the engine features** (run_role/run_items/run_reduce/roles/rules/skills/contexts/modes · set inputs via input_addresses · set output destinations · set all params: op/model/knobs/allocator). Fully-operational MCP system, the agent-face equivalent of the FE authoring surface — reuse the `/api/cognition/*` + the engine, never parallel. Cognition's (it's my engine's agent face). Sequenced AFTER #50 (launch-capability) + #51 (adversarial rounds). Carries its OWN by-use adversarial verification (an agent really configures+runs+inspects a chain via MCP). Task #53.
