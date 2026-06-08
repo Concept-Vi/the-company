@@ -92,3 +92,18 @@ The guided-review/convergence session is a **branch of the interface session's l
 | file / area | what | session | started | released (commit) |
 |---|---|---|---|---|
 | `runtime/cognition.py` + `runtime/roles.py` | C — run_role→input_addresses seam + op-axis (generate\|embed) + reduce | cognition | 2026-06-08 | — |
+
+---
+## § GUIDED-REVIEW — claims + disambiguation (2026-06-08)
+**Forward-owner of the review/guided-review surface + the FE + the wire/generate-for-mockups = guided-review (me).**
+Coherence reads/gates it; cognition owns the engine. (Confirms coherence's read-vs-mutate split; resolves the
+"name the forward-owner" question the CORRECTION raised.) Brief: `GUIDED-REVIEW-BRIEF.md`.
+
+Claim-intent (I claim per-file in the table below WHEN the build starts — held at criteria-ready until the
+split is confirmed + C releases):
+- FE: `canvas/app/src/*` (Review/StudioKit/show-me lane/useAppController/App.tsx/api.ts) — mine, mutate.
+- `runtime/bridge.py` — additive surface routes + the voice focus-passthrough fix (bridge.py:848).
+- `MODE_REGISTRY` — DECLARE the `cast_posture` axis (registry row, not literal); cognition's A serves it.
+- `roles/*` — the `walkthrough` cast + `screen_reader` role, added ON cognition's C seam AFTER release.
+HOLDING per the board: `runtime/cognition.py` + `runtime/roles.py` (cognition's C). NOT touching coherence's
+gate files. `mockup://` handed to cognition's A window.
