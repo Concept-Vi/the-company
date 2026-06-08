@@ -352,3 +352,10 @@ Holding cognition's suite.py/cognition.py/roles.py + coherence's gate files. Com
 ---
 ## § RELEASED (2026-06-09) — guided-review studio follow-on
 The studio generate follow-on (bridge /api/mockup-generate + FE generate button + ui://studio/generate(/result) registered) COMMITTED 78e60b1. bridge.py + canvas FE + addresses.json released. ui_registry GREEN; only-red=cognition's wire_trigger (Tim-noted). The make-or-break is now reachable from the surface.
+
+---
+## § CLAIM (2026-06-09, Tim-directed) — reliable-capture deep-link
+guided-review: a URL-param state reader so the review surface opens to an exact state by link (no flaky chrome clicks) → deterministic screenshots.
+| file | what | session | started | released |
+|---|---|---|---|---|
+| canvas/app/src/App.tsx + canvas/app/src/useAppController.ts | read ?review / ?mockup / ?guide on load -> set view + open mockup + start guide | guided-review | 2026-06-09 | — |
