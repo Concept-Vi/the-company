@@ -48,6 +48,12 @@ Roles fire model calls through `fabric/` guards (a model runs only INSIDE a role
   - **`check`** — contradiction: a forming answer vs ground → does it contradict? (CHAINS after a part
     starts — its dependency is declared as DATA; the chaining executor is G3/G4).
   - **`voice`** — tone: persona+answer → the toned phrasing (the cognition role, not the TTS module).
+- The **`walkthrough` cast (guided-review's enriched guided turn — on the C cast-beyond-listening seam, 56d42f4):**
+  the 6 `listening` roles above ALSO declare `mode_scope ⊇ {walkthrough}` (the enrichment swarm fires during
+  the guided review walk), plus:
+  - **`screen_reader`** — the at-altitude screen-comprehension: reads the `MOCKUP UNDER REVIEW` block (the
+    `mockup://` focus injection, cognition's A) → a plain-language "what this screen is + what you can do" for
+    the non-developer operator. Walkthrough-cast only (the review faculty; not `listening`). `op:generate`.
 - **`verify_jury`** — the canonical **jury** (C2.4): `draws:3` + a pure majority-vote `verdict_rule`. In no
   cast (fired explicitly via `run_jury`). **⚠ E4 caveat:** N draws on ONE model are correlated (variance,
   not independent error) — a correctness-jury that matters needs model diversity; the verdict_rule shape
