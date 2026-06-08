@@ -121,6 +121,12 @@ def _serialize_role(rid: str, role: Any) -> dict:
         "draws": int(getattr(role, "draws", 1)),
         "mode_scope": sorted(getattr(role, "mode_scope", ()) or ()),
         "requires": list(getattr(role, "requires", []) or []),
+        # C-build facets (the engine generalization — so the surface/registry/gates SEE them):
+        # `op` (generate|embed — the operation axis, C 1/4) and `input_addresses` (what the role reads,
+        # resolved from the address system: a skill/context/upstream output, C 3/4+3b). Projected so a
+        # role's full declared shape is one-source-visible — never re-derived or hardcoded FE-side.
+        "op": spec.get("op", "generate"),
+        "input_addresses": list(spec.get("input_addresses") or ()),
         "trigger": spec.get("trigger"),
         "render_hint": spec.get("render_hint"),
         # the role's declared routing rules AS DATA (06 §C — the chain/injection edges the view draws).
