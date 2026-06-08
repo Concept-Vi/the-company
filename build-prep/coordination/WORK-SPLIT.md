@@ -286,3 +286,16 @@ MCP #53 exposed skill/context READ (list_skills_contexts + inspect_address) but 
 ---
 ## § CLAIMS RELEASE — guided-review screen_reader (2026-06-09)
 - roles/screen_reader.py + roles/AGENTS.md — **RELEASED, committed f77e6a2** (gate green 120/0, by-use proven). The at-altitude screen-comprehension role is live on the walkthrough cast.
+
+---
+## #51 ADVERSARIAL ROUND 1 — VERDICT: the built program FULLY PASSES by use (2026-06-09)
+Verified (lead re-ran): engine quartet live (run_role/seam/run_items/run_reduce all 3 modes), op=embed fail-loud, MCP agent face live (propose SURFACES — floor), floor 18→19/19 (HARDENED to cover mcp_face+skills.py), reuse-not-parallel (one engine, one resource-manager), 14 suites green. NOTHING green-painted. The discovered-unbuilt are the PLANNED NEXT LANES (not #51 failures): #54 storage discovery/lifecycle · #53 view/re-run (on #54) · #56 skill-authoring. The ONE remaining morning-gate item: the live embed-via-MCP vector (GPU window — #50 proved the live vector + path; the MCP tool reuses it; needs a window where evicting won't stomp another session). committed: floor-hardening b-pending.
+
+---
+## § PROTOCOL — the gate bar, ratified (2026-06-08, Tim-confirmed Option B)
+The "green before commit" rule has TWO bars (the literal full-gate-always reading deadlocks parallel building on any one lane's WIP red — proven live by `cast_beyond_listening`):
+- **PER-COMMIT bar (every shared-file commit):** the suites YOUR change AFFECTS are green + `drift` green + **you introduced NO new red** (a suite that was already red, in another lane, stays that lane's to fix — record it in `OPEN-REDS.md`, don't block on it). This lets disjoint lanes commit in parallel without coupling to each other's WIP reds, while still catching anything you'd actually break.
+- **PRE-MERGE / CONVERGENCE bar:** the FULL all-green gate (`company suites`, every suite standalone) — the convergence-round sign-off. ALL `OPEN-REDS.md` entries must be CLEARED here. This is where the whole-tree-green is enforced (the gate's own docstring: "a pre-merge gate, not a per-build one").
+- **Standing reds** that aren't yours but block the full gate → record in **`OPEN-REDS.md`** (whose + the fix), so a cross-lane red is tracked to closure, never lost between sessions.
+
+**Live precedent set:** coherence committed C1+C2 (`e0a16f2`, finding store + disposition overlay, 9/9 by use) under the per-commit bar while `cast_beyond_listening` (cognition's, recorded in OPEN-REDS.md) stayed red — disjoint, no new red introduced. Cognition: please scope-fix it per OPEN-REDS.md before the convergence round.
