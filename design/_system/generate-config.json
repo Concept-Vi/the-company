@@ -1,0 +1,29 @@
+{
+  "_doc": "generate-for-mockups — the DECLARED, reconfigurable heart of the guided-review 'generate' step. This is the SINGLE SOURCE runtime/generate_mockup.py reads; changing generate behaviour = editing THIS file, no code change. Honors no-hardcoding: NO prompt/model/mode literal lives in the engine code — all of it is here. Read fresh at call-time (mirrors implement.permission_mode()'s call-time read) so an edit takes effect with no restart. Sibling of design/_system/tokens.json / addresses.json (the design/_system registry precedent).",
+
+  "model": "default",
+  "_model_doc": "The agent/model the generate dispatch runs under. 'default' = let the dispatcher (claude -p) use its configured default model; a concrete model id can be slotted here to pin it. (implement.launch does not yet thread a per-call model; this field is carried as declared config + surfaced in the rendered context so the behaviour is reconfigurable data, and is the seam for a future --model wire.)",
+
+  "mode": "plan",
+  "_mode_doc": "plan | apply. DEFAULT plan = SAFE/read-only: a plan-mode claude -p run changes NOTHING and commits NOTHING. apply graduates to a change-making, git-revertible run. The engine's mode= argument overrides this per-call; absent that, THIS is the default posture.",
+
+  "instruction_template": "You are refining ONE design mockup in the 'company' repo as part of the guided design-review loop. The operator has reviewed the rendered mockup and left the feedback notes below; apply them faithfully to the mockup's HTML.\n\nMOCKUP FILE: {mockup_file} (at {mockup_path})\n\nREVIEWER FEEDBACK (oldest first — apply every PENDING note; notes marked applied/dismissed are context only):\n{feedback_block}\n\nEDIT RULES:\n- Change ONLY {mockup_path}. Do not touch any other file.\n- Keep the mockup on the shared design system (its existing classes + design tokens) — never introduce hardcoded one-off values where a token exists.\n- Make the smallest change that satisfies each note; preserve everything the notes do not ask to change.\n- If a note is ambiguous or cannot be satisfied without leaving this one file, say so in your summary rather than guessing or widening scope.",
+  "_instruction_template_doc": "Renders a mockup + its captured feedback into the CORE instruction. Placeholders: {mockup_file} {mockup_path} {feedback_block}. NOTE: implement.build_instruction WRAPS this core with the repo's universal STANDARDS_BLOCK + the authorized-scope line (derived from routing.mockup_edit.scope below) — so this template is the generate-specific core, not the literal final prompt.",
+
+  "feedback_filter": "pending",
+  "_feedback_filter_doc": "Which captured feedback statuses feed the instruction's actionable set. 'pending' = only un-applied notes drive the edit (applied/dismissed still render as context). 'all' = every note. The fail-loud no-feedback check counts notes matching THIS filter.",
+
+  "routing": {
+    "mockup_edit": {
+      "enabled": true,
+      "scope": ["design/mockups/{mockup_file}"],
+      "_scope_doc": "scope_rule: the dispatch is authorized to change ONLY this one mockup file. {mockup_file} is substituted at call-time. Passed as the decision payload's scope[] so implement.build_instruction emits the 'authorized to change ONLY these paths' line and the wire's scope-diff can enforce it."
+    },
+    "live": {
+      "enabled": false,
+      "_live_doc": "DECLARED, not yet implemented: the 'live' route turns a reviewed mockup into a build-intent against the real surface/code (not an edit to the static mockup file). Carried here as config so the route is reconfigurable data; the engine implements mockup_edit now and raises a clear NotImplementedError if asked to run 'live'."
+    }
+  },
+  "default_route": "mockup_edit",
+  "_default_route_doc": "Which routing entry generate_for_mockup uses when no route is passed."
+}
