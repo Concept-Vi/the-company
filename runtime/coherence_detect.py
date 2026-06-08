@@ -222,6 +222,33 @@ def reconcile(current: list[dict], prior: list[dict]) -> dict:
             "counts": {"known": len(known), "new": len(new), "resolved": len(resolved)}}
 
 
+def record_structural_findings(store, repo_root: str) -> dict:
+    """C6 — run the trustworthy structural detector (reachability) and WRITE its findings into the store, so
+    the substrate flows end-to-end (detector → finding-store → disposition overlay → burn_down) on REAL data.
+    Each orphan route lands as an `unwired-route` finding; a catalogued orphan's disposition is SEEDED from the
+    declared orphan-routes catalogue tag (the _ORPHAN_ROUTES→records migration) — BUT only if undispositioned,
+    so an operator's later decision is never clobbered by the catalogue default on re-detection (own/reflect:
+    the decision persists, detection re-runs). A NEW (uncatalogued) orphan lands undispositioned → open (the
+    burn-down target). Only the EXACT detector writes burn-down findings; the candidate detectors
+    (capability-no-consumer/hardcoding) stay report-only (positive-only — they don't inflate the must-fix
+    count). Returns {recorded}."""
+    import json
+    routes, wired = route_reachability(repo_root)
+    cat_path = os.path.join(repo_root, "design", "_system", "orphan-routes.json")
+    catalogue = json.load(open(cat_path, encoding="utf-8"))["routes"]
+    recorded = 0
+    for route in sorted(routes):
+        if wired.get(route):
+            continue                                     # wired — not a finding
+        store.append_finding({"kind": "unwired-route", "address": route, "route": route,
+                              "state": "built-no-caller", "source": "structural", "owner": "interface"})
+        recorded += 1
+        if route in catalogue and store.disposition_for("unwired-route", route) is None:
+            store.append_disposition("unwired-route", route, catalogue[route]["tag"],
+                                     reason=catalogue[route].get("note", ""), by="catalogue")
+    return {"recorded": recorded}
+
+
 def burn_down(store) -> dict:
     """C5 — the burn-down model: a READ-TIME fold over the finding store ⨝ the disposition overlay (the
     run_stats pattern — no maintained graph; own/reflect). Dedups the append-only findings by (kind,address)
