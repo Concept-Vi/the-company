@@ -25,3 +25,5 @@ mcp_registration_debug.log
 
 # CLI telemetry (generated runtime data)
 ops/cli/telemetry.jsonl
+.adv.log
+.loop.log
