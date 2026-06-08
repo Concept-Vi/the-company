@@ -222,6 +222,50 @@ def reconcile(current: list[dict], prior: list[dict]) -> dict:
             "counts": {"known": len(known), "new": len(new), "resolved": len(resolved)}}
 
 
+def scan(repo_root: str, store=None) -> dict:
+    """The on-demand coherence READ (the `company coherence` face). RE-DERIVES the model fresh (own/reflect:
+    no maintained graph — detection is recomputed each call), recording the structural findings into `store`
+    (a fresh temp store if none given) + folding the burn_down, and running the CANDIDATE detectors as a
+    separate report (positive-only — proposed, never in the burn-down must-fix count). Returns
+    {burn_down, candidates:{capability_no_consumer, hardcoding}}."""
+    if store is None:
+        import tempfile, os as _os
+        from store.fs_store import FsStore
+        store = FsStore(_os.path.join(tempfile.mkdtemp(prefix="coherence-scan-"), "store"))
+    record_structural_findings(store, repo_root)
+    return {"burn_down": burn_down(store),
+            "candidates": {"capability_no_consumer": capability_no_consumer(repo_root),
+                           "hardcoding": [d["name"] + f" ({d['file']}:{d['line']})" for d in hardcoding_candidates(repo_root)]}}
+
+
+def format_scan(result: dict) -> str:
+    """Render a scan scannably for the CLI (the FORM bar for this lane: a navigable surface, not a dict dump).
+    The burn-down up top (the headline), the open backlog by disposition, then the candidates (adjudicate),
+    clearly separated so the trustworthy must-fix set is never confused with the propose-only candidates."""
+    b = result["burn_down"]
+    c = result["candidates"]
+    lines = []
+    lines.append(f"COHERENCE — {b['total']} findings :: {b['open']} open · {b['accepted']} accepted · {b['closed']} closed")
+    # the open backlog, grouped by disposition (the burn-down-to-zero target)
+    byd = b["by_disposition"]
+    open_disp = {k: v for k, v in byd.items() if k in (*_FINISH_DISPOSITIONS, "(open)")}
+    if open_disp:
+        lines.append("  OPEN (the burn-down target):")
+        for disp, n in sorted(open_disp.items(), key=lambda kv: -kv[1]):
+            lines.append(f"    [{disp}] {n}")
+    acc_disp = {k: v for k, v in byd.items() if k in _ACCEPTED_DISPOSITIONS}
+    if acc_disp:
+        lines.append("  accepted (dispositioned — not a defect): "
+                     + " · ".join(f"{disp} {n}" for disp, n in sorted(acc_disp.items())))
+    lines.append(f"  by kind: " + " · ".join(f"{k} {v}" for k, v in sorted(b["by_kind"].items())))
+    # the candidate detectors — positive-only, ADJUDICATE (never in the must-fix count)
+    cnc, hc = c["capability_no_consumer"], c["hardcoding"]
+    lines.append(f"\n  candidates (positive-only — adjudicate, never auto-acted):")
+    lines.append(f"    capability-no-consumer ({len(cnc)}): {', '.join(cnc) if cnc else '—'}")
+    lines.append(f"    hardcoding ({len(hc)}): {', '.join(hc[:8])}{' …' if len(hc) > 8 else ''}")
+    return "\n".join(lines)
+
+
 def record_structural_findings(store, repo_root: str) -> dict:
     """C6 — run the trustworthy structural detector (reachability) and WRITE its findings into the store, so
     the substrate flows end-to-end (detector → finding-store → disposition overlay → burn_down) on REAL data.

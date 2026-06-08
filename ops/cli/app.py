@@ -152,6 +152,17 @@ def main():
         env = dict(_os.environ, COMPANY_STORE=_tf.mkdtemp(prefix="company-suites-"))
         print("running the all-green gate — every acceptance suite, standalone. This takes a few minutes…\n")
         sys.exit(_sp.run([py, gate], cwd=repo, env=env).returncode)
+    if cmd == "coherence":
+        # THE COHERENCE READ (on-demand). Re-derives the coherence model fresh (own/reflect — no maintained
+        # graph): runs the structural detectors over the repo, folds the burn-down, and prints the real
+        # backlog + the positive-only candidates. Fast (no subprocess swarm — pure AST/registry reads).
+        # Thin: the logic lives in runtime/coherence_detect (scan/format_scan); this is its operator face.
+        import os as _os
+        repo = _os.path.dirname(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+        sys.path.insert(0, repo)
+        from runtime import coherence_detect as _cd
+        print(_cd.format_scan(_cd.scan(repo)))
+        return
     if cmd == "models":
         print(models.inventory()); return
     if cmd == "telemetry":
