@@ -201,10 +201,19 @@ no model — mirrors `run_jury`'s `verdict_rule`); `mode="cluster"` embeds (op=e
 (reusing `nodes/retrieve._cosine` / `vector_index.query_index`) — the cross-unit "which of these are the
 same" join, the **built-twice-discovery** primitive. `run_reduce` is a DRIVER (the model runs only in a
 reduce-role; rule/cluster are pure L2) and emits NO resolve/approve/dispatch (the floor holds). It wires
-the previously-declared-but-dead `reduce-tree` THOUGHT_SHAPE live. The `run_role` input is `ctx`-supplied
-(default `Utterance:`) OR resolved from `input_addresses` via the address system (C 1/4 seam — a role's
-input can be a skill / a context / any upstream output, set by address); `op: generate|embed` selects the
-operation (embed reuses `complete_embeddings`, local-resident only). Add a new shape/grain ⇒ add it to
+the previously-declared-but-dead `reduce-tree` THOUGHT_SHAPE live. **`run_items(role, items, store, *,
+turn_id, ...)` (C 3/4) is the fourth — the axis-INVERSION: 1 role × N units** (vs `run_swarm`'s N roles ×
+1 ctx), fanning ONE role over N input-units (each a literal or an address), output per-unit at
+`run://<turn>/<role>/<i>`; it mirrors `run_swarm`'s gate/pool/barrier/rollup (reuse, not forked). Its
+companion **`resolve_address(store, addr, *, turn_id)` is the scheme-dispatching resolver** (the
+"resolve content from ANY address" seam): materialises `<turn>` templates, then dispatches by `://`
+presence — `run://`→`resolve_run_ref`, `cas://`→`get_content` (both REUSE), a bare name→a `BARE_NAME`
+sentinel (a ctx-key), and **every other scheme (`skill://`/`context://`/blob/vec/ui/code) RAISES
+fail-loud — the extensible seam where those resolvers plug in** (skills/contexts are net-new addressable
+registries landing on this seam, C 3b). The `run_role` input is `ctx`-supplied (default `Utterance:`) OR
+resolved from `input_addresses` via the address system (C 1/4 seam — a role's input can be a skill / a
+context / any upstream output, set by address); `op: generate|embed` selects the operation (embed reuses
+`complete_embeddings`, local-resident only). Add a new shape/grain ⇒ add it to
 `THOUGHT_SHAPES`/`PART_GRAIN` **and reflect it here**, or `tests/chat_parts_acceptance.py` fails loud.
 
 ## The activation contexts (Concurrent Cognition G5 · `runtime/activation.py` + `runtime/suite.py` · the dial generalised)

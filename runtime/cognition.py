@@ -45,6 +45,7 @@ from typing import Any, Callable, Iterator
 
 from pydantic import BaseModel, Field
 
+from contracts.address import scheme as _scheme
 from fabric import client, transport
 from fabric.vram import VramGate
 
@@ -588,6 +589,82 @@ def resolve_run_ref(store, addr: str, *, on_missing: str = "raise") -> Any:
     return store.get_content(cas)
 
 
+# --- C 3/4: the SCHEME-DISPATCHING address resolver (the input-address INTENT — Tim, 2026-06-08) --
+# A SENTINEL the dispatcher returns for a BARE NAME (no "://" — e.g. "utterance", "notes"): a bare name
+# is NOT an address, it is a ctx KEY the caller reads from the supplied context. Distinct object (an
+# `is`-comparison, never a falsy/None confusion) so a caller can tell "this is a ctx-key, go read ctx"
+# apart from a legitimately-resolved None.
+class _BareName:
+    __slots__ = ()
+    def __repr__(self): return "<BARE_NAME: read from ctx>"
+BARE_NAME = _BareName()
+
+
+def resolve_address(store, addr: str, *, turn_id: str | None = None,
+                    on_missing: str = "raise") -> Any:
+    """Resolve CONTENT FROM ANY ADDRESS — the scheme-dispatching resolver (C 3/4, the input-address
+    INTENT: a role's input can be "any skill, any context, or the output of anything else, set by
+    address"). This is the EXTENSIBLE SEAM: it DISPATCHES by address scheme to the existing per-scheme
+    resolvers — it does NOT build a parallel resolver (reuse-don't-parallel).
+
+    Resolution path:
+      1. MATERIALIZE templates first — substitute `<turn>` → `turn_id` in `addr` (so a declared
+         `run://<turn>/part-1` becomes `run://<turn_id>/part-1` BEFORE any scheme dispatch). A `<turn>`
+         template with no `turn_id` RAISES (fail loud — never dispatch an unmaterialized template, which
+         would resolve the literal "<turn>" path and miss).
+      2. DISPATCH by `contracts.address.scheme(addr)`:
+           run://  → the EXISTING canonical resolver `resolve_run_ref` (head→get_content; REUSE).
+           cas://  → the EXISTING immutable-content read `store.get_content(addr)` (cas:// IS get_content).
+      3. A BARE NAME (no "://" at all — e.g. "utterance", "notes") is NOT an address: return the
+         `BARE_NAME` sentinel so the CALLER reads it from the supplied ctx (bare names are ctx keys).
+      4. ANY OTHER scheme — a REGISTERED scheme with no content-resolver yet (blob:// vec:// ui:// code://)
+         OR an UNREGISTERED scheme (skill:// foo://) — RAISES fail-loud: there is no content-resolver for
+         it TODAY. NEVER a silent empty. This RAISE is the extensible seam: when a skill/context resolver
+         exists, add a dispatch branch here (and that scheme stops raising).
+
+    HONEST SCOPE: skills / contexts are NOT addressed today — there is no skill:// or context resolver.
+    `resolve_address` resolves `run://` (an upstream output) + `cas://` (a content blob) NOW; it is the
+    ONE place a skill://-resolver / context-resolver / vec:// k-NN read will plug in LATER (when the
+    scheme has a resolver). Until then, those schemes fail loud here — the seam is declared, not faked.
+
+    `on_missing` is passed through to `resolve_run_ref` for run:// (a declared "skip" returns None on a
+    pruned ref; default "raise" fail-louds). Fail loud everywhere else."""
+    if not isinstance(addr, str):
+        raise TypeError(f"resolve_address: address must be a str, got {type(addr).__name__} — fail loud.")
+    # 1. MATERIALIZE the <turn> template FIRST (before any scheme dispatch).
+    if "<turn>" in addr:
+        if not turn_id:
+            raise ValueError(
+                f"resolve_address: address {addr!r} carries a <turn> template but no turn_id was "
+                f"passed — cannot materialize the address (fail loud, never dispatch an unmaterialized "
+                f"template that would resolve the literal '<turn>' path and miss).")
+        addr = addr.replace("<turn>", turn_id)
+    # 2/3/4. DISPATCH by scheme. NOTE: scheme() returns None for BOTH a bare name AND an unregistered
+    # scheme (skill:// — not in SCHEMES) — so we MUST discriminate on "://", not on scheme()==None
+    # (else skill://foo would wrongly return the ctx-read sentinel instead of failing loud).
+    sch = _scheme(addr)
+    if sch == "run":
+        return resolve_run_ref(store, addr, on_missing=on_missing)        # REUSE the canonical resolver
+    if sch == "cas":
+        return store.get_content(addr)                                    # REUSE: cas:// IS get_content
+    if sch is not None:
+        # a REGISTERED scheme (blob/vec/ui/code) with no content-resolver wired into this dispatcher yet.
+        raise ValueError(
+            f"resolve_address: scheme {sch!r} not content-resolvable yet (address {addr!r}) — only "
+            f"run:// + cas:// resolve to content today (extensible: add a {sch}:// resolver branch here). "
+            f"Fail loud, NEVER a silent empty.")
+    if "://" in addr:
+        # an UNREGISTERED scheme (skill://, context://, foo://) — the input-address INTENT's future home.
+        bad = addr.split("://", 1)[0]
+        raise ValueError(
+            f"resolve_address: scheme {bad!r} not content-resolvable yet (address {addr!r}) — skills / "
+            f"contexts are NOT addressed today (the honest scope). run:// + cas:// resolve now; this is "
+            f"the EXTENSIBLE seam where a {bad}:// resolver plugs in when the scheme exists. Fail loud, "
+            f"NEVER a silent empty.")
+    # a BARE NAME (no "://") — not an address; the caller reads it from the supplied ctx.
+    return BARE_NAME
+
+
 # --- C1.1 + C1.2 + C1.6: the concurrent swarm wave -----------------------------------------------
 @dataclass
 class RoleRun:
@@ -710,6 +787,174 @@ def run_swarm(roles: list, ctx: dict, store, *, turn_id: str,
     # AFTER the barrier (serialized). This is the value a later part injects. Fail loud on a missing ref.
     for rid, addr in addresses.items():
         result.resolved[rid] = resolve_run_ref(store, addr)
+    return result
+
+
+# =================================================================================================
+# C 3/4 — run_items: the AXIS-INVERSION (1 role × N units) — makes input_addresses OPERATIONAL.
+#
+# run_swarm fans N DIFFERENT roles over 1 shared ctx (N roles × 1 ctx). run_items INVERTS the axis: it
+# fans ONE role over N input-UNITS (1 role × N units) — each unit becomes that role's primary input
+# (CORPUS-CHAIN §MAP: "run_swarm fans N roles × 1 ctx; the map needs 1 role × N units"). This is the
+# map half of the corpus-chain, and the operational form of the input-address INTENT: a unit is either a
+# LITERAL value OR an ADDRESS (resolved via resolve_address — run:// an upstream output, cas:// a blob).
+#
+# It MIRRORS run_swarm's fan (reuse-don't-fork): the SAME global VramGate, the SAME swarm sub-pool width
+# (budget.swarm_slots), the SAME per-unit fail-loud + barrier re-raise, the SAME ONE batched emit rollup.
+# It is a DRIVER (the model runs only in the role, via run_role); it emits NO resolve/approve/dispatch
+# (the operator-only floor). It does NOT fire any reduce — it only MAPs (the cross-unit JOIN is run_reduce).
+#
+# Additive: nothing calls run_items yet; run_swarm/run_jury/run_role/the cast/chat_parts are byte-identical.
+# =================================================================================================
+@dataclass
+class ItemsResult:
+    """The captured artifact of one run_items fan (1 role × N units) — mirrors WaveResult.
+
+    addresses    {i: run://<turn>/<role>/<i>}  — the per-unit output address (positional index).
+    resolved     {i: value}                    — each unit's role output, read BACK via the resolver.
+    runs         list[RoleRun]                 — the per-unit run-records (the batched-rollup unit).
+    finish_order list[int]                     — the order units FINISHED (nondeterministic — the fan).
+    skipped      list[(i, reason)]             — units DECLARED-skipped (on_missing="skip" — never silent).
+    """
+    turn_id: str
+    role_id: str
+    addresses: dict = field(default_factory=dict)
+    resolved: dict = field(default_factory=dict)
+    runs: list = field(default_factory=list)
+    finish_order: list = field(default_factory=list)
+    skipped: list = field(default_factory=list)
+    wall_s: float = 0.0
+    sum_unit_s: float = 0.0
+
+
+def run_items(role: "Role", items: list, store, *, turn_id: str,
+              ctx: dict | None = None,
+              budget: "SlotBudget | None" = None,
+              on_missing: str = "raise",
+              emit: "Callable[[str, dict], None] | None" = None,
+              base_url: str = RESIDENT_BASE_URL, model: str = RESIDENT_MODEL,
+              max_tokens: int = 256, temperature: float = 0.0) -> ItemsResult:
+    """Fan ONE `role` over N input-UNITS (1 role × N units) — the AXIS-INVERSION of run_swarm (C 3/4).
+
+    `items` = the N input-units. Each unit is EITHER:
+      * an ADDRESS (a str containing "://": run:// an upstream output, cas:// a content blob) — RESOLVED
+        via `resolve_address` (which materializes the `<turn>` template against `turn_id` + fail-louds on
+        a not-content-resolvable scheme), OR
+      * a LITERAL value (anything else — a plain string / dict) — used as-is.
+    The resolved/literal unit becomes the role's PRIMARY input: it is placed at `ctx["utterance"]`, so a
+    "utterance"-reading role (today's every fireable role) takes run_role's DEFAULT byte-identical path.
+
+    `ctx` (optional) is a SHARED context for the role's DECLARED EXTRA inputs (the bare-name input_addresses
+    beyond "utterance" — e.g. a role declaring input_addresses=("utterance","memory") reads ctx["memory"]).
+    Mirrors run_swarm's single shared ctx (not per-unit dicts — no plumbing the proof doesn't exercise).
+    NOTE: run_items does NOT point at a role's TEMPLATED run:// input_addresses (e.g. check.py's
+    "run://<turn>/part-1") — that forming-answer chaining is the G3/G4 chainer's job; run_items materializes
+    the <turn> template on the ITEMS axis (the units), the addressed axis it owns.
+
+    For EACH unit (CONCURRENTLY — the SAME bounded pool + global VramGate + barrier as run_swarm): resolve
+    the unit → build the per-unit ctx (the unit at "utterance" + the shared ctx's extra inputs) → fire
+    run_role(role, ctx, store=store, ...) → write the validated output to `run://<turn>/<role>/<i>`
+    (put_content → set_ref, exactly like run_swarm). JOIN at the barrier; read every unit's output BACK
+    via the canonical resolver; emit ONE batched `cognition.items` rollup.
+
+    Fail loud (the run_swarm discipline): a unit's failure is captured per-RoleRun AND re-raised after the
+    barrier (the fan cannot silently lose a unit). A unit that is a run:// address which does not resolve
+    RAISES via resolve_address UNLESS on_missing="skip" is DECLARED — a declared skip is RECORDED in
+    .skipped (returned so the caller sees what was dropped), NEVER a silent drop.
+
+    A DRIVER, not an agent: the model runs only inside the role; run_items emits no resolve/approve/dispatch
+    (the operator-only floor). Returns an ItemsResult (the by-use artifact)."""
+    if not role.can_fire:
+        raise ValueError(
+            f"run_items: role {role.id!r} cannot fire (no prompt_template/output_schema, and not op=embed) "
+            f"— run_items maps a FIREABLE role over N units. Fail loud.")
+    if budget is None:
+        budget = SlotBudget.from_registry()
+    shared_ctx = dict(ctx or {})
+    gate = global_vram_gate(budget.max_num_seqs)
+
+    # the per-unit OUTPUT addresses are POSITIONAL — run://<turn>/<role>/<i> (a distinct address per unit,
+    # like run_swarm's per-role addresses → no shared key → no write race).
+    addresses = {i: f"run://{turn_id}/{role.id}/{i}" for i in range(len(items))}
+    result = ItemsResult(turn_id=turn_id, role_id=role.id, addresses=dict(addresses))
+    runs: dict = {}
+    finish_lock = threading.Lock()
+    skipped: dict = {}                                       # i -> reason (declared skip, never silent)
+
+    def _resolve_unit(unit: Any) -> Any:
+        """Resolve ONE unit to the role's primary input. An ADDRESS (a str with "://") resolves via
+        resolve_address (materialize <turn> + dispatch by scheme + fail-loud on unknown). Anything else
+        is a LITERAL, used as-is. (A non-address str — no "://" — is a literal, not a ctx-key: the
+        BARE_NAME sentinel belongs to a role's bare input_addresses, not to a unit.)"""
+        if isinstance(unit, str) and "://" in unit:
+            return resolve_address(store, unit, turn_id=turn_id, on_missing=on_missing)
+        return unit
+
+    def _one(i: int, unit: Any) -> "RoleRun | None":
+        t0 = time.monotonic()
+        with gate.slot():                                    # the SAME global gate as run_swarm/run_jury
+            resolved_unit = _resolve_unit(unit)
+            if resolved_unit is None and on_missing == "skip":
+                # a DECLARED skip (a pruned run:// ref under on_missing="skip") — recorded, never silent.
+                with finish_lock:
+                    skipped[i] = f"unit {i} ({unit!r}) resolved to None (declared on_missing=skip)"
+                return None
+            # build the per-unit ctx: the resolved unit at "utterance" (the role's primary input → the
+            # default byte-identical run_role path) + the shared ctx's declared extra inputs.
+            unit_ctx = dict(shared_ctx)
+            unit_ctx["utterance"] = resolved_unit
+            out = run_role(role, unit_ctx, base_url=base_url, model=model,
+                           max_tokens=max_tokens, temperature=temperature, store=store)
+            cas = store.put_content(out)                     # immutable content (write-once)
+            store.set_ref(addresses[i], cas)                 # the run:// pointer (atomic set_ref)
+        ms = int((time.monotonic() - t0) * 1000)
+        rr = RoleRun(role_id=f"{role.id}/{i}", address=addresses[i], ok=True, ms=ms)
+        with finish_lock:
+            result.finish_order.append(i)
+        return rr
+
+    wall0 = time.monotonic()
+    errors: list[BaseException] = []
+    if items:
+        with ThreadPoolExecutor(max_workers=budget.swarm_slots,
+                                thread_name_prefix=f"items-{turn_id}") as pool:
+            futs = {pool.submit(_one, i, u): i for i, u in enumerate(items)}
+            for fut in as_completed(futs):                   # the BARRIER — every unit joined before we proceed
+                i = futs[fut]
+                try:
+                    rr = fut.result()
+                    if rr is not None:
+                        runs[i] = rr
+                except BaseException as e:                   # capture per-unit; re-raise after the barrier
+                    runs[i] = RoleRun(role_id=f"{role.id}/{i}", address=addresses[i],
+                                      ok=False, ms=0, error=f"{type(e).__name__}: {e}")
+                    errors.append(e)
+    result.wall_s = round(time.monotonic() - wall0, 3)
+    result.skipped = [(i, skipped[i]) for i in sorted(skipped)]
+    # ordered run-records (positional, skipping the declared-skipped units)
+    result.runs = [runs[i] for i in sorted(runs)]
+    result.sum_unit_s = round(sum(rr.ms for rr in result.runs) / 1000.0, 3)
+
+    # ONE BATCHED ROLLUP per fan (C1.6 discipline — NOT one append_event per unit-fire). Carries every
+    # unit's run-record. NO resolve/approve/dispatch verb (the operator-only floor — driver, not agent).
+    if emit is not None:
+        emit("cognition.items", {
+            "turn_id": turn_id, "role": role.id, "n_units": len(items),
+            "n_run": len(result.runs), "skipped": [i for (i, _r) in result.skipped],
+            "wall_s": result.wall_s, "sum_unit_s": result.sum_unit_s,
+            "finish_order": result.finish_order,
+            "units": [{"i": rr.role_id.split("/")[-1], "address": rr.address, "ok": rr.ok,
+                       "ms": rr.ms, **({"error": rr.error} if rr.error else {})}
+                      for rr in result.runs],
+        })
+
+    # Fail loud AFTER the rollup (so the failure is recorded) — the fan cannot silently lose a unit.
+    if errors:
+        raise errors[0]
+
+    # read every unit's output BACK via the canonical resolver (head→get_content), AFTER the barrier.
+    for i in sorted(runs):
+        result.resolved[i] = resolve_run_ref(store, addresses[i])
     return result
 
 
