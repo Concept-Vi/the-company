@@ -80,7 +80,7 @@ export function RhmChat() {
           the action runs ONLY when the operator approves it (the consent gate, click #2). */}
       <ProposeAffordance />
       <div className="rhm-input">
-        <input placeholder="ask the company about itself…" data-ui-ref="ui://chat/input" value={chatMsg}
+        <input placeholder="ask me to change anything you see" data-ui-ref="ui://chat/input" value={chatMsg}
           onChange={e => setChatMsg(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') sendChat() }} />
         <button className={'b ghost mic' + (recording ? ' rec' : '')} data-ui-ref="ui://chat/mic" onClick={micPressed}

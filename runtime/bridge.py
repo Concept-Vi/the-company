@@ -962,6 +962,14 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/revert":              # OPERATOR-only rollback of a self-change
                 b = self._body()
                 self._send(200, json.dumps(SUITE.revert_self_change(b["sha"])))
+            elif self.path == "/api/checkpoint":          # OPERATOR-only: mint a reversible restore point
+                # The operator stamps a `[checkpoint]` of NAMED paths (path-scoped — rule 10, parallel
+                # sessions on main) — the third reversible stream beside [self-apply]/[self-build]. It
+                # shows in the SAME audit ledger (GET /api/self-change-log) and undoes via the SAME
+                # /api/revert. Operator face only (beside /api/revert), off the MCP/agent face. Fail-loud
+                # guards (empty/escaping path-set, empty delta) surface through _send's except.
+                b = self._body()
+                self._send(200, json.dumps(SUITE.checkpoint(b["paths"], b.get("label", ""))))
             # --- build-dispatch (self-growth), operable from the operator's UI ---
             elif self.path == "/api/propose":          # agent/operator dispatches a build
                 b = self._body()

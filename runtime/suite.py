@@ -7353,11 +7353,13 @@ class Suite:
 
     @staticmethod
     def _is_revert_subject(subject: str) -> bool:
-        """A `git revert` of a self-apply produces subject `Revert "[self-apply] ..."` — which STILL
-        contains `[self-apply]`, so `--grep=[self-apply]` matches the REVERT itself. So an undo is NOT
-        a change: distinguish it by subject prefix. (Finding #2: prevents 'revert the revert' — and a
-        revert's --invert-grep can't be expressed alongside the positive grep, so we tag in Python.)"""
-        return (subject or "").startswith('Revert "[self-apply]')
+        """A `git revert` of a self-change produces subject `Revert "<prefix> ..."` — which STILL
+        contains the prefix, so the coarse `--grep` matches the REVERT itself. So an undo is NOT a
+        change: distinguish it by subject prefix, for EITHER reversible stream (`[self-apply]` AND
+        `[self-build]`). (Finding #2: prevents 'revert the revert' — and a revert's --invert-grep can't
+        be expressed alongside the positive grep, so we tag in Python.)"""
+        s = subject or ""
+        return any(s.startswith(f'Revert "{prefix}') for _, prefix in Suite._SELF_CHANGE_STREAMS)
 
     def _self_change_changed_files(self, sha: str) -> list[str]:
         """The files a self-apply commit touched — git ground truth (`git show --name-only`), so the
@@ -7374,29 +7376,66 @@ class Suite:
         return [ln.strip() for ln in out.splitlines() if ln.strip()]
 
     SELF_APPLY_PREFIX = "[self-apply]"
+    SELF_BUILD_PREFIX = "[self-build]"
+    CHECKPOINT_PREFIX = "[checkpoint]"
+    # The reversible autonomous-change STREAMS (label · subject-prefix). ALL are git-committed by
+    # `_git_self_commit` — `[self-apply]` for the self-mod streams (panels/extensions/nodes),
+    # `[self-build]` for the decision→implementation wire's accepted-build checkpoint, and
+    # `[checkpoint]` for an OPERATOR-initiated restore point (`checkpoint()`) — and ALL undo through the
+    # ONE prefix-agnostic `revert_self_change(sha)`. The audit ledger reads them ALL so every reversible
+    # autonomous change is visible AND one-click revertible from one place. This tuple is the SINGLE
+    # SOURCE for the family: `_change_stream`, `_is_revert_subject`, AND the `_self_change_records`
+    # `--grep` net all derive from it (so adding a stream here can't silently drop its commits from the
+    # ledger — a fail-loud/one-source obligation, AGENTS.md rules 3+4). (Was: self-apply + self-build
+    # ONLY — and before that self-apply ONLY, with a self-build revertible-by-sha but INVISIBLE to the
+    # ledger; the operator had no single list of what's reversible, and no way to stamp their own.)
+    _SELF_CHANGE_STREAMS = (("self-apply", SELF_APPLY_PREFIX), ("self-build", SELF_BUILD_PREFIX),
+                            ("checkpoint", CHECKPOINT_PREFIX))
+
+    @staticmethod
+    def _change_stream(subject: str) -> str | None:
+        """Which reversible STREAM a commit belongs to — `'self-apply'` | `'self-build'` |
+        `'checkpoint'` — by SUBJECT prefix, for BOTH a genuine change (`<prefix> …`) and a revert of one
+        (`Revert "<prefix> …`). `None` if the subject is none of them: a plain commit whose BODY merely
+        MENTIONS a prefix is NOT a self-change and must not pollute the ledger (it would make
+        `last_self_change` point at a non-self-change commit). This is the single classifier the audit
+        reader keys on — classify by SUBJECT, never by the `--grep`-matched body. Iterates
+        `_SELF_CHANGE_STREAMS` (the one source), so a new stream needs no edit here."""
+        s = subject or ""
+        for label, prefix in Suite._SELF_CHANGE_STREAMS:
+            if s.startswith(prefix) or s.startswith(f'Revert "{prefix}'):
+                return label
+        return None
 
     def _self_change_records(self, limit: int = 50) -> list[dict]:
         """The shared reader behind the audit log + last_self_change (Finding #1/#2/#4). Reads the
-        `[self-apply]` commits newest-first and tags each: {sha, subject, ts (committer ISO date),
-        is_revert (Finding #2), changed_files (Finding #4)}. Reverts are INCLUDED but MARKED — the log
-        shows the full undo history; `last_self_change` filters them out. Empty list on any git failure
-        (a read, not a mutation — degrade to empty, never raise here).
+        reversible-change commits of BOTH streams (`[self-apply]` self-mod AND `[self-build]` wire
+        builds) newest-first and tags each: {sha, subject, ts (committer ISO date), stream
+        ('self-apply'|'self-build'), is_revert (Finding #2), changed_files (Finding #4)}. Reverts are
+        INCLUDED but MARKED — the log shows the full undo history; `last_self_change` filters them out.
+        Empty list on any git failure (a read, not a mutation — degrade to empty, never raise here).
 
         CLASSIFY BY SUBJECT, not by message body: `--grep` matches the whole message (subject AND
-        body), but a genuine self-apply is SUBJECT-prefixed `[self-apply]` (exactly what
-        `_git_self_commit` writes), and a revert is subject `Revert "[self-apply] ...`. A plain commit
-        whose BODY merely MENTIONS the string (e.g. a feature/doc commit describing self-apply work) is
+        body), but a genuine self-change is SUBJECT-prefixed (`[self-apply]`/`[self-build]` — exactly
+        what `_git_self_commit` writes), and a revert is subject `Revert "<prefix> ...`. A plain commit
+        whose BODY merely MENTIONS a prefix (e.g. a feature/doc commit describing self-change work) is
         NOT a self-change and must NOT pollute the ledger — it would make `last_self_change` point at a
-        non-self-apply commit. So `--grep` stays as the cheap coarse net (it never drops a genuine or a
-        revert — both contain the string), and we KEEP a record only if its SUBJECT is a genuine
-        self-apply OR a revert-of-one; everything else (body-only mention) is dropped. To request more
+        non-self-change commit. So the two `--grep`s (OR'd by git) stay the cheap coarse net (they never
+        drop a genuine or a revert — both contain a prefix), and we KEEP a record only if `_change_stream`
+        classes its SUBJECT into a stream; everything else (body-only mention) is dropped. To request more
         than `limit` genuine records, the coarse net is widened (×4 + 20) before the subject filter, so
         body-mentions interleaved in history don't starve the requested count."""
         import subprocess
         n = max(1, int(limit))
+        # The coarse `--grep` net is DERIVED from `_SELF_CHANGE_STREAMS` (the one source) — one
+        # `--grep=<prefix>` per stream — so a stream added to that tuple is matched here too and its
+        # commits can never be silently dropped from the ledger (the failure mode if this stayed a
+        # hardcoded two-prefix literal; AGENTS.md rules 3+4). `--fixed-strings` keeps the bracketed
+        # prefixes literal; the subject-classifier (`_change_stream`) below is the precise filter.
+        grep_net = [arg for _, prefix in self._SELF_CHANGE_STREAMS for arg in ("--grep", prefix)]
         try:
             out = subprocess.run(
-                ["git", "-C", self._repo_root, "log", "--grep=[self-apply]", "--fixed-strings",
+                ["git", "-C", self._repo_root, "log", *grep_net, "--fixed-strings",
                  "-n", str(n * 4 + 20), "--format=%H%x00%cI%x00%s"],
                 check=True, capture_output=True, text=True).stdout.strip()
         except Exception:
@@ -7407,13 +7446,13 @@ class Suite:
                 continue
             sha, _, rest = line.partition("\x00")
             ts, _, subject = rest.partition("\x00")
-            is_revert = self._is_revert_subject(subject)
-            is_genuine = (subject or "").startswith(self.SELF_APPLY_PREFIX)
-            if not (is_genuine or is_revert):       # body-only mention → NOT a self-change, drop it
+            stream = self._change_stream(subject)   # 'self-apply' | 'self-build' | 'checkpoint' | None
+            if stream is None:                      # body-only mention → NOT a self-change, drop it
                 continue
             records.append({
                 "sha": sha, "subject": subject, "ts": ts,
-                "is_revert": is_revert,
+                "stream": stream,                   # which reversible stream this change belongs to
+                "is_revert": self._is_revert_subject(subject),
                 "changed_files": self._self_change_changed_files(sha),
             })
             if len(records) >= n:
@@ -7421,11 +7460,14 @@ class Suite:
         return records
 
     def self_change_log(self, limit: int = 50) -> list[dict]:
-        """The multi-entry self-modification audit ledger (Finding #1): the `[self-apply]` commit
-        history newest-first, each entry carrying sha · subject · timestamp · changed_files (Finding
-        #4) · is_revert (Finding #2 — a revert is surfaced DISTINCTLY, not hidden and not mistaken for
-        a change). Reachable through a real face (`GET /api/self-change-log`). Was: only the single
-        latest (last_self_change) existed — no ledger."""
+        """The multi-entry self-modification audit ledger (Finding #1): the reversible-change commit
+        history newest-first across BOTH streams — `[self-apply]` self-mod AND `[self-build]` wire
+        builds — each entry carrying sha · subject · timestamp · stream ('self-apply'|'self-build') ·
+        changed_files (Finding #4) · is_revert (Finding #2 — a revert is surfaced DISTINCTLY, not hidden
+        and not mistaken for a change). Reachable through a real face (`GET /api/self-change-log`). Was:
+        only the single latest (`last_self_change`) existed — then the ledger, but `[self-apply]` ONLY
+        (a `[self-build]` was revertible-by-sha yet invisible here); now every reversible autonomous
+        change is listed AND one-click revertible from the one place."""
         return self._self_change_records(limit)
 
     @staticmethod
@@ -7464,11 +7506,12 @@ class Suite:
         return out
 
     def last_self_change(self) -> dict | None:
-        """The most recent STILL-STANDING self-applied CHANGE (for one-click rollback + audit). D9:
-        a change still STANDS only if (a) it is not itself a revert (Finding #2 — a `git revert` of a
-        self-apply still matches `--grep=[self-apply]`, so the naive `-1` returned the revert itself,
-        and the UI offered to 'revert the revert'), AND (b) it has not since been UNDONE by a later
-        revert. Without (b), `last_self_change` would still point at a change the operator already
+        """The most recent STILL-STANDING autonomous CHANGE of EITHER reversible stream — a
+        `[self-apply]` self-mod OR a `[self-build]` wire build (the record carries `stream`) — for
+        one-click rollback + audit. D9: a change still STANDS only if (a) it is not itself a revert
+        (Finding #2 — a `git revert` of a self-change still matches the coarse `--grep`, so the naive
+        `-1` returned the revert itself, and the UI offered to 'revert the revert'), AND (b) it has not
+        since been UNDONE by a later revert. Without (b), `last_self_change` would still point at a change the operator already
         reverted — offering to roll back something that no longer exists in the working tree. So we read
         the tagged log, compute the set of shas reverted by any revert in it, and return the newest
         record that is neither a revert NOR in that reverted set. Keeps the {sha, subject} keys callers/
@@ -7479,6 +7522,61 @@ class Suite:
             if not rec["is_revert"] and rec["sha"] not in reverted:
                 return rec
         return None
+
+    def checkpoint(self, paths: list, label: str = "") -> dict:
+        """OPERATOR-only: mint a REVERSIBLE restore point of named paths — the operator-initiated third
+        reversible autonomous-change stream (`[checkpoint]`), beside `[self-apply]` (self-mod) and
+        `[self-build]` (the wire's accepted builds). The operator stamps "checkpoint THESE files so I
+        can experiment, and revert if it goes wrong." It then shows in the SAME audit ledger
+        (`self_change_log`/`last_self_change`, stream-tagged `checkpoint`) and undoes through the SAME
+        prefix-agnostic `revert_self_change(sha)`. No parallel git path, no parallel ledger, no new
+        revert route — a thin reuse of `_git_self_commit` with the `[checkpoint]` prefix.
+
+        PATH-SCOPED ON PURPOSE (AGENTS.md rule 10 — Tim runs MULTIPLE sessions on `main`): it commits
+        EXACTLY the named paths via `_git_self_commit` (pathspec `commit -- <paths>`), so a CONCURRENT
+        session's unstaged in-flight work is NEVER swept into the checkpoint — and therefore a `git
+        revert` of the checkpoint can never destroy another session's work. Blanket-committing the dirty
+        tree would be a footgun, not a reversible thing; so an unnamed/whole-tree checkpoint is REFUSED.
+
+        FAIL LOUD (rule 4), three guards: (a) an empty / non-list / blank-entry `paths` is refused
+        (no whole-tree checkpoint); (b) a path that escapes the repo root (`..` / an absolute path
+        outside) is refused (rule 8 — a wrong scope is a wrong checkpoint); (c) an EMPTY delta (none of
+        the named paths has changes → nothing to commit → `_git_self_commit` returns None) RAISES — a
+        checkpoint that commits nothing is not a restore point (mirrors `_commit_or_rollback`'s
+        fail-loud). Returns {sha, subject, stream, paths}. Operator-only by design: like
+        `revert_self_change`, it is OFF the MCP/agent face and NOT in `RHM_VERBS` (the RHM proposes /
+        surfaces, it never commits of its own authority) — reachable only through `POST /api/checkpoint`
+        on the operator face."""
+        if not isinstance(paths, (list, tuple)) or not paths:
+            raise ValueError(
+                "checkpoint: name the paths to checkpoint — a whole-tree checkpoint is refused "
+                "(AGENTS.md rule 10: parallel sessions on main; a blanket commit would sweep in — and a "
+                "revert would then destroy — another session's in-flight work).")
+        root = os.path.realpath(self._repo_root)
+        rel_paths = []
+        for p in paths:
+            if not isinstance(p, str) or not p.strip():
+                raise ValueError("checkpoint: each path must be a non-empty string.")
+            ap = os.path.realpath(os.path.join(root, p))
+            if ap != root and not ap.startswith(root + os.sep):
+                raise ValueError(
+                    f"checkpoint: path {p!r} escapes the repo root — refused (rule 8: a wrong scope is "
+                    "a wrong checkpoint).")
+            rel_paths.append(os.path.relpath(ap, root))
+        msg = label.strip() or f"operator checkpoint of {len(rel_paths)} path(s)"
+        sha = self._git_self_commit(rel_paths, msg, prefix=self.CHECKPOINT_PREFIX)
+        if not sha:
+            raise RuntimeError(
+                "checkpoint: nothing to commit for the named paths (no changes there) — a checkpoint "
+                "that commits nothing is not a restore point. Name paths that have pending changes, or "
+                "there is nothing to make reversible. (fail loud — AGENTS.md rule 4.)")
+        # Visibility (S2): a self-change shows at the workshop self-changes surface, on the live stream.
+        # Lenient `_emit` (telemetry) — the durable record IS the git commit, already written above; the
+        # event is narration, so a store hiccup must never undo a committed (and now reversible) change.
+        self._emit("checkpoint", f"operator checkpoint · {msg} · {sha[:8]}",
+                   commit=sha, paths=rel_paths, address="ui://chrome/workshop")
+        return {"sha": sha, "subject": f"{self.CHECKPOINT_PREFIX} {msg}",
+                "stream": "checkpoint", "paths": rel_paths}
 
     def revert_self_change(self, sha: str) -> dict:
         """RECOVERY: roll back a self-applied change via git (itself reversible). OPERATOR-only.

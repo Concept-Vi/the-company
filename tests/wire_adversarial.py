@@ -33,7 +33,12 @@ def record(attack, what, verdict, evidence):
 def fresh_suite():
     store = FsStore(os.path.join(tempfile.mkdtemp(prefix="adv-"), "store"))
     reg = NodeRegistry(); reg.discover([NODES])
-    return Suite(store, reg, nodes_dir=NODES)
+    s = Suite(store, reg, nodes_dir=NODES)
+    # NEUTRALIZE the wire's git CHECKPOINT in tests (it now commits each accepted build) — the real
+    # default would `git commit` on the LIVE repo. No-op fake-sha override isolates every dispatch
+    # here at once (the checkpoint is proven in wire_commit_acceptance.py). Production untouched.
+    s._self_build_commit = lambda paths, msg: "0" * 40
+    return s
 
 
 def approve_seq(suite, sid):

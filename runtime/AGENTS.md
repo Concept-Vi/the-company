@@ -48,7 +48,25 @@ ANY `CONFIRM`/`SURFACE`/`LOCKED` declared class surfaces for the operator instea
 `destructive`, absent from the LOCKED set, can no longer slip through). The close is `guard("code_build")`-ed
 (CONFIRM) on the verification verdict so an unverified close RAISES; a post-build scope-diff (git ground
 truth; an EMPTY declared scope is DENY-ALL, never allow-all; paths normalized so `..` can't fool the
-guard) surfaces a wandering build back instead of closing it. **AI-operated is NOT review-free (root
+guard) surfaces a wandering build back instead of closing it. **GIT CHECKPOINT (Tim's safety mandate
+before arming):** after all gates pass and BEFORE the close marks `implemented`, the wire commits
+EXACTLY the build's `changed_delta` paths as a single `[self-build] <sid>: <intent>` commit
+(`_self_build_commit` → `_git_self_commit` with the `[self-build]` prefix — reuse, not a parallel git
+path; path-scoped `git add <delta>` so a concurrent writer's unstaged dirty files are NEVER swept in),
+so every accepted autonomous build is one `git revert <sha>` from undone (the same prefix-agnostic
+operator revert path as `[self-apply]`). The sha is recorded (item · `decision.implemented` event · the
+review item). A commit failure (or an empty delta) FAILS LOUD — surfaces the build back via a
+`decision.verify` terminal event, NEVER `implemented` (a build that can't be checkpointed is not
+safe-closed). The `committer` is injectable (threaded through `drive_dispatchable`) so tests never
+commit the live repo. These `[self-build]` checkpoints are surfaced alongside the `[self-apply]`
+self-mods — AND the operator's own `[checkpoint]` restore points (below) — in the **unified
+self-change audit ledger** (`self_change_log`/`last_self_change`, each record **stream-tagged**
+`self-apply`|`self-build`|`checkpoint`; `GET /api/self-change-log`), and all undo through the one
+prefix-agnostic `revert_self_change` — so every reversible change is visible AND one-click revertible
+from one place, not just revertible-by-sha off its review item. The stream set is single-sourced
+(`Suite._SELF_CHANGE_STREAMS`): the subject-classifier, the revert-tagger, and the ledger's `--grep`
+net all derive from it, so a stream can't be added without the ledger seeing it (fail-loud one-source,
+rules 3+4). **AI-operated is NOT review-free (root
 AGENTS.md rule 9):** the SAME guarded close that writes `implemented` ALSO surfaces a review item — a
 `decision.surfaced_for_review` event + a `build_result_review` inbox item (the existing `surface_review`,
 no parallel review system) carrying the result summary + the changed-files diff + `derived_from`, so the
@@ -86,6 +104,20 @@ unambiguous named element, via a custom confident-single-match-else-ASK matcher)
 locus (`current_locus()` is session-held, not this-turn — a stale click must never override a target the
 operator named this turn); else the indicated locus; else it ASKS which element — never a guessed scope
 (rule 8 — a wrong scope is a wrong build). Proven by `tests/conversational_build_acceptance.py`.
+
+**The operator checkpoint** (`Suite.checkpoint(paths, label)` → `POST /api/checkpoint`, operator-only)
+is the THIRD reversible stream (`[checkpoint]`), beside the two AUTONOMOUS ones (`[self-apply]` self-mod,
+`[self-build]` the wire's accepted builds). It lets the operator stamp their OWN reversible restore point
+— "checkpoint these files so I can experiment, and revert if it goes wrong" — committed through the SAME
+`_git_self_commit`, surfaced in the SAME ledger, undone through the SAME prefix-agnostic
+`revert_self_change`: a thin reuse, never a parallel git/ledger/revert path. **Path-scoped on purpose**
+(root AGENTS.md rule 10 — Tim runs MULTIPLE sessions on `main`): it commits EXACTLY the named paths
+(pathspec), so a concurrent session's unstaged in-flight work is NEVER swept in and a revert can never
+destroy it — a whole-tree checkpoint would be a footgun and is **refused**. Three fail-loud guards
+(empty/whole-tree path-set · a path escaping the repo root · an empty delta — committing nothing is not a
+restore point; rules 4+8). Kept **off the MCP face** + out of `RHM_VERBS`, like `revert_self_change` —
+the RHM proposes/surfaces, it never commits of its own authority; minting is an operator act on the
+operator face. Proven by `tests/selfmod_audit_acceptance.py`.
 
 ## Relates to
 

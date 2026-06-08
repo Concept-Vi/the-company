@@ -21,6 +21,10 @@
   "cross_journeys": [],
   "addresses": [
     "ui://inbox/walk",
+    "ui://inspector/help",
+    "ui://toolbar/guide",
+    "ui://toolbar/point",
+    "ui://toolbar/teach",
     "ui://walkthrough",
     "ui://walkthrough/next",
     "ui://walkthrough/show-again"
@@ -28,6 +32,8 @@
   "build_to": {
     "components": [
       "inbox",
+      "inspector",
+      "toolbar",
       "walkthrough"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",

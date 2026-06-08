@@ -16,13 +16,15 @@
   "journeys": [],
   "cross_journeys": [],
   "addresses": [
-    "ui://chat/config",
-    "ui://chat/model-field",
-    "ui://chat/persona-field"
+    "ui://settings",
+    "ui://settings/brain",
+    "ui://settings/close",
+    "ui://settings/composition",
+    "ui://settings/roles"
   ],
   "build_to": {
     "components": [
-      "chat"
+      "settings"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
     "tokens": "design/_system/tokens.json \u2192 design-system.css (the only look-source)"
