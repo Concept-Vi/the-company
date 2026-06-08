@@ -53,8 +53,14 @@ check("input_addresses is a list (recall reads utterance+memory)", isinstance(ro
 # ── 2 · cast-beyond-listening is DATA-DRIVEN — a role declaring a non-listening mode fires there ──
 print("\n[2] cast-beyond-listening is data-driven — no `listening` hardcode in the firing path")
 check("walkthrough STAGES (PART_GRAIN.stage=True)", s.mode_stages("walkthrough"))
-check("walkthrough cast is EMPTY today (no role declares it yet — guided-review adds it)",
-      s.cast_for_mode("walkthrough") == [])
+# DATA-DRIVEN invariant (NOT a transient-emptiness assertion — that was the deadlock: it hard-failed the
+# moment guided-review declared the walkthrough cast, which is exactly the capability working). The real
+# invariant: whatever roles declare mode_scope ⊇ {walkthrough} fire there, and every one is fireable —
+# true when the cast is empty (vacuous) AND when guided-review has added its roles. The engine never
+# blocks a non-listening cast; the cast is purely what roles declare.
+_wt_cast = s.cast_for_mode("walkthrough")
+check("walkthrough cast is data-driven — every role declaring it is fireable (empty OR guided-review's roles)",
+      all(getattr(r, "can_fire", False) for r in _wt_cast))
 check("listening cast is non-empty (the built cast)", len(s.cast_for_mode("listening")) > 0)
 
 # a TEMP role declaring mode_scope ⊇ {walkthrough} → cast_for_mode picks it up (the data-driven proof).
