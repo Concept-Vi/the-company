@@ -979,3 +979,11 @@ several criteria — the loop builds ONLY my-lane criteria and CONSUMES the rest
   App.tsx, api.ts), the wire/generate-for-mockups, my surface's bridge routes, the voice focus-passthrough fix,
   the cast_posture DECLARATION, + my roles-on-C-seam (after C). The FE halves of A/B/D/E/H + F.
 READINESS: build only after this re-scope + a posted "loop-prep re-scoped + grounded + ready" (§ PROTOCOL item 11).
+
+---
+## RE-SCOPE (2026-06-09, Tim): generate-for-mockups is AUTONOMOUS + REGISTRY-DRIVEN
+Tim: "it shouldn't need me in the loop to build it, and it should be made so that it's easy to reconfigure and update."
+- **AUTONOMOUS-buildable** — REMOVE the earlier "needs Tim / focused-round-only" gate. The make-or-break builds like any lane; safety = git-revert (Tim's simple-consent model), not Tim-in-the-build-loop. (See [[feedback-no-needs-tim-gating]].)
+- **REGISTRY-DRIVEN / reconfigurable** — the generate behavior is DECLARED DATA, not hardcoded: a `generate-config` registry carrying {prompt/instruction template · model/agent · plan-vs-apply default · routing (mockup-edit vs live build-intent) · scope rule}. Changing how generate works = editing the config, no code change (no-hardcoding law).
+- **The engine core (file-disjoint, build now):** a generate-config registry (NEW declared data) + a dispatcher that reads config + a mockup's captured feedback (/api/mockup-feedback, already built) → builds the instruction → calls implement.py dispatch_decision (plan-safe-by-default) → on apply, commits (git-revertible). REUSE dispatch_decision (the claude -p spawner) — no parallel wire.
+- **Follow-on (after B1 releases bridge.py):** the thin /api/<generate> trigger route (bridge.py) + the FE "generate" button. Sequenced behind B1's bridge.py claim — NOT behind Tim.
