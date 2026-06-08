@@ -259,3 +259,7 @@ The MCP (`mcp_face/server.py`) is node-graph-ONLY + predates the cognition engin
 **#54 STORAGE/persistence model (NEW — the substrate the whole capability + MCP view/re-run sit ON):** so **outputs can be used as input** (a run output is a durable, DISCOVERABLE, addressed artifact), **things can be embedded** (op=embed → put_vector, persisted + k-NN queryable), and **the address system applies to all of them** (run://cas://vec://skill://context://). GROUNDED: CAS content durable+write-once+addressed ✓, vectors persist+query ✓, the address resolver applies ✓ — the GAP is a **discovery/query/lifecycle layer** over runs/chains/configs (no list-runs, no chain-result persistence, no gc/ttl). Reuse fs_store + vector_index — NOT a parallel DB. The address system is the spine; outputs→inputs is the keystone. Cognition's (it's the engine's storage), co-considered with the structural/coherence sessions (they query artifacts too).
 
 **Sequencing unchanged:** #50 (launch-capability, in flight) → #51 (adversarial rounds) → then #54 (storage model) + #53 (MCP exposure, sits on #54). #54 before #53's view/re-run (re-run needs durable listable runs+configs).
+
+---
+## § CLAIMS RELEASE — guided-review walkthrough cast (2026-06-09)
+- roles/{recall,ground,voice,connect,focus,check}.py — walkthrough cast: **RELEASED, committed 5b8c08e** (gate green 119/0). The enriched walkthrough turn now fires the cast.

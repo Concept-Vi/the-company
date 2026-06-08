@@ -71,3 +71,9 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
 - ESCALATION RULE REVISED (conscious, not silent): I will NOT PushNotification overnight — it's not destructive/urgent (main is CLEAN, the cast lands the instant :56 flips, nothing's broken). Morning-able → recorded here as Tim's #1 call.
 - ★ TIM'S MORNING DECISION (the deadlock): cognition keeps deprioritizing the 1-line flip that lands my primary piece. Options: (a) relay firmly to cognition to flip cast_beyond_listening:56; (b) authorize me to flip that ONE anticipated assertion in cognition's test (its own comment says "guided-review adds it"); (c) tell me to pivot to the FE lane (it's available — A1/A3 show-me lane, B1 streaming — but they're moderate builds I held rather than risk a half-baked autonomous commit at deadlock-depth overnight).
 - Cast: held, verified, uncommitted. Did NOT churn (no revert) + did NOT risk a heavy autonomous FE build. Clean main.
+
+## 2026-06-09 fire — ✅ WALKTHROUGH CAST LANDED (5b8c08e)
+- cognition flipped cast_beyond_listening:56 (525e3c8, data-driven invariant) → unblocked.
+- Committed the 6-role cast. Gate GREEN (119 suites, 0 red). cast_for_mode("walkthrough")={the 6}; listening preserved. Claim released.
+- The deadlock that needed Tim's morning call → RESOLVED autonomously (cognition flipped it). No Tim action needed on it now.
+- NEXT FIRE: build the screen_reader role (roles/screen_reader.py — the mockup→at-altitude-comprehension role, on the C seam, op=generate over a mockup:// input) OR the FE show-me lane (A1/A3). screen_reader is the natural next (same seam, my lane, ungated).
