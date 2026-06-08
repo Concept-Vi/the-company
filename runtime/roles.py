@@ -15,9 +15,14 @@ the judge's rich config dict AND a fire-able cast role's {prompt,output} both fi
 field except `id` is OPTIONAL, and a role's FACET follows which fields are populated:
   - `id`              — the role id (required; must equal the module name, fail-loud otherwise).
   - `label` / `description` — operator-facing (the config lab renders these).
-  - `prompt_template` — a system prompt. Present ⇒ the role can FIRE (run_role/run_swarm).
+  - `prompt_template` — a system prompt. Present ⇒ a GENERATE role can FIRE (run_role/run_swarm).
   - `output_schema`   — a Pydantic BaseModel subclass the role's JSON validates against (C1.4).
   - `input_addresses` — the declared inputs the role reads (e.g. ("utterance",) or run:// refs).
+  - `op`              — the OPERATION the role runs: "generate" (default — the chat/JSON path, today's
+                        every role) | "embed" (the vector path — complete_embeddings, no prompt/schema
+                        needed; LOCAL-resident embedder only, no cloud). The op-axis (C): a role's
+                        operation is DECLARED data, not hardcoded control-flow. An embed role fires via
+                        op=embed (its can_fire), not via a prompt_template.
   - `trigger`         — descriptive today (the consuming code's actual trigger); a general
                         event→role trigger engine is downstream (G3/activation-contexts).
   - `model_binding`   — {requires:[...], default_model, default_base_url, recommended_*, env_*}.
@@ -64,7 +69,7 @@ from pydantic import BaseModel
 # C2.2) — `model_binding` is the G2 nested capability-query shape, these are the flat fields resolve_role
 # consumes today. Both are valid role-schema fields (consumed by a real consumer — never a silent typo).
 ROLE_FIELDS = (
-    "id", "label", "description", "prompt_template", "output_schema", "input_addresses",
+    "id", "label", "description", "prompt_template", "output_schema", "input_addresses", "op",
     "trigger", "model_binding", "mode_scope", "rules", "render_hint", "draws", "verdict_rule",
     "knobs", "thinking", "output", "tools", "context",
     # legacy flat binding fields (resolve_role/roles() consume these directly — judge byte-identical):
@@ -85,11 +90,17 @@ class Role:
     output_schema: type[BaseModel] | None = None
     mode_scope: frozenset = field(default_factory=frozenset)
     draws: int = 1
+    op: str = "generate"                         # the operation (C op-axis): "generate" (default) | "embed"
 
     # --- facet predicates (a role's capabilities follow its populated fields) ---
     @property
     def can_fire(self) -> bool:
-        """A role can be FIRED (run_role/run_swarm) iff it declares a prompt_template + output_schema."""
+        """A role can be FIRED (run_role/run_swarm) iff it declares a prompt_template + output_schema
+        (a GENERATE role), OR it is an EMBED role (op=embed — it embeds its resolved input, needs no
+        prompt/schema). ADDITIVE: every committed role is op=generate, so this is byte-identical for
+        them (the judge stays can_fire=False — no prompt_template, op=generate)."""
+        if self.op == "embed":
+            return True
         return bool(self.prompt_template) and self.output_schema is not None
 
     @property
@@ -155,6 +166,14 @@ def _build_role(name: str, decl: dict) -> Role:
     draws = decl.get("draws", 1)
     if not isinstance(draws, int) or draws < 1:
         raise ValueError(f"role {rid!r}: draws must be an int >= 1, got {draws!r} — fail loud.")
+    # The OP-AXIS (C): a role declares its operation. Default "generate" (today's every role —
+    # byte-identical). "embed" = the vector path (no prompt_template/output_schema needed). Fail loud
+    # on an unknown op (never a silent typo that no run_role branch handles). Additive: absent ⇒ generate.
+    op = decl.get("op", "generate")
+    if op not in ("generate", "embed"):
+        raise ValueError(
+            f"role {rid!r}: op must be 'generate' or 'embed', got {op!r} — fail loud (the op-axis is "
+            f"declared data; an unknown op has no run_role branch).")
     # G3 commit gate (C3.1/C3.4): STATICALLY WHITELIST-WALK every AST-shaped declared rule at role
     # DISCOVERY — so a malformed/out-of-grammar/over-nested rule dropped in a roles/*.py file FAILS
     # LOUD here, riding the normal change path (no special gate). The existing descriptive rule shape
@@ -171,7 +190,7 @@ def _build_role(name: str, decl: dict) -> Role:
     ms = decl.get("mode_scope") or ()
     return Role(
         id=rid, spec=dict(decl), prompt_template=decl.get("prompt_template"),
-        output_schema=osch, mode_scope=frozenset(ms), draws=int(draws),
+        output_schema=osch, mode_scope=frozenset(ms), draws=int(draws), op=op,
     )
 
 

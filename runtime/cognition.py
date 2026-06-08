@@ -89,10 +89,66 @@ SPIKE_ROLES: dict[str, Role] = {FOCUS_ROLE.id: FOCUS_ROLE, RECALL_ROLE.id: RECAL
                                 GROUND_ROLE.id: GROUND_ROLE}
 
 
+# --- the INPUT axis (C): a role's input is DECLARED (input_addresses), resolved through the run:// resolver.
+# DEFAULT = today: an absent input_addresses OR exactly ("utterance",) resolves to ctx["utterance"], and the
+# GENERATE path frames it BYTE-IDENTICALLY as f"Utterance: {utterance}". Any OTHER declared inputs are resolved
+# per-name from ctx (a run:// value resolves via the canonical resolver IF a store is passed) and composed.
+def _declared_inputs(role: "Role") -> list:
+    """The role's declared input addresses, normalized to a list. Read from role.spec (input_addresses
+    lives in the declared dict, not on the dataclass). Absent/empty ⇒ [] (⇒ the default utterance path)."""
+    ia = role.spec.get("input_addresses") if hasattr(role, "spec") else None
+    return list(ia) if ia else []
+
+
+def _supplied_extra(role: "Role", ctx: dict, store) -> list:
+    """The role's DECLARED non-utterance inputs that the CALLER ACTUALLY SUPPLIED this call — either
+    present in `ctx`, or a run:// address resolvable because a `store` was passed. This is the
+    behaviour-preservation discriminator: `input_addresses` is DESCRIPTIVE today (roles.py docstring),
+    and every CURRENT caller passes only {"utterance": …} — so for them this is [] → the default
+    byte-identical path. The compose path is reached ONLY when a future caller supplies the richer
+    ctx/store (the run_items usage, deferred). Keying on SUPPLIED (not the descriptive field) is what
+    keeps recall/ground/check — which DECLARE extra inputs but are CALLED utterance-only — byte-identical."""
+    extras = [a for a in _declared_inputs(role) if a != "utterance"]
+    return [a for a in extras
+            if (a in ctx) or (isinstance(a, str) and a.startswith("run://") and store is not None)]
+
+
+def _is_default_input(role: "Role", ctx: dict, store) -> bool:
+    """TRUE ⇔ this CALL uses today's default input axis: no SUPPLIED extra declared inputs. The default
+    path MUST stay byte-identical to before the op/input axes existed (f"Utterance: {ctx['utterance']}")."""
+    return not _supplied_extra(role, ctx, store)
+
+
+def _resolve_input_value(name: str, ctx: dict, store) -> Any:
+    """Resolve ONE declared input by name. A run:// name resolves through the CANONICAL resolver
+    (resolve_run_ref — head→get_content; reuse-don't-parallel). Any other name reads ctx[name]
+    (bracket access — a missing declared input KeyErrors = fail loud, never a silent empty). A run://
+    input with no store RAISES (fail loud — never silently skip a declared addressed input)."""
+    if isinstance(name, str) and name.startswith("run://"):
+        if store is None:
+            raise ValueError(
+                f"run_role: declared input {name!r} is a run:// address but no store was passed — "
+                f"cannot resolve the addressed input (fail loud, never skip a declared input).")
+        return resolve_run_ref(store, name)
+    return ctx[name]
+
+
+def _embed_text_for(role: "Role", ctx: dict, store) -> str:
+    """The RAW text an embed role embeds. Default (no SUPPLIED extra inputs) = ctx["utterance"] itself
+    (NOT the "Utterance: …" generate-framing — that prefix is a chat artifact, wrong for a vector).
+    When extra inputs ARE supplied, the supplied declared inputs are concatenated as "name: value"
+    lines (the labelled compose)."""
+    if _is_default_input(role, ctx, store):
+        return str(ctx["utterance"])
+    parts = [f"{name}: {_resolve_input_value(name, ctx, store)}"
+             for name in _declared_inputs(role) if name in _supplied_extra(role, ctx, store) or name == "utterance"]
+    return "\n".join(parts)
+
+
 # --- run_role: fire ONE request at the resident 4B (mirrors is_finished_thought's fabric path) ---
 def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
              model: str = RESIDENT_MODEL, timeout: int = ROLE_TIMEOUT,
-             max_tokens: int = 256, temperature: float = 0.0) -> dict:
+             max_tokens: int = 256, temperature: float = 0.0, store=None) -> dict:
     """Fire ONE request at the resident 4B for `role`, returning VALIDATED JSON (a dict).
 
     Mirrors `Suite.is_finished_thought`/the judge EXACTLY: `client.complete(openai_transport(...))`.
@@ -104,12 +160,48 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
 
     `role` is a roles.Role (file-discovered, G2) OR the cognition dataclass Role — both expose
     `.prompt_template`/`.output_schema`/`.id` (duck-compatible; ONE role notion, the G2 superset).
-    `ctx` must carry `utterance`. Fail loud: a transport/empty/parse/schema failure PROPAGATES as
-    FabricError after retries (never a silent empty dict)."""
-    utterance = ctx["utterance"]
+
+    THE TWO AXES (C — behaviour-preserving):
+      * INPUT axis — the role's input is DECLARED (`role.input_addresses`). DEFAULT (absent, or exactly
+        `["utterance"]`) is BYTE-IDENTICAL to before: `ctx["utterance"]` framed as `f"Utterance: {…}"`.
+        Other declared inputs are resolved per-name from `ctx` (a `run://` name via the canonical
+        resolver, IF a `store=` is passed) and composed as labelled lines.
+      * OP axis — `role.op` selects the OPERATION. DEFAULT `"generate"` (today's every role) → the exact
+        `complete` + `output_schema` + `json=True` path. `"embed"` → the EXISTING `complete_embeddings`
+        vector path (reuse — zero new plumbing), returning `{"vector", "dim", "model"}` (LOCAL embedder
+        only, no cloud). An embed role needs NO prompt_template/output_schema (it embeds, doesn't generate).
+
+    `ctx` must carry `utterance` for the default input axis. Fail loud: a transport/empty/parse/schema
+    failure PROPAGATES as FabricError after retries (never a silent empty dict); a missing/unresolvable
+    declared input RAISES (never a silent skip)."""
+    op = getattr(role, "op", "generate")
+
+    if op == "embed":
+        # The EMBED op (C op-axis) — reuse the EXISTING embed plumbing (suite.py:2980-2983 / nodes/embed.py):
+        # openai_embeddings_transport + complete_embeddings, LOCAL resident embedder only (no cloud branch).
+        # complete_embeddings is the fail-loud guarded path: a down/empty/dim-mismatch embedder RAISES
+        # FabricError after retries — NEVER a silent [] (C law: an embed with no embedder RAISES).
+        from fabric import config as _fcfg
+        text = _embed_text_for(role, ctx, store)
+        et = transport.openai_embeddings_transport(base_url=_fcfg.DEFAULT_EMBED_URL)
+        vecs = client.complete_embeddings(
+            et, [text], model=_fcfg.DEFAULT_EMBED_MODEL, dim=_fcfg.DEFAULT_EMBED_DIM)
+        vec = vecs[0]
+        return {"vector": vec, "dim": len(vec), "model": _fcfg.DEFAULT_EMBED_MODEL}
+
+    # The GENERATE op (default) — BYTE-IDENTICAL to before for a default-input CALL (every current caller).
+    if _is_default_input(role, ctx, store):
+        user_content = f"Utterance: {ctx['utterance']}"   # identical framing + bracket access (fail-loud)
+    else:
+        # NET-NEW (never the current callers' path): compose the SUPPLIED declared inputs as labelled
+        # lines (utterance included if declared). Reached only when a future caller supplies richer ctx/store.
+        compose = [a for a in _declared_inputs(role)
+                   if a == "utterance" or a in _supplied_extra(role, ctx, store)]
+        user_content = "\n".join(
+            f"{name}: {_resolve_input_value(name, ctx, store)}" for name in compose)
     msgs = [
         {"role": "system", "content": role.prompt_template},
-        {"role": "user", "content": f"Utterance: {utterance}"},
+        {"role": "user", "content": user_content},
     ]
     t = transport.openai_transport(base_url=base_url, timeout=timeout)
     validated = client.complete(

@@ -19,11 +19,14 @@ one self-registering `roles/<id>.py` per role — **exactly mirroring how node-t
 removed file un-registers on `rediscover`.
 
 **Guarantees:** a role is **one self-contained declaration** — a module-level `ROLE` dict over the C2.1
-superset schema `{id · label · description · prompt_template · output_schema · input_addresses · trigger
+superset schema `{id · label · description · prompt_template · output_schema · input_addresses · op · trigger
 · model_binding · mode_scope · rules · render_hint · draws · verdict_rule · knobs · …}`. Every field
 except `id` is OPTIONAL, and a role's **facet follows which fields are populated**:
-`prompt_template`+`output_schema` ⇒ it can **fire** (`run_role`/`run_swarm`); `mode_scope` ⇒ it is in
-that mode's **cast**; `draws` ⇒ it is a **jury** (N varied draws + a pure verdict_rule). On drop-in it
+`prompt_template`+`output_schema` ⇒ a **generate** role can **fire** (`run_role`/`run_swarm`); `op:embed`
+⇒ an **embed** role fires the vector path (no prompt/schema needed — `complete_embeddings`, local
+embedder only); `mode_scope` ⇒ it is in that mode's **cast**; `draws` ⇒ it is a **jury** (N varied draws
++ a pure verdict_rule). The **op-axis** (`op: generate|embed`, default `generate`) declares the role's
+OPERATION as data — today's every role is `generate` (byte-identical). On drop-in it
 self-registers (`RoleRegistry.discover` reads `roles/*.py`) and is queryable
 (`cast_for_mode`/`fireable`/`juries`) — **with no change to the cognition driver, suite, or UI.**
 Roles fire model calls through `fabric/` guards (a model runs only INSIDE a role — L2).
