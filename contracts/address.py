@@ -7,6 +7,8 @@ Grammar:
   vec://<source-address>#emb=<model>                  an embedding of a source
   ui://<kind>/<ref>                                    a UI component (chrome/field/canvas/panel/ext)
   code://<file-stem>/<symbol>                          a code symbol (the S3 ui://→code:// join)
+  skill://<id>                                         a declared reusable unit of instructions (SkillRegistry)
+  context://<id>                                       a declared reusable unit of context (ContextRegistry)
 Schema-additive: add optional fields + bump schema_ver; never break an existing one.
 
 Note on `ui://`: this scheme is a *label* in the address grammar only. Unlike
@@ -25,11 +27,22 @@ is purely additive (it widens the legal scheme set; mirrors the `ui://` preceden
 so no record shape and no `schema_ver` change. Establishing `code://` in the
 backend is the pivot L1 (comment→build-intent scope) and L5 (self-change→element)
 both lean on.
+
+Note on `skill://` + `context://` (C 3b — skills/contexts as addressable
+registries): like `ui://`/`code://`, these are *labels* the store does not resolve —
+they are resolved by `runtime/cognition.py:resolve_address`, which dispatches them to
+their FILE-DISCOVERED registries (`runtime/skills.py:SkillRegistry`/`ContextRegistry`,
+mirroring `RoleRegistry`). A `skill://<id>` resolves to that skill's instructions
+content; a `context://<id>` resolves to that context's content blob. Adding both to
+SCHEMES is purely additive (it widens the legal scheme set; mirrors the `ui://`/`code://`
+precedent), so no record shape and no `schema_ver` change. This is the FIRST real
+extension of the `resolve_address` seam: the schemes that USED to fail loud there now
+have a resolver. registry-is-truth — the ids live in their dirs, never a literal here.
 """
 from __future__ import annotations
 from pydantic import BaseModel, Field
 
-SCHEMES = ("run", "cas", "blob", "vec", "ui", "code")
+SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context")
 
 
 class Provenance(BaseModel):

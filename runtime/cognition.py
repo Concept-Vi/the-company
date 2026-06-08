@@ -74,6 +74,27 @@ def role_registry() -> RoleRegistry:
     return RoleRegistry().discover([_ROLES_DIR])
 
 
+# C 3b — skills + contexts as addressable, file-discovered registries (registry-is-truth). The TWO
+# registries the `skill://`/`context://` schemes resolve through (the FIRST real extension of the C 3/4
+# resolve_address seam). Reached EXACTLY like roles (a fresh discovered registry, reuse-don't-parallel).
+from runtime.skills import SkillRegistry, ContextRegistry  # noqa: E402  (the C 3b registries)
+
+_SKILLS_DIR = os.path.join(os.path.dirname(_ROLES_DIR), "skills")
+_CONTEXTS_DIR = os.path.join(os.path.dirname(_ROLES_DIR), "contexts")
+
+
+def skill_registry() -> SkillRegistry:
+    """Discover the file-based skill registry (skills/*.py) — fresh each call, so an added/removed
+    skill file is picked up (mirrors role_registry()). `skill://<id>` resolves through this."""
+    return SkillRegistry().discover([_SKILLS_DIR])
+
+
+def context_registry() -> ContextRegistry:
+    """Discover the file-based context registry (contexts/*.py) — fresh each call (mirrors
+    role_registry()). `context://<id>` resolves through this."""
+    return ContextRegistry().discover([_CONTEXTS_DIR])
+
+
 # The spike's three roles, sourced FROM the file-discovered registry (canonical defs in roles/*.py).
 # Built at import so the spike's chat_parts_spike/concurrency_probe keep working UNCHANGED, and so a
 # missing role file FAILS LOUD at import (never a silently-absent spike role).
@@ -613,19 +634,25 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
          template with no `turn_id` RAISES (fail loud — never dispatch an unmaterialized template, which
          would resolve the literal "<turn>" path and miss).
       2. DISPATCH by `contracts.address.scheme(addr)`:
-           run://  → the EXISTING canonical resolver `resolve_run_ref` (head→get_content; REUSE).
-           cas://  → the EXISTING immutable-content read `store.get_content(addr)` (cas:// IS get_content).
+           run://     → the EXISTING canonical resolver `resolve_run_ref` (head→get_content; REUSE).
+           cas://     → the EXISTING immutable-content read `store.get_content(addr)` (cas:// IS get_content).
+           skill://   → `runtime/skills.py:SkillRegistry.read(id)` — the skill's declared instructions
+                        content (C 3b — file-discovered, registry-is-truth). An UNKNOWN id RAISES fail-loud.
+           context:// → `runtime/skills.py:ContextRegistry.read(id)` — the context's declared content
+                        blob (C 3b). An UNKNOWN id RAISES fail-loud (never fabricate a missing context).
       3. A BARE NAME (no "://" at all — e.g. "utterance", "notes") is NOT an address: return the
          `BARE_NAME` sentinel so the CALLER reads it from the supplied ctx (bare names are ctx keys).
       4. ANY OTHER scheme — a REGISTERED scheme with no content-resolver yet (blob:// vec:// ui:// code://)
-         OR an UNREGISTERED scheme (skill:// foo://) — RAISES fail-loud: there is no content-resolver for
-         it TODAY. NEVER a silent empty. This RAISE is the extensible seam: when a skill/context resolver
-         exists, add a dispatch branch here (and that scheme stops raising).
+         OR an UNREGISTERED scheme (foo://) — RAISES fail-loud: there is no content-resolver for it TODAY.
+         NEVER a silent empty. This RAISE is the extensible seam: when a resolver exists, add a dispatch
+         branch here (and that scheme stops raising) — exactly as skill://+context:// just did (C 3b).
 
-    HONEST SCOPE: skills / contexts are NOT addressed today — there is no skill:// or context resolver.
-    `resolve_address` resolves `run://` (an upstream output) + `cas://` (a content blob) NOW; it is the
-    ONE place a skill://-resolver / context-resolver / vec:// k-NN read will plug in LATER (when the
-    scheme has a resolver). Until then, those schemes fail loud here — the seam is declared, not faked.
+    SCOPE (C 3b — the seam's FIRST real extension): skills + contexts ARE addressed now —
+    `resolve_address` resolves `run://` (an upstream output) + `cas://` (a content blob) + `skill://`
+    (a reusable instructions unit) + `context://` (a reusable context blob). It remains the ONE place
+    the next resolver (a `vec://` k-NN read, a `blob://` binary read) plugs in LATER; until then those
+    schemes fail loud here — the seam is declared, not faked. The input-address INTENT (a role's input
+    = any skill, any context, or any upstream output, set by address) is now fully realised.
 
     `on_missing` is passed through to `resolve_run_ref` for run:// (a declared "skip" returns None on a
     pruned ref; default "raise" fail-louds). Fail loud everywhere else."""
@@ -647,20 +674,30 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
         return resolve_run_ref(store, addr, on_missing=on_missing)        # REUSE the canonical resolver
     if sch == "cas":
         return store.get_content(addr)                                    # REUSE: cas:// IS get_content
+    if sch == "skill":
+        # C 3b — skill://<id> → the skill's declared instructions content (file-discovered registry).
+        # read() FAIL-LOUDs on an unknown id (registry-is-truth — never fabricate a missing skill).
+        # NAMED .read (not .resolve): a registry read is the floor, and the cognition layer keeps
+        # `.resolve(` a forbidden-only token (the C9.2 source-invariant).
+        return skill_registry().read(addr[len("skill://"):])
+    if sch == "context":
+        # C 3b — context://<id> → the context's declared content blob (file-discovered registry).
+        return context_registry().read(addr[len("context://"):])
     if sch is not None:
         # a REGISTERED scheme (blob/vec/ui/code) with no content-resolver wired into this dispatcher yet.
         raise ValueError(
-            f"resolve_address: scheme {sch!r} not content-resolvable yet (address {addr!r}) — only "
-            f"run:// + cas:// resolve to content today (extensible: add a {sch}:// resolver branch here). "
-            f"Fail loud, NEVER a silent empty.")
+            f"resolve_address: scheme {sch!r} not content-resolvable yet (address {addr!r}) — "
+            f"run:// + cas:// + skill:// + context:// resolve to content today (extensible: add a "
+            f"{sch}:// resolver branch here). Fail loud, NEVER a silent empty.")
     if "://" in addr:
-        # an UNREGISTERED scheme (skill://, context://, foo://) — the input-address INTENT's future home.
+        # an UNREGISTERED scheme (foo://) — not in contracts.address.SCHEMES, no resolver. The seam's
+        # future home for a new declared scheme (skill://+context:// graduated from here in C 3b).
         bad = addr.split("://", 1)[0]
         raise ValueError(
-            f"resolve_address: scheme {bad!r} not content-resolvable yet (address {addr!r}) — skills / "
-            f"contexts are NOT addressed today (the honest scope). run:// + cas:// resolve now; this is "
-            f"the EXTENSIBLE seam where a {bad}:// resolver plugs in when the scheme exists. Fail loud, "
-            f"NEVER a silent empty.")
+            f"resolve_address: scheme {bad!r} not content-resolvable yet (address {addr!r}) — it is not "
+            f"a registered scheme (contracts.address.SCHEMES) and has no resolver. run:// + cas:// + "
+            f"skill:// + context:// resolve now; this is the EXTENSIBLE seam where a {bad}:// resolver "
+            f"plugs in when the scheme exists. Fail loud, NEVER a silent empty.")
     # a BARE NAME (no "://") — not an address; the caller reads it from the supplied ctx.
     return BARE_NAME
 

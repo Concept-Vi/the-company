@@ -80,15 +80,25 @@ check("resolve_address('utterance') returns the BARE_NAME sentinel (a ctx-key, n
 check("resolve_address('notes') likewise → BARE_NAME (bare names are ctx keys)",
       resolve_address(store, "notes") is BARE_NAME)
 
-# an UNREGISTERED scheme (skill://) — RAISES fail-loud with the extensible message. The CRITICAL case:
-# skill:// has scheme()==None just like a bare name, so the discriminator MUST be "://", not scheme().
-skill_raised = False
+# C 3b UPDATE: skill:// is now a RESOLVABLE registered scheme (the seam's first real extension), so an
+# UNKNOWN skill id RAISES via the registry's fail-loud (registry-is-truth), NOT the "not content-resolvable
+# yet" scheme message. The CRITICAL discriminator still holds: skill:// has scheme()=="skill" (registered)
+# now, so it dispatches to the SkillRegistry — never the bare-name sentinel.
+unknown_skill_raised = False
 try:
-    resolve_address(store, "skill://foo")
+    resolve_address(store, "skill://no-such-skill")
 except ValueError as e:
-    skill_raised = "not content-resolvable yet" in str(e) and "extensible" in str(e).lower()
-check("resolve_address('skill://foo') RAISES fail-loud (NOT the bare-name sentinel) — the extensible seam",
-      skill_raised)
+    unknown_skill_raised = "unknown skill" in str(e).lower() and "registry-is-truth" in str(e).lower()
+check("resolve_address('skill://no-such-skill') RAISES fail-loud unknown-id (registry-is-truth, NOT the sentinel)",
+      unknown_skill_raised)
+# a genuinely UNREGISTERED scheme (foo://) keeps the extensible-seam message (NOT a resolvable scheme).
+unreg_raised = False
+try:
+    resolve_address(store, "foo://bar")
+except ValueError as e:
+    unreg_raised = "not content-resolvable yet" in str(e) and "extensible" in str(e).lower()
+check("resolve_address('foo://bar') RAISES fail-loud (unregistered scheme — the extensible seam holds)",
+      unreg_raised)
 
 # a REGISTERED-but-unresolved scheme (blob:// / vec:// / ui:// / code://) — RAISES fail-loud too.
 for sch in ("blob://b2:abc", "vec://run://x#emb=m", "ui://panel/p", "code://suite/foo"):
