@@ -139,11 +139,14 @@ export function Stage({ titleFor }: { titleFor: (f: string | null) => string }) 
       <div className="studio-stage-head">
         <span className="studio-stage-title">
           {reviewMockup
-            ? <>{titleFor(reviewMockup)} <span className="muted">· {reviewMockup}</span></>
+            ? titleFor(reviewMockup)
             : <span className="muted">pick a mockup from the left to review</span>}
         </span>
         <span className="studio-stage-tools">
-          {reviewAddress && <Badge tone="wire">{reviewAddress}</Badge>}
+          {/* the locus indicator — the operator SEES what the RHM is grounded on (the vision: "I should see
+             what it's grounded on"), but in PLAIN words, never raw address syntax: strip the "ui://" scheme
+             and lead with "looking at:" (FORM: no dev jargon on the operator face, 2026-06-09). */}
+          {reviewAddress && <Badge tone="wire">looking at: {reviewAddress.replace(/^ui:\/\//, '')}</Badge>}
           <button type="button" className={'studio-dev' + (device === 'desktop' ? ' on' : '')}
             data-ui-ref="ui://studio/stage/device-desktop" onClick={() => setDevice('desktop')}>desktop</button>
           <button type="button" className={'studio-dev' + (device === 'phone' ? ' on' : '')}
