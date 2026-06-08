@@ -56,7 +56,9 @@ export function Card({ file, title, platform, group, address, active, onSelect }
       <span className="studio-card-title">{title}</span>
       <span className="studio-card-meta">
         <Badge tone={tone}>{platform}</Badge>
-        {address && <span className="studio-card-addr muted">{address}</span>}
+        {/* the raw ui:// address is the SYSTEM's locus — kept as data-ui-ref + the title tooltip, NOT shown
+           as a visible label. A non-developer reads the title + platform, never address syntax like
+           "ui://canvas" (FORM: no dev jargon on the operator face, 2026-06-09). */}
       </span>
     </Surface>
   )
