@@ -31,3 +31,10 @@ parts are done or every remaining piece needs C → record blocked + exit, don't
 - in-flight: —
 - blocked: my roles/cast → cognition's C (waiting).
 - needs-Tim: confirm the forward-split if coherence/interface object (none yet).
+
+## 2026-06-09 — RE-SCOPE done + READINESS HOLD (Tim's catch)
+Loop-prep RE-SCOPED for the 3-fork split (Completion Criteria § POST-COORDINATION RE-SCOPE): build ONLY my lane;
+consume cognition's C; cross-ref coherence's gates. § PROTOCOL item 11 = the readiness gate.
+**CRON: do NOT build until ALL THREE post "loop-prep re-scoped + grounded + ready" on the board.** Re-scope is
+done + I've posted my readiness; now waiting on coherence to ground its criteria + all three to confirm. Until
+then each fire = poll the channel + answer, NO code. When ready AND cognition's C cast lands → build my lane.

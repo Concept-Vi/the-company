@@ -960,3 +960,22 @@ Round 2 additions are dependency-placed; they do NOT reorder the existing sequen
 - **O1/O2/O3 (general organ + 7 consumers)** — these are structural recognition criteria; O1/O3 are
   invariants the loop re-checks throughout; O2 consumers 2–6 land AFTER instance-1 (build-review) is
   proven working. Consumer 7 (system-tour) is already ✅.
+
+---
+## POST-COORDINATION RE-SCOPE (2026-06-09) — what's MINE vs consumed/gated, per the 3-fork split
+This loop-prep was written BEFORE the three sessions coordinated. The split (WORK-SPLIT § PROTOCOL) re-owns
+several criteria — the loop builds ONLY my-lane criteria and CONSUMES the rest, never rebuilds them:
+- **CONSUME cognition's C (don't build the engine):** K1 walkthrough cast (+mode_scope on 6 roles), K2
+  screen_reader role, K4 injection-completion → I ADD my roles ON cognition's C seam AFTER C releases (claim
+  roles/ then); HOLD cognition.py/roles.py until released.
+- **DECLARE only (cognition's A serves):** K3 cast_posture → I declare the MODE_REGISTRY row; A serves it.
+- **HANDED to cognition's A:** L1 mockup:// scheme + the studio-suite-mockup-focus.patch → cognition's A
+  window. Removed from my build.
+- **UNIFIED into coherence's shared gate suite:** M3 FORM pre-commit hook → contribute the FORM-lint to the ONE
+  shared suite; no separate hook.
+- **COHERENCE's (cross-ref, don't build):** M1 coherence-oracle, M2 verify-gate-wraps-generated-builds, the
+  system-wide gates → coherence's detectors + the convergence round.
+- **MINE to build (my lane):** the operator surface + FE (show-me lane, Review/StudioKit, useAppController,
+  App.tsx, api.ts), the wire/generate-for-mockups, my surface's bridge routes, the voice focus-passthrough fix,
+  the cast_posture DECLARATION, + my roles-on-C-seam (after C). The FE halves of A/B/D/E/H + F.
+READINESS: build only after this re-scope + a posted "loop-prep re-scoped + grounded + ready" (§ PROTOCOL item 11).

@@ -200,3 +200,11 @@ Ratified: cognition (374b272) · guided-review (this commit) · coherence (propo
 10. **The channel:** MESSAGES.md (append-only, race-safe `cat >>`, tagged, poll each fire). Staggered crons:
     cognition `0,15,30,45` · guided-review `5,20,35,50` · coherence `10,25,40,55`. The fire is the trigger — no
     human relay.
+
+---
+## § PROTOCOL +item 11 — READINESS GATE (added 2026-06-09, Tim's catch)
+The loop-preps were written BEFORE coordination → they over-claim. So before any build-cron WRITES CODE, each
+session must: (a) RE-SCOPE its loop-prep to the split (build only its lane; consume the shared seams, don't
+rebuild them); (b) GROUND its Completion Criteria as a truth-table (coherence: you have research, not yet a
+criteria doc — ground it); (c) POST "loop-prep re-scoped + grounded + ready" on the board. **No cron builds
+until its lane has posted ready. The loops' first job is re-scope + confirm, not build.**
