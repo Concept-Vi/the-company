@@ -731,6 +731,110 @@ class H(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             return                                          # client closed — done, not an error
 
+    def _chat_stream(self):
+        """B1 TEXT-streaming turn: the TEXT-ONLY sibling of _voice_stream — drive SUITE.chat_parts() and
+        stream each completed part as an NDJSON line so the reply appears INCREMENTALLY in the RHM chat
+        (instead of the whole-reply wait of /api/chat). ADDITIVE: /api/chat (non-stream) is UNTOUCHED.
+
+        Reuses the PURE driver _stream_parts (no copy of the producer/consumer overlap) with a TEXT-ONLY
+        wiring: speak_fn is a NOOP (lambda s: b"" — same shape voice uses for voice-off at bridge.py:852)
+        and emit_fn is a NOOP (lambda c: None — we don't stream per-sentence audio chunks here, only the
+        per-PART text via on_part). The brain↔TTS overlap structure still runs (the producer pulls parts
+        ahead) but nothing synthesises — _stream_parts still DRAINS the generator so chat_parts' epilogue
+        (the SINGLE chat append + SINGLE _emit('chat')) runs exactly once, giving us the persisted history.
+
+        SUPERSET-not-degrade (no-silent-failures): the non-stream /api/chat path consumes r.proposal (the
+        I3 consent card), r.action (post-dispatch reactions), r.thread_id/r.history. _stream_parts returns
+        only `reply`, so we TEE the generator to capture the FINAL part dict (which carries the epilogue's
+        full 7-key return at final['result'], or the prologue's at final['early_return']) and fold
+        proposal/action/thread_id/history/reply into the {type:done} event. The FE's onDone then reuses the
+        SAME handlers (setProposal/applyActionReactions/setThreadId) → streaming loses NOTHING.
+
+        Response = newline-delimited JSON:
+          {type:part,idx,text,final}  (per completed part — the incremental display) ·
+          {type:done,reply,proposal,action,thread_id,history,parts}  (terminal — the FE's authoritative state) ·
+          {type:error,error,step}  (fail-loud)
+        The reply on `done` is the CANONICAL joined reply the epilogue wrote to history (never a manual
+        re-join of part texts — the parts are display-incremental; the done text is the source of truth)."""
+        import re as _re
+        b = self._body()                                      # read the request body BEFORE send_response (mirrors voice@764)
+        message = b.get("message")
+        gid = b.get("graph_id", DEMO)
+        focus = b.get("focus")
+        self.send_response(200)
+        self.send_header("Content-Type", "application/x-ndjson")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "close")
+        self.end_headers()
+
+        import select as _sel, socket as _sock
+        gone = [False]                                        # client-disconnect flag (cancel a speculative turn)
+
+        def emit(obj):
+            try:
+                self.wfile.write((json.dumps(obj) + "\n").encode()); self.wfile.flush()
+            except (BrokenPipeError, ConnectionResetError, OSError):
+                gone[0] = True                                # client hung up — stop, don't raise
+
+        def client_gone():
+            if gone[0]:
+                return True
+            try:
+                r, _, _ = _sel.select([self.connection], [], [], 0)
+                if r and self.connection.recv(1, _sock.MSG_PEEK) == b"":
+                    gone[0] = True
+            except Exception:
+                pass
+            return gone[0]
+
+        step = "init"
+        try:
+            if not message:
+                raise ValueError("/api/chat/stream needs {message} (fail loud)")
+
+            def _split(text):                                 # same per-part sentence split shape as voice (unused-result but keeps the contract)
+                return [s.strip() for s in _re.split(r'(?<=[.!?])\s+', text) if s.strip()] or ([text] if text.strip() else [])
+
+            box: dict = {}                                    # captures the FINAL part dict (carries result/early_return)
+            idx_box = [0]                                     # the per-part display index (on_part gives only text — track idx in a closure)
+
+            def _tee(gen):
+                # pass each part THROUGH while capturing the FINAL one (its result/early_return carries the
+                # epilogue's 7-key return — proposal/action/thread_id/history — that _stream_parts discards).
+                for p in gen:
+                    if p.get("final"):
+                        box["final"] = p
+                    yield p
+
+            def _emit_part(text):                             # the incremental display event (per completed part)
+                emit({"type": "part", "idx": idx_box[0], "text": text, "final": False})
+                idx_box[0] += 1
+
+            step = "think"
+            parts_gen = SUITE.chat_parts(message, gid, focus)
+            # TEXT-ONLY wiring: NOOP speak_fn/emit_fn (no audio); on_part streams each part's text. The driver
+            # still DRAINS the generator so the epilogue runs (the persisted chat turn) — voice-off does the
+            # same at bridge.py:851-853.
+            res = _stream_parts(_tee(parts_gen), speak_fn=lambda s: b"", emit_fn=lambda c: None, gone=gone,
+                                split_sentences=_split, on_part=_emit_part, should_stop=client_gone)
+            if res["cancelled"] or gone[0]:
+                return                                        # client disconnected mid-stream — socket's dead, nothing to send
+            # the CANONICAL turn-end state from the captured final part: result (normal/bypass) OR early_return
+            # (off/refusal prologue). reply prefers the epilogue's joined reply (res['reply']) — the source of truth.
+            final = box.get("final") or {}
+            ret = final.get("result") if isinstance(final.get("result"), dict) else (
+                  final.get("early_return") if isinstance(final.get("early_return"), dict) else {})
+            done = {"type": "done", "parts": res["parts_done"],
+                    "reply": (res["reply"] or ret.get("reply") or "").strip(),
+                    "proposal": ret.get("proposal"), "action": ret.get("action"),
+                    "thread_id": ret.get("thread_id"), "history": ret.get("history")}
+            emit(done)
+        except Exception as e:                                # fail loud — to the client (the socket is the only channel here)
+            try:
+                emit({"type": "error", "error": f"{type(e).__name__}: {e}", "step": step})
+            except Exception:
+                pass
+
     def _voice_stream(self):
         """Tier-1 STREAMING voice turn: hear → think-IN-PARTS → SPEAK part-by-part. The win over
         /api/voice/turn: instead of synthesising the WHOLE reply before any audio (the ~28s-on-a-long-
@@ -1074,6 +1178,9 @@ class H(BaseHTTPRequestHandler):
                 return
             if self.path.split("?")[0] == "/api/voice/stream":   # G7/Tier-1: STREAMING turn — speak sentence-by-sentence
                 self._voice_stream()
+                return
+            if self.path.split("?")[0] == "/api/chat/stream":    # B1: TEXT-streaming turn — parts appear incrementally
+                self._chat_stream()
                 return
             if self.path == "/api/run":
                 b = self._body()

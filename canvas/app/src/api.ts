@@ -95,6 +95,34 @@ export const api = {
   events: () => fetch('/api/events').then(jr),
   chat: (message: string, focus?: any) =>
     fetch('/api/chat', { method: 'POST', headers: J, body: JSON.stringify({ message, focus }) }).then(jr),
+  // B1 · TEXT-streaming chat — the incremental sibling of `chat` above (which stays untouched). POSTs to
+  // /api/chat/stream and reads the ndjson body line-by-line (the SAME reader pattern as voiceStream): each
+  // {type:part} → onPart(text, idx) (the reply appears progressively); the terminal {type:done} carries the
+  // CANONICAL turn-end state (reply/proposal/action/thread_id/history — a true superset of /api/chat) →
+  // onDone(done). A {type:error} event THROWS (so the caller's catch surfaces the real text, not a generic
+  // "could not reach the brain" — fail loud, no silent swallow).
+  chatStream: async (message: string, focus: any,
+                     onPart: (text: string, idx: number) => void,
+                     onDone: (done: any) => void) => {
+    const res = await fetch('/api/chat/stream', { method: 'POST', headers: J, body: JSON.stringify({ message, focus }) })
+    if (!res.ok || !res.body) {
+      const t = await res.text().catch(() => '')
+      throw new Error('chat stream failed (' + res.status + '): ' + t.slice(0, 200))
+    }
+    const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ''
+    for (;;) {
+      const { done, value } = await reader.read(); if (done) break
+      buf += dec.decode(value, { stream: true })
+      const lines = buf.split('\n'); buf = lines.pop() || ''
+      for (const ln of lines) {
+        const s = ln.trim(); if (!s) continue
+        let ev: any; try { ev = JSON.parse(s) } catch { continue }
+        if (ev.type === 'part') onPart(ev.text, ev.idx)
+        else if (ev.type === 'done') onDone(ev)
+        else if (ev.type === 'error') throw new Error(ev.error)   // fail loud — the caller's catch surfaces this
+      }
+    }
+  },
   // I3/I2: the click-emission seam — a DETERMINISTIC operator click ships a STRUCTURED {verb, address,
   // args} that drives _dispatch_rhm_action directly (the 7-verb whitelist + no-self-apply ride along
   // INSIDE the dispatcher). This is the path an APPROVED propose-affordance card fires (I3 = click #2,

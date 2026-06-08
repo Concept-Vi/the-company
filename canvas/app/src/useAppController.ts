@@ -64,6 +64,10 @@ export function useAppController(editor: Editor) {
   const [chat, setChat] = useState<any[]>([])
   const [chatMsg, setChatMsg] = useState('')
   const [chatBusy, setChatBusy] = useState(false)
+  // B1 · text-streaming default-on. The streaming path is a true superset of /api/chat (the done event
+  // carries proposal/action/thread/history) so this can default true with the non-stream path intact as a
+  // fallback (flip to false to use the whole-reply-wait /api/chat path).
+  const [chatStreaming] = useState(true)
   // REVIEW WORKSPACE — the mockup the operator is reviewing (a filename, e.g. "IA-mobile.html"), or null.
   // Held here (NOT via indicate(), which paints a same-document DOM class + clears on an unresolvable
   // address — a mockup lives in an iframe and mockup:// is not a registry address). When set, sendChat
@@ -1118,6 +1122,38 @@ export function useAppController(editor: Editor) {
       // It rides FIRST so the "mockup under review" framing leads the focus block (like the indicated addr).
       const reviewPrefix = reviewMockupRef.current ? ['mockup://' + reviewMockupRef.current] : []
       const selected = [...reviewPrefix, ...(indicatedRef.current ? [indicatedRef.current] : []), ...nodeIds]
+      // B1 · STREAMING is the DEFAULT path (parts appear incrementally); the non-stream /api/chat is the
+      // PRESERVED fallback (behind chatStreaming, default true). The streaming `done` event is a true SUPERSET
+      // of /api/chat's return (reply/proposal/action/thread_id/history), so the SAME post-turn handling
+      // (handleChatResult) runs for both — no feature is lost on the stream path (no silent regression).
+      if (chatStreaming) {
+        // hold the live assistant message index so each {type:part} appends to ITS text in place. Push an
+        // empty assistant bubble first; parts grow it. On done we OVERWRITE with the canonical joined reply
+        // (the parts are display-incremental; the persisted reply is the source of truth — never a re-join).
+        let assistantIdx = -1
+        let acc = ''
+        await api.chatStream(m, { selected },
+          (text) => {                                          // onPart — the incremental display
+            acc = acc ? acc + ' ' + text : text
+            setChat(c => {
+              if (assistantIdx < 0) { assistantIdx = c.length; return [...c, { role: 'assistant', text: acc }] }
+              const nc = c.slice(); nc[assistantIdx] = { role: 'assistant', text: acc }; return nc
+            })
+          },
+          (done) => {                                          // onDone — reconcile to canonical state
+            if (done.reply) {                                  // overwrite the incremental bubble with the canonical reply
+              setChat(c => {
+                if (assistantIdx < 0) return [...c, { role: 'assistant', text: done.reply }]
+                const nc = c.slice(); nc[assistantIdx] = { role: 'assistant', text: done.reply }; return nc
+              })
+            }
+            // the done event IS the /api/chat-shaped return → reuse the shared handler (proposal/action/
+            // thread/history/poll/voice-out), but DO NOT let it replace the chat array (we already rendered
+            // the parts incrementally; history would duplicate the just-streamed turn).
+            handleChatResult(done, { applyHistory: false })
+          })
+        return
+      }
       const r = await api.chat(m, { selected })
       // F5 · the named bug. On a backend 400 (model unreachable — the literal first thing an operator hits)
       // api.chat now resolves to a normalized `{error}` (api.ts jr). BEFORE F5 this did `setChat(r.history)`
@@ -1125,22 +1161,31 @@ export function useAppController(editor: Editor) {
       // backend's error text as a VISIBLE assistant message (fail-loud, rule 4 — never a silent swallow) and
       // return WITHOUT touching the chat array. `finally` clears chatBusy. No throw, no undefined setChat.
       if (r.error) { setChat(c => [...c, { role: 'assistant', text: '⚠ ' + r.error }]); return }
-      // defensive (advisor): only replace the log with a real array. A future non-ok GET would resolve to
-      // `{error}` (no `.history`); never `setChat(undefined)`.
-      if (Array.isArray(r.history)) setChat(r.history)
-      if (r.thread_id) { setThreadId(r.thread_id); refreshThreads() }   // S2: keep the thread + its last_msg/title fresh
-      await poll()
-      if (now?.mode === 'listening' && r.reply) speakReply(r.reply).catch(() => { /* TTS hiccup is harmless here */ })   // voice out
-      // I3 — the CONSENT gate: if the RHM PROPOSED an action (a structured {verb, address, args} on the
-      // response, with action===null because nothing ran), hold it for the operator to APPROVE. The card
-      // renders in RhmChat; approveProposal fires /api/act. Nothing executes here (the whole point).
-      if (r.proposal) { setProposal(r.proposal); return }
-      // the decision-compiler DOWN: an action the RHM TOOK (execute-then-render — PRESERVED) routes its
-      // post-hoc reaction through the SAME handler the approve path reuses.
-      await applyActionReactions(r.action)
+      // the shared post-turn handler (proposal/action/thread/history/poll/voice-out) — reused by the stream path.
+      handleChatResult(r, { applyHistory: true })
     }
-    catch { setChat(c => [...c, { role: 'assistant', text: '(could not reach the brain)' }]) }
+    catch (e: any) { setChat(c => [...c, { role: 'assistant', text: '⚠ ' + (e?.message || '(could not reach the brain)') }]) }
     finally { setChatBusy(false) }
+  }
+
+  // B1 · the SHARED post-turn handler. /api/chat returns {reply,proposal,action,thread_id,history}; the
+  // streaming {type:done} event is a SUPERSET of the SAME shape. Both route here so neither path loses the
+  // consent card, the action reactions, the thread sync, or the voice-out. `applyHistory` is false on the
+  // stream path (the turn was already rendered incrementally — re-setting history would double it).
+  async function handleChatResult(r: any, { applyHistory }: { applyHistory: boolean }) {
+    // defensive (F5/advisor): only replace the log with a real array. A non-ok GET resolves to `{error}`
+    // (no `.history`); never `setChat(undefined)`.
+    if (applyHistory && Array.isArray(r.history)) setChat(r.history)
+    if (r.thread_id) { setThreadId(r.thread_id); refreshThreads() }   // S2: keep the thread + its last_msg/title fresh
+    await poll()
+    if (now?.mode === 'listening' && r.reply) speakReply(r.reply).catch(() => { /* TTS hiccup is harmless here */ })   // voice out
+    // I3 — the CONSENT gate: if the RHM PROPOSED an action (a structured {verb, address, args} on the
+    // response, with action===null because nothing ran), hold it for the operator to APPROVE. The card
+    // renders in RhmChat; approveProposal fires /api/act. Nothing executes here (the whole point).
+    if (r.proposal) { setProposal(r.proposal); return }
+    // the decision-compiler DOWN: an action the RHM TOOK (execute-then-render — PRESERVED) routes its
+    // post-hoc reaction through the SAME handler the approve path reuses.
+    await applyActionReactions(r.action)
   }
 
   // I3 — the post-dispatch reaction handler, factored out so BOTH the execute-then-render chat path
