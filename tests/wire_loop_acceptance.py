@@ -48,7 +48,13 @@ def check(label, cond):
 def fresh_suite():
     store = FsStore(os.path.join(tempfile.mkdtemp(prefix="wireloop-"), "store"))
     reg = NodeRegistry(); reg.discover([NODES])
-    return Suite(store, reg, nodes_dir=NODES)
+    s = Suite(store, reg, nodes_dir=NODES)
+    # NEUTRALIZE the wire's git CHECKPOINT in tests (it now commits each accepted build) — the real
+    # default would `git commit` on the LIVE repo. No-op fake-sha override isolates every dispatch
+    # (incl. those driven via drive_dispatchable) at once. Production untouched; checkpoint proven in
+    # wire_commit_acceptance.py.
+    s._self_build_commit = lambda paths, msg: "0" * 40
+    return s
 
 
 def operator_approve(suite, sid):

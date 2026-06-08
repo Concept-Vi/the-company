@@ -62,7 +62,13 @@ def raises(label, fn, exc=GovernanceError):
 def fresh_suite():
     store = FsStore(os.path.join(tempfile.mkdtemp(prefix="wire-"), "store"))
     reg = NodeRegistry(); reg.discover([NODES])
-    return Suite(store, reg, nodes_dir=NODES)
+    s = Suite(store, reg, nodes_dir=NODES)
+    # NEUTRALIZE the wire's git CHECKPOINT in tests (it now commits each accepted build): the real
+    # default `_self_build_commit` would `git commit` on the LIVE repo. Override the instance method
+    # with a no-op that returns a fake 40-hex sha — isolates EVERY dispatch in this suite at once (the
+    # checkpoint mechanism itself is proven in wire_commit_acceptance.py). Production is untouched.
+    s._self_build_commit = lambda paths, msg: "0" * 40
+    return s
 
 
 def approve_seq(suite, sid):

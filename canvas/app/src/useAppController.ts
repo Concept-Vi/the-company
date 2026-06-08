@@ -73,12 +73,21 @@ export function useAppController(editor: Editor) {
   // `.ui-spotlight` ring (which the show-resolver flashes and removes after a timeout).
   const [indicated, setIndicated] = useState<string | null>(null)
   const indicatedRef = useRef<string | null>(null)   // for the capture handler (avoids a stale closure)
-  // I1-gate (Tim 2026-06-07): click-to-indicate is a DELIBERATE mode, NOT a global capture. Always-on, it
-  // hijacked every tap — the Settings ✕ wouldn't close (its onClick was disrupted by the indicate re-render)
-  // and a tap on any panel painted `.ui-indicated` (translucency) revealing what's behind. OFF by default:
-  // clicks behave normally; turn it ON to point-at-things for comment/reference. Ref for the capture closure.
-  const [indicateMode, setIndicateMode] = useState(false)
-  const indicateModeRef = useRef(false)
+  // I1-gate / L4-COHERENCE (Tim 2026-06-07, unify-wave2): click-to-indicate is the DEFAULT (ON), with the
+  // `◎ point` toolbar toggle as an explicit OPT-OUT for pure navigation. WHY ON by default: the branch's
+  // verified-by-use flows — show-me (C1/C2), address-help (D2), altitude (F1) — ALL assume that clicking a UI
+  // element INDICATES it (so the help panel / show-me / shaping target the clicked element). With indicate
+  // defaulting OFF (the merge carried main's a89dab1 over-broad gate), a click indicated nothing and those
+  // flows silently broke. Main's REAL a89dab1 fix was the MODAL EXCLUSION in onDocClick (don't indicate inside
+  // a modal — which fixed the Settings ✕-close + translucency bug); the global default-OFF gate was an
+  // over-broad way to get there. So: indicate ON by default (C/D/F work out of the box), the modal-exclusion
+  // guards in onDocClick KEPT (main's fix holds — a click inside the A3 Settings / Workshop modal does NOT
+  // indicate, the ✕ closes, no translucency), and the toggle still lets the operator switch indicate OFF.
+  // BOTH the state (drives the toolbar button visual) and the ref (drives the onDocClick behavior — the gate
+  // reads indicateModeRef.current, and the ref is NEVER synced from state, only flipped in toggleIndicateMode)
+  // must start true, or the gate would early-return until the toggle was pressed (the silent break, build-clean).
+  const [indicateMode, setIndicateMode] = useState(true)
+  const indicateModeRef = useRef(true)
   // L9 · reverse journey-recording (§21.7#2-reverse). The REVERSE of the forward resolveUiTarget: an
   // EXPLICIT start/stop recording of the operator's ordered ui:// click-path as a DISTINCT journey-record
   // (NOT the review-session organ — that records item-ids; this records navigation). While `journeyId` is
@@ -96,7 +105,54 @@ export function useAppController(editor: Editor) {
   // approve handler fires /api/act (api.act → the I2 dispatch path — REUSE, not a new path), so the
   // action runs ONLY on approve; dismiss just drops it (a reject does nothing). Mirrors the `indicated`
   // chip pattern (separate ephemeral state beside the chat log).
-  const [proposal, setProposal] = useState<{ verb: string; address?: string | null; args?: any } | null>(null)
+  // B1 · OFFER-WITH-OPTIONS shape (mirrors the backend suite.py:3313-3317 `proposal`): the top-level
+  // {verb,address,args} is the PRIMARY offer; `options[]` are the one-click choices the operator picks
+  // among (v1 carries exactly one — the surface maps over it generically so it's ready when the backend
+  // emits several); `direction:true` means the offer accepts a steer (the operator types a refinement →
+  // it loops back to the RHM to re-offer). Each option carries a `label` (the human one-liner shown on
+  // its button). Extended from the binary {verb,address,args} card → the rich consent surface.
+  // B2 · an option carries a `summary` (the DISTINGUISHING line the operator reads to choose between
+  // alternatives — for build/panel/extend the verb+address are often identical across options, so the
+  // summary IS the differentiator the comparison surface renders as the primary content).
+  type ProposalOption = { verb: string; address?: string | null; args?: any; label?: string; summary?: string | null }
+  // B2 · `interactive` (from the backend, derived from the verb class build/panel/extend — registry-truth):
+  // when true the ProposeAffordance region renders the ON-SCREEN COMPARISON surface (select-then-approve +
+  // chat-until-approve), NOT B1's click-to-act list. Single-option / non-consequential offers stay B1.
+  // B3 · `_sid` — when an offer is REVIVED from the inbox (a deferred_offer surfaced item), the proposal
+  // carries the surfaced id so the round-trip closes: on approve/dismiss the revived item is RESOLVED out
+  // of `live_escalations` (it doesn't linger as a ghost after it's been acted). A fresh (non-revived) offer
+  // has no _sid. Reflects-never-owns: only the operator's approve/dismiss resolves it.
+  const [proposal, setProposal] = useState<
+    { verb: string; address?: string | null; args?: any; options?: ProposalOption[]; direction?: boolean; interactive?: boolean; _sid?: string } | null
+  >(null)
+  // D2 · the COMPOSED address-help bundle for the indicated ui:// element — the operator-facing help/altitude
+  // surface (REPO-KNOWLEDGE D2). The three legs (what_this_is · how_to_use · how_to_change) of "what can I do
+  // here?" joined by the EXISTING D1 composer Suite.address_help (exposed via GET /api/address-help — NOT a
+  // parallel FE composer). Loaded by fetchAddressHelp whenever the operator indicates an element (keyed on
+  // `indicated` ONLY — the help text is STATIC per address, so unlike History/SelfChanges it does NOT re-poll
+  // on events.length). Rendered AT TIM'S ALTITUDE by the AddressHelp region: plain-language what/how-to-use
+  // lead; the mechanism (code scope, file paths, blast-radius reach) drills down on demand. `legs_present`
+  // drives the per-leg DEGRADE (G-53: many elements author no howto yet → an honest "no how-to authored yet",
+  // never a blank). null = nothing indicated / not yet loaded. `addressHelpError` carries a fail-loud message
+  // (malformed address → backend 400) so the panel says so, never a silent blank.
+  // F1 ALTITUDE: the bundle ALSO carries the LEARNED presentation pref (the adapt step attaches it backend-
+  // side — _apply_presentation_pref, committed e1700b4): `presentation_pref` {kind, arg?} = the structured
+  // learned shaping at this locus (null when none — the clean default), `presentation_directive` = its human
+  // form. The AddressHelp panel renders these as a 'learned: …' marker + a model-free structural adapt
+  // (lead_with:change auto-hoists the how-to-change drill-down). These MUST be threaded through (the prior
+  // fixed mapping dropped them) or the marker never appears.
+  const [addressHelp, setAddressHelp] = useState<{
+    address: string; what_this_is: string; how_to_use: string | null;
+    how_to_change: { scope: string[]; blast_radius: any; note: string | null };
+    legs_present: { what_this_is: boolean; how_to_change: boolean; how_to_use: boolean };
+    presentation_pref: { kind: string; arg?: string } | null;
+    presentation_directive: string | null;
+  } | null>(null)
+  // F1: a transient busy flag for the feedback affordance (so the chips disable + show 'shaping…' while the
+  // pref POSTs + the bundle re-fetches — the affordance is fail-loud + never double-fires).
+  const [prefBusy, setPrefBusy] = useState(false)
+  const [addressHelpBusy, setAddressHelpBusy] = useState(false)
+  const [addressHelpError, setAddressHelpError] = useState<string | null>(null)
   // L3 · addressed history (§21.7#1): the trajectory of events stamped AT the indicated ui:// address —
   // "everything that happened here". Loaded by fetchHistory whenever the operator indicates an element;
   // rendered NAVIGABLE (grouped by kind) by the History region. null = nothing indicated / no history yet.
@@ -129,12 +185,42 @@ export function useAppController(editor: Editor) {
                versions: { cas: string; ts: string; is_current: boolean; preview: string }[] } | null>(null)
   const [versionsBusy, setVersionsBusy] = useState(false)
   const [cfg, setCfg] = useState<any>({ model: '', persona: '' })
-  const [cfgOpen, setCfgOpen] = useState(false)
+  // L4-GEAR-RETIRE: `cfgOpen`/`applyCfg` (the legacy RhmChat .rhm-cfg gear's open-state + apply) are GONE —
+  // the gear is retired (its config duplicated A3). The consolidated A3 Settings (settingsOpen below) is the
+  // single config home; it writes via setCfgSlot → set_rhm_config. No parallel config surface remains (rule 3).
   const [personas, setPersonas] = useState<any[]>([])   // Option A: the cast you can switch between (id·name·engine)
-  const [voiceStatus, setVoiceStatus] = useState<string>('')   // V4.2: '' | 'loading' | 'ready' | 'down' (the persona voice's load state)
+  // A3/E2-FE · THE CONSOLIDATED SETTINGS SURFACE state. `settingsOpen` raises the one designed Settings region
+  // (the full-viewport modal mounted in App.tsx) — the single place modes/models/personas/RHM-config/voice all
+  // live together (A3 "consolidated, not scattered"). It is INDEPENDENT of `cfgOpen` (the legacy RhmChat gear,
+  // a forbidden-file we leave working): both read the SAME cfg/personas/etc. controller state — single source,
+  // no parallel config system (rule 3). The extra read-only registries the Settings surface renders are loaded
+  // ON OPEN (loadSettingsData) so a closed surface costs nothing: `roles` (the model-FUNCTION role registry,
+  // GET /api/roles) · `voicePaths` (the pipeline/s2s registry, GET /api/voice/paths — s2s renders UNAVAILABLE,
+  // never as working, G-19) · `voiceStatus` (per-engine TTS + STT availability, GET /api/voice) · `modeRegistry`
+  // (E1 — the hierarchical mode type-registry: ≤8 modes × subtypes × per-mode context-resolution declarations,
+  // from capabilities().mode_registry) · `autodetect` (E2 — the off/suggest/auto toggle's LIVE value + options,
+  // from capabilities().composition_config; READ-ONLY here — there is no runtime setter, surfaced honestly as
+  // env-set, never a silent no-op control). reflects-never-owns: every one is READ truth off the registry.
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const settingsOpenRef = useRef(false)   // openStream's closure is stale → the ref lets the SSE branch see live open-state
+  settingsOpenRef.current = settingsOpen
+  const [settingsTab, setSettingsTab] = useState<'brain' | 'modes' | 'voice' | 'roles' | 'composition'>('brain')
+  const [roles, setRoles] = useState<Record<string, any> | null>(null)
+  const [voicePaths, setVoicePaths] = useState<any | null>(null)
+  const [voiceStatus, setVoiceStatus] = useState<any | null>(null)
+  const [modeRegistry, setModeRegistry] = useState<Record<string, any> | null>(null)
+  const [autodetect, setAutodetect] = useState<{ value: string; options: string[] } | null>(null)
+  const [compositionCfg, setCompositionCfg] = useState<Record<string, any> | null>(null)
+  const [settingsBusy, setSettingsBusy] = useState(false)
+  const [settingsErr, setSettingsErr] = useState<string | null>(null)
+  // ---- main's voice/settings state, folded in (S1/S2/S3/S5/S6/V3/V4) ----
+  // NB: main also declared `voiceStatus` (a string load-state) and `settingsOpen`. The branch already owns
+  // both names above: `voiceStatus` is the A3 per-engine availability OBJECT, and `settingsOpen` raises the
+  // consolidated A3 modal (the same toggle main's S3 opened). So main's `settingsOpen` dup is dropped
+  // (converged to the one above) and main's string load-state is renamed `personaVoiceStatus` (§3e #2).
+  const [personaVoiceStatus, setPersonaVoiceStatus] = useState<string>('')   // V4.2 (was voiceStatus): '' | 'loading' | 'ready' | 'down' — the persona voice's load state
   const [recordingSession, setRecordingSession] = useState<string>('')   // V3.1: the active trial_session id when recording the conversation ('' = not recording)
   const [chatModelsX, setChatModelsX] = useState<any[]>([])   // S1: detailed chat-model picker rows (ollama + local vLLM, base_url·service·up)
-  const [settingsOpen, setSettingsOpen] = useState(false)   // S3: the dedicated settings window (modal/sheet)
   const [engineKnobs, setEngineKnobs] = useState<any>({})   // S5: per-TTS-engine knob catalog
   const [voiceInfo, setVoiceInfo] = useState<any>({})   // S5: /api/voice — stt_registry (ears) + engines (TTS up-status)
   const [fitReport, setFitReport] = useState<any>(null)   // S6: "will my selection fit the card?" (brain+voice budgets vs ceiling)
@@ -160,6 +246,26 @@ export function useAppController(editor: Editor) {
   // thought and re-listens, tap to stop. Distinct from push-to-talk (recordToggle). The ref holds the live
   // session so the second tap can end it.
   const autoListenRef = useRef<{ stop: boolean; stream: MediaStream | null }>({ stop: false, stream: null })
+  // V-B (Tim 2026-06-07) — the BARGE-IN + STREAM-CANCEL handles. Two defects fixed in this lane:
+  //  (1) re-arm: auto-listen used ONE MediaRecorder across pause()/resume() and reset `chunks=[]` after
+  //      the only chunk carrying the webm/EBML init header — so turn 2+ produced a HEADERLESS continuation
+  //      fragment that STT could not decode (proven by the on-phone trace: every autolisten_stt after the
+  //      first fire is chars:0/empty:true while vad_pause keeps firing). FIX = a FRESH recorder per listen
+  //      cycle (mirrors what makes push-to-talk reliable — recordToggle always news up a recorder).
+  //  (2) barge-in: nothing listened during playback + nothing could STOP a reply mid-stream. FIX = the
+  //      persistent analyser keeps reading RMS while SPEAKING; sustained speech cancels the reply.
+  // `voiceReaderRef` holds the in-flight /api/voice/stream reader so a barge-in can reader.cancel() it —
+  // closing the socket, which the bridge's MSG_PEEK client_gone() detects to STOP synth (no bridge change).
+  const voiceReaderRef = useRef<ReadableStreamDefaultReader<Uint8Array> | null>(null)
+  // `playSourcesRef` tracks every live AudioBufferSourceNode so a barge-in can stop() them (cut the audio
+  // already playing/queued). `playEpochRef` is a generation counter: playWavBuffer captures the epoch at
+  // schedule time and a barge-in bumps it, so a chunk that arrives AFTER the cut never gets scheduled.
+  const playSourcesRef = useRef<AudioBufferSourceNode[]>([])
+  const playEpochRef = useRef<number>(0)
+  // `bargedRef` flags that the CURRENT turn was interrupted by the operator speaking — runVoiceTurn checks
+  // it to stop consuming/playing the cancelled stream, and the auto-listen loop reads it to start the new
+  // capture immediately rather than waiting for the (now-cancelled) reply to "finish".
+  const bargedRef = useRef<boolean>(false)
   // A2/A4: the selected node's live config (from /api/graph), keyed by nodeId — the inspector reads it
   // here, NOT off the tldraw shape props (which carry no config). Refreshed on every graph load.
   const configByNode = useRef<Record<string, any>>({})
@@ -186,7 +292,11 @@ export function useAppController(editor: Editor) {
   // bottom-sheet over the (always-mounted) canvas. 'canvas' = no sheet (board full-bleed). This state is INERT
   // on desktop/tablet (those breakpoints display:none the tabbar+sheets), so it never changes desktop layout.
   // tldraw stays mounted under the sheet at every width — semantic-zoom/drag-to-wire (preserve-list) intact.
-  const [mobileTab, setMobileTab] = useState<'canvas' | 'palette' | 'inbox' | 'rhm'>('canvas')
+  // A2 (G-36): 'activity' joins the union so the ambient feed gets a tabbar-driven bottom-sheet (mirrors the
+  // 'rhm' reveal). G-57: an interactive offer landing raises 'rhm' (the App.tsx Hud effect calls setMobileTab).
+  // This is sheet-layer state only — NOT a voice function; it stays the single source of "which bottom surface
+  // is up" so a fresh offer and the operator's tab never both claim the bottom edge.
+  const [mobileTab, setMobileTab] = useState<'canvas' | 'palette' | 'inbox' | 'rhm' | 'activity'>('canvas')
   // L-fe · the live cognition VIEW state (C7.1/C7.2/C7.3). reflects-never-owns: this is folded PURELY from
   // the `cognition.*` SSE lifecycle (the L-fe-be emit-contract) — the view NEVER writes cognition state, it
   // only mirrors what the backend emits as a staged turn fires. `cognitionInfo` is the registry projection
@@ -456,6 +566,10 @@ export function useAppController(editor: Editor) {
         try { setNow(await api.now()) } catch (e: any) { setNotice('⚠ live update missed a refresh (' + (e?.message || e) + ')') }
       } else if (k === 'mode' || k === 'config') {
         try { setNow(await api.now()); setCfg(await api.rhmConfig()) } catch (e: any) { setNotice('⚠ mode/config update missed a refresh (' + (e?.message || e) + ')') }
+        // A3 · keep the open Settings surface LIVE: a mode/config change (from this surface, the toolbar dial,
+        // the RhmChat gear, or the RHM's own configure verb) re-loads the read-only registries so the modes/
+        // autodetect/roles/voice panels reflect the new truth without a re-open. Inert when settings are closed.
+        if (settingsOpenRef.current) void loadSettingsData()
       } else if (k.startsWith('cognition.')) {
         // L-fe · the LIVE COGNITION VIEW branch (C7.2 — live + no poll). This MIRRORS the `decision.*` branch
         // below: a `cognition.*` lifecycle event (the L-fe-be emit-contract) folds into the live turn frame so
@@ -691,6 +805,31 @@ export function useAppController(editor: Editor) {
       setNotice('💬 comment attached to ' + (title || addr))     // the annotate face's "did X" (rule 4)
     } catch (e: any) { setNotice('✕ could not attach comment: ' + (e?.message || e)) }
   }
+  // G-4 · THE WIRE'S OPERATOR DOOR — mint a build-intent FROM the indicated ui:// element (the missing
+  // FE caller for the self-build wire; D1/G-4). The SIBLING of annotateLocus: where annotateLocus attaches
+  // a comment, this REQUESTS A CHANGE — it POSTs /api/intent-at, which mints a build-intent whose SCOPE is
+  // derived from the pointed address (S3) and whose X16 BLAST-RADIUS is computed at consent time, so the
+  // minted item carries the reach the operator then sees + approves (BlastRadiusReach + /api/resolve — the
+  // door's "see the reach → approve" half reuses the EXISTING components, never reimplemented). MINT-ONLY:
+  // it surfaces the intent with resolved=None; it NEVER dispatches (dispatch is dispatch_decision, off this
+  // face, posture-gated, safe-by-default `plan`). Returns the minted item (so the caller can show its reach
+  // inline) or null on failure. Fail-loud (rule 4): no locus / not a ui:// element / empty text → a visible
+  // notice, never a silent no-op. After a successful mint we poll() so the new build-intent also appears in
+  // the Inbox builds lane (the persistent home; the door is the entry, the Inbox is the standing deck).
+  async function mintBuildIntent(text: string): Promise<any | null> {
+    const addr = indicatedRef.current
+    if (!addr || !addr.startsWith('ui://')) { setNotice('✕ point at a ui:// element first, then request the change'); return null }
+    const body = (text || '').trim()
+    if (!body) { setNotice('✕ a change request needs a description (no silent no-op)'); return null }
+    try {
+      const r = await api.intentAt(addr, body)
+      if (r?.error) { setNotice('✕ ' + r.error); return null }   // fail-loud: surface the backend 400, never swallow
+      const title = getUI_INFO()[addr]?.title
+      setNotice('⚙ build-intent minted at ' + (title || addr) + ' — review the reach, then approve (plan-mode by default)')
+      await poll()                                                // the new intent joins the Inbox builds lane too
+      return r
+    } catch (e: any) { setNotice('✕ could not mint the build-intent: ' + (e?.message || e)); return null }
+  }
   // A document-level CAPTURE listener: a click on any element carrying a ui:// data-ui-ref INDICATES it.
   // Capture phase + read the nearest [data-ui-ref] ancestor so a click on an inner glyph still resolves
   // to the addressed container; we DON'T preventDefault/stopPropagation — indicating is additive, the
@@ -707,7 +846,32 @@ export function useAppController(editor: Editor) {
       if (!indicateModeRef.current) return                  // I1-gate: indicate only fires in the deliberate mode (Tim) — otherwise clicks are normal
       const tgt = e.target as HTMLElement | null
       if (tgt?.closest?.('[data-ui-ref="chat"]')) return    // inside the chat region → conversing, never indicating
-      if (tgt?.closest?.('.settings, .workshop')) return    // inside a MODAL → you OPERATE it (close/config), never point at it
+      // G-4 · the WIRE-DOOR exclusion (mirrors the chat guard above, same failure it prevents). The door
+      // (ui://canvas/wire-request) is the surface where the operator DESCRIBES a change TO the pointed
+      // element — clicking into its textarea must NOT re-indicate the door itself (which would overwrite
+      // the operator's pointed target and mint the change AGAINST the door). So a click anywhere inside the
+      // wire door leaves the current indication UNTOUCHED — you point with the rest of the surface, then
+      // describe the change in the door. (The door reads `indicated`, never becomes it.)
+      if (tgt?.closest?.('[data-ui-ref="ui://canvas/wire-request"]')) return
+      // F1 · the ADDRESS-HELP panel exclusion (same class as the chat + wire-door guards above). The help
+      // panel (ui://inspector/help) is where the operator READS what-this-is + DRILLS the mechanism + SHAPES
+      // how it presents (the F1 feedback affordance) — all ABOUT the currently-indicated element. A click
+      // inside it (a drill caret, a reach toggle, a 'terser'/'lead with' chip) must NOT re-indicate to the
+      // help panel itself — that would overwrite the pointed locus the help is FOR (and the shaping would be
+      // recorded against ui://inspector/help instead of the real target). So the help panel READS `indicated`,
+      // it never BECOMES it (mirrors the chat-region guard precisely). The panel still carries its data-ui-ref
+      // (so show-me/address_help can describe the help surface itself); this only stops a click INSIDE it from
+      // hijacking the indication — you point with the rest of the surface, then read/shape in the help panel.
+      if (tgt?.closest?.('[data-ui-ref="ui://inspector/help"]')) return
+      // L4-COHERENCE: the MODAL exclusion (main's REAL a89dab1 fix — keep it; it is what makes indicate-ON
+      // safe). A click inside a modal OPERATES it (close/config), it never points AT it. NB the A3 consolidated
+      // Settings modal root is `.settings-scrim`/`.settings-panel` (Settings.tsx:71-72) — NOT `.settings` — so
+      // the merged `.settings` selector was a NO-OP for A3 (it matched only main's retired bespoke modal). With
+      // indicate now defaulting ON, that no-op would resurrect the exact bug a89dab1 fixed (the Settings ✕
+      // wouldn't close + a tap painted `.ui-indicated` translucency). So the guard matches the A3 classes
+      // explicitly. `.workshop` (Workshop.tsx:18, exact class) is kept. This is the ONLY in-territory lever for
+      // the A3 modal (Settings.tsx/App.tsx are out of this lane).
+      if (tgt?.closest?.('.settings-scrim, .settings-panel, .workshop')) return    // inside a MODAL → operate it, never indicate
       const t = tgt?.closest?.('[data-ui-ref]') as HTMLElement | null
       if (!t) return
       const ref = t.getAttribute('data-ui-ref') || ''
@@ -719,6 +883,84 @@ export function useAppController(editor: Editor) {
     return () => document.removeEventListener('click', onDocClick, true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+  // D2 · the COMPOSED address-help bundle. When the operator INDICATES a ui:// element, load "what can I do
+  // here?" — the three legs (what_this_is · how_to_use · how_to_change) joined by the EXISTING D1 composer
+  // (GET /api/address-help → Suite.address_help). Reflects-never-owns: the runtime/corpus is authoritative,
+  // the surface just reads + composes the help. Keyed on `indicated` ONLY (the help text is STATIC per
+  // address — no events.length re-poke, unlike History/SelfChanges). DEGRADE-CLEAN: a well-formed-but-thin
+  // address returns a partial bundle (legs_present flags the gaps); the AddressHelp panel renders each leg's
+  // absence honestly (G-53). FAIL-LOUD (rule 4): a backend 400 (a malformed address) sets addressHelpError so
+  // the panel SAYS the address couldn't be resolved — never a silent blank.
+  async function fetchAddressHelp(addr: string | null) {
+    setAddressHelpError(null)
+    if (!addr || !addr.startsWith('ui://')) { setAddressHelp(null); return }   // only a ui:// locus has help
+    setAddressHelpBusy(true)
+    try {
+      const r = await api.addressHelp(addr)
+      if (r?.error) {                                  // backend 400 (malformed/unparseable address) — fail loud
+        setAddressHelp(null); setAddressHelpError(r.error); setNotice('✕ ' + r.error); return
+      }
+      setAddressHelp({
+        address: r.address,
+        what_this_is: r.what_this_is || addr,
+        how_to_use: r.how_to_use ?? null,
+        how_to_change: {
+          scope: Array.isArray(r?.how_to_change?.scope) ? r.how_to_change.scope : [],
+          blast_radius: r?.how_to_change?.blast_radius ?? null,
+          note: r?.how_to_change?.note ?? null,
+        },
+        legs_present: {
+          what_this_is: !!r?.legs_present?.what_this_is,
+          how_to_change: !!r?.legs_present?.how_to_change,
+          how_to_use: !!r?.legs_present?.how_to_use,
+        },
+        // F1: the learned presentation pref the adapt step attached (null = the clean default — no marker).
+        presentation_pref: r?.presentation_pref ?? null,
+        presentation_directive: r?.presentation_directive ?? null,
+      })
+    } catch (e: any) {
+      setAddressHelp(null); setAddressHelpError(e?.message || String(e))
+      setNotice('✕ could not load address help: ' + (e?.message || e))
+    } finally { setAddressHelpBusy(false) }
+  }
+  // Load the help whenever the indicated locus changes. STATIC per address → no events.length dependency.
+  // (NOT static once F1 lands: a learned pref re-shapes the bundle — but the pref is set THROUGH this same
+  // surface via setPresentationPrefAt, which re-fetches explicitly, so the effect stays keyed on `indicated`.)
+  useEffect(() => { fetchAddressHelp(indicated) /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [indicated])
+  // F1 ALTITUDE · THE IN-SYSTEM FEEDBACK CHANNEL (the visible half of the learning loop, committed backend
+  // e1700b4). The SIBLING of annotateLocus/mintBuildIntent: where annotateLocus attaches a COMMENT and
+  // mintBuildIntent REQUESTS A CHANGE, this RESHAPES HOW THE LOCUS PRESENTS — "show me this terser / more
+  // detail / lead with the change". It records the pref via POST /api/presentation-pref (Suite.set_presentation_pref
+  // — the recorder, OFF the verb whitelist: a pref is a CONTROL signal, not an action), then RE-FETCHES the
+  // address-help bundle so the surface RE-RENDERS adapted (the adapt step consults the pref). The loop closes
+  // by USE: set a pref → the bundle reflects it (marker + the lead_with structural hoist) → it persists
+  // (the leaf reads disk, survives reload). The voice/typing INPUT ("show me this differently") rides the
+  // existing chat path (/api/chat, untouched per G-8); THIS is the deterministic affordance that records it.
+  //
+  // FAIL-LOUD (rule 4): no locus / not a ui:// element → a visible notice, never a silent no-op. The
+  // arg-taking kinds (lead_with/shape) REQUIRE a non-empty arg (the backend re-checks + 400s); the affordance
+  // passes the arg, and we guard it here too so the operator gets the message, not a swallowed 400. A backend
+  // 400 (malformed pref / address) surfaces via setNotice. `text` is the human phrasing kept for the thread.
+  async function setPresentationPrefAt(kind: string, arg?: string, text?: string) {
+    const addr = indicatedRef.current
+    if (!addr || !addr.startsWith('ui://')) { setNotice('✕ point at a ui:// element first, then shape how it presents'); return }
+    const a = (arg || '').trim()
+    if ((kind === 'lead_with' || kind === 'shape') && !a) {
+      setNotice('✕ "' + kind + '" needs a value (e.g. what to lead with) — no silent no-op'); return
+    }
+    const pref: { kind: string; arg?: string } = a ? { kind, arg: a } : { kind }
+    setPrefBusy(true)
+    try {
+      const r = await api.setPresentationPref(addr, pref, text)
+      if (r?.error) { setNotice('✕ ' + r.error); return }     // fail-loud: surface the backend 400, never swallow
+      // CLOSE THE LOOP: the pref is recorded; re-fetch the bundle so the surface re-renders adapted (the
+      // useEffect won't re-fire — `indicated` is unchanged — so the re-fetch is explicit here).
+      await fetchAddressHelp(addr)
+      const title = getUI_INFO()[addr]?.title
+      setNotice('✦ learned how to present ' + (title || addr) + ' — it will be shown this way from now on')
+    } catch (e: any) { setNotice('✕ could not shape the presentation: ' + (e?.message || e)) }
+    finally { setPrefBusy(false) }
+  }
   // L3 · addressed history (§21.7#1). When the operator INDICATES a ui:// element, load "everything that
   // happened here" — the GET /api/address-history trajectory for that locus. Reflects-never-owns: the
   // runtime is authoritative, the surface just reads. Clearing the indication clears the history. A
@@ -854,29 +1096,190 @@ export function useAppController(editor: Editor) {
   // (the I2 dispatch path — REUSE, never a new path). The action runs ONLY here, on the operator's
   // approve. Then drive the SAME post-dispatch reaction the chat path uses, surface the "did X"
   // confirmation as an assistant message, and clear the card. Fail-loud on a backend error (rule 4).
-  async function approveProposal() {
+  // B1 — APPROVE / PICK-AN-OPTION (click #2, the consent commit). The offer-with-options surface calls
+  // this with the chosen option; called bare it commits the PRIMARY offer (top-level verb/address/args).
+  // Either way it fires the chosen verb-at-address through /api/act (the I2 dispatch path — REUSE, never
+  // a new path). The action runs ONLY here, on the operator's pick. Then drive the SAME post-dispatch
+  // reaction the chat path uses, surface the "did X" confirmation, and clear the card. Fail-loud (rule 4).
+  async function approveProposal(opt?: { verb: string; address?: string | null; args?: any }) {
     const p = proposal
     if (!p || chatBusy) return
+    // the picked option (an explicit choice) OR the primary offer (a bare approve) — never a guess.
+    const chosen = opt ?? { verb: p.verb, address: p.address, args: p.args }
     setChatBusy(true)
     try {
-      const r = await api.act(p.verb, p.address || undefined, p.args)
+      const r = await api.act(chosen.verb, chosen.address || undefined, chosen.args)
       if (r.error) { setChat(c => [...c, { role: 'assistant', text: '⚠ ' + r.error }]) }
       else {
         if (r.reply) setChat(c => [...c, { role: 'assistant', text: '✓ ' + r.reply }])
         await applyActionReactions(r.action)
-        await poll()
+        // B3 — round-trip integrity: if this offer was REVIVED from the inbox (_sid), the act has now run,
+        // so RESOLVE the queued item out of live_escalations (approve) — else it would linger as a ghost
+        // duplicate after the very thing it queued was done. Only AFTER a successful act (never before).
+        if (p._sid) { await api.resolve(p._sid, 'approve', 'approved from the revived offer') }
+        await poll()   // poll() refreshes the inbox → the resolved deferred-offer leaves live_escalations
       }
     }
     catch { setChat(c => [...c, { role: 'assistant', text: '(could not reach the brain to act)' }]) }
     finally { setProposal(null); setChatBusy(false) }
   }
-  // I3 — REJECT/DISMISS does nothing but drop the card (no backend call; the action never ran).
-  function dismissProposal() { setProposal(null) }
-  async function changeMode(mm: string) { setNotice('presence → ' + mm); await api.setMode(mm); await poll() }
-  async function applyCfg() {
-    const c = await api.setRhmConfig({ model: cfg.model, persona: cfg.persona })
-    setCfg(c); setCfgOpen(false); setNotice('RHM config → ' + (c.model || 'default')); await poll()
+  // B1 — STEER/REFINE (the direction channel — not binary): the operator types a steer ("smaller scope",
+  // "the other node", "a draft first") and it loops BACK to the RHM to refine the offer. Implemented by
+  // REUSING sendChat (the voice/co-presence path stays untouched — we do NOT edit sendChat's body) with a
+  // composed message that names the standing offer so the RHM refines it rather than answering fresh. The
+  // prior offer is NOT in the chat log (suite.py:3365 persists only prose+action), so the steer carries
+  // the offer-context inline. sendChat already clears the old card (line 669); a refined offer returns as
+  // a NEW r.proposal → that IS the loop. SEAM: the RHM MAY act or answer instead of re-offering depending
+  // on mode — the FE cannot force a re-suggest; this presents the steer, the brain decides (flagged gap).
+  async function steerProposal(text: string) {
+    const p = proposal
+    const steer = text.trim()
+    if (!p || !steer || chatBusy) return
+    const at = p.address ? ` at ${p.address}` : ''
+    const composed = `Refine the offer (${p.verb}${at}) — steer: ${steer}`
+    await sendChat(composed)   // reuses the preserved chat path; the refined offer returns as a new proposal
   }
+  // B3 — DEFER (the configurable QUEUE arm, §6B mode #4): the operator isn't rejecting the offer, just not
+  // now — and now it is a REAL queued item, not the old no-op set-aside. Persist the WHOLE offer (its
+  // verb/address/args/options/interactive/direction) to the inbox via /api/defer-offer (the EXISTING
+  // surfaced/inbox store — registry-is-truth, no parallel queue). It lands in live_escalations (resolved=
+  // None), gets its own resume lane in the Inbox, and revisiting RE-OPENS this exact interactive card
+  // (reviveOffer below). NOTHING runs: defer dispatches no /api/act — the offer's verb runs only on a later
+  // approve (the B1/B2 consent invariant preserved). Fail-loud on a backend error (never a silent drop).
+  async function deferProposal() {
+    const p = proposal
+    if (!p || chatBusy) return
+    // already-queued (a revived offer with _sid) → deferring again is a no-op re-shelve: just drop the card.
+    if (p._sid) { setNotice('offer set aside — it’s still queued in your inbox (revisit it there)'); setProposal(null); return }
+    setChatBusy(true)
+    try {
+      const r = await api.deferOffer({ verb: p.verb, address: p.address, args: p.args,
+        options: p.options, interactive: p.interactive, direction: p.direction })
+      if (r?.error) { setNotice('✕ could not queue the offer: ' + r.error); return }   // fail-loud, keep the card
+      setNotice('⏸ offer queued to your inbox — revisit it any time to resume the conversation')
+      setProposal(null)
+      await poll()   // refresh the inbox so the new deferred-offer lane appears immediately
+    }
+    catch (e: any) { setNotice('✕ could not reach the brain to queue the offer (' + (e?.message || e) + ')') }
+    finally { setChatBusy(false) }
+  }
+  // B1 — SET ASIDE (the lighter, DISTINCT action): drop the live card WITHOUT queuing and without acting —
+  // "not now, and I don't need it kept." The honest no-op set-aside (no /api/act, no inbox item). Kept as a
+  // separate secondary from the durable QUEUE (defer) above, so the operator chooses queue-it vs forget-it.
+  function setAsideProposal() { setNotice('offer set aside — not queued (ask again to revisit)'); setProposal(null) }
+  // I3 — REJECT/DISMISS does nothing but drop the card (no backend call; the action never ran). If this is a
+  // REVIVED queued offer (_sid), resolving it rejected clears it out of the inbox (round-trip integrity —
+  // it doesn't linger after the operator has explicitly rejected it).
+  function dismissProposal() {
+    const p = proposal
+    if (p?._sid) { api.resolve(p._sid, 'reject', 'dismissed from the revived offer').then(() => poll()) }
+    setProposal(null)
+  }
+  // B3 — REVIVE a deferred offer from the inbox: read the persisted proposal back out and RE-OPEN the live
+  // interactive card (the ProposeAffordance with its options + steer + approve), carrying _sid so approve/
+  // dismiss closes the round-trip. This is the "live conversation when revisited, not a dead queue" half of
+  // B3. Reuses the SAME setProposal the chat path uses — the revived card is byte-identical to the original
+  // offer (select≠approve, nothing-runs-until-approved are preserved for free). Fail-loud on a backend error.
+  async function reviveOffer(sid: string) {
+    if (!sid) return
+    const r = await api.reviveOffer(sid)
+    if (r?.error) { setNotice('✕ could not reopen the offer: ' + r.error); return }
+    const stored = r?.proposal
+    if (!stored || (!stored.verb && !(stored.options && stored.options.length))) {
+      setNotice('✕ the deferred offer carried no revivable proposal'); return   // fail-loud, never a dead card
+    }
+    setMobileTab('rhm')   // bring the RHM surface forward (on phone the offer renders in the rhm sheet)
+    setProposal({ ...stored, _sid: sid })
+    setNotice('▷ reopened the deferred offer — discuss, steer, then approve (nothing has run)')
+  }
+  // C4 (FE show-me lane) — dial-select STARTS the organ. Selecting the guided/walkthrough presence mode
+  // must do MORE than the cosmetic set_mode: it must bind the dial to the REAL walkthrough organ. We keep
+  // the existing pure set_mode+poll (harmless+keeps the dial honest for every mode) and, ONLY for the
+  // walkthrough mode, ALSO call POST /api/walkthrough/start (the backend composer: set_mode + start_session
+  // over the pending items). The call is ASYNC with the EXISTING wtBusy spinner — a populated walk compiles
+  // a model-invoking session graph and can be slow / model-dependent (GAPS G-41), so we never block the UI
+  // thread expecting an instant return. On organ_started:true we feed the result straight into the EXISTING
+  // walk machinery via setSession (same shape start_session returns → the per-step zoom effect [~1046] and
+  // narration effect drive themselves). On organ_started:false we surface the reason as a CLEAR message
+  // (rule 4 — fail loud, never a silent no-op: the dial IS set, but there is nothing to step through).
+  async function changeMode(mm: string) {
+    setNotice('presence → ' + mm); await api.setMode(mm); await poll()
+    if (mm !== 'walkthrough') return
+    if (wtBusyRef.current) return                    // a walk start/step is already in flight — drop the extra
+    wtBusyRef.current = true; setWtBusy(true)
+    setNotice('walkthrough selected — gathering what needs you…')
+    try {
+      // G-41 — the populated walk compiles a model-invoking review-session graph; with NO model up the
+      // server-side start_walkthrough HANGS indefinitely. A bare `await` on that would NEVER resolve, so
+      // `finally` would never run and wtBusyRef (the SHARED guard for startWalk/nextStep/respondStep too)
+      // would stay TRUE forever — bricking the entire review organ until a reload, with a stuck
+      // "gathering…" notice. That is a SILENT FAILURE (rule 4). We BOUND the call: race it against a
+      // generous deadline (a LIVE model walk is legitimately slow — minutes for a cold model — so the
+      // window is wide; this only catches a true hang, never a slow-but-progressing start). On timeout we
+      // surface a LOUD, recoverable degrade and the finally releases the guard (the operator can retry).
+      const TIMEOUT_MS = 45000
+      const r: any = await Promise.race([
+        api.walkthroughStart(),                       // no item_ids → walk every PENDING unresolved inbox item
+        new Promise((_, rej) => setTimeout(() => rej(new Error('__wt_timeout__')), TIMEOUT_MS)),
+      ])
+      if (r?.error) { setNotice('✕ walkthrough: ' + r.error); return }
+      if (r.organ_started) {
+        try { localStorage.setItem('company-review-session', r.session) } catch { /* */ }
+        setSession(r); setWtReason(''); setWtSpoke('')   // → the existing per-step view-drive + narration fire
+        setNotice('walkthrough started — stepping you through ' + (r.total != null ? r.total + ' item(s)' : 'what needs you'))
+      } else {
+        // nothing-pending: the dial IS in guide mode, but there is nothing to walk — say so plainly.
+        setNotice('🛈 ' + (r.reason || 'nothing pending to walk through — surface or capture an item first, then re-select walkthrough'))
+      }
+    } catch (e: any) {
+      // The timeout reject (G-41 model-down) gets a SPECIFIC, recoverable message; anything else surfaces raw.
+      if (e?.message === '__wt_timeout__') {
+        setNotice('✕ no model responded — start a model (the walkthrough organ needs one to compile the walk), then re-select walkthrough')
+      } else { setNotice('✕ could not start the walkthrough: ' + (e?.message || e)) }
+    }
+    finally { wtBusyRef.current = false; setWtBusy(false) }   // re-enable on success OR error OR timeout — the guard is NEVER stuck
+  }
+  // C1 (FE show-me lane) — start a SYSTEM-INITIATED GUIDED SEQUENCE (the "show me how" tour). Distinct from
+  // changeMode/startWalk (which walk pending INBOX items via coa, model-dependent): a guide walks the
+  // INTERFACE's own addressed ELEMENTS, narrating each from the corpus how-to (address_help) — MODEL-FREE
+  // by construction (the backend present_current guide branch returns before coa). It rides the EXISTING
+  // walk machinery: on organ_started we setSession(r) and the SAME per-step view-drive effect [~1104] +
+  // narration effect [~1113] + the Walkthrough card drive themselves — because each step's raw.ui_target is
+  // now a real element address (G-43), resolveUiTarget SPOTLIGHTS the live element, and session.framing IS
+  // the how-to text (so the voice narration effect speaks the how-to for free — we never touch speakReply).
+  // POST /api/guide/start is called INLINE (api.ts is the voice session's hot-collision file, G-8 — we do
+  // NOT add a method there). BOUNDED-await mirrors changeMode's G-41 fix: although the guide is model-free,
+  // a hung/slow bridge must never leave the SHARED wtBusyRef guard stuck (that would brick the review organ
+  // too) — we race the start against a deadline and the finally ALWAYS releases. Reachable as an operator
+  // entry (the toolbar "?" guide control) AND directly system/RHM-initiated (the route + start_guide()).
+  async function startGuide(topic?: string) {
+    if (wtBusyRef.current) return                    // a walk/guide start or step is already in flight — drop the extra
+    wtBusyRef.current = true; setWtBusy(true)
+    setNotice('show me how — starting a guided tour…')
+    try {
+      // BOUND the start (G-41/G-44 reuse): the guide is model-free, but a hung bridge would otherwise leave
+      // wtBusyRef TRUE forever (the SHARED guard for startWalk/nextStep/respondStep too) → a silent brick.
+      const r: any = await Promise.race([
+        fetch('/api/guide/start', { method: 'POST', headers: J, body: JSON.stringify({ topic: topic || undefined }) }).then(x => x.json()),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('__wt_timeout__')), 45000)),
+      ])
+      if (r?.error) { setNotice('✕ guide: ' + r.error); return }
+      if (r.organ_started) {
+        try { localStorage.setItem('company-review-session', r.session) } catch { /* */ }
+        setSession(r); setWtReason(''); setWtSpoke('')   // → the existing per-step view-drive + narration fire
+        setNotice('guided tour started — stepping you through ' + (r.total != null ? r.total + ' part(s)' : 'the interface'))
+      } else {
+        // FAIL LOUD (rule 4 — no silent no-op): the dial IS in guide register, but nothing to tour. Say so.
+        setNotice('🛈 ' + (r.reason || 'no parts of the interface to tour right now'))
+      }
+    } catch (e: any) {
+      if (e?.message === '__wt_timeout__') setNotice('✕ the guide did not start in time — try again')
+      else setNotice('✕ could not start the guide: ' + (e?.message || e))
+    }
+    finally { wtBusyRef.current = false; setWtBusy(false) }   // re-enable on success OR error OR timeout — never stuck
+  }
+  // L4-GEAR-RETIRE: `applyCfg` (the legacy gear's model+persona apply) is GONE — A3 Settings writes each slot
+  // live via setCfgSlot → set_rhm_config (the same backend path), so there is no batched apply gesture anymore.
   // Option A — switch between the personas: set the chosen persona AS active and AUTO-LOAD its voice
   // (the backend evicts the previous voice engine to fit the 16 GB card, then cold-loads this one —
   // accepted that a switch may cold-load). We optimistically reflect the new persona, then poll the
@@ -886,25 +1289,78 @@ export function useAppController(editor: Editor) {
   async function switchPersona(id: string) {
     if (!id || id === cfg.persona) { setCfg((c: any) => ({ ...c, persona: id })); return }
     setCfg((c: any) => ({ ...c, persona: id }))
-    setVoiceStatus('loading')                            // V4.2: badge tracks the cold-load
+    setPersonaVoiceStatus('loading')                            // V4.2: badge tracks the cold-load
     setNotice(`switching to ${id} — cold-loading their voice…`)
     try {
       const r = await api.voiceSwitch(id)
-      if (r.error) { setVoiceStatus('down'); setNotice('⚠ could not switch to ' + id + ': ' + r.error); return }
+      if (r.error) { setPersonaVoiceStatus('down'); setNotice('⚠ could not switch to ' + id + ': ' + r.error); return }
       if (r.service) {                                  // an engine that needs loading (not an always-on one)
         const dl = Date.now() + 240000                  // the heavy voices (orpheus) cold-load in minutes
         for (;;) {
           const sv = await api.voiceServices().catch(() => null)
           const st = sv?.services?.[r.service]?.state
           if (st === 'up') break
-          if (st === 'down' || Date.now() > dl) { setVoiceStatus('down'); setNotice(`⚠ ${id}'s voice (${r.engine}) didn't come up — open the voice panel`); break }
+          if (st === 'down' || Date.now() > dl) { setPersonaVoiceStatus('down'); setNotice(`⚠ ${id}'s voice (${r.engine}) didn't come up — open the voice panel`); break }
           await new Promise(res => setTimeout(res, 3000))
         }
       }
-      setVoiceStatus('ready')
+      setPersonaVoiceStatus('ready')
       setNotice(`${id} is ready — talk (🎙) or type; it speaks back in listening mode`)
       setCfg(await api.rhmConfig())
     } catch (e: any) { setNotice('⚠ switch failed: ' + (e?.message || e)) }
+  }
+  // A3/E2-FE · load the read-only registries the consolidated Settings surface renders. Fire on OPEN (and on
+  // a config/mode SSE event while open, so the surface stays live). reflects-never-owns: each is READ truth off
+  // an EXISTING endpoint — NO new config endpoint, NO parallel composer (the lane law). fail-loud (rule 4): a
+  // fetch that fails sets settingsErr so the surface SAYS so, never a silent blank; partial loads still render
+  // (each setter is independent — one down endpoint doesn't blank the others). api.ts is off-limits to this
+  // lane, so the two reads without an existing api method (roles, voicePaths, voice) use an inline fetch with
+  // the same jr-style normalization the rest of the app uses (matching annotateLocus's inline-fetch precedent).
+  async function loadSettingsData() {
+    setSettingsBusy(true); setSettingsErr(null)
+    const errs: string[] = []
+    // capabilities carries the E1 mode_registry + the E2 composition_config (incl MODE_AUTODETECT). One call.
+    try {
+      const caps = await api.capabilities()
+      setModeRegistry(caps?.mode_registry || {})
+      const cc = caps?.composition_config || {}
+      setCompositionCfg(cc)
+      setAutodetect({ value: cc.MODE_AUTODETECT || 'off', options: Array.isArray(cc.MODE_AUTODETECT_OPTIONS) ? cc.MODE_AUTODETECT_OPTIONS : ['off', 'suggest', 'auto'] })
+    } catch (e: any) { errs.push('capabilities/modes (' + (e?.message || e) + ')') }
+    // roles — the model-FUNCTION role registry (judge + future) the config lab binds. GET /api/roles.
+    try { const r = await fetch('/api/roles').then(x => x.json()); if (r?.error) errs.push('roles (' + r.error + ')'); else setRoles(r || {}) }
+    catch (e: any) { errs.push('roles (' + (e?.message || e) + ')') }
+    // voice paths — the pipeline/s2s registry. GET /api/voice/paths (s2s renders UNAVAILABLE, G-19).
+    try { const r = await fetch('/api/voice/paths').then(x => x.json()); if (r?.error) errs.push('voice-paths (' + r.error + ')'); else setVoicePaths(r) }
+    catch (e: any) { errs.push('voice-paths (' + (e?.message || e) + ')') }
+    // voice status — per-engine TTS up/voices + the STT (ear) registry. api.voice() is the existing READ method.
+    try { const r = await api.voice(); if (r?.error) errs.push('voice (' + r.error + ')'); else setVoiceStatus(r) }
+    catch (e: any) { errs.push('voice (' + (e?.message || e) + ')') }
+    if (errs.length) setSettingsErr('could not load: ' + errs.join('; '))
+    setSettingsBusy(false)
+  }
+  // A3 · open the consolidated Settings surface — raises the modal AND loads its read-only registries. The
+  // writable slots (model/persona/mode) already live in cfg/now (loaded at boot + kept live by SSE), so they
+  // render instantly; loadSettingsData fills the extras. Closing just lowers the modal (state persists).
+  function openSettings(tab?: 'brain' | 'modes' | 'voice' | 'roles' | 'composition') {
+    if (tab) setSettingsTab(tab)
+    setSettingsOpen(true)
+    void loadSettingsData()
+  }
+  // A3 · write ANY whitelisted rhm-config slot through the EXISTING set_rhm_config path (the 11-slot whitelist:
+  // model/base_url/persona/mode/voice_enabled/timeout/stt/roles/tts_engine/tts_voice/voice_path). REUSE — NOT a
+  // new endpoint, NOT a new write path: it is the same api.setRhmConfig applyCfg uses, generalised to one slot.
+  // The backend fail-loud-validates (unknown slot/engine/path → 400) so an invalid value surfaces, never sets.
+  // After the write we mirror the returned fresh config (reflects-never-owns — the backend value is truth) and
+  // poll() so the live surface (presence dot, mode line) reflects the change everywhere. The mode slot keeps
+  // routing through changeMode (it also drives the walkthrough organ), so this is for the non-mode slots.
+  async function setCfgSlot(key: string, value: any) {
+    setNotice('set ' + key + ' → ' + value)
+    try {
+      const c = await api.setRhmConfig({ [key]: value })
+      if (c?.error) { setSettingsErr(c.error); setNotice('✕ ' + c.error); return }
+      setCfg(c); setNotice(key + ' → ' + value); await poll()
+    } catch (e: any) { setSettingsErr(e?.message || String(e)); setNotice('✕ could not set ' + key + ': ' + (e?.message || e)) }
   }
   function cycleLayers() {
     const next = (layerView + 1) % 3
@@ -958,6 +1414,21 @@ export function useAppController(editor: Editor) {
     if (canvasMm) {
       const ref = canvasMm[1]
       if (ref == null || ref === '*') { editor.zoomToFit({ animation: { duration: 450 } }); setNotice('→ canvas'); return true }
+      // C2 fix — a DOM-STAMPED canvas ELEMENT (not a graph node): the wire-door (data-ui-ref=
+      // "ui://canvas/wire-request") + the portal window (ui://canvas/portal-window) are REGISTERED corpus
+      // addresses carried as literal data-ui-ref strings on a DOM element, NOT tldraw shapes. Before this,
+      // EVERY ui://canvas/<ref> fell to driveCanvas (the camera path) → it looked for a graph NODE named
+      // "wire-request" and fail-loud'd ("no node wire-request on the canvas"), so the C2 ask-step spotlight
+      // (the request-a-change door — the heart of the bootstrap) never landed. DISCRIMINATOR (cannot drift
+      // the node-camera path): a live graph node-id is NEITHER a registered corpus address (UI_INFO[target]
+      // is null for runtime node-ids) NOR DOM-stamped with a literal ui://canvas/<id> data-ui-ref (tldraw
+      // shapes are camera-driven). So a registered address that is ALSO present in the DOM as that exact
+      // data-ui-ref → spotlight it (the DOM element); everything else (every review-walk node drive) falls
+      // straight through to driveCanvas, byte-identical. The DOM-present check means a registered-but-
+      // unmounted canvas element camera-falls-back rather than spotlight-failing.
+      if (UI_INFO[target] != null && document.querySelector('[data-ui-ref="' + target + '"]')) {
+        return spotlightUiRef(target, target, UI_INFO)   // DOM-stamped canvas element (e.g. the wire-door)
+      }
       return driveCanvas(ref)
     }
     // RES1 (F8 follow-up) — REGION-ONLY addresses (single segment, e.g. ui://inbox, ui://models). Two DOM
@@ -1045,12 +1516,24 @@ export function useAppController(editor: Editor) {
     wtBusyRef.current = true; setWtBusy(true)
     setNotice('starting walk over ' + itemIds.length + ' item(s)…')
     try {
-      const s = await api.reviewStart(itemIds, 'walkthrough')
+      // G-44 — BOUND the start (mirrors changeMode's G-41 fix): reviewStart compiles a model-invoking
+      // review-session graph; with NO model up it HANGS server-side, and a bare await would leave the
+      // SHARED wtBusyRef guard TRUE forever (the finally never runs) → bricks the whole review organ until
+      // reload (a silent failure, rule 4). Race it against a generous deadline (a live walk is legitimately
+      // slow — minutes for a cold model — so the window is wide; this only catches a true hang). On timeout:
+      // degrade LOUD + release the guard so the operator can retry.
+      const s: any = await Promise.race([
+        api.reviewStart(itemIds, 'walkthrough'),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('__wt_timeout__')), 45000)),
+      ])
       if (s?.error) { setNotice('✕ ' + s.error); return }
       try { localStorage.setItem('company-review-session', s.session) } catch { /* */ }
       setSession(s); setWtReason(''); setWtSpoke('')
-    } catch (e: any) { setNotice('✕ could not start the walk: ' + (e?.message || e)) }
-    finally { wtBusyRef.current = false; setWtBusy(false) }   // re-enable on success OR error
+    } catch (e: any) {
+      if (e?.message === '__wt_timeout__') setNotice('✕ no model responded — start a model (the walk organ needs one to compile), then try again')
+      else setNotice('✕ could not start the walk: ' + (e?.message || e))
+    }
+    finally { wtBusyRef.current = false; setWtBusy(false) }   // re-enable on success OR error OR timeout — never stuck
   }
   // refresh the card from the server-authoritative present_current. reflects-never-owns.
   async function refreshSession(sid: string) {
@@ -1061,7 +1544,14 @@ export function useAppController(editor: Editor) {
     } catch { /* bridge transient — the next event re-pulls */ }
   }
   function endWalk() {
+    // C2 — a GUIDED TOUR may have left an element INDICATED (step 0 indicates ui://toolbar/run to MOUNT the
+    // wire-door for the ask step). On closing the tour, clear that indication so the canvas returns to a
+    // neutral state the operator didn't have to choose (no lingering door / .ui-indicated / contextualized
+    // history). Scoped to a GUIDE close (capture the flag BEFORE nulling) so a REVIEW-walk close — which never
+    // sets indication — is byte-identical/undisturbed. indicate(null) is the existing clear path (fail-safe).
+    const wasGuide = !!(sessionRef.current?.guide || sessionRef.current?.raw?.guide_address)
     setSession(null); sessionRef.current = null; spokenFor.current = ''
+    if (wasGuide && indicatedRef.current) indicate(null)
     try { localStorage.removeItem('company-review-session') } catch { /* */ }
   }
   // D-frontend: respond to the current step — operator-only, tagged with the session id + cursor position.
@@ -1096,10 +1586,21 @@ export function useAppController(editor: Editor) {
 
   // B+C — the per-step VIEW DRIVE: when the walk lands on a new step, MOVE the view to the thing the item
   // concerns. Deps are the STEP only (not voiceOn) so toggling voice mid-step does NOT re-zoom.
+  // C2 (teach-to-self-modify tour): a guided step may carry an INDICATE hint (raw.indicate, a ui:// address)
+  // — a hard-gated element (the request-a-change wire-door) renders ONLY while a ui:// element is indicated.
+  // So we call the EXISTING indicate(addr) FIRST (it sets `indicated` → React re-renders → the door mounts),
+  // THEN resolveUiTarget. The spotlight is safe across this re-render because spotlightUiRef DEFERS its DOM
+  // query one frame (setTimeout 30ms) — by the time it querySelectors the freshly-mounted door, React has
+  // flushed. We supply the hint only; indicate() is the unchanged machinery (registry-validated, fail-loud).
+  // No indicate hint (the default tour / review walk) → unchanged behaviour (resolveUiTarget only).
   useEffect(() => {
     if (!session || session.done || !session.item) return
+    const hint = session.raw?.indicate as string | undefined
+    if (hint && hint.startsWith('ui://') && indicatedRef.current !== hint) {
+      indicate(hint)                // MOUNT the hard-gated element (the wire-door) before the spotlight
+    }
     const tgt = session.raw?.ui_target
-    if (tgt) resolveUiTarget(tgt)   // registry-validated; fail-loud if unknown
+    if (tgt) resolveUiTarget(tgt)   // registry-validated; fail-loud if unknown (defers 30ms → mount lands first)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.session, session?.cursor, session?.item])
 
@@ -1271,17 +1772,35 @@ export function useAppController(editor: Editor) {
   // (so streamed sentence-chunks play in order — V2.2). Fail-loud-ish: if the context is blocked/absent,
   // fall back to a plain <audio> element (works on desktop; on iOS the gesture-primed context is the path).
   async function playWavBuffer(buf: ArrayBuffer) {
+    // V-B: capture the play-epoch at ENTRY. A barge-in bumps playEpochRef + stops live sources; a chunk
+    // whose decode finishes AFTER that bump must NOT schedule onto the (now-cut) timeline — so we re-check
+    // the epoch after the async decode and drop the buffer if the turn was interrupted while we decoded.
+    const epoch = playEpochRef.current
     const ctx = audioCtxRef.current
     if (ctx && ctx.state === 'running') {
       const audioBuf = await ctx.decodeAudioData(buf.slice(0))
+      if (epoch !== playEpochRef.current) return                 // barged-in mid-decode — abandon this chunk
       const src = ctx.createBufferSource(); src.buffer = audioBuf; src.connect(ctx.destination)
       const now = ctx.currentTime
       const at = Math.max(now, playCursorRef.current || now)
       src.start(at); playCursorRef.current = at + audioBuf.duration
+      // track the live source so a barge-in can stop() it; self-prune on natural end.
+      playSourcesRef.current.push(src)
+      src.onended = () => { playSourcesRef.current = playSourcesRef.current.filter(s => s !== src) }
       return
     }
     // fallback (desktop / context not unlocked): a one-shot element
+    if (epoch !== playEpochRef.current) return                   // barged-in mid-decode — don't start it
     await new Audio(URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }))).play()
+  }
+  // V-B — CUT all reply audio NOW (barge-in or a hard stop). Bump the epoch so any chunk still decoding is
+  // dropped (playWavBuffer re-checks), stop() every live source node, and reset the play cursor so the next
+  // turn starts a fresh queue. Fail-soft per-source (a node that already ended throws on stop()).
+  function stopPlayback() {
+    playEpochRef.current += 1
+    for (const s of playSourcesRef.current) { try { s.stop() } catch { /* already ended */ } }
+    playSourcesRef.current = []
+    playCursorRef.current = 0
   }
   // voice out — speak text in the configured persona voice (the bridge routes /api/tts to it). Plays through
   // the gesture-unlocked Web Audio context (V2.1) so it actually sounds on iOS. Throws on a hard failure so
@@ -1318,21 +1837,47 @@ export function useAppController(editor: Editor) {
     if (!res.ok || !res.body) {
       const t = await res.text().catch(() => ''); setNotice('⚠ voice turn failed (' + res.status + '): ' + t.slice(0, 160)); return
     }
+    // V-B: hold the reader so a barge-in (the auto-listen analyser hearing the operator speak over the
+    // reply) can reader.cancel() it — that closes the socket, which the bridge's client_gone()/MSG_PEEK
+    // detects and STOPS the per-sentence synth before the next one (no server change). bargedRef starts
+    // false for this turn; if it flips, we stop consuming + drop any remaining chunks.
+    bargedRef.current = false
     const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = ''
-    for (;;) {
-      const { done, value } = await reader.read(); if (done) break
-      buf += dec.decode(value, { stream: true })
-      const lines = buf.split('\n'); buf = lines.pop() || ''
-      for (const ln of lines) {
-        const s = ln.trim(); if (!s) continue
-        let ev: any; try { ev = JSON.parse(s) } catch { continue }
-        if (ev.type === 'transcript') { setNotice('you said: ' + ev.text); if (ev.text) setChat(c => [...c, { role: 'user', text: ev.text }]) }
-        else if (ev.type === 'reply') { if (ev.text) setChat(c => [...c, { role: 'assistant', text: ev.text }]) }
-        else if (ev.type === 'chunk') { try { await playWavBuffer(b64ToArrayBuffer(ev.wav_b64)) } catch (e: any) { api.voiceLog('play_fail', { idx: ev.idx, error: String(e?.message || e) }) } }   // iOS/audio playback failure — captured, not silent
-        else if (ev.type === 'error') { api.voiceLog('stream_error', { error: ev.error, step: ev.step, turn_id: ev.turn_id }); setNotice('⚠ ' + ev.error) }   // fail loud (V2.3) + durable
-        else if (ev.type === 'done') { setNotice(''); poll() }
+    voiceReaderRef.current = reader
+    try {
+      for (;;) {
+        let chunk: ReadableStreamReadResult<Uint8Array>
+        try { chunk = await reader.read() }
+        catch { break }                                          // reader.cancel() (barge-in) rejects the pending read — exit cleanly
+        const { done, value } = chunk; if (done) break
+        if (bargedRef.current) break                             // operator spoke over the reply — stop consuming this turn
+        buf += dec.decode(value, { stream: true })
+        const lines = buf.split('\n'); buf = lines.pop() || ''
+        for (const ln of lines) {
+          if (bargedRef.current) break
+          const s = ln.trim(); if (!s) continue
+          let ev: any; try { ev = JSON.parse(s) } catch { continue }
+          if (ev.type === 'transcript') { setNotice('you said: ' + ev.text); if (ev.text) setChat(c => [...c, { role: 'user', text: ev.text }]) }
+          else if (ev.type === 'reply') { if (ev.text) setChat(c => [...c, { role: 'assistant', text: ev.text }]) }
+          else if (ev.type === 'chunk') { try { await playWavBuffer(b64ToArrayBuffer(ev.wav_b64)) } catch (e: any) { api.voiceLog('play_fail', { idx: ev.idx, error: String(e?.message || e) }) } }   // iOS/audio playback failure — captured, not silent
+          else if (ev.type === 'error') { api.voiceLog('stream_error', { error: ev.error, step: ev.step, turn_id: ev.turn_id }); setNotice('⚠ ' + ev.error) }   // fail loud (V2.3) + durable
+          else if (ev.type === 'done') { setNotice(''); poll() }
+        }
       }
+    } finally {
+      if (voiceReaderRef.current === reader) voiceReaderRef.current = null   // only clear if still ours
     }
+  }
+  // V-B — BARGE-IN: the operator started speaking over the reply. Cut the audio (stopPlayback) AND cancel
+  // the in-flight reply stream (reader.cancel → socket close → the bridge's client_gone() stops synth).
+  // Sets bargedRef so runVoiceTurn's consume loop exits. Idempotent + fail-soft (a reader already done
+  // throws on cancel). Returns nothing; the caller starts the fresh capture cycle.
+  function bargeIn() {
+    bargedRef.current = true
+    stopPlayback()
+    const r = voiceReaderRef.current
+    if (r) { try { r.cancel() } catch { /* already settled */ } ; voiceReaderRef.current = null }
+    api.voiceLog('autolisten_bargein', { input_mode: 'auto_listen' })   // durable: the reply was interrupted
   }
   // voice in — push-to-talk: record → STT → send as a chat turn (which then speaks its reply)
   async function recordToggle() {
@@ -1376,15 +1921,31 @@ export function useAppController(editor: Editor) {
       api.voiceLog('ptt_start', { input_mode: 'push_to_talk' })   // push-to-talk recording opened
     } catch { api.voiceLog('mic_denied', { mode: 'push_to_talk' }); setNotice('mic unavailable — grant microphone permission') }
   }
-  // V1.1 — AUTO-LISTEN (hands-free, "reply on a finished thought, not a silence timer"). One continuous
-  // recorder; a Web Audio analyser watches RMS for a speech→silence PAUSE; on a pause the utterance-so-far
-  // is transcribed + put to the finished-thought JUDGE — if finished, the turn fires (streamed persona
-  // voice via runVoiceTurn) and the buffer resets; if not, it keeps listening (don't cut him off). The
-  // recorder is PAUSED during the reply so viv's voice isn't captured as new input (echo). Tap again to stop.
-  // The real feel (does it wait for a finished thought) is needs-tim — no mic on the server.
+  // V1.1 / V-B — AUTO-LISTEN (hands-free, "reply on a finished thought, not a silence timer").
+  //
+  // SHAPE (V-B rewrite, Tim 2026-06-07 — fixes "works for turn 1 only, no barge-in, then doesn't register"):
+  //  · the `stream` + Web Audio `analyser` are PERSISTENT for the whole session (independent of any recorder;
+  //    the analyser tap is what watches RMS — it is alive in EVERY phase, including while the reply speaks).
+  //  · a FRESH MediaRecorder is created for EACH listen cycle (inside `listenOnce`) and fully stop()'d to
+  //    FLUSH a complete webm. ROOT-CAUSE FIX for re-arm: the old code reused ONE recorder across pause()/resume() and reset
+  //    `chunks=[]` after the only chunk carrying the webm/EBML header had been consumed — so turn 2+ produced
+  //    a HEADERLESS fragment STT could not decode (proven by the phone trace: every post-fire autolisten_stt
+  //    was chars:0/empty:true while vad_pause kept firing → the recorder WAS recording, the BLOB was junk).
+  //    A fresh recorder per cycle = a fresh header every turn (exactly why push-to-talk, which news up a
+  //    recorder per press, always worked). No pause()/resume() to fail, either.
+  //  · phases: LISTENING (recorder running, RMS end-of-speech → STT+judge → fire/keep) → SPEAKING (NO recorder;
+  //    analyser still tapping → BARGE-IN detect) → back to LISTENING. After a fired turn the loop ALWAYS
+  //    re-arms a fresh recorder (the re-arm the old code lost), unless the operator stopped the session.
+  //  · BARGE-IN: while SPEAKING, sustained speech (≥ BARGEIN_FRAMES consecutive frames over a RAISED RMS,
+  //    to reject speaker-bleed) calls bargeIn() — cut the audio + cancel the reply stream — and immediately
+  //    starts a fresh capture cycle. Echo-avoidance is preserved WITHOUT pausing a recorder: no recorder runs
+  //    during playback, so viv's own voice is never captured as input; the analyser (not a recorder) is what
+  //    listens for the interruption.
+  // The real feel (does it wait for a finished thought; barge-in sensitivity; iOS audio) is needs-tim.
   function stopAutoListen() {
     autoListenRef.current.stop = true
     autoListenRef.current.stream?.getTracks().forEach(t => t.stop())
+    if (voiceReaderRef.current) bargeIn()                      // cut a reply still speaking; no-op (no spurious log) if idle
     setRecording(false); setNotice('')
   }
   async function startAutoListen() {
@@ -1395,50 +1956,119 @@ export function useAppController(editor: Editor) {
     autoListenRef.current = { stop: false, stream }
     api.voiceLog('autolisten_start', { input_mode: 'auto_listen', silence_ms: 800, speech_rms: 0.015 })   // session opened (mic granted)
     setRecording(true); setNotice('listening… (tap to stop)')
+    // PERSISTENT analyser tap — alive across LISTENING and SPEAKING (the barge-in detector reads it too).
     const ctx = audioCtxRef.current || new (window.AudioContext || (window as any).webkitAudioContext)()
     audioCtxRef.current = ctx
     const analyser = ctx.createAnalyser(); analyser.fftSize = 512
     ctx.createMediaStreamSource(stream).connect(analyser)
     const data = new Uint8Array(analyser.fftSize)
-    let chunks: BlobPart[] = []
-    const rec = new MediaRecorder(stream)
-    rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data) }
-    rec.start(250)                                             // periodic chunks so the buffer is fresh on a pause
     const SILENCE_MS = 800, SPEECH_RMS = 0.015
-    let spoke = false, lastVoice = performance.now(), busy = false
-    const tick = async () => {
-      if (autoListenRef.current.stop) { try { rec.state !== 'inactive' && rec.stop() } catch {} ; stream.getTracks().forEach(t => t.stop()); setRecording(false); setNotice(''); return }
-      if (!busy && rec.state === 'recording') {
-        analyser.getByteTimeDomainData(data)
-        let sum = 0; for (let i = 0; i < data.length; i++) { const v = (data[i] - 128) / 128; sum += v * v }
-        const rms = Math.sqrt(sum / data.length); const now = performance.now()
-        if (rms > SPEECH_RMS) { spoke = true; lastVoice = now }
-        if (spoke && (now - lastVoice) > SILENCE_MS && chunks.length) {
-          busy = true
-          api.voiceLog('vad_pause', { silence_ms: Math.round(now - lastVoice), chunks: chunks.length })   // the loop saw a pause
-          const blob = new Blob(chunks, { type: 'audio/webm' })
-          try {
-            const r = await api.stt(blob); const text = (r.text || '').trim()
-            api.voiceLog('autolisten_stt', { chars: text.length, empty: !text, text: text.slice(0, 200) })   // what the ear heard at the pause
-            if (text) {
-              const j = await api.finishedThought(text)
-              api.voiceLog('autolisten_judge', { verdict: j && j.verdict, finished: !!(j && j.finished), text: text.slice(0, 200) })   // fire or keep listening?
-              if (j && j.finished) {
-                try { rec.pause() } catch {}                   // pause capture so the reply isn't heard as input
-                setNotice('you said: ' + text); setRecording(false)
-                api.voiceLog('autolisten_fire', { chars: text.length })   // the turn fired
-                await runVoiceTurn(blob)                       // streamed persona-voice reply (V2.2)
-                chunks = []; spoke = false; lastVoice = performance.now()
-                if (!autoListenRef.current.stop) { try { rec.resume() } catch {} ; setRecording(true); setNotice('listening… (tap to stop)') }
-              } else { setNotice('… go on'); lastVoice = performance.now() }  // not finished — keep him talking
-            }
-          } catch (e: any) { api.voiceLog('error', { where: 'autolisten', error: String(e?.message || e) }); setNotice('⚠ ' + (e?.message || e) + ' — tap to use push-to-talk') }  // fail loud → ptt fallback
-          busy = false
-        }
-      }
-      setTimeout(tick, 150)
+    // barge-in is deliberately LESS sensitive than the listen-VAD (higher RMS + sustained frames) so the
+    // speaker's own audio bleeding into the mic doesn't false-trigger a cut. These are FEEL parameters —
+    // the exact values are Tim's to tune on-device (flagged needs-tim).
+    const BARGEIN_RMS = 0.04, BARGEIN_FRAMES = 4
+
+    // read the current RMS off the persistent analyser (0..~1).
+    const readRms = () => {
+      analyser.getByteTimeDomainData(data)
+      let sum = 0; for (let i = 0; i < data.length; i++) { const v = (data[i] - 128) / 128; sum += v * v }
+      return Math.sqrt(sum / data.length)
     }
-    tick()
+
+    // ONE LISTEN CYCLE: a FRESH recorder, watch RMS for an end-of-speech pause, transcribe + judge.
+    // Resolves with the captured blob+text when a FINISHED thought fires; loops internally (re-arming a
+    // fresh recorder) while not-finished; resolves null if the session was stopped. The fresh-recorder-
+    // per-cycle is the re-arm fix.
+    // FRESH recorder per TURN (not per pause). One continuously-running recorder accumulates the WHOLE
+    // turn's audio (so chunk[0] carries the webm header → every snapshot is decodable). On a not-finished
+    // pause we SNAPSHOT the accumulated blob WHILE the recorder keeps running (header present) and KEEP
+    // listening — so a multi-segment thought ("show me the inbox" … "and then settings") is heard WHOLE,
+    // which is the entire point of the finished-thought judge over a dumb silence timer. We only stop()+
+    // discard at the TURN boundary: when a thought FIRES (flush the tail, resolve) — the session loop's
+    // next listenOnce() then news up the fresh recorder for the next turn (THAT is the cross-turn re-arm
+    // fix; the old bug was reusing one recorder ACROSS turns with a reset buffer → headerless turn-2).
+    const listenOnce = (): Promise<{ blob: Blob; text: string } | null> => new Promise((resolve) => {
+      const chunks: BlobPart[] = []
+      const rec = new MediaRecorder(stream)                    // FRESH recorder for THIS turn ⇒ chunk[0] has the header
+      rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data) }
+      rec.start(250)                                           // periodic chunks so a snapshot is fresh on a pause
+      let spoke = false, lastVoice = performance.now(), busy = false
+      const tick = async () => {
+        if (autoListenRef.current.stop) {
+          try { rec.state !== 'inactive' && rec.stop() } catch {}
+          resolve(null); return
+        }
+        if (!busy && rec.state === 'recording') {
+          const rms = readRms(); const now = performance.now()
+          if (rms > SPEECH_RMS) { spoke = true; lastVoice = now }
+          if (spoke && (now - lastVoice) > SILENCE_MS && chunks.length) {
+            busy = true
+            api.voiceLog('vad_pause', { silence_ms: Math.round(now - lastVoice), chunks: chunks.length })
+            // SNAPSHOT the accumulated utterance-so-far WITHOUT stopping the recorder. chunks[0] holds the
+            // webm header (the recorder has run continuously since the turn began), so the snapshot decodes.
+            const blob = new Blob(chunks, { type: 'audio/webm' })
+            try {
+              const r = await api.stt(blob); const text = (r.text || '').trim()
+              api.voiceLog('autolisten_stt', { chars: text.length, empty: !text, text: text.slice(0, 200) })
+              if (text) {
+                const j = await api.finishedThought(text)
+                api.voiceLog('autolisten_judge', { verdict: j && j.verdict, finished: !!(j && j.finished), text: text.slice(0, 200) })
+                if (j && j.finished) {
+                  // FIRE — stop the recorder to FLUSH the tail into a final complete blob, then resolve.
+                  const finalBlob: Blob = await new Promise((res) => {
+                    rec.onstop = () => res(new Blob(chunks, { type: 'audio/webm' }))
+                    try { rec.stop() } catch { res(new Blob(chunks, { type: 'audio/webm' })) }
+                  })
+                  api.voiceLog('autolisten_fire', { chars: text.length })
+                  resolve({ blob: finalBlob, text }); return   // caller speaks the reply, then re-arms (fresh listenOnce)
+                }
+              }
+              // not finished (or empty) → KEEP the recorder running + KEEP the accumulated chunks; just reset
+              // the VAD pause-clock so the next pause re-evaluates the (now longer) accumulated thought. This
+              // is what makes a multi-segment thought heard WHOLE — we do NOT discard the pre-pause speech.
+              if (autoListenRef.current.stop) { try { rec.state !== 'inactive' && rec.stop() } catch {} ; resolve(null); return }
+              setNotice(text ? '… go on' : 'listening… (tap to stop)')
+              lastVoice = performance.now(); busy = false
+            } catch (e: any) {
+              try { rec.state !== 'inactive' && rec.stop() } catch {}
+              api.voiceLog('error', { where: 'autolisten', error: String(e?.message || e) })
+              setNotice('⚠ ' + (e?.message || e) + ' — tap to use push-to-talk')
+              resolve(null); return                            // fail loud → operator falls back to push-to-talk
+            }
+          }
+        }
+        setTimeout(tick, 150)
+      }
+      tick()
+    })
+
+    // THE SESSION LOOP: listen → fire → SPEAK (with barge-in watch) → re-arm. Runs until the operator stops.
+    ;(async () => {
+      while (!autoListenRef.current.stop) {
+        const fired = await listenOnce()
+        if (!fired || autoListenRef.current.stop) break
+        setNotice('you said: ' + fired.text); setRecording(false)
+        // SPEAK the reply. No recorder runs now (echo-safe). A concurrent barge-in WATCH ticks the analyser;
+        // sustained speech cancels the reply (bargeIn) and unblocks immediately so we re-arm at once.
+        let watching = true
+        const watchBargeIn = async () => {
+          let hot = 0
+          while (watching && !autoListenRef.current.stop) {
+            if (readRms() > BARGEIN_RMS) { if (++hot >= BARGEIN_FRAMES) { bargeIn(); break } }
+            else hot = 0
+            await new Promise(r => setTimeout(r, 80))
+          }
+        }
+        const watcher = watchBargeIn()
+        try { await runVoiceTurn(fired.blob) }                 // streamed persona-voice reply (V2.2)
+        catch (e: any) { api.voiceLog('error', { where: 'autolisten_turn', error: String(e?.message || e) }); setNotice('⚠ ' + (e?.message || e)) }
+        watching = false; await watcher                        // stop the barge-in watch before re-listening
+        if (autoListenRef.current.stop) break
+        setRecording(true); setNotice('listening… (tap to stop)')   // RE-ARM — the loop continues to listenOnce()
+      }
+      // session ended — make sure the mic is released + state cleared.
+      stream.getTracks().forEach(t => t.stop()); setRecording(false); setNotice('')
+    })()
   }
   // The mic press routes by the configured input mode (V1.3). Push-to-talk → recordToggle (tap/tap).
   // Auto-listen → start a hands-free session, or stop it if one is live. Both unlock audio in the gesture.
@@ -1641,23 +2271,33 @@ export function useAppController(editor: Editor) {
   return {
     // state values (read by the region components)
     edges, running, runError, runStartedAt, runElapsed, types, gname, gspec, surf, growMsg, workshop,
-    oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, cfgOpen, inbox,
-    showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn, personas, voiceStatus, recordingSession, threads, threadId, chatModelsX, settingsOpen, engineKnobs, voiceInfo, fitReport,
+    oinfo, nodeStates, modeDesc, notice, gid, layerView, now, events, chat, chatMsg, chatBusy, cfg, inbox,
+    showResolved, drill, reason, lastChange, panels, recording, configTick, session, wtReason, voiceOn, personas,
+    // A3/E2-FE · the consolidated Settings surface state
+    settingsOpen, settingsTab, roles, voicePaths, voiceStatus, modeRegistry, autodetect, compositionCfg, settingsBusy, settingsErr,
+    // main's voice/settings state (S1/S2/S3/S5/S6/V3/V4) — voiceStatus→personaVoiceStatus; settingsOpen already above
+    personaVoiceStatus, recordingSession, threads, threadId, chatModelsX, engineKnobs, voiceInfo, fitReport,
     wtSpoke, wtBusy, selected, mobileTab, fleet, indicated, proposal, history, historyBusy,
+    addressHelp, addressHelpBusy, addressHelpError, prefBusy,
     selfChanges, selfChangesBusy, freshness, freshnessBusy, versions, versionsBusy, journeyId, journeyReplaying,
     cognitionInfo, cognitionTurn,   // L-fe: the live cognition VIEW state (projection + the folded live turn)
     // refs the components read for the inspector form
     configByNode,
     // setters the components call directly
-    setGname, setGspec, setSurf, setWorkshop, setNotice, setCfg, setCfgOpen, setChatMsg, setShowResolved,
+    setGname, setGspec, setSurf, setWorkshop, setNotice, setCfg, setChatMsg, setShowResolved,
     setDrill, setReason, setWtReason, setVoiceOn, setRunError, setGrowMsg, setMobileTab,
+    setSettingsOpen, setSettingsTab,
     // handlers
     poll, openCoa, reload, fitGraph, addNode, wireSelected, doConnect, setNodeConfig, surfaceOutput,
-    buildFromOutput, deleteSelected, sendChat, changeMode, applyCfg, cycleLayers, portalSelected,
-    resolveUiTarget, startWalk, endWalk, respondStep, nextStep, dispatch, recordToggle, micPressed, setVoiceInputMode, setVoiceEnabled, toggleRecordConversation, startDebriefSession, newConversation, openConversation, chooseModel, setSettingsOpen, applyRhm, setBrainKnob, setModelCtx, refreshFit, startVoiceService, fieldValue,
-    setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus,
+    buildFromOutput, deleteSelected, sendChat, changeMode, cycleLayers, portalSelected,
+    resolveUiTarget, startWalk, startGuide, endWalk, respondStep, nextStep, dispatch, recordToggle, fieldValue,
+    setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus, mintBuildIntent, setPresentationPrefAt,
+    approveProposal, dismissProposal, steerProposal, deferProposal, setAsideProposal, reviveOffer, toggleJourneyRecording, replayJourney, switchPersona,
+    // A3/E2-FE · the consolidated Settings handlers
+    openSettings, loadSettingsData, setCfgSlot,
+    // main's voice/settings handlers (S1/S2/S3/S5/S6/V3/V4 + the indicate-mode toggle); setSettingsOpen already returned above
+    micPressed, setVoiceInputMode, setVoiceEnabled, toggleRecordConversation, startDebriefSession, newConversation, openConversation, chooseModel, applyRhm, setBrainKnob, setModelCtx, refreshFit, startVoiceService,
     indicateMode, toggleIndicateMode,
-    approveProposal, dismissProposal, toggleJourneyRecording, replayJourney, switchPersona,
   }
 }
 

@@ -39,8 +39,8 @@
 .brand em{font-style:normal;color:var(--acc)}
 .brand .tag{font-size:10.5px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:7px}
 /* presence dial — current posture = WALKTHROUGH (one of the 8 real modes) */
-.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--kind-model);border-radius:99px;background:var(--kind-model-bg);font-size:11.5px;color:var(--tx);white-space:nowrap;cursor:pointer}
-.presence .dot{width:7px;height:7px;border-radius:99px;background:var(--kind-model);box-shadow:0 0 0 3px var(--kind-model-bg)}
+.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--kind-model);border-radius:var(--r-pill);background:var(--kind-model-bg);font-size:11.5px;color:var(--tx);white-space:nowrap;cursor:pointer}
+.presence .dot{width:7px;height:7px;border-radius:var(--r-pill);background:var(--kind-model);box-shadow:0 0 0 3px var(--kind-model-bg)}
 .presence .ch{color:var(--tx-3);font-size:10px}
 .verbs{margin-left:auto;display:flex;gap:6px;flex:none}
 .verbs .btn{padding:7px 11px}
@@ -67,7 +67,7 @@
   transition:background .5s ease}
 /* the target node sits ABOVE the spotlight, lit, ringed, gently lifted (just-arrived) */
 .node.target{z-index:6;border-color:var(--acc);
-  box-shadow:0 0 0 1px var(--acc-glow),0 0 34px 2px var(--acc-glow),0 26px 60px -20px #000;
+  box-shadow:0 0 0 1px var(--acc-glow),0 0 34px 2px var(--acc-glow),0 26px 60px -20px var(--shadow-color);
   animation:settle .55s ease both}
 @keyframes settle{from{transform:scale(1.05);filter:brightness(1.25)}to{transform:scale(1);filter:none}}
 /* the GHOST FLIGHT-PATH — where the camera flew FROM → the subject (movement made literal) */
@@ -75,8 +75,8 @@
 /* a small "re-centred here" badge pinned over the target — names the act */
 .drovehere{position:absolute;z-index:7;left:600px;top:150px;transform:translateX(-50%);
   display:flex;align-items:center;gap:7px;background:rgba(8,10,13,.82);border:1px solid var(--acc-dim);
-  border-radius:99px;padding:5px 11px;font-family:'IBM Plex Mono';font-size:10px;color:var(--acc);backdrop-filter:blur(4px)}
-.drovehere .av{width:14px;height:14px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow);flex:none}
+  border-radius:var(--r-pill);padding:5px 11px;font-family:'IBM Plex Mono';font-size:10px;color:var(--acc);backdrop-filter:blur(4px)}
+.drovehere .av{width:14px;height:14px;border-radius:var(--r-pill);background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow);flex:none}
 /* faded neighbour nodes (under the vignette) make the contrast obvious */
 .node.dim{opacity:.5;z-index:2}
 
@@ -85,14 +85,14 @@
 
 .foot{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--s0);border-top:1px solid var(--line);font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';overflow:hidden;white-space:nowrap}
 .foot .live{color:var(--acc);display:inline-flex;align-items:center;gap:5px}
-.foot .live i{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.foot .live i{width:6px;height:6px;border-radius:var(--r-pill);background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
 
 /* ── RIGHT PANEL — the RHM is on its own tab while walking ── */
 .panel{grid-area:panel;background:var(--s0);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);padding:10px 12px 0}
 .tab{padding:8px 12px;font-size:12px;color:var(--tx-3);border-bottom:2px solid transparent;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
 .tab.on{color:var(--tx);border-bottom-color:var(--acc)}
-.tab .badge{font-family:'IBM Plex Mono';font-size:9px;background:var(--await);color:var(--ink-await);border-radius:99px;padding:0 5px;font-weight:600}
+.tab .badge{font-family:'IBM Plex Mono';font-size:9px;background:var(--await);color:var(--ink-await);border-radius:var(--r-pill);padding:0 5px;font-weight:600}
 .pbody{padding:14px;overflow:auto;flex:1;min-height:0;display:flex;flex-direction:column;gap:0}
 
 /* walkthrough header — N of M + the page-turn */
@@ -100,11 +100,11 @@
 .walkhd .rhmav{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--acc),var(--acc-deep));display:grid;place-items:center;color:var(--ink-accent);font-family:'Bricolage Grotesque';font-weight:800;font-size:13px;flex:none}
 .walkhd .ttl{font-family:'Bricolage Grotesque';font-weight:700;font-size:14px;line-height:1.1}
 .walkhd .ttl small{display:block;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);font-weight:400;letter-spacing:.4px;margin-top:2px}
-.nofm{margin-left:auto;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-2);background:var(--s2);border:1px solid var(--line-2);border-radius:99px;padding:3px 9px;white-space:nowrap}
+.nofm{margin-left:auto;font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-2);background:var(--s2);border:1px solid var(--line-2);border-radius:var(--r-pill);padding:3px 9px;white-space:nowrap}
 .nofm b{color:var(--acc);font-weight:500}
 /* slim progress rail = the session-as-a-graph, one tick per gated step */
 .steps{display:flex;gap:4px;margin-bottom:14px}
-.steps i{height:4px;flex:1;border-radius:99px;background:var(--s3)}
+.steps i{height:4px;flex:1;border-radius:var(--r-pill);background:var(--s3)}
 .steps i.done{background:var(--acc-dim)} .steps i.now{background:var(--acc);box-shadow:0 0 0 2px var(--acc-glow)}
 
 /* co-presence line — the RHM already SEES your selection + its value */
@@ -139,7 +139,7 @@
 /* VERDICT ROW — operator-only resolve vocab ONLY: approve·reject·decide·comment·skip + voice */
 .verdict{margin-top:15px}
 .verdict .lbl{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--tx-3);font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:7px}
-.verdict .lbl .oo{font-family:'IBM Plex Mono';font-size:8.5px;text-transform:none;letter-spacing:.4px;color:var(--await);border:1px solid var(--await);border-radius:99px;padding:0 6px}
+.verdict .lbl .oo{font-family:'IBM Plex Mono';font-size:8.5px;text-transform:none;letter-spacing:.4px;color:var(--await);border:1px solid var(--await);border-radius:var(--r-pill);padding:0 6px}
 .vrow{display:flex;gap:7px}
 .vbtn{flex:1;justify-content:center;padding:9px 6px}
 .vbtn.approve{background:linear-gradient(180deg,var(--acc),var(--acc-deep));color:var(--ink-accent);border-color:transparent;font-weight:600}
@@ -153,8 +153,8 @@
 /* the COMMENT capture (resolve verb comment→annotate, captures WHY) + voice affordance */
 .why{margin-top:13px;background:var(--s0);border:1px solid var(--line);border-radius:var(--r);padding:9px 10px}
 .why .head{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--tx-2);margin-bottom:7px}
-.why .head .v{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--tx-2);background:var(--s2);border:1px solid var(--line-2);border-radius:99px;padding:4px 10px;cursor:pointer}
-.why .head .v .mic{width:9px;height:9px;border-radius:99px;background:var(--fail);box-shadow:0 0 0 3px rgba(236,106,94,.18);flex:none;animation:pulse 1.4s infinite}
+.why .head .v{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--tx-2);background:var(--s2);border:1px solid var(--line-2);border-radius:var(--r-pill);padding:4px 10px;cursor:pointer}
+.why .head .v .mic{width:9px;height:9px;border-radius:var(--r-pill);background:var(--fail);box-shadow:0 0 0 3px rgba(236,106,94,.18);flex:none;animation:pulse 1.4s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 .why .field{font-family:'IBM Plex Sans';font-size:12px;color:var(--tx-3);line-height:1.5;min-height:34px}
 .why .field .typed{color:var(--tx-2)}

@@ -472,7 +472,7 @@ def resurface_crashed(suite) -> list[str]:
 
 def drive_dispatchable(suite, *, cursor: int = -1, launcher=None, verifier=None,
                        suite_runner=None, critic=None, cap: int | None = None,
-                       repo: str | None = None) -> dict:
+                       repo: str | None = None, committer=None) -> dict:
     """§W6 — the unattended trigger. ONE bounded watcher pass: read every resolve verdict since the
     cursor, dispatch the auto-dispatchable build-intent approves (up to the §W7 CONCURRENCY_CAP), and
     surface — loud — anything deferred or crashed. NO human re-prompt anywhere: the operator's
@@ -492,9 +492,10 @@ def drive_dispatchable(suite, *, cursor: int = -1, launcher=None, verifier=None,
          deferred verdict is re-offered next pass. Exactly-once is the event log, not the cursor —
          so even a coarse/duplicated cursor can never double-launch.
 
-    cap/launcher/verifier/repo are injectable (tests + a future standalone daemon supply them); the
-    DEFAULT cap is implement.CONCURRENCY_CAP and the default launcher/verifier are dispatch_decision's
-    own (the real `claude -p` round-trip + the change-set verifier). A single dispatch that fails to
+    cap/launcher/verifier/committer/repo are injectable (tests + a future standalone daemon supply
+    them); the DEFAULT cap is implement.CONCURRENCY_CAP and the default launcher/verifier/committer are
+    dispatch_decision's own (the real `claude -p` round-trip + the change-set verifier + the
+    `[self-build]` git checkpoint). A single dispatch that fails to
     LAUNCH is already a loud re-queue inside dispatch_decision (it returns requeued, never raises for
     a LaunchError) — counted here as handled, not crashed.
 
@@ -542,7 +543,8 @@ def drive_dispatchable(suite, *, cursor: int = -1, launcher=None, verifier=None,
         # verify + close-or-surface). A LaunchError is turned into a loud re-queue INSIDE the verb (it
         # returns {requeued,...,launched:False}), so this call does not raise for a crashed launch.
         out = suite.dispatch_decision(sid, seq, launcher=launcher, verifier=verifier,
-                                      suite_runner=suite_runner, critic=critic, repo=repo)
+                                      suite_runner=suite_runner, critic=critic, repo=repo,
+                                      committer=committer)
         dispatched.append({"surfaced": sid, "seq": seq, "result": out})
         launched += 1
         new_cursor = max(new_cursor, seq)

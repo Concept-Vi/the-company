@@ -1,46 +1,92 @@
 /* GENERATED from tokens.json by emit.py — DO NOT hand-edit. Edit tokens.json + re-run `python3 emit.py`. */
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,900&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
 :root{
   /* surface tiers */
-  --bg:#080a0d;
-  --s0:#0d1116;
-  --s1:#12171d;
-  --s2:#171e25;
-  --s3:#1d262e;
-  --line:#232c35;
-  --line-2:#2c3742;
-  --tx:#e8eef4;
-  --tx-2:#9aa7b4;
-  --tx-3:#5e6b78;
+  /* WARM charcoal base (warm/umber undertone, not blue-black) — mirrors SCENARIO-PLAYER.html's warmed dark base. tx warmed to a soft cream so text-on-charcoal reads warm. */
+  --bg:#0c0a08;
+  --s0:#13110d;
+  --s1:#191611;
+  --s2:#211d17;
+  --s3:#2a241c;
+  --line:#332c22;
+  --line-2:#403729;
+  --tx:#f3ece1;
+  --tx-2:#b3a692;
+  --tx-3:#6f6555;
   /* signal + semantic */
-  --acc:#54d6b0;
-  --acc-dim:#2c6b5c;
-  --acc-glow:rgba(84,214,176,.14);
-  --acc-deep:#3fb595;
-  --await:#e6ab5c;
+  /* acc/ok = gold (the alive/done/value signal — the identity colour). acc-dim = a warm bronze (the dim signal, was green #2c6b5c). acc-deep = deep bronze-gold (the grounded end of the flow). acc-glow = the instrument's whole glow (scrim/indicated/bi-outcome/rhm-afford all read from it) — gold at .16. await = orange-amber (vivid, leans orange — distinct from the gold acc by hue-direction + saturation; trapped between gold and the coral fail, orange is its lane). cache = a warm taupe-grey neutral (the one near-cool, helps the fit-bar four-way read; needs-Tim's-eye for full-warm). */
+  --acc:#e6ab5c;
+  --acc-dim:#8a6a35;
+  --acc-glow:rgba(230,171,92,.16);
+  --acc-deep:#d2913f;
+  --await:#e08a3c;
   --fail:#ec6a5e;
-  --cache:#6b8aa8;
-  --ok:#54d6b0;
+  --cache:#9c8f78;
+  --ok:#e6ab5c;
   /* ink on bright surfaces */
-  /* The near-black text colour that sits ON accent/await coloured chips, badges, primary buttons (legibility on bright fills). Recurs corpus-wide; promoted from hardcoded literals 2026-06-05. */
-  --ink-accent:#06140f;
+  /* The near-black text colour that sits ON accent/await/fail coloured chips, badges, primary buttons (legibility on bright fills). Recurs corpus-wide; promoted from hardcoded literals 2026-06-05; ink-fail added 2026-06-07. ink-accent warmed to a warm near-black (#1c1304) for the gold-primary theme (was the cold-green #06140f) — the legible ink ON gold fills, mirrors the mockup. */
+  --ink-accent:#1c1304;
   --ink-await:#1a1205;
+  --ink-fail:#1a0a08;
   /* node-type visual language */
-  /* KIND drives colour. REALITY (audit 2026-06-03): only TWO kinds live — process & content. 'present' is contract-allowed but has no live node (future). 'model' is a config-slot accent, NOT a node kind. */
-  --kind-process:#54d6b0;
-  --kind-content:#6b9bd8;
+  /* KIND drives colour. REALITY (audit 2026-06-03): only TWO kinds live — process & content. 'present' is contract-allowed but has no live node (future). 'model' is a config-slot accent, NOT a node kind. GOLD-PRIMARY (2026-06-07): kind-process = gold (the process signal IS the accent). kind-content (the 'wire/building' tone) is pulled OFF the vivid axis to a DESATURATED bronze/taupe so it reads muted beside the vivid gold(sig)+orange(await) — the unlock that keeps build-lifecycle states apart (the mockup's gold-tan #d9b46a has no triage lanes to separate, so it never needed this). kind-present = gold (the gold-grade). kind-model = a soft warm mauve (the one off-warm config accent — distinct from the warm world without being green). */
+  --kind-process:#e6ab5c;
+  --kind-content:#b89a6e;
   --kind-present:#e6ab5c;
-  --kind-model:#b58cdc;
-  --kind-process-bg:rgba(84,214,176,.10);
-  --kind-content-bg:rgba(107,155,216,.10);
+  --kind-model:#c0a0c8;
+  --kind-process-bg:rgba(230,171,92,.10);
+  --kind-content-bg:rgba(184,154,110,.12);
   --kind-present-bg:rgba(230,171,92,.10);
-  --kind-model-bg:rgba(181,140,220,.10);
-  /* shape */
-  --r:7px;
-  --r-lg:11px;
-  --r-pill:99px;
+  --kind-model-bg:rgba(192,160,200,.10);
+  /* typography — the commander's-bridge voice */
+  /* THE TYPE SYSTEM (wave-2 design-direction, 2026-06-07). The running app's de-facto pairing — promoted from raw 'Fraunces'/'IBM Plex Mono' string literals scattered across canvas/app/src/app.css into registry tokens so the look assembles FROM the registry, not bolt-on (law 2). DIRECTION: a dark instrument / commander's bridge — a monospace INSTRUMENT BODY (IBM Plex Mono) for precision + machine-truth, a Fraunces SERIF DISPLAY for authority/headings (the calm-authority signature: serif-in-a-cockpit, not generic-dashboard sans). Fraunces added to the imports beside Bricolage (Bricolage stays for the mockup corpus' .display; the running app wears Fraunces). --font-display = Fraunces serif (titles, RHM voice, node output, panel headings); --font-mono = IBM Plex Mono (every control, label, value, address — the instrument body); --font-body aliases mono (the app's base font IS mono — the precision read). The type SCALE is a coherent modular ladder (no more scattered 8/8.5/9/9.5/10/10.5/11/11.5/12/12.5/13/13.5/14/15/16/19 literals); steps named by ROLE so a region picks intent, not a number. */
+  --font-display:'Fraunces', Georgia, serif;
+  --font-mono:'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+  --font-body:'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+  --font-sans:'IBM Plex Sans', system-ui, sans-serif;
+  --fs-micro:8.5px;
+  --fs-tag:9.5px;
+  --fs-meta:10.5px;
+  --fs-body:12px;
+  --fs-lg:13.5px;
+  --fs-title:15px;
+  --fs-display:19px;
+  --lh-tight:1.3;
+  --lh-body:1.5;
+  --tr-tag:.12em;
+  --tr-label:.08em;
+  /* living instrument — presence, glow flow, persona pastels */
+  /* THE LIVING-INSTRUMENT layer (2026-06-07) — the depth + motion + presence the flat/static surface lacked, sourced from design/mockups/SCENARIO-PLAYER.html so it reflows from the registry too (law 2). gold-hi/gold/gold-deep = the gold RANGE (light → primary → deep bronze) the presence orb + accent flow paint with. acc-flow = the primary gold gradient (the orb conic, the send button, the active step, the run strip — the 'alive' fill). orb-hi = the bright specular highlight on the presence orb. PERSONA PASTELS: the personas are PASTEL sub colour families WITHIN the gold world (Tim, 2026-06-07). Vi = the canonical primary GOLD; Atlas = a soft APRICOT pastel; Nova = a soft ROSE-GOLD pastel. These are DEFINED here as tokens; the app currently runs Vi=gold as the live default (App.tsx does not set data-persona — switching Atlas/Nova would need controller markup, out of this styling lane), so Atlas/Nova are DEFINED-NOT-LIVE — ready for a future persona switch, no fiction. The persona-* tokens give the per-persona acc/acc-deep/acc-glow/acc-flow/orb-hi a future [data-persona] rule swaps in. */
+  --gold-hi:#f2d08a;
+  --gold-mid:#e6ab5c;
+  --gold-deep:#d2913f;
+  --acc-flow:linear-gradient(120deg,#f2d08a 0%,#e6ab5c 52%,#d2913f 100%);
+  --orb-hi:rgba(255,248,233,.62);
+  --persona-atlas:#f0c49a;
+  --persona-atlas-deep:#dba26f;
+  --persona-atlas-glow:rgba(240,196,154,.20);
+  --persona-atlas-flow:linear-gradient(120deg,#f7d8b8 0%,#f0c49a 52%,#dba26f 100%);
+  --persona-nova:#eebfae;
+  --persona-nova-deep:#dd9f8a;
+  --persona-nova-glow:rgba(238,191,174,.20);
+  --persona-nova-flow:linear-gradient(120deg,#f6d8cc 0%,#eebfae 50%,#dd9f8a 100%);
+  /* shape — a coherent space + radius + elevation scale */
+  /* shadow-color added 2026-06-07 — the near-black drop-shadow colour the mockups' bespoke node/sheet box-shadows recurred (#000 ×12). G-22 FIX (wave-2 design-direction): the old scale was 3 colliding steps (--r 7px / --r-lg 11px / --sp 8px) — incoherent + value-overloaded. REPLACED with a coherent modular ladder. SPACE is a base-4 ramp (--sp-1..--sp-6 = 4·8·12·16·24·32) so every gap/pad reads on one rhythm; --sp kept = base-8 (8px, the legacy default — now an explicit alias of --sp-2). RADII harmonised to a 3-step ramp (--r-sm 5 / --r 8 / --r-lg 12) + --r-pill; --r nudged 7→8 and --r-lg 11→12 so radii sit ON the 4-grid too (one rhythm for space AND corners). The token NAMES are unchanged so every existing var(--r)/var(--sp) reference keeps resolving — only the values rationalised; the global re-screenshot verifies no regression. --elev-1/-2 = the two elevations (rail/panel vs floating card/sheet) so depth is a token, not a per-region literal. */
+  --sp-1:4px;
+  --sp-2:8px;
+  --sp-3:12px;
+  --sp-4:16px;
+  --sp-5:24px;
+  --sp-6:32px;
   --sp:8px;
-  --shadow:0 18px 40px -22px #000;
+  --r-sm:5px;
+  --r:8px;
+  --r-lg:12px;
+  --r-pill:99px;
+  --shadow-color:#000;
+  --shadow:0 18px 40px -22px var(--shadow-color);
+  --elev-1:0 1px 0 rgba(255,255,255,.02), 0 8px 24px -16px var(--shadow-color);
+  --elev-2:0 1px 0 rgba(255,255,255,.03), 0 24px 60px -28px var(--shadow-color);
   font-size:14px;
 }
 
@@ -50,8 +96,8 @@
 html,body{height:100%}
 body{
   background:
-    radial-gradient(1200px 700px at 72% -10%, rgba(84,214,176,.05), transparent 60%),
-    radial-gradient(900px 600px at 0% 110%, rgba(107,138,168,.04), transparent 55%),
+    radial-gradient(1200px 700px at 72% -10%, var(--acc-glow), transparent 60%),
+    radial-gradient(900px 600px at 0% 110%, color-mix(in srgb, var(--cache) 6%, transparent), transparent 55%),
     var(--bg);
   color:var(--tx); font-family:'IBM Plex Sans',system-ui,sans-serif; letter-spacing:.1px;
 }
@@ -74,7 +120,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
 .node[data-kind=present] .bar{background:var(--kind-present-bg)} .node[data-kind=present]{border-left:3px solid var(--kind-present)}
 .node[data-kind=model]   .bar{background:var(--kind-model-bg)}   .node[data-kind=model]{border-left:3px solid var(--kind-model)}
 /* the per-type monogram chip */
-.node .mono-chip{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:12px;flex:none;color:#06140f}
+.node .mono-chip{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:12px;flex:none;color:var(--ink-accent)}
 .node[data-kind=process] .mono-chip{background:var(--kind-process)}
 .node[data-kind=content] .mono-chip{background:var(--kind-content)}
 .node[data-kind=present] .mono-chip{background:var(--kind-present);color:#1a1205}
@@ -94,11 +140,11 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
 /* s-await is NOT a node status — it marks INBOX items "awaiting you" (presence), never a node dot. */
 .s-await{background:var(--await);box-shadow:0 0 0 3px rgba(230,171,92,.14)}
 .port{position:absolute;width:11px;height:11px;border-radius:99px;background:var(--s3);border:2px solid var(--line-2);top:50%}
-.port.in{left:-6px}.port.out{right:-6px;border-color:var(--acc-dim);background:#0f1a17}
+.port.in{left:-6px}.port.out{right:-6px;border-color:var(--acc-dim);background:var(--s0)}
 
 /* ── buttons / chips / pills ──────────────────────────── */
 .btn{display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:var(--r);font-size:12.5px;font-weight:500;border:1px solid var(--line-2);background:var(--s2);color:var(--tx-2);cursor:pointer}
-.btn.run{background:linear-gradient(180deg,var(--acc),#3fb595);color:#06140f;border-color:transparent;font-weight:600}
+.btn.run{background:linear-gradient(180deg,var(--acc),var(--acc-deep));color:var(--ink-accent);border-color:transparent;font-weight:600}
 .btn .k{font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3);border:1px solid var(--line);border-radius:3px;padding:0 4px}
 
 /* ── RESPONSIVE / MOBILE rules (the requirement) ──────────

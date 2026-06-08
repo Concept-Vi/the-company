@@ -15,12 +15,16 @@
   "journeys": [],
   "cross_journeys": [],
   "addresses": [
+    "ui://chat/debrief",
     "ui://chat/mic",
+    "ui://chat/record",
+    "ui://settings/voice",
     "ui://walkthrough/voice"
   ],
   "build_to": {
     "components": [
       "chat",
+      "settings",
       "walkthrough"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",

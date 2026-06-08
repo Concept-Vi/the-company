@@ -24,6 +24,7 @@
   ],
   "addresses": [
     "ui://inspector/freshness",
+    "ui://toolbar",
     "ui://toolbar/reload",
     "ui://toolbar/run"
   ],

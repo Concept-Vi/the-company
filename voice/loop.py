@@ -30,6 +30,7 @@ import urllib.request
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from voice import stt as voice_stt                          # noqa: E402  (in-process STT, same venv)
 from voice import personas as voice_personas                # noqa: E402
+from voice import speakable as voice_speakable              # noqa: E402  (the pre-TTS speakable layer)
 
 BRIDGE_URL = os.environ.get("COMPANY_BRIDGE_URL", "http://127.0.0.1:8770")
 # The engine port map — the SHARED contract the runtime-backend builder relies on. Names → base URLs.
@@ -182,7 +183,13 @@ def loop_turn(audio: bytes, persona_id: str, *, graph_id: str = "codebase",
     # → the persona's own engine (qwen3tts for Sable, etc.) unchanged.
     engine = engine_override or p["engine"]
     voice_arg = voice_override or _voice_arg_for(p, engine)   # voice for the SELECTED engine (any persona × any engine)
-    wav = speak(reply, engine, voice=voice_arg)
+    # V-C/V-D the SPEAKABLE LAYER: a brain reply reads like a TEXT model (markdown/code/urls/emoji) —
+    # clean it to natural prose + map any canonical expression tags to THIS engine's syntax (or drop
+    # them) BEFORE synth, so the engine never reads markup aloud. The RETURNED `reply` stays RAW (the
+    # visible transcript the UI shows / renders); only what hits speak() is cleaned. Fail loud (bad
+    # input / empty-after-clean) propagates — never a silent drop of the whole reply.
+    spoken = voice_speakable.speakable(reply, engine)
+    wav = speak(spoken, engine, voice=voice_arg)
     return {"transcript": transcript, "reply": reply, "engine": engine,
             "voice": voice_arg, "wav": wav, "spoke": True, "action": thought.get("action"),
             "mode": thought.get("mode")}

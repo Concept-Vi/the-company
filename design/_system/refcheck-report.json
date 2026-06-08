@@ -1,7 +1,7 @@
 {
   "_what": "Drift findings for every code: ref in register.json (features[].code) + addresses.json (addresses.*.code). Produced by _system/refcheck.py (read ~/company READ-ONLY). drift[] is the lead's repair worklist; the lead repairs the registries centrally. 'points_at' = what the ref now lands on; 'expected' = the symbol hint derived from the owner's label. NOTE: represents[] in views[] are feature-ids, not code refs \u2014 code refs live in features[].code, so THAT is what this validates (see report (d)).",
-  "snapshot": "~/company @ 92d8d47c267b60cbe42d0a167690b7d63aec999f 2026-06-04 18:21:15 +1000 \u2014 line numbers are as-of this revision (the repo is under an active build loop; re-run after the registries are repaired).",
-  "checked": 91,
+  "snapshot": "~/company @ 72c72368a74cfc0fb850c80489398920a58af022 2026-06-07 16:34:07 +1000 \u2014 line numbers are as-of this revision (the repo is under an active build loop; re-run after the registries are repaired).",
+  "checked": 188,
   "ok": [
     {
       "ref": "scheduler.py:37",
@@ -96,7 +96,7 @@
       "candidates": [
         "stuck"
       ],
-      "points_at": "file runtime/suite.py exists; defines _last_run_stuck @ line 370",
+      "points_at": "file runtime/suite.py exists; defines _last_run_stuck @ line 642",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -130,8 +130,8 @@
       "repair_target": null
     },
     {
-      "ref": "node_type.py",
-      "full_code": "node_type.py / App.tsx:134",
+      "ref": "contracts/node_type.py",
+      "full_code": "contracts/node_type.py / canvas/app/src/components/NodeConfigForm.tsx:NodeConfigForm",
       "source": "register",
       "owner": "NODE-config",
       "represents": "per-node config_schema \u2192 inspector form",
@@ -145,8 +145,8 @@
       "repair_target": null
     },
     {
-      "ref": "App.tsx:134",
-      "full_code": "node_type.py / App.tsx:134",
+      "ref": "canvas/app/src/components/NodeConfigForm.tsx:NodeConfigForm",
+      "full_code": "contracts/node_type.py / canvas/app/src/components/NodeConfigForm.tsx:NodeConfigForm",
       "source": "register",
       "owner": "NODE-config",
       "represents": "per-node config_schema \u2192 inspector form",
@@ -154,9 +154,9 @@
         "config",
         "config_schema"
       ],
-      "points_at": "configSchemaToFields (def @ line 127, +7)",
-      "resolved": "canvas/app/src/App.tsx",
-      "line_content": "default: f.default,",
+      "points_at": "file canvas/app/src/components/NodeConfigForm.tsx exists; defines NodeConfigForm @ line 10",
+      "resolved": "canvas/app/src/components/NodeConfigForm.tsx",
+      "line_content": null,
       "repair_target": null
     },
     {
@@ -168,9 +168,9 @@
       "candidates": [
         "ports"
       ],
-      "points_at": "doc_drift (def @ line 335, +14)",
+      "points_at": "voice_log (def @ line 342, +7)",
       "resolved": "runtime/suite.py",
-      "line_content": "}",
+      "line_content": "`data` carries turn_id (correlate to the server turn), ms, and event-specific fields.\"\"\"",
       "repair_target": null
     },
     {
@@ -212,50 +212,64 @@
         "set_config",
         "set_position"
       ],
-      "points_at": "file runtime/suite.py exists; defines set_config @ line 459",
+      "points_at": "file runtime/suite.py exists; defines set_config @ line 734",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
     },
     {
-      "ref": "canvas/app/src/App.tsx:DRAG_CONN",
-      "full_code": "canvas/app/src/App.tsx:DRAG_CONN",
+      "ref": "canvas/app/src/registryStore.ts:DRAG_CONN",
+      "full_code": "canvas/app/src/registryStore.ts:DRAG_CONN / canvas/app/src/NodeShape.tsx (drag-to-wire handlers)",
       "source": "register",
       "owner": "CAN-drag",
       "represents": "drag-to-connect port nubs",
       "candidates": [
         "drag"
       ],
-      "points_at": "file canvas/app/src/App.tsx exists; defines DRAG_CONN @ line 111",
-      "resolved": "canvas/app/src/App.tsx",
+      "points_at": "file canvas/app/src/registryStore.ts exists; defines DRAG_CONN @ line 50",
+      "resolved": "canvas/app/src/registryStore.ts",
       "line_content": null,
       "repair_target": null
     },
     {
-      "ref": "canvas/app/src/App.tsx:zoom",
-      "full_code": "canvas/app/src/App.tsx:zoom",
+      "ref": "canvas/app/src/NodeShape.tsx (drag-to-wire handlers)",
+      "full_code": "canvas/app/src/registryStore.ts:DRAG_CONN / canvas/app/src/NodeShape.tsx (drag-to-wire handlers)",
+      "source": "register",
+      "owner": "CAN-drag",
+      "represents": "drag-to-connect port nubs",
+      "candidates": [
+        "drag"
+      ],
+      "points_at": "file canvas/app/src/NodeShape.tsx exists (no line given)",
+      "resolved": "canvas/app/src/NodeShape.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/NodeShape.tsx:zoom",
+      "full_code": "canvas/app/src/NodeShape.tsx:zoom",
       "source": "register",
       "owner": "CAN-zoom",
       "represents": "semantic zoom",
       "candidates": [
         "zoom"
       ],
-      "points_at": "file canvas/app/src/App.tsx exists; defines zoom @ line 389",
-      "resolved": "canvas/app/src/App.tsx",
+      "points_at": "file canvas/app/src/NodeShape.tsx exists; defines zoom @ line 47",
+      "resolved": "canvas/app/src/NodeShape.tsx",
       "line_content": null,
       "repair_target": null
     },
     {
-      "ref": "canvas/app/src/App.tsx:cycleLayers",
-      "full_code": "canvas/app/src/App.tsx:cycleLayers",
+      "ref": "canvas/app/src/useAppController.ts:cycleLayers",
+      "full_code": "canvas/app/src/useAppController.ts:cycleLayers",
       "source": "register",
       "owner": "CAN-layers",
       "represents": "layer view all/origin/system",
       "candidates": [
         "layers"
       ],
-      "points_at": "file canvas/app/src/App.tsx exists; defines cycleLayers @ line 955",
-      "resolved": "canvas/app/src/App.tsx",
+      "points_at": "file canvas/app/src/useAppController.ts exists; defines cycleLayers @ line 828",
+      "resolved": "canvas/app/src/useAppController.ts",
       "line_content": null,
       "repair_target": null
     },
@@ -268,9 +282,9 @@
       "candidates": [
         "multigraph"
       ],
-      "points_at": "_acceptance_suites (def @ line 285, +0)",
+      "points_at": "_emit (def @ line 285, +0)",
       "resolved": "runtime/suite.py",
-      "line_content": "def _acceptance_suites(self) -> list:",
+      "line_content": "def _emit(self, kind: str, summary: str, **meta) -> None:",
       "repair_target": null
     },
     {
@@ -282,7 +296,7 @@
       "candidates": [
         "run"
       ],
-      "points_at": "file runtime/suite.py exists; defines run @ line 498",
+      "points_at": "file runtime/suite.py exists; defines run @ line 774",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -296,7 +310,7 @@
       "candidates": [
         "status"
       ],
-      "points_at": "file runtime/suite.py exists; defines session_status @ line 1907",
+      "points_at": "file runtime/suite.py exists; defines session_status @ line 4046",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -310,7 +324,7 @@
       "candidates": [
         "chat"
       ],
-      "points_at": "file runtime/suite.py exists; defines chat @ line 1339",
+      "points_at": "file runtime/suite.py exists; defines chat @ line 3347",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -324,7 +338,7 @@
       "candidates": [
         "verbs"
       ],
-      "points_at": "file runtime/suite.py exists (no line given)",
+      "points_at": "file runtime/suite.py exists; defines available_verbs @ line 2127",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -366,7 +380,7 @@
       "candidates": [
         "react"
       ],
-      "points_at": "file runtime/suite.py exists; defines react @ line 1439",
+      "points_at": "file runtime/suite.py exists; defines react @ line 3559",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -380,7 +394,7 @@
       "candidates": [
         "config"
       ],
-      "points_at": "file runtime/suite.py exists; defines set_config @ line 459",
+      "points_at": "file runtime/suite.py exists; defines set_config @ line 734",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -422,7 +436,7 @@
       "candidates": [
         "session"
       ],
-      "points_at": "file runtime/suite.py exists; defines _session_lock @ line 107",
+      "points_at": "file runtime/suite.py exists; defines _session_lock @ line 263",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -438,7 +452,7 @@
         "present_current",
         "ui_target"
       ],
-      "points_at": "file runtime/suite.py exists; defines present_current @ line 1818",
+      "points_at": "file runtime/suite.py exists; defines present_current @ line 3956",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -452,7 +466,7 @@
       "candidates": [
         "next"
       ],
-      "points_at": "file runtime/suite.py exists; defines next @ line 1866",
+      "points_at": "file runtime/suite.py exists; defines next @ line 4004",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -480,7 +494,7 @@
       "candidates": [
         "lanes"
       ],
-      "points_at": "file runtime/suite.py exists; defines inbox_lanes @ line 1642",
+      "points_at": "file runtime/suite.py exists; defines inbox_lanes @ line 3767",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -494,7 +508,35 @@
       "candidates": [
         "coa"
       ],
-      "points_at": "file runtime/suite.py exists; defines coa @ line 1667",
+      "points_at": "file runtime/suite.py exists; defines coa @ line 3792",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Inbox.tsx:Inbox",
+      "full_code": "canvas/app/src/regions/Inbox.tsx:Inbox / runtime/suite.py:surface_output",
+      "source": "register",
+      "owner": "INB-target",
+      "represents": "click-to-thing: a surfaced item carries its ui:// target; clicking navigates+spotlights in context",
+      "candidates": [
+        "target"
+      ],
+      "points_at": "file canvas/app/src/regions/Inbox.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Inbox.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:surface_output",
+      "full_code": "canvas/app/src/regions/Inbox.tsx:Inbox / runtime/suite.py:surface_output",
+      "source": "register",
+      "owner": "INB-target",
+      "represents": "click-to-thing: a surfaced item carries its ui:// target; clicking navigates+spotlights in context",
+      "candidates": [
+        "target"
+      ],
+      "points_at": "file runtime/suite.py exists; defines _registry_ui_target @ line 3935",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -508,7 +550,7 @@
       "candidates": [
         "surface"
       ],
-      "points_at": "file runtime/suite.py exists; defines surface_output @ line 1687",
+      "points_at": "file runtime/suite.py exists; defines surface_output @ line 3812",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -522,7 +564,7 @@
       "candidates": [
         "idea"
       ],
-      "points_at": "file runtime/suite.py exists; defines idea_capture @ line 1724",
+      "points_at": "file runtime/suite.py exists; defines idea_capture @ line 3861",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -536,7 +578,7 @@
       "candidates": [
         "resolve"
       ],
-      "points_at": "file runtime/suite.py exists; defines resolve_verdicts_since @ line 1944",
+      "points_at": "file runtime/suite.py exists; defines _resolve_context_at @ line 1957",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -550,7 +592,7 @@
       "candidates": [
         "replay"
       ],
-      "points_at": "file runtime/suite.py exists; defines replay @ line 3099",
+      "points_at": "file runtime/suite.py exists; defines replay @ line 6455",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -565,7 +607,7 @@
         "intent",
         "surface_build_intent"
       ],
-      "points_at": "file runtime/suite.py exists; defines surface_build_intent @ line 2020",
+      "points_at": "file runtime/suite.py exists; defines surface_build_intent @ line 4261",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -595,14 +637,14 @@
         "dispatch",
         "dispatch_decision"
       ],
-      "points_at": "file runtime/suite.py exists; defines dispatch_decision @ line 2260",
+      "points_at": "file runtime/suite.py exists; defines dispatch_decision @ line 4715",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
     },
     {
-      "ref": "App.tsx:252",
-      "full_code": "App.tsx:252",
+      "ref": "canvas/app/src/components/BuildIntentCard.tsx (build_result_review card)",
+      "full_code": "canvas/app/src/components/BuildIntentCard.tsx (build_result_review card) / runtime/suite.py:surface_review",
       "source": "register",
       "owner": "WIRE-review",
       "represents": "demonstrate-first build_result_review card",
@@ -610,37 +652,52 @@
         "review",
         "build_result_review"
       ],
-      "points_at": "outcome (def @ line 252, +0)",
-      "resolved": "canvas/app/src/App.tsx",
-      "line_content": "const outcome = deriveOutcome(d, liveTypes)",
+      "points_at": "file canvas/app/src/components/BuildIntentCard.tsx exists (no line given)",
+      "resolved": "canvas/app/src/components/BuildIntentCard.tsx",
+      "line_content": null,
       "repair_target": null
     },
     {
-      "ref": "suite.py:1713",
-      "full_code": "suite.py:1713 / implement.py:260",
+      "ref": "runtime/suite.py:surface_review",
+      "full_code": "canvas/app/src/components/BuildIntentCard.tsx (build_result_review card) / runtime/suite.py:surface_review",
       "source": "register",
-      "owner": "WIRE-states",
-      "represents": "failure/lifecycle states (verify-fail/scope-overrun/FORM-review/launch-fail/cap-deferred/crashed)",
+      "owner": "WIRE-review",
+      "represents": "demonstrate-first build_result_review card",
       "candidates": [
-        "states"
+        "review",
+        "build_result_review"
       ],
-      "points_at": "surface_review (def @ line 1710, +3)",
+      "points_at": "file runtime/suite.py exists; defines surface_review @ line 3846",
       "resolved": "runtime/suite.py",
-      "line_content": "Tim threw in). The item carries a SEPARATE `status` (starts 'inbox') so the walk-lifecycle never",
+      "line_content": null,
       "repair_target": null
     },
     {
-      "ref": "implement.py:260",
-      "full_code": "suite.py:1713 / implement.py:260",
+      "ref": "runtime/implement.py:resurface_crashed",
+      "full_code": "runtime/implement.py:resurface_crashed / runtime/implement.py:drive_dispatchable",
       "source": "register",
       "owner": "WIRE-states",
       "represents": "failure/lifecycle states (verify-fail/scope-overrun/FORM-review/launch-fail/cap-deferred/crashed)",
       "candidates": [
         "states"
       ],
-      "points_at": "resurface_crashed (def @ line 260, +0)",
+      "points_at": "file runtime/implement.py exists (no line given)",
       "resolved": "runtime/implement.py",
-      "line_content": "def resurface_crashed(suite) -> list[str]:",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/implement.py:drive_dispatchable",
+      "full_code": "runtime/implement.py:resurface_crashed / runtime/implement.py:drive_dispatchable",
+      "source": "register",
+      "owner": "WIRE-states",
+      "represents": "failure/lifecycle states (verify-fail/scope-overrun/FORM-review/launch-fail/cap-deferred/crashed)",
+      "candidates": [
+        "states"
+      ],
+      "points_at": "file runtime/implement.py exists (no line given)",
+      "resolved": "runtime/implement.py",
+      "line_content": null,
       "repair_target": null
     },
     {
@@ -652,7 +709,7 @@
       "candidates": [
         "node"
       ],
-      "points_at": "file runtime/suite.py exists; defines create_node @ line 408",
+      "points_at": "file runtime/suite.py exists; defines create_node @ line 680",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -666,7 +723,7 @@
       "candidates": [
         "panel"
       ],
-      "points_at": "file runtime/suite.py exists; defines propose_panel @ line 2843",
+      "points_at": "file runtime/suite.py exists; defines propose_panel @ line 5778",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -680,7 +737,7 @@
       "candidates": [
         "extension"
       ],
-      "points_at": "file runtime/suite.py exists; defines propose_extension @ line 2936",
+      "points_at": "file runtime/suite.py exists; defines propose_extension @ line 5873",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -694,7 +751,7 @@
       "candidates": [
         "revert"
       ],
-      "points_at": "file runtime/suite.py exists; defines _is_revert_subject @ line 2697",
+      "points_at": "file runtime/suite.py exists; defines _is_revert_subject @ line 5506",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -708,7 +765,7 @@
       "candidates": [
         "registry"
       ],
-      "points_at": "file runtime/suite.py exists; defines _registry_ui_target @ line 1797",
+      "points_at": "file runtime/suite.py exists; defines _registry_ui_target @ line 3935",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -756,17 +813,17 @@
       "repair_target": null
     },
     {
-      "ref": "App.tsx:1214",
-      "full_code": "voice/ + App.tsx:1214",
+      "ref": "canvas/app/src/useAppController.ts (speakReply/recordToggle listening loop)",
+      "full_code": "voice/ + canvas/app/src/useAppController.ts (speakReply/recordToggle listening loop)",
       "source": "register",
       "owner": "VOICE",
       "represents": "two-way voice (TTS Kokoro / STT) + listening loop",
       "candidates": [
         "VOICE"
       ],
-      "points_at": "recordToggle (def @ line 1212, +2)",
-      "resolved": "canvas/app/src/App.tsx",
-      "line_content": "try {",
+      "points_at": "file canvas/app/src/useAppController.ts exists; defines runVoiceTurn @ line 1224",
+      "resolved": "canvas/app/src/useAppController.ts",
+      "line_content": null,
       "repair_target": null
     },
     {
@@ -778,7 +835,7 @@
       "candidates": [
         "stream"
       ],
-      "points_at": "file runtime/bridge.py exists; defines _stream @ line 178",
+      "points_at": "file runtime/bridge.py exists; defines _stream @ line 323",
       "resolved": "runtime/bridge.py",
       "line_content": null,
       "repair_target": null
@@ -792,7 +849,7 @@
       "candidates": [
         "now"
       ],
-      "points_at": "file runtime/suite.py exists; defines now @ line 615",
+      "points_at": "file runtime/suite.py exists; defines now @ line 894",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -806,7 +863,7 @@
       "candidates": [
         "log"
       ],
-      "points_at": "file runtime/suite.py exists; defines self_change_log @ line 2765",
+      "points_at": "file runtime/suite.py exists; defines voice_log @ line 342",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -835,7 +892,7 @@
         "cap",
         "object_info"
       ],
-      "points_at": "file runtime/suite.py exists; defines object_info @ line 357",
+      "points_at": "file runtime/suite.py exists; defines object_info @ line 629",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -855,39 +912,39 @@
       "repair_target": null
     },
     {
-      "ref": "canvas/app/src/App.tsx (toolbar)",
-      "full_code": "canvas/app/src/App.tsx (toolbar)",
+      "ref": "canvas/app/src/regions/Toolbar.tsx (toolbar)",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (toolbar)",
       "source": "addresses",
       "owner": "ui://toolbar",
-      "represents": "F1",
+      "represents": "RUN-run",
       "candidates": [],
-      "points_at": "file canvas/app/src/App.tsx exists (no line given)",
-      "resolved": "canvas/app/src/App.tsx",
+      "points_at": "file canvas/app/src/regions/Toolbar.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Toolbar.tsx",
       "line_content": null,
       "repair_target": null
     },
     {
-      "ref": "runtime/bridge.py:184",
-      "full_code": "runtime/bridge.py:184 / App.tsx:1146",
+      "ref": "canvas/app/src/regions/Toolbar.tsx (run)",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (run) / runtime/suite.py:run",
       "source": "addresses",
       "owner": "ui://toolbar/run",
       "represents": "RUN-run",
       "candidates": [],
-      "points_at": "_stream (def @ line 178, +6)",
-      "resolved": "runtime/bridge.py",
-      "line_content": "since = q.get(\"since\")",
+      "points_at": "file canvas/app/src/regions/Toolbar.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Toolbar.tsx",
+      "line_content": null,
       "repair_target": null
     },
     {
-      "ref": "App.tsx:1146",
-      "full_code": "runtime/bridge.py:184 / App.tsx:1146",
+      "ref": "runtime/suite.py:run",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (run) / runtime/suite.py:run",
       "source": "addresses",
       "owner": "ui://toolbar/run",
       "represents": "RUN-run",
       "candidates": [],
-      "points_at": "doRun (def @ line 1145, +1)",
-      "resolved": "canvas/app/src/App.tsx",
-      "line_content": "setRunning(true); setRunError(null)",
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
       "repair_target": null
     },
     {
@@ -903,56 +960,56 @@
       "repair_target": null
     },
     {
-      "ref": "canvas/app/src/App.tsx:App",
-      "full_code": "canvas/app/src/App.tsx:App",
+      "ref": "canvas/app/src/regions/Palette.tsx (Palette)",
+      "full_code": "canvas/app/src/regions/Palette.tsx (Palette)",
       "source": "addresses",
       "owner": "ui://rail/palette",
-      "represents": "F3",
+      "represents": "NODE-types",
       "candidates": [],
-      "points_at": "file canvas/app/src/App.tsx exists (no line given)",
-      "resolved": "canvas/app/src/App.tsx",
+      "points_at": "file canvas/app/src/regions/Palette.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Palette.tsx",
       "line_content": null,
       "repair_target": null
     },
     {
-      "ref": "App.tsx NodeShapeUtil:124",
-      "full_code": "App.tsx NodeShapeUtil:124",
+      "ref": "canvas/app/src/NodeShape.tsx:NodeShapeUtil",
+      "full_code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil",
       "source": "addresses",
       "owner": "ui://canvas",
       "represents": "CAN-compose",
       "candidates": [],
-      "points_at": "resolveOptions (def @ line 122, +2)",
-      "resolved": "canvas/app/src/App.tsx",
-      "line_content": "if (Array.isArray(f.options)) return f.options",
+      "points_at": "file canvas/app/src/NodeShape.tsx exists (no line given)",
+      "resolved": "canvas/app/src/NodeShape.tsx",
+      "line_content": null,
       "repair_target": null
     },
     {
-      "ref": "App.tsx:124",
-      "full_code": "App.tsx:124 / suite.py:436",
+      "ref": "canvas/app/src/NodeShape.tsx:NodeShapeUtil",
+      "full_code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil / runtime/suite.py:create_node",
       "source": "addresses",
       "owner": "ui://canvas/node",
       "represents": "NODE-kinds",
       "candidates": [],
-      "points_at": "resolveOptions (def @ line 122, +2)",
-      "resolved": "canvas/app/src/App.tsx",
-      "line_content": "if (Array.isArray(f.options)) return f.options",
+      "points_at": "file canvas/app/src/NodeShape.tsx exists (no line given)",
+      "resolved": "canvas/app/src/NodeShape.tsx",
+      "line_content": null,
       "repair_target": null
     },
     {
-      "ref": "suite.py:436",
-      "full_code": "App.tsx:124 / suite.py:436",
+      "ref": "runtime/suite.py:create_node",
+      "full_code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil / runtime/suite.py:create_node",
       "source": "addresses",
       "owner": "ui://canvas/node",
       "represents": "NODE-kinds",
       "candidates": [],
-      "points_at": "connect (def @ line 429, +7)",
+      "points_at": "file runtime/suite.py exists (no line given)",
       "resolved": "runtime/suite.py",
-      "line_content": "raise KeyError(f\"connect: unknown node ({from_node!r} -> {to_node!r})\")",
+      "line_content": null,
       "repair_target": null
     },
     {
       "ref": "contracts/node_type.py",
-      "full_code": "contracts/node_type.py / App.tsx:447",
+      "full_code": "contracts/node_type.py / canvas/app/src/regions/Inspector.tsx (Inspector)",
       "source": "addresses",
       "owner": "ui://inspector",
       "represents": "NODE-config",
@@ -963,60 +1020,60 @@
       "repair_target": null
     },
     {
-      "ref": "App.tsx:447",
-      "full_code": "contracts/node_type.py / App.tsx:447",
+      "ref": "canvas/app/src/regions/Inspector.tsx (Inspector)",
+      "full_code": "contracts/node_type.py / canvas/app/src/regions/Inspector.tsx (Inspector)",
       "source": "addresses",
       "owner": "ui://inspector",
       "represents": "NODE-config",
       "candidates": [],
-      "points_at": "toPort (def @ line 435, +12)",
-      "resolved": "canvas/app/src/App.tsx",
-      "line_content": "<div className={`node-card ${p.status} layer-${p.layer}` + (isPortal ? ' portal' : '')}>",
+      "points_at": "file canvas/app/src/regions/Inspector.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Inspector.tsx",
+      "line_content": null,
       "repair_target": null
     },
     {
-      "ref": "runtime/suite.py:109",
-      "full_code": "runtime/suite.py:109 / App.tsx:134",
+      "ref": "canvas/app/src/components/NodeConfigForm.tsx:NodeConfigForm",
+      "full_code": "canvas/app/src/components/NodeConfigForm.tsx:NodeConfigForm / runtime/suite.py:available_models",
       "source": "addresses",
       "owner": "ui://inspector/model-field",
       "represents": "MOD-registry",
       "candidates": [
         "field"
       ],
-      "points_at": "_session_lock (def @ line 107, +2)",
+      "points_at": "file canvas/app/src/components/NodeConfigForm.tsx exists (no line given)",
+      "resolved": "canvas/app/src/components/NodeConfigForm.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:available_models",
+      "full_code": "canvas/app/src/components/NodeConfigForm.tsx:NodeConfigForm / runtime/suite.py:available_models",
+      "source": "addresses",
+      "owner": "ui://inspector/model-field",
+      "represents": "MOD-registry",
+      "candidates": [
+        "field"
+      ],
+      "points_at": "file runtime/suite.py exists (no line given)",
       "resolved": "runtime/suite.py",
-      "line_content": "import threading as _t",
+      "line_content": null,
       "repair_target": null
     },
     {
-      "ref": "App.tsx:134",
-      "full_code": "runtime/suite.py:109 / App.tsx:134",
-      "source": "addresses",
-      "owner": "ui://inspector/model-field",
-      "represents": "MOD-registry",
-      "candidates": [
-        "field"
-      ],
-      "points_at": "configSchemaToFields (def @ line 127, +7)",
-      "resolved": "canvas/app/src/App.tsx",
-      "line_content": "default: f.default,",
-      "repair_target": null
-    },
-    {
-      "ref": "canvas/app/src/App.tsx:doRun",
-      "full_code": "canvas/app/src/App.tsx:doRun / runtime/scheduler.py:run",
+      "ref": "canvas/app/src/regions/Inspector.tsx (act)",
+      "full_code": "canvas/app/src/regions/Inspector.tsx (act) / runtime/scheduler.py:run",
       "source": "addresses",
       "owner": "ui://inspector/act",
       "represents": "ENG-force",
       "candidates": [],
-      "points_at": "file canvas/app/src/App.tsx exists (no line given)",
-      "resolved": "canvas/app/src/App.tsx",
+      "points_at": "file canvas/app/src/regions/Inspector.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Inspector.tsx",
       "line_content": null,
       "repair_target": null
     },
     {
       "ref": "runtime/scheduler.py:run",
-      "full_code": "canvas/app/src/App.tsx:doRun / runtime/scheduler.py:run",
+      "full_code": "canvas/app/src/regions/Inspector.tsx (act) / runtime/scheduler.py:run",
       "source": "addresses",
       "owner": "ui://inspector/act",
       "represents": "ENG-force",
@@ -1047,8 +1104,78 @@
       "candidates": [
         "review"
       ],
-      "points_at": "file runtime/suite.py exists; defines surface_review @ line 1710",
+      "points_at": "file runtime/suite.py exists; defines surface_review @ line 3846",
       "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:surface_build_intent",
+      "full_code": "runtime/suite.py:surface_build_intent",
+      "source": "addresses",
+      "owner": "ui://inbox/build-intent",
+      "represents": "WIRE-intent",
+      "candidates": [
+        "intent"
+      ],
+      "points_at": "file runtime/suite.py exists; defines surface_build_intent @ line 4261",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:surface_build_intent (payload.context \u2014 the X3 R2 gather)",
+      "full_code": "runtime/suite.py:surface_build_intent (payload.context \u2014 the X3 R2 gather) / canvas/app/src/components/ContextBundle.tsx",
+      "source": "addresses",
+      "owner": "ui://inbox/context-bundle",
+      "represents": "WIRE-intent",
+      "candidates": [
+        "bundle"
+      ],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/components/ContextBundle.tsx",
+      "full_code": "runtime/suite.py:surface_build_intent (payload.context \u2014 the X3 R2 gather) / canvas/app/src/components/ContextBundle.tsx",
+      "source": "addresses",
+      "owner": "ui://inbox/context-bundle",
+      "represents": "WIRE-intent",
+      "candidates": [
+        "bundle"
+      ],
+      "points_at": "file canvas/app/src/components/ContextBundle.tsx exists; defines ContextBundle @ line 30",
+      "resolved": "canvas/app/src/components/ContextBundle.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:pin (X7 pin override)",
+      "full_code": "runtime/suite.py:pin (X7 pin override) / canvas/app/src/components/ContextBundle.tsx",
+      "source": "addresses",
+      "owner": "ui://inbox/context-pin",
+      "represents": "WIRE-intent",
+      "candidates": [
+        "pin"
+      ],
+      "points_at": "file runtime/suite.py exists; defines pin @ line 3135",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/components/ContextBundle.tsx",
+      "full_code": "runtime/suite.py:pin (X7 pin override) / canvas/app/src/components/ContextBundle.tsx",
+      "source": "addresses",
+      "owner": "ui://inbox/context-pin",
+      "represents": "WIRE-intent",
+      "candidates": [
+        "pin"
+      ],
+      "points_at": "file canvas/app/src/components/ContextBundle.tsx exists; defines togglePin @ line 45",
+      "resolved": "canvas/app/src/components/ContextBundle.tsx",
       "line_content": null,
       "repair_target": null
     },
@@ -1058,6 +1185,30 @@
       "source": "addresses",
       "owner": "ui://inbox/coa",
       "represents": "INB-coa",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Inbox.tsx (go to thing)",
+      "full_code": "canvas/app/src/regions/Inbox.tsx (go to thing) / runtime/suite.py:surface_output",
+      "source": "addresses",
+      "owner": "ui://inbox/target",
+      "represents": "INB-target",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Inbox.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Inbox.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:surface_output",
+      "full_code": "canvas/app/src/regions/Inbox.tsx (go to thing) / runtime/suite.py:surface_output",
+      "source": "addresses",
+      "owner": "ui://inbox/target",
+      "represents": "INB-target",
       "candidates": [],
       "points_at": "file runtime/suite.py exists (no line given)",
       "resolved": "runtime/suite.py",
@@ -1077,14 +1228,26 @@
       "repair_target": null
     },
     {
-      "ref": "App.tsx (chat input)",
-      "full_code": "App.tsx (chat input)",
+      "ref": "canvas/app/src/regions/RhmChat.tsx (chat input)",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (chat input) / runtime/suite.py:chat",
       "source": "addresses",
       "owner": "ui://chat/input",
       "represents": "RHM-chat",
       "candidates": [],
-      "points_at": "file canvas/app/src/App.tsx exists (no line given)",
-      "resolved": "canvas/app/src/App.tsx",
+      "points_at": "file canvas/app/src/regions/RhmChat.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/RhmChat.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:chat",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (chat input) / runtime/suite.py:chat",
+      "source": "addresses",
+      "owner": "ui://chat/input",
+      "represents": "RHM-chat",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
     },
@@ -1137,6 +1300,30 @@
       "repair_target": null
     },
     {
+      "ref": "canvas/app/src/app.css .tabbar (mobile nav \u2014 responsive chrome)",
+      "full_code": "canvas/app/src/app.css .tabbar (mobile nav \u2014 responsive chrome) / canvas/app/src/App.tsx (tabbar)",
+      "source": "addresses",
+      "owner": "ui://tabbar",
+      "represents": "CAN-compose",
+      "candidates": [],
+      "points_at": "file canvas/app/src/app.css exists (no line given)",
+      "resolved": "canvas/app/src/app.css",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/App.tsx (tabbar)",
+      "full_code": "canvas/app/src/app.css .tabbar (mobile nav \u2014 responsive chrome) / canvas/app/src/App.tsx (tabbar)",
+      "source": "addresses",
+      "owner": "ui://tabbar",
+      "represents": "CAN-compose",
+      "candidates": [],
+      "points_at": "file canvas/app/src/App.tsx exists (no line given)",
+      "resolved": "canvas/app/src/App.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
       "ref": "runtime/suite.py:available_models",
       "full_code": "runtime/suite.py:available_models",
       "source": "addresses",
@@ -1175,6 +1362,20 @@
       "repair_target": null
     },
     {
+      "ref": "runtime/suite.py:surface_intent_at",
+      "full_code": "runtime/suite.py:surface_intent_at",
+      "source": "addresses",
+      "owner": "ui://canvas/wire-request",
+      "represents": "WIRE-door",
+      "candidates": [
+        "request"
+      ],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
       "ref": "runtime/suite.py:revert_self_change",
       "full_code": "runtime/suite.py:revert_self_change",
       "source": "addresses",
@@ -1183,7 +1384,7 @@
       "candidates": [
         "changes"
       ],
-      "points_at": "file runtime/suite.py exists (no line given)",
+      "points_at": "file runtime/suite.py exists; defines self_changes_at @ line 5675",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -1194,6 +1395,976 @@
       "source": "addresses",
       "owner": "ui://activity/replay",
       "represents": "INB-replay",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Toolbar.tsx (wire)",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (wire) / runtime/suite.py:set_config",
+      "source": "addresses",
+      "owner": "ui://toolbar/wire",
+      "represents": "CAN-compose",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Toolbar.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Toolbar.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:set_config",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (wire) / runtime/suite.py:set_config",
+      "source": "addresses",
+      "owner": "ui://toolbar/wire",
+      "represents": "CAN-compose",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Toolbar.tsx (portal)",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (portal) / nodes/portal.py",
+      "source": "addresses",
+      "owner": "ui://toolbar/portal",
+      "represents": "NODE-portal",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Toolbar.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Toolbar.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "nodes/portal.py",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (portal) / nodes/portal.py",
+      "source": "addresses",
+      "owner": "ui://toolbar/portal",
+      "represents": "NODE-portal",
+      "candidates": [],
+      "points_at": "file nodes/portal.py exists (no line given)",
+      "resolved": "nodes/portal.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Toolbar.tsx (delete)",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (delete) / runtime/suite.py:set_config",
+      "source": "addresses",
+      "owner": "ui://toolbar/delete",
+      "represents": "CAN-compose",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Toolbar.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Toolbar.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:set_config",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (delete) / runtime/suite.py:set_config",
+      "source": "addresses",
+      "owner": "ui://toolbar/delete",
+      "represents": "CAN-compose",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Toolbar.tsx (layers)",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (layers) / canvas/app/src/useAppController.ts:cycleLayers",
+      "source": "addresses",
+      "owner": "ui://toolbar/layers",
+      "represents": "CAN-layers",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Toolbar.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Toolbar.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/useAppController.ts:cycleLayers",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (layers) / canvas/app/src/useAppController.ts:cycleLayers",
+      "source": "addresses",
+      "owner": "ui://toolbar/layers",
+      "represents": "CAN-layers",
+      "candidates": [],
+      "points_at": "file canvas/app/src/useAppController.ts exists (no line given)",
+      "resolved": "canvas/app/src/useAppController.ts",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Toolbar.tsx (fit)",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (fit) / canvas/app/src/useAppController.ts:fitGraph",
+      "source": "addresses",
+      "owner": "ui://toolbar/fit",
+      "represents": "CAN-zoom",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Toolbar.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Toolbar.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/useAppController.ts:fitGraph",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (fit) / canvas/app/src/useAppController.ts:fitGraph",
+      "source": "addresses",
+      "owner": "ui://toolbar/fit",
+      "represents": "CAN-zoom",
+      "candidates": [],
+      "points_at": "file canvas/app/src/useAppController.ts exists (no line given)",
+      "resolved": "canvas/app/src/useAppController.ts",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Toolbar.tsx (reload)",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (reload) / runtime/suite.py:state",
+      "source": "addresses",
+      "owner": "ui://toolbar/reload",
+      "represents": "RUN-status",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Toolbar.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Toolbar.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:state",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (reload) / runtime/suite.py:state",
+      "source": "addresses",
+      "owner": "ui://toolbar/reload",
+      "represents": "RUN-status",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Toolbar.tsx (\u25ce point)",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (\u25ce point) / useAppController.ts:toggleIndicateMode",
+      "source": "addresses",
+      "owner": "ui://toolbar/point",
+      "represents": "RHM-copresence",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Toolbar.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Toolbar.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "useAppController.ts:toggleIndicateMode",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (\u25ce point) / useAppController.ts:toggleIndicateMode",
+      "source": "addresses",
+      "owner": "ui://toolbar/point",
+      "represents": "RHM-copresence",
+      "candidates": [],
+      "points_at": "file canvas/app/src/useAppController.ts exists (no line given)",
+      "resolved": "canvas/app/src/useAppController.ts",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/RhmChat.tsx (send)",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (send) / runtime/suite.py:chat",
+      "source": "addresses",
+      "owner": "ui://chat/send",
+      "represents": "RHM-chat",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/RhmChat.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/RhmChat.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:chat",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (send) / runtime/suite.py:chat",
+      "source": "addresses",
+      "owner": "ui://chat/send",
+      "represents": "RHM-chat",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/RhmChat.tsx (mic)",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (mic) / voice/",
+      "source": "addresses",
+      "owner": "ui://chat/mic",
+      "represents": "VOICE",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/RhmChat.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/RhmChat.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/RhmChat.tsx (rhm-min toggle)",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (rhm-min toggle)",
+      "source": "addresses",
+      "owner": "ui://chat/minimize",
+      "represents": "RHM-chat",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/RhmChat.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/RhmChat.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/RhmChat.tsx (+ new)",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (+ new) / useAppController.ts:newConversation / runtime/suite.py:new_conversation",
+      "source": "addresses",
+      "owner": "ui://chat/new-conversation",
+      "represents": "RHM-chat",
+      "candidates": [
+        "conversation"
+      ],
+      "points_at": "file canvas/app/src/regions/RhmChat.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/RhmChat.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "useAppController.ts:newConversation",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (+ new) / useAppController.ts:newConversation / runtime/suite.py:new_conversation",
+      "source": "addresses",
+      "owner": "ui://chat/new-conversation",
+      "represents": "RHM-chat",
+      "candidates": [
+        "conversation"
+      ],
+      "points_at": "file canvas/app/src/useAppController.ts exists; defines newConversation @ line 1436",
+      "resolved": "canvas/app/src/useAppController.ts",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:new_conversation",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (+ new) / useAppController.ts:newConversation / runtime/suite.py:new_conversation",
+      "source": "addresses",
+      "owner": "ui://chat/new-conversation",
+      "represents": "RHM-chat",
+      "candidates": [
+        "conversation"
+      ],
+      "points_at": "file runtime/suite.py exists; defines new_conversation @ line 3314",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/RhmChat.tsx (thread select)",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (thread select) / useAppController.ts:openConversation / runtime/suite.py:load_conversation",
+      "source": "addresses",
+      "owner": "ui://chat/threads",
+      "represents": "RHM-chat",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/RhmChat.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/RhmChat.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "useAppController.ts:openConversation",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (thread select) / useAppController.ts:openConversation / runtime/suite.py:load_conversation",
+      "source": "addresses",
+      "owner": "ui://chat/threads",
+      "represents": "RHM-chat",
+      "candidates": [],
+      "points_at": "file canvas/app/src/useAppController.ts exists (no line given)",
+      "resolved": "canvas/app/src/useAppController.ts",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:load_conversation",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (thread select) / useAppController.ts:openConversation / runtime/suite.py:load_conversation",
+      "source": "addresses",
+      "owner": "ui://chat/threads",
+      "represents": "RHM-chat",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/RhmChat.tsx (record)",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (record) / useAppController.ts:toggleRecordConversation / runtime/suite.py:trial_record_turn",
+      "source": "addresses",
+      "owner": "ui://chat/record",
+      "represents": "VOICE",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/RhmChat.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/RhmChat.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "useAppController.ts:toggleRecordConversation",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (record) / useAppController.ts:toggleRecordConversation / runtime/suite.py:trial_record_turn",
+      "source": "addresses",
+      "owner": "ui://chat/record",
+      "represents": "VOICE",
+      "candidates": [],
+      "points_at": "file canvas/app/src/useAppController.ts exists (no line given)",
+      "resolved": "canvas/app/src/useAppController.ts",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:trial_record_turn",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (record) / useAppController.ts:toggleRecordConversation / runtime/suite.py:trial_record_turn",
+      "source": "addresses",
+      "owner": "ui://chat/record",
+      "represents": "VOICE",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/RhmChat.tsx (debrief)",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (debrief) / useAppController.ts:startDebriefSession / runtime/suite.py:start_debrief",
+      "source": "addresses",
+      "owner": "ui://chat/debrief",
+      "represents": "VOICE",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/RhmChat.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/RhmChat.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "useAppController.ts:startDebriefSession",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (debrief) / useAppController.ts:startDebriefSession / runtime/suite.py:start_debrief",
+      "source": "addresses",
+      "owner": "ui://chat/debrief",
+      "represents": "VOICE",
+      "candidates": [],
+      "points_at": "file canvas/app/src/useAppController.ts exists (no line given)",
+      "resolved": "canvas/app/src/useAppController.ts",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:start_debrief",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (debrief) / useAppController.ts:startDebriefSession / runtime/suite.py:start_debrief",
+      "source": "addresses",
+      "owner": "ui://chat/debrief",
+      "represents": "VOICE",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Inspector.tsx (open workshop)",
+      "full_code": "canvas/app/src/regions/Inspector.tsx (open workshop) / runtime/suite.py:ui_info",
+      "source": "addresses",
+      "owner": "ui://inspector/workshop",
+      "represents": "WS-workshop",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Inspector.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Inspector.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:ui_info",
+      "full_code": "canvas/app/src/regions/Inspector.tsx (open workshop) / runtime/suite.py:ui_info",
+      "source": "addresses",
+      "owner": "ui://inspector/workshop",
+      "represents": "WS-workshop",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Inspector.tsx (surface output)",
+      "full_code": "canvas/app/src/regions/Inspector.tsx (surface output) / runtime/suite.py:surface_review",
+      "source": "addresses",
+      "owner": "ui://inspector/surface",
+      "represents": "INB-surface",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Inspector.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Inspector.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:surface_review",
+      "full_code": "canvas/app/src/regions/Inspector.tsx (surface output) / runtime/suite.py:surface_review",
+      "source": "addresses",
+      "owner": "ui://inspector/surface",
+      "represents": "INB-surface",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Inspector.tsx (build from output)",
+      "full_code": "canvas/app/src/regions/Inspector.tsx (build from output) / runtime/suite.py:apply_node",
+      "source": "addresses",
+      "owner": "ui://inspector/build",
+      "represents": "SM-node",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Inspector.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Inspector.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:apply_node",
+      "full_code": "canvas/app/src/regions/Inspector.tsx (build from output) / runtime/suite.py:apply_node",
+      "source": "addresses",
+      "owner": "ui://inspector/build",
+      "represents": "SM-node",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/History.tsx (L3 addressed history)",
+      "full_code": "canvas/app/src/regions/History.tsx (L3 addressed history) / runtime/suite.py:address_view",
+      "source": "addresses",
+      "owner": "ui://inspector/history",
+      "represents": "INB-replay",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/History.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/History.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:address_view",
+      "full_code": "canvas/app/src/regions/History.tsx (L3 addressed history) / runtime/suite.py:address_view",
+      "source": "addresses",
+      "owner": "ui://inspector/history",
+      "represents": "INB-replay",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Versions.tsx (L6 versions at an address)",
+      "full_code": "canvas/app/src/regions/Versions.tsx (L6 versions at an address) / runtime/suite.py:ref_versions / store/fs_store.py:ref_history",
+      "source": "addresses",
+      "owner": "ui://inspector/versions",
+      "represents": "NODE-portal",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Versions.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Versions.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:ref_versions",
+      "full_code": "canvas/app/src/regions/Versions.tsx (L6 versions at an address) / runtime/suite.py:ref_versions / store/fs_store.py:ref_history",
+      "source": "addresses",
+      "owner": "ui://inspector/versions",
+      "represents": "NODE-portal",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "store/fs_store.py:ref_history",
+      "full_code": "canvas/app/src/regions/Versions.tsx (L6 versions at an address) / runtime/suite.py:ref_versions / store/fs_store.py:ref_history",
+      "source": "addresses",
+      "owner": "ui://inspector/versions",
+      "represents": "NODE-portal",
+      "candidates": [],
+      "points_at": "file store/fs_store.py exists (no line given)",
+      "resolved": "store/fs_store.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Inspector.tsx (L10 memo stale badge)",
+      "full_code": "canvas/app/src/regions/Inspector.tsx (L10 memo stale badge) / runtime/suite.py:stale_at_address",
+      "source": "addresses",
+      "owner": "ui://inspector/freshness",
+      "represents": "ENG-memo",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Inspector.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Inspector.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:stale_at_address",
+      "full_code": "canvas/app/src/regions/Inspector.tsx (L10 memo stale badge) / runtime/suite.py:stale_at_address",
+      "source": "addresses",
+      "owner": "ui://inspector/freshness",
+      "represents": "ENG-memo",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Grow.tsx",
+      "full_code": "canvas/app/src/regions/Grow.tsx / runtime/suite.py:apply_node",
+      "source": "addresses",
+      "owner": "ui://grow",
+      "represents": "SM-node",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Grow.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Grow.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:apply_node",
+      "full_code": "canvas/app/src/regions/Grow.tsx / runtime/suite.py:apply_node",
+      "source": "addresses",
+      "owner": "ui://grow",
+      "represents": "SM-node",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Grow.tsx (dispatch build)",
+      "full_code": "canvas/app/src/regions/Grow.tsx (dispatch build) / runtime/suite.py:apply_node",
+      "source": "addresses",
+      "owner": "ui://grow/dispatch",
+      "represents": "SM-node",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Grow.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Grow.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:apply_node",
+      "full_code": "canvas/app/src/regions/Grow.tsx (dispatch build) / runtime/suite.py:apply_node",
+      "source": "addresses",
+      "owner": "ui://grow/dispatch",
+      "represents": "SM-node",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Grow.tsx (approve & apply)",
+      "full_code": "canvas/app/src/regions/Grow.tsx (approve & apply) / runtime/governance.py:resolve",
+      "source": "addresses",
+      "owner": "ui://grow/approve",
+      "represents": "GOV-resolve",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Grow.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Grow.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/governance.py:resolve",
+      "full_code": "canvas/app/src/regions/Grow.tsx (approve & apply) / runtime/governance.py:resolve",
+      "source": "addresses",
+      "owner": "ui://grow/approve",
+      "represents": "GOV-resolve",
+      "candidates": [],
+      "points_at": "file runtime/governance.py exists (no line given)",
+      "resolved": "runtime/governance.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Grow.tsx (reject)",
+      "full_code": "canvas/app/src/regions/Grow.tsx (reject) / runtime/suite.py:resolve_surfaced",
+      "source": "addresses",
+      "owner": "ui://grow/reject",
+      "represents": "INB-resolve",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Grow.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Grow.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:resolve_surfaced",
+      "full_code": "canvas/app/src/regions/Grow.tsx (reject) / runtime/suite.py:resolve_surfaced",
+      "source": "addresses",
+      "owner": "ui://grow/reject",
+      "represents": "INB-resolve",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Walkthrough.tsx (voice/text toggle)",
+      "full_code": "canvas/app/src/regions/Walkthrough.tsx (voice/text toggle) / voice/",
+      "source": "addresses",
+      "owner": "ui://walkthrough/voice",
+      "represents": "VOICE",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Walkthrough.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Walkthrough.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Walkthrough.tsx (next)",
+      "full_code": "canvas/app/src/regions/Walkthrough.tsx (next) / runtime/suite.py:next",
+      "source": "addresses",
+      "owner": "ui://walkthrough/next",
+      "represents": "WALK-next",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Walkthrough.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Walkthrough.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:next",
+      "full_code": "canvas/app/src/regions/Walkthrough.tsx (next) / runtime/suite.py:next",
+      "source": "addresses",
+      "owner": "ui://walkthrough/next",
+      "represents": "WALK-next",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Walkthrough.tsx (reason)",
+      "full_code": "canvas/app/src/regions/Walkthrough.tsx (reason) / runtime/suite.py:resolve_surfaced",
+      "source": "addresses",
+      "owner": "ui://walkthrough/reason",
+      "represents": "INB-resolve",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Walkthrough.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Walkthrough.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:resolve_surfaced",
+      "full_code": "canvas/app/src/regions/Walkthrough.tsx (reason) / runtime/suite.py:resolve_surfaced",
+      "source": "addresses",
+      "owner": "ui://walkthrough/reason",
+      "represents": "INB-resolve",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Walkthrough.tsx (show again)",
+      "full_code": "canvas/app/src/regions/Walkthrough.tsx (show again) / runtime/suite.py:_registry_ui_target",
+      "source": "addresses",
+      "owner": "ui://walkthrough/show-again",
+      "represents": "WALK-uiresolve",
+      "candidates": [
+        "again"
+      ],
+      "points_at": "file canvas/app/src/regions/Walkthrough.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Walkthrough.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:_registry_ui_target",
+      "full_code": "canvas/app/src/regions/Walkthrough.tsx (show again) / runtime/suite.py:_registry_ui_target",
+      "source": "addresses",
+      "owner": "ui://walkthrough/show-again",
+      "represents": "WALK-uiresolve",
+      "candidates": [
+        "again"
+      ],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Inbox.tsx (walk these)",
+      "full_code": "canvas/app/src/regions/Inbox.tsx (walk these) / runtime/suite.py:present_current",
+      "source": "addresses",
+      "owner": "ui://inbox/walk",
+      "represents": "WALK-present",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Inbox.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Inbox.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:present_current",
+      "full_code": "canvas/app/src/regions/Inbox.tsx (walk these) / runtime/suite.py:present_current",
+      "source": "addresses",
+      "owner": "ui://inbox/walk",
+      "represents": "WALK-present",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Toolbar.tsx (guide)",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (guide) / runtime/suite.py:start_guide",
+      "source": "addresses",
+      "owner": "ui://toolbar/guide",
+      "represents": "WALK-present",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Toolbar.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Toolbar.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:start_guide",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (guide) / runtime/suite.py:start_guide",
+      "source": "addresses",
+      "owner": "ui://toolbar/guide",
+      "represents": "WALK-present",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Toolbar.tsx (teach)",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (teach) / runtime/suite.py:start_guide",
+      "source": "addresses",
+      "owner": "ui://toolbar/teach",
+      "represents": "WALK-present",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Toolbar.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Toolbar.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:start_guide",
+      "full_code": "canvas/app/src/regions/Toolbar.tsx (teach) / runtime/suite.py:start_guide",
+      "source": "addresses",
+      "owner": "ui://toolbar/teach",
+      "represents": "WALK-present",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:address_help",
+      "full_code": "canvas/app/src/regions/AddressHelp.tsx (AddressHelp) / runtime/suite.py:address_help",
+      "source": "addresses",
+      "owner": "ui://inspector/help",
+      "represents": "WALK-uiresolve",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Settings.tsx (Settings)",
+      "full_code": "canvas/app/src/regions/Settings.tsx (Settings) / runtime/suite.py:set_rhm_config",
+      "source": "addresses",
+      "owner": "ui://settings",
+      "represents": "RHM-config",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Settings.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Settings.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:set_rhm_config",
+      "full_code": "canvas/app/src/regions/Settings.tsx (Settings) / runtime/suite.py:set_rhm_config",
+      "source": "addresses",
+      "owner": "ui://settings",
+      "represents": "RHM-config",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Settings.tsx (\u2715 close)",
+      "full_code": "canvas/app/src/regions/Settings.tsx (\u2715 close) / useAppController.ts:setSettingsOpen",
+      "source": "addresses",
+      "owner": "ui://settings/close",
+      "represents": "RHM-config",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Settings.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Settings.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "useAppController.ts:setSettingsOpen",
+      "full_code": "canvas/app/src/regions/Settings.tsx (\u2715 close) / useAppController.ts:setSettingsOpen",
+      "source": "addresses",
+      "owner": "ui://settings/close",
+      "represents": "RHM-config",
+      "candidates": [],
+      "points_at": "file canvas/app/src/useAppController.ts exists (no line given)",
+      "resolved": "canvas/app/src/useAppController.ts",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Settings.tsx (brain)",
+      "full_code": "canvas/app/src/regions/Settings.tsx (brain) / runtime/suite.py:set_rhm_config",
+      "source": "addresses",
+      "owner": "ui://settings/brain",
+      "represents": "RHM-config",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Settings.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Settings.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:set_rhm_config",
+      "full_code": "canvas/app/src/regions/Settings.tsx (brain) / runtime/suite.py:set_rhm_config",
+      "source": "addresses",
+      "owner": "ui://settings/brain",
+      "represents": "RHM-config",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Settings.tsx (modes)",
+      "full_code": "canvas/app/src/regions/Settings.tsx (modes) / runtime/suite.py:set_rhm_config",
+      "source": "addresses",
+      "owner": "ui://settings/modes",
+      "represents": "RHM-modes",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Settings.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Settings.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:set_rhm_config",
+      "full_code": "canvas/app/src/regions/Settings.tsx (modes) / runtime/suite.py:set_rhm_config",
+      "source": "addresses",
+      "owner": "ui://settings/modes",
+      "represents": "RHM-modes",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Settings.tsx (voice)",
+      "full_code": "canvas/app/src/regions/Settings.tsx (voice) / useAppController.ts:setVoiceInputMode / runtime/suite.py:set_rhm_config",
+      "source": "addresses",
+      "owner": "ui://settings/voice",
+      "represents": "VOICE",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Settings.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Settings.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "useAppController.ts:setVoiceInputMode",
+      "full_code": "canvas/app/src/regions/Settings.tsx (voice) / useAppController.ts:setVoiceInputMode / runtime/suite.py:set_rhm_config",
+      "source": "addresses",
+      "owner": "ui://settings/voice",
+      "represents": "VOICE",
+      "candidates": [],
+      "points_at": "file canvas/app/src/useAppController.ts exists (no line given)",
+      "resolved": "canvas/app/src/useAppController.ts",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:set_rhm_config",
+      "full_code": "canvas/app/src/regions/Settings.tsx (voice) / useAppController.ts:setVoiceInputMode / runtime/suite.py:set_rhm_config",
+      "source": "addresses",
+      "owner": "ui://settings/voice",
+      "represents": "VOICE",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Settings.tsx (roles)",
+      "full_code": "canvas/app/src/regions/Settings.tsx (roles) / runtime/suite.py:set_rhm_config",
+      "source": "addresses",
+      "owner": "ui://settings/roles",
+      "represents": "RHM-config",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Settings.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Settings.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:set_rhm_config",
+      "full_code": "canvas/app/src/regions/Settings.tsx (roles) / runtime/suite.py:set_rhm_config",
+      "source": "addresses",
+      "owner": "ui://settings/roles",
+      "represents": "RHM-config",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Settings.tsx (composition)",
+      "full_code": "canvas/app/src/regions/Settings.tsx (composition) / runtime/suite.py:set_rhm_config",
+      "source": "addresses",
+      "owner": "ui://settings/composition",
+      "represents": "RHM-config",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Settings.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Settings.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:set_rhm_config",
+      "full_code": "canvas/app/src/regions/Settings.tsx (composition) / runtime/suite.py:set_rhm_config",
+      "source": "addresses",
+      "owner": "ui://settings/composition",
+      "represents": "RHM-config",
       "candidates": [],
       "points_at": "file runtime/suite.py exists (no line given)",
       "resolved": "runtime/suite.py",
@@ -1219,7 +2390,7 @@
     },
     {
       "ref": "voice/",
-      "full_code": "voice/ + App.tsx:1214",
+      "full_code": "voice/ + canvas/app/src/useAppController.ts (speakReply/recordToggle listening loop)",
       "source": "register",
       "owner": "VOICE",
       "represents": "two-way voice (TTS Kokoro / STT) + listening loop",
@@ -1232,22 +2403,46 @@
       "repair_target": null
     },
     {
-      "ref": "design-system.css .tabbar (mobile nav)",
-      "full_code": "design-system.css .tabbar (mobile nav)",
+      "ref": "voice/",
+      "full_code": "canvas/app/src/regions/RhmChat.tsx (mic) / voice/",
       "source": "addresses",
-      "owner": "ui://tabbar",
-      "represents": "G2",
+      "owner": "ui://chat/mic",
+      "represents": "VOICE",
       "candidates": [],
-      "points_at": "file 'design-system.css' not found under ~/company code dirs",
+      "points_at": "unrecognised form (glob/dir/no file:line): 'voice/'",
+      "resolved": null,
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "voice/",
+      "full_code": "canvas/app/src/regions/Walkthrough.tsx (voice/text toggle) / voice/",
+      "source": "addresses",
+      "owner": "ui://walkthrough/voice",
+      "represents": "VOICE",
+      "candidates": [],
+      "points_at": "unrecognised form (glob/dir/no file:line): 'voice/'",
+      "resolved": null,
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/AddressHelp.tsx (AddressHelp)",
+      "full_code": "canvas/app/src/regions/AddressHelp.tsx (AddressHelp) / runtime/suite.py:address_help",
+      "source": "addresses",
+      "owner": "ui://inspector/help",
+      "represents": "WALK-uiresolve",
+      "candidates": [],
+      "points_at": "file 'canvas/app/src/regions/AddressHelp.tsx' not found under ~/company code dirs",
       "resolved": null,
       "line_content": null,
       "repair_target": null
     }
   ],
   "summary": {
-    "checked": 91,
-    "ok": 88,
+    "checked": 188,
+    "ok": 183,
     "drift": 0,
-    "unverifiable": 3
+    "unverifiable": 5
   }
 }

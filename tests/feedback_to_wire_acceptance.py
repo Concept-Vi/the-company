@@ -31,10 +31,12 @@ This suite proves (RED first, then GREEN):
   6. REACHABLE FROM A FACE — a bridge POST route mints "turn this comment into a build-intent",
      mirroring /api/build-intent; approval stays on the EXISTING operator-only /api/resolve.
 
-FIXTURES: reuse L5's verified REAL-corpus addresses so we test the live corpus, not invented ones:
-  ui://chat/input            → ['canvas/app/src/App.tsx']   (resolves — happy path)
-  ui://workshop/self-changes → ['runtime/suite.py']         (resolves — second clean scope)
-  ui://nonexistent/thing     → []                           (orphan — DENY-ALL)
+FIXTURES: reuse verified REAL-corpus addresses so we test the live corpus, not invented ones.
+POST-App.tsx-carve, the chat input's code home moved out of the App monolith into the carved chat
+region (regions/RhmChat.tsx) + the suite chat handler (suite.chat):
+  ui://chat/input            → ['canvas/app/src/regions/RhmChat.tsx','runtime/suite.py']  (resolves — happy path)
+  ui://workshop/self-changes → ['runtime/suite.py']                                       (resolves — second clean scope)
+  ui://nonexistent/thing     → []                                                         (orphan — DENY-ALL)
 
 Run: /home/tim/company/.venv/bin/python tests/feedback_to_wire_acceptance.py
 """
@@ -64,14 +66,15 @@ store = FsStore(os.path.join(tempfile.mkdtemp(prefix="l1-"), "store"))
 reg = NodeRegistry(); reg.discover([NODES])
 suite = Suite(store, reg, nodes_dir=NODES)
 
-# REAL corpus addresses (verified live in L5's suite) — the join leans on the regenerated corpus.
-CHATIN = "ui://chat/input"                 # → ['canvas/app/src/App.tsx']
+# REAL corpus addresses (verified live) — the join leans on the regenerated corpus.
+# POST-App.tsx-carve: ui://chat/input lives in regions/RhmChat.tsx + suite.chat (not the pre-carve App.tsx).
+CHATIN = "ui://chat/input"                 # → ['canvas/app/src/regions/RhmChat.tsx','runtime/suite.py']
 WORKSHOP = "ui://workshop/self-changes"    # → ['runtime/suite.py']
 ORPHAN = "ui://nonexistent/thing"          # → [] (DENY-ALL)
 
 # sanity: the corpus resolver gives the scopes the join leans on (else the fixtures are wrong, not L1)
-check(f"{CHATIN} resolves to canvas/app/src/App.tsx (S3, real corpus)",
-      suite.resolve_scope(CHATIN)["scope"] == ["canvas/app/src/App.tsx"])
+check(f"{CHATIN} resolves to regions/RhmChat.tsx + suite.py (S3, real corpus — post-App.tsx-carve)",
+      suite.resolve_scope(CHATIN)["scope"] == ["canvas/app/src/regions/RhmChat.tsx", "runtime/suite.py"])
 check(f"{WORKSHOP} resolves to runtime/suite.py (S3, real corpus)",
       suite.resolve_scope(WORKSHOP)["scope"] == ["runtime/suite.py"])
 check(f"{ORPHAN} resolves to empty scope (S3 orphan → DENY-ALL)",
@@ -86,9 +89,10 @@ check("the surfaced item IS a build-intent (intent='build')", Suite.is_build_int
 check("the build-intent is a LIVE ESCALATION (resolved=None until the operator resolves)",
       d.get("resolved") is None)
 # THE one load-bearing property — the scope carried == S3's resolved scope (no fabrication, exactly the join)
+# Post-App.tsx-carve the resolved scope is regions/RhmChat.tsx + suite.py (not the pre-carve App.tsx).
 expected_scope = suite.resolve_scope(CHATIN)["scope"]
 check(f"the surfaced intent's scope == resolve_scope({CHATIN}) ({expected_scope}) — no fabrication",
-      (d["payload"].get("scope") or []) == expected_scope == ["canvas/app/src/App.tsx"])
+      (d["payload"].get("scope") or []) == expected_scope == ["canvas/app/src/regions/RhmChat.tsx", "runtime/suite.py"])
 check("the comment text is carried into the build-intent spec (the comment drives the build)",
       "tone it down" in (d["payload"].get("spec") or "") or "too loud" in (d["payload"].get("spec") or ""))
 check("the address is carried as the 'why' (legible consent: build derives from this address+comment)",

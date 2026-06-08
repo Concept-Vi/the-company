@@ -80,6 +80,11 @@ def fresh_sandbox():
     store = FsStore(os.path.join(base, "store"))
     reg = NodeRegistry(); reg.discover([nodes])
     s = Suite(store, reg, nodes_dir=nodes)
+    # NEUTRALIZE the wire's git CHECKPOINT: the sandbox `base` is NOT a git repo, so the real
+    # default `_self_build_commit` (git commit in `base`) would fail → the build would not close.
+    # A no-op fake-sha override lets the accepted-build path close in the throwaway sandbox exactly as
+    # before the checkpoint was added (the checkpoint mechanism is proven in wire_commit_acceptance.py).
+    s._self_build_commit = lambda paths, msg: "0" * 40
     return s, base, nodes
 
 

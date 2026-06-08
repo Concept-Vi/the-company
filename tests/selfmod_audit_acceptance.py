@@ -166,7 +166,55 @@ try:
     check("#3: HEAD is unchanged (the failed revert created no commit)",
           git(repo, "rev-parse", "HEAD") == head_before)
 
+    # ========== CHECKPOINT STREAM: the operator-initiated THIRD reversible stream ==========
+    # `checkpoint(paths, label)` mints a `[checkpoint]` commit of EXACTLY the named paths — a third
+    # reversible stream beside [self-apply] + [self-build]. It must be VISIBLE in the SAME ledger
+    # (stream-tagged 'checkpoint') and undone through the SAME prefix-agnostic revert_self_change — no
+    # parallel git path, no parallel ledger. Path-scoped (rule 10: parallel sessions on main) with
+    # three fail-loud guards. Placed LAST so its commits don't perturb the gamma-is-tip assertions above.
+    cp_file = os.path.join(nodes, "checkpoint_target.py")
+    open(cp_file, "w").write(_node_code("checkpoint-target"))    # a working-tree change, not yet committed
+    cp = suite.checkpoint(["nodes/checkpoint_target.py"], "before experiment")
+    check("checkpoint returns a sha tagged the 'checkpoint' stream",
+          bool(cp.get("sha")) and cp.get("stream") == "checkpoint")
+    cp_subj = git(repo, "log", "-1", "--format=%s")
+    check("the checkpoint commit subject is prefixed [checkpoint]", cp_subj.startswith("[checkpoint] "))
+    log_cp = suite.self_change_log(limit=20)
+    cp_rec = next((e for e in log_cp if e["sha"] == cp["sha"]), None)
+    check("the checkpoint appears in the SAME audit ledger (not a parallel log)", cp_rec is not None)
+    check("the checkpoint record is stream-tagged 'checkpoint'", cp_rec and cp_rec.get("stream") == "checkpoint")
+    check("the checkpoint record names the file it checkpointed (changed_files)",
+          cp_rec and any("checkpoint_target.py" in f for f in cp_rec["changed_files"]))
+    lsc_cp = suite.last_self_change() or {}
+    check("last_self_change returns the checkpoint as the newest still-standing change (any stream)",
+          lsc_cp.get("sha") == cp["sha"])
+    check("last_self_change carries the stream tag", lsc_cp.get("stream") == "checkpoint")
+
+    # fail-loud guards — a checkpoint that is unsafe (whole-tree / escaping) or empty (commits nothing) RAISES
+    def _refused(fn):
+        try:
+            fn(); return False
+        except Exception:
+            return True
+    check("checkpoint REFUSES a whole-tree/empty path-set (rule 10 footgun: would sweep a parallel session)",
+          _refused(lambda: suite.checkpoint([], "nope")))
+    check("checkpoint REFUSES a path escaping the repo root (rule 8: a wrong scope is a wrong checkpoint)",
+          _refused(lambda: suite.checkpoint(["../outside.py"], "nope")))
+    check("checkpoint REFUSES an empty delta — committing nothing is not a restore point (rule 4)",
+          _refused(lambda: suite.checkpoint(["nodes/seed.py"], "no changes here")))   # seed.py unchanged
+
+    # REVERT the checkpoint through the SAME operator path → the revert-recursion guard, GENERALIZED to
+    # the new stream: the reverted checkpoint must drop out of last_self_change (no 'revert the revert').
+    suite.revert_self_change(cp["sha"])
+    cp_revert_subj = git(repo, "log", "-1", "--format=%s")
+    check("the checkpoint reverts via the SAME revert_self_change (subject Revert \"[checkpoint] ...\")",
+          cp_revert_subj.startswith('Revert "[checkpoint]'))
+    lsc_after = suite.last_self_change() or {}
+    check("after revert, last_self_change EXCLUDES the reverted checkpoint (generalized revert-recursion)",
+          lsc_after.get("sha") != cp["sha"] and not lsc_after.get("subject", "").startswith('Revert "'))
+
     print(f"\nALL {PASS} CHECKS PASS — audit ledger + changed_files; revert-a-revert distinguished; "
-          "conflicting non-tip revert fail-loud + repo clean")
+          "conflicting non-tip revert fail-loud + repo clean; operator [checkpoint] stream "
+          "(mint → same ledger → same revert, fail-loud guards)")
 finally:
     shutil.rmtree(work, ignore_errors=True)

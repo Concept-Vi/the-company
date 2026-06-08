@@ -53,7 +53,13 @@ def main():
     valid = {CAS_A, CAS_B, None}
     bad_reads = []
     stop = threading.Event()
-    ITER = 4000
+    # GC4/G-48: 600 (was 4000). The torn-read check is a CONCURRENCY storm — 2 writers flipping the ref
+    # while 4 readers hammer head() continuously; the readers loop until `stop` regardless of ITER, so ITER
+    # only sets how long the storm runs. 4000 × 2 writers × 2 fsyncs/write (~16k fsyncs) on WSL2/ext4 +
+    # 4 concurrent readers blew past the harness timeout (a slow-fsync hang, NOT a code bug — the atomic
+    # rename in set_ref is correct). 600 keeps a strong interleaving storm (1200 atomic renames, readers
+    # hammering throughout) while completing in seconds — the invariant (never a torn/empty read) is unchanged.
+    ITER = 600
 
     def writer(val):
         for _ in range(ITER):

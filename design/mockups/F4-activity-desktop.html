@@ -51,8 +51,8 @@
 .brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:18px;letter-spacing:-.3px}
 .brand em{font-style:normal;color:var(--acc)}
 .brand .tag{font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:8px}
-.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--line-2);border-radius:99px;background:var(--s2);font-size:12px;color:var(--tx-2)}
-.presence .dot{width:7px;height:7px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--line-2);border-radius:var(--r-pill);background:var(--s2);font-size:12px;color:var(--tx-2)}
+.presence .dot{width:7px;height:7px;border-radius:var(--r-pill);background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
 .verbs{margin-left:auto;display:flex;gap:7px}
 
 .rail{grid-area:rail;background:var(--s0);border-right:1px solid var(--line);padding:14px 12px;overflow:auto}
@@ -78,18 +78,18 @@
 .streamhd{display:flex;align-items:center;gap:10px;margin:0 2px 11px}
 .streamhd .ttl{font-family:'Bricolage Grotesque';font-weight:700;font-size:15px}
 .streamhd .live{font-family:'IBM Plex Mono';font-size:10.5px;color:var(--acc);display:inline-flex;align-items:center;gap:6px}
-.streamhd .live i{width:6px;height:6px;border-radius:99px;background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
+.streamhd .live i{width:6px;height:6px;border-radius:var(--r-pill);background:var(--acc);box-shadow:0 0 0 3px var(--acc-glow)}
 .streamhd .cursor{margin-left:auto;font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3)}
 
 .log{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--s0);overflow:hidden}
 .ev{display:flex;align-items:flex-start;gap:11px;padding:9px 13px;border-bottom:1px solid var(--line);font-size:12px}
 .ev:last-child{border-bottom:none}
 .ev .seq{font-family:'IBM Plex Mono';font-size:9.5px;color:var(--tx-3);min-width:34px;text-align:right;padding-top:2px}
-.ev .kdot{width:8px;height:8px;border-radius:99px;margin-top:4px;flex:none;background:var(--tx-3)}
+.ev .kdot{width:8px;height:8px;border-radius:var(--r-pill);margin-top:4px;flex:none;background:var(--tx-3)}
 .ev .kind{font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-2);background:var(--s2);border:1px solid var(--line);border-radius:5px;padding:1px 7px;flex:none;align-self:flex-start}
 .ev .sum{color:var(--tx-2);line-height:1.45}
 .ev .sum b{color:var(--tx);font-weight:500}
-.ev .face{margin-left:auto;font-family:'IBM Plex Mono';font-size:8.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--tx-3);border:1px solid var(--line);border-radius:99px;padding:1px 7px;flex:none;align-self:flex-start}
+.ev .face{margin-left:auto;font-family:'IBM Plex Mono';font-size:8.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--tx-3);border:1px solid var(--line);border-radius:var(--r-pill);padding:1px 7px;flex:none;align-self:flex-start}
 /* kind families → the colour the dot carries (kind accents, NOT node statuses) */
 .ev.k-run .kdot,.ev.k-create .kdot,.ev.k-connect .kdot,.ev.k-config .kdot,.ev.k-move .kdot{background:var(--kind-process)}
 .ev.k-ask .kdot,.ev.k-chat .kdot{background:var(--kind-content)}
@@ -107,7 +107,7 @@
 .panel .tab.on{color:var(--tx);border-bottom-color:var(--acc)}
 .panel .legend{font-size:10px;color:var(--tx-3);line-height:1.7}
 .panel .legend .row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
-.panel .legend .d{width:8px;height:8px;border-radius:99px;flex:none}
+.panel .legend .d{width:8px;height:8px;border-radius:var(--r-pill);flex:none}
 .panel h5{font-family:'IBM Plex Mono';font-size:9.5px;text-transform:uppercase;letter-spacing:1px;color:var(--tx-3);margin:14px 0 8px}
 </style></head>
 <body><div class="app">

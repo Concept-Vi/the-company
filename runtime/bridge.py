@@ -115,7 +115,8 @@ def _tts_base_url(engine: str | None) -> str:
 #   • the assembled FULL reply lives in: final["result"]["reply"] (staged + bypass paths) OR
 #     final["early_return"]["reply"] (off/refusal prologue short-circuit). We read it from THERE (what
 #     the epilogue actually wrote to history), never a manual re-join of part texts.
-def _stream_parts(parts_gen, *, speak_fn, emit_fn, gone, split_sentences, on_part=None, should_stop=None):
+def _stream_parts(parts_gen, *, speak_fn, emit_fn, gone, split_sentences, on_part=None, should_stop=None,
+                  clean_fn=None):
     """Drive a chat_parts() generator with brain↔TTS overlap. Pure of HTTP — the caller passes:
       • parts_gen      — an iterator of part dicts (SUITE.chat_parts(...) or a test stub)
       • speak_fn(text) — synth ONE sentence → wav bytes (voice_loop.speak bound to engine+voice)
@@ -123,6 +124,15 @@ def _stream_parts(parts_gen, *, speak_fn, emit_fn, gone, split_sentences, on_par
       • gone           — a 1-element mutable [bool]: True ⇒ client disconnected, STOP (cancellation)
       • split_sentences(text) -> [str]  — the per-part sentence split (the existing re.split)
       • on_part(text)  — optional callback per completed part (e.g. a {type:part} event)
+      • clean_fn(text) -> str  — V-C/V-D the SPEAKABLE LAYER (optional; None = identity). Applied to a
+                         WHOLE PART's text BEFORE the sentence split (cleaning per-CHUNK would split markdown
+                         — code fences/lists span sentences; a PART is a coherent reply segment, so per-part
+                         is the correct granularity). Strips markdown/code/urls/emoji + maps expression tags
+                         to the bound engine's syntax. The RAW part text still flows to `on_part` (the
+                         {type:part} display event) + the assembled reply (the {type:reply} event + trial
+                         recording, owned by the caller); ONLY what hits TTS (speak_fn) is cleaned. Fail-loud
+                         (rule 4): a part that cleans to EMPTY raises ValueError on this thread → the caller's
+                         try/except surfaces {type:error} + the durable log (never silent synth of silence).
       • should_stop()  — optional PROACTIVE disconnect probe (the handler's client_gone — select+MSG_PEEK).
                          The consumer polls it before each synth and folds its verdict into gone[0], so a
                          disconnect during a long part-GENERATION (no emits in flight) is noticed promptly
@@ -195,9 +205,14 @@ def _stream_parts(parts_gen, *, speak_fn, emit_fn, gone, split_sentences, on_par
             staged = True
         text = (part.get("text") or "").strip()
         if on_part is not None and text:
-            on_part(text)
+            on_part(text)                                    # the RAW part text (display/{type:part}) — never cleaned
         if text:
-            for sent in split_sentences(text):
+            # V-C/V-D: clean the WHOLE part to speakable prose BEFORE the sentence split (only the TTS-bound
+            # text is cleaned; the raw `text` already went to on_part + rides into the assembled reply). A
+            # clean-to-empty raises here (fail-loud) → re-raised on the handler thread below as the producer
+            # err path does, surfacing {type:error}; we never hand the engine silence.
+            spoken = clean_fn(text) if clean_fn is not None else text
+            for sent in split_sentences(spoken):
                 if should_stop is not None and should_stop():  # PROACTIVE probe (select+MSG_PEEK) → folds into gone[0]
                     gone[0] = True
                 if gone[0]:                                  # client gone → STOP before the next synth (existing tier-2)
@@ -337,6 +352,27 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.ui_info()))
             elif path == "/api/scope":                     # S3: ui://→code://→scope[] (the address→code join)
                 self._send(200, json.dumps(SUITE.resolve_scope(q["address"])))
+            elif path == "/api/address-help":              # D2: the COMPOSED affordance bundle for one ui:// address
+                # The address-keyed READ that EXPOSES the existing D1 composer (Suite.address_help — committed
+                # 89f60d9, NOT rebuilt here): the JOIN of the THREE legs — what_this_is (_describe_ui_address /
+                # represents), how_to_change (resolve_scope → blast_radius/X16 reach), how_to_use (the corpus
+                # 'howto' stratum) — plus a `legs_present` flag the D2 surface reads to DEGRADE cleanly when a
+                # leg is thin (G-53: many elements author no howto yet). Mirrors /api/scope + /api/self-changes-at
+                # exactly: missing `address` → KeyError → 400 (fail loud); a MALFORMED address → ValueError from
+                # address_help's S0 grammar gate → 400 (fail loud); a well-formed-but-unregistered address returns
+                # a clean partial bundle (what_this_is tagged '(unregistered)', legs honestly false), never a crash.
+                self._send(200, json.dumps(SUITE.address_help(q["address"])))
+            elif path == "/api/up-translate":              # F1: the GENERALIZED up-translate move (reach face)
+                # The reusable "present-this-at-Tim's-altitude" resolver (Suite.up_translate — composes the
+                # EXISTING organs, NOT rebuilt): ANY artifact → its altitude envelope {lead, mechanism,
+                # legs_present, grounded, degraded}. `kind` ∈ address|decision|finding|event. For the read-face
+                # we expose the two FIRST-CLASS reachable kinds keyed by a string `ref`: 'address' (ref = a
+                # ui:// address → composes address_help) and 'decision' (ref = a surfaced_id → composes coa).
+                # finding/event take a dict the caller holds (the G2/FE-surface lane will POST those) — not on
+                # this GET read. Mirrors /api/address-help exactly: missing `kind`/`ref` → KeyError → 400; an
+                # unknown kind / malformed address → ValueError → 400 (fail loud); a missing surfaced_id →
+                # KeyError → 400. The grounding guard means the body is honestly grounded/degraded, never faked.
+                self._send(200, json.dumps(SUITE.up_translate(q["kind"], q["ref"])))
             elif path == "/api/self-changes-at":           # L5: "what did the system change HERE?" (§21.7#5)
                 # The address-keyed READ over the self-change audit log: filters self_change_log by the
                 # S3 address→code scope join. Missing `address` → KeyError → 400 (fail loud, mirrors
@@ -349,6 +385,12 @@ class H(BaseHTTPRequestHandler):
                 # 400 (fail loud, mirrors /api/scope). Suite.annotations_at validates the address (S0)
                 # and returns the thread oldest-first. This is what R2 will gather at the operator's locus.
                 self._send(200, json.dumps(SUITE.annotations_at(q["address"])))
+            elif path == "/api/presentation-pref":         # F1: the ACTIVE learned presentation pref at a ui:// address
+                # The address-keyed READ side of the POST capture seam (latest-wins). Missing `address` →
+                # KeyError → 400 (fail loud, mirrors /api/annotations). Suite.presentation_pref_at validates
+                # the address (S0) + re-validates a stored junk pref (raises → 400). Returns the structured
+                # pref {kind, arg} or null (a clean absence — the adapt step degrades to the default).
+                self._send(200, json.dumps(SUITE.presentation_pref_at(q["address"])))
             elif path == "/api/chats":                     # I7: the chat THREAD attached to a ui:// address
                 # The address-keyed READ side of /api/attach-chat (POST). Missing `address` → KeyError →
                 # 400 (fail loud, mirrors /api/scope + /api/annotations). Suite.chats_at validates the
@@ -523,6 +565,7 @@ class H(BaseHTTPRequestHandler):
         import base64 as _b64, re as _re, time as _t
         from urllib.parse import urlparse as _up, parse_qs as _pq
         from voice import loop as voice_loop, stt as voice_stt, lifecycle as voice_lc, personas as voice_personas
+        from voice import speakable as voice_speakable
         self.close_connection = True
         vq = {k: v[0] for k, v in _pq(_up(self.path).query).items()}
         persona = (vq.get("persona") or "").strip()
@@ -632,8 +675,14 @@ class H(BaseHTTPRequestHandler):
                 return
 
             step = "tts"
+            # V-C/V-D the SPEAKABLE LAYER bound to THIS engine — folded into the parts overlap: each part's
+            # text is cleaned (markdown/code/urls/emoji stripped; canonical expression tags mapped to `eng`'s
+            # syntax or dropped) BEFORE its sentence split. The {type:reply} event + trial recording stay RAW
+            # (only the TTS-bound text is cleaned). A non-fatal warn (unknown engine) → {type:note}.
             res = _stream_parts(parts_gen, speak_fn=_speak, emit_fn=_emit_chunk, gone=gone,
-                                split_sentences=_split, on_part=_emit_part, should_stop=client_gone)
+                                split_sentences=_split, on_part=_emit_part, should_stop=client_gone,
+                                clean_fn=lambda txt: voice_speakable.speakable(
+                                    txt, eng, warn=lambda w: emit({"type": "note", "text": w})))
             reply = (res["reply"] or "").strip()
             think_ms = int((_t.monotonic() - think_t0) * 1000)
             total = int((_t.monotonic() - t0) * 1000)
@@ -651,6 +700,12 @@ class H(BaseHTTPRequestHandler):
                     SUITE.trial_record_turn(trial_session, "character", reply, character=persona)
                 except Exception as _e:
                     emit({"type": "note", "text": f"(recording skipped: {type(_e).__name__})"})  # never break the turn
+            # NOTE (additive merge — main↔cognition): main's OLD per-sentence synth loop here is SUPERSEDED by
+            # the G6 _stream_parts overlap above (parts-as-TTS-units, brain↔TTS overlap). main's V-C/V-D
+            # SPEAKABLE LAYER was NOT dropped — it is folded INTO _stream_parts via the `clean_fn` arg
+            # (per-part speakable() cleaning before the sentence split). Both survive: the overlap structure
+            # AND the speakable cleaning. The reply/{type:reply} + trial recording stay RAW (above); only the
+            # TTS-bound text is cleaned (inside _stream_parts).
             # the DETAILED, durable per-turn log line (Tim 2026-06-07): the texts + per-step timings + config,
             # so a whole turn is investigable from the event log (op=voice.stream, keyed by turn_id).
             SUITE.emit_run_record("voice.stream", total, turn_id=turn_id, ok=True, stt_ms=stt_ms, think_ms=think_ms,
@@ -733,6 +788,16 @@ class H(BaseHTTPRequestHandler):
                             engine = None                 # unknown persona → kokoro fallback (never crash a reply)
                 base = _tts_base_url(engine)              # raises ValueError on an unknown engine
                 fwd = {k: v for k, v in payload.items() if k != "engine"}
+                # V-C/V-D the SPEAKABLE LAYER on the GENERIC text→wav path too (speakReply text-replies,
+                # walkthrough narration — also "reply text → TTS"). One universal transform everywhere
+                # reply text becomes speech: clean markdown/code/urls/emoji + map canonical expression
+                # tags to THIS engine's syntax (kokoro/absent → no tags → stripped). Cleaning already-
+                # clean text is idempotent, so this is safe + complete. Empty `text` is left as-is for
+                # the downstream engine to handle; only non-empty text is run through (speakable raises
+                # on a non-empty-but-cleans-to-nothing string — that fail-loud is desirable here too).
+                if isinstance(fwd.get("text"), str) and fwd["text"].strip():
+                    from voice import speakable as _vsp
+                    fwd["text"] = _vsp.speakable(fwd["text"], engine)
                 req = _u.Request(base + "/tts", data=json.dumps(fwd).encode(),
                                  headers={"Content-Type": "application/json"})
                 try:
@@ -927,6 +992,20 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/capture-idea":         # A4: capture a fleeting idea (generative review item)
                 b = self._body()
                 self._send(200, json.dumps(SUITE.idea_capture(b["text"])))
+            elif self.path == "/api/defer-offer":           # B3: defer a live RHM offer into the inbox as a
+                # REAL queued, revivable item (§6B QUEUE mode). The operator face mints it; resolved=None, so
+                # it stays a live escalation until they revive+approve or dismiss it. NOTHING dispatches here
+                # (the offer's verb runs only on a later approve through /api/act — the B1/B2 consent invariant).
+                # Fail loud on a missing proposal (no silent no-op).
+                b = self._body()
+                prop = b.get("proposal")
+                if not isinstance(prop, dict):
+                    raise ValueError("/api/defer-offer needs a 'proposal' object (fail loud)")
+                self._send(200, json.dumps(SUITE.defer_offer(prop, note=b.get("note", ""))))
+            elif self.path == "/api/revive-offer":          # B3: read a deferred offer back out to RE-OPEN the
+                # live interactive conversation (the ProposeAffordance card with its options+steer+approve).
+                b = self._body()
+                self._send(200, json.dumps(SUITE.revive_offer(b["id"])))
             elif self.path == "/api/build-intent":          # T0-WIRE: the REAL production entry seam for the
                 # decision→implementation wire. The operator (this is the OPERATOR face, not the agent
                 # face) mints a build-intent — a declared-scope decision that, once they APPROVE it via
@@ -966,6 +1045,25 @@ class H(BaseHTTPRequestHandler):
                 b = self._body()
                 self._send(200, json.dumps(SUITE.start_session(
                     b["item_ids"], mode=b.get("mode", "walkthrough"))))
+            elif self.path == "/api/walkthrough/start":     # C4: the mode-selection → ORGAN-start seam.
+                # SELECTING the guided/walkthrough experience: this binds the cosmetic presence-dial
+                # 'walkthrough' MODE to the real walkthrough ORGAN (start_walkthrough sets the dial AND
+                # starts the organ over the pending items) — closing the naming trap (a dial mode that
+                # only narrated vs. the screen-driving engine). Optional `item_ids` to pre-select a set;
+                # absent → it walks every pending unresolved inbox item. FAIL LOUD (no silent no-op):
+                # nothing pending → {organ_started:False, reason} (the dial is set, the surface is told).
+                # The FE that CALLS this on dial-select + drives the per-step view is the FE show-me lane.
+                b = self._body()
+                self._send(200, json.dumps(SUITE.start_walkthrough(b.get("item_ids"))))
+            elif self.path == "/api/guide/start":           # C1: the SYSTEM-INITIATED guided sequence ("show
+                # me how" tour). start_guide composes the SAME walkthrough organ over ui:// ELEMENT addresses
+                # (not inbox items): it sets the dial to 'walkthrough' AND starts a session whose steps each
+                # narrate the element's corpus how-to (address_help) + spotlight the real element (G-43).
+                # MODEL-FREE by construction (present_current's guide branch reads the corpus, never a model).
+                # Optional `topic` to pick a sequence; absent → the default orientation tour. FAIL LOUD: no
+                # registered addresses → {organ_started:False, reason} (the dial is set, the surface is told).
+                b = self._body()
+                self._send(200, json.dumps(SUITE.start_guide(b.get("topic"))))
             elif self.path == "/api/debrief/start":         # voice-trial lane F: walk Tim back through the
                 # recorded trial sessions. start_debrief SURFACES each recorded session as a review item
                 # (carrying its real CAS transcript) then drives the SAME walkthrough organ — so the
@@ -1073,6 +1171,14 @@ class H(BaseHTTPRequestHandler):
             elif self.path == "/api/revert":              # OPERATOR-only rollback of a self-change
                 b = self._body()
                 self._send(200, json.dumps(SUITE.revert_self_change(b["sha"])))
+            elif self.path == "/api/checkpoint":          # OPERATOR-only: mint a reversible restore point
+                # The operator stamps a `[checkpoint]` of NAMED paths (path-scoped — rule 10, parallel
+                # sessions on main) — the third reversible stream beside [self-apply]/[self-build]. It
+                # shows in the SAME audit ledger (GET /api/self-change-log) and undoes via the SAME
+                # /api/revert. Operator face only (beside /api/revert), off the MCP/agent face. Fail-loud
+                # guards (empty/escaping path-set, empty delta) surface through _send's except.
+                b = self._body()
+                self._send(200, json.dumps(SUITE.checkpoint(b["paths"], b.get("label", ""))))
             # --- build-dispatch (self-growth), operable from the operator's UI ---
             elif self.path == "/api/propose":          # agent/operator dispatches a build
                 b = self._body()
@@ -1149,6 +1255,27 @@ class H(BaseHTTPRequestHandler):
                 # annotation rec (unchanged response shape — retrieve the comment via GET /api/annotations).
                 self._send(200, json.dumps(SUITE.ingest_comment(
                     str(addr).strip(), b.get("text", ""), source=b.get("source", "operator"))))
+            elif self.path == "/api/presentation-pref":  # F1 LEARNING LOOP: record "how Tim wants <this>
+                # presented" at a ui:// ADDRESS — the CAPTURE seam. It IS the annotate-branch of the
+                # addressed-feedback channel (a comment at an address WITH a presentation intent), so it
+                # rides the SAME annotations.jsonl store leaf, but with a STRUCTURED pref so the adapt step
+                # (up_translate/coa/address_help consult it) is MODEL-FREE. OPERATOR face. The VOICE/TYPING
+                # input that PRODUCES "show me this differently" rides the existing chat path (/api/chat);
+                # this is the recorder a parsed presentation intent calls. Suite.set_presentation_pref
+                # S0-validates the address (raises → 400) AND validates the pref kind/arg (raises → 400 on a
+                # malformed pref — fail loud, no silent ignore). Persists keyed by address; consulted via
+                # the up-translate organs; survives reload (the leaf reads disk every call). Fail loud on a
+                # missing address or pref (no silent no-op — AGENTS.md rule 4).
+                b = self._body()
+                addr = b.get("address")
+                pref = b.get("pref")
+                if not addr or not str(addr).strip():
+                    raise ValueError("/api/presentation-pref needs a non-empty 'address' (fail loud)")
+                if not isinstance(pref, dict):
+                    raise ValueError("/api/presentation-pref needs a structured 'pref' object "
+                                     "{kind, arg?} (fail loud — no silent ignore)")
+                self._send(200, json.dumps(SUITE.set_presentation_pref(
+                    str(addr).strip(), pref, text=b.get("text"), source=b.get("source", "operator"))))
             elif self.path == "/api/pin":                # X7: pin/unpin an attached item at a ui:// ADDRESS
                 # OPERATOR face (beside /api/annotate, /api/attach-chat) — the SET path for the dead pin
                 # term: `pinned` is read in `_r2_score` but nothing set it. This records a pin/unpin of the

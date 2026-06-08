@@ -4,8 +4,8 @@
 html,body{height:100%}
 body{
   background:
-    radial-gradient(1200px 700px at 72% -10%, rgba(84,214,176,.05), transparent 60%),
-    radial-gradient(900px 600px at 0% 110%, rgba(107,138,168,.04), transparent 55%),
+    radial-gradient(1200px 700px at 72% -10%, var(--acc-glow), transparent 60%),
+    radial-gradient(900px 600px at 0% 110%, color-mix(in srgb, var(--cache) 6%, transparent), transparent 55%),
     var(--bg);
   color:var(--tx); font-family:'IBM Plex Sans',system-ui,sans-serif; letter-spacing:.1px;
 }
@@ -28,7 +28,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
 .node[data-kind=present] .bar{background:var(--kind-present-bg)} .node[data-kind=present]{border-left:3px solid var(--kind-present)}
 .node[data-kind=model]   .bar{background:var(--kind-model-bg)}   .node[data-kind=model]{border-left:3px solid var(--kind-model)}
 /* the per-type monogram chip */
-.node .mono-chip{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:12px;flex:none;color:#06140f}
+.node .mono-chip{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font-family:'Bricolage Grotesque';font-weight:800;font-size:12px;flex:none;color:var(--ink-accent)}
 .node[data-kind=process] .mono-chip{background:var(--kind-process)}
 .node[data-kind=content] .mono-chip{background:var(--kind-content)}
 .node[data-kind=present] .mono-chip{background:var(--kind-present);color:#1a1205}
@@ -48,11 +48,11 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
 /* s-await is NOT a node status — it marks INBOX items "awaiting you" (presence), never a node dot. */
 .s-await{background:var(--await);box-shadow:0 0 0 3px rgba(230,171,92,.14)}
 .port{position:absolute;width:11px;height:11px;border-radius:99px;background:var(--s3);border:2px solid var(--line-2);top:50%}
-.port.in{left:-6px}.port.out{right:-6px;border-color:var(--acc-dim);background:#0f1a17}
+.port.in{left:-6px}.port.out{right:-6px;border-color:var(--acc-dim);background:var(--s0)}
 
 /* ── buttons / chips / pills ──────────────────────────── */
 .btn{display:flex;align-items:center;gap:7px;padding:8px 13px;border-radius:var(--r);font-size:12.5px;font-weight:500;border:1px solid var(--line-2);background:var(--s2);color:var(--tx-2);cursor:pointer}
-.btn.run{background:linear-gradient(180deg,var(--acc),#3fb595);color:#06140f;border-color:transparent;font-weight:600}
+.btn.run{background:linear-gradient(180deg,var(--acc),var(--acc-deep));color:var(--ink-accent);border-color:transparent;font-weight:600}
 .btn .k{font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3);border:1px solid var(--line);border-radius:3px;padding:0 4px}
 
 /* ── RESPONSIVE / MOBILE rules (the requirement) ──────────

@@ -53,8 +53,8 @@
 .brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:18px;letter-spacing:-.3px}
 .brand em{font-style:normal;color:var(--acc)}
 .brand .tag{font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono';margin-left:8px}
-.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--line-2);border-radius:99px;background:var(--s2);font-size:12px;color:var(--tx-2)}
-.presence .dot{width:7px;height:7px;border-radius:99px;background:var(--await);box-shadow:0 0 0 3px rgba(230,171,92,.14)}
+.presence{display:flex;align-items:center;gap:8px;padding:5px 11px;border:1px solid var(--line-2);border-radius:var(--r-pill);background:var(--s2);font-size:12px;color:var(--tx-2)}
+.presence .dot{width:7px;height:7px;border-radius:var(--r-pill);background:var(--await);box-shadow:0 0 0 3px rgba(230,171,92,.14)}
 .verbs{margin-left:auto;display:flex;gap:7px}
 
 .rail{grid-area:rail;background:var(--s0);border-right:1px solid var(--line);padding:14px 12px;overflow:auto}
@@ -67,7 +67,7 @@
 .canvas{grid-area:canvas;position:relative;overflow:hidden;background-image:radial-gradient(var(--line) .9px,transparent .9px);background-size:26px 26px;display:grid;place-items:center}
 .dim-note{max-width:420px;text-align:center;color:var(--tx-3);font-size:12.5px;line-height:1.7}
 .dim-note .display{font-size:16px;color:var(--tx-2);display:block;margin-bottom:6px}
-.dim-note .play{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:6px 12px;border:1px dashed var(--line-2);border-radius:99px;font-family:'IBM Plex Mono';font-size:11px;color:var(--acc)}
+.dim-note .play{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:6px 12px;border:1px dashed var(--line-2);border-radius:var(--r-pill);font-family:'IBM Plex Mono';font-size:11px;color:var(--acc)}
 .foot{grid-area:foot;display:flex;align-items:center;gap:14px;padding:0 16px;background:var(--s0);border-top:1px solid var(--line);font-size:11px;color:var(--tx-3);font-family:'IBM Plex Mono'}
 .foot .live{color:var(--acc)} .foot .await{color:var(--await)}
 
@@ -76,7 +76,7 @@
 .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:-14px -14px 14px;padding:10px 12px 0}
 .tab{padding:8px 13px;font-size:12.5px;color:var(--tx-3);border-bottom:2px solid transparent;font-weight:500;display:flex;align-items:center;gap:7px}
 .tab.on{color:var(--tx);border-bottom-color:var(--acc)}
-.tab .badge{background:var(--await);color:var(--ink-await);font-family:'IBM Plex Mono';font-size:9px;font-weight:600;border-radius:99px;padding:1px 6px}
+.tab .badge{background:var(--await);color:var(--ink-await);font-family:'IBM Plex Mono';font-size:9px;font-weight:600;border-radius:var(--r-pill);padding:1px 6px}
 
 /* the "N awaiting you" head + the test-origin excluded note (the real counts dict) */
 .ibx-head{display:flex;align-items:baseline;gap:9px;margin:2px 2px 4px}
@@ -89,7 +89,7 @@
 /* a lane head — encodes urgency by label + a count + an accent rule per lane */
 .lane{margin-bottom:18px}
 .lane-head{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;font-weight:600;display:flex;align-items:center;gap:8px;margin:0 2px 10px}
-.lane-head .dot{width:7px;height:7px;border-radius:99px;flex:none}
+.lane-head .dot{width:7px;height:7px;border-radius:var(--r-pill);flex:none}
 .lane-head .c{margin-left:auto;font-family:'IBM Plex Mono';font-weight:400;letter-spacing:0;color:var(--tx-3)}
 .lane.escalations .lane-head{color:var(--await)} .lane.escalations .lane-head .dot{background:var(--await);box-shadow:0 0 0 3px rgba(230,171,92,.14)}
 .lane.batched .lane-head{color:var(--tx-2)} .lane.batched .lane-head .dot{background:var(--cache)}
@@ -123,7 +123,7 @@
 
 /* resolved-for-you: quiet, audit-only rows (resolved is not None) */
 .rrow{display:flex;align-items:center;gap:9px;padding:8px 11px;border:1px solid var(--line);border-radius:var(--r);background:var(--s1);margin-bottom:6px;opacity:.82}
-.rrow .v{font-family:'IBM Plex Mono';font-size:9.5px;text-transform:uppercase;letter-spacing:.7px;padding:2px 7px;border-radius:99px;flex:none}
+.rrow .v{font-family:'IBM Plex Mono';font-size:9.5px;text-transform:uppercase;letter-spacing:.7px;padding:2px 7px;border-radius:var(--r-pill);flex:none}
 .rrow .v.approve{color:var(--ink-accent);background:var(--ok)} .rrow .v.decide{color:var(--ink-accent);background:var(--cache)}
 .rrow .t{font-size:12px;color:var(--tx-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rrow .when{margin-left:auto;font-family:'IBM Plex Mono';font-size:9px;color:var(--tx-3);flex:none}

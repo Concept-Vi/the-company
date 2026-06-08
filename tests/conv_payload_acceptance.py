@@ -22,9 +22,9 @@ PROOF MODEL:
     unaffected; an intent minted via the bare `surface_build_intent` (no address) has NO address/symbols
     keys (additive-optional: absent reads as None, exactly as before); empty-scope=DENY-ALL still holds.
 
-REAL corpus addresses (verified live, same fixtures L1 uses):
-  ui://chat/input            → symbols=['code://App'],                    scope=['canvas/app/src/App.tsx']
-  ui://workshop/self-changes → symbols=['code://suite/revert_self_change'], scope=['runtime/suite.py']
+REAL corpus addresses (verified live, same fixtures L1 uses) — POST-App.tsx-carve:
+  ui://chat/input            → symbols=['code://RhmChat','code://suite/chat'], scope=['canvas/app/src/regions/RhmChat.tsx','runtime/suite.py']
+  ui://workshop/self-changes → symbols=['code://suite/revert_self_change'],    scope=['runtime/suite.py']
 
 Run: /home/tim/company/.venv/bin/python tests/conv_payload_acceptance.py
 """
@@ -56,15 +56,20 @@ store = FsStore(STORE_ROOT)
 reg = NodeRegistry(); reg.discover([NODES])
 suite = Suite(store, reg, nodes_dir=NODES)
 
-CHATIN = "ui://chat/input"                 # → symbols=['code://App'], scope=['canvas/app/src/App.tsx']
+# POST-App.tsx-carve: the chat input's code home moved out of the App monolith into the carved chat
+# region (regions/RhmChat.tsx) + the suite chat handler (suite.chat). The regenerated corpus resolves
+# ui://chat/input → ['code://RhmChat','code://suite/chat'], NOT the pre-carve ['code://App']. (Mirrors
+# the 0f61b4f conv_context fix — same App.tsx-carve symbol drift.)
+CHATIN = "ui://chat/input"                 # → symbols=['code://RhmChat','code://suite/chat'], scope=['canvas/app/src/regions/RhmChat.tsx','runtime/suite.py']
 WORKSHOP = "ui://workshop/self-changes"    # → symbols=['code://suite/revert_self_change']
 ORPHAN = "ui://nonexistent/thing"          # → [] (DENY-ALL)
 
 # sanity: the corpus resolver gives the symbols+scope the assertions lean on (else the fixtures are wrong)
 rs = suite.resolve_scope(CHATIN)
-check(f"{CHATIN} resolves symbols=['code://App'] (S3, real corpus)", rs["symbols"] == ["code://App"])
-check(f"{CHATIN} resolves scope=['canvas/app/src/App.tsx'] (S3, real corpus)",
-      rs["scope"] == ["canvas/app/src/App.tsx"])
+check(f"{CHATIN} resolves symbols={rs['symbols']} (S3, real corpus — post-App.tsx-carve: chat lives in RhmChat + suite.chat)",
+      rs["symbols"] == ["code://RhmChat", "code://suite/chat"])
+check(f"{CHATIN} resolves scope={rs['scope']} (S3, real corpus — post-App.tsx-carve)",
+      rs["scope"] == ["canvas/app/src/regions/RhmChat.tsx", "runtime/suite.py"])
 
 # ── mint a build-intent at the address (the L1 mint path that widens the payload) ────────────────
 out = suite.surface_intent_at(CHATIN, "this run button is too loud — tone it down", source="operator")
@@ -84,9 +89,9 @@ payload = reloaded["payload"]
 check("X1: the RELOADED payload carries the ui:// address (reaches disk, not just the return dict)",
       payload.get("address") == CHATIN)
 
-# X2 — the relationships (code:// symbol-neighbours) reach disk
+# X2 — the relationships (code:// symbol-neighbours) reach disk (post-App.tsx-carve: RhmChat + suite.chat)
 check("X2: the RELOADED payload carries the code:// symbol-neighbours",
-      payload.get("symbols") == ["code://App"])
+      payload.get("symbols") == ["code://RhmChat", "code://suite/chat"])
 check("X2: the persisted symbols == resolve_scope's computed value (REUSED, not recomputed/fabricated)",
       payload.get("symbols") == suite.resolve_scope(CHATIN)["symbols"])
 
@@ -107,7 +112,7 @@ for f in ("intent", "spec", "scope", "consequence_class", "why"):
           f in payload)
 check("PRESERVE: intent=='build' (the discriminator, untouched)", payload.get("intent") == "build")
 check("PRESERVE: scope still carries S3's resolved scope (X2 added symbols BESIDE it, didn't touch it)",
-      (payload.get("scope") or []) == ["canvas/app/src/App.tsx"])
+      (payload.get("scope") or []) == ["canvas/app/src/regions/RhmChat.tsx", "runtime/suite.py"])
 check("PRESERVE: the comment text still drives the spec",
       "tone it down" in (payload.get("spec") or "") or "too loud" in (payload.get("spec") or ""))
 check("PRESERVE: a .get of an OLD field (why) still works exactly as before",

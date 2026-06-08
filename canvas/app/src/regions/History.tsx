@@ -13,8 +13,19 @@
 //
 // Renders ONLY when a ui:// element is indicated (else nothing — it never clutters the rail). data-ui-ref
 // keeps it addressable on the surface itself (quoted, per the lane rule).
+//
+// WAVE-? REGION-BATCH-2 (HEAD-ONLY pass, A1/H) — this is a CLASS-A region (like Activity): its `.ev`/`.hist`
+// grouped-row body is ALREADY the designed, shared, token-coloured vocabulary (the same rows Activity /
+// Versions / SelfChanges reuse) — Surface-ifying it would REGRESS cross-region coherence. So the conversion
+// is the SAME light touch Activity took: only the HEAD is brought to the commander's-bridge language — a kit
+// SectionHead in the display voice (the indicated address rides the kicker `tag`; the event count + busy
+// state read as a kit Badge in the aside). This also FIXES a live drift: the old `.act-title` CSS rule was
+// deleted in Activity's wave-4 pass but these three regions still rendered `.act-title`, so their titles had
+// been unstyled (bare 12px mono) since then — the SectionHead restores the display voice. The `.ev`/`.hist`/
+// `.ver` body + every grouped-row, every data-ui-ref, the collapse state are all PRESERVED untouched.
 import { useState } from 'react'
 import { relTime } from '../api'
+import { SectionHead, Badge } from '../components/kit'
 import { useApp } from '../AppContext'
 
 export function History() {
@@ -38,11 +49,15 @@ export function History() {
 
   return (
     <div className="hist" data-ui-ref="ui://inspector/history">
-      <div className="hist-head">
-        <span className="act-title">history</span>
-        <span className="muted hist-addr" title={indicated}>{indicated}</span>
-        <span className="muted">{historyBusy ? 'loading…' : `${traj.length} event${traj.length === 1 ? '' : 's'} here`}</span>
-      </div>
+      {/* the HEAD — the commander's-bridge title in the display voice. The indicated address rides the kicker
+          (the locus this trajectory is FOR); the event count reads as a Badge (sig when there's history, dim
+          when empty) so the operator sees "how much happened here" by sight. */}
+      <SectionHead tag={indicated}
+        aside={historyBusy
+          ? <Badge tone="dim">loading…</Badge>
+          : <Badge tone={traj.length ? 'sig' : 'dim'}>{traj.length} event{traj.length === 1 ? '' : 's'} here</Badge>}>
+        history
+      </SectionHead>
       {traj.length === 0 && !historyBusy && (
         <div className="muted">nothing has happened at this element yet — comment on it, or operate it, and it shows here.</div>
       )}

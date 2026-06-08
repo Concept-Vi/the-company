@@ -152,6 +152,15 @@ try:
     verdict = s.resolve_surfaced(sid, "approve", reason="authorize this build")
     check("the resolve→dispatch trigger FIRED when armed (verdict carries the trigger outcome)",
           ("wire_drive" in verdict) or ("wire_drive_error" in verdict))
+    # WIRE-ASYNC: the build now runs in a BACKGROUND daemon thread (decoupled from this request), so the
+    # ack returns PROMPTLY (status:running) and the launch happens off-thread. The routing assertions
+    # below check the build COMPLETED in the background — join the dispatch thread first (the test
+    # equivalent of "the SSE stream eventually carries the result"). The PRODUCTION request does NOT
+    # wait; this join exists only so the by-use test can observe the off-thread side-effects.
+    check("the ack is prompt + running (the request did NOT block on the build)",
+          verdict.get("wire_drive", {}).get("status") == "running")
+    check("all WIRE-ASYNC background dispatch threads finished within the join window",
+          s.wire_wait_for_dispatch(timeout=30))
     check("implement.launch WAS reached (the routing closed resolve→dispatch→launch)", len(calls) == 1)
     # the launch was called with the RIGHT decision (the approved build-intent) + its declared scope.
     launched_decision = calls[0]["decision"]
@@ -188,6 +197,7 @@ try:
     locked = s.surface_build_intent("touch source data", scope=["data/"], consequence_class="source_data")
     lsid = locked["id"]
     verdict = s.resolve_surfaced(lsid, "approve", reason="authorize")
+    s.wire_wait_for_dispatch(timeout=30)   # WIRE-ASYNC: let any (here: none) bg dispatch settle
     check("a non-AUTO (LOCKED) class is NOT auto-dispatched even when armed (AUTO gate preserved)",
           len(calls) == 0)
     check("the LOCKED item did NOT reach implemented (left for the operator)",
@@ -207,7 +217,11 @@ impl.launch = fake_launch
 try:
     intent = s.surface_build_intent("once-only build", scope=["runtime/"], consequence_class="decision_build")
     sid = intent["id"]
-    s.resolve_surfaced(sid, "approve", reason="authorize")          # fires the trigger once (launch reached)
+    s.resolve_surfaced(sid, "approve", reason="authorize")          # fires the trigger once (bg dispatch)
+    # WIRE-ASYNC: the trigger dispatches in a BACKGROUND thread now — join it so the durable
+    # decision.dispatch claim is in place before the second pass (the claim, not timing, is the
+    # exactly-once guarantee; the join just makes the off-thread claim observable to the assertion).
+    check("the background dispatch finished within the join window", s.wire_wait_for_dispatch(timeout=30))
     first = len(calls)
     # a SECOND watcher pass over the SAME verdict (the production caller, re-run) must NOT re-launch —
     # the durable decision.dispatch claim is the guarantee, not the cursor.
@@ -239,6 +253,7 @@ try:
                                     consequence_class="decision_build")
     sid = intent["id"]
     s.resolve_surfaced(sid, "approve", reason="authorize")
+    s.wire_wait_for_dispatch(timeout=30)   # WIRE-ASYNC: let the bg dispatch settle before asserting
     check("an EMPTY declared scope (DENY-ALL) build did NOT close implemented",
           s.inbox.get(sid)["status"] != "implemented")
 finally:

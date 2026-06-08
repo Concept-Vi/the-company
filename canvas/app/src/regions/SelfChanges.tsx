@@ -20,8 +20,16 @@
 // Renders ONLY when a ui:// element is indicated (else nothing — it never clutters the rail). data-ui-ref
 // (quoted, per the lane rule) keeps it addressable on the surface itself.
 import { relTime } from '../api'
+import { SectionHead, Badge } from '../components/kit'
 import { useApp } from '../AppContext'
 
+// WAVE-? REGION-BATCH-2 (HEAD-ONLY pass, A1/H) — CLASS-A region: the `.ev`/`.hist` change-row body is the
+// shared designed vocabulary (self-apply=warn, revert=err) coherent with History/Versions/Activity — left
+// untouched. HEAD-ONLY conversion (the Activity pattern): a kit SectionHead in the display voice (the indicated
+// address rides the kicker; the state reads as a Badge — AWAIT amber when the corpus join is stale, else the
+// change count). PRESERVED (the function half — do NOT flatten): the THREE-WAY fail-loud trichotomy
+// (corpus-stale / no-code-scope / true-empty) kept as three DISTINCT cues, the per-row operator-only revert
+// (the /api/revert gate), the matched-files tooltip, every data-ui-ref.
 export function SelfChanges() {
   const { indicated, selfChanges, selfChangesBusy, revertSelfChangeAt } = useApp()
   if (!indicated || !indicated.startsWith('ui://')) return null   // only a ui:// locus has a code scope
@@ -33,17 +41,17 @@ export function SelfChanges() {
 
   return (
     <div className="hist" data-ui-ref="ui://workshop/self-changes">
-      <div className="hist-head">
-        <span className="act-title">what changed here</span>
-        <span className="muted hist-addr" title={indicated}>{indicated}</span>
-        <span className="muted">
-          {selfChangesBusy
-            ? 'loading…'
-            : stale
-              ? 'corpus stale'
-              : `${changes.length} self-change${changes.length === 1 ? '' : 's'} here`}
-        </span>
-      </div>
+      {/* the HEAD — display-voice title; the indicated address rides the kicker; the state reads as a Badge:
+          AWAIT amber when the corpus join is STALE (the list can't be trusted — fail-loud at a glance), else
+          the self-change count (sig when there are changes here, dim when none). */}
+      <SectionHead tag={indicated}
+        aside={selfChangesBusy
+          ? <Badge tone="dim">loading…</Badge>
+          : stale
+            ? <Badge tone="await">corpus stale ⚠</Badge>
+            : <Badge tone={changes.length ? 'sig' : 'dim'}>{changes.length} self-change{changes.length === 1 ? '' : 's'}</Badge>}>
+        what changed here
+      </SectionHead>
 
       {/* fail-loud: a stale corpus is NEVER shown as "nothing here" — the operator is told to regenerate. */}
       {stale && !selfChangesBusy && (

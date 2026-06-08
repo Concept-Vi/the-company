@@ -30,6 +30,7 @@ import { PanelErrorBoundary } from './components/PanelErrorBoundary'
 import { Toolbar } from './regions/Toolbar'
 import { Palette } from './regions/Palette'
 import { Inspector } from './regions/Inspector'
+import { AddressHelp } from './regions/AddressHelp'
 import { History } from './regions/History'
 import { Versions } from './regions/Versions'
 import { SelfChanges } from './regions/SelfChanges'
@@ -43,6 +44,7 @@ import { Workshop } from './regions/Workshop'
 import { Settings } from './regions/Settings'
 import { Fleet } from './regions/Fleet'
 import { CognitionView } from './regions/CognitionView'
+import { WireRequest } from './components/WireRequest'
 import { api } from './api'
 
 // I5 · the ANNOTATE-FACE affordance. Renders ONLY when the operator has indicated a ui:// element whose
@@ -121,6 +123,18 @@ function Hud() {
   // the CSS reveal exactly one bottom-sheet (or none for 'canvas'). On desktop/tablet the tabbar + sheet
   // behaviour is display:none, so this attribute is inert above 699px — desktop layout is untouched.
   const { mobileTab, setMobileTab } = ctrl
+  // G-57 · PHONE: a CONSEQUENTIAL offer (the B2 interactive proposal — build/panel/extend) lands in the RHM
+  // chat, but on phone the chat is a bottom-sheet hidden unless the 'rhm' tab is raised — so a fresh
+  // consequential offer could be MISSED. When `ctrl.proposal.interactive` flips true (the registry-truth flag
+  // the comparison surface renders on), auto-raise the rhm sheet so the operator sees the choice. This is the
+  // SHEET-LAYER hook only (setMobileTab — already on the controller, zero voice-function reach). INERT on
+  // desktop: the tabbar/sheets are display:none >699px, so setMobileTab changes nothing visible there (the
+  // chat is always-on in the canvas cell) — it only matters at phone width. Single-source: it sets the SAME
+  // mobileTab the operator's taps drive, so a raised offer and a manual tab never both claim the bottom edge.
+  useEffect(() => {
+    if (ctrl.proposal?.interactive) setMobileTab('rhm')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ctrl.proposal?.interactive])
   return (
     <AppContext.Provider value={ctrl}>
       {/* Edges paints over the whole viewport (pointer-events:none); kept outside the grid so it overlays
@@ -177,6 +191,16 @@ function Hud() {
              blurred. FORM: built on the corpus .rhm-indicating chip vocabulary (tokens only, no literals);
              the amber [data-click-mode="annotate"] cue + this bar are the DEFAULT mode-signal (needs-tim). */}
           <AnnotateBar />
+          {/* G-4 · THE SELF-BUILD WIRE'S OPERATOR DOOR. The missing FE caller for the decision→implementation
+             wire (REPO-KNOWLEDGE D1): when the operator has indicated a ui:// element, this door lets them
+             REQUEST A CHANGE to it → mints a build-intent (POST /api/intent-at, via ctrl.mintBuildIntent,
+             carrying the derived scope + the X16 blast-radius) → shows the reach (the reused BlastRadiusReach
+             ripple) → approve (/api/resolve). Point → ask → see-the-reach → approve. Sibling of AnnotateBar
+             (same indicated-element surface area, the wire-blue signature). SAFE-BY-DEFAULT: mint + approve
+             compose a PLAN; dispatch is inert/plan-mode unless deliberately armed (stated as honest static
+             copy — the armed state is not served to the FE). The onDocClick capture excludes this subtree so
+             clicking into it never overwrites the pointed target. */}
+          <WireRequest />
           {/* L9 · reverse journey-recording (§21.7#2-reverse). The RECORD toggle + REPLAY picker: capture
              the operator's ordered ui:// click-path as a DISTINCT journey-record (steps appended in
              ctrl.indicate while recording), replay it by stepping the view through its addresses via the
@@ -190,6 +214,18 @@ function Hud() {
            F2: .as-sheet makes it a bottom-sheet (the 'inbox' tab) at <699px. */}
         <div className="as-panel as-sheet hud panel" data-ui-ref="inspector">
           <Inspector />
+          {/* D2 · the COMPOSED address-help / altitude surface (REPO-KNOWLEDGE D2): when the operator INDICATES
+             a ui:// element, "what can I do here?" leads the indicated-locus stack — the three legs of
+             address_help (what-this-is · how-to-use · how-to-change) composed AT TIM'S ALTITUDE (plain-language
+             howto leads; the mechanism — code/files/blast-radius — drills down on demand). EXPOSES the existing
+             D1 composer (GET /api/address-help → Suite.address_help, NOT a parallel composer). Degrades cleanly
+             per leg (G-53: many elements author no howto yet). Per-panel boundary (PRESERVE-LIST): a render-throw
+             degrades to a contained card, never a white-screen. Renders nothing unless a ui:// locus is
+             indicated, so it never clutters the rail; mounted BEFORE History because "what can I do here" is the
+             primary indicated-locus question. */}
+          <PanelErrorBoundary name="address-help">
+            <AddressHelp />
+          </PanelErrorBoundary>
           {/* L3 · addressed history (§21.7#1): when the operator INDICATES a ui:// element, its full
              addressed trajectory ("everything that happened here") shows here — navigable, grouped by kind
              (GET /api/address-history → Suite.address_view, the decision_view sid path untouched). Per-panel
@@ -236,12 +272,23 @@ function Hud() {
           <a className={mobileTab === 'palette' ? 'on' : ''} onClick={() => setMobileTab('palette')}><span className="ic">＋</span>add</a>
           <a className={mobileTab === 'inbox' ? 'on' : ''} onClick={() => setMobileTab('inbox')}><span className="ic">▤</span>panel</a>
           <a className={mobileTab === 'rhm' ? 'on' : ''} onClick={() => setMobileTab('rhm')}><span className="ic">◈</span>rhm</a>
+          {/* A2 (G-36): the ACTIVITY feed tab — the ambient trace gets a thumb-reachable home (its own
+             bottom-sheet, the .rhm-template reveal). Sits between rhm and run. */}
+          <a className={mobileTab === 'activity' ? 'on' : ''} onClick={() => setMobileTab('activity')}><span className="ic">≋</span>feed</a>
           <a onClick={() => ctrl.doRun()}><span className="ic">▶</span>run</a>
         </nav>
       </div>
       {/* Workshop is a full-viewport modal (position:fixed) — outside the grid so it covers everything. */}
       <Workshop />
-      <Settings />
+      {/* A3 + E2-FE/GC3 · the CONSOLIDATED SETTINGS surface. A full-viewport modal (Workshop pattern — outside
+         the grid, position:fixed) so it covers everything and works IDENTICALLY desktop + phone (no bottom-sheet
+         competition). It is the ONE designed home for every config slot (modes/models/personas/RHM-config/voice),
+         reading the SAME controller state the scattered RhmChat gear + Toolbar dial read (single source). Opened
+         from the Toolbar gear (ctrl.openSettings). Per-panel boundary: a settings render-throw degrades to a
+         contained card, never a white-screen — its own modal already covers the live canvas behind it. */}
+      <PanelErrorBoundary name="settings">
+        <Settings />
+      </PanelErrorBoundary>
     </PanelErrorBoundary>
     </AppContext.Provider>
   )

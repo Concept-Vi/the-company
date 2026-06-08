@@ -18,7 +18,8 @@
       "addresses": [
         "ui://canvas",
         "ui://canvas/node",
-        "ui://canvas/portal-window"
+        "ui://canvas/portal-window",
+        "ui://canvas/wire-request"
       ]
     },
     {
@@ -27,11 +28,14 @@
       "status": "built",
       "addresses": [
         "ui://chat",
-        "ui://chat/config",
+        "ui://chat/debrief",
         "ui://chat/input",
         "ui://chat/mic",
-        "ui://chat/model-field",
+        "ui://chat/minimize",
+        "ui://chat/new-conversation",
+        "ui://chat/record",
         "ui://chat/send",
+        "ui://chat/threads",
         "ui://twin",
         "ui://walkthrough",
         "ui://walkthrough/verdict"
@@ -73,6 +77,7 @@
         "ui://inspector/act",
         "ui://inspector/build",
         "ui://inspector/freshness",
+        "ui://inspector/help",
         "ui://inspector/history",
         "ui://inspector/model-field",
         "ui://inspector/surface",
@@ -98,6 +103,21 @@
       ]
     },
     {
+      "region": "settings",
+      "component": null,
+      "status": "planned",
+      "note": "region in addresses.json with no component mapping",
+      "addresses": [
+        "ui://settings",
+        "ui://settings/brain",
+        "ui://settings/close",
+        "ui://settings/composition",
+        "ui://settings/modes",
+        "ui://settings/roles",
+        "ui://settings/voice"
+      ]
+    },
+    {
       "region": "tabbar",
       "component": null,
       "status": "planned",
@@ -114,11 +134,14 @@
         "ui://toolbar",
         "ui://toolbar/delete",
         "ui://toolbar/fit",
+        "ui://toolbar/guide",
         "ui://toolbar/layers",
+        "ui://toolbar/point",
         "ui://toolbar/portal",
         "ui://toolbar/presence",
         "ui://toolbar/reload",
         "ui://toolbar/run",
+        "ui://toolbar/teach",
         "ui://toolbar/wire"
       ]
     },

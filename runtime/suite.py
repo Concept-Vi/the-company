@@ -73,7 +73,13 @@ def _load_corpus_element_addresses() -> list[tuple]:
         # I4: carry the union-record `tier` (governance action_class for COMMANDS at this address)
         # into the registry row's union-extras. ADDITIVE + OPTIONAL — None when the corpus entry
         # carries no tier (the default), so an untiered address falls back to the verb's own class.
-        extras = {"region": ur.region, "represents": ur.represents, "code": ur.code, "tier": ur.tier}
+        # D1: carry the union-record `howto` (the foundational affordance / how-to-use text) into the
+        # registry row's union-extras alongside region/represents/code/tier. ADDITIVE + OPTIONAL — None
+        # when the corpus entry authors no help (the default). The how-to stratum (`_r2_howto_at`) and
+        # `address_help` read it from row[5] GENERICALLY (mirroring how `_describe_ui_address` reads
+        # `represents`), never a per-element branch — Tim's not-hardwired correction.
+        extras = {"region": ur.region, "represents": ur.represents, "code": ur.code,
+                  "tier": ur.tier, "howto": ur.howto}
         rows.append((addr, ur.kind, (ur.title or addr), handle, dict(ur.capabilities), extras))
     return rows
 
@@ -86,6 +92,43 @@ def _strip_fences(code: str) -> str:
         if c.lstrip().startswith("python"):
             c = c.lstrip()[len("python"):]
     return c.strip()
+
+
+# ── F1 up-translate: the code-enforced SHAPE of a commander-altitude framing ──────────────────────
+# coa() up-translates a raw technical decision into a Commander-altitude VALUE choice. The brief's bar
+# splits STRUCTURE (prove model-free) from WORDING-QUALITY (live-model-dependent). That split only
+# holds if the SHAPE is code-enforced — otherwise a test degenerates to "framing is a non-empty
+# string". So the framing is a SCHEMA (`fabric.client.complete(..., schema=CoaFraming)` retries+raises
+# on a shape miss): a plain-language meaning, 2-3 options each with a trade-off, and a recommendation.
+# The struct is PROJECTED to a `framing` TEXT string for FE compat (Grow.tsx renders surf.coa as text)
+# and also exposed verbatim as `framing_struct`. A live model that can't satisfy the schema degrades
+# (framed=False + raw) rather than emitting malformed prose — MORE honest, not less. (pydantic is a
+# hard dep of fabric/client.py — already imported there; importing it here adds no new dependency.)
+from pydantic import BaseModel, Field
+
+
+class CoaOption(BaseModel):
+    """One value-option the operator could choose, at their altitude — never the raw code fork."""
+    label: str = Field(description="the option in plain commander terms (a value choice, not code)")
+    tradeoff: str = Field(description="what you gain / give up by choosing this option")
+
+
+class CoaFraming(BaseModel):
+    """The CODE-ENFORCED shape of an up-translated decision (the structural bar coa must hit).
+    SHAPE is proven model-free (an injected canned response validates against this); the WORDING
+    quality is the live-model-dependent half (flagged for a model-up check)."""
+    meaning: str = Field(description="what this decision means for the system, in plain terms")
+    options: list[CoaOption] = Field(description="2-3 value options the operator could choose")
+    recommendation: str = Field(description="a clear recommendation + a one-line why")
+
+    def to_text(self) -> str:
+        """Project the struct to the plain-language `framing` string the FE (Grow.tsx) renders.
+        The struct is the proven shape; this is the human-legible lead the operator reads."""
+        lines = [self.meaning, ""]
+        for i, o in enumerate(self.options, 1):
+            lines.append(f"{i}. {o.label} — {o.tradeoff}")
+        lines += ["", f"Recommendation: {self.recommendation}"]
+        return "\n".join(lines)
 
 
 @dataclass(frozen=True)
@@ -105,6 +148,47 @@ class VerbSpec:
     action_class: str               # governance action-class (the old RHM_VERB_CLASS value)
     modes: frozenset                # the presence modes in which this verb is OFFERED
     predicate: Callable             # ctx(dict) -> bool — does this verb make sense in the current context
+
+
+@dataclass(frozen=True)
+class ModeSpec:
+    """ONE source for a single TOP-LEVEL presence mode (E1 — the mode type-registry). Replaces the two
+    parallel literals `MODES` (the tuple) and `MODE_DIRECTIVES` (the prose map), which could drift: both
+    are now DERIVED from `MODE_SPECS` below (the same one-source move `VerbSpec`/`RHM_VERB_SPECS` made).
+
+    A mode-type is NOT just a behavioural label — per Tim's load-bearing correction (direction §6,
+    2026-06-06) **modes and context-resolution are ONE system**: a mode-type CARRIES its
+    context-resolution declarations, so editing a mode-type changes BOTH behaviour (the directive) AND
+    how context resolves under it (the `resolution` block). That is why `resolution` lives on the spec
+    next to `directive` — one edit, one place, both change (§6.5).
+
+    Fields:
+      label      — short operator-facing name (the surface renders it).
+      directive  — the behavioural prose injected into the RHM prompt (the OLD MODE_DIRECTIVES value).
+      resolution — the CONTEXT-RESOLUTION DECLARATION: a dict the resolver consumes AS DATA (never a
+                   mode-name branch — registry-is-truth). Keys (all optional; absent → today's default):
+                     • strata        — frozenset of gather-stratum kinds this lens admits
+                                       ({'annotation','chat','event','howto','run'}). None → admit all
+                                       (byte-for-byte today). A lens can DROP a stratum (e.g. a terse
+                                       lens that excludes 'howto').
+                     • howto_detail  — 'full' (today) | 'terse' (truncate howto harder) | 'none'
+                                       (suppress the how-to/affordance leg entirely).
+                     • budget        — int char-cap OVERRIDE for this lens (None → the instance R2_BUDGET).
+                                       A tight-attention mode (focus) resolves a SMALLER window.
+                   This is the §6.3 unification made concrete: R2 becomes mode-parameterized — the
+                   active mode-type's declarations choose which strata / how much / how, the instance
+                   parameters (sub-type + rhm_mode-node overrides) supply the specifics, over the ONE
+                   shared store.
+      subtypes   — the HIERARCHY (§6.5: '≤8 top-level, each with sub-types'). A dict {subtype-id: {...}}
+                   where each sub-type may OVERRIDE any `resolution` key for an INSTANCE. The mode-type
+                   is the lens; the sub-type (an instance parameter) refines it. None/{} → no sub-types.
+      consent    — the consent-interaction style this mode favours (§6B — descriptive declaration the
+                   later rich consent layer reads; not yet wired into dispatch, captured as data)."""
+    label: str
+    directive: str
+    resolution: dict | None = None
+    subtypes: dict | None = None
+    consent: str = "offer"
 
 
 class Suite:
@@ -210,6 +294,20 @@ class Suite:
         # durable decision.dispatch event remains the cross-process/restart guarantee.
         self._dispatch_locks_guard = _t.Lock()
         self._dispatch_locks: dict = {}
+        # WIRE-ASYNC — the resolve→dispatch trigger must NOT run the build INSIDE the approving HTTP
+        # request. `drive_dispatchable` → `dispatch_decision` → `launch` runs a BLOCKING `claude -p`
+        # subprocess (up to DEFAULT_TIMEOUT_S=900s); doing that synchronously means the whole build
+        # ran inside POST /api/resolve, so a dropped client connection (curl timeout, UI fetch timeout,
+        # phone backgrounding) abandoned the request thread → the build orphaned as a 'crashed' dispatch
+        # (a decision.dispatch claim with no terminal event), never re-launched (exactly-once). The fix:
+        # resolve_surfaced writes the operator verdict SYNCHRONOUSLY (the consent record is durable
+        # immediately), then hands the build EXECUTION to a BACKGROUND daemon thread owned HERE, and
+        # returns a prompt ack. The background thread completes + emits its terminal event + commits +
+        # surfaces via the SAME event log/SSE stream INDEPENDENTLY of the approving client connection.
+        # We TRACK the live threads so tests can join them (wire_wait_for_dispatch) and so a caller can
+        # see they exist; daemon=True so a never-finished thread can't block process shutdown.
+        self._wire_threads_guard = _t.Lock()
+        self._wire_threads: list = []
         # R1 — the BACKEND-HELD current `ui://` locus (seams-rhm Seam 4: "there is no stored
         # current-locus anywhere in suite/store" — this is the net-new piece). Today the operator's
         # locus exists ONLY FE-side, shipped per-request as `focus.selected`; nothing is remembered
@@ -241,6 +339,28 @@ class Suite:
         self.R2_SEMANTIC_WEIGHT = self._cfg_float("COMPANY_R2_SEMANTIC_WEIGHT", type(self).R2_SEMANTIC_WEIGHT)
         self.R2_BUDGET = self._cfg_int("COMPANY_R2_BUDGET", type(self).R2_BUDGET)
         self.R2_RUN_VERSIONS = self._cfg_int("COMPANY_R2_RUN_VERSIONS", type(self).R2_RUN_VERSIONS)
+        self.R2_HOWTO_MAX = self._cfg_int("COMPANY_R2_HOWTO_MAX", type(self).R2_HOWTO_MAX)   # D1 flood guard
+        self.R2_HOWTO_TERSE = self._cfg_int("COMPANY_R2_HOWTO_TERSE", type(self).R2_HOWTO_TERSE)  # E1 terse cap
+        # E2 (mode auto-detect as a CONFIG TOGGLE, not hardcoded — direction §6.5) — resolve the toggle
+        # from the env into an instance attr (the SAME X17 pattern). VALUES (fail-loud-validated by
+        # _cfg_choice): 'off' (manual only — the default, byte-for-byte today's operator-selected modes),
+        # 'suggest' (auto-detection PROPOSES a mode, never switches), 'auto' (auto-detection SWITCHES).
+        # Exposed in capabilities().composition_config so the surface reads + SETS it. The DETECTOR
+        # that produces a candidate is a deferred seam (§11: zero detector exists today) — `autodetect_mode`
+        # honours the toggle over a SUPPLIED candidate; it never fabricates detection (rule 4/8).
+        # GC6 (E2-live) — MODE_AUTODETECT is now a RUNTIME-SETTABLE slot (set_rhm_config), so it must
+        # SURVIVE a reload like every other config slot. PRECEDENCE on a fresh Suite: the PERSISTED store
+        # value (MODE_NODE config, written by set_rhm_config) wins → else the env (_cfg_choice, X17) → else
+        # the class default. So a value set through the surface is honoured by a fresh Suite re-running
+        # __init__ (the reload test), while an unset slot still byte-for-byte resolves the env/class default
+        # (every preserve suite stays green). The persisted value is fail-loud-validated by set_rhm_config
+        # before it lands, so reading it here needs no re-validation; _rhm_cfg() returns {} safely at first
+        # boot (no rhm node yet) → the env/class path. self.store is assigned above (line 229), so the
+        # _rhm_cfg() read here is safe.
+        _persisted_autodetect = self._rhm_cfg().get("mode_autodetect")
+        self.MODE_AUTODETECT = (_persisted_autodetect if _persisted_autodetect in self.MODE_AUTODETECT_OPTIONS
+                                else self._cfg_choice("COMPANY_MODE_AUTODETECT",
+                                                      type(self).MODE_AUTODETECT, self.MODE_AUTODETECT_OPTIONS))
 
     @staticmethod
     def _cfg_float(env_name: str, default: float) -> float:
@@ -270,6 +390,18 @@ class Suite:
             raise ValueError(f"{env_name}={raw!r} is not a valid int — fix the env value "
                              f"(X17 composition knob; default {default!r})")
 
+    @staticmethod
+    def _cfg_choice(env_name: str, default: str, options) -> str:
+        """E2 — resolve a STRING-ENUM knob from the env (default = the class constant). FAIL LOUD on a
+        value outside `options` (rule 4 — never a silent wrong/default). Mirrors _cfg_int/_cfg_float."""
+        raw = os.environ.get(env_name)
+        if raw is None:
+            return default
+        if raw not in options:
+            raise ValueError(f"{env_name}={raw!r} is not one of {tuple(options)} — fix the env value "
+                             f"(config toggle; default {default!r})")
+        return raw
+
     def _session_lock(self, session_id: str):
         """One reentrant-safe lock per session, created on demand (threadsafe)."""
         import threading as _t
@@ -291,6 +423,76 @@ class Suite:
                 lk = _t.Lock()
                 self._dispatch_locks[derived_from] = lk
             return lk
+
+    # ── WIRE-ASYNC · background dispatch (decouple the build from the approving request) ──────────
+    def _drive_dispatchable_bg(self, *, sid: str | None, launcher=None, verifier=None,
+                               suite_runner=None, critic=None, cap: int | None = None,
+                               repo: str | None = None, committer=None):
+        """Spawn a BACKGROUND daemon thread that runs ONE `drive_dispatchable` watcher pass, decoupled
+        from whatever request triggered it. The thread:
+          • runs the full GOVERNED path (drive_dispatchable → dispatch_decision: the per-seq lock + the
+            durable decision.dispatch CLAIM + the AUTO-posture gate + launch + verify + the [self-build]
+            commit + the guarded close + surface-for-review) — REUSED byte-for-byte, never re-implemented,
+            so EXACTLY-ONCE, the gates, and git-safety are preserved (the claim is emitted under the
+            SAME locks INSIDE dispatch_decision regardless of which thread runs it);
+          • emits its terminal event (decision.implemented / decision.verify) + surfaces the review via
+            the SAME store/event log → the SSE stream delivers it to the UI, INDEPENDENT of the
+            approving client connection (a dropped connection no longer orphans the build);
+          • is daemon=True so a long/never-finishing build can't block process shutdown;
+          • CATCHES every exception and emits a FAIL-LOUD decision.verify terminal (rule 4 — a silently
+            dead thread = an orphaned dispatch, exactly the bug this lane closes). resurface_crashed
+            still covers a thread that genuinely dies (e.g. the interpreter is torn down), because the
+            claim event with no terminal is its signal — but the normal-exception path fails loud HERE.
+
+        Returns the spawned threading.Thread (tracked in self._wire_threads). The injectables
+        (launcher/verifier/committer/cap/repo) are threaded through so tests inject a fake runner +
+        a no-op committer (never a real `claude -p`, never a live commit)."""
+        import threading as _t
+
+        def _run():
+            try:
+                implement = __import__("runtime.implement", fromlist=["drive_dispatchable"])
+                implement.drive_dispatchable(
+                    self, launcher=launcher, verifier=verifier, suite_runner=suite_runner,
+                    critic=critic, cap=cap, repo=repo, committer=committer)
+            except Exception as e:   # noqa: BLE001 — fail loud, never a silent thread death
+                # A silently-dead background thread would re-create the orphan bug (a claim with no
+                # terminal). Emit a loud terminal so now()'s last-event surfaces it and the SSE stream
+                # delivers it to the UI. The operator's resolve already committed (resolve_surfaced),
+                # so operator-only resolve holds; only the build EXECUTION failed.
+                try:
+                    self._emit("decision.verify",
+                               f"WIRE-ASYNC background dispatch thread errored (build not driven): {e}",
+                               surfaced=sid, derived_from=None, verify_passed=False,
+                               address="ui://chrome/inbox")
+                except Exception:
+                    pass   # the emit itself failing must not crash the daemon thread teardown
+            finally:
+                # drop ourselves from the live-thread registry (best-effort; the GC handles the rest)
+                with self._wire_threads_guard:
+                    me = _t.current_thread()
+                    if me in self._wire_threads:
+                        self._wire_threads.remove(me)
+
+        th = _t.Thread(target=_run, name=f"wire-dispatch-{sid or '?'}", daemon=True)
+        with self._wire_threads_guard:
+            self._wire_threads.append(th)
+        th.start()
+        return th
+
+    def wire_wait_for_dispatch(self, timeout: float | None = None) -> bool:
+        """TEST/OPS helper — join every live WIRE-ASYNC background dispatch thread (a SNAPSHOT taken
+        under the guard, so a thread that finishes + removes itself mid-join is fine). Returns True if
+        all joined within `timeout`, False if any is still alive. NOT used in the production request
+        path (the whole point is that the request does NOT wait) — it exists so a by-use test can prove
+        the build COMPLETES in the background after the resolve returned, and so ops can drain on demand."""
+        with self._wire_threads_guard:
+            snapshot = list(self._wire_threads)
+        for th in snapshot:
+            th.join(timeout)
+            if th.is_alive():
+                return False
+        return True
 
     def _emit(self, kind: str, summary: str, **meta) -> None:
         """Append one TELEMETRY event to the captured trajectory (I2). Lenient by design: a telemetry
@@ -491,6 +693,30 @@ class Suite:
             # mode_directives) are now BOTH merged — registry-is-truth, PoLR honoured. Additive map
             # {mode: directive}; an older FE that ignores it is unaffected.
             "mode_directives": dict(self.MODE_DIRECTIVES),
+            # E1 — THE MODE TYPE-REGISTRY (registry-is-truth): the full HIERARCHICAL spec the surface reads
+            # so the modes-and-context-resolution-are-ONE-system is visible end-to-end. Each entry carries
+            # its label + directive (behaviour) + resolution declaration (HOW context resolves under it:
+            # strata/howto_detail/budget) + sub-types (the hierarchy, §6.5) + consent style. Editing a mode
+            # in this registry changes BOTH behaviour AND context-resolution — one edit, one place. strata
+            # is a frozenset → serialized to a sorted list (None stays None = admit-all) so it's JSON-safe.
+            "mode_registry": {
+                m: {
+                    "label": s.label,
+                    "directive": s.directive,
+                    "resolution": (None if s.resolution is None else {
+                        "strata": (None if s.resolution.get("strata") is None
+                                   else sorted(s.resolution.get("strata"))),
+                        "howto_detail": s.resolution.get("howto_detail", "full"),
+                        "budget": s.resolution.get("budget"),
+                    }),
+                    "subtypes": {
+                        st: {k: (sorted(v) if k == "strata" and v is not None else v)
+                             for k, v in (ov or {}).items()}
+                        for st, ov in (s.subtypes or {}).items()
+                    },
+                    "consent": s.consent,
+                } for m, s in self.MODE_SPECS.items()
+            },
             "rhm_verbs": list(self.RHM_VERBS),
             # The STATE-TYPE REGISTRY exposed (registry-is-truth): WHAT node-states exist + their meaning
             # + which resolve-mode each applies to, so the surface renders the status vocabulary from
@@ -524,6 +750,12 @@ class Suite:
                 "R2_SEMANTIC_WEIGHT": self.R2_SEMANTIC_WEIGHT,
                 "R2_BUDGET": self.R2_BUDGET,
                 "R2_RUN_VERSIONS": self.R2_RUN_VERSIONS,
+                "R2_HOWTO_MAX": self.R2_HOWTO_MAX,
+                "R2_HOWTO_TERSE": self.R2_HOWTO_TERSE,   # E1 — the terse-lens per-howto cap
+                # E2 — the mode AUTO-DETECT toggle (off/suggest/auto), a CONFIG item not hardcoded. The
+                # live resolved value + the valid options, so the surface renders + (later) sets it.
+                "MODE_AUTODETECT": self.MODE_AUTODETECT,
+                "MODE_AUTODETECT_OPTIONS": list(self.MODE_AUTODETECT_OPTIONS),
             },
             "api_verbs": ["/api/run", "/api/now", "/api/chat", "/api/graph", "/api/graphs",
                           "/api/types", "/api/object_info", "/api/cognition_info", "/api/events", "/api/inbox",
@@ -934,11 +1166,110 @@ class Suite:
         }
 
     # --- modes / the presence dial: the mode IS a node (context-05, D1-D3) ---
-    MODES = ("listening", "text-only", "background", "focus",
-             "walkthrough", "watch-and-react", "decide-for-me", "off")
+    # E1 — THE MODE TYPE-REGISTRY (the modes-and-context-resolution-are-ONE-system criterion, direction
+    # §6/§6.5). Each entry is a `ModeSpec` carrying its directive (behaviour) AND its `resolution`
+    # declaration (how context resolves under it) AND its sub-types (the hierarchy). `MODES` (the 8-tuple,
+    # ORDER-CONTRACTED — modes_acceptance asserts len==8) and `MODE_DIRECTIVES` (the prose map) are now
+    # DERIVED from this ONE source (no parallel literal to drift — the same move RHM_VERB_SPECS made).
+    # The 8 top-level modes are UNCHANGED in NAME and ORDER (listening … off) — schema-additive: the new
+    # `resolution`/`subtypes`/`consent` data is added, no mode renamed/removed/reordered.
+    #
+    # The `resolution` blocks are the LOAD-BEARING half. They are consumed AS DATA by `resolution_spec_for`
+    # → `_resolve_context_at` (there is NO `if mode ==` anywhere in the resolution path — registry-is-truth).
+    # The seed `listening` resolution = today's full gather (strata=None admit-all, howto full, no budget
+    # override) so the DEFAULT path is byte-for-byte unchanged (every existing R2 suite stays green). The
+    # OTHER modes declare GENUINE differences over the SAME store/locus: focus resolves a tight, terse,
+    # howto-suppressed window (deep work — minimal context); background/watch drop the chatty strata; off
+    # resolves nothing (the RHM is asleep). Editing any one of these entries changes BOTH the mode's
+    # behaviour AND how context resolves under it — one edit, one place (§6.5, proven by use).
+    MODE_SPECS = {
+        "listening": ModeSpec(
+            label="Listening",
+            directive="Conversational and present; respond fully.",
+            # SEED = today's full gather: admit every stratum, full howto, no budget override.
+            resolution={"strata": None, "howto_detail": "full", "budget": None},
+            subtypes={
+                "general": {},   # the default sub-type (no override) — identical to the mode-type lens
+                # an instance can ask for a deeper, semantically-weighted read (e.g. when co-present at a
+                # node): a sub-type is an INSTANCE PARAMETER that refines the SAME mode-type lens (§6.2).
+                "deep": {"budget": 8000},
+            },
+            consent="offer"),
+        "text-only": ModeSpec(
+            label="Text-only",
+            directive="Respond in text, concisely, only to what is addressed.",
+            resolution={"strata": None, "howto_detail": "full", "budget": None},
+            consent="offer"),
+        "background": ModeSpec(
+            label="Background",
+            directive="Be minimal — surface only what genuinely needs the operator; otherwise a one-line acknowledgement.",
+            # background = low-noise: drop the chatty annotation/chat strata, keep the stable howto +
+            # presentation_pref (F1 — a learned pref is address-truth, a sibling of howto) + events.
+            resolution={"strata": frozenset({"howto", "presentation_pref", "event", "run"}),
+                        "howto_detail": "terse", "budget": 1500},
+            consent="act"),
+        "focus": ModeSpec(
+            label="Focus",
+            directive="The operator is in deep work. Be extremely brief (one or two lines); do not elaborate unless asked.",
+            # focus = TIGHT ATTENTION: a small window, terse, NO how-to/affordance leg (it would flood deep work).
+            resolution={"strata": frozenset({"annotation", "chat", "event", "run"}), "howto_detail": "none", "budget": 800},
+            subtypes={
+                "default": {},
+                # a focus instance that still wants the structural run-trail but nothing chatty:
+                "structural": {"strata": frozenset({"event", "run"}), "budget": 600},
+            },
+            consent="act"),
+        "walkthrough": ModeSpec(
+            label="Walkthrough",
+            directive="Actively guide: narrate what you are doing and direct the operator's attention step by step.",
+            # GUIDED/show-me lens (§5): the howto/affordance leg is the POINT (narrate what-this-is /
+            # what-you-can-do), full strata so the narration has the whole picture. A wider window.
+            resolution={"strata": None, "howto_detail": "full", "budget": 6000},
+            subtypes={
+                "guided": {},                       # the operator drives, the RHM narrates each step
+                "show-me": {"budget": 8000},        # the RHM drives the sequence (a richer read per step)
+            },
+            consent="offer"),
+        "watch-and-react": ModeSpec(
+            label="Watch & react",
+            directive="Observe; comment only when relevant, and briefly.",
+            # observe lens: events + run-trail are what matters (what's HAPPENING), terse, no flood; keep
+            # the stable howto + presentation_pref (F1 — address-truth, a sibling of howto).
+            resolution={"strata": frozenset({"event", "run", "howto", "presentation_pref"}),
+                        "howto_detail": "terse", "budget": 1500},
+            consent="act"),
+        "decide-for-me": ModeSpec(
+            label="Decide for me",
+            directive="Act on what the governance posture lets you act on (the AUTO/reversible classes — propose a node, run the graph) rather than asking; surface the rest for the operator. The routing is deterministic (the action's posture decides), not a judgement call. You still cannot self-approve; anything that needs approval is surfaced.",
+            resolution={"strata": None, "howto_detail": "full", "budget": None},
+            consent="act"),
+        # D13: 'off' carries a one-line DESCRIPTION (was empty). chat() short-circuits on mode=='off'
+        # BEFORE any directive is used, so this is purely descriptive for the surface — it does NOT
+        # re-enable the RHM. modes_acceptance asserts non-empty directives only for m != 'off'.
+        # resolution = the EMPTY lens: the RHM is asleep, nothing resolves (strata=empty set).
+        "off": ModeSpec(
+            label="Off",
+            directive="The right-hand-man is asleep — no conversation, no actions. Switch any other mode on the presence dial to wake it.",
+            resolution={"strata": frozenset(), "howto_detail": "none", "budget": 0},
+            consent="none"),
+    }
+    # --- the two legacy names, DERIVED from the one registry (no drift) ---
+    # MODES: the 8-tuple in registry-insertion order (ORDER-CONTRACTED — modes_acceptance len==8 + the
+    # _M_* mode-sets below frozenset over it). MODE_DIRECTIVES: the {mode: directive} prose map the
+    # grounding context + capabilities() read. Both DERIVE — there is no second copy to fall out of sync.
+    MODES = tuple(MODE_SPECS)
+    MODE_DIRECTIVES = {m: s.directive for m, s in MODE_SPECS.items()}
     DEFAULT_MODE = "listening"
     SYSTEM_GRAPH = "system"
     MODE_NODE = "rhm"
+    # E2 — mode AUTO-DETECTION is a positionable CONFIG TOGGLE (direction §6.5: "the system CAN auto-detect
+    # the mode, but whether/how is configured" — NOT hardcoded). The class constant is the DEFAULT FLOOR;
+    # __init__ resolves the live value from COMPANY_MODE_AUTODETECT into self.MODE_AUTODETECT (X17 pattern).
+    #   'off'     — manual only (operator-selected modes — TODAY's behaviour, the safe default).
+    #   'suggest' — auto-detection PROPOSES a mode (a surfaced suggestion); never switches on its own.
+    #   'auto'    — auto-detection SWITCHES the mode (set_mode the detected candidate).
+    MODE_AUTODETECT_OPTIONS = ("off", "suggest", "auto")
+    MODE_AUTODETECT = "off"
 
     # --- the MODEL-ROLE REGISTRY (registry-is-truth; mirrors STT_PROVIDERS / the node registry) -------
     # A ROLE is a named model-FUNCTION of the collective cognition: a specific job done by a model that
@@ -1036,21 +1367,8 @@ class Suite:
     _S2S_HINTS = ("omni", "moshi", "glm-voice", "glm4-voice", "mini-omni", "miniomni", "qwen2.5-omni",
                   "qwen3-omni", "ultravox", "llama-omni", "csm", "sesame")
 
-    MODE_DIRECTIVES = {
-        "listening": "Conversational and present; respond fully.",
-        "text-only": "Respond in text, concisely, only to what is addressed.",
-        "background": "Be minimal — surface only what genuinely needs the operator; otherwise a one-line acknowledgement.",
-        "focus": "The operator is in deep work. Be extremely brief (one or two lines); do not elaborate unless asked.",
-        "walkthrough": "Actively guide: narrate what you are doing and direct the operator's attention step by step.",
-        "watch-and-react": "Observe; comment only when relevant, and briefly.",
-        "decide-for-me": "Act on what the governance posture lets you act on (the AUTO/reversible classes — propose a node, run the graph) rather than asking; surface the rest for the operator. The routing is deterministic (the action's posture decides), not a judgement call. You still cannot self-approve; anything that needs approval is surfaced.",
-        # D13: 'off' now carries a one-line DESCRIPTION (was an empty string — the only mode with none,
-        # so the surface had nothing to render for it). chat() still short-circuits on mode=='off' BEFORE
-        # any directive is used, so this is purely descriptive for the surface (capabilities().
-        # mode_directives) — it does NOT re-enable the RHM. modes_acceptance asserts non-empty directives
-        # only for m != 'off', so this is schema-additive there too.
-        "off": "The right-hand-man is asleep — no conversation, no actions. Switch any other mode on the presence dial to wake it.",
-    }
+    # MODE_DIRECTIVES is now DERIVED from MODE_SPECS above (one-source; the literal here was removed when
+    # E1 folded the directive INTO the spec — see the MODE_SPECS block + `MODE_DIRECTIVES = {...}` derive).
 
     # ============================================================================================
     # CONCURRENT COGNITION G4 — the staged-response queue (the reply as PARTS).
@@ -1231,6 +1549,97 @@ class Suite:
     def _mode_directive(self, mode: str) -> str:
         return self.MODE_DIRECTIVES.get(mode, "")
 
+    # --- E1: the mode SUB-TYPE (the instance parameter in §6.2's (mode-type) × (instance) factoring) ---
+    # The sub-type is a SECOND rhm_mode-node config key ('submode'), edited by the SAME verb as the mode
+    # (set_config). Schema-additive: an rhm_mode node WITHOUT a 'submode' key reads as None → the
+    # mode-type's bare lens (no instance override). So old graphs keep working byte-for-byte.
+    def get_submode(self) -> str | None:
+        return self._rhm_cfg().get("submode")
+
+    def set_submode(self, submode: str | None) -> str | None:
+        """Set the instance sub-type for the CURRENT mode-type. FAIL LOUD (rule 4) if the sub-type isn't
+        declared on the current mode-type's spec — never a silent wrong value. None clears it (bare lens)."""
+        mode = self.get_mode()
+        spec = self.MODE_SPECS.get(mode)
+        valid = set((spec.subtypes or {})) if spec else set()
+        if submode is not None and submode not in valid:
+            raise ValueError(f"unknown sub-type {submode!r} for mode {mode!r} — one of {sorted(valid) or '(none declared)'}")
+        self._ensure_rhm_node()
+        self.set_config(self.SYSTEM_GRAPH, self.MODE_NODE, {"submode": submode})
+        self._emit("mode", f"sub-type → {mode}/{submode}", address="ui://chrome/toolbar")
+        return submode
+
+    def resolution_spec_for(self, mode: str | None = None, submode: str | None = None) -> dict:
+        """E1 — the LOAD-BEARING resolver: (mode-type declarations) × (instance parameters) → the
+        context-resolution spec the R2 path consumes AS DATA. This is the §6.2 relational primitive made
+        a function: `resolved context = (mode-type) × (instance) over ONE shared store`.
+
+        It is called ONCE at the resolution caller (`_chat_context`) and the resulting DICT is threaded
+        down the R2 path — so NO mode-NAME ever appears in `_resolve_context_at`/`_r2_gather`/`_r2_howto_at`
+        (registry-is-truth: the resolution shape is DATA from the spec, never an `if mode ==` branch).
+
+        Resolution order (mode-type lens, then instance override — §6.2):
+          1. start from the mode-type's `resolution` declaration (the LENS — what/how it admits);
+          2. overlay the sub-type's overrides (the INSTANCE — what specifically, this time).
+        With mode=None → the current live mode (read from the rhm_mode node); submode=None → the current
+        live sub-type. Returns {'strata','howto_detail','budget'} — every key always present (the lens'
+        default fills any the sub-type didn't override). An UNKNOWN mode degrades to the listening lens
+        with a warning (fail-loud-legible — never crash the resolver, mirroring _resolve_context_at)."""
+        if mode is None:
+            mode = self.get_mode()
+        spec = self.MODE_SPECS.get(mode)
+        if spec is None:
+            # locus-bound: the mode lives on the presence dial (ui://chrome/toolbar — same locus set_mode
+            # stamps), so this config-resolution warning is honestly addressed, not locus-less.
+            self._emit("warning", f"resolution_spec_for: unknown mode {mode!r} — defaulting to listening lens",
+                       address="ui://chrome/toolbar")
+            spec = self.MODE_SPECS["listening"]
+        base = dict(spec.resolution or {})
+        out = {"strata": base.get("strata"),
+               "howto_detail": base.get("howto_detail", "full"),
+               "budget": base.get("budget")}
+        # INSTANCE overlay: the sub-type (an instance parameter) refines the SAME mode-type lens.
+        if submode is None:
+            submode = self.get_submode()
+        if submode is not None:
+            sub = (spec.subtypes or {}).get(submode)
+            if sub is None:
+                # honest: a sub-type set on the node that isn't declared on THIS mode-type (e.g. the mode
+                # was switched after a sub-type was set) — ignore it with a warning, never a wrong read.
+                # locus-bound to the presence dial (the mode/sub-type live there).
+                self._emit("warning", f"resolution_spec_for: sub-type {submode!r} not declared on mode {mode!r} — using bare lens",
+                           address="ui://chrome/toolbar")
+            else:
+                for k in ("strata", "howto_detail", "budget"):
+                    if k in sub:
+                        out[k] = sub[k]
+        return out
+
+    def autodetect_mode(self, candidate: str) -> dict:
+        """E2-BACKEND — honour the mode AUTO-DETECT toggle (self.MODE_AUTODETECT) over a SUPPLIED candidate
+        mode. The toggle (a config item, NOT hardcoded — direction §6.5) decides what auto-detection DOES:
+          • 'off'     — NO-OP: auto-detection is disabled; the operator's mode is untouched (today's default).
+          • 'suggest' — PROPOSE the candidate (emit a surfaced 'mode' suggestion event); never switch.
+          • 'auto'    — SWITCH to the candidate via the SAME `set_mode` (no parallel path).
+        FAIL LOUD (rule 4/8): the candidate must be a real registered mode — never a fabricated/unknown one.
+        The DETECTOR that PRODUCES the candidate is a deferred seam (§11 — zero detector in the repo today);
+        this method honours the toggle over whatever candidate it's GIVEN, and never invents a detection.
+        Returns a legible {toggle, candidate, applied, action} so the caller/surface sees exactly what
+        happened (no silent no-op — rule 4)."""
+        if candidate not in self.MODES:
+            raise ValueError(f"autodetect_mode: unknown candidate {candidate!r} — one of {self.MODES} "
+                             f"(rule 8: never fabricate a mode)")
+        toggle = self.MODE_AUTODETECT
+        if toggle == "off":
+            return {"toggle": toggle, "candidate": candidate, "applied": None, "action": "noop"}
+        if toggle == "suggest":
+            self._emit("mode", f"auto-detect SUGGESTS presence → {candidate} (toggle=suggest; not switched)",
+                       address="ui://chrome/toolbar")
+            return {"toggle": toggle, "candidate": candidate, "applied": None, "action": "suggested"}
+        # 'auto' — switch via the one set_mode (validated above; the toggle was env-validated by _cfg_choice).
+        self.set_mode(candidate)
+        return {"toggle": toggle, "candidate": candidate, "applied": candidate, "action": "switched"}
+
     # --- the STT (ear) slot: a SWAPPABLE speech-to-text provider, mirroring the brain-model slot ---
     # The RHM's ear is a config slot just like its brain model — so the operator can swap providers
     # without code. The stt lane (voice/stt.py) is the source of truth for WHAT ears exist; this slot
@@ -1338,7 +1747,7 @@ class Suite:
     def set_rhm_config(self, updates: dict) -> dict:
         allowed = {k: v for k, v in (updates or {}).items()
                    if k in ("model", "base_url", "persona", "mode", "voice_enabled", "timeout", "stt",
-                            "roles", "tts_engine", "tts_voice", "voice_path", "voice_input_mode", "brain_knobs")}
+                            "roles", "tts_engine", "tts_voice", "voice_path", "voice_input_mode", "brain_knobs", "MODE_AUTODETECT")}
         if "brain_knobs" in allowed:                          # S5 — temperature/max_tokens/top_p (numeric, fail-loud)
             bk = allowed["brain_knobs"]
             if not isinstance(bk, dict):
@@ -1399,6 +1808,20 @@ class Suite:
             allowed["roles"] = existing
         if "mode" in allowed and allowed["mode"] not in self.MODES:
             raise ValueError(f"unknown mode {allowed['mode']!r}")
+        if "MODE_AUTODETECT" in allowed:                      # GC6 (E2-live): the auto-detect toggle slot
+            # The FE writes the SAME key composition_config exposes (`MODE_AUTODETECT`); we persist it
+            # under the node-config slot `mode_autodetect` (lowercase, matching the slot convention so
+            # _rhm_cfg/__init__ read it back). FAIL LOUD (rule 4/8) on a value outside the registered
+            # options — mirrors _cfg_choice's validation discipline (off/suggest/auto only; never invent).
+            ad = str(allowed.pop("MODE_AUTODETECT")).strip()
+            if ad not in self.MODE_AUTODETECT_OPTIONS:
+                raise ValueError(f"MODE_AUTODETECT must be one of {tuple(self.MODE_AUTODETECT_OPTIONS)}, "
+                                 f"got {ad!r} (rule 8: never fabricate a value)")
+            allowed["mode_autodetect"] = ad                   # persist under the lowercase slot key
+            # X17 re-resolve — set the LIVE instance attr so autodetect_mode() + capabilities() honour
+            # the new value IMMEDIATELY (this turn), without waiting for a reload. Persistence (below,
+            # via set_config) carries it across a reload; __init__ re-seeds self.MODE_AUTODETECT from it.
+            self.MODE_AUTODETECT = ad
         if "stt" in allowed:                                  # the ear slot — validate against voice/stt.py's
             # source of truth (never fabricate a provider id, rule 8). When the stt lane's registry has
             # shipped we validate ∈ its ids; until then (registry absent → no ids) we accept any non-empty
@@ -1534,10 +1957,26 @@ class Suite:
         graphs_s = (f"{len(all_graphs)} total — current: {nowv['graph']}"
                     + (f"; others incl. {', '.join(others[:5])}" + ("…" if len(others) > 5 else "") if others else ""))
         panels_s = ", ".join(p.get("id", "?") for p in self.list_panels()) or "(none)"
-        # the valid ui:// show-targets, from the UI_REGISTRY (single-source; chrome refs as full ui:// refs).
-        show_targets_s = ", ".join(
-            ("ui://canvas/*" if kind == "canvas" else f"ui://{kind}/{ref}")
-            for ref, kind, *_ in self.UI_REGISTRY) or "(none)"
+        # the valid ui:// show-targets, from the UI_REGISTRY (single-source). MUST mirror
+        # _describe_ui_address's served-form logic (S1's TWO key conventions): the corpus ELEMENT rows are
+        # ALREADY full-keyed (`ref="ui://inbox/build-review"`) → emit `ref` AS-IS; only the bare-keyed REGION
+        # rows (`ref="inbox"`) get the `ui://{kind}/{ref}` served form (canvas-kind → `ui://canvas/*`). The
+        # OLD builder applied the served form UNCONDITIONALLY, producing the malformed double-prefix
+        # `ui://chrome/ui://inbox/build-review` (the exact bug _describe_ui_address's docstring warns against)
+        # for every element row — fabricated, non-resolvable grounding the RHM was told were valid targets.
+        # G-61-class drift: waves added ~60 full-keyed element rows to UI_REGISTRY but this builder was never
+        # lifted past the bare-region vocabulary it was written for. De-malforming it also collapses the
+        # repeated `ui://canvas/*` (dedupe, order-preserving) — together this dropped the line 2262→~1487
+        # chars (the whole RHM-grounding budget overflow, len 4039>4000). One-source/never-fabricated (rule 8).
+        _seen_targets: set[str] = set()
+        _targets = []
+        for row in self.UI_REGISTRY:
+            ref, kind = row[0], row[1]
+            t = ref if ref.startswith("ui://") else ("ui://canvas/*" if kind == "canvas" else f"ui://{kind}/{ref}")
+            if t not in _seen_targets:
+                _seen_targets.add(t)
+                _targets.append(t)
+        show_targets_s = ", ".join(_targets) or "(none)"
 
         ctx = (
             "LIVE SYSTEM STATE (ground truth — answer only from this):\n"
@@ -1615,7 +2054,13 @@ class Suite:
         # X13 (Convergence) — pass `intent` (the operator's current chat message) so the locus context is
         # SEMANTICALLY ranked (relevance to what they're asking), not just recency·proximity·pin. With no
         # intent the ranking is the pre-X13 ordering; a down embedder degrades the term to 0 with a warning.
-        ctx += self._resolve_context_at(self.current_locus(), graph_id=graph_id, intent=intent)
+        # E1 (mode-and-context-resolution-are-ONE-system) — resolve the LENS once here (mode-type × instance
+        # sub-type, read live from the rhm_mode node), then thread the resulting DATA spec into R2 so the
+        # active mode parameterizes WHAT/HOW context resolves. The mode is already in scope above (`mode`).
+        # No mode-name reaches the R2 path — the shape is the spec dict (registry-is-truth).
+        _res = self.resolution_spec_for(mode)
+        ctx += self._resolve_context_at(self.current_locus(), graph_id=graph_id, intent=intent,
+                                        resolution=_res)
         return ctx
 
     def _describe_ui_address(self, address: str) -> str:
@@ -1653,6 +2098,206 @@ class Suite:
                     return f"{address} — represents {represents}"
                 return address                                 # registered, no extra descriptor available
         return f"{address} (unregistered)"                    # fail-loud-legible: gap surfaced, not dropped
+
+    def address_help(self, ui_addr: str) -> dict:
+        """D1 — the COMPOSED affordance resolver: join the THREE legs of "what can I do here?" at one
+        `ui://` address into ONE bundle, REUSING the existing resolvers (no parallel system, rule 3):
+
+          • what_this_is   — the WHAT (`_describe_ui_address`): the registry row's human title /
+                             `represents` feature-id (one-source, never invented).
+          • how_to_change  — the HOW-TO-CHANGE (`resolve_scope` → `blast_radius`): the `code://` scope this
+                             address powers + the BLAST RADIUS a change here would reach (co-reference /
+                             structural dependents+dependencies / semantic neighbours). This is the
+                             "if you change this, here's what it touches" leg — the same X1/X2/X14 join the
+                             consent/mint path uses.
+          • how_to_use     — the HOW-TO-USE (`_registry_howto_for`): the authored affordance/how-to text
+                             (the NEW D1 `howto` field). None when the address authors no help.
+
+        DEGRADE-CLEAN IF A LEG IS ABSENT (rule 4, fail-loud-LEGIBLE, never crash): each leg is resolved in
+        its own guard. `resolve_scope`/`blast_radius` ALREADY return graceful-empty + a `note` for an
+        address with no code symbol / a stale corpus join (they do not raise on absence — only a malformed
+        address raises the S0 gate). The how-to-use leg is None when unauthored. So a bare/region address
+        with no code and no howto returns a bundle with what_this_is populated and the other two legs
+        honestly empty (each carrying its own note / None) — a clean partial, never a half-crash. A
+        MALFORMED address propagates the S0 grammar raise (fail loud — an unparseable locus is a real
+        error, not a missing leg).
+
+        Returns {address, what_this_is, how_to_change:{scope, blast_radius, note}, how_to_use,
+        legs_present:{...}} — `legs_present` makes the degrade explicit so a caller (or the D2 UI later)
+        can see WHICH legs resolved without re-deriving it. GENERIC over any address (mode-parameterizable
+        later, E1); no per-element branch (Tim's not-hardwired correction)."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(ui_addr)                              # S0 grammar gate — a malformed locus IS an error
+
+        # LEG 1 — WHAT THIS IS (always resolvable for a well-formed address; '(unregistered)' if unknown).
+        what_this_is = self._describe_ui_address(ui_addr)
+
+        # LEG 2 — HOW TO CHANGE: scope (resolve_scope) + blast_radius. Both degrade graceful-empty (note),
+        # never raise on absence. Guarded so even an unexpected internal failure becomes a legible note,
+        # not a crash of the whole bundle (the leg is then honestly marked absent).
+        how_to_change = {"scope": [], "blast_radius": None, "note": None}
+        try:
+            scoped = self.resolve_scope(ui_addr)               # {address, symbols, scope, stale, note}
+            radius = self.blast_radius(ui_addr)                # {address, symbols, co_reference, …, note}
+            how_to_change = {"scope": scoped.get("scope", []),
+                             "blast_radius": radius,
+                             "note": scoped.get("note") or radius.get("note")}
+        except (ValueError, TypeError):
+            raise                                              # malformed address already raised above; re-raise
+        except Exception as e:                                 # any other internal failure → legible absent leg
+            how_to_change = {"scope": [], "blast_radius": None,
+                             "note": f"how-to-change leg unresolved ({type(e).__name__})"}
+
+        # LEG 3 — HOW TO USE: the authored affordance text (None when unauthored — a clean absent leg).
+        how_to_use = self._registry_howto_for(ui_addr)
+
+        def _howto_change_has_content(htc: dict) -> bool:
+            """The how-to-change leg has REAL content iff there is a code `scope` OR the blast_radius
+            carries at least one edge (co_reference / structural dependents+dependencies / semantic
+            neighbours). A well-formed no-code-symbol address yields an all-empty radius dict — that is an
+            ABSENT change-leg (the operator can't change code that doesn't resolve), so we report it
+            absent rather than reading the bare dict as 'present'."""
+            if htc.get("scope"):
+                return True
+            br = htc.get("blast_radius")
+            if not isinstance(br, dict):
+                return False
+            return bool(br.get("co_reference") or br.get("structural_dependents")
+                        or br.get("structural_dependencies") or br.get("semantic_neighbours")
+                        or br.get("symbols"))
+
+        bundle = {
+            "address": ui_addr,
+            "what_this_is": what_this_is,
+            "how_to_change": how_to_change,
+            "how_to_use": how_to_use,
+            "legs_present": {
+                # what-this-is is "present" only when the address is REGISTERED (an '(unregistered)'
+                # descriptor is the honest gap, not a resolved leg).
+                "what_this_is": bool(what_this_is) and "(unregistered)" not in what_this_is,
+                # how-to-change is "present" only when it resolved REAL content — a code `scope` OR a
+                # blast_radius carrying at least one neighbour/dependent. blast_radius returns a dict for
+                # ANY well-formed address (often all-empty for a no-code-symbol address), so testing
+                # `is not None` would mark the leg present even when there is nothing to change. We check
+                # for actual edges, so the D2 UI can detect a genuinely-empty change-leg (degrade signal).
+                "how_to_change": _howto_change_has_content(how_to_change),
+                # how-to-use is "present" only when the address authored a howto.
+                "how_to_use": how_to_use is not None,
+            },
+        }
+        # F1 LEARNING LOOP — the ADAPT step: CONSULT the learned presentation pref at this address and
+        # APPLY it (model-free) so address_help (and up_translate('address'), which composes it) REFLECTS
+        # how Tim has shaped this. No pref → the bundle is returned byte-for-byte (the clean default — no
+        # error, no fabrication; every existing address_help caller + acceptance is preserved). A stored
+        # junk pref RAISES (fail loud) via the consult-read's re-validation.
+        return self._apply_presentation_pref(bundle, self.presentation_pref_at(ui_addr))
+
+    def _resolve_named_target(self, target: str | None) -> dict | None:
+        """Resolve a MODEL-SUPPLIED change target → a confident ui:// address, or an ASK. Returns None
+        when no target was supplied at all (so the caller falls back to the indicated locus). REUSES the
+        existing address machinery (parse_ui_address + _describe_ui_address + the UI_REGISTRY) — this is
+        a CUSTOM confident-single-match-else-ASK resolver (there is no existing name→address resolver to
+        reuse: `show`'s handle_map is handle→address, not name→address), deliberately conservative:
+          • a ui:// address → accepted iff grammar-valid AND REGISTERED (an unregistered/malformed ui://
+            is NOT silently accepted — it would mint a DENY-ALL or raise — it returns an ASK).
+          • a plain name ("the run button") → token-matched against the registry's OWN titles/refs
+            (registry-truth, never a fabricated address). CONFIDENT iff exactly ONE registry row matches;
+            ZERO or AMBIGUOUS (>1) → ASK, never pick one (rule 8 — a wrong scope = a wrong build).
+        Returns {address, source:'named'} on a confident match, {address:None, source:'ask', ask, candidates}
+        on an unconfident one, or None when target is empty."""
+        from contracts.ui_info import parse_ui_address
+        t = (target or "").strip()
+        if not t:
+            return None                                        # no target supplied → caller uses the locus
+        if t.startswith("ui://"):
+            try:
+                parse_ui_address(t)
+                if "(unregistered)" not in self._describe_ui_address(t):
+                    return {"address": t, "source": "named", "ask": None, "candidates": []}
+            except Exception:
+                pass                                           # malformed/unregistered ui:// → ASK below
+            return {"address": None, "source": "ask", "candidates": [],
+                    "ask": (f"I can't confidently resolve {t!r} to a known UI element. Point at the "
+                            f"element (click it) or name one of the registered elements so I scope the "
+                            f"change correctly — I won't guess a scope.")}
+        # plain name → token-match against the registry's OWN titles + refs. Tokenise both sides; a row
+        # matches when every salient query token is a substring of the row's title-or-ref token bag.
+        import re
+        stop = {"the", "a", "an", "this", "that", "button", "panel", "field", "area", "element",
+                "section", "view", "to", "in", "on", "of", "for"}
+        q_tokens = [w for w in re.findall(r"[a-z0-9]+", t.lower()) if w not in stop and len(w) >= 2]
+        matches = []                                           # (served_address, label)
+        if q_tokens:
+            for row in self.UI_REGISTRY:
+                ref, kind, title = row[0], row[1], row[2]
+                served = "ui://canvas/*" if kind == "canvas" else (
+                    ref if str(ref).startswith("ui://") else f"ui://{kind}/{ref}")
+                hay = (str(title or "") + " " + str(ref or "")).lower()
+                hay_tokens = set(re.findall(r"[a-z0-9]+", hay))
+                if all(any(qt in ht for ht in hay_tokens) or qt in hay for qt in q_tokens):
+                    matches.append((served, str(title or ref)))
+        seen, uniq = set(), []                                 # de-dup by address (a region may surface once)
+        for addr, label in matches:
+            if addr not in seen:
+                seen.add(addr); uniq.append((addr, label))
+        if len(uniq) == 1:
+            return {"address": uniq[0][0], "source": "named", "ask": None, "candidates": []}
+        if len(uniq) > 1:                                      # AMBIGUOUS → ASK, never pick one
+            cand = [f"{label} ({addr})" for addr, label in uniq[:8]]
+            return {"address": None, "source": "ask", "candidates": cand,
+                    "ask": (f"{t!r} could mean more than one element: " + "; ".join(cand) +
+                            ". Which one should I scope the change to? (Or click the element.)")}
+        return {"address": None, "source": "ask", "candidates": [],   # zero matches → ASK
+                "ask": (f"I couldn't match {t!r} to a known UI element. Click the element you mean, "
+                        f"or name a registered one, so I scope the change correctly — I won't guess.")}
+
+    def resolve_change_target(self, target: str | None, indicated: str | None = None) -> dict:
+        """CONVO→SELF-BUILD BRIDGE — resolve WHICH ui:// element/scope a conversational change-request
+        is about (rule 8 — never guess a scope; a wrong scope = a wrong/over-broad build). REUSES the
+        EXISTING address machinery (UI_REGISTRY + parse_ui_address + _describe_ui_address) via the
+        custom `_resolve_named_target` resolver above.
+
+        PRECEDENCE (the correctness-critical order):
+          1. EXPLICIT RESOLVABLE TARGET WINS. If the model supplied a `target` that resolves CONFIDENTLY
+             (a registered ui:// OR an unambiguous named element), use it — even if an indicated locus is
+             also present. Rationale: `indicated` is the backend-held `current_locus()`, which is the
+             most-recent indication ACROSS THE SESSION (set `if indicated:` in _chat_context, never
+             cleared — locus_acceptance proves a no-focus turn does NOT clobber it). It is therefore NOT
+             reliably "this turn." A stale earlier click must NEVER silently override a target the operator
+             named THIS turn (that is the exact wrong-scope failure the task warns against). An explicit,
+             resolvable target is itself evidence the operator is not leaning on a click this turn.
+          2. INDICATED LOCUS. Else, if the operator has a held ui:// locus (they pointed at an element)
+             and it is grammar-valid + REGISTERED, use it — this is the "operator pointed and didn't
+             restate the address" case (mirrors the wire-door using the pointed element).
+          3. ASK. Else fail loud: return an ASK message and resolve NO address (no fiction, no guessed
+             scope). If the model supplied a target that did NOT resolve confidently, the ASK carries
+             that named-target failure reason (its candidate list / no-match), which is more useful than
+             a generic prompt — but ONLY after step 2 declined (so a stale locus can't suppress a useful
+             ASK either, and a present locus is preferred over an unresolvable named target).
+
+        Returns {address, source:'named'|'indicated'|'ask', ask:str|None, candidates:[...]}.
+        `address` is None exactly when `source=='ask'`."""
+        from contracts.ui_info import parse_ui_address
+        # 1. EXPLICIT RESOLVABLE TARGET WINS (never let a stale session locus override a named target).
+        named = self._resolve_named_target(target)
+        if named is not None and named["source"] == "named":
+            return named
+        # 2. INDICATED LOCUS — the operator pointed at an element; use it if registered + valid.
+        if indicated and isinstance(indicated, str) and indicated.startswith("ui://"):
+            try:
+                parse_ui_address(indicated)                    # grammar gate (an indicated address should be valid)
+                if "(unregistered)" not in self._describe_ui_address(indicated):
+                    return {"address": indicated, "source": "indicated", "ask": None, "candidates": []}
+            except Exception:
+                pass                                           # a malformed held locus → fall through to ASK
+        # 3. ASK — no resolvable target, no usable locus. Prefer the named-target failure reason (its
+        #    candidate list is more useful than a generic prompt) when the model DID supply a target.
+        if named is not None:                                  # named was supplied but unconfident → its ASK
+            return named
+        return {"address": None, "source": "ask", "candidates": [],   # no target + no usable locus → generic ASK
+                "ask": ("Which UI element should this change apply to? Click the element (so I use that "
+                        "exact locus) or name it — I won't guess a scope, because a wrong scope is a "
+                        "wrong build.")}
 
     def current_locus(self) -> str | None:
         """R1 — READ the backend-held current `ui://` locus (the most-recent indicated address).
@@ -1727,6 +2372,20 @@ class Suite:
     #                                     window (~1k tokens). attention = BUDGET; the cap is ENFORCED —
     #                                     never stuffed. Far below CONSULT_CAP: this is the always-on
     #                                     locus slice that rides EVERY turn, not a one-shot consult read.
+    R2_HOWTO_MAX = 2000                 # D1 — max CHARS of the how-to/affordance stratum that may enter the
+    #                                     gather per locus (the FLOOD GUARD, mirroring R2_RUN_VERSIONS). The
+    #                                     howto stratum is PIN-PERSISTENT (pinned=True + ts=now each gather →
+    #                                     recency never decays), so it scores at or above the operator's own
+    #                                     comments and, unbounded, a long help text could EVICT them from the
+    #                                     bounded window (the same starvation _r2_run_strata caps against). So
+    #                                     a howto longer than this is TRUNCATED-with-marker at the data seam
+    #                                     (legible, not silent) BEFORE scoring; the per-turn R2_BUDGET cap
+    #                                     still applies on top. A named knob (D2/X17 will env-wire it), not a
+    #                                     bare literal — the affordance grounds, it never floods.
+    R2_HOWTO_TERSE = 240                # E1 — the per-howto cap a mode-type's `howto_detail='terse'` lens
+    #                                     applies (a one-liner affordance for low-noise modes — background /
+    #                                     watch-and-react — that still want the help leg but not a paragraph).
+    #                                     A named knob (env-wired below), not a bare literal; ≤ R2_HOWTO_MAX.
 
     @staticmethod
     def address_tree_distance(a: str, b: str) -> int:
@@ -1823,6 +2482,127 @@ class Suite:
                             "pinned": False})
         return out
 
+    def _registry_howto_for(self, address: str) -> str | None:
+        """D1 — read the authored HOW-TO / affordance text for `address` from the live UI_REGISTRY,
+        GENERICALLY (rule 8 — from the registry, never invented; mode-parameterizable later, NEVER a
+        per-element branch — Tim's not-hardwired correction). The howto rides the registry row's
+        union-extras (row[5]['howto'], plumbed from the corpus `howto` field via
+        UnionAddressRecord.from_corpus → _load_corpus_element_addresses), so this resolves it with the
+        SAME two-key matching `_describe_ui_address` uses (the bare-region served-form OR the corpus
+        element full-key) — one source, one match rule.
+
+        Returns the howto string, or None when the address is unregistered OR registered-without-howto
+        (both honest absences — the caller treats a None as 'no how-to-use leg' and degrades cleanly).
+        FAIL-LOUD (rule 4): a malformed address raises (S0 grammar gate) — never a silent empty parse."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                              # S0 grammar gate — raises on malformed
+        for row in self.UI_REGISTRY:
+            ref, kind = row[0], row[1]
+            served = "ui://canvas/*" if kind == "canvas" else f"ui://{kind}/{ref}"
+            if ref == address or served == address:
+                extras = row[5] if len(row) > 5 else {}
+                howto = (extras or {}).get("howto")
+                return howto if (howto and str(howto).strip()) else None
+        return None
+
+    def _r2_howto_at(self, address: str, now=None, detail: str = "full") -> list:
+        """D1 — the HOW-TO / AFFORDANCE stratum at `address`: the FOUNDATIONAL layer that resolves the
+        what-this-is / what-you-can-do / how-to-change-it help INTO the locus context, as a NEW R2 gather
+        source mirroring `_r2_events_at`. It is the data half of the foundational affordance stratum (the
+        composed three-leg join lives in `address_help`).
+
+        PIN-PERSISTENT (the keystone of this stratum — no recency decay): unlike a comment/chat/event whose
+        relevance fades, an address's how-to text is ALWAYS true at that address, so it must not decay out
+        of the window over a long session. Achieved WITHOUT touching `_r2_score` (which would risk the
+        addr_context_acceptance byte-for-byte assertion): the item is emitted with `pinned=True` (the
+        R2_PIN_WEIGHT bonus, the same mechanism a pinned comment uses) AND `ts=now` re-stamped EVERY gather
+        (recency = exp(-LAMBDA·0) = 1 — the maximum, never decaying). So the howto holds its rank turn over
+        turn through the EXISTING scorer — a pure-data persistence, not a scorer special-case.
+
+        FLOOD-PROOF (mirrors `_r2_run_strata`'s R2_RUN_VERSIONS bound): because it is pin-persistent it
+        scores at/above the operator's own locus comments; an unbounded long help text could EVICT them
+        from the R2_BUDGET window (the same starvation the run:// versions cap guards against). So the text
+        is TRUNCATED-with-marker at R2_HOWTO_MAX here (legible, never silent), BEFORE it reaches the
+        score+cap; the per-turn R2_BUDGET cap still applies on top.
+
+        MODE-PARAMETERIZABLE, NOT HARDWIRED (Tim's correction): the resolution is generic over ANY address
+        via `_registry_howto_for` (one match rule, registry-is-truth) — there is NO per-element branch and
+        NO help text embedded in code. E1 (NOW WIRED): the `detail` arg (the mode-type's `howto_detail`
+        declaration, threaded from `resolution_spec_for` via `_r2_gather`) parameterizes WHAT/HOW the
+        how-to resolves — the seam this docstring advertised is now closed:
+          • 'full'  — today's behaviour byte-for-byte (truncate only at R2_HOWTO_MAX).
+          • 'terse' — a tighter per-howto cap (R2_HOWTO_TERSE) so a low-noise mode (background/watch)
+                      still GETS the affordance but as a one-liner, not a paragraph.
+          • 'none'  — SUPPRESS the leg entirely (focus/off — deep work / asleep: no how-to flood).
+        `detail` is DATA from the spec (a string compare on a declared value), NOT a mode-name branch.
+
+        Returns a list of 0-or-1 R2 items in the common gather shape `{kind, address, ts, text, pinned}`.
+        `kind='howto'` (NOT 'event' — so `_r2_dedup`'s pass-2 echo logic never mangles it) and NO `_raw`
+        key (so dedup pass-1 keeps it unconditionally — it is never a comment double-count). Empty list
+        when the address has no authored howto (clean degrade) OR when `detail=='none'` (the lens suppresses it)."""
+        from datetime import datetime, timezone
+        if now is None:
+            now = datetime.now(timezone.utc)
+        if detail == "none":                                  # E1: the lens suppresses the how-to leg entirely
+            return []
+        howto = self._registry_howto_for(address)             # generic registry read (raises on malformed addr)
+        if not howto:
+            return []
+        text = str(howto)
+        cap = self.R2_HOWTO_TERSE if detail == "terse" else self.R2_HOWTO_MAX   # E1: the lens' per-howto cap
+        if len(text) > cap:                                   # FLOOD GUARD — truncate-with-marker (legible)
+            text = text[: cap] + " …[howto truncated]"
+        return [{"kind": "howto", "address": address,
+                 "ts": now.isoformat(),                        # PIN-PERSISTENT: re-stamped now → recency = 1
+                 "text": f"[how-to @ {address}] {text}",
+                 "pinned": True}]                              # PIN-PERSISTENT: the R2_PIN_WEIGHT bonus
+
+    def _r2_pref_at(self, address: str, now=None) -> list:
+        """F1 LEARNING LOOP — the PRESENTATION-PREFERENCE stratum at `address`: the learned "how Tim wants
+        <this> presented" resolved INTO the locus context as a NEW R2 gather source, MIRRORING `_r2_howto_at`
+        (the affordance stratum it is a sibling of — both are pin-persistent address-truth that must not
+        decay out of the bounded window).
+
+        PIN-PERSISTENT (the keystone): a learned pref is ALWAYS true at its address until Tim re-shapes it,
+        so it must not decay like a comment. Achieved WITHOUT touching `_r2_score` (same as `_r2_howto_at`):
+        emitted `pinned=True` (the R2_PIN_WEIGHT bonus) AND `ts=now` re-stamped EVERY gather (recency =
+        exp(-LAMBDA·0) = 1 — the max, never decaying). So the pref holds its rank turn-over-turn through the
+        EXISTING scorer — pure-data persistence, not a scorer special-case.
+
+        LATEST-WINS: reads the ACTIVE pref via `presentation_pref_at` (the same consult the adapt step uses,
+        one-source) — the most-recent shaping, so the context reflects Tim's CURRENT preference, not the
+        whole pref history. None / no pref → empty list (clean degrade — the RHM just gets the default
+        framing context). NO `_raw` key (so `_r2_dedup` keeps it unconditionally — it is never a comment
+        double-count). `kind='presentation_pref'` (distinct from 'annotation' so the comment-skip in
+        `_r2_gather` + the dedup echo logic never touch it). Generic over any address (registry-is-truth) —
+        the SAME 'read context at address → structured signal' shape a future mode auto-detect detector
+        reuses (the sibling seam, left clean)."""
+        from datetime import datetime, timezone
+        if now is None:
+            now = datetime.now(timezone.utc)
+        # AMBIENT-GATHER POSTURE (mirrors `_r2_run_strata`, NOT the explicit-consult posture): this runs on
+        # EVERY chat turn via `_r2_gather`. `presentation_pref_at` RAISES on a stored junk pref (the F6
+        # explicit-consult fail-loud) — but a single junk pref at the locus/an ancestor must NOT collapse
+        # the WHOLE locus gather to '' (the silent-degrade `_resolve_context_at`'s catch-all would cause).
+        # So here we CATCH it, WARN loudly (address-stamped — fail-loud-LEGIBLE), and SKIP this one stratum,
+        # never crashing/nuking the per-turn slice. The EXPLICIT up-translate consult (address_help/coa/
+        # up_translate) keeps raising — an operator asking to up-translate THAT address wants it loud.
+        try:
+            pref = self.presentation_pref_at(address)         # latest-wins; raises on a stored junk pref
+        except Exception as e:
+            self._emit("warning",
+                       f"F1 learning loop: malformed stored presentation pref at {address} "
+                       f"({type(e).__name__}) — skipped (the pref leg degraded; other context unaffected)",
+                       address=address)
+            return []
+        if not pref:
+            return []
+        directive = self.PRESENTATION_PREFS[pref["kind"]].format(arg=pref.get("arg"))
+        return [{"kind": "presentation_pref", "address": address,
+                 "ts": now.isoformat(),                        # PIN-PERSISTENT: re-stamped now → recency = 1
+                 "text": f"[presentation pref @ {address}] {directive}",
+                 "pinned": True}]                              # PIN-PERSISTENT: the R2_PIN_WEIGHT bonus
+
     def _r2_run_counterpart(self, locus: str, graph_id: str | None) -> str | None:
         """X6 (Convergence) — the ui://↔run:// BRIDGE: map a `ui://canvas/<node>` locus to its
         `run://<graph_id>/<node>` counterpart, the address where the SAME node's output-versions (L6,
@@ -1918,7 +2698,8 @@ class Suite:
                        address=ui_locus)
         return items
 
-    def _r2_gather(self, locus: str, graph_id: str | None = None) -> list:
+    def _r2_gather(self, locus: str, graph_id: str | None = None, now=None,
+                   resolution: dict | None = None) -> list:
         """GATHER every item attached to the locus AND its ancestors (I6 annotations via
         `annotations_at`, I7 chats via `chats_at`, addressed events). Each item is normalised to a
         common shape `{kind, address, ts, text, pinned}` so the decay scores them uniformly. The
@@ -1932,23 +2713,63 @@ class Suite:
         (L6 version-history + node-instance events) via `_r2_run_strata`, so at the locus BOTH schemes'
         memory resolves into one bounded window. `graph_id` is OPTIONAL (default None): with no graph_id
         the run:// step does NOT fire and the ui:// gather is byte-for-byte unchanged (preserving every
-        existing caller + addr_context_acceptance). The run:// items go through the SAME dedup/score/cap."""
+        existing caller + addr_context_acceptance). The run:// items go through the SAME dedup/score/cap.
+
+        E1 (mode-and-context-resolution-are-ONE-system) — `resolution` (optional, default None) is the
+        per-mode-type×instance lens spec from `resolution_spec_for`. `strata` (a frozenset of admitted
+        gather-kinds, or None = admit all) FILTERS which sources contribute — so a mode-type resolves a
+        DIFFERENT context SHAPE over the SAME store+locus (background drops annotation/chat; off admits
+        nothing). `howto_detail` (full/terse/none) is threaded into `_r2_howto_at`. resolution=None →
+        admit-all + full howto = byte-for-byte today (every R2 caller preserved). The filter is a DATA
+        membership test, never a mode-name branch (registry-is-truth — Tim's not-hardwired correction)."""
+        # E1: derive the admitted-strata set + howto detail FROM the resolution spec (data, no mode-name).
+        admit = None            # None = admit every stratum (today's behaviour)
+        howto_detail = "full"
+        if resolution is not None:
+            admit = resolution.get("strata")
+            howto_detail = resolution.get("howto_detail", "full")
+        def _ok(kind: str) -> bool:
+            return admit is None or kind in admit       # DATA membership test, NOT an `if mode ==` branch
         items = []
         for addr in self._r2_ancestors(locus):
-            for a in self.annotations_at(addr):
-                items.append({"kind": "annotation", "address": addr, "ts": a.get("ts"),
-                              "text": f"[comment @ {addr}] {a.get('text', '')}",
-                              "_raw": (a.get("text", "") or ""),   # X8: underlying text, for dedup identity
-                              "pinned": bool(a.get("pinned"))})
-            for c in self.chats_at(addr):
-                items.append({"kind": "chat", "address": addr, "ts": c.get("ts"),
-                              "text": f"[chat @ {addr}] {c.get('role', '')}: {c.get('text', '')}",
-                              "_raw": (c.get("text", "") or ""),   # X8: underlying text, for dedup identity
-                              "pinned": bool(c.get("pinned"))})
-            items.extend(self._r2_events_at(addr))
+            if _ok("annotation"):
+                for a in self.annotations_at(addr):
+                    # F1 LEARNING LOOP — a presentation pref rides the SAME annotations.jsonl leaf (no
+                    # parallel store) but is NOT a comment: skip it in the comment stratum so it is not
+                    # double-counted (the howto-stratum class of double-count `_r2_dedup` guards) — it is
+                    # gathered as its OWN distinct `presentation_pref` stratum below, pin-persistent.
+                    if a.get("kind") == "presentation_pref":
+                        continue
+                    items.append({"kind": "annotation", "address": addr, "ts": a.get("ts"),
+                                  "text": f"[comment @ {addr}] {a.get('text', '')}",
+                                  "_raw": (a.get("text", "") or ""),   # X8: underlying text, for dedup identity
+                                  "pinned": bool(a.get("pinned"))})
+            # F1 LEARNING LOOP — the learned presentation pref at this ancestor rides R2 resolve-at-locus
+            # as its OWN distinct stratum (so a learned "present this terser" reaches the RHM's context the
+            # SAME way everything else does). Pin-persistent like the howto leg (a pref doesn't decay) and
+            # NO `_raw` key (so `_r2_dedup`'s "no _raw → never dropped" rule keeps it — it is never a
+            # comment double-count). Admitted under its own gather-kind so a lens can drop it.
+            if _ok("presentation_pref"):
+                items.extend(self._r2_pref_at(addr, now=now))
+            if _ok("chat"):
+                for c in self.chats_at(addr):
+                    items.append({"kind": "chat", "address": addr, "ts": c.get("ts"),
+                                  "text": f"[chat @ {addr}] {c.get('role', '')}: {c.get('text', '')}",
+                                  "_raw": (c.get("text", "") or ""),   # X8: underlying text, for dedup identity
+                                  "pinned": bool(c.get("pinned"))})
+            if _ok("event"):
+                items.extend(self._r2_events_at(addr))
+            # D1: the FOUNDATIONAL HOW-TO / AFFORDANCE stratum at this ancestor — pin-persistent (no recency
+            # decay), flood-bounded (R2_HOWTO_MAX), through the SAME dedup/score/cap as every other item.
+            # `now` is threaded so the pin-persistent ts matches the scorer's `now` (deterministic in tests);
+            # generic over any address (registry-is-truth), never a per-element branch (Tim's correction).
+            # E1: `howto_detail` (the lens) parameterizes it — the seam _r2_howto_at's docstring advertised.
+            if _ok("howto"):
+                items.extend(self._r2_howto_at(addr, now=now, detail=howto_detail))
         # X6: bridge the ui:// locus to its run:// counterpart (guarded; None when the bridge doesn't apply).
+        # E1: the run:// stratum is admitted under the 'run' kind (so a lens can drop the version-trail too).
         run_addr = self._r2_run_counterpart(locus, graph_id)
-        if run_addr is not None:
+        if run_addr is not None and _ok("run"):
             items.extend(self._r2_run_strata(run_addr, locus))
         deduped = self._r2_dedup(items)
         # `_raw` is dedup-INTERNAL identity (added above for X8); strip it before returning so the gather's
@@ -2068,7 +2889,8 @@ class Suite:
             out[id(it)] = dot / (ni * nv)                      # cosine, mirror nodes/similarity.py
         return out
 
-    def _r2_score_and_cap(self, items: list, locus: str, now, intent: str | None = None) -> list:
+    def _r2_score_and_cap(self, items: list, locus: str, now, intent: str | None = None,
+                          budget: int | None = None) -> list:
         """Score each item by the decay, sort DESC, then `budget_cap` — accumulate text until R2_BUDGET
         is reached and STOP (cap the window, NEVER stuff). Returns the surviving items in score order.
         The cap is the keystone (the guide's THE-critical requirement): with more items than the budget,
@@ -2087,18 +2909,21 @@ class Suite:
         scored = sorted(items,
                         key=lambda it: self._r2_score(it, locus, now, semantic=sem.get(id(it), 0.0)),
                         reverse=True)
+        # E1: the resolution lens may OVERRIDE the window cap (focus resolves a tighter window; walkthrough
+        # a wider one). `budget=None` (every pre-E1 caller) → the instance R2_BUDGET, byte-for-byte today.
+        cap = self.R2_BUDGET if budget is None else budget
         out, total = [], 0
         for it in scored:
             t = it.get("text", "") or ""
-            if total + len(t) > self.R2_BUDGET and out:       # cap is hard once we have at least one item
+            if total + len(t) > cap and out:                  # cap is hard once we have at least one item
                 break
             out.append(it); total += len(t)
-            if total >= self.R2_BUDGET:
+            if total >= cap:
                 break
         return out
 
     def _resolve_context_at(self, locus: str | None, now=None, graph_id: str | None = None,
-                            intent: str | None = None) -> str:
+                            intent: str | None = None, resolution: dict | None = None) -> str:
         """The R2 entry point: resolve the BOUNDED, address-keyed context slice at the operator's locus.
         Returns a ready-to-inject block string, or '' when there is no locus / nothing attached (so the
         caller skips injection cleanly). FAIL-LOUD-LEGIBLE, never crash-the-turn (mirrors _chat_context's
@@ -2114,17 +2939,28 @@ class Suite:
         `_r2_score_and_cap`, which adds the SEMANTIC ranking term (R2_SEMANTIC_WEIGHT·cosine(intent,item)).
         Optional (default None): with no intent the ranking is the pre-X13 recency·proximity·pin (byte-for-
         byte). When the embedder is DOWN the semantic term degrades to 0 with a warning (handled in
-        `_r2_semantic_map`) — the score+cap still runs, never crashing the turn."""
+        `_r2_semantic_map`) — the score+cap still runs, never crashing the turn.
+
+        E1 (the mode-and-context-resolution-are-ONE-system criterion) — `resolution` (optional, default
+        None) is the CONTEXT-RESOLUTION SPEC produced by `resolution_spec_for` (mode-type × instance). It
+        parameterizes the R2 gather+cap WITHOUT any mode-name branch (registry-is-truth, the shape is
+        DATA): `strata` filters which gather-stratum kinds are admitted, `howto_detail` tunes/suppresses
+        the how-to leg, `budget` overrides the per-turn window cap. With resolution=None the gather +
+        budget are EXACTLY today's (byte-for-byte — every existing R2 caller/suite stays green). This is
+        §6.3 made real: ONE spine, the active mode-type's declarations choose the shape."""
         from datetime import datetime, timezone
         if not locus:
             return ""
         if now is None:
             now = datetime.now(timezone.utc)
         try:
-            items = self._r2_gather(locus, graph_id=graph_id)
+            items = self._r2_gather(locus, graph_id=graph_id, now=now, resolution=resolution)
             if not items:
                 return ""
-            capped = self._r2_score_and_cap(items, locus, now, intent=intent)
+            budget = None
+            if resolution is not None:
+                budget = resolution.get("budget")   # E1: the lens may resolve a tighter/wider window
+            capped = self._r2_score_and_cap(items, locus, now, intent=intent, budget=budget)
             if not capped:
                 return ""
             lines = "\n".join("  · " + (it.get("text", "") or "") for it in capped)
@@ -2191,6 +3027,24 @@ class Suite:
                                  _M_BUILDISH, lambda ctx: True),
         "unload_voice": VerbSpec("unload a voice service to free VRAM", "configure",
                                  _M_BUILDISH, lambda ctx: True),
+        # CONVO→SELF-BUILD BRIDGE — the conversational entry to the claude -p self-build wire. The
+        # wire's dispatcher only acts on payload intent=="build" items (is_build_intent), which until
+        # now were minted ONLY by the wire-DOOR (/api/build-intent, /api/intent-at). The RHM's existing
+        # consequential verbs (propose/panel/extend) create NET-NEW components via /api/apply — they do
+        # NOT reach the edit-existing-code wire. `request_change` closes that gap: it routes a
+        # conversational change-request ("make the run button confirm before recomputing", "this panel
+        # is too cramped, fix it") into the EXISTING `surface_intent_at` producer, which mints an
+        # intent=="build" item that surfaces for approval through the SAME inbox/build-intent card +
+        # /api/resolve approve the wire-door uses. CONSEQUENCE CLASS = the same SURFACE-then-approve
+        # consent shape the wire-door has: it SURFACES a build-intent for the operator's approval —
+        # NOTHING builds until the operator approves it (the wire only dispatches an approved
+        # decision_build, and resolve_surfaced stays operator-only + off the MCP face). So the safe,
+        # consent-respecting action this verb performs IS the surfacing (action_class register_type =
+        # CONFIRM/SURFACE posture, like propose — it surfaces a draft for the operator, never auto-acts).
+        "request_change": VerbSpec("surface a build-intent to CHANGE existing code at a ui:// element "
+                                   "(routes a conversational change-request to the self-build wire; "
+                                   "nothing builds until the operator approves)", "register_type",
+                                   _M_BUILDISH, lambda ctx: True),
     }
 
     # --- the three legacy names, DERIVED from the one registry (no drift) ---
@@ -2242,6 +3096,25 @@ class Suite:
                          "required": ["service"]},
         "unload_voice": {"type": "object",
                          "properties": {"service": {"type": "string"}}, "required": ["service"]},
+        # CONVO→SELF-BUILD BRIDGE: the change description is REQUIRED; the target is the ui:// element/scope
+        # the change is about. The target is OPTIONAL in the schema because address resolution has THREE
+        # tiers in the dispatcher (indicated locus → named-element lookup → ASK) — if the operator has
+        # pointed at an element this turn, the dispatcher uses that indicated locus and the model need not
+        # restate the address. When neither an indicated locus nor a resolvable named target exists, the
+        # verb ASKS which element rather than guessing a scope (a wrong scope = a wrong/over-broad build).
+        "request_change": {"type": "object",
+                           "properties": {
+                               "change": {"type": "string",
+                                          "description": "what to change, in plain words (becomes the "
+                                                         "build-intent's spec) — e.g. 'make the run button "
+                                                         "confirm before recomputing'"},
+                               "target": {"type": "string",
+                                          "description": "the ui:// element/scope the change is about "
+                                                         "(e.g. ui://toolbar/run), OR a recognizable element "
+                                                         "name ('the run button'). OMIT if the operator has "
+                                                         "pointed at the element this turn (the indicated "
+                                                         "locus is used)."}},
+                           "required": ["change"]},
     }
 
     def _affordance_context(self, graph_id: str, focus: dict | None = None) -> dict:
@@ -2294,25 +3167,53 @@ class Suite:
                 },
             })
         # OFFER-WITH-OPTIONS (the consent affordance): if the RHM can ACT in this mode, it can also OFFER
-        # — call `suggest` to surface a one-click "shall I?" card (sees-then-approves, ANY offered verb)
-        # INSTEAD of acting now. This is the convergence's propose-affordance, unified into native
-        # tool-calling (no retired AFFORD: text directive). The card carries options[]/direction so the
-        # rich layer (multi-option + steer→refine + interactive-build) extends it without a re-trigger.
+        # — call `suggest` to surface a "shall I?" card (sees-then-approves, ANY offered verb) INSTEAD of
+        # acting now. This is the convergence's propose-affordance, unified into native tool-calling (no
+        # retired AFFORD: text directive).
+        #
+        # B2 · ON-SCREEN INTERACTIVE BUILD (the rich layer, multi-option): `suggest` accepts EITHER a single
+        # `verb`/`address`/`args` (B1, the "shall I?" offer — UNCHANGED) OR an `options[]` array of two or
+        # more ALTERNATIVES the operator chooses between on a comparison surface (e.g. several panel designs,
+        # several build approaches). Each option carries a `label` + a `summary` (the DISTINGUISHING content —
+        # what makes this option different, the thing the operator reads to choose) + the verb's `args`. For
+        # the CONSEQUENTIAL verbs (build/panel/extend) the offer should come on-screen interactive (options to
+        # weigh + chat-until-approve), NOT a silent inbox-drop — that is exactly what `options[]` is for. The
+        # options are carried FAITHFULLY from the model's own tool-call (rule 8 — never fabricated here); a
+        # one-option offer renders as B1's single card, two+ render the comparison surface (the FE branches on
+        # the interactive marker derived from the verb class, never invents alternatives).
         if verbs:
+            _consequential = sorted({"build", "panel", "extend"} & set(verbs))
             tools.append({
                 "type": "function",
                 "function": {
                     "name": "suggest",
-                    "description": ("OFFER an action as a one-click suggestion the operator SEES and approves "
-                                    "(the 'shall I?' affordance) INSTEAD of doing it now. Use when proposing "
-                                    "rather than acting, or when the operator should choose/steer first."),
+                    "description": ("OFFER an action the operator SEES and approves (the 'shall I?' affordance) "
+                                    "INSTEAD of doing it now. Use when proposing rather than acting, or when the "
+                                    "operator should choose/steer first. For a CONSEQUENTIAL verb "
+                                    f"({', '.join(_consequential) or 'build/panel/extend'}) prefer `options`: offer "
+                                    "TWO OR THREE real ALTERNATIVES (e.g. different panel designs / build approaches), "
+                                    "each with a distinguishing `summary`, so the operator compares + chooses + "
+                                    "discusses on screen — never a silent queue."),
                     "parameters": {"type": "object", "properties": {
+                        # B1 single-offer shape (unchanged) — used when there is one obvious action to confirm.
                         "verb": {"type": "string", "enum": list(verbs),
-                                 "description": "the action being offered (a real RHM verb)"},
+                                 "description": "the single action being offered (a real RHM verb); omit if using `options`"},
                         "address": {"type": "string", "description": "the ui:// locus the action targets, if any"},
                         "args": {"type": "object", "description": "the offered verb's arguments"},
                         "label": {"type": "string", "description": "a short human label for the offer"},
-                    }, "required": ["verb"]},
+                        # B2 multi-option shape — used to offer alternatives on a comparison surface.
+                        "options": {"type": "array",
+                            "description": ("TWO OR THREE alternative actions the operator chooses between on a "
+                                            "comparison surface. Use for consequential verbs (build/panel/extend) so the "
+                                            "operator weighs real options + chats before approving. Nothing runs until approved."),
+                            "items": {"type": "object", "properties": {
+                                "verb": {"type": "string", "enum": list(verbs)},
+                                "address": {"type": "string"},
+                                "args": {"type": "object", "description": "the verb's arguments (the panel spec / the build steps)"},
+                                "label": {"type": "string", "description": "a short name for this alternative"},
+                                "summary": {"type": "string", "description": "what makes THIS option different — the line the operator reads to choose"},
+                            }, "required": ["verb"]}},
+                    }},
                 },
             })
         return tools
@@ -2642,6 +3543,15 @@ class Suite:
                     "spec": str(merged.get("spec") or merged.get("description") or "").strip()}
         if verb == "run":
             return {"verb": "run"}
+        if verb == "request_change":
+            # the change description (accept a few synonyms a model might emit) + the optional target
+            # (the ui:// element/scope, or a named element). Both normalised to clean strings; the
+            # address-resolution tiers + the ASK live in the dispatcher (not here — this is shape-only).
+            return {"verb": "request_change",
+                    "change": str(merged.get("change") or merged.get("description")
+                                  or merged.get("spec") or merged.get("text") or "").strip(),
+                    "target": str(merged.get("target") or merged.get("address")
+                                  or merged.get("element") or "").strip() or None}
         return {"verb": verb}
 
     # --- I3: propose-affordance — the CONSENT gate (click #2 of the two-click model) ----------
@@ -2771,6 +3681,16 @@ class Suite:
             return f"drafted panel '{outcome.get('name')}' — awaiting your approval in the inbox"
         if did == "extend":
             return f"authored UI component '{outcome.get('name')}' (build-gated) — awaiting your approval"
+        if did == "request_change":
+            # CONVO→SELF-BUILD BRIDGE: a build-intent was SURFACED for approval — nothing built yet.
+            scope = outcome.get("scope") or []
+            scope_note = (" (scope: " + ", ".join(scope) + ")") if scope else \
+                         " (no resolvable code scope yet — DENY-ALL until the address maps to code)"
+            return (f"I've surfaced a build-intent to change {outcome.get('address')}{scope_note} — "
+                    f"approve it in the inbox to build; nothing runs until you do.")
+        if did == "ask_target":
+            # the change could NOT be confidently scoped → the verb ASKED rather than guessing (rule 8).
+            return outcome.get("ask") or ("Which element should this change apply to? I won't guess a scope.")
         if did == "surfaced_for_approval":
             # I4: the click hit an address whose governance tier is CONFIRM/LOCKED — the command was
             # SURFACED for see-and-approve and did NOT act (no silent success, rule 4).
@@ -2825,15 +3745,33 @@ class Suite:
                 if t.startswith("ui://"):
                     kind, _, ref = t[len("ui://"):].partition("/")
                     if kind == "canvas":
-                        # camera-resolved: a live node-id, or '*' = the whole canvas (registry entry)
+                        # camera-resolved: a live node-id, or '*' = the whole canvas (registry entry). This
+                        # gate is LIVE-NODE-scoped on PURPOSE (the FE can only drive the camera to a node
+                        # actually on the loaded graph) — it must stay so. NOTE a corpus element row like
+                        # ui://canvas/node IS a build_ui_info key, so it must NOT be matched by the
+                        # full-string element check below (that would bypass this live-node gate and emit a
+                        # target the FE can't drive). Keeping the element check INSIDE the else branch
+                        # ensures canvas addresses ALWAYS pass through this gate (preserved).
                         if ref == "*" or ref in ids:
                             targets.append(t)
                     else:
-                        # registry-resolved (chrome/field/panel/ext): the ref must be a known component.
-                        # build_ui_info() is keyed by ref; kind is carried for the frontend's dispatch.
+                        # registry-resolved (chrome/field/panel/ext + the S1 ELEMENT addresses):
+                        # build_ui_info() keys BOTH the bare region handles ('inbox') AND the full-string
+                        # element rows (ui://toolbar/run, ui://inbox/build-review — see
+                        # _load_corpus_element_addresses). Match EITHER:
+                        #   • t in reg   — C3 FIX: an ELEMENT-level (S1) address keyed by its FULL canonical
+                        #     string. Before this, the parse below keyed on the <element> SEGMENT ('run'),
+                        #     which is NOT a registry key, so element addresses were silently refused even
+                        #     though they ARE registered + drivable. A full-string match passes through
+                        #     UNCHANGED for the FE's resolveUiTarget (validates against /api/ui_info = the
+                        #     same build_ui_info). The canonical dual-grammar (live kind-form
+                        #     ui://chrome/inbox AND corpus region-form ui://inbox/build-review) both conform (S0).
+                        #   • ref in reg — the EXISTING region kind-form (ui://chrome/inbox → ref 'inbox' is
+                        #     a bare registry key). Kept exactly as before.
+                        # Fail-loud preserved: neither key present → not appended → the refuse-tail fires.
                         if reg is None:
                             reg = self.build_ui_info()
-                        if ref in reg:
+                        if t in reg or ref in reg:
                             targets.append(t)
                 elif t in ids:
                     targets.append(t)                           # bare node-id (kept)
@@ -2900,6 +3838,42 @@ class Suite:
             except Exception as e:                           # the lifecycle fail-loud (unknown/won't-fit) → structured, not a crash
                 return {"did": verb, "error": f"{type(e).__name__}: {e}"}
             return {"did": verb, **r}
+        if verb == "request_change":
+            # CONVO→SELF-BUILD BRIDGE: route a conversational change-request into the EXISTING
+            # surface_intent_at producer (which mints an intent=="build" item via the wire's UNCHANGED
+            # surface_build_intent front door, deriving the code scope from the address per S3). This is
+            # the ONLY conversational path to the claude -p self-build wire; the wire-door (/api/build-intent,
+            # /api/intent-at) is unchanged, and NOTHING builds until the operator approves the surfaced item
+            # via /api/resolve (operator-only, off the MCP face — resolve_surfaced + the approve→dispatch
+            # trigger are untouched). REUSE, never reinvent: surface_intent_at composes ingest_comment +
+            # resolve_scope + surface_build_intent — we add no parallel intent path.
+            change = (action.get("change") or "").strip()
+            if not change:
+                return {"did": "none", "refused": "request_change needs a 'change' description"}
+            # ADDRESS RESOLUTION (the one real design point): (a) the indicated locus the operator
+            # pointed at this turn (held backend-side by current_locus(), SET in _chat_context from the
+            # widened focus.selected), else (b) the model-supplied target (a ui:// address or a named
+            # element matched against the registry), else (c) ASK. resolve_change_target is fail-loud:
+            # an unresolvable target NEVER mints a build-intent (rule 8 — no guessed scope).
+            resolved = self.resolve_change_target(action.get("target"), indicated=self.current_locus())
+            if resolved["source"] == "ask" or not resolved.get("address"):
+                # fail-loud, NO fiction: surface NO build-intent; return the ASK so the model voices it.
+                return {"did": "ask_target", "ask": resolved["ask"],
+                        "candidates": resolved.get("candidates", [])}
+            address = resolved["address"]
+            # MINT via the EXISTING producer (reused exactly; consequence_class=decision_build — the
+            # one AUTO-posture class the wire dispatches on the operator's approve; surface_intent_at
+            # derives the scope from the address per S3, empty scope = DENY-ALL). It only SURFACES
+            # (resolved=None) — the operator approves via /api/resolve; this method NEVER dispatches.
+            try:
+                out = self.surface_intent_at(address, change, source="operator",
+                                             consequence_class="decision_build")
+            except Exception as e:                           # malformed address / corpus error → fail loud, no half-claim
+                return {"did": "none", "refused": f"request_change could not surface a build-intent: "
+                                                   f"{type(e).__name__}: {e}"}
+            return {"did": "request_change", "surfaced": out["id"], "address": address,
+                    "scope": out.get("scope", []), "source": resolved["source"],
+                    "stale": out.get("stale"), "note": out.get("note") or ""}
         return {"did": "none",
                 "refused": f"verb {verb!r} is not permitted from the RHM — only {self.RHM_VERBS} "
                            "(apply/delete/file-write are operator-gated)"}
@@ -3206,6 +4180,156 @@ class Suite:
         from contracts.ui_info import parse_ui_address
         parse_ui_address(address)                            # S0 grammar gate (raises on malformed)
         return self._overlay_pins(address, self.store.annotations_for(address))
+
+    # ============================================================================================
+    # F1 LEARNING LOOP — "how Tim wants <this> presented" (the presentation-preference store + adapt)
+    # ============================================================================================
+    # Tim's F1 expansion: he must be able to SHAPE how the system presents to him FROM INSIDE the system
+    # ("show me this differently / more / less / lead with X"), by voice OR typing, and it must ADAPT +
+    # REMEMBER — "how it presents to him is LEARNED." This is the net-new piece of F1. It REUSES, never
+    # rebuilds:
+    #   • the addressed-feedback substrate — a presentation pref is "a comment at an address" with a
+    #     presentation INTENT, so it rides the EXISTING `annotations.jsonl` store leaf (`append_annotation`)
+    #     with one additive structured marker (`kind:"presentation_pref"`). NO parallel store (rule 3).
+    #     It deliberately rides the PURE `annotate` leaf-shape (S0-gate + fail-loud guards mirrored here),
+    #     NOT `ingest_comment` — a presentation pref is a CONTROL signal, not twin gold-training data, so it
+    #     stays OUT of the located-gold `append_chat` pipe + the R2 [comment @ addr] framing noise (the
+    #     twin's gold corpus + the RHM's framing context stay clean).
+    #   • R2 resolve-at-locus — the pref is gathered as its OWN distinct `presentation_pref` stratum (NOT
+    #     collapsed into the comment stratum) so a learned pref rides the SAME machinery as everything else,
+    #     pin-persistent like the howto leg (a pref doesn't decay).
+    #   • the up-translate organs (up_translate / coa / address_help) CONSULT the pref at the address and
+    #     APPLY it (the adapt step) — model-free for the structural part (the pref REACHES the framing
+    #     input/shape), model-dependent only in the actual WORDING the model emits when honoring it.
+    # The chat path (voice OR typing) is the input — that rides the EXISTING `chat()` + `/api/chat`; the
+    # capture seam below is what a "present this differently" message records.
+    #
+    # The pref VOCABULARY (registry-is-truth, rule 8 — a pref-kind not in this set FAILS LOUD, never a
+    # silent ignore that the operator would read as "it remembered"). Each is a deterministic presentation
+    # intent the adapt step can apply structurally and/or thread into the framing prompt:
+    PRESENTATION_PREFS = {
+        "terser":    "Present this more tersely — fewer words, the essentials only.",
+        "more":      "Present this in more detail — expand, give me the fuller picture.",
+        "lead_with": "Lead with {arg} — put that first when presenting this.",
+        "shape":     "Present this as {arg} (the shape/form Tim recognises it by).",
+    }
+
+    def _validate_presentation_pref(self, pref: dict) -> dict:
+        """FAIL LOUD on a malformed preference (rule 4/8 — a junk pref must RAISE, never be silently
+        ignored or read as 'no pref', which the operator would misread as 'it remembered'). A valid pref is
+        `{kind: <one of PRESENTATION_PREFS>, arg?: <str, REQUIRED for the arg-taking kinds>}`. The
+        arg-taking kinds (`lead_with`/`shape`) carry a non-empty `arg`; the bare kinds (`terser`/`more`)
+        must NOT carry a meaningful arg-dependence (an arg is tolerated-but-ignored). Returns the
+        normalized pref dict (kind + arg-or-None)."""
+        if not isinstance(pref, dict):
+            raise ValueError(f"presentation pref must be a dict, got {type(pref).__name__} (fail loud)")
+        kind = pref.get("kind")
+        if kind not in self.PRESENTATION_PREFS:
+            raise ValueError(
+                f"unknown presentation pref kind {kind!r} — one of {tuple(self.PRESENTATION_PREFS)} "
+                "(rule 8: never fabricate/silently-accept a pref kind)")
+        arg = pref.get("arg")
+        if "{arg}" in self.PRESENTATION_PREFS[kind]:                  # an arg-taking kind
+            if not (isinstance(arg, str) and arg.strip()):
+                raise ValueError(f"presentation pref {kind!r} needs a non-empty 'arg' (fail loud)")
+            return {"kind": kind, "arg": arg.strip()}
+        return {"kind": kind, "arg": None}
+
+    def set_presentation_pref(self, address: str, pref: dict, text: str | None = None,
+                              source: str = "operator") -> dict:
+        """F1 LEARNING LOOP — the CAPTURE seam: record "how Tim wants <this> presented" at `address`.
+
+        Mirrors `annotate`'s GUARDS (it IS the annotate-branch of the addressed-feedback channel, with a
+        presentation intent) but carries a STRUCTURED pref so the adapt step is MODEL-FREE:
+          • S0 grammar gate FIRST (`parse_ui_address` RAISES on a malformed `ui://` — fail loud, so the
+            store never persists a junk key; the bridge's try/except turns the raise into a 400 for free).
+          • the pref is VALIDATED (`_validate_presentation_pref` RAISES on an unknown kind / a missing
+            required arg — the third distinct fail-loud guard the loop names, beside malformed-address and
+            empty-text).
+          • persist through the SAME `append_annotation` store leaf (one-source, no parallel store) with
+            the additive `kind:"presentation_pref"` marker + the structured `pref` + the human `text`. The
+            store is APPEND-ONLY, so an address accrues a pref HISTORY; the consult-read takes the LATEST
+            (latest-wins = "remembers the most recent shaping"). Persistence-survives-reload comes free
+            (the leaf reads disk every call — a FRESH Suite over the same store root reads Tim's learned
+            prefs).
+          • emit an addressed `presentation_pref` event so the shaping is visible on the live stream at its
+            locus (S2), distinct from the `annotation` event so it is never mistaken for a plain comment.
+
+        `text` defaults to the human form of the pref (so a bare structured capture still records a legible
+        comment line). DELIBERATELY does NOT call `ingest_comment` (no gold `append_chat`): a presentation
+        pref is a control signal, not twin training gold — keeping it out preserves the twin's gold corpus
+        and R2's [comment] framing context (the I6 SEPARATION spirit). `annotate`/`ingest_comment` are
+        UNTOUCHED (their contract + `annotation_acceptance` hold)."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                                    # S0 grammar gate — raises on malformed
+        norm = self._validate_presentation_pref(pref)                # fail loud on a malformed pref
+        human = self.PRESENTATION_PREFS[norm["kind"]].format(arg=norm.get("arg"))
+        rec_text = (text.strip() if (text and text.strip()) else human)
+        rec = self.store.append_annotation({
+            "kind": "presentation_pref", "address": address,
+            "pref": norm, "text": rec_text, "source": source})
+        self._emit("presentation_pref",
+                   f"present @ {address}: {norm['kind']}" + (f" {norm['arg']}" if norm.get("arg") else ""),
+                   address=address)
+        return rec
+
+    def presentation_pref_at(self, address: str) -> dict | None:
+        """F1 LEARNING LOOP — the CONSULT seam: the ACTIVE presentation pref at `address` (latest-wins), or
+        None when none is recorded (a CLEAN absence the adapt step degrades to the DEFAULT framing — never
+        an error, never a fabricated pref).
+
+        S0-gated (raises on a malformed address — same gate as the capture/read siblings). Reads the SAME
+        `annotations.jsonl` leaf the capture wrote (so a FRESH Suite over the same store root reads it —
+        reload-survival), filters for the `presentation_pref` marker, and returns the LAST (most-recent)
+        one's structured pref — RE-VALIDATED on read (`_validate_presentation_pref` RAISES on a stored junk
+        pref, so a corrupted record fails loud rather than silently degrading to 'no pref'). Generic over
+        any address (registry-is-truth) — the SAME 'read context at an address → structured signal' shape a
+        future mode auto-detect detector could call (the sibling seam; left clean, not built here)."""
+        from contracts.ui_info import parse_ui_address
+        parse_ui_address(address)                                    # S0 grammar gate — raises on malformed
+        active = None
+        for rec in self.store.annotations_for(address):              # oldest-first → last loop = latest-wins
+            if rec.get("kind") == "presentation_pref":
+                active = rec
+        if active is None:
+            return None
+        return self._validate_presentation_pref(active.get("pref"))  # fail loud on a stored junk pref
+
+    def _apply_presentation_pref(self, bundle: dict, pref: dict | None) -> dict:
+        """F1 LEARNING LOOP — the ADAPT step (deterministic / MODEL-FREE) for the address path: thread a
+        consulted pref INTO an `address_help`/`up_translate('address')` envelope so the presentation
+        REFLECTS Tim's recorded shaping. Returns a NEW dict (never mutates the input — the un-adapted
+        bundle stays available; reflects-never-owns).
+
+        No pref → the bundle is returned UNCHANGED (the clean default — no error, no fabrication). With a
+        pref it:
+          • ATTACHES the structured pref to the envelope (`presentation_pref`) so any surface (the FE F1
+            lane — NEXT lane) can render it + a 'learned' marker WITHOUT re-deriving it;
+          • applies the pref STRUCTURALLY where the shape allows it model-free (the strongest model-free
+            proof): `lead_with:how_to_change` REORDERS the legs so the change-leg leads (a deterministic
+            re-shape the operator can SEE in the envelope); `terser`/`more`/`shape` are carried as a
+            framing DIRECTIVE on the envelope (`presentation_directive`) that the model honors in WORDING
+            (the model-dependent half — flagged) while the MECHANISM (pref recorded → consulted → reached
+            the envelope) is proven model-free.
+        The DIRECTIVE string is the human form of the pref (the same `PRESENTATION_PREFS` text the prompt
+        consumes) — single-source between the FE marker, the prompt thread, and the live stream event."""
+        if not pref:
+            return bundle
+        out = dict(bundle)
+        out["presentation_pref"] = pref
+        out["presentation_directive"] = self.PRESENTATION_PREFS[pref["kind"]].format(arg=pref.get("arg"))
+        # STRUCTURAL adapt (model-free, SEE-able in the envelope): lead_with reorders the address legs.
+        if pref["kind"] == "lead_with" and isinstance(out.get("lead"), str):
+            arg = (pref.get("arg") or "").lower()
+            # the address envelope's drillable MECHANISM is how-to-change; "lead with the change" surfaces
+            # a one-line change-lead AHEAD of the what-this-is lead (a deterministic, observable re-shape).
+            if arg in ("how_to_change", "how-to-change", "change", "mechanism"):
+                htc = out.get("mechanism") or {}
+                scope = htc.get("scope") if isinstance(htc, dict) else None
+                if scope:
+                    out["lead"] = f"[changes: {', '.join(str(s) for s in scope)}]  " + out["lead"]
+                    out["led_with"] = "how_to_change"
+        return out
 
     def attach_chat(self, address: str, text: str, role: str = "user", source: str | None = None) -> dict:
         """I7 — attach a chat turn to a `ui://` address (the dropped 4th attach-type, §21.1: the
@@ -3751,9 +4875,22 @@ class Suite:
         actx = self._affordance_context(graph_id, focus)
         tools = self._rhm_tools(mode, actx) if is_final else []
 
+        # S2 (main's fresh-conversation fix, folded into the per-part core) — the history that FEEDS THE MODEL
+        # must be the CURRENT conversation's, not the global stream. `_current_thread` is set by
+        # new_conversation/load_conversation; read it HERE (before building msgs) so a freshly-started
+        # conversation feeds an EMPTY history (it carries no prior thread's turns) and a reopened one feeds
+        # exactly its own turns. With no thread (None) this is the legacy global stream (chat_history),
+        # byte-for-byte the prior behaviour — back-compat. (The bug it fixes: chat_history(20) here ignored
+        # the thread, so the model saw the PRIOR conversation's last 20 turns even right after "new
+        # conversation" → the first reply "defaulted to the same original one". The turns were already
+        # PERSISTED + RETURNED thread-scoped below; only this model-input read leaked. Limit matched (20) for
+        # context-window parity.) NOTE: this read runs ONCE PER PART (the per-part core) — the same thread is
+        # current across a turn's parts, so every part feeds the correct conversation.
+        _tid = getattr(self, "_current_thread", None)
+        prior = self.store.chats_in_thread(_tid, 20) if _tid else self.store.chat_history(20)
         # _chat_context ONCE PER PART (NOT side-effect-free — emits a warning on a down endpoint).
         msgs = [{"role": "system", "content": sys_p + "\n\n" + self._chat_context(graph_id, focus)}]
-        for t in self.store.chat_history(20):
+        for t in prior:
             msgs.append({"role": t["role"], "content": t["text"]})
         user_content = message
         if inject:                                            # C4.2 — the resolved run:// role value, folded in
@@ -3770,9 +4907,10 @@ class Suite:
         reply = msg.get("content") or ""                      # may be empty (the model called a tool)
 
         outcomes = []
-        proposals = []
+        proposals = []                                        # OFFER-WITH-OPTIONS: suggest-then-confirm cards (no dispatch)
         # THE TOOL BLOCK — FINAL PART ONLY (C4.5). Intermediate parts are pure generation: skip entirely
-        # (and they were offered no tools above, so a well-behaved model emits none regardless).
+        # (and they were offered no tools above, so a well-behaved model emits none regardless). `outcomes`
+        # and `proposals` are method-level (above) so the non-final return shape still carries empty lists.
         if is_final:
             offered = set(self.available_verbs(mode, actx))
             for tc in (msg.get("tool_calls") or []):
@@ -3781,26 +4919,63 @@ class Suite:
                 if not verb:
                     continue
                 if verb == "suggest":
-                    # OFFER-WITH-OPTIONS (the consent affordance): build a PROPOSAL, do NOT dispatch.
+                    # OFFER-WITH-OPTIONS (the consent affordance): build a PROPOSAL, do NOT dispatch. The
+                    # operator sees a card for ANY offered verb and approves (→ /api/act) or steers — nothing
+                    # runs until then. Each option's verb is validated against the ONE whitelist (RHM_VERBS); a
+                    # non-verb option is dropped (refused-loud-at-the-click philosophy, never a silent bad card).
+                    #
+                    # B2 · the suggest call carries EITHER a single {verb,address,args} (B1) OR an `options[]`
+                    # array of alternatives (the comparison surface). We normalise BOTH into one option list,
+                    # carried FAITHFULLY from the model (rule 8 — we never invent an alternative). A consequential
+                    # verb (build/panel/extend) among the options marks the offer INTERACTIVE so the FE renders the
+                    # on-screen comparison + chat-until-approve surface; everything else stays B1's single card.
                     import json as _json
                     try:
                         sargs = _json.loads(fn.get("arguments") or "{}")
                     except Exception:
                         sargs = {}
-                    sv = str(sargs.get("verb") or "").strip().lower()
-                    if sv in self.RHM_VERBS:
-                        one = {"verb": sv, "address": sargs.get("address"), "args": sargs.get("args") or {}}
-                        proposals.append({**one,
-                                          "options": [{**one, "label": sargs.get("label") or sv}],
-                                          "direction": True})
+                    raw_opts = sargs.get("options")
+                    if not isinstance(raw_opts, list) or not raw_opts:
+                        # B1 shape (or a malformed options) → the single top-level offer is the only option.
+                        raw_opts = [{"verb": sargs.get("verb"), "address": sargs.get("address"),
+                                     "args": sargs.get("args"), "label": sargs.get("label")}]
+                    norm_opts = []
+                    for o in raw_opts:
+                        if not isinstance(o, dict):
+                            continue
+                        ov = str(o.get("verb") or "").strip().lower()
+                        if ov not in self.RHM_VERBS:                  # drop a non-whitelisted option (never a bad card)
+                            continue
+                        norm_opts.append({"verb": ov, "address": o.get("address"),
+                                          "args": o.get("args") or {},
+                                          "label": o.get("label") or ov,
+                                          "summary": (str(o.get("summary")).strip() or None) if o.get("summary") else None})
+                    if not norm_opts:
+                        continue                                       # no valid option survived → no card
+                    primary = norm_opts[0]
+                    # interactive when ANY offered option is a consequential verb (build/panel/extend) — the
+                    # registry-truth marker the FE branches the comparison surface on (NOT options.length, so a
+                    # single consequential offer still presents the interactive frame, and a multi-`show` offer
+                    # stays the lighter B1 list). consequential = a verb whose body composes/authors, vs read/run.
+                    _CONSEQUENTIAL = {"build", "panel", "extend"}
+                    interactive = any(o["verb"] in _CONSEQUENTIAL for o in norm_opts)
+                    proposals.append({**{k: primary[k] for k in ("verb", "address", "args")},
+                                      "options": norm_opts,
+                                      "direction": True,
+                                      "interactive": interactive})
                     continue
                 if verb not in offered:
-                    # not offered in THIS mode → refuse without dispatching (mode-discipline gate).
+                    # not offered in THIS mode → refuse without dispatching (mode-discipline gate). Legible
+                    # reason; same {did:none, refused} shape _confirmation_for folds into the reply.
                     outcomes.append({"did": "none",
                                      "refused": f"{verb} not available in mode {mode}"})
                     continue
                 action = self._json_obj_to_action({"name": verb, "arguments": fn.get("arguments")}, verb)
                 if mode == "decide-for-me":
+                    # G3 wiring: route the ACT-vs-SURFACE decision DETERMINISTICALLY by the verb's governance
+                    # action-class (no confidence) through autonomous_dispatch. The verb BODY performs it
+                    # either way — AUTO verbs run; CONFIRM verbs run their body whose action is to SURFACE a
+                    # consumable applyable draft. Outcome carries routed_posture for audit.
                     cls = self.RHM_VERB_CLASS.get(verb, "register_type")   # unknown verb → safest (CONFIRM)
                     outcome = self.autonomous_dispatch(
                         cls, do=lambda a=action: self._dispatch_rhm_action(a, graph_id), payload=action)
@@ -3839,9 +5014,15 @@ class Suite:
             action_field = outcomes[0]
         else:
             action_field = outcomes
+        # `_tid` re-read here (the epilogue is its own method in the G4 refactor — it does NOT share the
+        # part-core's local scope, so the current-thread must be read again). It is the SAME in-memory
+        # current-thread that scoped the model input in _chat_part_core, so the turns are PERSISTED under the
+        # same thread they were REASONED in — input and storage agree by construction (main's S2 invariant).
         _tid = getattr(self, "_current_thread", None)
         if persist:
             # provenance grading (B3): Tim's words are gold (train the twin); the twin's are working.
+            # S2 — thread the turn into the CURRENT conversation (the additive thread_id; None = the
+            # global/legacy stream, back-compat).
             self.store.append_chat({"role": "user", "text": message, "grade": self._provenance_grade("user"), "source": self._provenance_source("user"), **({"thread_id": _tid} if _tid else {})})
             self.store.append_chat({"role": "assistant", "text": reply, "action": action_field,
                                     "grade": self._provenance_grade("assistant"), "source": self._provenance_source("assistant"), **({"thread_id": _tid} if _tid else {})})
@@ -3857,6 +5038,9 @@ class Suite:
                 except Exception:
                     pass                                       # thread metadata is best-effort, never break a turn
             self._emit("chat", f"you: {message[:48]}", address="ui://chrome/chat")   # S2: chat organ event carries its locus
+        # OFFER-WITH-OPTIONS: a `suggest` tool_call rides back as a `proposal` (the FE renders the one-click
+        # card; approve → /api/act). Additive + back-compat: None when the turn dispatched/spoke instead of
+        # offering; the existing single-`proposal` FE consumer (useAppController r.proposal) reads it unchanged.
         proposal = proposals[0] if proposals else None
         return {"reply": reply, "action": action_field, "proposal": proposal, "mode": mode,
                 "model": cfg["model"], "thread_id": _tid,
@@ -4349,25 +5533,246 @@ class Suite:
                        "test_origin_excluded": excluded},
         }
 
-    def coa(self, surfaced_id: str) -> dict:
-        """Decision-compiler UP: translate a raw technical decision into a Commander-altitude
-        value-choice — what it means, 2-3 options with trade-offs, + a recommendation. The raw
-        payload stays DRILLABLE (F2); the operator decides on value, never the raw fork (C2)."""
+    # COA framing — the system prompt is module-level so the grounding guard, the live path, and the
+    # acceptance suite all reference the SAME contract (one source). It hard-instructs grounding: frame
+    # ONLY from the supplied payload, never invent — the prompt half of the guard (the code half below
+    # is the real enforcement: abstain-on-empty + degrade-on-model-absent, neither prompt-dependent).
+    # SCHEMA-AWARE: the live path is `client.complete(schema=CoaFraming)`, which retrieves the model's
+    # CONTENT and validates it against CoaFraming — it does NOT auto-emit JSON for us (the schema kwarg is
+    # not threaded into the transport's response_format; `json=True` in _live_complete sets the endpoint's
+    # json_object mode, and THIS prompt names the exact shape). So the prompt MUST instruct the model to
+    # return ONLY the CoaFraming JSON — otherwise prose comes back, _parse fails, and coa degrades on a
+    # healthy model. The shape named here is the CoaFraming contract (one source — keep in sync if it
+    # changes; the schema validation is the backstop that fails loud if it drifts).
+    _COA_SYS = (
+        "You are the right-hand-man's decision-compiler. Translate the raw technical decision BELOW into a "
+        "COMMANDER-ALTITUDE value choice for the operator. Ground EVERY part STRICTLY in the supplied "
+        "payload — never invent a decision the payload does not contain. Never make raw code the choice — "
+        "the operator decides on value, not implementation.\n\n"
+        "Respond with ONLY a JSON object of this exact shape (no prose, no markdown fences):\n"
+        '{"meaning": "<what this decision means for the system, in plain terms>", '
+        '"options": [{"label": "<a value option in plain commander terms>", '
+        '"tradeoff": "<what you gain / give up choosing it>"}, ... 2-3 options], '
+        '"recommendation": "<a clear recommendation + a one-line why>"}')
+
+    def coa(self, surfaced_id: str, _complete=None) -> dict:
+        """Decision-compiler UP (F1's core up-translate organ): translate a raw technical decision into a
+        Commander-altitude VALUE choice — what it means, 2-3 options with trade-offs, + a recommendation.
+        The raw payload stays DRILLABLE (F2); the operator decides on value, never the raw fork (C2).
+
+        SHAPE is CODE-ENFORCED via the `CoaFraming` schema (proven model-free by an injected canned
+        response); the WORDING quality is the live-model-dependent half (flagged for a model-up check).
+
+        GROUNDING GUARD (soft-spot #5, code-enforced — NOT prompt-only):
+          • ABSTAIN-ON-EMPTY — if the surfaced item carries no real payload there is nothing true to
+            frame, so coa does NOT call the model (a model given no payload would CONFABULATE a decision).
+            It returns an honest "can't frame this — here's the raw" with grounded=False, raw still
+            attached. No silent fabrication from emptiness.
+          • DEGRADE-ON-MODEL-ABSENT — the live model call is wrapped: a FabricError (model down /
+            unreachable / a shape it could not satisfy) is NOT swallowed and is NOT faked into a story.
+            `framing` becomes a LEGIBLE "model unavailable" line, the raw stays drillable, degraded=True,
+            and a loud warning is emitted (fail-loud-legible, rule 4). The operator never sees an invented
+            framing in place of a real one.
+          • RAW ALWAYS ATTACHED — every return path keeps `raw` (the structural drill-to-ground), so the
+            operator can always reach the true payload behind the altitude lead.
+
+        FE CONTRACT (additive-only — Grow.tsx + useAppController.ts:272 read these, canvas/** is out of
+        this lane's file set): `id`, `raw` (the payload dict — .name/.code read off it), and `framing` (a
+        STRING rendered in the grow-coa div). NEW alongside: `framing_struct` (the CoaFraming dict or
+        None), `grounded` (bool), `degraded` (bool) — unknown keys the FE ignores.
+
+        `_complete` is the test injection seam (default None → the real fabric path): a callable
+        (sys_prompt, user_prompt, model, base_url) -> CoaFraming, so the structure/guard/degrade can all
+        be driven deterministically with NO live model."""
         d = self.inbox.get(surfaced_id)
-        if not d:
+        if not d:                                              # asked to frame a thing that doesn't exist → RAISE
             raise KeyError(f"no surfaced decision {surfaced_id!r}")
-        from fabric import client, transport
+
+        payload = d.get("payload")
+        # GROUNDING GUARD (a) — ABSTAIN-ON-EMPTY: no real payload → do not call the model (it would
+        # confabulate). Honest "can't frame, here's the raw", grounded=False, raw still attached.
+        if not payload or (isinstance(payload, (dict, list, str)) and len(payload) == 0):
+            self._emit("warning", f"coa: surfaced {surfaced_id!r} has no payload to frame — abstaining "
+                       "(no confabulation)", surfaced=surfaced_id)
+            return {"id": surfaced_id, "class": d.get("action"),
+                    "framing": "Can't frame this at your altitude — the decision carries no payload to "
+                               "ground a framing in. The raw is attached for inspection.",
+                    "framing_struct": None, "raw": payload, "grounded": False, "degraded": False}
+
         cfg = self.rhm_config()
-        sys_p = (
-            "You are the right-hand-man's decision-compiler. Translate a raw technical decision into a "
-            "COMMANDER-ALTITUDE value choice for the operator: (1) what it means for the system in plain "
-            "terms, (2) 2-3 options with their trade-offs, (3) a clear RECOMMENDATION with a one-line why. "
-            "Never make raw code the choice — the operator decides on value, not implementation. Be concise.")
-        user = f"Decision class: {d['action']}. Default if ignored: {d.get('default')}. Payload: {d['payload']}"
-        framing = client.complete(transport.openai_transport(base_url=cfg["base_url"]),
-                                  [{"role": "system", "content": sys_p},
-                                   {"role": "user", "content": user}], model=cfg["model"])
-        return {"id": surfaced_id, "class": d["action"], "framing": framing, "raw": d["payload"]}
+        user = f"Decision class: {d.get('action')}. Default if ignored: {d.get('default')}. Payload: {payload}"
+
+        # F1 LEARNING LOOP — the ADAPT step for coa: if the surfaced item carries a `ui://` address (e.g. a
+        # build-intent minted at a locus), CONSULT the learned presentation pref there and THREAD its
+        # directive into the user prompt so the model honors how Tim wants this framed. The MECHANISM (pref
+        # recorded → consulted → reached the framing prompt) is proven MODEL-FREE (the `_complete` injection
+        # seam receives the directive in its prompt args); the WORDING the model actually emits honoring it
+        # is the model-dependent half (flagged). No address / no pref → the prompt is byte-for-byte the
+        # default (the clean default — no error, no fabricated directive). A stored junk pref RAISES (fail
+        # loud) via the consult-read's re-validation.
+        _pref_addr = payload.get("address") if isinstance(payload, dict) else None
+        _pref = None
+        if isinstance(_pref_addr, str) and _pref_addr.startswith("ui://"):
+            _pref = self.presentation_pref_at(_pref_addr)            # raises on a stored junk pref (fail loud)
+        presentation_directive = None
+        if _pref:
+            presentation_directive = self.PRESENTATION_PREFS[_pref["kind"]].format(arg=_pref.get("arg"))
+            user += (f"\n\nPRESENTATION PREFERENCE (Tim has shaped how he wants things at {_pref_addr} "
+                     f"presented — honor it in your framing): {presentation_directive}")
+
+        def _live_complete(sys_p, usr, model, base_url) -> CoaFraming:
+            from fabric import client, transport
+            # `json=True` → the transport sets response_format={type:json_object} (transport.py:37) so the
+            # endpoint emits a JSON object; `schema=CoaFraming` → complete() validates the content against
+            # the schema (retries+raises on a shape miss). The prompt (_COA_SYS) names the exact shape. All
+            # three together make the LIVE path emit + validate the struct — WITHOUT the prompt+json the
+            # schema kwarg alone does NOT request JSON from the endpoint, so a healthy model would return
+            # prose and coa would always degrade (the regression this guards against).
+            return client.complete(transport.openai_transport(base_url=base_url),
+                                   [{"role": "system", "content": sys_p},
+                                    {"role": "user", "content": usr}],
+                                   model=model, schema=CoaFraming, json=True)
+
+        run = _complete or _live_complete
+        # GROUNDING GUARD (b) — DEGRADE-ON-MODEL-ABSENT: wrap the model call. FabricError (down /
+        # unreachable / schema-unsatisfiable) → legible degrade, raw kept, NEVER a fabricated framing.
+        try:
+            struct: CoaFraming = run(self._COA_SYS, user, cfg["model"], cfg["base_url"])
+        except Exception as e:
+            self._emit("warning", f"coa: framing model unavailable ({type(e).__name__}) — degrading "
+                       "to raw-only, no fabricated framing", surfaced=surfaced_id)
+            return {"id": surfaced_id, "class": d.get("action"),
+                    "framing": (f"Can't up-translate this right now — the framing model is unavailable "
+                                f"({type(e).__name__}). The raw decision is attached so you can still act on it."),
+                    "framing_struct": None, "raw": payload, "grounded": True, "degraded": True}
+
+        # SHAPE is code-enforced (the schema validated); project to the FE text + expose the struct.
+        out = {"id": surfaced_id, "class": d.get("action"),
+               "framing": struct.to_text(), "framing_struct": struct.model_dump(),
+               "raw": payload, "grounded": True, "degraded": False}
+        if _pref:                                                    # F1: the consulted pref reached the framing
+            out["presentation_pref"] = _pref
+            out["presentation_directive"] = presentation_directive
+        return out
+
+    # ============================================================================================
+    # F1 — the GENERALIZED up-translate move: "present-this-at-Tim's-altitude" for ANY artifact
+    # ============================================================================================
+    # address_help up-translates ONE address (3 legs); coa up-translates ONE surfaced decision. The
+    # foundation "up-translate everywhere" needs the SAME move callable on ANY system artifact — an
+    # address, a surfaced decision, a drift/coherence finding, an event — returning its Tim-altitude
+    # framing (a plain-language LEAD + a drillable MECHANISM). This is the reusable resolver F1's
+    # surface + G2 (detectors-as-RHM-signal) will CONSUME.
+    #
+    # It is a THIN COMPOSER, never a rebuild (rule 3, one-source): each kind DISPATCHES to the existing
+    # proven organ and the result is NORMALIZED to one envelope. It REUSES:
+    #   • address_help (D2) — already returns the altitude shape (legs + legs_present + degrade-clean);
+    #   • coa — the value-framing + grounding guard + model-degrade (above);
+    #   • the surfaced/inbox store — the same artifacts coa/the inbox read (no parallel store);
+    #   • resolution_spec_for (modes E1) — the active mode's lens tunes verbosity where it helps.
+    # The ONE envelope every kind returns:
+    #   {kind, ref, lead, mechanism, legs_present, grounded, degraded, note}
+    #   • lead       — the plain-language altitude line (what this IS / MEANS at Tim's level).
+    #   • mechanism  — the drillable ground (the raw payload / the address legs / the finding detail).
+    #   • legs_present — which parts resolved (the address_help degrade pattern, generalized).
+    #   • grounded   — framed ONLY from real resolved content (the grounding guard, generalized).
+    #   • degraded   — a leg/the model was unavailable (legible, never fabricated).
+    UPTRANSLATE_KINDS = ("address", "decision", "finding", "event")
+
+    def up_translate(self, kind: str, ref, _complete=None) -> dict:
+        """F1 — up-translate ANY system artifact to Tim's altitude (plain-language LEAD + drillable
+        MECHANISM), composing the existing organs. `kind` ∈ UPTRANSLATE_KINDS; `ref` is the artifact
+        handle (a ui:// address string for 'address'; a surfaced_id for 'decision'; a finding dict for
+        'finding'; an event dict for 'event'). FAIL LOUD on an unknown kind (rule 8 — never guess). The
+        grounding guard is generalized: every kind frames ONLY from real resolved content and marks
+        degraded/grounded honestly rather than confabulating. `_complete` is threaded to coa for the
+        model-free decision proof."""
+        if kind not in self.UPTRANSLATE_KINDS:
+            raise ValueError(f"up_translate: unknown kind {kind!r} — one of {self.UPTRANSLATE_KINDS} "
+                             "(rule 8: never fabricate a kind)")
+
+        if kind == "address":
+            # REUSE address_help (D2) — it already IS the altitude shape. Normalize its 3 legs into the
+            # one envelope: the lead is the plain-language what-this-is + how-to-use (the altitude lead);
+            # the mechanism is how-to-change (the code scope + blast radius — the drill-to-ground).
+            # A MALFORMED address propagates address_help's S0 raise (fail loud); an UNREGISTERED /
+            # no-code / unauthored address degrades clean (the legs_present flags carry which legs landed).
+            b = self.address_help(ref)                          # raises on malformed (S0) — fail loud
+            lp = b.get("legs_present") or {}
+            wti = b.get("what_this_is")
+            htu = b.get("how_to_use")
+            lead_parts = []
+            if lp.get("what_this_is"):
+                lead_parts.append(wti)
+            if lp.get("how_to_use") and htu:
+                lead_parts.append(htu)
+            lead = "  ".join(lead_parts) if lead_parts else (wti or f"{ref} (not registered)")
+            grounded = bool(lp.get("what_this_is"))             # framed from a REAL registry row, not invented
+            degraded = not (lp.get("what_this_is") and lp.get("how_to_use") and lp.get("how_to_change"))
+            env = {"kind": "address", "ref": ref, "lead": lead,
+                   "mechanism": b.get("how_to_change"), "legs_present": lp,
+                   "grounded": grounded, "degraded": degraded,
+                   "note": (b.get("how_to_change") or {}).get("note")}
+            # F1 LEARNING LOOP — the ADAPT step on the COMPOSED envelope: address_help already consulted
+            # the pref (it rides `b["presentation_pref"]`); apply it to the up_translate `lead`/`mechanism`
+            # shape so the F1 envelope REFLECTS Tim's shaping (model-free: the pref reaches the envelope +
+            # reorders the lead). No pref → byte-for-byte the pre-loop envelope (the clean default).
+            return self._apply_presentation_pref(env, b.get("presentation_pref"))
+
+        if kind == "decision":
+            # REUSE coa — the value-framing + grounding guard + model-degrade already live there. Map its
+            # return into the one envelope: lead = the framing (the altitude value-choice text), mechanism
+            # = raw (the drillable payload). coa's grounded/degraded carry straight through. A missing
+            # surfaced_id propagates coa's KeyError (fail loud — asked to frame a thing that isn't there).
+            c = self.coa(ref, _complete=_complete)              # raises KeyError on a missing item — fail loud
+            return {"kind": "decision", "ref": ref, "lead": c.get("framing"),
+                    "mechanism": c.get("raw"),
+                    "legs_present": {"meaning": c.get("framing_struct") is not None,
+                                     "raw": c.get("raw") is not None},
+                    "grounded": bool(c.get("grounded")), "degraded": bool(c.get("degraded")),
+                    "note": None, "framing_struct": c.get("framing_struct")}
+
+        if kind == "finding":
+            # A drift/coherence finding (the shape G2 will feed — NOT wired here, that's a later lane). We
+            # up-translate a finding DICT the caller already holds (e.g. {address, what, detail, touches}).
+            # GROUNDING GUARD: frame ONLY from the supplied finding — an empty/non-dict finding abstains
+            # rather than inventing one. If the finding names a ui:// address, ENRICH the mechanism with
+            # that address's blast-radius (REUSE resolve_scope/blast_radius — the same "what it touches"
+            # join address_help uses), so a drift lead can drill to what a fix would reach. Best-effort:
+            # an unreachable/absent address degrades the enrichment, never fabricates it.
+            if not isinstance(ref, dict) or not (ref.get("what") or ref.get("detail")):
+                return {"kind": "finding", "ref": ref, "grounded": False, "degraded": False,
+                        "lead": "Can't frame this finding — it carries no content to ground a framing in.",
+                        "mechanism": ref, "legs_present": {"finding": False, "touches": False},
+                        "note": "empty/malformed finding — abstained (no confabulation)"}
+            what = ref.get("what") or ref.get("detail")
+            addr = ref.get("address")
+            lead = (f"{what}" + (f" (at {addr})" if addr else ""))
+            mechanism = {"detail": ref.get("detail"), "address": addr, "touches": None}
+            degraded = False
+            note = None
+            if isinstance(addr, str) and addr.startswith("ui://"):
+                try:
+                    mechanism["touches"] = self.blast_radius(addr)   # REUSE — what a fix here would reach
+                except Exception as e:                               # best-effort enrichment, never fabricate
+                    degraded = True
+                    note = f"could not resolve what this touches ({type(e).__name__})"
+            return {"kind": "finding", "ref": ref, "lead": lead, "mechanism": mechanism,
+                    "legs_present": {"finding": True, "touches": mechanism["touches"] is not None},
+                    "grounded": True, "degraded": degraded, "note": note}
+
+        # kind == "event" — up-translate one recorded event (kind/summary/address/ts) to a plain line.
+        # GROUNDING GUARD: an event with no summary has nothing true to frame → abstain. The mechanism is
+        # the raw event dict (drillable); if it carries a ui:// address, that's the locus to drill to.
+        if not isinstance(ref, dict) or not ref.get("summary"):
+            return {"kind": "event", "ref": ref, "grounded": False, "degraded": False,
+                    "lead": "Can't frame this event — it carries no summary to ground a framing in.",
+                    "mechanism": ref, "legs_present": {"event": False},
+                    "note": "empty/malformed event — abstained (no confabulation)"}
+        ek = ref.get("kind", "event")
+        lead = f"[{ek}] {ref.get('summary')}" + (f"  (at {ref['address']})" if ref.get("address") else "")
+        return {"kind": "event", "ref": ref, "lead": lead, "mechanism": ref,
+                "legs_present": {"event": True}, "grounded": True, "degraded": False, "note": None}
 
     def surface_output(self, graph_id: str, node_id: str) -> dict:
         """F2: route a node's RESULT to the decision surface. Composes the EXISTING surfaced/inbox
@@ -4426,6 +5831,75 @@ class Suite:
             raise ValueError("idea_capture needs non-empty text (fail loud)")
         return self.surface_review({"title": t[:80], "idea": t, "kind": "idea"}, origin="generative")
 
+    # --- B3: the configurable interactive-inbox — defer a LIVE offer into the one queue, revivable ---
+    # §6B mode #4 (QUEUE, configurable): the operator can defer ANY offer/build (the B1/B2 propose-affordance
+    # — its verb/address/args/options[]/interactive/direction) into the inbox AS A REAL QUEUED ITEM (not the
+    # earlier FE-only "set aside" no-op). It lands in the SAME surfaced/inbox store every other lane uses
+    # (registry-is-truth, NO parallel queue) so a fresh process reads it back. The whole proposal shape is
+    # persisted under payload.proposal — ENOUGH TO REVIVE the interactive RHM offer (the ProposeAffordance
+    # card with its options + steer channel + approve), so revisiting RE-OPENS the live conversation, never a
+    # dead queue card. NOTHING runs here: resolved=None (a live escalation until the operator acts), no
+    # /api/act, no dispatch — the B1/B2 consent invariants (select≠approve, nothing-runs-until-approved) are
+    # preserved because reviving simply re-renders the SAME card whose approve is the only dispatch.
+    #
+    # DISTINCT action_class `deferred_offer` (NOT surface_review — that forces action="review" and would make
+    # this indistinguishable from a real review item; the Inbox splits it into its OWN resume lane by class).
+    # Schema-additive: the surfaced record gains an optional payload shape; no schema_ver bump (payload is the
+    # open bag every consumer reads via .get — an unknown class is ignored cleanly by inbox_lanes/escalation).
+    def defer_offer(self, proposal: dict, note: str = "") -> dict:
+        """Defer a live RHM offer into the inbox as a REAL queued, revivable item (§6B QUEUE mode).
+        `proposal` is the B1/B2 offer shape ({verb, address, args, options[], interactive, direction}) — the
+        revival state. Fail loud on a non-dict or a proposal carrying no verb AND no options (nothing to
+        revive). The item lands in `live_escalations` (resolved=None) until the operator revives+approves it
+        or dismisses it; only the operator-face resolve ever clears it (reflects-never-owns)."""
+        if not isinstance(proposal, dict):
+            raise TypeError(f"defer_offer needs a dict proposal, got {type(proposal).__name__} (fail loud)")
+        opts = proposal.get("options") or []
+        if not proposal.get("verb") and not opts:
+            raise ValueError("defer_offer needs a proposal carrying a verb or options[] to revive (fail loud)")
+        # the human-legible name for the queued card (the primary offer's label/verb at its address).
+        primary = (opts[0] if opts else proposal)
+        label = primary.get("label") or primary.get("verb") or "offer"
+        addr = proposal.get("address") or primary.get("address")
+        name = f"deferred offer · {label}" + (f" @ {addr}" if addr else "")
+        payload = {
+            "name": name,
+            "note": (note or "").strip(),
+            # the FULL revival state — exactly what ProposeAffordance + approveProposal need to re-open the
+            # live offer. Stored verbatim (the open bag), so a fresh Suite reads it back unchanged.
+            "proposal": {
+                "verb": proposal.get("verb"),
+                "address": proposal.get("address"),
+                "args": proposal.get("args"),
+                "options": opts,
+                "interactive": bool(proposal.get("interactive")),
+                "direction": proposal.get("direction") is not False,
+            },
+            # L8 (§21.7#9): if the offer points at a ui:// address, carry it as the click-to-thing target so
+            # the queued card can drive the operator's view to the locus the offer is about (registry-valid by
+            # construction — derived from the offer's own address, never fabricated).
+            **({"ui_target": addr} if (isinstance(addr, str) and addr.startswith("ui://")) else {}),
+        }
+        sid = self.inbox.surface("deferred_offer", payload, default="reject", resolved=None)
+        # emit 'ask' so the live SSE inbox-refresh path lights up (same kind surface_output/surface_review use).
+        self._emit("ask", f"an offer was deferred to your inbox: {name}", surfaced=sid,
+                   address=addr if (isinstance(addr, str) and addr.startswith("ui://")) else None)
+        return {"id": sid, "name": name, "proposal": payload["proposal"]}
+
+    def revive_offer(self, sid: str) -> dict:
+        """B3 — read a deferred offer back out of the inbox to RE-OPEN the live interactive conversation
+        (the ProposeAffordance card). Returns the stored revival state ({verb,address,args,options,
+        interactive,direction}) so the operator resumes discussing/steering/approving from where they left
+        off. Fail loud if the id is missing or is not a deferred_offer (never a wrong-card revive)."""
+        d = self.inbox.get(sid)
+        if not d:
+            raise KeyError(f"no surfaced item {sid!r} to revive (fail loud)")
+        if d.get("action") != "deferred_offer":
+            raise ValueError(f"surfaced {sid!r} is a {d.get('action')!r}, not a deferred_offer — cannot revive as an offer (fail loud)")
+        return {"id": sid, "proposal": (d.get("payload") or {}).get("proposal") or {},
+                "note": (d.get("payload") or {}).get("note", ""),
+                "resolved": d.get("resolved")}
+
     # --- B: the walkthrough engine — a review session IS a Graph, run by the existing scheduler ---
     # No bespoke iterator + no scheduler change: a review-item = a STEP node whose readiness waits on a
     # human-writable `go` input (the scheduler already waits on an unwired/unresolved declared port,
@@ -4448,17 +5922,29 @@ class Suite:
         """The go-gate address for step `position` — the source node's logical output (compile.py form)."""
         return f"run://{self._session_graph_id(session_id)}/go{position}"
 
-    def start_session(self, item_ids: list, mode: str = "walkthrough") -> dict:
+    def start_session(self, item_ids: list, mode: str = "walkthrough",
+                      teach: list | None = None, indicate: list | None = None) -> dict:
         """Compile a review-session into a Graph the existing scheduler runs, operator-paced (B).
         For each item i: a go-SOURCE node `go{i}` (constant, unwired → never auto-fires → its address
         stays unresolved = the gate) wired into a STEP node `step{i}` (carrier) on its `text` port. The
         step thus waits until next() writes `go{i}`'s address. Persists the session record atomically
-        (save_session) + the graph. The session is server-authoritative; the canvas reflects it."""
+        (save_session) + the graph. The session is server-authoritative; the canvas reflects it.
+
+        C2 (schema-additive side-channels, both optional): `teach` is a per-step list of flow-level
+        narration (the bootstrap's own teaching voice, composed WITH the corpus how-to in present_current's
+        guide branch), `indicate` is a per-step list of FE mount-hints (a ui:// address the FE indicates so
+        a hard-gated element mounts before its spotlight). Both POSITIONALLY ALIGNED to `item_ids`; None
+        (the default — every existing caller) leaves the session record C1-shaped (no teach/indicate keys),
+        so the guide/review narration is byte-identical. A length mismatch fails loud (no silent misalign)."""
         items = list(item_ids or [])
         if not items:
             raise ValueError("start_session needs at least one item id (fail loud)")
         if mode not in self.MODES:
             raise ValueError(f"unknown session mode {mode!r} — one of {self.MODES}")
+        if teach is not None and len(teach) != len(items):
+            raise ValueError(f"start_session teach length {len(teach)} != items length {len(items)} (fail loud — no silent misalign)")
+        if indicate is not None and len(indicate) != len(items):
+            raise ValueError(f"start_session indicate length {len(indicate)} != items length {len(items)} (fail loud — no silent misalign)")
         import time as _t
         session_id = f"{int(_t.time())}-{len(items)}"
         gid = self._session_graph_id(session_id)
@@ -4480,6 +5966,12 @@ class Suite:
         # silently breaks pacing — every step would fire on the first Next; no test would catch it.)
         session = {"id": session_id, "graph": gid, "mode": mode, "items": items,
                    "cursor": 0, "opened": [], "done": False}
+        # C2 side-channels (schema-additive): only set when provided, so a plain review/guide session record
+        # stays C1-shaped (no extra keys → byte-identical). present_current's guide branch reads these by cursor.
+        if teach is not None:
+            session["teach"] = list(teach)
+        if indicate is not None:
+            session["indicate"] = list(indicate)
         self.store.save_session(session)
         self._emit("review.start", f"review session {session_id} started — {len(items)} item(s), mode={mode}",
                    session=session_id, items=items, mode=mode,
@@ -4508,6 +6000,22 @@ class Suite:
         returns a ref present in UI_REGISTRY (no fabrication). This stamps INTO the payload (what `raw`
         carries) — the additive field the FE reads — WITHOUT removing the top-level ui://review/<id>."""
         p = payload or {}
+        # G-43 (C1 guided-sequence seam) — a payload may ALREADY carry an explicit registry-valid `ui://`
+        # element address (a guided-step item is an `ui://<region>/<element>` address, NOT a node-backed
+        # review payload). Honour it FIRST, validated against the live UI registry (registry-is-truth,
+        # rule 8 — never pass through a fabricated ref the FE resolveUiTarget would then fail-loud on).
+        # Before this, payload-less / synthetic / address-keyed items fell straight to the inbox region
+        # (G-43: "per-step ui_target not stamped for payload-less items") so the FE spotlight no-op'd.
+        # `payload['ui_target']` (a guided step stamps it) OR `payload['guide_address']` (the C1 marker) —
+        # whichever is a registered element address wins. A NODE-backed payload still maps node→canvas.
+        for key in ("ui_target", "guide_address"):
+            cand = p.get(key)
+            if isinstance(cand, str) and cand.startswith("ui://"):
+                try:
+                    if cand in self.build_ui_info():           # registered element address → drive to it
+                        return cand
+                except Exception:
+                    pass                                       # registry unavailable → fall through (fail-safe)
         node = p.get("node")                               # surface_output result items carry the node id
         if isinstance(node, str) and node.strip():
             return f"ui://canvas/{node.strip()}"
@@ -4522,6 +6030,57 @@ class Suite:
             return {"session": session_id, "done": True, "cursor": cur, "total": len(s["items"])}
         item_id = s["items"][cur]
         framing, raw = None, None
+        # ── C1 · GUIDED-SEQUENCE branch (system-initiated show-me) ───────────────────────────────────
+        # A guided sequence is a review session whose ITEMS are `ui://<region>/<element>` ADDRESSES (not
+        # inbox review-ids). Reuse-only: it rides the SAME start_session/present_current/next organ + the
+        # SAME FE per-step view-drive (resolveUiTarget) + spotlight — NO parallel stepper. The ONLY divergence
+        # is HERE: a step that IS a ui:// address frames from the CORPUS how-to (address_help, D1) and returns
+        # BEFORE the coa() call — so the guided walk is MODEL-FREE BY CONSTRUCTION (coa is what makes the
+        # review walk model-dependent, G-41; the tour reads its narration from the registry/corpus, never a
+        # model). The prefix check works on cursor 0 too (present_current(0) runs inside start_session before
+        # any session flag could be set, so we sniff the item, not a session field).
+        if isinstance(item_id, str) and item_id.startswith("ui://"):
+            try:
+                bundle = self.address_help(item_id)         # the THREE-leg D1 affordance bundle (corpus)
+            except Exception as e:                          # malformed address → fail loud, never a silent skip
+                raise ValueError(f"guided step {cur} carries an unresolvable address {item_id!r}: {e}")
+            # NARRATION: prefer the authored how-to-use; fall back to what-this-is; NEVER empty, NEVER
+            # fabricated (registry-is-truth). This lands in `framing` so the EXISTING voice narration effect
+            # (useAppController ~1113 reads session.framing) speaks the how-to FOR FREE — we drive the visual
+            # sequence + supply the narration TEXT, we never call speakReply (G-8 voice functions untouched).
+            corpus_narration = bundle.get("how_to_use") or bundle.get("what_this_is") \
+                or f"This is {item_id} — a part of the interface."
+            # C2 — COMPOSE the bootstrap's flow-level TEACH (the side-channel, by cursor) WITH the corpus
+            # how-to (rule 3: teach is the FLOW framing, not a second source of element how-to). Teach LEADS
+            # (it carries the point→ask→surface→approve step), the element's corpus how-to/what-this-is
+            # FOLLOWS where it exists — so the narration auto-enriches when the corpus fills the per-element
+            # howtos (no drift). When the topic carries no teach (the default tour), narration == the corpus
+            # narration BYTE-FOR-BYTE (C1 unchanged). Read defensively (the side-channel may be shorter/absent).
+            teach_list = s.get("teach") or []
+            teach_text = teach_list[cur] if (isinstance(teach_list, list) and cur < len(teach_list)) else None
+            if teach_text:
+                # the element's WHAT-THIS-IS as a brief tail (skip the verbose how_to_use leg here — teach is
+                # already the teaching voice; what_this_is grounds the element by name without doubling text).
+                what = bundle.get("what_this_is")
+                narration = f"{teach_text}\n\n({what})" if what else teach_text
+            else:
+                narration = corpus_narration
+            # the FE mount-hint for this step (the side-channel, by cursor): a ui:// address the FE indicates
+            # so a hard-gated element (the wire-door) MOUNTS before resolveUiTarget spotlights it. None = no
+            # indication for this step. The FE per-step effect calls the EXISTING indicate(addr) (we supply
+            # the hint; we never touch the indicate machinery here — fail-loud-safe, registry-validated FE-side).
+            indicate_list = s.get("indicate") or []
+            indicate_hint = indicate_list[cur] if (isinstance(indicate_list, list) and cur < len(indicate_list)) else None
+            # raw carries: a registry-valid per-step ui_target (G-43 — _registry_ui_target honours
+            # guide_address) so the FE per-step drive spotlights the REAL element; guide_address as the C1
+            # marker the FE branches on (tour vs review card); the full how-to bundle for a richer surface;
+            # teach (the step's flow narration) + indicate (the mount-hint) for the C2 teach-to-self-modify tour.
+            raw = {"guide_address": item_id, "ui_target": self._registry_ui_target({"guide_address": item_id}),
+                   "how_to": bundle, "kind": "guide", "teach": teach_text, "indicate": indicate_hint}
+            return {"session": session_id, "cursor": cur, "total": len(s["items"]),
+                    "item": item_id, "framing": narration, "raw": raw,
+                    "ui_target": item_id,                   # the step's present target IS the element address
+                    "done": False, "guide": True}
         try:
             c = self.coa(item_id)                          # decision-compiler UP (D1, reuse)
             framing, raw = c.get("framing"), c.get("raw")
@@ -4550,6 +6109,201 @@ class Suite:
                 "item": item_id, "framing": framing, "raw": raw,
                 "ui_target": f"ui://review/{item_id}",      # the step's present target (C1 addressing)
                 "done": False}
+
+    def start_walkthrough(self, item_ids: list | None = None) -> dict:
+        """C4 — the mode-selection → ORGAN-start seam (backend half). Resolves the long-standing
+        walkthrough NAMING TRAP: there is a cosmetic presence-DIAL 'walkthrough' MODE (MODE_DIRECTIVES,
+        a narration directive only) AND a separate, real walkthrough ORGAN (start_session — the
+        screen-driving review engine). Selecting the dial-mode set ONLY the cosmetic directive; it never
+        bound to / started the organ. This method UNIFIES the seam: SELECTING the guided/walkthrough
+        experience now (a) sets the presence dial to 'walkthrough' (the cosmetic mode — kept, so the RHM
+        speaks in guide register) AND (b) actually STARTS the organ over the pending review items.
+
+        REUSE-ONLY (no parallel system): it composes the EXISTING set_mode (the dial) + the EXISTING
+        pending-item gather (the same `resolved is None` predicate `_affordance_context`/`now` use) +
+        the EXISTING start_session organ (which compiles a review-session graph the scheduler runs).
+        `set_mode` stays PURE (its widely-called contract is untouched); this is the higher-level
+        COMPOSER that binds dial→organ, so callers that want only the cosmetic mode are unaffected.
+
+          • item_ids given  → walk exactly those (operator pre-selected a set).
+          • item_ids None   → walk every PENDING unresolved inbox item (the natural "guide me through
+                              what needs me" set). The gather mirrors the affordance-context predicate
+                              (registry-is-truth: the one definition of 'pending').
+
+        FAIL LOUD, never a silent no-op (rule 4): if there is NOTHING to walk, this does NOT crash and
+        does NOT pretend success — it returns {organ_started:False, reason:'…', mode:'walkthrough'} so
+        the dial is set (the operator IS in guide mode) but the surface is told plainly there is nothing
+        to step through. A populated walk returns start_session's first presentation (present_current of
+        cursor 0), tagged organ_started:True + the session id, so the FE can drive the organ view.
+
+        DEFERRED (the FE show-me lane — noted, NOT built here): the FE wiring that CALLS this when the
+        operator picks the walkthrough mode on the presence dial, and then DRIVES the organ view per
+        step (resolveUiTarget over the per-step ui_target). This is the backend binding + a reachable
+        entry; the view-drive is the FE half (would collide with the concurrent canvas/region lane)."""
+        mode = self.set_mode("walkthrough")                      # (a) the cosmetic dial — kept, pure reuse
+        if item_ids is None:
+            # (b) the pending set — the SAME 'resolved is None' predicate the affordance layer uses
+            # (one definition of 'pending', registry-is-truth — never a second notion).
+            try:
+                item_ids = [d.get("id") for d in self.inbox.list()
+                            if d.get("resolved") is None and d.get("id")]
+            except Exception:
+                item_ids = []
+        items = [i for i in (item_ids or []) if i]
+        if not items:
+            # FAIL LOUD (no silent no-op): the dial IS set, but there is nothing to walk — say so plainly.
+            self._emit("mode", "walkthrough selected — nothing pending to walk through",
+                       address="ui://chrome/chat")
+            return {"organ_started": False, "mode": mode,
+                    "reason": "no pending review items to walk through "
+                              "(surface or capture an item first, then start the walkthrough)"}
+        started = self.start_session(items, mode="walkthrough")   # the REAL organ — screen-driving engine
+        # carry the session id + the organ_started flag so the surface can drive the organ view.
+        return {**started, "organ_started": True,
+                "session": started.get("session"), "mode": mode}
+
+    # --- C1 · SYSTEM-INITIATED GUIDED SEQUENCES (the "show me how" tour) ---
+    # A guided sequence is the SAME walkthrough organ (start_session/present_current/next) walking
+    # `ui://` ELEMENT ADDRESSES instead of inbox review-items. It is SYSTEM-INITIATED: start_guide is
+    # directly callable (no operator click needed — the test calls it bare; the RHM/bridge can call it
+    # too), distinct from the review-organ's pending-item walk which is operator/dial-triggered. Each step
+    # resolves the element's HOW-TO from the corpus (address_help, D1) as narration, drives the view to it,
+    # and spotlights it (the FE per-step resolveUiTarget over the registry-valid ui_target, G-43). MODEL-FREE
+    # by construction (present_current's guide branch returns before coa) — the tour reads the corpus, never
+    # a model, so a model-down can't brick it (the FE still bounds the start, G-41/G-44 reuse).
+
+    # The DEFAULT guided sequence — a registry-true ordered tour of the cockpit's primary affordances.
+    # registry-is-truth (rule 8): every address here MUST be a live UI_REGISTRY key (validated in
+    # _guide_sequence), never invented. Ordered as a first-run orientation: run → presence-dial → inbox.
+    # ui://toolbar/run carries an AUTHORED howto (the seeded D1 text), so the tour opens on real how-to
+    # narration; the others narrate their what-this-is leg. Named GUIDE_SEQUENCES so topic-keyed tours
+    # extend by adding a key (each filtered to registered addresses at resolve time — registry-is-truth).
+    GUIDE_SEQUENCES: dict = {
+        "default": ["ui://toolbar/run", "ui://toolbar/presence", "ui://inbox/build-review"],
+        # C2 — the BOOTSTRAP tour: teach the operator HOW TO REQUEST A CHANGE AND APPROVE IT FROM INSIDE
+        # (point → ask → surface → approve). Every address here is a LIVE registry key (registry-is-truth,
+        # filtered in _guide_sequence); the teach-narration (GUIDE_TEACH) + the indicate-hint (GUIDE_INDICATE)
+        # ride PARALLEL side-channels keyed by position (the session items stay address STRINGS — the organ
+        # keys on a ui:// string; teach/indicate are NOT folded into the items, so C1 stays byte-identical).
+        #   • point   ui://toolbar/run        — point at an element (also the indicate-target that MOUNTS the door)
+        #   • ask     ui://canvas/wire-request — the request-a-change door (appears because step 1 indicated an element)
+        #   • surface ui://inbox              — the build-intent surfaces in the inbox, awaiting you (always-mounted region)
+        #   • approve ui://inbox              — you approve it; only then does it dispatch (same region, distinct teach)
+        "request-a-change": ["ui://toolbar/run", "ui://canvas/wire-request", "ui://inbox", "ui://inbox"],
+        # alias — same bootstrap tour under the self-modify name (both resolve to the request-a-change spine).
+        "self-modify": ["ui://toolbar/run", "ui://canvas/wire-request", "ui://inbox", "ui://inbox"],
+    }
+
+    # C2 — the flow-level TEACH narration, POSITIONALLY ALIGNED to each topic's GUIDE_SEQUENCES list. This is
+    # the BOOTSTRAP's own teaching voice (not per-element how-to — that lives in the corpus, rule 3): each
+    # string frames its STEP in the point→ask→surface→approve flow. It is COMPOSED WITH the corpus how-to in
+    # present_current (teach leads; the element's authored how_to_use/what_this_is follows where present), so
+    # the narration auto-enriches when the corpus fills the per-element howtos (no drift, no second source of
+    # element how-to). Model-free (read here, never generated). Topics without a TEACH entry (e.g. 'default')
+    # narrate purely from the corpus exactly as C1 did — teach is None → byte-identical C1 behaviour.
+    GUIDE_TEACH: dict = {
+        "request-a-change": [
+            "The first thing to learn here is that you can change the Company from inside it — by sight. "
+            "Start by POINTING at any element. Here it's the Run button; it could be any part of the "
+            "interface. The element you point at becomes the place you request a change.",
+            "With an element pointed at, the request-a-change door appears right here. You describe the "
+            "change in plain words — what you want different. Your description becomes a scoped build-intent: "
+            "the system works out which code it reaches (the blast radius), you don't have to.",
+            "A minted build-intent surfaces here, in the inbox's decision-to-build lane, awaiting you. It "
+            "shows what the change is and how far it reaches. Nothing has run yet — minting a build-intent "
+            "composes a plan, it does not modify anything.",
+            "Approval is yours alone — and it is safe by default. You approve the build-intent; that records "
+            "your verdict, but nothing modifies the Company yet. The wire stays in plan-mode (inert) until it "
+            "is deliberately armed, so an approved change is a plan awaiting that final go — you can always "
+            "ask first ('shall I?'). This is the loop that lets you grow the Company by sight: point, ask, "
+            "approve — with no change ever made behind your back.",
+        ],
+    }
+    GUIDE_TEACH["self-modify"] = GUIDE_TEACH["request-a-change"]
+
+    # C2 — the per-step INDICATE hint (the FE reads raw.indicate and calls the EXISTING indicate(addr) so a
+    # hard-gated element MOUNTS before the spotlight). POSITIONALLY ALIGNED. The wire-door (ui://canvas/wire-
+    # request) renders ONLY when a ui:// element is indicated (clickMode==='annotate'); so the 'point' step
+    # indicates ui://toolbar/run, which MOUNTS the door for the 'ask' step's spotlight. The later inbox steps
+    # carry no indicate (the door may stay up — harmless; the spotlight moves to the inbox region). A None per
+    # position = no FE indication for that step. Topics without an entry (default) = no indication anywhere.
+    GUIDE_INDICATE: dict = {
+        "request-a-change": ["ui://toolbar/run", None, None, None],
+    }
+    GUIDE_INDICATE["self-modify"] = GUIDE_INDICATE["request-a-change"]
+
+    def _guide_sequence(self, topic: str | None = None) -> list:
+        """Resolve a topic → an ORDERED list of registry-valid `ui://` addresses for the guided walk.
+        registry-is-truth (rule 8): a candidate address is kept ONLY if it is a live UI_REGISTRY key
+        (build_ui_info) — an unregistered/typo address is DROPPED (never drives the FE to a dead ref).
+        An unknown topic falls back to 'default' (the orientation tour). Fail loud at the CALLER
+        (start_guide) if the resolved list is empty after the registry filter."""
+        return [a for a, _t, _i in self._guide_steps(topic)]
+
+    def _guide_steps(self, topic: str | None = None) -> list:
+        """C2 — resolve a topic → ORDERED (address, teach, indicate) triples, PAIRED so the registry filter
+        keeps teach/indicate aligned to the surviving addresses (filtering by address alone would misalign a
+        positional teach list). registry-is-truth: an address is kept ONLY if it is a live UI_REGISTRY key
+        (build_ui_info) — a dropped address takes its teach+indicate with it. teach is the flow-level
+        narration (GUIDE_TEACH, None when the topic authors none → C1-identical corpus-only narration);
+        indicate is the FE mount-hint (GUIDE_INDICATE, None when none). An unknown topic falls back to
+        'default'. The CALLER (start_guide) fail-louds if the resolved list is empty after the filter."""
+        key = (topic or "default").strip().lower()
+        addresses = self.GUIDE_SEQUENCES.get(key) or self.GUIDE_SEQUENCES["default"]
+        teach = self.GUIDE_TEACH.get(key) or []
+        indicate = self.GUIDE_INDICATE.get(key) or []
+        try:
+            reg = self.build_ui_info()
+        except Exception:
+            reg = {}
+        out = []
+        for idx, a in enumerate(addresses):
+            if reg and a not in reg:
+                continue                                    # registry-is-truth — drop unregistered, with its teach+indicate
+            out.append((a,
+                        teach[idx] if idx < len(teach) else None,
+                        indicate[idx] if idx < len(indicate) else None))
+        return out
+
+    def start_guide(self, topic: str | None = None) -> dict:
+        """C1 — start a SYSTEM-INITIATED guided sequence (the "show me how" tour). Composes the EXISTING
+        walkthrough organ over `ui://` element ADDRESSES (REUSE-ONLY, no parallel stepper): set the
+        presence dial to 'walkthrough' (so the RHM speaks in guide register — same as start_walkthrough)
+        + start_session over the resolved address sequence. Each step narrates the element's corpus
+        how-to (address_help) and spotlights the real element (present_current's guide branch + G-43).
+
+        SYSTEM-INITIATED: callable directly (no operator click) — the bridge route + the RHM can invoke
+        it. DISTINCT from start_walkthrough (which walks pending INBOX items): a guide walks the
+        INTERFACE's own addressed elements, teaching what each is + how to use it, model-free.
+
+        FAIL LOUD (rule 4 — no silent no-op): if the topic resolves to NO registered addresses, this
+        does NOT crash and does NOT pretend success — it returns {organ_started:False, reason:'…',
+        mode:'walkthrough', topic} so the dial is set but the surface is told plainly there is nothing to
+        tour. A populated guide returns start_session's first presentation (cursor 0) tagged
+        organ_started:True + guide:True + the session id, so the FE drives the tour view per step."""
+        steps = self._guide_steps(topic)                        # (address, teach, indicate) triples (registry-filtered, paired)
+        addresses = [a for a, _t, _i in steps]
+        teach = [t for _a, t, _i in steps]                       # the flow-level teach narration, aligned to the kept addresses
+        indicate = [i for _a, _t, i in steps]                    # the FE mount-hints, aligned to the kept addresses
+        mode = self.set_mode("walkthrough")                      # the cosmetic dial — kept, pure reuse
+        if not addresses:
+            # FAIL LOUD: the dial IS set, but there is nothing to tour — say so plainly (no silent no-op).
+            self._emit("mode", f"guide selected (topic={topic or 'default'}) — no registered addresses to tour",
+                       address="ui://chrome/chat")
+            return {"organ_started": False, "mode": mode, "topic": topic or "default", "guide": True,
+                    "reason": "no registered UI addresses resolved for this guide topic "
+                              "(the sequence is registry-filtered — nothing to tour)"}
+        # teach/indicate ride PARALLEL side-channels onto the session record (the items stay address STRINGS,
+        # so the organ + C1 are unchanged); present_current's guide branch reads them by cursor. Pass None
+        # when the topic carries no teach/indicate (the default tour) so the session record stays C1-shaped.
+        started = self.start_session(addresses, mode="walkthrough",
+                                     teach=teach if any(teach) else None,
+                                     indicate=indicate if any(indicate) else None)   # the REAL organ — model-free guide branch
+        self._emit("guide.start", f"guided sequence started — {len(addresses)} step(s), topic={topic or 'default'}",
+                   session=started.get("session"), topic=topic or "default", address="ui://chrome/chat")
+        return {**started, "organ_started": True, "guide": True,
+                "session": started.get("session"), "mode": mode, "topic": topic or "default",
+                "steps": addresses}
 
     def respond(self, session_id: str, choice: str, reason: str = "") -> dict:
         """B→D: record the operator's verdict for the CURRENT step, tagged with the session + position
@@ -5273,7 +7027,8 @@ class Suite:
                       + why)
 
     def dispatch_decision(self, sid: str, derived_from: int, *, launcher=None,
-                          verifier=None, suite_runner=None, critic=None, repo: str | None = None) -> dict:
+                          verifier=None, suite_runner=None, critic=None, repo: str | None = None,
+                          committer=None) -> dict:
         """W2·W4·W1·W3·W5 — the governed dispatch verb. Run an implementation job ONLY when bound to
         a real operator approve via `derived_from` = the resolve event's unique `seq`, and ONLY once.
 
@@ -5293,6 +7048,14 @@ class Suite:
              item does NOT close (no `implemented`). Do NOT reuse requeue_from_verdict (it needs
              choice!=approve; a build follows an approve).
           8. W4 scope-diff: changed paths outside the declared scope → surface back, do NOT close.
+          8b. GIT CHECKPOINT (Tim's safety mandate): commit EXACTLY the build's changed_delta paths as a
+             single `[self-build] <sid>: <intent>` commit so the accepted build is REVERTIBLE
+             (`git revert <sha>`, the same operator path as a self-apply). Path-scoped, so the
+             concurrent writer's unstaged dirty files are NEVER swept in. FAIL LOUD: a commit failure
+             (or an empty delta at this point) surfaces the build BACK as a retryable build-intent —
+             it does NOT mark implemented (a build that can't be checkpointed is not safe-closed). The
+             resulting sha is threaded into the close (the `decision.implemented` event + the review
+             item) so the operator/a revert path can `git revert <sha>`.
           9. CLOSE + SURFACE-FOR-REVIEW (guarded): write status='implemented' AND surface a review item
              through guard("code_build",…, confirmed=verify_passed) — an unverified close RAISES
              (mirrors apply_node). `implemented` means "done AND surfaced for review", NEVER a silent
@@ -5489,6 +7252,74 @@ class Suite:
                 return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
                         "closed": False, "requeued": new_sid, "overrun": overrun}
 
+        # 8b — GIT CHECKPOINT (Tim's safety mandate before arming the wire): commit EXACTLY the build's
+        # changed_delta paths as a SINGLE revertible commit, BEFORE the close marks it implemented. This
+        # turns each accepted autonomous build into a `git revert <sha>` away from undone — the property
+        # that makes arming the wire acceptable. It runs ONLY here, on the verified + in-scope + FORM-ok
+        # success branch (every earlier gate already surfaced its own failures back), so a
+        # failed/denied/out-of-scope/plan-mode build NEVER reaches a commit.
+        #
+        # PROPERTIES, each load-bearing:
+        #  • PATH-SCOPED: we commit `changed` (= the build's changed_delta — git ground truth, isolated
+        #    by launch()'s baseline_snapshot from any pre-existing dirty files). `_self_build_commit` →
+        #    `_git_self_commit` does `git add <changed>` (named paths only), so the concurrent writer's
+        #    UNSTAGED dirty files (design/blueprint/*.json) are NEVER swept in.
+        #  • EMPTY-DELTA GUARD: a verified build with an EMPTY change-set is a no-op (the default critic
+        #    already vetoes it; a plan-mode run yields an empty delta and fails verify upstream). If we
+        #    still arrive here with nothing to commit (only reachable via an injected verifier that
+        #    passes on empty), we DO NOT create an empty commit — we surface back, fail loud.
+        #  • FAIL LOUD: a commit failure (sha is None) surfaces the build BACK as a RETRYABLE build-intent
+        #    (the same shape as the verify/scope-overrun re-queues, a `decision.verify`/verify_passed=False
+        #    terminal event so the watcher does NOT read it as a crashed mid-flight dispatch) and returns
+        #    closed=False. It must NOT mark `implemented` — a build that can't be checkpointed is NOT
+        #    safe-closed (Tim's mandate). The sha is threaded into the close so the close can record it.
+        #  • INJECTABLE: `committer(paths, msg) -> sha|None` defaults to the real `_self_build_commit`;
+        #    a test injects a stub so no real commit hits the live repo and the exact staged paths can be
+        #    asserted. (NOT `_commit_or_rollback` — that os.remove()s its path on failure, which would
+        #    DELETE the build's own work across a multi-file delta.)
+        commit = committer or self._self_build_commit
+        if not changed:
+            # a verified, in-scope build that changed NOTHING — no-op masquerading as done. Surface back
+            # (do not create an empty checkpoint commit). (Unreachable on the default path: the critic
+            # vetoes an empty change-set; reachable only via an injected verifier that passes on empty.)
+            empty_item = dict(payload)
+            empty_item.update({"requeued_from": sid, "intent": "build", "derived_from": derived_from,
+                               "why": "git checkpoint: nothing to commit (empty change-set) — a build with "
+                                      "no changed files cannot be checkpointed/closed (no-op is not a build)",
+                               "build_result": d.get("build_result")})
+            new_sid = self.inbox.surface_review(empty_item, origin="responsive")
+            self._emit("decision.verify",
+                       f"build for {sid} had an EMPTY change-set at checkpoint → re-queued {new_sid}; not closed",
+                       surfaced=new_sid, requeued_from=sid, derived_from=derived_from, verify_passed=False,
+                       address="ui://chrome/inbox")
+            return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
+                    "closed": False, "requeued": new_sid, "reason": "empty change-set at checkpoint"}
+        intent_summary = (payload.get("spec") or payload.get("instruction") or payload.get("why") or "").strip()
+        intent_summary = " ".join(intent_summary.split())[:120] or "(no intent summary)"
+        commit_msg = f"{sid}: {intent_summary}"
+        commit_sha = commit(changed, commit_msg)
+        if not commit_sha:
+            # FAIL LOUD: the checkpoint did not commit → the build is NOT git-revertible → it is NOT
+            # safe-closed. Surface back as a retryable build-intent (the operator may re-approve after the
+            # tree is sorted); emit a recognized terminal kind (decision.verify) so resurface_crashed does
+            # NOT later read this dispatch as crashed-mid-flight and double-surface it.
+            fail_item = dict(payload)
+            fail_item.update({"requeued_from": sid, "intent": "build", "derived_from": derived_from,
+                              "why": (f"git checkpoint FAILED: could not commit the build's changed files "
+                                      f"{changed} — the build is NOT git-revertible, so it is NOT safe to "
+                                      f"close (Tim's safety mandate). Re-surfaced for the operator."),
+                              "checkpoint_failed": True, "build_result": d.get("build_result")})
+            new_sid = self.inbox.surface_review(fail_item, origin="responsive")
+            self._emit("decision.verify",
+                       f"build for {sid} could NOT be git-checkpointed (commit failed) → re-queued "
+                       f"{new_sid}; not closed (a build that can't be checkpointed is not safe-closed)",
+                       surfaced=new_sid, requeued_from=sid, derived_from=derived_from, verify_passed=False,
+                       checkpoint_failed=True,
+                       address="ui://chrome/inbox")
+            return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
+                    "closed": False, "requeued": new_sid, "reason": "git checkpoint failed",
+                    "checkpoint_failed": True}
+
         # 9 — CLOSE + SURFACE-FOR-REVIEW (the conceptual correction). guarded on the verification
         # verdict (W4 Hole 4). guard("code_build", …, confirmed=verify_passed): code_build is
         # CONFIRM-posture, so an unverified close (confirmed False) RAISES instead of silently writing
@@ -5512,10 +7343,18 @@ class Suite:
         review_holder = {}
         def _close():
             self.inbox.set_status(sid, "implemented")
+            # record the checkpoint sha on the item so the operator (or a revert path) can find it
+            # without re-deriving it from the log. T1-RACE: re-read + mutate under the surfaced lock.
+            with self.store.surfaced_lock():
+                _it = self.inbox.get(sid) or d
+                _it["commit"] = commit_sha
+                self.store.save_surfaced(_it)
             self._emit("decision.implemented",
-                       f"build for {sid} verified + within scope → status=implemented "
+                       f"build for {sid} verified + within scope → checkpointed [self-build] "
+                       f"{commit_sha[:8]} → status=implemented "
                        f"(changed {len(changed)} files; derived from seq={derived_from})",
                        surfaced=sid, derived_from=derived_from, verify_passed=True, changed_files=changed,
+                       commit=commit_sha,                 # the revertible checkpoint sha (`git revert <sha>`)
                        address="ui://chrome/inbox")   # S2: the implemented build-intent's inbox item
             # surface the result for the MANDATORY review (reversible/AUTO builds are non-blocking —
             # the change is made + git-reversible — but the review is ALWAYS surfaced). Reuses the
@@ -5529,11 +7368,13 @@ class Suite:
                 "derived_from": derived_from,
                 "summary": br.get("summary", ""),
                 "changed_files": changed,                # git ground truth = the diff manifest
+                "commit": commit_sha,                    # the revertible checkpoint sha (`git revert <sha>`)
                 "consequence_class": declared,
                 "scope": scope,
                 "why": (f"a build for {sid} was implemented (verified + in scope) and is surfaced for "
-                        f"MANDATORY review — AI-operated is NOT review-free. The change is "
-                        f"git-reversible; review it in the RHM walkthrough."),
+                        f"MANDATORY review — AI-operated is NOT review-free. The change was checkpointed "
+                        f"as [self-build] commit {commit_sha[:8]} and is git-reversible "
+                        f"(`git revert {commit_sha}`); review it in the RHM walkthrough."),
             }
             rev = self.surface_review(review_payload, origin="responsive")
             review_holder["id"] = rev["id"]
@@ -5547,6 +7388,7 @@ class Suite:
         guard("code_build", do=_close, confirmed=verify_passed, inbox=None)
         return {"surfaced": sid, "dispatched": True, "launched": True, "verified": True,
                 "closed": True, "status": "implemented", "changed_files": changed,
+                "commit": commit_sha,                    # the revertible [self-build] checkpoint sha
                 "derived_from": derived_from, "review_surfaced": review_holder.get("id")}
 
     @classmethod
@@ -6459,19 +8301,48 @@ class Suite:
     def _repo_root(self) -> str:
         return os.path.dirname(self.nodes_dir)
 
-    def _git_self_commit(self, paths: list[str], msg: str) -> str | None:
+    def _git_self_commit(self, paths: list[str], msg: str, *, prefix: str = "[self-apply]") -> str | None:
         """Commit a self-authored change so it is ALWAYS one `git revert` away (the real safety
-        net — not the operator gate). Path-scoped; tagged [self-apply]. None if commit fails."""
+        net — not the operator gate). Path-scoped; tagged with `prefix` (default `[self-apply]` for
+        the self-mod streams; the wire's accepted-build close passes `[self-build]` so the two
+        revertible-commit streams stay DISTINCT in the log without a parallel git path). None if the
+        commit fails. `revert_self_change(sha)` is prefix-agnostic (it just `git revert`s a sha), so a
+        `[self-build]` commit reverts via the SAME operator path as a `[self-apply]` one.
+
+        Path-scoped (`git add <paths>`): only the named paths are staged here, so a concurrent
+        writer's unstaged dirty files are NEVER swept in — this is the concurrent-writer isolation the
+        wire's checkpoint rests on (the wire passes EXACTLY the build's `changed_delta`)."""
         import subprocess
         try:
             subprocess.run(["git", "-C", self._repo_root, "add", *paths], check=True, capture_output=True)
-            subprocess.run(["git", "-C", self._repo_root, "commit", "-m", f"[self-apply] {msg}"],
+            # PATHSPEC-SCOPED commit (`commit -- <paths>`): commit ONLY the named paths, NOT whatever
+            # else happens to be in the shared index. The bridge is ONE process; apply_node's
+            # `[self-apply]` path also does an unlocked add+commit on the SAME index, and the wire's
+            # commit runs outside the per-seq dispatch lock — so without the pathspec a concurrent
+            # `[self-apply]` add could be swept into THIS commit (wrong attribution + lost update +
+            # the other path's os.remove-on-fail deleting a just-committed file). The pathspec makes the
+            # "concurrent writer's files are NEVER swept in" guarantee UNCONDITIONAL (not just "they're
+            # usually unstaged"). Strictly safe for the [self-apply] caller too (it writes one file then
+            # commits exactly it — a partial commit of a just-added new/modified path works).
+            subprocess.run(["git", "-C", self._repo_root, "commit", "-m", f"{prefix} {msg}", "--", *paths],
                            check=True, capture_output=True)
             out = subprocess.run(["git", "-C", self._repo_root, "rev-parse", "HEAD"],
                                  check=True, capture_output=True, text=True)
             return out.stdout.strip()
         except Exception:
             return None
+
+    def _self_build_commit(self, paths: list[str], msg: str) -> str | None:
+        """The wire's accepted-build CHECKPOINT — commit EXACTLY the build's changed_delta paths so
+        each autonomous build the wire accepts is a single revertible git commit (`git revert <sha>`,
+        the SAME operator path as a self-apply). Tagged `[self-build]` (DISTINCT from `[self-apply]`
+        self-mod), path-scoped (so a concurrent writer's unstaged dirty files — design/blueprint/*.json
+        — are NEVER swept in). Returns the resulting sha, or None if the commit fails (the caller then
+        surfaces the build back, never marking it implemented — a build that can't be checkpointed is
+        not safe-closed). This is a thin reuse of `_git_self_commit` with the wire prefix — NOT a
+        parallel git path — and is the default `committer` injected into dispatch_decision (a test
+        supplies a stub so no real commit hits the live repo)."""
+        return self._git_self_commit(list(paths), msg, prefix="[self-build]")
 
     def _commit_or_rollback(self, path: str, msg: str) -> str:
         """Commit a just-written self-change; if the commit FAILS, roll the file back and raise —
@@ -6490,11 +8361,13 @@ class Suite:
 
     @staticmethod
     def _is_revert_subject(subject: str) -> bool:
-        """A `git revert` of a self-apply produces subject `Revert "[self-apply] ..."` — which STILL
-        contains `[self-apply]`, so `--grep=[self-apply]` matches the REVERT itself. So an undo is NOT
-        a change: distinguish it by subject prefix. (Finding #2: prevents 'revert the revert' — and a
-        revert's --invert-grep can't be expressed alongside the positive grep, so we tag in Python.)"""
-        return (subject or "").startswith('Revert "[self-apply]')
+        """A `git revert` of a self-change produces subject `Revert "<prefix> ..."` — which STILL
+        contains the prefix, so the coarse `--grep` matches the REVERT itself. So an undo is NOT a
+        change: distinguish it by subject prefix, for EITHER reversible stream (`[self-apply]` AND
+        `[self-build]`). (Finding #2: prevents 'revert the revert' — and a revert's --invert-grep can't
+        be expressed alongside the positive grep, so we tag in Python.)"""
+        s = subject or ""
+        return any(s.startswith(f'Revert "{prefix}') for _, prefix in Suite._SELF_CHANGE_STREAMS)
 
     def _self_change_changed_files(self, sha: str) -> list[str]:
         """The files a self-apply commit touched — git ground truth (`git show --name-only`), so the
@@ -6511,29 +8384,66 @@ class Suite:
         return [ln.strip() for ln in out.splitlines() if ln.strip()]
 
     SELF_APPLY_PREFIX = "[self-apply]"
+    SELF_BUILD_PREFIX = "[self-build]"
+    CHECKPOINT_PREFIX = "[checkpoint]"
+    # The reversible autonomous-change STREAMS (label · subject-prefix). ALL are git-committed by
+    # `_git_self_commit` — `[self-apply]` for the self-mod streams (panels/extensions/nodes),
+    # `[self-build]` for the decision→implementation wire's accepted-build checkpoint, and
+    # `[checkpoint]` for an OPERATOR-initiated restore point (`checkpoint()`) — and ALL undo through the
+    # ONE prefix-agnostic `revert_self_change(sha)`. The audit ledger reads them ALL so every reversible
+    # autonomous change is visible AND one-click revertible from one place. This tuple is the SINGLE
+    # SOURCE for the family: `_change_stream`, `_is_revert_subject`, AND the `_self_change_records`
+    # `--grep` net all derive from it (so adding a stream here can't silently drop its commits from the
+    # ledger — a fail-loud/one-source obligation, AGENTS.md rules 3+4). (Was: self-apply + self-build
+    # ONLY — and before that self-apply ONLY, with a self-build revertible-by-sha but INVISIBLE to the
+    # ledger; the operator had no single list of what's reversible, and no way to stamp their own.)
+    _SELF_CHANGE_STREAMS = (("self-apply", SELF_APPLY_PREFIX), ("self-build", SELF_BUILD_PREFIX),
+                            ("checkpoint", CHECKPOINT_PREFIX))
+
+    @staticmethod
+    def _change_stream(subject: str) -> str | None:
+        """Which reversible STREAM a commit belongs to — `'self-apply'` | `'self-build'` |
+        `'checkpoint'` — by SUBJECT prefix, for BOTH a genuine change (`<prefix> …`) and a revert of one
+        (`Revert "<prefix> …`). `None` if the subject is none of them: a plain commit whose BODY merely
+        MENTIONS a prefix is NOT a self-change and must not pollute the ledger (it would make
+        `last_self_change` point at a non-self-change commit). This is the single classifier the audit
+        reader keys on — classify by SUBJECT, never by the `--grep`-matched body. Iterates
+        `_SELF_CHANGE_STREAMS` (the one source), so a new stream needs no edit here."""
+        s = subject or ""
+        for label, prefix in Suite._SELF_CHANGE_STREAMS:
+            if s.startswith(prefix) or s.startswith(f'Revert "{prefix}'):
+                return label
+        return None
 
     def _self_change_records(self, limit: int = 50) -> list[dict]:
         """The shared reader behind the audit log + last_self_change (Finding #1/#2/#4). Reads the
-        `[self-apply]` commits newest-first and tags each: {sha, subject, ts (committer ISO date),
-        is_revert (Finding #2), changed_files (Finding #4)}. Reverts are INCLUDED but MARKED — the log
-        shows the full undo history; `last_self_change` filters them out. Empty list on any git failure
-        (a read, not a mutation — degrade to empty, never raise here).
+        reversible-change commits of BOTH streams (`[self-apply]` self-mod AND `[self-build]` wire
+        builds) newest-first and tags each: {sha, subject, ts (committer ISO date), stream
+        ('self-apply'|'self-build'), is_revert (Finding #2), changed_files (Finding #4)}. Reverts are
+        INCLUDED but MARKED — the log shows the full undo history; `last_self_change` filters them out.
+        Empty list on any git failure (a read, not a mutation — degrade to empty, never raise here).
 
         CLASSIFY BY SUBJECT, not by message body: `--grep` matches the whole message (subject AND
-        body), but a genuine self-apply is SUBJECT-prefixed `[self-apply]` (exactly what
-        `_git_self_commit` writes), and a revert is subject `Revert "[self-apply] ...`. A plain commit
-        whose BODY merely MENTIONS the string (e.g. a feature/doc commit describing self-apply work) is
+        body), but a genuine self-change is SUBJECT-prefixed (`[self-apply]`/`[self-build]` — exactly
+        what `_git_self_commit` writes), and a revert is subject `Revert "<prefix> ...`. A plain commit
+        whose BODY merely MENTIONS a prefix (e.g. a feature/doc commit describing self-change work) is
         NOT a self-change and must NOT pollute the ledger — it would make `last_self_change` point at a
-        non-self-apply commit. So `--grep` stays as the cheap coarse net (it never drops a genuine or a
-        revert — both contain the string), and we KEEP a record only if its SUBJECT is a genuine
-        self-apply OR a revert-of-one; everything else (body-only mention) is dropped. To request more
+        non-self-change commit. So the two `--grep`s (OR'd by git) stay the cheap coarse net (they never
+        drop a genuine or a revert — both contain a prefix), and we KEEP a record only if `_change_stream`
+        classes its SUBJECT into a stream; everything else (body-only mention) is dropped. To request more
         than `limit` genuine records, the coarse net is widened (×4 + 20) before the subject filter, so
         body-mentions interleaved in history don't starve the requested count."""
         import subprocess
         n = max(1, int(limit))
+        # The coarse `--grep` net is DERIVED from `_SELF_CHANGE_STREAMS` (the one source) — one
+        # `--grep=<prefix>` per stream — so a stream added to that tuple is matched here too and its
+        # commits can never be silently dropped from the ledger (the failure mode if this stayed a
+        # hardcoded two-prefix literal; AGENTS.md rules 3+4). `--fixed-strings` keeps the bracketed
+        # prefixes literal; the subject-classifier (`_change_stream`) below is the precise filter.
+        grep_net = [arg for _, prefix in self._SELF_CHANGE_STREAMS for arg in ("--grep", prefix)]
         try:
             out = subprocess.run(
-                ["git", "-C", self._repo_root, "log", "--grep=[self-apply]", "--fixed-strings",
+                ["git", "-C", self._repo_root, "log", *grep_net, "--fixed-strings",
                  "-n", str(n * 4 + 20), "--format=%H%x00%cI%x00%s"],
                 check=True, capture_output=True, text=True).stdout.strip()
         except Exception:
@@ -6544,13 +8454,13 @@ class Suite:
                 continue
             sha, _, rest = line.partition("\x00")
             ts, _, subject = rest.partition("\x00")
-            is_revert = self._is_revert_subject(subject)
-            is_genuine = (subject or "").startswith(self.SELF_APPLY_PREFIX)
-            if not (is_genuine or is_revert):       # body-only mention → NOT a self-change, drop it
+            stream = self._change_stream(subject)   # 'self-apply' | 'self-build' | 'checkpoint' | None
+            if stream is None:                      # body-only mention → NOT a self-change, drop it
                 continue
             records.append({
                 "sha": sha, "subject": subject, "ts": ts,
-                "is_revert": is_revert,
+                "stream": stream,                   # which reversible stream this change belongs to
+                "is_revert": self._is_revert_subject(subject),
                 "changed_files": self._self_change_changed_files(sha),
             })
             if len(records) >= n:
@@ -6558,11 +8468,14 @@ class Suite:
         return records
 
     def self_change_log(self, limit: int = 50) -> list[dict]:
-        """The multi-entry self-modification audit ledger (Finding #1): the `[self-apply]` commit
-        history newest-first, each entry carrying sha · subject · timestamp · changed_files (Finding
-        #4) · is_revert (Finding #2 — a revert is surfaced DISTINCTLY, not hidden and not mistaken for
-        a change). Reachable through a real face (`GET /api/self-change-log`). Was: only the single
-        latest (last_self_change) existed — no ledger."""
+        """The multi-entry self-modification audit ledger (Finding #1): the reversible-change commit
+        history newest-first across BOTH streams — `[self-apply]` self-mod AND `[self-build]` wire
+        builds — each entry carrying sha · subject · timestamp · stream ('self-apply'|'self-build') ·
+        changed_files (Finding #4) · is_revert (Finding #2 — a revert is surfaced DISTINCTLY, not hidden
+        and not mistaken for a change). Reachable through a real face (`GET /api/self-change-log`). Was:
+        only the single latest (`last_self_change`) existed — then the ledger, but `[self-apply]` ONLY
+        (a `[self-build]` was revertible-by-sha yet invisible here); now every reversible autonomous
+        change is listed AND one-click revertible from the one place."""
         return self._self_change_records(limit)
 
     @staticmethod
@@ -6601,11 +8514,12 @@ class Suite:
         return out
 
     def last_self_change(self) -> dict | None:
-        """The most recent STILL-STANDING self-applied CHANGE (for one-click rollback + audit). D9:
-        a change still STANDS only if (a) it is not itself a revert (Finding #2 — a `git revert` of a
-        self-apply still matches `--grep=[self-apply]`, so the naive `-1` returned the revert itself,
-        and the UI offered to 'revert the revert'), AND (b) it has not since been UNDONE by a later
-        revert. Without (b), `last_self_change` would still point at a change the operator already
+        """The most recent STILL-STANDING autonomous CHANGE of EITHER reversible stream — a
+        `[self-apply]` self-mod OR a `[self-build]` wire build (the record carries `stream`) — for
+        one-click rollback + audit. D9: a change still STANDS only if (a) it is not itself a revert
+        (Finding #2 — a `git revert` of a self-change still matches the coarse `--grep`, so the naive
+        `-1` returned the revert itself, and the UI offered to 'revert the revert'), AND (b) it has not
+        since been UNDONE by a later revert. Without (b), `last_self_change` would still point at a change the operator already
         reverted — offering to roll back something that no longer exists in the working tree. So we read
         the tagged log, compute the set of shas reverted by any revert in it, and return the newest
         record that is neither a revert NOR in that reverted set. Keeps the {sha, subject} keys callers/
@@ -6616,6 +8530,61 @@ class Suite:
             if not rec["is_revert"] and rec["sha"] not in reverted:
                 return rec
         return None
+
+    def checkpoint(self, paths: list, label: str = "") -> dict:
+        """OPERATOR-only: mint a REVERSIBLE restore point of named paths — the operator-initiated third
+        reversible autonomous-change stream (`[checkpoint]`), beside `[self-apply]` (self-mod) and
+        `[self-build]` (the wire's accepted builds). The operator stamps "checkpoint THESE files so I
+        can experiment, and revert if it goes wrong." It then shows in the SAME audit ledger
+        (`self_change_log`/`last_self_change`, stream-tagged `checkpoint`) and undoes through the SAME
+        prefix-agnostic `revert_self_change(sha)`. No parallel git path, no parallel ledger, no new
+        revert route — a thin reuse of `_git_self_commit` with the `[checkpoint]` prefix.
+
+        PATH-SCOPED ON PURPOSE (AGENTS.md rule 10 — Tim runs MULTIPLE sessions on `main`): it commits
+        EXACTLY the named paths via `_git_self_commit` (pathspec `commit -- <paths>`), so a CONCURRENT
+        session's unstaged in-flight work is NEVER swept into the checkpoint — and therefore a `git
+        revert` of the checkpoint can never destroy another session's work. Blanket-committing the dirty
+        tree would be a footgun, not a reversible thing; so an unnamed/whole-tree checkpoint is REFUSED.
+
+        FAIL LOUD (rule 4), three guards: (a) an empty / non-list / blank-entry `paths` is refused
+        (no whole-tree checkpoint); (b) a path that escapes the repo root (`..` / an absolute path
+        outside) is refused (rule 8 — a wrong scope is a wrong checkpoint); (c) an EMPTY delta (none of
+        the named paths has changes → nothing to commit → `_git_self_commit` returns None) RAISES — a
+        checkpoint that commits nothing is not a restore point (mirrors `_commit_or_rollback`'s
+        fail-loud). Returns {sha, subject, stream, paths}. Operator-only by design: like
+        `revert_self_change`, it is OFF the MCP/agent face and NOT in `RHM_VERBS` (the RHM proposes /
+        surfaces, it never commits of its own authority) — reachable only through `POST /api/checkpoint`
+        on the operator face."""
+        if not isinstance(paths, (list, tuple)) or not paths:
+            raise ValueError(
+                "checkpoint: name the paths to checkpoint — a whole-tree checkpoint is refused "
+                "(AGENTS.md rule 10: parallel sessions on main; a blanket commit would sweep in — and a "
+                "revert would then destroy — another session's in-flight work).")
+        root = os.path.realpath(self._repo_root)
+        rel_paths = []
+        for p in paths:
+            if not isinstance(p, str) or not p.strip():
+                raise ValueError("checkpoint: each path must be a non-empty string.")
+            ap = os.path.realpath(os.path.join(root, p))
+            if ap != root and not ap.startswith(root + os.sep):
+                raise ValueError(
+                    f"checkpoint: path {p!r} escapes the repo root — refused (rule 8: a wrong scope is "
+                    "a wrong checkpoint).")
+            rel_paths.append(os.path.relpath(ap, root))
+        msg = label.strip() or f"operator checkpoint of {len(rel_paths)} path(s)"
+        sha = self._git_self_commit(rel_paths, msg, prefix=self.CHECKPOINT_PREFIX)
+        if not sha:
+            raise RuntimeError(
+                "checkpoint: nothing to commit for the named paths (no changes there) — a checkpoint "
+                "that commits nothing is not a restore point. Name paths that have pending changes, or "
+                "there is nothing to make reversible. (fail loud — AGENTS.md rule 4.)")
+        # Visibility (S2): a self-change shows at the workshop self-changes surface, on the live stream.
+        # Lenient `_emit` (telemetry) — the durable record IS the git commit, already written above; the
+        # event is narration, so a store hiccup must never undo a committed (and now reversible) change.
+        self._emit("checkpoint", f"operator checkpoint · {msg} · {sha[:8]}",
+                   commit=sha, paths=rel_paths, address="ui://chrome/workshop")
+        return {"sha": sha, "subject": f"{self.CHECKPOINT_PREFIX} {msg}",
+                "stream": "checkpoint", "paths": rel_paths}
 
     def revert_self_change(self, sha: str) -> dict:
         """RECOVERY: roll back a self-applied change via git (itself reversible). OPERATOR-only.
@@ -7034,21 +9003,47 @@ class Suite:
         # review. We REUSE it (the watcher also enforces the §W7 concurrency cap + re-surfaces crashed
         # dispatches); we never re-implement or weaken it. A non-AUTO / non-build-intent approve is NOT
         # dispatched (drive_dispatchable._is_dispatchable filters it) — it surfaces for the operator.
+        #
+        # WIRE-ASYNC — the build EXECUTION is DECOUPLED from this request. The synchronous bug: this
+        # block used to call drive_dispatchable INLINE, so the blocking `claude -p` subprocess (up to
+        # 900s) ran INSIDE POST /api/resolve — if the approving client connection dropped, the request
+        # thread's result-handling was lost and the build orphaned as a 'crashed' dispatch. NOW the
+        # operator verdict above is the ONLY thing written synchronously (the consent record is durable
+        # immediately); the build is handed to a BACKGROUND daemon thread (_drive_dispatchable_bg) that
+        # runs the SAME governed drive_dispatchable → dispatch_decision path (per-seq lock + durable
+        # claim + gates + [self-build] commit + guarded close + surface-for-review, all UNCHANGED), and
+        # this method RETURNS PROMPTLY with an ack. The build completes + emits its terminal event +
+        # commits + surfaces via the SAME event log → the SSE stream delivers the result to the UI
+        # INDEPENDENT of this connection. EXACTLY-ONCE is preserved: the decision.dispatch claim is
+        # emitted under the locks INSIDE dispatch_decision regardless of which thread runs it, so two
+        # concurrent approves of the same seq → two threads → one claim wins, the other is refused.
         from runtime import implement      # local import (mirrors dispatch_decision) — avoid import cycle
         if choice == "approve" and implement.wire_armed() and self.is_build_intent(d):
             try:
-                drive = implement.drive_dispatchable(self)
-                verdict["wire_drive"] = {
-                    "dispatched": [x.get("surfaced") for x in drive.get("dispatched", [])],
-                    "deferred": [x.get("surfaced") for x in drive.get("deferred", [])],
-                    "crashed_resurfaced": drive.get("crashed_resurfaced", []),
-                }
+                self._drive_dispatchable_bg(sid=sid)
+                # the ACK — HONEST (rule 4, no pretending): the bg pass only DISPATCHES a build-intent
+                # whose DECLARED class has posture==AUTO (drive_dispatchable._is_dispatchable filters
+                # CONFIRM/SURFACE/LOCKED classes OUT — they surface for the operator, never auto-build).
+                # So we report THIS sid as dispatched ONLY when it is genuinely auto-dispatchable; a
+                # non-AUTO build-intent reports status="surfaced" with an EMPTY dispatched list (it was
+                # NOT dispatched — claiming it was would be the exact "pretend success" rule 4 forbids).
+                # The authoritative result (implemented / verify / surfaced-for-review) arrives via the
+                # SSE event stream, NOT this ack — the ack only says what the bg pass WILL attempt.
+                from runtime.governance import posture as _posture, AUTO as _AUTO
+                _declared = (d.get("payload") or {}).get("consequence_class", "decision_build")
+                if _posture(_declared) == _AUTO:
+                    verdict["wire_drive"] = {"dispatched": [sid], "status": "running"}
+                else:
+                    verdict["wire_drive"] = {"dispatched": [], "status": "surfaced",
+                                             "reason": f"declared class {_declared!r} is not AUTO — "
+                                                       f"surfaced for the operator, not auto-dispatched"}
             except Exception as e:
-                # FAIL LOUD (rule 4): the trigger firing but the dispatch erroring must NOT pretend the
-                # approve silently did nothing — surface the failure on the verdict + a telemetry event.
-                # The operator's resolve itself already committed (above) — operator-only resolve holds.
+                # FAIL LOUD (rule 4): failing to even SPAWN the background dispatch (e.g. thread start)
+                # must NOT pretend the approve silently did nothing — surface it on the verdict + a
+                # terminal event. The operator's resolve itself already committed (above) — operator-only
+                # resolve holds; only the build EXECUTION couldn't start.
                 self._emit("decision.verify",
-                           f"resolve→dispatch trigger for {sid} errored: {e}",
+                           f"resolve→dispatch trigger for {sid} could not start: {e}",
                            surfaced=sid, derived_from=None, verify_passed=False,
                            address="ui://chrome/inbox")
                 verdict["wire_drive_error"] = str(e)

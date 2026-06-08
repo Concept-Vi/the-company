@@ -60,6 +60,26 @@ export const api = {
     fetch('/api/pin', { method: 'POST', headers: J, body: JSON.stringify({ address, target_ts, pinned }) }).then(jr),
   apply: (id: string) =>
     fetch('/api/apply', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(jr),
+  // G-4 · THE WIRE'S OPERATOR DOOR (the self-build mint seam). Two entry shapes, both MINT-ONLY:
+  // they surface a build-intent with resolved=None for the operator to approve — they NEVER dispatch
+  // (dispatch is dispatch_decision, off this face + posture-gated + safe-by-default `plan`). The door
+  // is INERT-by-default: minting a build-intent is composing a PLAN, not self-modifying live.
+  //
+  //   intentAt — the RECOGNITION-BY-SIGHT path (the door the operator actually uses): from a POINTED
+  //   `ui://` element, mint a build-intent whose SCOPE is DERIVED from the address (S3 resolve_scope)
+  //   and whose X16 BLAST-RADIUS is computed at consent time (surface_intent_at, bridge.py:626). So the
+  //   minted item carries `payload.blast_radius` → BlastRadiusReach renders the ripple + reach-approval.
+  //   An orphan/CSS address → empty scope = DENY-ALL (honest, never fabricated). Backend fail-loud on a
+  //   missing address/text → 400 (normalized to {error} by jr).
+  intentAt: (address: string, text: string, consequence_class = 'decision_build', why = '') =>
+    fetch('/api/intent-at', { method: 'POST', headers: J, body: JSON.stringify({ address, text, consequence_class, why }) }).then(jr),
+  //   buildIntent — the SCOPE-DECLARED path (the wire's raw production entry seam, bridge.py:607): the
+  //   operator declares the spec + the paths the build may touch directly (no address). It carries NO
+  //   blast_radius (no address to compute a radius from) — so it surfaces with the declared scope only.
+  //   Provided additively for completeness; the door prefers intentAt (address-grounded, carries the reach).
+  //   Empty/omitted scope = DENY-ALL. Backend fail-loud on a missing spec → 400 (normalized by jr).
+  buildIntent: (spec: string, scope?: string[], consequence_class = 'decision_build', why = '') =>
+    fetch('/api/build-intent', { method: 'POST', headers: J, body: JSON.stringify({ spec, scope, consequence_class, why }) }).then(jr),
   objectInfo: () => fetch('/api/object_info').then(jr),
   // registry-is-truth: WHAT EXISTS (node-types, models, modes, mode_directives, verbs, panels). The
   // presence-mode descriptions are read from capabilities().mode_directives — one backend source, no
@@ -90,6 +110,14 @@ export const api = {
     fetch('/api/rhm-config', { method: 'POST', headers: J, body: JSON.stringify(updates) }).then(jr),
   inbox: () => fetch('/api/inbox').then(jr),
   coa: (id: string) => fetch('/api/coa', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(jr),
+  // B3 · the configurable interactive-inbox (§6B QUEUE mode): defer a LIVE RHM offer into the inbox as a
+  // REAL queued item (the whole proposal shape is persisted so it can be revived), and read it back to
+  // RE-OPEN the interactive conversation. Nothing dispatches on defer — the offer's verb runs only on a
+  // later approve through /api/act (the B1/B2 consent invariant: nothing-runs-until-approved).
+  deferOffer: (proposal: any, note = '') =>
+    fetch('/api/defer-offer', { method: 'POST', headers: J, body: JSON.stringify({ proposal, note }) }).then(jr),
+  reviveOffer: (id: string) =>
+    fetch('/api/revive-offer', { method: 'POST', headers: J, body: JSON.stringify({ id }) }).then(jr),
   // F2: route a node's RESULT to the decision surface — backend reads the output from live state
   // (client sends only the node id; canvas reflects-never-owns), surfaces it on the EXISTING inbox path.
   surfaceOutput: (node: string) =>
@@ -165,6 +193,53 @@ export const api = {
   // address → backend 400 (fail-loud, normalized to {error} by jr).
   selfChangesAt: (address: string) =>
     fetch('/api/self-changes-at?address=' + encodeURIComponent(address)).then(jr),
+  // D2 · the COMPOSED address-help bundle (the operator-facing help/altitude surface). EXPOSES the
+  // existing D1 composer Suite.address_help (committed 89f60d9 — NOT a parallel FE composer): the JOIN of
+  // the three legs at one ui:// address — what_this_is (the represents/feature label) · how_to_use (the
+  // corpus 'howto' stratum) · how_to_change (resolve_scope → blast_radius/X16 reach) — plus `legs_present`
+  // the AddressHelp panel reads to DEGRADE cleanly per leg (G-53: many elements author no howto yet).
+  // Returns { address, what_this_is, how_to_use, how_to_change:{scope,blast_radius,note}, legs_present }.
+  // A malformed address → backend 400 (S0 grammar gate, fail-loud, normalized to {error} by jr); a
+  // well-formed-but-unregistered address returns a clean partial bundle (never a crash). NOTE: this method
+  // is OUTSIDE the voice block (G-8) — it is an address-keyed read sibling of selfChangesAt/addressHistory.
+  addressHelp: (address: string) =>
+    fetch('/api/address-help?address=' + encodeURIComponent(address)).then(jr),
+  // F1 ALTITUDE · THE PRESENTATION-PREFERENCE LEARNING LOOP (the visible half — committed backend e1700b4).
+  // These wire the in-system "shape how it presents to me, it remembers" channel. NOTE: OUTSIDE the voice
+  // block (G-8) — they are address-keyed read/write siblings of addressHelp/annotate, not voice methods.
+  //
+  //   presentationPref — READ the ACTIVE learned pref at a ui:// address (GET /api/presentation-pref). The
+  //   latest-wins structured pref {kind, arg?} or null (a clean absence — the surface renders no marker).
+  //   The backend S0-validates the address (→ 400) AND re-validates a stored junk pref (→ 400, fail-loud,
+  //   never a silent degrade-to-default). address_help/up_translate ALREADY consult+attach this; this read
+  //   is the standalone seam (e.g. to confirm a pref persisted across reload).
+  presentationPref: (address: string) =>
+    fetch('/api/presentation-pref?address=' + encodeURIComponent(address)).then(jr),
+  //   setPresentationPref — CAPTURE "how Tim wants <this> presented" at a ui:// address (POST). It IS the
+  //   annotate-branch of the addressed-feedback channel WITH a presentation intent (rides the same
+  //   annotations.jsonl leaf, an additive structured marker — NO parallel store, rule 3). The `pref` is
+  //   {kind:'terser'|'more'|'lead_with'|'shape', arg?}: terser/more are bare; lead_with/shape REQUIRE a
+  //   non-empty arg. `text` is the human phrasing the operator gave (kept for the thread). Persists keyed
+  //   by address; the next address-help/up_translate render REFLECTS it (the adapt step consults it);
+  //   survives reload (the leaf reads disk every call). Fail-loud (rule 4): a missing address / a malformed
+  //   pref → backend 400 (normalized to {error} by jr) — no silent ignore. OPERATOR-only (off the MCP face).
+  //   The voice/typing INPUT that produces "show me this differently" rides the existing chat path
+  //   (/api/chat, untouched per G-8); this is the recorder the affordance (or a parsed intent) calls.
+  setPresentationPref: (address: string, pref: { kind: string; arg?: string }, text?: string) =>
+    fetch('/api/presentation-pref', { method: 'POST', headers: J, body: JSON.stringify({ address, pref, text }) }).then(jr),
+  // F1 ALTITUDE · THE GENERALIZED UP-TRANSLATE REACH (committed backend foundation 5f3592b). The reusable
+  // "present-this-at-Tim's-altitude" resolver (Suite.up_translate) → an artifact's altitude envelope
+  // { lead, mechanism, legs_present, grounded, degraded }. `kind` ∈ address|decision (the two first-class
+  // string-keyed kinds on the GET face; finding/event take a caller-held dict the G2/future surfaces POST).
+  // NOTE this lane (f1-fe-surface): the ADDRESS surface (AddressHelp) consumes `addressHelp` DIRECTLY (not
+  // this envelope) BY DESIGN — address_help keeps the THREE legs (what_this_is · how_to_use · how_to_change)
+  // distinct so the panel renders all 5 degrade states, where up_translate's `lead` FLATTENS the front legs
+  // into one prose string (which would regress D2's distinct howto-block + the STATE-2 'no how-to authored'
+  // cue). This client is the named generalized reach for the OTHER kinds (decision → coa, + future
+  // finding/event consumers); it is provided for completeness + correctness, not wired into a FE render here
+  // (see the lane report's identified_gaps). A malformed address / unknown kind / missing ref → backend 400.
+  upTranslate: (kind: string, ref: string) =>
+    fetch('/api/up-translate?kind=' + encodeURIComponent(kind) + '&ref=' + encodeURIComponent(ref)).then(jr),
   // L10 · "stale at this address" (§21.7#10): is the cached result AT this NODE's run:// address out of
   // date vs its CURRENT inputs? A COSTED DERIVATION, not a served field — the surface CALLS this only when
   // it wants the verdict (the backend recompiles + resolves input-hashes + recomputes the _memo_sig +
@@ -196,6 +271,17 @@ export const api = {
     fetch('/api/review/next', { method: 'POST', headers: J, body: JSON.stringify({ session }) }).then(jr),
   reviewStatus: (session: string) =>
     fetch('/api/review/status?session=' + encodeURIComponent(session)).then(jr),
+  // C4 (FE show-me lane): the mode-selection → ORGAN-start seam. POST /api/walkthrough/start binds the
+  // cosmetic presence-dial 'walkthrough' MODE to the REAL walkthrough organ — set_mode('walkthrough')
+  // AND start_session over the pending review items, in ONE composed call. Optional item_ids pre-selects
+  // a set; absent → it walks every pending unresolved inbox item. Returns the SAME shape start_session
+  // returns (so the FE feeds it straight into the existing walk machinery via setSession) PLUS
+  // { organ_started, mode, reason? }: organ_started:true → a populated walk (carries `session`);
+  // organ_started:false → nothing pending (carries `reason` — fail-loud, the surface says so, never silent).
+  // ASYNC by contract: a populated walk compiles a review-session graph that invokes a model, so this can
+  // be slow / hang if no model is up (GAPS G-41) — the FE awaits with a spinner, never blocks the UI thread.
+  walkthroughStart: (item_ids?: string[]) =>
+    fetch('/api/walkthrough/start', { method: 'POST', headers: J, body: JSON.stringify(item_ids ? { item_ids } : {}) }).then(jr),
   // D: the per-step verdict — operator-only. Session+position tag the verdict to its walk step (additive;
   // legacy id+choice+reason callers unchanged). Reflects-never-owns: the verdict goes THROUGH the gate.
   resolveStep: (id: string, choice: string, reason: string, session: string, position: number) =>

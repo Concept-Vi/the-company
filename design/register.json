@@ -83,7 +83,7 @@
       "id": "NODE-config",
       "area": "nodes",
       "label": "per-node config_schema → inspector form",
-      "code": "node_type.py / App.tsx:134"
+      "code": "contracts/node_type.py / canvas/app/src/components/NodeConfigForm.tsx:NodeConfigForm"
     },
     {
       "id": "NODE-ports",
@@ -113,19 +113,19 @@
       "id": "CAN-drag",
       "area": "canvas",
       "label": "drag-to-connect port nubs",
-      "code": "canvas/app/src/App.tsx:DRAG_CONN"
+      "code": "canvas/app/src/registryStore.ts:DRAG_CONN / canvas/app/src/NodeShape.tsx (drag-to-wire handlers)"
     },
     {
       "id": "CAN-zoom",
       "area": "canvas",
       "label": "semantic zoom",
-      "code": "canvas/app/src/App.tsx:zoom"
+      "code": "canvas/app/src/NodeShape.tsx:zoom"
     },
     {
       "id": "CAN-layers",
       "area": "canvas",
       "label": "layer view all/origin/system",
-      "code": "canvas/app/src/App.tsx:cycleLayers"
+      "code": "canvas/app/src/useAppController.ts:cycleLayers"
     },
     {
       "id": "CAN-multigraph",
@@ -277,13 +277,13 @@
       "id": "WIRE-review",
       "area": "wire",
       "label": "demonstrate-first build_result_review card",
-      "code": "App.tsx:252"
+      "code": "canvas/app/src/components/BuildIntentCard.tsx (build_result_review card) / runtime/suite.py:surface_review"
     },
     {
       "id": "WIRE-states",
       "area": "wire",
       "label": "failure/lifecycle states (verify-fail/scope-overrun/FORM-review/launch-fail/cap-deferred/crashed)",
-      "code": "suite.py:1713 / implement.py:260"
+      "code": "runtime/implement.py:resurface_crashed / runtime/implement.py:drive_dispatchable"
     },
     {
       "id": "SM-node",
@@ -337,7 +337,7 @@
       "id": "VOICE",
       "area": "voice",
       "label": "two-way voice (TTS Kokoro / STT) + listening loop",
-      "code": "voice/ + App.tsx:1214"
+      "code": "voice/ + canvas/app/src/useAppController.ts (speakReply/recordToggle listening loop)"
     },
     {
       "id": "EVT-stream",
@@ -1208,58 +1208,63 @@
     "_comment": "feature-id → [view-ids]; auto-derivable from views[].represents. The loop checks: every feature here has >=1 view. Any [] is an un-mocked capability (a gap to add a view for)."
   },
   "produced": {
-    "_comment": "wave-1 view-variants that are written, rendered, and quality-passed (grounded·linked·on-system·journey·no-fiction). Verified by eyeball against quality_bar.",
+    "_comment": "wave-1 view-variants that have been WRITTEN + rendered. AUTHORITY (D-1 resolved 2026-06-07): when this list's `status` and views[].status disagree, views[].status is the TRUTH — `produced` is reconciled DOWN to it (it is a build-log of what was emitted, not an independent quality verdict; the FE it depicts is prototype-grade per G-9, so the earlier blanket `quality-passed` here was an over-claim). gallery.py trusts `produced`, so this list MUST mirror views[].status. A view-variant counts DONE only at views[].status=quality-passed. See design/CLAUDE.md › The register authority (D-1).",
     "wave1": [
       {
         "view": "A1",
         "variant": "desktop",
-        "status": "quality-passed",
+        "status": "planned",
         "file": "mockups/A1-canvas-empty-desktop.html",
-        "thumb": "mockups/A1-canvas-empty-desktop.jpeg"
+        "thumb": "mockups/A1-canvas-empty-desktop.jpeg",
+        "note": "D-1 reconcile 2026-06-07: was quality-passed here but views[].status=planned (the authority); the depicted FE is prototype-grade (G-9), not quality-passed."
       },
       {
         "view": "A2",
         "variant": "desktop",
-        "status": "quality-passed",
+        "status": "redo-pre-audit",
         "file": "mockups/A2-canvas-desktop.html",
         "thumb": "mockups/A2-canvas-desktop.jpeg",
-        "note": "regenerated grounded — replaces the pre-audit fiction"
+        "note": "regenerated grounded — replaces the pre-audit fiction. D-1 reconcile 2026-06-07: views[].status=redo-pre-audit is the authority (was over-claimed quality-passed here)."
       },
       {
         "view": "A2",
         "variant": "mobile",
-        "status": "quality-passed",
+        "status": "redo-pre-audit",
         "file": "mockups/A2-canvas-mobile.html",
         "thumb": "mockups/A2-canvas-mobile.jpeg",
-        "note": "regenerated grounded; native mobile"
+        "note": "regenerated grounded; native mobile. D-1 reconcile 2026-06-07: views[].status=redo-pre-audit is the authority."
       },
       {
         "view": "A3",
         "variant": "desktop",
-        "status": "quality-passed",
+        "status": "planned",
         "file": "mockups/A3-inspector-desktop.html",
-        "thumb": "mockups/A3-inspector-desktop.jpeg"
+        "thumb": "mockups/A3-inspector-desktop.jpeg",
+        "note": "D-1 reconcile 2026-06-07: views[].status=planned is the authority (was over-claimed quality-passed)."
       },
       {
         "view": "C1",
         "variant": "desktop",
-        "status": "quality-passed",
+        "status": "planned",
         "file": "mockups/C1-inbox-desktop.html",
-        "thumb": "mockups/C1-inbox-desktop.jpeg"
+        "thumb": "mockups/C1-inbox-desktop.jpeg",
+        "note": "D-1 reconcile 2026-06-07: views[].status=planned is the authority (was over-claimed quality-passed)."
       },
       {
         "view": "C3",
         "variant": "desktop",
-        "status": "quality-passed",
+        "status": "planned",
         "file": "mockups/C3-build-review-desktop.html",
-        "thumb": "mockups/C3-build-review-desktop.jpeg"
+        "thumb": "mockups/C3-build-review-desktop.jpeg",
+        "note": "D-1 reconcile 2026-06-07: views[].status=planned is the authority (was over-claimed quality-passed)."
       },
       {
         "view": "B3",
         "variant": "desktop",
-        "status": "quality-passed",
+        "status": "planned",
         "file": "mockups/B3-walkthrough-desktop.html",
-        "thumb": "mockups/B3-walkthrough-desktop.jpeg"
+        "thumb": "mockups/B3-walkthrough-desktop.jpeg",
+        "note": "D-1 reconcile 2026-06-07: views[].status=planned is the authority (was over-claimed quality-passed)."
       },
       {
         "view": "B6",

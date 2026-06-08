@@ -283,6 +283,16 @@ class UnionAddressRecord(BaseModel):
       tier          — governance posture for COMMANDS at this address (feeds I4).
                       OPTIONAL — proposed, not all addresses carry it yet.
       title         — human label (live). OPTIONAL.
+      howto         — the FOUNDATIONAL AFFORDANCE stratum (D1): plain-language
+                      what-this-is / what-you-can-do / how-to-change-it text for
+                      this address — the help that resolves AT the locus (the
+                      `_r2_howto_at` R2 stratum reads it; `address_help` joins it
+                      as the how-to-USE leg). OPTIONAL with a None default — an
+                      address with no authored help still validates (it just has
+                      no how-to-use leg, and `address_help` degrades that leg
+                      cleanly). DATA, not code — the resolution is generic over
+                      any address (mode-parameterizable later, E1), never a
+                      per-element branch (Tim's not-hardwired correction).
 
     Schema-additive (rule 2): every join/semantic field is OPTIONAL with a
     default, so a side that lacks it still validates — the record is the union,
@@ -298,6 +308,7 @@ class UnionAddressRecord(BaseModel):
     states: list[str] = Field(default_factory=list)
     tier: str | None = None
     title: str | None = None
+    howto: str | None = None
 
     @classmethod
     def from_corpus(cls, address: str, rec: dict) -> "UnionAddressRecord":
@@ -320,6 +331,7 @@ class UnionAddressRecord(BaseModel):
             code=rec.get("code"),
             tier=rec.get("tier"),          # I4: governance action_class for COMMANDS at this address
             title=rec.get("title"),
+            howto=rec.get("howto"),         # D1: the foundational affordance/how-to-use text (optional)
         )
 
     @classmethod
