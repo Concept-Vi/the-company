@@ -231,6 +231,14 @@ expect_raises("ORDERING: approve_reach RAISES after a terminal resolve (can't wi
 # ── 9. THE WIRE GOVERNED PATH UNCHANGED — dispatch reads the (expanded) scope; launcher MOCKED ──
 # Prove the EXPANDED scope authorizes the dependent's file at the dispatch scope-diff, and the
 # NARROW scope does NOT — WITHOUT a real claude -p (the launcher is injected).
+#
+# X16↔WIRE-COMMIT SEAM (the integration these two cross-session features share): dispatch_decision's
+# accepted-build close now makes a git-safe `[self-build]` checkpoint of the changed delta. That commit
+# step is INJECTABLE BY DESIGN (committer=…, mirroring wire_commit_acceptance) so the GOVERNED PATH is
+# provable model-free + repo-safe — the mock launcher reports changed_files but changes nothing real, so
+# the DEFAULT committer would (correctly) fail "git checkpoint failed". We inject a stub committer so 9b
+# isolates exactly what it tests — the SCOPE-DIFF gate accepting the reach-expanded file — not the real
+# git side-effect. (9a never reaches the checkpoint: the overrun short-circuits it; the stub is harmless.)
 from runtime import implement as _impl
 
 def mock_launch_touching(files):
@@ -243,6 +251,11 @@ def mock_verifier_pass(result):
     # the injected fast verifier — signature verifier(result) -> (passed, reason).
     return True, "mock verify passed (no real suite run)"
 
+def mock_committer(paths, msg):
+    # the injected git checkpoint — signature committer(paths, msg) -> sha|None. A deterministic fake sha
+    # (NO real git on the live repo); a truthy sha = the checkpoint succeeded, so an in-scope build closes.
+    return "0000reach16"
+
 # 9a — a NARROW build (no reach-approval) that touches the dependent's file → OVERRUN, NOT closed.
 sN = with_corpus(SYMBOLS, EDGES)
 outN = sN.surface_intent_at(A, "narrow build")
@@ -251,7 +264,7 @@ vN = sN.resolve_surfaced(sidN, "approve", reason="approve narrow")
 seqN = next(e["seq"] for e in sN.store.events_since(-1)
             if e.get("kind") == "resolve" and e.get("surfaced") == sidN)
 resN = sN.dispatch_decision(sidN, seqN, launcher=mock_launch_touching([D_FILE]),
-                            verifier=mock_verifier_pass)
+                            verifier=mock_verifier_pass, committer=mock_committer)
 check(f"WIRE: a NARROW build that touches the un-approved dependent file is an OVERRUN, not closed — {resN.get('closed')}",
       resN.get("closed") is False and resN.get("overrun"))
 
@@ -264,7 +277,7 @@ vE = sE.resolve_surfaced(sidE, "approve", reason="approve expanded")
 seqE = next(e["seq"] for e in sE.store.events_since(-1)
             if e.get("kind") == "resolve" and e.get("surfaced") == sidE)
 resE = sE.dispatch_decision(sidE, seqE, launcher=mock_launch_touching([D_FILE]),
-                            verifier=mock_verifier_pass)
+                            verifier=mock_verifier_pass, committer=mock_committer)
 check(f"WIRE: an EXPANDED build (reach approved) touching the dependent file is WITHIN scope — closed={resE.get('closed')}",
       resE.get("closed") is True and not resE.get("overrun"))
 
