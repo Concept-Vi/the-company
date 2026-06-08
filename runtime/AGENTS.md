@@ -190,7 +190,21 @@ the mode's cast fires CONCURRENTLY via `run_swarm` (G1) writing `run://<turn>/<r
 (`cognition.INJECTION_RULE` + any AST-shaped role `rules`) read those resolved values back via
 `resolve_run_ref` (the canonical resolver — NOT `_chat_context`/`_resolve_context_at`, which read
 operator-notebook strata) and decide what injects into the FINAL part (which carries the prior parts for
-coherence, C4.4, and runs the tool block, C4.5). Add a new shape/grain ⇒ add it to
+coherence, C4.4, and runs the tool block, C4.5).
+
+**The engine triad (C-build): `run_swarm` is MAP, `run_reduce` is the cross-unit JOIN, `run_jury` is the
+draws-reduce.** `run_swarm` fans N roles × 1 ctx → N `run://` outputs (map). `run_reduce(addresses, store,
+*, mode)` (C 2/4) reads those outputs back via the SHARED `_read_back` helper (the same primitive the jury
+uses — jury body unchanged) and joins them: `mode="role"` synthesises N→1 via a reduce-ROLE whose input is
+the composed outputs (the C 1/4 input-axis); `mode="rule"` is a pure deterministic verdict over them (L2,
+no model — mirrors `run_jury`'s `verdict_rule`); `mode="cluster"` embeds (op=embed) + greedy-cosine-groups
+(reusing `nodes/retrieve._cosine` / `vector_index.query_index`) — the cross-unit "which of these are the
+same" join, the **built-twice-discovery** primitive. `run_reduce` is a DRIVER (the model runs only in a
+reduce-role; rule/cluster are pure L2) and emits NO resolve/approve/dispatch (the floor holds). It wires
+the previously-declared-but-dead `reduce-tree` THOUGHT_SHAPE live. The `run_role` input is `ctx`-supplied
+(default `Utterance:`) OR resolved from `input_addresses` via the address system (C 1/4 seam — a role's
+input can be a skill / a context / any upstream output, set by address); `op: generate|embed` selects the
+operation (embed reuses `complete_embeddings`, local-resident only). Add a new shape/grain ⇒ add it to
 `THOUGHT_SHAPES`/`PART_GRAIN` **and reflect it here**, or `tests/chat_parts_acceptance.py` fails loud.
 
 ## The activation contexts (Concurrent Cognition G5 · `runtime/activation.py` + `runtime/suite.py` · the dial generalised)

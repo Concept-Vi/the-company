@@ -52,6 +52,13 @@ Roles fire model calls through `fabric/` guards (a model runs only INSIDE a role
   cast (fired explicitly via `run_jury`). **⚠ E4 caveat:** N draws on ONE model are correlated (variance,
   not independent error) — a correctness-jury that matters needs model diversity; the verdict_rule shape
   accepts a future 2nd-model/cloud tiebreak. v1 single-model, limit documented.
+- **`reduce_synth`** — the demonstrative **reduce-role** (C 2/4): the `reduce-tree` THOUGHT_SHAPE's declared
+  `join` role made real — `op:generate`, takes the N map-output notes (composed by `run_reduce` into one
+  `"notes"` input via the C 1/4 input-axis) → ONE merged `{summary}`. In no cast (fired explicitly via
+  `run_reduce(mode="role")`, the cross-unit synthesize join — `runtime/cognition.py:run_reduce`). The
+  reduce DRIVER also offers `mode="rule"` (a pure L2 verdict over the N values, mirroring `run_jury`) and
+  `mode="cluster"` (the embed-cluster "which of these are the same" discovery join, reusing
+  `nodes/retrieve._cosine`).
 
 **Where new things go:** a new role = a new file `roles/<id>.py` declaring its `ROLE` dict (its `id`
 MUST equal the file name). Put it in a mode's cast by adding that mode to its `mode_scope`. Make it a

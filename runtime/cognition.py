@@ -805,3 +805,241 @@ def run_jury(role: "Role", ctx: dict, store, *, turn_id: str,
             "addresses": addresses,
         })
     return result
+
+
+# =================================================================================================
+# C 2/4 — THE CROSS-UNIT REDUCE (run_reduce): the net-new JOIN engine.
+#
+# `run_swarm` is MAP-ONLY (fan-out + barrier + resolve-each-individually); the only joins that exist
+# are run_role's two-input rule and run_jury's N-draws-of-ONE-role verdict. There is NO mechanism to
+# JOIN N DIFFERENT units' outputs (COGNITION-REVIEW §3 "the smart REDUCE"; CORPUS-CHAIN §2-REDUCE:
+# join / adjudicate / compose / decide-next). This wires the declared-but-dead `reduce-tree` shape
+# (suite.py THOUGHT_SHAPES: join="reduce") LIVE.
+#
+# run_reduce is a DRIVER, not an agent (not-agent-by-default): it READS the N map outputs back via the
+# canonical resolver (the run_jury read-back pattern, factored into _read_back) and applies ONE declared
+# JOIN MODE. The model runs ONLY in the reduce-ROLE variant (a real role, fired via run_role); the rule
+# and cluster variants are PURE L2 (no model call), mirroring run_jury's deterministic verdict_rule.
+# A reduce emits NO resolve/approve/dispatch (the operator-only floor). It does NOT fire the MAP — the
+# caller produces the addresses (via run_swarm or seeded) and passes them in; run_reduce only JOINS.
+#
+# Fail loud: a missing/unresolvable map address RAISES via resolve_run_ref (never a silent drop) UNLESS
+# an explicit on_missing="skip" is declared (a DECLARED skip, not a silent one) — mirroring run_swarm's
+# per-unit fail-loud + barrier re-raise.
+# =================================================================================================
+
+
+def _read_back(store, addresses, *, on_missing: str = "raise") -> "list[tuple[str, str, Any]]":
+    """Read the N map-output run:// addresses BACK via the canonical resolver, in a STABLE order
+    (the run_jury / run_swarm read-back pattern, factored to ONE place so the reduce + the jury share
+    it — reuse-don't-fork). `addresses` is either a {unit_id: addr} mapping (e.g. WaveResult.addresses)
+    or a list of addr strings; in both forms the unit_id is the mapping key or the address string.
+
+    Returns a list of (unit_id, addr, value) tuples, ORDERED by unit_id (deterministic — the reduce's
+    determinism, like the jury's, must not depend on which map unit finished first).
+
+    Fail loud (C0.4 / the run_swarm barrier discipline): a missing/unresolved address RAISES through
+    resolve_run_ref (head() is None → RuntimeError) — UNLESS on_missing="skip" is DECLARED, in which
+    case a missing unit is omitted (a DECLARED skip, returned so the caller can see what was dropped —
+    NEVER a silent drop)."""
+    if isinstance(addresses, dict):
+        items = sorted(addresses.items())                 # stable order by unit_id
+    else:
+        items = sorted((a, a) for a in addresses)         # a list of addrs: unit_id == addr
+    out: list = []
+    for unit_id, addr in items:
+        # resolve_run_ref already fail-louds on a missing ref (on_missing="raise" default); pass the
+        # declared on_missing through (so a declared skip returns None, never an implicit-truthy miss).
+        val = resolve_run_ref(store, addr, on_missing=on_missing)
+        if val is None and on_missing == "skip":
+            continue                                       # a DECLARED skip (never a silent drop)
+        out.append((unit_id, addr, val))
+    return out
+
+
+@dataclass
+class ReduceResult:
+    """The captured artifact of one cross-unit reduce (the by-use proof) — mirrors WaveResult/JuryResult.
+
+    `joined` is the reduce's ONE output, its shape following the join mode:
+      - reduce-role    → the synthesized role output dict (e.g. {"summary": ...}).
+      - reduce-rule    → the pure verdict over the N values (whatever the rule returns).
+      - reduce-cluster → {"clusters": [[unit_id, ...], ...], "k": N} (groups of near-duplicate units).
+    """
+    turn_id: str
+    mode: str                                              # "role" | "rule" | "cluster"
+    inputs: list = field(default_factory=list)             # [(unit_id, addr), ...] — what was read back (stable)
+    skipped: list = field(default_factory=list)            # [(unit_id, addr), ...] declared-skipped (on_missing=skip)
+    joined: Any = None                                     # the ONE reduce output (shape per mode, above)
+    wall_s: float = 0.0
+    detail: dict = field(default_factory=dict)             # mode-specific provenance (the by-use evidence)
+
+
+def run_reduce(addresses, store, *, turn_id: str, mode: str,
+               role: "Role | None" = None,
+               reduce_rule: "Callable[[list], Any] | None" = None,
+               cluster_threshold: float = 0.85,
+               on_missing: str = "raise",
+               embed_fn: "Callable | None" = None,
+               base_url: str = RESIDENT_BASE_URL, model: str = RESIDENT_MODEL,
+               max_tokens: int = 512,
+               emit: "Callable[[str, dict], None] | None" = None) -> ReduceResult:
+    """The CROSS-UNIT REDUCE — JOIN a set of map-output run:// addresses into ONE output (C 2/4).
+
+    `addresses` = the map outputs to join: a {unit_id: run://addr} mapping (e.g. WaveResult.addresses)
+    OR a list of run:// addr strings. run_reduce READS THEM ALL BACK via the canonical resolver (the
+    run_jury read-back pattern, _read_back — stable order, fail-loud-on-missing), then applies ONE
+    declared JOIN `mode`:
+
+      mode="role"    — the reduce-ROLE / synthesize join (op=generate). Composes the N read-back outputs
+                       into ONE input and fires `role` (a reduce-role, e.g. roles/reduce_synth.py) via
+                       run_role → ONE synthesized output (the reduce-tree "join role"). The N→1 compose
+                       is run_reduce's job (the N addresses are DYNAMIC — they cannot be statically
+                       declared on the role); the role declares input_addresses=("notes",) and run_reduce
+                       passes ctx={"notes": <composed>} (exercising the 1/4 input-axis compose path).
+      mode="rule"    — the deterministic L2 join (no model). Applies the PURE `reduce_rule` (a callable
+                       over the list of read-back values — vote / merge / select) → its result. MIRRORS
+                       run_jury's verdict_rule EXACTLY (deterministic; identical on replay; no model call).
+      mode="cluster" — the embed-cluster join (the built-twice DISCOVERY primitive). Embeds each unit's
+                       read-back text (op=embed / complete_embeddings via embed_fn) then GROUPS by cosine-
+                       nearness (reuse nodes/retrieve._cosine — dim-mismatch fail-loud by reuse) → clusters
+                       of near-duplicates (the cross-unit "which of these are the same" join). Deterministic
+                       given vectors (greedy union over SORTED units → replay-identical). `embed_fn` lets a
+                       caller inject seeded vectors when the live embedder (:8001) is down (mirrors
+                       vector_index.build_index's embed_fn seam); default = the live complete_embeddings.
+
+    A DRIVER, not an agent: the model runs ONLY in the reduce-role; rule + cluster are pure L2. No
+    resolve/approve/dispatch is emitted (operator-only floor). It does NOT fire the map (the caller
+    passes the addresses). Fail loud: a missing address RAISES (or a DECLARED on_missing="skip" omits it,
+    recorded in ReduceResult.skipped — never a silent drop), mirroring run_swarm's barrier discipline.
+
+    Returns a ReduceResult (the by-use artifact)."""
+    if mode not in ("role", "rule", "cluster"):
+        raise ValueError(
+            f"run_reduce: unknown join mode {mode!r} — declared modes are 'role' | 'rule' | 'cluster' "
+            f"(COGNITION-REVIEW 'the smart REDUCE'). Fail loud (an unknown mode has no join branch).")
+
+    wall0 = time.monotonic()
+    # SHARED FRONT-HALF (the run_jury read-back, factored): read the N map outputs back, stable order.
+    # A missing address fail-louds here (on_missing="raise") — the cross-unit barrier discipline.
+    read = _read_back(store, addresses, on_missing=on_missing)
+    values = [v for (_uid, _addr, v) in read]
+    inputs = [(uid, addr) for (uid, addr, _v) in read]
+    # which declared inputs were skipped (only populated when on_missing="skip")
+    if isinstance(addresses, dict):
+        all_items = sorted(addresses.items())
+    else:
+        all_items = sorted((a, a) for a in addresses)
+    kept = {uid for (uid, _a) in inputs}
+    skipped = [(uid, addr) for (uid, addr) in all_items if uid not in kept]
+
+    result = ReduceResult(turn_id=turn_id, mode=mode, inputs=inputs, skipped=skipped)
+
+    if mode == "role":
+        # The reduce-ROLE / synthesize join (op=generate). The N→1 compose is run_reduce's job.
+        if role is None:
+            raise ValueError("run_reduce(mode='role'): a reduce-role must be passed (the join role, "
+                             "e.g. roles/reduce_synth.py). Fail loud.")
+        if not role.can_fire:
+            raise ValueError(f"run_reduce(mode='role'): role {role.id!r} cannot fire (no prompt_template/"
+                             f"output_schema) — a synthesize join needs a generate role. Fail loud.")
+        # COMPOSE the N read-back outputs into ONE labelled input (deterministic order). Each unit is
+        # rendered as "[unit_id] <json>" so the role sees which output came from which map unit.
+        composed = "\n".join(f"[{uid}] {json.dumps(v, sort_keys=True)}" for (uid, _addr, v) in read)
+        # Fire the reduce-role via run_role, exercising the 1/4 INPUT-AXIS compose path: the role
+        # declares input_addresses=("notes",) and we SUPPLY ctx={"notes": composed} (a declared
+        # non-utterance input present in ctx → _is_default_input is False → the labelled compose path).
+        synth = run_role(role, {"notes": composed}, base_url=base_url, model=model,
+                         max_tokens=max_tokens, temperature=0.0, store=store)
+        result.joined = synth
+        result.detail = {"n_units": len(values), "role": role.id, "composed_chars": len(composed)}
+
+    elif mode == "rule":
+        # The DETERMINISTIC L2 join (no model) — MIRRORS run_jury's verdict_rule (a PURE callable over
+        # the list of read-back values; deterministic; identical on replay). No model call.
+        if not callable(reduce_rule):
+            raise ValueError("run_reduce(mode='rule'): a callable reduce_rule must be passed (a PURE "
+                             "deterministic function over the N read-back values — vote/merge/select; "
+                             "L2, no model call). Mirrors run_jury's verdict_rule. Fail loud.")
+        result.joined = reduce_rule(values)               # the deterministic verdict over the N values
+        result.detail = {"n_units": len(values), "rule": getattr(reduce_rule, "__name__", "rule")}
+
+    else:  # mode == "cluster"
+        # The EMBED-CLUSTER join — the built-twice DISCOVERY primitive ("which of these are the same").
+        # Embed each unit's read-back text, then GROUP by cosine-nearness (reuse nodes/retrieve._cosine).
+        clusters, vecs = _cluster_units(read, threshold=cluster_threshold, embed_fn=embed_fn,
+                                        base_url=base_url)
+        result.joined = {"clusters": clusters, "k": len(clusters)}
+        result.detail = {"n_units": len(values), "threshold": cluster_threshold,
+                         "dims": [len(v) for v in vecs]}
+
+    result.wall_s = round(time.monotonic() - wall0, 3)
+
+    if emit is not None:                                  # ONE batched rollup (C1.6 discipline)
+        emit("cognition.reduce", {
+            "turn_id": turn_id, "mode": mode, "n_units": len(values),
+            "skipped": [uid for (uid, _a) in skipped], "wall_s": result.wall_s,
+            "detail": result.detail,
+        })
+    return result
+
+
+def _reduce_embed_text(value: Any) -> str:
+    """The RAW text a cluster embeds for ONE read-back unit. A dict output is rendered to a stable JSON
+    string (sort_keys — deterministic); a plain string is embedded as-is. (The same 'embed the unit's
+    text' contract vector_index.build_index uses.)"""
+    if isinstance(value, str):
+        return value
+    return json.dumps(value, sort_keys=True)
+
+
+def _cluster_units(read, *, threshold: float, embed_fn=None, base_url: str = RESIDENT_BASE_URL):
+    """Embed the N read-back units + GROUP by cosine-nearness → clusters of near-duplicates (the
+    cross-unit DISCOVERY join). Returns (clusters, vectors) where clusters is a list of lists of
+    unit_ids (each group is a set of near-duplicate units) and vectors is the per-unit embedding list.
+
+    REUSE (no parallel machinery): the cosine is nodes/retrieve._cosine (dim-mismatch FAIL-LOUD by
+    reuse — never a wrong-but-plausible cosine); the live embed path is the EXISTING complete_embeddings
+    (op=embed / vector_index.build_index's fabric path). `embed_fn(texts) -> [vector,...]` lets a caller
+    inject SEEDED vectors when the embedder (:8001) is down (mirrors vector_index's embed_fn seam) — the
+    cosine-grouping is deterministic given vectors, so the cluster LOGIC is proven on seeded vectors and
+    the live-embed run is its first consumer when the launch-capability loads BGE-M3.
+
+    DETERMINISTIC: units are processed in SORTED unit_id order and grouped greedily (a unit joins the
+    FIRST existing cluster whose representative is within `threshold` cosine, else starts a new cluster)
+    → replay-identical regardless of input order (mirrors the jury's order-independence)."""
+    from nodes.retrieve import _cosine                     # reuse the cosine (dim-mismatch fail-loud)
+    ordered = sorted(read, key=lambda t: t[0])             # stable: sort by unit_id
+    unit_ids = [uid for (uid, _addr, _v) in ordered]
+    texts = [_reduce_embed_text(v) for (_uid, _addr, v) in ordered]
+
+    if embed_fn is not None:
+        vectors = list(embed_fn(texts))                    # SEEDED / injected vectors (embedder-down path)
+    else:
+        # LIVE embed via the EXISTING fabric path (complete_embeddings — local resident embedder only).
+        from fabric import client, transport, config as _fcfg
+        et = transport.openai_embeddings_transport(base_url=_fcfg.DEFAULT_EMBED_URL)
+        vectors = client.complete_embeddings(
+            et, texts, model=_fcfg.DEFAULT_EMBED_MODEL, dim=_fcfg.DEFAULT_EMBED_DIM)
+
+    if len(vectors) != len(unit_ids):                      # fail loud — every unit must get a vector
+        raise ValueError(
+            f"_cluster_units: embedder returned {len(vectors)} vectors for {len(unit_ids)} units — "
+            f"a unit cannot be silently dropped from the cluster join (fail loud).")
+
+    # GREEDY cosine grouping (deterministic): a unit joins the first cluster whose REPRESENTATIVE (its
+    # first member's vector) is within `threshold`, else opens a new cluster. _cosine raises on a dim
+    # mismatch (fail-loud by reuse). Replay-identical because units are processed in sorted order.
+    clusters: list[list[str]] = []
+    reps: list = []                                        # the representative vector per cluster
+    for uid, vec in zip(unit_ids, vectors):
+        placed = False
+        for ci, rep in enumerate(reps):
+            if _cosine(vec, rep) >= threshold:
+                clusters[ci].append(uid)
+                placed = True
+                break
+        if not placed:
+            clusters.append([uid])
+            reps.append(vec)
+    return clusters, vectors
