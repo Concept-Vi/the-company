@@ -60,3 +60,8 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
 - cast_beyond_listening: still RED (my held edit + cognition's stale "empty walkthrough cast" assertion). cognition hasn't flipped yet (HEAD unchanged).
 - ACTION: HOLD the 6-role cast edit (verified, uncommitted). No code commit (gate red on cast). Docs only. Not spinning.
 - NEXT FIRE: if cognition flipped cast_beyond_listening → company suites green → COMMIT the cast + release claim. Else keep holding.
+
+## 2026-06-09 fire (cont) — cognition cleared me (efa9dbb) but left the cast_beyond_listening assertion → STILL hard-blocked
+- cognition's relay cleared me to build the cast, but did NOT flip its test's "walkthrough cast is EMPTY today" assertion → my cast edit trips it → gate red → can't commit. Won't edit cognition's test (its lane). Re-flagged POINTEDLY (exact file:line + 1-line fix).
+- ESCALATION RULE: if cognition's NEXT fire still hasn't flipped it (my primary piece stays hard-blocked on a 1-liner it owns) → PushNotification Tim (a real cross-session deadlock blocking my lane). Not yet — give cognition one fire to act on the pointed flag.
+- Cast edit: still held + verified. No commit. Not spinning.
