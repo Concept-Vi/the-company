@@ -133,3 +133,16 @@ Every prior item is accounted for: the original G0–G9 (✅ proven, by referenc
 
 ## OPEN DECISIONS (Tim's — captured for him + the adversaries)
 1. rep_penalty vs legitimate enumeration (O2) · 2. node-authoring line: declarative-direct/code-gated (the inspection) · 3. pillar-relationship: distinct pillar on the spine (lean) vs deeper GROUP D.
+
+---
+# PART 4 — ADVERSARIAL-FOLD corrections (see GUIDE Part 4; these supersede the over-claims)
+## RESTORED (no-regression violations adversary-foundations caught — were DROPPED/mis-stated)
+- **C7.3 · the live ANIMATED per-turn thought-visualization (the CRAFT SURFACE, Tim-flagged 2026-06-07)** — distinct from the corpus-network render (Q); carried. 🔴 FORM: animation, watch-the-wave; needs-tim on feel.
+- **G8 (cloud-decoupled · swarm-always-resident · residency-fail-loud)** — added to the proven FOUNDATION; the cloud-routing rides these, never breaks them. ✅ base + the cloud-additive rule.
+- **C7.4 · canvas authoring of roles/rules** (the FE create surface, beside the agent create). 🔴
+## RE-SIZED / CORRECTED (verified)
+- the **cascade RUNNER is NET-NEW** (N1-N3; the ActionRegistry only validates/saves) · **cloud routing net-new transport** (run_role is resident-only) · **marks = a GENERALIZATION of the finding store** (not same-shape; needs claim/span + mark-type retrieval) · **field_types is widen-the-grammar, NOT a registry** (K/B2 contradiction fixed) · **the model layer goes file-discovered** (Native Model Layer; supersedes N2) · **registries must be file-discovered + create_*-authorable** (P1: not "projects").
+- **LANES added:** LANE-FABRIC (transport/client) · LANE-STORE (fs_store+vector_index — ban OFF, abide the store constitution).
+- **LINEAGE is a sequencing GATE** (session/round/project in the corpus-record before the first run). Restored disciplines: map-vs-reduce enforcement · effort-routing by form · resume-safety. Ingestion path (/mnt/c→ext4). Thresholds per-context. json_schema VERIFY.
+## DECISIONS resolved (Tim's posture + the laws) · 1 open
+- fs_store: **edit/upgrade, abide portability (address-stable+Protocol)+constitution** ✓ · render: **EXTENDS the RHM organ** (reuse-don't-parallel) ✓ · model layer: **file-discovered** (Native Model Layer) ✓ · node-type authoring: **gated (code=the floor)**, declarative direct ✓ · **OPEN: rep_penalty robust-vs-lossy (lean: ladder + diff-against-source, never silent).**

@@ -159,3 +159,48 @@ LANE-NEWMOD: the registries (runtime/projections.py·lifters.py·etc.) + runtime
 1. **rep_penalty vs legitimate enumeration** (3.2) — robust vs quietly-lossy; my lean: ladder + diff-against-source, never silent.
 2. **node-authoring line** (the inspection) — declarative-direct / executable-code-gated (my recommendation), or node-creation direct too?
 3. **pillar-relationship** — the corpus/discovery engine as a distinct pillar ON the cognition spine (my lean), vs folded into a deeper GROUP D.
+
+---
+# PART 4 — ADVERSARIAL-REVIEW FOLD (verified; these corrections SUPERSEDE the over-claims in Parts 1-3)
+> 5 adversaries (codeclaims·flows·uncovered·dynamic·foundations) converged. Posture (Tim): re-examine/improve/upgrade freely — the constraint is ABIDE BY THE RULES (the floor · the store's portability=address-stable+Resolver-Protocol+CAS-immutable+ext4 · the dynamic law · reuse-don't-parallel). Each correction verified against code (file:line).
+
+## 4.1 SCOPE re-size — the cascade RUNNER + cloud routing are NET-NEW (supersedes §3.5/3.8 "REUSE the ActionRegistry")
+`coherence_actions.py:5-8` says in-code "the RUNNER is NOT built here." `build_action`/`ActionRegistry` only VALIDATE + SAVE a declaration. **NET-NEW = the multi-hop/looping/multi-turn EXECUTOR** (per-step op/model/tier dispatch, output→input threading) — the LARGEST piece, mis-filed as REUSE. And `run_role` pins `RESIDENT_BASE_URL` (:8000) with no model→endpoint router → **cloud routing is net-new transport** (not "routes via the fabric"). It must ABIDE BY G8's invariants (swarm-always-resident, cloud-decoupled, residency fail-loud — C8.1/C8.3/C8.4) — cloud is additive, never displaces the resident swarm.
+
+## 4.2 marks = a GENERALIZATION of the finding store, NOT "same shape" (supersedes M1)
+The finding record is `{kind, address, route, state, source, owner, ts}`; `findings_for` keys by ADDRESS, `disposition_for` by (kind,address). Run-1's `{target, mark_type, value, confidence, source_pass, evidence}` is NOT findable there. So marks **extend** the finding store (a claim/span target + mark_type retrieval), abiding by the store rules (address grammar + Protocol). `append_finding` IS public + uncoupled (good) — the gap is a connector (a mark-pass → append_finding) + the schema generalization.
+
+## 4.3 The registry-BAR is FILE-DISCOVERY + create_*-AUTHORING, not "projection" (supersedes P1/3.1)
+The real test (dynamic + foundations adversaries): **add-a-row = a FILE, no code edit.** `cognition_info` already projects code-dicts (RULE_OPS/THOUGHT_SHAPES) — projection ≠ dynamic. The 7 new registries (projections/lifters/mark-types/AI-tics/relation-types/generation-policies/forms) MUST be **directory-discovered-file-per-entry + create_*-authorable** (like roles/skills via `runtime/skills.py` importlib), NOT Python dicts.
+- **field_types CONTRADICTION fixed:** field_types is NOT a new registry — it's **widen-the-grammar+recursive-renderer in `authoring.py`** (a closed-grammar extension, source-edited like RULE_OPS — output_schema is already Pydantic). Drop the "B2 type registry" framing.
+- **The MODEL LAYER goes file-discovered** (a model = a declared file) = Tim's Native Model Layer — supersedes N2's "MODEL_CAPABILITIES += dict edit" (the live bad-pattern the adversary flagged).
+- Genuinely-static (do NOT make dynamic — the adversary's cleared list): the floor verbs · RULE_OPS/SCHEMES/DESTINATION_KINDS/ENGINE_RUN_OPS (closed grammars, each = a code branch) · MODE_REGISTRY (the one-source that FIXED drift). The B fixes (project/derive, not new registries): api_verbs · PROTECTED_ROLES · _REDUCE_RULES.
+
+## 4.4 The LANE-CUT was broken — add LANE-FABRIC + LANE-STORE + an owner for vector_index (supersedes the 6-lane cut)
+finish_reason + json_schema + cloud-routing need `fabric/transport.py`+`fabric/client.py`; the space filter needs `store/vector_index.py`; the space-keyed vectors need `store/fs_store.py` — **none had an owner, and fs_store was wrongly banned.** New lanes:
+```
+LANE-FABRIC (fabric/transport.py + client.py)  → json_schema response_format · finish_reason passthrough · cloud-reasoner routing (reasoning-field/headroom/multi-turn)
+LANE-STORE  (store/fs_store.py + vector_index.py) → space-keyed vector storage + per-space query (DONE RIGHT, abiding the store constitution: address-grammar C1 + Resolver-Protocol C4 + CAS-immutable + schema-additive + ext4 + provenance; Supabase-later implements the same). Coordinate w/ coherence (claims board).
+```
+
+## 4.5 NO-REGRESSION restorations (the violations adversary-foundations caught — Tim's "nothing dropped")
+- **C7.3 RESTORED — the live ANIMATED per-turn thought-visualization ("the CRAFT SURFACE", Tim-flagged 2026-06-07, held on his A/B/C steer)** — DISTINCT from the corpus-network render (Q1/Q2). Carried as an open criterion; the per-turn cognition-wave animation has a home again.
+- **G8 added to the proven FOUNDATION + its residency invariants acknowledged** (C8.1/C8.3/C8.4: swarm-always-resident, cloud-decoupled, residency-fail-loud) — the cloud-routing (4.1) rides them, never breaks them.
+- **C7.4 (canvas authoring of roles/rules) specified** — the FE authoring surface for create_role/rule, beside the agent/MCP create.
+
+## 4.6 The RHM-relationship — the render EXTENDS the guided-review organ (reuse-don't-parallel; resolves the pillar fork)
+My Q1/Q2 "patterned-visibility render" is the SAME shape as the built `build-prep/guided-review-surface/` RHM organ. **The corpus-discovery render is a mode/surface OF the RHM organ, NOT a new kit.tsx renderer.** The corpus/discovery engine is a distinct PILLAR on the cognition spine; its human face EXTENDS the RHM organ. (Pillar-vs-GroupD = the RHM-relationship: distinct pillar, render extends RHM.)
+
+## 4.7 Restored run-1 DISCIPLINES + lineage + ingestion + human-tiers (the load-bearing half I'd reduced to "wiring")
+- **LINEAGE-FIRST (sequencing gate):** the corpus-record + projections carry session/round/project — MUST be in before the first capture run (corroboration is cross-SESSION; the inversion-finder needs it).
+- **map-vs-reduce enforcement** (the engine guides/guards the level — run-1's most-repeated mistake) · **effort-routing by form** (light-vs-substance — ~half the corpus is bookkeeping; don't burn full depth on logs) · **resume-safety/single-writer** in corpus.py (the store's fcntl locks).
+- **The cascade step-type encodes the human/Tim tiers** (free reduce-reasoner=Claude, the Tim-confirm gate) — NOT model-only `{op,model}`.
+- **Ingestion path:** read the external corpus (/mnt/c, ~5000 files) → state on ext4/the store (never /mnt/c). Net-new.
+- **Thresholds per-context:** cluster_threshold per-projection (a generation/relation policy, not a global 0.85); budget constants mode/loadout-projected (once C2).
+- **VERIFY json_schema** (transport branch + the 4B honoring it) — don't assert "verified."
+
+## 4.8 The honest re-sized shape (supersedes §3.8 "~3 new")
+NET-NEW (real): the cascade RUNNER (largest) · cloud-routing transport · the model-layer file-discovery · the marks generalization + connector · the projection-split + corpus-record · the space-keyed vector storage+query · the 7 file-discovered registries · ingestion · lineage · C7.3 animation · the restored disciplines. REUSE (verified): run_items · run_reduce (incl. cluster) · op=embed/put_vector/query_index · the finding store (generalized) · the ActionRegistry VALIDATOR (not the runner) · the run-index. **It is a real build with substantial net-new — not "mostly wiring." The criteria 🔴 were honest; this fold corrects the guide's over-sold reuse.**
+
+## 4.9 OPEN (genuinely Tim's — no law resolves it)
+**rep_penalty: robust vs quietly-lossy on enumerative content.** My lean: the ladder + a diff-against-source check on enumerative outputs, NEVER a silent penalty — proceeding on that unless Tim redirects. (The other forks resolved by the posture+laws above.)
