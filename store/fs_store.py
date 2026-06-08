@@ -565,6 +565,86 @@ class FsStore:
                 out.append(rec)
         return out
 
+    # --- coherence finding store (C1) + disposition overlay (C2) ---
+    # The substrate spine of the Coherence model, built on the SAME own/reflect split the pin overlay uses.
+    # DETECTION (a finding) is re-derivable → an append-only, address-keyed open record (mirrors
+    # append_annotation): a detector re-run re-appends; the reconcile/rollup dedups by (kind,address) at read
+    # time (own/reflect: re-derive freely, the read folds to current). DISPOSITION is a DECISION (not
+    # recomputable) → a last-wins overlay keyed by the (kind,address) finding handle (mirrors the pin overlay),
+    # NOT a mutation of the append-only finding record, so it SURVIVES a re-detection. A disposition is a
+    # micro-ADR. The store stays dumb (turns an address into bytes and back; never calls a model — the
+    # detector semantics live in coherence_detect.py / the Suite, mirroring annotations' S0 gate).
+    def append_finding(self, rec: dict) -> dict:
+        """Persist a coherence finding — `{kind, address, state, evidence, source, ...}` — to an append-only
+        `findings.jsonl`. Open-record like append_annotation: `{ts, **rec}`. The `address` is the retrieval
+        key; append-only so a re-detection accrues (the reconcile dedups by (kind,address) on read). The store
+        does NOT validate the finding (that is the detector's job)."""
+        import json as _j
+        from datetime import datetime, timezone
+        out = {"ts": datetime.now(timezone.utc).isoformat(), **rec}
+        with (self.root / "findings.jsonl").open("a", encoding="utf-8") as f:
+            f.write(_j.dumps(out) + "\n")
+        return out
+
+    def findings_for(self, address: str) -> list[dict]:
+        """Every finding at `address`, oldest-first (the detection thread). Filters append-only
+        `findings.jsonl` by the `address` field — the address IS the key. Reads disk every call, so a second
+        Suite over the same store root sees a prior Suite's findings (persistence-survives-reload)."""
+        import json as _j
+        path = self.root / "findings.jsonl"
+        if not path.exists():
+            return []
+        out = []
+        for l in path.read_text(encoding="utf-8").splitlines():
+            if not l.strip():
+                continue
+            rec = _j.loads(l)
+            if rec.get("address") == address:
+                out.append(rec)
+        return out
+
+    def all_findings(self) -> list[dict]:
+        """Every finding record (for the reconcile/burn-down rollup — C3/C5). Append-only, oldest-first."""
+        import json as _j
+        path = self.root / "findings.jsonl"
+        if not path.exists():
+            return []
+        return [_j.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+
+    def append_disposition(self, kind: str, address: str, disposition: str, *, reason: str = "", by: str = "") -> dict:
+        """Record a disposition (finish/defer/by-design/…) on the finding handle `(kind, address)`, as an
+        APPEND-ONLY control record in `dispositions.jsonl`, resolved LAST-WINS (`disposition_for`). WHY an
+        overlay not a field on the finding: the finding store is append-only (a re-detection re-appends), so
+        the disposition cannot live on the record (it would be lost/duplicated on re-detect). The overlay is
+        keyed by the finding's STABLE handle `(kind, address)`, so the decision persists across re-detections.
+        Open-record: `{ts, kind, address, disposition, reason, by}`; append-only so the disposition HISTORY is
+        preserved (a later change is a NEW record, last-wins — the micro-ADR trail; never a lost update)."""
+        import json as _j
+        from datetime import datetime, timezone
+        rec = {"ts": datetime.now(timezone.utc).isoformat(), "kind": kind, "address": address,
+               "disposition": disposition, "reason": reason, "by": by}
+        with (self.root / "dispositions.jsonl").open("a", encoding="utf-8") as f:
+            f.write(_j.dumps(rec) + "\n")
+        return rec
+
+    def disposition_for(self, kind: str, address: str) -> dict | None:
+        """The resolved disposition on `(kind, address)`, LAST-WINS over append-only `dispositions.jsonl`
+        (a later record overrides — a changed decision reads as the latest). Reads disk every call
+        (persistence-survives-reload). No disposition record → None (the additive default: the finding is
+        OPEN/undispositioned)."""
+        import json as _j
+        path = self.root / "dispositions.jsonl"
+        if not path.exists():
+            return None
+        latest = None
+        for l in path.read_text(encoding="utf-8").splitlines():
+            if not l.strip():
+                continue
+            rec = _j.loads(l)
+            if rec.get("kind") == kind and rec.get("address") == address:
+                latest = rec   # last line wins
+        return latest
+
     # --- pin-state overlay (X7 · Convergence): operator's "keep this in view" override ---
     def append_pin(self, address: str, target_ts: str, pinned: bool) -> dict:
         """X7 — record a pin/unpin of an attached item, as an APPEND-ONLY control-state record.
