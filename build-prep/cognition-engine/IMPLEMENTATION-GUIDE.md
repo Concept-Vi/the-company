@@ -204,3 +204,10 @@ NET-NEW (real): the cascade RUNNER (largest) · cloud-routing transport · the m
 
 ## 4.9 OPEN (genuinely Tim's — no law resolves it)
 **rep_penalty: robust vs quietly-lossy on enumerative content.** My lean: the ladder + a diff-against-source check on enumerative outputs, NEVER a silent penalty — proceeding on that unless Tim redirects. (The other forks resolved by the posture+laws above.)
+
+---
+# PART 5 — THE TWO STANDING BARS (cross-cutting build requirements; see CRITERIA Part 5)
+Every lane delivers, alongside its code, BOTH:
+- **Agent-knowledge:** the new tools ship rich descriptions (what/when/params/RETURN-shape/composes); the multi-step workflows ship SKILLS (the 3-layer corpus pipeline · patterned-visibility · inversion-query · map-vs-reduce); cognition_info projects the new registries; saved-cascades freeze proven pipelines. The tool SIGNATURES + RESPONSE shapes are specced from the STEP-by-STEP simulation (ingest_corpus · run_items(extract) · run_items(project) · embed_projections · run_reduce(cluster+then-synthesize) · find_relations · find_runs · inspect_address · findings_for · save_cascade/run_cascade — each with its return shape). A LANE owns the skills (LANE-SKILLS) + the descriptions ride each tool's lane.
+- **Self-describing-for-update:** every module/registry/tool updates its constitution + drift-home + inline-why + tool↔delegate trace AS PART OF the change; drift-acceptance is the gate. The bar: a fresh agent extends it from the self-description alone.
+**Open design choice (from the sim, Q4):** extract+project as TWO layers vs ONE richer capture pass — make it CONFIGURABLE (two for a big corpus, one for small), not fixed.

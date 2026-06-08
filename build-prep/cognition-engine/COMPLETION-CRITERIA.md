@@ -146,3 +146,26 @@ Every prior item is accounted for: the original G0–G9 (✅ proven, by referenc
 - **LINEAGE is a sequencing GATE** (session/round/project in the corpus-record before the first run). Restored disciplines: map-vs-reduce enforcement · effort-routing by form · resume-safety. Ingestion path (/mnt/c→ext4). Thresholds per-context. json_schema VERIFY.
 ## DECISIONS resolved (Tim's posture + the laws) · 1 open
 - fs_store: **edit/upgrade, abide portability (address-stable+Protocol)+constitution** ✓ · render: **EXTENDS the RHM organ** (reuse-don't-parallel) ✓ · model layer: **file-discovered** (Native Model Layer) ✓ · node-type authoring: **gated (code=the floor)**, declarative direct ✓ · **OPEN: rep_penalty robust-vs-lossy (lean: ladder + diff-against-source, never silent).**
+
+---
+# PART 5 — TWO STANDING BARS (cross-cutting; EVERY lane/tool/module held to BOTH, like Form)
+> Tim 2026-06-09: the agent-knowledge layer + self-describing-for-update are MAJOR parts of the implementation, not polish. They're the two halves of AI-operable-with-no-human-devs: agents know how to USE it, and how to EVOLVE it. Verified by USE (a FRESH agent/session, no hand-holding).
+
+## BAR 1 — AGENT-KNOWLEDGE (how an agent knows to call any of this)
+Every capability ships its knowledge-path, on four layers:
+- **AK1 · Discovery** — `cognition_info` (+ the registry projections) is the entry-point: a call returns the complete live capability surface (roles, projections, models, tools, the new registries). The agent learns "what can I compose" from ONE call, never from hardcoded knowledge. 🔴/✅(exists, extend to new registries)
+- **AK2 · Per-tool descriptions** — EVERY MCP tool ships a rich description: what it does · when to use it · each param · what it RETURNS (the response shape) · how it composes with others. A capable agent can use any single tool from its schema alone. 🔴 (audit + bring all tools — incl. the old node-graph ones — to this bar)
+- **AK3 · Per-workflow SKILLS** — every MULTI-STEP workflow (the 3-layer corpus pipeline · the patterned-visibility loop · the inversion-query · map-vs-reduce composition) ships a SKILL (the composition recipe — order, wiring output→input, when to use which tier), like the existing build-loop skills. Single tool-descs do NOT encode multi-step composition; the skill does. 🔴 (NEW — write the skills alongside the tools)
+- **AK4 · Saved cascades** — a saved Action IS a frozen recipe; `run_cascade(action)` runs the encoded workflow. The agent reuses proven pipelines without re-deriving them. 🔴
+- **VERIFY (the bar):** a FRESH agent, given ONLY `cognition_info` + the tool descriptions + the skills (no hand-holding, no pre-knowledge of the steps), can drive the 3-layer corpus pipeline + the follow-up queries by use. If it can't, the knowledge-layer is incomplete. *(This is the "agent-usability is half of done" analog of the Form bar — assessed, not assumed.)*
+
+## BAR 2 — SELF-DESCRIBING FOR UPDATE (how an agent knows to evolve it; no human devs)
+Every module/tool/registry/criterion is documented so the NEXT AI session/agent can update + extend it easily — the AI-path-of-least-resistance: the *correct* update is the *easiest* one.
+- **SD1 · Module self-description** — each module carries its constitution (`AGENTS.md`: Is / Guarantees / Where-new-things-go / To-extend / Never), kept TRUE as part of every change (drift-acceptance passes — the standing gate). 🔴/✅(pattern exists, hold the new modules to it)
+- **SD2 · Registry drift-homes** — every registry (incl. the 7 new ones) declares its drift-home + the "add-a-row = a FILE" recipe in-place, so extending it is obvious + can't silently drift. 🔴
+- **SD3 · Inline WHY + seams** — the code explains its reasoning (not just what), names its seams ("where X plugs in"), and its "never" list — so an agent reading it cold can change it without re-deriving or breaking an invariant. 🔴
+- **SD4 · Tool↔code traceability** — each tool's description names its delegate (tool → Suite/engine fn → what it touches), so an agent updating behaviour knows where it actually lives (the inspection-map, made standing). 🔴
+- **VERIFY (the bar):** a FRESH session, given only the self-description (the constitutions + drift-homes + inline-why), can correctly EXTEND a registry / change a tool / add a projection without reading the whole codebase or breaking an invariant. The drift gate fails loud if a change doesn't update its self-description.
+
+## Why these are load-bearing (the connection)
+The system is AI-operated with NO human developers. BAR 1 = agents know how to USE it; BAR 2 = agents know how to EVOLVE it. Without BAR 1, the tools exist but agents can't compose them. Without BAR 2, the code works but the next session can't safely change it → drift, the thing the whole Company fights. Together they ARE the self-hosting spine: the system describes itself well enough to be used AND grown by AI alone.
