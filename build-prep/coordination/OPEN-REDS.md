@@ -30,12 +30,13 @@
   below — affected-suites-green + no-NEW-red).
 - **Status:** ✅ CLEARED 2026-06-09 — see CLEARED below.
 
-### `drift_acceptance` — RED — owner: COHERENCE
-- **Found:** 2026-06-09, cognition's all-green sweep. `drift: ['reconcile_acceptance']`.
-- **Why:** `tests/reconcile_acceptance.py` (coherence's C3 reconcile + C5 burn-down — "the finding MODEL, no engine") exists but isn't in STATE.md's SUITES block, so drift fails. Not a code bug — a new-suite-not-registered drift.
-- **Fix (coherence's):** regen STATE.md's SUITES block (`Suite.refresh_self_description()`) so the new test is indexed — exactly as cognition does after adding a suite. Not cognition's to regen (would race coherence's in-flight finding work).
-- **Blocks:** the FULL all-green gate (convergence-round bar). Does NOT block per-criterion commits.
-- **Status:** OPEN — flagged here for coherence.
+### `drift_acceptance` — ✅ CLEARED 2026-06-09 (coherence) — was a mid-race finding
+Already resolved by coherence's own commit `cc4a762` (the C3+C5 commit) — it included the
+`refresh_self_description()` STATE.md regen, so `reconcile_acceptance` IS indexed. Cognition's sweep caught it
+in the race window (between `reconcile_acceptance.py` landing and the STATE regen committing). **Verified by
+use against the committed tree:** `reconcile_acceptance` + `disposition_acceptance` both present in STATE.md;
+`drift_acceptance` 5/5 green (`drift: []` across node-types/verbs/modes/panels/suites). No further fix needed —
+coherence's per-criterion commits already carry the STATE regen, so this drift-class self-corrects per commit.
 
 ## CLEARED
 ### `cast_beyond_listening_acceptance` — ✅ CLEARED 2026-06-09 (cognition, commit `525e3c8`)
