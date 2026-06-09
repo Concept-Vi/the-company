@@ -260,6 +260,30 @@ context / any upstream output, set by address); `op: generate|embed` selects the
 `complete_embeddings`, local-resident only). Add a new shape/grain ⇒ add it to
 `THOUGHT_SHAPES`/`PART_GRAIN` **and reflect it here**, or `tests/chat_parts_acceptance.py` fails loud.
 
+**F3 — CHUNK-AND-COMPOSE for over-context units (`run_chunked` · the over-context TIER).** A unit whose
+text exceeds the model's context window USED to be a DEAD END (a loud 400 — correct, no silent truncation,
+but unprocessable). `run_chunked(role, text, store, *, turn_id, context_window=None, compose_mode="role"|"rule", …)`
+is the tier that makes the common over-context case (one big document) processable: a SIZE GATE compares
+`len(text)` against a per-chunk char budget DERIVED from the model's context window — `context_window`
+defaults to the LIVE registry's `max_model_len` (the SAME `ops/services.json` `config` block
+`SlotBudget.from_registry` reads, `model_context_window()`; **NOTHING hardcodes 65536**; injectable for a
+SHORT synthetic test window). A unit that **FITS** runs `role` ONCE via `run_role` — **byte-identical** to
+today (no chunking, no reduce, no extra event). A unit that is **OVER**-context is SPLIT (`chunk_text` —
+deterministic, paragraph/line-boundary preferring, hard-split fallback, the join covers the WHOLE doc),
+MAPPED via **`run_items`** (1 role × N chunks — REUSE, no 2nd map), then COMPOSED via **`run_reduce`**
+(`mode="role"` synthesize via `roles/reduce_synth.py`, or `mode="rule"` a pure L2 join — REUSE, no 2nd
+reduce). **THE LOAD-BEARING FAIL-LOUD (the F3 law — a dropped chunk is LOUD):** the chunks ARE ONE
+document, so `run_items`' F2 per-unit resilience (a poison unit → `.failed`, good units still return) is
+the OPPOSITE of what F3 needs — composing the survivors would SILENTLY TRUNCATE the document. So after the
+map `run_chunked` INSPECTS `.failed` AND `.skipped`; if either is non-empty it RAISES a legible error
+(which chunk, of how many, why — F4) and NEVER composes a truncated document (rule 4). Additive + opt-in
+(today's callers + `run_role`/`run_items`/`run_reduce` untouched); a DRIVER (the model runs only in the
+map-role + the reduce-role; NO resolve/approve/dispatch — the floor holds, it only calls the two
+already-floor-clean primitives; it adds NO third emit, so C1.6's per-fan rollup discipline is preserved).
+Proven by `tests/chunk_compose_acceptance.py` (over-context → chunked → mapped → composed → ONE output, on
+a long synthetic doc + a short injected window/mocked short-context transport; a fitting unit byte-identical
+to `run_role`; a seeded chunk-failure FAILS LOUD without a partial compose).
+
 **The run INDEX — runs are DISCOVERABLE as inputs, not just known-by-address (#54 storage-discovery).**
 Run outputs are already durable + addressed (`run_role`/`run_items`/`run_reduce` write `run://<turn>/<role>`
 via CAS, immutable, cross-session) and read back by `resolve_address` — but there was **no list/query over
@@ -696,8 +720,18 @@ authoring system:
 
 - **`runtime/authoring.py`** — the PURE half: the **ONE fields→source renderer** (`render_role_source`:
   operator field-set → a real `roles/<id>.py` module declaring `class <Name>Out(BaseModel)` + `ROLE = {…}`
-  — C7.5's "dynamically define structured outputs"), the **closed field-type registry** (`FIELD_TYPES`:
-  str·int·float·bool·list[str]·list[int]; an unknown type fails loud — rule 8), and **THE GATE**
+  — C7.5's "dynamically define structured outputs"), the **field-type registry** (`FIELD_TYPES`, widened
+  by Cognition Engine **B2** beyond flat scalars: the 6 scalars (`str·int·float·bool·list[str]·list[int]`,
+  `kind:"scalar"`) PLUS the RICHER kinds `enum` (→ `Literal[...]`), `object` (→ a nested sub-`BaseModel`),
+  `list[object]`/`list[dict]` (→ `list[<SubModel>]`), with the per-field MODIFIERS `optional` (→ `T | None`)
+  and `default` — rendered by a **recursive renderer** (`_render_output_fields`/`_build_field_line`) that
+  emits sub-models BEFORE their owners (define-before-use; no forward refs) and a conditional `Literal`
+  import (only when an enum appears, so a flat-scalar role renders **byte-identical** — the additive law).
+  Each row carries a `kind` discriminator + the `params` the richer kinds need (`enum→values`,
+  `object/list[object]→fields`), surfaced via `field_types()` so the FE/agent learns the per-type shape
+  from the registry (registry-is-truth). `output_schema` is ALREADY real Pydantic — B2 widens the AUTHORING
+  grammar, NOT Pydantic, NOT a 2nd registry. An unknown type / malformed nested-or-enum spec fails loud —
+  rule 8; proven by `tests/richer_types_acceptance.py`), and **THE GATE**
   (`gate_role_source` / `load_role_from_source`): validate a generated module by **discovering it in a temp
   dir OUTSIDE the live tree** (mirrors `Suite._gate_extension`). This is the #1 constraint — a malformed
   `roles/*.py` makes `RoleRegistry.discover` RAISE, which would brick the WHOLE cognition layer; so a bad

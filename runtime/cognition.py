@@ -1284,6 +1284,293 @@ def run_items(role: "Role", items: list, store, *, turn_id: str,
     return result
 
 
+# =================================================================================================
+# F3 — CHUNK-AND-COMPOSE for over-context units (the over-context TIER) · runtime/cognition.py
+#
+# THE GAP (Cognition Engine COMPLETION-CRITERIA F3): today a unit whose text exceeds the model's
+# context window FAILS LOUD with a 400 (correct — never a silent truncation — but a DEAD END: the
+# unit can't be processed at all). F3 builds the over-context tier: when a unit's text is LARGER
+# than the model's context window, SPLIT it into context-sized chunks, MAP the role over each chunk
+# (REUSE run_items — the existing 1-role×N-units fan), then COMPOSE the per-chunk outputs (REUSE
+# run_reduce, role or rule mode) into ONE result for that unit. The 400 stays the floor for a unit
+# that genuinely overflows even after sizing (token-from-char estimation is approximate); F3 is the
+# tier that makes the COMMON over-context case (one big document) processable instead of a dead end.
+#
+# REUSE-DON'T-PARALLEL (the lane law): the MAP is `run_items` (the existing fan — same gate/pool/
+# barrier/per-unit-address/rollup) and the COMPOSE is `run_reduce` (the existing JOIN — role|rule).
+# There is NO 2nd map/reduce here. The ONLY net-new is (a) the chunker (split text on a budget) and
+# (b) the size GATE that decides fit-vs-chunk + the load-bearing fail-loud over the chunk map.
+#
+# ADDITIVE / BYTE-IDENTICAL FLOOR: this is a NEW opt-in function. Today's callers + run_role/run_items/
+# run_reduce are untouched. A unit that FITS the window is byte-identical to a plain run_role call (the
+# fitting path does exactly run_role — NO chunking, NO reduce, NO extra event). Only an OVER-context
+# unit enters the chunk branch.
+#
+# CHUNK SIZE IS REGISTRY-DRIVEN (rule 8 — author from the registry, never invent): the model's context
+# window is `max_model_len`, read from the SAME ops/services.json `config` block SlotBudget.from_registry
+# reads `max_num_seqs` from. NOTHING hardcodes 65536. `context_window` is an INJECTABLE param (registry
+# default) so a test can drive the tier with a SHORT synthetic window (the run_reduce/build_index embed_fn
+# seam pattern — a real 65 536-char doc is impractical in a test).
+#
+# THE LOAD-BEARING CORRECTNESS (the F3 law — a dropped chunk is LOUD): run_items is PER-UNIT RESILIENT
+# (F2 — a poison unit lands in .failed and the GOOD units still return). For F3 that resilience is the
+# OPPOSITE of what's needed: the chunks ARE ONE DOCUMENT, so a failed/skipped chunk = a SILENTLY-TRUNCATED
+# document if we composed only the survivors. So AFTER the map we INSPECT .failed AND .skipped, and if
+# EITHER is non-empty we FAIL LOUD with a legible message (F4) — NEVER compose a truncated document.
+# (Structural backstop: passing the FULL addresses dict into run_reduce with on_missing="raise" would
+# also raise on the never-set_ref'd failed-chunk address — but the explicit .failed/.skipped check is the
+# clearer primary guard, so it's done first.)
+# =================================================================================================
+
+# Defaults for the size GATE + chunker (used ONLY as the budget arithmetic; the WINDOW value itself comes
+# from the registry's max_model_len, never from here — these are the reservation/margin knobs).
+DEFAULT_OUTPUT_TOKENS = 512        # tokens reserved for the role's OUTPUT (not available for the chunk).
+DEFAULT_PROMPT_TOKENS = 256        # a conservative estimate of the role's prompt_template + framing tokens.
+DEFAULT_CTX_MARGIN = 0.85          # use 85% of the usable window per chunk (token-from-char est. is approx).
+CHARS_PER_TOKEN = 4                # the standard coarse char≈token ratio (English/code average).
+
+
+def model_context_window(*, service_id: str = "chat-4b",
+                         services_path: str = _SERVICES_JSON) -> int:
+    """The model's CONTEXT WINDOW in tokens, read from the LIVE registry (ops/services.json) — `max_model_len`
+    in the SAME `config` block SlotBudget.from_registry reads `max_num_seqs` from (registry-is-truth, rule 8;
+    NOTHING hardcodes 65536). Fail loud (FileNotFoundError/KeyError) on a corrupt registry or an absent
+    max_model_len — never a silent guessed window (a wrong window would silently over/under-chunk)."""
+    with open(services_path) as f:
+        reg = json.load(f)
+    svcs = reg["services"] if "services" in reg else reg
+    if service_id not in svcs:
+        raise KeyError(
+            f"model_context_window: no service {service_id!r} in {services_path} — cannot read the "
+            f"model context window from the registry (fail loud, never assume a window).")
+    cfg = svcs[service_id].get("config") or {}
+    if "max_model_len" not in cfg:
+        raise KeyError(
+            f"model_context_window: service {service_id!r} declares no max_model_len — the model's "
+            f"context window is unknown (fail loud, never guess a chunk size).")
+    return int(cfg["max_model_len"])
+
+
+def chunk_budget_chars(context_window: int, *, output_tokens: int = DEFAULT_OUTPUT_TOKENS,
+                       prompt_tokens: int = DEFAULT_PROMPT_TOKENS, margin: float = DEFAULT_CTX_MARGIN,
+                       chars_per_token: int = CHARS_PER_TOKEN) -> int:
+    """The per-chunk CHARACTER budget, DERIVED from the model's token context window (registry-driven).
+
+    usable_tokens = (context_window − output_tokens − prompt_tokens) × margin   (reserve output + prompt,
+                    then keep a conservative margin because char→token estimation is approximate)
+    chunk_chars   = usable_tokens × chars_per_token
+
+    A non-positive budget (a window too small to fit even the reservations) FAILS LOUD — a 0/negative chunk
+    size can't split text (rule 4 — never an infinite-loop or empty-chunk fabrication)."""
+    usable_tokens = int((context_window - output_tokens - prompt_tokens) * margin)
+    chunk_chars = usable_tokens * chars_per_token
+    if chunk_chars <= 0:
+        raise ValueError(
+            f"chunk_budget_chars: context_window={context_window} too small for the reservations "
+            f"(output={output_tokens} + prompt={prompt_tokens} tokens, margin={margin}) — usable per-chunk "
+            f"budget is {chunk_chars} chars (≤0). Fail loud — cannot chunk a document into non-positive "
+            f"chunks (a bigger window or smaller reservations is needed).")
+    return chunk_chars
+
+
+def chunk_text(text: str, chunk_chars: int) -> list[str]:
+    """Split `text` into chunks no larger than `chunk_chars`, preferring PARAGRAPH/LINE boundaries so a
+    chunk reads as coherent text (not a mid-word cut), falling back to a HARD char split for any single
+    line longer than the budget. Deterministic (same text + budget → same chunks → replay-identical map).
+
+    Boundary discipline: split on "\\n\\n" (paragraphs) then "\\n" (lines), greedily packing pieces up to
+    the budget; a piece itself over the budget is hard-split at the char boundary (a 10K-char line can't
+    stay whole). NO chunk is empty (empty pieces are dropped — never a fabricated empty unit). The
+    concatenation of the chunks covers the whole text (no character is dropped — the join over chunks is
+    the whole document; the over-context law forbids silent truncation, and the chunker is where it starts)."""
+    if chunk_chars <= 0:
+        raise ValueError(f"chunk_text: chunk_chars={chunk_chars} must be positive (fail loud).")
+    if len(text) <= chunk_chars:
+        return [text] if text else []
+    # split into pieces on paragraph/line boundaries (keep the separators so nothing is dropped).
+    pieces: list[str] = []
+    for para in text.split("\n\n"):
+        if pieces:
+            pieces[-1] = pieces[-1] + "\n\n"          # restore the paragraph separator we split on
+        for ln in para.split("\n"):
+            pieces.append(ln + "\n")
+        if pieces:
+            pieces[-1] = pieces[-1].rstrip("\n")       # the last line of a paragraph keeps no trailing \n
+    chunks: list[str] = []
+    cur = ""
+    for piece in pieces:
+        # a single piece longer than the budget → hard-split it at the char boundary first.
+        while len(piece) > chunk_chars:
+            if cur:
+                chunks.append(cur)
+                cur = ""
+            chunks.append(piece[:chunk_chars])
+            piece = piece[chunk_chars:]
+        if len(cur) + len(piece) > chunk_chars:
+            if cur:
+                chunks.append(cur)
+            cur = piece
+        else:
+            cur += piece
+    if cur:
+        chunks.append(cur)
+    return [c for c in chunks if c]                    # never a fabricated empty chunk
+
+
+@dataclass
+class ChunkedResult:
+    """The captured artifact of one chunk-and-compose over an over-context unit (the by-use proof).
+
+    chunked        bool                   — True iff the unit was OVER-context (split→map→compose); False =
+                                            the unit FIT and was processed by a single byte-identical run_role.
+    n_chunks       int                    — how many chunks the unit split into (1 when it fit).
+    chunk_chars    int                    — the per-chunk char budget used (derived from the context window).
+    map_addresses  dict {i: run://addr}   — the per-chunk MAP output addresses (run_items' .addresses).
+    composed       Any                    — the ONE result for the unit: the reduce's joined output (chunked)
+                                            OR the single run_role output (fit) — the chunk-and-compose RESULT.
+    compose_mode   str | None             — the run_reduce mode used to compose ("role"|"rule"), None when fit.
+    """
+    turn_id: str
+    role_id: str
+    chunked: bool
+    n_chunks: int
+    chunk_chars: int
+    composed: Any = None
+    compose_mode: str | None = None
+    map_addresses: dict = field(default_factory=dict)
+    wall_s: float = 0.0
+
+
+def run_chunked(role: "Role", text: str, store, *, turn_id: str,
+                context_window: int | None = None,
+                service_id: str = "chat-4b",
+                compose_mode: str = "role",
+                reduce_role: "Role | None" = None,
+                reduce_rule: "Callable[[list], Any] | None" = None,
+                ctx: dict | None = None,
+                output_tokens: int = DEFAULT_OUTPUT_TOKENS,
+                prompt_tokens: int = DEFAULT_PROMPT_TOKENS,
+                margin: float = DEFAULT_CTX_MARGIN,
+                chars_per_token: int = CHARS_PER_TOKEN,
+                emit: "Callable[[str, dict], None] | None" = None,
+                base_url: str = RESIDENT_BASE_URL, model: str = RESIDENT_MODEL,
+                max_tokens: int = 256, temperature: float = 0.0) -> ChunkedResult:
+    """The OVER-CONTEXT TIER (F3): process a unit whose `text` may EXCEED the model's context window by
+    SPLIT → MAP → COMPOSE. REUSES the existing engine (run_items for the map, run_reduce for the compose) —
+    NO 2nd map/reduce. Additive + opt-in: a FITTING unit is byte-identical to a single run_role call.
+
+    THE SIZE GATE (chunk vs fit), registry-driven:
+      * `context_window` (tokens) defaults to the LIVE registry's `max_model_len` for `service_id` (rule 8 —
+        author from the registry, never invent; a test injects a SHORT window). The per-chunk char budget is
+        `chunk_budget_chars(window)` = (window − output − prompt tokens) × margin × chars_per_token.
+      * If `len(text) <= chunk_chars` (FITS): run `role` ONCE via run_role on the whole text (the DEFAULT
+        utterance path — BYTE-IDENTICAL to today). chunked=False, n_chunks=1, composed = the role output.
+      * If `len(text) > chunk_chars` (OVER-context): split into chunks (chunk_text), MAP the role over them
+        via run_items (1 role × N chunks), then COMPOSE the per-chunk outputs into ONE result via run_reduce.
+
+    THE COMPOSE (`compose_mode`):
+      * "role" (DEFAULT) — synthesize join: a reduce-role (default `roles/reduce_synth.py`, looked up via the
+        role registry; or an injected `reduce_role`) merges the N chunk outputs into ONE. The smart compose.
+      * "rule" — a PURE deterministic L2 join (`reduce_rule`, a callable over the N chunk-output values — no
+        model). For a deterministic/model-free compose (and the test's mocked path).
+
+    THE LOAD-BEARING FAIL-LOUD (the F3 law — a dropped chunk is LOUD): the chunks ARE ONE DOCUMENT, so the
+    compose MUST see EVERY chunk's output. run_items is per-unit RESILIENT (F2 — a failed unit lands in
+    .failed and the good units still return), which for F3 would SILENTLY TRUNCATE the document. So after
+    the map we INSPECT .failed AND .skipped: if EITHER is non-empty we RAISE a legible error (which chunk,
+    of how many, why) and NEVER compose the survivors. (No-silent-truncation, AGENTS.md rule 4.)
+
+    `ctx` is the role's SHARED extra-inputs ctx (the run_items contract — the chunk is the role's primary
+    "utterance" input). `emit` is passed THROUGH to run_items/run_reduce (their existing per-fan rollups —
+    this wrapper adds NO third emit, so C1.6's per-fan discipline is preserved). FLOOR: a DRIVER, not an
+    agent — the model runs only inside the role (map) and the reduce-role (compose); NO resolve/approve/
+    dispatch is ever emitted (the operator-only build-dispatch floor holds by construction — it only calls
+    run_items/run_reduce, both already floor-clean).
+
+    Returns a ChunkedResult (the by-use artifact). Fail loud: a non-fireable role, a too-small window, a
+    failed/skipped chunk, or a missing compose role/rule all RAISE (never a silent or partial result)."""
+    if not role.can_fire:
+        raise ValueError(
+            f"run_chunked: role {role.id!r} cannot fire (no prompt_template/output_schema, not op=embed) — "
+            f"chunk-and-compose maps a FIREABLE role over the chunks. Fail loud.")
+    if compose_mode not in ("role", "rule"):
+        raise ValueError(
+            f"run_chunked: unknown compose_mode {compose_mode!r} — the compose REUSES run_reduce, whose "
+            f"applicable join modes here are 'role' (synthesize) | 'rule' (deterministic L2). Fail loud. "
+            f"('cluster' is a discovery join, not a document-compose — not applicable to chunk-and-compose.)")
+    if not isinstance(text, str):
+        raise ValueError(f"run_chunked: text must be a str (the unit's text to size + maybe chunk), "
+                         f"got {type(text).__name__} — fail loud.")
+
+    window = context_window if context_window is not None else model_context_window(service_id=service_id)
+    chunk_chars = chunk_budget_chars(window, output_tokens=output_tokens, prompt_tokens=prompt_tokens,
+                                     margin=margin, chars_per_token=chars_per_token)
+    wall0 = time.monotonic()
+
+    # ── THE FIT PATH — byte-identical to a single run_role call (no chunking, no reduce, no extra event) ──
+    if len(text) <= chunk_chars:
+        unit_ctx = dict(ctx or {})
+        unit_ctx["utterance"] = text
+        out = run_role(role, unit_ctx, base_url=base_url, model=model,
+                       max_tokens=max_tokens, temperature=temperature, store=store)
+        return ChunkedResult(turn_id=turn_id, role_id=role.id, chunked=False, n_chunks=1,
+                             chunk_chars=chunk_chars, composed=out, compose_mode=None,
+                             map_addresses={}, wall_s=round(time.monotonic() - wall0, 3))
+
+    # ── THE OVER-CONTEXT PATH — SPLIT → MAP (run_items) → COMPOSE (run_reduce) ──
+    chunks = chunk_text(text, chunk_chars)
+    if not chunks:                                          # defensive — a non-empty over-budget text always
+        raise ValueError(                                  # yields ≥1 chunk; an empty result is a bug, not silent.
+            f"run_chunked: chunking {len(text)} chars at {chunk_chars}/chunk yielded NO chunks — fail loud "
+            f"(an over-context document must split into at least one chunk).")
+
+    # MAP — REUSE run_items (1 role × N chunks). The chunks are LITERALS (used as-is as each fire's primary
+    # "utterance" input); on_missing="raise" is moot (literals never resolve). emit passes through (run_items'
+    # own per-fan cognition.items + op.run rollups — no extra emit from this wrapper, C1.6 preserved).
+    mapped = run_items(role, chunks, store, turn_id=turn_id, ctx=ctx, emit=emit,
+                       base_url=base_url, model=model, max_tokens=max_tokens, temperature=temperature)
+
+    # THE LOAD-BEARING FAIL-LOUD (F3 law — a dropped chunk is LOUD): the chunks ARE ONE document, so a
+    # failed/skipped chunk would SILENTLY TRUNCATE it if we composed only the survivors. run_items' F2
+    # per-unit resilience is the OPPOSITE of what F3 needs here — so inspect .failed AND .skipped and RAISE
+    # a legible error (which chunk, of how many, why) rather than compose a truncated document.
+    if mapped.failed or mapped.skipped:
+        n = len(chunks)
+        bad = []
+        for (i, err) in mapped.failed:
+            bad.append(f"chunk {i} of {n} FAILED ({err})")
+        for (i, reason) in mapped.skipped:
+            bad.append(f"chunk {i} of {n} SKIPPED ({reason})")
+        raise RuntimeError(
+            f"run_chunked: refusing to compose a TRUNCATED document — "
+            f"{len(mapped.failed)} failed + {len(mapped.skipped)} skipped of {n} chunks for role "
+            f"{role.id!r} (turn {turn_id}): {'; '.join(bad)}. The chunks ARE one document; a dropped chunk "
+            f"is a silent truncation (AGENTS.md rule 4 — fail loud, never compose the survivors).")
+
+    # COMPOSE — REUSE run_reduce over the FULL per-chunk MAP addresses (every chunk produced an output, the
+    # fail-loud above guarantees it). mode="role" synthesizes via a reduce-role; mode="rule" is a pure L2
+    # join. on_missing="raise" so a (theoretically impossible after the check) unwritten address still
+    # fail-louds in _read_back — the structural backstop, belt-and-braces with the explicit .failed check.
+    if compose_mode == "role":
+        r_role = reduce_role
+        if r_role is None:
+            r_role = role_registry()["reduce_synth"]       # the default synthesize join (registry-is-truth)
+        reduced = run_reduce(mapped.addresses, store, turn_id=turn_id, mode="role", role=r_role,
+                             on_missing="raise", emit=emit, base_url=base_url, model=model)
+    else:  # "rule"
+        if not callable(reduce_rule):
+            raise ValueError(
+                "run_chunked(compose_mode='rule'): a callable reduce_rule must be passed (a PURE "
+                "deterministic function over the N chunk-output values — merge/concat/select; no model). "
+                "Fail loud.")
+        reduced = run_reduce(mapped.addresses, store, turn_id=turn_id, mode="rule",
+                             reduce_rule=reduce_rule, on_missing="raise", emit=emit)
+
+    return ChunkedResult(turn_id=turn_id, role_id=role.id, chunked=True, n_chunks=len(chunks),
+                         chunk_chars=chunk_chars, composed=reduced.joined, compose_mode=compose_mode,
+                         map_addresses=dict(mapped.addresses), wall_s=round(time.monotonic() - wall0, 3))
+
+
 # --- C2.4: the JURY/ensemble primitive (first-class) --------------------------------------------
 @dataclass
 class JuryResult:
