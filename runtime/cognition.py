@@ -2158,8 +2158,36 @@ def run_cascade(action: dict, store, *, turn_id: str,
             # ── ITEMS step (the MAP): fan the role over the prior step's address LIST (or `inputs` as a
             # 1-list on step 0). run_items persists each unit independently of emit; we suppress its
             # self-op.run (emit=None) and emit ONE uniform op.run for the fan below.
-            if prev_addresses is not None:
-                units: list = list(prev_addresses)            # the prior step's per-unit run:// addresses
+            fan = step.get("fan_field")
+            if prev_addresses is not None and fan:
+                # ── G3 MID-CHAIN FAN-OUT (panel-designed, 2026-06-10: "a small ADDITIVE hook in the
+                # EXISTING runner — no new decomposer, no 2nd engine"): the step declares fan_field=<key>;
+                # the runner resolves the PREVIOUS step's single output, reads that named LIST field, and
+                # fans the role over ITS ELEMENTS as the units (e.g. decompose_seed → {groups:[...]} →
+                # expand_criterion fans over the groups — the ⑦ spec-compiler chain). FAIL LOUD at every
+                # edge — never a silent 1-unit fan over the wrong thing.
+                if len(prev_addresses) != 1:
+                    raise ValueError(
+                        f"run_cascade: step {i} ({role_id!r}, items) declares fan_field={fan!r} but the "
+                        f"previous step produced {len(prev_addresses)} addresses — fan_field explodes ONE "
+                        f"upstream output's list field (place it after a `role` step). Fail loud.")
+                prev_val = resolve_address(store, prev_addresses[0], turn_id=turn_id)
+                if not isinstance(prev_val, dict) or fan not in prev_val:
+                    have = sorted(prev_val) if isinstance(prev_val, dict) else type(prev_val).__name__
+                    raise ValueError(
+                        f"run_cascade: step {i} ({role_id!r}, items) fan_field={fan!r} not found in the "
+                        f"previous step's output (it has: {have}) — name a list field the upstream role "
+                        f"actually emits. Fail loud, never a fabricated fan.")
+                field_val = prev_val[fan]
+                if not isinstance(field_val, list) or not field_val:
+                    raise ValueError(
+                        f"run_cascade: step {i} ({role_id!r}, items) fan_field={fan!r} must be a NON-EMPTY "
+                        f"LIST in the previous output — got {type(field_val).__name__}"
+                        f"{' (empty)' if isinstance(field_val, list) else ''}. An empty fan is a silent "
+                        f"no-op; fail loud instead.")
+                units = list(field_val)                       # the exploded per-element units (literals)
+            elif prev_addresses is not None:
+                units = list(prev_addresses)                  # the prior step's per-unit run:// addresses
             elif step.get("items") is not None:
                 units = list(step["items"])                   # an EXPLICIT unit list declared on the step
             elif inputs is not None:
