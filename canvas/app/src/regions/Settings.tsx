@@ -38,12 +38,14 @@ import { SectionHead, Badge, Surface, EmptyState } from '../components/kit'
 import { getMODEL_OPTIONS } from '../registryStore'
 
 // the section spine — recognition-by-sight: an icon + a name per section, the left rail of the surface.
-const SECTIONS: { id: 'brain' | 'modes' | 'voice' | 'roles' | 'composition'; icon: string; name: string; blurb: string }[] = [
+const SECTIONS: { id: 'brain' | 'modes' | 'voice' | 'roles' | 'composition' | 'cognition'; icon: string; name: string; blurb: string }[] = [
   { id: 'brain', icon: '◈', name: 'Brain & persona', blurb: 'the model that thinks · the voice that speaks · the fit' },
   { id: 'modes', icon: '◐', name: 'Modes', blurb: 'presence + how context resolves under each' },
   { id: 'voice', icon: '🎙', name: 'Voice', blurb: 'the ear, the engine, the path' },
   { id: 'roles', icon: '⚖', name: 'Model roles', blurb: 'the model-function bindings (judge + more)' },
   { id: 'composition', icon: '⚙', name: 'Composition', blurb: 'the context-ranking knobs (read)' },
+  // G2/C7.4 · the cognition-engine HUMAN face — author a role (direct, no approval), run a role, see runs.
+  { id: 'cognition', icon: '⚒', name: 'Cognition', blurb: 'author a role · run a role · see the runs (the engine, on the surface)' },
 ]
 
 export function Settings() {
@@ -53,6 +55,9 @@ export function Settings() {
     chatModelsX, engineKnobs, voiceInfo, fitReport,
     switchPersona, changeMode, setCfgSlot,
     chooseModel, setBrainKnob, setModelCtx, setVoiceInputMode, startVoiceService,
+    // G2/C7.4 · the cognition-engine HUMAN face state + acts (registry reads + run/create — reflects-never-owns)
+    cogRuns, cogFieldTypes, cogModels, cogInputs, cogBusy, cogErr, cogLastResult,
+    refreshCogRuns, runCogRole, createCogRole, cognitionInfo,
   } = useApp()
   if (!settingsOpen) return null
   const curMode = now?.mode || cfg?.mode || 'listening'
@@ -99,6 +104,7 @@ export function Settings() {
             {settingsTab === 'voice' && <VoiceSection cfg={cfg} voiceStatus={voiceStatus} voiceInfo={voiceInfo} engineKnobs={engineKnobs} personas={personas} voicePaths={voicePaths} setCfgSlot={setCfgSlot} setVoiceInputMode={setVoiceInputMode} startVoiceService={startVoiceService} />}
             {settingsTab === 'roles' && <RolesSection roles={roles} chatModels={chatModels} cfg={cfg} setCfgSlot={setCfgSlot} />}
             {settingsTab === 'composition' && <CompositionSection compositionCfg={compositionCfg} />}
+            {settingsTab === 'cognition' && <CognitionSection cognitionInfo={cognitionInfo} cogRuns={cogRuns} cogFieldTypes={cogFieldTypes} cogModels={cogModels} cogInputs={cogInputs} cogBusy={cogBusy} cogErr={cogErr} cogLastResult={cogLastResult} refreshCogRuns={refreshCogRuns} runCogRole={runCogRole} createCogRole={createCogRole} />}
           </div>
         </div>
       </div>
@@ -488,6 +494,182 @@ function CompositionSection({ compositionCfg }: any) {
               </Surface>
             ))}
           </div>}
+    </div>
+  )
+}
+
+// — COGNITION — the cognition-engine HUMAN face (G2 + C7.4). The operator does, on the surface, what the MCP
+// agent does: AUTHOR a role (direct, no approval — C7.4/A1), RUN a role (G2 "do" — fire it, see the run://
+// output), and SEE the runs (G2 "see" — the run-index). reflects-never-owns: every select PROJECTS from a
+// registry read the controller already loaded (cogModels/cogFieldTypes/cogInputs — registry-is-truth, rule 8:
+// a new model/field-type/input appears here with ZERO form edit) and every act calls an EXISTING /api/cognition/*
+// route (the SAME Suite methods the MCP face calls — one composition surface, G3).
+//
+// THE FLOOR (AGENTS rule 9 + criteria A1/A4): create_role is DECLARATIVE-DIRECT — it applies LIVE with NO
+// approval step (over-gating it with a fake "surfaced for approval" would VIOLATE A1). run_role is COMPUTATION
+// (produces a run:// output + op.run telemetry; NEVER resolve/approve/dispatch). The role EDIT/DELETE +
+// rule ATTACH/DETACH paths SURFACE for approval and stay the RHM's — this section does direct-create only, and
+// node-type/code create (the GATED tier) is NOT here. So the surface emits no floor act.
+//
+// FORM: built on the shared kit (SectionHead/Badge/Surface/EmptyState) + the existing .set-* form classes +
+// design tokens ONLY (no bespoke hex/px) — graded separately by the design-critic (the implementer cannot
+// self-certify FORM, AGENTS rule 9). The output-schema authoring (nested objects / list[dict] — Group B2) is
+// NOT built here: this form authors the role's IDENTITY + binding + inputs; the rich schema editor is a deeper
+// pass. Flagged so it reads as honest scope, never green-painted.
+function CognitionSection({ cognitionInfo, cogRuns, cogFieldTypes, cogModels, cogInputs, cogBusy, cogErr, cogLastResult, refreshCogRuns, runCogRole, createCogRole }: any) {
+  // the role registry the run-a-role select offers — projected from the live cognition projection (rule 8: a
+  // role authored here, or registered engine-side, appears with zero FE edit). roleMeta carries label/op/trigger.
+  const roleMeta: Record<string, any> = cognitionInfo?.roles || {}
+  const roleIds = Object.keys(roleMeta)
+  // RUN-A-ROLE local form state (kept LOCAL — the controller owns only the data + the acts, not the draft).
+  const [runRole, setRunRole] = useState('')
+  const [runUtterance, setRunUtterance] = useState('')
+  const [runModel, setRunModel] = useState('')
+  // CREATE-A-ROLE local form state (the role's identity + op + directive). The op is the real engine op axis
+  // (generate|embed) the engine dispatches on. We post ONLY ROLE_FIELDS-contract keys (see doCreate) — an
+  // unknown key fails loud, so the form holds back to the proven-safe set; the deeper authoring is flagged.
+  const [newId, setNewId] = useState('')
+  const [newLabel, setNewLabel] = useState('')
+  const [newOp, setNewOp] = useState('generate')
+  const [newPrompt, setNewPrompt] = useState('')
+
+  function doCreate() {
+    // The spec shape is the ROLE_FIELDS contract (runtime/roles.py:71 + runtime/authoring.py render_role_source) —
+    // read from the contract, NOT inferred (rule 8): the accepted keys are id · label · description ·
+    // prompt_template · output_fields · op · input_addresses · mode_scope · trigger · rules · model_binding · …
+    // An UNKNOWN key FAILS LOUD backend-side (authoring.py:156 — never a silent typo'd field). So we emit ONLY
+    // proven keys:
+    //   • prompt_template (NOT 'prompt') — the directive; its presence ⇒ the role can FIRE.
+    //   • op = generate|embed (a real ROLE_FIELDS key, the engine dispatches on it).
+    //   • input_addresses = ['utterance'] — the proven-safe input (the docstring's example). The richer input
+    //     wiring (run://<turn>/<role>, context://<var>, vec://…#space=<proj>) the input vocabulary advertises is
+    //     a DEEPER pass — those are address TEMPLATES, not directly-postable spec values, so binding them here
+    //     would risk a fail-loud 400. Flagged in the form, not green-painted.
+    //   • model is NOT a ROLE_FIELDS key (binding is `model_binding`/legacy `default_model`) AND create_role
+    //     does NOT strip it from the spec (suite.py:8576) — so passing it would FAIL LOUD. The created role
+    //     binds to the swarm default; per-role model binding is the deeper model_binding concern. Omitted here.
+    const spec: any = { id: newId.trim(), label: newLabel.trim() || newId.trim(), op: newOp, input_addresses: ['utterance'] }
+    if (newPrompt.trim()) spec.prompt_template = newPrompt.trim()
+    createCogRole(spec)
+  }
+
+  return (
+    <div className="settings-section" data-ui-ref="ui://settings/cognition">
+      <SectionHead tag="the engine, on the surface"
+        aside={<Badge tone="dim">{roleIds.length} role(s)</Badge>}>Cognition</SectionHead>
+      <p className="set-prose muted">The same composition the agent does, on your surface — author a role (applied live, no approval), run a role, and see the runs. Every select reads the live registry; nothing here is hardcoded.</p>
+      {cogErr && <Surface tone="fail"><span className="set-err">⚠ {cogErr}</span></Surface>}
+
+      {/* ── AUTHOR A ROLE (C7.4) — direct-create, applied LIVE, no approval (A1). ───────────────────────── */}
+      <div className="cog-block">
+        <SectionHead tag="C7.4 · declarative-direct, no approval">Author a role</SectionHead>
+        <label className="set-field">
+          <span className="set-label">Role id</span>
+          <input className="set-input" value={newId} placeholder="e.g. repo_digest" onChange={e => setNewId(e.target.value)} />
+        </label>
+        <label className="set-field">
+          <span className="set-label">Label</span>
+          <input className="set-input" value={newLabel} placeholder="(defaults to the id)" onChange={e => setNewLabel(e.target.value)} />
+        </label>
+        <label className="set-field">
+          <span className="set-label">Op</span>
+          {/* the two engine ops the dispatcher routes on (generate|embed); registry-truth would widen this from
+             a capability registry — flagged as the deeper B5 pass, not green-painted here. */}
+          <select className="set-select" value={newOp} onChange={e => setNewOp(e.target.value)}>
+            <option value="generate">generate</option>
+            <option value="embed">embed</option>
+          </select>
+        </label>
+        <label className="set-field">
+          <span className="set-label">Directive (prompt_template)</span>
+          <input className="set-input" value={newPrompt} placeholder="You are … — the role's directive (its presence makes the role fire)" onChange={e => setNewPrompt(e.target.value)} />
+        </label>
+        {/* HONEST SCOPE (no green-paint): this form authors the role's IDENTITY + op + directive + the proven-safe
+           'utterance' input, posting ONLY ROLE_FIELDS keys the contract accepts (an unknown key fails loud). The
+           DEEPER pass (not built here): per-role model binding (model_binding), the richer INPUT wiring
+           (run://<turn>/<role> · context://<var> · vec://…#space — address templates the input vocabulary
+           advertises), and the structured output-schema editor (output_fields → BaseModel; field types: the list
+           below). These read from the live registry so they're build-ready, but they are not wired into this form. */}
+        {(cogFieldTypes.length > 0 || cogModels.length > 0 || cogInputs.length > 0) && (
+          <p className="set-prose muted cog-hint">
+            Deeper authoring available from the live registry (not in this form yet):
+            {cogModels.length > 0 && <> model binding ({cogModels.length} models),</>}
+            {cogInputs.length > 0 && <> input wiring ({cogInputs.length} addresses),</>}
+            {cogFieldTypes.length > 0 && <> output-schema field types ({cogFieldTypes.join(' · ')}).</>}
+          </p>
+        )}
+        <div className="cog-actions">
+          <button className="b" onClick={doCreate} disabled={cogBusy || !newId.trim()}
+            title="create this role — applied LIVE, no approval (declarative-direct); a malformed spec is refused fail-loud, never written">
+            {cogBusy ? 'working…' : 'create role (live)'}
+          </button>
+        </div>
+      </div>
+
+      {/* ── RUN A ROLE (G2 "do") — fire ONE role; see its run:// output. COMPUTATION, not a floor act. ──── */}
+      <div className="cog-block">
+        <SectionHead tag="G2 · computation (no approve/dispatch)">Run a role</SectionHead>
+        <label className="set-field">
+          <span className="set-label">Role</span>
+          <select className="set-select" value={runRole} onChange={e => setRunRole(e.target.value)}>
+            <option value="">— pick a role —</option>
+            {roleIds.map((id: string) => <option key={id} value={id}>{roleMeta[id]?.label || id}</option>)}
+          </select>
+        </label>
+        <label className="set-field">
+          <span className="set-label">Model (optional)</span>
+          <select className="set-select" value={runModel} onChange={e => setRunModel(e.target.value)}>
+            <option value="">— the role's bound model —</option>
+            {cogModels.map((m: string) => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </label>
+        <label className="set-field">
+          <span className="set-label">Utterance</span>
+          <input className="set-input" value={runUtterance} placeholder="what the role works on" onChange={e => setRunUtterance(e.target.value)} />
+        </label>
+        <div className="cog-actions">
+          <button className="b" onClick={() => runCogRole({ role: runRole, utterance: runUtterance, model: runModel })}
+            disabled={cogBusy || !runRole}
+            title="fire this role → its run:// output. computation only — it never approves or dispatches anything">
+            {cogBusy ? 'running…' : 'run role'}
+          </button>
+        </div>
+        {cogLastResult && (
+          // the last act's outcome — the run:// address / created id, read by sight (fail-loud already surfaced via cogErr).
+          <Surface tone="sig" className="cog-result">
+            <div className="cog-result-head">
+              <Badge tone="sig">{cogLastResult.kind === 'create' ? 'created' : 'ran'}</Badge>
+              {cogLastResult.address && <span className="cog-result-addr">{cogLastResult.address}</span>}
+              {cogLastResult.role_id && <span className="cog-result-addr">role: {cogLastResult.role_id}{cogLastResult.path ? ' → ' + cogLastResult.path : ''}</span>}
+            </div>
+            {(cogLastResult.output != null) && (
+              <div className="cog-result-out muted">{typeof cogLastResult.output === 'string' ? cogLastResult.output.slice(0, 600) : JSON.stringify(cogLastResult.output).slice(0, 600)}</div>
+            )}
+          </Surface>
+        )}
+      </div>
+
+      {/* ── SEE THE RUNS (G2 "see") — the run-index tail, a navigable list (each run a card, not a text line). */}
+      <div className="cog-block">
+        <SectionHead tag="G2 · the run index"
+          aside={<button className="b ghost sm" onClick={() => refreshCogRuns()} title="re-probe the run index">↻</button>}>Runs</SectionHead>
+        {cogRuns.length === 0
+          ? <EmptyState>No runs yet — run a role above (or fire a staged turn). The run-index is the source.</EmptyState>
+          : cogRuns.map((r: any, i: number) => (
+              // each run is a kit Surface card carrying its run:// address (data-ui-ref so the locus is addressable).
+              <Surface key={r.address || r.seq || i} tone="dim" className="cog-run" dataUiRef={r.address}>
+                <div className="cog-run-head">
+                  <span className="cog-run-role">{r.role || r.run_op || r.op || 'run'}</span>
+                  {r.duration_ms != null && <Badge tone="dim">{r.duration_ms}ms</Badge>}
+                </div>
+                <div className="cog-run-meta muted">
+                  {r.address && <span className="cog-run-addr">{r.address}</span>}
+                  {r.op && <span> · {r.op}</span>}
+                  {r.ts && <span> · {String(r.ts).slice(0, 19)}</span>}
+                </div>
+              </Surface>
+            ))}
+      </div>
     </div>
   )
 }

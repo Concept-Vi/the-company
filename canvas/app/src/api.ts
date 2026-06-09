@@ -348,6 +348,57 @@ export const api = {
   journeyReplay: (journey: string) =>
     fetch('/api/journey/replay?journey=' + encodeURIComponent(journey)).then(jr),
   journeys: () => fetch('/api/journeys').then(jr),
+  // ── COGNITION ENGINE · the HUMAN face (G2 + C7.4) — reflects-never-owns ───────────────────────────────
+  // Every method below READS or DRIVES an EXISTING /api/cognition/* route the bridge already serves (the
+  // SAME Suite methods the MCP agent face calls — one composition surface, both faces project from the same
+  // registries, AGENTS rule 3/8). The FE INVENTS nothing: selects/specs project from these registry reads.
+  //
+  // THE FLOOR (AGENTS rule 9 + the cognition criteria A1/A4, verified in bridge.py:1695/1741):
+  //   • run_role/run_items/run_reduce are COMPUTATION — they produce run:// outputs + op.run telemetry,
+  //     NEVER a resolve/approve/dispatch. The FE calls them DIRECTLY (not a floor act).
+  //   • create_role/create_skill/create_context are DECLARATIVE-DIRECT (#58, A1 ✅) — they apply LIVE with NO
+  //     approval step. The FE posts them direct. (Over-gating create with a fake approval step would VIOLATE
+  //     A1; conversely node-type/code create stays GATED — propose_* + /api/apply — and is NOT exposed here.)
+  //   • role EDIT/DELETE + rule ATTACH/DETACH SURFACE for approval (bridge role/edit · role/delete ·
+  //     rule/attach) — NOT exposed in this authoring lane (it does direct-create only); they remain the RHM's.
+
+  // AUTHORING SELECTS (registry-is-truth) — the option lists the create-role form projects from, so adding a
+  // model/input/field-type makes it settable in the form with zero FE edit (rule 8).
+  cogModelsForRole: (requires = '') =>
+    fetch('/api/cognition/models_for_role?requires=' + encodeURIComponent(requires)).then(jr),
+  cogInputs: () => fetch('/api/cognition/inputs').then(jr),     // the addresses a role can read (skill://context://run://cas://…)
+  cogFieldTypes: () => fetch('/api/cognition/field_types').then(jr), // the closed output-schema field-type grammar
+
+  // RUN DISCOVERY (G2 "see runs") — the run-index projection (the SAME read the MCP list_runs/find_runs serve).
+  // Returns { runs:[{address,op,run_op,turn_id,role,duration_ms,seq,ts}], total_records }. A fabricated op
+  // fails loud (→ {error} via jr). `find` filters by role; `list` is the unfiltered tail.
+  cogListRuns: (limit = 50) =>
+    fetch('/api/cognition/list_runs?limit=' + limit).then(jr),
+  cogFindRuns: (opts: { role?: string; op?: string; run_op?: string; limit?: number } = {}) => {
+    const p = new URLSearchParams()
+    if (opts.role) p.set('role', opts.role)
+    if (opts.op) p.set('op', opts.op)
+    if (opts.run_op) p.set('run_op', opts.run_op)
+    p.set('limit', String(opts.limit ?? 50))
+    return fetch('/api/cognition/find_runs?' + p.toString()).then(jr)
+  },
+
+  // RUN A ROLE (G2 "do" — fire ONE role over an utterance → its run:// output). COMPUTATION, NOT a floor act
+  // (bridge.py:1701). Returns the engine result incl. the run:// address + output. `ensure` requests the
+  // gated #50 model-load (a down model otherwise fails loud — no silent fallback).
+  cogRunRole: (body: { role: string; utterance?: string; model?: string; inputs?: string[]; max_tokens?: number; temperature?: number; ensure?: boolean }) =>
+    fetch('/api/cognition/run_role', { method: 'POST', headers: J, body: JSON.stringify(body) }).then(jr),
+
+  // DIRECT CREATE (C7.4 + A1) — author a role/skill/context, applied LIVE, NO approval (declarative-direct,
+  // #58). The correctness gate BITES backend-side: a malformed spec → AuthoringError → 400 → {error} (jr),
+  // fail-loud, never written. The build-dispatch floor is untouched (this writes a roles/ file; it never
+  // launches claude -p). `spec` is the full role/skill/context shape projected from the authoring selects.
+  cogCreateRole: (spec: any) =>
+    fetch('/api/cognition/create_role', { method: 'POST', headers: J, body: JSON.stringify({ spec }) }).then(jr),
+  cogCreateSkill: (spec: any) =>
+    fetch('/api/cognition/create_skill', { method: 'POST', headers: J, body: JSON.stringify({ spec }) }).then(jr),
+  cogCreateContext: (spec: any) =>
+    fetch('/api/cognition/create_context', { method: 'POST', headers: J, body: JSON.stringify({ spec }) }).then(jr),
 }
 export { J }
 

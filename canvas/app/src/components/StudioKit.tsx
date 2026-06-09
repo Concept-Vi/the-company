@@ -112,12 +112,19 @@ export function Rail() {
 //   GUARDS (load-bearing): only same-origin messages, only the studio-deixis envelope, only ui:// addresses —
 //   so vite/devtools' own dev-time postMessages can never move the locus.
 export function Stage({ titleFor }: { titleFor: (f: string | null) => string }) {
-  const { reviewMockup, reviewAddress, setReviewMockup } = useApp()
+  const { corpus, reviewMockup, reviewAddress, setReviewMockup } = useApp()
   const [device, setDevice] = useState<'desktop' | 'phone'>('desktop')
-  // non-stale read of the open file inside the (mount-once) message listener — mirrors useAppController's
-  // indicatedRef pattern, so the deixis re-indicate keeps the SAME file open and only swaps the address.
+  // non-stale read of the open file inside the click delegate — mirrors useAppController's indicatedRef
+  // pattern, so the deixis re-indicate keeps the SAME file open and only swaps the address.
   const reviewMockupRef = useRef<string | null>(reviewMockup)
   reviewMockupRef.current = reviewMockup
+  // the WHOLE-mockup (base) locus — the address the mockup represents (its corpus row). BOTH levels are
+  // reachable (Tim 2026-06-09: "I may want to select the whole thing AND add comments — not either/or"):
+  // clicking an addressed ELEMENT selects it; clicking the background (or the ⤢ whole-screen control) returns
+  // to the whole mockup. A ref so the (per-load) click delegate reads it fresh.
+  const baseAddr = corpus.find((c: any) => c.file === reviewMockup)?.address || null
+  const baseAddrRef = useRef<string | null>(baseAddr)
+  baseAddrRef.current = baseAddr
   useEffect(() => {
     function onMsg(e: MessageEvent) {
       if (e.origin !== location.origin) return                     // only our own served mockups (not vite/devtools)
@@ -125,15 +132,28 @@ export function Stage({ titleFor }: { titleFor: (f: string | null) => string }) 
       if (!d || d.type !== 'studio-deixis') return                 // only the deixis envelope
       const addr = typeof d.address === 'string' ? d.address : ''
       if (!addr.startsWith('ui://')) return                        // only a full ui:// address is a locus
-      // re-indicate the CLICKED element at the SAME open file: setReviewMockup(file, addr) keeps the iframe
-      // (file unchanged → key unchanged → no remount) and runs setReviewAddress(addr)+indicate(addr) — the
-      // one locus sink. A no-ref click posts nothing, so the locus simply stays where it was (fail-soft).
       setReviewMockup(reviewMockupRef.current, addr)
     }
     window.addEventListener('message', onMsg)
     return () => window.removeEventListener('message', onMsg)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+  // ★ ELEMENT-LEVEL DEIXIS — wired from the PARENT on iframe load. The mockups never sent the studio-deixis
+  // message (0/23 — so element selection NEVER worked, Tim's "I can only select the whole thing"). The frame
+  // is same-origin (served from /mockups, sandbox allow-same-origin), so the parent attaches the click
+  // delegate directly. BOTH levels: a click on an addressed element → that element's locus; a click on the
+  // background → the WHOLE-mockup base (so you can always comment on the whole screen too).
+  function wireDeixis(e: { currentTarget: HTMLIFrameElement }) {
+    const doc = e.currentTarget.contentDocument
+    if (!doc) return
+    doc.addEventListener('click', (ev: Event) => {
+      const t = ev.target as Element | null
+      const el = t?.closest?.('[data-ui-ref]') as Element | null
+      const a = el?.getAttribute('data-ui-ref') || ''
+      const next = a.startsWith('ui://') ? a : baseAddrRef.current   // element locus, else the whole mockup
+      setReviewMockup(reviewMockupRef.current, next)
+    }, true)
+  }
   return (
     <div className="studio-stage" data-ui-ref="ui://studio/stage">
       <div className="studio-stage-head">
@@ -147,6 +167,13 @@ export function Stage({ titleFor }: { titleFor: (f: string | null) => string }) 
              what it's grounded on"), but in PLAIN words, never raw address syntax: strip the "ui://" scheme
              and lead with "looking at:" (FORM: no dev jargon on the operator face, 2026-06-09). */}
           {reviewAddress && <Badge tone="wire">looking at: {reviewAddress.replace(/^ui:\/\//, '')}</Badge>}
+          {/* WHOLE-SCREEN — always return to commenting on the whole mockup (both levels, not either/or). Shown
+             when an ELEMENT is selected (reviewAddress drilled below the base); click to pop back to the whole. */}
+          {baseAddr && reviewAddress && reviewAddress !== baseAddr && (
+            <button type="button" className="studio-dev" data-ui-ref="ui://studio/stage/whole"
+              title="comment on the whole screen (not just the selected element)"
+              onClick={() => setReviewMockup(reviewMockup, baseAddr)}>⤢ whole screen</button>
+          )}
           <button type="button" className={'studio-dev' + (device === 'desktop' ? ' on' : '')}
             data-ui-ref="ui://studio/stage/device-desktop" onClick={() => setDevice('desktop')}>desktop</button>
           <button type="button" className={'studio-dev' + (device === 'phone' ? ' on' : '')}
@@ -155,7 +182,7 @@ export function Stage({ titleFor }: { titleFor: (f: string | null) => string }) 
       </div>
       <div className={'studio-stage-body dev-' + device}>
         {reviewMockup
-          ? <iframe key={reviewMockup} className="studio-frame" title={reviewMockup}
+          ? <iframe key={reviewMockup} className="studio-frame" title={reviewMockup} onLoad={wireDeixis}
               src={'/mockups/' + reviewMockup + '?studio=1'} sandbox="allow-scripts allow-same-origin" />
           : <EmptyState>no mockup open.</EmptyState>}
       </div>

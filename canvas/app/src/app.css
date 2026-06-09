@@ -1313,6 +1313,21 @@ button.b:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
 .set-static{font-family:var(--font-mono);font-size:var(--fs-meta);color:var(--dim);
   background:var(--bg);border:1px solid var(--line);border-radius:var(--r);padding:var(--sp-2);word-break:break-all}
 .set-note{font-size:var(--fs-micro);line-height:1.5;margin-top:var(--sp-1)}
+/* COGNITION section (G2/C7.4) — the engine, on the surface. Token-only; each block is a grouped band, runs
+   are kit Surface cards. The look lives in the kit + the design tokens — these classes are LAYOUT only. */
+.cog-block{display:flex;flex-direction:column;gap:var(--sp-2);padding-top:var(--sp-3);
+  border-top:1px solid var(--line)}
+.cog-block:first-of-type{border-top:none;padding-top:0}
+.cog-actions{display:flex;gap:var(--sp-2);margin-top:var(--sp-1)}
+.cog-hint{font-size:var(--fs-micro);line-height:1.5}
+.cog-result{display:flex;flex-direction:column;gap:var(--sp-1)}
+.cog-result-head{display:flex;align-items:center;gap:var(--sp-2)}
+.cog-result-addr,.cog-run-addr{font-family:var(--font-mono);font-size:var(--fs-micro);color:var(--sig);word-break:break-all}
+.cog-result-out{font-family:var(--font-mono);font-size:var(--fs-micro);line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.cog-run{display:flex;flex-direction:column;gap:var(--sp-1)}
+.cog-run-head{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2)}
+.cog-run-role{font-family:var(--font-display);font-size:var(--fs-body);font-weight:600;color:var(--ink)}
+.cog-run-meta{font-size:var(--fs-micro);line-height:1.5}
 /* persona grid — cards recognised by name + active spine. */
 .set-persona-grid,.set-engines,.set-paths{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:var(--sp-2)}
 .set-persona-head,.set-engine-head,.set-path-head,.set-mode-head,.set-role-head,.set-autodetect-head{

@@ -273,7 +273,7 @@ export function useAppController(editor: Editor) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const settingsOpenRef = useRef(false)   // openStream's closure is stale → the ref lets the SSE branch see live open-state
   settingsOpenRef.current = settingsOpen
-  const [settingsTab, setSettingsTab] = useState<'brain' | 'modes' | 'voice' | 'roles' | 'composition'>('brain')
+  const [settingsTab, setSettingsTab] = useState<'brain' | 'modes' | 'voice' | 'roles' | 'composition' | 'cognition'>('brain')
   const [roles, setRoles] = useState<Record<string, any> | null>(null)
   const [voicePaths, setVoicePaths] = useState<any | null>(null)
   const [voiceStatus, setVoiceStatus] = useState<any | null>(null)
@@ -384,6 +384,22 @@ export function useAppController(editor: Editor) {
   const [cognitionInfo, setCognitionInfo] = useState<Record<string, any>>({})
   const [cognitionTurn, setCognitionTurn] = useState<any>(null)
   const cognitionTurnRef = useRef<any>(null)   // the openStream closure folds into this synchronously (no stale closure)
+  // G2/C7.4 · the cognition-engine HUMAN-face state (the SETTINGS "cognition" section reads it). reflects-
+  // never-owns: every field below is a registry projection or a run-index read off an EXISTING /api/cognition/*
+  // route (the SAME Suite methods the MCP face calls) — the FE owns nothing, it mirrors what the backend serves.
+  //   • cogRuns        — the run-index tail (G2 "see runs"): {address,op,run_op,turn_id,role,duration_ms,…}.
+  //   • cogFieldTypes  — the closed output-schema field-type grammar (the create-role form's type select).
+  //   • cogModels      — the chat-capable models a role can bind (the create-role + run-role model select).
+  //   • cogInputs      — the addresses a role can read (skill://context://run://cas://…).
+  //   • cogBusy/cogErr — fail-loud surface state for the run/create/discover acts (a 400 SAYS so, never silent).
+  //   • cogLastResult  — the last run_role/create_* outcome (the section shows the run:// / created id by-sight).
+  const [cogRuns, setCogRuns] = useState<any[]>([])
+  const [cogFieldTypes, setCogFieldTypes] = useState<string[]>([])
+  const [cogModels, setCogModels] = useState<string[]>([])
+  const [cogInputs, setCogInputs] = useState<string[]>([])
+  const [cogBusy, setCogBusy] = useState(false)
+  const [cogErr, setCogErr] = useState<string | null>(null)
+  const [cogLastResult, setCogLastResult] = useState<any>(null)
 
   // Merge events by SEQ into the current list — an event already present (same seq) is never duplicated,
   // regardless of source. Makes `key={e.seq}` inherently unique and kills the "two children with the same
@@ -1494,6 +1510,33 @@ export function useAppController(editor: Editor) {
     // voice status — per-engine TTS up/voices + the STT (ear) registry. api.voice() is the existing READ method.
     try { const r = await api.voice(); if (r?.error) errs.push('voice (' + r.error + ')'); else setVoiceStatus(r) }
     catch (e: any) { errs.push('voice (' + (e?.message || e) + ')') }
+    // G2/C7.4 · the cognition-engine registry projections (the create-role form's selects + the run-index).
+    // Each is an EXISTING /api/cognition/* read (registry-is-truth, rule 8) — a new model/field-type/input
+    // appears in the form with zero FE edit. Independent of the others (one down read doesn't blank the rest).
+    try { const r = await api.cogFieldTypes(); if (r?.error) errs.push('cognition field-types (' + r.error + ')'); else setCogFieldTypes(Array.isArray(r) ? r : (r?.types || Object.keys(r || {}))) }
+    catch (e: any) { errs.push('cognition field-types (' + (e?.message || e) + ')') }
+    try { const r = await api.cogModelsForRole(''); if (r?.error) errs.push('cognition models (' + r.error + ')'); else setCogModels(Array.isArray(r) ? r : (r?.models || [])) }
+    catch (e: any) { errs.push('cognition models (' + (e?.message || e) + ')') }
+    // available_inputs returns {utterance, roles[], role_addresses[], context_variables[], projections[],
+    // projection_spaces[]} — flatten into the readable address vocabulary the input-wiring select offers
+    // (registry-is-truth: a new role/context-var/projection appears here with zero FE edit, rule 8).
+    try {
+      const r = await api.cogInputs()
+      if (r?.error) errs.push('cognition inputs (' + r.error + ')')
+      else if (Array.isArray(r)) setCogInputs(r)
+      else {
+        const flat = [
+          ...(r?.utterance ? ['utterance'] : []),
+          ...(Array.isArray(r?.role_addresses) ? r.role_addresses : []),
+          ...(Array.isArray(r?.context_variables) ? r.context_variables.map((c: string) => 'context://' + c) : []),
+          ...(Array.isArray(r?.projection_spaces) ? r.projection_spaces : []),
+        ]
+        setCogInputs(flat)
+      }
+    }
+    catch (e: any) { errs.push('cognition inputs (' + (e?.message || e) + ')') }
+    try { const r = await api.cogListRuns(30); if (r?.error) errs.push('cognition runs (' + r.error + ')'); else setCogRuns(Array.isArray(r?.runs) ? r.runs : []) }
+    catch (e: any) { errs.push('cognition runs (' + (e?.message || e) + ')') }
     if (errs.length) setSettingsErr('could not load: ' + errs.join('; '))
     setSettingsBusy(false)
   }
@@ -1519,6 +1562,51 @@ export function useAppController(editor: Editor) {
       if (c?.error) { setSettingsErr(c.error); setNotice('✕ ' + c.error); return }
       setCfg(c); setNotice(key + ' → ' + value); await poll()
     } catch (e: any) { setSettingsErr(e?.message || String(e)); setNotice('✕ could not set ' + key + ': ' + (e?.message || e)) }
+  }
+  // G2 · re-probe the run-index (the "see runs" half) without a restart — the SAME read loadSettingsData does.
+  async function refreshCogRuns() {
+    setCogBusy(true); setCogErr(null)
+    try { const r = await api.cogListRuns(30); if (r?.error) setCogErr(r.error); else setCogRuns(Array.isArray(r?.runs) ? r.runs : []) }
+    catch (e: any) { setCogErr(e?.message || String(e)) }
+    setCogBusy(false)
+  }
+  // G2 "do" · FIRE a role over an utterance → its run:// output. COMPUTATION, NOT a floor act (the engine
+  // produces run:// + op.run telemetry; it never resolves/approves/dispatches — bridge.py:1701). Fail-loud:
+  // a backend 400 (down model / unknown role) surfaces on cogErr + a notice, never a silent no-op. On success
+  // the result (the run:// address + output) lands on cogLastResult AND the run-index is re-probed so the new
+  // run shows in the list (the surface SEES what the act produced — verify-by-the-surface, not by assertion).
+  async function runCogRole(body: { role: string; utterance?: string; model?: string }) {
+    if (!body.role) { setCogErr('pick a role to run'); return }
+    setCogBusy(true); setCogErr(null); setCogLastResult(null)
+    setNotice('running role ' + body.role + '…')
+    try {
+      const r = await api.cogRunRole({ role: body.role, utterance: body.utterance || '', model: body.model || undefined })
+      if (r?.error) { setCogErr(r.error); setNotice('✕ run ' + body.role + ': ' + r.error); setCogBusy(false); return }
+      setCogLastResult({ kind: 'run', ...r })
+      setNotice('ran ' + body.role + (r?.address ? ' → ' + r.address : ''))
+      await refreshCogRuns()
+    } catch (e: any) { setCogErr(e?.message || String(e)); setNotice('✕ run ' + body.role + ': ' + (e?.message || e)) }
+    setCogBusy(false)
+  }
+  // C7.4 + A1 · DIRECT-CREATE a role (declarative-direct, NO approval — the floor-correct path; the bridge
+  // reuses the SAME Suite.create_role the MCP create_role tool calls). The CORRECTNESS gate bites backend-side
+  // (a malformed spec → AuthoringError → 400 → cogErr, fail-loud, never written). The build-dispatch floor is
+  // untouched (this writes a roles/ file; it never launches claude -p). On success the created role is LIVE
+  // (rediscovered) — we reload the cognition projections so the new role appears in the selects (registry-truth).
+  async function createCogRole(spec: any) {
+    if (!spec?.id) { setCogErr('a role needs an id'); return }
+    setCogBusy(true); setCogErr(null); setCogLastResult(null)
+    setNotice('creating role ' + spec.id + '…')
+    try {
+      const r = await api.cogCreateRole(spec)
+      if (r?.error) { setCogErr(r.error); setNotice('✕ create ' + spec.id + ': ' + r.error); setCogBusy(false); return }
+      setCogLastResult({ kind: 'create', ...r })
+      setNotice('created role ' + spec.id + ' (live, no approval)')
+      // the new role is live + rediscovered — refresh the cognition registry projection so the River/selects see it.
+      try { const ci = await api.cognitionInfo(); if (ci && !ci.error) setCognitionInfo(ci) } catch { /* projection refresh is best-effort; the create already succeeded */ }
+      try { const m = await api.cogModelsForRole(''); if (m && !m.error) setCogModels(Array.isArray(m) ? m : (m?.models || [])) } catch { /* best-effort */ }
+    } catch (e: any) { setCogErr(e?.message || String(e)); setNotice('✕ create ' + spec.id + ': ' + (e?.message || e)) }
+    setCogBusy(false)
   }
   function cycleLayers() {
     const next = (layerView + 1) % 3
@@ -2439,6 +2527,9 @@ export function useAppController(editor: Editor) {
     addressHelp, addressHelpBusy, addressHelpError, prefBusy,
     selfChanges, selfChangesBusy, freshness, freshnessBusy, versions, versionsBusy, journeyId, journeyReplaying,
     cognitionInfo, cognitionTurn,   // L-fe: the live cognition VIEW state (projection + the folded live turn)
+    // G2/C7.4: the cognition-engine HUMAN face (the Settings 'cognition' section) — registry reads + run/create acts
+    cogRuns, cogFieldTypes, cogModels, cogInputs, cogBusy, cogErr, cogLastResult,
+    refreshCogRuns, runCogRole, createCogRole,
     // refs the components read for the inspector form
     configByNode,
     // setters the components call directly
