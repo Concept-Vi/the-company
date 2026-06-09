@@ -1,0 +1,773 @@
+{
+  "mockup": "A1-canvas-empty-desktop.html",
+  "ground": {
+    "screen_present": true,
+    "what_this_is": "This is the empty starting screen for the A1 Canvas, a workspace where you begin building your workflow from scratch.",
+    "what_you_can_do": "You can drag a node from the left-hand palette onto the central stage to start composing your workflow, or click the 'Start Demo' button to run the system's built-in example."
+  },
+  "n_candidates": 28,
+  "n_dossiers": 28,
+  "n_clusters": 21,
+  "confirmed": [
+    {
+      "dossier": {
+        "address": "ui://toolbar/layers",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (canvas/app/src/regions/Toolbar.tsx); adding or changing a layer control is a code change there, surfaced via the build-intent wire.",
+          "what": "The layers control on the toolbar.",
+          "what_you_can_do": "Open the layers panel to manage the structural depth of the current workspace."
+        },
+        "maps_to_feature": "NODE-layer",
+        "represents": "LAY-layers"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        1
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/wire",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (canvas/app/src/regions/Toolbar.tsx); changing its behavior is a code change there, surfaced via the build-intent wire.",
+          "what": "The wire command button on the bridge's command strip.",
+          "what_you_can_do": "Click this to initiate a wire operation, translating the board's current state into a dispatchable intent for the system to execute."
+        },
+        "maps_to_feature": "WIRE-intent",
+        "represents": "WIRE-intent"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        2,
+        4
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://rail/palette",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The rack fills itself from the live registry (/object_info); adding a node-type (nodes/<name>.py) makes a new block appear here automatically, no palette code.",
+          "what": "The Node palette \u2014 the rack of build-blocks (every node-type the system knows, grouped by kind: process \u00b7 acts, content \u00b7 holds).",
+          "what_you_can_do": "Click a block to drop that node on the board; select two and use + wire to connect them."
+        },
+        "maps_to_feature": "NODE-types",
+        "represents": "NODE-types"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        6,
+        8
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://rail/palette/drag-hint",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific text yet.",
+          "what": "The empty stage instruction telling the operator to begin building.",
+          "what_you_can_do": "Read the instruction to understand how to start composing the workflow by dragging a node from the palette."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Drag instruction"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        7
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://rail/palette/content-5",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The block's appearance and label are defined in the Palette.tsx region; however, the actual node type 'Content' is a live registry entry (nodes/<name>.py). Adding or modifying this node type requires updating the registry definition, not the palette code itself.",
+          "what": "A draggable tile representing a 'Content' node type (ID 5) available for building workflows.",
+          "what_you_can_do": "Drag this block from the palette onto the central canvas to instantiate a Content node in your workflow, or select it to inspect its properties."
+        },
+        "maps_to_feature": "NODE-types",
+        "represents": "A content node block in the palette rack"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        9
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/graph",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific count display yet.",
+          "what": "The node count display on the graph chip.",
+          "what_you_can_do": "See how many nodes currently exist in the codebase view; it updates as you drag nodes from the palette or wire them together."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "NODE-count"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        11
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/empty-stage",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific empty state yet. It lives conceptually in the canvas region (canvas/app/src/NodeShape.tsx), but changes are currently external-agent driven.",
+          "what": "The empty starting screen for the A1 Canvas, the workspace where you begin building your workflow from scratch.",
+          "what_you_can_do": "Drag a node from the left-hand palette onto the central stage to start composing your workflow, or click the 'Start Demo' button to run the system's built-in example."
+        },
+        "maps_to_feature": "CAN-compose",
+        "represents": "CAN-compose"
+      },
+      "cluster_size": 4,
+      "cluster_members": [
+        12,
+        13,
+        18,
+        20
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/j1",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This text is driven by the NodeShape.tsx region (specifically the NodeShapeUtil utility) and the App.tsx shell; changing the instruction text requires a code edit in that region.",
+          "what": "The J1 instruction banner on the canvas, announcing the core workflow loop.",
+          "what_you_can_do": "Read the instructions to understand the starting action: drag a node, wire connections, and run the system."
+        },
+        "maps_to_feature": "NODE-kinds",
+        "represents": "J1-loop"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        14
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/demo",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to it yet.",
+          "what": "The 'Open the demo' button on the empty canvas.",
+          "what_you_can_do": "Launch the system's built-in example workflow to see the system in action."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Demo entry"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        15
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/codebase-q-a",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This is a mockup-only control; no built code path maps to it yet.",
+          "what": "A control on the canvas that initiates a dialogue with the system's own source code.",
+          "what_you_can_do": "Click it to ask a question of the system's own source code and receive an answer derived from that codebase."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Codebase Q&A entry"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        16
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/presence",
+        "capabilities": [
+          "presentable",
+          "driven"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The indicator is the activity region (runtime/suite.py:now); changing its state or text is a code change there.",
+          "what": "The presence indicator on the activity feed, showing the system's current state.",
+          "what_you_can_do": "See the system's live state at a glance (empty vs. active) and understand the current graph status without reading code."
+        },
+        "maps_to_feature": "EVT-now",
+        "represents": "EVT-presence"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        19
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/empty-state",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This message is rendered by the canvas region (canvas/app/src/NodeShape.tsx); changing the text or styling requires a code edit there.",
+          "what": "The empty state message displayed on the canvas when no nodes are selected or present.",
+          "what_you_can_do": "It informs the operator that the workspace is currently empty and ready for the first action (dragging a node or starting a demo)."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Empty board state"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        21
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/inspector",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The panel region is defined in canvas/app/src/regions/Inspector.tsx; changing its fields or structure requires code edits there.",
+          "what": "The Inspector panel on the canvas \u2014 the control surface for viewing and configuring a selected node.",
+          "what_you_can_do": "Select a node on the board to view its configuration fields, typed inputs, and outputs here; the panel reflects the live state of that node."
+        },
+        "maps_to_feature": "NODE-config",
+        "represents": "INSPECT-panel"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        22
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    }
+  ],
+  "flagged": [
+    {
+      "dossier": {
+        "address": "ui://toolbar/presence",
+        "capabilities": [
+          "pointable",
+          "spotlit",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (canvas/app/src/regions/Toolbar.tsx); changing the state or the light is a code change there, surfaced via the build-intent wire.",
+          "what": "The live presence light on the toolbar's command strip.",
+          "what_you_can_do": "Read the system's current state at a glance (running, thinking, or awaiting) and interact with the system's live presence."
+        },
+        "maps_to_feature": "RUN-status",
+        "represents": "RUN-presence"
+      },
+      "cluster_size": 3,
+      "cluster_members": [
+        0,
+        5,
+        26
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/force",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (canvas/app/src/regions/Toolbar.tsx); changing its behavior is a code change there.",
+          "what": "The force control on the toolbar.",
+          "what_you_can_do": "Click this to immediately trigger a forced system action, overriding normal state checks."
+        },
+        "maps_to_feature": "ENG-force",
+        "represents": "RUN-force"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        3
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/rail/palette",
+        "capabilities": [
+          "pointable",
+          "driven"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The rail is driven by NodeShape.tsx (NodeShapeUtil) and the App.tsx shell; adding or changing a node type requires a code edit there.",
+          "what": "The left-hand rail containing the draggable node types for the canvas.",
+          "what_you_can_do": "Drag a node from this palette onto the stage to begin composing your workflow; the rail reflects the system's available node kinds."
+        },
+        "maps_to_feature": "NODE-kinds",
+        "represents": "NODE-palette"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        10
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/colour-kind",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This is a mockup-only annotation; changing it requires editing the NodeShape.tsx region to alter the visual mapping logic.",
+          "what": "A static annotation on the canvas board stating that a node's visual 'colour' corresponds to its logical 'kind'.",
+          "what_you_can_do": "Read the rule to understand how the system distinguishes between different types of nodes visually; this is a declarative statement, not an interactive control."
+        },
+        "maps_to_feature": "NODE-kinds",
+        "represents": "The semantic rule defining node identity"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        17
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/toolbar",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The strip is the toolbar region (canvas/app/src/regions/Toolbar.tsx); adding or changing a control is a code change there, surfaced via the build-intent wire.",
+          "what": "The toolbar control on the canvas header.",
+          "what_you_can_do": "Access the system's live state at a glance and reach every board-level action (run, wire, portal, delete, layers, fit, reload) from one place."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "RUN-run"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        23
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/inbox",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the canvas region (canvas/app/src/NodeShape.tsx); changing the entry point is a code change there.",
+          "what": "The Inbox entry point on the canvas workspace.",
+          "what_you_can_do": "Click it to access the inbox triage deck where decisions and approvals are escalated for your review."
+        },
+        "maps_to_feature": "INB-lanes",
+        "represents": "INB-entry"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        24
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/rhm",
+        "capabilities": [
+          "pointable",
+          "driven"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the canvas region (canvas/app/src/NodeShape.tsx); changing its behavior is a code change there.",
+          "what": "The RHM control on the canvas header.",
+          "what_you_can_do": "Initiate the RHM (Run-Here-Now) mode to begin composing the workflow from scratch or start the built-in demo."
+        },
+        "maps_to_feature": "RHM-verbs",
+        "represents": "RHM-verbs"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        25
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/tabbar",
+        "capabilities": [
+          "pointable",
+          "driven"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the canvas region (canvas/app/src/NodeShape.tsx); changing the tabs is a code change there.",
+          "what": "The navigation strip at the top of the canvas workspace.",
+          "what_you_can_do": "Switch between the main canvas, the Inbox, the RHM view, and the Run state to navigate the workspace's different modes."
+        },
+        "maps_to_feature": "CAN-compose",
+        "represents": "CAN-tabbar"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        27
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A1-canvas-empty-desktop.html"
+    }
+  ]
+}
