@@ -280,3 +280,11 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
 - ROOT: NO live bridge process running (:8770 → 000). FE proxies to a dead bridge → every /api fails → mockups gone (/api/corpus unreachable), 500s, empty-JSON. Mockups SAFE (23 on disk, store-independent).
 - CURRENT MAIN HEALTHY (verified on fresh bridge): corpus/roles/voice/cognition all serve. My diagnosis 404s were my own path typos, not bugs. No recent commit broke it.
 - FIX = `company up` (start bridge on the LIVE store, cgroup-managed). Did NOT spawn it myself (wrong/temp-store bridge would lose real data; live store never-touch-wrong). Offered to run company up.
+
+## 2026-06-09 — Tim found "vast majority of mockup elements not clickable" → FIXED + verified (chrome back)
+- ROOT (evidence): C1-inbox mockup = 131 elements, only 3 carry data-ui-ref (0 of 8 buttons). Requiring a pre-authored marker → only 3 zones selectable. The deixis worked; the addressing was sparse.
+- FIX (1a3c284): deixis now DERIVES a locus for ANY clicked element — own ui:// → nearest ui:// ancestor + element slug → whole-mockup base — and visually outlines the clicked element. No per-element authoring; every element in every mockup is selectable + commentable.
+- VERIFIED BY USE (:5230, chrome): clicked an un-addressed button → "LOOKING AT: INBOX/LAYERS", button outlined gold, "⤢ whole screen" escape shown, composer = "commenting on this part of the screen". Both levels intact (element + whole).
+- This composes with F2 (Q3): a derived element locus (ui://inbox/layers) prefix-matches ui://inbox → generate gathers it.
+- Also answered Tim's bridge confusion: his "mockups gone" = his bridge not running; mine (:5230) shows all 22 because I run my own bridge. Fix = `company up` (offered, awaiting his yes).
+- NEXT (chrome up): P2 tldraw-toolbar bleed-through (top-left corner leak — tldraw button above studio; fix = hide tldraw UI in review via a data-view hook) — was mid-investigation when Tim asked about clickability.
