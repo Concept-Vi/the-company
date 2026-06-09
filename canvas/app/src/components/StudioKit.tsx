@@ -143,9 +143,11 @@ export function Stage({ titleFor }: { titleFor: (f: string | null) => string }) 
   // is same-origin (served from /mockups, sandbox allow-same-origin), so the parent attaches the click
   // delegate directly. BOTH levels: a click on an addressed element → that element's locus; a click on the
   // background → the WHOLE-mockup base (so you can always comment on the whole screen too).
-  function wireDeixis(e: { currentTarget: HTMLIFrameElement }) {
-    const doc = e.currentTarget.contentDocument
-    if (!doc) return
+  const frameRef = useRef<HTMLIFrameElement | null>(null)
+  // attach the click delegate to the mockup doc ONCE (idempotent via a flag), so element-clicks select.
+  function attachDeixis(doc: Document | null | undefined) {
+    if (!doc || !doc.body || (doc as any).__deixisWired) return false
+    ;(doc as any).__deixisWired = true
     doc.addEventListener('click', (ev: Event) => {
       const t = ev.target as Element | null
       const el = t?.closest?.('[data-ui-ref]') as Element | null
@@ -153,7 +155,22 @@ export function Stage({ titleFor }: { titleFor: (f: string | null) => string }) 
       const next = a.startsWith('ui://') ? a : baseAddrRef.current   // element locus, else the whole mockup
       setReviewMockup(reviewMockupRef.current, next)
     }, true)
+    return true
   }
+  // ROBUST attach: onLoad alone is unreliable for a key-remounting iframe (it can fire before React binds the
+  // handler, or the same-origin doc isn't ready yet). So ALSO poll briefly per open file until the doc is
+  // ready + wired (idempotent). This is the fix for "element-select never worked" being load-timing-fragile.
+  useEffect(() => {
+    if (!reviewMockup) return
+    let tries = 0
+    const id = setInterval(() => {
+      tries++
+      const done = attachDeixis(frameRef.current?.contentDocument)
+      if (done || tries > 20) clearInterval(id)   // ~20×120ms ≈ 2.4s budget
+    }, 120)
+    return () => clearInterval(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reviewMockup])
   return (
     <div className="studio-stage" data-ui-ref="ui://studio/stage">
       <div className="studio-stage-head">
@@ -182,7 +199,8 @@ export function Stage({ titleFor }: { titleFor: (f: string | null) => string }) 
       </div>
       <div className={'studio-stage-body dev-' + device}>
         {reviewMockup
-          ? <iframe key={reviewMockup} className="studio-frame" title={reviewMockup} onLoad={wireDeixis}
+          ? <iframe key={reviewMockup} ref={frameRef} className="studio-frame" title={reviewMockup}
+              onLoad={() => attachDeixis(frameRef.current?.contentDocument)}
               src={'/mockups/' + reviewMockup + '?studio=1'} sandbox="allow-scripts allow-same-origin" />
           : <EmptyState>no mockup open.</EmptyState>}
       </div>
