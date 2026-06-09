@@ -9435,12 +9435,32 @@ class Suite:
             models = [p["model"] for p in providers.values() if set(reqs) <= set(p.get("provides", []))]
         return {"requires": reqs, "models": sorted(set(models)), "providers": providers}
 
-    def available_inputs(self, turn_context: dict | None = None) -> dict:
-        """C7.4 — the INPUT-WIRING SELECT: the addresses a role/rule can READ. The utterance (always),
-        the OTHER roles' run:// outputs (a rule reads run://<turn>/<role>, declared as the role id), and
-        the notebook strata (the C6 context variables) — so the FE rule-builder/role-editor populates the
-        'reads' dropdown from truth, not a hardcoded list. Returns {utterance, roles[], role_addresses[],
-        context_variables[]}. Read-only."""
+    def available_inputs(self, turn_context: dict | None = None, *, model: str | None = None) -> dict:
+        """C7.4 — the INPUT-WIRING + COMPOSITION SELECT: the full input space a role/rule can READ +
+        the capabilities settable on a role's BOUND model. The utterance (always), the OTHER roles'
+        run:// outputs (a rule reads run://<turn>/<role>, declared as the role id), the notebook strata
+        (the C6 context variables), the 6 corpus/cognition registries — AND (Cognition Engine B3) the
+        skill://+context:// addressable registries + the registered address SCHEMES, AND (B5) the
+        op/thinking/tools the bound model actually supports — so the FE rule-builder/role-editor (and an
+        MCP agent via cognition_inputs) populates every 'reads'/settable dropdown FROM TRUTH, never a
+        hardcoded list. Read-only.
+
+        ALL keys PROJECT from a live registry (registry-is-truth, rule 8, zero hardcode): roles ←
+        role_registry · context_variables ← context_variables.REGISTRY · projections/lifters/mark_types/
+        generation_policies/relation_types/ai_tics/forms ← their file-discovered registries · skills/
+        contexts ← the SkillRegistry/ContextRegistry (drop a `skills/<id>.py` / `contexts/<id>.py` →
+        restart → it appears here) · schemes ← contracts/address.py:SCHEMES (add a scheme → it appears) ·
+        op/thinking/tools ← ops/cli/capabilities.py:MODEL_CAPABILITIES (the bound model's `provides`).
+
+        `model` (B5) names the model whose capabilities project op/thinking/tools; default = the current
+        brain (rhm_config()["model"], mirrors knobs_for). NOTE: a role may bind a DIFFERENT model via
+        resolve_role_binding — role-scoped capability gating (project against THAT role's bound model) is
+        a follow-up; this select gates against ONE model (the brain by default, any model on request).
+
+        Returns {utterance, roles[], role_addresses[], context_variables[], projections[],
+        projection_spaces[], lifters[], mark_types[], generation_policies[], relation_types[], ai_tics[],
+        forms[], skills[], contexts[], schemes[], op[], thinking(bool), tools(bool), capability_model}.
+        ADDITIVE — every prior key is unchanged (B3/B5 only ADD keys)."""
         roles = sorted(rid for rid in self.role_registry if self.role_registry[rid].can_fire)
         ctx_vars = []
         try:
@@ -9457,6 +9477,55 @@ class Suite:
         # ADDITIVE — every prior key (utterance/roles/role_addresses/context_variables) is unchanged.
         projections = sorted(self.projection_registry)
         spaces = [p.id for p in self.projection_registry.embeddable()]
+        # B3 — the skill://+context:// ADDRESSABLE registries + the registered address SCHEMES. The input
+        # space was advertising the 6 corpus registries but OMITTING the C 3b skill://+context:// schemes
+        # (the FIRST extension of the resolve_address seam) and the SCHEMES vocabulary generally — so an
+        # agent/operator could not DISCOVER that a role's input can be a skill, a context, a run://, a
+        # cas://, etc. (discoverability broken — COMPLETION-CRITERIA B3). Now PROJECTED from truth:
+        #   skills/contexts ← self._entry_registry(kind) (the SAME instance-local SkillRegistry/
+        #     ContextRegistry create_skill/create_context check liveness against — one registry, not a
+        #     parallel reader; drop a `skills/<id>.py` → restart → it appears as skill://<id>).
+        #   schemes ← contracts/address.py:SCHEMES (the registered scheme vocabulary, ADVERTISED in the
+        #     templated `<scheme>://` form so the 'reads' select shows skill/context/run/cas/blob/vec/ui/
+        #     code; that blob/vec/ui/code don't RESOLVE yet — see skills_contexts_acceptance §3 — is a
+        #     separate concern: registry-is-truth advertises the registered scheme set regardless).
+        # FAIL-LOUD-LEGIBLE: a registry that can't be read WARNS + degrades to [] (never a silent wrong
+        # set + never a crash of the whole select — mirrors models_for_role's fail-soft).
+        from contracts.address import SCHEMES as _SCHEMES
+        try:
+            skills = sorted(f"skill://{s}" for s in self._entry_registry("skill"))
+        except Exception as _e:
+            print(f"[available_inputs] WARN: skill registry unreadable ({type(_e).__name__}: {_e}) — []")
+            skills = []
+        try:
+            contexts = sorted(f"context://{c}" for c in self._entry_registry("context"))
+        except Exception as _e:
+            print(f"[available_inputs] WARN: context registry unreadable ({type(_e).__name__}: {_e}) — []")
+            contexts = []
+        # B5 — op/thinking/tools PROJECT from the MODEL-CAPABILITY registry (what's settable on a role =
+        # what the BOUND model actually PROVIDES), never a hardcoded enum (COMPLETION-CRITERIA B5). The
+        # bound model defaults to the current brain (rhm_config()["model"], mirrors knobs_for); `model`
+        # overrides it. `provides` ← ops/cli/capabilities.py:provides_for(model) (the SAME read
+        # models_for_role/capability_providers use — one source, no re-spelling). The projection is
+        # HONEST per CAPABILITY_TAGS: op=generate iff the model provides 'chat', op=embed iff it provides
+        # 'embed' (embed IS a tag, widened C2.5); thinking=('thinking' in provides); tools=('tools' in
+        # provides). So adding a capability → it appears; a model lacking 'tools' → tools=False (not
+        # offered). FAIL-SOFT: an unreadable catalog → provides=[] → everything False (fail-loud-by-empty,
+        # never a fabricated capability — rule 8: never offer a setting the model can't honor).
+        cap_model = model or self.rhm_config().get("model")
+        provides: list = []
+        try:
+            import sys as _sys
+            _opscli = os.path.join(self._repo_root, "ops", "cli")
+            if _opscli not in _sys.path:
+                _sys.path.insert(0, _opscli)
+            import capabilities as _caps                       # ops/cli/capabilities.py (bare import)
+            provides = list(_caps.provides_for(cap_model)) if cap_model else []
+        except Exception as _e:
+            print(f"[available_inputs] WARN: model-capability catalog unreadable for {cap_model!r} "
+                  f"({type(_e).__name__}: {_e}) — op/thinking/tools project EMPTY (fail-loud-by-empty)")
+            provides = []
+        op = [o for o, tag in (("generate", "chat"), ("embed", "embed")) if tag in provides]
         # The 6 OTHER file-discovered corpus/cognition registries (719f82d) — ADVERTISE their ids in the
         # composition select so the agent can SEE + USE them where it composes (registry-is-truth: drop a
         # `<name>/<id>.py` → restart → it appears here with NO code change). These are the discovery/
@@ -9474,7 +9543,16 @@ class Suite:
                 "generation_policies": sorted(self.generation_policy_registry),
                 "relation_types": sorted(self.relation_type_registry),
                 "ai_tics": sorted(self.ai_tic_registry),
-                "forms": sorted(self.form_registry)}
+                "forms": sorted(self.form_registry),
+                # B3 — the addressable registries + the scheme vocabulary
+                "skills": skills,
+                "contexts": contexts,
+                "schemes": [f"{s}://" for s in _SCHEMES],
+                # B5 — what the bound model actually supports (projected, never a hardcoded enum)
+                "op": op,
+                "thinking": "thinking" in provides,
+                "tools": "tools" in provides,
+                "capability_model": cap_model}
 
     def field_types(self) -> dict:
         """C7.5 — the closed field-type registry the FE schema-editor reads (registry-is-truth — the
