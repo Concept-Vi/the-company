@@ -68,6 +68,7 @@ home `runtime/authoring.py` + `Suite.create_relation_type` — **flagged as a se
 [[Company Map]] · [[projections — constitution]] · `build-prep/cognition-engine/COMPLETION-CRITERIA.md` (GROUP L/P).
 
 ## Agent-authored entries (auto-reflected)
+- **`depends_on`** — agent-authored relation_type (created via the declarative-direct face). DEPENDENCY axis (substrate lift): this unit requires the target — a gate; the inverse reading is 'target unlocks this'
 <!-- created live by the create face; one line per entry — keeps the
      drift-home acceptance green; refine the prose by integration. -->
 - **`precedes`** — agent-authored relation_type (created via the declarative-direct face). SEQUENCE axis (substrate lift): this unit comes before the target in a declared order — stage/step/round; logical order, not the wall-clock 
