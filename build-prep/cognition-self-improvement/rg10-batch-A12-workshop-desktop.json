@@ -1,0 +1,679 @@
+{
+  "mockup": "A12-workshop-desktop.html",
+  "ground": {
+    "screen_present": true,
+    "what_this_is": "This is a detailed 'Workshop' view for a specific node (the 'ask' process) on the canvas, designed to show the full output and configuration of that single node in a deep-dive mode.",
+    "what_you_can_do": "You can read the node's full output, view its configuration settings, see its status (currently 'ran'), and inspect its input/output ports and provenance details."
+  },
+  "n_candidates": 25,
+  "n_dossiers": 25,
+  "n_clusters": 18,
+  "confirmed": [
+    {
+      "dossier": {
+        "address": "ui://canvas/force",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to it yet.",
+          "what": "The force control on the workshop view.",
+          "what_you_can_do": "Trigger a forced resolution or state change on the current node (mockup-only; not yet built)."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "ENG-force"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        2
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A12-workshop-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/run",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (canvas/app/src/regions/Toolbar.tsx); changing the action or its result is a code change there.",
+          "what": "The run command on the workshop toolbar.",
+          "what_you_can_do": "Execute the current node's configuration to generate its output and update the live board state."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "RUN-run"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        3,
+        4
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A12-workshop-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://workshop/provenance",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the workshop region (runtime/suite.py:ui_info); changing the provenance display is a code change there.",
+          "what": "The provenance layer on the workshop view, displaying the node's origin and authorship status.",
+          "what_you_can_do": "Read the node's origin history and authorship details to understand its lineage and who created it."
+        },
+        "maps_to_feature": "NODE-layer",
+        "represents": "WS-provenance"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        14
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A12-workshop-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://workshop/config",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This is a read-only view in the mockup; changes to configuration require editing the node definition in the workshop region (runtime/suite.py:ui_info) and re-running the self-modification path.",
+          "what": "The configuration display for the current node within the workshop view.",
+          "what_you_can_do": "Read the node's current settings and status (currently 'ran') to understand its operational parameters."
+        },
+        "maps_to_feature": "NODE-config",
+        "represents": "WS-config"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        17,
+        20
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A12-workshop-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://workshop/ask-fields",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "This note lives in the workshop region (runtime/suite.py:ui_info); changing the allowed fields requires a code change there.",
+          "what": "The field specification note for the 'ask' node in the workshop view.",
+          "what_you_can_do": "Read the exact configuration parameters (model, system, base_url, retries) allowed for this node, excluding LLM-only settings like temperature."
+        },
+        "maps_to_feature": "NODE-config",
+        "represents": "ASK-field-spec"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        18
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A12-workshop-desktop.html"
+    }
+  ],
+  "flagged": [
+    {
+      "dossier": {
+        "address": "ui://canvas/layers",
+        "capabilities": [
+          "pointable",
+          "driven"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (canvas/app/src/regions/Toolbar.tsx); changing it is a code change there.",
+          "what": "The layers control on the canvas toolbar.",
+          "what_you_can_do": "Toggle the layering mode to view or manage the composition's depth structure."
+        },
+        "maps_to_feature": "CAN-layers",
+        "represents": "CAN-layers"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        0
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A12-workshop-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/wire",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (canvas/app/src/regions/Toolbar.tsx); adding or changing this control is a code change there, surfaced via the build-intent wire.",
+          "what": "The wire action button on the canvas toolbar.",
+          "what_you_can_do": "Click it to initiate a wire operation on the selected node, translating the operator's intent into a system action."
+        },
+        "maps_to_feature": "WIRE-intent",
+        "represents": "WIRE-intent"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        1
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A12-workshop-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/process",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the canvas region (canvas/app/src/NodeShape.tsx); changing the node's kind or label requires a code edit there.",
+          "what": "The 'Process' node header on the canvas, displaying the kind and label of a specific node in the composition.",
+          "what_you_can_do": "Select this node to inspect its full output, configuration, status, and input/output ports; use it to view provenance details."
+        },
+        "maps_to_feature": "NODE-kinds",
+        "represents": "NODE-process"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        5
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A12-workshop-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/content",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific label yet.",
+          "what": "The 'Content' label header on the node detail view.",
+          "what_you_can_do": "Read the node's full output, configuration, status, and input/output port details in deep-dive mode."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Content header"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        6
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A12-workshop-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/process-ask",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The rail is defined in the canvas region (canvas/app/src/NodeShape.tsx); changing its structure or labels requires code edits there.",
+          "what": "The navigation rail for the 'Process A ask L llm Content' node on the canvas.",
+          "what_you_can_do": "Select this rail to inspect the node's full output, configuration, status, and input/output ports."
+        },
+        "maps_to_feature": "NODE-config",
+        "represents": "Process A ask L llm Content rail"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        7
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A12-workshop-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/workshop",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This view is driven by the node's configuration and workshop logic; changes require updates to the node's configuration or the workshop-specific logic in the canvas region.",
+          "what": "The detailed 'Workshop' view for a specific node, showing its full output and configuration in deep-dive mode.",
+          "what_you_can_do": "Read the node's complete output, inspect its configuration settings, view its status (currently 'ran'), and examine its input/output ports and provenance details."
+        },
+        "maps_to_feature": "WSK-workshop",
+        "represents": "WSK-workshop"
+      },
+      "cluster_size": 4,
+      "cluster_members": [
+        8,
+        11,
+        21,
+        24
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "refcheck (Layer 1, deterministic floor): feature fabrication: maps_to_feature 'WSK-workshop' is not an inventory id nor 'proposed'",
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A12-workshop-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://workshop/full-render",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the workshop region (runtime/suite.py:ui_info); changing the view is a code change there.",
+          "what": "The full render view of the workshop node.",
+          "what_you_can_do": "Read the node's complete output, configuration, status, and provenance details in a deep-dive mode."
+        },
+        "maps_to_feature": "WS-workshop",
+        "represents": "WS-full-render"
+      },
+      "cluster_size": 3,
+      "cluster_members": [
+        9,
+        13,
+        15
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A12-workshop-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://workshop/process-status",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the workshop region (runtime/suite.py:ui_info); changing the state or marker requires a code change there.",
+          "what": "The status indicator showing the current state of the 'ask' process node.",
+          "what_you_can_do": "Read the live state of the process (currently 'ran') and its visual marker."
+        },
+        "maps_to_feature": "RUN-status",
+        "represents": "Process status indicator"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        10
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A12-workshop-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://workshop/graph-visual",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the workshop region (runtime/suite.py:ui_info); changing the visual representation requires a code change there.",
+          "what": "The visual anchor on the workshop canvas that displays the system's current graph state.",
+          "what_you_can_do": "View the resolved graph structure and configuration for the active node in deep-dive mode."
+        },
+        "maps_to_feature": "NODE-config",
+        "represents": "Graph visualization anchor"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        12
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A12-workshop-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://workshop/memo",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The explanation lives in runtime/scheduler.py; changing the visible text or logic requires a code change there.",
+          "what": "The memo gate control on the workshop view.",
+          "what_you_can_do": "Read the engine's caching mechanism to understand why a node is frozen or re-running; observe how content hashes determine if a branch is served from cache or fired anew."
+        },
+        "maps_to_feature": "ENG-memo",
+        "represents": "ENG-memo"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        16
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A12-workshop-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://workshop/ports",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This is a mockup-only view for the 'ask' process node; no built code path maps to it yet.",
+          "what": "The detailed view of a node's input and output connection points within the Workshop.",
+          "what_you_can_do": "Inspect the node's configuration, status, and provenance details; read its full output and inspect its input/output ports and provenance."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "NODE-ports"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        19
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A12-workshop-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/ask-workshop",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The view is driven by the canvas region (canvas/app/src/regions/NodeShape.tsx) and the specific node's memoization logic (runtime/suite.py:ENG-memo); structural changes require edits to the node shape or the memo engine.",
+          "what": "The deep-dive 'Workshop' view for a specific node (the 'ask' process) on the canvas.",
+          "what_you_can_do": "Read the node's full output, view its configuration settings, see its status (currently 'ran'), and inspect its input/output ports and provenance details to understand how the 're-run only what changed' mechanism applies here."
+        },
+        "maps_to_feature": "ENG-memo",
+        "represents": "ENG-memo"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        22
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A12-workshop-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/workshop",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the footer region (canvas/app/src/regions/Footer.tsx); changing the content or behavior is a code change there.",
+          "what": "The workshop control on the canvas footer.",
+          "what_you_can_do": "Open the detailed workshop view for the 'ask' process node, showing its full output, configuration, and status."
+        },
+        "maps_to_feature": "WS-workshop",
+        "represents": "Workshop entry"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        23
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A12-workshop-desktop.html"
+    }
+  ]
+}

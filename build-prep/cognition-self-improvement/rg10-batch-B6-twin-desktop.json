@@ -1,0 +1,1178 @@
+{
+  "mockup": "B6-twin-desktop.html",
+  "ground": {
+    "screen_present": true,
+    "what_this_is": "This is a technical dashboard for the 'Twin' system, specifically showing the 'Model of Tim' content node which acts as a volatile, real-time reference for grading.",
+    "what_you_can_do": "You can view the node's current status (marked as 'RAN'), read its volatile content digest, and see the provenance grading and echo-guard rules applied to the system's turns."
+  },
+  "n_candidates": 56,
+  "n_dossiers": 56,
+  "n_clusters": 31,
+  "confirmed": [
+    {
+      "dossier": {
+        "address": "ui://toolbar/presence/presence-dial",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (Toolbar.tsx); modes are defined as nodes (rhm_mode) and managed by the MODES registry; add a mode by registering one there.",
+          "what": "The presence dial on the toolbar, the selector for the RHM's current mode.",
+          "what_you_can_do": "Click it to pick a presence mode (focus, listening, walkthrough, etc.), which changes the verbs the RHM offers and how it speaks; clicking it again disables the mode."
+        },
+        "maps_to_feature": "RHM-modes",
+        "represents": "RHM-modes"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        0
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/model_of_tim",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The node is driven by the canvas region (NodeShape.tsx); content updates are managed via the system's volatile state wire.",
+          "what": "A volatile content node on the canvas displaying Tim's synthesised principles and laws.",
+          "what_you_can_do": "View the explicit principles and implicit model, check the volatile status (fail-loud), and inspect the path to the foundation document."
+        },
+        "maps_to_feature": "NODE-kinds",
+        "represents": "Model of Tim node"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        14
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://twin/verdict",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It is surfaced by the echo-guard logic in the training signal pipeline; changing the verdict requires modifying the guard rules or the source turn.",
+          "what": "A verdict marker on the twin's training signal, indicating a turn was rejected due to echo-guard rules.",
+          "what_you_can_do": "View the status of a specific operator turn that was filtered out by the echo-guard system."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Echo-guarded verdict"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        38
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://twin/noconf",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific text yet.",
+          "what": "The 'no confidence' notice on the twin dashboard.",
+          "what_you_can_do": "Read the principle that no confidence score is shown by law; observe the deliberate absence of a meter."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "RHM-noconf"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        43
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://twin/coldstart",
+        "capabilities": [
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It is a read-only display of the training signal's current state; changes occur only when corpus ingestion (D8) is completed and the learned model is updated.",
+          "what": "The explicit status of the Twin's learning phase, indicating it is currently abstaining from prediction.",
+          "what_you_can_do": "Read the system's current posture: that the mechanism is live but the twin is not yet built to predict Tim's decisions."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Cold-start state"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        44
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://tabbar/inbox",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It is the 'inbox' link within the .tabbar region (App.tsx); changing its label or behavior is a code change in the tabbar shell.",
+          "what": "The Inbox tab entry in the mobile navigation bar.",
+          "what_you_can_do": "Select this to switch the main view to the Inbox surface where decisions and approvals are managed."
+        },
+        "maps_to_feature": "INB-surface",
+        "represents": "INB-surface"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        52
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "B6-twin-desktop.html"
+    }
+  ],
+  "flagged": [
+    {
+      "dossier": {
+        "address": "ui://chat/presence",
+        "capabilities": [
+          "pointable",
+          "spotlit",
+          "presentable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The surface is RhmChat.tsx; the state logic is driven by the RHM-modes and RHM-copresence wires in suite.py:chat.",
+          "what": "The presence dial on the chat header, indicating the system's current state of engagement.",
+          "what_you_can_do": "View the system's current mode (background vs. presence) and toggle the presence state via the dropdown."
+        },
+        "maps_to_feature": "RHM-copresence",
+        "represents": "RHM-presence"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        1,
+        4
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/status",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The surface is RhmChat.tsx; the state logic is suite.py:chat \u2014 changing the visible label requires a code update to the chat region.",
+          "what": "The status indicator on the chat interface showing the system's current operational state.",
+          "what_you_can_do": "View the live verification state of the chat system (marked as 'exists \u00b7 verified') to confirm the system is active and ready for interaction."
+        },
+        "maps_to_feature": "RHM-status",
+        "represents": "RHM-status"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        2
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "refcheck (Layer 1, deterministic floor): feature fabrication: maps_to_feature 'RHM-status' is not an inventory id nor 'proposed'",
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/substrate",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is RhmChat.tsx; the annotation logic is driven by the model's state management in suite.py:chat.",
+          "what": "The technical annotation on the chat interface, marking the boundary between the live system state and the proposed model layer.",
+          "what_you_can_do": "Read the system's current status to understand that the active content is a 'proposed' model over a real substrate; this element serves as a visual guardrail for the operator."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "RHM-annex"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        3
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/node-palette",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is the node region in the dashboard; the content logic maps to the NODE-kinds feature.",
+          "what": "The node palette on the Twin's technical dashboard.",
+          "what_you_can_do": "View the volatile, real-time reference content for the 'Model of Tim' node, including its current status, digest, and grading rules."
+        },
+        "maps_to_feature": "NODE-kinds",
+        "represents": "NODE-kinds"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        5
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/process-11",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is the technical dashboard region; the state is driven by the volatile content node logic.",
+          "what": "A status indicator for the 'Model of Tim' content node in the Twin system's technical dashboard.",
+          "what_you_can_do": "View the node's current volatile status (marked as 'RAN'), read its content digest, and observe the provenance grading and echo-guard rules applied to the system's turns."
+        },
+        "maps_to_feature": "ENG-volatile",
+        "represents": "Process 11 node"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        6
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/content-5",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is RhmChat.tsx; the volatile state logic is in suite.py:chat (specifically the grading and echo-guard wires).",
+          "what": "A volatile content node in the RHM chat, acting as a real-time reference for grading system turns.",
+          "what_you_can_do": "View the node's current status (marked 'RAN'), read its volatile content digest, and observe the provenance grading and echo-guard rules applied to the system's turns."
+        },
+        "maps_to_feature": "ENG-volatile",
+        "represents": "RHM-volatile-node"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        7,
+        16
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/rail",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The rail structure is in RhmChat.tsx; the node definitions and their meanings are in suite.py:chat.",
+          "what": "The navigation rail on the RHM chat dashboard.",
+          "what_you_can_do": "Select a node kind (Process, LLM, Retrieve, etc.) to switch the chat's active context or view."
+        },
+        "maps_to_feature": "NODE-kinds",
+        "represents": "RHM-rail"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        8
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/twin-grounding",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This node is driven by the NodeShape.tsx region; changes to its state or content require edits there.",
+          "what": "The explicit grounding node for the 'Twin' system, displaying the volatile reference state for the 'Model of Tim'.",
+          "what_you_can_do": "View the current volatile status (marked 'RAN'), read the content digest, and observe the provenance grading and echo-guard rules applied to the system's turns."
+        },
+        "maps_to_feature": "ENG-volatile",
+        "represents": "TWIN-grounding"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        9,
+        15
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://system/model_of_tim/volatile",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the system region (system/model_of_tim.tsx); the volatile state logic is driven by the model's runtime configuration.",
+          "what": "The volatile reference card for the 'Model of Tim' content node.",
+          "what_you_can_do": "View the node's current status (marked as 'RAN'), read its volatile content digest, and observe the provenance grading and echo-guard rules applied to the system's turns."
+        },
+        "maps_to_feature": "ENG-volatile",
+        "represents": "VOLATILE reference"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        10,
+        12
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://run/system/model_of_tim/manifest",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This is a mockup-only view; no built code path maps to it yet. Changes would require creating a new region in the Model of Tim dashboard.",
+          "what": "The central display card for the 'Model of Tim' content node, showing its single-origin status and operational loudness.",
+          "what_you_can_do": "View the node's current volatile digest, read its provenance grading rules, and observe the echo-guard status applied to the system's turns."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "The volatile manifest of the Model of Tim"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        11,
+        13
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://twin/grading",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It reads suite.py:training_signal (gold + source='operator' + echo-guard); every chat turn you write is graded gold and feeds it.",
+          "what": "The provenance grading control on the Twin dashboard.",
+          "what_you_can_do": "View the current provenance grading and cold-start status of the Model of Tim node."
+        },
+        "maps_to_feature": "RHM-twin",
+        "represents": "RHM-twin grading"
+      },
+      "cluster_size": 15,
+      "cluster_members": [
+        17,
+        18,
+        19,
+        21,
+        26,
+        28,
+        32,
+        33,
+        34,
+        35,
+        36,
+        40,
+        41,
+        42,
+        47
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://twin/single-origin",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It reads from suite.py:training_signal (gold + source='operator'); changes are made by writing new operator gold turns that are graded and fed back.",
+          "what": "The single-origin reference node for the 'Model of Tim' twin system.",
+          "what_you_can_do": "View the volatile, real-time reference content digest that acts as the gold standard for grading operator turns; observe the echo-guard rules applied to the system's turns."
+        },
+        "maps_to_feature": "RHM-twin",
+        "represents": "RHM-twin single-origin node"
+      },
+      "cluster_size": 3,
+      "cluster_members": [
+        20,
+        27,
+        31
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://twin/uncertainty",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It reads suite.py:training_signal (specifically the confidence metric); changing the value requires updating the source gold turn data.",
+          "what": "The confidence indicator on the Twin's training signal dashboard.",
+          "what_you_can_do": "View the current confidence level of the operator-sourced gold turns being used to train the model."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Twin's confidence gauge"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        22
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://twin/digest",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the twin region (runtime/suite.py:training_signal); changing the digest content requires updating the training signal source or the summarization logic there.",
+          "what": "The compact digest view of the Twin's training signal.",
+          "what_you_can_do": "Read the current posture summary of the Company's model (single origin, no silent failures) and drill into the full text to see the raw operator turns that trained it."
+        },
+        "maps_to_feature": "RHM-twin",
+        "represents": "RHM-twin digest"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        23
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://twin/model_of_tim",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It reads live from the system's training signal (suite.py:training_signal); changing the visible principles requires updating the source gold turns in that signal.",
+          "what": "The volatile content node displaying the explicit principles of the 'Model of Tim' system.",
+          "what_you_can_do": "Read the live, non-fabricated digest of the twin's training signal (Tim's principles) and drill into the full text via the node reference."
+        },
+        "maps_to_feature": "RHM-twin",
+        "represents": "RHM-twin content node"
+      },
+      "cluster_size": 3,
+      "cluster_members": [
+        24,
+        25,
+        45
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://twin/never-trains",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It reads suite.py:training_signal (gold + source='operator' + echo-guard); changing the state requires modifying the source attribution in the training signal logic.",
+          "what": "The twin's training signal indicator \u2014 a note that the current gold turns are being sourced from the operator, not the twin itself.",
+          "what_you_can_do": "View the status of the twin's learning process to confirm that the system is currently ingesting operator-sourced gold turns and not the twin's own output."
+        },
+        "maps_to_feature": "RHM-twin",
+        "represents": "RHM-twin-no-train"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        29
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://twin/voice",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the twin region (runtime/suite.py:training_signal); changing the voice rule requires updating the operator-sourced gold turns that feed the model.",
+          "what": "The voice definition node for the Twin system, displaying the current inference rule governing the model's output.",
+          "what_you_can_do": "Read the current voice rule (single-origin principle) and observe its provenance (operator-sourced, not twin-generated)."
+        },
+        "maps_to_feature": "RHM-twin",
+        "represents": "RHM-voice"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        30,
+        37
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://twin/guards",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the twin region (runtime/suite.py:training_signal); changing the guard is a code change there.",
+          "what": "The twin's echo-guard \u2014 the rule that prevents the model from training on its own output.",
+          "what_you_can_do": "Read the strict constraint that source must never equal twin, ensuring the learned model remains distinct from the twin's own history."
+        },
+        "maps_to_feature": "RHM-twin",
+        "represents": "TWIN-guards"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        39
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://twin/addresses.json",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It reads from the twin's configuration region (runtime/suite.py:training_signal context); changes require updating the twin's address mapping.",
+          "what": "The address ledger for the Twin system, displaying the current node configuration.",
+          "what_you_can_do": "View the current addresses and their state within the Twin's operational context."
+        },
+        "maps_to_feature": "RHM-twin",
+        "represents": "Twin's address ledger"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        46
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://twin/addresses.json",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It is a mockup-only display; no built code path maps to it yet.",
+          "what": "The address register for the Twin system, displaying its current surface and grounding.",
+          "what_you_can_do": "View the registered address (ui://twin) and the live node (run://system/model_of_tim) that defines the Twin's current state."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Twin address register"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        48
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/twin",
+        "capabilities": [
+          "presentable",
+          "openable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is RhmChat.tsx; the volatile state and digest are managed by the system's runtime logic (suite.py:chat) which reads from the content node.",
+          "what": "The explicit, volatile grounding node for the 'Twin' system's model of Tim.",
+          "what_you_can_do": "View the live digest of Tim's principles (Company entity, single origin, no silent failures) and the current provenance grading status; drill into the full text via the content node."
+        },
+        "maps_to_feature": "RHM-twin",
+        "represents": "The twin \u00b7 model-of-Tim provenance grading"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        49,
+        50
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://tabbar/canvas",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the tabbar region (App.tsx); changing the label or icon is a code change there, while the content it loads is defined by the volatile node configuration.",
+          "what": "The 'Canvas' navigation entry in the mobile tabbar.",
+          "what_you_can_do": "Switch the view to the 'Model of Tim' content node, which acts as a volatile, real-time reference for grading the system's turns."
+        },
+        "maps_to_feature": "CAN-compose",
+        "represents": "CAN-compose"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        51
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://tabbar/twin",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the tabbar region (App.tsx); changing the link text or target is a code change there.",
+          "what": "The 'Twin' navigation link in the mobile tabbar.",
+          "what_you_can_do": "Select the 'Twin' system surface to view the 'Model of Tim' content node and its volatile status."
+        },
+        "maps_to_feature": "RHM-twin",
+        "represents": "Twin entry"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        53
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://tabbar/run",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the tabbar region (App.tsx); changing the action is a code change there, surfaced via the build-intent wire.",
+          "what": "The 'Run' command button on the mobile navigation bar.",
+          "what_you_can_do": "Initiate the system's active execution cycle or refresh the current view."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "RUN-run"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        54
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/tabs",
+        "capabilities": [
+          "pointable",
+          "openable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The strip is the tabbar region (runtime/suite.py:chat); changing a tab's label or icon is a code change there.",
+          "what": "The navigation strip on the Twin dashboard.",
+          "what_you_can_do": "Switch between the system's operational views: Canvas (the board), Inbox (escalations), Twin (the model), and Run (execution)."
+        },
+        "maps_to_feature": "RHM-twin",
+        "represents": "RHM-twin"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        55
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B6-twin-desktop.html"
+    }
+  ]
+}

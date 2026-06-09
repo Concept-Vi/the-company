@@ -1,0 +1,1984 @@
+{
+  "mockup": "IA-mobile.html",
+  "ground": {
+    "screen_present": true,
+    "what_this_is": "This is a mobile interface prototype for a 'Board' system, designed to let a user manage ideas and tasks through a warm, glowing interface with a gold theme.",
+    "what_you_can_do": "You can switch between four main sections (Board, Talk, Queue, and Tune) using the bottom navigation bar, and interact with the live board by running tasks, approving items, or adjusting settings."
+  },
+  "n_candidates": 89,
+  "n_dossiers": 89,
+  "n_clusters": 54,
+  "confirmed": [
+    {
+      "dossier": {
+        "address": "ui://board/process",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific status display yet.",
+          "what": "The process status indicator on the board header.",
+          "what_you_can_do": "View the current state of the process (awaiting input) at a glance."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Process state indicator"
+      },
+      "cluster_size": 5,
+      "cluster_members": [
+        4,
+        27,
+        41,
+        42,
+        77
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chrome/run",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (Toolbar.tsx); changing its behavior is a code change there.",
+          "what": "The primary action trigger on the board's top bar.",
+          "what_you_can_do": "Execute the current board state to advance the simulation or task flow."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "RUN-run"
+      },
+      "cluster_size": 4,
+      "cluster_members": [
+        7,
+        36,
+        48,
+        65
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chrome/fab",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the chrome region (canvas/app/src/regions/Chrome.tsx); adding a new action is a code change there.",
+          "what": "The floating action button (fab) on the board interface.",
+          "what_you_can_do": "Click it to add a new node or idea to the board."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "The floating action button"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        8
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/model_of_tim",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific instance yet.",
+          "what": "A specific model instance displayed on the board surface.",
+          "what_you_can_do": "View the model's current state and details within the board context."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "A model instance on the board"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        10
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/identity",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this label yet. Changing it requires a future code change in the board header region.",
+          "what": "The visible name of the active system instance (deepseek-v4-pro) displayed at the top of the board.",
+          "what_you_can_do": "Read the system's current identity to confirm which model or instance is active; this label is immutable during a session."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "The system's current identity label"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        11
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chrome/url-display",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this display yet.",
+          "what": "The system's current network address shown at the top of the interface.",
+          "what_you_can_do": "View the live connection point (localhost:8000) where the Board system is running."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "System address display"
+      },
+      "cluster_size": 3,
+      "cluster_members": [
+        12,
+        76,
+        81
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/it-hashes",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This is a mockup-only display; no built code path maps to it yet.",
+          "what": "A status card displaying the immutable hash of a volatile node.",
+          "what_you_can_do": "Read the current (type, version, config, inputs) signature to verify the node's identity and understand why it is re-running."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "The volatile node's hash state"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        13
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/portal",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (Toolbar.tsx); changing its behavior is a code change there, surfaced via the build-intent wire.",
+          "what": "The portal control on the board's command strip.",
+          "what_you_can_do": "Open the portal to access the system's deep configuration and extension layers."
+        },
+        "maps_to_feature": "NODE-portal",
+        "represents": "NODE-portal"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        15,
+        44
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/del",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (Toolbar.tsx); changing it is a code change there.",
+          "what": "The delete action button on the board's toolbar.",
+          "what_you_can_do": "Click it to remove the current item from the board."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Delete control"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        16
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/listen",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the board region (canvas/app/src/regions/Board.tsx); changing the message or state is a code change there.",
+          "what": "The active listening indicator on the board's main stage.",
+          "what_you_can_do": "Confirm the system is ready to receive a new thought or task from the operator."
+        },
+        "maps_to_feature": "VOICE",
+        "represents": "VOICE-listen"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        19,
+        31
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/question",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific question yet.",
+          "what": "The question card in the board that asks how the memo gate decides node re-runs.",
+          "what_you_can_do": "Read the system's logic on memo gate decisions to understand node re-run behavior; this is a read-only inquiry point."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "ENG-memo"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        20
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/utterance",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This is a mockup-only explanation; no built code path maps to it yet. Changes would require writing new text in the prototype region.",
+          "what": "A text bubble explaining the system's caching behavior and volatile node bypass logic.",
+          "what_you_can_do": "Read the technical explanation of how the system handles hashes, caching, and volatile nodes like 'codebase' to understand the board's runtime state."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "The volatile node's execution note"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        22
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/approve",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific button yet.",
+          "what": "The approve control on the board interface.",
+          "what_you_can_do": "Click this to resolve an item, recording your decision and moving it out of the active queue."
+        },
+        "maps_to_feature": "ENG-resolve",
+        "represents": "ENG-resolve"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        25,
+        47
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chrome/decline",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific action yet.",
+          "what": "The 'not now' button on the board interface.",
+          "what_you_can_do": "Click it to defer the current task or idea without resolving it immediately."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Decline control"
+      },
+      "cluster_size": 3,
+      "cluster_members": [
+        26,
+        37,
+        43
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chrome/ptt",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific button yet.",
+          "what": "The 'hold to speak' button on the board's chrome.",
+          "what_you_can_do": "Press and hold to initiate voice input; release to stop; the system listens for your spoken commands."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "PTT voice trigger"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        29
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/need-you",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The lane is defined in the board region (canvas/app/src/regions/Board.tsx); the pre-triage logic and tinting rules are handled by the board's intent wire (runtime/suite.py:board_intent).",
+          "what": "The 'need you' lane on the board, highlighting items requiring immediate operator attention.",
+          "what_you_can_do": "View the pre-triaged items awaiting your decision; interact with the lane to see tinted status indicators."
+        },
+        "maps_to_feature": "INB-lanes",
+        "represents": "Need-you lane"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        33
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/utterance",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to it yet.",
+          "what": "The 'say more' button on the board interface.",
+          "what_you_can_do": "Click it to expand the current utterance or initiate a voice interaction (mockup-only; not a built feature here)."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "VOICE-utter"
+      },
+      "cluster_size": 3,
+      "cluster_members": [
+        38,
+        51,
+        79
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chrome/build-status",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this message yet.",
+          "what": "A status message confirming the successful creation of a memo-gate panel.",
+          "what_you_can_do": "Read the confirmation that the panel is built and note the file changes."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Build completion notification"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        40
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chrome/show-me",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this action yet.",
+          "what": "A 'Show me' command button in the app chrome.",
+          "what_you_can_do": "Request a demonstration or explanation of the current system state or a specific feature."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Show-me trigger"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        49
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/watch-react",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the Board region (canvas/app/src/regions/Board.tsx); the reaction logic is driven by the RUN-run wire and RHM-react state.",
+          "what": "The 'watch & react' control on the Board interface.",
+          "what_you_can_do": "Initiate a reactive cycle where the system observes the current state and automatically generates or updates the next step based on live conditions."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "Board-watch-react"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        58
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/decide",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The action logic lives in the board region (canvas/app/src/regions/Board.tsx); the recommendation engine is defined in runtime/suite.py:rhm-decide.",
+          "what": "The 'decide for me' control on the board interface.",
+          "what_you_can_do": "Trigger the system to generate a course-of-action recommendation for the current item, translating raw technical data into actionable options with trade-offs."
+        },
+        "maps_to_feature": "RHM-decide",
+        "represents": "RHM-decide"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        59
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/manifest",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this element yet.",
+          "what": "The system's self-generating manifesto that defines the current Board's growth rules and direct controls.",
+          "what_you_can_do": "Read the interface's self-definition to understand how it grows and how to directly control its evolution through the proposed lifecycle (propose, see, approve, reversible)."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Board-manifest"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        62
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chrome/new-component",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to it yet.",
+          "what": "A button entry point in the app chrome for initiating a new component.",
+          "what_you_can_do": "Click it to start a new component (mockup-only; not a built feature here)."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "New component entry"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        64
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/record-turn",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The trigger is the board region (canvas/app/src/regions/Board.tsx); the recording logic is the voice wire (runtime/suite.py:voice).",
+          "what": "The voice recording trigger on the board interface.",
+          "what_you_can_do": "Initiate a spoken turn to capture a user's idea or task verbally."
+        },
+        "maps_to_feature": "VOICE",
+        "represents": "VOICE-record"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        70
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/ledger",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this ledger yet.",
+          "what": "The self-change log \u2014 the full ledger of autonomous modifications.",
+          "what_you_can_do": "View the complete history of self-initiated changes and their outcomes."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "The self-change ledger"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        72
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/judge-binding",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific binding action yet.",
+          "what": "A control on the Board interface for self-assigning a judge role.",
+          "what_you_can_do": "Click this to bind the current user as a judge for the active session or task."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Judge role binding control"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        74
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chrome/queue",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this navigation yet.",
+          "what": "The Queue navigation button in the app chrome.",
+          "what_you_can_do": "Switch the view to the Queue section of the Board system."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Queue entry"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        86
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chrome/tabbar",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the tabbar region (canvas/app/src/regions/Tabbar.tsx); changing the buttons or their layout is a code change there.",
+          "what": "The bottom navigation bar on the mobile interface.",
+          "what_you_can_do": "Switch between the four main sections (Board, Talk, Queue, Tune) to access different views of the system."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Board navigation strip"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        88
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "IA-mobile.html"
+    }
+  ],
+  "flagged": [
+    {
+      "dossier": {
+        "address": "ui://chrome/title",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this yet.",
+          "what": "The main title of the mobile interface prototype.",
+          "what_you_can_do": "Read the system's name and brand identity at a glance."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Company title"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        0,
+        55
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/content",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific readout yet.",
+          "what": "The content readout panel on the board interface.",
+          "what_you_can_do": "View the current repository state and read the repo content without triggering a build or action."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Content readout"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        1
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/process",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the board region (Board.tsx); changing it is a code change there.",
+          "what": "The process control on the board.",
+          "what_you_can_do": "Interact with the live board by running tasks, approving items, or adjusting settings."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Process control"
+      },
+      "cluster_size": 9,
+      "cluster_members": [
+        2,
+        3,
+        6,
+        17,
+        32,
+        53,
+        56,
+        60,
+        84
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/status",
+        "capabilities": [
+          "pointable",
+          "spotlit",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The light is the toolbar/header region (canvas/app/src/regions/Toolbar.tsx); changing the state indicator is a code change there, surfaced via the build-intent wire.",
+          "what": "The live presence light on the board's header, showing the system's current operational state.",
+          "what_you_can_do": "Read the system's live state at a glance (running, thinking, awaiting) to understand the board's current altitude."
+        },
+        "maps_to_feature": "RUN-status",
+        "represents": "RUN-status"
+      },
+      "cluster_size": 4,
+      "cluster_members": [
+        5,
+        18,
+        67,
+        80
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/filter",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to it yet.",
+          "what": "The filter control on the board header.",
+          "what_you_can_do": "Select or refine the visible node types on the board (mockup-only; not a built feature here)."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "NODE-types filter"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        9
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/wire",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (Toolbar.tsx); the dispatch logic is the build-intent wire (runtime/suite.py:wire_dispatch).",
+          "what": "The wire control on the toolbar bridge.",
+          "what_you_can_do": "Initiate a wire dispatch to the board system, translating the current board state into a live intent for the system to process."
+        },
+        "maps_to_feature": "WIRE-intent",
+        "represents": "WIRE-intent"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        14
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/consult",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific action yet.",
+          "what": "A consultation chip on the board interface.",
+          "what_you_can_do": "Click it to initiate a system self-consultation where the system reads its own code to generate insights."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Consult chip"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        21,
+        45
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chrome/memo-gate",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this yet.",
+          "what": "The control panel for the memo-gate system, allowing users to tune hash inputs without writing code.",
+          "what_you_can_do": "Access the settings to adjust the memo-gate parameters; this is a mockup-only interface for configuration."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Memo-gate settings panel"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        23
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chrome/settings/panels",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to it yet.",
+          "what": "The settings entry point for managing field groups on the board.",
+          "what_you_can_do": "Open the settings to configure or view new field groups (mockup-only; not a built feature here)."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Panel control"
+      },
+      "cluster_size": 4,
+      "cluster_members": [
+        24,
+        63,
+        69,
+        85
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/lead-why",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this text yet.",
+          "what": "The introductory banner on the Board screen.",
+          "what_you_can_do": "Read the system's guiding principle to begin the session."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Board intro"
+      },
+      "cluster_size": 3,
+      "cluster_members": [
+        28,
+        30,
+        54
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/resolve",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the board region (Board.tsx); the resolve logic is ENG-resolve.",
+          "what": "The resolve control on the board.",
+          "what_you_can_do": "Route the model brief to your reading list or hold it for the cost rollup."
+        },
+        "maps_to_feature": "ENG-resolve",
+        "represents": "ENG-resolve"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        34
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/rollup",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The card is the rollup region (canvas/app/src/regions/Board.tsx); the data comes from the run status wire (RUN-run / RUN-status).",
+          "what": "The rollup summary card on the board, displaying the current run's outcome.",
+          "what_you_can_do": "View the high-level status of the latest run (e.g., 'lands ~next run') and the associated course-of-action (coa) value choice."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "ROLL-up"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        35
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/build-review",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The review surfacing logic lives in the decision\u2192implementation wire (guarded close + surface_review); the visible control is the board region.",
+          "what": "The 'build \u00b7 review' control on the board's top section.",
+          "what_you_can_do": "Click this to open the review interface for a completed self-build, allowing you to read the result summary and changed-files diff, then record your verdict (approve, reject, comment, skip, or decide)."
+        },
+        "maps_to_feature": "WIRE-review",
+        "represents": "WIRE-review"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        39
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/abstain",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the board region (canvas/app/src/regions/Board.tsx); changing the abstain logic is a code change there.",
+          "what": "A control on the board that allows the operator to abstain from a decision rather than guess.",
+          "what_you_can_do": "Click this control to abstain from the current decision, preventing the system from generating a guess or proceeding with a default action."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Abstain control"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        46
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/idea-capture",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The capture logic lives in the board region (canvas/app/src/regions/Board.tsx); the compilation is driven by suite.py:coa (the decision-compiler); you decide on the value, never the raw code fork.",
+          "what": "The idea capture entry on the board's main view.",
+          "what_you_can_do": "Click it to compile a course-of-action from the raw technical idea into a Commander-altitude value choice (what it means, 2-3 options with trade-offs, and a recommendation); the raw payload stays drillable."
+        },
+        "maps_to_feature": "INB-idea",
+        "represents": "INB-idea"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        50
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://queue/decision",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The card structure and options live in the queue region (Queue.tsx); the decision logic and lane data are driven by the queue lane configuration.",
+          "what": "A queue item presenting a value-choice decision (route vs hold) with metadata on timing and framing.",
+          "what_you_can_do": "Interact with the decision options (route, hold, say more) to advance the item through the queue workflow."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "A decision card in the queue lane"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        52
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chrome/presence",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the chrome region (canvas/app/src/regions/Chrome.tsx); changing the mode options is a code change there.",
+          "what": "The presence mode control on the board chrome.",
+          "what_you_can_do": "Select a specific operational mode (e.g., latent, active) to change how the board behaves and what sub-types are selectable."
+        },
+        "maps_to_feature": "RHM-modes",
+        "represents": "Presence mode selector"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        57
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/latent",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific latent control yet.",
+          "what": "The primary latent control on the Board interface.",
+          "what_you_can_do": "Activate the system's latent mode to grow the interface and explore hidden capabilities."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "The #1 latent"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        61
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/knobs",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the board header region (Board.tsx); changing it is a code change there.",
+          "what": "The knobs control on the board header.",
+          "what_you_can_do": "Adjust the system's volatile parameters to influence the board's current state."
+        },
+        "maps_to_feature": "ENG-volatile",
+        "represents": "ENG-volatile"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        66
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/comp-setter",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "driven"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the board region (Board.tsx); changing the setter logic is a code change there.",
+          "what": "The live composition setter for the board's context.",
+          "what_you_can_do": "Adjust the current context composition settings in real-time; the system updates the board state immediately upon this action."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "R2 composition control"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        68
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chrome/turn-feedback-reflection",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The strip is defined in the board region (canvas/app/src/regions/Board.tsx); changing the actions or their labels requires a code change there.",
+          "what": "The command strip on the board's top section, offering four distinct actions: turn, feedback, reflection, and transcript.",
+          "what_you_can_do": "Select one of the four actions to initiate the corresponding system flow (e.g., start a turn, open a feedback channel, begin a reflection session, or generate a transcript)."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "The turn-feedback-reflection control strip"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        71
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/memo-gate",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The panel is the visible organ in the board region; the compile logic lives in the decision-compiler wire (guarded close + surface_review).",
+          "what": "The memo-gate panel on the board interface.",
+          "what_you_can_do": "Interact with the self-apply growth mechanism for memos; the system translates raw technical decisions into altitude values (what it means, 2-3 options with trade-offs, and a recommendation)."
+        },
+        "maps_to_feature": "INB-coa",
+        "represents": "MEMO-gate"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        73
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/revert",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the board region (canvas/app/src/regions/Board.tsx); the revert logic is the SM-revert wire (runtime/suite.py:sm_revert).",
+          "what": "The revert surface panel on the board.",
+          "what_you_can_do": "Initiate a surface-level revert of the current board state or a specific idea, allowing the system to roll back changes without triggering a full build re-run."
+        },
+        "maps_to_feature": "SM-revert",
+        "represents": "SM-revert"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        75
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/embed",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the board region (Board.tsx); changing the embed behavior is a code change there.",
+          "what": "The embed control on the board interface.",
+          "what_you_can_do": "Interact with an embedded module or external resource within the board context."
+        },
+        "maps_to_feature": "MOD-embed",
+        "represents": "MOD-embed"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        78
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://board/first-contact",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This is a mockup-only prototype; no built code path maps to it yet. Changes would require creating a new tour module in the Board region.",
+          "what": "The initial tour entry point on the Board system interface.",
+          "what_you_can_do": "Initiate the guided tour for new users to explore the Board's warm, glowing interface and core functions."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "First-contact tour entry"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        82
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chrome/tune",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the chrome region (canvas/app/src/regions/Chrome.tsx); changing its layout or controls is a code change there.",
+          "what": "The main control panel for the 'Tune' section of the Board system.",
+          "what_you_can_do": "Access the consolidated decision-making interface where you can view live configurations, manage persona settings, and execute guided walks to refine resolution."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "TUNE-control"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        83,
+        87
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "IA-mobile.html"
+    }
+  ]
+}

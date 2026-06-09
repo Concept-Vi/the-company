@@ -1,0 +1,1233 @@
+{
+  "mockup": "C5-replay-desktop.html",
+  "ground": {
+    "screen_present": true,
+    "what_this_is": "This is a forensic audit dashboard designed to trace the exact history of a specific decision, showing how it evolved from an initial idea through to its final resolution.",
+    "what_you_can_do": "You can view the complete chronological path of events for a decision, read the raw activity log, and review the specific causal chain that authorized the final outcome."
+  },
+  "n_candidates": 51,
+  "n_dossiers": 51,
+  "n_clusters": 33,
+  "confirmed": [
+    {
+      "dossier": {
+        "address": "ui://inbox/replay",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The control lives in the dashboard region (canvas/app/src/regions/ForensicAudit.tsx); the replay logic is the decision\u2192history wire (guarded close + surface_replay).",
+          "what": "The replay control on the forensic audit dashboard.",
+          "what_you_can_do": "Click it to rewind the chronological path of a decision, re-examining the raw activity log and causal chain from the beginning."
+        },
+        "maps_to_feature": "INB-replay",
+        "represents": "INB-replay"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        1,
+        41
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/build-closed",
+        "capabilities": [
+          "presentable",
+          "driven"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The status is driven by the activity feed region (runtime/suite.py:now); changing the state requires updating the build intent or verification trace in the suite.",
+          "what": "A status marker on the activity feed indicating a build has been closed, implemented, and self-verified.",
+          "what_you_can_do": "View the confirmation that this specific build (C3) is resolved and ready for demonstration."
+        },
+        "maps_to_feature": "EVT-now",
+        "represents": "C3 build closure"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        17
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/criterion",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The display reflects the captured trajectory; it does not drive the system. Changes require updating the source code in the activity region.",
+          "what": "A forensic audit display showing the committed criterion and its bound sentiment state.",
+          "what_you_can_do": "View the exact history of a decision's evolution from initial idea to final resolution, including the raw activity log and causal chain."
+        },
+        "maps_to_feature": "EVT-log",
+        "represents": "Criterion audit"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        19
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/coa/s31-build_result_review",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The review surfacing is the decision\u2192implementation wire (guarded close + surface_review); the specific result view is defined in suite.py:review_verdicts.",
+          "what": "A review card for a specific build result within the course-of-action lane.",
+          "what_you_can_do": "Read the build result summary and the changed-files diff to review the outcome of a completed self-build."
+        },
+        "maps_to_feature": "WIRE-review",
+        "represents": "Build result review card"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        27
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/coa/resolved",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It is surfaced by the decision-compiler (suite.py:coa) when a value is chosen; changing the visible label requires updating the compile output or the wire's resolved state.",
+          "what": "The resolved verdict label on a course-of-action card.",
+          "what_you_can_do": "View the final decision state (resolved \u00b7 approve) for the current action lane item."
+        },
+        "maps_to_feature": "INB-resolve",
+        "represents": "INB-coa verdict"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        28
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/replay/trajectory",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It reads the event log region (runtime/suite.py:replay); changing the visible log format or filtering is a code change in that region.",
+          "what": "The forensic audit dashboard's lead panel displaying the unfiltered, append-only event log.",
+          "what_you_can_do": "View the complete chronological trajectory of events across both the bridge and MCP faces, reading the real record shape (seq, ts, kind, summary) that trains the twin."
+        },
+        "maps_to_feature": "EVT-log",
+        "represents": "I1-logs"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        32
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/replay/decision.surfaced_for_review",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It is surfaced by the replay region (runtime/suite.py:replay); changing the view or the specific decision node requires a code change in that replay region.",
+          "what": "A specific decision node visible on the forensic replay dashboard.",
+          "what_you_can_do": "View the exact moment a decision surfaced for review within the chronological history of the activity, tracing its evolution from initial idea to final resolution."
+        },
+        "maps_to_feature": "INB-replay",
+        "represents": "decision.surfaced_for_review"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        34
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/replay/decision.verify",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the replay region (runtime/suite.py:replay); changing the verification state requires a code update there.",
+          "what": "A verification marker on the replay timeline.",
+          "what_you_can_do": "View the specific point where a decision was formally verified or confirmed within the recorded history."
+        },
+        "maps_to_feature": "RHM-decide",
+        "represents": "decision verification checkpoint"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        37
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/replay",
+        "capabilities": [
+          "presentable",
+          "pointable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The replay view is defined in the activity region (runtime/suite.py:replay); changing the log shape or replay logic requires a code change there.",
+          "what": "The replay control on the activity feed, showing the full historical trace of a decision.",
+          "what_you_can_do": "View the complete chronological path of events for a decision, reading the raw append-only log to trace how the system evolved from an initial idea to its final resolution."
+        },
+        "maps_to_feature": "EVT-log",
+        "represents": "EVT-log"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        40
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/coa/surfaces",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is defined in the inbox region (Inbox.tsx); the compilation logic lives in suite.py:coa.",
+          "what": "The surface entry point for compiling a course-of-action decision.",
+          "what_you_can_do": "Click this to compile the raw technical decision into a Commander-altitude value choice (options with trade-offs and a recommendation)."
+        },
+        "maps_to_feature": "INB-coa",
+        "represents": "INB-coa surface"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        43
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/coa/twin-set",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The card's content is defined in the decision-compiler (runtime/suite.py:coa); you change the value choice, not the raw code.",
+          "what": "A specific course-of-action card within the 'the twin's set' decision lane.",
+          "what_you_can_do": "Click this card to compile a course-of-action, allowing the system to translate the raw technical decision into a Commander-altitude value choice with trade-offs and recommendations."
+        },
+        "maps_to_feature": "INB-coa",
+        "represents": "The twin's set"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        48
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C5-replay-desktop.html"
+    }
+  ],
+  "flagged": [
+    {
+      "dossier": {
+        "address": "ui://inbox/layers",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The control lives in the toolbar region (Toolbar.tsx); the layers view logic is defined in suite.py:layers.",
+          "what": "The layers control on the inbox toolbar.",
+          "what_you_can_do": "Open the layers view to see the chronological history of a decision, tracing its evolution from initial idea through to final resolution."
+        },
+        "maps_to_feature": "INB-layers",
+        "represents": "INB-layers"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        0
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "refcheck (Layer 1, deterministic floor): feature fabrication: maps_to_feature 'INB-layers' is not an inventory id nor 'proposed'",
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/run",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the inbox region (Inbox.tsx); the action logic is defined in runtime/suite.py:run (or similar execution wire).",
+          "what": "The run command on the inbox dashboard.",
+          "what_you_can_do": "Execute the current decision or audit item to trigger its resolution or next step."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "RUN-run"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        2
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/operating-surface",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The header region is defined in the dashboard view (likely within the region hosting the audit trace); changing the controls or text requires a code change in that region.",
+          "what": "The operating surface header on the forensic audit dashboard.",
+          "what_you_can_do": "View the company's current operating state, review the record of the specific decision being audited, and access controls to layer, replay, or run the audit trace."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "INB-operating-surface"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        3
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/audit",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The lens is the visible organ in Inbox.tsx; the history tracing logic lives in the audit history wire (guarded close + surface_audit).",
+          "what": "The audit history lens on the inbox dashboard.",
+          "what_you_can_do": "View the complete chronological path of a decision's events, read the raw activity log, and review the specific causal chain that authorized the final outcome."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "AUDIT-history"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        4,
+        6
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/walk",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "defer",
+        "howto": {
+          "how_to_change": "It starts a review session (suite.py:present_current); the walkthrough card is the visible organ defined in Inbox.tsx.",
+          "what": "The 'walk these' control on the inbox dashboard.",
+          "what_you_can_do": "Send all awaiting items through the review organ as one guided walk, framing each in plain language for a step-by-step verdict."
+        },
+        "maps_to_feature": "WALK-present",
+        "represents": "WALK-present"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        5
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/audit",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The head reads suite.py:now (live state); the feed is the captured trajectory \u2014 it reflects, it doesn't drive.",
+          "what": "The forensic audit dashboard on the activity feed.",
+          "what_you_can_do": "View the complete chronological path of events for a decision, read the raw activity log, and review the specific causal chain that authorized the final outcome."
+        },
+        "maps_to_feature": "EVT-log",
+        "represents": "EVT-log"
+      },
+      "cluster_size": 11,
+      "cluster_members": [
+        7,
+        8,
+        10,
+        14,
+        15,
+        18,
+        20,
+        23,
+        24,
+        26,
+        30
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/audit-window",
+        "capabilities": [
+          "presentable",
+          "pointable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The window's content and limits are defined in the activity region (runtime/suite.py:now); changing the window size or logic requires a code change there.",
+          "what": "The forensic audit window on the activity feed, displaying a truncated history of the last 999 events for a specific decision.",
+          "what_you_can_do": "View the chronological trace of events leading to a decision without truncation, allowing you to read the raw activity log and the causal chain that authorized the outcome."
+        },
+        "maps_to_feature": "EVT-log",
+        "represents": "EVT-log"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        9
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/audit",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the activity region (activity.tsx); the trace reflects the resolve event's unique sequence (ENG-resolve) and is read-only in this mockup.",
+          "what": "The forensic audit dashboard displaying the unique resolve event chain.",
+          "what_you_can_do": "View the provably authorized history of a decision, tracing the resolve event's unique sequence from initial idea through final resolution, verifying the chain at each hop."
+        },
+        "maps_to_feature": "ENG-resolve",
+        "represents": "ENG-resolve"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        11
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/root-bind",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The marker is the visual anchor in the activity region (activity.tsx); the sequence logic is defined in the event trace handler (runtime/suite.py:now).",
+          "what": "The root binding marker on the activity feed, marking the sequence where others attach to the main chain.",
+          "what_you_can_do": "View the specific sequence number (412) and the binding status of the root node in the forensic trace."
+        },
+        "maps_to_feature": "EVT-log",
+        "represents": "SEQ-412 anchor"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        12
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/s31-build-result-review",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The dashboard reflects the captured event trace; it is read-only in this mockup context. To alter the trace, one would modify the event log source (EVT-log) and re-run the trace generation.",
+          "what": "A forensic audit dashboard displaying the exact history of a specific decision.",
+          "what_you_can_do": "View the complete chronological path of events for a decision, read the raw activity log, and review the specific causal chain that authorized the final outcome."
+        },
+        "maps_to_feature": "EVT-log",
+        "represents": "S31-build-result-review"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        13,
+        16
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/derived",
+        "capabilities": [
+          "presentable",
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The text is a static annotation on the activity feed region; changing the underlying trace logic requires modifying the event generation logic in the activity feed region.",
+          "what": "A forensic text marker on the activity feed indicating a decision path that originated from a rejected sequence.",
+          "what_you_can_do": "View the specific causal chain of events that led to a resolution following a rejection, allowing you to audit the history of that decision branch."
+        },
+        "maps_to_feature": "EVT-log",
+        "represents": "A derived audit trace from a rejected sequence"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        21
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/verdict",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The verdict surfacing is the decision\u2192implementation wire; the card reflects the captured event trace and does not drive new system state.",
+          "what": "A verdict card in the activity feed that records a reject or needs-change decision on a sequence.",
+          "what_you_can_do": "View the forensic audit of a decision's evolution, read the raw activity log, and review the causal chain that authorized the final outcome (including the specific verdict kind and state)."
+        },
+        "maps_to_feature": "ENG-resolve",
+        "represents": "ENG-resolve"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        22,
+        29
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/lineage",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The lineage display is rendered in the activity region (activity.tsx); the data and logic for the resolve chain come from suite.py:resolve (mapped to ENG-resolve).",
+          "what": "The forensic audit section displaying the causal lineage of a specific resolve event.",
+          "what_you_can_do": "View the provable chain of how a verdict authorized the system's acts, tracing the unique sequence from the initial idea through the resolve event to the final system action."
+        },
+        "maps_to_feature": "ENG-resolve",
+        "represents": "ENG-resolve"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        25
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/replay/trace",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It reads the event log at suite.py:replay (specifically the recent events reversed to oldest-first); changing the view requires a code change in the replay region.",
+          "what": "The forensic trace line on the replay dashboard.",
+          "what_you_can_do": "View the exact causal chain of events that led to a decision, from the initial idea through to the final resolution, in chronological order."
+        },
+        "maps_to_feature": "INB-replay",
+        "represents": "INB-replay trace"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        31,
+        38
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/replay/decision.intent",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the replay region (runtime/suite.py:replay); changing the marker is a code change there.",
+          "what": "A specific intent marker on the replay timeline.",
+          "what_you_can_do": "Identify the precise decision point within the recorded activity path."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "decision intent marker"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        33,
+        39
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/replay/comment",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the activity replay region (runtime/suite.py:replay); changing the comment content requires updating the event log data or the review annotation layer.",
+          "what": "A specific review comment attached to a replayed event in the forensic audit dashboard.",
+          "what_you_can_do": "Read the system's recorded history of a decision and view the specific notes or annotations added by operators to that event during the review process."
+        },
+        "maps_to_feature": "WIRE-review",
+        "represents": "WIRE-review"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        35
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/replay/decision.dispatch",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the activity/replay region (activity/replay.tsx); changing it is a code change there.",
+          "what": "The dispatch control on the replay dashboard.",
+          "what_you_can_do": "Initiate the dispatch of a decision event within the replay context."
+        },
+        "maps_to_feature": "WIRE-dispatch",
+        "represents": "decision dispatch"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        36
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/audit",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The footer is the visible organ of the dashboard region; the log tracing logic lives in the runtime suite (audit tracing).",
+          "what": "The audit footer on the forensic dashboard.",
+          "what_you_can_do": "View the complete chronological path of events for a decision, read the raw activity log, and review the specific causal chain that authorized the final outcome."
+        },
+        "maps_to_feature": "EVT-log",
+        "represents": "INB-audit"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        42
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/coa/audit",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The audit surfacing is the decision\u2192implementation wire (guarded close + surface_audit); the dashboard is the visible organ.",
+          "what": "A forensic audit dashboard embedded within the decision card.",
+          "what_you_can_do": "View the complete chronological path of events for a decision, read the raw activity log, and review the specific causal chain that authorized the final outcome."
+        },
+        "maps_to_feature": "WIRE-intent",
+        "represents": "INB-coa audit surface"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        44,
+        46
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/coa/session_view",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This is a mockup-only view; no built code path maps to it yet.",
+          "what": "A forensic audit dashboard displaying the chronological evolution of a specific decision.",
+          "what_you_can_do": "View the complete history of how a decision evolved from its initial idea to its final resolution, including the raw activity log and the causal chain that authorized the outcome."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Session history trace"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        45,
+        47
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/coa/replay",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The replay surfacing is the decision\u2192implementation wire (guarded close + surface_review); the replay card is the visible organ.",
+          "what": "A forensic replay control on the course-of-action card.",
+          "what_you_can_do": "View the complete chronological path of events for a decision, read the raw activity log, and review the specific causal chain that authorized the final outcome."
+        },
+        "maps_to_feature": "INB-replay",
+        "represents": "INB-replay"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        49
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/coa",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "defer",
+        "howto": {
+          "how_to_change": "The panel is the audit region (runtime/suite.py:coa); changing the view or data is a code change there.",
+          "what": "The audit panel on the inbox, showing the forensic history of a decision.",
+          "what_you_can_do": "View the complete chronological path of events for a decision, read the raw activity log, and review the specific causal chain that authorized the final outcome."
+        },
+        "maps_to_feature": "INB-coa",
+        "represents": "INB-coa"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        50
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C5-replay-desktop.html"
+    }
+  ]
+}

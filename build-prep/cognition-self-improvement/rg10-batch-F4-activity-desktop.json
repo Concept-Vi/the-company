@@ -1,0 +1,1076 @@
+{
+  "mockup": "F4-activity-desktop.html",
+  "ground": {
+    "screen_present": true,
+    "what_this_is": "This is the central Activity Dashboard, a live 'now-view' that shows the current state of the system and a scrolling feed of recent events.",
+    "what_you_can_do": "Scan the top tiles to see the system's current status (e.g., if work is pending your approval or fully resolved), and read the scrolling log below to see what actions have just happened."
+  },
+  "n_candidates": 35,
+  "n_dossiers": 35,
+  "n_clusters": 29,
+  "confirmed": [
+    {
+      "dossier": {
+        "address": "ui://canvas/wire",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the canvas header region (canvas/app/src/regions/Toolbar.tsx); adding or changing this control is a code change there, surfaced via the build-intent wire.",
+          "what": "The wire control on the canvas header.",
+          "what_you_can_do": "Click to initiate a wire connection between two nodes, translating the operator's spatial intent into a system action."
+        },
+        "maps_to_feature": "WIRE-intent",
+        "represents": "WIRE-intent"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        1
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/run",
+        "capabilities": [
+          "pointable",
+          "driven"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (Toolbar.tsx); changing the run action is a code change there.",
+          "what": "The run command on the activity dashboard.",
+          "what_you_can_do": "Execute the current composition to advance the system state."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "RUN-run"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        3
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/content",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific label yet. Changing it requires a code edit in the canvas header region (NodeShape.tsx) to alter the kind display.",
+          "what": "The 'Content' label on the canvas header, visually marked with a dot to denote the current active kind.",
+          "what_you_can_do": "Identify the current composition kind (Content) at a glance; it is a static status indicator for the active view."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Content kind indicator"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        6
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/registry-fallback",
+        "capabilities": [
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This is a mockup-only message; no built code path maps to it yet.",
+          "what": "A status message indicating the model registry is empty and the system is using the default brain.",
+          "what_you_can_do": "Read the system's fallback state to understand why the specific model registry is unavailable."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Registry fallback message"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        12
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/connected-constant",
+        "capabilities": [
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This is a mockup-only display; no built code path exists to change it yet.",
+          "what": "The visual indicator of the permanent, unchanging connection between the system and the Large Language Model.",
+          "what_you_can_do": "Observe the status of the constant data flow (Text to Text) to understand the system's current mode of operation."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "The constant bridge link"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        18
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/registry",
+        "capabilities": [
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This is a mockup-only display; no built code path maps to it yet.",
+          "what": "A status indicator on the Activity Dashboard showing that a node-type proposal has been applied and rediscovered in the registry.",
+          "what_you_can_do": "Read the current state of the registry to see which node types are active and rediscovered."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Registry proposal state"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        20
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/legend",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "driven"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It is driven by the live run-state; changing the text requires updating the state logic in the App.tsx shell or the NodeShape.tsx region.",
+          "what": "The live legend on the canvas, displaying the current system state and presence string.",
+          "what_you_can_do": "Read the live status of the system (pending, resolved, empty, or off) and the current mode without interaction."
+        },
+        "maps_to_feature": "ENG-volatile",
+        "represents": "ENG-volatile"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        25,
+        33
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/converse",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the canvas region (canvas/app/src/NodeShape.tsx); changing the interaction logic requires code edits there.",
+          "what": "The conversational control embedded in the canvas activity dashboard.",
+          "what_you_can_do": "Initiate a chat or ask a question to the system directly from the live board."
+        },
+        "maps_to_feature": "RHM-chat",
+        "represents": "The conversational interface on the canvas"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        28
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/warning",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "driven"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This banner is driven by the canvas region (canvas/app/src/NodeShape.tsx); changing its state or message requires a code edit in that region.",
+          "what": "The warning banner on the canvas, signaling a system state that is failing loudly and must never be silent.",
+          "what_you_can_do": "Read the alert to understand the current failure state; it serves as a visual indicator that the system is in a volatile condition."
+        },
+        "maps_to_feature": "ENG-volatile",
+        "represents": "ENG-volatile"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        31
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "F4-activity-desktop.html"
+    }
+  ],
+  "flagged": [
+    {
+      "dossier": {
+        "address": "ui://canvas/layers",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (canvas/app/src/regions/Toolbar.tsx); changing it is a code change there.",
+          "what": "The layers control on the canvas toolbar.",
+          "what_you_can_do": "Toggle the layering mode to manage node depth and visibility on the board."
+        },
+        "maps_to_feature": "CAN-layers",
+        "represents": "CAN-layers"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        0
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/force",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to it yet.",
+          "what": "The force control on the canvas header.",
+          "what_you_can_do": "Trigger a forced state change on the composition (mockup-only; not yet built)."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "ENG-force"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        2
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/toolbar",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The strip is the toolbar region (canvas/app/src/regions/Toolbar.tsx); adding or changing a control is a code change there, surfaced via the build-intent wire.",
+          "what": "The toolbar \u2014 the bridge's command strip across the top of the board (the Company title, the live presence light, then the act controls: run \u00b7 wire \u00b7 portal \u00b7 delete \u00b7 layers \u00b7 fit \u00b7 reload).",
+          "what_you_can_do": "Read the system's live state at a glance (running / thinking / awaiting) and reach every board-level action from one place."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "RUN-run"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        4
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/process",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the canvas region (NodeShape.tsx); changing its definition or behavior is a code change there.",
+          "what": "The Process node type in the central Activity Dashboard.",
+          "what_you_can_do": "Identify the current system activity as a 'Process' to inspect its state, select it to inspect details, or wire it to other nodes."
+        },
+        "maps_to_feature": "NODE-kinds",
+        "represents": "NODE-process"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        5
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/rail",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The rail is driven by the canvas region (canvas/app/src/regions/Canvas.tsx); changing the rail's structure or behavior requires code edits there.",
+          "what": "The central navigation rail on the Activity Dashboard.",
+          "what_you_can_do": "Select a Process (A) to ask for a decision, or select a Content (\u2315) to retrieve information; the rail reflects the current system state and allows navigation between these domains."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Process rail"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        7
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/status",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The head reads suite.py:now (live state); the feed reflects the captured trajectory.",
+          "what": "The central status indicator on the Activity Dashboard showing the system's current readiness and resolution state.",
+          "what_you_can_do": "Scan the top tiles to see if work is pending your approval, fully resolved, or awaiting focus."
+        },
+        "maps_to_feature": "EVT-now",
+        "represents": "EVT-now"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        8
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/run",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the activity region (runtime/suite.py:now); changing the status text is a code change there.",
+          "what": "The run status indicator on the activity feed.",
+          "what_you_can_do": "See the current execution state of the codebase graph (e.g., 'ran', 'cached') at a glance."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "RUN-run"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        9
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/heartbeat",
+        "capabilities": [
+          "presentable",
+          "driven"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the activity region (runtime/suite.py:now); changing the text or values is a code change there.",
+          "what": "The live heartbeat ticker on the activity dashboard showing system sequence and reconnection status.",
+          "what_you_can_do": "Scan the top of the activity feed to see the current system state, sequence number, and reconnection rhythm at a glance."
+        },
+        "maps_to_feature": "EVT-now",
+        "represents": "EVT-now"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        10,
+        21
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/sum",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the activity region (activity.tsx); the live state reflects suite.py:now (live state), and the memo gate is the captured trajectory.",
+          "what": "The summary tile on the activity dashboard showing the current graph run state.",
+          "what_you_can_do": "Read the live status of the graph run (how many nodes resolved vs cached) and the memo gate status at a glance."
+        },
+        "maps_to_feature": "EVT-now",
+        "represents": "SUM-memo"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        11
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/build-review",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The review surfacing is the decision\u2192implementation wire (guarded close + surface_review).",
+          "what": "A build-result review card in the activity feed.",
+          "what_you_can_do": "Read the result summary and the changed-files diff of a completed self-build, then approve (resolve) it \u2014 this records your verdict, it never re-triggers the build."
+        },
+        "maps_to_feature": "WIRE-review",
+        "represents": "WIRE-review"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        13,
+        16
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/verified",
+        "capabilities": [
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific banner yet.",
+          "what": "The verification banner on the activity feed.",
+          "what_you_can_do": "Read the confirmation that a build has passed use verification and see which suites are in a green state."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "EVT-verified"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        14
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/walkthrough",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "driven"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the activity region (runtime/suite.py:now); changing the sequence or the 'gate opened' trigger is a code change there.",
+          "what": "The 'walkthrough advanced' control on the activity dashboard.",
+          "what_you_can_do": "Open the guided walk session to advance the system state; the system fires the next item in the sequence."
+        },
+        "maps_to_feature": "WALK-next",
+        "represents": "WALK-next"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        15
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/ask-grounded",
+        "capabilities": [
+          "presentable",
+          "pointable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The text and status are rendered in the activity feed region (runtime/suite.py:now); changing the message or grounding logic requires a code update to the feed's event surfacing.",
+          "what": "The 'ask' node status indicator in the activity feed, showing that a node has responded based on two specific inputs.",
+          "what_you_can_do": "Read the confirmation that the node has answered and note the grounding in two inputs to understand the current resolution state."
+        },
+        "maps_to_feature": "EVT-now",
+        "represents": "ASK-grounded"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        17
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/created-node",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The feed reflects the live state; the creation event is driven by the runtime's node generation logic (runtime/suite.py:now).",
+          "what": "A live event marker in the activity feed showing a node was just created on the codebase.",
+          "what_you_can_do": "Scan the feed to see the system's recent actions and identify the specific node that was just instantiated."
+        },
+        "maps_to_feature": "NODE-kinds",
+        "represents": "NODE-creation event"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        19
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/now",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The board reflects live run-state; changing the state requires editing the runtime logic (suite.py) that feeds the now-view, while the visual tile itself is driven by the canvas region (NodeShape.tsx).",
+          "what": "The central 'now-view' dashboard tile showing the system's current operational state.",
+          "what_you_can_do": "Scan the top tiles to see if work is pending your approval or fully resolved, and read the scrolling log below to see what actions have just happened."
+        },
+        "maps_to_feature": "EVT-now",
+        "represents": "NOW-present"
+      },
+      "cluster_size": 4,
+      "cluster_members": [
+        22,
+        24,
+        26,
+        32
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/foot",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the footer region of the dashboard; changing the text or state is a code edit in the dashboard's footer component.",
+          "what": "The footer control on the Activity Dashboard showing the live event stream status.",
+          "what_you_can_do": "View the current sequence number and the append-only log state of the system's live event stream."
+        },
+        "maps_to_feature": "EVT-stream",
+        "represents": "EVT-stream"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        23
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/act",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific dashboard view yet.",
+          "what": "The central Activity Dashboard \u2014 the live 'now-view' showing the system's current state and a scrolling feed of recent events.",
+          "what_you_can_do": "Scan the top tiles to see the system's status (e.g., pending approval vs. resolved) and read the scrolling log below to see what actions have just happened."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "ACT-act"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        27
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/decision-review",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the canvas region (canvas/app/src/NodeShape.tsx); changing the control logic requires edits there.",
+          "what": "The central decision and review control on the canvas.",
+          "what_you_can_do": "Select a node to review its state, or resolve it directly; it acts as the bridge between inspection and final verdict."
+        },
+        "maps_to_feature": "RHM-decide",
+        "represents": "Decision/Review control"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        29
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/mode",
+        "capabilities": [
+          "pointable",
+          "driven"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the canvas region (canvas/app/src/NodeShape.tsx); changing the mode logic is a code edit there.",
+          "what": "The mode selector on the canvas \u2014 the switch that changes how the board behaves.",
+          "what_you_can_do": "Click it to shift the system's presence state (e.g., from active to dormant or into a specific operational mode), altering how nodes and connections respond."
+        },
+        "maps_to_feature": "RHM-modes",
+        "represents": "MODE-presence"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        30
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/inspector",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the canvas region (canvas/app/src/NodeShape.tsx); changing its layout or content is a code change there.",
+          "what": "The Inspector panel on the canvas, a dedicated view for deep system inspection.",
+          "what_you_can_do": "View the live system state, inspect the current activity log, and manage the presence string (e.g., pending, resolved) without altering the underlying composition."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "INSPECT-panel"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        34
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "F4-activity-desktop.html"
+    }
+  ]
+}

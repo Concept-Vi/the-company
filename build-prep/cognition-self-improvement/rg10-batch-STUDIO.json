@@ -1,0 +1,205 @@
+{
+  "mockup": "STUDIO.html",
+  "ground": {
+    "screen_present": true,
+    "what_this_is": "This is the Mockup Studio, a design-review portal where you view mockup files and provide conversational feedback to the right-hand-man (RHM) agent.",
+    "what_you_can_do": "Select a mockup from the left gallery to view it in the center stage, then type feedback in the right panel to update the mockup corpus."
+  },
+  "n_candidates": 18,
+  "n_dossiers": 18,
+  "n_clusters": 5,
+  "confirmed": [
+    {
+      "dossier": {
+        "address": "ui://studio/mockup-studio",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific screen yet.",
+          "what": "The Mockup Studio, a design-review portal where you view mockup files and provide conversational feedback to the right-hand-man (RHM) agent.",
+          "what_you_can_do": "Select a mockup from the left gallery to view it in the center stage, then type feedback in the right panel to update the mockup corpus."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "The Mockup Studio portal"
+      },
+      "cluster_size": 12,
+      "cluster_members": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        9,
+        10,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "STUDIO.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://mockup/reload",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific control yet.",
+          "what": "The reload control on the Mockup Studio toolbar.",
+          "what_you_can_do": "Click it to refresh the current mockup view and re-fetch the latest design state from the corpus."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Reload control"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        6
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "STUDIO.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://mockup-studio/choose",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this selection yet.",
+          "what": "The rail entry in the Mockup Studio that selects a mockup file.",
+          "what_you_can_do": "Click this entry to load the selected mockup into the device frame for review."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Mockup rail entry"
+      },
+      "cluster_size": 3,
+      "cluster_members": [
+        7,
+        8,
+        12
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "STUDIO.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://mockup/empty",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This is a mockup-only UI element; no built code path maps to it yet. Changes would require updating the mockup design file.",
+          "what": "The empty state message displayed when no mockup is currently selected in the design-review portal.",
+          "what_you_can_do": "Inform the operator that the center stage is empty and direct them to select a mockup from the left gallery to begin the feedback thread."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Empty state for the Mockup Studio"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        11
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "STUDIO.html"
+    }
+  ],
+  "flagged": [
+    {
+      "dossier": {
+        "address": "ui://mockup/phone",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific display yet.",
+          "what": "The phone status display on the Mockup Studio header.",
+          "what_you_can_do": "View the current phone state (e.g., 'Phone \u00b7 390') to understand the system's operational mode or connection status."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Phone status indicator"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        4
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "STUDIO.html"
+    }
+  ]
+}

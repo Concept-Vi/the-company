@@ -1,0 +1,871 @@
+{
+  "mockup": "E1-fleet-desktop.html",
+  "ground": {
+    "screen_present": true,
+    "what_this_is": "This is a process control dashboard where you are currently viewing a specific step in a workflow (an 'ask' node) and selecting which AI model to run it with.",
+    "what_you_can_do": "You can click the 'Chat' or 'Embed' tabs to switch between the two available model lists, select a model from the list to apply to the current process step, and view the system's status indicators at the top and bottom."
+  },
+  "n_candidates": 33,
+  "n_dossiers": 33,
+  "n_clusters": 23,
+  "confirmed": [
+    {
+      "dossier": {
+        "address": "ui://inspector/model-fleet",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The control lives in the inspector region (Inspector.tsx); the refresh logic is driven by the live fleet wire (WIRE-intent or similar live sync mechanism).",
+          "what": "The refresh control on the inspector panel.",
+          "what_you_can_do": "Click to pull the latest state from the live model fleet and update the current node's configuration."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "FLEET-refresh"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        14
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/model-field/transport-filter",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This is a mockup-only element; it does not exist in the built code path. To make it appear, a developer must add a conditional rendering block in the model field component that displays this text when the 'transport' config flag is active.",
+          "what": "A static informational note displayed on the model configuration field.",
+          "what_you_can_do": "Read the system's configuration rule that explains why this specific model option is currently hidden from the operator view."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Transport filter note"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        19
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/model-field/endpoint-status",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The text is generated dynamically based on the endpoint's configuration state; changing the underlying endpoint config in the fabric registry updates this view.",
+          "what": "A status indicator on the model configuration field showing the state of the embed endpoint.",
+          "what_you_can_do": "Read the system's status regarding the embed endpoint configuration (specifically whether it is unconfigured)."
+        },
+        "maps_to_feature": "MOD-embed",
+        "represents": "MOD-embed-status"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        23
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "E1-fleet-desktop.html"
+    }
+  ],
+  "flagged": [
+    {
+      "dossier": {
+        "address": "ui://settings/layers",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is Settings.tsx; the layer switching logic is driven by the model selection wire (mockup-only; no built code path maps to it yet).",
+          "what": "The layers control on the settings dashboard.",
+          "what_you_can_do": "Toggle the layer view to switch between the 'Chat' and 'Embed' model lists for the current process step."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "RHM-layers"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        0
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://settings/wire",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is Settings.tsx; the action logic maps to the existing wire intent path (suite.py:wire_intents).",
+          "what": "The wire control on the settings dashboard.",
+          "what_you_can_do": "Click this to initiate a wire operation (intent) for the current configuration step."
+        },
+        "maps_to_feature": "WIRE-intent",
+        "represents": "WIRE-intent"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        1
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://settings/force",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this yet.",
+          "what": "The force control on the settings dashboard.",
+          "what_you_can_do": "Click to apply a forced state to the current configuration (mockup-only; not yet built)."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "RHM-force"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        2
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://settings/run",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The control lives in the settings region (Settings.tsx); the action is wired via the existing run intent (suite.py:run).",
+          "what": "The primary execution trigger on the settings control-room.",
+          "what_you_can_do": "Click this to initiate the current process step with the selected model configuration."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "RUN-run"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        3,
+        31
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://settings/toolbar",
+        "capabilities": [
+          "pointable",
+          "spotlit",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The strip is the toolbar region (canvas/app/src/regions/Toolbar.tsx); adding or changing a control is a code change there, surfaced via the build-intent wire.",
+          "what": "The toolbar \u2014 the bridge's command strip across the top of the board (the Company title, the live presence light, then the act controls: run \u00b7 wire \u00b7 portal \u00b7 delete \u00b7 layers \u00b7 fit \u00b7 reload).",
+          "what_you_can_do": "Read the system's live state at a glance (running / thinking / awaiting) and reach every board-level action from one place."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "RUN-run"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        4
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://settings/node-palette",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is Settings.tsx; the model selection logic maps to the NODE-config feature path.",
+          "what": "The node palette control on the process dashboard.",
+          "what_you_can_do": "Select which AI model to run the current process step by clicking the 'Chat' or 'Embed' tabs and choosing a model from the list."
+        },
+        "maps_to_feature": "NODE-config",
+        "represents": "NODE-config"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        5,
+        8
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://settings/process",
+        "capabilities": [
+          "presentable",
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is Settings.tsx; the process logic is driven by suite.py:set_rhm_config.",
+          "what": "The process control header on the settings dashboard, indicating the current workflow step.",
+          "what_you_can_do": "View the active process step and select the AI model to run it via the 'Chat' or 'Embed' tabs."
+        },
+        "maps_to_feature": "RHM-process",
+        "represents": "RHM-process"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        6,
+        26
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": [
+          "refcheck (Layer 1, deterministic floor): feature fabrication: maps_to_feature 'RHM-process' is not an inventory id nor 'proposed'"
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://settings/content",
+        "capabilities": [
+          "presentable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The surface is Settings.tsx; changes flow through the existing config path (suite.py:set_rhm_config) as reuse-only updates to the real config.",
+          "what": "The content control within the consolidated Settings control-room.",
+          "what_you_can_do": "View and manage the system's content configuration (model roles, persona, presence modes, voice settings) in one place; read-only or unavailable settings are shown honestly."
+        },
+        "maps_to_feature": "RHM-config",
+        "represents": "RHM-content"
+      },
+      "cluster_size": 3,
+      "cluster_members": [
+        7,
+        27,
+        30
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/node/model",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The card is the generic NodeShape.tsx; the model selection logic lives in the nodes/<name>.py file for this specific node type.",
+          "what": "The model selector on a process node card.",
+          "what_you_can_do": "Select the AI model (e.g., deepseek-v4-pro:cloud) to apply to the current process step."
+        },
+        "maps_to_feature": "NODE-model",
+        "represents": "NODE-model"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        9
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "refcheck (Layer 1, deterministic floor): feature fabrication: maps_to_feature 'NODE-model' is not an inventory id nor 'proposed'",
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/node/ask-process",
+        "capabilities": [
+          "pointable",
+          "spotlit",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The node's visual and data structure is driven by NodeShape.tsx (specifically the process kind and port wiring logic) and the App.tsx shell; structural changes require edits there.",
+          "what": "A process control node on the canvas representing an 'ask' step in a workflow.",
+          "what_you_can_do": "Select this node to inspect its question, context, and model configuration; interact with its ports to wire it into the flow; view its live run state."
+        },
+        "maps_to_feature": "NODE-kinds",
+        "represents": "AN-ask-process"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        10
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/model-slot",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the canvas region (canvas/app/src/NodeShape.tsx); changing the model list or selection logic is a code change there.",
+          "what": "The model slot control on the process dashboard.",
+          "what_you_can_do": "Select an AI model to run the current process step from the available lists."
+        },
+        "maps_to_feature": "RHM-chat",
+        "represents": "Model selection control"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        11
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://settings/ask-process",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is Settings.tsx; changing the model or process state requires updating the config path (suite.py:set_rhm_config) or the specific process node logic.",
+          "what": "The active 'ask' process node within the settings control room.",
+          "what_you_can_do": "View the current model assignment (deepseek-v4-pro:cloud) and the process flow (question + context \u2192 answer) for this specific step; switch between model lists via the Chat or Embed tabs."
+        },
+        "maps_to_feature": "NODE-config",
+        "represents": "ASK-process"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        12
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://settings/model-field",
+        "capabilities": [
+          "presentable",
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is the process control dashboard region; the binding logic lives in the runtime suite (suite.py) and the UI wire is the dashboard region.",
+          "what": "The live model selection field in the process control dashboard, bound to the chat endpoint.",
+          "what_you_can_do": "View the currently selected model (Gemini filtered company) and its status (event-stream connected); switch between 'Chat' or 'Embed' tabs to browse available models."
+        },
+        "maps_to_feature": "RHM-chat",
+        "represents": "RHM-chat model field"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        13
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/model-field/models_at",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The field is generated from the node-type's config_schema (NodeConfigForm.tsx); the model list is pulled from the live registry (suite.py:available_models) \u2014 change the field by editing the type's schema.",
+          "what": "The model selector control on the inspector node configuration.",
+          "what_you_can_do": "Select a registered model (e.g., 'chat') from the live registry to apply to the current process step; if a saved value is missing from the live list, it is displayed rather than dropped."
+        },
+        "maps_to_feature": "MOD-registry",
+        "represents": "MOD-registry model selector"
+      },
+      "cluster_size": 5,
+      "cluster_members": [
+        15,
+        16,
+        17,
+        20,
+        25
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/model-field/default-brain",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This label is generated from the node-type's config_schema (NodeConfigForm.tsx); changing the label requires editing the type's schema.",
+          "what": "The 'default brain' label on the model selection field within the node inspector.",
+          "what_you_can_do": "Select this to apply the 'default brain' model to the current process step; the system will then fetch the live registry for that model type to populate the available options."
+        },
+        "maps_to_feature": "MOD-embed",
+        "represents": "MOD-embed"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        18,
+        21
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/model-field/registry-note",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This is a static informational note in the inspector region; changing the text requires editing the inspector component's static content.",
+          "what": "A note explaining that the full model list is fetched from the registry endpoint, not fully enumerated in the audit.",
+          "what_you_can_do": "Read the note to understand that only the default model is named in the audit while the rest are populated dynamically."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Registry note on model enumeration"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        22
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/model-field/embed-error",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The field is generated from the node-type's config_schema (NodeConfigForm.tsx); the error logic is driven by the absence of a configured embed endpoint in the live registry (suite.py:available_models).",
+          "what": "A status indicator on the model configuration field showing that the embed endpoint is unconfigured.",
+          "what_you_can_do": "Read the error message to understand that the system cannot list embed models without a configured endpoint; this prevents silent fallbacks to the chat endpoint."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Embed endpoint failure notice"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        24
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://settings/canvas",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is Settings.tsx; the Canvas region logic is in canvas/app/src/regions/Settings.tsx.",
+          "what": "The Canvas control on the settings dashboard.",
+          "what_you_can_do": "Click it to open the Canvas region and manage the process control dashboard where you select AI models for workflow steps."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Canvas control"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        28
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://settings/inbox",
+        "capabilities": [
+          "openable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is Settings.tsx; the navigation link is defined there, and the destination behavior is routed via suite.py:inbox_lanes.",
+          "what": "The Inbox navigation entry within the Settings control-room.",
+          "what_you_can_do": "Click to open the Inbox triage deck where decisions and approvals are escalated for review."
+        },
+        "maps_to_feature": "INB-lanes",
+        "represents": "INB-lanes"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        29
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://settings/Canvas",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific tab yet.",
+          "what": "The Canvas tab in the settings navigation bar.",
+          "what_you_can_do": "Select the Canvas configuration section within the settings control-room."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Canvas entry"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        32
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "E1-fleet-desktop.html"
+    }
+  ]
+}

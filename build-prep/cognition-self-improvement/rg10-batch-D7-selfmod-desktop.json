@@ -1,0 +1,659 @@
+{
+  "mockup": "D7-selfmod-desktop.html",
+  "ground": {
+    "screen_present": true,
+    "what_this_is": "This is a draft design for a 'Self-Modification Audit' panel, intended to let a human operator safely review and undo changes the system made to itself.",
+    "what_you_can_do": "You can see the single most recent change the system made and click the 'Revert' button to undo it immediately; older changes are currently hidden as a future feature."
+  },
+  "n_candidates": 38,
+  "n_dossiers": 38,
+  "n_clusters": 17,
+  "confirmed": [
+    {
+      "dossier": {
+        "address": "ui://toolbar/run",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (canvas/app/src/regions/Toolbar.tsx); changing its behavior is a code change there, surfaced via the build-intent wire.",
+          "what": "The primary execution trigger on the toolbar.",
+          "what_you_can_do": "Click to initiate the system's active run cycle."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "RUN-run"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        4
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "D7-selfmod-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://workshop/self-changes/sm-revert",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the workshop region (runtime/suite.py:revert_self_change); changing the behavior requires a code update there.",
+          "what": "The immediate, operator-only control to undo the system's last self-change.",
+          "what_you_can_do": "Click to trigger an instant, no-confirm git revert that re-discovers the node registry and emits a revert event; the change is itself git-reversible."
+        },
+        "maps_to_feature": "SM-revert",
+        "represents": "SM-revert"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        19
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "D7-selfmod-desktop.html"
+    }
+  ],
+  "flagged": [
+    {
+      "dossier": {
+        "address": "ui://toolbar/workshop",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The strip is the toolbar region (canvas/app/src/regions/Toolbar.tsx); adding or changing a control is a code change there, surfaced via the build-intent wire.",
+          "what": "The workshop control on the toolbar \u2014 the bridge's command strip across the top of the board.",
+          "what_you_can_do": "See the single most recent change the system made and click 'Revert' to undo it immediately; older changes are currently hidden as a future feature."
+        },
+        "maps_to_feature": "SM-revert",
+        "represents": "SM-revert"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        0,
+        5
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "D7-selfmod-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/layers",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (canvas/app/src/regions/Toolbar.tsx); the panel logic is the SM-panel wire.",
+          "what": "The layers control on the toolbar.",
+          "what_you_can_do": "Open the Self-Modification Audit panel to review and undo recent system changes."
+        },
+        "maps_to_feature": "SM-revert",
+        "represents": "SM-layer"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        1
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "D7-selfmod-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/wire",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This control lives in the toolbar region (canvas/app/src/regions/Toolbar.tsx); enabling or modifying the audit flow requires a code change there, surfaced via the build-intent wire.",
+          "what": "The 'wire' command button on the bridge's command strip.",
+          "what_you_can_do": "Click this to initiate a self-modification audit, allowing the system to safely review and undo changes it made to itself."
+        },
+        "maps_to_feature": "WIRE-intent",
+        "represents": "WIRE-intent"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        2
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "D7-selfmod-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/force",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This is a mockup-only draft; no built code path maps to it yet.",
+          "what": "The force control on the toolbar.",
+          "what_you_can_do": "Click this to immediately revert the system's most recent self-modification change."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "SM-revert"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        3
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "D7-selfmod-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/coa",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; the visible text is a draft design. To make this a functional element, the code path would need to be created in the Self-Modification Audit region, but currently, it is not a built feature.",
+          "what": "The 'Process' header in the Self-Modification Audit panel, serving as the title for the most recent system change.",
+          "what_you_can_do": "Identify the specific system modification (the 'Process') that has just occurred; this is a read-only view of the current state."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "INB-coa"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        6
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "D7-selfmod-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/audit",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific panel yet.",
+          "what": "A dedicated panel for reviewing and undoing changes the system made to itself.",
+          "what_you_can_do": "View the single most recent system change and click 'Revert' to undo it immediately; older changes are currently hidden as a future feature."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Self-Modification Audit panel"
+      },
+      "cluster_size": 6,
+      "cluster_members": [
+        7,
+        9,
+        10,
+        12,
+        31,
+        33
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "D7-selfmod-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/ask",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This control is defined in the inbox region (Inbox.tsx); the underlying logic for the 'ask' action is the self-modification wire (guarded close + surface_review).",
+          "what": "The 'Process A ask L llm E embed Content C' control on the inbox rail.",
+          "what_you_can_do": "Initiate a self-modification audit by asking the system to embed the current content into a constant for review; this surfaces the most recent change made to the codebase for operator scrutiny."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "INB-ask"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        8
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "D7-selfmod-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/self-apply",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The panel is defined in the inbox region (Inbox.tsx); the revert action logic lives in the self-modify module (SM-revert).",
+          "what": "The Self-Modify audit panel that displays the system's most recent self-change.",
+          "what_you_can_do": "View the system's latest self-edit and click the revert control to undo that change safely."
+        },
+        "maps_to_feature": "SM-revert",
+        "represents": "SM-revert"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        11
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "D7-selfmod-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://workshop/audit",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the workshop region (runtime/suite.py:ui_info); the revert action is gated by the self-modification path.",
+          "what": "The Self-Modification Audit panel in the workshop region.",
+          "what_you_can_do": "View the single most recent system change and click 'Revert' to undo it immediately; older changes are currently hidden."
+        },
+        "maps_to_feature": "SM-revert",
+        "represents": "SM-revert"
+      },
+      "cluster_size": 16,
+      "cluster_members": [
+        13,
+        14,
+        15,
+        17,
+        18,
+        20,
+        21,
+        23,
+        25,
+        26,
+        27,
+        29,
+        30,
+        32,
+        35,
+        36
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "D7-selfmod-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://workshop/self-changes/nodes",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the workshop region (workshop.tsx); the logic for adding node types is defined in suite.py:NODE-types.",
+          "what": "The control to add a new node type definition within the self-changes audit panel.",
+          "what_you_can_do": "Click this to introduce a new kind of node (e.g., 'sentiment') into the system's self-modification schema."
+        },
+        "maps_to_feature": "NODE-types",
+        "represents": "NODE-types"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        16
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "D7-selfmod-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://workshop/revert",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific marker yet.",
+          "what": "A revert marker in the workshop panel.",
+          "what_you_can_do": "View the most recent self-modification change and its commit hash to understand what was changed."
+        },
+        "maps_to_feature": "SM-revert",
+        "represents": "SM-revert"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        22
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "D7-selfmod-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://workshop/sentiment-node",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path exists yet. If implemented, it would require changes to the workshop region and the self-modification schema logic.",
+          "what": "A draft control in the workshop panel for adding a 'sentiment' node type.",
+          "what_you_can_do": "This is a mockup-only design element; it allows an operator to visually propose adding a new node type to the system's self-modification schema."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "SM-node"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        24
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "D7-selfmod-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://workshop/extend",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the workshop region (runtime/suite.py:ui_info); changing the extension definition requires modifying the self-modification path (panel/extend verbs, build-gated, git-reversible).",
+          "what": "The entry point for adding a new extension to the workshop system.",
+          "what_you_can_do": "Click to initiate the creation of a new extension, specifically the 'token-usage-panel' in this draft."
+        },
+        "maps_to_feature": "SM-extension",
+        "represents": "Extension authoring entry"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        28
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "D7-selfmod-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://activity/evt-now",
+        "capabilities": [
+          "presentable",
+          "driven"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The indicator reflects the live state from suite.py:now; it is surfaced by the activity feed region.",
+          "what": "The live status indicator on the activity feed, showing the current state of self-modification events.",
+          "what_you_can_do": "See the system's real-time operational state and the active event trace at a glance."
+        },
+        "maps_to_feature": "EVT-now",
+        "represents": "EVT-now"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        34
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "D7-selfmod-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/walk",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "defer",
+        "howto": {
+          "how_to_change": "It starts a review session (suite.py:present_current); the walkthrough card is the visible organ.",
+          "what": "The 'walk these' control on the inbox.",
+          "what_you_can_do": "Send all the awaiting items through the review organ as one guided walk \u2014 each item is framed in plain language and you give a verdict (approve \u00b7 reject \u00b7 comment \u00b7 skip \u00b7 decide) step by step."
+        },
+        "maps_to_feature": "WALK-present",
+        "represents": "WALK-present"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        37
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "D7-selfmod-desktop.html"
+    }
+  ]
+}

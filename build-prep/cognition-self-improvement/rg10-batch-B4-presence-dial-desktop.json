@@ -1,0 +1,260 @@
+{
+  "mockup": "B4-presence-dial-desktop.html",
+  "ground": {
+    "screen_present": true,
+    "what_this_is": "This is the Presence Dial, a control panel that lets you adjust how the system's 'Right-Hand-Man' (RHM) assistant behaves and speaks to you.",
+    "what_you_can_do": "You can click any of the 8 modes (Listening, Text-Only, Background, Focus, Walkthrough, Watch-and-React, Decide-for-Me, or Off) to instantly change the system's posture, loudness, and level of autonomy."
+  },
+  "n_candidates": 35,
+  "n_dossiers": 35,
+  "n_clusters": 6,
+  "confirmed": [
+    {
+      "dossier": {
+        "address": "ui://toolbar/presence/resp",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the presence dial region (runtime/suite.py:set_mode); changing the text-only behavior is a code change there.",
+          "what": "The text-only response switch on the presence dial.",
+          "what_you_can_do": "Click this to force the RHM to reply only in concise text, ignoring visual or complex modes; click again to restore the previous posture."
+        },
+        "maps_to_feature": "RHM-modes",
+        "represents": "RHM-text-mode"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        17
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "B4-presence-dial-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/presence/watch-and-react",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the presence dial region (runtime/suite.py:set_mode); changing the mode's behavior or adding new modes requires updating the MODES registry and the mode definition nodes.",
+          "what": "A specific presence mode (Watch-and-React) on the presence dial.",
+          "what_you_can_do": "Click this mode to instantly shift the system's posture from active listening to passive observation and reactive suggestion, adjusting its loudness and autonomy level."
+        },
+        "maps_to_feature": "RHM-modes",
+        "represents": "RHM-modes"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        21
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "B4-presence-dial-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/presence/self-approve",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the presence dial region (runtime/suite.py:set_mode); changing the rule requires updating the mode validation logic there.",
+          "what": "The self-approval prohibition indicator on the presence dial.",
+          "what_you_can_do": "It visually blocks the operator from selecting the 'self-approve' mode, preventing the system from granting itself authority in that posture."
+        },
+        "maps_to_feature": "RHM-modes",
+        "represents": "RHM-self-approve guard"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        25
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "B4-presence-dial-desktop.html"
+    }
+  ],
+  "flagged": [
+    {
+      "dossier": {
+        "address": "ui://toolbar/presence/dial",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (Toolbar.tsx); changing a mode is a code change there, surfaced via the RHM-modes registry.",
+          "what": "The Presence Dial on the toolbar, the mode selector for the Right-Hand-Man assistant.",
+          "what_you_can_do": "Click any of the 8 modes (Listening, Text-Only, Background, Focus, Walkthrough, Watch-and-React, Decide-for-Me, or Off) to instantly change the system's posture, loudness, and level of autonomy."
+        },
+        "maps_to_feature": "RHM-modes",
+        "represents": "RHM-modes"
+      },
+      "cluster_size": 30,
+      "cluster_members": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        18,
+        20,
+        22,
+        24,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B4-presence-dial-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/presence/deep-work",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the presence dial region (runtime/suite.py:set_mode); changing the mode label or description is a code change there.",
+          "what": "The deep work mode indicator on the presence dial.",
+          "what_you_can_do": "Select this mode to set the system's posture to 'deep work', which restricts its verbs to brief, focused updates and suppresses elaboration unless explicitly requested."
+        },
+        "maps_to_feature": "RHM-modes",
+        "represents": "RHM-modes"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        19
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B4-presence-dial-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/presence/decide-for-me",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the presence dial region (runtime/suite.py:set_mode); changing its behavior or adding new modes requires a code change there.",
+          "what": "The 'Decide-for-Me' switch on the presence dial.",
+          "what_you_can_do": "Click this to instantly grant the RHM full autonomy to make and execute decisions without operator input, effectively pausing the operator's direct control."
+        },
+        "maps_to_feature": "RHM-decide",
+        "represents": "RHM-decide"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        23
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B4-presence-dial-desktop.html"
+    }
+  ]
+}

@@ -1,0 +1,639 @@
+{
+  "mockup": "C3-build-review-desktop.html",
+  "ground": {
+    "screen_present": true,
+    "what_this_is": "This is a focused review screen for a completed build that added a new feature called 'sentiment'. It shows the result of the work and allows you to verify it before it goes live.",
+    "what_you_can_do": "You can click the 'Show me it working' button to run a live demo of the new feature, or you can read the 'For the record' section to see which files were changed."
+  },
+  "n_candidates": 28,
+  "n_dossiers": 28,
+  "n_clusters": 17,
+  "confirmed": [
+    {
+      "dossier": {
+        "address": "ui://toolbar/presence",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "defer",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (canvas/app/src/regions/Toolbar.tsx); changing the light or controls is a code change there, surfaced via the build-intent wire.",
+          "what": "The live presence light on the toolbar bridge.",
+          "what_you_can_do": "Read the system's current state at a glance (running / thinking / awaiting) and interact with the act controls."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "RUN-run"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        0,
+        4
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C3-build-review-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/layers",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (canvas/app/src/regions/Toolbar.tsx); adding or changing a layer action is a code change there, surfaced via the build-intent wire.",
+          "what": "The layers control on the toolbar.",
+          "what_you_can_do": "Open the layers panel to manage the system's structural depth."
+        },
+        "maps_to_feature": "CAN-layers",
+        "represents": "LAY-layers"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        1
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C3-build-review-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/wire",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (canvas/app/src/regions/Toolbar.tsx); changing its behavior is a code change there, surfaced via the build-intent wire.",
+          "what": "The wire command button on the bridge's command strip.",
+          "what_you_can_do": "Click this to initiate a new wire intent, translating the board's current state into a sent action."
+        },
+        "maps_to_feature": "WIRE-intent",
+        "represents": "WIRE-intent"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        2
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C3-build-review-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/force",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to it yet.",
+          "what": "The force control on the toolbar.",
+          "what_you_can_do": "Click this to apply a force action to the board (mockup-only; not yet built)."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "RUN-force"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        3
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C3-build-review-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/build-review",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This surface is driven by the build-intent wire (WIRE-intent) surfacing the completed build state; the visible organ is the canvas region (canvas/app/src/regions/Canvas.tsx).",
+          "what": "The review surface for a completed build that surfaced a new node.",
+          "what_you_can_do": "Read the build summary and the 'show me' action to verify the new node is placed and runnable before it goes live."
+        },
+        "maps_to_feature": "WIRE-intent",
+        "represents": "BUILD-result surface"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        10
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C3-build-review-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/build-review/show-me",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the build-review region (runtime/suite.py:review_verdicts); changing the demo logic is a code change there.",
+          "what": "A button on the build review card that launches a live demonstration of the new feature.",
+          "what_you_can_do": "Click it to run a live demo of the new 'sentiment' feature in the browser."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "Live demo trigger"
+      },
+      "cluster_size": 3,
+      "cluster_members": [
+        11,
+        18,
+        19
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C3-build-review-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/decision-build",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The lane is defined in Inbox.tsx; the count logic lives in suite.py:inbox_lanes.",
+          "what": "The decision\u2192build lane on the inbox, showing the count of items awaiting your decision.",
+          "what_you_can_do": "View the number of escalated decisions waiting for your verdict before they move to the build phase."
+        },
+        "maps_to_feature": "INB-lanes",
+        "represents": "decision\u2192build lane"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        13
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C3-build-review-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/build-review/derived-source",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific display yet.",
+          "what": "The provenance display on a build review card, showing the three specific wires (decision, intent, proposal) that generated this build.",
+          "what_you_can_do": "Read the source wires to understand the origin of the build's logic and intent before verifying the result."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "WIRE-provenance"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        20
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C3-build-review-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/build-review/sendback",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the build-review region (runtime/suite.py:review_verdicts); changing the action or text is a code change there.",
+          "what": "The 'send back' control on the build review card.",
+          "what_you_can_do": "Click this to re-queue the current build result to the wire with a reason, effectively pausing the current review state."
+        },
+        "maps_to_feature": "WIRE-review",
+        "represents": "WIRE-requeue"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        23,
+        24
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C3-build-review-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/build-review/agent-guard",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific text yet.",
+          "what": "A warning marker on the build review card.",
+          "what_you_can_do": "Read the rule that an agent cannot self-approve its own build."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "AGENT-guard"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        25
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C3-build-review-desktop.html"
+    }
+  ],
+  "flagged": [
+    {
+      "dossier": {
+        "address": "ui://inbox/build-review/toolbar",
+        "capabilities": [
+          "pointable",
+          "spotlit",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (Toolbar.tsx); changing its buttons is a code change there.",
+          "what": "The command strip at the top of the build review screen.",
+          "what_you_can_do": "Access high-level actions like running the feature, viewing layers, or forcing a review state."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "WIRE-toolbar"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        5
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C3-build-review-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/build-review/process",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the review card region (runtime/suite.py:review_verdicts); changing the label or its meaning is a code change there.",
+          "what": "The 'Process' label on the build-review card, marking the specific work item being reviewed.",
+          "what_you_can_do": "Identify the current stage of the build review; clicking it (if openable) would reveal the full review context, but currently it serves as the focal point for the verdict decision."
+        },
+        "maps_to_feature": "INB-resolve",
+        "represents": "Process verdict"
+      },
+      "cluster_size": 6,
+      "cluster_members": [
+        6,
+        7,
+        14,
+        15,
+        17,
+        22
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C3-build-review-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/build-review/process-a",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The lane surfacing is the decision\u2192implementation wire (guarded close + surface_review); the specific process logic lives in the review verdicts region (runtime/suite.py:review_verdicts).",
+          "what": "A review lane in the build-result inbox dedicated to 'Process A' (the LLM embedding sentiment workflow).",
+          "what_you_can_do": "Read the result summary and changed-files diff for this specific process, then approve or resolve the build result without re-triggering the build."
+        },
+        "maps_to_feature": "WIRE-review",
+        "represents": "Process A review lane"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        8
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C3-build-review-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/build-status",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the canvas region (canvas/app/src/NodeShape.tsx); changing the message requires a code edit there.",
+          "what": "The status indicator on the canvas showing a completed build.",
+          "what_you_can_do": "Read the confirmation that a build has finished; this element reflects the system's current run-state."
+        },
+        "maps_to_feature": "RUN-status",
+        "represents": "BUILD-status"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        9
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C3-build-review-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/build-review/foot",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the build-review region (runtime/suite.py:review_verdicts); changing the status text is a code change there.",
+          "what": "The status footer on the build review card.",
+          "what_you_can_do": "Read the live state of the build (live, closed, implemented) and the event stream connection status."
+        },
+        "maps_to_feature": "WIRE-status",
+        "represents": "WIRE-status"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        12
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "refcheck (Layer 1, deterministic floor): feature fabrication: maps_to_feature 'WIRE-status' is not an inventory id nor 'proposed'",
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C3-build-review-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/build-review/decision_build",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The review surfacing is the decision\u2192implementation wire (guarded close + surface_review); the card lives in the inbox region (Inbox.tsx) and is governed by the review verdicts logic (runtime/suite.py:review_verdicts).",
+          "what": "A specific review card for a completed build that added a new feature called 'sentiment'.",
+          "what_you_can_do": "Read the result summary and the changed-files diff of the completed self-build, then approve (resolve) it to record your verdict without re-triggering the build."
+        },
+        "maps_to_feature": "INB-resolve",
+        "represents": "A build-result review card in the inbox"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        16,
+        26
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C3-build-review-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/build-review/record",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific display yet.",
+          "what": "A static reference card showing which files were modified in a completed build.",
+          "what_you_can_do": "Read the list of changed files to verify the scope of the new feature before finalizing the review."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "The technical record of changed files"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        21,
+        27
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C3-build-review-desktop.html"
+    }
+  ]
+}

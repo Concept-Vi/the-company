@@ -1,0 +1,415 @@
+{
+  "mockup": "B4-presence-dial-mobile.html",
+  "ground": {
+    "screen_present": true,
+    "what_this_is": "This is a mobile interface for setting your 'presence' or work posture, displayed as a floating sheet at the bottom of the screen.",
+    "what_you_can_do": "Tap the 'focus' pill at the top to open this sheet; select one of the eight available modes (like 'listening' or 'text-only') to change your current posture; and use the bottom navigation bar to switch between other main app sections."
+  },
+  "n_candidates": 22,
+  "n_dossiers": 22,
+  "n_clusters": 11,
+  "confirmed": [
+    {
+      "dossier": {
+        "address": "ui://toolbar/presence",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the toolbar region (Toolbar.tsx); changing the available modes requires updating the MODES registry.",
+          "what": "The presence mode selector on the toolbar.",
+          "what_you_can_do": "Tap this to open the sheet and select a work posture (like 'focus' or 'listening') that changes which verbs the system offers and how it speaks."
+        },
+        "maps_to_feature": "RHM-modes",
+        "represents": "RHM-modes"
+      },
+      "cluster_size": 10,
+      "cluster_members": [
+        0,
+        1,
+        3,
+        6,
+        8,
+        13,
+        15,
+        16,
+        19,
+        21
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "B4-presence-dial-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/presence/resp",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the presence dial region (runtime/suite.py:set_mode); changing the mode is a configuration change there.",
+          "what": "The text-only response mode on the presence dial.",
+          "what_you_can_do": "Select this mode to force the system to reply only in concise text, ignoring visual or complex reasoning outputs."
+        },
+        "maps_to_feature": "RHM-modes",
+        "represents": "RHM-text-mode"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        4,
+        14
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "B4-presence-dial-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/presence/minimal",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the presence sheet region (presence.tsx); changing the text or logic is a code change there.",
+          "what": "The minimal presence surface that surfaces only what genuinely needs you; otherwise a one-line ack.",
+          "what_you_can_do": "View the current minimal presence state or the single-line acknowledgement required for the current posture."
+        },
+        "maps_to_feature": "RHM-modes",
+        "represents": "Minimal presence surface"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        5
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "B4-presence-dial-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/presence/narrate",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the presence sheet region (runtime/suite.py:set_mode); changing the narration behavior is a code change there.",
+          "what": "The narration control on the presence sheet.",
+          "what_you_can_do": "Activate the system's active guidance mode to narrate steps and direct attention."
+        },
+        "maps_to_feature": "RHM-modes",
+        "represents": "RHM-narrate"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        7,
+        11
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "B4-presence-dial-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/presence/observation",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the presence dial region (runtime/suite.py:set_mode); changing the observation text or logic requires a code change there.",
+          "what": "The observation indicator on the presence dial.",
+          "what_you_can_do": "View the system's current posture (e.g., 'Observes over your shoulder') and its commentary style; it reflects the active RHM mode selected via the presence dial."
+        },
+        "maps_to_feature": "RHM-modes",
+        "represents": "RHM-observation"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        9
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "B4-presence-dial-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/presence/decide-for-me",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the presence dial region (runtime/suite.py:set_mode); changing the logic is a code change there.",
+          "what": "The 'decide-for-me' control on the presence dial.",
+          "what_you_can_do": "Tap this to trigger the system to autonomously select the best available presence mode (e.g., switching from 'listening' to 'focus') based on current context."
+        },
+        "maps_to_feature": "RHM-decide",
+        "represents": "RHM-decide"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        10
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "B4-presence-dial-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://toolbar/presence/no-self-approve",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the presence dial region (runtime/suite.py:set_mode); changing the toggle state is a code change there.",
+          "what": "The 'no self-approve' toggle on the presence dial.",
+          "what_you_can_do": "Click it to disable the system's ability to autonomously approve actions; when off, the RHM must seek external authorization before acting."
+        },
+        "maps_to_feature": "RHM-modes",
+        "represents": "RHM-modes"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        12
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "B4-presence-dial-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://tabbar/canvas",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "defer",
+        "howto": {
+          "how_to_change": "It is the 'Canvas' link in the .tabbar region (App.tsx); changing its label or icon is a code change there.",
+          "what": "The 'Canvas' navigation button in the mobile tabbar.",
+          "what_you_can_do": "Tap this to switch the mobile view to the main board surface where work is composed."
+        },
+        "maps_to_feature": "CAN-compose",
+        "represents": "CAN-compose"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        17
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "B4-presence-dial-mobile.html"
+    }
+  ],
+  "flagged": [
+    {
+      "dossier": {
+        "address": "ui://toolbar/presence/directives",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the presence dial region (runtime/suite.py:set_mode); changing the displayed directives requires updating the mode definition in the MODES registry.",
+          "what": "The directive display on the presence dial showing the current mode's capabilities.",
+          "what_you_can_do": "Read the current mode's active capabilities and directives; this view confirms the system's current posture and what it is authorized to do."
+        },
+        "maps_to_feature": "RHM-modes",
+        "represents": "RHM-directives"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        2
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B4-presence-dial-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://tabbar/inbox",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the tabbar region (App.tsx); changing the label or icon is a code change there.",
+          "what": "The 'Inbox' tab in the mobile navigation bar.",
+          "what_you_can_do": "Select this tab to switch the main view to the inbox surface where decisions and approvals are managed."
+        },
+        "maps_to_feature": "INB-lanes",
+        "represents": "INB-lanes"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        18
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B4-presence-dial-mobile.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://tabbar/run",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the tabbar region (App.tsx); changing the action is a code change there.",
+          "what": "The 'Run' command in the mobile navigation bar.",
+          "what_you_can_do": "Tap this to initiate the system's active execution cycle."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "RUN-run"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        20
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "B4-presence-dial-mobile.html"
+    }
+  ]
+}

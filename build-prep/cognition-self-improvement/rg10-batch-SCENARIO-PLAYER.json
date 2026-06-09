@@ -1,0 +1,979 @@
+{
+  "mockup": "SCENARIO-PLAYER.html",
+  "ground": {
+    "screen_present": true,
+    "what_this_is": "This is the Scenario Player interface, a warm, gold-themed control room where you can step through a live simulation of the system, switch between different 'personas' (Vi, Atlas, Nova), and toggle between phone and desktop views to see how the system behaves.",
+    "what_you_can_do": "Click the state buttons at the top to advance or rewind the simulation, tap the persona cards to change the system's identity and color scheme, and use the frame toggle to switch between mobile and desktop layouts."
+  },
+  "n_candidates": 41,
+  "n_dossiers": 41,
+  "n_clusters": 26,
+  "confirmed": [
+    {
+      "dossier": {
+        "address": "ui://scenario-player/ptt",
+        "capabilities": [
+          "pointable",
+          "openable",
+          "driven"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is ScenarioPlayer.tsx; the voice wire is RHM-verbs (the twin's listening channel).",
+          "what": "The push-to-talk control on the Scenario Player interface.",
+          "what_you_can_do": "Initiate a voice command to the system's twin, allowing the operator to speak directly to the live simulation state."
+        },
+        "maps_to_feature": "RHM-verbs",
+        "represents": "RHM-verbs"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        4,
+        17
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/reply",
+        "capabilities": [
+          "pointable",
+          "driven"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is RhmChat.tsx; the action logic is driven by suite.py:chat (specifically the RHM-verbs wire).",
+          "what": "The 'reply' command button on the Scenario Player control panel.",
+          "what_you_can_do": "Click this to trigger a reply action from the live system state, allowing the operator to advance the simulation's narrative flow."
+        },
+        "maps_to_feature": "RHM-verbs",
+        "represents": "RHM-verbs"
+      },
+      "cluster_size": 3,
+      "cluster_members": [
+        6,
+        23,
+        31
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://scenario/consent",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific button yet.",
+          "what": "The consent control on the Scenario Player interface.",
+          "what_you_can_do": "Click it to grant or deny the system's permission to proceed with the current simulation step."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "The consent checkpoint in the Scenario Player"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        7
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://scenario/phone-390",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is ScenarioPlayer.tsx; the view logic is driven by the simulation state machine.",
+          "what": "The phone view switch on the Scenario Player control room.",
+          "what_you_can_do": "Click it to switch the simulation's layout from desktop to mobile (phone) view, allowing you to see how the system behaves on a phone screen."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Phone view toggle"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        12,
+        13
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/composition",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is ScenarioPlayer.tsx; the simulation logic and persona states live in the runtime simulation module.",
+          "what": "The composition canvas \u2014 the Scenario Player's control room where you step through a live simulation of the system.",
+          "what_you_can_do": "Click state buttons to advance or rewind the simulation, tap persona cards to change the system's identity and color scheme, and use the frame toggle to switch between mobile and desktop layouts."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "The composition canvas"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        15
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/utterance",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The text is a static display in the Scenario Player interface; changing it requires editing the Scenario Player's display logic, not the runtime code.",
+          "what": "A system node explaining its caching behavior versus volatile re-runs.",
+          "what_you_can_do": "Read the explanation of how the system distinguishes between cached results and nodes that bypass the gate to always re-run."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "The volatile codebase node"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        21
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/approve",
+        "capabilities": [
+          "pointable",
+          "openable",
+          "driven"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is RhmChat.tsx; the approval logic is driven by suite.py:chat (specifically the RHM-decide wire).",
+          "what": "The approval trigger on the Scenario Player interface.",
+          "what_you_can_do": "Click this to formally approve an action proposed by the RHM (Right-Hand-Man) system, recording your verdict and allowing the simulation to proceed."
+        },
+        "maps_to_feature": "RHM-decide",
+        "represents": "RHM-decide"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        25
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/decline",
+        "capabilities": [
+          "pointable",
+          "driven"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is RhmChat.tsx; the logic for this specific verb is in suite.py:chat.",
+          "what": "The 'not now' control on the chat interface.",
+          "what_you_can_do": "Click it to pause or defer the current system response or action without resolving it immediately."
+        },
+        "maps_to_feature": "RHM-verbs",
+        "represents": "RHM-verbs"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        26
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/empty",
+        "capabilities": [
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "This is a mockup-only surface; the real state generation logic lives in the parent region (RhmChat.tsx) and the system state in suite.py:chat. Changing the text requires a code update to the parent region.",
+          "what": "The empty state message displayed when the RHM-chat has no active conversation or system state to present.",
+          "what_you_can_do": "Read the message to understand that the chat is currently idle; no interaction is possible until state is generated."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "The empty state of the RHM-chat"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        28
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://scenario-player/ask-rhm",
+        "capabilities": [
+          "pointable",
+          "openable",
+          "driven"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is RhmChat.tsx; the query handling is driven by the RHM-chat brain in suite.py:chat.",
+          "what": "The input field in the Scenario Player control room where you ask the Company about itself.",
+          "what_you_can_do": "Type a question to the system (it answers from live state and says so when it can't see something); this is the primary interface for querying the RHM twin."
+        },
+        "maps_to_feature": "RHM-chat",
+        "represents": "RHM-query input"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        32,
+        36
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/ptt",
+        "capabilities": [
+          "pointable",
+          "driven"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is ScenarioPlayer.tsx; the trigger logic is driven by the simulation state machine (mockup-only; no built code path maps to it yet).",
+          "what": "The 'release to send' button on the Scenario Player interface.",
+          "what_you_can_do": "Advance the live simulation of the system by triggering the next state change or action in the scenario."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "RHM-verbs"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        33
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    }
+  ],
+  "flagged": [
+    {
+      "dossier": {
+        "address": "ui://chat/title",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is RhmChat.tsx; the identity logic is RHM-config or RHM-modes.",
+          "what": "The system's nameplate in the Scenario Player control room.",
+          "what_you_can_do": "Identify the current persona (Vi, Atlas, or Nova) and the system's operational state at a glance."
+        },
+        "maps_to_feature": "RHM-identity",
+        "represents": "RHM-identity"
+      },
+      "cluster_size": 4,
+      "cluster_members": [
+        0,
+        1,
+        16,
+        18
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "refcheck (Layer 1, deterministic floor): feature fabrication: maps_to_feature 'RHM-identity' is not an inventory id nor 'proposed'",
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/idle",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is RhmChat.tsx; the behavior is defined in the runtime logic that governs the Scenario Player's state machine.",
+          "what": "The idle state button on the Scenario Player control room.",
+          "what_you_can_do": "Click it to pause the live simulation and return the system to its resting state, halting all active inference and state changes."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "RHM-idle"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        2
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/step",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is the Scenario Player region (canvas/app/src/regions/ScenarioPlayer.tsx); the simulation logic is driven by the runtime state (runtime/suite.py:scenario).",
+          "what": "The step control on the Scenario Player interface.",
+          "what_you_can_do": "Click this button to advance or rewind the live simulation of the system, allowing you to step through different states and personas (Vi, Atlas, Nova) to observe how the system behaves."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "The step control on the Scenario Player"
+      },
+      "cluster_size": 8,
+      "cluster_members": [
+        3,
+        8,
+        9,
+        10,
+        24,
+        27,
+        34,
+        37
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/thinking",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "driven"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is RhmChat.tsx; the state logic is suite.py:chat (specifically the thinking state flag).",
+          "what": "The thinking state indicator on the chat control.",
+          "what_you_can_do": "Indicate that the RHM (Right-Hand-Man) is currently processing a query or generating a response from live system state."
+        },
+        "maps_to_feature": "RHM-thinking",
+        "represents": "RHM-thinking"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        5
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "refcheck (Layer 1, deterministic floor): feature fabrication: maps_to_feature 'RHM-thinking' is not an inventory id nor 'proposed'",
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/persona",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "openable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is the Scenario Player region; changing the persona options or their visual representation requires a code change there.",
+          "what": "The persona selector on the Scenario Player interface.",
+          "what_you_can_do": "Click a persona card to switch the system's identity and color scheme (e.g., Vi, Atlas, Nova), allowing you to step through the simulation with a different operational voice."
+        },
+        "maps_to_feature": "RHM-persona",
+        "represents": "RHM-persona"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        11
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "refcheck (Layer 1, deterministic floor): feature fabrication: maps_to_feature 'RHM-persona' is not an inventory id nor 'proposed'",
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://scenario-player/graph",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is the Scenario Player region (canvas/app/src/regions/ScenarioPlayer.tsx); the graph rendering logic is driven by the simulation state engine.",
+          "what": "The canvas display in the Scenario Player control room showing the system's internal graph.",
+          "what_you_can_do": "View the live graph structure behind the current simulation state; interact with the graph elements to inspect relationships and nodes."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "The graph behind the simulation"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        14
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/listen",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is RhmChat.tsx; the mode logic is suite.py:chat (specifically the listening state and model selection).",
+          "what": "The listening state indicator on the chat control room.",
+          "what_you_can_do": "See the system's active listening mode (auto-listen) and the model version (deepseek-v4-pro) currently driving the conversation."
+        },
+        "maps_to_feature": "RHM-listen",
+        "represents": "RHM-listen"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        19
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": [
+          "refcheck (Layer 1, deterministic floor): feature fabrication: maps_to_feature 'RHM-listen' is not an inventory id nor 'proposed'"
+        ]
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/memo-gate",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is the Scenario Player interface; the logic is defined in the memo-gate wire.",
+          "what": "The inquiry point on the Scenario Player where the system explains its memo-gate logic.",
+          "what_you_can_do": "Ask the system how it decides whether a node re-runs based on live state."
+        },
+        "maps_to_feature": "ENG-memo",
+        "represents": "ENG-memo"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        20
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/utterance",
+        "capabilities": [
+          "pointable",
+          "openable",
+          "driven"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is RhmChat.tsx; the voice and state logic are in runtime/suite.py:chat.",
+          "what": "A live system state summary spoken by the Right-Hand-Man (RHM) in the chat interface.",
+          "what_you_can_do": "Read the current status of the system's three nodes (codebase scan, model brief, cost rollup) and choose whether to open the brief or wait for the rollup."
+        },
+        "maps_to_feature": "RHM-utterance",
+        "represents": "RHM-utterance"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        22
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": [
+          "refcheck (Layer 1, deterministic floor): feature fabrication: maps_to_feature 'RHM-utterance' is not an inventory id nor 'proposed'"
+        ]
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/vi-listening",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is ScenarioPlayer.tsx; the invitation text is a static string in that region, while the listening logic is driven by the RHM-chat runtime.",
+          "what": "The invitation text on the Scenario Player screen that invites the operator to interact with the Company's voice (Vi).",
+          "what_you_can_do": "Read the invitation to understand how to engage the system (ask questions, point at nodes, or speak); clicking the screen area activates the listening state."
+        },
+        "maps_to_feature": "RHM-chat",
+        "represents": "RHM-chat listening prompt"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        29
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/minimized",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is RhmChat.tsx; the state logic is suite.py:chat (minimized mode).",
+          "what": "The minimized state indicator on the RHM chat interface.",
+          "what_you_can_do": "Indicate that the chat is currently in a minimized, ready-to-expand state for the operator."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "RHM-minimized"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        30
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/inbox",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is RhmChat.tsx; the live queue state is driven by suite.py:chat (specifically the escalation logic).",
+          "what": "The Inbox control on the Scenario Player's right-hand-man interface.",
+          "what_you_can_do": "View the current queue of escalated decisions and approvals awaiting the operator's attention, represented by the '3' badge count."
+        },
+        "maps_to_feature": "INB-lanes",
+        "represents": "INB-lanes"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        35
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/toolbar",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The strip is the toolbar region (canvas/app/src/regions/Toolbar.tsx); adding or changing a control is a code change there, surfaced via the build-intent wire.",
+          "what": "The command strip across the top of the Scenario Player control room.",
+          "what_you_can_do": "Read the system's live state at a glance (running/thinking/awaiting) and reach every board-level action from one place (run, wire, portal, delete, layers, fit, reload)."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "RUN-run"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        38
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/inbox-run",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The surface is the Scenario Player region; the action logic is driven by the simulation state machine.",
+          "what": "The run control on the Scenario Player interface.",
+          "what_you_can_do": "Advance or rewind the live simulation of the system to observe behavior changes."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "INB-run"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        39
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://chat/status",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "driven"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The surface is RhmChat.tsx; the state counts are driven by the live system state in suite.py:chat.",
+          "what": "The live status indicator on the RHM chat interface.",
+          "what_you_can_do": "View the current count of system states (awaiting vs ready) to gauge the system's readiness level."
+        },
+        "maps_to_feature": "RHM-status",
+        "represents": "RHM-status"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        40
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "refcheck (Layer 1, deterministic floor): feature fabrication: maps_to_feature 'RHM-status' is not an inventory id nor 'proposed'",
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "SCENARIO-PLAYER.html"
+    }
+  ]
+}

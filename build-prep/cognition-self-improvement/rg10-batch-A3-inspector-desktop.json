@@ -1,0 +1,1035 @@
+{
+  "mockup": "A3-inspector-desktop.html",
+  "ground": {
+    "screen_present": true,
+    "what_this_is": "This is the Node Inspector, a control panel that appears when you click a specific node (a 'process' node) on the main canvas to configure its settings.",
+    "what_you_can_do": "You can change the AI model, adjust sampling parameters like temperature and max tokens, and force the system to re-run this specific node immediately."
+  },
+  "n_candidates": 46,
+  "n_dossiers": 46,
+  "n_clusters": 27,
+  "confirmed": [
+    {
+      "dossier": {
+        "address": "ui://inspector/force",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the Inspector.tsx region; the action is wired via the ENG-force capability.",
+          "what": "The force trigger on the node inspector panel.",
+          "what_you_can_do": "Click this to immediately re-run the selected node, overriding its current state."
+        },
+        "maps_to_feature": "ENG-force",
+        "represents": "NODE-force"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        2,
+        3
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/process-11",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the Inspector.tsx region; changing the label or node ID requires a code change there, while the underlying config schema is generic per node type.",
+          "what": "The specific label for Process node 11 within the inspector panel.",
+          "what_you_can_do": "Identify the specific process node currently being configured; clicking it (if openable) would reveal its full state and editable config form."
+        },
+        "maps_to_feature": "NODE-config",
+        "represents": "Process node identifier"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        6
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/node/memo",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The text is static documentation; the logic it describes lives in the node's Python file (nodes/<name>.py) and the NodeShape rendering utility.",
+          "what": "The memo gate on a node card, explaining its caching logic.",
+          "what_you_can_do": "Read the explanation of when a node re-runs versus when it serves a cached result."
+        },
+        "maps_to_feature": "ENG-memo",
+        "represents": "NODE-memo"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        10
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/node/llm-process",
+        "capabilities": [
+          "pointable",
+          "spotlit",
+          "presentable",
+          "openable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The node's visual state and data are driven by the NodeShape.tsx region; configuration changes are handled via the memo gate logic in the runtime.",
+          "what": "A process node on the canvas displaying its LLM configuration and execution status.",
+          "what_you_can_do": "Inspect the model type, temperature, and caching behavior; trigger a re-run of this specific node."
+        },
+        "maps_to_feature": "ENG-memo",
+        "represents": "LLM process node"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        12
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/model-field",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the Inspector.tsx region; the options are driven by the live fabric registry (~/company MAP.md REGISTRY block / available_models()).",
+          "what": "The model selector on the node inspector panel.",
+          "what_you_can_do": "Select a live model from the fleet registry to reconfigure this node's execution."
+        },
+        "maps_to_feature": "NODE-config",
+        "represents": "NODE-config"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        18
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/act/force",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It drives the per-node run path (doRun([nodeId]) \u2192 the scheduler); the force-past-memo behaviour lives in runtime/scheduler.py.",
+          "what": "The force re-run control on the node inspector.",
+          "what_you_can_do": "Click it to force this specific node to recompute immediately, bypassing the normal memo cache that skips unchanged inputs."
+        },
+        "maps_to_feature": "ENG-force",
+        "represents": "ENG-force"
+      },
+      "cluster_size": 3,
+      "cluster_members": [
+        35,
+        36,
+        37
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/inbox",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the Inspector.tsx region; the lane logic is defined in runtime/suite.py:inbox_lanes.",
+          "what": "The Inbox control within the Node Inspector detail panel.",
+          "what_you_can_do": "View the queue of escalated decisions awaiting the operator's triage and action."
+        },
+        "maps_to_feature": "INB-lanes",
+        "represents": "INB-lanes"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        42
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "A3-inspector-desktop.html"
+    }
+  ],
+  "flagged": [
+    {
+      "dossier": {
+        "address": "ui://inspector/layers",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the Inspector.tsx region; the layer logic is driven by the NODE-layer feature.",
+          "what": "The layers control on the inspector panel.",
+          "what_you_can_do": "Toggle the layering mode for the selected node to adjust its visibility and stacking context."
+        },
+        "maps_to_feature": "NODE-layer",
+        "represents": "NODE-layer control"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        0
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/wire",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the Inspector.tsx region; the action logic is driven by the wire-intent wire.",
+          "what": "The wire control on the Node Inspector panel.",
+          "what_you_can_do": "Click this to force the system to execute a wire operation on the selected node immediately."
+        },
+        "maps_to_feature": "WIRE-intent",
+        "represents": "WIRE-intent"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        1,
+        44
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/controls",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the inspector region (Inspector.tsx); the specific buttons are defined in the node's config schema (NodeConfigForm.tsx).",
+          "what": "The primary control bar at the top of the inspector panel.",
+          "what_you_can_do": "Access the node's configuration, view its presence state, and trigger immediate actions like forcing a re-run or adding layers."
+        },
+        "maps_to_feature": "NODE-config",
+        "represents": "Top command strip"
+      },
+      "cluster_size": 4,
+      "cluster_members": [
+        4,
+        38,
+        40,
+        45
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/palette",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The list is defined in the Inspector region (Inspector.tsx); adding a new option requires a code change there that updates the available node kinds.",
+          "what": "The Node palette \u2014 the control strip on the inspector that lists the available node types for the current context.",
+          "what_you_can_do": "Select a node type from this list to instantiate it on the canvas, or use it to filter the visible node options."
+        },
+        "maps_to_feature": "NODE-kinds",
+        "represents": "NODE-palette"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        5,
+        8
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/content",
+        "capabilities": [
+          "presentable",
+          "openable",
+          "driven"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The display is in the Inspector region (Inspector.tsx); the re-run action is driven by the node's specific configuration schema and the RUN-run capability.",
+          "what": "The content display for a specific node (a 'process' node) within the inspector panel.",
+          "what_you_can_do": "View the node's current content state (e.g., AI model, sampling parameters) and trigger an immediate re-run of this specific node."
+        },
+        "maps_to_feature": "NODE-config",
+        "represents": "NODE-content"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        7,
+        41
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/inspector",
+        "capabilities": [
+          "pointable",
+          "spotlit",
+          "openable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The panel is driven by the Node Inspector region in the canvas app; changes to the configuration options require edits in the node shape utility code.",
+          "what": "The Node Inspector panel that appears when a specific process node is selected on the canvas.",
+          "what_you_can_do": "Configure the node's AI model, adjust sampling parameters (temperature, max tokens), and force an immediate re-run of this specific node."
+        },
+        "maps_to_feature": "NODE-config",
+        "represents": "NODE-inspector"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        9,
+        13
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://canvas/node/inspect",
+        "capabilities": [
+          "pointable",
+          "spotlit",
+          "openable",
+          "driven"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The visible panel is the Node Inspector region; the model selection and temp sliders are defined in the node's config wire, while the 'force re-run' action is triggered by the ENG-force capability.",
+          "what": "The Node Inspector panel that appears when a specific node is selected on the canvas.",
+          "what_you_can_do": "View and edit the node's AI model configuration (e.g., deepseek-v4-pro, temperature 0.7) and force an immediate re-run of the node's logic."
+        },
+        "maps_to_feature": "ENG-force",
+        "represents": "NODE-inspect"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        11
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/llm-config",
+        "capabilities": [
+          "pointable",
+          "openable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The panel lives in the node's config form region (NodeConfigForm.tsx); the memo-gate logic is defined in the node's type definition (contracts/node_type.py).",
+          "what": "The LLM configuration panel for the 'C' constant node, exposing its memo-gate logic.",
+          "what_you_can_do": "Adjust the AI model, sampling parameters (temperature, max tokens), and force an immediate re-run of this node to bypass the cache."
+        },
+        "maps_to_feature": "ENG-memo",
+        "represents": "LLM-memo-gate"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        14
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/status",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the Inspector.tsx region; the status text is driven by the node's runtime state (likely via a state wire or status query).",
+          "what": "The live status bar on the Node Inspector panel.",
+          "what_you_can_do": "Read the node's current state (live, running, inputs cached, resolution count, and event stream connection) at a glance."
+        },
+        "maps_to_feature": "NODE-status",
+        "represents": "NODE-status"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        15,
+        19
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "refcheck (Layer 1, deterministic floor): feature fabrication: maps_to_feature 'NODE-status' is not an inventory id nor 'proposed'",
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/model-field/model-enum",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The label is generated from the node-type's config_schema (NodeConfigForm.tsx); the live model list is pulled from the registry (suite.py:available_models) \u2014 to change the field, edit the type's schema.",
+          "what": "The model selection label on the node inspector, displaying the current AI model choice.",
+          "what_you_can_do": "Select a model from the live fleet list; if a saved model is missing from the live list, it is displayed as a fallback rather than dropped."
+        },
+        "maps_to_feature": "MOD-registry",
+        "represents": "MOD-enum"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        16,
+        17
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/ai-model",
+        "capabilities": [
+          "openable",
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The panel lives in the node inspector region (Inspector.tsx); the specific model controls are defined in the node's config schema (NodeConfigForm.tsx).",
+          "what": "The control panel for configuring the AI model parameters of a selected node.",
+          "what_you_can_do": "Adjust the AI model type, sampling temperature, and max tokens, then force an immediate re-run of this node."
+        },
+        "maps_to_feature": "NODE-config",
+        "represents": "AI-model config"
+      },
+      "cluster_size": 7,
+      "cluster_members": [
+        20,
+        21,
+        22,
+        24,
+        26,
+        30,
+        39
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/top_p",
+        "capabilities": [
+          "pointable",
+          "openable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the node inspector region (Inspector.tsx); the specific parameter binding is defined in the node's config schema (NodeConfigForm.tsx).",
+          "what": "The top_p parameter control on the node inspector panel.",
+          "what_you_can_do": "Adjust the probability threshold for token selection to control sampling diversity; changes commit immediately and trigger a re-run of this node."
+        },
+        "maps_to_feature": "NODE-config",
+        "represents": "NODE-config"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        23
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/max_tokens",
+        "capabilities": [
+          "pointable",
+          "openable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the node inspector region (Inspector.tsx); the specific token limit value is driven by the node's config schema (NodeConfigForm.tsx).",
+          "what": "The max tokens control on the node inspector panel.",
+          "what_you_can_do": "Adjust the maximum number of tokens the AI model is allowed to generate for this specific node, then trigger an immediate re-run of the node."
+        },
+        "maps_to_feature": "NODE-config",
+        "represents": "NODE-config: max_tokens"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        25
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/base_url",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the Inspector.tsx region; the input is wired to the node's config_schema (NodeConfigForm.tsx).",
+          "what": "The base URL input field within the Node Inspector panel.",
+          "what_you_can_do": "Edit the base URL string for the selected node to change its network endpoint."
+        },
+        "maps_to_feature": "NODE-config",
+        "represents": "NODE-config:base_url"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        27
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/endpoint",
+        "capabilities": [
+          "pointable",
+          "openable",
+          "driven"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the Inspector.tsx region; the logic for handling the endpoint change is in contracts/node_type.py.",
+          "what": "The input field in the Node Inspector panel that defines the default fabric endpoint for the selected node.",
+          "what_you_can_do": "Enter a new endpoint address to change where this node's output is sent; the system will re-run the node immediately upon change."
+        },
+        "maps_to_feature": "NODE-config",
+        "represents": "Fabric endpoint control"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        28
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/retries",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the Inspector.tsx region; the specific retry logic is wired via the node's config schema (NodeConfigForm.tsx).",
+          "what": "The retry count control on the node inspector panel.",
+          "what_you_can_do": "Adjust how many times the system will re-run this specific node if it fails, then commit the change to take effect immediately."
+        },
+        "maps_to_feature": "NODE-config",
+        "represents": "NODE-retries"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        29
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/run-trigger",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the Inspector.tsx region; the trigger logic is wired to the node's execution contract.",
+          "what": "The immediate re-run command on the node inspector panel.",
+          "what_you_can_do": "Force the system to re-execute this specific node configuration right now, bypassing the standard next-run cycle."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "NODE-retrigger"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        31,
+        33
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/memo",
+        "capabilities": [
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the inspector region (Inspector.tsx); the logic is defined in runtime/scheduler.py.",
+          "what": "The memo gate on the node inspector panel.",
+          "what_you_can_do": "Read the caching strategy for a node to understand when it re-runs versus when it serves a cached result."
+        },
+        "maps_to_feature": "ENG-memo",
+        "represents": "NODE-memo"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        32
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/act",
+        "capabilities": [
+          "pointable",
+          "openable",
+          "driven"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "It lives in the Inspector.tsx region; the action logic is wired via the node's output schema in contracts/node_type.py.",
+          "what": "The 'Act on this output' control on the Node Inspector panel.",
+          "what_you_can_do": "Trigger the system to execute the node's configured output action (rerun, surface to inbox, or build from it) immediately."
+        },
+        "maps_to_feature": "NODE-act",
+        "represents": "NODE-act"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        34
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": [
+          "refcheck (Layer 1, deterministic floor): feature fabrication: maps_to_feature 'NODE-act' is not an inventory id nor 'proposed'"
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inspector/rhm",
+        "capabilities": [
+          "pointable",
+          "openable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the inspector region (Inspector.tsx); the specific action logic is driven by the node's type configuration (NodeConfigForm.tsx).",
+          "what": "The RHM control on the inspector panel.",
+          "what_you_can_do": "Trigger the RHM mode for the selected node (change AI model, adjust sampling parameters, or force an immediate re-run)."
+        },
+        "maps_to_feature": "RHM-config",
+        "represents": "RHM control"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        43
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "A3-inspector-desktop.html"
+    }
+  ]
+}
