@@ -139,8 +139,18 @@ def inbox() -> dict:
 @mcp.tool()
 def capabilities() -> dict:
     """The source of truth for WHAT EXISTS — real models, node-types, RHM verbs, panels, api verbs.
-    Author from these; never invent. If you need something not here, ask the operator (don't fabricate)."""
-    return SUITE.capabilities()
+    Author from these; never invent. If you need something not here, ask the operator (don't fabricate).
+    (M3 dedup: the cognition.roles block is slimmed to ids here — the full per-role specs live in
+    cognition_info(role='<id>') / cognition_info(section='roles'), the ONE discovery face for them.)"""
+    cap = SUITE.capabilities()
+    cog = cap.get("cognition")
+    if isinstance(cog, dict) and "roles" in cog:
+        r = cog["roles"]
+        ids = sorted(r) if isinstance(r, dict) else \
+            [x.get("id", x) if isinstance(x, dict) else x for x in r] if isinstance(r, list) else r
+        cap = {**cap, "cognition": {**cog, "roles": {
+            "ids": ids, "full_specs": "cognition_info(role='<id>') or cognition_info(section='roles')"}}}
+    return cap
 
 
 # =================================================================================================
@@ -200,13 +210,48 @@ def _resolve_role(role_id_or_fields):
 
 # --- INSPECT (read-only) -------------------------------------------------------------------------
 @mcp.tool()
-def cognition_info() -> dict:
-    """INSPECT the cognition registries — the agent's 'what can I compose with': the file-discovered
-    roles (+ each role's rules/render-hint/facet/op/input_addresses), the declared rules, the
-    THOUGHT_SHAPES · ACTIVATION_CONTEXTS · RULE_OPS · DESTINATION_KINDS · the cast-per-mode, and the
-    cognition event-contract. REUSES Suite.cognition_info() (the SAME projection /api/cognition_info
-    serves — registry-is-truth, generated from the live registries)."""
-    return SUITE.cognition_info()
+def cognition_info(section: str = "", role: str = "", detail: str = "concise") -> dict:
+    """INSPECT the cognition registries — the ONE place to learn 'what can I compose with' (roles ·
+    rules · projections/spaces · mark_types · casts · rule_ops · destination_kinds · activation
+    contexts · ...). REUSES Suite.cognition_info() (the SAME projection /api/cognition_info serves —
+    registry-is-truth, generated from the live registries). Scope it (M2/M3 — don't pull the firehose):
+
+      role="<id>"        — ONE role's full spec (the per-role inspector; e.g. role='verify_lens').
+      section="<name>"   — ONE section in full (e.g. section='roles' | 'projections' | 'mark_types';
+                           the valid names are the live payload's keys — an unknown name fails loud
+                           listing them).
+      (no args)          — a CONCISE OVERVIEW: every section's names/ids only (dict sections → their
+                           keys, list sections → their ids, scalars inline) — the composition
+                           vocabulary at a glance. detail="detailed" → the full payload (~40KB)."""
+    info = SUITE.cognition_info()
+    if role:
+        roles = info.get("roles", {})
+        if role not in roles:
+            return {"error": f"cognition_info: unknown role {role!r}. Registered roles: {sorted(roles)} "
+                    "(registry-is-truth — see the live set; create one via create(kind='role'))."}
+        return {"role": role, "spec": roles[role]}
+    if section:
+        if section not in info:
+            return {"error": f"cognition_info: unknown section {section!r}. Sections (live, registry-is-"
+                    f"truth): {sorted(info)}."}
+        return {"section": section, "value": info[section]}
+    if detail == "detailed":
+        return info
+    # CONCISE overview — a UNIFORM deterministic rule (no magic size thresholds): dict→keys, list→ids,
+    # scalar→inline. A new section appears here automatically (derives from the live payload).
+    overview = {}
+    for k, v in info.items():
+        if isinstance(v, dict):
+            overview[k] = sorted(v)
+        elif isinstance(v, list):
+            ids = [x.get("id") for x in v if isinstance(x, dict) and x.get("id")]
+            overview[k] = ids if (ids and len(ids) == len(v)) else v
+        else:
+            overview[k] = v
+    overview["_hint"] = ("concise overview (names/ids only) — cognition_info(section='<name>') for one "
+                         "section in full · cognition_info(role='<id>') for one role's spec · "
+                         "detail='detailed' for the full payload.")
+    return overview
 
 
 @mcp.tool()
