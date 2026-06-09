@@ -90,6 +90,14 @@ Roles fire model calls through `fabric/` guards (a model runs only INSIDE a role
   **⚠ E4 caveat** (shared with `verify_jury`): N draws on ONE 4B are correlated — variance, not
   independent error — so Layer 2 is SOFT; the verdict_rule shape accepts a future stronger-model/cloud
   tiebreak (C2.5 / `models_for_role`) as an ENHANCEMENT, never a requirement.
+- **`verify_lens`** — the **verification jury's LENS role** (COMPOSITIONS ⑥): judges ONE change-under-test
+  through ONE lens (the lens rides in the unit: correctness · floor · drift · matches-criterion ·
+  registry-is-truth · adversarial-disprove) → `{lens, verdict: pass|fail|uncertain, evidence,
+  breaking_case}`. NOT a draws-jury — its "jury" is the cross-LENS fan (N distinct lenses, one draw each
+  via `run_items`); the adversarial-disprove lens defaults to fail/uncertain if it can construct a
+  breaking case. In the `verification` cast only (a cast-beyond-listening context; listening untouched).
+  The deterministic green-iff-all-pass verdict-TALLY is a `run_reduce(mode='rule')` reduce-rule (the
+  next-beat follow-on); the unit contract is `{lens, change, bar}`.
 
 **Where new things go:** a new role = a new file `roles/<id>.py` declaring its `ROLE` dict (its `id`
 MUST equal the file name). Put it in a mode's cast by adding that mode to its `mode_scope`. Make it a
