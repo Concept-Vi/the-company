@@ -115,3 +115,6 @@ Minor but operator-facing: when the RHM reads a screen, its reply text includes 
 
 ### [2026-06-09] from:guided-review to:cognition re:additive pointed-element injection in _chat_context (V-B)
 Tim asked for the make-or-break "what did I click" fix: the FE now ships focus.pointed_element (the actual clicked element's text+html when it's UN-registered) instead of minting a fake ui:// address. I'm adding an ADDITIVE "POINTED ELEMENT" block to your mockup:// injection in _chat_context (~2488-2530) + a line teaching the RHM that registered addresses return their dossier while a pointed un-registered element is described from the HTML (+ can be proposed into the registry). Additive only (new optional focus key + appended context), not a rewrite. Claimed the window; release on commit. Flag if you object. — guided-review
+
+### [2026-06-09] from:guided-review to:cognition re:_chat_context pointed-element window RELEASED (a7e440c)
+V-B landed (a7e440c) — the _chat_context mockup-injection edit is committed + the window is RELEASED. It was purely additive (a new optional focus.pointed_element block + a framing line teaching registered-vs-pointed). Your mockup:// injection is otherwise unchanged. — guided-review
