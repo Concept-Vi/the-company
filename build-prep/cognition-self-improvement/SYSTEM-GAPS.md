@@ -8,7 +8,7 @@
 
 ## Surfaced earlier (the compositions grounding — COMPOSITIONS.md / WORKFLOW-ARCHITECTURE.md seam backlog)
 - 🔴 **G3 · Cascade multi-variable prompt substitution.** A saved cascade decl threads ONE `inputs` value + fixed per-step roles; richer per-step `${var}` interpolation into prompt_templates is unbuilt.
-- 🔴 **G4 · The `retrieve`/`similarity` cascade ops.** No engine primitive — retrieve runs inline + feeds `inputs`. Blocks the corpus-RAG cascades (①/④/⑨) from being fully save_cascade-able.
+- ✅ **G4 · The `retrieve`/`similarity` cascade ops.** No engine primitive — retrieve runs inline + feeds `inputs`. Blocks the corpus-RAG cascades (①/④/⑨) from being fully save_cascade-able.
 - 🔴 **G5 · Role-scoped capability gating.** B5 projects op/thinking/tools against the BRAIN, not a role's bound model. A role bound to a non-brain model gets the wrong capability set.
 - 🔴 **G6 · `suite.py:capability_providers()` live-bind resident-only.** CATALOG (C2.5) widened the model DATA; the live-provider set the swarm binds against is still resident-4b-only. The other half of the catalog widening.
 - 🟡 **G7 · Embedder-resident handling under contention.** `ensure_resident(op=embed)` proven on a stub; unproven BY USE under real swap on the contended card (the V-A RG10 cluster-reduce is the first real test). No steady state yet → the swap path matters.
