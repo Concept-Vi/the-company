@@ -275,3 +275,8 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
 - VERIFIED BY USE (temp bridge :8823, temp store, no chrome): (a) NO comment → fast 400 "no actionable feedback, 0 total note(s)". (b) seed a comment at ui://inbox → route gets PAST the no-feedback check into the proposal dispatch (curl timed out on the claude run = comment FOUND). The "no actionable feedback" break is GONE end-to-end on the backend; comment-in-store → /api/mockup-generate finds it → proposes.
 - ★ F2 STATUS: backend (engine Q3 + route) ✅ verified-by-use, both levels (whole+element), chrome-free. REMAINING: only the FE click-through (studio comment → click generate → proposal renders) needs CHROME (down). Result-card FE already renders (critical-review). Loop fully wired + backend-proven.
 - Chrome-free backend for the make-or-break = COMPLETE (Q2 registry + Q3 gather + route verify). Remaining scope (Q1 FE-loop, R1 deixis click, P2 tldraw occlusion, T1/T3 FE, S1 model) all need chrome or Tim.
+
+## 2026-06-09 — Tim: "mockups gone + load errors". DIAGNOSED (not theorized):
+- ROOT: NO live bridge process running (:8770 → 000). FE proxies to a dead bridge → every /api fails → mockups gone (/api/corpus unreachable), 500s, empty-JSON. Mockups SAFE (23 on disk, store-independent).
+- CURRENT MAIN HEALTHY (verified on fresh bridge): corpus/roles/voice/cognition all serve. My diagnosis 404s were my own path typos, not bugs. No recent commit broke it.
+- FIX = `company up` (start bridge on the LIVE store, cgroup-managed). Did NOT spawn it myself (wrong/temp-store bridge would lose real data; live store never-touch-wrong). Offered to run company up.
