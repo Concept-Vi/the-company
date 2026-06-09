@@ -57,7 +57,7 @@ input_addresses above), which the engine DOES deliver. The `context` field is de
 proven prompt-injection path. Flagged, not fictionalised.
 
 DEFER, don't duplicate (LAW 0 — unification): a candidate whose selector already maps to a registered
-`ui://` is NOT a new address — the role RECOGNISES it and DEFERS (sets a low/zero confidence + represents
+`ui://` is NOT a new address — the role RECOGNISES it and DEFERS (sets grounding="defer" + represents
 "already registered — defer to <existing ui://>" + maps_to_feature the existing one or "proposed"), it
 must NEVER re-propose a duplicate address. (The cross-unit dedup is run_reduce's cluster mode, RG5; this
 is the per-unit recognition that keeps the role from minting a collision in the first place.)
@@ -66,6 +66,7 @@ Op:generate. mode_scope={"registration"} — a registration cast, so the cast-be
 (56d42f4, the same seam screen_reader rides) can fire it. Fireable.
 """
 from pydantic import BaseModel
+from typing import Literal
 
 
 class HowTo(BaseModel):
@@ -82,13 +83,18 @@ class RegisterElementOut(BaseModel):
     the same junction shape addresses.json entries carry. PROPOSED — never auto-written (operator-only floor).
 
     Richer field-type grammar (B2 — nested/optional, not flat scalars): `howto` is a nested sub-model
-    (HowTo); the rest are scalars/lists/float. Mirrors how ScreenReaderOut is a real class."""
+    (HowTo); the rest are scalars/lists + a closed-vocabulary TAG (`grounding` — the no-confidence law,
+    G16: tags+counts, never a fabricated float). Mirrors how ScreenReaderOut is a real class."""
     address: str            # the PROPOSED ui:// — nested UNDER the parent's address (parent + "/" + element)
     represents: str         # short, the 82's "RUN-run" voice — what real thing this element represents
     howto: HowTo            # the nested at-altitude dossier (what / what_you_can_do / how_to_change)
     capabilities: list[str] # ⊆ the REAL capability vocabulary (pointable·spotlit·presentable·openable·driven) — NEVER invented
     maps_to_feature: str    # a Feature & Function Inventory id (e.g. "ENG-resolve") OR the literal "proposed" if un-built
-    confidence: float       # 0..1 — low for an un-built/uncertain element or an already-registered defer
+    grounding: Literal["built", "proposed", "uncertain", "defer"]   # the NO-CONFIDENCE tag (G16) — a discrete
+    #   grounding STATE, not a float (the float was empirically flat noise — all 0.85; the tag carries the
+    #   routing signal the operator triages on). built=a real built addressable feature (maps_to_feature a
+    #   real inventory id); proposed=mockup-only/un-built (maps_to_feature="proposed"); uncertain=ambiguous,
+    #   surface for extra operator scrutiny; defer=selector already maps to a registered ui:// (don't duplicate).
 
 
 ROLE = {
@@ -97,7 +103,7 @@ ROLE = {
     "description": (
         "Maps a candidate mockup element + its grounded context (parent dossier · mockup summary · "
         "exemplars · feature inventory) → a PROPOSED registry dossier (address · represents · howto · "
-        "capabilities · maps_to_feature · confidence), at the 82 existing entries' altitude. Proposes "
+        "capabilities · maps_to_feature · grounding tag), at the 82 existing entries' altitude. Proposes "
         "— never writes (operator-only floor). Defers an already-registered selector, never duplicates it."
     ),
     "prompt_template": (
@@ -119,13 +125,16 @@ ROLE = {
         "honestly fit what the element does; an inert label gets few or none.\n"
         "  - maps_to_feature: use a feature id from the INVENTORY only if this element clearly depicts that "
         "real, built feature. If the element is mockup-only / not yet built / you are unsure, set it to the "
-        "literal \"proposed\" and LOWER your confidence — do NOT guess a feature id.\n"
+        "literal \"proposed\" and set grounding to \"proposed\"/\"uncertain\" — do NOT guess a feature id.\n"
         "  - address: nest the proposed ui:// UNDER the parent's address (parent + '/' + a short element "
         "slug). If the element's selector ALREADY corresponds to the parent address or a registered address "
-        "you were shown, DEFER: do not mint a new address — set confidence near 0, set represents to "
+        "you were shown, DEFER: do not mint a new address — set grounding to \"defer\", set represents to "
         "\"already registered — defer to <that ui://>\", and reuse that address. Never duplicate an address.\n"
-        "  - confidence: high only when the element is clearly a real, built, addressable thing and your "
-        "dossier is well-grounded; low for mockup-only/un-built/ambiguous/already-registered.\n"
+        "  - grounding: a discrete TAG (NOT a number) reporting how grounded the dossier is — "
+        "\"built\" ONLY when the element is clearly a real, built, addressable thing AND maps_to_feature is a "
+        "real inventory id; \"proposed\" for a mockup-only / un-built element (maps_to_feature must be "
+        "\"proposed\"); \"uncertain\" when the element's function is ambiguous (surface for operator scrutiny); "
+        "\"defer\" when the selector already maps to a registered ui://.\n"
         "\n"
         "Return ONLY JSON:\n"
         '  "address": the proposed ui:// (nested under the parent),\n'
@@ -134,14 +143,16 @@ ROLE = {
         '"what_you_can_do": what the operator can do with it, '
         '"how_to_change": how it is changed (which region/code/wire) },\n'
         '  "capabilities": a list from the allowed vocabulary only,\n'
-        '  "maps_to_feature": a feature id from the inventory OR the literal "proposed",\n'
-        '  "confidence": a number 0..1.\n'
-        "Example A (a clear, built feature — high confidence): {\"address\": \"ui://inbox/triage\", "
+        '  "maps_to_feature": a feature id COPIED VERBATIM from the inventory list, OR the literal '
+        '"proposed". NEVER invent or adapt an id — if no inventory id matches the element\'s function '
+        'EXACTLY, use "proposed" (a wrong/coined id corrupts the registry worse than an honest "proposed"),\n'
+        '  "grounding": one of "built" | "proposed" | "uncertain" | "defer" (the tag described above).\n'
+        "Example A (a clear, built feature — grounding \"built\"): {\"address\": \"ui://inbox/triage\", "
         "\"represents\": \"INB-lanes\", "
         "\"howto\": {\"what\": \"The triage control on the inbox.\", "
         "\"what_you_can_do\": \"Sort the awaiting decisions into lanes.\", "
         "\"how_to_change\": \"It lives in the inbox region (Inbox.tsx); changing it is a code change there.\"}, "
-        "\"capabilities\": [\"pointable\", \"openable\"], \"maps_to_feature\": \"INB-lanes\", \"confidence\": 0.78}\n"
+        "\"capabilities\": [\"pointable\", \"openable\"], \"maps_to_feature\": \"INB-lanes\", \"grounding\": \"built\"}\n"
         "Example B (NO inventory feature honestly fits — ABSTAIN, do NOT stretch onto a loosely-related id): "
         "for a generic chrome control like a 'Settings' nav item or an account/export button whose function "
         "matches NONE of the inventory feature labels — {\"address\": \"ui://chrome/settings\", "
@@ -149,11 +160,11 @@ ROLE = {
         "\"howto\": {\"what\": \"A settings entry point in the app chrome.\", "
         "\"what_you_can_do\": \"Open the settings (mockup-only — not a built feature here).\", "
         "\"how_to_change\": \"Mockup-only; no built code path maps to it yet.\"}, "
-        "\"capabilities\": [\"pointable\"], \"maps_to_feature\": \"proposed\", \"confidence\": 0.3}\n"
+        "\"capabilities\": [\"pointable\"], \"maps_to_feature\": \"proposed\", \"grounding\": \"proposed\"}\n"
         "RULE OF THUMB for maps_to_feature: only return an inventory id when the element's function MATCHES "
         "that feature's label closely. If you find yourself reaching for an id that is merely RELATED (same "
-        "area, similar word) but not the same function, that is the signal to return \"proposed\" with LOW "
-        "confidence instead. A wrong id corrupts the registry worse than an honest \"proposed\"."
+        "area, similar word) but not the same function, that is the signal to return \"proposed\" with "
+        "grounding \"proposed\"/\"uncertain\" instead. A wrong id corrupts the registry worse than an honest \"proposed\"."
     ),
     "output_schema": RegisterElementOut,
     # THE SEAM — the engine-real grounding path (run_role composes utterance + these declared inputs into

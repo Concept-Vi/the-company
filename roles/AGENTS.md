@@ -73,11 +73,15 @@ Roles fire model calls through `fabric/` guards (a model runs only INSIDE a role
   in `cognition_info` with NO surfaced item.
 - **`register_element`** — the **Registry-Generation chain's MAP role** (RG3): reads ONE candidate mockup
   element + its grounded context (parent dossier · mockup summary · exemplars · the feature inventory) →
-  a PROPOSED registry dossier (`{address, represents, howto, capabilities, maps_to_feature, confidence}`)
-  in the 82 existing `ui://` entries' voice. `op:generate`, `mode_scope:{registration}` (the cast-beyond-
-  listening seam fires it). Fired over N candidates by `run_items` (RG4). NO-FICTION is the make-or-break:
-  capabilities ⊆ the closed vocabulary, `maps_to_feature` a real inventory id or the literal `proposed` —
-  it PROPOSES, never writes (operator-only floor). Mirrors `screen_reader`.
+  a PROPOSED registry dossier (`{address, represents, howto, capabilities, maps_to_feature, grounding}`)
+  in the 82 existing `ui://` entries' voice. The `grounding` field is a discrete TAG (`built|proposed|
+  uncertain|defer`) — the NO-CONFIDENCE law (G16: tags+counts, never a fabricated float; the old
+  `confidence:float` was empirically flat noise — all 0.85 — so it was migrated out to a state tag).
+  `op:generate`, `mode_scope:{registration}` (the cast-beyond-listening seam fires it). Fired over N
+  candidates by `run_items` (RG4). NO-FICTION is the make-or-break: capabilities ⊆ the closed vocabulary,
+  `maps_to_feature` a real inventory id COPIED VERBATIM or the literal `proposed` (the model coins INB-*
+  ids by analogy — the verbatim instruction + the deterministic floor catch it) — it PROPOSES, never
+  writes (operator-only floor). Mirrors `screen_reader`.
 - **`confirm_registration`** — the **Registry-Generation chain's CONFIRM gate, Layer 2** (RG6): the
   accuracy **jury** (`draws:3` + a pure `quorum_grounded` `verdict_rule`). Each draw sees the PROPOSED
   dossier AND the ELEMENT it claims to represent → judges ONE boolean `grounded` (is `represents` accurate

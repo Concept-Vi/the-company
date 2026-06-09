@@ -1,0 +1,1040 @@
+{
+  "mockup": "C1-inbox-desktop.html",
+  "ground": {
+    "screen_present": true,
+    "what_this_is": "This is the Chief of Staff's main Inbox dashboard, a triage hub showing three distinct lanes of work: live escalations awaiting your decision, already resolved items for audit, and a grouped 'batched' lane for items needing simultaneous handling.",
+    "what_you_can_do": "Scan the three lanes to see what is 'awaiting you,' click on any item to drill down into its full details, and use the bottom counter to gauge the total volume of live work requiring your immediate attention."
+  },
+  "n_candidates": 43,
+  "n_dossiers": 43,
+  "n_clusters": 28,
+  "confirmed": [
+    {
+      "dossier": {
+        "address": "ui://inbox/wire",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The button UI is defined in the Inbox region (Inbox.tsx); the wire intent logic is handled by the RUN-run and WIRE-intent capabilities in the runtime suite.",
+          "what": "The primary action button on the Inbox dashboard that initiates a wire operation.",
+          "what_you_can_do": "Click this button to trigger the system's 'wire' intent, which translates the current triage state into a live operational command."
+        },
+        "maps_to_feature": "WIRE-intent",
+        "represents": "WIRE-intent"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        1
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/force",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The control lives in the inbox region (Inbox.tsx); the force logic is defined in suite.py:inbox_lanes (specifically the force override path).",
+          "what": "The force control on the inbox dashboard.",
+          "what_you_can_do": "Click this button to immediately escalate the current triage state to a forced resolution or override, bypassing standard review queues."
+        },
+        "maps_to_feature": "ENG-force",
+        "represents": "INB-force"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        2
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/run",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the inbox region (Inbox.tsx); the action logic is defined in runtime/suite.py:inbox_lanes.",
+          "what": "The run command on the inbox dashboard.",
+          "what_you_can_do": "Execute the current triage decision to advance the item through the system."
+        },
+        "maps_to_feature": "RUN-run",
+        "represents": "RUN-run"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        3
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/decision",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The card is the visible organ in Inbox.tsx; the compilation logic is suite.py:coa (the decision-compiler); you decide on value, never the raw code fork.",
+          "what": "The decision card in the inbox's action lane, presenting a pre-triaged value-choice.",
+          "what_you_can_do": "Drill into the item to see its ground truth or open the build review; the system translates the raw technical decision into a Commander-altitude value choice (what it means, 2-3 options with trade-offs, and a recommendation)."
+        },
+        "maps_to_feature": "INB-coa",
+        "represents": "INB-decision"
+      },
+      "cluster_size": 4,
+      "cluster_members": [
+        10,
+        26,
+        31,
+        36
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/build-review/s31-build_result_review",
+        "capabilities": [
+          "pointable",
+          "presentable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The review surfacing logic lives in the decision-to-implementation wire (guarded close + surface_review) within the inbox region.",
+          "what": "An individual review card displaying the summary and diff of a completed self-build.",
+          "what_you_can_do": "Read the result summary and changed-files diff, then approve (resolve) the build to record your verdict without re-triggering the build."
+        },
+        "maps_to_feature": "WIRE-review",
+        "represents": "A specific build-result review card within the inbox lane"
+      },
+      "cluster_size": 4,
+      "cluster_members": [
+        16,
+        21,
+        38,
+        42
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/build-review/sentiment-node",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The text and state are driven by the build-review region (runtime/suite.py:review_verdicts); changing the message requires a code update to that region.",
+          "what": "A status indicator showing a build's 'sentiment' node is ready for live deployment.",
+          "what_you_can_do": "Read the confirmation that the build finished and the sentiment node is live; this element informs the operator that the system is ready to accept new inputs based on this build."
+        },
+        "maps_to_feature": "WIRE-review",
+        "represents": "Sentiment node status"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        17
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/build-review/drill",
+        "capabilities": [
+          "pointable",
+          "spotlit"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "It lives in the build-review region (runtime/suite.py:review_verdicts); changing it is a code change there.",
+          "what": "A drill control on the build-review card.",
+          "what_you_can_do": "Click it to drill down into the ground-level details of the build result."
+        },
+        "maps_to_feature": "WIRE-review",
+        "represents": "Drill-to-ground control"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        19
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/coa/keep-or-widen",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The card's logic lives in the decision-compiler region (runtime/suite.py:coa); changing the 'keep' or 'widen' options is a value decision there, not a code fork.",
+          "what": "A decision card in the Chief of Staff's inbox lane indicating a retrieval chain returned a low-confidence top result.",
+          "what_you_can_do": "Click it to choose between keeping the current low-confidence result or widening the corpus to find a better match."
+        },
+        "maps_to_feature": "INB-coa",
+        "represents": "A low-confidence retrieval decision card"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        22
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/coa/drill",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The drill action is defined in the decision-compiler (suite.py:coa); the visible control is the drillable payload.",
+          "what": "A drill control on the Chief of Staff's decision card.",
+          "what_you_can_do": "Click it to drill down into the node and view the raw output."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Drill control on the CoA card"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        24
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/coa/open-value-choice",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The button's presence and label are defined in the decision card template; the compilation logic itself lives in suite.py:coa.",
+          "what": "The primary action button on a decision card within the Chief of Staff's inbox lane.",
+          "what_you_can_do": "Click this button to initiate the compilation of the raw technical decision into a Commander-altitude value choice (presenting 2-3 options with trade-offs and a recommendation)."
+        },
+        "maps_to_feature": "INB-coa",
+        "represents": "The compile trigger for a course-of-action"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        25,
+        30
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/s28-review",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific item view yet.",
+          "what": "A specific review card for item s28 in the inbox dashboard.",
+          "what_you_can_do": "View the generative review status for this specific item and drill into its details."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "INB-s28-review"
+      },
+      "cluster_size": 3,
+      "cluster_members": [
+        27,
+        35,
+        40
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/idea",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific idea node yet.",
+          "what": "A captured idea node in the Chief of Staff's Inbox, representing a conceptual score for tone across a thread.",
+          "what_you_can_do": "View the captured concept to understand the tone scoring; this element is a static record of an idea, not an active decision lane."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "INB-idea"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        28
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/coa/settings",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific settings panel yet.",
+          "what": "A settings panel overlay on the Chief of Staff's inbox dashboard.",
+          "what_you_can_do": "Review the proposed configuration for the triage deck before it goes live; this is a mockup-only view awaiting final approval."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "INB-coa-settings"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        33
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 3,
+          "votes_ungrounded": 0,
+          "n": 3,
+          "unanimous": true,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/resolve",
+        "capabilities": [
+          "presentable",
+          "pointable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "This lane is defined in the Inbox.tsx region; the 'resolved for you' logic and audit classification come from the suite.py:inbox_lanes runtime.",
+          "what": "The resolved-for-you lane header in the Chief of Staff's Inbox dashboard.",
+          "what_you_can_do": "View the count of items already resolved for the operator and the specific audit type (e.g., 'audit') associated with that lane."
+        },
+        "maps_to_feature": "INB-resolve",
+        "represents": "INB-resolve"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        41
+      ],
+      "confirm": {
+        "status": "confirmed",
+        "confirmed": true,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": []
+      },
+      "mockup": "C1-inbox-desktop.html"
+    }
+  ],
+  "flagged": [
+    {
+      "dossier": {
+        "address": "ui://inbox/toolbar",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The toolbar strip is defined in canvas/app/src/regions/Toolbar.tsx; the 'layers' action logic is wired in suite.py:toolbar_actions.",
+          "what": "The toolbar control on the inbox dashboard.",
+          "what_you_can_do": "Access the 'layers' action to view or manage the triage lanes (live escalations, resolved audits, and batched work) from the main command strip."
+        },
+        "maps_to_feature": "INB-lanes",
+        "represents": "INB-toolbar"
+      },
+      "cluster_size": 2,
+      "cluster_members": [
+        0,
+        4
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/process",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The lane structure is defined in Inbox.tsx; the process logic and escalation rules are configured in suite.py:inbox_lanes.",
+          "what": "The Process lane header in the Chief of Staff's Inbox dashboard.",
+          "what_you_can_do": "Identify the lane containing live escalations awaiting your decision; click to drill into the specific items within this process queue."
+        },
+        "maps_to_feature": "INB-lanes",
+        "represents": "INB-process"
+      },
+      "cluster_size": 6,
+      "cluster_members": [
+        5,
+        6,
+        7,
+        15,
+        32,
+        37
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/summon",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The banner is the Inbox.tsx region; the summoning logic lives in suite.py:inbox_lanes (live escalations) or suite.py:coa (decision compilation).",
+          "what": "The summoning banner on the Chief of Staff's Inbox dashboard.",
+          "what_you_can_do": "Read the urgent count of pending decisions and initiate the review session to process the backlog."
+        },
+        "maps_to_feature": "INB-lanes",
+        "represents": "INB-summon"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        8
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 0,
+          "votes_ungrounded": 3,
+          "n": 3,
+          "unanimous": true,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (0 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/decision-focus",
+        "capabilities": [
+          "pointable",
+          "openable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The focus logic lives in the inbox region (Inbox.tsx); the drill/open actions are wired via the decision\u2192build lane logic in suite.py:inbox_lanes.",
+          "what": "The decision focus control on the inbox dashboard.",
+          "what_you_can_do": "Drill into a specific value-choice to see its ground truth, or open the build review for that item."
+        },
+        "maps_to_feature": "INB-focus",
+        "represents": "INB-focus"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        9
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": [
+          "refcheck (Layer 1, deterministic floor): feature fabrication: maps_to_feature 'INB-focus' is not an inventory id nor 'proposed'"
+        ]
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/await",
+        "capabilities": [
+          "presentable",
+          "pointable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The count is driven by the live escalation logic in suite.py:inbox_lanes; changing the count requires modifying the source of new escalations or the filtering logic there.",
+          "what": "The live counter on the inbox dashboard showing the number of items awaiting your decision.",
+          "what_you_can_do": "Scan the number to gauge the volume of work requiring your immediate attention; it updates dynamically as items enter the queue."
+        },
+        "maps_to_feature": "INB-lanes",
+        "represents": "INB-queue-count"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        11
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/foot",
+        "capabilities": [
+          "presentable",
+          "pointable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The footer is the Inbox.tsx region; the live counters and stream indicators are driven by the suite.py:inbox_lanes logic.",
+          "what": "The footer of the Chief of Staff's Inbox dashboard.",
+          "what_you_can_do": "View the live status of the event stream and the current volume of work (awaiting vs resolved) at a glance."
+        },
+        "maps_to_feature": "INB-lanes",
+        "represents": "INB-foot"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        12
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/awaiting",
+        "capabilities": [
+          "presentable",
+          "pointable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The beacon is the visible organ of the inbox region (Inbox.tsx); its state is driven by the live escalations logic in suite.py:inbox_lanes.",
+          "what": "The attention beacon on the inbox dashboard, signaling that the Chief of Staff has live work requiring immediate decision.",
+          "what_you_can_do": "Scan the dashboard to see if the system is actively waiting for your input; this label confirms the presence of live escalations in the current view."
+        },
+        "maps_to_feature": "INB-lanes",
+        "represents": "INB-attention"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        13
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/excluded",
+        "capabilities": [
+          "presentable",
+          "pointable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The count is calculated in suite.py:965-967 based on the test_origin tag; the display is in Inbox.tsx.",
+          "what": "The excluded count badge on the Chief of Staff's Inbox dashboard.",
+          "what_you_can_do": "View the number of items filtered out due to test-origin tags; these are visible only as a count, never as individual items."
+        },
+        "maps_to_feature": "INB-excluded",
+        "represents": "INB-excluded"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        14
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": true,
+          "votes_grounded": 2,
+          "votes_ungrounded": 1,
+          "n": 3,
+          "unanimous": false,
+          "quorum": true
+        },
+        "reasons": [
+          "refcheck (Layer 1, deterministic floor): feature fabrication: maps_to_feature 'INB-excluded' is not an inventory id nor 'proposed'"
+        ]
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/build-review/remark",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The card is the visible organ in the build-review region (runtime/suite.py:review_verdicts); changing the text is a code change there.",
+          "what": "A demonstration instruction card in the build-review lane.",
+          "what_you_can_do": "Read the instruction to see it working before accepting or sending back with a why, and click to review now."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "Demonstrate-first remark"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        18
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/build-review/review",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "Mockup-only; no built code path maps to this specific button yet.",
+          "what": "The 'Review' action button on the build result card.",
+          "what_you_can_do": "Click this to open the review interface where you can read the build summary and diff, then approve or resolve the build."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "WIRE-review trigger"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        20
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/coa/recommendation",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The card is surfaced by the decision-compiler (suite.py:coa); changing the recommendation requires altering the compiler logic or the input data, not the card's HTML.",
+          "what": "A recommendation card in the Chief of Staff's action lane.",
+          "what_you_can_do": "Read the node ranking and the system's suggested action (widen corpus, re-run) to understand the current state and proposed fix."
+        },
+        "maps_to_feature": "proposed",
+        "represents": "INB-coa recommendation"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        23
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/idea",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "built",
+        "howto": {
+          "how_to_change": "The note is surfaced in Inbox.tsx; the underlying state and recommendation logic live in suite.py:inbox_lanes.",
+          "what": "A triage note in the inbox indicating a mid-flow item that has resurfaced for review.",
+          "what_you_can_do": "Read the status of the resurfaced item and the recommended action (turn into a build-intent or defer)."
+        },
+        "maps_to_feature": "INB-idea",
+        "represents": "INB-idea"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        29
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/propose",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The proposal logic lives in the inbox region (Inbox.tsx); the proposal generation is driven by suite.py:inbox_lanes (specifically the self-mod branch).",
+          "what": "A proposal card in the inbox, offering a self-modified decision path.",
+          "what_you_can_do": "Review the proposed declarative panel, validate its registry checks, and either approve the change or send it back with a reason."
+        },
+        "maps_to_feature": "INB-propose",
+        "represents": "INB-propose"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        34
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "refcheck (Layer 1, deterministic floor): feature fabrication: maps_to_feature 'INB-propose' is not an inventory id nor 'proposed'",
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C1-inbox-desktop.html"
+    },
+    {
+      "dossier": {
+        "address": "ui://inbox/idea",
+        "capabilities": [
+          "pointable",
+          "presentable"
+        ],
+        "grounding": "proposed",
+        "howto": {
+          "how_to_change": "The card is rendered in the inbox region (Inbox.tsx); the underlying idea data and tone scoring logic are defined in the node configuration (NODE-config) or the specific node kind (NODE-kinds) within the suite.",
+          "what": "A node card in the inbox representing a specific idea or tone-scoring concept.",
+          "what_you_can_do": "View the idea's details and its associated tone score; click to drill into the raw node data or the decision-making context."
+        },
+        "maps_to_feature": "INB-idea",
+        "represents": "INB-idea"
+      },
+      "cluster_size": 1,
+      "cluster_members": [
+        39
+      ],
+      "confirm": {
+        "status": "FLAGGED",
+        "confirmed": false,
+        "jury": {
+          "verdict": false,
+          "votes_grounded": 1,
+          "votes_ungrounded": 2,
+          "n": 3,
+          "unanimous": false,
+          "quorum": false
+        },
+        "reasons": [
+          "accuracy jury (Layer 2, SOFT \u2014 variance not error): no quorum that the dossier is grounded in the element (1 of 3 draws agreed grounded). Flagged for operator scrutiny."
+        ]
+      },
+      "mockup": "C1-inbox-desktop.html"
+    }
+  ]
+}

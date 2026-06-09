@@ -11,7 +11,7 @@
       "op": "generate",
       "role": "register_element",
       "kind": "items",
-      "_phase": "MAP (RG4) — the run_items fan: ONE role (register_element, RG3) x N candidate units, concurrent on the swarm. Each unit + its grounded context -> a PROPOSED registry dossier {address, represents, howto{what,what_you_can_do,how_to_change}, capabilities, maps_to_feature|'proposed', confidence} (roles/register_element.py :: RegisterElementOut). PROPOSES; never writes (operator-only floor).",
+      "_phase": "MAP (RG4) — the run_items fan: ONE role (register_element, RG3) x N candidate units, concurrent on the swarm. Each unit + its grounded context -> a PROPOSED registry dossier {address, represents, howto{what,what_you_can_do,how_to_change}, capabilities, maps_to_feature|'proposed', grounding-tag} (roles/register_element.py :: RegisterElementOut; the no-confidence law G16 — a discrete grounding tag built|proposed|uncertain|defer, NOT a confidence float). PROPOSES; never writes (operator-only floor).",
       "_input": "THE CASCADE INPUT (step 0). run_cascade threads `inputs` here: the N candidate-element units from design/_system/candidates.json's `candidates` array (RG1 EXTRACT's product — 940 units on main 2026-06-09; schema {mockup_file, selector, outerHTML, visible_text, tag, ancestor_address, ancestor_dossier, base_address, self_registered, self_address}). Pass them as `inputs` (a list -> run_items fans over them), OR as a run://·cas:// address resolving to that list. EXTRACT is a deterministic parse.py pass (NOT a role) -> it is a PRECOMPUTE PRECONDITION that produces candidates.json, NOT an executable cascade step (a roleless / non-VALID_OPS step cannot run in run_cascade).",
       "_output_addresses": "run://<turn>-s0/register_element/<j> (one per OK unit; run_items keys its own turn_id with the s0 step-suffix so the addresses are step-unique). The reduce step (step 1) consumes this LIST.",
       "_grounding_seam": "register_element.input_addresses = ('utterance', 'run://<turn>/screen_reader/{mockup}', 'exemplars', 'inventory'). 'utterance' = the per-unit candidate (run_items places the unit here). 'exemplars'/'inventory' = SHARED, resolved-once context (3-5 addresses.json entries for voice + the Feature & Function Inventory: design/register.json features + the closed capability vocabulary pointable·spotlit·presentable·openable·driven). 'run://<turn>/screen_reader/{mockup}' = the GROUND phase's per-mockup summary, keyed per-element by its mockup. *** OPEN SEAM ([C]'s lane): today's run_cascade threads only the prior step's positional addresses into a step; it does NOT yet provision (a) the per-unit-keyed shared ground summary nor (b) the resolve-once shared exemplars/inventory ctx. That shared-context provisioning is the engine work [C] owns (the run:// {mockup}-keyed wiring named in COORDINATION). Until it lands, this step fans register_element over the candidates with the per-unit context that travels IN the unit (ancestor_address + ancestor_dossier are already in candidates.json), and the ground/exemplars/inventory grounding is the convergence-round seam, not yet engine-provisioned.",
@@ -48,10 +48,10 @@
     "represents": "str — the 82-entries' short voice (e.g. 'RUN-run')",
     "howto": { "what": "str", "what_you_can_do": "str", "how_to_change": "str" },
     "capabilities": "list[str] — subset of the closed vocabulary (pointable·spotlit·presentable·openable·driven), NEVER invented",
-    "maps_to_feature": "str — a Feature & Function Inventory id (design/register.json features[].id) OR the literal 'proposed' if un-built",
-    "confidence": "float 0..1",
-    "_confirm_added": "the confirm gate adds the verdict (grounded quorum) + refcheck pass/flags so RG8 can mark low-confidence/flagged entries for extra Tim scrutiny",
-    "_provenance": "run://, model, confidence per entry (introspective-data-building)"
+    "maps_to_feature": "str — a Feature & Function Inventory id (design/register.json features[].id) COPIED VERBATIM, OR the literal 'proposed' if un-built (never an invented/adapted id — the smoke showed the model coins INB-* ids by analogy; the floor + verbatim instruction catch it)",
+    "grounding": "the NO-CONFIDENCE tag (G16) — one of built|proposed|uncertain|defer (a discrete grounding STATE, replacing the old confidence:float which was empirically flat noise; the routing/triage signal the operator reads)",
+    "_confirm_added": "the confirm gate adds the verdict (grounded quorum) + refcheck pass/flags so RG8 can mark flagged entries (grounding != built, or floor-FLAGGED) for extra Tim scrutiny",
+    "_provenance": "run://, model, grounding-tag per entry (introspective-data-building; no confidence float — G16)"
   },
 
   "_chain_documented_5_phases": {
