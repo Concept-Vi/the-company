@@ -50,6 +50,35 @@ def _apply_response_format(body: dict, opts: dict) -> None:
         body["response_format"] = {"type": "json_object"}      # structured-output request (existing path)
 
 
+def _fill_meta(opts: dict, data: dict) -> None:
+    """ADDITIVE finish_reason + token-count passthrough (O3). If the caller passed a `meta={}` dict in
+    opts, fill it IN PLACE from the response envelope — WITHOUT touching the transport's return type, so
+    every one of the 12+ bare-content-string callers is byte-unaffected (the out-param is invisible to
+    them: they pass no `meta`, so this is a no-op). `meta` rides `**opts` straight through
+    fabric.client.complete() (which forwards `**opts` to the transport) and NEVER enters the request body
+    (the body only reads response_format + the explicit temperature/max_tokens/top_p keys — never `meta`),
+    so a stray `meta` key can't pollute the request.
+
+    Why the TRANSPORT fills it (not the client): the transport is the ONLY layer that sees the raw OpenAI
+    envelope (`choices[0].finish_reason`, `usage`). `complete()` re-runs the transport per retry attempt and
+    overwrites `meta` each time, so it naturally lands on the SUCCESSFUL attempt's values (fail-loud chain
+    unchanged — meta is decoration, never the guarantee).
+
+      - finish_reason: choices[0].finish_reason — 'stop' (clean) | 'length' (TRUNCATED → grammar/JSON
+        output is INVALID; the O3 signal the engine persists) | 'tool_calls' | 'content_filter' | None.
+      - usage: the token counts (prompt_tokens / completion_tokens / total_tokens) when the server reports
+        them (vLLM does); None-safe (an endpoint that omits usage → usage stays absent, never a crash).
+    """
+    meta = opts.get("meta")
+    if meta is None:
+        return                                                 # no out-param requested → no-op (default)
+    choices = data.get("choices") or [{}]
+    meta["finish_reason"] = choices[0].get("finish_reason")    # may be None — passed through honestly
+    usage = data.get("usage")
+    if isinstance(usage, dict):
+        meta["usage"] = usage                                  # {prompt_tokens, completion_tokens, total_tokens}
+
+
 def openai_transport(base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama", timeout: int = DEFAULT_TIMEOUT):
     """Build a transport bound to an OpenAI-compatible endpoint.
 
@@ -70,6 +99,7 @@ def openai_transport(base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama", 
         )
         with urllib.request.urlopen(req, timeout=timeout) as r:
             data = json.loads(r.read())
+        _fill_meta(opts, data)                                 # ADDITIVE finish_reason+usage out-param (O3); no-op without meta=
         # OpenAI shape: choices[0].message.content
         return (data.get("choices") or [{}])[0].get("message", {}).get("content", "")
     return transport
@@ -103,6 +133,7 @@ def openai_tools_transport(base_url: str = DEFAULT_BASE_URL, api_key: str = "oll
         )
         with urllib.request.urlopen(req, timeout=timeout) as r:
             data = json.loads(r.read())
+        _fill_meta(opts, data)                                 # ADDITIVE finish_reason+usage out-param (O3); no-op without meta=
         # OpenAI shape: choices[0].message = {role, content, tool_calls?}. Return the WHOLE message
         # dict (NOT the bare content) so the caller sees tool_calls alongside content.
         return (data.get("choices") or [{}])[0].get("message", {}) or {}

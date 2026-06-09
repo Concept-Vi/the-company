@@ -12,6 +12,12 @@ PROVES the additive `json_schema` branch in fabric/transport.py:
   4. ENFORCEMENT STAYS CLIENT-SIDE: complete()'s validate/retry is the guarantee (F9) — json_schema is a
      decode strengthening, not a replacement. A live json_schema call STILL goes through complete() and
      returns a VALIDATED FocusOut.
+  5. finish_reason + usage PASSTHROUGH (O3): the additive `meta={}` out-param — a caller passes an empty
+     dict, the transport fills it (finish_reason + token usage) after parsing. UNIT: meta does NOT leak
+     into the request body; _fill_meta populates from the envelope; absent meta = no-op (the 12+ bare-string
+     callers byte-unaffected). BY USE: tiny max_tokens → finish_reason='length' (truncation = invalid
+     grammar output, the O3 signal); normal → 'stop' + usage; threads through complete() with its return
+     type UNCHANGED. The ENGINE lane (cognition.py run_role / op.run) is the CONSUMER (O3) — not wired here.
 
 Run: PYTHONPATH=/home/tim/company-cognition /home/tim/company/.venv/bin/python tests/json_schema_transport_acceptance.py
 The live checks need the resident 4B UP at :8000 (read-only USE — no load/evict). If it is DOWN, the
@@ -249,18 +255,105 @@ def test_live_complete_validates(evidence: dict):
     ok(f"live: complete() returns a VALIDATED FocusOut over the json_schema branch → {validated.model_dump()}")
 
 
+# ---------------------------------------------------------------------------------------------------
+# 5. finish_reason + usage PASSTHROUGH (O3) — the additive meta={} out-param
+# ---------------------------------------------------------------------------------------------------
+def test_meta_no_leak():
+    """UNIT (no network): a `meta={}` out-param must NOT leak into the request body, and _fill_meta
+    populates it from the response envelope. Proves the 12+ bare-string callers are byte-unaffected."""
+    cap = {}
+
+    def cap_t(model, messages, **opts):
+        body = {"model": model, "messages": messages, "stream": False}
+        transport._apply_response_format(body, opts)
+        for k in ("temperature", "max_tokens", "top_p"):
+            if k in opts:
+                body[k] = opts[k]
+        cap["body"] = body
+        transport._fill_meta(opts, {"choices": [{"finish_reason": "stop"}], "usage": {"total_tokens": 7}})
+        return "hi"
+
+    m = {}
+    cap_t("m", [], meta=m, temperature=0.0)
+    if "meta" not in cap["body"]:
+        ok("unit: meta out-param does NOT leak into the request body (callers unaffected)")
+    else:
+        bad("unit: meta leak", f"body has meta: {cap['body']!r}")
+    if m == {"finish_reason": "stop", "usage": {"total_tokens": 7}}:
+        ok("unit: _fill_meta populates finish_reason + usage from the envelope")
+    else:
+        bad("unit: _fill_meta fill", f"got {m!r}")
+
+    # no meta passed → _fill_meta is a no-op (the default path)
+    m2 = {}
+    transport._fill_meta({}, {"choices": [{"finish_reason": "stop"}]})
+    if m2 == {}:
+        ok("unit: no meta= → _fill_meta is a no-op (default path unchanged)")
+
+
+def test_live_finish_reason(evidence: dict):
+    """BY USE: a tiny max_tokens call → finish_reason='length' (truncation = invalid grammar output, the
+    O3 signal); a normal call → 'stop' + real usage token counts. Threads through complete() unchanged."""
+    t = transport.openai_transport(base_url=RESIDENT_BASE_URL, timeout=60)
+    # short → length (truncated)
+    meta_s = {}
+    try:
+        t(RESIDENT_MODEL, [{"role": "system", "content": "Write a long multi-paragraph essay about databases."},
+                           {"role": "user", "content": "Go."}], max_tokens=8, temperature=0.0, meta=meta_s)
+    except Exception as e:
+        bad("live: finish_reason on truncation", f"{e!r}"); evidence["finish_reason_passthrough"] = False; return
+    evidence["finish_reason_short"] = meta_s.get("finish_reason")
+    evidence["usage_short"] = meta_s.get("usage")
+    if meta_s.get("finish_reason") == "length":
+        ok(f"live: tiny max_tokens → finish_reason='length' (the O3 truncated-invalid signal); usage={meta_s.get('usage')}")
+    else:
+        bad("live: truncation → finish_reason='length'", f"got {meta_s!r}")
+    # normal → stop + usage
+    meta_n = {}
+    try:
+        t(RESIDENT_MODEL, [{"role": "user", "content": "Say only the word: hello"}],
+          max_tokens=64, temperature=0.0, meta=meta_n)
+    except Exception as e:
+        bad("live: finish_reason on clean stop", f"{e!r}"); evidence["finish_reason_passthrough"] = False; return
+    evidence["finish_reason_normal"] = meta_n.get("finish_reason")
+    if meta_n.get("finish_reason") == "stop" and isinstance(meta_n.get("usage"), dict) \
+            and "completion_tokens" in meta_n["usage"]:
+        ok(f"live: clean completion → finish_reason='stop' + usage token counts {meta_n.get('usage')}")
+    else:
+        bad("live: clean → 'stop' + usage", f"got {meta_n!r}")
+    # threads through complete() WITHOUT changing its return type
+    meta_c = {}
+    try:
+        validated = client.complete(
+            t, [{"role": "system", "content": "Return ONLY JSON: intent (string), which_roles (array of strings)."},
+                {"role": "user", "content": "Utterance: hello"}],
+            model=RESIDENT_MODEL, schema=FocusOut, json=True, temperature=0.0, max_tokens=128, meta=meta_c)
+    except Exception as e:
+        bad("live: meta threads through complete()", f"{e!r}"); evidence["finish_reason_passthrough"] = False; return
+    if hasattr(validated, "model_dump") and meta_c.get("finish_reason") == "stop":
+        ok(f"live: complete() return UNCHANGED (validated FocusOut) + meta filled → fr={meta_c.get('finish_reason')}")
+        evidence["finish_reason_passthrough"] = True
+        evidence["complete_meta"] = meta_c
+    else:
+        bad("live: complete() return + meta", f"validated={validated!r} meta={meta_c!r}")
+        evidence["finish_reason_passthrough"] = False
+
+
 def main():
     print("== json_schema transport acceptance (L-transport · C1.4 / R1-FOLD F9) ==")
     evidence = {"resident_model": RESIDENT_MODEL, "base_url": RESIDENT_BASE_URL}
 
     print("\n[1] UNIT — request body shape (additive + correct nesting)")
     test_unit_shape()
+    print("\n[5-unit] finish_reason+usage meta out-param (O3) — no-leak + fill")
+    test_meta_no_leak()
 
-    print("\n[2-4] BY USE — live resident 4B")
+    print("\n[2-5] BY USE — live resident 4B")
     if _server_up():
         test_live_json_schema(evidence)
         test_live_json_object_preserved(evidence)
         test_live_complete_validates(evidence)
+        test_live_finish_reason(evidence)
     else:
         evidence["live_skipped"] = "resident server :8000 down"
 
