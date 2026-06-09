@@ -13,8 +13,11 @@ class RepoDigestOut(BaseModel):
 ROLE = {'id': 'repo_digest',
  'label': 'Repo digest',
  'description': 'One-sentence digest of a supplied file: what it is + its role in the system.',
- 'prompt_template': 'Read the supplied file content and produce a 1-sentence digest of what it is '
-                    '+ its role in the system.',
+ 'prompt_template': 'Read the supplied file content and return JSON with EXACTLY these fields:\n'
+                    '  "digest" — a 1-2 sentence summary of what this file IS and its role in the system '
+                    '(the prose goes HERE, never in kind);\n'
+                    '  "kind" — ONE WORD ONLY: code | doc | config | test | data.\n'
+                    'File content:\n{utterance}',
  'op': 'generate',
  'input_addresses': ['utterance'],
  'mode_scope': [],

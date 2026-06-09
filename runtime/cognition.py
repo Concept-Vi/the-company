@@ -282,7 +282,11 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
         if ensure:
             # OPT-IN deliberate load (#50): make the embedder resident via the gated capability BEFORE
             # the embed. Default (ensure=False) skips this entirely → the existing fail-loud-when-down.
-            _ensure_embedder_resident(evict=ensure_evict)
+            # G14: a load NEEDING EVICTION (unauthorized) returns the structured swap-approval ASK —
+            # surface it (the caller decides), never swallow it into a downstream FabricError.
+            _res = _ensure_embedder_resident(evict=ensure_evict)
+            if isinstance(_res, dict) and _res.get("swap_needed"):
+                return _res
         text = _embed_text_for(role, ctx, store)
         et = transport.openai_embeddings_transport(base_url=_fcfg.DEFAULT_EMBED_URL)
         vecs = client.complete_embeddings(
