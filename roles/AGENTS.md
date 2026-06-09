@@ -96,8 +96,16 @@ Roles fire model calls through `fabric/` guards (a model runs only INSIDE a role
   breaking_case}`. NOT a draws-jury — its "jury" is the cross-LENS fan (N distinct lenses, one draw each
   via `run_items`); the adversarial-disprove lens defaults to fail/uncertain if it can construct a
   breaking case. In the `verification` cast only (a cast-beyond-listening context; listening untouched).
-  The deterministic green-iff-all-pass verdict-TALLY is a `run_reduce(mode='rule')` reduce-rule (the
-  next-beat follow-on); the unit contract is `{lens, change, bar}`.
+  The deterministic green-iff-all-pass verdict-TALLY is the `verdict-tally` `run_reduce(mode='rule')`
+  reduce-rule (now built, mcp_face `_REDUCE_RULES`); the unit contract is `{lens, change, bar}`.
+- **`develop_option`** — the **option-panel MAP role** (COMPOSITIONS ⑩): develops ONE approach to a
+  decision through ONE biasing lens (the lens rides in the unit: mvp-first · risk-first · reuse-first ·
+  framework-first · radical-recompose) → `{lens, approach, buys, costs, touches, risk}`. In the `panel`
+  cast (cast-beyond-listening; listening untouched). Fanned over the lenses via `run_items` → a diverse
+  option-space for Tim's A/B/C forks.
+- **`score_options`** — the **option-panel REDUCE role** (⑩, mode=role): takes the N per-lens approaches
+  → `{scored:[{lens,score,why}], recommendation, grafts}` — scores each + a recommendation that may graft
+  runner-up strengths. Mirrors `reduce_synth`'s reduce-role shape.
 
 **Where new things go:** a new role = a new file `roles/<id>.py` declaring its `ROLE` dict (its `id`
 MUST equal the file name). Put it in a mode's cast by adding that mode to its `mode_scope`. Make it a
