@@ -328,10 +328,26 @@ def run_role(role: str, utterance: str = "", op: str = "generate", model: str = 
 
     FLOOR: this produces a run:// output (computation) — it emits NO resolve/approve/dispatch."""
     r = _resolve_role(role)
-    turn_id = "mcp-" + _time.strftime("%Y%m%d-%H%M%S") + f"-{int(_time.monotonic()*1000) % 100000}"
+    return _fire_role_and_persist(
+        r, utterance, inputs, model, max_tokens, temperature, ensure, ensure_evict, policy,
+        turn_prefix="mcp")
+
+
+def _fire_role_and_persist(r, utterance: str, inputs: dict, model: str, max_tokens: int,
+                           temperature: float, ensure: bool, ensure_evict: bool, policy: str,
+                           *, turn_prefix: str) -> dict:
+    """The SHARED single-role fire-and-persist tail of run_role / run_draft (REUSE — never copy-paste a
+    second wrapper body, so the two stay byte-identical in behaviour). Given an ALREADY-RESOLVED `Role`
+    (`_resolve_role` of an id for run_role, of a draft dict for run_draft — the engine path is the same
+    `_cog.run_role` either way), it: mints a turn_id, resolves address-valued declared inputs, FIRES the
+    role, PERSISTS the output to run://<turn>/<role>, emits ONE op.run index record, and returns the
+    agent-facing shape. The draft case differs ONLY in how `r` was built (a tempdir module that is
+    rmtree'd — NEVER written to roles/); from here the two are identical. FLOOR: a run:// output
+    (computation) — emits NO resolve/approve/dispatch."""
+    turn_id = turn_prefix + "-" + _time.strftime("%Y%m%d-%H%M%S") + f"-{int(_time.monotonic()*1000) % 100000}"
     # resolve any address-valued declared inputs through the engine resolver (input-address intent).
     ctx = {"utterance": utterance}
-    for name, val in dict(inputs).items():
+    for name, val in dict(inputs or {}).items():
         if isinstance(val, str) and "://" in val:
             ctx[name] = _cog.resolve_address(SUITE.store, val, turn_id=turn_id)
         else:
@@ -378,6 +394,36 @@ def run_role(role: str, utterance: str = "", op: str = "generate", model: str = 
 
 
 @mcp.tool()
+def run_draft(draft_role: dict, utterance: str = "", model: str = "",
+              inputs: dict = {}, max_tokens: int = 256, temperature: float = 0.0,
+              ensure: bool = False, ensure_evict: bool = False, policy: str = "") -> dict:
+    """CONFIGURE + RUN a ONE-OFF DRAFT role (the G1 ephemeral-run path) — fire an INLINE role spec ONCE
+    over a single utterance WITHOUT registering or committing it. The motivating gap (SYSTEM-GAPS G1): a
+    bounded one-off classify/extract forces `create_role` (which COMMITS a throwaway role → registry
+    pollution + a `.git/index.lock` race) or dropping below the MCP. `run_draft` closes it.
+
+    `draft_role` is a DRAFT FIELD-SPEC (a dict, the SAME shape `create_role`/`propose_role`/`dry_run_role`
+    consume — NOT a registered id): `{id (plain lower identifier), prompt_template, output_fields:
+    [{name, type, description?}], op?, input_addresses?, requires?, ...}`. It is rendered → loaded from a
+    TEMP module → discovered (the SAME RoleRegistry the live roles use, via `_resolve_role`'s dict branch
+    → `authoring.load_role_from_source`, which `shutil.rmtree`s the tempdir in a `finally`). **The draft
+    role is NEVER written to roles/ and NEVER committed** — a malformed spec FAILS LOUD (the correctness
+    gate) before any fire.
+
+    Everything else is byte-identical to `run_role` (REUSES `_fire_role_and_persist` — the SAME engine
+    path `_cog.run_role`, the SAME persist to run://<turn>/<role>, the SAME op.run index record). The
+    output is inspectable/feedable downstream by address. Returns {role, op, output, address, turn_id,
+    finish_reason}.
+
+    FLOOR: this is a run:// output (COMPUTATION, not authoring-apply) — it emits NO resolve/approve/
+    dispatch and writes/commits NO role file. The single-fire analogue of run_draft_items (the MAP)."""
+    r = _resolve_role(draft_role)        # the dict branch: render → tempdir-load → discover → (rmtree); no commit
+    return _fire_role_and_persist(
+        r, utterance, inputs, model, max_tokens, temperature, ensure, ensure_evict, policy,
+        turn_prefix="mcp-draft")
+
+
+@mcp.tool()
 def run_items(role: str, items: list, max_tokens: int = 256, temperature: float = 0.0) -> dict:
     """CONFIGURE + RUN the MAP — fan ONE role over N input-UNITS (1 role × N units). REUSES
     runtime.cognition.run_items (the axis-inversion engine — never a parallel fan). Each unit is either
@@ -385,12 +431,49 @@ def run_items(role: str, items: list, max_tokens: int = 256, temperature: float 
     run://<turn>/<role>/<i> (inspectable/feedable). Returns {role, turn_id, n_units, addresses, resolved,
     finish_order, skipped, wall_s}. A DRIVER: emits NO resolve/approve/dispatch (the floor)."""
     r = _resolve_role(role)
-    turn_id = "mcp-items-" + _time.strftime("%Y%m%d-%H%M%S") + f"-{int(_time.monotonic()*1000) % 100000}"
+    return _run_items_and_shape(r, items, max_tokens, temperature, turn_prefix="mcp-items")
+
+
+def _run_items_and_shape(r, items: list, max_tokens: int, temperature: float,
+                         *, turn_prefix: str) -> dict:
+    """The SHARED MAP fan-and-shape tail of run_items / run_draft_items (REUSE — one fan body, so the
+    registered-id and draft-spec paths stay byte-identical). Given an ALREADY-RESOLVED fireable `Role`
+    (`_resolve_role` of an id for run_items, of a draft dict for run_draft_items), it fans the role over
+    the N units via `_cog.run_items` (the axis-inversion engine — never a parallel fan) and returns the
+    agent-facing ItemsResult shape. FLOOR: a DRIVER — emits NO resolve/approve/dispatch."""
+    turn_id = turn_prefix + "-" + _time.strftime("%Y%m%d-%H%M%S") + f"-{int(_time.monotonic()*1000) % 100000}"
     res = _cog.run_items(r, list(items), SUITE.store, turn_id=turn_id, emit=_cog_emit,
                          max_tokens=max_tokens, temperature=temperature)
     return {"role": r.id, "turn_id": turn_id, "n_units": len(items),
             "addresses": res.addresses, "resolved": res.resolved,
             "finish_order": res.finish_order, "skipped": res.skipped, "wall_s": res.wall_s}
+
+
+@mcp.tool()
+def run_draft_items(draft_role: dict, items: list, max_tokens: int = 256,
+                    temperature: float = 0.0) -> dict:
+    """CONFIGURE + RUN the DRAFT MAP (the G1 ephemeral-fan path + ⑪ grunt-offload's missing primitive) —
+    fan a ONE-OFF INLINE role spec over N input-UNITS WITHOUT registering or committing the role. This is
+    THE primitive a bounded one-off classify needs: "classify these 39 candidates once" → one
+    `run_draft_items` call, NOT a `create_role` that pollutes the registry (+ a `.git/index.lock` race).
+
+    `draft_role` is a DRAFT FIELD-SPEC (a dict, the SAME shape `create_role`/`dry_run_role` consume — NOT
+    a registered id): `{id, prompt_template, output_fields:[{name, type, description?}], op?,
+    input_addresses?, requires?, ...}`. It is rendered → loaded from a TEMP module → discovered (the SAME
+    RoleRegistry the live roles use, via `_resolve_role`'s dict branch → `authoring.load_role_from_source`,
+    which `shutil.rmtree`s the tempdir in a `finally`). **The draft role is NEVER written to roles/ and
+    NEVER committed** — a malformed spec FAILS LOUD (the correctness gate) before any fire.
+
+    `items` = the N input-units (each a LITERAL value OR an ADDRESS run://…/cas://… resolved via
+    resolve_address) — identical to `run_items`. REUSES `_cog.run_items` (the axis-inversion engine) +
+    `_run_items_and_shape` (the SAME fan body run_items uses). Outputs land at run://<turn>/<role>/<i>
+    (inspectable/feedable). Returns {role, turn_id, n_units, addresses, resolved, finish_order, skipped,
+    wall_s}.
+
+    FLOOR: a DRIVER — this is run:// COMPUTATION (not an authoring-apply): it emits NO resolve/approve/
+    dispatch and writes/commits NO role file. The N-unit MAP analogue of run_draft."""
+    r = _resolve_role(draft_role)        # the dict branch: render → tempdir-load → discover → (rmtree); no commit
+    return _run_items_and_shape(r, items, max_tokens, temperature, turn_prefix="mcp-draft-items")
 
 
 # the closed, NAMED reduce-rule registry (registry-is-truth): a deterministic L2 join the agent selects
