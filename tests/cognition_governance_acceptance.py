@@ -173,6 +173,25 @@ for m in ("create_role", "create_skill", "create_context", "_write_role_file", "
     check(f"#58 authoring-apply reachable: Suite.{m} exists (direct create, no approval)",
           callable(getattr(_Suite, m, None)))
 
+# CAPTURE-EMBED ONE-SOURCE floor home — Suite.capture_corpus is the shared capture+embed-on-write seam BOTH
+# faces call. It LIVES in suite.py, which CANNOT be added to COG_SOURCES (the wire's dispatch_decision /
+# claude -p launch legitimately lives in the same file — a whole-file scan would false-breach). So the floor
+# teeth for this method live HERE as a TARGETED method-source scan (the permanent home — not just the lane
+# tests that a refactor could drop): capture_corpus is computation (a corpus.record write + a put_vector
+# write via embed_corpus_to_spaces) and MUST NOT emit/launch any consequential verb. Same for _embed_text
+# (a pure derivation). AST-for-calls would be ideal, but a code-only string scan (comments stripped) matches
+# the COG_SOURCES discipline above and is robust to the docstrings that legitimately DESCRIBE the floor.
+import inspect as _ins_floor
+for _mname in ("capture_corpus", "_embed_text"):
+    _msrc = _ins_floor.getsource(getattr(_Suite, _mname))
+    _mbody = _msrc.split('"""', 2)[-1] if _msrc.count('"""') >= 2 else _msrc
+    _mcode = "\n".join(l.split("#", 1)[0] for l in _mbody.splitlines())  # strip end-of-line comments
+    _breach = [tok for tok in ("resolve_surfaced", "dispatch_decision", ".approve(", "drive_dispatchable",
+                               ".resolve(")
+               if tok in _mcode]
+    check(f"C9.2 the floor COVERS Suite.{_mname} (the shared capture+embed seam — computation, never an "
+          f"action): no resolve/approve/dispatch in its body", not _breach)
+
 # ── C9.1 — a model runs only inside a role; the cognition layer has no consequential verb ─────────
 print("\n[C9.1] roles act only within posture — no gate-bypassing action reachable from cognition")
 # the rule engine routes; the ONLY effects are the declared destination kinds (all non-consequential:

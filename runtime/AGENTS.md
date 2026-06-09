@@ -362,9 +362,10 @@ source-of-truth (no role-file `protected` marker exists, and that file is not th
 declared as `_SUITE_OWNED_PROTECTED_ROLES` (the honest single source for "the roles suite.py depends on by
 name"). The full `PROTECTED_ROLES` is the union, built in `__init__`. *(The OTHER two B-targets:
 `ENGINE_RUN_OPS` is itself the source — the emit sites mirror it — so it's already single-source, not a copy;
-`api_verbs` (`capabilities()`) is a second copy of `bridge.py`'s route literals, but suite.py CANNOT import
-bridge.py (circular) and there is NO importable route registry — so it is CROSS-LANE-BLOCKED: surfaced as
-needs-coordination, NOT replaced with a parallel hardcoded list.)*
+`api_verbs` (`capabilities()`) was a second copy of `bridge.py`'s route literals — now DE-HARDCODED: it is
+projected from `bridge.BRIDGE_ROUTES` (the single-source route table) via a LAZY import in `Suite._api_verbs`
+that sidesteps the circular import, with a drift test keeping `BRIDGE_ROUTES` == the live dispatcher. See "The
+substrate WENT LIVE" section below for the full close-out.)*
 
 ## The cascade RUNNER (Cognition Engine GROUP N · `runtime/cognition.py` + `runtime/suite.py` + `mcp_face/server.py` · the LARGEST net-new of the corpus pillar)
 
@@ -833,16 +834,29 @@ The corpus substrate was BUILT (the 6 registries' `as_records()`, `embed_corpus_
   previous in-lane `info["projections"]`/`info["spaces"]` AUGMENT is now REDUNDANT and removed — the
   `projections=` kwarg produces both (the contract derives `spaces` from `projections.embeddable()`),
   collapsing two mechanisms into ONE.
-- **`capture` (MCP) is `embed_corpus_to_spaces`'s FIRST LIVE CALLER — the corpus auto-populates the space.**
-  After the lineage-gated `write_corpus_record` writes (the **sequencing gate**: session/round/project ride
-  IN the record BEFORE the first embed), when `projection` names an EMBEDDABLE lens (`embeds==True` → a
-  vector space) `capture` builds `{source_address, text, projection}` embed-records (text = the lens output
-  stringified by `_embed_text` — deterministic, so a re-captured record is a content-hash no-op) and calls
+- **CAPTURE-EMBED ONE-SOURCE — `Suite.capture_corpus` is the ONE capture+embed-on-write seam BOTH faces call.**
+  *(Was: only the MCP `capture` tool embedded-on-write; the bridge `/api/cognition/corpus` route ONLY wrote
+  the record and NEVER embedded — so capturing via /api SILENTLY did not populate the space, and
+  `find_relations` stayed empty over it, a no-silent-failure violation. The FINAL lane closed it.)* The
+  write+embed is HOISTED into **`Suite.capture_corpus(records, *, project, session, round, embed_fn=?)`** —
+  it writes each lineage-gated `write_corpus_record` FIRST (the **sequencing gate**: session/round/project ride
+  IN the record BEFORE the first embed), derives the embed-text via **`Suite._embed_text`** (MOVED here from
+  `mcp_face/server.py` so it travels WITH the shared seam — deterministic stringification, so a re-captured
+  record is a content-hash no-op), and embeds the embeddable-projection records via
   `cognition.embed_corpus_to_spaces` (the REUSE delegate to `vector_index.build_index(space=)` — NO second
-  vector path). So a real capture run POPULATES the space `find_relations` reads end-to-end. A non-embeddable
-  / absent projection → capture-only (records written, space untouched, `embedded=None`); a DOWN embedder →
-  `build_index`'s sanctioned LOUD degrade-with-warning (`degraded=True`, no vectors, no crash). The result
-  rides back as `embedded` on the capture return.
+  vector path; its FIRST live caller). **BOTH faces CALL it:** the MCP `capture` tool owns only the FAN
+  (`run_items` over units) then hands the per-unit records to `capture_corpus`; the bridge `/api/cognition/corpus`
+  POST arm assembles its single-record (or `records:[…]` batch) body into `capture_corpus`. So both populate
+  the space IDENTICALLY; neither silently no-ops. **FAIL-LOUD (the WHOLE POINT — registry-is-truth +
+  no-silent-fallback):** `capture_corpus` does NOT pre-filter the embeddable check — it lets
+  `embed_corpus_to_spaces` OWN it (the embeddable decision is `projection_registry.embeddable()`), so a record
+  naming a projection that is NOT an embeddable space RAISES (→ a 400 on the bridge). A record with NO
+  projection is legitimately capture-only (`embedded=None`, no error — distinct from "asked for a non-embeddable
+  space", which fails loud). A DOWN embedder → `build_index`'s sanctioned LOUD degrade-with-warning
+  (`degraded=True`, no vectors, no crash). The result rides back as `embedded` on the return (and on `capture`'s
+  return). Proven by `tests/capture_one_source_acceptance.py` (both faces populate identically; the fail-loud;
+  the floor) + `tests/suite3_wiring_acceptance.py` §2/§5. **needs-tim:** a LIVE `:8001` embed (the embedder is
+  DOWN — the capture→embed→space→`find_relations` code path is proven on a stub).
 - **O3 PERSISTED — the MCP `run_role` wrapper rides `finish_reason` onto the `op.run` record.** The wrapper
   passes `meta={}` into `cognition.run_role` (the OUT-PARAM seam — the engine's return shape is UNCHANGED,
   `finish_reason` never folds into it) and threads `finish_reason` (+ `usage` if present) into the
@@ -860,12 +874,20 @@ is a `corpus.record`/`put_vector`/`op.run` write, `cognition_info` is a pure rea
 `cognition_info_registries` 45, `cognition_info` 82, `drift` 5, `route_run_output`, `cascade` 25,
 `space_embed` 27). **needs-tim:** a LIVE `:8001` embed (the embedder is DOWN — the capture→embed→space code
 path is proven on a stub; a real BGE-M3 capture populating the space is the embedder-up follow-up). **B-fix
-needs-coordination:** `capabilities()['api_verbs']` (suite.py) is still a HARDCODED literal list — the bridge
-dispatches routes via an `if/elif path ==` chain in `do_GET`/`do_POST` (`runtime/bridge.py`) with NO central
-route registry to derive from; the only clean source is in `bridge.py` (out of the SUITE lane), so building a
-parallel list here would be the very anti-pattern the B-fix targets. Proposed source: a `BRIDGE_ROUTES`
-tuple/registry in `bridge.py` the dispatcher iterates AND `capabilities()` projects (one source). Flagged,
-not hand-built. (`PROTECTED_ROLES` — the other flagged B-fix — was already de-hardcoded: derived from
+CLOSED — `api_verbs` is now DERIVED from `bridge.BRIDGE_ROUTES`** (the FINAL lane): `runtime/bridge.py` now
+declares **`BRIDGE_ROUTES`** — a flat tuple, the SINGLE SOURCE of the bridge route table (every `path ==` /
+`self.path ==` literal the `do_GET`/`do_POST` dispatcher handles, listed ONCE). `capabilities()['api_verbs']`
+projects the `/api/*` subset of it (`Suite._api_verbs` — a projection by the INTRINSIC path-prefix, NOT a
+hand-maintained classification, so adding an `/api/` route makes it appear with no second list). The
+circular-import constraint (suite.py can't import bridge.py at module load — bridge imports Suite) is handled
+by a LAZY import inside `_api_verbs` (both modules are loaded by call-time). The TEETH that make this the
+single source rather than a relabeled third copy: **`tests/bridge_routes_acceptance.py`** greps the dispatcher's
+own route literals out of `bridge.py` and fail-louds if `BRIDGE_ROUTES` drifts from them BOTH directions
+(dispatched-but-unlisted OR listed-but-undispatched) — so a route can't be added/removed without the matching
+`BRIDGE_ROUTES` edit. The dispatch `if/elif` chain is UNCHANGED (de-hardcoding the projection, not rewriting
+the dispatcher — a high-regression refactor avoided deliberately). The old curated 22-item literal is GONE; the
+preamble label softened to "the api routes" since it now includes POST verbs (a fuller true list — POLR working,
+not a regression). (`PROTECTED_ROLES` — the other flagged B-fix — was already de-hardcoded: derived from
 `cognition.SPIKE_ROLES` ∪ `_SUITE_OWNED_PROTECTED_ROLES`.)
 
 ## The cognition-engine HUMAN-FACE routes (Cognition Engine LANE-BRIDGE · `runtime/bridge.py` · G2)
