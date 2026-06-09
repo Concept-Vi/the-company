@@ -9731,6 +9731,24 @@ class Suite:
         return _corpus.find_corpus(self.store, project=project, kind=kind, projection=projection,
                                    source_address=source_address)
 
+    def query_corpus(self, text: str, *, space: str | None = None, k: int = 8) -> dict:
+        """G20 — the TEXT→QUERY convenience: ask the corpus a natural-language question and get the top-k
+        addressed records back. The agent-facing retrieve (① repo-exocortex's 'ask the codebase'): it EMBEDS
+        `text` through the real fabric path (reuse `_embed_consult_query` — BGE-M3 @ DEFAULT_EMBED_URL, the
+        SAME model/dim the index was built with so the cosine is dim-consistent) THEN ranks the persisted
+        vector index (reuse store/vector_index.query_index with the `space=` filter). NO cosine reimplemented,
+        NO new transport — closes the gap that an agent had to embed-first before query_index (which takes a
+        query_VECTOR). DEGRADE-WITH-WARNING (the no-silent-failure floor): embedder :8001 unreachable →
+        _embed_consult_query warns + returns None → this returns {ranked:[], note:'embed endpoint unreachable'}
+        (a LOUD honest empty, never a fabricated/zero-vector nearest). Returns {query, space, ranked:[{address,
+        score, ...}], note?}. Read-only computation — no resolve/approve/dispatch (the floor)."""
+        from store import vector_index as vx
+        qvec = self._embed_consult_query(text)          # the real bge-m3 embed (warns+None on :8001-down)
+        if qvec is None:
+            return {"query": text, "space": space, "ranked": [], "note": "embed endpoint unreachable — no semantic query"}
+        result = vx.query_index(self.store, qvec, k=k, space=space, with_note=True)
+        return {"query": text, "space": space, **result}
+
     def find_relations(self, item: str, *, near_space: str, far_space: str, k: int = 10,
                        min_score: float = 0.5) -> dict:
         """GROUP L2 — THE INVERSION-FINDER: the cross-space relation query "same principle, different

@@ -77,14 +77,16 @@ try:
     proj_ids = {p["id"] for p in info["projections"]}
     check("cognition_info()['projections'] = the discovered lens set (file-discovered, not hardcoded)",
           seed_ids <= proj_ids)
-    check("cognition_info()['spaces'] = the embeddable subset (Group-L vector spaces)",
-          set(info["spaces"]) == {"topics", "principles", "worldview"})
+    check("cognition_info()['spaces'] = the embeddable subset (Group-L vector spaces) — the discovery "
+          "seeds present (registry-is-truth: a NEW embeds:true lens like 'repo' for ① extends the set, not breaks it)",
+          {"topics", "principles", "worldview"} <= set(info["spaces"]))
 
     ai = suite.available_inputs()
     check("available_inputs()['projections'] surfaces the lens set", seed_ids <= set(ai["projections"]))
-    check("available_inputs()['projection_spaces'] = the vec:// spaces of the embeddable lenses",
-          set(ai["projection_spaces"]) ==
-          {"vec://<item>#space=topics", "vec://<item>#space=principles", "vec://<item>#space=worldview"})
+    check("available_inputs()['projection_spaces'] = the vec:// spaces of the embeddable lenses (seeds present; "
+          "a new space extends)",
+          {"vec://<item>#space=topics", "vec://<item>#space=principles", "vec://<item>#space=worldview"}
+          <= set(ai["projection_spaces"]))
     check("available_inputs() ADDITIVE — prior keys preserved",
           all(k in ai for k in ("utterance", "roles", "role_addresses", "context_variables")))
 
