@@ -74,8 +74,11 @@ Do **not** build duplicate command centers. The right shape (Tim, "one substrate
   fail-loud, loud `OFFER_LOAD` on a miss, NEVER auto-loads), and **`ensure_resident(model_or_service, *, evict=False)`**
   (#50, 2026-06-08) — the **gated launch/select/evict ACTUATOR**: the deliberate sibling of the fail-loud
   `require_resident`. No-op if resident; loads if it fits; `evict=True` makes room via the EXISTING largest-first
-  `gpu.plan_eviction` then loads; **RAISES `EnsureResidentError`** if it can't fit even after evict (no silent
-  half-load). It REUSES the ONE resource-manager primitives (`check_fit`/`plan_eviction`/`teardown`/
+  `gpu.plan_eviction` then loads; **needs-eviction WITHOUT pre-authorization (`evict=False`) RETURNS the G14
+  swap-approval ASK** (Tim's design, 2026-06-09: `{swap_needed, would_load, would_evict, free_gb, needed_gb,
+  approve:"re-call with ensure_evict=true"}` — never a hard-block, never a silent evict; the agent/operator
+  approves at call time); **RAISES `EnsureResidentError`** only on the genuinely impossible — no local service,
+  can't fit even after the FULL eviction plan, or a failed start (no silent half-load). It REUSES the ONE resource-manager primitives (`check_fit`/`plan_eviction`/`teardown`/
   `systemd.control(...,"start")`/`budget_vram`) — it does NOT call `app.py:_act` (the CLI front that `sys.exit`s)
   and is NOT a second start path. Reachable as **`company ensure MODEL|SERVICE [--evict] [--no-wait]`** and called
   by the cognition engine (the embed-op's opt-in `run_role(..., ensure=True)`). `ensure_loadout_for_mode(mode, ...)`

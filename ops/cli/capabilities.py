@@ -356,6 +356,13 @@ def require_resident(model_id, reg=None):
 #
 # FAIL-LOUD: if it cannot fit even after the full eviction plan, it RAISES EnsureResidentError — never
 # a silent half-load, never a blind over-budget --force stomp (that stays a separate CLI-only override).
+#
+# G14 — THE SWAP-APPROVAL RESPONSE (Tim's design, 2026-06-09): a load that NEEDS eviction without
+# pre-authorization (evict=False) is NOT a hard-block and NOT a silent evict — the actuator RETURNS a
+# structured swap-approval ASK ({swap_needed, would_load, would_evict, free_gb, needed_gb, approve})
+# carrying the REAL largest-first plan it would execute, so the agent/operator approves AT CALL TIME
+# (re-call with the authorization). The raise is reserved for the genuinely impossible (no service /
+# can't fit even after the FULL plan / start failed) — an ask whose approve would fail is a false offer.
 
 class EnsureResidentError(RuntimeError):
     """Raised when a model CANNOT be made resident (no local service, or won't fit even after the full
@@ -397,17 +404,26 @@ def ensure_resident(model_or_service, *, evict=False, reg=None, wait=True, timeo
       model_or_service — a service-key (services.json) OR a model-id (JOINed via service_key_for).
       evict            — if True AND the start doesn't fit, make room via the EXISTING largest-first
                          eviction plan (gpu.plan_eviction — models→brain→voice, identical to
-                         `company up --evict`), then load. If False and it doesn't fit → RAISE.
+                         `company up --evict`), then load. If False and it doesn't fit → the G14
+                         SWAP-APPROVAL ASK is RETURNED (see below) — not a raise, not a silent evict.
       reg              — the registry (loaded if None).
       wait/timeout     — block until the service's port serves before returning (default True).
 
     Returns a structured dict (mirrors require_resident's shape) describing what happened:
       {resident, model_or_service, served_by, action, evicted, vram_budget_mb, message}
-        action ∈ {"already-resident", "loaded", "evicted-and-loaded"}.
+        action ∈ {"already-resident", "loaded", "evicted-and-loaded", "swap-approval-needed"}.
+      G14 — THE SWAP-APPROVAL ASK (Tim's design, 2026-06-09): when the load NEEDS eviction and
+      eviction was NOT pre-authorized (evict=False), the actuator RETURNS the structured ask —
+        {swap_needed: True, would_load: <svc>, would_evict: [<svcs> — the REAL largest-first plan],
+         free_gb, needed_gb, approve: "re-call with ensure_evict=true", resident: False, ...}
+      — never a hard-block, never a silent evict; the agent (or operator) decides and re-calls with
+      the authorization. Callers MUST check `swap_needed`/`resident` before treating the result as
+      a successful load (the run_role(ensure=) seam surfaces this dict to the agent).
 
-    RAISES EnsureResidentError on: no local service (cloud/unregistered); won't fit and evict=False;
-    won't fit even after the full eviction plan; the start command failed; or (when wait=True) the
-    service never came up. NEVER a silent half-load (fail-loud law)."""
+    RAISES EnsureResidentError on: no local service (cloud/unregistered); won't fit even after the
+    full eviction plan (an ask whose approve would fail is a false offer — this raises under EITHER
+    authorization); the start command failed; or (when wait=True) the service never came up. NEVER
+    a silent half-load (fail-loud law)."""
     reg = reg or registry.load()
     key = _resolve_service_key(reg, model_or_service)
     if key is None:
@@ -428,18 +444,40 @@ def ensure_resident(model_or_service, *, evict=False, reg=None, wait=True, timeo
     ok, need, free, _present = gpu.check_fit(reg, [key])
     evicted = []
     if not ok:
-        if not evict:
-            raise EnsureResidentError(
-                f"ensure_resident: loading {key} needs ~{need/1000:.1f} GB but only ~{free/1000:.1f} GB "
-                f"is free, and evict=False. Pass evict=True to make room (largest-first), free space "
-                f"first, or use `company up {key} --evict`. (Fail-loud: no silent over-budget load.)")
-        # 3. EVICT — reuse the EXISTING largest-first plan (gpu.plan_eviction), sparing the to-start key.
+        # The load needs ROOM. Compute the largest-first plan EITHER WAY (gpu.plan_eviction — the ONE
+        # planner, sparing the to-start key): authorized (evict=True) EXECUTES it; unauthorized RETURNS
+        # it as the G14 swap-approval ASK so the agent/operator decides at call time.
         plan, projected = gpu.plan_eviction(reg, [key], need, free)
         if not plan or projected < need:
+            # No swap CAN fit this load — an ASK whose approve would then fail is a false offer; this
+            # stays the genuine fail-loud case regardless of authorization.
             raise EnsureResidentError(
-                f"ensure_resident: CANNOT fit {key} (need ~{need/1000:.1f} GB) even after evicting "
-                f"{plan or 'nothing evictable'} (frees only ~{projected/1000:.1f} GB). Fail-loud — "
-                f"the card cannot hold this model alongside what must stay. No half-load.")
+                f"ensure_resident: CANNOT fit {key} (need ~{need/1000:.1f} GB, free ~{free/1000:.1f} GB) "
+                f"even after evicting {plan or 'nothing evictable'} (frees only ~{projected/1000:.1f} GB). "
+                f"Fail-loud — the card cannot hold this model alongside what must stay. No half-load.")
+        if not evict:
+            # G14 — THE SWAP-APPROVAL ASK (Tim's design, 2026-06-09): a load that needs eviction and
+            # wasn't pre-authorized RETURNS "swap needed — approve?" — NEVER a hard-block (the old
+            # raise), NEVER a silent evict. The agent (or operator) decides and re-calls with the
+            # authorization. Structured + complete: what would load, what would be evicted (the REAL
+            # largest-first plan the authorized path would execute), the measured numbers, and the
+            # approve hint at every seam (run_role/MCP `ensure_evict=true` · this fn `evict=True` ·
+            # CLI `--evict`). Nothing is loaded or evicted on this branch.
+            return {
+                "resident": False, "swap_needed": True,
+                "model_or_service": model_or_service, "served_by": key,
+                "would_load": key, "would_evict": plan,
+                "free_gb": round(free / 1000, 2), "needed_gb": round(need / 1000, 2),
+                "vram_budget_mb": budget, "action": "swap-approval-needed", "evicted": [],
+                "approve": "re-call with ensure_evict=true",
+                "message": (f"SWAP NEEDED — loading {key} needs ~{need/1000:.1f} GB but only "
+                            f"~{free/1000:.1f} GB is free. Approving would evict "
+                            f"{', '.join(plan)} (largest-first). Approve: re-call with "
+                            f"ensure_evict=true (run_role/MCP) / evict=True "
+                            f"(capabilities.ensure_resident) / `company ensure {key} --evict` (CLI). "
+                            f"Nothing was loaded or evicted."),
+            }
+        # 3. EVICT — the AUTHORIZED path (evict=True): execute the SAME plan (behaviour unchanged).
         for k in plan:
             okk, msg = gpu.teardown(svc=reg["services"][k])   # orphan-safe stop (cgroup teardown)
             if not okk:

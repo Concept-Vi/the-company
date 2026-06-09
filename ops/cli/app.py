@@ -218,6 +218,12 @@ def main():
         except _cap.EnsureResidentError as e:
             print(f"  ✖ {e}")
             sys.exit(2)
+        if res.get("swap_needed"):
+            # G14: the swap-approval ASK — NOT a success (no ✓, exit 3 so scripts can't mistake it).
+            print(f"  ⇄ {res['message']}")
+            print(f"    would evict (largest-first): {', '.join(res.get('would_evict', []))} — "
+                  f"approve: re-run with --evict")
+            sys.exit(3)
         print(f"  ✓ {res['message']}")
         if res.get("evicted"):
             print(f"    (evicted, largest-first: {', '.join(res['evicted'])})")
