@@ -71,3 +71,8 @@ or a mark-pass RESOLVE (render-not-judge; the floor) · ship one without reflect
 
 ## Read next
 [[Company Map]] · [[projections — constitution]] · `build-prep/cognition-engine/COMPLETION-CRITERIA.md` (GROUP M/P).
+
+## Agent-authored entries (auto-reflected)
+<!-- created live by the create face; one line per entry — keeps the
+     drift-home acceptance green; refine the prose by integration. -->
+- **`n6_probe`** — agent-authored mark_type (created via the declarative-direct face). N6 auto-reflect probe (throwaway)
