@@ -27,6 +27,24 @@ read by address through the same Resolver Protocol. The backend behind the addre
 swappable (filesystem-first, Supabase later) precisely because the address never changes.
 See [[Company Map]] for where the store sits in the whole picture.
 
+**Space-keyed vectors (cognition-engine GROUP L).** A source item is a POINT in MANY PROJECTION SPACES
+(principle/topic/vocab/…) — its principle-embedding and its topic-embedding are DIFFERENT vectors of the
+SAME item. The store holds all of them THROUGH the C1 grammar (not an address hack): a spaced vector rides
+the existing `vec://<source-address>#emb=<model>` shape with a `#space=<projection>` fragment
+(`vec://<item>#space=<proj>`, composed by `FsStore.space_address(source, space)`), one file per
+(item, space). The default/unspaced vector keeps its BARE source address as the key (back-compat — old
+single-space vectors are byte-for-byte untouched). **Portable by FIELD, not by string-parse:** `put_vector`
+carries `space` (None | projection) and `source` (the bare item address) as EXPLICIT record fields, so the
+per-space filter is a clean field match a Supabase backend implements as `WHERE space = X` — the address
+fragment is only the unique key, never the thing a backend must parse. `index_corpus(space=…)` /
+`index_addresses(space=…)` / `vector_index.query_index(space=…)` default to `space=None` = the
+DEFAULT/unspaced entries ONLY (a spaced entry NEVER leaks into the default corpus — that would pollute
+retrieval and crash `retrieve._cosine` when two projections differ in dim); a named space returns the
+SOURCE items (round-trips); `FsStore.ALL_SPACES` enumerates everything. `build_index(space=…)` keys its
+incremental diff on the SPACED address (the same item in two spaces is independent). All params are optional
+kwargs — every prior caller is unchanged. NEXT (a later STORE pass, NOT done here): marks-generalization —
+the finding/disposition store extended with a claim/span target + `mark_type` retrieval.
+
 ## Relates to
 
 - **Called by** [[runtime — constitution]] — everything that persists, and everything read

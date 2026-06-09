@@ -61,7 +61,8 @@ def _default_embed(transport, inputs, model, dim=None):
     return client.complete_embeddings(transport, inputs, model=model, dim=dim)
 
 
-def build_index(store, corpus, *, embed_fn=_default_embed, dim=None, model=None, base_url=None) -> dict:
+def build_index(store, corpus, *, embed_fn=_default_embed, dim=None, model=None, base_url=None,
+                space=None) -> dict:
     """BUILD/REFRESH the persisted vector index over `corpus` = `[{address, text}, ...]`.
 
     INCREMENTAL: an address is (re-)embedded ONLY when NEW or its content_hash CHANGED — unchanged items
@@ -69,6 +70,14 @@ def build_index(store, corpus, *, embed_fn=_default_embed, dim=None, model=None,
     is O(changed)). On success each changed {address: vector, content_hash} is persisted via
     store.put_vector (atomic, crash-durable). dim= is passed through to complete_embeddings so a
     wrong-length vector FAILS LOUD at the fabric (rule 4) — never a silent bad cosine.
+
+    SPACE-KEYED (cognition-engine GROUP L · additive — every prior caller is unchanged): `space=None` (the
+    default) builds the DEFAULT/unspaced index exactly as before (keyed by the bare item address). A named
+    `space="<projection>"` builds that PROJECTION space — the SAME item embedded at a different lens — keyed
+    by the composed C1 address `vec://<item>#space=<projection>` (store.space_address), carrying the explicit
+    `space`/`source` fields so a per-space query (query_index(space=...)) ranks WITHIN one space and returns
+    the SOURCE item. Each space's incremental diff keys on its OWN composed address (so the same item in
+    space A and space B are independent entries — changing one never false-skips the other).
 
     DEGRADE-WITH-WARNING: if the embed call RAISES (the embedder :8001 is unreachable — its state RIGHT
     NOW), NO vectors are written (the index stays empty/partial honestly), a LOUD durable `warning` event
@@ -82,16 +91,21 @@ def build_index(store, corpus, *, embed_fn=_default_embed, dim=None, model=None,
     base_url = base_url or fcfg.DEFAULT_EMBED_URL
     dim = fcfg.DEFAULT_EMBED_DIM if dim is None else dim
 
-    # 1) content-hash diff — which addresses are NEW or CHANGED (re-embed) vs UNCHANGED (skip)
+    # 1) content-hash diff — which addresses are NEW or CHANGED (re-embed) vs UNCHANGED (skip).
+    #    The KEY is the SPACE-composed address (store.space_address): for the default space this is the bare
+    #    item address (back-compat); for a named space it is `vec://<item>#space=<proj>`. Keying the diff on
+    #    the composed address is what makes the same item INDEPENDENT across spaces — comparing against the
+    #    bare entry's content_hash (the bug the advisor flagged) would false-skip a space's first embed.
     to_embed, skipped = [], 0
     for item in corpus:
-        addr = item["address"]
+        source = item["address"]
+        key = store.space_address(source, space)           # bare addr (default) | vec://<item>#space=<proj>
         h = content_hash(item.get("text", ""))
-        prior = store.get_vector(addr)
+        prior = store.get_vector(key)
         if prior is not None and prior.get("content_hash") == h:
             skipped += 1                                   # UNCHANGED — do NOT re-embed (incremental)
             continue
-        to_embed.append((addr, item.get("text", ""), h))
+        to_embed.append((source, key, item.get("text", ""), h))
 
     # 2) NO-OP rebuild → no endpoint round-trip, no warning (a spurious 'embedder down' here would be a
     #    false fail-loud; mirror suite.py's silent empty case).
@@ -99,7 +113,7 @@ def build_index(store, corpus, *, embed_fn=_default_embed, dim=None, model=None,
         return {"embedded": 0, "skipped": skipped, "degraded": False}
 
     # 3) embed the changed batch in ONE round-trip via the EXISTING fabric path (NO new transport)
-    texts = [t for (_a, t, _h) in to_embed]
+    texts = [t for (_s, _k, t, _h) in to_embed]
     try:
         t = transport.openai_embeddings_transport(base_url=base_url)
         vectors = embed_fn(t, texts, model=model, dim=dim)
@@ -117,33 +131,45 @@ def build_index(store, corpus, *, embed_fn=_default_embed, dim=None, model=None,
             pass                                           # the warning is best-effort; the degrade still holds
         return {"embedded": 0, "skipped": skipped, "degraded": True}
 
-    # 4) persist — atomic, crash-durable, keyed by ADDRESS (one substrate). dim already enforced by the fabric.
-    for (addr, _txt, h), vec in zip(to_embed, vectors):
-        store.put_vector(addr, vec, h, dim=dim, model=model)
+    # 4) persist — atomic, crash-durable, keyed by the SPACE-composed ADDRESS (one substrate). The space +
+    #    source ride as explicit fields (the portable per-space filter key — see fs_store.put_vector). dim
+    #    already enforced by the fabric. For the default space, key == source == the bare address (back-compat).
+    for (source, key, _txt, h), vec in zip(to_embed, vectors):
+        store.put_vector(key, vec, h, dim=dim, model=model, space=space, source=source)
     return {"embedded": len(to_embed), "skipped": skipped, "degraded": False}
 
 
-def query_index(store, query_vector, *, k=5, with_note=False):
+def query_index(store, query_vector, *, k=5, with_note=False, space=None):
     """QUERY the persisted index: given a query VECTOR, return the top-K nearest ADDRESSES, REUSING the
     existing `nodes/retrieve` node (the cosine is NOT reimplemented; its _cosine raises ValueError on a
     dim mismatch → the query dim guard is FAIL-LOUD by reuse — never a wrong-but-plausible cosine).
 
-    EMPTY index (the embedder was DOWN at build → nothing persisted): retrieve naturally returns [] over
-    an empty corpus; with_note=True wraps it as {"ranked": [], "note": "..."} so the caller (X13/consult,
-    which already falls back) can distinguish 'index empty' from 'populated, no match'. with_note=False
-    returns the bare ranked list (the nodes/retrieve shape: [{id: address, score}, ...]).
+    SPACE filter (cognition-engine GROUP L · L2 · additive — default unchanged): `space=None` (the default)
+    ranks the DEFAULT/unspaced index EXACTLY as before — a spaced entry NEVER leaks in (so no polluted
+    ranking, and no cross-dim cosine crash from two projections sharing the corpus; this is the regression
+    the live callers — consult/R2 — depend on). `space="<projection>"` restricts the k-NN to that ONE
+    projection space and returns the SOURCE items (k-NN WITHIN a space: nearest in principle-space ≠ in
+    topic-space — the same item is cross-space distinguishable by its different neighbours). The dim guard
+    still bites per-space (a query-dim mismatch raises). `space=FsStore.ALL_SPACES` ranks every entry.
+
+    EMPTY index (the embedder was DOWN at build → nothing persisted, OR no entry in the named space):
+    retrieve naturally returns [] over an empty corpus; with_note=True wraps it as {"ranked": [], "note":
+    "..."} so the caller (X13/consult, which already falls back) can distinguish 'index empty' from
+    'populated, no match'. with_note=False returns the bare ranked list (the nodes/retrieve shape:
+    [{id: address, score}, ...]).
     """
     from nodes import retrieve                              # the existing cosine-ranking node — reused, not reimplemented
-    corpus = store.index_corpus()                           # [{id: address, vector}], the exact shape retrieve consumes
+    corpus = store.index_corpus(space=space)                # [{id: <item>, vector}], the exact shape retrieve consumes
     ranked = retrieve.run({"query": query_vector, "corpus": corpus}, {"k": k})
     if not with_note:
         return ranked
+    _scope = "default space" if space is None else (f"space '{space}'" if space is not store.ALL_SPACES else "all spaces")
     if not corpus:
-        return {"ranked": [], "note": ("the vector index is EMPTY (it may have been built while the "
-                                       "embedder :8001 was down) — no addresses to rank; the caller "
-                                       "should fall back (e.g. keyword/consult). Live population is the "
-                                       ":8001-up follow-up.")}
-    return {"ranked": ranked, "note": f"ranked {len(ranked)} of {len(corpus)} indexed addresses by cosine"}
+        return {"ranked": [], "note": (f"the vector index is EMPTY ({_scope}) — it may have been built "
+                                       "while the embedder :8001 was down, or no item is embedded in this "
+                                       "space; no addresses to rank, the caller should fall back "
+                                       "(e.g. keyword/consult). Live population is the :8001-up follow-up.")}
+    return {"ranked": ranked, "note": f"ranked {len(ranked)} of {len(corpus)} indexed addresses by cosine ({_scope})"}
 
 
 def index_staleness(store, corpus, *, model=None) -> dict:
@@ -196,9 +222,11 @@ def index_staleness(store, corpus, *, model=None) -> dict:
                        "missing": len(missing), "changed": len(changed), "extra": len(extra)}}
 
 
-def index_addresses(store) -> list:
-    """Convenience pass-through — every address currently in the persisted index (sorted)."""
-    return store.index_addresses()
+def index_addresses(store, space=None) -> list:
+    """Convenience pass-through — every address currently in the persisted index (sorted). `space=None`
+    (default) = the DEFAULT/unspaced entries (back-compat); a named space = that projection's entries;
+    FsStore.ALL_SPACES = every entry."""
+    return store.index_addresses(space=space)
 
 
 def get_vector(store, address: str):

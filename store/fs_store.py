@@ -703,18 +703,69 @@ class FsStore:
     # embedding ORCHESTRATION (embed the corpus → degrade-with-warning when :8001 is down) lives in
     # store/vector_index.py, which CALLS these. The content_hash makes a re-build INCREMENTAL — the build
     # path re-embeds an address ONLY when its content_hash changed (compare get_vector(addr)["content_hash"]).
-    def put_vector(self, address: str, vector: list, content_hash: str, *, dim: int, model: str) -> dict:
+    # SPACE-KEYED VECTORS (cognition-engine GROUP L · L1/L2): a single source item is a POINT in MANY
+    # PROJECTION SPACES (principle / topic / vocab / ...) — its principle-embedding and its topic-embedding
+    # are DIFFERENT vectors of the SAME item, and a query must be able to rank WITHIN one space (k-NN in
+    # principle-space ≠ in topic-space). This is done THROUGH the C1 address grammar, not an address hack:
+    # the grammar already declares `vec://<source-address>#emb=<model>` (contracts/address.py); a SPACED
+    # vector rides the SAME shape with a `#space=<projection>` fragment — `vec://<source-address>#space=<proj>`.
+    # That composed `vec://` string is the per-(item,space) KEY (one file per (item,space) under _safe()),
+    # so the same item in two spaces is two entries that never collide; the UNSPACED (default) vector keeps
+    # its BARE source address as the key, byte-for-byte as before (back-compat — old single-space vectors
+    # still resolve).
+    #
+    # PORTABILITY (store constitution + C4 Resolver Protocol — Supabase-later implements the SAME): the
+    # space + the source are carried as EXPLICIT FIELDS on the open record (`space`, `source`), NOT only
+    # buried inside the address string. So the per-space filter is a clean FIELD match (`rec["space"]==X`)
+    # that a SQL backend implements as a `WHERE space = X` column — never an opaque `#space=` substring a
+    # backend must parse out. Field and address AGREE by construction (the address is composed FROM source
+    # + space). An entry with NO `space` field (every pre-cognition-engine entry) IS the default/None space.
+    @staticmethod
+    def space_address(source: str, space: str | None) -> str:
+        """Compose the per-(item,space) KEY through the C1 grammar. space=None → the BARE source address
+        (the default space — byte-identical to the pre-space key, so old single-space vectors are
+        untouched). A named space → `vec://<source>#space=<proj>` (the existing vec:// `#`-fragment shape;
+        contracts/address.py already declares vec:// + free-form fragments, so this needs NO grammar edit —
+        if C1's grammar DOC should name the `#space=` fragment that is a separate rule-7 contract touch,
+        surfaced not done here)."""
+        if space is None:
+            return source
+        return f"vec://{source}#space={space}"
+
+    def put_vector(self, address: str, vector: list, content_hash: str, *, dim: int, model: str,
+                   space: str | None = None, source: str | None = None) -> dict:
         """Persist one {address: vector} entry into the vectors/ namespace, ATOMICALLY (crash-durable
         tmp+fsync+os.replace — the SAME guarantee save_surfaced/save_graph give, so a reader sees the whole
         old entry or the whole new one, never a torn one). Keyed by _safe(address). Schema-additive open
         record. The store does NOT validate the vector (no model here) — the dim contract is enforced UP at
         the embed fabric (complete_embeddings dim= guard) and DOWN at the query cosine (retrieve._cosine);
-        the store just persists the bytes by address."""
+        the store just persists the bytes by address.
+
+        SPACE-KEYED (additive — every prior caller is unchanged): when `space`/`source` are given, the entry
+        records WHICH projection space it belongs to (`space`) and WHICH source item it embeds (`source`),
+        as EXPLICIT FIELDS (the portable per-space filter key — see the class-comment above). `address` is
+        still the storage key (the composed `vec://<source>#space=<proj>` for a spaced entry — callers
+        compose it via `space_address`). Omitting both = the default/None space (the unspaced legacy entry,
+        keyed by its bare source address) — byte-for-byte the prior shape PLUS the two additive fields
+        defaulting to None, so old readers (index_corpus/index_addresses with no space filter) see it
+        exactly as today."""
         import json as _j
         from datetime import datetime, timezone
+        # FAIL LOUD (rule 4): a SPACED entry MUST name its source item — `source` defaults to `address`, which
+        # for a spaced entry is the composed `vec://…#space=` KEY, not the bare item. Letting that default
+        # through would silently record a wrong round-trip (a per-space query would return the internal key,
+        # not the item). build_index always passes the bare source, so this only bites a direct misuse.
+        if space is not None and source is None:
+            raise ValueError(
+                f"put_vector: a spaced entry (space={space!r}) must pass `source` (the bare item address it "
+                f"embeds) — defaulting source to the composed key {address!r} would record a wrong round-trip.")
         (self.root / "vectors").mkdir(parents=True, exist_ok=True)   # defensive (mirrors save_session) — never assume __init__ ran
         rec = {"address": address, "vector": list(vector), "content_hash": content_hash,
-               "dim": int(dim), "model": model, "ts": datetime.now(timezone.utc).isoformat()}
+               "dim": int(dim), "model": model, "space": space,
+               # `source` defaults to the bare address for an unspaced entry (it IS its own source) so the
+               # field is always present + truthful — a spaced entry carries the bare item address it embeds.
+               "source": source if source is not None else address,
+               "ts": datetime.now(timezone.utc).isoformat()}
         path = self.root / "vectors" / (self._safe(address) + ".json")
         self._fsync_atomic_write(path, _j.dumps(rec))
         return rec
@@ -727,26 +778,23 @@ class FsStore:
         p = self.root / "vectors" / (self._safe(address) + ".json")
         return _j.loads(p.read_text()) if p.exists() else None
 
-    def index_addresses(self) -> list[str]:
+    # A sentinel for "ALL spaces, no filter" — DISTINCT from space=None ("the DEFAULT/unspaced space only").
+    # The default of the space= kwarg is None (default-space-only), which is exactly the pre-space behaviour
+    # the live callers (consult/R2 query_index, index_staleness) depend on: a spaced entry must NOT leak into
+    # the default corpus, or (a) retrieval is polluted and (b) two projections with different embed-dims make
+    # retrieve._cosine fail-loud the instant they share the corpus. Pass space=ALL_SPACES to enumerate the
+    # whole index regardless of space (used by nothing on the hot path; available for an index-wide audit).
+    ALL_SPACES = object()
+
+    def index_addresses(self, space=None) -> list[str]:
         """Every address currently in the vector index, sorted. Reads the entries (the `address` field is
         the truth, not the _safe filename) so the canonical address is returned verbatim. Empty index → []
-        (an honest empty — the embedder may have been DOWN at build, the index stays empty/partial honestly)."""
-        import json as _j
-        d = self.root / "vectors"
-        if not d.exists():
-            return []
-        out = []
-        for p in sorted(d.glob("*.json")):
-            try:
-                out.append(_j.loads(p.read_text())["address"])
-            except Exception:
-                continue
-        return sorted(out)
+        (an honest empty — the embedder may have been DOWN at build, the index stays empty/partial honestly).
 
-    def index_corpus(self) -> list[dict]:
-        """The whole index as a corpus list `[{id: address, vector: [...]}]` — the EXACT shape
-        nodes/retrieve.run consumes (id + vector), so the QUERY path feeds it straight in with NO reshaping
-        and NO reimplemented cosine. Empty index → [] (query then returns empty + an honest note)."""
+        SPACE filter (additive — default unchanged): `space=None` (the default) → only DEFAULT/unspaced
+        entries (`rec.space is None`), so the legacy callers + index_staleness see EXACTLY today's address
+        set (no spaced entries leaking in as phantom `extra`s). `space="<proj>"` → only that projection's
+        entries. `space=FsStore.ALL_SPACES` → every entry regardless of space."""
         import json as _j
         d = self.root / "vectors"
         if not d.exists():
@@ -755,9 +803,42 @@ class FsStore:
         for p in sorted(d.glob("*.json")):
             try:
                 rec = _j.loads(p.read_text())
-                out.append({"id": rec["address"], "vector": rec["vector"]})
             except Exception:
                 continue
+            if space is self.ALL_SPACES or rec.get("space") == space:
+                out.append(rec["address"])
+        return sorted(out)
+
+    def index_corpus(self, space=None) -> list[dict]:
+        """The index as a corpus list `[{id: <item>, vector: [...]}]` — the EXACT shape nodes/retrieve.run
+        consumes (id + vector), so the QUERY path feeds it straight in with NO reshaping and NO reimplemented
+        cosine. Empty index → [] (query then returns empty + an honest note).
+
+        SPACE filter (additive — default unchanged): `space=None` (the default) → only DEFAULT/unspaced
+        entries, EXACTLY today's corpus (no spaced entry leaks in → no polluted ranking, no cross-dim cosine
+        crash). `space="<proj>"` → only that projection's entries, and each entry's `id` is its `source` (the
+        BARE item address it embeds) — so a per-space query RETURNS THE ITEM (which round-trips through the
+        existing code://-resolution), not the internal vec://#space= key. `space=FsStore.ALL_SPACES` → every
+        entry (id = the verbatim stored address). A legacy entry with no `source` field falls back to its
+        own `address` (it IS its own source)."""
+        import json as _j
+        d = self.root / "vectors"
+        if not d.exists():
+            return []
+        out = []
+        for p in sorted(d.glob("*.json")):
+            try:
+                rec = _j.loads(p.read_text())
+            except Exception:
+                continue
+            if space is self.ALL_SPACES:
+                out.append({"id": rec["address"], "vector": rec["vector"]})
+            elif rec.get("space") == space:
+                # within a NAMED space, rank/return by the SOURCE item (not the internal vec://#space= key)
+                # so the caller gets the item back; the default space (space is None) returns the bare address
+                # (== source for an unspaced entry) — identical to the pre-space shape.
+                _id = rec.get("source") if space is not None else rec["address"]
+                out.append({"id": _id if _id is not None else rec["address"], "vector": rec["vector"]})
         return out
 
     # --- surfaced-decision inbox (S7/D4): non-blocking gates, shared across faces ---
