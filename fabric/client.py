@@ -59,7 +59,25 @@ def complete(transport: Callable, messages: list, model: str,
     Retries on: transport error · empty content · unparseable JSON · schema mismatch.
     Backs off exponential+jittered between attempts (`_retry_sleep`), never after the last.
     Default `retries`=4 (bumped from 3 — ollama-cloud queues). Exhausted → raises FabricError.
+
+    SCHEMA-GUIDED DECODING (G24 — make malformed role-JSON impossible at the DECODER): a `schema=`
+    (a Pydantic model class) is ALSO handed to the transport as the derived `json_schema` opt —
+    `{"name": <class name>, "schema": schema.model_json_schema()}` — so `_apply_response_format`
+    (fabric/transport.py) requests SERVER-SIDE schema-CONSTRAINED decoding (vLLM guided/structured
+    outputs, response_format type=json_schema; it takes precedence over a co-passed `json=True`).
+    Before this wiring, `schema=` only validated CLIENT-SIDE: the resident 4B could (and
+    deterministically DID, on 3 known files) emit unparseable JSON that burned all retries into a
+    FabricError; with the constraint the decoder cannot emit schema-invalid JSON for ANY role.
+    The derivation is skipped when the caller passes `json_schema` in opts EXPLICITLY (even
+    `json_schema=None` — the documented opt-out, e.g. for an endpoint known to reject it); an
+    endpoint that REJECTS json_schema errors → transport error → retry → FabricError (fail loud,
+    the posture `_apply_response_format` documents — never a silent downgrade). Client-side
+    parse/validate/retry below REMAINS the guarantee (F9) — the constraint is a decode
+    strengthening, not a replacement.
     """
+    if schema is not None and "json_schema" not in opts and hasattr(schema, "model_json_schema"):
+        opts["json_schema"] = {"name": getattr(schema, "__name__", "schema"),
+                               "schema": schema.model_json_schema()}
     last: FabricError | None = None
     for attempt in range(retries):
         try:

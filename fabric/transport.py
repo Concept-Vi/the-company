@@ -69,8 +69,11 @@ def _apply_response_format(body: dict, opts: dict) -> None:
          SERVER-SIDE schema-CONSTRAINED decoding (vLLM ≥0.21 guided/structured outputs). The caller
          passes the FULL OpenAI/vLLM json_schema object — {"name": <role_id>, "schema": <JSON schema>}
          (the actual schema nests UNDER "schema", "name" is its sibling; flattening 400s the server).
-         A role's declared output_schema (a Pydantic model) flows through as
-         {"name": role.id, "schema": role.output_schema.model_json_schema()} when the caller opts in.
+         WIRED (G24): fabric.client.complete() now DERIVES this opt from its `schema=` Pydantic class
+         ({"name": <class name>, "schema": schema.model_json_schema()}) unless the caller passed
+         `json_schema` explicitly (even None — the opt-out) — so EVERY schema= caller (run_role's
+         role.output_schema, coa's CoaFraming) gets the guided decode, and a role fire cannot emit
+         schema-invalid JSON at the decoder. Client-side validate/retry stays the guarantee (F9).
       2. opts["schema"] OR opts["json"]  → {"type":"json_object"} — the EXISTING bare-JSON path,
          UNCHANGED, so every current json=True caller (run_role, the judge, G0/G1/G2/G3) is unaffected.
       3. neither  → no response_format (free text), unchanged.
