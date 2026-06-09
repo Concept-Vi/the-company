@@ -116,6 +116,17 @@ Roles fire model calls through `fabric/` guards (a model runs only INSIDE a role
   `mine_exchange` extract against its RAW exchange → `{grounded:bool, unsupported:str, confidence:float}`
   (did the miner fabricate a decision/correction not in the exchange?). A single-generate validator
   (mirrors `verify_lens`; E4 caveat — soft, model-binding accepts a stronger tiebreak). In `mining`.
+- **`decompose_seed`** — the **spec-compiler's seed→groups role** (COMPOSITIONS ⑦, 1×1): a dense seed →
+  `{groups:[{group_id, what, systems_touched}]}` (the loop-prep "group by system, not implementation-order"). In the `spec` cast.
+- **`expand_criterion`** — the **spec-compiler's group→criterion MAP** (⑦): one group → a TWO-FACED criterion
+  `{id, function, form, files_touched, reuse_or_netnew, preserves}` (FUNCTION + FORM both; reuse-claim is
+  PROPOSED here, the authoritative no-fiction grounding deferred to `ground_criterion`). In `spec`.
+- **`ground_criterion`** — the **spec-compiler's no-fiction reuse-check** (⑦ MAP): one criterion →
+  `{criterion_id, grounded: reuse|net-new, cite (real file:symbol if reuse), note}`. Degrades cleanly
+  without the corpus (names the believed file + states confidence); the corpus-grounded retrieve is the ① enhancement. In `spec`.
+- **`triad_synth`** — the **spec-compiler's REDUCE role** (⑦, mode=role; mirrors `reduce_synth`, no cast):
+  the N grounded criteria → `{completion_criteria, implementation_guide, research_synthesis}` (the loop-prep
+  triad, house style). A DRAFT → me → Tim (never a build off an unconfirmed compiled spec).
 
 **Where new things go:** a new role = a new file `roles/<id>.py` declaring its `ROLE` dict (its `id`
 MUST equal the file name). Put it in a mode's cast by adding that mode to its `mode_scope`. Make it a
