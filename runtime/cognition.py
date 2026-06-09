@@ -2024,7 +2024,7 @@ def _cluster_units(read, *, threshold: float, embed_fn=None, base_url: str = RES
 # never a code-build. (Source-invariant-scanned by cognition_governance_acceptance.)
 # =====================================================================================================
 
-CASCADE_KINDS = ("role", "items", "reduce")   # the closed primitive selectors (drift home: runtime/AGENTS.md)
+CASCADE_KINDS = ("role", "items", "reduce", "retrieve")   # the closed primitive selectors (drift home: runtime/AGENTS.md)
 
 
 def _cascade_step_kind(step: dict) -> str:
@@ -2043,6 +2043,8 @@ def _cascade_step_kind(step: dict) -> str:
                 f"cascade step kind {kind!r} is not a known primitive selector — declared kinds are "
                 f"{CASCADE_KINDS} (role=run_role · items=run_items · reduce=run_reduce). Fail loud (rule 8).")
         return kind
+    if step.get("op") == "retrieve":
+        return "retrieve"                                  # G4 — the corpus-RAG primitive (semantic fetch)
     if step.get("op") == "reduce":
         return "reduce"
     if step.get("fan") or step.get("items") is not None:
@@ -2054,6 +2056,7 @@ def run_cascade(action: dict, store, *, turn_id: str,
                 inputs: Any = None,
                 resolve_role: "Callable[[str], Role]",
                 reduce_rules: "dict[str, Callable] | None" = None,
+                retrieve_fn: "Callable | None" = None,
                 emit: "Callable[[str, dict], None] | None" = None,
                 base_url: str = RESIDENT_BASE_URL, model: str = RESIDENT_MODEL,
                 max_tokens: int = 256) -> dict:
@@ -2111,11 +2114,12 @@ def run_cascade(action: dict, store, *, turn_id: str,
         # ever an address-naming token, which confused authors + made save-ok decls unrunnable). Every
         # OTHER step kind fires a model in a role → role required, fail loud with the real reason.
         is_rule_reduce = (kind == "reduce" and step.get("reduce_mode", "role") == "rule")
-        if not role_id and not is_rule_reduce:
+        if not role_id and not is_rule_reduce and kind != "retrieve":
             raise ValueError(
                 f"run_cascade: step {i} of {name!r} declares no `role` — this step kind ({kind!r}) fires "
-                f"a model IN a role, so a registered role id is required. (Only a reduce step with "
-                f"reduce_mode='rule' may omit it — a rule is pure, no model.) Fail loud (rule 8).")
+                f"a model IN a role, so a registered role id is required. (Only a rule-reduce or a "
+                f"retrieve step may omit it — both are role-less: pure rule / semantic fetch.) "
+                f"Fail loud (rule 8).")
         role = resolve_role(role_id) if role_id else None
         # A per-step `model` override is honoured on the RESIDENT endpoint (the engine pins RESIDENT_BASE_URL).
         # CLOUD-tier routing is N2 net-new transport in fabric/, NOT this lane — a cloud model id here FAILS
@@ -2123,7 +2127,46 @@ def run_cascade(action: dict, store, *, turn_id: str,
         step_model = step.get("model") or model
         kw_common = {"max_tokens": max_tokens}
 
-        if kind == "reduce":
+        if kind == "retrieve":
+            # ── RETRIEVE step (G4 — the corpus-RAG primitive): consume ONE query value (the prior step's
+            # single output, or `inputs` on step 0) → semantic-fetch the top-k corpus RECORD addresses
+            # (resolvable run:// — the N1 round-trip applied inside the runner) → they become the thread
+            # (a following items step FANS over them; a reduce JOINS them). Role-less: no model fires.
+            if retrieve_fn is None:
+                raise ValueError(
+                    f"run_cascade: step {i} of {name!r} is a retrieve step but no retrieve_fn was "
+                    f"injected — the caller (Suite.run_cascade) wires the corpus query. Fail loud.")
+            if prev_addresses is not None:
+                if len(prev_addresses) != 1:
+                    raise ValueError(
+                        f"run_cascade: step {i} (retrieve) consumes ONE query value but the prior step "
+                        f"produced {len(prev_addresses)} addresses — put a reduce before it. Fail loud.")
+                qval = resolve_address(store, prev_addresses[0], turn_id=turn_id)
+                query_text = qval if isinstance(qval, str) else json.dumps(qval, ensure_ascii=False)
+            elif inputs is not None and i == 0:
+                query_text = inputs if isinstance(inputs, str) else json.dumps(inputs, ensure_ascii=False)
+            else:
+                raise ValueError(
+                    f"run_cascade: step {i} (retrieve) has no query — pass `inputs` (the question) or "
+                    f"place it after a step that produces one. Fail loud.")
+            t0 = time.monotonic()
+            fetched = retrieve_fn(query_text, space=step.get("space") or None, k=int(step.get("k", 6)))
+            ms = int((time.monotonic() - t0) * 1000)
+            if not fetched:
+                raise ValueError(
+                    f"run_cascade: step {i} (retrieve) found NOTHING for {query_text[:80]!r} in space "
+                    f"{step.get('space')!r} — an empty retrieve would silently starve the chain; ingest "
+                    f"the corpus first (the ingest tool) or widen the query. Fail loud, never empty-feed.")
+            # persist the ranked fetch (inspectable + feedable), thread the record addresses
+            address = f"run://{turn_id}/{i}-retrieve"
+            cas = store.put_content({"query": query_text, "addresses": list(fetched)})
+            store.set_ref(address, cas)
+            out_addresses = list(fetched)
+            final_output = {"query": query_text, "addresses": list(fetched)}
+            run_op, op_kind = "retrieve", "cognition.run_cascade.retrieve"
+            items_visibility = {}
+
+        elif kind == "reduce":
             # ── REDUCE step: consume the prior step's address LIST → ONE joined output the RUNNER persists.
             reduce_mode = step.get("reduce_mode", "role")
             if prev_addresses is None:
@@ -2268,13 +2311,13 @@ def run_cascade(action: dict, store, *, turn_id: str,
         # output address(es). Telemetry only — NO resolve/approve/dispatch (the floor).
         if emit is not None:
             emit("op.run", {
-                "summary": f"{op_kind} · cascade {name} step {i} · {role.id if role else (step.get('reduce_rule') or 'rule')} · {ms}ms",
+                "summary": f"{op_kind} · cascade {name} step {i} · {role.id if role else (step.get('reduce_rule') or kind)} · {ms}ms",
                 "op": op_kind, "run_op": run_op, "turn_id": turn_id, "role": (role.id if role else None),
                 "duration_ms": ms, "addresses": out_addresses,
                 "cascade": name, "step": i, "step_kind": kind, **items_visibility,
             })
 
-        step_records.append({"step": i, "role": (role.id if role else step.get("reduce_rule")), "kind": kind, "op": op_kind,
+        step_records.append({"step": i, "role": (role.id if role else step.get("reduce_rule") or kind), "kind": kind, "op": op_kind,
                              "addresses": out_addresses, **items_visibility,
                              **({"address": address} if address else {})})
         prev_addresses = out_addresses

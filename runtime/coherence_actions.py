@@ -51,12 +51,13 @@ def build_action(decl: dict, *, models: set, roles: set | None = None, rule_reso
                     f"never a hardcoded literal (no-hardcoding)"}
         # N3 runner-parity checks (only when the caller supplies the live registries):
         is_rule_reduce = (op == "reduce" and step.get("reduce_mode", "role") == "rule")
+        is_retrieve = (op == "retrieve")                     # G4: role-less semantic fetch
         role_id = step.get("role")
         if roles is not None:
-            if not role_id and not is_rule_reduce:
+            if not role_id and not is_rule_reduce and not is_retrieve:
                 return {"ok": False, "error": f"step {i}: declares no `role` — every step fires a model IN "
-                        f"a role EXCEPT a reduce with reduce_mode='rule' (a rule is pure; its role is "
-                        f"optional). Add a registered role id, or make this a rule-reduce."}
+                        f"a role EXCEPT a rule-reduce or a retrieve (both role-less: pure rule / semantic "
+                        f"fetch). Add a registered role id, or use one of those step kinds."}
             if role_id and role_id not in roles:
                 return {"ok": False, "error": f"step {i}: role {role_id!r} is not a REGISTERED role "
                         f"(registry-is-truth — author it first via create(kind='role'), or pick from the "

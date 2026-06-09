@@ -939,9 +939,22 @@ class Suite:
                     f"registered roles: {sorted(self.role_registry)} (author from the registry, never invent).")
             return self.role_registry[role_id]
 
+        def _retrieve(text: str, *, space=None, k: int = 6) -> list:
+            # G4 — the cascade's semantic-fetch: query the corpus, then map each ranked SOURCE id to its
+            # RECORD address (the N1 round-trip — record addresses RESOLVE, source ids alone don't), so
+            # the fetched list threads straight into an items fan / a reduce join.
+            ranked = (self.query_corpus(text, space=space, k=k) or {}).get("ranked") or []
+            out = []
+            for row in ranked:
+                rows = self.find_corpus(source_address=row.get("id"))
+                if rows:
+                    out.append(rows[0]["address"])           # newest record for that source
+            return out
+
         return _cog.run_cascade(action, self.store, turn_id=turn_id, inputs=inputs,
                                 resolve_role=_resolve_role,
                                 reduce_rules=_cog.REDUCE_RULES,
+                                retrieve_fn=_retrieve,
                                 emit=lambda k, p: self._emit(k, p.get("summary", k),
                                                              **{kk: vv for kk, vv in p.items() if kk != "summary"}),
                                 max_tokens=max_tokens)
