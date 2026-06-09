@@ -236,3 +236,10 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
 - C cant-change-model: picker EXISTS (qwen3.5-9b/qwen3.6-35b/+, cold-load on pick). The occlusion (A) blocked interaction; needs his retest post-fix.
 - D no-selection-mode: the element-vs-whole IS selection (E); if he means operate-vs-annotate, ask.
 - LESSON (again): verify VISUAL/clickable reality (elementFromPoint, real clicks), never DOM-presence. The z-index occlusions + the never-wired deixis all passed my shallow checks + reached Tim.
+
+## 2026-06-09 fire — ROOT-CAUSE found + cleared: chrome process leak (~4971 procs / 7.3GB)
+- The recurring session flakiness (wedged chrome evals, "vites die in seconds", SIGTERM/exit-144 on bash, dying servers) was almost certainly PROCESS/FD EXHAUSTION from a chrome leak: ~4971 chrome procs accrued across fires (every new_page/relaunch, never closed). Killed → 2 procs, mem 19007→15804 MB (+3.2GB). Dev instance (vite 5210/bridge 8820) survived.
+- CONSEQUENCE: the chrome-devtools MCP disconnected (its browser was among the killed). chrome verification UNAVAILABLE this session (may reconnect next session via the SessionStart hook).
+- E (element-selection deixis) remains BUILT (on main, wireDeixis in HEAD) but UNVERIFIED — chrome gone, so verification now = Tim clicking an element on his refresh, OR a future chrome reconnect. Honest: NOT claimed working; the React iframe onLoad timing is the suspected risk if it doesn't fire.
+- LESSON: clean up spawned browser pages each fire (close_page / cap open tabs) — the leak is what degraded everything. Going forward: one page, reuse it, close extras.
+- NEXT: Tim click-test E (does clicking a mockup element narrow the locus? does background/whole-screen return to whole?). If broken → fix iframe onLoad timing (effect-based attach with retry). A (settings) is fixed+verified+committed.
