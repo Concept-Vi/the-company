@@ -252,13 +252,22 @@ export function Composer() {
 //   labelled "right-hand-man"; here it IS the same brain/persona/thread machinery the canvas uses, grounded
 //   at the studio element's locus. address_help shows "what is this + what a change would touch" at the locus.
 export function RhmPanel({ children }: { children?: ReactNode }) {
-  const { reviewAddress, addressHelp, addressHelpBusy } = useApp()
+  const { reviewAddress, addressHelp, addressHelpBusy, sendChat, reviewMockup } = useApp()
   const hasLocus = !!(reviewAddress && reviewAddress.startsWith('ui://'))
   return (
     <div className="studio-rhm" data-ui-ref="ui://studio/rhm">
       <div className="studio-rhm-lede">
-        You are reviewing a design surface. Ask the right-hand-man <b>"what am I looking at, and what do I
-        do here?"</b> — it reads the surface for you at its locus and explains in plain language.
+        You're reviewing a design surface — the right-hand-man reads it for you in plain language.
+        {/* The lede no longer just TELLS the operator to ask — it gives a one-click primed question that
+           FIRES the read for them (reuses sendChat, which carries the open mockup as focus → the
+           screen_reader role narrates the screen at the operator's altitude). "Reads each screen FOR you." */}
+        <button className="b studio-read-btn" data-ui-ref="ui://studio/rhm/read"
+          disabled={!reviewMockup}
+          style={{ display: 'block', marginTop: 8 }}
+          title="the right-hand-man reads this screen and tells you what it is + what you can do"
+          onClick={() => sendChat('What am I looking at here, and what can I do on this screen?')}>
+          ◎ what am I looking at?
+        </button>
       </div>
       {/* AddressHelp AT THE LOCUS — "what is this + what a change would touch" (the D1 composer). reflects-only. */}
       {hasLocus && (
