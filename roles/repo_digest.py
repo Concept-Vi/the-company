@@ -1,7 +1,7 @@
-"""roles/repo_digest.py — operator-authored cognition role (Concurrent Cognition C7.4/C7.5).
-Authored through the surface (propose_role → operator approve → apply_role); validated by
-import-in-a-temp-dir before it ever reached the live roles/ tree. A declared role: the
-output_schema is a real BaseModel subclass (fail-loud requirement), rules are declared ASTs."""
+"""roles/repo_digest.py — agent-authored cognition role (Concurrent Cognition C7.4/C7.5 · #58 direct-create).
+Authored DIRECTLY via create_role (the agent authors live, NO operator approval — the #58 reframe);
+validated by import-in-a-temp-dir (the correctness gate) before it reached the live roles/ tree. A declared
+role: the output_schema is a real BaseModel subclass (fail-loud requirement), rules are declared ASTs."""
 from pydantic import BaseModel, Field
 
 
