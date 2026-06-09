@@ -166,17 +166,25 @@ export function Stage({ titleFor }: { titleFor: (f: string | null) => string }) 
       // 2) else the clicked element is the locus: nearest ui:// ANCESTOR (semantic region) + a slug of THIS
       //    element → a distinct, meaningful sub-locus (e.g. ui://inbox/build-review/approve). 3) clicking the
       //    bare body/background → the WHOLE mockup base (so "comment on the whole screen" still works).
+      // V-B (registry-is-truth fix): NEVER mint a fake ui:// address. A REGISTERED element resolves to its
+      // dossier; an UN-registered element keys to its nearest REGISTERED ancestor (a real address) and ships
+      // its ACTUAL content so the RHM describes the real thing from the mockup HTML (not "unregistered").
       let next: string | null
+      let pointed: { text: string; tag: string; html: string } | null = null
       const own = t.getAttribute && t.getAttribute("data-ui-ref")
       const bodyClick = (t === doc.body || t === doc.documentElement)
       if (own && own.startsWith("ui://")) {
-        next = own
+        next = own                                              // registered → its real address (resolves richly)
       } else if (bodyClick) {
-        next = base
+        next = base                                             // background → the whole mockup
       } else {
         const region = (t.closest("[data-ui-ref]") as Element | null)?.getAttribute("data-ui-ref")
-        const root = (region && region.startsWith("ui://")) ? region : base
-        next = root ? root.replace(/\/$/, "") + "/" + _slug(t) : base
+        next = (region && region.startsWith("ui://")) ? region : base   // a REAL ancestor address (no fabrication)
+        pointed = {                                             // the actual element the RHM reads + describes
+          text: ((t as HTMLElement).innerText || "").trim().slice(0, 200),
+          tag: t.tagName.toLowerCase(),
+          html: (t.outerHTML || "").slice(0, 700),
+        }
       }
       // VISUAL feedback: outline the actually-clicked element so the operator SEES the selection (clear prior).
       try {
@@ -188,7 +196,7 @@ export function Stage({ titleFor }: { titleFor: (f: string | null) => string }) 
           ;(doc as any).__deixisSel = t
         } else { (doc as any).__deixisSel = undefined }
       } catch { /* outline is cosmetic — never block the locus on it */ }
-      setReviewMockup(reviewMockupRef.current, next)
+      setReviewMockup(reviewMockupRef.current, next, pointed)
     }, true)
     return true
   }

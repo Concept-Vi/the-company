@@ -88,7 +88,13 @@ export function useAppController(editor: Editor) {
   // returned proposal, not authoritative state.
   const [generateBusy, setGenerateBusy] = useState(false)
   const [generateResult, setGenerateResult] = useState<any | null>(null)
-  function setReviewMockup(file: string | null, address?: string | null) {
+  // V-B: the POINTED ELEMENT content (text + bounded html + tag) when the operator clicks an UN-registered
+  // mockup element. Shipped in focus.pointed_element so the RHM describes the ACTUAL element from the mockup
+  // HTML it already holds — instead of resolving a fake ui:// address (the registry-is-truth fix). null when
+  // a registered element / the whole mockup is the locus (those resolve via the registry on their own).
+  const pointedElementRef = useRef<{ text: string; tag: string; html: string } | null>(null)
+  function setReviewMockup(file: string | null, address?: string | null,
+                           pointed?: { text: string; tag: string; html: string } | null) {
     reviewMockupRef.current = file
     setReviewMockupState(file)
     // STUDIO locus binding: opening a mockup INDICATES the surface it depicts (its ui:// address), so the
@@ -99,6 +105,7 @@ export function useAppController(editor: Editor) {
     const addr = address ?? null
     setReviewAddress(addr)
     if (addr) indicate(addr); else indicate(null)
+    pointedElementRef.current = pointed ?? null   // the specific element (if un-registered) the RHM should read
   }
   // STUDIO (G4) · the gallery corpus, bound from /api/corpus (registry-is-truth — the disk listing, never a
   // hardcoded FE list). Each item {file,title,platform,group,address}. fail-loud: a fetch failure carries
@@ -1175,7 +1182,7 @@ export function useAppController(editor: Editor) {
         let assistantIdx = -1
         let acc = ''
         let captured: any = null                               // the done event — handled AFTER the stream closes (so its
-        await api.chatStream(m, { selected },                  // poll()/proposal/action run INSIDE this try's error coverage)
+        await api.chatStream(m, { selected, pointed_element: pointedElementRef.current },  // V-B: ship the pointed element (run INSIDE this try's error coverage)
           (text) => {                                          // onPart — the incremental display
             acc = acc ? acc + ' ' + text : text
             setChat(c => {
@@ -1200,7 +1207,7 @@ export function useAppController(editor: Editor) {
         if (captured) await handleChatResult(captured, { applyHistory: false })
         return
       }
-      const r = await api.chat(m, { selected })
+      const r = await api.chat(m, { selected, pointed_element: pointedElementRef.current })  // V-B: ship the pointed element
       // F5 · the named bug. On a backend 400 (model unreachable — the literal first thing an operator hits)
       // api.chat now resolves to a normalized `{error}` (api.ts jr). BEFORE F5 this did `setChat(r.history)`
       // = `setChat(undefined)` → RhmChat `chat.length` threw at render → white-screen. Now: surface the

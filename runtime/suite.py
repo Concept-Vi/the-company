@@ -2523,8 +2523,25 @@ class Suite:
                         "a static HTML design artifact, NOT the live running app. The operator does not read "
                         "code — read this FOR them and explain, at a plain-language altitude, what this screen "
                         "IS, what they are looking at, and what they could do here. When they ask 'what am I "
-                        "looking at', ground your answer in THIS content):\n"
+                        "looking at', ground your answer in THIS content. NOTE on addresses: a ui:// in the "
+                        "INDICATED block that resolves to a dossier (what-it-is/how-to) IS a registered surface "
+                        "— answer from that. If a POINTED ELEMENT block is present, the operator clicked a "
+                        "SPECIFIC element that may NOT be registered — describe THAT element from this content, "
+                        "and you may note it could be registered as its own addressable surface):\n"
                         f"  file: {name}\n  ---\n{body}\n  ---\n")
+        # V-B: the POINTED ELEMENT — the operator clicked a specific (often UN-registered) element. The FE ships
+        # its actual content (text+html+tag) in focus.pointed_element instead of a fabricated ui:// address
+        # (registry-is-truth). Inject it so the RHM describes the REAL thing clicked from the mockup HTML above —
+        # never "that address isn't registered". Additive; absent → no block.
+        _pointed = (focus or {}).get("pointed_element")
+        if isinstance(_pointed, dict) and (_pointed.get("text") or _pointed.get("html")):
+            _ptxt = str(_pointed.get("text", "")).strip()[:200]
+            _phtml = str(_pointed.get("html", "")).strip()[:700]
+            _ptag = str(_pointed.get("tag", "")).strip()[:20]
+            ctx += ("\nPOINTED ELEMENT (the operator just clicked THIS specific element inside the mockup above "
+                    "— answer about THIS, read from the mockup content; it may not be a registered address, so "
+                    "describe what it is + what it does in plain language, never 'unregistered'):\n"
+                    f"  tag: <{_ptag}>\n  text: {_ptxt!r}\n  markup: {_phtml}\n")
         if indicated:
             ilines = []
             for addr in indicated:
