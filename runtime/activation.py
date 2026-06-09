@@ -325,3 +325,291 @@ def consolidate_rollup(suite, *, since: int = -1, mode: str | None = None,
 
 def _activation_turn_id(context: str) -> str:
     return f"act-{context}-" + time.strftime("%Y%m%d-%H%M%S-") + str(int(time.monotonic() * 1000) % 100000)
+
+
+# =====================================================================================================
+# THE DRIVERS (Group H) — the net-new DECISION LAYER over the (already-built) entry points.
+#
+# G5 built the activation-context substrate + the entry points (fire_activation / consolidate_rollup),
+# but left them UNDRIVEN: nothing decided WHEN to fire them. The always-on CALLER (an idle-loop daemon,
+# an OS event source, a `.timer`) is a system-lifecycle + GPU-always-on concern → NEEDS-TIM (we do NOT
+# stand up an always-on GPU-consuming daemon — that is the operator's call, per the loadout directive).
+#
+# So H is built as a TICKABLE decision layer, NOT a daemon: each driver is a pure-ish function the
+# always-on caller would invoke ON A CADENCE. The net-new is the DECISION/STATE the driver adds OVER the
+# entry point (an idle gate · an event→sense_event intake · a held rollup cursor) — never a re-implement
+# of fire_activation/consolidate_rollup (those still enforce the mode budget + the sacred reserve). The
+# mechanism is proven by USE: feeding a synthetic idle/event/clock tick fires the cast / lands a rollup.
+#
+# THE FLOOR (G9 / C9.2) holds by construction — every driver routes ONLY through fire_activation /
+# consolidate_rollup, which route over the five non-consequential DESTINATION_KINDS (no resolve/approve/
+# dispatch). A driver never names a forbidden verb.
+# =====================================================================================================
+
+# How long (seconds) the operator must be quiet before the background context is allowed to tick. A
+# DECLARED knob (not a magic literal buried in a branch) so the idle gate is legible + tunable; the
+# always-on caller may also pass its own threshold per tick.
+DEFAULT_IDLE_SECONDS = 90.0
+
+# The event kinds that count as OPERATOR ACTIVITY (a turn / a deliberate operator act) — reading these
+# off the shared event log is how the idle gate knows "the operator is quiet". Declared as data (the
+# ACTIVATION_CONTEXTS discipline) so what counts as activity is one legible set, never an inline list.
+# A spoken turn (chat) and a completed cognition turn are the strongest "the operator is here" signals;
+# direct operator graph acts (create/connect/apply/resolve/move) count too — the system reacting to its
+# OWN background activity must NOT reset the idle clock, so activation/op.run/cognition.* mid-wave kinds
+# are deliberately EXCLUDED.
+OPERATOR_ACTIVITY_KINDS: frozenset = frozenset({
+    "chat", "cognition.turn.done", "create", "connect", "delete",
+    "config", "apply", "resolve", "move", "pin", "annotation",
+})
+
+
+def _iso_to_epoch(ts: str | None) -> float | None:
+    """Parse an event's ISO-8601 UTC `ts` (append_event writes datetime.now(timezone.utc).isoformat())
+    to epoch seconds. Returns None on a missing/malformed ts (fail-soft for a READ — a single junk ts
+    must never crash the idle gate; the gate treats unknown-age as 'no recent activity')."""
+    if not ts:
+        return None
+    try:
+        from datetime import datetime
+        s = ts.replace("Z", "+00:00")
+        return datetime.fromisoformat(s).timestamp()
+    except Exception:
+        return None
+
+
+def activity_signal(suite, *, now_epoch: float | None = None) -> dict:
+    """THE SHARED ACTIVITY READER (reused by the background idle gate H1 AND the mode detector I1 —
+    reuse-don't-parallel: one reader, two consumers). Reads the shared event log and reports a small,
+    DETERMINISTIC signal snapshot the drivers/detector decide over:
+
+      • idle_seconds   — seconds since the last OPERATOR_ACTIVITY_KINDS event (None = no activity seen).
+      • last_activity  — the kind of that last operator-activity event (None if none seen).
+      • mode           — the live presence mode (the operator's current dial).
+      • inbox          — count of items awaiting the operator (a 'work is piling up' signal).
+      • recent_kinds   — the kinds in the recent window (a cheap shape of what's happening).
+
+    A READ only — it fires nothing and emits nothing (rule 4: a signal read is not an action)."""
+    now_epoch = time.time() if now_epoch is None else now_epoch
+    events = suite.events_since(-1)
+    last_act_ts = None
+    last_act_kind = None
+    recent_kinds: list[str] = []
+    for e in events[-200:]:                                 # a bounded recent window (cheap; not the whole log)
+        k = e.get("kind")
+        if k:
+            recent_kinds.append(k)
+        if k in OPERATOR_ACTIVITY_KINDS:
+            ep = _iso_to_epoch(e.get("ts"))
+            if ep is not None:
+                last_act_ts = ep
+                last_act_kind = k
+    idle_seconds = None if last_act_ts is None else max(0.0, now_epoch - last_act_ts)
+    try:
+        inbox = len(suite.inbox_lanes().get("awaiting", [])) if hasattr(suite, "inbox_lanes") else 0
+    except Exception:
+        inbox = 0
+    return {
+        "idle_seconds": idle_seconds,
+        "last_activity": last_act_kind,
+        "mode": suite.get_mode(),
+        "inbox": inbox,
+        "recent_kinds": recent_kinds[-20:],
+    }
+
+
+def background_tick(suite, *, mode: str | None = None, idle_seconds: float = DEFAULT_IDLE_SECONDS,
+                    now_epoch: float | None = None) -> dict:
+    """H1 · THE BACKGROUND DRIVER — the idle-gate decision over fire_activation('background').
+
+    The net-new is the GATE: a background tick fires the mode's cast ONLY when (a) the mode declares the
+    `background` context live (read from the mode's allocation — never hardcoded) AND (b) the operator has
+    been QUIET for >= `idle_seconds` (read from the shared activity signal). When it fires, it delegates to
+    `fire_activation('background')` — which enforces the mode budget + the sacred reserve + routes the cast
+    over surface/address/lane with NO reply (re-used, not re-implemented). When it does NOT fire, it returns
+    a legible reason (rule 4 — no silent no-op): the always-on caller / a test sees exactly why.
+
+    The always-on CALLER (the idle-loop that invokes this on a cadence) is NEEDS-TIM (no daemon stood up);
+    this is the tickable mechanism it would call. Returns {fired, reason, signal, result?}."""
+    mode = mode or suite.get_mode()
+    sig = activity_signal(suite, now_epoch=now_epoch)
+    alloc = suite.activation_allocation(mode)
+    if "background" not in alloc["live"]:
+        return {"fired": False, "reason": f"mode {mode!r} does not allocate the background context",
+                "signal": sig}
+    idle = sig["idle_seconds"]
+    if idle is not None and idle < idle_seconds:
+        return {"fired": False,
+                "reason": f"operator active {round(idle, 1)}s ago (< idle threshold {idle_seconds}s)",
+                "signal": sig}
+    # idle is None (no recent operator activity seen) OR >= the threshold → the operator is quiet: fire.
+    result = suite.fire_activation("background", mode=mode)
+    return {"fired": True,
+            "reason": ("no recent operator activity" if idle is None
+                       else f"operator idle {round(idle, 1)}s (>= {idle_seconds}s)"),
+            "signal": sig, "result": result}
+
+
+def sense_tick(suite, raw_event: dict, *, mode: str | None = None) -> dict:
+    """H2 · THE SENSE DRIVER — the event-intake over fire_activation('sense').
+
+    The net-new is the INTAKE: an OS/bridge event source (screen/app/state change) hands the driver a RAW
+    event; the driver SHAPES it into the `sense_event` dict fire_activation('sense') expects (a `summary`
+    the cast sees as its utterance + the structured fields preserved), gating on whether the mode allocates
+    the `sense` context. It then delegates to `fire_activation('sense')` (reused — budget/reserve/route/no-
+    reply all enforced there). FAIL LOUD on a non-dict raw event (rule 4/8 — never fabricate a sense event).
+
+    The always-on event SOURCE is NEEDS-TIM (no OS hook stood up); a synthetic raw_event proves the path.
+    Returns {fired, reason, sense_event, result?}."""
+    if not isinstance(raw_event, dict):
+        raise ValueError(f"sense_tick: raw_event must be a dict (the screen/app/state change), got "
+                         f"{type(raw_event).__name__} — fail loud, never fire on a fabricated event.")
+    mode = mode or suite.get_mode()
+    alloc = suite.activation_allocation(mode)
+    if "sense" not in alloc["live"]:
+        return {"fired": False, "reason": f"mode {mode!r} does not allocate the sense context",
+                "raw_event": raw_event}
+    # SHAPE the raw event → the sense_event contract (a `summary` the cast reads as its utterance). A raw
+    # event without an explicit summary gets one composed from its kind+detail (never a bare str(dict)).
+    summary = raw_event.get("summary")
+    if not summary:
+        kind = raw_event.get("kind") or raw_event.get("type") or "state-change"
+        detail = raw_event.get("detail") or raw_event.get("app") or raw_event.get("window") or ""
+        summary = f"[{kind}] {detail}".strip()
+    sense_event = {**raw_event, "summary": summary}
+    result = suite.fire_activation("sense", mode=mode, sense_event=sense_event)
+    return {"fired": True, "reason": f"sense event shaped + dispatched ({summary[:60]!r})",
+            "sense_event": sense_event, "result": result}
+
+
+@dataclass
+class RollupDriver:
+    """H3 · THE ROLLUP DRIVER — the held-cursor decision over consolidate_rollup().
+
+    `consolidate_rollup` already does the introspective-data math (it reads the swarm's cognition.wave
+    run-records since a given seq → ONE distribution at run://rollup/<id>). The net-new the DRIVER adds is
+    the STATE a timer needs: a `since` cursor HELD across ticks, so tick 2 consolidates ONLY the waves that
+    arrived after tick 1 (never re-consolidating the same waves every tick). The cursor advances to the log
+    head each tick; an empty interval (no new waves) is a legible no-op, not a wasted/duplicate rollup.
+
+    The TIMER that calls .tick() on a cadence is NEEDS-TIM (no `.timer` stood up); .tick() is the tickable
+    mechanism it would call. Reuse-don't-parallel: it owns ONLY the cursor; the consolidation is the
+    existing entry point."""
+    suite: Any
+    since: int = -1                                          # the held cursor (−1 = from the log start)
+
+    def tick(self, *, mode: str | None = None, gc: bool = False) -> dict:
+        """One timer tick: consolidate the waves since the held cursor, advance the cursor to the log head,
+        and return {consolidated, reason, since_before, since_after, result?}. An interval with no new
+        cognition.wave records is a legible no-op (cursor still advances past any non-wave events)."""
+        before = self.since
+        head = self._head_seq()
+        # any new cognition.wave events in (before, head]? (consolidate_rollup uses seq > since.)
+        new_waves = [e for e in self.suite.events_since(before)
+                     if e.get("kind") == "cognition.wave"]
+        if not new_waves:
+            self.since = head                                # advance past the (wave-free) interval anyway
+            return {"consolidated": False, "reason": "no new cognition.wave records since last tick",
+                    "since_before": before, "since_after": self.since}
+        result = self.suite.consolidate_rollup(since=before, mode=mode, gc=gc)
+        self.since = head                                    # advance the cursor for the next tick
+        return {"consolidated": True,
+                "reason": f"consolidated {len(new_waves)} new wave(s)",
+                "since_before": before, "since_after": self.since, "result": result}
+
+    def _head_seq(self) -> int:
+        """The current log head seq (the cursor's new position). −1 when the log is empty (so the next
+        tick re-reads from the start — never skips an event by advancing past an empty log)."""
+        evs = self.suite.events_since(-1)
+        return evs[-1].get("seq", -1) if evs else -1
+
+
+# =====================================================================================================
+# THE MODE AUTO-DETECTOR (Group I) — the net-new that PRODUCES a candidate for the existing toggle.
+#
+# `Suite.autodetect_mode(candidate)` already honours the off/suggest/auto TOGGLE over a SUPPLIED candidate
+# (proven by autodetect_setter_acceptance). The gap (mode-map lost-opportunity #6): NOTHING produced a
+# candidate. I1 builds the DETECTOR — a DETERMINISTIC read of the live signal → a candidate mode — and
+# FEEDS it to autodetect_mode (never set_mode directly: the toggle decides the posture, off/suggest/auto,
+# and a suggestion SURFACES legibly via the existing 'mode' event — it never silently auto-switches
+# outside the declared posture).
+#
+# DETERMINISTIC + REGISTRY-DRIVEN (NOTHING static): the signal→candidate mapping is DECLARED DATA
+# (MODE_DETECTION_RULES, the ACTIVATION_CONTEXTS discipline) walked top-to-bottom — NOT a model (a model
+# would be non-deterministic + GPU-bound; the criteria say deterministic-where-possible) and NOT an inline
+# if/else ladder. Each rule's candidate MUST be a registered mode (autodetect_mode fail-louds otherwise);
+# the rules reference modes by id and are validated against suite.MODES at detect time.
+#
+# The always-on CALLER (a tick that runs the detector on a cadence) is the SAME needs-tim seam as the H
+# drivers; detect_mode_candidate/propose_mode are the tickable mechanism it would call. Proven by USE:
+# a signal that matches a rule produces the declared candidate, which drives the toggle.
+# =====================================================================================================
+
+# The DECLARED detection rules (deterministic, top-to-bottom; first match wins). Each row:
+#   when(signal) -> bool   : a pure predicate over the activity_signal() snapshot (no model, no IO).
+#   candidate              : the mode id to propose (validated ∈ suite.MODES at detect time).
+#   why                    : a one-line legible rationale (surfaces with the suggestion — FORM: legible).
+# Add/tune a rule = a row here (registry-driven). A signal matching NO rule → no candidate (clean no-op,
+# never a fabricated mode — rule 8).
+MODE_DETECTION_RULES: list[dict] = [
+    {
+        "candidate": "background",
+        "why": "the operator has been quiet for a long while — drop to a low-noise background presence",
+        "when": lambda s: (s.get("idle_seconds") is not None
+                           and s["idle_seconds"] >= 10 * DEFAULT_IDLE_SECONDS),
+    },
+    {
+        "candidate": "focus",
+        "why": "sustained operator activity with nothing piling up — protect deep work with a tight window",
+        "when": lambda s: (s.get("idle_seconds") is not None
+                           and s["idle_seconds"] < DEFAULT_IDLE_SECONDS
+                           and (s.get("inbox") or 0) == 0),
+    },
+    {
+        "candidate": "listening",
+        "why": "items are awaiting the operator — be present and conversational",
+        "when": lambda s: (s.get("inbox") or 0) > 0,
+    },
+]
+
+
+def detect_mode_candidate(suite, *, now_epoch: float | None = None) -> dict:
+    """I1 · THE DETECTOR — read the live signal, walk the DECLARED MODE_DETECTION_RULES (deterministic,
+    first-match-wins), and PRODUCE a candidate mode (or None). A pure READ: it fires nothing, switches
+    nothing, emits nothing — it only computes WHAT mode the signal suggests. The candidate is validated
+    against suite.MODES (a rule referencing an unregistered mode FAILS LOUD — rule 8, never propose a
+    fabricated mode). Returns {candidate, why, signal, rule_index} (candidate=None ⇒ no rule matched)."""
+    sig = activity_signal(suite, now_epoch=now_epoch)
+    modes = set(suite.MODES)
+    for i, rule in enumerate(MODE_DETECTION_RULES):
+        cand = rule["candidate"]
+        if cand not in modes:
+            raise ValueError(f"detect_mode_candidate: rule {i} proposes unregistered mode {cand!r} "
+                             f"— one of {sorted(modes)} (rule 8: never fabricate a mode).")
+        try:
+            matched = bool(rule["when"](sig))
+        except Exception as exc:                             # a malformed predicate fails loud (rule 4)
+            raise ValueError(f"detect_mode_candidate: rule {i} predicate raised {exc!r}") from exc
+        if matched:
+            return {"candidate": cand, "why": rule["why"], "signal": sig, "rule_index": i}
+    return {"candidate": None, "why": "no detection rule matched the live signal", "signal": sig,
+            "rule_index": None}
+
+
+def propose_mode(suite, *, now_epoch: float | None = None) -> dict:
+    """I1 · THE DETECTOR→TOGGLE WIRE — run the detector, and if it produces a candidate that DIFFERS from
+    the live mode, FEED it to the existing `Suite.autodetect_mode` (which honours the off/suggest/auto
+    toggle: 'off' no-ops, 'suggest' surfaces a 'mode' event, 'auto' switches via the one set_mode). Never
+    calls set_mode directly — the toggle owns the posture; the suggestion surfaces legibly, never a silent
+    switch outside the declared posture. A candidate EQUAL to the live mode is a no-op (don't re-propose the
+    mode already on). Returns {detected, toggle_result?} — the toggle_result is autodetect_mode's legible
+    {toggle, candidate, applied, action}."""
+    det = detect_mode_candidate(suite, now_epoch=now_epoch)
+    cand = det["candidate"]
+    if cand is None:
+        return {"detected": det, "toggle_result": None, "reason": "no candidate produced"}
+    if cand == suite.get_mode():
+        return {"detected": det, "toggle_result": None,
+                "reason": f"candidate {cand!r} already the live mode (no-op)"}
+    toggle_result = suite.autodetect_mode(cand)              # honours off/suggest/auto (the proven toggle)
+    return {"detected": det, "toggle_result": toggle_result}

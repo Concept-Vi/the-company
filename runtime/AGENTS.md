@@ -331,6 +331,60 @@ the per-turn stream uses → R permits ALWAYS stay free for the live per-turn ca
 never starve it). Add a context ⇒ add it to `ACTIVATION_CONTEXTS` **and reflect it here**, or
 `tests/activation_contexts_acceptance.py` fails loud.
 
+### The activation DRIVERS (Group H · `runtime/activation.py` · the dial GETS DRIVEN)
+
+G5 built the activation-context substrate + the entry points; H builds the **decision layer** that decides
+*when* to fire them. **The always-on CALLER** (an idle-loop daemon · an OS event source · a `.timer`)
+stays **needs-tim** (no always-on GPU-consuming daemon is stood up — the operator's call). So each driver
+is a **tickable** function the caller would invoke on a cadence — **never a thread/`while`/route/timer**.
+The net-new is the DECISION/STATE each driver adds OVER the entry point; the entry point is REUSED, never
+re-implemented (it still enforces the mode budget + the sacred reserve + routes over the non-consequential
+`DESTINATION_KINDS` — the `claude -p` floor holds by construction). Proven by USE (`tests/activation_drivers_acceptance.py`):
+a synthetic idle/event/clock tick FIRES the cast and LANDS its output at surface/address/lane (not a no-op).
+
+- **`background_tick`** (H1) — the **idle gate**: fires `fire_activation('background')` ONLY when the mode
+  allocates `background` live AND the operator has been quiet ≥ the idle threshold (read from the shared
+  signal). A non-fire returns a legible reason (rule 4 — no silent no-op).
+- **`sense_tick`** (H2) — the **event intake**: shapes a RAW screen/app/state event → the `sense_event`
+  dict (a `summary` the cast reads as its utterance) and dispatches `fire_activation('sense')`. Fail-loud
+  on a non-dict raw event (never a fabricated sense event).
+- **`RollupDriver`** (H3) — the **held cursor**: `.tick()` consolidates the cognition.wave records since
+  the HELD `since` cursor (so a tick never re-consolidates prior waves), advancing the cursor to the log
+  head each tick; an empty interval is a legible no-op. `consolidate_rollup` does the math; the driver owns
+  only the cursor.
+- **`activity_signal`** — the **shared activity reader** (REUSED by H1's idle gate AND I1's detector — one
+  reader, two consumers): a deterministic READ of the shared event log → `{idle_seconds, last_activity,
+  mode, inbox, recent_kinds}`. Fires/emits nothing.
+
+### The mode AUTO-DETECTOR (Group I · `runtime/activation.py` · the toggle GETS A CANDIDATE)
+
+`Suite.autodetect_mode(candidate)` already honours the off/suggest/auto TOGGLE over a SUPPLIED candidate
+(proven by `autodetect_setter_acceptance`); I1 builds the **detector that PRODUCES** one. **Deterministic +
+registry-driven** (NOTHING static): the signal→candidate map is DECLARED DATA, walked first-match-wins —
+no model (non-deterministic + GPU), no inline if/else ladder. The detector FEEDS `autodetect_mode` (never
+`set_mode` directly — the toggle owns the posture; a suggestion SURFACES via the existing `mode` event,
+never a silent switch outside the declared posture). The periodic CALLER is the same needs-tim seam as H.
+
+- **`detect_mode_candidate`** — a pure READ → `{candidate, why, signal, rule_index}` (candidate=None ⇒ no
+  rule matched). A rule whose candidate is not in `suite.MODES` FAILS LOUD (rule 8).
+- **`propose_mode`** — runs the detector and, if the candidate DIFFERS from the live mode, feeds it to
+  `autodetect_mode` (off no-ops · suggest surfaces · auto switches). A candidate equal to the live mode is
+  a no-op.
+
+**The two net-new registries (drift homes — mirror `RULE_OPS`; `tests/activation_drivers_acceptance.py`
+asserts both stay reflected HERE):**
+
+- **`OPERATOR_ACTIVITY_KINDS`** (`runtime/activation.py`) — the event kinds that count as operator
+  activity for the idle gate (`chat`/`cognition.turn.done`/operator graph acts); the system's OWN
+  background activity (`activation`/`op.run`/mid-wave `cognition.*`) is deliberately EXCLUDED so a
+  background tick can't reset its own idle clock.
+- **`MODE_DETECTION_RULES`** (`runtime/activation.py`) — the declared signal→candidate detection rules
+  (deterministic, first-match-wins; each row `{candidate, why, when(signal)→bool}`). Add/tune a rule = a
+  row here. A signal matching no rule → no candidate (clean no-op).
+
+Add a driver/detector helper, an `OPERATOR_ACTIVITY_KINDS` member, or a `MODE_DETECTION_RULES` row ⇒
+reflect it here, or `tests/activation_drivers_acceptance.py` fails loud.
+
 ## The live cognition VIEW backend (Concurrent Cognition L-fe-be · `contracts/cognition_info.py` + `runtime/suite.py` + `runtime/bridge.py` · §F net-new backend)
 
 The live cognition VIEW (`build-prep/concurrent-cognition/06-rendering.md`) is a **generic
@@ -384,6 +438,54 @@ stays reflected HERE, mirroring `rules_acceptance` → `RULE_OPS` and `edge_kind
   and none may ever be — a `resolve`/`approve`/`dispatch`; a cognition.* event NARRATES backend truth,
   it can never forge an operator action. Add an event kind ⇒ add it to `COGNITION_EVENT_KINDS` **and
   reflect it here**, or `tests/cognition_info_acceptance.py` fails loud.
+
+## The corpus pillar — SUITE FACE (Cognition Engine GROUP B + GROUP D · `runtime/suite.py` over `runtime/projections.py` + `runtime/corpus.py` + `store/vector_index.py`)
+
+The corpus/discovery pillar rides the cognition spine. Its registries + record + space-keyed index live
+in their own modules (`runtime/projections.py` K1/P1 · `runtime/corpus.py` D1 · `store/vector_index.py`
+Group L) — the **Suite is the thin FACE** over them (the SUITE lane; the MCP tools + `/api` routes are the
+SURFACE/BRIDGE lanes on top). **Reuse-don't-parallel:** every method here delegates to those modules; the
+record gate, the dedup-on-read, and the cosine ranking are NOT reimplemented.
+
+- **The SELECTS PROJECT the file-discovered PROJECTION registry (GROUP B — registry-is-truth, no
+  hardcoding).** The Suite discovers `projections/` in `__init__` (`self.projection_registry =
+  ProjectionRegistry().discover([self.projections_dir])`, mirroring `role_registry`). `cognition_info()`
+  AUGMENTS its returned envelope with `projections` (= `projection_registry.as_records()` — the discovered
+  lens set verbatim) + `spaces` (= `embeddable()` ids — the Group-L vector spaces); `available_inputs()`
+  adds `projections` (the lens ids — the corpus discovery vocabulary) + `projection_spaces` (the
+  `vec://<item>#space=<id>` read-addresses a corpus-reading role/rule can wire). **THE BAR (PART 4.3):**
+  drop a `projections/<id>.py`, restart the bridge, and the lens appears in BOTH selects with NO code
+  change (proven by use against the live `/api/cognition_info` + `/api/cognition/inputs`). **Seam (BAR2):**
+  the proper long-term home for the projection serialization is a `projections=` kwarg on
+  `contracts/cognition_info.build_cognition_info` (mirroring `roles`/`rules`/`edge_kinds`); until that
+  contracts-lane edit lands, `cognition_info()` augments the dict in-lane (still the ONE `as_records()`
+  source — never a hand-built list). The other 6 file-discovered registries
+  (lifters/mark-types/ai-tics/relation-types/generation-policies/forms) instantiate + project the SAME way
+  as they land.
+- **The corpus record FACE (GROUP D):** `write_corpus_record(source_address, output, kind, lineage,
+  model?, projection?, **extra)` → `corpus.write_record(self.store, ...)` — the LINEAGE GATE bites here
+  (session/round/project REQUIRED, fail-loud `CorpusError`; a record without lineage is uncorroboratable
+  cross-session). `read_corpus_record(address)` round-trips it back (honest None if never written).
+  `list_corpus(project?)` / `find_corpus(project?, kind?, projection?, source_address?)` are the read-time
+  PROJECTION over the `corpus.record` event log (dedup-on-read, the run-index sibling — no maintained
+  index, no parallel DB).
+- **`find_relations(item, near_space, far_space, k?, min_score?)` — THE INVERSION-FINDER (GROUP L2):** the
+  cross-space "same principle, different subject" query — items NEAR `item` in `near_space` but NOT near it
+  in `far_space` (near∩¬far). The query VECTOR is the item's OWN persisted per-space vector
+  (`store.get_vector(store.space_address(item, space))`), so the query side needs **no live embedder** (the
+  persisted vectors are enough — matters because :8001 is DOWN); the k-NN reuses
+  `vector_index.query_index(space=)` (no cosine reimplemented). **The threshold pivot:** `query_index`
+  returns EVERY indexed item ranked (including score≈0), so "in the far ranked list" ≠ "is a far-NEIGHBOUR"
+  — a neighbour is `score ≥ min_score` (default 0.5; a per-projection `cluster_threshold` is a
+  relation/generation POLICY — registry-projected once those registries land — so it is a tunable PARAM
+  here, not a hardcoded global). FAIL LOUD: a missing anchor (item not embedded in a named space) raises;
+  an unpopulated space is an honest empty difference (distinct from the missing-anchor raise).
+
+**THE FLOOR (C9.2) HOLDS:** every method here is a READ or a `corpus.record` telemetry write — NONE emits
+`resolve`/`approve`/`dispatch`, NONE is in `RHM_VERBS` or on the MCP face (the SURFACE/BRIDGE lanes expose
+them). Proven by `tests/suite_corpus_relations_acceptance.py` (the selects project the discovered set + the
+drop-in bar + the corpus round-trip/gate + the near∩¬far inversion over seeded vectors + the floor); the
+modules' own proofs are `tests/projections_acceptance.py` + `tests/corpus_acceptance.py`.
 
 ## The authoring backend (Concurrent Cognition C7.4/C7.5 · `runtime/authoring.py` + `runtime/suite.py` · the WRITE-side)
 
