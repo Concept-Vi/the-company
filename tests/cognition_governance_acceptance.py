@@ -61,12 +61,21 @@ for verb in ("resolve", "approve", "dispatch"):
 # AGENT face (`mcp_face/server.py`) and the skills/contexts registry (`runtime/skills.py`) — so a
 # FUTURE edit emitting a forbidden verb on either fails loud, not just the original engine. (The floor
 # already HELD on both; this guards it standing — defense-in-depth for "a future edit opens the floor".)
+# Extended again (Cognition Engine NEWMOD): the CORPUS pillar surfaces — the file-discovered projections
+# registry (`runtime/projections.py`) and the lineage-bearing corpus-record (`runtime/corpus.py`) — are
+# cognition-reachable (a capture role produces corpus records, routed by the same engine). They are
+# enrolled here for the SAME reason skills.py was (its docstring): a corpus write must stay a READ/INDEX
+# (append_event telemetry), never a resolve/dispatch — so a future edit emitting a forbidden verb on
+# either fails loud. (The floor already HOLDS: corpus.record is telemetry; this guards it standing.)
 COG_SOURCES = ["runtime/cognition.py", "runtime/rules.py", "runtime/roles.py",
-               "mcp_face/server.py", "runtime/skills.py"] + \
+               "mcp_face/server.py", "runtime/skills.py",
+               "runtime/projections.py", "runtime/corpus.py"] + \
     [f"roles/{f}" for f in os.listdir("roles") if f.endswith(".py")]
 # coverage-regression guard: the new surfaces MUST stay scanned (so the guard can't silently shrink).
 check("C9.2 the floor source-invariant COVERS the MCP agent face + the skills registry (new surfaces)",
       "mcp_face/server.py" in COG_SOURCES and "runtime/skills.py" in COG_SOURCES)
+check("C9.2 the floor source-invariant COVERS the corpus pillar (projections + corpus-record)",
+      "runtime/projections.py" in COG_SOURCES and "runtime/corpus.py" in COG_SOURCES)
 floor_breach = []
 for src in COG_SOURCES:
     with open(src) as fh:

@@ -28,6 +28,35 @@ right-hand-man (C6). And `suite.py` holds **the Suite — the brain**: the engin
 RHM, the self-modification path, and **the decision→implementation wire** — the one object
 [[mcp_face — constitution]] and the bridge both speak to.
 
+## The corpus pillar (Cognition Engine K1/D1 · `runtime/projections.py` + `runtime/corpus.py`)
+
+The corpus pillar rides the cognition spine: a capture/map run over a corpus produces durable,
+addressed, embeddable, queryable RECORDS (the SINK the scale test was missing). Two NET-NEW modules
+land here this pass:
+
+- **`runtime/projections.py`** — the **file-discovered PROJECTION registry** (the lens vocabulary of
+  the corpus pillar). A projection is a declared LENS over a unit (`what`/`topics`/`principles`/
+  `worldview`/`claimed_status`/`lineage`). It is a registry **like roles/skills** — `os.listdir` →
+  import `projections/<id>.py`, each a FILE not a dict (the PART-4.3 file-discovery + create_*-authorable
+  BAR; add-a-row = a FILE, no code edit). Mirrors `runtime/roles.py:RoleRegistry` /
+  `runtime/skills.py` exactly (the ONE registry mechanism). Drift home: `projections/AGENTS.md`;
+  proven by `tests/projections_acceptance.py`. The capture-schema builder reads `model_projections()`,
+  the space-keying (Group L) reads `embeddable()`, `cognition_info` reads `as_records()` — all pure
+  reads (the floor). **render-NOT-judge** (K3): a lens describes; judgement is a later reduce.
+- **`runtime/corpus.py`** — the **corpus-record WITH LINEAGE** (the sequencing GATE). A thin module
+  over the store's EXISTING public methods (`put_content`/`set_ref`/`append_event` + read-back) — it
+  does **NOT** edit `store/fs_store.py` (the STORE lane owns that). The record carries `session/round/
+  project` lineage **FROM THE START**, and `write_record` **REFUSES** a record without it (fail-loud,
+  NOT optional-with-default) — because corroboration (M3) is cross-SESSION and the inversion-finder
+  (L2) needs the placement, so retrofitting lineage = a full re-capture. The record is indexed on the
+  ONE event log via a **DISTINCT `corpus.record` kind** (NOT `op.run` — that is a CLOSED engine-run
+  grammar; `list_corpus`/`find_corpus` are a read-projection over it, dedup-on-read for resume-safety).
+  The cas content is deterministic (no per-write `ts` in the content) so a resumed write is a true no-op
+  overwrite. Three lineage axes kept distinct: corpus lineage (here) ≠ `store.lineage()` (provenance
+  walk) ≠ `decision_lineage` (event trajectory). The floor holds: `corpus.record` is telemetry, never a
+  resolve/dispatch (enrolled in the `cognition_governance_acceptance` source-invariant scan). Proven by
+  `tests/corpus_acceptance.py`.
+
 **The decision→implementation wire** (`implement.py` + `dispatch_decision`/`surface_build_intent`,
 Group W) closes the circuit *recorded decision → governed dispatch to Claude Code → verify → result
 back → status=`implemented` **AND surfaced for review*** (AI-operated is NOT review-free), with no
