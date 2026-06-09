@@ -540,6 +540,48 @@ record gate, the dedup-on-read, and the cosine ranking are NOT reimplemented.
   here, not a hardcoded global). FAIL LOUD: a missing anchor (item not embedded in a named space) raises;
   an unpopulated space is an honest empty difference (distinct from the missing-anchor raise).
 
+## The SPACE-EMBED wiring (Cognition Engine GROUP L · L1/D2 · `runtime/cognition.py:embed_corpus_to_spaces` · the end-to-end SINK that fed `find_relations`)
+
+`find_relations` reads the item's persisted per-space vector (`store.get_vector(store.space_address(item,
+space))`) — but **nothing wrote those per-space vectors**: `run_role(op=embed)` PRODUCED a vector and
+RETURNED it (`{vector, dim, model}`), yet the result was never `put_vector`'d into a SPACE, so the corpus's
+embedded records never populated a queryable space and `find_relations` had nothing to read end-to-end (its
+docstring even said the item "must be embedded in both spaces first (run the capture+embed pass)" — that
+pass did not exist). **`embed_corpus_to_spaces(store, records, projections, *, embed_fn?, dim?, model?,
+base_url?)` IS that pass** — the thin engine path the corpus capture uses to PERSIST embeddings space-keyed.
+
+- **REUSE-DON'T-PARALLEL (NO 2nd vector path):** it is a pure delegate to STORE's existing space-keyed
+  `vector_index.build_index(store, [{address: source_address, text}], space=<projection>)` — which already
+  does embed→space-keyed `put_vector`. That path embeds via `client.complete_embeddings` (the EXACT plumbing
+  `run_role(op=embed)` uses — the ONE embed path, not paralleled), keys by `store.space_address(item, space)`
+  (the SAME key `find_relations` reads — lines up by construction), carries the explicit `space`/`source`
+  fields, and gives the content-hash incremental diff + the one-round-trip batch + the degrade-with-warning
+  FOR FREE. `embed_corpus_to_spaces` makes NO `put_vector` call itself (build_index owns persist). It groups
+  records by projection (one build_index per space), validates each against `projection_registry.embeddable()`
+  (registry-is-truth — a record naming a non-embeddable lens RAISES, never silently dropped). **Why a path,
+  not inside `run_role(op=embed)`:** like generate's `run_role` returns the validated dict and the CALLER
+  persists, embed returns the vector and the CAPTURE PATH persists — `run_role(op=embed)`'s return stays
+  `{vector,dim,model}`, untouched.
+- **EMBEDDER-DOWN (deliberate):** the batch path uses build_index's **degrade-with-warning** (a LOUD durable
+  `warning` event, NO vectors written, `degraded=True`, no crash) — chosen knowingly so a multi-record/
+  multi-space capture pass is not aborted whole by a transient :8001 outage; re-embed when up populates the
+  space. (The HARD-raise fail-loud lives at the single-embed seam — `run_role(op=embed)`/`complete_embeddings`
+  — for a deliberate one-shot embed; this is still fail-loud — never a silent `[]`, never a fabricated vector.)
+- **THE FLOOR:** `put_vector` is a store WRITE — `embed_corpus_to_spaces` emits no `op.run`/resolve/approve/
+  dispatch, is not on the MCP face, not in `RHM_VERBS`. Proven by `tests/space_embed_acceptance.py` (records
+  → embed pass → vectors at `space_address` → `find_relations` near∩¬far end-to-end with per-space-distinct
+  geometry teeth + fail-loud + embedder-down degrade + the floor).
+
+**O3 — `finish_reason`/token-count is AVAILABLE at the `run_role` seam (`runtime/cognition.py`).** `run_role`
+gained an additive `meta: dict | None = None` out-param: a caller that passes `meta={}` reads the
+completion's `finish_reason` (+ `usage`) back via the transport's `_fill_meta` (the ladder path already used
+this seam internally). `meta=None` (every current caller) is BYTE-IDENTICAL to before — no meta reaches the
+transport, the request body is untouched, and the return is the same `model_dump()` (`run_swarm`/
+`dry_run_role`/`run_cascade`/the MCP wrapper depend on that exact shape — `finish_reason` is an OUT-PARAM,
+**never folded into the returned dict**). This makes the O3 value AVAILABLE; **PERSISTING it into the
+agent-facing `op.run` run-record is the MCP wrapper's emit (`mcp_face/server.py:run_role` — a DIFFERENT
+lane), flagged needs-coordination (not edited here).**
+
 **THE FLOOR (C9.2) HOLDS:** every method here is a READ or a `corpus.record` telemetry write — NONE emits
 `resolve`/`approve`/`dispatch`, NONE is in `RHM_VERBS` or on the MCP face (the SURFACE/BRIDGE lanes expose
 them). Proven by `tests/suite_corpus_relations_acceptance.py` (the selects project the discovered set + the
@@ -620,6 +662,64 @@ restore point; rules 4+8). Kept **off the MCP face** + out of `RHM_VERBS`, like 
 the RHM proposes/surfaces, it never commits of its own authority; minting is an operator act on the
 operator face. Proven by `tests/selfmod_audit_acceptance.py`.
 
+## The 6 registries WIRED into their consumers (Cognition Engine WIRING · `runtime/suite.py` + `runtime/cognition.py` + `mcp_face/server.py`)
+
+The 6 file-discovered registries (719f82d — lifters/mark_types/generation_policies/relation_types/ai_tics/
+forms) now EXIST **and are CONSUMED** (they were "existence only" before). All three wires REUSE the
+existing patterns — NO parallel author path, NO 2nd anything:
+
+- **generation_policies → `run_role` (NOTHING static).** `cognition.run_role` gains an OPT-IN `policy`
+  param (default `None` = BYTE-IDENTICAL to before — no penalty, no meta, one call). When set, it reads the
+  regime from the file-discovered `generation_policy_registry()` (registry-is-truth, fail-loud on an unknown
+  id) and runs its **repetition_penalty LADDER as DATA**: start at `default_rep_penalty`, pass
+  `repetition_penalty=<rung>` + read `finish_reason` back via the transport's `meta={}` out-param (O3); on
+  `finish_reason=="length"` escalate to `next_rep_penalty`; **EXHAUST the ladder → fail-loud
+  `degenerate-loop`** (the regime's own contract, never a silent give-up). The penalty VALUE is the registry
+  rung, never a code constant. **NO live caller is flipped onto it** (run_swarm/dry_run_role/run_cascade stay
+  `policy=None`) — item 1 asks only that `run_role` CAN read the ladder. **KNOWN/FLAGGED (coordinate-with-
+  owner):** `fabric/transport.py` (out of this lane) copies only `temperature/max_tokens/top_p` into the
+  request body (transport.py:92/122) — it does NOT yet forward `repetition_penalty`, so the penalty does not
+  reach vLLM until that one-line passthrough lands. The ladder LOGIC + registry-sourced value + escalation +
+  fail-loud exhaustion are real + proven (`tests/generation_policy_ladder_acceptance.py`); the penalty's
+  EFFECT is gated on the transport edit. `diff_against_source` is read off the policy but the output-vs-source
+  diff is NOT implemented this pass (flagged not-done, never silently ignored).
+
+- **create_* (declarative-direct authoring — MIRROR create_skill/create_projection).** `Suite.create_mark_type`/
+  `create_generation_policy`/`create_relation_type`/`create_ai_tic` author a `<name>/<id>.py` LIVE with NO
+  approval, via the SHARED `Suite._write_registry_file` helper over the single-source `_CORPUS_REGISTRIES`
+  table (render `<CONST> = {...}` → the registry's OWN `discover()` gate-in-tempdir → atomic write →
+  `_commit_or_rollback` → rediscover). It is create_projection's mechanism FACTORED into one helper (the
+  proper home that tool's BAR2 seam wished for) — reuse-don't-parallel, no copy-pasted bodies. The MCP tools
+  (`create_mark_type`/…) are thin delegators. **SCOPED TO THE 4 PURE-DATA registries:** `lifter` (an `extract`
+  CALLABLE) and `form` (a `match` CALLABLE) carry EXECUTABLE CODE in their row — pprint can't serialize a
+  function + MCP-JSON can't carry one, so a data-create would always fail-loud at the gate. That is the
+  FLOOR's "executable-code create stays GATED" line: lifter/form need a CODE-render+gate authoring contract
+  (create_role-style render of a `def`, or the gated propose→apply), net-new + unspecified → **flagged for the
+  operator, NOT invented here** (they stay LISTABLE in the selects + GOVERNED by the floor; only data-CREATE
+  excludes them). `_write_registry_file` fail-louds defense-in-depth if ever handed a callable field.
+
+- **marks suite-side API + MCP tool.** `Suite.mark(target, mark_type, **fields)`/`marks_for`/`marks_by_type`
+  REUSE STORE-2's `append_mark`/`marks_for`/`marks_by_type` (the dumb `marks.jsonl` leaf). A mark targets a
+  CLAIM or SPAN, carries a **registered** `mark_type` — the Suite owns the type GATE (fail-loud on an unknown
+  type; `store.append_mark` stays dumb by design, its docstring says it won't import the registry). The `mark`/
+  `marks_for`/`marks_by_type` MCP tools are thin delegators. Retrievable by BOTH keys (target AND mark_type).
+
+- **The selects advertise the new registries.** `available_inputs()` adds `lifters`/`mark_types`/
+  `generation_policies`/`relation_types`/`ai_tics`/`forms` (the discovery/capture vocabulary a corpus-reading
+  role/rule/cascade composes with) — projected from the live registries, never a hardcoded list (drop a
+  `<name>/<id>.py` → restart → it appears). **NOT touched:** `cognition_info()`'s projection of the 6
+  registries (the live-registry VIEW) — that is the **owner's coordinate-with follow-up** (the contract owner
+  is actively editing `contracts/cognition_info.py`; an in-lane augment there would collide). The exact shape
+  the owner needs: `info["lifters"] = self.lifter_registry.as_records()`, `info["mark_types"] = …`, … mirroring
+  the existing `info["projections"]`.
+
+- **floor teeth:** `tests/cognition_governance_acceptance.py` enrolls all 6 new `runtime/<name>.py` in
+  COG_SOURCES (the source-invariant scan) + adds all 6 to HOMES (5→11 drift homes). The floor scan is now 38
+  checks (was 31); the 6 are floor-clean by construction (reads + DATA writes, never resolve/dispatch).
+
+Proven by `tests/generation_policy_ladder_acceptance.py` (17) + `tests/registry_authoring_marks_acceptance.py`
+(55) + the floor (38) + the MCP tool round-trip (live, isolated repo).
+
 ## The cognition-engine HUMAN-FACE routes (Cognition Engine LANE-BRIDGE · `runtime/bridge.py` · G2)
 
 The HUMAN face (the FE/#55) reaches the cognition engine over `/api/cognition/*`, **reflects-never-owns**:
@@ -658,9 +758,12 @@ the run-index discovery of `fe-` runs, the corpus round-trip + lineage-gate, the
 seeded space-vectors, `/api/corpus` gallery still 200, fail-loud on bad-op/missing-anchor/missing-lineage).
 **NOT proven (needs-tim):** a successful `/api/cognition/embed` + a `run_reduce(mode='cluster')` (the local
 embedder at :8001 is DOWN — both fail loud correctly; a real embed needs the embedder resident, a GPU
-window). **NOT this pass (blocked):** `create_projection`/`create_mark_type`/… — the projections-create
-Suite/MCP methods don't exist yet (SURFACE/NEWMOD lane); routing to them would be inventing (rule 8), so
-they are deferred until those methods land.
+window). **NOW UNBLOCKED (the methods landed):** the declarative-direct create_* Suite + MCP methods now
+EXIST — `create_projection` (cc9a749) + `create_mark_type`/`create_generation_policy`/`create_relation_type`/
+`create_ai_tic` (WIRING, via the shared `Suite._write_registry_file`; `create_lifter`/`create_form` stay
+GATED code-authoring — see the WIRING section above). So adding the bridge `POST /api/cognition/create_*`
+routes for them is the now-unblocked BRIDGE-lane follow-up (no longer "inventing" — the delegate methods
+exist), out of this WIRING lane's edit set (bridge.py).
 
 ## Relates to
 

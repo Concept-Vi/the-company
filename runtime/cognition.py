@@ -204,7 +204,7 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
              model: str = RESIDENT_MODEL, timeout: int = ROLE_TIMEOUT,
              max_tokens: int = 256, temperature: float = 0.0, store=None,
              ensure: bool = False, ensure_evict: bool = False,
-             policy: str | None = None) -> dict:
+             policy: str | None = None, meta: dict | None = None) -> dict:
     """Fire ONE request at the resident 4B for `role`, returning VALIDATED JSON (a dict).
 
     Mirrors `Suite.is_finished_thought`/the judge EXACTLY: `client.complete(openai_transport(...))`.
@@ -254,6 +254,18 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
       policy but the output-vs-source diff (catching legitimate-enumeration under-capture) is NOT implemented
       in this pass — flagged NOT-done, never silently ignored.
 
+    O3 — finish_reason / token-count OUT-PARAM (additive, behaviour-preserving): a caller may pass a
+    `meta={}` dict to read the completion's `finish_reason` (+ `usage`) back WITHOUT changing the
+    returned shape. The transport's `_fill_meta` (fabric/transport.py) populates it on every call when
+    `meta` is supplied; the policy-ladder path already used this seam internally (it reads
+    `finish_reason=="length"` to escalate). `meta=None` (DEFAULT, every current caller) is BYTE-IDENTICAL
+    to before — no meta dict reaches the transport, the request body is untouched, and the return is the
+    same `model_dump()` (run_swarm/dry_run_role/run_cascade/the MCP wrapper all depend on that exact
+    shape — finish_reason is an OUT-PARAM, NEVER folded into the returned dict). This makes the O3 value
+    AVAILABLE at the engine seam; PERSISTING it into the agent-facing `op.run` run-record is the MCP
+    wrapper's emit (`mcp_face/server.py` — a different lane; flagged for that owner, not edited here).
+    embed-op ignores meta (no completion to read a finish_reason from).
+
     `ctx` must carry `utterance` for the default input axis. Fail loud: a transport/empty/parse/schema
     failure PROPAGATES as FabricError after retries (never a silent empty dict); a missing/unresolvable
     declared input RAISES (never a silent skip)."""
@@ -292,11 +304,16 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
     ]
     t = transport.openai_transport(base_url=base_url, timeout=timeout)
     if policy is None:
-        # DEFAULT path — BYTE-IDENTICAL to before (no ladder, no meta, ONE complete() call). Every
-        # current caller (run_swarm/dry_run_role/run_cascade/the MCP run_role) is on this path.
+        # DEFAULT path — BYTE-IDENTICAL to before for a meta=None caller (ONE complete() call, the same
+        # return). Every current caller (run_swarm/dry_run_role/run_cascade/the MCP run_role) passes no
+        # meta, so `_complete_kw` carries nothing extra and the request body is untouched. O3: a caller
+        # that passes `meta={}` gets finish_reason/usage filled by the transport's _fill_meta — the value
+        # rides `**opts` straight through; the body only reads response_format + temperature/max_tokens/
+        # top_p, so a stray `meta` key can't pollute the request. OUT-PARAM only — NEVER in the return.
+        _complete_kw = {} if meta is None else {"meta": meta}
         validated = client.complete(
             t, msgs, model=model, schema=role.output_schema, json=True,
-            temperature=temperature, max_tokens=max_tokens,
+            temperature=temperature, max_tokens=max_tokens, **_complete_kw,
         )
         return validated.model_dump()
 
@@ -325,6 +342,101 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
                 f"of generation-policy {policy!r}'s rep_penalty ladder {pol.rep_penalty_ladder} — the "
                 f"output is truncated/looping and the ladder is exhausted. Fail loud (never a silent give-up).")
         rung = nxt                                             # climb the ladder, re-call
+
+
+# --- SPACE-EMBED (Cognition Engine GROUP L · L1/D2): the corpus capture path PERSISTS embeddings ---
+# THE END-TO-END GAP (the SURFACE flagged): run_role(op=embed) PRODUCES a 1024-dim vector but the result
+# is never put_vector'd into a SPACE — so the corpus's embedded records never populate a queryable space
+# and find_relations (suite.py:9222, the cross-space inversion-finder) has nothing to read end-to-end (its
+# own docstring says the item "must be embedded in both spaces first (run the capture+embed pass)" — that
+# pass did not exist). This is that pass.
+#
+# REUSE-DON'T-PARALLEL (the lane law — NO 2nd vector path): the persist is `vector_index.build_index(store,
+# corpus, space=<projection>)` — which ALREADY does embed→space-keyed put_vector (vector_index.py:64-139).
+# It embeds via `client.complete_embeddings` (the EXACT plumbing run_role(op=embed) uses, cognition.py:274
+# ≡ vector_index.py:60-61 — the ONE embed path, not a paralleled one), keys by `store.space_address(item,
+# space)` (the SAME key find_relations reads — `space_address(item, near_space)` → get_vector → lines up by
+# construction), carries the explicit `space`/`source` fields put_vector requires for the per-space query,
+# and gives the content-hash incremental diff + the ONE-round-trip batch + the degrade-with-warning FOR
+# FREE. A per-item run_role(op=embed)→put_vector path would REIMPLEMENT all of that (= the parallel path
+# the law forbids). The OR-clause in the lane brief ("run_role(op=embed) OR a thin engine path the corpus
+# capture uses") sanctions exactly this — and persistence does not belong INSIDE run_role anyway (like
+# generate's run_role returns the validated dict and the CALLER persists, embed returns the vector and the
+# CAPTURE PATH persists — the run_role(op=embed) return shape stays {vector,dim,model}, untouched).
+#
+# EMBEDDER-DOWN SEMANTICS (deliberate): build_index's degrade-with-warning IS fail-loud — a down :8001
+# emits a LOUD durable `warning` event, writes NOTHING (no silent fabricated/zero vector, never a silent
+# []), and returns degraded=True WITHOUT crashing the capture run. This is the sanctioned degrade (chosen
+# knowingly): a multi-record/multi-space capture pass should not be aborted whole by a transient embedder
+# outage — the loud durable warning is the detectable channel + the records can be re-embedded when :8001
+# is up. (The HARD-raise fail-loud lives at the single-embed seam — run_role(op=embed)/complete_embeddings
+# — for a deliberate one-shot embed; the capture pass uses the batch path's degrade.)
+def embed_corpus_to_spaces(store, records, projections, *, embed_fn=None, dim=None,
+                           model=None, base_url=None) -> dict:
+    """Embed corpus RECORDS into their PROJECTION SPACES so find_relations / query_index(space=) read them
+    end-to-end. THE thin engine path the corpus capture uses (L1/D2) — a pure delegate to STORE's existing
+    space-keyed `vector_index.build_index(space=)`, NOT a second vector path.
+
+    `records` = `[{source_address, text, projection}, ...]` — each is one corpus capture under ONE lens
+    (`projection`) describing one `source_address` (the item), with the `text` to embed (the lens output).
+    `projections` = the EMBEDDABLE projection set (`projection_registry.embeddable()` — registry-is-truth;
+    a record whose `projection` is NOT in this set is REFUSED fail-loud, never silently dropped — only a
+    lens DECLARED to become a space (`embeds==True`, GROUP L) may be embedded into one).
+
+    Groups the records BY projection (one build_index call per space — the batch the incremental diff +
+    one-round-trip cost is O(changed) over), and for each space calls
+    `vector_index.build_index(store, [{address: source_address, text}], space=projection)`. The persisted
+    key is `store.space_address(source_address, projection)` (build_index owns that — the SAME key
+    find_relations reads), carrying `space`/`source` as explicit fields.
+
+    `embed_fn`/`dim`/`model`/`base_url` are the SAME injection seams build_index exposes — a test injects
+    SEEDED vectors (embedder-down / deterministic) exactly as conv_index_space_acceptance does; the live
+    default is `complete_embeddings`.
+
+    FAIL LOUD: a record missing `source_address`/`text`/`projection`, or naming a non-embeddable projection,
+    RAISES before any write (rule 4 — an unembeddable record is a misconfiguration, never a silent skip).
+    A DOWN embedder degrades-with-warning per space (build_index's sanctioned loud degrade — see the module
+    note above), reflected in the per-space result.
+
+    Returns `{spaces: {<projection>: {embedded, skipped, degraded}}, records: N, degraded: bool}` — the
+    per-space build result + an aggregate `degraded` (True iff ANY space degraded). The FLOOR holds:
+    put_vector is a store WRITE, never a resolve/approve/dispatch; this emits no engine run-record."""
+    from store import vector_index as _vx              # the EXISTING space-keyed embed→put_vector (reuse)
+
+    embeddable_ids = {p.id for p in projections}        # registry-is-truth (the declared space set)
+    by_space: dict[str, list] = {}
+    for rec in records:
+        src = rec.get("source_address")
+        text = rec.get("text")
+        proj = rec.get("projection")
+        if not src or not isinstance(src, str):
+            raise ValueError(
+                f"embed_corpus_to_spaces: a record needs a string `source_address` (the item the vector is "
+                f"keyed to — what find_relations queries). Got {src!r} in {rec!r} — fail loud.")
+        if not isinstance(text, str) or not text.strip():
+            raise ValueError(
+                f"embed_corpus_to_spaces: a record needs non-empty `text` to embed (the lens output). "
+                f"Got {text!r} for source_address {src!r} — fail loud (never embed an empty string).")
+        if not proj or proj not in embeddable_ids:
+            raise ValueError(
+                f"embed_corpus_to_spaces: record for {src!r} names projection {proj!r}, which is not an "
+                f"EMBEDDABLE space (the embeddable set is {sorted(embeddable_ids)} — embeds==True, GROUP L). "
+                f"Only a lens declared to become a space may be embedded into one — fail loud, never a "
+                f"silent drop. (registry-is-truth, AGENTS.md rule 8.)")
+        by_space.setdefault(proj, []).append({"address": src, "text": text})
+
+    # build_index defaults embed_fn=_default_embed (the live complete_embeddings); only pass embed_fn when
+    # a caller INJECTS one (seeded/embedder-down) — passing None would override that default with None.
+    bi_kw = {"dim": dim, "model": model, "base_url": base_url}
+    if embed_fn is not None:
+        bi_kw["embed_fn"] = embed_fn
+    spaces: dict[str, dict] = {}
+    any_degraded = False
+    for proj in sorted(by_space):                       # deterministic per-space order
+        res = _vx.build_index(store, by_space[proj], space=proj, **bi_kw)
+        spaces[proj] = res
+        any_degraded = any_degraded or bool(res.get("degraded"))
+    return {"spaces": spaces, "records": len(records), "degraded": any_degraded}
 
 
 # --- the DECLARED RULE (L2): a NON-TRIVIAL pure function of resolved values (C0.2 / R1-FOLD F5) ---
