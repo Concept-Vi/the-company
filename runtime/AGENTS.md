@@ -288,6 +288,84 @@ carries empty `addresses`) — so a STANDALONE reduce is discoverable-as-having-
 **The cascade RUNNER (below) closes this for a chained reduce:** it OWNS persist+index for every step, so a
 reduce *inside a cascade* IS landed at a step-keyed `run://` address and IS feedable/discoverable.
 
+**E2 — the run index is INCREMENTAL (`Suite._run_index_fold` · `runtime/suite.py`).** `list_runs`/`find_runs`
+USED to re-read + re-filter the WHOLE `op.run` log on EVERY call (O(events) — caught at scale). The op.run
+log is append-only with monotonic-unique seqs (T1-SEQ), so the projection is cheaply incremental: the Suite
+holds the projected rows (`_run_index_rows`, oldest-first) + a high-water seq (`_run_index_hw`); each call
+reads ONLY `events_since(high_water)` (the tail delta, read ONCE under `_run_index_lock`), projects the new
+ENGINE_RUN_OP events via the SHARED `_project_run_event` (so a cold rebuild + an incremental fold produce
+byte-identical rows), and advances the high-water over the WHOLE delta (the last delta event may itself be a
+non-engine op.run, so the cursor must move past it). The op.run log STAYS the source of truth (**no parallel
+store, no maintained index on disk, NO `fs_store` edit**) — the cache is a pure derived projection a fresh
+Suite rebuilds from the log; cross-PROCESS safe (each process reads the disk tail past its OWN high-water,
+appends are immutable). `total_records` keeps the pre-E2 EVENT-count semantics (a fan event = N rows but ONE
+record). Proven by `tests/run_index_incremental_acceptance.py` (the 2nd call reads only the delta — spied; a
+sibling Suite rebuilds from the shared log; cold-scan-equal).
+
+## GROUP J — the cognition↔resolution feedback loop (the system sees its OWN thinking · `runtime/suite.py`)
+
+R2 resolves operator-NOTEBOOK strata at the operator's locus; the swarm's per-turn cognition
+(`run://<turn>/<role>`) was a PARALLEL edge that never converged back. **J1 wires the PRIOR COMPLETED turn's
+cognition into what the NEXT turn's R2 resolves** — the system's own thinking becomes its context. REUSE, no
+second system: `_r2_gather` (a NET-NEW `cognition` stratum) + `resolve_address` (the canonical resolver) + the
+swarm's OWN lifecycle events for discovery.
+
+- **`_r2_cognition_strata(now, intent)`** gathers the prior turns' role outputs as R2 items. COMPLETED turns
+  are the `cognition.turn.done` events (one per turn, emitted in `chat_parts`'s EPILOGUE, after both parts);
+  the per-role `run://` addresses come from each completed turn's **`cognition.role.ran`** events (ok-only —
+  each carries `turn_id`/`role`/`ok`/`address`). **CRITICAL — NOT the #54 run-index:** the run-index
+  deliberately does NOT cover the per-cast swarm (one `op.run` per cast-role "would flood the index" — see
+  the run-index section above), so `find_runs` returns 0 for swarm cognition (VERIFIED BY USE: a live staged
+  turn fires 6 roles that resolve at `run://<turn>/<role>` yet `find_runs`→0). `cognition.role.ran` is the
+  swarm's per-turn DISCOVERY surface (`resolve_address` stays the RESOLUTION — role.ran is discovery, not a
+  parallel resolver). *(The completion-criteria named "via the run-index #54"; the run-index is the wrong
+  producer surface for the swarm — same INTENT, correct source. Flagged so the next agent doesn't re-derive.)*
+- **THE IN-FLIGHT EXCLUSION (the load-bearing correctness):** `_chat_context` runs DURING the current turn's
+  part-core (at BOTH part-1 AND part-2); the current turn's `turn.done` fires LATER (epilogue). Keying
+  completed-turns on `turn.done` excludes the in-flight turn by construction — even though its `role.ran`
+  events have ALREADY fired by part-2 (so it is the `turn.done` gate, NOT absence-of-events, that excludes it;
+  proven by a test that seeds an in-flight turn's role.ran WITHOUT turn.done).
+- **THE ANCHOR (resolves with OR WITHOUT a canvas locus):** a SECOND, dedicated R2 call in `_chat_context`
+  anchored at the FIXED `Suite.R2_COGNITION_ANCHOR = "ui://cognition/recent"` (parses like the per-turn
+  `ui://cognition/<turn>`), so cognition resolves on a plain chat (no selection) — the case J1 exists for. The
+  items score AT the anchor (X6 cross-scheme proximity 0 → recency/intent rank them); a spec-driven `framing`
+  header labels them "YOUR OWN PRIOR THINKING" (not the locus header). Suppressed in `off` mode.
+- **THE OPT-IN GATE (the silent-leak guard):** the cognition stratum is gated by an EXPLICIT POSITIVE
+  membership `admit is not None and "cognition" in admit` — **NOT `_ok("cognition")`** (which is True for the
+  default admit-all `resolution=None`, and would SILENTLY leak conversation-global cognition into the
+  address-attached reads `context_at`/`surface_intent_at` with no test failure). ONLY the dedicated
+  cognition-resolution call supplies a spec whose `strata` admits `cognition`; every other R2 caller is
+  byte-for-byte unchanged.
+- **BOUNDED** (`R2_COGNITION_TURNS` most-recent completed turns; `R2_COGNITION_PER_ROLE` chars/role — mirrors
+  `R2_RUN_VERSIONS`/`R2_HOWTO_MAX`) so it can't flood the window; **FAIL-LOUD-LEGIBLE** (a pruned ref is
+  WARN+skipped, never crashes the gather). Proven by `tests/cognition_resolution_loop_acceptance.py` + LIVE
+  end-to-end against the resident 4B (a real staged turn's 6-role cognition fed the next turn).
+
+**E4 — the run-output DESTINATION (`Suite.route_run_output` · `runtime/suite.py`).** E4 = chain
+save/re-run + output-destination. The SAVE + RE-RUN half IS the SAVED CASCADE (`save_cascade`/`run_cascade`,
+GROUP N — a declared re-runnable pipeline; `cascade_acceptance`). The remaining bit: route a DIRECT run's
+output to a named destination/lane WITHOUT a saved cascade. `route_run_output(run_address, destination, *,
+turn_id, params)` READS the output via `resolve_address` (the canonical resolver) and performs the effect via
+**`rules.route`** over the SAME `DESTINATION_KINDS` (`address`/`lane`/`surface`/`inject`/`chain`) — NO second
+router, NO destination logic re-implemented. **THE FLOOR HOLDS BY CONSTRUCTION:** `rules.route` can only do
+the five non-consequential kinds; `FORBIDDEN_DESTINATION_VERBS` (resolve/approve/dispatch) are rejected — a
+routed run output can NEVER forge an operator approve or launch a build (`surface` rides `surface_review` → an
+`ask`, never a resolve). Fail-loud on an unknown destination + an unresolvable address. Proven by
+`tests/route_run_output_acceptance.py`.
+
+**B-fix (P3) — `PROTECTED_ROLES` DERIVED, not a second-copy literal.** It conflated two role classes with
+DIFFERENT sources: (a) the SPIKE roles `cognition.py` imports by name (`focus`/`recall`/`ground`) — a second
+copy of `cognition.SPIKE_ROLES`, now DERIVED from it in `__init__` (add a spike role there → it protects here,
+no edit; a fail-loud assert catches drift); (b) the load-bearing CONFIG roles suite.py's OWN machinery binds
+by name (`judge`/`verify_jury`/`voice`/`check`/`connect`) — suite-OWNED dependencies with no other
+source-of-truth (no role-file `protected` marker exists, and that file is not the SUITE lane's to add), kept
+declared as `_SUITE_OWNED_PROTECTED_ROLES` (the honest single source for "the roles suite.py depends on by
+name"). The full `PROTECTED_ROLES` is the union, built in `__init__`. *(The OTHER two B-targets:
+`ENGINE_RUN_OPS` is itself the source — the emit sites mirror it — so it's already single-source, not a copy;
+`api_verbs` (`capabilities()`) is a second copy of `bridge.py`'s route literals, but suite.py CANNOT import
+bridge.py (circular) and there is NO importable route registry — so it is CROSS-LANE-BLOCKED: surfaced as
+needs-coordination, NOT replaced with a parallel hardcoded list.)*
+
 ## The cascade RUNNER (Cognition Engine GROUP N · `runtime/cognition.py` + `runtime/suite.py` + `mcp_face/server.py` · the LARGEST net-new of the corpus pillar)
 
 A **saved cascade** is a declared, named, RE-RUNNABLE pipeline — a frozen recipe (AK4) an agent reuses
@@ -719,6 +797,55 @@ existing patterns — NO parallel author path, NO 2nd anything:
 
 Proven by `tests/generation_policy_ladder_acceptance.py` (17) + `tests/registry_authoring_marks_acceptance.py`
 (55) + the floor (38) + the MCP tool round-trip (live, isolated repo).
+
+## The substrate WENT LIVE — the three call-sites (SUITE-3 WIRING · `runtime/suite.py` + `mcp_face/server.py`)
+
+The corpus substrate was BUILT (the 6 registries' `as_records()`, `embed_corpus_to_spaces`, the `run_role`
+`meta` out-param, `route_run_output`) but not all CALLED. SUITE-3 wired the call-sites that make it LIVE —
+**reuse-don't-parallel** (call the existing fn, no second path):
+
+- **`cognition_info()` PASSES the 6 registries + projections to `build_cognition_info`.** The contract
+  serializer opened the uniform `projections=`/`lifters=`/`mark_types=`/`generation_policies=`/
+  `relation_types=`/`ai_tics=`/`forms=` kwargs (each projecting the registry's OWN `as_records()` — rule 3,
+  one source); the caller now passes `self.<x>_registry` for each, so `/api/cognition_info` + the MCP
+  `cognition_info` tool show them **NON-EMPTY** (they were `[]` because the caller didn't pass them). The
+  previous in-lane `info["projections"]`/`info["spaces"]` AUGMENT is now REDUNDANT and removed — the
+  `projections=` kwarg produces both (the contract derives `spaces` from `projections.embeddable()`),
+  collapsing two mechanisms into ONE.
+- **`capture` (MCP) is `embed_corpus_to_spaces`'s FIRST LIVE CALLER — the corpus auto-populates the space.**
+  After the lineage-gated `write_corpus_record` writes (the **sequencing gate**: session/round/project ride
+  IN the record BEFORE the first embed), when `projection` names an EMBEDDABLE lens (`embeds==True` → a
+  vector space) `capture` builds `{source_address, text, projection}` embed-records (text = the lens output
+  stringified by `_embed_text` — deterministic, so a re-captured record is a content-hash no-op) and calls
+  `cognition.embed_corpus_to_spaces` (the REUSE delegate to `vector_index.build_index(space=)` — NO second
+  vector path). So a real capture run POPULATES the space `find_relations` reads end-to-end. A non-embeddable
+  / absent projection → capture-only (records written, space untouched, `embedded=None`); a DOWN embedder →
+  `build_index`'s sanctioned LOUD degrade-with-warning (`degraded=True`, no vectors, no crash). The result
+  rides back as `embedded` on the capture return.
+- **O3 PERSISTED — the MCP `run_role` wrapper rides `finish_reason` onto the `op.run` record.** The wrapper
+  passes `meta={}` into `cognition.run_role` (the OUT-PARAM seam — the engine's return shape is UNCHANGED,
+  `finish_reason` never folds into it) and threads `finish_reason` (+ `usage` if present) into the
+  `emit_run_record` `op.run` index event; `_project_run_event` carries `finish_reason` onto the discovered
+  row (present-only — None when absent, never fabricated), so `find_runs` surfaces WHY a run stopped
+  (`stop`/`length`/tool-call) — introspective-data-building, the run self-instruments.
+
+**E4 (chain save/re-run + output-destination) is COVERED** by the saved cascade (`save_cascade`/`run_cascade`,
+GROUP N — chain SAVE + RE-RUN) + `route_run_output` (the run-output DESTINATION param — route a DIRECT run's
+output to address/lane/surface via `rules.route` over `DESTINATION_KINDS`, reuse, no second router) —
+verified by use, not rebuilt. **THE FLOOR HOLDS:** every wired call-site is computation/telemetry — `capture`
+is a `corpus.record`/`put_vector`/`op.run` write, `cognition_info` is a pure read, `run_role` emits `op.run`
+— NONE emits resolve/approve/dispatch, NONE launches `claude -p`. Proven by `tests/suite3_wiring_acceptance.py`
+(47) + the floor (`cognition_governance_acceptance` 38) + no-regression (`run_discovery` 22, `mcp_engine` 35,
+`cognition_info_registries` 45, `cognition_info` 82, `drift` 5, `route_run_output`, `cascade` 25,
+`space_embed` 27). **needs-tim:** a LIVE `:8001` embed (the embedder is DOWN — the capture→embed→space code
+path is proven on a stub; a real BGE-M3 capture populating the space is the embedder-up follow-up). **B-fix
+needs-coordination:** `capabilities()['api_verbs']` (suite.py) is still a HARDCODED literal list — the bridge
+dispatches routes via an `if/elif path ==` chain in `do_GET`/`do_POST` (`runtime/bridge.py`) with NO central
+route registry to derive from; the only clean source is in `bridge.py` (out of the SUITE lane), so building a
+parallel list here would be the very anti-pattern the B-fix targets. Proposed source: a `BRIDGE_ROUTES`
+tuple/registry in `bridge.py` the dispatcher iterates AND `capabilities()` projects (one source). Flagged,
+not hand-built. (`PROTECTED_ROLES` — the other flagged B-fix — was already de-hardcoded: derived from
+`cognition.SPIKE_ROLES` ∪ `_SUITE_OWNED_PROTECTED_ROLES`.)
 
 ## The cognition-engine HUMAN-FACE routes (Cognition Engine LANE-BRIDGE · `runtime/bridge.py` · G2)
 

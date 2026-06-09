@@ -186,6 +186,26 @@ def _cog_emit(kind: str, payload: dict) -> None:
     SUITE._emit(kind, summary, **{k: v for k, v in payload.items() if k != "summary"})
 
 
+def _embed_text(output) -> str:
+    """CAPTURE-WIRING — derive the embeddable TEXT from a captured role output. A str is the text itself;
+    a dict/list (a structured lens output) is serialized to compact, key-sorted JSON (deterministic — the
+    SAME output → the SAME text → the SAME content-hash, so re-embedding a re-captured record is a true
+    no-op under build_index's incremental diff). Falls back to str() for any other scalar. An empty/blank
+    result returns "" → the caller SKIPS it from the embed batch (embed_corpus_to_spaces fail-louds on
+    empty text — a blank lens output is not embeddable, never a fabricated vector)."""
+    import json as _json
+    if isinstance(output, str):
+        return output.strip()
+    if isinstance(output, (dict, list)):
+        try:
+            return _json.dumps(output, sort_keys=True, ensure_ascii=False).strip()
+        except (TypeError, ValueError):
+            return str(output).strip()
+    if output is None:
+        return ""
+    return str(output).strip()
+
+
 def _resolve_role(role_id_or_fields):
     """Resolve a role from an id (str — looked up in the LIVE registry, registry-is-truth) OR a draft
     field-set (dict — rendered + loaded from a temp module, the SAME authoring path dry_run_role uses).
@@ -336,8 +356,15 @@ def run_role(role: str, utterance: str = "", op: str = "generate", model: str = 
         kw["model"] = model
     if policy:
         kw["policy"] = policy          # O2 — the rep_penalty ladder regime (registry-is-truth)
+    # O3 — read the completion's finish_reason (+ usage) back via run_role's `meta` OUT-PARAM (ENGINE-2's
+    # flagged hand-off: the value is AVAILABLE at the run_role seam, persisting it into the agent-facing
+    # op.run record is THIS MCP wrapper's emit). meta={} = an empty out-dict the transport's _fill_meta
+    # populates; the run_role RETURN shape (model_dump()) is UNCHANGED — finish_reason never folds into it.
+    # An EMBED op or any path that doesn't fill meta leaves it {} → finish_reason stays None (honest absent,
+    # never fabricated).
+    meta: dict = {}
     _t0 = _time.monotonic()
-    out = _cog.run_role(r, ctx, **kw)
+    out = _cog.run_role(r, ctx, meta=meta, **kw)
     _ms = int((_time.monotonic() - _t0) * 1000)
     # PERSIST the output to run://<turn>/<role> so it is inspectable/feedable (reuse the store primitives).
     address = f"run://{turn_id}/{r.id}"
@@ -350,11 +377,18 @@ def run_role(role: str, utterance: str = "", op: str = "generate", model: str = 
     # Reuses Suite.emit_run_record (the introspective-data op.run path; run_stats rolls duration_ms up).
     # Additive + behaviour-preserving (the output persists to run:// exactly as before); a run record
     # NARRATES backend truth — NO resolve/approve/dispatch (the operator-only floor).
-    SUITE.emit_run_record("cognition.run_role", _ms,
-                          run_op=getattr(r, "op", "generate"), turn_id=turn_id,
-                          role=r.id, addresses=[address])
+    # O3 — finish_reason (+ usage if present) ride ONTO the op.run record (introspective-data-building: the
+    # run self-instruments — so find_runs surfaces WHY a run stopped: 'stop' vs 'length' vs tool-call).
+    _conds = dict(run_op=getattr(r, "op", "generate"), turn_id=turn_id,
+                  role=r.id, addresses=[address])
+    if meta.get("finish_reason") is not None:
+        _conds["finish_reason"] = meta["finish_reason"]
+    if meta.get("usage") is not None:
+        _conds["usage"] = meta["usage"]
+    SUITE.emit_run_record("cognition.run_role", _ms, **_conds)
     return {"role": r.id, "op": getattr(r, "op", "generate"), "output": out,
-            "address": address, "turn_id": turn_id}
+            "address": address, "turn_id": turn_id,
+            "finish_reason": meta.get("finish_reason")}
 
 
 @mcp.tool()
@@ -653,13 +687,25 @@ def capture(role: str, units: list, project: str, session: str, round: str = "1"
     role outputs. To tag a record to a specific lens, pass `projection` (a lens id — see
     cognition_info().projections); absent → one un-projected record per unit.
 
-    Returns {project, session, round, role, turn_id, n_units, captured:[{i, source_address, address, cas,
-    seq}], skipped, failed, wall_s}. `captured` are the persisted records (inspect via read_corpus_record/
-    inspect_address; feed downstream via list_corpus/find_corpus). `skipped`/`failed` carry units that did
-    not produce a record (F2 per-unit resilience — a poison unit never silently vanishes).
+    POPULATES THE QUERYABLE SPACE (SUITE-3 capture-wiring): when `projection` names an EMBEDDABLE lens
+    (embeds==True → a vector space), the captured outputs are embedded into that space via
+    cognition.embed_corpus_to_spaces (the REUSE delegate to vector_index.build_index(space=) — NO second
+    vector path) AFTER the lineage-gated records are written (the sequencing gate: lineage rides IN the
+    record before the first embed). So a real capture run AUTO-POPULATES the space find_relations reads —
+    closing the "no live caller" gap. A non-embeddable / absent projection → capture-only (records written,
+    space untouched). A DOWN embedder → build_index's sanctioned LOUD degrade-with-warning (degraded=True,
+    no vectors, no crash); re-run when up populates the space.
 
-    DELEGATE: run_items (cognition.py) + Suite.write_corpus_record (→ corpus.py). FLOOR: a corpus.record
-    telemetry write — emits NO resolve/approve/dispatch."""
+    Returns {project, session, round, role, turn_id, n_units, captured:[{i, source_address, address, cas,
+    seq}], embedded, skipped, failed, wall_s}. `captured` are the persisted records (inspect via
+    read_corpus_record/inspect_address; feed downstream via list_corpus/find_corpus). `embedded` is the
+    per-space embed result {spaces, records, degraded} when the projection is embeddable, else None.
+    `skipped`/`failed` carry units that did not produce a record (F2 per-unit resilience — a poison unit
+    never silently vanishes).
+
+    DELEGATE: run_items (cognition.py) + Suite.write_corpus_record (→ corpus.py) +
+    cognition.embed_corpus_to_spaces (→ store/vector_index.build_index). FLOOR: a corpus.record telemetry
+    write + a store put_vector WRITE — emits NO resolve/approve/dispatch."""
     r = _resolve_role(role)
     units = list(units)
     turn_id = "mcp-capture-" + _time.strftime("%Y%m%d-%H%M%S") + f"-{int(_time.monotonic()*1000) % 100000}"
@@ -667,6 +713,7 @@ def capture(role: str, units: list, project: str, session: str, round: str = "1"
                          max_tokens=max_tokens, temperature=temperature)
     lineage = {"session": session, "round": round, "project": project}
     captured = []
+    embed_recs = []                                # the {source_address, text, projection} embed inputs
     for i, output in sorted(res.resolved.items()):
         unit = units[i]
         # The source-address retrieval key: a string unit IS its address; a literal is repr'd so it still
@@ -677,8 +724,33 @@ def capture(role: str, units: list, project: str, session: str, round: str = "1"
             model=getattr(r, "model", None), projection=(projection or None))
         captured.append({"i": i, "source_address": source_address, "address": ev["address"],
                          "cas": ev["cas"], "seq": ev.get("seq")})
+        # CAPTURE-WIRING (SUITE-3 — ENGINE-2's flagged hand-off): the embeddable-text the lens produced,
+        # keyed to the unit. _embed_text stringifies a structured output deterministically (a str passes
+        # through; a dict/list → compact JSON) so the lens output becomes embeddable. Only non-empty text
+        # is embeddable (embed_corpus_to_spaces fail-louds on empty — pre-filtered here so a blank output
+        # is skipped from the embed batch, not a hard abort of a multi-record capture).
+        _txt = _embed_text(output)
+        if _txt:
+            embed_recs.append({"source_address": source_address, "text": _txt, "projection": projection})
+
+    # CAPTURE-WIRING — POPULATE THE QUERYABLE SPACE. The corpus records are durable + lineage-gated above
+    # (the sequencing GATE: lineage is in the record BEFORE the first embed); now, when `projection` is an
+    # EMBEDDABLE lens (embeds==True → a vector space), embed the captured outputs into that space via
+    # cognition.embed_corpus_to_spaces (the thin REUSE delegate to vector_index.build_index(space=) — NO
+    # second vector path; this is its first LIVE caller, closing ENGINE-2's "no live caller" gap so a real
+    # capture run auto-populates the space find_relations reads). registry-is-truth: only an embeddable lens
+    # becomes a space (embed_corpus_to_spaces fail-louds on a non-embeddable projection); a non-embeddable
+    # or absent projection → capture-only (records written, no space populated), reported as embedded:None.
+    embedded = None
+    if projection and embed_recs:
+        _embeddable = SUITE.projection_registry.embeddable()
+        if projection in {p.id for p in _embeddable}:
+            # EMBEDDER-DOWN: embed_corpus_to_spaces uses build_index's sanctioned LOUD degrade-with-warning
+            # (a durable `warning` event, no vectors written, degraded=True) — a transient :8001 outage does
+            # NOT abort the capture; re-run when up populates the space. Still fail-loud (never a silent []).
+            embedded = _cog.embed_corpus_to_spaces(SUITE.store, embed_recs, _embeddable)
     return {"project": project, "session": session, "round": round, "role": r.id, "turn_id": turn_id,
-            "n_units": len(units), "captured": captured,
+            "n_units": len(units), "captured": captured, "embedded": embedded,
             "skipped": res.skipped, "failed": res.failed, "wall_s": res.wall_s}
 
 

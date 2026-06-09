@@ -44,29 +44,34 @@ def _suite(root):
 
 
 def _seed_completed_turn(suite, turn, role_outputs: dict):
-    """Seed a COMPLETED prior turn: write each role's run://<turn>/<role> output, emit the op.run RUN-INDEX
-    record (so the run index discovers it), and emit cognition.turn.done (so it counts as a completed turn)."""
+    """Seed a COMPLETED prior turn the way `chat_parts` does: write each role's run://<turn>/<role> output,
+    emit a `cognition.role.ran` lifecycle event (ok=True, address — the SWARM's discovery surface), and emit
+    `cognition.turn.done` (so it counts as a COMPLETED turn). NOTE: deliberately NO op.run RUN-INDEX record —
+    the swarm doesn't emit one (flood-avoidance), so the wire must discover via role.ran, NOT find_runs."""
     addrs = []
     for role, text in role_outputs.items():
         addr = f"run://{turn}/{role}"
         cas = suite.store.put_content(text)
         suite.store.set_ref(addr, cas)
         addrs.append(addr)
-        suite.emit_run_record("cognition.run_role", 5, run_op="generate", turn_id=turn, role=role,
-                              addresses=[addr])
+        suite._emit("cognition.role.ran", f"role {role} ok", turn_id=turn, role=role, ok=True,
+                    ms=5, address=addr)
     suite._emit("cognition.turn.done", f"turn {turn} done", turn_id=turn, total_ms=10,
                 n_parts=2, n_roles=len(role_outputs), address=f"ui://cognition/{turn}")
     return addrs
 
 
 def _seed_inflight_turn(suite, turn, role_outputs: dict):
-    """Seed an IN-FLIGHT turn: run:// written + op.run indexed, but NO cognition.turn.done (not completed)."""
+    """Seed an IN-FLIGHT turn the way chat_parts looks at part-2: run:// written + `cognition.role.ran`
+    ALREADY FIRED (the wave joined), but NO `cognition.turn.done` yet (the epilogue hasn't run). This proves
+    the TURN.DONE GATE is what excludes the in-flight turn — NOT the absence of role.ran events (which HAVE
+    fired by part-2). If the wire keyed on role.ran presence, this turn would leak into its own context."""
     for role, text in role_outputs.items():
         addr = f"run://{turn}/{role}"
         cas = suite.store.put_content(text)
         suite.store.set_ref(addr, cas)
-        suite.emit_run_record("cognition.run_role", 5, run_op="generate", turn_id=turn, role=role,
-                              addresses=[addr])
+        suite._emit("cognition.role.ran", f"role {role} ok", turn_id=turn, role=role, ok=True,
+                    ms=5, address=addr)
 
 
 with tempfile.TemporaryDirectory() as root:
@@ -133,9 +138,9 @@ with tempfile.TemporaryDirectory() as root:
           and len(big[0]["_raw"]) <= 41)
 
     print("\n[6] FAIL-LOUD-LEGIBLE — a pruned run:// ref is SKIPPED, never crashes the gather")
-    # emit an op.run index row + turn.done for a turn whose run:// was NEVER set_ref'd (a pruned/dangling ref).
-    suite.emit_run_record("cognition.run_role", 5, run_op="generate", turn_id="turn-pruned", role="recall",
-                          addresses=["run://turn-pruned/recall"])
+    # a completed turn whose role.ran address was NEVER set_ref'd (a pruned/dangling ref).
+    suite._emit("cognition.role.ran", "role recall ok", turn_id="turn-pruned", role="recall", ok=True,
+                ms=5, address="run://turn-pruned/recall")
     suite._emit("cognition.turn.done", "turn turn-pruned done", turn_id="turn-pruned", total_ms=10,
                 n_parts=2, n_roles=1, address="ui://cognition/turn-pruned")
     # must not raise; the pruned ref is skipped (on_missing='skip' → None → skipped).

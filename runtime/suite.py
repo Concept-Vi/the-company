@@ -673,6 +673,10 @@ class Suite:
             "address": addr, "op": e.get("op"), "run_op": e.get("run_op"),
             "turn_id": e.get("turn_id"), "role": e.get("role"),
             "duration_ms": e.get("duration_ms"), "seq": e.get("seq"), "ts": e.get("ts"),
+            # O3 (introspective-data-building) — WHY the run stopped, carried onto the discovered row so
+            # find_runs surfaces it (present-only: None when the emit carried no finish_reason — embed ops,
+            # older records — never fabricated).
+            "finish_reason": e.get("finish_reason"),
         } for addr in addrs]
 
     def _run_index_fold(self) -> list[dict]:
@@ -3229,16 +3233,25 @@ class Suite:
         PRIOR COMPLETED turns' swarm cognition (the roles' `run://<turn>/<role>` outputs) as R2 items, so the
         NEXT turn's resolution reads back what the system itself just thought.
 
-        The wire reuses the EXISTING seams (no parallel resolver, no second index — Group J's law):
+        The wire reuses the EXISTING seams (no parallel resolver, no second system — Group J's law):
           • COMPLETED turns are the `cognition.turn.done` events on the ONE event log (the staged path emits
-            one per turn in its epilogue, AFTER both parts). Reading those EXCLUDES the IN-FLIGHT turn by
-            construction: `_chat_context` (this method's caller) runs DURING the current turn's part-core,
-            BEFORE that turn emits its own `turn.done` — so the current turn's cognition is never resolved
-            into its own context (which would conflate J1 with the intra-turn inject edge + double-count).
-          • the roles of each completed turn + their `run://` addresses come from the (now-incremental, E2)
-            RUN INDEX (`find_runs` filtered to that turn) — the #54 storage-discovery, NOT a re-derivation.
+            ONE per turn in its EPILOGUE, AFTER both parts). Reading those EXCLUDES the IN-FLIGHT turn by
+            construction: `_chat_context` (this method's caller) runs DURING the current turn's part-core (at
+            BOTH part-1 AND part-2), BEFORE that turn emits its own `turn.done` — so the current turn's
+            cognition is NEVER resolved into its own context (which would conflate J1 with the intra-turn
+            inject edge + double-count, even though the current turn's `role.ran` events have fired by part-2).
+          • the roles + their `run://` addresses of each completed turn come from that turn's
+            **`cognition.role.ran`** lifecycle events (each carries `turn_id`, `role`, `ok`, `address=
+            run://<turn>/<role>`, emitted by `chat_parts` post-join). This is the SWARM's per-turn discovery
+            surface — NOT the #54 run-index (`list_runs`/`find_runs`): the run-index deliberately does NOT
+            cover the per-cast swarm (emitting one op.run per cast-role "would flood the index" — runtime/
+            AGENTS.md #54). VERIFIED BY USE: a live staged turn fires 6 roles that resolve at run://<turn>/
+            <role> yet `find_runs` returns 0 — so the run-index is the WRONG producer surface for swarm
+            cognition; `cognition.role.ran` is the right one (same intent the criterion names, correct source).
+            Only `ok=True` roles are read (a failed role's address may be unwritten/garbage).
           • each role output is read by `resolve_address` (the canonical scheme-dispatching resolver) — the
-            SAME path the intra-turn inject + outputs→inputs discovery use.
+            SAME path the intra-turn inject + the outputs→inputs discovery use (the "no parallel resolver" law
+            is untouched: role.ran is DISCOVERY, resolve_address is RESOLUTION).
 
         Bounded (R2_COGNITION_TURNS most-recent completed turns; R2_COGNITION_PER_ROLE chars per role) so the
         cognition stratum can't flood the R2 window (mirrors R2_RUN_VERSIONS / R2_HOWTO_MAX). Each item is
@@ -3254,11 +3267,11 @@ class Suite:
         import json as _json
         if now is None:
             now = _dt.now(_tz.utc)
+        evs = self.events_since(-1)
         # the COMPLETED turns, newest-first, capped — read off the cognition.turn.done lifecycle events.
-        done = [e for e in self.events_since(-1) if e.get("kind") == "cognition.turn.done"]
-        # newest-first; de-dupe turn_ids (one done per turn, but be defensive) preserving order.
+        done = [e for e in evs if e.get("kind") == "cognition.turn.done"]
         seen, turn_ids = set(), []
-        for e in reversed(done):
+        for e in reversed(done):                                  # newest-first
             tid = e.get("turn_id")
             if tid and tid not in seen:
                 seen.add(tid)
@@ -3267,18 +3280,22 @@ class Suite:
                 break
         if not turn_ids:
             return []
+        # the per-role run:// addresses of those completed turns — from the cognition.role.ran events (the
+        # SWARM's discovery surface; ok-only). Group by turn_id so the bound is per-turn.
+        ran_by_turn: dict = {}
+        for e in evs:
+            if e.get("kind") == "cognition.role.ran" and e.get("ok") and e.get("turn_id") in seen \
+               and e.get("address"):
+                ran_by_turn.setdefault(e["turn_id"], []).append(e)
         items = []
-        for tid in turn_ids:
-            # the roles + run:// addresses of THIS turn — from the run INDEX (E2 incremental), not re-derived.
-            rows = self.find_runs(limit=10_000).get("runs", [])
-            turn_rows = [r for r in rows if r.get("turn_id") == tid and r.get("address")]
-            for r in turn_rows:
-                addr = r["address"]
+        for tid in turn_ids:                                      # newest-first
+            for e in ran_by_turn.get(tid, []):
+                addr = e["address"]
                 try:
                     val = _cog.resolve_address(self.store, addr, turn_id=tid, on_missing="skip")
-                except Exception as e:
+                except Exception as ex:
                     self._emit("warning",
-                               f"GROUP J: prior-turn cognition unresolvable at {addr} ({type(e).__name__}) — skipped",
+                               f"GROUP J: prior-turn cognition unresolvable at {addr} ({type(ex).__name__}) — skipped",
                                address=self.R2_COGNITION_ANCHOR)
                     continue
                 if val is None:                                   # a pruned/unresolved ref (on_missing=skip)
@@ -3286,9 +3303,9 @@ class Suite:
                 snippet = val if isinstance(val, str) else _json.dumps(val, default=str)
                 if len(snippet) > self.R2_COGNITION_PER_ROLE:     # bound one role's contribution (legible)
                     snippet = snippet[:self.R2_COGNITION_PER_ROLE] + "…"
-                role = r.get("role") or "?"
+                role = e.get("role") or "?"
                 items.append({
-                    "kind": "cognition", "address": self.R2_COGNITION_ANCHOR, "ts": r.get("ts"),
+                    "kind": "cognition", "address": self.R2_COGNITION_ANCHOR, "ts": e.get("ts"),
                     "text": f"[my prior thinking · role {role} @ {addr}] {snippet}",
                     "_raw": snippet,                              # X8 dedup identity (the role output text)
                     "pinned": False})
@@ -5272,6 +5289,14 @@ class Suite:
                 if rule is not None and rule.id not in rules_map:
                     rules_map[rule.id] = rule
         casts = {m: [r.id for r in self.role_registry.cast_for_mode(m)] for m in self.MODES}
+        # Cognition Engine WIRING (SUITE-3) — the 6 file-discovered corpus registries + the projection
+        # registry now ride the ONE uniform kwarg home the contract serializer (build_cognition_info, the
+        # SURFACE/contracts lane) opened for them (each projects the registry's OWN `as_records()` — rule 3,
+        # one source, no hand-built list). The contract derives `spaces` from `projections.embeddable()`.
+        # Passing them HERE is what makes /api/cognition_info + the MCP cognition_info tool show the 6
+        # registries NON-EMPTY (they were [] because the caller didn't pass them — the COGNITION-INFO lane's
+        # flagged hand-off). The previous in-lane `info["projections"]`/`info["spaces"]` AUGMENT is now
+        # REDUNDANT and removed — the projections= kwarg produces both, collapsing two mechanisms into one.
         info = build_cognition_info(
             roles=self.role_registry,                            # the file-discovered RoleRegistry (dict-like)
             rules=rules_map,
@@ -5282,21 +5307,14 @@ class Suite:
             destination_kinds=_rules.DESTINATION_KINDS,
             casts=casts,
             node_states=[dict(s, applies_to=list(s["applies_to"])) for s in self.NODE_STATES],
+            projections=self.projection_registry,                # → info["projections"] + info["spaces"]
+            lifters=self.lifter_registry,
+            mark_types=self.mark_type_registry,
+            generation_policies=self.generation_policy_registry,
+            relation_types=self.relation_type_registry,
+            ai_tics=self.ai_tic_registry,
+            forms=self.form_registry,
         )
-        # Cognition Engine K1/P1 — PROJECT the file-discovered PROJECTION registry onto the SAME
-        # cognition_info envelope every other registry rides (rule 3, one source: this is
-        # ProjectionRegistry.as_records() — the discovered lens set verbatim, never a hand-listed one).
-        # Done by AUGMENTING the returned dict (NOT a hand-built list) so this stays a pure projection of
-        # the live registry: drop a `projections/<id>.py` → restart → the lens appears here with no code
-        # change (the PART 4.3 file-discovery bar). `spaces` is the embeddable subset (the Group-L vector
-        # spaces find_relations ranges over) — also projected, never hardcoded.
-        #   SEAM / cross-lane note (BAR2): the PROPER long-term home is a `projections=` kwarg on
-        #   contracts/cognition_info.build_cognition_info (mirroring roles/rules/edge_kinds), so the
-        #   contract owns the serialization. That edit is the SURFACE/contracts lane, NOT this SUITE
-        #   lane (which may only touch suite.py); augmenting here is the in-lane reuse-don't-parallel
-        #   move (still the ONE as_records() source) until that kwarg lands. Flagged in the lane report.
-        info["projections"] = self.projection_registry.as_records()
-        info["spaces"] = [p.id for p in self.projection_registry.embeddable()]
         return info
 
     def knobs_for(self, model: str | None = None, base_url: str | None = None) -> dict:
