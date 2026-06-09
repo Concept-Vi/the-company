@@ -33,7 +33,11 @@ def register(mcp, suite):
         (the live set is registry-is-truth — see the error/cognition_info if unsure). `spec` is the entry
         ROW (its `id` MUST be a valid identifier — it becomes <kind>/<id>.py; the row's fields are the
         registry's own — see cognition_info / field_types). `model` applies only to kind='role' (its bound
-        model). Each kind renders→gates-in-tempdir→writes→commits→rediscovers (a malformed spec FAILS LOUD,
+        model). For kind='role': output_fields is a LIST of rows [{name, type, values?, description?}]
+        (types via field_types(); 'enum' takes a sibling `values` list); prompt_template may reference
+        {utterance} — the input run_role/run_items places each unit at — plus any names you declare in
+        input_addresses (resolved addresses); an existing role's authorable shape is inspectable via
+        cognition_info(role='<id>') which returns prompt_template + output_fields. Each kind renders→gates-in-tempdir→writes→commits→rediscovers (a malformed spec FAILS LOUD,
         never written). Returns {kind, id, path, live, spec, reflect_in} — `reflect_in` names the drift-home
         doc to reflect the new entry in (keeps tests/<kind>_acceptance green). FLOOR: declarative DATA only —
         never resolve/approve/dispatch; a node-type / executable-code create stays GATED, off this tool

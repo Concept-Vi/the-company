@@ -229,7 +229,24 @@ def cognition_info(section: str = "", role: str = "", detail: str = "concise") -
         if role not in roles:
             return {"error": f"cognition_info: unknown role {role!r}. Registered roles: {sorted(roles)} "
                     "(registry-is-truth — see the live set; create one via create(kind='role'))."}
-        return {"role": role, "spec": roles[role]}
+        out = {"role": role, "spec": roles[role]}
+        # N2 — the AUTHORABLE fields (the re-eval: the inspector omitted exactly what create needs, so
+        # authoring shapes were learned by failing). Pull them from the live registry's declared spec:
+        # prompt_template verbatim + the output fields PROJECTED from the Pydantic model (name/type —
+        # the same [{name, type, values?}] rows create(kind='role') consumes).
+        live = SUITE.role_registry.get(role)
+        if live is not None:
+            if live.spec.get("prompt_template"):
+                out["prompt_template"] = live.spec["prompt_template"]
+            os_cls = getattr(live, "output_schema", None)
+            if os_cls is not None and hasattr(os_cls, "model_fields"):
+                out["output_fields"] = [{"name": fn, "type": str(fi.annotation)}
+                                        for fn, fi in os_cls.model_fields.items()]
+            out["_authoring_hint"] = ("these ARE the authorable fields — create(kind='role', spec={id, "
+                                      "prompt_template, output_fields:[{name,type,values?}], op, ...}); "
+                                      "prompt_template may reference {utterance} (the input run_role/"
+                                      "run_items places each unit at) + any declared input_addresses.")
+        return out
     if section:
         if section not in info:
             return {"error": f"cognition_info: unknown section {section!r}. Sections (live, registry-is-"

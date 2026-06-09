@@ -323,7 +323,11 @@ def render_role_source(spec: dict) -> str:
     # import is needed (only when an enum appeared).
     out_fields = spec.get("output_fields") or []
     if not isinstance(out_fields, list):
-        raise AuthoringError(f"role {rid!r}: output_fields must be a list, got {type(out_fields).__name__}")
+        raise AuthoringError(
+            f"role {rid!r}: output_fields must be a LIST of field rows, got {type(out_fields).__name__}. "
+            f"Example: [{{'name': 'label', 'type': 'enum', 'values': ['a', 'b']}}, "
+            f"{{'name': 'why', 'type': 'str'}}] — valid types via field_types() "
+            f"(N2: the error teaches the shape, not just the constraint).")
     field_lines, submodels, needs_literal = _render_output_fields(rid, cls, out_fields)
 
     # --- the ROLE declared dict (DATA — verbatim what the file consumers read) ---
