@@ -21,6 +21,8 @@ from store.fs_store import FsStore
 from runtime.registry import NodeRegistry
 from runtime.suite import Suite
 from runtime import generate_mockup            # the committed generate-for-mockups ENGINE (own-test green)
+from runtime import cognition as _cog          # the ONE cognition engine (run_role/run_items/run_reduce/
+#                                                resolve_address) — the SAME functions mcp_face/server.py calls
 from fabric import config as fcfg
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -365,6 +367,140 @@ SUITE = Suite(FsStore(fcfg.STORE_DIR),
 DEMO = "codebase"
 
 
+# =================================================================================================
+# THE COGNITION-ENGINE GLUE (LANE-BRIDGE) — the thin per-face wrapper around the SHARED engine fns.
+#
+# REUSE-DON'T-PARALLEL: the ENGINE is `runtime.cognition` (`_cog.run_role`/`run_items`/`run_reduce`/
+# `resolve_address`) — the SAME functions the swarm, `dry_run_role`, and `mcp_face/server.py` call. There
+# is NO second engine here. What these helpers do is the small, NON-engine glue the engine deliberately
+# leaves to the caller: assign a `turn_id`, resolve address-valued declared inputs, PERSIST the output to
+# its `run://` address, and emit the ONE `op.run` RUN-INDEX record (#54 storage-discovery) so an
+# FE-initiated run is DISCOVERABLE by `list_runs`/`find_runs` exactly like an MCP-initiated one.
+#
+# SEAM (BAR2 — surfaced honestly): this glue is byte-for-byte the same shape as `mcp_face/server.py`'s
+# run_role/run_items/run_reduce (same `ENGINE_RUN_OPS` strings, same `addresses=[address]`, same
+# `run_op`). It is mirrored, NOT shared, because extracting it into a shared helper (or onto the Suite)
+# would touch `suite.py`/`mcp_face` — OUT of the BRIDGE lane this pass. The long-term home is one shared
+# `Suite.run_role/run_items/run_reduce` (or a `runtime/cognition_face.py`) both faces call; until then
+# the two copies MUST stay identical (drift on the op-string/addresses silently breaks #54 discovery).
+# THE FLOOR (C9.2) HOLDS: every helper produces a `run://` output + an `op.run` telemetry record — NONE
+# emits resolve/approve/dispatch (the operator-only floor; the `claude -p` wire stays off this seam).
+# =================================================================================================
+
+# the closed, NAMED reduce-rule registry (registry-is-truth) — IDENTICAL to mcp_face/server.py's
+# `_REDUCE_RULES`: a deterministic L2 join selected BY NAME over the JSON boundary (a Python callable
+# can't cross HTTP). An unknown name FAILS LOUD (never a fabricated rule). Same seam-note as above.
+_COG_REDUCE_RULES = {
+    "count":  lambda values: {"count": len(values)},
+    "concat": lambda values: {"concat": [v for v in values]},
+    "first":  lambda values: {"first": (values[0] if values else None)},
+}
+
+
+def _cog_emit(kind, payload):
+    """The (kind, payload-dict) emit sink the engine fns expect, onto the Suite's lenient telemetry
+    `_emit` (the ONE event log — reflects-never-owns narration; never a safety claim). Mirrors
+    mcp_face/server.py:_cog_emit so run_items/run_reduce telemetry is identical across both faces."""
+    summary = payload.get("summary") or f"{kind} ({payload.get('turn_id', '')})"
+    SUITE._emit(kind, summary, **{k: v for k, v in payload.items() if k != "summary"})
+
+
+def _cog_resolve_role(role_id_or_fields):
+    """Resolve a role from an id (str — looked up in the LIVE registry, registry-is-truth) OR a draft
+    field-set (dict — rendered + loaded via the authoring path). Mirrors mcp_face/server.py:_resolve_role
+    (reuse-don't-parallel: no second role notion). Fail loud on an unknown id (rule 8 — never invent)."""
+    from runtime import authoring as _auth
+    if isinstance(role_id_or_fields, str):
+        rid = _auth._safe_role_id(role_id_or_fields)
+        if rid not in SUITE.role_registry:
+            raise ValueError(f"unknown role {rid!r} — registered roles: {sorted(SUITE.role_registry)} "
+                             f"(see /api/cognition_info — author from the registry, never invent).")
+        return SUITE.role_registry[rid]
+    if isinstance(role_id_or_fields, dict):
+        rid = _auth._safe_role_id(role_id_or_fields.get("id"))
+        source = _auth.render_role_source(role_id_or_fields)
+        return _auth.load_role_from_source(rid, source)          # the SAME RoleRegistry discovery (no fork)
+    raise TypeError("role must be a registered role id (str) or a draft field-set (dict)")
+
+
+def _cog_turn_id(prefix):
+    """A face-tagged turn id (the FE face uses 'fe-' so a run's origin is legible in the run index)."""
+    return prefix + time.strftime("%Y%m%d-%H%M%S") + f"-{int(time.monotonic()*1000) % 100000}"
+
+
+def cog_run_role(role, *, utterance="", model="", inputs=None,
+                 max_tokens=256, temperature=0.0, ensure=False, ensure_evict=False):
+    """Fire ONE role and persist+index its output. Mirror of mcp_face/server.py:run_role (same engine
+    `_cog.run_role`, same persist to run://<turn>/<role>, same `cognition.run_role` op.run emit). The
+    OPERATION is the ROLE's own `op` (NOT a caller kwarg — the engine dispatches on `role.op`, exactly as
+    the MCP face does): a generate-role → validated structured output; an embed-role (op='embed', e.g. the
+    'embed' role) → a {vector,dim,model} via the local embedder (down embedder FAILS LOUD unless
+    ensure=True requests the gated #50 load). Returns {role, op, output, address, turn_id}."""
+    r = _cog_resolve_role(role)
+    op = getattr(r, "op", "generate")                            # the op rides the ROLE (mcp_face parity)
+    turn_id = _cog_turn_id("fe-")
+    ctx = {"utterance": utterance}
+    for name, val in dict(inputs or {}).items():
+        # an address-VALUED input is RESOLVED via the engine resolver (input-address intent); else literal.
+        # Mirrors mcp_face/server.py:run_role exactly (the "://" probe → resolve_address, which itself
+        # fail-louds on an unresolvable/unknown scheme — the engine owns the scheme contract, not the glue).
+        if isinstance(val, str) and "://" in val:
+            ctx[name] = _cog.resolve_address(SUITE.store, val, turn_id=turn_id)
+        else:
+            ctx[name] = val
+    kw = {"max_tokens": max_tokens, "temperature": temperature, "store": SUITE.store,
+          "ensure": ensure, "ensure_evict": ensure_evict}
+    if model:
+        kw["model"] = model
+    _t0 = time.monotonic()
+    out = _cog.run_role(r, ctx, **kw)
+    _ms = int((time.monotonic() - _t0) * 1000)
+    address = f"run://{turn_id}/{r.id}"
+    cas = SUITE.store.put_content(out)
+    SUITE.store.set_ref(address, cas)
+    # #54 RUN INDEX — colocated with the persist (engine run_role has no emit + does not persist).
+    SUITE.emit_run_record("cognition.run_role", _ms,
+                          run_op=op, turn_id=turn_id, role=r.id, addresses=[address])
+    return {"role": r.id, "op": op, "output": out, "address": address, "turn_id": turn_id}
+
+
+def cog_run_items(role, items, *, max_tokens=256, temperature=0.0):
+    """Fan ONE role over N units (the MAP axis). Mirror of mcp_face/server.py:run_items (same engine
+    `_cog.run_items`, same per-unit run://<turn>/<role>/<i> outputs + cognition.items rollup; the engine
+    emits its OWN op.run index via the `emit` sink). Returns {role, turn_id, n_units, addresses, resolved,
+    finish_order, skipped, wall_s}."""
+    r = _cog_resolve_role(role)
+    turn_id = _cog_turn_id("fe-items-")
+    res = _cog.run_items(r, list(items), SUITE.store, turn_id=turn_id, emit=_cog_emit,
+                         max_tokens=max_tokens, temperature=temperature)
+    return {"role": r.id, "turn_id": turn_id, "n_units": len(items),
+            "addresses": res.addresses, "resolved": res.resolved,
+            "finish_order": res.finish_order, "skipped": res.skipped, "wall_s": res.wall_s}
+
+
+def cog_run_reduce(addresses, mode, *, role="", reduce_rule="", cluster_threshold=0.85, max_tokens=512):
+    """Reduce N map-output run:// addresses into ONE output (the JOIN axis). Mirror of
+    mcp_face/server.py:run_reduce (same engine `_cog.run_reduce`). mode='role' → synthesize join (pass a
+    reduce-role id); mode='rule' → a NAMED deterministic L2 join (count·concat·first); mode='cluster' →
+    embed-cluster (needs the local embedder). Returns {turn_id, mode, joined, inputs, skipped, wall_s,
+    detail}."""
+    turn_id = _cog_turn_id("fe-reduce-")
+    kw = {"turn_id": turn_id, "mode": mode, "emit": _cog_emit, "max_tokens": max_tokens,
+          "cluster_threshold": cluster_threshold}
+    if mode == "role":
+        if not role:
+            raise ValueError("run_reduce(mode='role'): pass a reduce-role id (e.g. 'reduce_synth').")
+        kw["role"] = _cog_resolve_role(role)
+    elif mode == "rule":
+        if reduce_rule not in _COG_REDUCE_RULES:
+            raise ValueError(f"run_reduce(mode='rule'): unknown reduce_rule {reduce_rule!r} — named "
+                             f"built-ins are {sorted(_COG_REDUCE_RULES)} (fail loud, never a fabricated rule).")
+        kw["reduce_rule"] = _COG_REDUCE_RULES[reduce_rule]
+    res = _cog.run_reduce(list(addresses), SUITE.store, **kw)
+    return {"turn_id": turn_id, "mode": mode, "joined": res.joined, "inputs": res.inputs,
+            "skipped": res.skipped, "wall_s": res.wall_s, "detail": res.detail}
+
+
 def seed_demo():
     """First-run graph = the FIRST PURPOSE: the system answering about its own codebase."""
     if DEMO not in SUITE.list_graphs():
@@ -683,6 +819,42 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.available_inputs()))
             elif path == "/api/cognition/field_types":     # AUTHORING SELECT: the closed output-schema field types
                 self._send(200, json.dumps(SUITE.field_types()))
+            # --- LANE-BRIDGE: the cognition-engine HUMAN-face reads (G2; reflects-never-owns; reuse the
+            #     SAME Suite methods the MCP tools call — list_runs/find_runs/find_relations/corpus). ---
+            elif path == "/api/cognition/list_runs":       # #54 RUN INDEX: discover past engine runs (read)
+                # → {runs:[{address,op,run_op,turn_id,role,duration_ms,seq,ts}], total_records}. Delegates to
+                # Suite.list_runs (the SAME read-time op.run projection the MCP list_runs tool serves). op
+                # filters to one ENGINE_RUN_OP (fail-loud on a fabricated op); run_op by operation; since=seq.
+                self._send(200, json.dumps(SUITE.list_runs(
+                    op=q.get("op"), run_op=q.get("run_op"),
+                    since=int(q.get("since", -1)), limit=int(q.get("limit", 50)))))
+            elif path == "/api/cognition/find_runs":       # #54: the FILTERED run index (by role/op/run_op)
+                self._send(200, json.dumps(SUITE.find_runs(
+                    role=q.get("role"), op=q.get("op"), run_op=q.get("run_op"),
+                    since=int(q.get("since", -1)), limit=int(q.get("limit", 50)))))
+            elif path == "/api/cognition/find_relations":  # GROUP L2: the inversion-finder (near∩¬far)
+                # ?item=&near_space=&far_space=[&k=&min_score=] → items NEAR the item in near_space but NOT
+                # near it in far_space ("same principle, different subject"). Delegates to Suite.find_relations
+                # (anchored on the item's persisted per-space vector — NO live-embedder dependency; the
+                # SAME method the MCP find_relations tool serves). A missing axis → KeyError → 400 (fail loud).
+                self._send(200, json.dumps(SUITE.find_relations(
+                    q["item"], near_space=q["near_space"], far_space=q["far_space"],
+                    k=int(q.get("k", 10)), min_score=float(q.get("min_score", 0.5)))))
+            elif path == "/api/cognition/corpus":          # GROUP D5: the discovered corpus records (LIST/READ)
+                # Two read shapes on ONE route (NOT /api/corpus — that is the mockup-gallery index, a
+                # name-collision; verified). ?address=… → read ONE record back (read_corpus_record, honest
+                # None if never written). Else → the discovered corpus PROJECTION, filtered by any of
+                # project/kind/projection/source_address (find_corpus; list_corpus when no filter). Both
+                # delegate to the SAME Suite methods the MCP face uses (the corpus.record event-log
+                # projection — no parallel DB). Writes are a POST to the same path.
+                if q.get("address"):
+                    self._send(200, json.dumps({"record": SUITE.read_corpus_record(q["address"])}))
+                elif any(q.get(k) for k in ("project", "kind", "projection", "source_address")):
+                    self._send(200, json.dumps({"records": SUITE.find_corpus(
+                        project=q.get("project"), kind=q.get("kind"),
+                        projection=q.get("projection"), source_address=q.get("source_address"))}))
+                else:
+                    self._send(200, json.dumps({"records": SUITE.list_corpus(project=q.get("project"))}))
             elif path == "/api/roles":                     # G4.2: the model-ROLE registry (judge + future) the config lab binds
                 self._send(200, json.dumps(SUITE.roles()))
             elif path == "/api/run-stats":                 # G7 rollup: op.run run-records → distributions (learning by use)
@@ -1519,6 +1691,67 @@ class H(BaseHTTPRequestHandler):
                 b = self._body()
                 self._send(200, json.dumps(SUITE.preview_turn(
                     b["utterance"], b.get("mode"), graph_id=b.get("graph_id"))))
+            # --- LANE-BRIDGE: the cognition-engine HUMAN-face RUNS + DIRECT creates (G2). The engine
+            #     functions (run_role/run_items/run_reduce/embed) are COMPUTATION — they produce run://
+            #     outputs + op.run telemetry, NEVER a resolve/approve/dispatch (the floor; reuse the SAME
+            #     `_cog` engine the swarm + MCP face use, via the cog_* glue above). The DIRECT creates
+            #     (#58: declarative-direct, no approval) reuse the SAME Suite.create_* methods the MCP
+            #     create tools call; node-type/arbitrary-code create stays GATED (operator-only, off this
+            #     run-route — propose_* + /api/apply). ---
+            elif self.path == "/api/cognition/run_role":   # fire ONE role (op rides the role) → run:// output
+                b = self._body()
+                self._send(200, json.dumps(cog_run_role(
+                    b["role"], utterance=b.get("utterance", ""),
+                    model=b.get("model", ""), inputs=b.get("inputs"),
+                    max_tokens=int(b.get("max_tokens", 256)), temperature=float(b.get("temperature", 0.0)),
+                    ensure=bool(b.get("ensure", False)), ensure_evict=bool(b.get("ensure_evict", False)))))
+            elif self.path == "/api/cognition/run_items":  # the MAP: fan ONE role over N units (per-unit run://)
+                b = self._body()
+                self._send(200, json.dumps(cog_run_items(
+                    b["role"], b["items"], max_tokens=int(b.get("max_tokens", 256)),
+                    temperature=float(b.get("temperature", 0.0)))))
+            elif self.path == "/api/cognition/run_reduce": # the JOIN: reduce N run:// addresses → one output
+                b = self._body()
+                self._send(200, json.dumps(cog_run_reduce(
+                    b["addresses"], b["mode"], role=b.get("role", ""),
+                    reduce_rule=b.get("reduce_rule", ""),
+                    cluster_threshold=float(b.get("cluster_threshold", 0.85)),
+                    max_tokens=int(b.get("max_tokens", 512)))))
+            elif self.path == "/api/cognition/embed":      # EMBED: fire an embed-op role → {vector,dim,model}
+                # The embed op via the SAME run_role engine path — exactly how the MCP face exposes embed
+                # (there is no standalone Suite.embed; embed IS run_role over an op='embed' role, e.g. the
+                # registered 'embed' role; the engine dispatches on role.op). `role` defaults to 'embed'.
+                # A down local embedder FAILS LOUD unless ensure=True requests the gated #50 load.
+                b = self._body()
+                self._send(200, json.dumps(cog_run_role(
+                    b.get("role", "embed"), utterance=b.get("utterance", b.get("text", "")),
+                    model=b.get("model", ""), inputs=b.get("inputs"),
+                    ensure=bool(b.get("ensure", False)), ensure_evict=bool(b.get("ensure_evict", False)))))
+            elif self.path == "/api/cognition/corpus":     # GROUP D1: CAPTURE — persist ONE corpus record
+                # The WRITE half of /api/cognition/corpus (the GET is the list/read). Delegates to
+                # Suite.write_corpus_record → runtime/corpus.write_record: the LINEAGE GATE bites
+                # (session/round/project REQUIRED — a record without lineage raises CorpusError → 400,
+                # fail loud). Returns {address, cas, ...}. NOT /api/corpus (the mockup gallery).
+                b = self._body()
+                self._send(200, json.dumps(SUITE.write_corpus_record(
+                    source_address=b["source_address"], output=b["output"], kind=b["kind"],
+                    lineage=b["lineage"], model=b.get("model"), projection=b.get("projection"),
+                    **{k: v for k, v in b.items()
+                       if k not in ("source_address", "output", "kind", "lineage", "model", "projection")})))
+            elif self.path == "/api/cognition/create_role":    # DIRECT create (#58 — declarative, no approval)
+                # Reuses Suite.create_role (the SAME render+gate+write+commit+rediscover path the MCP
+                # create_role tool calls). The CORRECTNESS gate bites (a malformed spec is refused fail-loud,
+                # never written). The build-dispatch floor is UNTOUCHED — this writes a roles/ file, it never
+                # launches claude -p. (Surfacing stays available via /api/cognition/role/propose.)
+                b = self._body()
+                spec = b.get("spec") or b
+                self._send(200, json.dumps(SUITE.create_role(spec, model=spec.get("model"))))
+            elif self.path == "/api/cognition/create_skill":   # DIRECT create (#56 write-half / #58 direct)
+                b = self._body()
+                self._send(200, json.dumps(SUITE.create_skill(b.get("spec") or b)))
+            elif self.path == "/api/cognition/create_context": # DIRECT create (#56 write-half / #58 direct)
+                b = self._body()
+                self._send(200, json.dumps(SUITE.create_context(b.get("spec") or b)))
             elif self.path == "/api/act":               # I2: the click-emission seam — a DETERMINISTIC
                 # human click ships a STRUCTURED {verb, address, args} that drives _dispatch_rhm_action
                 # DIRECTLY (bypassing the unreliable model-prose parse) — the emission RELOCATION

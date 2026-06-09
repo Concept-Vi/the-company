@@ -561,6 +561,48 @@ restore point; rules 4+8). Kept **off the MCP face** + out of `RHM_VERBS`, like 
 the RHM proposes/surfaces, it never commits of its own authority; minting is an operator act on the
 operator face. Proven by `tests/selfmod_audit_acceptance.py`.
 
+## The cognition-engine HUMAN-FACE routes (Cognition Engine LANE-BRIDGE · `runtime/bridge.py` · G2)
+
+The HUMAN face (the FE/#55) reaches the cognition engine over `/api/cognition/*`, **reflects-never-owns**:
+the bridge serves what the operator sees + does, the backend is truth. Every route REUSES the SAME engine
+the swarm + the MCP face use — **reuse-don't-parallel, NO second engine**:
+
+- **RUN (computation):** `POST /api/cognition/{run_role,run_items,run_reduce,embed}` fire the ONE engine
+  (`runtime.cognition.run_role`/`run_items`/`run_reduce`/`resolve_address`) via the module-level `cog_run_role`/
+  `cog_run_items`/`cog_run_reduce` GLUE in `bridge.py`. The OP rides the ROLE (`role.op` — generate|embed),
+  never a caller kwarg (engine dispatches on `role.op`; `/api/cognition/embed` fires an embed-op role,
+  default `embed`). A run PERSISTS to `run://<turn>/<role>[/<i>]` (turn-id `fe-…`) and emits the ONE
+  `op.run` RUN-INDEX record (#54) so an FE-initiated run is DISCOVERABLE by `list_runs`/`find_runs`
+  identically to an MCP-initiated one. **THE FLOOR (C9.2):** a run produces a `run://` output + `op.run`
+  telemetry — it emits NO resolve/approve/dispatch; the `claude -p` wire stays OFF this seam.
+- **READ (the human-face reads):** `GET /api/cognition/{list_runs,find_runs,find_relations}` +
+  `GET /api/cognition/corpus` (`?address=` reads ONE record, else the filtered/full corpus projection) —
+  thin delegations to `Suite.list_runs`/`find_runs`/`find_relations`/`read_corpus_record`/`find_corpus`/
+  `list_corpus` (the SAME methods the MCP tools call). `POST /api/cognition/corpus` is the CAPTURE write
+  (`Suite.write_corpus_record` — the lineage gate bites: session/round/project REQUIRED, fail-loud). This is
+  `/api/cognition/corpus`, **NOT `/api/corpus`** (that is the mockup-gallery index — a name-collision,
+  verified preserved).
+- **DIRECT create (declarative-direct, #58 — no approval):** `POST /api/cognition/{create_role,create_skill,
+  create_context}` reuse the SAME `Suite.create_*` (render→correctness-gate→write→git-commit→rediscover);
+  a malformed spec is REFUSED fail-loud, never written. **node-type / arbitrary-code create stays GATED**
+  (operator-only — `propose_*` + `/api/apply`/`/api/resolve`), NOT on these run-routes.
+
+**THE SEAM (BAR2 — surfaced honestly, not silently shipped):** the run_role/items/reduce GLUE (turn-id +
+input-address resolution + persist + the `op.run` emit) is **mirrored byte-for-byte** from
+`mcp_face/server.py` (same `ENGINE_RUN_OPS` strings, same `addresses=[address]`, same `run_op`) because the
+engine deliberately leaves persist+index to the caller, and extracting a shared helper would touch
+`suite.py`/`mcp_face` (out of the BRIDGE lane). **The two copies MUST stay identical** — drift on the
+op-string / `addresses=` silently breaks #54 discovery for one face. **The long-term home** is one shared
+`Suite.run_role/run_items/run_reduce` (or a `runtime/cognition_face.py`) both faces call; until that
+suite.py/mcp_face edit lands, the mirror is the reuse. Proven BY USE (the run quartet over the resident 4B,
+the run-index discovery of `fe-` runs, the corpus round-trip + lineage-gate, the near∩¬far inversion over
+seeded space-vectors, `/api/corpus` gallery still 200, fail-loud on bad-op/missing-anchor/missing-lineage).
+**NOT proven (needs-tim):** a successful `/api/cognition/embed` + a `run_reduce(mode='cluster')` (the local
+embedder at :8001 is DOWN — both fail loud correctly; a real embed needs the embedder resident, a GPU
+window). **NOT this pass (blocked):** `create_projection`/`create_mark_type`/… — the projections-create
+Suite/MCP methods don't exist yet (SURFACE/NEWMOD lane); routing to them would be inventing (rule 8), so
+they are deferred until those methods land.
+
 ## Relates to
 
 - **Called by** [[canvas — constitution]] — through the bridge (C8) — and by
