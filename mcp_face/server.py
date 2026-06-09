@@ -34,10 +34,8 @@ for _m in _pkgutil.iter_modules(_tools_pkg.__path__):
     _importlib.import_module(f"mcp_face.tools.{_m.name}").register(mcp, SUITE)
 
 
-@mcp.tool()
-def list_types() -> list:
-    """List every registered node-type (process · content · presentation)."""
-    return SUITE.list_types()
+# list_types → REMOVED (N7): it duplicated capabilities()['node_types'] exactly (the eval flagged the
+# triple-coverage with object_info). Node-types: capabilities() for the ids, object_info() for the library.
 
 
 @mcp.tool()
@@ -222,7 +220,10 @@ def cognition_info(section: str = "", role: str = "", detail: str = "concise") -
                            listing them).
       (no args)          — a CONCISE OVERVIEW: every section's names/ids only (dict sections → their
                            keys, list sections → their ids, scalars inline) — the composition
-                           vocabulary at a glance. detail="detailed" → the full payload (~40KB)."""
+                           vocabulary at a glance. detail="detailed" → the full payload (~40KB).
+                           (`detail` applies to the overview only; role=/section= always return their
+                           full content. `spaces` ⊂ `projections` — the spaces are the EMBEDDABLE
+                           projections, the ones find_relations/corpus-query can range over.)"""
     info = SUITE.cognition_info()
     if role:
         roles = info.get("roles", {})
@@ -272,10 +273,20 @@ def cognition_info(section: str = "", role: str = "", detail: str = "concise") -
 
 
 @mcp.tool()
-def models_for_role(requires: str = "") -> dict:
-    """INSPECT (the MODEL select): the model-ids whose `provides` ⊇ `requires` (comma-separated caps,
-    e.g. 'embed' or 'chat'), plus the live providers the swarm binds against. REUSES
-    Suite.models_for_role (the /api/cognition/models_for_role path). What models fit a role."""
+def models_for_role(requires: str = "", role: str = "") -> dict:
+    """INSPECT (the MODEL select): which models fit. Pass EITHER:
+      role="<id>"     — a registered role; its declared requirements (spec.model_binding.requires)
+                        are looked up for you (N7 — the tool finally takes the role its name promises).
+      requires="..."  — capability strings directly (comma-separated, e.g. 'embed' or 'chat,json').
+    Returns the model-ids whose `provides` ⊇ the requirements + the live providers the swarm binds
+    against. REUSES Suite.models_for_role (the /api/cognition/models_for_role path)."""
+    if role:
+        live = SUITE.role_registry.get(role)
+        if live is None:
+            return {"error": f"models_for_role: unknown role {role!r} — registered: "
+                    f"{sorted(SUITE.role_registry)} (or pass `requires` capability strings directly)."}
+        reqs = (live.spec.get("model_binding") or {}).get("requires") or []
+        return {"role": role, **SUITE.models_for_role(reqs)}
     return SUITE.models_for_role(requires)
 
 

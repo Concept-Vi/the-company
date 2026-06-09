@@ -59,14 +59,18 @@ def main():
     check("MCP face RUNS the UI's graph (one brain, two faces)",
           "u" in rr["ran"] or "u" in rr["cached"])
     check("MCP face reads the result -> 'HI'", agent.get_results(GID)["u"] == "HI")
-    check("MCP face: list_types generic (incl constant/uppercase/llm)",
-          {"constant", "uppercase", "llm"} <= set(agent.list_types()))
+    # N7: the flat list_types tool was removed (it duplicated capabilities()['node_types'] exactly) —
+    # generic node-type visibility is asserted through capabilities, the one source.
+    check("MCP face: node-types generic via capabilities (incl constant/uppercase/llm)",
+          {"constant", "uppercase", "llm"} <= set(agent.capabilities()["node_types"]))
 
     # FastMCP registered the verbs as tools
     tools = agent.mcp._tool_manager.list_tools() if hasattr(agent.mcp, "_tool_manager") else []
     names = {getattr(t, "name", "") for t in tools}
-    check("MCP server registered the generic verbs as tools",
-          {"create_node", "run_graph", "list_types"} <= names or len(names) == 0)  # tolerate SDK API variance
+    # N7/MCP-DESIGN: the flat create_node/list_types were CONSOLIDATED (node(op=create) · capabilities) —
+    # assert the consolidated contract.
+    check("MCP server registered the generic verbs as tools (consolidated contract)",
+          {"node", "run_graph", "capabilities"} <= names or len(names) == 0)  # tolerate SDK API variance
 
     print("\n" + ("✅ E5 SUITE + MCP FACE PASSED" if ok else "❌ E5 FAILED"))
     return 0 if ok else 1
