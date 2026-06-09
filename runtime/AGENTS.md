@@ -204,7 +204,22 @@ reduce-role; rule/cluster are pure L2) and emits NO resolve/approve/dispatch (th
 the previously-declared-but-dead `reduce-tree` THOUGHT_SHAPE live. **`run_items(role, items, store, *,
 turn_id, ...)` (C 3/4) is the fourth — the axis-INVERSION: 1 role × N units** (vs `run_swarm`'s N roles ×
 1 ctx), fanning ONE role over N input-units (each a literal or an address), output per-unit at
-`run://<turn>/<role>/<i>`; it mirrors `run_swarm`'s gate/pool/barrier/rollup (reuse, not forked). Its
+`run://<turn>/<role>/<i>`; it mirrors `run_swarm`'s gate/pool/barrier/rollup (reuse, not forked).
+**ROBUSTNESS AT SCALE (F1/F2 — caught by the whole-repo map over raw file text):** a unit is an ADDRESS
+only when it **STARTS WITH a registered scheme** (`contracts.address.scheme(unit) is not None`), NOT when
+it merely CONTAINS "://" — 16% of repo files mention `run://`/`ui://` MID-TEXT, and the old contains-check
+sent every such file to `resolve_address` (which fail-louds on a not-resolvable scheme) and aborted the
+map; now those files are LITERALS (the text the role fans over). A templated `run://<turn>/x` still
+classifies as an address (it STARTS with `run://`). **The fan is per-unit RESILIENT, not all-or-nothing:**
+a unit whose `run_role` RAISES (a PROCESSING failure — e.g. an over-context file → 400) goes to
+`ItemsResult.failed` (recorded in the result + the `cognition.items` rollup — fail-loud VISIBILITY, never
+silent), kept OUT of `runs`/`resolved` (its address was never `set_ref`'d), and the GOOD units' outputs
+STILL return — one poison unit no longer discards the whole batch. The ADDRESS CONTRACT is unchanged: a
+RESOLUTION failure (an unresolvable `run://` unit under the default `on_missing="raise"`) is a fatal
+misconfiguration and STILL fails the whole fan loud; a declared `on_missing="skip"` records it in
+`.skipped` (the two failure points are distinguished by a private `_ResolutionError` marker — resolution
+re-raises after the barrier, processing routes to `.failed`). Proven by `tests/run_items_acceptance.py`
+(incl. §3's resolution-fail-loud, which locks the address contract). Its
 companion **`resolve_address(store, addr, *, turn_id)` is the scheme-dispatching resolver** (the
 "resolve content from ANY address" seam): materialises `<turn>` templates, then dispatches by `://`
 presence — `run://`→`resolve_run_ref`, `cas://`→`get_content` (both REUSE), a bare name→a `BARE_NAME`

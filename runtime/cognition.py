@@ -876,10 +876,19 @@ class ItemsResult:
     """The captured artifact of one run_items fan (1 role × N units) — mirrors WaveResult.
 
     addresses    {i: run://<turn>/<role>/<i>}  — the per-unit output address (positional index).
-    resolved     {i: value}                    — each unit's role output, read BACK via the resolver.
-    runs         list[RoleRun]                 — the per-unit run-records (the batched-rollup unit).
+    resolved     {i: value}                    — each OK unit's role output, read BACK via the resolver.
+    runs         list[RoleRun]                 — the per-unit OK run-records (the batched-rollup unit).
     finish_order list[int]                     — the order units FINISHED (nondeterministic — the fan).
     skipped      list[(i, reason)]             — units DECLARED-skipped (on_missing="skip" — never silent).
+    failed       list[(i, error)]              — units that ERRORED in run_role (F2 per-unit resilience):
+                                                 a poison unit lands HERE (never a silent drop), and the
+                                                 GOOD units' outputs STILL return in .runs/.resolved. A
+                                                 failed unit's address was never set_ref'd, so it is kept
+                                                 OUT of .runs/.resolved (the read-back reads OK addresses
+                                                 only). NOTE: this is a PROCESSING failure (run_role raised
+                                                 on a resolved unit) — distinct from a RESOLUTION failure
+                                                 (an unresolvable run:// address under on_missing="raise"),
+                                                 which STILL fails the whole fan loud (the address contract).
     """
     turn_id: str
     role_id: str
@@ -888,6 +897,7 @@ class ItemsResult:
     runs: list = field(default_factory=list)
     finish_order: list = field(default_factory=list)
     skipped: list = field(default_factory=list)
+    failed: list = field(default_factory=list)
     wall_s: float = 0.0
     sum_unit_s: float = 0.0
 
@@ -922,10 +932,18 @@ def run_items(role: "Role", items: list, store, *, turn_id: str,
     (put_content → set_ref, exactly like run_swarm). JOIN at the barrier; read every unit's output BACK
     via the canonical resolver; emit ONE batched `cognition.items` rollup.
 
-    Fail loud (the run_swarm discipline): a unit's failure is captured per-RoleRun AND re-raised after the
-    barrier (the fan cannot silently lose a unit). A unit that is a run:// address which does not resolve
-    RAISES via resolve_address UNLESS on_missing="skip" is DECLARED — a declared skip is RECORDED in
-    .skipped (returned so the caller sees what was dropped), NEVER a silent drop.
+    F2 — PER-UNIT RESILIENCE (the batch is not all-or-nothing). Two DISTINCT failure points, handled
+    differently (the address contract vs. processing resilience):
+      * RESOLUTION failure — a unit that is a run:// address which does NOT resolve. Under the default
+        on_missing="raise" this RAISES (via resolve_address) and FAILS THE WHOLE FAN LOUD — the address
+        contract is unchanged (an unresolvable declared input is a fatal misconfiguration, not a flaky
+        unit). A DECLARED on_missing="skip" instead RECORDS it in .skipped (returned so the caller sees
+        what was dropped), NEVER a silent drop.
+      * PROCESSING failure — a unit that RESOLVED fine but whose run_role RAISED (e.g. an over-context
+        file → a 400, a transient model error). This unit goes to .failed (recorded, never silent) and
+        the GOOD units' outputs STILL return in .runs/.resolved. The fan no longer discards the whole
+        batch for one poison unit. A failed unit's address was never set_ref'd, so it is kept OUT of
+        .runs/.resolved (the after-barrier read-back reads OK addresses only — never an unset address).
 
     A DRIVER, not an agent: the model runs only inside the role; run_items emits no resolve/approve/dispatch
     (the operator-only floor). Returns an ItemsResult (the by-use artifact)."""
@@ -945,25 +963,57 @@ def run_items(role: "Role", items: list, store, *, turn_id: str,
     runs: dict = {}
     finish_lock = threading.Lock()
     skipped: dict = {}                                       # i -> reason (declared skip, never silent)
+    failed: dict = {}                                        # i -> error (F2 processing failure, never silent)
+
+    class _ResolutionError(Exception):
+        """Marks a RESOLUTION failure (an unresolvable run:// unit under on_missing="raise") — distinct
+        from a PROCESSING failure (run_role raised on a resolved unit). A resolution failure is FATAL to
+        the whole fan (the address contract: an unresolvable declared input is a misconfiguration, not a
+        flaky unit), so it is re-raised after the barrier; a processing failure goes to .failed and the
+        good units still return (F2). Carries the original cause so the re-raise preserves it."""
+        def __init__(self, cause: BaseException):
+            self.cause = cause
+            super().__init__(str(cause))
 
     def _resolve_unit(unit: Any) -> Any:
-        """Resolve ONE unit to the role's primary input. An ADDRESS (a str with "://") resolves via
-        resolve_address (materialize <turn> + dispatch by scheme + fail-loud on unknown). Anything else
-        is a LITERAL, used as-is. (A non-address str — no "://" — is a literal, not a ctx-key: the
-        BARE_NAME sentinel belongs to a role's bare input_addresses, not to a unit.)"""
-        if isinstance(unit, str) and "://" in unit:
+        """Resolve ONE unit to the role's primary input.
+
+        F1 — ://-CLASSIFICATION (starts-with-registered-scheme): a unit is an ADDRESS only if it STARTS
+        WITH a REGISTERED scheme — `contracts.address.scheme(unit) is not None`, i.e. it begins with one
+        of `run://`/`cas://`/`blob://`/`vec://`/`ui://`/`code://`/`skill://`/`context://`. It is NOT an
+        address merely because the string CONTAINS "://" somewhere in its body. This is the fix for the
+        whole-repo map: 16% of repo files contain "run://"/"ui://" MID-TEXT (in prose/code), and the old
+        `"://" in unit` check sent every such file to resolve_address — which then fail-louds on a
+        not-content-resolvable scheme and aborted the map. With starts-with classification, those files
+        are LITERALS (used as-is — the unit IS the text to fan the role over), exactly as intended.
+
+        An ADDRESS resolves via resolve_address (materialize <turn> + dispatch by scheme + fail-loud on an
+        unknown/unresolvable scheme). Anything else is a LITERAL, used as-is. (A non-address str — one that
+        does not START with a registered scheme — is a literal, not a ctx-key: the BARE_NAME sentinel
+        belongs to a role's bare input_addresses, not to a unit.) A templated `run://<turn>/x` still
+        classifies as an address (it STARTS with `run://`), so the address/template path is preserved."""
+        if isinstance(unit, str) and _scheme(unit) is not None:
             return resolve_address(store, unit, turn_id=turn_id, on_missing=on_missing)
         return unit
 
     def _one(i: int, unit: Any) -> "RoleRun | None":
         t0 = time.monotonic()
         with gate.slot():                                    # the SAME global gate as run_swarm/run_jury
-            resolved_unit = _resolve_unit(unit)
+            # RESOLUTION (the address contract) — a failure here is FATAL to the fan (re-raised at the
+            # barrier). Wrapped in _ResolutionError so the barrier can tell it apart from a PROCESSING
+            # failure (which goes to .failed; F2). on_missing="skip" handles a pruned ref WITHOUT raising.
+            try:
+                resolved_unit = _resolve_unit(unit)
+            except BaseException as e:
+                raise _ResolutionError(e) from e
             if resolved_unit is None and on_missing == "skip":
                 # a DECLARED skip (a pruned run:// ref under on_missing="skip") — recorded, never silent.
                 with finish_lock:
                     skipped[i] = f"unit {i} ({unit!r}) resolved to None (declared on_missing=skip)"
                 return None
+            # PROCESSING (run_role + the store write) — a failure here is PER-UNIT resilient (F2): it goes
+            # to .failed and the good units still return. The exception propagates to the barrier as a
+            # PLAIN exception (NOT a _ResolutionError) so the barrier routes it to .failed, not the re-raise.
             # build the per-unit ctx: the resolved unit at "utterance" (the role's primary input → the
             # default byte-identical run_role path) + the shared ctx's declared extra inputs.
             unit_ctx = dict(shared_ctx)
@@ -979,7 +1029,7 @@ def run_items(role: "Role", items: list, store, *, turn_id: str,
         return rr
 
     wall0 = time.monotonic()
-    errors: list[BaseException] = []
+    fatal: list[BaseException] = []                          # RESOLUTION failures — re-raised after barrier
     if items:
         with ThreadPoolExecutor(max_workers=budget.swarm_slots,
                                 thread_name_prefix=f"items-{turn_id}") as pool:
@@ -990,13 +1040,18 @@ def run_items(role: "Role", items: list, store, *, turn_id: str,
                     rr = fut.result()
                     if rr is not None:
                         runs[i] = rr
-                except BaseException as e:                   # capture per-unit; re-raise after the barrier
-                    runs[i] = RoleRun(role_id=f"{role.id}/{i}", address=addresses[i],
-                                      ok=False, ms=0, error=f"{type(e).__name__}: {e}")
-                    errors.append(e)
+                except _ResolutionError as re_:              # RESOLUTION failure — FATAL to the fan (address
+                    fatal.append(re_.cause)                  # contract: re-raise after the barrier, unchanged.
+                except BaseException as e:                   # PROCESSING failure — PER-UNIT resilient (F2):
+                    # the poison unit goes to .failed (recorded, never silent); the unit's address was never
+                    # set_ref'd, so it is kept OUT of runs/resolved (the read-back reads OK addresses only).
+                    # The GOOD units' outputs STILL return — the fan does NOT discard the whole batch.
+                    failed[i] = f"{type(e).__name__}: {e}"
     result.wall_s = round(time.monotonic() - wall0, 3)
     result.skipped = [(i, skipped[i]) for i in sorted(skipped)]
-    # ordered run-records (positional, skipping the declared-skipped units)
+    result.failed = [(i, failed[i]) for i in sorted(failed)]
+    # ordered OK run-records (positional, excluding declared-skipped AND failed units — runs is ok-only,
+    # so the after-barrier read-back never touches an address that was never set_ref'd).
     result.runs = [runs[i] for i in sorted(runs)]
     result.sum_unit_s = round(sum(rr.ms for rr in result.runs) / 1000.0, 3)
 
@@ -1006,6 +1061,10 @@ def run_items(role: "Role", items: list, store, *, turn_id: str,
         emit("cognition.items", {
             "turn_id": turn_id, "role": role.id, "n_units": len(items),
             "n_run": len(result.runs), "skipped": [i for (i, _r) in result.skipped],
+            # F2 — the FAILED units are recorded in the rollup too (fail-loud VISIBILITY: a poison unit is
+            # never silently dropped; the run-record carries which units failed + why), distinct from the
+            # declared-skipped units. The good units still ran (in `units` below).
+            "failed": [{"i": i, "error": err} for (i, err) in result.failed],
             "wall_s": result.wall_s, "sum_unit_s": result.sum_unit_s,
             "finish_order": result.finish_order,
             "units": [{"i": rr.role_id.split("/")[-1], "address": rr.address, "ok": rr.ok,
@@ -1030,11 +1089,16 @@ def run_items(role: "Role", items: list, store, *, turn_id: str,
             "addresses": [rr.address for rr in result.runs if rr.ok],
         })
 
-    # Fail loud AFTER the rollup (so the failure is recorded) — the fan cannot silently lose a unit.
-    if errors:
-        raise errors[0]
+    # Fail loud AFTER the rollup (so the failure is recorded) on a RESOLUTION failure ONLY — an
+    # unresolvable run:// unit under on_missing="raise" is a fatal misconfiguration (the address contract),
+    # so the whole fan re-raises (unchanged behaviour; tests/run_items_acceptance.py §3 locks this). A
+    # PROCESSING failure (F2) does NOT raise — it is recorded in .failed and the good units still return.
+    if fatal:
+        raise fatal[0]
 
-    # read every unit's output BACK via the canonical resolver (head→get_content), AFTER the barrier.
+    # read every OK unit's output BACK via the canonical resolver (head→get_content), AFTER the barrier.
+    # `runs` is ok-only (failed/skipped units are excluded), so a never-set_ref'd address is never read —
+    # the F2 read-back does NOT relocate the whole-batch failure here (advisor flag).
     for i in sorted(runs):
         result.resolved[i] = resolve_run_ref(store, addresses[i])
     return result
