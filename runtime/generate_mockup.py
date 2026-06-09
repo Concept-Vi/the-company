@@ -111,6 +111,84 @@ def read_feedback(mockup_file: str) -> list[dict]:
     return out
 
 
+# --- Q3: the REAL feedback source — the shared ANNOTATION store (where the studio comment writes), NOT the
+# retired .feedback jsonl. The studio comments via /api/annotate → <STORE>/annotations.jsonl keyed by the
+# mockup's ui:// address; this is what closes the comment→generate make-or-break loop (F2). The map
+# mockup→ui://address is the corpus-meta REGISTRY (Q2, 1a0bfc1) — read here WITHOUT importing bridge.
+CORPUS_META_PATH = os.path.join(ROOT, "design", "_system", "corpus-meta.json")
+
+
+def _address_for_mockup(mockup_file: str, meta_path: str | None = None) -> str | None:
+    """The ui:// address a mockup depicts, from the corpus-meta registry. None if the mockup is uncurated
+    (no mapped surface) — then there's no annotation locus to gather (the legacy .feedback path still works)."""
+    path = meta_path or CORPUS_META_PATH
+    if not os.path.isfile(path):
+        return None
+    try:
+        meta = json.load(open(path, encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    row = meta.get(mockup_file)                          # [title, platform, group, address]
+    return row[3] if isinstance(row, list) and len(row) >= 4 and isinstance(row[3], str) else None
+
+
+def _annotations_as_feedback(mockup_file: str, *, store_root: str | None = None,
+                             meta_path: str | None = None) -> list[dict]:
+    """Gather the mockup's comments from the shared annotation store, mapped to the feedback-entry shape.
+    Reads <store>/annotations.jsonl (replicating fs_store.annotations_for — no Suite import) and keeps every
+    record whose address is the mockup's base address OR a DESCENDANT of it (prefix match) — so BOTH a
+    whole-mockup comment AND an element-level comment feed generate (Tim: both levels, not either/or).
+    Oldest-first. An annotation has no status field → treated as 'pending' (actionable)."""
+    address = _address_for_mockup(mockup_file, meta_path)
+    if not address:
+        return []
+    if store_root is None:
+        try:
+            from fabric import config as _fcfg
+            store_root = _fcfg.STORE_DIR
+        except Exception:
+            return []
+    path = os.path.join(store_root, "annotations.jsonl")
+    if not os.path.isfile(path):
+        return []
+    base = address.rstrip("/")
+    out: list[dict] = []
+    with open(path, "r", encoding="utf-8") as f:
+        for ln in f:
+            ln = ln.strip()
+            if not ln:
+                continue
+            try:
+                rec = json.loads(ln)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(rec, dict):
+                continue
+            a = rec.get("address", "")
+            if not isinstance(a, str) or not a:
+                continue
+            if a == base or a.startswith(base + "/"):     # the mockup's surface OR any element within it
+                text = str(rec.get("text", "")).strip()
+                if not text:
+                    continue
+                # map annotation → feedback-entry shape; element = the (sub)address it was placed at.
+                out.append({"text": text, "status": rec.get("status", "pending"),
+                            "element": a if a != base else None, "ts": rec.get("ts")})
+    return out
+
+
+def gather_feedback(mockup_file: str, *, store_root: str | None = None,
+                    meta_path: str | None = None) -> list[dict]:
+    """The mockup's full feedback for generate = the shared annotation store (the real source, Q3) UNIONED
+    with the legacy .feedback jsonl (kept as a fallback for any pre-annotation notes). Oldest-first by ts
+    where present. This is what `generate_for_mockup` drives from — so a studio comment reaches generate."""
+    annos = _annotations_as_feedback(mockup_file, store_root=store_root, meta_path=meta_path)
+    legacy = read_feedback(mockup_file)
+    merged = legacy + annos
+    merged.sort(key=lambda e: e.get("ts") or "")          # stable oldest-first when ts present
+    return merged
+
+
 def _actionable(entries: list[dict], feedback_filter: str) -> list[dict]:
     """Select the feedback entries that DRIVE the edit, per the config's feedback_filter:
     'pending' → only status=='pending' notes; 'all' → every note. Unknown filter → fail loud."""
@@ -163,7 +241,7 @@ def render_instruction(mockup_file: str, config: dict, *, feedback: list[dict] |
                             f"(it is config-declared for the future; not runnable yet) — fail loud")
 
     mockup_path = os.path.join("design", "mockups", mockup_file)
-    entries = feedback if feedback is not None else read_feedback(mockup_file)
+    entries = feedback if feedback is not None else gather_feedback(mockup_file)
     actionable = _actionable(entries, config.get("feedback_filter", "pending"))
     feedback_block = _render_feedback_block(actionable, entries)
 
@@ -186,7 +264,8 @@ def render_instruction(mockup_file: str, config: dict, *, feedback: list[dict] |
 
 def generate_for_mockup(mockup_file: str, *, mode: str | None = None,
                         config_path: str | None = None, launcher=None,
-                        repo: str | None = None) -> dict:
+                        repo: str | None = None, store_root: str | None = None,
+                        meta_path: str | None = None) -> dict:
     """THE engine entry point. Refine ONE mockup from its captured reviewer feedback, autonomously.
 
     Sequence:
@@ -213,7 +292,7 @@ def generate_for_mockup(mockup_file: str, *, mode: str | None = None,
     if not os.path.isfile(mockup_abs):
         raise GenerateError(f"unknown mockup {mockup_file!r}: no file at {mockup_abs} (fail loud)")
 
-    entries = read_feedback(mockup_file)
+    entries = gather_feedback(mockup_file, store_root=store_root, meta_path=meta_path)
     actionable = _actionable(entries, config.get("feedback_filter", "pending"))
     if not actionable:
         raise GenerateError(

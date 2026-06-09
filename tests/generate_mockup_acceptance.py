@@ -114,7 +114,10 @@ def test_reads_feedback_and_renders(tmpdir):
     ])
     try:
         cfg = _write_config(tmpdir)
-        out = gm.generate_for_mockup(mockup, mode="plan", config_path=cfg, launcher=_RecordingLauncher())
+        # store_root=tmpdir (empty, no annotations.jsonl) ISOLATES this from the LIVE annotation store —
+        # gather_feedback unions .feedback + the annotation store, so a test asserting the seeded count must
+        # point the annotation-read at an empty store (Q3).
+        out = gm.generate_for_mockup(mockup, mode="plan", config_path=cfg, launcher=_RecordingLauncher(), store_root=tmpdir)
         core = out["instruction_core"]
         assert "make the primary button gold" in core
         assert "remove the debug banner" in core
@@ -155,11 +158,34 @@ def test_fail_loud_no_feedback(tmpdir):
     cfg = _write_config(tmpdir)
     raised = False
     try:
-        gm.generate_for_mockup(mockup, mode="plan", config_path=cfg, launcher=_RecordingLauncher())
+        # store_root=tmpdir (empty) isolates from the live annotation store, so "no feedback" is truly empty (Q3).
+        gm.generate_for_mockup(mockup, mode="plan", config_path=cfg, launcher=_RecordingLauncher(), store_root=tmpdir)
     except gm.GenerateError as e:
         raised = "no actionable feedback" in str(e)
     assert raised, "engine did NOT fail loud on no feedback"
     print("  [4a] fail-loud on no feedback")
+
+
+def test_reads_annotations_both_levels(tmpdir):
+    """Q3 — the engine gathers a mockup's comments from the SHARED annotation store (where the studio writes),
+    at the mockup's base address AND descendant (element) addresses — the comment→generate make-or-break."""
+    import json as _json
+    mockup = "C1-inbox-desktop.html"   # maps to ui://inbox in the corpus-meta registry
+    store = os.path.join(tmpdir, "store"); os.makedirs(store, exist_ok=True)
+    with open(os.path.join(store, "annotations.jsonl"), "w") as f:
+        f.write(_json.dumps({"address": "ui://inbox", "text": "make the heading larger", "ts": "t1"}) + "\n")
+        f.write(_json.dumps({"address": "ui://inbox/lane", "text": "add a count badge", "ts": "t2"}) + "\n")
+        f.write(_json.dumps({"address": "ui://settings", "text": "UNRELATED surface", "ts": "t3"}) + "\n")
+    fb = gm.gather_feedback(mockup, store_root=store)
+    texts = [e["text"] for e in fb]
+    assert "make the heading larger" in texts, "whole-mockup comment not gathered"
+    assert "add a count badge" in texts, "element (descendant) comment not gathered"
+    assert "UNRELATED surface" not in texts, "an unrelated surface's comment leaked in"
+    cfg = _write_config(tmpdir)
+    out = gm.generate_for_mockup(mockup, mode="plan", config_path=cfg, launcher=_RecordingLauncher(), store_root=store)
+    assert out["actionable_feedback_count"] == 2, "annotations not actionable for generate"
+    assert "make the heading larger" in out["instruction_core"], "comment not carried into the instruction"
+    print("  [Q3] gathers annotations (whole + element) from the shared store → generate (comment→generate connects)")
 
 
 def test_fail_loud_unknown_mockup(tmpdir):
@@ -201,6 +227,7 @@ def run():
     with tempfile.TemporaryDirectory() as td:
         test_config_declared_and_reconfigurable(td)
         test_reads_feedback_and_renders(td)
+        test_reads_annotations_both_levels(td)
         test_plan_mode_safe_dispatches_mutates_nothing(td)
         test_fail_loud_no_feedback(td)
         test_fail_loud_unknown_mockup(td)
