@@ -32,20 +32,33 @@ function titleFor(corpus: { file: string; title: string }[], file: string | null
 }
 
 export function Review() {
-  const { corpus, reviewMockup, setReviewMockup, refreshCorpus } = useApp()
+  const { corpus, reviewMockup, reviewAddress, setReviewMockup, refreshCorpus } = useApp()
   // re-bind the corpus on mount (registry-is-truth) and open the first reviewable surface so the Stage is
   // never an empty void — INDICATING its locus (the second arg) so the RhmPanel/Composer bind immediately.
   useEffect(() => {
     void refreshCorpus()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+  // LOCUS BINDING from the corpus (registry-is-truth). Two cases, both resolved here when the corpus is loaded:
+  //   (1) nothing open → open the first reviewable surface (so the Stage is never an empty void).
+  //   (2) a mockup IS open but its address was never bound → bind it from the corpus row. This is the deep-link
+  //       fix: the ?mockup= effect (App.tsx) opens the mockup EAGERLY on mount — BEFORE the corpus loads — so it
+  //       can't pass the address; the mockup showed but the locus stayed null and the Composer was disabled
+  //       (a comment couldn't be placed). Now, once the corpus is in, we look up the open mockup's address and
+  //       bind it. reflects-never-owns: the address comes FROM the corpus, never invented. We bind ONLY when no
+  //       address is set yet (reviewAddress falsy) so a user's element selection / "whole screen" is never
+  //       clobbered, and only when the corpus row HAS an address (a genuinely unmapped mockup stays null — honest).
   useEffect(() => {
-    if (!reviewMockup && corpus.length > 0) {
+    if (corpus.length === 0) return
+    if (!reviewMockup) {
       const first = corpus[0]
       setReviewMockup(first.file, first.address)
+    } else if (!reviewAddress) {
+      const row = corpus.find(c => c.file === reviewMockup)
+      if (row && row.address) setReviewMockup(reviewMockup, row.address)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [corpus.length])
+  }, [corpus.length, reviewMockup])
 
   return (
     <div className="studio-shell" data-ui-ref="ui://studio">
