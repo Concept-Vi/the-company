@@ -37,6 +37,34 @@ change to the resolver, the cognition driver, or the UI.**
   `list_skills_contexts`. Proof the skill write-half is the agent's: written + git-committed `[self-apply]`
   + live with NO surfaced item.
 
+**The COMPOSITION skills (AK3 — Cognition Engine · per-workflow recipes):** a single tool-description
+describes ONE tool; it cannot encode multi-step composition (the ORDER, the output→input wiring, when to
+use which tier). Each of these is the RECIPE for one MULTI-STEP cognition workflow, naming the REAL
+now-built tools (`capture`·`run_items`·`run_reduce`·`find_relations`·`find_runs`·`inspect_address`·
+`findings_for`·`create_projection`·`read_corpus_record`·`list_corpus`·`find_corpus`·`run_role`·
+`reduce_rule_names`·`cognition_info` — all in `mcp_face/server.py`). They are agent/operator-facing
+composition playbooks (same registry row + format as `summarize`); a role *can* read one as input, but
+their primary use is as the recipe a reader composes the tools from. The FLOOR holds — each is
+declarative content describing how to compose READ / RUN / declarative-create tools; none instructs
+emitting resolve/approve/dispatch or launching `claude -p`.
+- **`corpus_pipeline`** — the 3-layer corpus pipeline: `capture` (describe over N units → corpus records)
+  → `run_items` (extract) → `run_items` (project) → the engine/bridge capture+embed pass → `run_reduce`
+  (cluster THEN synthesize) → `findings_for`. The order + each step's output→next-input wiring. Flags the
+  two registry-is-truth gaps honestly: there is NO standalone `embed` MCP tool (LAYER-2 embed is the
+  engine pass over embeddable lenses; `run_role(op='embed')` is the one-off vector actuator, distinct),
+  and NO write-`mark` tool (`findings_for` is the READ side only).
+- **`patterned_visibility`** — the patterned-visibility loop: run → look/compare (`list_corpus`·
+  `find_corpus`·`find_relations`·`findings_for`·`read_corpus_record`·`find_runs`) → mark the pattern
+  (encode it as a new lens via `create_projection`, since there is no write-`mark` tool) → that reveals
+  the next step → repeat. Discovery is a loop, not a pre-scripted list.
+- **`inversion_query`** — the inversion-query: `find_relations(item, near_space, far_space)` returns the
+  near∩¬far cross-space set difference (same principle, different subject). When + how to use it,
+  including the inversion read to find what is MISSING; space ids come from `cognition_info().spaces`,
+  and it fails loud without a persisted vector for `item` in both spaces.
+- **`map_reduce_composition`** — map-vs-reduce: when to `run_items` (1 role × N units, the MAP) vs
+  `run_reduce` (cross-unit JOIN: role|rule|cluster), and how to chain them (the MAP's `addresses` output
+  feeds the REDUCE's `addresses` input — the load-bearing seam).
+
 **How it resolves (the address seam — C 3b is its FIRST real extension):** `skill://<id>` is resolved
 by `runtime/cognition.py:resolve_address` (the C 3/4 scheme-dispatching seam). It dispatches `skill://`
 to `runtime/skills.py:SkillRegistry.read(id)`, which returns the skill's `content`. An UNKNOWN id
