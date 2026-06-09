@@ -369,6 +369,14 @@ def run_items(role: str, items: list, max_tokens: int = 256, temperature: float 
 # BY NAME over the MCP/JSON boundary (a Python callable cannot cross MCP). Each is a PURE function over
 # the N read-back values. An unknown name FAILS LOUD (never a fabricated rule). This is the rule-mode
 # analogue of the role/cluster modes — additive; add a named rule here when a new deterministic join is needed.
+#
+# B-FIX (PART 4.4 — the adversary's cleared list: _REDUCE_RULES is "project/derive, NOT a new registry"):
+# this ONE dict is the SINGLE SOURCE — the names are never re-listed as a second literal. The run_reduce
+# description, the gate, and the error all DERIVE from `sorted(_REDUCE_RULES)` (so adding a rule here makes
+# it discoverable everywhere with no second edit). A reduce_rule is a PURE Python callable, so the dict
+# can't move to a file-discovered registry (a callable can't cross the import/MCP boundary the way DATA
+# rows do) and can't move to cognition.py (out of this lane); the fix is DERIVE-don't-duplicate the names,
+# not build infrastructure. (Serving the names at /api is the BRIDGE lane — flagged in the report.)
 _REDUCE_RULES = {
     "count":  lambda values: {"count": len(values)},
     "concat": lambda values: {"concat": [v for v in values]},
@@ -383,8 +391,10 @@ def run_reduce(addresses: list, mode: str, role: str = "", reduce_rule: str = ""
     REUSES runtime.cognition.run_reduce (the net-new JOIN engine — never a parallel reducer).
 
       mode="role"    → synthesize join (op=generate). Pass `role` = a reduce-role id (e.g. 'reduce_synth').
-      mode="rule"    → deterministic L2 join (no model). Pass `reduce_rule` = a NAMED built-in
-                       (one of: count · concat · first) — a callable can't cross MCP, so select by name.
+      mode="rule"    → deterministic L2 join (no model). Pass `reduce_rule` = a NAMED built-in. The
+                       available names are listed by `reduce_rule_names()` (and in the fail-loud error on
+                       an unknown name) — both DERIVE from the single-source _REDUCE_RULES dict (no
+                       hardcoded second list). A callable can't cross MCP, so select by name.
       mode="cluster" → embed-cluster join (the 'which of these are the same' discovery primitive) — needs
                        the local embedder resident.
 
@@ -405,6 +415,16 @@ def run_reduce(addresses: list, mode: str, role: str = "", reduce_rule: str = ""
     res = _cog.run_reduce(list(addresses), SUITE.store, **kw)
     return {"turn_id": turn_id, "mode": mode, "joined": res.joined, "inputs": res.inputs,
             "skipped": res.skipped, "wall_s": res.wall_s, "detail": res.detail}
+
+
+@mcp.tool()
+def reduce_rule_names() -> dict:
+    """INSPECT the named deterministic reduce-rules `run_reduce(mode='rule')` accepts — PROJECTED from the
+    single-source _REDUCE_RULES dict (the B-fix: derive, never a hardcoded second list; PART 4.4). A
+    reduce-rule is a PURE function over the N read-back values, selected BY NAME over the MCP boundary (a
+    callable can't cross MCP). Read-only. Returns {names:[…]} (currently count·concat·first; adding one is
+    a row in _REDUCE_RULES and it appears here with no other edit)."""
+    return {"names": sorted(_REDUCE_RULES)}
 
 
 @mcp.tool()
@@ -509,6 +529,268 @@ def attach_rule(role_id: str, rule: dict) -> dict:
 # an operator approve) stays OFF this face (on /api/resolve, operator-only). So an agent can author a
 # role/skill/context, but it can NEVER trigger an autonomous code-build of the repo. The CORRECTNESS
 # gate (validate-in-tempdir, fail-loud on malformed) is kept on every create — a bad entry never writes.
+
+
+# =================================================================================================
+# COGNITION ENGINE — THE CORPUS / DISCOVERY PILLAR (agent face · GROUP B/D · PART 3.6)
+# -------------------------------------------------------------------------------------------------
+# The 3-LAYER PIPELINE an agent drives over a corpus, every tool a THIN wrapper over the SAME engine
+# the SUITE/ENGINE lanes built (reuse-don't-parallel — NO parallel engine):
+#
+#   LAYER 1 · CAPTURE  — `capture(role, units, project, session, round)` : fan ONE role over N corpus
+#                        units (REUSE run_items, the axis-inversion engine) → write each per-unit output
+#                        as a DURABLE corpus RECORD (REUSE Suite.write_corpus_record → runtime/corpus.py).
+#                        The records are the place the engine's at-scale output LIVES + is reused (D1).
+#   LAYER 2 · EMBED    — per-projection vectors are written by the ENGINE/BRIDGE capture+embed pass (not
+#                        a tool here); the corpus records produced by LAYER 1 are what gets embedded.
+#   LAYER 3 · RELATE / — `find_relations(item, near_space, far_space)` : the INVERSION-FINDER (REUSE
+#             MARK       Suite.find_relations over the space-keyed vector index — same principle, different
+#                        subject); `findings_for(address)` : read the marks/gold-profile a mark-pass left
+#                        (REUSE the coherence finding store).
+#
+# READ-BACK the pillar: `list_corpus`/`find_corpus`/`read_corpus_record` project the corpus-record event
+# log (REUSE the Suite corpus methods); `cognition_info().projections`/`.spaces` is the lens/space surface.
+#
+# THE FLOOR (C9.2): every tool below is a READ or a corpus.record-telemetry / put_content-store write —
+# NONE emits resolve/approve/dispatch and NONE launches `claude -p`. `create_projection` is a DECLARATIVE
+# create (a `projections/<id>.py` lens DATA file) → DIRECT, like create_role/create_skill (#58: authoring
+# is the agent's, correctness-gated). NODE-TYPE / executable-code create stays GATED (off this face).
+# NOT here yet (no dead tools): `run_cascade` (the cascade-RUNNER is unbuilt — PART 4.1, NET-NEW ENGINE
+# lane); `mark` (marks-generalization is a later STORE pass — `findings_for` only READS the store, safe);
+# `create_mark_type`/`create_lifter`/… (those registries are later NEWMOD passes). See the lane report.
+# =================================================================================================
+
+@mcp.tool()
+def capture(role: str, units: list, project: str, session: str, round: str = "1",
+            projection: str = "", record_kind: str = "capture",
+            max_tokens: int = 512, temperature: float = 0.0) -> dict:
+    """LAYER 1 of the corpus pipeline — CAPTURE: fan ONE describe-role over N corpus UNITS and PERSIST
+    each per-unit output as a durable, addressed, queryable corpus RECORD. This is the place the engine's
+    at-scale output LIVES (D1 — the scale test produced at scale then DISCARDED the output for want of a
+    sink; this is that sink).
+
+    MECHANISM (reuse-don't-parallel — NO parallel fan, NO parallel record gate):
+      • REUSES runtime.cognition.run_items (the axis-inversion engine, 1 role × N units) to fan `role`
+        over `units`. Each unit is a LITERAL value OR an ADDRESS (run://… cas://… — resolved by the
+        engine's resolver). Per-unit OK outputs land at run://<turn>/<role>/<i> and are read BACK.
+      • REUSES Suite.write_corpus_record (→ runtime/corpus.py) to persist ONE record per OK unit:
+        durable cas:// content + a deterministic run://corpus/<project>/<unit>[/<projection>] pointer +
+        a `corpus.record` index event. The source_address is the unit itself (a corpus address; a
+        non-string literal unit is repr'd so it still has a retrieval key).
+
+    LINEAGE IS A REQUIRED GATE (PART 4.7 — fail-loud, never defaulted): `project` · `session` · `round`
+    are REQUIRED and ride INTO every record. A record without all three is UNCORROBORATABLE cross-session
+    (M3 corroboration is cross-SESSION) and unplaceable by the inversion-finder (L2) — so it is REFUSED at
+    write (CorpusError). Supply them; this is not optional metadata.
+
+    `role` is a registered describe-role id (see cognition_info().roles) OR a draft field-set (dict path
+    via _resolve_role). The capture-schema-FROM-projections builder (output_schema = the model
+    projections) is the SUITE/ENGINE lane's concern; this tool writes ONE record per unit of whatever the
+    role outputs. To tag a record to a specific lens, pass `projection` (a lens id — see
+    cognition_info().projections); absent → one un-projected record per unit.
+
+    Returns {project, session, round, role, turn_id, n_units, captured:[{i, source_address, address, cas,
+    seq}], skipped, failed, wall_s}. `captured` are the persisted records (inspect via read_corpus_record/
+    inspect_address; feed downstream via list_corpus/find_corpus). `skipped`/`failed` carry units that did
+    not produce a record (F2 per-unit resilience — a poison unit never silently vanishes).
+
+    DELEGATE: run_items (cognition.py) + Suite.write_corpus_record (→ corpus.py). FLOOR: a corpus.record
+    telemetry write — emits NO resolve/approve/dispatch."""
+    r = _resolve_role(role)
+    units = list(units)
+    turn_id = "mcp-capture-" + _time.strftime("%Y%m%d-%H%M%S") + f"-{int(_time.monotonic()*1000) % 100000}"
+    res = _cog.run_items(r, units, SUITE.store, turn_id=turn_id, emit=_cog_emit,
+                         max_tokens=max_tokens, temperature=temperature)
+    lineage = {"session": session, "round": round, "project": project}
+    captured = []
+    for i, output in sorted(res.resolved.items()):
+        unit = units[i]
+        # The source-address retrieval key: a string unit IS its address; a literal is repr'd so it still
+        # has a stable key (the record's source_address is required + a string — corpus.py gate).
+        source_address = unit if isinstance(unit, str) else repr(unit)
+        ev = SUITE.write_corpus_record(
+            source_address=source_address, output=output, kind=record_kind, lineage=lineage,
+            model=getattr(r, "model", None), projection=(projection or None))
+        captured.append({"i": i, "source_address": source_address, "address": ev["address"],
+                         "cas": ev["cas"], "seq": ev.get("seq")})
+    return {"project": project, "session": session, "round": round, "role": r.id, "turn_id": turn_id,
+            "n_units": len(units), "captured": captured,
+            "skipped": res.skipped, "failed": res.failed, "wall_s": res.wall_s}
+
+
+# --- READ-BACK the corpus (the pillar's discoverable output) -------------------------------------
+@mcp.tool()
+def list_corpus(project: str = "") -> dict:
+    """DISCOVER the corpus records a capture pass produced — a READ-TIME PROJECTION over the ONE event
+    log (the run-index sibling, filtered to `corpus.record`), dedup-on-read (resume-safe, latest-seq
+    wins), newest-first. Optionally narrowed to a lineage `project`. NO maintained index, NO parallel DB
+    (the log IS the index). REUSES Suite.list_corpus (→ runtime/corpus.list_corpus). Read-only.
+    Returns {project, total, records:[{address, cas, source_address, record_kind, model, projection,
+    lineage, seq, ts}]}. Feed an `address` to read_corpus_record/inspect_address, or filter with
+    find_corpus."""
+    rows = SUITE.list_corpus(project=(project or None))
+    return {"project": project or None, "total": len(rows), "records": rows}
+
+
+@mcp.tool()
+def find_corpus(project: str = "", kind: str = "", projection: str = "", source_address: str = "") -> dict:
+    """DISCOVER corpus records FILTERED by any of the lineage/record axes — the query face of the corpus
+    (list_corpus narrowed by project · record kind · projection lens · source_address). E.g.
+    find_corpus(project='wizard', projection='principles') → every principle-lens record in that project.
+    REUSES Suite.find_corpus (→ runtime/corpus.find_corpus — filters the discovered set, never a
+    hand-listed one). Read-only. Returns the same {project, total, records} shape as list_corpus."""
+    rows = SUITE.find_corpus(project=(project or None), kind=(kind or None),
+                             projection=(projection or None), source_address=(source_address or None))
+    return {"project": project or None, "total": len(rows), "records": rows}
+
+
+@mcp.tool()
+def read_corpus_record(address: str) -> dict:
+    """INSPECT ONE corpus record back by its run:// address (the capture→read-back→verify loop, and the
+    way a fresh agent inspects what a capture produced). REUSES Suite.read_corpus_record (head→get_content,
+    the canonical resolver path). Returns {address, record} where `record` is the persisted
+    {source_address, output, kind, model, projection, lineage, …} — or {address, record: null} if never
+    written (an HONEST null, never a fabricated record). Read-only."""
+    rec = SUITE.read_corpus_record(address)
+    return {"address": address, "record": rec}
+
+
+# --- LAYER 3: the inversion-finder + the marks/gold read ------------------------------------------
+@mcp.tool()
+def find_relations(item: str, near_space: str, far_space: str, k: int = 10, min_score: float = 0.5) -> dict:
+    """LAYER 3 — THE INVERSION-FINDER: the cross-space relation query "same principle, different subject."
+    Over the SPACE-KEYED persisted vector index, returns the items NEAR `item` in `near_space` but NOT
+    near it in `far_space` (a near∩¬far set difference) — e.g. units sharing a PRINCIPLE
+    (near_space='principles') yet diverging in TOPIC (far_space='topics'), the inversion the discovery
+    loop surfaces. The space ids are the EMBEDDABLE projections — see cognition_info().spaces (the live
+    set; never invent one). REUSES Suite.find_relations (no cosine reimplemented — the k-NN is
+    query_index, the threshold turns 'ranked' into 'is-a-neighbour').
+
+    `min_score` (default 0.5): a NEIGHBOUR is an item whose cosine ≥ this (query_index ranks EVERY indexed
+    item incl. score≈0, so mere presence in the far ranked list ≠ a far-neighbour — without the threshold
+    far would contain everything and the difference would always be empty). A per-projection cluster
+    threshold becomes registry-projected once the relation/generation-policy registries land; a tunable
+    PARAM until then. `k` caps the per-space k-NN.
+
+    FAIL LOUD: if `item` has no persisted vector in EITHER named space, this RAISES (the inversion is
+    undefined without both anchors — never a silent empty that reads as 'no relations'). The vectors come
+    from the capture+embed pass (the embedder must have been up at build) — a missing anchor means run the
+    capture+embed for `item` in both spaces first.
+
+    Returns {item, near_space, far_space, min_score, relations:[ids], near:[{id,score}], far:[{id,score}]}.
+    `relations` is the inversion result; near/far carry the THRESHOLDED neighbour rows so the surface can
+    render the WHY. DELEGATE: Suite.find_relations (→ store/vector_index.query_index space-filter).
+    Read-only; no model call."""
+    return SUITE.find_relations(item, near_space=near_space, far_space=far_space, k=k, min_score=min_score)
+
+
+@mcp.tool()
+def findings_for(address: str) -> dict:
+    """READ the MARKS / gold-likelihood PROFILE at a corpus address — every finding a mark-pass left on
+    `address`, oldest-first (the detection thread). A mark = a finding record; the gold-likelihood profile
+    is findings_for(item) composed with its evidence — a READ, never a stored score (Tim sees-WHY and can
+    overrule; positive-only — frequency only promotes). REUSES the coherence finding store
+    (Suite.store.findings_for over the append-only findings.jsonl — the SAME store coherence writes; the
+    address IS the key). An address with no findings returns an HONEST empty list (not yet marked), never
+    a fabricated mark. Read-only.
+
+    Returns {address, total, findings:[{kind, address, state, source, evidence, ts, …}]}. NOTE: writing
+    marks (`mark`) is a later STORE pass (marks-generalization — a claim/span target + mark_type
+    retrieval); this tool is the READ side, available now. DELEGATE: Suite.store.findings_for
+    (store/fs_store.py)."""
+    rows = SUITE.store.findings_for(address)
+    return {"address": address, "total": len(rows), "findings": rows}
+
+
+# --- CREATE (declarative-direct — a projection LENS, like create_role/create_skill; #58) ----------
+@mcp.tool()
+def create_projection(spec: dict) -> dict:
+    """CREATE a NEW projection LENS DIRECTLY — applies LIVE, NO operator approval (#58: declarative
+    authoring is the agent's, correctness-gated). A PROJECTION is a declared LENS over a corpus unit (one
+    named way to DESCRIBE it — what it IS, its topics, the principles it expresses, its claimed status).
+    Dropping a lens makes it appear EVERYWHERE with zero code change: the capture-schema (if
+    produced_by='model'), the vector spaces find_relations ranges over (if embeds=true), and
+    cognition_info().projections/.spaces — the PART 4.3 "add-a-row = a FILE" registry bar.
+
+    `spec` is the projection ROW (see runtime/projections.py · projections/AGENTS.md):
+      • id          (required) — the lens name; MUST be a valid identifier (it becomes projections/<id>.py).
+      • level       (required) — the abstraction band (open vocab: structural·content·relational·meaning·
+                                 epistemic·generative·texture·functional — a new band is just a new value).
+      • produced_by (required) — 'model' (a capture-role DESCRIBES it — the LLM path, included in the
+                                 capture-schema) | 'code' (a lifter EXTRACTOR produces it — a later pass).
+      • embeds      (required) — bool; does this lens become a vector SPACE (Group L) find_relations uses.
+      • field       (optional) — the output field shape ('string'·'array'·'enum').
+      • enum        (optional) — for field='enum', the allowed values.
+      • desc        (optional) — the render-NOT-judge instruction the capture prompt uses (K3: DESCRIBE
+                                 what the unit claims; do NOT judge whether it is true — that is a later reduce).
+      • stage       (optional) — effort band ('legibility' cheap broad · 'deep' heavier).
+
+    MECHANISM (reuse-don't-parallel): renders `PROJECTION = {...}` source → runs the registry's OWN
+    correctness GATE (import-in-tempdir via ProjectionRegistry — a malformed lens RAISES, never written,
+    mirroring create_role/create_skill's gate-in-tempdir) → writes projections/<id>.py atomically →
+    git-commits via the shared Suite._commit_or_rollback (path-scoped — only the one file; revertible) →
+    rediscovers the live registry. RENDER-NOT-JUDGE is enforced by the schema (a lens DESCRIBES via desc).
+
+    Returns {projection_id, path, live: True, spec}. `live` proves it appears in cognition_info()
+    immediately. The build-dispatch floor is UNTOUCHED — this writes a projections/ DATA file (declarative
+    authoring), it NEVER dispatches claude -p; node-type / executable-code create stays GATED, off this face.
+
+    SEAM (BAR2, cross-lane — flagged, not made): the long-term home is render_projection_source in
+    runtime/authoring.py + a Suite.create_projection method (mirroring create_skill/create_context). This
+    in-server author path is the in-lane reuse-don't-parallel move (the SAME registry gate + the SAME
+    Suite._commit_or_rollback) until that lands — the SUITE lane's own augment-in-lane/flag-the-seam
+    precedent. DELEGATE: runtime.projections (the gate) + Suite._commit_or_rollback + Suite.projection_registry."""
+    import os as _os
+    import tempfile as _tempfile
+    import pprint as _pprint
+    from runtime import projections as _proj
+
+    if not isinstance(spec, dict):
+        raise TypeError(f"create_projection needs a dict spec (the lens ROW), got {type(spec).__name__}")
+    pid = spec.get("id")
+    if not pid or not isinstance(pid, str) or not pid.isidentifier():
+        raise ValueError(
+            f"create_projection: `id` must be a valid python identifier (it becomes projections/<id>.py — "
+            f"addressable by file, like a role/skill). Got {pid!r} — fail loud, never an unnamed/illegal lens.")
+    if pid in SUITE.projection_registry:
+        raise ValueError(
+            f"projection {pid!r} already exists — create_projection is for a NEW lens. Fail loud "
+            f"(registry-is-truth; existing: {sorted(SUITE.projection_registry)}).")
+    # RENDER the lens module source: `PROJECTION = {...}` (the declared row verbatim). Trivial PYTHON-literal
+    # serialization (pprint.pformat — NOT json.dumps, which would emit `true`/`null` that aren't Python) —
+    # NOT a parallel engine (no logic, no behaviour — DATA). The dict round-trips: pformat of a dict of
+    # str/bool/list/None reads back as the same Python value, which the gate then re-validates.
+    row = {k: v for k, v in spec.items() if k in _proj.PROJECTION_FIELDS}
+    row["id"] = pid
+    source = (f'"""projections/{pid}.py — an agent-authored projection LENS (create_projection, #58 direct).\n'
+              f'A declared lens over a corpus unit. See runtime/projections.py + projections/AGENTS.md.\n'
+              f'Its `id` MUST equal the file stem ({pid!r})."""\n\n'
+              f"PROJECTION = {_pprint.pformat(row, indent=4, sort_dicts=True)}\n")
+    # THE CORRECTNESS GATE — import-in-tempdir via the registry's OWN discovery path. A malformed lens
+    # (bad id / missing required / unknown field / bad type) RAISES in _build_projection here, BEFORE any
+    # write to the live projections/ dir (which a bad module would NOT brick — discovery is per-file — but
+    # a bad lens must never go live). Mirrors create_role/create_skill's gate-in-tempdir (reuse the gate).
+    with _tempfile.TemporaryDirectory() as _td:
+        with open(_os.path.join(_td, f"{pid}.py"), "w", encoding="utf-8") as _f:
+            _f.write(source)
+        gated = _proj.ProjectionRegistry().discover([_td])      # RAISES on a malformed lens (the gate)
+        if pid not in gated:
+            raise RuntimeError(
+                f"create_projection: rendered module for {pid!r} did not discover as a PROJECTION — "
+                f"refused to write it (fail loud; a non-discovering lens is a bug in the render).")
+    # WRITE atomically into the LIVE projections/ dir, then git-commit (path-scoped, revertible) via the
+    # shared Suite path — reuse, NOT a parallel write/commit.
+    path = _os.path.join(SUITE.projections_dir, f"{pid}.py")
+    _os.makedirs(SUITE.projections_dir, exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as _f:
+        _f.write(source)
+    _os.replace(tmp, path)                                      # atomic; no partial file
+    sha = SUITE._commit_or_rollback(path, f"create projection lens '{pid}' (direct)")
+    SUITE.projection_registry.rediscover([SUITE.projections_dir])   # go LIVE in this process
+    SUITE._emit("apply", f"created projection lens '{pid}' DIRECTLY — now a live lens · {sha[:8]}",
+                node_name=pid, commit=sha)
+    return {"projection_id": pid, "path": path, "live": pid in SUITE.projection_registry, "spec": row}
 
 
 if __name__ == "__main__":

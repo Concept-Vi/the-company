@@ -13,12 +13,17 @@ The 6 by-use scenarios (the task bar):
      op=embed wiring + the gated ensure_resident is invoked) and the live vector is marked pending a
      safe GPU window — NEVER a blind evict of the live brain.
   4. inspect a run output by address via MCP (inspect_address) → reads the generate run back.
-  5. create: propose_role via MCP → SURFACES (NOT applied); the floor held (no file written, no commit).
+  5. create: propose_role via MCP → SURFACES (kept available); the direct create_role/create_skill/
+     create_context tools are REGISTERED (the #58 direct authoring path — by-use proven in
+     tests/direct_create_acceptance.py, which uses an isolated roles dir + injected committer so it
+     never commits the live repo).
   6. run_items + run_reduce via MCP → the map + the cross-unit join.
 
 + the FLOOR (asserted directly on THIS face, since the cognition source-invariant scans only
-  cognition.py/rules.py/roles.py): no MCP tool exposes resolve/apply/dispatch; propose surfaces with
-  resolved=None and writes no roles/ file.
+  cognition.py/rules.py/roles.py): the BUILD-DISPATCH floor holds — no MCP tool emits dispatch_decision
+  or launches `claude -p` / calls resolve_surfaced (the wire's autonomous repo-mutation stays
+  operator-gated, off this face). AUTHORING-apply (create_role/skill/context) is now ALLOWED (#58 —
+  Tim's reframe: the create-approval gate was the AI default, not his constraint).
 
 Run:  COMPANY_STORE=/tmp/mcp-eng-$$ ./.venv/bin/python tests/mcp_engine_acceptance.py
 (COMPANY_STORE MUST be set BEFORE import — the MCP server binds a module-level SUITE at import.)
@@ -154,8 +159,8 @@ except Exception:
     raised = True
 check("4 inspect_address FAILS LOUD on an unresolvable address (never a silent empty)", raised)
 
-# ── 5. CREATE: propose_role via MCP → SURFACES (NOT applied); the floor held ──────────────────────
-print("\n[5] propose_role via MCP — create = PROPOSE → surface (the operator-only floor)")
+# ── 5. CREATE: propose_role SURFACES (kept) + the DIRECT create tools are registered (#58) ────────
+print("\n[5] propose_role via MCP surfaces (kept) + direct create_role/skill/context registered (#58)")
 roles_dir = os.path.join(ROOT, "roles")
 before_files = set(os.listdir(roles_dir))
 spec = {"id": "mcp_probe_role", "label": "MCP probe",
@@ -163,16 +168,22 @@ spec = {"id": "mcp_probe_role", "label": "MCP probe",
         "output_fields": [{"name": "ack", "type": "bool"}]}
 prop = srv.propose_role(spec)
 sid = prop.get("id")
-check("5 propose_role returns a surfaced id", bool(sid))
+check("5 propose_role (surfacing path, kept available) returns a surfaced id", bool(sid))
 surfaced = srv.SUITE.store.get_surfaced(sid)
 check("5 the proposal SURFACED (an inbox item exists)", surfaced is not None)
-check("5 the surfaced item is UNRESOLVED (resolved is None — NOT self-approved)",
+check("5 the surfaced item is UNRESOLVED (propose still surfaces — NOT applied)",
       surfaced is not None and surfaced.get("resolved") in (None, ""))
 after_files = set(os.listdir(roles_dir))
-check("5 NO roles/ FILE was written (propose ≠ apply — the floor: nothing applied)",
+check("5 propose wrote NO roles/ file (surfacing path is still propose-not-apply)",
       after_files == before_files)
-check("5 the new role is NOT in the live registry (it was only surfaced, not applied)",
-      "mcp_probe_role" not in srv.SUITE.role_registry)
+# the #58 DIRECT create tools are wired (by-use applies LIVE — proven in direct_create_acceptance.py
+# with an isolated dir so this no-regression suite never commits the live repo).
+check("5 the DIRECT create_role tool is registered on the MCP face (#58)", hasattr(srv, "create_role"))
+check("5 the DIRECT create_skill tool is registered on the MCP face (#56/#58)", hasattr(srv, "create_skill"))
+check("5 the DIRECT create_context tool is registered on the MCP face (#56/#58)", hasattr(srv, "create_context"))
+check("5 create_role routes to the DIRECT Suite.create_role (no surfacing in its source)",
+      "create_role" in __import__("inspect").getsource(srv.create_role)
+      and "SUITE.create_role" in __import__("inspect").getsource(srv.create_role))
 
 # ── 6. run_items + run_reduce via MCP → the map + the cross-unit join ─────────────────────────────
 print("\n[6] run_items (map) + run_reduce (cross-unit join) via MCP")
@@ -201,19 +212,49 @@ except Exception:
     raised = True
 check("6 run_reduce rejects an unknown named reduce_rule (fail loud, never fabricate)", raised)
 
-# ── FLOOR (C9.2) — asserted directly on THIS face ─────────────────────────────────────────────────
-print("\n[FLOOR] the operator-only floor holds on the MCP cognition face (C9.2)")
+# ── FLOOR (C9.2, reframed by #58) — asserted directly on THIS face ────────────────────────────────
+print("\n[FLOOR] the BUILD-DISPATCH floor holds on the MCP cognition face (C9.2, #58 reframe)")
 import inspect as _inspect
+import ast as _ast
 src = _inspect.getsource(srv)
-# strip comments + docstrings is overkill; the load-bearing assertion is: no tool CALLS a self-apply path.
-# the FORBIDDEN calls: SUITE.resolve_surfaced / SUITE.apply_role / SUITE.apply_role_delete / dispatch_decision.
-forbidden = ["resolve_surfaced", "apply_role", "apply_role_delete", "dispatch_decision", ".apply_surfaced"]
-code_lines = [l.split("#", 1)[0] for l in src.splitlines()]
-breaches = [f for f in forbidden if any(f in l for l in code_lines)]
-check("FLOOR: NO MCP tool calls resolve_surfaced/apply_role/apply_role_delete/dispatch (create=propose→surface)",
+# #58: AUTHORING-apply (create_role/skill/context → live) is now ALLOWED from the agent face. What
+# STILL holds is the BUILD-DISPATCH floor: no MCP tool may trigger the wire's autonomous repo-mutation —
+# i.e. CALL the operator-only build-dispatch trigger (resolve_surfaced) or the wire's dispatch
+# (dispatch_decision) or launch `claude -p`. We scan the REAL CODE (AST — robust to docstrings/comments
+# that legitimately MENTION these tokens while describing the floor) for any CALL of those names.
+_called = set()
+for node in _ast.walk(_ast.parse(src)):
+    if isinstance(node, _ast.Call):
+        f = node.func
+        nm = f.attr if isinstance(f, _ast.Attribute) else (f.id if isinstance(f, _ast.Name) else None)
+        if nm:
+            _called.add(nm)
+FORBIDDEN_CALLS = {"resolve_surfaced", "dispatch_decision", "apply_role_delete"}
+breaches = sorted(FORBIDDEN_CALLS & _called)
+check("FLOOR: NO MCP tool CALLS the build-dispatch trigger (resolve_surfaced/dispatch_decision) — the "
+      "wire's autonomous repo-mutation stays operator-gated, off this face",
       not breaches)
 if breaches:
-    print("      breach tokens:", breaches)
+    print("      breach calls:", breaches)
+# the `claude -p` build-dispatch is a SUBPROCESS LAUNCH (the wire's implement.py via subprocess/Popen).
+# The phrase "claude -p" appears ONLY in floor-describing docstrings here (which AST/launch-detection
+# ignores); a REAL launch would be a subprocess.run/Popen call or an import of the wire's implement.py.
+# Scan the AST imports + the called-names set for those — never the bare docstring mention.
+_imported = set()
+for node in _ast.walk(_ast.parse(src)):
+    if isinstance(node, _ast.Import):
+        _imported.update(a.name.split(".")[0] for a in node.names)
+    elif isinstance(node, _ast.ImportFrom) and node.module:
+        _imported.add(node.module.split(".")[0])
+check("FLOOR: no MCP tool launches `claude -p` (no subprocess/implement.py — the build-dispatch stays "
+      "operator-gated, off this face)",
+      "subprocess" not in _imported and "implement" not in _imported
+      and not ({"run", "Popen", "call", "check_output"} & _called and "subprocess" in _imported))
+# #58 POSITIVE: authoring-apply IS now reachable from this face (the reframe — create applies directly).
+_code_no_comments = "\n".join(l.split("#", 1)[0] for l in src.splitlines())
+check("FLOOR (#58): authoring-apply IS allowed — create_role/skill/context call the DIRECT Suite methods",
+      "SUITE.create_role" in _code_no_comments and "SUITE.create_skill" in _code_no_comments
+      and "SUITE.create_context" in _code_no_comments)
 # the registered tool set does not include an apply/resolve tool name
 tool_names = set()
 try:

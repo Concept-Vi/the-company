@@ -62,8 +62,13 @@ is a describer; judgement of truth/quality is a LATER reduce pass, never the cap
 
 **To extend:** drop a `projections/<id>.py` (model OR code lens) → it self-registers → it appears in the
 capture-schema (if `model`) / the space set (if `embeds`) / `cognition_info` with NO code change. To
-author one from the agent face: `create_projection` (a SURFACE/SUITE lane; the declarative-direct create,
-like `create_skill`) — a later pass.
+author one from the agent face: `create_projection` (the MCP/agent-face tool — the declarative-direct
+create, like `create_skill`: renders `PROJECTION = {...}`, runs THIS registry's own discover() gate
+in a tempdir, writes `projections/<id>.py`, git-commits (`[self-apply]`, path-scoped → revertible), and
+rediscovers so the lens is LIVE in `cognition_info` immediately; node-type / executable-code create stays
+GATED). The author path currently lives in `mcp_face/server.py` reusing this registry's gate +
+`Suite._commit_or_rollback`; its long-term home is `render_projection_source` in `runtime/authoring.py`
++ a `Suite.create_projection` method (mirroring `create_skill`/`create_context`) — flagged as a seam.
 
 **Seam:** discovered by `runtime/projections.py:ProjectionRegistry` (mirrors `runtime/roles.py:RoleRegistry`
 / `runtime/skills.py:_BaseEntryRegistry`, which mirror `runtime/registry.py:NodeRegistry` —
