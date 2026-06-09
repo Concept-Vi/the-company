@@ -427,6 +427,62 @@ def reduce_rule_names() -> dict:
     return {"names": sorted(_REDUCE_RULES)}
 
 
+# --- SAVED CASCADES (GROUP N · save a proven pipeline → re-run it; AK4 frozen recipes) ----------------
+@mcp.tool()
+def save_cascade(decl: dict) -> dict:
+    """SAVE a proven multi-step pipeline as a re-runnable CASCADE (GROUP N · N1 · AK4 — a frozen recipe an
+    agent reuses without re-deriving). A cascade = a declared chain validated through the EXISTING one door
+    (coherence_actions.build_action — REUSED, NOT a 2nd validator) + persisted (survives reload). REUSES
+    Suite.save_cascade.
+
+    `decl` = {name(str), steps:[{...}], output_schema?(dict)}. EACH STEP:
+      · op        — the OPERATION (REQUIRED, validated): generate|embed|reduce (+similarity/retrieve/detect,
+                    which have no engine primitive yet → out-of-lane, flagged needs-tim/N2).
+      · role      — the role id to fire (REQUIRED at run time; resolved from the live role registry).
+      · model     — OPTIONAL per-step model. MUST be a member of the LIVE model registry (chat ∪ embed) or
+                    build_action FAILS LOUD (registry-is-truth, no hardcoded literal). OMIT it → the
+                    resident default brain (recommended; NO cloud router here — N2, needs-tim).
+      · kind      — OPTIONAL primitive selector: role(run_role · 1→1) | items(run_items · MAP 1→N) |
+                    reduce(run_reduce · JOIN N→1). DEFAULT: op=reduce→reduce; a `fan:true`/`items:[…]` step
+                    →items; else role.
+      · reduce_mode/reduce_rule/cluster_threshold — for a reduce step (mode role|rule|cluster; rule selects
+                    a NAMED reduce-rule via reduce_rule_names()).
+
+    THE SEAM (output→input): step 0 reads run_cascade(inputs); step N reads step N-1's output address(es).
+    A `role` step consumes ONE value, `items` a LIST, `reduce` a LIST→ONE (the runner persists the reduce's
+    joined output to a run:// address so it is feedable+discoverable). Returns build_action's shape
+    {ok, action} or {ok:False, error} — fail-loud, NEVER written on an invalid decl. THE FLOOR: a cascade
+    is run:// computation — running it emits NO resolve/approve/dispatch, launches NO claude -p."""
+    return SUITE.save_cascade(dict(decl))
+
+
+@mcp.tool()
+def list_cascades() -> dict:
+    """LIST the saved cascades (the discoverable re-runnable pipelines — AK4 · registry-is-truth). Each row
+    is the full decl (name·steps·output_schema) so an agent reads the steps/ops/models BEFORE run_cascade.
+    REUSES Suite.list_cascades. Read-only. Returns {cascades:[…]}."""
+    return {"cascades": SUITE.list_cascades()}
+
+
+@mcp.tool()
+def run_cascade(name: str, inputs=None, max_tokens: int = 256) -> dict:
+    """RUN a saved cascade END-TO-END (GROUP N · N3 — the largest net-new). Loads the saved decl (fail-loud
+    if unknown — never a fabricated cascade), then fires the GROUP-N runner (cognition.run_cascade) which
+    rides the EXISTING engine primitives (run_role/run_items/run_reduce — NO 2nd engine): each step's output
+    threads → the next step's input via the run:// resolver, each step is PERSISTED + op.run-INDEXED (so
+    find_runs/list_runs see every step), the final addressed output is returned. REUSES Suite.run_cascade.
+
+    `name`   — a saved cascade name (see list_cascades / save_cascade).
+    `inputs` — the FIRST step's argument. A run://·cas:// address is RESOLVED via the engine resolver; a
+               literal is used as-is; None → the role's default framing. A missing/unresolvable step input
+               FAILS LOUD (the engine raises — no silent skip).
+
+    Returns {action, turn_id, steps:[{step, role, kind, op, addresses, address?}…], final_address,
+    final_output, final_addresses}. THE FLOOR: run:// computation only — NO resolve/approve/dispatch, NO
+    claude -p (a cascade step is a role-run, never a code-build)."""
+    return SUITE.run_cascade(name, inputs, max_tokens=max_tokens)
+
+
 @mcp.tool()
 def preview_turn(utterance: str, mode: str = "") -> dict:
     """RUN a full STAGED turn (the cast fires, the declared rules route) — non-mutating (no chat history

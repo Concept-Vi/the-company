@@ -283,8 +283,67 @@ telemetry — `append_event(kind='op.run')`, NEVER a resolve/approve/dispatch; `
 19/19). Proven by `tests/run_discovery_acceptance.py` (the run index + projection + MCP tools + the full
 outputs→inputs-**by-discovery** loop, live against the resident 4B). **NOT built (deliberate follow-up):**
 lifecycle — `run://` outputs are **unbounded** (no gc/ttl); discovery is the keystone, gc is a later call.
-A reduce's joined output is not landed at a `run://` address today (its `op.run` row carries empty
-`addresses`), so a reduce is discoverable-as-having-happened but not yet feedable-by-address.
+A reduce's joined output is not landed at a `run://` address by `run_reduce` itself (its `op.run` row
+carries empty `addresses`) — so a STANDALONE reduce is discoverable-as-having-happened but not feedable-by-address.
+**The cascade RUNNER (below) closes this for a chained reduce:** it OWNS persist+index for every step, so a
+reduce *inside a cascade* IS landed at a step-keyed `run://` address and IS feedable/discoverable.
+
+## The cascade RUNNER (Cognition Engine GROUP N · `runtime/cognition.py` + `runtime/suite.py` + `mcp_face/server.py` · the LARGEST net-new of the corpus pillar)
+
+A **saved cascade** is a declared, named, RE-RUNNABLE pipeline — a frozen recipe (AK4) an agent reuses
+without re-deriving. **Two halves, both REUSE-don't-parallel:**
+
+- **DECLARE + SAVE = the EXISTING one door.** A cascade IS an `ActionRegistry` row — the decl
+  `{name, steps:[{op, model?, ...}], output_schema?}` VALIDATED + persisted by
+  `runtime/coherence_actions.py:build_action` / `ActionRegistry` (**EXISTS — REUSED, never a 2nd validator/
+  registry**). `Suite.save_cascade(decl)` is the ONE validation door (registry-is-truth: each step's `model`
+  must be a member of the LIVE model registry = chat ∪ embed, else `build_action` FAILS LOUD on a hardcoded
+  literal); it persists to `cascade_registry` (an `ActionRegistry` at `<store.root>/cascades.json` — ext4,
+  survives reload). `list_cascades`/`get_cascade` discover them.
+- **EXECUTE = the net-new RUNNER** (`cognition.run_cascade`). For each step it fires the right ENGINE
+  PRIMITIVE — `run_role` (1→1) · `run_items` (MAP 1→N) · `run_reduce` (JOIN N→1) — **riding the existing
+  engine, NO 2nd engine.** It THREADS each step's output → the next step's input via the `run://` resolver,
+  PERSISTS + op.run-INDEXES each step (so `find_runs` sees every step), and returns the final addressed output.
+
+**THE TWO TRAPS the design handles (the seams an agent updating this MUST preserve):**
+
+- **TRAP 1 — the decl `op` is CONSTRAINED.** `build_action._VALID_OPS` =
+  `(generate, embed, similarity, retrieve, detect, reduce)`; a step's `op` CANNOT be a primitive name
+  (`run_role`/`run_items`/`run_reduce`), and `coherence_actions.py` is reuse-only (do NOT edit it). So the
+  PRIMITIVE rides an ADDITIVE step field the validator copies through verbatim: **`kind` ∈
+  `CASCADE_KINDS` = `(role, items, reduce)`** (`_cascade_step_kind`, fail-loud on an unknown kind). Derivation
+  when `kind` absent: `op=="reduce"`→reduce · `fan:true`/`items:[…]`→items · else role. **`op` is the
+  OPERATION axis; `kind` is the FAN axis** — never collapse them. `similarity`/`retrieve`/`detect` have no
+  engine primitive in the trio yet → out-of-lane, **flagged needs-tim/N2** (a step using one fails loud at
+  run, never silently skips).
+- **TRAP 2 — `run_reduce` does NOT address its joined output** (it returns `ReduceResult.joined`; its
+  `op.run` row carries empty `addresses` by design — the caller decides whether to land it). So **THE RUNNER
+  OWNS PERSIST + INDEX UNIFORMLY for EVERY step:** it calls the primitives with `emit=None` (suppressing their
+  self-`op.run`, which would otherwise DOUBLE-record `run_items`/`run_reduce` and give the reduce an
+  addressless row), then persists each step's output to a STEP-KEYED address and emits exactly ONE `op.run`
+  per step under the matching `ENGINE_RUN_OP`. This is what makes a chained reduce **feedable-by-address +
+  discoverable** — closing the "reduce not addressed" gap for cascades.
+
+**THE SEAM (output→input — the heart):** step 0 reads `run_cascade(inputs)`; step N reads step N-1's output
+ADDRESS(es). **Cardinality is explicit per-primitive** (never inferred by magic): `role` consumes ONE value →
+ONE address `run://<turn>/<i>-<role>`; `items` consumes a LIST → a LIST `run://<turn>-s<i>/<role>/<j>`;
+`reduce` consumes a LIST → ONE address THE RUNNER persists. Step outputs are keyed by **step index**
+(`<i>-<role>`), NOT bare `run://<turn>/<role>` — two steps sharing a role would otherwise overwrite (the MCP
+`run_role` wrapper uses the bare form; the runner can't, a chain re-uses roles). **`resolve_role` is INJECTED**
+(not imported) so the engine stays Suite-free — the Suite passes `self.role_registry` lookup (fail-loud on an
+unknown role).
+
+**THE FLOOR (AGENTS.md rule + C9.2):** a cascade step is a role-run — `run://` COMPUTATION. The runner emits
+ONLY `op.run` telemetry (per step) — **NEVER resolve/approve/dispatch, launches NO `claude -p`**; a cascade is
+computation, never a code-build. (Source-invariant-scanned by `cognition_governance_acceptance`.)
+
+**MCP face:** `save_cascade(decl)` · `list_cascades()` · `run_cascade(name, inputs?)` (rich descriptions,
+AK2 bar). **NOT built (deliberate follow-up):** cloud-tier routing per step (N2 — `run_role` pins
+`RESIDENT_BASE_URL`; a multi-endpoint router is net-new fabric/ transport, needs-tim); looping / multi-turn /
+human-tier steps (the synthesis mentions them — not in the linear-runner scope this pass). Add a kind/op
+mapping ⇒ extend `CASCADE_KINDS` + `_cascade_step_kind` **and reflect it here** (the drift home). Proven by
+`tests/cascade_acceptance.py` (save→validate→persist→reload + the 2-step live end-to-end against the resident
+4B + per-step op.run discovery + fail-loud + the floor).
 
 ## The activation contexts (Concurrent Cognition G5 · `runtime/activation.py` + `runtime/suite.py` · the dial generalised)
 

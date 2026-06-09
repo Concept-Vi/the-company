@@ -297,6 +297,14 @@ class Suite:
         self.projection_registry = ProjectionRegistry().discover([self.projections_dir])
         self.role_registry = role_registry or RoleRegistry().discover([self.roles_dir])
         self.ROLE_REGISTRY = {rid: self.role_registry[rid].spec for rid in self.role_registry}
+        # Cognition Engine GROUP N — the SAVED-CASCADE registry (a saved cascade = a declared ActionRegistry
+        # row). REUSE coherence_actions.ActionRegistry (the one-door validator+store EXISTS — never a 2nd
+        # registry); persisted to a json file UNDER THE STORE ROOT (ext4 — never /mnt/c), so a reload sees
+        # saved cascades (persistence-survives-reload). save_cascade validates via build_action + saves here;
+        # run_cascade loads from here + fires the GROUP-N runner (cognition.run_cascade). Drift home: the
+        # cascade-runner section in runtime/AGENTS.md.
+        from runtime.coherence_actions import ActionRegistry as _ActionRegistry
+        self.cascade_registry = _ActionRegistry(str(self.store.root / "cascades.json"))
         # The bridge is a ThreadingHTTPServer → concurrent POST /api/review/next run in separate threads of
         # ONE process over this one Suite. The session-cursor advance is a read-modify-write (load→run→save)
         # with no lock → concurrent calls dropped advances (lost update). A per-session in-process lock
@@ -623,6 +631,102 @@ class Suite:
         if role:
             runs = [r for r in runs if r.get("role") == role]
         return {"runs": runs[:limit], "total_records": len(runs)}
+
+    # =================================================================================================
+    # SAVED CASCADES (Cognition Engine GROUP N · the saving + running FACE over the runner)
+    #
+    # A saved cascade = a declared, named, RE-RUNNABLE pipeline. REUSE-don't-parallel:
+    #   * the DECL is validated + persisted by coherence_actions.build_action / ActionRegistry (EXISTS) —
+    #     save_cascade is the ONE validation door, the registry survives reload.
+    #   * the EXECUTOR is cognition.run_cascade (the GROUP-N runner) riding run_role/run_items/run_reduce —
+    #     NO 2nd engine.
+    # registry-is-truth: a step's `model` must be a member of the LIVE model registry (chat ∪ embed) —
+    # build_action FAILS LOUD on a hardcoded literal. A step's `role` must be a registered role at RUN time
+    # (resolved via role_registry) — fail loud on an unknown role. THE FLOOR: a cascade is run:// COMPUTATION
+    # — run_cascade emits only op.run telemetry, NEVER resolve/approve/dispatch, launches NO claude -p.
+    # Drift home: the cascade-runner section in runtime/AGENTS.md.
+    # =================================================================================================
+    # The NAMED deterministic reduce-rules a cascade reduce-step (mode="rule") may select BY NAME (a Python
+    # callable can't cross a saved decl). SINGLE SOURCE here; mirrors the MCP run_reduce _REDUCE_RULES seam.
+    _CASCADE_REDUCE_RULES = {
+        "count":  lambda values: {"count": len(values)},
+        "concat": lambda values: {"concat": list(values)},
+        "first":  lambda values: {"first": (values[0] if values else None)},
+    }
+
+    def _cascade_models(self) -> set:
+        """The model REGISTRY build_action validates a cascade's per-step models against — the LIVE chat ∪
+        embed models (registry-is-truth; a step naming anything outside this FAILS LOUD as a hardcoding
+        violation). chat = available_models(); embed = models_at('embed') (best-effort — a down embed
+        endpoint is tolerated so a generate-only cascade still validates; a missing embed model on an embed
+        step then fails loud in build_action, never silently)."""
+        models = set(self.available_models() or [])
+        try:
+            models |= set(self.models_at("embed") or [])
+        except Exception:
+            pass
+        return models
+
+    def save_cascade(self, decl: dict) -> dict:
+        """SAVE a proven pipeline as a re-runnable cascade (GROUP N · N1). The decl is the ActionRegistry
+        shape `{name, steps:[{op, model?, role, kind?, ...}], output_schema?}`. VALIDATED through the ONE
+        existing door (coherence_actions.build_action — registry-is-truth on each step's model; fail-loud on
+        no-name/no-steps/unknown-op/non-registry-model) then PERSISTED to the cascade_registry (survives
+        reload). The execution fields (`role`/`kind`/`reduce_mode`/`fan`/...) ride through verbatim (the
+        validator copies steps as-is — they are the runner's axis, the constrained `op` is the OPERATION
+        axis). Returns {ok, action} or {ok:False, error} (build_action's shape — fail-loud, never written
+        on invalid)."""
+        from runtime import coherence_actions as _act
+        built = _act.build_action(decl, models=self._cascade_models())
+        if not built.get("ok"):
+            return built
+        self.cascade_registry.save(built["action"])
+        self._emit("cascade.save", f"saved cascade {built['action']['name']!r} "
+                   f"({len(built['action']['steps'])} steps)", cascade=built["action"]["name"])
+        return built
+
+    def list_cascades(self) -> list:
+        """The saved cascades (registry-is-truth — the discoverable re-runnable pipelines, AK4). Each is the
+        full decl row; an agent reads it to know the steps/ops/models before run_cascade."""
+        return self.cascade_registry.all()
+
+    def get_cascade(self, name: str) -> dict | None:
+        """One saved cascade decl by name (None if absent — honest, not a fabricated row)."""
+        return self.cascade_registry.get(name)
+
+    def run_cascade(self, name: str, inputs=None, *, max_tokens: int = 256) -> dict:
+        """RUN a saved cascade END-TO-END (GROUP N · N3 — the largest net-new). Loads the saved decl
+        (fail-loud if unknown — never a fabricated cascade), then fires cognition.run_cascade (the runner
+        riding run_role/run_items/run_reduce): each step's output threads → the next step's input via the
+        run:// resolver, each step is PERSISTED + op.run-INDEXED (so find_runs sees every step), the final
+        addressed output is returned. `inputs` is the first step's argument (a run://·cas:// address is
+        resolved; a literal used as-is). A missing/unresolvable step input FAILS LOUD (the engine raises).
+
+        DELEGATE: cognition.run_cascade. The role resolver is injected (self.role_registry lookup — the SAME
+        registry the swarm uses; fail-loud on an unknown role) so the engine stays Suite-free. THE FLOOR:
+        run:// computation only — no resolve/approve/dispatch, no claude -p."""
+        action = self.cascade_registry.get(name)
+        if action is None:
+            raise ValueError(
+                f"run_cascade: no saved cascade {name!r} — saved cascades are {[a['name'] for a in self.cascade_registry.all()]} "
+                f"(save one via save_cascade first; registry-is-truth, never a fabricated cascade).")
+        import time as _time
+        from runtime import cognition as _cog
+        turn_id = "cascade-" + _time.strftime("%Y%m%d-%H%M%S") + f"-{int(_time.monotonic()*1000) % 100000}"
+
+        def _resolve_role(role_id: str):
+            if role_id not in self.role_registry:
+                raise ValueError(
+                    f"run_cascade: cascade {name!r} references role {role_id!r} which is not registered — "
+                    f"registered roles: {sorted(self.role_registry)} (author from the registry, never invent).")
+            return self.role_registry[role_id]
+
+        return _cog.run_cascade(action, self.store, turn_id=turn_id, inputs=inputs,
+                                resolve_role=_resolve_role,
+                                reduce_rules=self._CASCADE_REDUCE_RULES,
+                                emit=lambda k, p: self._emit(k, p.get("summary", k),
+                                                             **{kk: vv for kk, vv in p.items() if kk != "summary"}),
+                                max_tokens=max_tokens)
 
     def voice_log(self, event: str, **data) -> None:
         """Client-side voice trace (Tim 2026-06-07: "store the process to a proper log so you can

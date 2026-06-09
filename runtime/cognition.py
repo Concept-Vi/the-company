@@ -1446,3 +1446,261 @@ def _cluster_units(read, *, threshold: float, embed_fn=None, base_url: str = RES
             clusters.append([uid])
             reps.append(vec)
     return clusters, vectors
+
+
+# =====================================================================================================
+# THE CASCADE RUNNER (Cognition Engine GROUP N · N1-N3 · the LARGEST net-new of the corpus pillar)
+#
+# A saved cascade is a DECLARED chain — the ActionRegistry decl `{name, steps:[{op, model, ...}],
+# output_schema}` validated + persisted by `runtime/coherence_actions.py:build_action`/`ActionRegistry`
+# (the validator EXISTS — REUSED, never re-built). This is the EXECUTOR that runs such a saved decl
+# end-to-end: for each step it fires the right ENGINE PRIMITIVE (`run_role`/`run_items`/`run_reduce`),
+# THREADS each step's output → the next step's input (via the run:// resolver), PERSISTS + op.run-INDEXES
+# each step (so `find_runs` sees every step), and returns the final step's addressed output.
+#
+# WHY net-new (RESEARCH-SYNTHESIS §4.1, coherence_actions.py:5-8 in-code): `build_action`/`ActionRegistry`
+# only VALIDATE + SAVE a declaration; the multi-hop output→input EXECUTOR (per-step primitive dispatch,
+# threading, persist, index) was never built. This is it — riding the existing primitives, NOT a 2nd engine.
+#
+# ── THE TWO TRAPS THIS DESIGN HANDLES (the seams an agent updating this MUST preserve) ──
+#  TRAP 1 — the decl `op` is CONSTRAINED. `build_action._VALID_OPS` =
+#    (generate, embed, similarity, retrieve, detect, reduce); a step's `op` CANNOT be a primitive name
+#    (run_role/run_items/run_reduce). So the PRIMITIVE is selected from ADDITIVE step fields the validator
+#    copies through verbatim (it never inspects them): the `kind` selector below. NEVER edit
+#    coherence_actions.py to widen `op` — the primitive is a separate axis (op = the OPERATION the role
+#    performs; kind = HOW it fans).
+#  TRAP 2 — `run_reduce` does NOT persist its joined output to a run:// address (cognition.py ~1375-1386:
+#    its op.run carries EMPTY addresses by design — the caller decides whether to land it). So THE RUNNER
+#    OWNS PERSIST + INDEX UNIFORMLY for EVERY step: it calls the primitives with `emit=None` (suppressing
+#    their self-op.run, which would otherwise double-record run_items/run_reduce AND give the reduce an
+#    addressless row), then persists each step's output to a STEP-KEYED address and emits exactly ONE
+#    op.run per step under the matching ENGINE_RUN_OP. This is what makes a reduce step FEEDABLE-by-address
+#    and discoverable by find_runs — closing the "reduce not addressed today" gap for cascades.
+#
+# THE FLOOR (AGENTS.md rule + C9.2): a cascade step is a role-run (run:// COMPUTATION). The runner emits
+# only op.run telemetry — NO resolve/approve/dispatch, launches NO claude -p. A cascade is computation,
+# never a code-build. (Source-invariant-scanned by cognition_governance_acceptance.)
+# =====================================================================================================
+
+CASCADE_KINDS = ("role", "items", "reduce")   # the closed primitive selectors (drift home: runtime/AGENTS.md)
+
+
+def _cascade_step_kind(step: dict) -> str:
+    """Select the ENGINE PRIMITIVE for a cascade step from the DECL (registry-is-truth — never guessed).
+
+    The decl `op` is constrained to coherence_actions._VALID_OPS (TRAP 1), so the primitive rides an
+    ADDITIVE `kind` field the validator copies through verbatim. DERIVATION (fail-loud, no silent default):
+      * explicit `kind` ∈ CASCADE_KINDS wins (the author said so);
+      * else `op=="reduce"` → "reduce" (the JOIN op maps to the JOIN primitive);
+      * else (op generate/embed) → "items" if the step is a FAN (`fan:true` OR `items` supplied), else "role".
+    An explicit `kind` outside CASCADE_KINDS FAILS LOUD (rule 8 — never a fabricated primitive)."""
+    kind = step.get("kind")
+    if kind is not None:
+        if kind not in CASCADE_KINDS:
+            raise ValueError(
+                f"cascade step kind {kind!r} is not a known primitive selector — declared kinds are "
+                f"{CASCADE_KINDS} (role=run_role · items=run_items · reduce=run_reduce). Fail loud (rule 8).")
+        return kind
+    if step.get("op") == "reduce":
+        return "reduce"
+    if step.get("fan") or step.get("items") is not None:
+        return "items"
+    return "role"
+
+
+def run_cascade(action: dict, store, *, turn_id: str,
+                inputs: Any = None,
+                resolve_role: "Callable[[str], Role]",
+                reduce_rules: "dict[str, Callable] | None" = None,
+                emit: "Callable[[str, dict], None] | None" = None,
+                base_url: str = RESIDENT_BASE_URL, model: str = RESIDENT_MODEL,
+                max_tokens: int = 256) -> dict:
+    """EXECUTE a saved cascade (a validated ActionRegistry decl) END-TO-END (the GROUP N runner).
+
+    `action` — the saved decl `{name, steps:[{op, model?, role, kind?, ...}], output_schema}` (already
+        validated by `coherence_actions.build_action`; this runner does NOT re-validate the decl shape —
+        save_cascade is the one validation door, REUSED). The runner reads the EXECUTION fields off each
+        step: `role` (the role id — REQUIRED, resolved via `resolve_role`), `kind`/`op`/`fan` (the
+        primitive selector — see `_cascade_step_kind`), `model` (per-step model override; None → the
+        resident default — NO cloud router here, that is N2 in fabric/, needs-tim), and for reduce steps
+        `reduce_mode`("role"|"rule"|"cluster", default "role") + `reduce_rule` (a NAMED rule via
+        `reduce_rules`, for mode="rule").
+    `inputs` — the FIRST step's input (the cascade's argument). A run://·cas:// address is resolved; a
+        literal is used as-is. None → the role's default "Utterance:" framing.
+    `resolve_role(role_id) -> Role` — the caller's role resolver (Suite.role_registry / mcp _resolve_role).
+        Injected (not imported) so the runner stays engine-pure — no Suite/authoring import cycle.
+    `reduce_rules` — the NAMED deterministic reduce-rules (for a reduce step with mode="rule"); a callable
+        can't cross a decl, so it is selected BY NAME (mirrors the MCP run_reduce _REDUCE_RULES seam).
+
+    ── THE SEAM (output→input threading — the heart of the runner) ──
+      * step 0 reads `inputs` (the cascade argument).
+      * step N (N>0) reads step N-1's output ADDRESS(es) — the run:// address(es) the prior step landed at.
+      * CARDINALITY (per-primitive, explicit — never inferred by magic):
+          - role   : consumes ONE value (the prior single address resolved, or `inputs`) → produces ONE
+                     address run://<turn>/<i>-<role>.
+          - items  : consumes a LIST (the prior step's address LIST, or `inputs` as a 1-list) → produces a
+                     LIST run://<turn>/<i>-<role>/<j>.
+          - reduce : consumes a LIST of addresses (the prior step's address list — the run_reduce input) →
+                     produces ONE address run://<turn>/<i>-<role> (THE RUNNER persists it — TRAP 2).
+      * a step's outputs are keyed by STEP INDEX (`<i>-<role>`), NOT bare `run://<turn>/<role>` — so two
+        steps sharing a role never overwrite (the MCP run_role wrapper uses the bare form; the runner
+        can't — a chain re-uses roles).
+
+    FAIL LOUD (no silent fallback, rule 4): a missing/unresolvable step input RAISES (via the engine's
+    `resolve_address`/`resolve_run_ref`, on_missing="raise" — the runner adds NO own check, the engine
+    already raises); a step naming no `role`, an unknown `kind`, or a reduce mode/rule that doesn't
+    resolve RAISES. A step never silently skips.
+
+    Returns {action, turn_id, steps:[{step, role, kind, address|addresses, op}...], final_address,
+             final_output}. THE FLOOR: emits only op.run telemetry (per step) — never resolve/approve/dispatch."""
+    name = action.get("name", "<unnamed>")
+    steps = action.get("steps") or []
+    if not steps:
+        raise ValueError(f"run_cascade: action {name!r} has no steps — nothing to execute (fail loud).")
+    reduce_rules = reduce_rules or {}
+
+    step_records: list[dict] = []
+    prev_addresses: list[str] | None = None   # the prior step's output address(es) — the thread
+
+    for i, step in enumerate(steps):
+        role_id = step.get("role")
+        if not role_id:
+            raise ValueError(
+                f"run_cascade: step {i} of {name!r} declares no `role` — a cascade step IS a role-run "
+                f"(the model runs in the role; rule = pure decision, no role). Fail loud (rule 8).")
+        role = resolve_role(role_id)
+        kind = _cascade_step_kind(step)
+        # A per-step `model` override is honoured on the RESIDENT endpoint (the engine pins RESIDENT_BASE_URL).
+        # CLOUD-tier routing is N2 net-new transport in fabric/, NOT this lane — a cloud model id here FAILS
+        # LOUD downstream in the client (no silent fallback). needs-tim: a multi-endpoint per-step router (N2).
+        step_model = step.get("model") or model
+        kw_common = {"max_tokens": max_tokens}
+
+        if kind == "reduce":
+            # ── REDUCE step: consume the prior step's address LIST → ONE joined output the RUNNER persists.
+            reduce_mode = step.get("reduce_mode", "role")
+            if prev_addresses is None:
+                raise ValueError(
+                    f"run_cascade: step {i} ({role_id!r}, reduce) is the FIRST step but a reduce JOINS the "
+                    f"outputs of a prior MAP step — there is no prior step to reduce. Fail loud (a reduce "
+                    f"needs upstream addresses; put a map/items step before it).")
+            rkw = {"turn_id": turn_id, "mode": reduce_mode, "emit": None,
+                   "base_url": base_url, "model": step_model, "max_tokens": max_tokens}
+            if reduce_mode == "role":
+                rkw["role"] = role
+            elif reduce_mode == "rule":
+                rname = step.get("reduce_rule")
+                if rname not in reduce_rules:
+                    raise ValueError(
+                        f"run_cascade: step {i} reduce_mode='rule' names reduce_rule {rname!r} which is not "
+                        f"a known named rule {sorted(reduce_rules)} — a callable can't cross a decl, select "
+                        f"by name; fail loud (rule 8, never a fabricated rule).")
+                rkw["reduce_rule"] = reduce_rules[rname]
+            elif reduce_mode == "cluster":
+                rkw["cluster_threshold"] = step.get("cluster_threshold", 0.85)
+            else:
+                raise ValueError(
+                    f"run_cascade: step {i} reduce_mode {reduce_mode!r} unknown — declared modes are "
+                    f"role|rule|cluster. Fail loud.")
+            t0 = time.monotonic()
+            res = run_reduce(list(prev_addresses), store, **rkw)
+            ms = int((time.monotonic() - t0) * 1000)
+            # TRAP 2 — THE RUNNER persists the joined output to a step-keyed run:// address (run_reduce
+            # does NOT). This makes the reduce step FEEDABLE-by-address + discoverable by find_runs.
+            address = f"run://{turn_id}/{i}-{role.id}"
+            cas = store.put_content(res.joined)
+            store.set_ref(address, cas)
+            out_addresses = [address]
+            final_output = res.joined
+            run_op, op_kind = reduce_mode, "cognition.run_reduce"
+            items_visibility = {}
+
+        elif kind == "items":
+            # ── ITEMS step (the MAP): fan the role over the prior step's address LIST (or `inputs` as a
+            # 1-list on step 0). run_items persists each unit independently of emit; we suppress its
+            # self-op.run (emit=None) and emit ONE uniform op.run for the fan below.
+            if prev_addresses is not None:
+                units: list = list(prev_addresses)            # the prior step's per-unit run:// addresses
+            elif step.get("items") is not None:
+                units = list(step["items"])                   # an EXPLICIT unit list declared on the step
+            elif inputs is not None:
+                units = inputs if isinstance(inputs, list) else [inputs]
+            else:
+                raise ValueError(
+                    f"run_cascade: step {i} ({role_id!r}, items) has no units — pass `inputs`, declare "
+                    f"`items` on the step, or place it after a map step. Fail loud.")
+            t0 = time.monotonic()
+            res = run_items(role, units, store, turn_id=f"{turn_id}-s{i}", emit=None,
+                            base_url=base_url, model=step_model, **kw_common)
+            ms = int((time.monotonic() - t0) * 1000)
+            # FAIL LOUD ON A PROCESSING FAILURE (the lane law: "a missing step input / DOWN MODEL → fail
+            # loud, never skip"; Tim's no-silent-failures rule). run_items is PER-UNIT RESILIENT by design
+            # (F2 — a poison unit goes to .failed and the good units still return), and we suppressed its
+            # `cognition.items` rollup (emit=None) which is where .failed is normally surfaced. In a CASCADE
+            # that resilience is the WRONG posture: the downstream reduce consumes the SET, so a silently
+            # SHRUNK input set silently changes the result (a confident answer built from fewer inputs than
+            # supplied). So a cascade items step RAISES if ANY unit failed processing — the failed units are
+            # named so the failure is legible, never an invisible shorter address list. (A resolution failure
+            # already re-raised inside run_items regardless of emit — this covers the F2 processing path.)
+            if res.failed:
+                raise RuntimeError(
+                    f"run_cascade: step {i} ({role_id!r}, items) had {len(res.failed)} unit(s) FAIL "
+                    f"processing — a cascade reduce consumes the SET, so a silently shrunk input set is "
+                    f"not acceptable (fail loud, no silent skip). Failed units: "
+                    f"{[{'i': fi, 'error': err} for (fi, err) in res.failed]}")
+            # run_items keys its outputs run://<turn>-s<i>/<role>/<j> (its own turn_id). Those ARE the
+            # step-keyed addresses (the s<i> suffix makes them step-unique). Use the OK addresses.
+            out_addresses = [rr.address for rr in res.runs if rr.ok]
+            final_output = res.resolved
+            run_op, op_kind = getattr(role, "op", "generate"), "cognition.run_items"
+            address = None
+            # carry the run_items visibility (skipped — only populated under a declared on_missing=skip; a
+            # processing failure already raised above) onto the step record so it is never invisible.
+            items_visibility = {"skipped": [fi for (fi, _r) in res.skipped]} if res.skipped else {}
+
+        else:  # kind == "role" — ONE value in, ONE value out
+            # ── ROLE step: consume ONE input (the prior single address resolved, or `inputs` on step 0).
+            if prev_addresses is not None:
+                if len(prev_addresses) != 1:
+                    raise ValueError(
+                        f"run_cascade: step {i} ({role_id!r}, role) consumes ONE value but the prior step "
+                        f"produced {len(prev_addresses)} addresses — wire a `reduce`/`items` step (a role "
+                        f"step is single-cardinality). Fail loud (the cardinality rule).")
+                primary = resolve_address(store, prev_addresses[0], turn_id=turn_id)
+            elif inputs is not None:
+                primary = (resolve_address(store, inputs, turn_id=turn_id)
+                           if isinstance(inputs, str) and _scheme(inputs) is not None else inputs)
+            else:
+                primary = ""   # the role's default "Utterance:" framing (run_role default-input path)
+            ctx = {"utterance": primary}
+            t0 = time.monotonic()
+            out = run_role(role, ctx, base_url=base_url, model=step_model, store=store, **kw_common)
+            ms = int((time.monotonic() - t0) * 1000)
+            address = f"run://{turn_id}/{i}-{role.id}"
+            cas = store.put_content(out)
+            store.set_ref(address, cas)
+            out_addresses = [address]
+            final_output = out
+            run_op, op_kind = getattr(role, "op", "generate"), "cognition.run_role"
+            items_visibility = {}
+
+        # #54 STORAGE-DISCOVERY — ONE uniform op.run per step (THE RUNNER OWNS INDEX — TRAP 2). op keys
+        # the ENGINE_RUN_OP so find_runs/list_runs see every cascade step; addresses are the step's REAL
+        # output address(es). Telemetry only — NO resolve/approve/dispatch (the floor).
+        if emit is not None:
+            emit("op.run", {
+                "summary": f"{op_kind} · cascade {name} step {i} · {role.id} · {ms}ms",
+                "op": op_kind, "run_op": run_op, "turn_id": turn_id, "role": role.id,
+                "duration_ms": ms, "addresses": out_addresses,
+                "cascade": name, "step": i, "step_kind": kind, **items_visibility,
+            })
+
+        step_records.append({"step": i, "role": role.id, "kind": kind, "op": op_kind,
+                             "addresses": out_addresses, **items_visibility,
+                             **({"address": address} if address else {})})
+        prev_addresses = out_addresses
+
+    final_address = prev_addresses[0] if (prev_addresses and len(prev_addresses) == 1) else None
+    return {"action": name, "turn_id": turn_id, "steps": step_records,
+            "final_address": final_address, "final_output": final_output,
+            "final_addresses": prev_addresses}
