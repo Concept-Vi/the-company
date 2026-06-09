@@ -148,7 +148,7 @@ REMAINING: ingest_paths (G21) as mcp_face/tools/ module · ②/③ as documented
 ## 2026-06-10 — G21 ✅ ingest first-class (① complete through the MCP) + a new finding
 ingest(roots/paths, space, max_files, force) live as mcp_face/tools/ingest.py → Suite.ingest_paths (walk_files promoted to runtime/corpus.py). Incremental proven by use (28/29 skipped on re-run); failures NAMED in the response. 45 tools (the +1 is a NEW capability).
 - ✅ **G24 · the 4B digest emits malformed JSON on some content (runtime/bridge.py, deterministic at temp 0).** The CLASS-fix: schema-GUIDED decoding at the transport (fabric passes the role's output_schema as a vLLM guided-json constraint → unparseable JSON becomes impossible for every role, not just digests). Check what fabric/transport.py json_schema support already does (L-transport built something) — wire or finish it. Until then: bridge.py is un-ingested (named loudly each run, never silent).
-- 🟡 **G25 · sha-refresh ingest** — skip-if-present is path-keyed; a CHANGED file needs force=True. The staleness pass (index_staleness is the read seam) = the follow-on for a self-refreshing corpus.
+- ✅ **G25 · sha-refresh ingest** — skip-if-present is path-keyed; a CHANGED file needs force=True. The staleness pass (index_staleness is the read seam) = the follow-on for a self-refreshing corpus.
 REMAINING: full-repo ingest via the new tool (a few bounded calls) · ②/③ flows · the FRESH-AGENT RE-EVAL · M5/M8 · G4/G14/G5/G6/G24/G25 · substrate exploration.
 
 ## 2026-06-10 — ① AT FULL SCALE (the full-repo ingest, via the G21 pipeline)
