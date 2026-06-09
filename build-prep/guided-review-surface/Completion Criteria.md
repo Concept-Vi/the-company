@@ -1065,3 +1065,76 @@ Tim: "it shouldn't need me in the loop to build it, and it should be made so tha
 ### U2 · browser/process hygiene each fire · STANDING RULE
 - close pages / cap open tabs every fire; a chrome process leak (~4971 procs/7.3GB) was the hidden cause of
   the session-long flakiness (wedged evals, dying servers, SIGTERM'd commands). Clean spawned procs.
+
+---
+# ════════ GROUP V — Element addressing: B (runtime read) · A (registry-generation chain) · substrate-retrieval (placeholder) ════════
+> Tim 2026-06-09: clicking an un-registered element made the RHM say "not registered" — my R1 fix minted FAKE
+> ui:// addresses (registry-is-truth violation). The registry is design/_system/addresses.json (82 entries:
+> represents · code · howto{what/can-do/how-to-change} · capabilities). Decided: B now + A as a chain + C
+> (both compose). Captured expansively per grow-scope.
+
+## V-B · Runtime element comprehension (the IMMEDIATE fix) · 🔴 build now
+- **FUNCTION:** clicking an element does the RIGHT thing per registration state:
+  · REGISTERED element (real data-ui-ref ui://) → indicate that real address → resolves to its dossier (as now).
+  · UN-REGISTERED element → do NOT mint a fake ui://. Indicate the NEAREST REGISTERED ANCESTOR (a real address,
+    for grounding + annotation keying) AND capture the clicked element's ACTUAL CONTENT (visible text + a
+    bounded outerHTML snippet + tag/role) and ship it to the RHM so it describes what was actually clicked from
+    the mockup HTML it already holds (the screen_reader/comprehension capacity — suite.py:2522 MOCKUP block).
+  · background/body click → the whole-mockup base (unchanged).
+- **THE PROMPT-INJECTION UPDATE (Tim's explicit ask):** the mockup context block must teach the RHM BOTH paths:
+  (1) a REGISTERED address returns its dossier (represents/howto) — answer from that; (2) for a POINTED ELEMENT
+  that is NOT registered, here is the actual element HTML/text the operator pointed at — describe it from the
+  mockup, and offer that it can be PROPOSED into the registry (live-vs-proposed). Add a "POINTED ELEMENT" sub-block.
+- **FORM:** the chip reads plainly ("looking at: <plain>"), the element stays highlighted; the RHM's answer is
+  about the real thing clicked, never "unregistered, can't tell you."
+- *Status:* 🔴 FE (StudioKit deixis — mine) + the injection (suite.py mockup block — coordinate with cognition).
+  Verify by use: click an un-registered element → RHM names what it actually is.
+
+## V-A · The registry-generation chain (the swarm registers the surface) · 🔴 scoped, cross-lane (cognition engine)
+> THE corpus-chain the engine was generalized FOR: run_items (1 role × N units, the map) + run_reduce (the
+> cross-unit join + embed-cluster dedup) + a jury confirm → grows the address registry by READING the surface.
+> This is the system doing to its own face what it was built to do. Full pipeline:
+- **0 · EXTRACT (deterministic, parse.py-style, no model):** scan the 23 mockups → the MEANINGFUL elements
+  (buttons/sections/named controls/semantic headings; skip layout-only). Each → a unit:
+  `{mockup_file, selector/path, outerHTML, visible_text, tag/role, nearest_registered_ancestor(+its dossier),
+  mockup_base_address}`. This list (N≈200-600) IS the allocation source — the cheap exact floor first.
+- **1 · GROUND:** screen_reader × 23 mockups → per-mockup summaries (run once, shared as context for that
+  mockup's elements — each element understood in its screen's purpose).
+- **2 · MAP (run_items, NEW `register_element` role × N units, concurrent on the 4B swarm — the axis-inversion):**
+  each element → a proposed dossier `{address(proposed), represents, howto{what,what_you_can_do,how_to_change},
+  capabilities, maps_to_feature|proposed, confidence}`. CONTEXT per unit (grounding is everything — no-fiction
+  law): the element snippet+text+role · the parent registered address + ITS dossier (child inherits consistent
+  framing + nests right) · the mockup summary (step 1) · a few existing addresses.json entries as few-shot (voice/
+  shape match) · the Feature & Function Inventory (ground truth — never invent a capability; un-built element →
+  marked proposed). Outputs at run://<turn>/register_element/<i>.
+- **3 · REDUCE (run_reduce — three jobs):** (a) mode=cluster (embed-dedup): "which proposed elements are the SAME
+  surface across mockups?" → merge (ui://inbox in C1 & C5 → one) — the built-twice-discovery primitive on the
+  registry itself; (b) nest/validate: build parent→child tree, check each address vs contracts/address.py grammar,
+  resolve collisions; (c) merge howtos where an element was described N times. Output: a reconciled candidate registry.
+- **4 · CONFIRM (jury / stronger-model):** is represents accurate? is howto grounded (cross-check code ref via
+  refcheck.py + feature inventory for no-fiction)? variance/low-confidence → FLAGGED not dropped (the variance-
+  not-error → stronger-model-confirm gate).
+- **5 · PROPOSE → operator (the floor):** confirmed entries DON'T auto-write — surface as a BATCH proposal (inbox/
+  review surface) → Tim approves once (simple-consent) → THEN written to addresses.json (canonical) + data-ui-ref
+  stamped into the mockup HTML → parse.py re-runs → element-map.json regenerates. Provenance per entry (which
+  run://, model, confidence — introspective-data law). Nothing canonical until approved (operator-only).
+- **GENERALIZES:** "read a surface's elements → propose registry entries → reduce → confirm → operator-approve"
+  is a reusable REGISTER-A-SURFACE faculty — works on the LIVE app too (read running DOM + code refs), not just mockups.
+- *Status:* 🔴 NET-NEW chain. Cross-lane: uses cognition's engine (run_items/run_reduce/jury) + a new role →
+  co-design with cognition. A new register_element role (roles/ — lands on the C seam). The EXTRACT + parse.py
+  round-trip + the proposal-batch surface are mine. Loop-prep this as its own pipeline before building.
+
+## V-C · A + B compose (self-completing surface) · the frame
+- B = the RUNTIME floor (any not-yet-registered element still described live, never a dead "unregistered").
+- A = the BUILD-TIME enrichment (the swarm fills the registry in over time, dossiers get richer).
+- Together: the registry steadily fills; the fallback always covers the gap. Never hit a dead end; coverage + richness grow.
+
+## V-D · PLACEHOLDER (Tim's idea, more thought when closer) — substrate-retrieval for element context
+- **The idea:** when an element is clicked, RETRIEVE related substrate (once the substrate exists) about that
+  element's content and inject it as ADDITIONAL context. Example: the right-hand-man button → retrieve the
+  right-hand-man documents/files in the directories → inject for a richer, grounded answer about that element.
+- So the element-comprehension context = the element HTML (B) + its registered dossier (A) + RETRIEVED SUBSTRATE
+  about what it represents (V-D). The address becomes a true junction: what-you-see + what-it-is + the-code +
+  the-docs/substrate + the-conversation.
+- **Placeholder** — depends on the substrate/retrieval layer existing; revisit with more design when closer.
+  Likely reuses the embed/retrieve nodes + the corpus/find_relations the engine now has. Marked, not built.
