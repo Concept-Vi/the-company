@@ -127,6 +127,12 @@ Roles fire model calls through `fabric/` guards (a model runs only INSIDE a role
 - **`triad_synth`** — the **spec-compiler's REDUCE role** (⑦, mode=role; mirrors `reduce_synth`, no cast):
   the N grounded criteria → `{completion_criteria, implementation_guide, research_synthesis}` (the loop-prep
   triad, house style). A DRAFT → me → Tim (never a build off an unconfirmed compiled spec).
+- **`judge_drift`** — the **drift-radar CONFIRM role** (COMPOSITION ②): given a cluster of semantically-near
+  repo files (from `run_reduce(mode='cluster')` over `space='repo'`), judges genuine `built-twice` / `overlap`
+  vs legitimately `distinct` → `{verdict, shared, the_source, note}` — the false-positive guard so the drift
+  map flags real unification targets, not every near-neighbour. Single-generate (mirrors `verify_lens`); NO
+  confidence float (verdict token + cluster nearness carry the signal). In the `drift` cast. Judges, never
+  fixes — a confirmed drift becomes a MARK for review.
 
 **Where new things go:** a new role = a new file `roles/<id>.py` declaring its `ROLE` dict (its `id`
 MUST equal the file name). Put it in a mode's cast by adding that mode to its `mode_scope`. Make it a
