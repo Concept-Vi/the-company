@@ -144,3 +144,24 @@ REMAINING PROOF: RG10 — run the cascade end-to-end → a once-dead mockup elem
 
 ### [2026-06-09 LOOP] from:cognition re:registry-coverage audit (the "use the models" test) — DONE + findings
 Ran the tightened registry-coverage classify (deterministic overlap + 4B kind-call + escalate-candidacy). PROVED the earned fix (deterministic overlap = grounded, zero hallucination vs the loose run's 7). 3 deterministic registry-is-truth violations + 3 built-twice unification findings (sampling-keys ×3, plan/apply ×2, propose/panel/extend ×2). Full report + Tim's candidacy shortlist: build-prep/cognition-self-improvement/registry-coverage-findings.md. Lesson logged: registry-coverage is deterministic-overlap-primary; the 4B kind-call is low-signal. Next loop beats: the built-twice/violation fixes (careful suite.py/bridge.py edits) + ⑥ verify-jury + the G-series seams. — cognition
+
+### [2026-06-09 COMMIT+RECORD] from:the-runner re:V-A registry-generation COMMIT step — 7/8 pieces already landed (concurrent), RG8 blocked-on-registration
+I am the dedicated COMMIT+RECORD agent for the unified V-A registry-generation build. By the time I ran the gate, the concurrent cognition session had ALREADY committed 7 of the 8 RG pieces (the V-A ADOPTED note above). I verified each landed commit captured ONLY its declared files (no contamination) and that the roles discover live + the floor imports at current HEAD. NOTHING re-committed — the work is already on main.
+
+WHAT'S COMMITTED (verified by `git show --name-only` + live discovery):
+- ff990fa — RG3 register_element.py + RG6 confirm_registration.py + roles/AGENTS.md (both drift-home reflections present, grep count=2). Files captured = EXACTLY those 3, no contamination. Both roles discover live via RoleRegistry().discover(['roles']); check_dossier importable.
+- 690ab28 — RG1 parse.py + candidates.json (940 units) · RG7 registry-generation.cascade.json · RG9 registry_writeback.py · RG6-refcheck.py floor (check_dossier). Files captured = EXACTLY those 5.
+- 5a1bcd5 / 90d8a81 — cognition self-improvement docs + workflow.js + MESSAGES (not RG deliverables).
+
+RG8 — RegistryProposals.tsx — BLOCKED-FOR-THIS-AGENT, NOT committed (honest, no green-paint):
+- It is built-verified per its own report (tsc clean for the file, vite build clean) and cognition explicitly HELD it for the FE/[M] lane ("commit when your FE tree's calm").
+- BUT: isolation-proven, it adds 5 NEW orphans to the already-red ui_registry_acceptance suite: ui://registry/proposals · /approve · /approve-bar · /notice · /refresh — none in addresses.json (registry-is-truth defect class). I CANNOT make it gate-clean without (a) auto-mutating the real design/_system/addresses.json (BARRED by the operator-only floor) or (b) editing RG9's lane file. So the file STAYS in the tree, recorded as built-but-blocked-on-registration. Remediation is operator-gated RG9 write-back (register those 5 addresses on Tim's approve), NOT this agent's to force.
+- ALSO: RegistryProposals is orphaned (mounted by no region — the App.tsx/Review.tsx view-switch is the RG10 convergence seam). Mounting + backend routes GET /api/registry/proposals + POST /api/registry/approve are the RG9/RG10 follow-on.
+
+THE GATE (./.venv/bin/python ops/cli/app.py suites): 8 standing reds — consult · convergence_signoff · event_address · reachability · rhm_completion · twin_located_gold · ui_registry · wire_trigger. ALL pre-existing cross-session reds, NONE caused by RG files (proven: (1) ui_registry is red WITHOUT my tsx on the 3 pre-existing orphans ui://settings/cognition · ui://studio/rhm/read · ui://studio/stage/whole — documented in OPEN-REDS as UI-REGISTRY-lineage's; (2) grep shows none of the other 7 red suites reference any RG-introduced file). They do NOT block the RG record; they are other lanes' fix-board items.
+
+TWO SEAM CONTRACTS NOW FROZEN (committed):
+1. candidates.json (RG1 EXTRACT) — {generated_from, count:940, filter, candidates[]}; each unit: {mockup_file, selector, outerHTML, visible_text, tag, ancestor_address, ancestor_dossier, base_address, self_address, self_registered}.
+2. register_element output_schema (RG3) — {address, represents, howto{...}, capabilities, maps_to_feature, confidence}. This is the dossier shape RG9 write-back consumes.
+
+REMAINING PROOF = RG10 (the gate, whole-by-use): run the cascade end-to-end → a once-dead mockup element resolves to a real dossier after Tim approves. NEEDS-TIM: (a) an embedder GPU window for the cluster-reduce step; (b) the engine seams cognition flagged (confirm jury-firing as run_jury not single run_role, {mockup}-keyed shared-context provisioning, cluster embed model at runtime) — the RG10 convergence round; (c) RG8's FORM/feel (batch-review walk) once mounted; (d) mounting RegistryProposals + the backend proposals/approve routes. — the-runner
