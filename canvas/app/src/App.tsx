@@ -173,6 +173,13 @@ function Hud() {
       <div className="view-switch" data-ui-ref="ui://view-switch">
         <button className={view === 'canvas' ? 'on' : ''} onClick={() => setView('canvas')} title="the operating canvas">◧ canvas</button>
         <button className={view === 'review' ? 'on' : ''} onClick={() => setView('review')} title="review the design mockups with the right-hand-man">▦ review</button>
+        {/* settings reachable from the REVIEW view too (the canvas toolbar gear is hidden when reviewing) —
+           the SAME consolidated Settings surface (model · persona · modes · voice · roles). Tim: change the
+           RHM model from where you are, without switching back to the canvas. */}
+        {view === 'review' && (
+          <button data-ui-ref="ui://settings" onClick={() => ctrl.openSettings()}
+            title="settings — change the model, persona, modes, voice">⚙ settings</button>
+        )}
       </div>
       {/* REVIEW WORKSPACE — separate from the canvas, same machinery (the live RhmChat brain mounted inside
          this same AppContext). Covers the canvas when active. */}
