@@ -53,6 +53,9 @@ def register(mcp, suite):
         result = fn(spec, model=model or None) if kind == "role" else fn(spec)
         out = dict(result) if isinstance(result, dict) else {"result": result}
         out["kind"] = kind
-        out["reflect_in"] = _DRIFT_HOME.get(kind, f"{kind}/AGENTS.md")
+        # N6: the drift-home reflection is now AUTOMATIC (same commit as the entry) — the response
+        # confirms it instead of instructing the agent to do something it can't through this surface.
+        out["reflected_in"] = _DRIFT_HOME.get(kind, f"{kind}/AGENTS.md")
+        out["reflected"] = True
         return out
     return create

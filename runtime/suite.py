@@ -8949,7 +8949,12 @@ class Suite:
         with open(tmp, "w", encoding="utf-8") as f:
             f.write(source if source.endswith("\n") else source + "\n")
         os.replace(tmp, path)                               # atomic; no partial file
-        sha = self._commit_or_rollback(path, commit_msg)    # fail loud if not git-revertible
+        # N6 — auto-reflect the new role in roles/AGENTS.md, SAME commit (the cold-agent eval twice left
+        # the drift red after an MCP create — the reflect is now the system's own job, never a follow-up).
+        _refl = self._reflect_drift_home(self.roles_dir, rid, "role", desc=str(spec.get("description") or ""))
+        sha = self._commit_or_rollback(path, commit_msg,
+                                       extra_paths=[_refl[0]] if _refl else None,
+                                       restore={_refl[0]: _refl[1]} if _refl else None)
         self._rediscover_roles()                            # committed → NOW make it live
         self._emit("apply", f"{emit_msg} · {sha[:8]}",
                    node_name=rid, commit=sha, address="ui://chrome/workshop")
@@ -9022,7 +9027,11 @@ class Suite:
         with open(tmp, "w", encoding="utf-8") as f:
             f.write(source if source.endswith("\n") else source + "\n")
         os.replace(tmp, path)                               # atomic; no partial file
-        sha = self._commit_or_rollback(path, commit_msg)    # fail loud if not git-revertible
+        # N6 — auto-reflect the new skill/context in its drift-home, SAME commit.
+        _refl = self._reflect_drift_home(base, eid, kind)
+        sha = self._commit_or_rollback(path, commit_msg,
+                                       extra_paths=[_refl[0]] if _refl else None,
+                                       restore={_refl[0]: _refl[1]} if _refl else None)
         self._emit("apply", f"{emit_msg} · {sha[:8]}",
                    node_name=eid, commit=sha, address="ui://chrome/workshop")
         self.refresh_map()
@@ -9143,7 +9152,11 @@ class Suite:
         with open(tmp, "w", encoding="utf-8") as _f:
             _f.write(source)
         os.replace(tmp, path)                        # atomic; no partial file
-        sha = self._commit_or_rollback(path, f"create {kind} '{rid}' (direct)")
+        # N6 — auto-reflect in the drift-home, SAME commit (never a dangling reflect-instruction).
+        _refl = self._reflect_drift_home(base, rid, kind, desc=str(row.get("desc") or row.get("description") or ""))
+        sha = self._commit_or_rollback(path, f"create {kind} '{rid}' (direct)",
+                                       extra_paths=[_refl[0]] if _refl else None,
+                                       restore={_refl[0]: _refl[1]} if _refl else None)
         setattr(self, reg_attr, RegClass().discover([base]))   # rediscover → live in this process
         self._emit("apply", f"created {kind} '{rid}' DIRECTLY — now a live {kind} · {sha[:8]}",
                    node_name=rid, commit=sha)
@@ -9973,16 +9986,52 @@ class Suite:
         supplies a stub so no real commit hits the live repo)."""
         return self._git_self_commit(list(paths), msg, prefix="[self-build]")
 
-    def _commit_or_rollback(self, path: str, msg: str) -> str:
+    def _reflect_drift_home(self, base_dir: str, rid: str, kind: str, desc: str = "") -> tuple | None:
+        """N6 — AUTO-REFLECT a just-created registry entry in its drift-home (<base_dir>/AGENTS.md), so
+        the per-registry acceptance suite stays green WITHOUT a human/agent follow-up edit (the cold-agent
+        eval twice created a role through the MCP and left the drift red — `reflect_in` alone was a
+        dangling instruction an MCP-only agent cannot execute). Appends ONE line under a marked section
+        (created if absent); idempotent (already-reflected → no-op). Returns (path, original_text) so the
+        caller can include the file in the SAME commit + restore it on rollback — or None (no drift home /
+        already reflected)."""
+        p = os.path.join(base_dir, "AGENTS.md")
+        if not os.path.exists(p):
+            return None
+        txt = open(p, encoding="utf-8").read()
+        if f"`{rid}`" in txt:
+            return None                                   # already reflected (idempotent)
+        marker = "## Agent-authored entries (auto-reflected)"
+        line = (f"- **`{rid}`** — agent-authored {kind} (created via the declarative-direct face). "
+                f"{(desc or '').strip()[:140]}\n")
+        if marker in txt:
+            new = txt.replace(marker + "\n", marker + "\n" + line, 1)
+        else:
+            new = txt.rstrip() + (f"\n\n{marker}\n"
+                                  "<!-- created live by the create face; one line per entry — keeps the\n"
+                                  "     drift-home acceptance green; refine the prose by integration. -->\n"
+                                  + line)
+        with open(p, "w", encoding="utf-8") as f:
+            f.write(new)
+        return (p, txt)
+
+    def _commit_or_rollback(self, path: str, msg: str, *, extra_paths: list | None = None,
+                            restore: dict | None = None) -> str:
         """Commit a just-written self-change; if the commit FAILS, roll the file back and raise —
         never leave a live self-change without its revert safety net (red-team F2: fail loud, not
-        silent success). Returns the sha on success."""
-        sha = self._git_self_commit([path], msg)
+        silent success). Returns the sha on success. N6: `extra_paths` ride in the SAME commit (e.g.
+        the auto-reflected drift-home); `restore` maps path→original_text to put back on rollback."""
+        sha = self._git_self_commit([path] + list(extra_paths or []), msg)
         if not sha:
             try:
                 os.remove(path)
             except OSError:
                 pass
+            for rp, rtxt in (restore or {}).items():
+                try:
+                    with open(rp, "w", encoding="utf-8") as f:
+                        f.write(rtxt)
+                except OSError:
+                    pass
             raise RuntimeError(
                 f"git commit failed for {os.path.basename(path)} — rolled back the write and refused "
                 "to apply: a self-change must be git-revertible (the safety net), or it does not go live.")
