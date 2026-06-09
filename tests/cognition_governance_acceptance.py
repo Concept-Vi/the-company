@@ -81,7 +81,10 @@ COG_SOURCES = ["runtime/cognition.py", "runtime/rules.py", "runtime/roles.py",
                "runtime/relation_types.py", "runtime/ai_tics.py", "runtime/forms.py",
                # Group I — the mode-detection-rule registry: a cognition-layer registry that PRODUCES a
                # candidate mode + feeds the toggle; the floor must cover it (it emits no resolve/dispatch).
-               "runtime/mode_detection_rules.py"] + \
+               "runtime/mode_detection_rules.py",
+               # CALLER — the always-on activation tick: an executable cognition path that FIRES the H/I
+               # drivers+detector; the floor must cover it (the tick is computation — no resolve/dispatch).
+               "runtime/activation_driver.py"] + \
     [f"roles/{f}" for f in os.listdir("roles") if f.endswith(".py")]
 # coverage-regression guard: the new surfaces MUST stay scanned (so the guard can't silently shrink).
 check("C9.2 the floor source-invariant COVERS the MCP agent face + the skills registry (new surfaces)",
@@ -95,6 +98,9 @@ check("C9.2 the floor source-invariant COVERS the 6 wired corpus/cognition regis
 check("C9.2 the floor source-invariant COVERS the mode-detection-rule registry (Group I — it produces a "
       "candidate + feeds the toggle, never a resolve/dispatch)",
       "runtime/mode_detection_rules.py" in COG_SOURCES)
+check("C9.2 the floor source-invariant COVERS the always-on activation caller (CALLER — the tick fires "
+      "the H/I drivers+detector; computation only, never a resolve/dispatch/claude -p)",
+      "runtime/activation_driver.py" in COG_SOURCES)
 floor_breach = []
 for src in COG_SOURCES:
     with open(src) as fh:

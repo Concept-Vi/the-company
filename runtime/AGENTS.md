@@ -453,10 +453,15 @@ mapping ⇒ extend `CASCADE_KINDS` + `_cascade_step_kind` **and reflect it here*
 The **activation contexts** generalise "mode" (the presence dial) from *presence-modes* to the named ways
 a cast can fire. Per-turn (the live reply) is the spine of G0–G4; G5 adds the **three NET-NEW non-turn
 triggers** as declared data + real entry points (R1-FOLD F7 / R2-FOLD H6 — there was NO activation
-substrate: `background` was only a presence-MODE directive, zero `.timer` units). **The always-on DRIVERS
-that *call* these entry points (the idle-loop daemon · the OS/bridge event-hook source · the timer
-scheduler) are system-lifecycle + GPU-always-on concerns → needs-tim; this build provides the MECHANISM +
-entry points, proven by USE (invoking fires the cast).**
+substrate: `background` was only a presence-MODE directive, zero `.timer` units). **The always-on CALLER
+is now BUILT (`runtime/activation_driver.py` — `ActivationCaller.activation_tick(suite)` fires the DUE
+clock-driven drivers [background idle-gate · held-cursor rollup · mode-detect→toggle] + sense ONLY on a
+supplied real event; it REUSES the H/I entry points byte-for-byte, never bypasses the idle gate, and is
+floor-covered in `COG_SOURCES`). `POST /api/activation/tick` is the live manual/external-drive seam. The
+AUTONOMOUS loop (`run_activation_loop`) is OFF BY DEFAULT behind `activation_loop_enabled()`
+(`COMPANY_ACTIVATION_LOOP`) — importing the bridge auto-starts nothing (the `wire_armed`/`policy=None`
+inert default). ENABLING the always-on cadence live (the flag + the tick interval/triggers) is a
+system-behaviour decision → needs-tim; the MECHANISM is proven by USE (a tick fires the cast).**
 
 **The net-new registry (drift home — C9.4 / R2-FOLD H5; `tests/activation_contexts_acceptance.py` asserts
 it stays reflected HERE, mirroring `rules_acceptance` → `RULE_OPS`):**
