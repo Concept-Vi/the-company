@@ -347,3 +347,10 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
   no addr → locus none → composer disabled until you click the rail card). Fix: Review.tsx corpus effect binds the
   address when a mockup's open without one. HELD — not editing canvas/app while cognition's RegistryProposals.tsx
   is uncommitted in the tree (avoid the hot-tree collision); fix after V-A lands.
+
+## 2026-06-09 — deep-link locus-binding bug RESOLVED properly + verified (Tim: "investigate, understand, resolve faithfully")
+- INVESTIGATED → ROOT (traced, not guessed): the App.tsx deep-link effect (?mockup=) opens the mockup EAGERLY on mount, BEFORE the async corpus loads — so it can't pass an address. Review.tsx's corpus-binding effect guarded on `!reviewMockup`, but the deep-link already set reviewMockup → the effect skipped binding the open mockup → reviewAddress stayed null → composer disabled (couldn't comment until you clicked the rail card, which passes the address).
+- RESOLVED FAITHFULLY (6b63c3f, Review.tsx only): the corpus effect now binds the OPEN mockup's address from the corpus row when none is bound — registry-truth (address FROM corpus, never invented), reflects-never-owns; guarded on reviewAddress-falsy so a user's element selection / "whole screen" is never clobbered; unmapped mockups (corpus address null) stay null (honest). Deps [corpus.length, reviewMockup].
+- VERIFIED BY USE (chrome, deep-link ONLY, no rail-card click): badge "LOOKING AT: INBOX" binds, composer enables on typing, comment persists to /api/annotations at ui://inbox (two records now). The deep-link → comment path that was dead now works.
+- File-disjoint commit (explicit pathspec) — did NOT touch cognition's uncommitted RegistryProposals.tsx (no hot-tree collision).
+- NOTE: cognition's V-A workflow files (register_element/candidates/writeback/RegistryProposals) still UNCOMMITTED in the tree (their workflow's commit-phase may not have run / stalled). Their lane — I leave them. If still uncommitted much later it may need a flag, but NOT mine to commit.
