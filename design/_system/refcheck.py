@@ -286,6 +286,163 @@ def collect_refs(register: dict, addresses: dict) -> list:
     return items
 
 
+def _check_one_ref(sub: str, cands: list, bridge_lines: list) -> dict:
+    """Dispatch ONE sub-ref to the right form-checker (the SAME dispatch run_corpus uses, lifted to
+    ONE place so check_dossier reuses it rather than re-spelling it — reuse-not-parallel). Returns the
+    raw {status, points_at, ...} from the matched checker. Forms (in the order run_corpus tested them):
+      • /api/...                              → check_api_route (route literal in bridge.py)
+      • glob / dir / no-file-extension token  → unverifiable (NOT drift — honest classification)
+      • Capitalised.method (Suite.verb)       → check_symbol against bridge.py
+      • bare dotted symbol (no file)          → check_symbol against bridge.py
+      • file[:line]                           → check_ref against the resolved source"""
+    if sub.startswith("/api/"):
+        return check_api_route(sub, bridge_lines)
+    if "*" in sub or sub.endswith("/") or "." not in sub.split()[0]:
+        return {"status": "unverifiable", "points_at": f"unrecognised form (glob/dir/no file:line): {sub!r}"}
+    if re.fullmatch(r'[A-Z]\w*\.\w+', sub):
+        return check_symbol(sub, bridge_lines)
+    f, _line, _ = parse_ref(sub)
+    if f is None:
+        return check_symbol(sub, bridge_lines)
+    return check_ref(sub, candidates=cands)
+
+
+# =================================================================================================
+# THE DOSSIER FLOOR — RG6 Layer 1 (the DETERMINISTIC no-fiction gate, model-independent).
+#   A single PROPOSED registry dossier (the register_element role's output, RG3) is verified WITHOUT
+#   any model: (a) every capability ∈ the canonical capability vocabulary (contracts/ui_info — the
+#   closed drift-home set, REUSED, not a hand-listed copy); (b) maps_to_feature ∈ register.json
+#   features[].id ∪ {"proposed"}; (c) any code ref resolves to a real file/symbol (REUSES the existing
+#   _check_one_ref dispatch). This catches FABRICATION regardless of model strength — the no-fiction
+#   guarantee that must NOT rest on the 4B jury (the E4 epistemic-monoculture caveat). A dossier that
+#   FAILS here is FLAGGED (never dropped, never proposed-as-confirmed) — variance→flag, error→flag too.
+# =================================================================================================
+
+# Reuse the canonical capability vocabulary (the closed set + its drift-home + fail-loud), NOT a copy.
+# refcheck runs from its own dir (design/_system), so contracts/ is not on the default path — add the
+# COMPANY root (READ-ONLY; the same root the rest of this file resolves refs against) before importing.
+import sys as _sys                                                                    # noqa: E402
+if COMPANY not in _sys.path:
+    _sys.path.insert(0, COMPANY)
+from contracts.ui_info import normalize_capabilities, CAPABILITY_FIELDS, _CORPUS_CAP_MAP  # noqa: E402
+
+
+def _load_feature_ids(design_dir=None) -> set:
+    """The Feature & Function Inventory ids = register.json features[].id. A dossier's `maps_to_feature`
+    must be one of these (or the literal 'proposed' for an un-built element). Fail loud on a malformed
+    register (mirrors collect_refs' discipline)."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    design = design_dir or os.path.dirname(here)
+    register = json.load(open(os.path.join(design, "register.json"), encoding="utf-8"))
+    feats = register.get("features")
+    if not isinstance(feats, list):
+        raise ValueError("register.json malformed: 'features' is not a list")
+    ids = set()
+    for f in feats:
+        if "id" not in f:
+            raise ValueError(f"register.json feature missing id: {f!r}")
+        ids.add(f["id"])
+    return ids
+
+
+def check_dossier(dossier: dict, *, feature_ids: set | None = None, bridge_lines: list | None = None,
+                  resolve=_resolve) -> dict:
+    """LAYER 1 — the deterministic no-fiction floor for ONE proposed registry dossier (RG6).
+
+    `dossier` is a register_element output: {address, represents, howto, capabilities[],
+    maps_to_feature, confidence, code?(optional)}. Verifies, WITHOUT any model:
+      • capabilities[]   — EVERY entry ∈ the canonical capability vocabulary (contracts/ui_info's closed
+                           set; an UNKNOWN string is FABRICATION → FAIL). REUSES normalize_capabilities
+                           (which fails loud on an unknown cap — the single source, no copied list).
+      • maps_to_feature  — ∈ register.json features[].id, OR the literal 'proposed' (a legitimately
+                           un-built element). Anything else = an INVENTED feature id → FAIL.
+      • code (if present)— resolves to a real file/symbol via the EXISTING _check_one_ref dispatch
+                           (compound refs split). 'drift' (resolves but lands wrong) and 'unverifiable'
+                           (glob/un-resolvable form) are NOT fabrication → they do NOT fail the floor;
+                           a code ref naming a file/symbol that does NOT exist DOES (a status that the
+                           dispatch returns as drift with severity high / 'does not exist'). Absent code
+                           on a 'proposed' element is FINE (un-built → nothing to resolve yet).
+
+    Returns {passed: bool, checks: {capabilities, maps_to_feature, code}, reasons: [str]}. Deterministic:
+    the SAME dossier always yields the SAME verdict (no model, no time, no order-dependence). FLAG, never
+    drop — the caller (confirm_status) ANDs this with the jury verdict; a False here forces FLAGGED."""
+    if not isinstance(dossier, dict):
+        raise TypeError(f"check_dossier: dossier must be a dict, got {type(dossier).__name__}")
+    fids = feature_ids if feature_ids is not None else _load_feature_ids()
+    if bridge_lines is None:
+        bridge_res = resolve("bridge.py")
+        bridge_lines = bridge_res[1] if bridge_res else []
+    reasons: list = []
+    checks: dict = {}
+
+    # (a) capabilities ∈ the canonical vocabulary. normalize_capabilities raises on an unknown string
+    #     (its rule-4 fail-loud) — we CATCH that to turn fabrication into a FLAG, not a crash (a jury
+    #     pipeline must not die on one bad dossier; it flags it and moves on).
+    caps = dossier.get("capabilities", [])
+    cap_ok = True
+    cap_detail = ""
+    if caps is None:
+        caps = []
+    if not isinstance(caps, (list, tuple, set)):
+        cap_ok = False
+        cap_detail = f"capabilities must be a list, got {type(caps).__name__}"
+    else:
+        try:
+            normalize_capabilities(list(caps))                 # REUSE — the closed-set check + fail-loud
+            cap_detail = f"all ∈ vocabulary {sorted(_CORPUS_CAP_MAP)}"
+        except ValueError as e:
+            cap_ok = False
+            cap_detail = str(e)
+    checks["capabilities"] = {"passed": cap_ok, "detail": cap_detail, "value": list(caps)}
+    if not cap_ok:
+        reasons.append(f"capability fabrication: {cap_detail}")
+
+    # (b) maps_to_feature ∈ register.json ids ∪ {"proposed"}.
+    mtf = dossier.get("maps_to_feature")
+    feat_ok = (mtf == "proposed") or (mtf in fids)
+    checks["maps_to_feature"] = {
+        "passed": feat_ok, "value": mtf,
+        "detail": ("'proposed' (un-built element — legitimate)" if mtf == "proposed"
+                   else (f"∈ inventory ({len(fids)} features)" if feat_ok
+                         else f"NOT an inventory feature id and not 'proposed' (invented)"))}
+    if not feat_ok:
+        reasons.append(f"feature fabrication: maps_to_feature {mtf!r} is not an inventory id nor 'proposed'")
+
+    # (c) code ref (OPTIONAL) resolves. Only a ref that names a NON-EXISTENT file/symbol fabricates;
+    #     drift (lands wrong) + unverifiable (glob/no-form) are honest non-fabrication signals → no fail.
+    code = dossier.get("code")
+    code_check = {"passed": True, "detail": "no code ref (un-built / proposed — nothing to resolve)",
+                  "subrefs": []}
+    if code:
+        cands = _candidates_for(dossier.get("address", "") or "", dossier.get("represents", "") or "")
+        sub_results = []
+        fabricated = False
+        for sub in split_refs(code):
+            r = _check_one_ref(sub, cands, bridge_lines)       # REUSE the exact run_corpus dispatch
+            pts = (r.get("points_at") or "")
+            # FABRICATION = a ref that names a file/symbol that does NOT exist (the high-confidence
+            # "does not exist" / "not found" signals). A drift that still resolves to a real file, or
+            # an unverifiable form, is NOT fabrication (mirrors refcheck's conservative verdict order).
+            is_fab = (
+                ("not found under" in pts) or ("does not exist" in pts) or
+                (r.get("status") == "drift" and ("not found" in pts)) or
+                (r.get("status") == "drift" and ("not in bridge.py" in pts))
+            )
+            if is_fab:
+                fabricated = True
+            sub_results.append({"ref": sub, "status": r.get("status"), "points_at": pts,
+                                "fabricated": is_fab})
+        code_check = {"passed": not fabricated, "subrefs": sub_results,
+                      "detail": ("a code ref names a file/symbol that does not exist (fabrication)"
+                                 if fabricated else "all code refs resolve to real files/symbols")}
+        if fabricated:
+            reasons.append("code fabrication: a code ref names a non-existent file/symbol")
+    checks["code"] = code_check
+
+    passed = cap_ok and feat_ok and code_check["passed"]
+    return {"passed": passed, "checks": checks, "reasons": reasons}
+
+
 def run_corpus():
     """Validate every ref in the real corpus; write refcheck-report.json; return the report."""
     here = os.path.dirname(os.path.abspath(__file__))
@@ -312,24 +469,10 @@ def run_corpus():
         cands = _candidates_for(it["owner"], it["label"])
         for sub in split_refs(it["raw"]):
             checked += 1
-            if sub.startswith("/api/"):
-                r = check_api_route(sub, bridge_lines)
-            elif "*" in sub or sub.endswith("/") or "." not in sub.split()[0]:
-                # a glob (nodes/*.py), a directory (voice/), or a token with no file extension →
-                # unrecognised form → unverifiable, NEVER drift, NEVER a bogus symbol grep (the task
-                # forbids silently skipping; we classify it honestly instead).
-                r = {"status": "unverifiable", "points_at": f"unrecognised form (glob/dir/no file:line): {sub!r}"}
-            elif re.fullmatch(r'[A-Z]\w*\.\w+', sub):
-                # Suite.verb form (Capitalised.method, no path) — grep the API face for the verb.
-                # (Not a file: 'Suite.run' must NOT be read as a file named 'Suite.run'.)
-                r = check_symbol(sub, bridge_lines)
-            else:
-                f, line, _ = parse_ref(sub)
-                # a bare symbol (no file, but dotted) → symbol grep against bridge.py.
-                if f is None:
-                    r = check_symbol(sub, bridge_lines)
-                else:
-                    r = check_ref(sub, candidates=cands)
+            # the per-ref form-dispatch (api-route / glob-dir / Suite.verb / bare-symbol / file:line)
+            # lives in _check_one_ref now — ONE place, reused by check_dossier (reuse-not-parallel). The
+            # dispatch is byte-identical to the inline chain it replaced.
+            r = _check_one_ref(sub, cands, bridge_lines)
             rec = {"ref": sub, "full_code": it["raw"], "source": it["source"], "owner": it["owner"],
                    "represents": it["label"], "candidates": cands, "points_at": r.get("points_at"),
                    "resolved": r.get("resolved"), "line_content": r.get("line_content"),

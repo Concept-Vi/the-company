@@ -1,0 +1,77 @@
+{
+  "_doc": "REGISTRY-GENERATION CASCADE (RG7) — the V-A chain declared as DATA, not a hand-orchestration script (registry-is-truth / no-hardcoding). The swarm reads the design surface -> proposes registry entries -> Tim approves -> the address registry grows -> previously-dead elements resolve richly. This file is the [J] meeting point: [M] authors this spec; [C]'s engine (runtime/cognition.run_cascade via runtime/suite.save_cascade/run_cascade) runs it. Save it with `save_cascade(<this decl>)`; fire it with `run_cascade('registry-generation', inputs=<candidates.json candidates list, or run:///cas:// thereof>)`.",
+
+  "_authored": "build-prep/registry-generation/{COMPLETION-CRITERIA,IMPLEMENTATION-GUIDE,RESEARCH-SYNTHESIS,COORDINATION}.md — RG7, the cascade spec. Grounded on main 2026-06-09.",
+
+  "name": "registry-generation",
+  "schema_ver": 1,
+
+  "steps": [
+    {
+      "op": "generate",
+      "role": "register_element",
+      "kind": "items",
+      "_phase": "MAP (RG4) — the run_items fan: ONE role (register_element, RG3) x N candidate units, concurrent on the swarm. Each unit + its grounded context -> a PROPOSED registry dossier {address, represents, howto{what,what_you_can_do,how_to_change}, capabilities, maps_to_feature|'proposed', confidence} (roles/register_element.py :: RegisterElementOut). PROPOSES; never writes (operator-only floor).",
+      "_input": "THE CASCADE INPUT (step 0). run_cascade threads `inputs` here: the N candidate-element units from design/_system/candidates.json's `candidates` array (RG1 EXTRACT's product — 940 units on main 2026-06-09; schema {mockup_file, selector, outerHTML, visible_text, tag, ancestor_address, ancestor_dossier, base_address, self_registered, self_address}). Pass them as `inputs` (a list -> run_items fans over them), OR as a run://·cas:// address resolving to that list. EXTRACT is a deterministic parse.py pass (NOT a role) -> it is a PRECOMPUTE PRECONDITION that produces candidates.json, NOT an executable cascade step (a roleless / non-VALID_OPS step cannot run in run_cascade).",
+      "_output_addresses": "run://<turn>-s0/register_element/<j> (one per OK unit; run_items keys its own turn_id with the s0 step-suffix so the addresses are step-unique). The reduce step (step 1) consumes this LIST.",
+      "_grounding_seam": "register_element.input_addresses = ('utterance', 'run://<turn>/screen_reader/{mockup}', 'exemplars', 'inventory'). 'utterance' = the per-unit candidate (run_items places the unit here). 'exemplars'/'inventory' = SHARED, resolved-once context (3-5 addresses.json entries for voice + the Feature & Function Inventory: design/register.json features + the closed capability vocabulary pointable·spotlit·presentable·openable·driven). 'run://<turn>/screen_reader/{mockup}' = the GROUND phase's per-mockup summary, keyed per-element by its mockup. *** OPEN SEAM ([C]'s lane): today's run_cascade threads only the prior step's positional addresses into a step; it does NOT yet provision (a) the per-unit-keyed shared ground summary nor (b) the resolve-once shared exemplars/inventory ctx. That shared-context provisioning is the engine work [C] owns (the run:// {mockup}-keyed wiring named in COORDINATION). Until it lands, this step fans register_element over the candidates with the per-unit context that travels IN the unit (ancestor_address + ancestor_dossier are already in candidates.json), and the ground/exemplars/inventory grounding is the convergence-round seam, not yet engine-provisioned.",
+      "_cardinality": "items: consumes a LIST (the cascade `inputs`) -> produces a LIST."
+    },
+    {
+      "op": "reduce",
+      "role": "reduce_synth",
+      "kind": "reduce",
+      "reduce_mode": "cluster",
+      "cluster_threshold": 0.85,
+      "_phase": "REDUCE (RG5) — run_reduce in CLUSTER mode (embed-dedup via nodes/retrieve._cosine): the same surface recurring across mockups (e.g. ui://inbox in C1 and C5) collapses to ONE entry. Cross-unit join.",
+      "_role_wart": "run_reduce(mode='cluster') does NOT use the `role` — the runner (cognition.run_cascade ~L2046-2082) still RESOLVES a `role` on EVERY step (fail-loud if absent or unregistered), then for cluster mode ignores it and uses only cluster_threshold. So `reduce_synth` here is a RESOLVE-BUT-IGNORE placeholder (a real, registered reduce-role; roles/reduce_synth.py) that satisfies the runner's role-presence requirement without affecting cluster behaviour. If a cluster step should carry NO role someday, that is an engine change ([C]'s lane); declaring a registered role is the additive, fail-loud-clean choice today.",
+      "_reduce_scope_note": "RG5 names THREE jobs for REDUCE: (a) cluster-dedup [this step, cluster mode]; (b) nest/validate the parent->child address tree vs contracts/address.py grammar + resolve collisions; (c) merge duplicate howtos. Cluster mode covers (a). Jobs (b)+(c) are either folded into the confirm step's gate or a follow-on reduce(mode='role', role=reduce_synth) — an engine/role decision [C] holds. Declared here as cluster (the dedup that's runnable today); the tree-nest/howto-merge is the documented extension.",
+      "_input_addresses": "the LIST of run://<turn>-s0/register_element/<j> from step 0 (run_reduce's input set).",
+      "_output_address": "run://<turn>/1-reduce_synth (THE RUNNER persists the joined output here — run_reduce itself does not; cognition.run_cascade TRAP-2 set_ref's it so it is feedable-by-address + find_runs-discoverable). The confirm step (step 2) consumes this ONE address.",
+      "_cardinality": "reduce: consumes a LIST -> produces ONE."
+    },
+    {
+      "op": "generate",
+      "role": "confirm_registration",
+      "kind": "role",
+      "_phase": "CONFIRM (RG6) — the no-fiction / accuracy GATE over the reconciled set. roles/confirm_registration.py: a jury (draws=3 + quorum_grounded verdict_rule) PLUS the deterministic refcheck.py floor (every capability in the canonical vocabulary; maps_to_feature in register.json features ∪ {'proposed'}; any code ref resolves). Low-confidence / fabricated -> FLAGGED (not dropped) for extra operator scrutiny.",
+      "_jury_seam": "confirm_registration is a JURY role (draws/verdict_rule). The cascade `role` step fires run_role (cognition.run_cascade ~L2128-2151), which runs the role once; the N-draw + deterministic verdict + refcheck two-layer gate is the role's run_jury path (run_jury in cognition.py). WIRING the cascade's confirm step to the jury+refcheck gate (rather than a single run_role pass) is [C]'s engine seam — declared here by role id (the gate is confirm_registration), the firing primitive (run_role vs run_jury inside the cascade reduce/role step) is the convergence-round detail. confirm_registration.input_addresses = ('utterance', 'element'): each draw sees BOTH the dossier AND the element it claims to represent — another shared-context provisioning the engine seam covers.",
+      "_input_address": "run://<turn>/1-reduce_synth (the ONE reconciled set from step 1).",
+      "_output_address": "run://<turn>/2-confirm_registration (THE confirmed set — the cascade's final_address). Feeds RG8 PROPOSE (governance batch-review surface) -> RG9 WRITE-BACK on operator approve. THOSE are NOT cascade steps: the cascade is run:// COMPUTATION only (emits op.run telemetry, NEVER resolve/approve/dispatch, launches no claude -p — the floor). PROPOSE/APPROVE/WRITE-BACK are the operator-gated governance path AFTER the cascade lands its confirmed set.",
+      "_cardinality": "role: consumes ONE (step 1's single address) -> produces ONE."
+    }
+  ],
+
+  "output_schema": {
+    "_doc": "The cascade's final output = the CONFIRMED reconciled set at run://<turn>/2-confirm_registration. Each entry is a register_element dossier (roles/register_element.py :: RegisterElementOut) carrying its confirm verdict (grounded? + flags) + provenance (the run://, model, confidence — introspective-data-building). Declared loosely (the runner reads steps, not this schema; this documents the shape consumers — RG8/RG9 — depend on).",
+    "address": "str — the PROPOSED ui:// (nested under the parent's registered address)",
+    "represents": "str — the 82-entries' short voice (e.g. 'RUN-run')",
+    "howto": { "what": "str", "what_you_can_do": "str", "how_to_change": "str" },
+    "capabilities": "list[str] — subset of the closed vocabulary (pointable·spotlit·presentable·openable·driven), NEVER invented",
+    "maps_to_feature": "str — a Feature & Function Inventory id (design/register.json features[].id) OR the literal 'proposed' if un-built",
+    "confidence": "float 0..1",
+    "_confirm_added": "the confirm gate adds the verdict (grounded quorum) + refcheck pass/flags so RG8 can mark low-confidence/flagged entries for extra Tim scrutiny",
+    "_provenance": "run://, model, confidence per entry (introspective-data-building)"
+  },
+
+  "_chain_documented_5_phases": {
+    "_doc": "The IMPLEMENTATION-GUIDE's 5-phase chain is extract -> ground -> map -> reduce -> confirm. Only map->reduce->confirm are EXECUTABLE cascade steps in today's run_cascade (every step must declare a registered `role` and a VALID op; the run:// thread is positional). extract + ground are documented PRECONDITIONS/precompute, NOT roleless steps forced into the runner (that would fail-loud on extract / silently mis-thread ground). This object records the full chain so the spec represents all 5 phases honestly.",
+    "1_EXTRACT": "design/_system/parse.py --extract-candidates (deterministic, RG1, BUILT) -> design/_system/candidates.json (940 units on main). Roleless + op outside _VALID_OPS -> a PRECONDITION that produces the cascade's `inputs`, not a step.",
+    "2_GROUND": "run_role(screen_reader) x 23 mockups (RG2; screen_reader is BUILT, live) -> per-mockup at-altitude summaries at run://<turn>/screen_reader/<mockup>. SHARED context for the MAP step's per-element grounding (keyed by {mockup}). NOT a linear step before MAP: if it were, run_cascade would thread its per-mockup summaries as MAP's input units (prev_addresses WINS over a step's own items — cognition.py ~L2089) and register_element would fan over summaries instead of candidates — a SILENT-WRONG trap. So GROUND is shared, {mockup}-keyed context the engine must PROVISION (the open seam, [C]'s lane), not a positional predecessor.",
+    "3_MAP": "step 0 above (register_element items fan over the candidates).",
+    "4_REDUCE": "step 1 above (run_reduce cluster-dedup; tree-nest/howto-merge = documented extension).",
+    "5_CONFIRM": "step 2 above (confirm_registration jury + refcheck gate)."
+  },
+
+  "_run_thread": {
+    "_doc": "The run:// output->input wiring is IMPLICIT/POSITIONAL in run_cascade — NOT a declared per-step field. Step 0 reads `inputs`; step N>0 reads step N-1's output address(es). The cardinality rule (role 1->1, items list->list, reduce list->1) makes the thread legal. Do NOT add `input_from`/`input_addresses` keys to a step — the runner ignores them (it reads only role/op/kind/model/fan/items/reduce_mode/reduce_rule/cluster_threshold). The thread for THIS cascade:",
+    "inputs": "candidates list (RG1's candidates.json `candidates`) — the cascade argument",
+    "step0_map": "inputs (list) -> run://<turn>-s0/register_element/<j> (LIST)",
+    "step1_reduce": "run://<turn>-s0/register_element/<j> (LIST) -> run://<turn>/1-reduce_synth (ONE)",
+    "step2_confirm": "run://<turn>/1-reduce_synth (ONE) -> run://<turn>/2-confirm_registration (ONE = final_address)"
+  },
+
+  "_models_note": "NO per-step `model` is declared. registry-is-truth: build_action FAILS LOUD on a step `model` outside the live model registry (chat ∪ embed). Omitting it means each step runs on the role's model_binding / the resident default (the run_cascade `model=` arg) — a registry-resolved binding, NOT a hardcoded literal. A per-step model can be added later as a registry ref (e.g. a stronger model on confirm via models_for_role) without changing this chain's shape.",
+
+  "_validation": "SHAPE-VALID: `from runtime import coherence_actions; coherence_actions.build_action(<this decl>, models=set())` returns ok:True (non-mutating — does NOT touch cascades.json; per-step model omitted so the registry check is skipped; build_action rebuilds {name, steps, output_schema, schema_ver} and DROPS the leading-underscore doc keys, which is why they are safe here). END-TO-END RUNNABLE is NOT claimed: the ground/exemplars/inventory shared-context provisioning + the {mockup}-keyed wiring + the confirm jury-vs-run_role firing are [C]'s engine seams (the convergence round, RG10). Two honest statuses: shape-valid (verified) vs runnable (needs the engine seams — needs-tim/[C])."
+}
