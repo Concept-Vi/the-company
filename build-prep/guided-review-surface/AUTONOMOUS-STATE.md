@@ -221,3 +221,10 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
 - ★ TIM DIRECTION NEEDED (the real unblock): either (1) redirect cognition to free/co-design the walkthrough-organ region of suite.py, or (2) authorize me to edit the walkthrough-organ functions (~6207-6560, disjoint from cognition activation/ops seam) despite the claim — git-revert is the safety net. Without one, the heart of the surface cannot proceed.
 - NOT spinning: FE quick-wins exhausted (done), rest is genuinely blocked. Recording blocked + escalating per protocol step 4.
 - See it: http://localhost:5210/?mockup=C1-inbox-desktop.html (the 3 fixes live; click "what am I looking at?").
+
+## 2026-06-09 fire — last static FE jargon cleared; model-echo flagged to cognition
+- 4a0c94f: composer locus line plain ("commenting on this part of the screen" / "pick a screen, then comment or ask for a change"). Verified no-locus path plain; the annotation thread ("what's been said here") already renders (StudioKit:199-211 — that experience piece was already built).
+- Found the only remaining ui:// is in the RHM's NARRATION text (model echoes "ui://studio/stage") — a screen_reader role-prompt fix (roles/, cognition's). Flagged 6169154, did NOT hack an FE regex-strip on model output.
+- ★ STATIC FE OPERATOR-FACING JARGON: now fully cleared (walk-card · stage-header · rail · studio-RHM · composer-locus). The "dev-stuff look" surface fixes are done + verified by use.
+- ★ STILL THE WALL: cognition is ACTIVELY committing to suite.py (5405c70 B+D) — won't free it; the heart pieces (mockup-walk/back/RHM-marks/batch) need it. Escalation 3b30243 stands; needs Tim direction (redirect cognition OR authorize me to edit the organ region). No new info → not re-escalating.
+- NEXT: blocked on the suite.py decision. FE static-jargon + affordance quick-wins exhausted. Hold for Tim direction or cognition freeing suite.py.
