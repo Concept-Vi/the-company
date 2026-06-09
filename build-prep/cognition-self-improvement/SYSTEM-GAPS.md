@@ -134,3 +134,9 @@ REMAINING: M2 (per-role inspector / scoped cognition_info) · M3 (cognition_info
 
 ## 2026-06-10 — M2+M3 DONE (the discovery face, post-restart first beat on Fable 5)
 cognition_info(section=,role=,detail=) — no-args = a 2KB concise overview (was 41.7KB, 20×); per-role inspector; teaching errors; detail='detailed' back-compat. capabilities.cognition.roles → {ids, full_specs pointer} (the dup gone, 17.9K→14K). M-series now: M1✅ M2✅ M3✅ M4✅(reflect_in) M6✅ M7✅ · M5/M8 deferred (cosmetic). NEXT: COVERAGE (⑦/⑩ as saved cascades · ②/③ runnable flows · ingest_paths G21) → the fresh-agent RE-EVAL (measure the gain vs eval #1).
+
+## 2026-06-10 — COVERAGE beat: ⑩ option-panel SAVED + RUN via the live MCP; G3 now HAS a design (from the engine itself)
+- ✅ Reconnect verified by use: cognition_info() → the 2KB concise overview (live, with the teaching _hint); create(kind=) live, 8 flats gone.
+- ✅ ⑩ option-panel = a saved cascade (save_cascade ok; steps: items(develop_option) → reduce(role=score_options)). RUN end-to-end via run_cascade on a REAL fork (the G3 mid-chain fan-out question, 5 lenses, JSON-array inputs) → a ranked option-space + recommendation + graft. Saved cascades now: verify-jury · eval-classify-flow · option-panel.
+- ★ G3 DESIGN (the engine's own recommendation, rank-1 reuse-first + a framework-first graft): mid-chain fan-out = a small ADDITIVE hook on an items step in the EXISTING runner — the step reads the prev role-step's output, explodes a named list field (e.g. fan_field='groups') into N units, fans. No new decomposer, no 2nd engine. This unblocks ⑦ spec-compiler as a saved cascade (decompose → expand needs exactly this) + G12. Build it as a bounded engine beat (cognition.run_cascade + build_action validation of the fan_field key).
+- REMAINING coverage: ⑦ as a cascade (after the fan_field hook) · ②/③ as documented runnable flows · ingest_paths (G21) as a first-class mcp_face/tools/ module · then the FRESH-AGENT RE-EVAL.
