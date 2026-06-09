@@ -352,6 +352,22 @@ class Suite:
         # cascade-runner section in runtime/AGENTS.md.
         from runtime.coherence_actions import ActionRegistry as _ActionRegistry
         self.cascade_registry = _ActionRegistry(str(self.store.root / "cascades.json"))
+        # E2 — the INCREMENTAL run-index cache (#54 efficiency). `list_runs`/`find_runs` are a READ-TIME
+        # PROJECTION over the `op.run` event log; the naive form re-reads + re-filters the WHOLE log on
+        # EVERY call (O(events)) — caught at scale. The op.run log is append-only with monotonic-unique
+        # seqs (store.append_event T1-SEQ), so the projection is cheaply INCREMENTAL: hold the projected
+        # rows + a high-water seq; each call reads ONLY `events_since(high_water)` (the delta), projects
+        # the new op.run events, appends, advances the high-water. This is NOT a parallel store/index — the
+        # op.run log STAYS the source of truth (registry-is-truth); the cache is a pure derived projection
+        # that a fresh Suite rebuilds from the log (no persistence, no fs_store edit). Cross-PROCESS safe:
+        # each process reads the disk tail past ITS OWN high-water and appends are immutable, so two Suites
+        # over one store dir each converge on the same rows (a Suite never sees another's in-RAM cache, it
+        # re-reads the shared log delta). Guarded by a lock — the bridge is a ThreadingHTTPServer (concurrent
+        # list_runs across threads of one process would race the read-modify-write of the cache).
+        import threading as _t
+        self._run_index_lock = _t.Lock()
+        self._run_index_rows: list[dict] = []   # projected ENGINE_RUN_OPS rows, oldest-first (one per concrete addr)
+        self._run_index_hw: int = -1            # high-water: the largest event seq folded into _run_index_rows
         # The bridge is a ThreadingHTTPServer → concurrent POST /api/review/next run in separate threads of
         # ONE process over this one Suite. The session-cursor advance is a read-modify-write (load→run→save)
         # with no lock → concurrent calls dropped advances (lost update). A per-session in-process lock
@@ -414,6 +430,8 @@ class Suite:
         self.R2_RUN_VERSIONS = self._cfg_int("COMPANY_R2_RUN_VERSIONS", type(self).R2_RUN_VERSIONS)
         self.R2_HOWTO_MAX = self._cfg_int("COMPANY_R2_HOWTO_MAX", type(self).R2_HOWTO_MAX)   # D1 flood guard
         self.R2_HOWTO_TERSE = self._cfg_int("COMPANY_R2_HOWTO_TERSE", type(self).R2_HOWTO_TERSE)  # E1 terse cap
+        self.R2_COGNITION_TURNS = self._cfg_int("COMPANY_R2_COGNITION_TURNS", type(self).R2_COGNITION_TURNS)  # GROUP J
+        self.R2_COGNITION_PER_ROLE = self._cfg_int("COMPANY_R2_COGNITION_PER_ROLE", type(self).R2_COGNITION_PER_ROLE)  # GROUP J
         # E2 (mode auto-detect as a CONFIG TOGGLE, not hardcoded — direction §6.5) — resolve the toggle
         # from the env into an instance attr (the SAME X17 pattern). VALUES (fail-loud-validated by
         # _cfg_choice): 'off' (manual only — the default, byte-for-byte today's operator-selected modes),
@@ -630,6 +648,46 @@ class Suite:
     # in the MCP wrapper) and this filter both name the SAME closed set; a new engine run-op is added here.
     ENGINE_RUN_OPS = ("cognition.run_role", "cognition.run_items", "cognition.run_reduce")
 
+    @staticmethod
+    def _project_run_event(e: dict) -> list[dict]:
+        """#54 — project ONE `op.run` ENGINE_RUN_OP event into its discovered ROW(s). One event carries the
+        per-fan `addresses` list (the C1.6 one-emit-per-fan discipline) → one row PER concrete run:// address
+        (run://<turn>/<role>[/<i>]). A reduce records with no address → one row with address=None. SINGLE
+        SOURCE of the row shape, shared by the cold rebuild + the incremental fold (so a fold + a full scan
+        produce byte-identical rows)."""
+        addrs = e.get("addresses") or [None]                  # a reduce records with no feedable address
+        return [{
+            "address": addr, "op": e.get("op"), "run_op": e.get("run_op"),
+            "turn_id": e.get("turn_id"), "role": e.get("role"),
+            "duration_ms": e.get("duration_ms"), "seq": e.get("seq"), "ts": e.get("ts"),
+        } for addr in addrs]
+
+    def _run_index_fold(self) -> list[dict]:
+        """E2 — the INCREMENTAL run-index. Return the projected ENGINE_RUN_OPS rows (oldest-first), folding
+        ONLY the events appended since the held high-water seq (NOT a full re-read of the op.run log).
+
+        Why this is correct + cheap: the event log is append-only with monotonic-unique seqs (T1-SEQ), so a
+        row, once projected, never changes; `events_since(hw)` returns exactly the events with seq > hw,
+        oldest-first. We read the tail delta ONCE, advance the high-water over the WHOLE delta (so the next
+        call's events_since never re-yields an event we've seen — the last delta event may itself be a
+        non-ENGINE_RUN_OP, so the cursor must move past it too), and project the ENGINE_RUN_OP subset into
+        rows. The FIRST call (hw=-1) folds the whole log ONCE (the unavoidable cold read — same cost as
+        before); EVERY subsequent call reads only the new tail. Cross-process safe: a sibling process's
+        appends land on the shared disk log and this process picks them up on its next call (it reads past
+        its OWN high-water).
+
+        Held under `_run_index_lock` — the read-modify-write of (rows, hw) would otherwise race across the
+        bridge's threads. Returns a SNAPSHOT COPY so the caller can filter/slice without holding the lock."""
+        with self._run_index_lock:
+            delta = self.events_since(self._run_index_hw)     # the tail past our high-water (read ONCE)
+            if delta:
+                self._run_index_hw = delta[-1].get("seq", self._run_index_hw)
+            for e in delta:
+                if e.get("kind") == "op.run" and e.get("op") in self.ENGINE_RUN_OPS:
+                    self._run_index_rows.extend(self._project_run_event(e))
+            # SNAPSHOT — a shallow copy of the row list; the rows themselves are never mutated after projection.
+            return list(self._run_index_rows)
+
     def list_runs(self, op: str | None = None, run_op: str | None = None,
                   since: int = -1, limit: int = 50) -> dict:
         """#54 STORAGE-DISCOVERY — the RUN INDEX: make past engine runs DISCOVERABLE as inputs (not just
@@ -637,6 +695,13 @@ class Suite:
         maintained index, no new store; reuse-don't-parallel — the op.run log IS the index). The discovery:
         an agent/FE can now LIST past runs + their run:// addresses → feed one as an input (resolve_address)
         or re-run, instead of only reading a run it already KNOWS the address of.
+
+        E2 EFFICIENCY — the projection is INCREMENTAL (`_run_index_fold`): it no longer re-reads the WHOLE
+        op.run log on every call (the O(events) cost caught at scale). It holds the projected rows + a
+        high-water seq and folds only the events_since(high_water) delta. The op.run log STAYS the source of
+        truth (registry-is-truth, no parallel store, no fs_store edit) — the cache is a pure derived
+        projection a fresh Suite rebuilds from the log. `since`/`op`/`run_op`/`limit` are applied as filters
+        on the cached rows (each row carries its `seq`).
 
         Filters to the closed ENGINE_RUN_OPS (the engine runs — NOT the voice/etc. op.run telemetry). One
         op.run event carries the per-fan `addresses` list (the C1.6 one-emit-per-fan discipline); this
@@ -651,22 +716,18 @@ class Suite:
             raise ValueError(
                 f"list_runs: unknown engine run-op {op!r} — the run index covers {list(self.ENGINE_RUN_OPS)} "
                 f"(the engine runs that emit the op.run index). Fail loud (never project a fabricated op).")
-        evs = [e for e in self.events_since(since)
-               if e.get("kind") == "op.run" and e.get("op") in self.ENGINE_RUN_OPS]
+        rows = self._run_index_fold()                         # incremental: only the new tail is projected
+        if since is not None and since != -1:
+            rows = [r for r in rows if (r.get("seq") or 0) > since]   # `since` is an exclusive event-seq cursor
         if op:
-            evs = [e for e in evs if e.get("op") == op]
+            rows = [r for r in rows if r.get("op") == op]
         if run_op:
-            evs = [e for e in evs if e.get("run_op") == run_op]
-        rows = []
-        for e in reversed(evs):                               # newest-first (events_since is oldest-first)
-            addrs = e.get("addresses") or [None]              # a reduce records with no feedable address
-            for addr in addrs:
-                rows.append({
-                    "address": addr, "op": e.get("op"), "run_op": e.get("run_op"),
-                    "turn_id": e.get("turn_id"), "role": e.get("role"),
-                    "duration_ms": e.get("duration_ms"), "seq": e.get("seq"), "ts": e.get("ts"),
-                })
-        return {"runs": rows[:limit], "total_records": len(evs)}
+            rows = [r for r in rows if r.get("run_op") == run_op]
+        # total_records = the count of underlying op.run EVENTS (after the same filters), NOT expanded rows
+        # — a fan event projects to N rows but is ONE record (preserves the pre-E2 `len(evs)` semantics).
+        total = len({r.get("seq") for r in rows})
+        rows = list(reversed(rows))                           # newest-first (the cache holds oldest-first)
+        return {"runs": rows[:limit], "total_records": total}
 
     def find_runs(self, role: str | None = None, op: str | None = None,
                   run_op: str | None = None, since: int = -1, limit: int = 50) -> dict:
@@ -2745,6 +2806,18 @@ class Suite:
     #                                     applies (a one-liner affordance for low-noise modes — background /
     #                                     watch-and-react — that still want the help leg but not a paragraph).
     #                                     A named knob (env-wired below), not a bare literal; ≤ R2_HOWTO_MAX.
+    R2_COGNITION_TURNS = 2              # GROUP J (the cognition↔resolution loop) — how many PRIOR COMPLETED
+    #                                     turns' cognition (the swarm's run://<turn>/<role> outputs) feed the
+    #                                     NEXT turn's R2 resolution (the system's OWN thinking becomes its
+    #                                     context). Bounded like R2_RUN_VERSIONS: the cognition items score at
+    #                                     the cognition anchor (proximity 0), so without a bound many prior
+    #                                     turns × many roles would flood the window. A few most-recent turns is
+    #                                     the working-memory horizon (the per-turn R2_BUDGET cap still applies).
+    R2_COGNITION_PER_ROLE = 360        # GROUP J — max CHARS of ONE role's cognition output admitted into the
+    #                                     gather (a role's structured JSON can be long; this keeps each
+    #                                     contribution a legible snippet so no single role evicts the others —
+    #                                     truncated-with-marker at the data seam, never silent). A named knob,
+    #                                     not a bare literal; the R2_BUDGET cap bounds the whole stratum on top.
 
     @staticmethod
     def address_tree_distance(a: str, b: str) -> int:
@@ -3055,6 +3128,84 @@ class Suite:
             self._emit("warning",
                        f"X6 bridge: node-instance events unresolvable at {run_addr} ({type(e).__name__}) — skipped",
                        address=ui_locus)
+        return items
+
+    # GROUP J — the cognition anchor. A FIXED, stable ui:// address the cognition-resolution call hangs off,
+    # so the system's own thinking resolves into the chat context EVEN WHEN there is no canvas locus (a plain
+    # chat turn). It parses identically to the per-turn `ui://cognition/<turn>` the staged path already emits
+    # (so it is a registered-shape address, not a fabricated one). The cognition items are scored AT this
+    # anchor (X6's cross-scheme trick — uniform proximity 0 → recency+intent rank them), never at the canvas
+    # locus (which would be the wrong frame: cognition is conversation-global, not address-attached).
+    R2_COGNITION_ANCHOR = "ui://cognition/recent"
+
+    def _r2_cognition_strata(self, now=None, intent: str | None = None) -> list:
+        """GROUP J (the cognition↔resolution feedback loop — the system SEES ITS OWN THINKING) — gather the
+        PRIOR COMPLETED turns' swarm cognition (the roles' `run://<turn>/<role>` outputs) as R2 items, so the
+        NEXT turn's resolution reads back what the system itself just thought.
+
+        The wire reuses the EXISTING seams (no parallel resolver, no second index — Group J's law):
+          • COMPLETED turns are the `cognition.turn.done` events on the ONE event log (the staged path emits
+            one per turn in its epilogue, AFTER both parts). Reading those EXCLUDES the IN-FLIGHT turn by
+            construction: `_chat_context` (this method's caller) runs DURING the current turn's part-core,
+            BEFORE that turn emits its own `turn.done` — so the current turn's cognition is never resolved
+            into its own context (which would conflate J1 with the intra-turn inject edge + double-count).
+          • the roles of each completed turn + their `run://` addresses come from the (now-incremental, E2)
+            RUN INDEX (`find_runs` filtered to that turn) — the #54 storage-discovery, NOT a re-derivation.
+          • each role output is read by `resolve_address` (the canonical scheme-dispatching resolver) — the
+            SAME path the intra-turn inject + outputs→inputs discovery use.
+
+        Bounded (R2_COGNITION_TURNS most-recent completed turns; R2_COGNITION_PER_ROLE chars per role) so the
+        cognition stratum can't flood the R2 window (mirrors R2_RUN_VERSIONS / R2_HOWTO_MAX). Each item is
+        normalised to the R2 item shape `{kind, address, ts, text, pinned}` with `address = the cognition
+        ANCHOR` (X6 cross-scheme proximity — same conversation, distance 0) so the EXISTING decay/score/cap
+        rank them uniformly with everything else; the SCORING formula is untouched.
+
+        FAIL-LOUD-LEGIBLE (rule 4): a single unresolvable run:// address (a pruned ref) WARNs (address-
+        stamped) and is SKIPPED — losing one role's snippet must never crash the per-turn gather. An empty
+        history (no completed turns yet) is a clean empty list (no error, no fabrication)."""
+        from datetime import datetime as _dt, timezone as _tz
+        from runtime import cognition as _cog
+        import json as _json
+        if now is None:
+            now = _dt.now(_tz.utc)
+        # the COMPLETED turns, newest-first, capped — read off the cognition.turn.done lifecycle events.
+        done = [e for e in self.events_since(-1) if e.get("kind") == "cognition.turn.done"]
+        # newest-first; de-dupe turn_ids (one done per turn, but be defensive) preserving order.
+        seen, turn_ids = set(), []
+        for e in reversed(done):
+            tid = e.get("turn_id")
+            if tid and tid not in seen:
+                seen.add(tid)
+                turn_ids.append(tid)
+            if len(turn_ids) >= self.R2_COGNITION_TURNS:
+                break
+        if not turn_ids:
+            return []
+        items = []
+        for tid in turn_ids:
+            # the roles + run:// addresses of THIS turn — from the run INDEX (E2 incremental), not re-derived.
+            rows = self.find_runs(limit=10_000).get("runs", [])
+            turn_rows = [r for r in rows if r.get("turn_id") == tid and r.get("address")]
+            for r in turn_rows:
+                addr = r["address"]
+                try:
+                    val = _cog.resolve_address(self.store, addr, turn_id=tid, on_missing="skip")
+                except Exception as e:
+                    self._emit("warning",
+                               f"GROUP J: prior-turn cognition unresolvable at {addr} ({type(e).__name__}) — skipped",
+                               address=self.R2_COGNITION_ANCHOR)
+                    continue
+                if val is None:                                   # a pruned/unresolved ref (on_missing=skip)
+                    continue
+                snippet = val if isinstance(val, str) else _json.dumps(val, default=str)
+                if len(snippet) > self.R2_COGNITION_PER_ROLE:     # bound one role's contribution (legible)
+                    snippet = snippet[:self.R2_COGNITION_PER_ROLE] + "…"
+                role = r.get("role") or "?"
+                items.append({
+                    "kind": "cognition", "address": self.R2_COGNITION_ANCHOR, "ts": r.get("ts"),
+                    "text": f"[my prior thinking · role {role} @ {addr}] {snippet}",
+                    "_raw": snippet,                              # X8 dedup identity (the role output text)
+                    "pinned": False})
         return items
 
     def _r2_gather(self, locus: str, graph_id: str | None = None, now=None,
