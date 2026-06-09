@@ -291,11 +291,14 @@ def models_for_role(requires: str = "", role: str = "") -> dict:
 
 
 @mcp.tool()
-def cognition_inputs() -> dict:
+def cognition_inputs(role: str = "", model: str = "") -> dict:
     """INSPECT (the INPUT-WIRING select): the addresses a role/rule can READ — the utterance, the
-    roles' run://<turn>/<role> outputs, the context variables. REUSES Suite.available_inputs
-    (the /api/cognition/inputs path). What addresses are readable as inputs."""
-    return SUITE.available_inputs()
+    roles' run://<turn>/<role> outputs, the context variables, skills/contexts/schemes — plus which
+    op/thinking/tools the CAPABILITY MODEL supports. REUSES Suite.available_inputs (the
+    /api/cognition/inputs path). Scope the capability projection (G5): `role='<id>'` projects against
+    THAT role's capability-resolved bound model; `model='<id>'` against an explicit model; default =
+    the current brain."""
+    return SUITE.available_inputs(model=(model or None), role=(role or None))
 
 
 @mcp.tool()

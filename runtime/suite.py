@@ -5273,33 +5273,52 @@ class Suite:
             with open(self.cognition_services_path()) as f:
                 reg = _json.load(f)
             svcs = reg.get("services", reg)
-            svc = svcs.get("chat-4b") or {}
-            cfg = svc.get("config") or {}
-            model = cfg.get("model")
-            if model:
-                # G8 WIRE (single source): the `provides` set comes from the L-model capability catalog
-                # (ops/cli/capabilities.py:provides_for — keyed by model-id, provenance declared/probed/served).
-                # ops/cli is stdlib-only with BARE imports + no __init__.py (do NOT add one — it breaks the
-                # siblings), so we read the catalog by inserting ops/cli on sys.path for the import only.
-                # Fail-soft to the registry-grounded resident traits if the catalog can't be read (never a
-                # silent WRONG set — the fallback is the same attested resident traits, documented).
-                provides = None
+            # G6 — THE FULL LIVE-BIND (was resident-chat-4b-only): enumerate EVERY registered model
+            # service (registry-is-truth — ops/services.json is the one source), each with its
+            # catalog-derived `provides` (ops/cli/capabilities.py:provides_for — the C2.5 catalog) and a
+            # `resident` flag (ops/cli/gpu.running_gpu_services — the live card). RESIDENTS ride FIRST
+            # (dict order) so a binding prefers a live provider; a loadable-but-down provider is still a
+            # legal bind target (the G14 ensure/swap-approval path loads it deliberately, never silently).
+            _caps = _gpu = None
+            try:
+                import sys as _sys
+                _opscli = os.path.join(self._repo_root, "ops", "cli")
+                if _opscli not in _sys.path:
+                    _sys.path.insert(0, _opscli)
+                import capabilities as _caps   # bare imports (ops/cli has no __init__.py — keep it so)
+                import gpu as _gpu
+            except Exception:
+                pass
+            running = set()
+            if _gpu is not None:
                 try:
-                    import sys as _sys
-                    _opscli = os.path.join(self._repo_root, "ops", "cli")
-                    if _opscli not in _sys.path:
-                        _sys.path.insert(0, _opscli)
-                    import capabilities as _caps  # ops/cli/capabilities.py (bare import)
-                    provides = list(_caps.provides_for(model))
+                    running = {k for (k, _v) in (_gpu.running_gpu_services(reg) or [])} \
+                        if not isinstance(_gpu.running_gpu_services(reg), dict) else set(_gpu.running_gpu_services(reg))
                 except Exception:
-                    provides = None
-                if not provides:
-                    # fallback = the resident vLLM config's attested traits (registry-grounded, not invented):
-                    # chat + json (response_format) + tool-calling (--enable-auto-tool-choice) + fast/no-think.
+                    running = set()
+            rows = []
+            for sname, svc in (svcs or {}).items():
+                cfg = (svc or {}).get("config") or {}
+                model = cfg.get("model")
+                if not model:
+                    continue
+                provides = None
+                if _caps is not None:
+                    try:
+                        provides = list(_caps.provides_for(model))
+                    except Exception:
+                        provides = None
+                if not provides and sname == "chat-4b":
+                    # the attested resident-vLLM fallback (registry-grounded, documented — never invented)
                     provides = ["chat", "json", "tools", "fast", "no-think"]
-                providers[f"resident:chat-4b"] = {
-                    "model": model, "base_url": f"http://127.0.0.1:{cfg.get('port', 8000)}/v1",
-                    "provides": provides}
+                if not provides:
+                    continue                     # no catalog row → not a bindable provider (fail-quietly-HONEST: absent, not wrong)
+                rows.append((sname not in running, sname, {
+                    "model": model,
+                    "base_url": f"http://127.0.0.1:{cfg.get('port', 8000)}/v1",
+                    "provides": provides, "resident": sname in running}))
+            for _down, sname, row in sorted(rows):  # residents (False) sort first
+                providers[("resident:" if row["resident"] else "loadable:") + sname] = row
         except (OSError, ValueError, KeyError):
             pass
         return providers
@@ -9513,7 +9532,8 @@ class Suite:
             models = [p["model"] for p in providers.values() if set(reqs) <= set(p.get("provides", []))]
         return {"requires": reqs, "models": sorted(set(models)), "providers": providers}
 
-    def available_inputs(self, turn_context: dict | None = None, *, model: str | None = None) -> dict:
+    def available_inputs(self, turn_context: dict | None = None, *, model: str | None = None,
+                         role: str | None = None) -> dict:
         """C7.4 — the INPUT-WIRING + COMPOSITION SELECT: the full input space a role/rule can READ +
         the capabilities settable on a role's BOUND model. The utterance (always), the OTHER roles'
         run:// outputs (a rule reads run://<turn>/<role>, declared as the role id), the notebook strata
@@ -9532,8 +9552,8 @@ class Suite:
 
         `model` (B5) names the model whose capabilities project op/thinking/tools; default = the current
         brain (rhm_config()["model"], mirrors knobs_for). NOTE: a role may bind a DIFFERENT model via
-        resolve_role_binding — role-scoped capability gating (project against THAT role's bound model) is
-        a follow-up; this select gates against ONE model (the brain by default, any model on request).
+        resolve_role_binding — pass `role=` to project against THAT role's bound model (G5, built); the
+        select gates against ONE model (precedence: model= > role= binding > the brain).
 
         Returns {utterance, roles[], role_addresses[], context_variables[], projections[],
         projection_spaces[], lifters[], mark_types[], generation_policies[], relation_types[], ai_tics[],
@@ -9590,7 +9610,15 @@ class Suite:
         # provides). So adding a capability → it appears; a model lacking 'tools' → tools=False (not
         # offered). FAIL-SOFT: an unreadable catalog → provides=[] → everything False (fail-loud-by-empty,
         # never a fabricated capability — rule 8: never offer a setting the model can't honor).
-        cap_model = model or self.rhm_config().get("model")
+        # G5 — ROLE-SCOPED capability gating (the docstring's named follow-up, now built): role= projects
+        # op/thinking/tools against THAT role's capability-resolved BOUND model (resolve_role_binding —
+        # which now binds across the FULL G6 provider set), not the brain. Precedence: explicit model= >
+        # role='s binding > the brain.
+        cap_model = model
+        if not cap_model and role:
+            _b = self.resolve_role_binding(role)            # fail-loud on an unknown role
+            cap_model = (_b or {}).get("model")
+        cap_model = cap_model or self.rhm_config().get("model")
         provides: list = []
         try:
             import sys as _sys
