@@ -144,15 +144,50 @@ export function Stage({ titleFor }: { titleFor: (f: string | null) => string }) 
   // delegate directly. BOTH levels: a click on an addressed element → that element's locus; a click on the
   // background → the WHOLE-mockup base (so you can always comment on the whole screen too).
   const frameRef = useRef<HTMLIFrameElement | null>(null)
-  // attach the click delegate to the mockup doc ONCE (idempotent via a flag), so element-clicks select.
+  // a short URL-safe slug from an element's visible text / label / tag — so an UN-addressed element still
+  // gets a meaningful, distinct locus segment (e.g. "approve", "heading"). Bounded so the address stays sane.
+  function _slug(el: Element): string {
+    const raw = (el.getAttribute('aria-label') || (el as HTMLElement).innerText || el.tagName || "").trim()
+    const s = raw.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 32)
+    return s || el.tagName.toLowerCase()
+  }
+  // attach the click delegate to the mockup doc ONCE (idempotent via a flag). EVERY element is selectable:
+  // the mockups only pre-address a FEW elements (e.g. C1-inbox: 3 of 131), so requiring data-ui-ref made the
+  // "vast majority not clickable" (Tim). Instead we DERIVE a locus for ANY clicked element + highlight it, so
+  // you can point at + comment on anything you see — no per-element authoring needed.
   function attachDeixis(doc: Document | null | undefined) {
     if (!doc || !doc.body || (doc as any).__deixisWired) return false
     ;(doc as any).__deixisWired = true
     doc.addEventListener('click', (ev: Event) => {
       const t = ev.target as Element | null
-      const el = t?.closest?.('[data-ui-ref]') as Element | null
-      const a = el?.getAttribute('data-ui-ref') || ''
-      const next = a.startsWith('ui://') ? a : baseAddrRef.current   // element locus, else the whole mockup
+      if (!t || !t.closest) return
+      const base = baseAddrRef.current
+      // 1) the element's OWN ui:// address wins (a pre-addressed element).
+      // 2) else the clicked element is the locus: nearest ui:// ANCESTOR (semantic region) + a slug of THIS
+      //    element → a distinct, meaningful sub-locus (e.g. ui://inbox/build-review/approve). 3) clicking the
+      //    bare body/background → the WHOLE mockup base (so "comment on the whole screen" still works).
+      let next: string | null
+      const own = t.getAttribute && t.getAttribute("data-ui-ref")
+      const bodyClick = (t === doc.body || t === doc.documentElement)
+      if (own && own.startsWith("ui://")) {
+        next = own
+      } else if (bodyClick) {
+        next = base
+      } else {
+        const region = (t.closest("[data-ui-ref]") as Element | null)?.getAttribute("data-ui-ref")
+        const root = (region && region.startsWith("ui://")) ? region : base
+        next = root ? root.replace(/\/$/, "") + "/" + _slug(t) : base
+      }
+      // VISUAL feedback: outline the actually-clicked element so the operator SEES the selection (clear prior).
+      try {
+        const prev = (doc as any).__deixisSel as HTMLElement | undefined
+        if (prev) prev.style.outline = ""
+        if (!bodyClick && (t as HTMLElement).style) {
+          (t as HTMLElement).style.outline = "2px solid var(--acc, #d4a23c)"
+          ;(t as HTMLElement).style.outlineOffset = "1px"
+          ;(doc as any).__deixisSel = t
+        } else { (doc as any).__deixisSel = undefined }
+      } catch { /* outline is cosmetic — never block the locus on it */ }
       setReviewMockup(reviewMockupRef.current, next)
     }, true)
     return true
