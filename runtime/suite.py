@@ -15,6 +15,7 @@ from runtime import scheduler
 from runtime.governance import Inbox, GovernanceError, guard, posture, AUTO
 from runtime.registry import NodeRegistry
 from runtime.roles import RoleRegistry, resolve_binding
+from runtime.projections import ProjectionRegistry
 from store.fs_store import FsStore
 
 CONTENT_KINDS = ("constant", "document", "code", "file", "image", "source", "portal")
@@ -283,6 +284,17 @@ class Suite:
         # cognition._SKILLS_DIR/_CONTEXTS_DIR (the global readers — list_skills_contexts/resolve_address).
         self.skills_dir = os.path.join(os.path.dirname(self.nodes_dir), "skills")
         self.contexts_dir = os.path.join(os.path.dirname(self.nodes_dir), "contexts")
+        # Cognition Engine K1/P1 — the FILE-DISCOVERED PROJECTION registry (the corpus-pillar lens set).
+        # Discovered exactly like role_registry above (the `projections/` sibling of `nodes/`), so the
+        # cognition SELECTS (cognition_info / available_inputs) PROJECT the live discovered lens set
+        # rather than a hardcoded list: drop a `projections/<id>.py`, restart the bridge, and the lens
+        # appears in the select with NO code change (the PART 4.3 add-a-row=a-FILE bar). The capture-role
+        # output_schema (model_projections()) + the Group-L spaces (embeddable()) are consumed by the
+        # ENGINE/SURFACE lanes; this SUITE lane only PROJECTS the registry into the selects. As the other
+        # 6 file-discovered registries (lifters/mark-types/ai-tics/relation-types/generation-policies/
+        # forms) land, they instantiate here the SAME way and the selects project them too.
+        self.projections_dir = os.path.join(os.path.dirname(self.nodes_dir), "projections")
+        self.projection_registry = ProjectionRegistry().discover([self.projections_dir])
         self.role_registry = role_registry or RoleRegistry().discover([self.roles_dir])
         self.ROLE_REGISTRY = {rid: self.role_registry[rid].spec for rid in self.role_registry}
         # The bridge is a ThreadingHTTPServer → concurrent POST /api/review/next run in separate threads of
@@ -4854,7 +4866,7 @@ class Suite:
                 if rule is not None and rule.id not in rules_map:
                     rules_map[rule.id] = rule
         casts = {m: [r.id for r in self.role_registry.cast_for_mode(m)] for m in self.MODES}
-        return build_cognition_info(
+        info = build_cognition_info(
             roles=self.role_registry,                            # the file-discovered RoleRegistry (dict-like)
             rules=rules_map,
             edge_kinds=EDGE_KINDS,
@@ -4865,6 +4877,21 @@ class Suite:
             casts=casts,
             node_states=[dict(s, applies_to=list(s["applies_to"])) for s in self.NODE_STATES],
         )
+        # Cognition Engine K1/P1 — PROJECT the file-discovered PROJECTION registry onto the SAME
+        # cognition_info envelope every other registry rides (rule 3, one source: this is
+        # ProjectionRegistry.as_records() — the discovered lens set verbatim, never a hand-listed one).
+        # Done by AUGMENTING the returned dict (NOT a hand-built list) so this stays a pure projection of
+        # the live registry: drop a `projections/<id>.py` → restart → the lens appears here with no code
+        # change (the PART 4.3 file-discovery bar). `spaces` is the embeddable subset (the Group-L vector
+        # spaces find_relations ranges over) — also projected, never hardcoded.
+        #   SEAM / cross-lane note (BAR2): the PROPER long-term home is a `projections=` kwarg on
+        #   contracts/cognition_info.build_cognition_info (mirroring roles/rules/edge_kinds), so the
+        #   contract owns the serialization. That edit is the SURFACE/contracts lane, NOT this SUITE
+        #   lane (which may only touch suite.py); augmenting here is the in-lane reuse-don't-parallel
+        #   move (still the ONE as_records() source) until that kwarg lands. Flagged in the lane report.
+        info["projections"] = self.projection_registry.as_records()
+        info["spaces"] = [p.id for p in self.projection_registry.embeddable()]
+        return info
 
     def knobs_for(self, model: str | None = None, base_url: str | None = None) -> dict:
         """G8.1 — DYNAMIC knob resolution: the configurable per-request surface for a (loaded) model,
@@ -8810,15 +8837,133 @@ class Suite:
             ctx_vars = sorted(getattr(_cv, "REGISTRY", {}).keys())
         except Exception:
             ctx_vars = []
+        # Cognition Engine K1/L — PROJECT the file-discovered PROJECTION registry into the input space.
+        # The embeddable lenses (Group L) are vector SPACES (vec://<item>#space=<id>) a corpus-reading
+        # role/rule can READ as an input (RAG-over-the-corpus, D3), so the 'reads' select advertises them
+        # from truth, never a hardcoded list: drop a `projections/<id>.py` with embeds:true → restart →
+        # it appears here. `projections` is every lens id (the discovery vocabulary); `projection_spaces`
+        # is the templated read-address per embeddable lens (the per-item space the corpus capture writes).
+        # ADDITIVE — every prior key (utterance/roles/role_addresses/context_variables) is unchanged.
+        projections = sorted(self.projection_registry)
+        spaces = [p.id for p in self.projection_registry.embeddable()]
         return {"utterance": "utterance", "roles": roles,
                 "role_addresses": [f"run://<turn>/{r}" for r in roles],
-                "context_variables": ctx_vars}
+                "context_variables": ctx_vars,
+                "projections": projections,
+                "projection_spaces": [f"vec://<item>#space={s}" for s in spaces]}
 
     def field_types(self) -> dict:
         """C7.5 — the closed field-type registry the FE schema-editor reads (registry-is-truth — the
         output_schema field-type dropdown comes from here, never a hardcoded FE list)."""
         from runtime import authoring as _auth
         return _auth.field_types()
+
+    # ============================================================================================
+    # Cognition Engine GROUP D — the CORPUS SINK + the inversion-finder (thin Suite methods)
+    # --------------------------------------------------------------------------------------------
+    # These are the SUITE-lane FACE over runtime/corpus.py (D1) + store/vector_index.query_index's
+    # space filter (Group L / L2). They are THIN — they REUSE corpus.py + query_index, never
+    # reimplement the record gate, the dedup-on-read, or the cosine ranking (reuse-don't-parallel).
+    # THE FLOOR (C9.2): every one of these is a READ or a corpus.record telemetry write — NONE emits
+    # resolve/approve/dispatch, and NONE is in RHM_VERBS or on the MCP face (the SURFACE/BRIDGE lanes
+    # expose them as tools/routes; this lane only provides the methods).
+    # ============================================================================================
+    def write_corpus_record(self, *, source_address: str, output, kind: str, lineage: dict,
+                            model: str | None = None, projection: str | None = None, **extra) -> dict:
+        """D1 — persist ONE corpus record (durable cas:// + a deterministic run:// pointer + a
+        `corpus.record` index event) via runtime/corpus.write_record over THIS Suite's store. The LINEAGE
+        GATE bites here (session/round/project REQUIRED — fail-loud CorpusError, never a silent default):
+        a record without lineage is uncorroboratable cross-session (M3) and unplaceable by the
+        inversion-finder (L2). Thin reuse — corpus.py owns the gate + the resume-safe deterministic
+        address; this just supplies self.store."""
+        from runtime import corpus as _corpus
+        return _corpus.write_record(self.store, source_address=source_address, output=output, kind=kind,
+                                    lineage=lineage, model=model, projection=projection, **extra)
+
+    def read_corpus_record(self, address: str) -> dict | None:
+        """D1 — read a corpus record back by its run:// address (head→get_content, the canonical resolver
+        path). An HONEST None if never written — never a crash, never a fabricated record. Thin reuse of
+        corpus.read_record."""
+        from runtime import corpus as _corpus
+        return _corpus.read_record(self.store, address)
+
+    def list_corpus(self, *, project: str | None = None) -> list[dict]:
+        """D5 — the DISCOVERED corpus records: a READ-TIME PROJECTION over the ONE event log (the
+        run-index sibling, filtered to `corpus.record`), dedup-on-read (resume-safe, latest-seq wins),
+        newest-first, optionally narrowed to a lineage `project`. No maintained index, no parallel DB
+        (reuse-don't-parallel — the log IS the index). Thin reuse of corpus.list_corpus."""
+        from runtime import corpus as _corpus
+        return _corpus.list_corpus(self.store, project=project)
+
+    def find_corpus(self, *, project: str | None = None, kind: str | None = None,
+                    projection: str | None = None, source_address: str | None = None) -> list[dict]:
+        """D5 — the FILTERED corpus projection (the query face): list_corpus narrowed by any of the
+        lineage/record axes (project · record kind · projection lens · source_address). Thin reuse of
+        corpus.find_corpus (registry-is-truth: filters the discovered set, never a hand-listed one)."""
+        from runtime import corpus as _corpus
+        return _corpus.find_corpus(self.store, project=project, kind=kind, projection=projection,
+                                   source_address=source_address)
+
+    def find_relations(self, item: str, *, near_space: str, far_space: str, k: int = 10,
+                       min_score: float = 0.5) -> dict:
+        """GROUP L2 — THE INVERSION-FINDER: the cross-space relation query "same principle, different
+        subject." Over the SPACE-KEYED persisted vector index (store/vector_index.query_index with the
+        `space=` filter), it returns the items NEAR `item` in `near_space` but NOT near it in `far_space`
+        (a near∩¬far set difference): e.g. units sharing a PRINCIPLE (near=principles) yet diverging in
+        TOPIC (far=topics) — the inversion the discovery loop surfaces.
+
+        MECHANISM (reuse-don't-parallel — NO cosine reimplemented):
+          • the QUERY VECTOR is the item's OWN persisted per-space vector (store.get_vector over
+            store.space_address(item, near_space)) — the same vector the capture/embed pass wrote. So the
+            ranking is item-anchored, not a re-embed (NO :8001 dependency on the query side — the persisted
+            vectors are enough; matters because the embedder is DOWN right now).
+          • near = the items in `near_space` whose cosine to the item's near-vector ≥ `min_score`.
+          • far  = the items in `far_space` whose cosine to the item's far-vector ≥ `min_score`.
+          • relations = near.ids − far.ids − {item} : near in near_space, NOT near in far_space.
+
+        WHY A THRESHOLD, not the raw ranked list (the correctness pivot): query_index/nodes.retrieve
+        returns EVERY indexed item ranked by cosine — including score≈0 items (a k larger than the corpus
+        returns the whole space). "In the far ranked list" therefore ≠ "is a far-NEIGHBOUR" — using mere
+        presence would put EVERY item in `far_ids` and the difference would always be empty (the bug this
+        guards). So a NEIGHBOUR is an item whose cosine ≥ `min_score` (DEFAULT 0.5; a cluster_threshold is
+        a per-projection RELATION/GENERATION POLICY — the relation-type/generation-policy registries, a
+        later NEWMOD pass — so it is a tunable PARAM here, not a hardcoded global, and becomes
+        registry-projected when those land). The k-NN is still computed via query_index (reuse — no cosine
+        reimplemented); the threshold is applied to its returned scores.
+
+        FAIL LOUD (rule 4): if `item` has no persisted vector in EITHER named space, raise — the inversion
+        is undefined without both anchors (never a silent empty that reads as 'no relations'). An
+        unpopulated space (the embedder was down at build) yields no neighbours (a true empty difference),
+        DISTINCT from the missing-anchor fail-loud.
+
+        Returns {item, near_space, far_space, min_score, relations[], near[], far[]} — relations is the
+        inversion result (source ids); near/far carry the THRESHOLDED neighbour rows (id+score) for the
+        surface to render the WHY. Read-only; no model call; not on the MCP face / not in RHM_VERBS."""
+        from store import vector_index as _vx
+        near_key = self.store.space_address(item, near_space)
+        far_key = self.store.space_address(item, far_space)
+        near_rec = self.store.get_vector(near_key)
+        far_rec = self.store.get_vector(far_key)
+        if near_rec is None or near_rec.get("vector") is None:
+            raise ValueError(
+                f"find_relations: item {item!r} has no persisted vector in near_space {near_space!r} "
+                f"(address {near_key!r}) — the inversion is anchored on the item's OWN per-space vector, "
+                f"so it must be embedded in both spaces first (run the capture+embed pass). Fail loud, "
+                f"never a silent empty result that looks like 'no relations'.")
+        if far_rec is None or far_rec.get("vector") is None:
+            raise ValueError(
+                f"find_relations: item {item!r} has no persisted vector in far_space {far_space!r} "
+                f"(address {far_key!r}) — both anchors are required for a near∩¬far inversion. Fail loud.")
+        # k-NN within each space (reuse query_index — never a reimplemented cosine), then THRESHOLD to a
+        # true neighbour set (score ≥ min_score) so a score≈0 item is NOT counted as 'near' (see WHY above).
+        near = [r for r in _vx.query_index(self.store, near_rec["vector"], k=k, space=near_space)
+                if r.get("score", 0.0) >= min_score]
+        far = [r for r in _vx.query_index(self.store, far_rec["vector"], k=k, space=far_space)
+               if r.get("score", 0.0) >= min_score]
+        far_ids = {r["id"] for r in far}
+        relations = [r["id"] for r in near if r["id"] not in far_ids and r["id"] != item]
+        return {"item": item, "near_space": near_space, "far_space": far_space, "min_score": min_score,
+                "relations": relations, "near": near, "far": far}
 
     # --- self-modification safety net (slice 13): additive + git-reversible ---
     @property
