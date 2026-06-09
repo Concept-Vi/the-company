@@ -25,6 +25,41 @@ def list_models(base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama", timeo
     return [m for m in ids if "gemini" not in m.lower()]
 
 
+# The vLLM/OpenAI SAMPLING family — the ALLOWLIST of opts keys that are forwarded VERBATIM into the
+# request body. ONE source, iterated by BOTH chat transports (reuse — never two divergent inline tuples).
+# An ALLOWLIST, deliberately (not a denylist): so `meta`/`tools`/`tool_choice`/`json_schema`/`schema`/`json`
+# (the OUT-PARAMS + the structured-output triggers, handled by _apply_response_format / _fill_meta) can NEVER
+# leak into the body. A key ABSENT from opts is not added → the call is BYTE-IDENTICAL to before for any
+# caller not passing it (the behaviour-preserving guarantee). It is an ORDERED TUPLE, not a set, ON PURPOSE:
+# _apply_sampling inserts keys in THIS order, and json.dumps serializes in dict-insertion order — so with the
+# original three FIRST, a call passing none of the new keys produces byte-for-byte the SAME request as the
+# pre-change inline `(temperature, max_tokens, top_p)` loop (a hash-ordered set would reorder the bytes for
+# any ≥2-key call — same keys/values, but not byte-identical). This is the seam the generation-policy
+# rep_penalty LADDER's `repetition_penalty` rides through to vLLM (it is a valid vLLM sampling param); the
+# rest of the family (frequency/presence_penalty, top_k, min_p, stop, seed, n) ride the SAME seam, so a
+# policy declaring any of them reaches the model with no further transport edit (registry-driven, general —
+# not a single hardcoded key). vLLM accepts these as top-level request fields (OpenAI-compatible + its
+# documented sampling extensions); an endpoint that doesn't recognise one ignores it (forward-compatible).
+_SAMPLING_KEYS = (
+    "temperature", "max_tokens", "top_p",                  # the original three, FIRST + IN ORDER (byte-identical)
+    "repetition_penalty",                                  # the O2 generation-policy ladder rung → vLLM
+    "frequency_penalty", "presence_penalty",               # OpenAI sampling penalties
+    "top_k", "min_p",                                      # vLLM sampling extensions
+    "stop", "seed", "n",                                   # stop sequences · determinism seed · draw count
+)
+
+
+def _apply_sampling(body: dict, opts: dict) -> None:
+    """Forward every PRESENT sampling-family key from opts into the request body, VERBATIM — the ONE
+    sampling passthrough shared by openai_transport AND openai_tools_transport (reuse, single-source so the
+    two agree by construction). Allowlist-gated (`_SAMPLING_KEYS`): an out-param (`meta`) or a structured-
+    output trigger (`json_schema`/`schema`/`json`) is NOT in the set, so it can never reach the body. A key
+    absent from opts is not added → the request is byte-identical to before for any caller not passing it."""
+    for k in _SAMPLING_KEYS:
+        if k in opts:
+            body[k] = opts[k]
+
+
 def _apply_response_format(body: dict, opts: dict) -> None:
     """Set body["response_format"] from opts — the ONE structured-output decision, shared by
     openai_transport AND openai_tools_transport (single-source so the two transports agree by
@@ -56,8 +91,8 @@ def _fill_meta(opts: dict, data: dict) -> None:
     every one of the 12+ bare-content-string callers is byte-unaffected (the out-param is invisible to
     them: they pass no `meta`, so this is a no-op). `meta` rides `**opts` straight through
     fabric.client.complete() (which forwards `**opts` to the transport) and NEVER enters the request body
-    (the body only reads response_format + the explicit temperature/max_tokens/top_p keys — never `meta`),
-    so a stray `meta` key can't pollute the request.
+    (the body only reads response_format + the allowlisted `_SAMPLING_KEYS` family via _apply_sampling —
+    `meta` is NOT in that allowlist, so a stray `meta` key can't pollute the request), never `meta`.
 
     Why the TRANSPORT fills it (not the client): the transport is the ONLY layer that sees the raw OpenAI
     envelope (`choices[0].finish_reason`, `usage`). `complete()` re-runs the transport per retry attempt and
@@ -89,9 +124,7 @@ def openai_transport(base_url: str = DEFAULT_BASE_URL, api_key: str = "ollama", 
         forbid_gemini(model)                                   # hard constraint, fail loud
         body = {"model": model, "messages": messages, "stream": False}
         _apply_response_format(body, opts)                     # json_schema branch › json_object › off
-        for k in ("temperature", "max_tokens", "top_p"):
-            if k in opts:
-                body[k] = opts[k]
+        _apply_sampling(body, opts)                            # the sampling family (temp/max_tokens/top_p/repetition_penalty/…), allowlist-gated
         req = urllib.request.Request(
             base_url.rstrip("/") + "/chat/completions",
             data=json.dumps(body).encode(),
@@ -119,9 +152,7 @@ def openai_tools_transport(base_url: str = DEFAULT_BASE_URL, api_key: str = "oll
         forbid_gemini(model)                                   # hard constraint, fail loud, FIRST
         body = {"model": model, "messages": messages, "stream": False}
         _apply_response_format(body, opts)                     # json_schema branch › json_object › off
-        for k in ("temperature", "max_tokens", "top_p"):
-            if k in opts:
-                body[k] = opts[k]
+        _apply_sampling(body, opts)                            # the sampling family (temp/max_tokens/top_p/repetition_penalty/…), allowlist-gated
         tools = opts.get("tools")
         if tools:                                              # only add the tool keys when tools passed
             body["tools"] = tools
