@@ -54,6 +54,23 @@ def register(mcp, suite):
             return {"op": op, "total": len(rows), "detail": detail, "records": _shape(rows)}
         if op == "read":
             if not address:
-                return {"error": "corpus(op='read') needs `address` (a run:// corpus address from list/find)."}
-            return {"op": op, "address": address, "record": suite.read_corpus_record(address)}
+                return {"error": "corpus(op='read') needs `address` — a run:// corpus record address "
+                        "(from op='list'/'find') OR a SOURCE address (e.g. the code:// ids op='query' "
+                        "returns — they round-trip here)."}
+            rec = suite.read_corpus_record(address)
+            if rec is not None:
+                return {"op": op, "address": address, "record": rec}
+            # N1 — THE ROUND-TRIP: op='query' returns SOURCE ids (code://…); accept them here by
+            # finding their record(s) (newest-first) instead of a silent {record:null}.
+            rows = suite.find_corpus(source_address=address)
+            if rows:
+                rec_addr = rows[0].get("address")
+                return {"op": op, "address": rec_addr, "source_address": address,
+                        "record": suite.read_corpus_record(rec_addr)}
+            # N1 — NO SILENT NULL: nothing found → a TEACHING error, never a bare null.
+            return {"op": op, "address": address, "record": None,
+                    "error": f"no corpus record found for {address!r} — pass a run://corpus record "
+                    "address (from op='list'/'find') or a source address of an INGESTED file (the "
+                    "code:// ids op='query' returns). If this source was never ingested, feed it "
+                    "first: ingest(paths=[...]) — then it becomes readable + queryable."}
     return corpus

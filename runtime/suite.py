@@ -9671,8 +9671,14 @@ class Suite:
                 try:
                     t = open(p, encoding="utf-8").read()
                 except (UnicodeDecodeError, OSError) as e:
-                    raise ValueError(f"ingest_paths: cannot read {p!r} ({e.__class__.__name__}) — "
-                                     f"fail loud, never a silent skip of an EXPLICIT path.") from e
+                    raise ValueError(f"ingest_paths: cannot read {p!r} ({e.__class__.__name__}) — paths "
+                                     f"are cwd-relative (cwd={os.getcwd()!r}) or absolute; fail loud, "
+                                     f"never a silent skip of an EXPLICIT path.") from e
+                # N5 — ONE id per file: normalize an absolute path under the repo to the same RELATIVE
+                # form the walk emits (an absolute and a relative spelling must not mint two code:// ids).
+                cwd = os.getcwd()
+                if os.path.isabs(p) and os.path.commonpath([cwd, os.path.abspath(p)]) == cwd:
+                    p = os.path.relpath(p, cwd)
                 files.append({"path": p, "text": t[:_corp.WALK_MAX_CHARS]})
         walked = len(files)
         if not force:
@@ -9683,7 +9689,8 @@ class Suite:
         files = files[:max_files]
         if not files:
             return {"walked": walked, "skipped_existing": skipped_existing, "digested": 0, "captured": 0,
-                    "remaining": remaining, "corpus_total": len(self.list_corpus(project=project))}
+                    "remaining": remaining, "addresses": [],
+                    "corpus_total": len(self.list_corpus(project=project))}
         units = [f"FILE {f['path']}:\n\n{f['text']}" for f in files]
         res = _cog.run_items(rd, units, self.store, turn_id=f"ingest-{session}", max_tokens=200)
         resolved = res.resolved if isinstance(res.resolved, dict) else {i: v for i, v in enumerate(res.resolved)}
@@ -9700,8 +9707,12 @@ class Suite:
         fail_by_i = {fi: err for (fi, err) in (res.failed or [])}
         failed_files = [{"path": files[fi]["path"], "error": str(err)[:200]}
                         for fi, err in fail_by_i.items() if fi < len(files)]
+        # N5 — CHAINABLE: return the record ADDRESSES (the composition currency — feed them straight to
+        # corpus(op='read') / run_items / find_relations), not just counts. Capped to keep it light.
+        rec_addresses = [f"run://corpus/{project}/{r['source_address']}/{projection}" for r in records][:25]
         return {"walked": walked, "skipped_existing": skipped_existing, "digested": len(records),
                 "captured": len(records), "failed": failed_files, "remaining": remaining,
+                "addresses": rec_addresses,
                 "corpus_total": len(self.list_corpus(project=project))}
 
     def capture_corpus(self, records: list[dict], *, project: str, session: str, round: str = "1",
