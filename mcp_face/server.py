@@ -22,6 +22,17 @@ SUITE = Suite(FsStore(fcfg.STORE_DIR),
 
 mcp = FastMCP("company")
 
+# --- MODULAR TOOLS (file-discovered — MCP-DESIGN-PRINCIPLE) ---------------------------------------
+# Consolidated, parameterised tools live in mcp_face/tools/<resource>.py, each exposing
+# register(mcp, suite). Discovered + registered here via pkgutil — mirrors the file-discovered
+# registries (roles/·projections/·nodes/): add a resource = add a file, no edit here. Each replaces a
+# flat-per-op cluster (the law: a new need is a new `op`, never a new flat tool). Standing law:
+# build-prep/cognition-self-improvement/MCP-DESIGN-PRINCIPLE.md.
+import importlib as _importlib, pkgutil as _pkgutil
+from mcp_face import tools as _tools_pkg
+for _m in _pkgutil.iter_modules(_tools_pkg.__path__):
+    _importlib.import_module(f"mcp_face.tools.{_m.name}").register(mcp, SUITE)
+
 
 @mcp.tool()
 def list_types() -> list:
@@ -805,41 +816,10 @@ def capture(role: str, units: list, project: str, session: str, round: str = "1"
             "skipped": res.skipped, "failed": res.failed, "wall_s": res.wall_s}
 
 
-# --- READ-BACK the corpus (the pillar's discoverable output) -------------------------------------
-@mcp.tool()
-def list_corpus(project: str = "") -> dict:
-    """DISCOVER the corpus records a capture pass produced — a READ-TIME PROJECTION over the ONE event
-    log (the run-index sibling, filtered to `corpus.record`), dedup-on-read (resume-safe, latest-seq
-    wins), newest-first. Optionally narrowed to a lineage `project`. NO maintained index, NO parallel DB
-    (the log IS the index). REUSES Suite.list_corpus (→ runtime/corpus.list_corpus). Read-only.
-    Returns {project, total, records:[{address, cas, source_address, record_kind, model, projection,
-    lineage, seq, ts}]}. Feed an `address` to read_corpus_record/inspect_address, or filter with
-    find_corpus."""
-    rows = SUITE.list_corpus(project=(project or None))
-    return {"project": project or None, "total": len(rows), "records": rows}
-
-
-@mcp.tool()
-def find_corpus(project: str = "", kind: str = "", projection: str = "", source_address: str = "") -> dict:
-    """DISCOVER corpus records FILTERED by any of the lineage/record axes — the query face of the corpus
-    (list_corpus narrowed by project · record kind · projection lens · source_address). E.g.
-    find_corpus(project='wizard', projection='principles') → every principle-lens record in that project.
-    REUSES Suite.find_corpus (→ runtime/corpus.find_corpus — filters the discovered set, never a
-    hand-listed one). Read-only. Returns the same {project, total, records} shape as list_corpus."""
-    rows = SUITE.find_corpus(project=(project or None), kind=(kind or None),
-                             projection=(projection or None), source_address=(source_address or None))
-    return {"project": project or None, "total": len(rows), "records": rows}
-
-
-@mcp.tool()
-def read_corpus_record(address: str) -> dict:
-    """INSPECT ONE corpus record back by its run:// address (the capture→read-back→verify loop, and the
-    way a fresh agent inspects what a capture produced). REUSES Suite.read_corpus_record (head→get_content,
-    the canonical resolver path). Returns {address, record} where `record` is the persisted
-    {source_address, output, kind, model, projection, lineage, …} — or {address, record: null} if never
-    written (an HONEST null, never a fabricated record). Read-only."""
-    rec = SUITE.read_corpus_record(address)
-    return {"address": address, "record": rec}
+# --- READ-BACK the corpus → CONSOLIDATED into mcp_face/tools/corpus.py (MCP-DESIGN-PRINCIPLE) -----
+# list_corpus · find_corpus · read_corpus_record + the previously-unexposed query() are now ONE
+# parameterised tool: corpus(op=list|find|read|query, detail=concise|detailed, limit=...). The flat
+# trio is removed (a new need = a new `op`, never a new flat tool). See mcp_face/tools/corpus.py.
 
 
 # --- LAYER 3: the inversion-finder + the marks/gold read ------------------------------------------
