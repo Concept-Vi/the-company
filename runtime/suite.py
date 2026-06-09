@@ -868,7 +868,12 @@ class Suite:
         axis). Returns {ok, action} or {ok:False, error} (build_action's shape — fail-loud, never written
         on invalid)."""
         from runtime import coherence_actions as _act
-        built = _act.build_action(decl, models=self._cascade_models())
+        from runtime import cognition as _cogn
+        # N3 save/run parity: pass the LIVE role registry + the rule resolver so ok:True ⇒ runnable
+        # (the cold-agent eval saved a decl the runner then rejected — the one door is now one door).
+        built = _act.build_action(decl, models=self._cascade_models(),
+                                  roles=set(self.role_registry),
+                                  rule_resolver=_cogn.resolve_reduce_rule)
         if not built.get("ok"):
             return built
         self.cascade_registry.save(built["action"])
@@ -878,8 +883,30 @@ class Suite:
 
     def list_cascades(self) -> list:
         """The saved cascades (registry-is-truth — the discoverable re-runnable pipelines, AK4). Each is the
-        full decl row; an agent reads it to know the steps/ops/models before run_cascade."""
-        return self.cascade_registry.all()
+        full decl row PLUS a DERIVED `inputs_hint` (N4 — the cold-agent eval: rows showed what a cascade
+        PRODUCES but never what it EATS; the hint derives from the FIRST step's shape, one source, never a
+        hand-written second description)."""
+        rows = self.cascade_registry.all()
+        out = []
+        for a in rows:
+            a = dict(a)
+            steps = a.get("steps") or []
+            if steps:
+                s0 = steps[0]
+                k0 = s0.get("kind") or ("reduce" if s0.get("op") == "reduce" else
+                                        "items" if (s0.get("fan") or s0.get("items") is not None) else "role")
+                if s0.get("items") is not None:
+                    a["inputs_hint"] = "inputs ignored — step 0 declares its own baked `items` list"
+                elif k0 == "items":
+                    a["inputs_hint"] = ("step 0 is a MAP (items) — pass `inputs` as a JSON-encoded ARRAY of "
+                                        "units, e.g. '[\"a\",\"b\"]' or a JSON array of unit dicts")
+                elif len(steps) > 1 and steps[1].get("fan_field"):
+                    a["inputs_hint"] = (f"step 0 takes ONE string/address (the seed); step 1 then fans over "
+                                        f"its {steps[1]['fan_field']!r} list field")
+                else:
+                    a["inputs_hint"] = "step 0 takes ONE value — a plain string, or a run://·cas:// address"
+            out.append(a)
+        return out
 
     def get_cascade(self, name: str) -> dict | None:
         """One saved cascade decl by name (None if absent — honest, not a fabricated row)."""

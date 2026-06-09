@@ -106,13 +106,13 @@ try:
 except ValueError as e:
     check("run_cascade on an unknown saved name RAISES (never a fabricated cascade)", "no saved cascade" in str(e))
 
-# a cascade referencing an unregistered role → fail loud at run (saved fine; the role check bites at run)
-SUITE.save_cascade({"name": "ghost-role", "steps": [{"op": "generate", "role": "definitely_not_a_role", "kind": "role"}]})
-try:
-    SUITE.run_cascade("ghost-role", inputs="hello")
-    check("run_cascade with an unregistered role RAISES", False)
-except ValueError as e:
-    check("run_cascade with an UNREGISTERED role RAISES (fail-loud, never invent)", "not registered" in str(e))
+# N3 SAVE/RUN PARITY: an unregistered role now REFUSES AT SAVE (ok:True ⇒ runnable — the one door is one
+# door; the cold-agent eval found save-ok decls the runner rejected, so the gate moved to save-time).
+_ghost = SUITE.save_cascade({"name": "ghost-role", "steps": [{"op": "generate", "role": "definitely_not_a_role", "kind": "role"}]})
+check("save_cascade with an UNREGISTERED role REFUSES AT SAVE (N3 parity — ok:True ⇒ runnable)",
+      (not _ghost.get("ok")) and "REGISTERED role" in _ghost.get("error", ""))
+check("the refused ghost-role cascade was NEVER persisted",
+      "ghost-role" not in [c["name"] for c in SUITE.list_cascades()])
 
 # a reduce as the FIRST step → fail loud (a reduce joins a prior map; there is none)
 SUITE.save_cascade({"name": "reduce-first", "steps": [{"op": "reduce", "role": "reduce_synth", "kind": "reduce"}]})

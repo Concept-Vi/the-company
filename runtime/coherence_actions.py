@@ -20,12 +20,20 @@ from runtime import coherence_detect as _cd
 _VALID_OPS = ("generate", "embed", "similarity", "retrieve", "detect", "reduce")
 
 
-def build_action(decl: dict, *, models: set) -> dict:
+def build_action(decl: dict, *, models: set, roles: set | None = None, rule_resolver=None) -> dict:
     """Validate an action declaration through ONE door (compiled / hand-written / saved all gate here —
     mirrors _build_role / the CC-1 build_chain insight). Enforces registry-is-truth: every step's `model`
     must be a member of `models` (the live model registry — chat + embed), never a hardcoded literal (the
-    no-hardcoding law). Fail-loud on: no name, no steps, an unknown op, a non-registry model. Returns
-    {ok, action} or {ok:False, error}."""
+    no-hardcoding law).
+
+    N3 — SAVE/RUN PARITY (additive; the cold-agent eval found save-ok decls the runner rejected): when the
+    caller supplies `roles` (the live role-registry ids) and/or `rule_resolver` (cognition.resolve_reduce_rule
+    — resolves static names AND parameterised patterns like 'tally-by:<field>'), the gate also enforces what
+    the RUNNER requires, so ok:True ⇒ runnable: a role is REQUIRED on every step EXCEPT a reduce step with
+    reduce_mode='rule' (where a rule is pure — no model, the role was only an address label and is optional);
+    a declared role must be REGISTERED; a rule-reduce's reduce_rule must RESOLVE; fan_field must be a
+    non-empty string on an items-shaped step. Fail-loud with TEACHING errors. Returns {ok, action} or
+    {ok:False, error}."""
     name = decl.get("name")
     steps = decl.get("steps")
     if not name or not isinstance(name, str):
@@ -41,6 +49,28 @@ def build_action(decl: dict, *, models: set) -> dict:
             return {"ok": False, "error": f"step {i}: model {model!r} is not in the model REGISTRY "
                     f"({sorted(models)}) — registry-is-truth: a step's model is a declared registry ref, "
                     f"never a hardcoded literal (no-hardcoding)"}
+        # N3 runner-parity checks (only when the caller supplies the live registries):
+        is_rule_reduce = (op == "reduce" and step.get("reduce_mode", "role") == "rule")
+        role_id = step.get("role")
+        if roles is not None:
+            if not role_id and not is_rule_reduce:
+                return {"ok": False, "error": f"step {i}: declares no `role` — every step fires a model IN "
+                        f"a role EXCEPT a reduce with reduce_mode='rule' (a rule is pure; its role is "
+                        f"optional). Add a registered role id, or make this a rule-reduce."}
+            if role_id and role_id not in roles:
+                return {"ok": False, "error": f"step {i}: role {role_id!r} is not a REGISTERED role "
+                        f"(registry-is-truth — author it first via create(kind='role'), or pick from the "
+                        f"live set: {sorted(roles)})"}
+        if is_rule_reduce and rule_resolver is not None:
+            rname = step.get("reduce_rule")
+            if not rname or rule_resolver(rname) is None:
+                return {"ok": False, "error": f"step {i}: reduce_mode='rule' names reduce_rule {rname!r} "
+                        f"which does not resolve — pick a named rule (see reduce_rule_names()) or the "
+                        f"parameterised 'tally-by:<field>' pattern."}
+        fan = step.get("fan_field")
+        if fan is not None and (not isinstance(fan, str) or not fan):
+            return {"ok": False, "error": f"step {i}: fan_field must be a non-empty string naming a LIST "
+                    f"field of the previous step's output (e.g. 'groups')."}
     action = {"name": name, "steps": steps, "output_schema": decl.get("output_schema", {}),
               "schema_ver": decl.get("schema_ver", 1)}
     return {"ok": True, "action": action}

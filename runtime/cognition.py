@@ -2102,12 +2102,17 @@ def run_cascade(action: dict, store, *, turn_id: str,
 
     for i, step in enumerate(steps):
         role_id = step.get("role")
-        if not role_id:
-            raise ValueError(
-                f"run_cascade: step {i} of {name!r} declares no `role` — a cascade step IS a role-run "
-                f"(the model runs in the role; rule = pure decision, no role). Fail loud (rule 8).")
-        role = resolve_role(role_id)
         kind = _cascade_step_kind(step)
+        # N3 — role is OPTIONAL on a rule-reduce step (the rule is a PURE function; a role there was only
+        # ever an address-naming token, which confused authors + made save-ok decls unrunnable). Every
+        # OTHER step kind fires a model in a role → role required, fail loud with the real reason.
+        is_rule_reduce = (kind == "reduce" and step.get("reduce_mode", "role") == "rule")
+        if not role_id and not is_rule_reduce:
+            raise ValueError(
+                f"run_cascade: step {i} of {name!r} declares no `role` — this step kind ({kind!r}) fires "
+                f"a model IN a role, so a registered role id is required. (Only a reduce step with "
+                f"reduce_mode='rule' may omit it — a rule is pure, no model.) Fail loud (rule 8).")
+        role = resolve_role(role_id) if role_id else None
         # A per-step `model` override is honoured on the RESIDENT endpoint (the engine pins RESIDENT_BASE_URL).
         # CLOUD-tier routing is N2 net-new transport in fabric/, NOT this lane — a cloud model id here FAILS
         # LOUD downstream in the client (no silent fallback). needs-tim: a multi-endpoint per-step router (N2).
@@ -2146,7 +2151,10 @@ def run_cascade(action: dict, store, *, turn_id: str,
             ms = int((time.monotonic() - t0) * 1000)
             # TRAP 2 — THE RUNNER persists the joined output to a step-keyed run:// address (run_reduce
             # does NOT). This makes the reduce step FEEDABLE-by-address + discoverable by find_runs.
-            address = f"run://{turn_id}/{i}-{role.id}"
+            # N3: on a role-less rule-reduce the address label derives from the RULE name (the role was
+            # only ever this label — now it's honest).
+            _label = role.id if role is not None else (str(step.get("reduce_rule") or "rule").replace(":", "-"))
+            address = f"run://{turn_id}/{i}-{_label}"
             cas = store.put_content(res.joined)
             store.set_ref(address, cas)
             out_addresses = [address]
@@ -2256,13 +2264,13 @@ def run_cascade(action: dict, store, *, turn_id: str,
         # output address(es). Telemetry only — NO resolve/approve/dispatch (the floor).
         if emit is not None:
             emit("op.run", {
-                "summary": f"{op_kind} · cascade {name} step {i} · {role.id} · {ms}ms",
-                "op": op_kind, "run_op": run_op, "turn_id": turn_id, "role": role.id,
+                "summary": f"{op_kind} · cascade {name} step {i} · {role.id if role else (step.get('reduce_rule') or 'rule')} · {ms}ms",
+                "op": op_kind, "run_op": run_op, "turn_id": turn_id, "role": (role.id if role else None),
                 "duration_ms": ms, "addresses": out_addresses,
                 "cascade": name, "step": i, "step_kind": kind, **items_visibility,
             })
 
-        step_records.append({"step": i, "role": role.id, "kind": kind, "op": op_kind,
+        step_records.append({"step": i, "role": (role.id if role else step.get("reduce_rule")), "kind": kind, "op": op_kind,
                              "addresses": out_addresses, **items_visibility,
                              **({"address": address} if address else {})})
         prev_addresses = out_addresses
