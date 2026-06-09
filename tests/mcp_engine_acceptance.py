@@ -178,12 +178,19 @@ check("5 propose wrote NO roles/ file (surfacing path is still propose-not-apply
       after_files == before_files)
 # the #58 DIRECT create tools are wired (by-use applies LIVE — proven in direct_create_acceptance.py
 # with an isolated dir so this no-regression suite never commits the live repo).
-check("5 the DIRECT create_role tool is registered on the MCP face (#58)", hasattr(srv, "create_role"))
-check("5 the DIRECT create_skill tool is registered on the MCP face (#56/#58)", hasattr(srv, "create_skill"))
-check("5 the DIRECT create_context tool is registered on the MCP face (#56/#58)", hasattr(srv, "create_context"))
-check("5 create_role routes to the DIRECT Suite.create_role (no surfacing in its source)",
-      "create_role" in __import__("inspect").getsource(srv.create_role)
-      and "SUITE.create_role" in __import__("inspect").getsource(srv.create_role))
+# CONSOLIDATED (MCP-DESIGN-PRINCIPLE): the 8 flat create_* tools → ONE create(kind=) tool
+# (mcp_face/tools/create.py, file-discovered). Assert the consolidated tool is registered + the flats gone.
+_tool_names = set(srv.mcp._tool_manager._tools.keys())
+check("5 the DIRECT create(kind=) tool is registered on the MCP face (#58, 8→1 consolidation)",
+      "create" in _tool_names)
+check("5 the 8 flat create_* tools are REMOVED (consolidated into create(kind=))",
+      not any(f in _tool_names for f in
+              ("create_role", "create_skill", "create_context", "create_projection", "create_mark_type",
+               "create_generation_policy", "create_relation_type", "create_ai_tic")))
+import mcp_face.tools.create as _createmod
+check("5 create routes to the DIRECT Suite.create_<kind> (registry-is-truth, no surfacing in its source)",
+      "create_" in __import__("inspect").getsource(_createmod)
+      and "getattr(suite" in __import__("inspect").getsource(_createmod))
 
 # ── 6. run_items + run_reduce via MCP → the map + the cross-unit join ─────────────────────────────
 print("\n[6] run_items (map) + run_reduce (cross-unit join) via MCP")
@@ -251,10 +258,10 @@ check("FLOOR: no MCP tool launches `claude -p` (no subprocess/implement.py — t
       "subprocess" not in _imported and "implement" not in _imported
       and not ({"run", "Popen", "call", "check_output"} & _called and "subprocess" in _imported))
 # #58 POSITIVE: authoring-apply IS now reachable from this face (the reframe — create applies directly).
-_code_no_comments = "\n".join(l.split("#", 1)[0] for l in src.splitlines())
-check("FLOOR (#58): authoring-apply IS allowed — create_role/skill/context call the DIRECT Suite methods",
-      "SUITE.create_role" in _code_no_comments and "SUITE.create_skill" in _code_no_comments
-      and "SUITE.create_context" in _code_no_comments)
+# CONSOLIDATED: the create logic lives in mcp_face/tools/create.py (dispatches to Suite.create_<kind>).
+_create_src = "\n".join(l.split("#", 1)[0] for l in __import__("inspect").getsource(_createmod).splitlines())
+check("FLOOR (#58): authoring-apply IS allowed — create(kind=) dispatches to the DIRECT Suite.create_<kind>",
+      "getattr(suite" in _create_src and "create_" in _create_src and "_kinds()" in _create_src)
 # the registered tool set does not include an apply/resolve tool name
 tool_names = set()
 try:

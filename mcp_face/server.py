@@ -572,47 +572,13 @@ def preview_turn(utterance: str, mode: str = "") -> dict:
     return SUITE.preview_turn(utterance, mode or None)
 
 
-# --- CREATE (#58 DIRECT — the agent authors LIVE, no operator approval; correctness gate + build-dispatch floor kept) ---
-@mcp.tool()
-def create_role(spec: dict) -> dict:
-    """CREATE a NEW role DIRECTLY — applies LIVE, NO operator approval (#58: authoring is the agent's,
-    not gated). Renders the role module from the FULL schema, runs the CORRECTNESS gate (import in a
-    temp dir — a malformed spec is REFUSED fail-loud, never written), writes + git-commits (revertible),
-    re-discovers → the role is LIVE in cognition_info immediately. REUSES Suite.create_role (apply_role's
-    render+gate+write path MINUS the approval check — never a parallel author path).
-
-    `spec` exposes EVERY role field the agent can set: id · label · description · prompt_template ·
-    output_fields ([{name,type,description}] → the structured output BaseModel) · op (generate|embed) ·
-    thinking · tools · knobs (max_tokens/temperature/…) · model_binding/requires · input_addresses
-    (incl skill://context://run://cas://) · mode_scope · rules · context · render_hint.
-
-    Returns {role_id, path, live: True, source}. The build-dispatch floor is UNTOUCHED — this writes a
-    roles/ file (authoring), it NEVER dispatches claude -p. (propose_role stays available for surfacing.)"""
-    return SUITE.create_role(spec, model=spec.get("model"))
-
-
-@mcp.tool()
-def create_skill(spec: dict) -> dict:
-    """CREATE a NEW skill DIRECTLY — applies LIVE, NO operator approval (#56 write-half, #58 direct: the
-    skill-writing-skill). Renders `skills/<id>.py` (id + content + label/description), runs the
-    CORRECTNESS gate, writes + git-commits, → LIVE (readable via skill://<id> + list_skills_contexts).
-    REUSES Suite.create_skill. Returns {skill_id, path, live: True}."""
-    return SUITE.create_skill(spec)
-
-
-@mcp.tool()
-def create_context(spec: dict) -> dict:
-    """CREATE a NEW context DIRECTLY — applies LIVE, NO operator approval (#56 write-half, #58 direct).
-    Renders `contexts/<id>.py` (id + content + label/description), runs the CORRECTNESS gate, writes +
-    git-commits, → LIVE (readable via context://<id> + list_skills_contexts). REUSES Suite.create_context.
-    Returns {context_id, path, live: True}."""
-    return SUITE.create_context(spec)
-
-
-# --- CREATE (PROPOSE — surfacing STAYS available for when an operator wants it; not the default path) ---
+# --- CREATE → CONSOLIDATED into mcp_face/tools/create.py (create(kind=role|skill|context|projection|
+# mark_type|generation_policy|relation_type|ai_tic), MCP-DESIGN-PRINCIPLE 8→1, registry-is-truth). The 8
+# flat create_* defs are removed; the #58 declarative-direct floor is preserved in the consolidated tool.
+# propose_role (surfacing) STAYS — it's a distinct verb (surface for operator), not a declarative create.
 @mcp.tool()
 def propose_role(spec: dict) -> dict:
-    """CREATE a NEW role — PROPOSE (surfacing path, kept available alongside the direct create_role):
+    """CREATE a NEW role — PROPOSE (surfacing path, kept available alongside create(kind='role')):
     renders + GATES the role module, then SURFACES it for the OPERATOR to approve (it is NOT applied
     here). REUSES Suite.propose_role (the /api/cognition/role/propose path). `spec` carries id +
     output_fields + prompt_template (or a natural-language `brief` the brain drafts from). Returns
@@ -798,151 +764,9 @@ def find_relations(item: str, near_space: str, far_space: str, k: int = 10, min_
 # findings_for → CONSOLIDATED into mcp_face/tools/marks.py (marks(by='findings', target=)). Flat def removed.
 
 
-# --- CREATE (declarative-direct — a projection LENS, like create_role/create_skill; #58) ----------
-@mcp.tool()
-def create_projection(spec: dict) -> dict:
-    """CREATE a NEW projection LENS DIRECTLY — applies LIVE, NO operator approval (#58: declarative
-    authoring is the agent's, correctness-gated). A PROJECTION is a declared LENS over a corpus unit (one
-    named way to DESCRIBE it — what it IS, its topics, the principles it expresses, its claimed status).
-    Dropping a lens makes it appear EVERYWHERE with zero code change: the capture-schema (if
-    produced_by='model'), the vector spaces find_relations ranges over (if embeds=true), and
-    cognition_info().projections/.spaces — the PART 4.3 "add-a-row = a FILE" registry bar.
-
-    `spec` is the projection ROW (see runtime/projections.py · projections/AGENTS.md):
-      • id          (required) — the lens name; MUST be a valid identifier (it becomes projections/<id>.py).
-      • level       (required) — the abstraction band (open vocab: structural·content·relational·meaning·
-                                 epistemic·generative·texture·functional — a new band is just a new value).
-      • produced_by (required) — 'model' (a capture-role DESCRIBES it — the LLM path, included in the
-                                 capture-schema) | 'code' (a lifter EXTRACTOR produces it — a later pass).
-      • embeds      (required) — bool; does this lens become a vector SPACE (Group L) find_relations uses.
-      • field       (optional) — the output field shape ('string'·'array'·'enum').
-      • enum        (optional) — for field='enum', the allowed values.
-      • desc        (optional) — the render-NOT-judge instruction the capture prompt uses (K3: DESCRIBE
-                                 what the unit claims; do NOT judge whether it is true — that is a later reduce).
-      • stage       (optional) — effort band ('legibility' cheap broad · 'deep' heavier).
-
-    MECHANISM (reuse-don't-parallel): renders `PROJECTION = {...}` source → runs the registry's OWN
-    correctness GATE (import-in-tempdir via ProjectionRegistry — a malformed lens RAISES, never written,
-    mirroring create_role/create_skill's gate-in-tempdir) → writes projections/<id>.py atomically →
-    git-commits via the shared Suite._commit_or_rollback (path-scoped — only the one file; revertible) →
-    rediscovers the live registry. RENDER-NOT-JUDGE is enforced by the schema (a lens DESCRIBES via desc).
-
-    Returns {projection_id, path, live: True, spec}. `live` proves it appears in cognition_info()
-    immediately. The build-dispatch floor is UNTOUCHED — this writes a projections/ DATA file (declarative
-    authoring), it NEVER dispatches claude -p; node-type / executable-code create stays GATED, off this face.
-
-    SEAM (BAR2, cross-lane — flagged, not made): the long-term home is render_projection_source in
-    runtime/authoring.py + a Suite.create_projection method (mirroring create_skill/create_context). This
-    in-server author path is the in-lane reuse-don't-parallel move (the SAME registry gate + the SAME
-    Suite._commit_or_rollback) until that lands — the SUITE lane's own augment-in-lane/flag-the-seam
-    precedent. DELEGATE: runtime.projections (the gate) + Suite._commit_or_rollback + Suite.projection_registry."""
-    import os as _os
-    import tempfile as _tempfile
-    import pprint as _pprint
-    from runtime import projections as _proj
-
-    if not isinstance(spec, dict):
-        raise TypeError(f"create_projection needs a dict spec (the lens ROW), got {type(spec).__name__}")
-    pid = spec.get("id")
-    if not pid or not isinstance(pid, str) or not pid.isidentifier():
-        raise ValueError(
-            f"create_projection: `id` must be a valid python identifier (it becomes projections/<id>.py — "
-            f"addressable by file, like a role/skill). Got {pid!r} — fail loud, never an unnamed/illegal lens.")
-    if pid in SUITE.projection_registry:
-        raise ValueError(
-            f"projection {pid!r} already exists — create_projection is for a NEW lens. Fail loud "
-            f"(registry-is-truth; existing: {sorted(SUITE.projection_registry)}).")
-    # RENDER the lens module source: `PROJECTION = {...}` (the declared row verbatim). Trivial PYTHON-literal
-    # serialization (pprint.pformat — NOT json.dumps, which would emit `true`/`null` that aren't Python) —
-    # NOT a parallel engine (no logic, no behaviour — DATA). The dict round-trips: pformat of a dict of
-    # str/bool/list/None reads back as the same Python value, which the gate then re-validates.
-    row = {k: v for k, v in spec.items() if k in _proj.PROJECTION_FIELDS}
-    row["id"] = pid
-    source = (f'"""projections/{pid}.py — an agent-authored projection LENS (create_projection, #58 direct).\n'
-              f'A declared lens over a corpus unit. See runtime/projections.py + projections/AGENTS.md.\n'
-              f'Its `id` MUST equal the file stem ({pid!r})."""\n\n'
-              f"PROJECTION = {_pprint.pformat(row, indent=4, sort_dicts=True)}\n")
-    # THE CORRECTNESS GATE — import-in-tempdir via the registry's OWN discovery path. A malformed lens
-    # (bad id / missing required / unknown field / bad type) RAISES in _build_projection here, BEFORE any
-    # write to the live projections/ dir (which a bad module would NOT brick — discovery is per-file — but
-    # a bad lens must never go live). Mirrors create_role/create_skill's gate-in-tempdir (reuse the gate).
-    with _tempfile.TemporaryDirectory() as _td:
-        with open(_os.path.join(_td, f"{pid}.py"), "w", encoding="utf-8") as _f:
-            _f.write(source)
-        gated = _proj.ProjectionRegistry().discover([_td])      # RAISES on a malformed lens (the gate)
-        if pid not in gated:
-            raise RuntimeError(
-                f"create_projection: rendered module for {pid!r} did not discover as a PROJECTION — "
-                f"refused to write it (fail loud; a non-discovering lens is a bug in the render).")
-    # WRITE atomically into the LIVE projections/ dir, then git-commit (path-scoped, revertible) via the
-    # shared Suite path — reuse, NOT a parallel write/commit.
-    path = _os.path.join(SUITE.projections_dir, f"{pid}.py")
-    _os.makedirs(SUITE.projections_dir, exist_ok=True)
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as _f:
-        _f.write(source)
-    _os.replace(tmp, path)                                      # atomic; no partial file
-    sha = SUITE._commit_or_rollback(path, f"create projection lens '{pid}' (direct)")
-    SUITE.projection_registry.rediscover([SUITE.projections_dir])   # go LIVE in this process
-    SUITE._emit("apply", f"created projection lens '{pid}' DIRECTLY — now a live lens · {sha[:8]}",
-                node_name=pid, commit=sha)
-    return {"projection_id": pid, "path": path, "live": pid in SUITE.projection_registry, "spec": row}
-
-
-# --- CREATE the 4 PURE-DATA file-discovered registries (declarative-direct, like create_projection; #58) ---
-# These are THIN DELEGATORS to Suite.create_<kind> (the shared _write_registry_file helper — the proper
-# long-term home create_projection's BAR2 seam wished for: ONE author path over the _CORPUS_REGISTRIES
-# table, never N copy-pasted bodies). Each: render `<CONST> = {...}` → the registry's OWN gate-in-tempdir
-# (a malformed spec RAISES, never written) → atomic write → git-commit → rediscover → LIVE. DATA registries
-# → DECLARATIVE-DIRECT (no approval); node-type / executable-code create stays GATED, off this face. FLOOR:
-# writes a DATA file, NEVER dispatches claude -p / emits resolve/approve/dispatch.
-#   SCOPED TO 4: mark_type · generation_policy · relation_type · ai_tic. The other two discovered registries
-#   (lifter/form) carry a CALLABLE (extract/match) in their row — executable code that pprint can't serialize
-#   and MCP-JSON can't carry — so a data-create would always fail-loud at the gate. They need a CODE-render+
-#   gate authoring contract (create_role-style), net-new + unspecified → FLAGGED for the operator, NOT built
-#   here (they stay fully listable via cognition_inputs + governed by the floor; only data-create excludes them).
-@mcp.tool()
-def create_mark_type(spec: dict) -> dict:
-    """CREATE a NEW MARK_TYPE DIRECTLY — applies LIVE, NO approval (#58). A MARK_TYPE is the type
-    VOCABULARY a mark carries (the `mark(...)` tool's mark_type must be registered): e.g. gold_likelihood
-    / ai_fingerprint / contradiction. `spec` is the row (see runtime/mark_types.py · mark_types/AGENTS.md):
-    id (required, becomes mark_types/<id>.py) · value_shape · direction ('surface'|'subtract') · desc.
-    Malformed → REFUSED fail-loud (the registry gate). Returns {id, kind, path, live, spec}. DELEGATE:
-    Suite.create_mark_type → _write_registry_file → runtime.mark_types (the gate)."""
-    return SUITE.create_mark_type(spec)
-
-
-@mcp.tool()
-def create_generation_policy(spec: dict) -> dict:
-    """CREATE a NEW GENERATION_POLICY DIRECTLY — applies LIVE, NO approval (#58). A GENERATION_POLICY is
-    the per-content GENERATION REGIME run_role reads (run_role(policy=<id>)) — the repetition_penalty
-    LADDER as DATA (NOTHING static): default → escalate-on-finish=length → fail-loud degenerate-loop. `spec`
-    (see runtime/generation_policies.py · generation_policies/AGENTS.md): id (required) · rep_penalty_ladder
-    (required, ASCENDING non-empty list of floats) · diff_against_source (required bool) · json_schema? ·
-    temperature? · budget? · desc?. Malformed → REFUSED fail-loud (empty/non-ascending ladder, bad type).
-    Returns {id, kind, path, live, spec}. DELEGATE: Suite.create_generation_policy → _write_registry_file."""
-    return SUITE.create_generation_policy(spec)
-
-
-@mcp.tool()
-def create_relation_type(spec: dict) -> dict:
-    """CREATE a NEW RELATION_TYPE DIRECTLY — applies LIVE, NO approval (#58). A RELATION_TYPE is a typed/
-    directional corpus relation (the L3 vocabulary): principle_beneath / fragment_of / contradicts /
-    sibling. `spec` (see runtime/relation_types.py · relation_types/AGENTS.md): id (required) · directed
-    (required bool) · inverse? · near? · far? · label? · desc?. Malformed → REFUSED fail-loud. Returns
-    {id, kind, path, live, spec}. DELEGATE: Suite.create_relation_type → _write_registry_file."""
-    return SUITE.create_relation_type(spec)
-
-
-@mcp.tool()
-def create_ai_tic(spec: dict) -> dict:
-    """CREATE a NEW AI_TIC DIRECTLY — applies LIVE, NO approval (#58). An AI_TIC is a fingerprint MARKER
-    (the M4 vocabulary — generic-AI tells to surface/subtract): framework_imposition / versioning /
-    false_finality / silent_fallback / agent_arch / closure_form / mvp. `spec` (see runtime/ai_tics.py ·
-    ai_tics/AGENTS.md): id (required) · markers (required) · label · desc. Malformed → REFUSED fail-loud.
-    Returns {id, kind, path, live, spec}. DELEGATE: Suite.create_ai_tic → _write_registry_file."""
-    return SUITE.create_ai_tic(spec)
-
+# --- CREATE → CONSOLIDATED into mcp_face/tools/create.py (create(kind=...) 8→1). The projection inline
+# body was LIFTED to Suite.create_projection (the flagged BAR2 seam closed); the 4 pure-data registries
+# (mark_type/generation_policy/relation_type/ai_tic) + projection are all create(kind=). Flat defs removed.
 
 # --- MARK — append a typed mark on a claim/span (the marks layer; reuses STORE-2 + the mark_types gate) ---
 @mcp.tool()

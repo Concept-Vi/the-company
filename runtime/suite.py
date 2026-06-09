@@ -354,6 +354,9 @@ class Suite:
             "generation_policy": ("generation_policies_dir", "generation_policy_registry", GenerationPolicyRegistry, "GENERATION_POLICY"),
             "relation_type":     ("relation_types_dir",      "relation_type_registry",     RelationTypeRegistry,     "RELATION_TYPE"),
             "ai_tic":            ("ai_tics_dir",             "ai_tic_registry",            AiTicRegistry,            "AI_TIC"),
+            # projection: LIFTED from the inline mcp_face/server.py body (the flagged BAR2 seam) into the
+            # shared helper — the inline create_projection becomes the consolidated create(kind='projection').
+            "projection":        ("projections_dir",         "projection_registry",        ProjectionRegistry,       "PROJECTION"),
         }
         self.role_registry = role_registry or RoleRegistry().discover([self.roles_dir])
         self.ROLE_REGISTRY = {rid: self.role_registry[rid].spec for rid in self.role_registry}
@@ -9120,6 +9123,14 @@ class Suite:
         self.refresh_map()
         return {"id": rid, "kind": kind, "path": path,
                 "live": rid in getattr(self, reg_attr), "spec": row}
+
+    def create_projection(self, spec: dict) -> dict:
+        """#58 DIRECT — create a PROJECTION LENS (a declared way to DESCRIBE a corpus unit; if embeds=true it
+        becomes a vector SPACE find_relations ranges over) LIVE, no approval. LIFTED from the inline
+        mcp_face/server.py body into the shared _write_registry_file helper (the flagged BAR2 seam closed —
+        render→gate-in-tempdir→atomic-write→commit→rediscover, the SAME mechanism as the other corpus
+        registries). See runtime/projections.py + projections/AGENTS.md."""
+        return self._write_registry_file("projection", spec)
 
     def create_mark_type(self, spec: dict) -> dict:
         """#58 DIRECT — create a MARK_TYPE (the type vocabulary a mark carries: gold_likelihood/
