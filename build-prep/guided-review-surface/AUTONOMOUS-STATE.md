@@ -306,3 +306,9 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
 - NOT captured: the model's final REPLY WORDING — the temp-instance model was slow/hung ("thinking…"); the chat-log parse was noisy. This is the comprehension that's independently proven (screen_reader); the live wording on a real click = Tim's eye / a faster instance. needs-tim, NOT green-painted as "the model said X".
 - ★ V-B DONE: the "RHM said not registered" bug is fixed at the root — no fake addresses, real element shipped + injected. Tim can refresh + click any element + ask "what is this" to see the live reply.
 - NEXT: V-A (the registry-generation chain) — loop-prep it as its own cognition-corpus pipeline (cross-lane w/ cognition's engine). The big one.
+
+## 2026-06-09 fire — LIGHT round (context at 84%, autocompact off)
+- V-B DONE+verified (a7e440c: FE ships real ancestor + pointed_element, suite injects POINTED ELEMENT block; verified by-use no-chrome + the live FE payload capture). The "RHM said not registered" bug fixed at root.
+- V-A (registry-generation chain) = SCOPED only (Group V in Completion Criteria, 96d8fac). NOT built, nothing building it. It is the big cross-lane next — needs its OWN loop-prep + a FRESH session (would overflow this 84% context). Do NOT start V-A here.
+- This fire: no heavy work (chrome/agents/big reads would overflow). Recorded + idle. Not spinning.
+- NEXT (fresh session): loop-prep V-A as a cognition-corpus pipeline (extract→ground→map[run_items]→reduce[cluster]→confirm[jury]→operator-propose), cross-lane w/ cognition. Plus: Tim click-test of V-B live reply (needs-tim).
