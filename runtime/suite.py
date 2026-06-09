@@ -838,12 +838,9 @@ class Suite:
     # Drift home: the cascade-runner section in runtime/AGENTS.md.
     # =================================================================================================
     # The NAMED deterministic reduce-rules a cascade reduce-step (mode="rule") may select BY NAME (a Python
-    # callable can't cross a saved decl). SINGLE SOURCE here; mirrors the MCP run_reduce _REDUCE_RULES seam.
-    _CASCADE_REDUCE_RULES = {
-        "count":  lambda values: {"count": len(values)},
-        "concat": lambda values: {"concat": list(values)},
-        "first":  lambda values: {"first": (values[0] if values else None)},
-    }
+    # callable can't cross a saved decl). SINGLE SOURCE = runtime/cognition.py:REDUCE_RULES (G11 unification
+    # — was a parallel literal here that DRIFTED out of sync with the MCP run_reduce seam; now run_cascade
+    # passes the engine's canonical dict, so verdict-tally + every future rule is visible to BOTH paths).
 
     def _cascade_models(self) -> set:
         """The model REGISTRY build_action validates a cascade's per-step models against — the LIVE chat ∪
@@ -914,7 +911,7 @@ class Suite:
 
         return _cog.run_cascade(action, self.store, turn_id=turn_id, inputs=inputs,
                                 resolve_role=_resolve_role,
-                                reduce_rules=self._CASCADE_REDUCE_RULES,
+                                reduce_rules=_cog.REDUCE_RULES,
                                 emit=lambda k, p: self._emit(k, p.get("summary", k),
                                                              **{kk: vv for kk, vv in p.items() if kk != "summary"}),
                                 max_tokens=max_tokens)

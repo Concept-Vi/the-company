@@ -1733,6 +1733,39 @@ class ReduceResult:
     detail: dict = field(default_factory=dict)             # mode-specific provenance (the by-use evidence)
 
 
+# ── The canonical named REDUCE-RULES (THE SINGLE SOURCE — G11 unification) ────────────────────────────
+# The deterministic mode="rule" reduce-rules, defined ONCE here in the engine (the lowest layer). BOTH
+# faces reference THIS, never a parallel literal: mcp_face/server.py's run_reduce tool aliases it
+# (_REDUCE_RULES = cognition.REDUCE_RULES) and runtime/suite.py's run_cascade caller passes it as
+# reduce_rules — so a rule added here is visible to run_reduce (MCP) AND run_cascade (the parallel-literal
+# built-twice that blocked run_cascade('verify-jury') is gone; a rule can't be added to one and not the
+# other). Each rule is a PURE (values)->dict, model-free (the floor); a callable can't cross a decl, so
+# callers select by NAME (the names DERIVE from sorted(REDUCE_RULES) — no second list anywhere).
+def _verdict_tally(values: list) -> dict:
+    """The VERIFICATION-JURY verdict tally (COMPOSITIONS ⑥ · G9) — the DETERMINISTIC L2 reduce that
+    completes the verify-jury: collapses the cross-LENS verdicts of N `verify_lens` outputs into ONE jury
+    verdict. PURE + model-free (the floor). Reads each unit's `verdict` field (the closed pass|fail|uncertain
+    vocab roles/verify_lens.py:VerifyLensOut emits): 'fail' IFF ANY=='fail'; 'green' IFF the set is NON-EMPTY
+    and EVERY=='pass'; else 'flag'. The non-empty guard is load-bearing (all([])==True would make a zero-juror
+    set GREEN — the exact false-pass a jury exists to prevent); any non-pass/fail token (None/missing/unknown)
+    → 'flag', NEVER silently green. Replay-identical despite nondeterministic finish-order (C0.2)."""
+    verdicts = [v.get("verdict") if isinstance(v, dict) else None for v in values]
+    if any(vd == "fail" for vd in verdicts):
+        tally = "fail"
+    elif verdicts and all(vd == "pass" for vd in verdicts):
+        tally = "green"
+    else:
+        tally = "flag"
+    return {"tally": tally, "n": len(verdicts), "verdicts": verdicts}
+
+REDUCE_RULES = {
+    "count":  lambda values: {"count": len(values)},
+    "concat": lambda values: {"concat": list(values)},
+    "first":  lambda values: {"first": (values[0] if values else None)},
+    "verdict-tally": _verdict_tally,
+}
+
+
 def run_reduce(addresses, store, *, turn_id: str, mode: str,
                role: "Role | None" = None,
                reduce_rule: "Callable[[list], Any] | None" = None,

@@ -481,49 +481,14 @@ def run_draft_items(draft_role: dict, items: list, max_tokens: int = 256,
 # the N read-back values. An unknown name FAILS LOUD (never a fabricated rule). This is the rule-mode
 # analogue of the role/cluster modes — additive; add a named rule here when a new deterministic join is needed.
 #
-# B-FIX (PART 4.4 — the adversary's cleared list: _REDUCE_RULES is "project/derive, NOT a new registry"):
-# this ONE dict is the SINGLE SOURCE — the names are never re-listed as a second literal. The run_reduce
-# description, the gate, and the error all DERIVE from `sorted(_REDUCE_RULES)` (so adding a rule here makes
-# it discoverable everywhere with no second edit). A reduce_rule is a PURE Python callable, so the dict
-# can't move to a file-discovered registry (a callable can't cross the import/MCP boundary the way DATA
-# rows do) and can't move to cognition.py (out of this lane); the fix is DERIVE-don't-duplicate the names,
-# not build infrastructure. (Serving the names at /api is the BRIDGE lane — flagged in the report.)
-def _verdict_tally(values: list) -> dict:
-    """The VERIFICATION-JURY verdict tally (COMPOSITIONS ⑥ · SYSTEM-GAPS G9) — the DETERMINISTIC L2 reduce
-    that completes the verify-jury: it collapses the cross-LENS verdicts of N `verify_lens` outputs into ONE
-    jury verdict. PURE + model-free (the floor — a reduce-rule never calls a model): it reads each unit's
-    `verdict` field (the closed `pass|fail|uncertain` vocabulary `roles/verify_lens.py:VerifyLensOut` emits)
-    and tallies:
-        · 'fail'  IFF ANY lens verdict == 'fail'          (one broken angle fails the change);
-        · 'green' IFF the set is NON-EMPTY and EVERY lens verdict == 'pass';
-        · 'flag'  otherwise                                (any 'uncertain' / missing / unknown / EMPTY set).
-
-    The NON-EMPTY guard is load-bearing: `all([]) == True` in Python, so a literal "green iff every=='pass'"
-    would make a ZERO-juror set GREEN — the exact false-pass a verification jury exists to prevent. Any
-    verdict that is not the literal 'pass'/'fail' (None / missing field / a malformed unit / an unknown
-    token) routes to 'flag', NEVER silently to green (fail-loud-at-the-surface: an unverifiable jury is
-    flagged for me, never passed). Replay-identical despite the jurors' nondeterministic finish-order (the
-    determinism the deterministic-reduce buys, C0.2). Mirrors the count/concat/first shape: a pure
-    `(values) -> dict`. `verdicts` rides in the result so the failing/uncertain angles are inspectable."""
-    verdicts = [v.get("verdict") if isinstance(v, dict) else None for v in values]
-    if any(vd == "fail" for vd in verdicts):
-        tally = "fail"
-    elif verdicts and all(vd == "pass" for vd in verdicts):
-        tally = "green"
-    else:
-        tally = "flag"
-    return {"tally": tally, "n": len(verdicts), "verdicts": verdicts}
-
-
-_REDUCE_RULES = {
-    "count":  lambda values: {"count": len(values)},
-    "concat": lambda values: {"concat": [v for v in values]},
-    "first":  lambda values: {"first": (values[0] if values else None)},
-    # the verify-jury verdict tally (COMPOSITIONS ⑥ · G9) — green iff every lens passed (non-empty),
-    # any fail→fail, any uncertain/missing/empty→flag. Pure, model-free (the floor). DERIVES: adding it
-    # here makes it appear in reduce_rule_names() + the run_reduce description + the fail-loud error.
-    "verdict-tally": _verdict_tally,
-}
+# SINGLE SOURCE (G11 unification): the named reduce-rules live ONCE in the engine —
+# runtime/cognition.py:REDUCE_RULES — and BOTH faces reference it (here for the run_reduce MCP tool;
+# runtime/suite.py's run_cascade caller passes the SAME cognition.REDUCE_RULES). So a rule added in the
+# engine is visible to run_reduce AND run_cascade — the parallel-literal built-twice (this dict vs suite's
+# old _CASCADE_REDUCE_RULES, which had drifted: missing verdict-tally + a different concat) is GONE.
+# The names still DERIVE from `sorted(_REDUCE_RULES)` (reduce_rule_names + the run_reduce description + the
+# fail-loud error) — no second list. Serving the names at /api is the BRIDGE lane (flagged).
+_REDUCE_RULES = _cog.REDUCE_RULES
 
 
 @mcp.tool()
