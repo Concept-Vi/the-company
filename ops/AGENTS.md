@@ -50,14 +50,26 @@ Do **not** build duplicate command centers. The right shape (Tim, "one substrate
     window renders it as a bar. Measured on the 16GB card: the 4b (hybrid, KV ~31.7KB/tok) does 256K
     **solo** and co-resides with light voices at 64K, but **Orpheus (~8.5GB) + 64K brain is over by
     ~0.6GB** — a switch-on-demand pair (the gate refuses, never OOMs).
-- **model-TYPE capabilities (the capability registry — `cli/capabilities.py`, G8/C8.1–C8.4, 2026-06-08).**
+- **model-TYPE capabilities (the capability CATALOG — `cli/capabilities.py` + `services.json`-sibling data file `model_capabilities.json`, G8/C8.1–C8.4 + C2.5, 2026-06-08/09).**
   The THIRD keying (B4): intrinsic capability **by model-id** (tool-calling · json_schema · thinking ·
   context-ceiling · concurrency-knee · speed), each with explicit provenance `declared|probed|measured|served`
-  (live/served wins). It owns ONLY model-intrinsic facts — it NEVER stores gpu_util/vram (rule 3); for those
+  (live/served wins). **The catalog is FILE-DISCOVERED DECLARED DATA (C2.5):** the rows live in
+  `ops/model_capabilities.json` — the single source ops + cognition both read (registry-is-truth, rule 8) —
+  NOT a hardcoded python dict; `capabilities.py:_load_catalog` reads it into `MODEL_CAPABILITIES` at import
+  (FAIL LOUD on missing/malformed/empty — never a silently-empty catalog), so **adding a model's capabilities
+  = adding ONE entry to that file (no code edit)**, mirroring how `services.json` declares what RUNS. It now
+  spans the **FULL declared model set** keyed by model-id (the resident 4B · the local chat workers
+  2B/0.8B/nemotron · the embedders bge/jina/qwen3 · the model-id voice engines orpheus/qwen3tts · the cloud
+  reasoner) — every `provides` GROUNDED in a hard services.json signal (`--runner pooling`→embed ·
+  `--tool-call-parser`→tools · `chat_template_nothink`→no-think), never fabricated; keyless services
+  (clone-TTS + STT ears with no `config.model`) are not model-id-keyable and are deliberately not invented.
+  It owns ONLY model-intrinsic facts — it NEVER stores gpu_util/vram (rule 3); for those
   it **JOINs to `gpu.py`** (`service_key_for(model_id)` matches `config.model`, then `budget_vram`/residency —
   REUSED, never duplicated). Queries: `capabilities_for(model_id)` (the row + the JOIN), `role_can_bind(requires,
-  model_id)` / `suitable_models(requires)` (the `requires ⊆ provides` binding query — the `provides` TAG set
-  matches `suite.py`'s `capability_providers()` exactly: chat·json·tools·fast·no-think), `placement_for(track)` +
+  model_id)` / `suitable_models(requires)` (the `requires ⊆ provides` binding query — projecting REAL
+  capabilities across ALL models: an embed role → the embedders, a vision role → `[]` fail-loud-by-empty, a tts
+  role → the voice engines; the `provides` TAG vocab matches `suite.py`'s `capability_providers()`
+  chat·json·tools·fast·no-think + the catalog's other TYPES embed·tts·vision), `placement_for(track)` +
   `swarm_survives_cloud_brain()` (C8.3 cloud-decoupling policy as DATA), `is_resident`/`require_resident` (C8.4
   fail-loud, loud `OFFER_LOAD` on a miss, NEVER auto-loads), and **`ensure_resident(model_or_service, *, evict=False)`**
   (#50, 2026-06-08) — the **gated launch/select/evict ACTUATOR**: the deliberate sibling of the fail-loud
@@ -70,8 +82,10 @@ Do **not** build duplicate command centers. The right shape (Tim, "one substrate
   is the B/mode-loadout consumer (reads `mode_registry(mode)["brain_config"]`, ensures the brain service resident,
   surfaces the gpu_util-variant gap loudly — never a hardcoded loadout→service map). GATED/operator-AUTO class:
   reversible/internal, does NOT bypass the operator-only floor. **Self-description / DRIFT HOME (C9.4):** this section
-  + the `cli/capabilities.py` module docstring are the registry's self-description home; the drift assertion is
-  `tests/model_capabilities_acceptance.py`. It COMPLEMENTS `suite.py`'s `MODEL_KNOBS` (per-request knobs, also by
+  + the `cli/capabilities.py` module docstring + `model_capabilities.json`'s `_doc` are the registry's
+  self-description home; the drift assertions are `tests/model_capabilities_acceptance.py` (the resident row +
+  JOIN + residency — the no-regression base) AND `tests/model_catalog_acceptance.py` (C2.5 — the width, the
+  capability-discrimination query, the data-driven add-a-row bar, the fail-loud loader). It COMPLEMENTS `suite.py`'s `MODEL_KNOBS` (per-request knobs, also by
   model-id) — knobs = "dials a request turns"; capabilities = "what the model can do." The DOWNSTREAM consumer is
   `suite.py:capability_providers()` (C2.5), which the lead wires to read this catalog (the one suite-side wire).
 - **cognitive-layers · RHM/modes · data/memory · jobs/cron** — not yet instantiated; same mechanism when they are.
@@ -84,5 +98,6 @@ Do **not** build duplicate command centers. The right shape (Tim, "one substrate
     `models.py` (inventory + swap) · `capabilities.py` (**the model-TYPE capability registry**, by model-id; JOINs to gpu.py) · `bench.py` · `render.py` (status/health views).
   - `README.md` — use guide.   `UPDATING.md` — how to extend the CLI + the registry schema.
 - `services.json` — the registry (the source of truth; now also carries `vram_mb`, `serve`, `vram_ceiling_mb`).
+- `model_capabilities.json` — the model-TYPE capability CATALOG (declared data, keyed by model-id; the file-discovered source `cli/capabilities.py` loads; add-a-model-capability = add-an-entry). Intrinsic facts only — NO vram (gpu.py JOINs that).
 - `STARTUP.md` — the command table + boot behaviour + open items.
 - `systemd/` — canonical unit + target files (the muscle).

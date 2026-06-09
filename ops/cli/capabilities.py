@@ -19,14 +19,30 @@ THIS catalog (the wire is flagged in the lane report; see `provides_for`).
 
 SELF-DESCRIPTION / DRIFT HOME (C9.4 / R2-FOLD H5): this registry's self-description home is
 this module docstring + the ops/AGENTS.md "models/VRAM" type-view section; its drift
-assertion lives in tests/model_capabilities_acceptance.py (asserts every catalog entry has
-the required fields + provenance, and that the resident's `provides` matches the capability
-fields it derives from). No net-new registry ships without its drift home.
+assertion lives in tests/model_capabilities_acceptance.py (the resident-4b row's exact values
++ the JOIN + fail-loud residency — the no-regression base) AND tests/model_catalog_acceptance.py
+(C2.5 — the WIDTH: the full declared set, the capability-discrimination query, the data-driven
+'add a row → it appears, no code edit' bar, the fail-loud loader). No net-new registry ships
+without its drift home.
 
-REGISTRY-IS-TRUTH (rule 8): entries are SEEDED only from what is KNOWN — services.json, the
-C0.5 measurement, and L-transport's proven json_schema fact. Cloud/ollama json_schema is
-recorded UNKNOWN (declared, value None) — recording that gap is exactly this registry's job.
-An unknown model-id returns an explicit "unknown — ASK" result, never a fabricated row.
+THE CATALOG IS FILE-DISCOVERED DECLARED DATA (C2.5, the original G8/L-model widened): the catalog
+lives in ops/model_capabilities.json — the SINGLE source ops + cognition both read (registry-is-
+truth) — NOT a hardcoded python dict that omits non-resident models. `_load_catalog` reads it into
+MODEL_CAPABILITIES at import (FAIL LOUD if missing/malformed/empty — never a silently-empty catalog);
+the name + shape + every consumer fn are UNCHANGED (the data MOVED, the values did not). Adding a
+model's capabilities = adding ONE entry to that FILE (no code edit). The catalog now spans the FULL
+declared model set keyed by model-id (the resident 4B · the local chat workers 2B/0.8B/nemotron ·
+the embedders bge/jina/qwen3 · the model-id voice engines orpheus/qwen3tts · the cloud reasoner) —
+so the role↔model query (suitable_models/role_can_bind/provides_for) projects REAL capabilities
+across ALL models (an embed role → the embedders; a vision role → [] fail-loud-by-empty; a tts role
+→ the voice engines), not just the resident's. Keyless services (clone-TTS engines + STT ears with
+no config.model) cannot be model-id-keyed and are deliberately NOT invented here.
+
+REGISTRY-IS-TRUTH (rule 8): every row is GROUNDED in a hard services.json signal — never fabricated
+(--runner pooling → embed · --tool-call-parser qwen3_xml → tools · chat_template_nothink → no-think ·
+a chat model → chat,json). Genuine unknowns are recorded honestly (value None/null, source declared):
+cloud/ollama json_schema (L-transport: cloud may 400) and the not-yet-live-probed local workers'
+tools/json_schema. An unknown model-id returns an explicit "unknown — ASK" result, never a row.
 """
 import json
 import os
@@ -45,84 +61,90 @@ import systemd
 PROVENANCE = ("declared", "probed", "measured", "served")
 
 # The controlled capability-TAG vocabulary (the `provides`/`requires` axis). MATCHES the live
-# suite.py capability_providers() set exactly (chat·json·tools·fast·no-think) + the negative
-# (vision) the verify-by-use exercises — so the lead's wire is a thin read, not a re-spelling.
+# suite.py capability_providers() set (chat·json·tools·fast·no-think) + the negative (vision) the
+# verify-by-use exercises — so the lead's wire is a thin read, not a re-spelling — WIDENED (C2.5)
+# with the catalog's other model TYPES so the FULL declared set has somewhere true to land:
+#   embed   — an embedding model's only provide (services.json `--runner pooling`)
+#   tts     — a model-id-bearing voice engine (forward-looking: no role REQUIRES it yet)
+#   vision  — declared as a tag so a vision-requiring role's suitable_models([vision]) returns []
+#             (fail-loud-by-empty) rather than choking; no cataloged model provides it yet.
 # NOTE: json_schema is a structured-output CAPABILITY FIELD (with provenance), NOT a provides-tag —
 # no role in the cast requires it as a tag, and adding it to `provides` would diverge from the seam.
-CAPABILITY_TAGS = ("chat", "json", "tools", "fast", "no-think", "vision", "thinking", "reasoning")
+CAPABILITY_TAGS = ("chat", "json", "tools", "fast", "no-think", "vision", "thinking", "reasoning",
+                   "embed", "tts", "stt")
 
 # --- THE CATALOG — keyed by MODEL-ID (the HF/cloud string), the intrinsic half ------------------
-# Seeded ONLY from services.json + the C0.5 measurement + L-transport's proven json_schema fact.
-# Every field carries {value, source}. concurrency_knee is DATA (the C0.5 loadout numbers), never
-# the stale literal 32. context_ceiling is the model's real ceiling (max_model_len_ceiling), read
-# via the JOIN where served. Cloud rows record UNKNOWNs honestly (value None, source declared).
-MODEL_CAPABILITIES = {
-    "cyankiwi/Qwen3.5-4B-AWQ-4bit": {
-        # --- intrinsic capabilities (what the weights can do) ---
-        # tools + json_schema were LIVE-PROVEN served against the resident vLLM :8000 (read-only USE):
-        #   tools  — forced tool_choice='required' returned a real tool_call (get_weather Paris)
-        #   json_schema — L-transport's negative control: a no-JSON prompt STILL returned conformant
-        #                 JSON, so xgrammar CONSTRAINS the decode (not just accepts). provenance=served.
-        "tools":           {"value": True,  "source": "served",
-                            "note": "live probe :8000 forced tool_choice → tool_call emitted; also "
-                                    "--enable-auto-tool-choice + qwen3_xml parser in services.json"},
-        "json_schema":     {"value": True,  "source": "served",
-                            "note": "L-transport PROVED resident vLLM 0.21 CONSTRAINS the decode "
-                                    "(neg-control: no-JSON prompt still conformant). Re-probed live."},
-        "thinking":        {"value": False, "source": "declared",
-                            "note": "no-think model — chat_template_nothink.jinja (services.json); the "
-                                    "day-one judge pick was chosen for exactly this"},
-        # context ceiling: the model's REAL capacity, not the currently-set max_model_len (65536).
-        # Read via the JOIN from the backing service's max_model_len_ceiling where served.
-        "context_ceiling": {"value": 262144, "source": "served",
-                            "note": "services.json chat-4b config.max_model_len_ceiling (reachable solo)"},
-        # --- performance profile (the MEASURED numbers the swarm budget + fit-surface read) ---
-        # concurrency-knee is DATA derived from max_num_seqs + KV (the C0.5 formula), NOT the literal 32.
-        # See G0.C0.5-measurement.json: the bind FLIPS on main-context depth.
-        "concurrency_knee": {
-            "value": {
-                "max_num_seqs": 16,                       # services.json chat-4b config.max_num_seqs
-                "kv_kb_per_token": 31.7,                  # services.json config._profile (measured)
-                "formula": "min(max_num_seqs - R, free_KV_tokens / per_role_ctx)",
-                # the two MEASURED loadout points (G0.C0.5-measurement.json authoritative_vllm_kv):
-                "loadout_points": {
-                    "voice_coresident_u0.49": {"kv_pool_tokens": 66036, "kv_gib": 2.14,
-                                               "roles_at_deep_main": "~1-2",
-                                               "note": "0.49 util + Orpheus co-resident; KV~one 64K conv "
-                                                       "→ deep main collapses swarm to ~1-2"},
-                    "swarm_mode_u0.63":       {"kv_pool_tokens": 135574, "kv_gib": 4.38,
-                                               "roles_at_deep_main": "~16",
-                                               "note": "0.63 util + NO Orpheus; 64K main leaves ~71K → "
-                                                       "seq-cap(16) is the sole bind → ~16 roles"},
-                },
-            },
-            "source": "measured",
-            "note": "C0.5 (2026-06-07, lead-supervised). NOT the stale literal 32 — bind flips on main "
-                    "context depth; the swarm Semaphore reads this, sized per the resident loadout.",
-        },
-        "speed_profile":   {"value": {"decode_tok_s": 100},  # ~100 tok/s decode (the resident worker)
-                            "source": "measured",
-                            "note": "approximate decode speed of the resident 4B-AWQ worker"},
-        # --- role-suitability: a CAPABILITY SET (provides), not a list of role names (B4 C3) ---
-        # MATCHES suite.py capability_providers() exactly so role.requires ⊆ provides is the same query.
-        "provides":        ["chat", "json", "tools", "fast", "no-think"],
-    },
-    # Cloud / ollama brain options carry capabilities but NO local VRAM (B4 "two populations" trap).
-    # json_schema is UNKNOWN for these — L-transport flagged they MAY 400 on response_format:json_schema;
-    # recording that gap honestly (value None, source declared) is exactly this registry's job (C8.3).
-    "deepseek-v4-pro:cloud": {
-        "tools":           {"value": True,  "source": "declared",
-                            "note": "ollama /api/show capabilities — verify by probe before binding"},
-        "json_schema":     {"value": None,  "source": "declared",
-                            "note": "UNKNOWN for cloud (L-transport: may 400). ASK / probe, never assume."},
-        "thinking":        {"value": True,  "source": "declared", "note": "a reasoner"},
-        "context_ceiling": {"value": None,  "source": "declared", "note": "cloud — no local ceiling/VRAM"},
-        "concurrency_knee": {"value": None, "source": "declared",
-                             "note": "cloud-throttled, not a local KV knee"},
-        "speed_profile":   {"value": None,  "source": "declared"},
-        "provides":        ["chat", "json", "tools", "thinking", "reasoning"],  # NOT 'fast', NOT 'no-think'
-    },
-}
+# DECLARED DATA, file-discovered (C2.5): the catalog is `ops/model_capabilities.json` — the SINGLE
+# source ops + cognition both read (registry-is-truth, AGENTS.md rule 8) — NOT a hardcoded python
+# dict that omits non-resident models. Adding a model's capabilities = adding ONE entry to that FILE
+# (no code edit) — mirroring how services.json declares what RUNS. This module LOADS it into the
+# `MODEL_CAPABILITIES` name (UNCHANGED name + shape: every field {value, source}; `provides` a TAG
+# set ⊆ CAPABILITY_TAGS) so every consumer (provides_for/suitable_models/capabilities_for/role_can_bind)
+# is unchanged — the data MOVED, the values + behaviour did not (the resident-4b row is preserved
+# exactly; proven by tests/model_capabilities_acceptance.py asserting its literal values).
+#
+# WIDTH (C2.5): the file catalogs the FULL declared model set keyed by model-id — the resident 4B,
+# the local chat workers (2B/0.8B/nemotron), the embedders (bge/jina/qwen3), the model-id-bearing
+# voice engines (orpheus/qwen3tts), and the cloud reasoner — each with `provides` GROUNDED in a hard
+# services.json signal (never fabricated). VRAM is NOT stored here (rule 3) — `capabilities_for`'s
+# JOIN to gpu.py supplies it. Keyless services (the clone-TTS engines + STT ears with no
+# config.model) cannot be model-id-keyed and are deliberately NOT invented here (a model-id is
+# required to key a row); they remain service-only.
+
+_CATALOG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                             "model_capabilities.json")
+
+
+def _load_catalog(path=None):
+    """Load the declared catalog from ops/model_capabilities.json into the MODEL_CAPABILITIES shape.
+    FAIL LOUD (raise) if the file is missing or malformed — NEVER a silently-empty catalog (a silent
+    empty would make every role unbindable + every model 'unknown', the opposite of registry-is-truth).
+    Strips `_doc`/`_note` annotation keys (they document the file, they are not model rows)."""
+    path = path or _CATALOG_PATH
+    try:
+        with open(path) as f:
+            raw = json.load(f)
+    except FileNotFoundError as e:
+        raise RuntimeError(
+            f"model capability catalog MISSING at {path!r} — the declared catalog is the single source "
+            f"of truth (registry-is-truth, rule 8); a missing catalog is fail-loud, never an empty dict."
+        ) from e
+    except (ValueError, OSError) as e:
+        raise RuntimeError(
+            f"model capability catalog at {path!r} is MALFORMED ({e}) — fail-loud; refusing a partial "
+            f"or empty catalog (a wrong catalog mis-binds every role)."
+        ) from e
+    if not isinstance(raw, dict):
+        raise RuntimeError(f"model capability catalog at {path!r} is not a JSON object — fail-loud.")
+    # model rows only — drop the file-level `_doc`; within each row strip `_`-prefixed annotation keys
+    # (`_note`) so a row is PURELY capability fields ({value, source} dicts) + `provides` — the exact
+    # shape the consumers + the drift test (model_capabilities_acceptance) assert (iterate-all-fields).
+    catalog = {
+        mid: {k: v for k, v in row.items() if not (isinstance(k, str) and k.startswith("_"))}
+        for mid, row in raw.items()
+        if not (isinstance(mid, str) and mid.startswith("_"))
+        if isinstance(row, dict)
+    }
+    if not catalog:
+        raise RuntimeError(f"model capability catalog at {path!r} has NO model rows — fail-loud.")
+    return catalog
+
+
+# Loaded at import — the live catalog (same name/shape as the old inline dict). reload_catalog()
+# re-reads the file (used by the acceptance test to prove 'add a row → it appears, no code edit').
+MODEL_CAPABILITIES = _load_catalog()
+
+
+def reload_catalog(path=None):
+    """Re-read the declared catalog from disk INTO the live MODEL_CAPABILITIES (in place, so importers
+    holding the name see the update). Returns it. This is the seam that proves the verify-by-use bar:
+    add a row to ops/model_capabilities.json → reload_catalog() → it appears via every query, NO code
+    edit. Fail-loud like the import-time load."""
+    global MODEL_CAPABILITIES
+    fresh = _load_catalog(path)
+    MODEL_CAPABILITIES.clear()
+    MODEL_CAPABILITIES.update(fresh)
+    return MODEL_CAPABILITIES
 
 
 # --- the model-id ↔ service-key JOIN (generalises bridge.py:_local_brain_key — NOT imported) -----
