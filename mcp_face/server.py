@@ -492,7 +492,11 @@ def run_reduce(addresses: list, mode: str, role: str = "", reduce_rule: str = ""
                              f"Fail loud, never a fabricated rule.")
         kw["reduce_rule"] = rule
     res = _cog.run_reduce(list(addresses), SUITE.store, **kw)
-    return {"turn_id": turn_id, "mode": mode, "joined": res.joined, "inputs": res.inputs,
+    # M6 (response-ergonomics): res.inputs is [(unit, address), ...] — for a plain-list addresses arg the
+    # two halves are identical and read as a confusing [['a','a'],...] doubling. LABEL the pair so the agent
+    # sees meaningful keys (engine ReduceResult shape stays stable for internal consumers; this is the face).
+    labeled_inputs = [{"unit": u, "address": a} for (u, a) in res.inputs]
+    return {"turn_id": turn_id, "mode": mode, "joined": res.joined, "inputs": labeled_inputs,
             "skipped": res.skipped, "wall_s": res.wall_s, "detail": res.detail}
 
 

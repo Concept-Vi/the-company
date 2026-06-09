@@ -1750,13 +1750,21 @@ def _verdict_tally(values: list) -> dict:
     set GREEN — the exact false-pass a jury exists to prevent); any non-pass/fail token (None/missing/unknown)
     → 'flag', NEVER silently green. Replay-identical despite nondeterministic finish-order (C0.2)."""
     verdicts = [v.get("verdict") if isinstance(v, dict) else None for v in values]
+    # M7 (no-silent-failure floor): an input that LACKS a `verdict` field is not a real 'flag' verdict — it's
+    # a contract mismatch (verdict-tally was fed non-verify_lens outputs). Surface WHICH inputs were missing
+    # the field rather than silently coercing null→flag (which reads as a real result). The tally still
+    # routes missing→flag (never silently green), but `missing_verdict` makes the mismatch VISIBLE.
+    missing = [i for i, vd in enumerate(verdicts) if vd not in ("pass", "fail", "uncertain")]
     if any(vd == "fail" for vd in verdicts):
         tally = "fail"
     elif verdicts and all(vd == "pass" for vd in verdicts):
         tally = "green"
     else:
         tally = "flag"
-    return {"tally": tally, "n": len(verdicts), "verdicts": verdicts}
+    out = {"tally": tally, "n": len(verdicts), "verdicts": verdicts}
+    if missing:
+        out["missing_verdict"] = missing   # indices whose input had no pass|fail|uncertain — the contract mismatch, surfaced
+    return out
 
 REDUCE_RULES = {
     "count":  lambda values: {"count": len(values)},
