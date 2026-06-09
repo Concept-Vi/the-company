@@ -67,15 +67,28 @@ for verb in ("resolve", "approve", "dispatch"):
 # enrolled here for the SAME reason skills.py was (its docstring): a corpus write must stay a READ/INDEX
 # (append_event telemetry), never a resolve/dispatch — so a future edit emitting a forbidden verb on
 # either fails loud. (The floor already HOLDS: corpus.record is telemetry; this guards it standing.)
+# Extended again (Cognition Engine WIRING, 2026-06-09): the 6 OTHER file-discovered corpus/cognition
+# registries (lifters/mark_types/generation_policies/relation_types/ai_tics/forms — 719f82d) are now
+# CONSUMED (create_* tools + run_role's rep_penalty ladder + the authoring selects). They are
+# cognition-reachable DATA registries, enrolled here for the SAME reason projections/corpus were: reading
+# a registry must stay a READ, a create_* must stay a declarative-DATA write (commit, never resolve/
+# dispatch) — so a future edit emitting a forbidden verb on any of them fails loud. (They are floor-clean
+# by construction; this guards them STANDING.)
 COG_SOURCES = ["runtime/cognition.py", "runtime/rules.py", "runtime/roles.py",
                "mcp_face/server.py", "runtime/skills.py",
-               "runtime/projections.py", "runtime/corpus.py"] + \
+               "runtime/projections.py", "runtime/corpus.py",
+               "runtime/lifters.py", "runtime/mark_types.py", "runtime/generation_policies.py",
+               "runtime/relation_types.py", "runtime/ai_tics.py", "runtime/forms.py"] + \
     [f"roles/{f}" for f in os.listdir("roles") if f.endswith(".py")]
 # coverage-regression guard: the new surfaces MUST stay scanned (so the guard can't silently shrink).
 check("C9.2 the floor source-invariant COVERS the MCP agent face + the skills registry (new surfaces)",
       "mcp_face/server.py" in COG_SOURCES and "runtime/skills.py" in COG_SOURCES)
 check("C9.2 the floor source-invariant COVERS the corpus pillar (projections + corpus-record)",
       "runtime/projections.py" in COG_SOURCES and "runtime/corpus.py" in COG_SOURCES)
+check("C9.2 the floor source-invariant COVERS the 6 wired corpus/cognition registries "
+      "(lifters/mark_types/generation_policies/relation_types/ai_tics/forms)",
+      all(f"runtime/{m}.py" in COG_SOURCES for m in
+          ("lifters", "mark_types", "generation_policies", "relation_types", "ai_tics", "forms")))
 floor_breach = []
 for src in COG_SOURCES:
     with open(src) as fh:
@@ -209,6 +222,14 @@ HOMES = {
     "RULE_OPS+DESTINATION (G3)":    ("runtime/rules.py",        "runtime/AGENTS.md",    "tests/rules_acceptance.py"),
     "MODEL_CAPABILITIES (G8)":      ("ops/cli/capabilities.py", "ops/AGENTS.md",        "tests/model_capabilities_acceptance.py"),
     "THOUGHT_SHAPES+GRAIN (G4)":    ("runtime/suite.py",        "runtime/AGENTS.md",    "tests/chat_parts_acceptance.py"),
+    # The 6 file-discovered corpus/cognition registries (719f82d) — now CONSUMED (WIRING). Each declares
+    # its OWN drift home (`<name>/AGENTS.md`) + acceptance suite (mirrors the projections registry's home).
+    "lifters registry (K2)":            ("runtime/lifters.py",            "lifters/AGENTS.md",            "tests/lifters_acceptance.py"),
+    "mark_types registry (M1)":         ("runtime/mark_types.py",         "mark_types/AGENTS.md",         "tests/mark_types_acceptance.py"),
+    "generation_policies registry (O2)":("runtime/generation_policies.py","generation_policies/AGENTS.md","tests/generation_policies_acceptance.py"),
+    "relation_types registry (L3)":     ("runtime/relation_types.py",     "relation_types/AGENTS.md",     "tests/relation_types_acceptance.py"),
+    "ai_tics registry (M4)":            ("runtime/ai_tics.py",            "ai_tics/AGENTS.md",            "tests/ai_tics_acceptance.py"),
+    "forms registry (effort-routing)":  ("runtime/forms.py",              "forms/AGENTS.md",              "tests/forms_acceptance.py"),
 }
 for name, (regfile, home, test) in HOMES.items():
     check(f"C9.4 {name}: registry file + drift home ({home}) + acceptance test all present",

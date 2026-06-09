@@ -95,6 +95,22 @@ def context_registry() -> ContextRegistry:
     return ContextRegistry().discover([_CONTEXTS_DIR])
 
 
+# O2 — the GENERATION-POLICY registry (file-discovered, `generation_policies/*.py`). `run_role` reads
+# the SELECTED policy's repetition_penalty LADDER from HERE (registry-is-truth — the rep_penalty is DATA,
+# NOTHING static), never a hardcoded constant. Discovered fresh each call (mirrors role_registry()), so a
+# dropped-in `generation_policies/<id>.py` is picked up. The default `policy=None` keeps run_role
+# BYTE-IDENTICAL to before (no ladder, no penalty, no meta read) — the ladder is OPT-IN by id.
+from runtime.generation_policies import GenerationPolicyRegistry  # noqa: E402
+
+_GENERATION_POLICIES_DIR = os.path.join(os.path.dirname(_ROLES_DIR), "generation_policies")
+
+
+def generation_policy_registry() -> GenerationPolicyRegistry:
+    """Discover the file-based generation-policy registry (generation_policies/*.py) — fresh each call
+    (mirrors role_registry()). `run_role(policy=<id>)` reads the selected regime's rep_penalty ladder."""
+    return GenerationPolicyRegistry().discover([_GENERATION_POLICIES_DIR])
+
+
 # The spike's three roles, sourced FROM the file-discovered registry (canonical defs in roles/*.py).
 # Built at import so the spike's chat_parts_spike/concurrency_probe keep working UNCHANGED, and so a
 # missing role file FAILS LOUD at import (never a silently-absent spike role).
@@ -187,7 +203,8 @@ def _ensure_embedder_resident(*, evict: bool = False) -> dict:
 def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
              model: str = RESIDENT_MODEL, timeout: int = ROLE_TIMEOUT,
              max_tokens: int = 256, temperature: float = 0.0, store=None,
-             ensure: bool = False, ensure_evict: bool = False) -> dict:
+             ensure: bool = False, ensure_evict: bool = False,
+             policy: str | None = None) -> dict:
     """Fire ONE request at the resident 4B for `role`, returning VALIDATED JSON (a dict).
 
     Mirrors `Suite.is_finished_thought`/the judge EXACTLY: `client.complete(openai_transport(...))`.
@@ -216,6 +233,26 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
     (capabilities.ensure_resident — the ONE resource-manager) to make the embedder resident before the
     embed; `ensure_evict=True` additionally authorizes largest-first eviction to make room. ensure only
     affects op="embed". This makes the load a DECLARED, authorized request — never an implicit one.
+
+    GENERATION POLICY (O2 — opt-in, the rep_penalty LADDER from the registry, NOTHING static):
+      * `policy=None` (DEFAULT, every current caller) → BYTE-IDENTICAL to before: no repetition_penalty,
+        no finish_reason read, ONE complete() call. The ladder is opt-in by id.
+      * `policy="<id>"` → look the regime up in the file-discovered GENERATION_POLICY registry
+        (generation_policies/<id>.py — registry-is-truth, fail-loud on an unknown id) and run its
+        repetition_penalty LADDER: start at `default_rep_penalty`; pass `repetition_penalty=<rung>` into the
+        call + read `finish_reason` back via the transport's `meta={}` out-param (O3). On
+        `finish_reason=="length"` (a TRUNCATED / degenerate-loop signal), re-call at `next_rep_penalty` (the
+        next rung up); EXHAUSTING the ladder → raise FabricError("degenerate-loop …") (fail-loud — never a
+        silent give-up; the regime's own contract). The penalty VALUE comes from the registry ladder, never
+        a code constant.
+      **KNOWN, FLAGGED (cross-lane — `fabric/transport.py` is out of this lane):** the transport's body-build
+      copies ONLY `temperature/max_tokens/top_p` into the request (transport.py:92/122) — it does NOT yet
+      forward `repetition_penalty`, so the penalty does not reach vLLM until that one-line passthrough lands
+      (the coordinate-with-owner follow-up flagged in the lane report). The LADDER LOGIC + the registry-sourced
+      value + the finish=length escalation + the fail-loud exhaustion are all real and verifiable here; the
+      penalty's EFFECT on the model is gated on that transport edit. `diff_against_source` is read off the
+      policy but the output-vs-source diff (catching legitimate-enumeration under-capture) is NOT implemented
+      in this pass — flagged NOT-done, never silently ignored.
 
     `ctx` must carry `utterance` for the default input axis. Fail loud: a transport/empty/parse/schema
     failure PROPAGATES as FabricError after retries (never a silent empty dict); a missing/unresolvable
@@ -254,11 +291,40 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
         {"role": "user", "content": user_content},
     ]
     t = transport.openai_transport(base_url=base_url, timeout=timeout)
-    validated = client.complete(
-        t, msgs, model=model, schema=role.output_schema, json=True,
-        temperature=temperature, max_tokens=max_tokens,
-    )
-    return validated.model_dump()
+    if policy is None:
+        # DEFAULT path — BYTE-IDENTICAL to before (no ladder, no meta, ONE complete() call). Every
+        # current caller (run_swarm/dry_run_role/run_cascade/the MCP run_role) is on this path.
+        validated = client.complete(
+            t, msgs, model=model, schema=role.output_schema, json=True,
+            temperature=temperature, max_tokens=max_tokens,
+        )
+        return validated.model_dump()
+
+    # O2 LADDER path (opt-in) — the repetition_penalty regime is DATA, read from the file-discovered
+    # GENERATION_POLICY registry (NOTHING static). Fail-loud on an unknown id (registry-is-truth).
+    pol = generation_policy_registry().policy_for(policy)
+    rung = pol.default_rep_penalty                              # the first ladder rung (e.g. 1.1)
+    pol_temp = pol.temperature if pol.temperature is not None else temperature
+    while True:
+        meta: dict = {}                                        # the O3 transport out-param (finish_reason)
+        validated = client.complete(
+            t, msgs, model=model, schema=role.output_schema, json=True,
+            temperature=pol_temp, max_tokens=max_tokens,
+            repetition_penalty=rung,                           # FROM the registry ladder — never a constant
+            meta=meta,                                         # read finish_reason back to drive escalation
+        )
+        if meta.get("finish_reason") != "length":
+            # clean finish (or an honest None the transport passed through) — accept this draw.
+            return validated.model_dump()
+        # finish=length → TRUNCATED / degenerate-loop signal: escalate to the next rung.
+        nxt = pol.next_rep_penalty(rung)
+        if nxt is None:
+            # the ladder is EXHAUSTED — fail loud (the regime's own contract; never a silent give-up).
+            raise client.FabricError(
+                f"degenerate-loop: role {getattr(role, 'id', '?')!r} hit finish_reason=length at the TOP "
+                f"of generation-policy {policy!r}'s rep_penalty ladder {pol.rep_penalty_ladder} — the "
+                f"output is truncated/looping and the ladder is exhausted. Fail loud (never a silent give-up).")
+        rung = nxt                                             # climb the ladder, re-call
 
 
 # --- the DECLARED RULE (L2): a NON-TRIVIAL pure function of resolved values (C0.2 / R1-FOLD F5) ---

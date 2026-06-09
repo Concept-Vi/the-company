@@ -294,7 +294,7 @@ def inspect_address(address: str, turn_id: str = "") -> dict:
 @mcp.tool()
 def run_role(role: str, utterance: str = "", op: str = "generate", model: str = "",
              inputs: dict = {}, max_tokens: int = 256, temperature: float = 0.0,
-             ensure: bool = False, ensure_evict: bool = False) -> dict:
+             ensure: bool = False, ensure_evict: bool = False, policy: str = "") -> dict:
     """CONFIGURE + RUN ONE role (the agent fires a role and gets its validated output).
     REUSES runtime.cognition.run_role (the SAME fire path run_swarm/dry_run_role use — never a parallel
     engine). `role` is a registered role id (or pass a draft field-set is via propose_role first).
@@ -309,6 +309,12 @@ def run_role(role: str, utterance: str = "", op: str = "generate", model: str = 
     `inputs` (optional): extra named inputs the role declares (input_addresses). An address-VALUED input
     (run://…, cas://…, skill://…, context://…) is RESOLVED via the engine's resolve_address before the
     run (the input-address intent); a literal value is used as-is. `model` overrides the role's model.
+
+    `policy` (optional, O2): a GENERATION_POLICY id (from the generation_policies registry — see
+    available via cognition_inputs / create_generation_policy). When set, run_role reads that regime's
+    repetition_penalty LADDER (DATA, NOTHING static): start at the ladder default, escalate on
+    finish_reason=length, fail-loud `degenerate-loop` when the ladder exhausts. Default "" → byte-identical
+    to before (no ladder). DELEGATE: runtime.cognition.run_role's `policy=` axis.
 
     GENERATE runs PERSIST: the validated output is written to run://<turn>/<role> (the SAME put_content→
     set_ref primitives run_items uses) so the run can be inspected back by address (inspect_address) and
@@ -328,6 +334,8 @@ def run_role(role: str, utterance: str = "", op: str = "generate", model: str = 
           "ensure": ensure, "ensure_evict": ensure_evict}
     if model:
         kw["model"] = model
+    if policy:
+        kw["policy"] = policy          # O2 — the rep_penalty ladder regime (registry-is-truth)
     _t0 = _time.monotonic()
     out = _cog.run_role(r, ctx, **kw)
     _ms = int((_time.monotonic() - _t0) * 1000)
@@ -847,6 +855,112 @@ def create_projection(spec: dict) -> dict:
     SUITE._emit("apply", f"created projection lens '{pid}' DIRECTLY — now a live lens · {sha[:8]}",
                 node_name=pid, commit=sha)
     return {"projection_id": pid, "path": path, "live": pid in SUITE.projection_registry, "spec": row}
+
+
+# --- CREATE the 4 PURE-DATA file-discovered registries (declarative-direct, like create_projection; #58) ---
+# These are THIN DELEGATORS to Suite.create_<kind> (the shared _write_registry_file helper — the proper
+# long-term home create_projection's BAR2 seam wished for: ONE author path over the _CORPUS_REGISTRIES
+# table, never N copy-pasted bodies). Each: render `<CONST> = {...}` → the registry's OWN gate-in-tempdir
+# (a malformed spec RAISES, never written) → atomic write → git-commit → rediscover → LIVE. DATA registries
+# → DECLARATIVE-DIRECT (no approval); node-type / executable-code create stays GATED, off this face. FLOOR:
+# writes a DATA file, NEVER dispatches claude -p / emits resolve/approve/dispatch.
+#   SCOPED TO 4: mark_type · generation_policy · relation_type · ai_tic. The other two discovered registries
+#   (lifter/form) carry a CALLABLE (extract/match) in their row — executable code that pprint can't serialize
+#   and MCP-JSON can't carry — so a data-create would always fail-loud at the gate. They need a CODE-render+
+#   gate authoring contract (create_role-style), net-new + unspecified → FLAGGED for the operator, NOT built
+#   here (they stay fully listable via cognition_inputs + governed by the floor; only data-create excludes them).
+@mcp.tool()
+def create_mark_type(spec: dict) -> dict:
+    """CREATE a NEW MARK_TYPE DIRECTLY — applies LIVE, NO approval (#58). A MARK_TYPE is the type
+    VOCABULARY a mark carries (the `mark(...)` tool's mark_type must be registered): e.g. gold_likelihood
+    / ai_fingerprint / contradiction. `spec` is the row (see runtime/mark_types.py · mark_types/AGENTS.md):
+    id (required, becomes mark_types/<id>.py) · value_shape · direction ('surface'|'subtract') · desc.
+    Malformed → REFUSED fail-loud (the registry gate). Returns {id, kind, path, live, spec}. DELEGATE:
+    Suite.create_mark_type → _write_registry_file → runtime.mark_types (the gate)."""
+    return SUITE.create_mark_type(spec)
+
+
+@mcp.tool()
+def create_generation_policy(spec: dict) -> dict:
+    """CREATE a NEW GENERATION_POLICY DIRECTLY — applies LIVE, NO approval (#58). A GENERATION_POLICY is
+    the per-content GENERATION REGIME run_role reads (run_role(policy=<id>)) — the repetition_penalty
+    LADDER as DATA (NOTHING static): default → escalate-on-finish=length → fail-loud degenerate-loop. `spec`
+    (see runtime/generation_policies.py · generation_policies/AGENTS.md): id (required) · rep_penalty_ladder
+    (required, ASCENDING non-empty list of floats) · diff_against_source (required bool) · json_schema? ·
+    temperature? · budget? · desc?. Malformed → REFUSED fail-loud (empty/non-ascending ladder, bad type).
+    Returns {id, kind, path, live, spec}. DELEGATE: Suite.create_generation_policy → _write_registry_file."""
+    return SUITE.create_generation_policy(spec)
+
+
+@mcp.tool()
+def create_relation_type(spec: dict) -> dict:
+    """CREATE a NEW RELATION_TYPE DIRECTLY — applies LIVE, NO approval (#58). A RELATION_TYPE is a typed/
+    directional corpus relation (the L3 vocabulary): principle_beneath / fragment_of / contradicts /
+    sibling. `spec` (see runtime/relation_types.py · relation_types/AGENTS.md): id (required) · directed
+    (required bool) · inverse? · near? · far? · label? · desc?. Malformed → REFUSED fail-loud. Returns
+    {id, kind, path, live, spec}. DELEGATE: Suite.create_relation_type → _write_registry_file."""
+    return SUITE.create_relation_type(spec)
+
+
+@mcp.tool()
+def create_ai_tic(spec: dict) -> dict:
+    """CREATE a NEW AI_TIC DIRECTLY — applies LIVE, NO approval (#58). An AI_TIC is a fingerprint MARKER
+    (the M4 vocabulary — generic-AI tells to surface/subtract): framework_imposition / versioning /
+    false_finality / silent_fallback / agent_arch / closure_form / mvp. `spec` (see runtime/ai_tics.py ·
+    ai_tics/AGENTS.md): id (required) · markers (required) · label · desc. Malformed → REFUSED fail-loud.
+    Returns {id, kind, path, live, spec}. DELEGATE: Suite.create_ai_tic → _write_registry_file."""
+    return SUITE.create_ai_tic(spec)
+
+
+# --- MARK — append a typed mark on a claim/span (the marks layer; reuses STORE-2 + the mark_types gate) ---
+@mcp.tool()
+def mark(target: str, mark_type: str, value: object = None, confidence: float = None,
+         source_pass: str = "", evidence: str = "") -> dict:
+    """APPEND a MARK on a claim/span `target`, of a REGISTERED `mark_type` (the marks layer, M1). A mark
+    targets a CLAIM or SPAN (the `target` string — e.g. a corpus address, a claim id, a span ref) and
+    carries a mark_type from the mark_types registry (the type VOCABULARY — create one via
+    create_mark_type). The Suite GATES the mark_type fail-loud (an unknown type is REFUSED — registry-is-
+    truth, never a fabricated mark_type). Optional fields ride the open record: value · confidence ·
+    source_pass (which mark-pass left it) · evidence (the WHY — Tim sees-why, overrules; positive-only).
+
+    Round-trips by BOTH keys: read back via marks_for(target) / marks_by_type(mark_type) (the
+    inspect_address / list-by-type seams). Append-only (a target accrues a mark THREAD; re-marking
+    re-appends). REUSES STORE-2's append_mark (the dumb marks.jsonl leaf — distinct from findings.jsonl, so
+    coherence's orphan rollup is unpolluted); the Suite is the only gate. FLOOR: a mark is a store append
+    (telemetry-class), NEVER a resolve/approve/dispatch. Returns the persisted mark record. DELEGATE:
+    Suite.mark → Suite.store.append_mark + the mark_types registry gate."""
+    fields = {}
+    if value is not None:
+        fields["value"] = value
+    if confidence is not None:
+        fields["confidence"] = confidence
+    if source_pass:
+        fields["source_pass"] = source_pass
+    if evidence:
+        fields["evidence"] = evidence
+    return SUITE.mark(target, mark_type, **fields)
+
+
+@mcp.tool()
+def marks_for(target: str) -> dict:
+    """READ every MARK on a claim/span `target`, oldest-first (the mark thread there — the M2 gold-
+    likelihood PROFILE is marks_for(target) composed with evidence, a READ not a stored score). An
+    unmarked target → an HONEST empty list. REUSES Suite.marks_for (store.marks_for over marks.jsonl;
+    persistence-survives-reload). Read-only. Returns {target, total, marks:[…]}. DELEGATE: Suite.marks_for.
+    (DISTINCT from findings_for, which reads the legacy coherence findings.jsonl by address — marks carry a
+    claim/span target + a registered mark_type, the marks-generalization's two retrieval keys.)"""
+    ms = SUITE.marks_for(target)
+    return {"target": target, "total": len(ms), "marks": ms}
+
+
+@mcp.tool()
+def marks_by_type(mark_type: str) -> dict:
+    """READ every MARK of `mark_type` across targets, oldest-first (the cross-target view of one mark kind
+    — e.g. every ai_fingerprint mark, the M4 denoising surface). FAIL LOUD on an unknown mark_type
+    (registry-is-truth — a typo'd type would silently look like 'no marks'). REUSES Suite.marks_by_type.
+    Read-only. Returns {mark_type, total, marks:[…]}. DELEGATE: Suite.marks_by_type + the mark_types gate."""
+    ms = SUITE.marks_by_type(mark_type)
+    return {"mark_type": mark_type, "total": len(ms), "marks": ms}
 
 
 if __name__ == "__main__":

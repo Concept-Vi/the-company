@@ -295,6 +295,53 @@ class Suite:
         # forms) land, they instantiate here the SAME way and the selects project them too.
         self.projections_dir = os.path.join(os.path.dirname(self.nodes_dir), "projections")
         self.projection_registry = ProjectionRegistry().discover([self.projections_dir])
+        # The OTHER 6 file-discovered corpus/cognition registries (719f82d) — discovered the SAME way
+        # as projection_registry (the ONE registry mechanism, reuse-don't-parallel). Each is a sibling
+        # `<name>/` dir of `nodes/`. They feed the authoring selects (available_inputs) + the create_*
+        # tools (the shared `_write_registry_file` helper writes a `<name>/<id>.py` through the registry's
+        # OWN gate). `_REGISTRIES` is the single-source table the create_* helper + the selects read, so
+        # adding a registry = one row here (registry-is-truth, no per-registry branch). Each tuple is
+        # (dir-attr, registry-instance-attr, RegistryClass, module-const, friendly-kind).
+        from runtime.lifters import LifterRegistry
+        from runtime.mark_types import MarkTypeRegistry
+        from runtime.generation_policies import GenerationPolicyRegistry
+        from runtime.relation_types import RelationTypeRegistry
+        from runtime.ai_tics import AiTicRegistry
+        from runtime.forms import FormRegistry
+        _base = os.path.dirname(self.nodes_dir)
+        self.lifters_dir = os.path.join(_base, "lifters")
+        self.mark_types_dir = os.path.join(_base, "mark_types")
+        self.generation_policies_dir = os.path.join(_base, "generation_policies")
+        self.relation_types_dir = os.path.join(_base, "relation_types")
+        self.ai_tics_dir = os.path.join(_base, "ai_tics")
+        self.forms_dir = os.path.join(_base, "forms")
+        self.lifter_registry = LifterRegistry().discover([self.lifters_dir])
+        self.mark_type_registry = MarkTypeRegistry().discover([self.mark_types_dir])
+        self.generation_policy_registry = GenerationPolicyRegistry().discover([self.generation_policies_dir])
+        self.relation_type_registry = RelationTypeRegistry().discover([self.relation_types_dir])
+        self.ai_tic_registry = AiTicRegistry().discover([self.ai_tics_dir])
+        self.form_registry = FormRegistry().discover([self.forms_dir])
+        # The single-source create_*-authorable table: (kind, dir-attr, registry-attr, RegistryClass,
+        # module-const-name). The create_* methods derive from this — never a per-registry literal. A bad
+        # spec is REFUSED via the registry's OWN discover() gate (mirrors create_projection).
+        #   SCOPED TO THE 4 PURE-DATA REGISTRIES ON PURPOSE: declarative-direct authoring renders a DATA
+        #   dict (pprint → a PYTHON-literal `<CONST> = {...}`) and arrives over MCP as JSON. So ONLY the
+        #   registries whose ROW is pure data are create_*-authorable here: mark_type · generation_policy ·
+        #   relation_type · ai_tic. The OTHER TWO discovered registries — `lifter` (an `extract` CALLABLE)
+        #   and `form` (a `match` CALLABLE) — carry EXECUTABLE CODE in their row; pprint cannot serialize a
+        #   function and MCP-JSON cannot carry one, so a data-create would ALWAYS fail-loud at the gate (a
+        #   broken affordance). That is exactly the FLOOR's "executable-code create stays GATED" line: a
+        #   lifter/form needs a CODE-render+gate authoring contract (create_role-style render of a `def`, or
+        #   the gated propose→apply path), which is net-new + unspecified → FLAGGED for the operator, NOT
+        #   invented here. lifter/form stay fully LISTABLE (selects) + GOVERNED (floor) — only data-CREATE
+        #   excludes them. (build-against-the-contracts: the floor wins over the brief's "data registries"
+        #   premise, which is false for these 2.)
+        self._CORPUS_REGISTRIES = {
+            "mark_type":         ("mark_types_dir",          "mark_type_registry",         MarkTypeRegistry,         "MARK_TYPE"),
+            "generation_policy": ("generation_policies_dir", "generation_policy_registry", GenerationPolicyRegistry, "GENERATION_POLICY"),
+            "relation_type":     ("relation_types_dir",      "relation_type_registry",     RelationTypeRegistry,     "RELATION_TYPE"),
+            "ai_tic":            ("ai_tics_dir",             "ai_tic_registry",            AiTicRegistry,            "AI_TIC"),
+        }
         self.role_registry = role_registry or RoleRegistry().discover([self.roles_dir])
         self.ROLE_REGISTRY = {rid: self.role_registry[rid].spec for rid in self.role_registry}
         # Cognition Engine GROUP N — the SAVED-CASCADE registry (a saved cascade = a declared ActionRegistry
@@ -8659,6 +8706,157 @@ class Suite:
                                       emit_msg=f"created context '{eid}' DIRECTLY — now a live context")
         return {"context_id": eid, "path": path, "live": eid in self._entry_registry("context")}
 
+    # === DECLARATIVE-DIRECT authoring of the 4 PURE-DATA corpus/cognition registries =================
+    # (mark_type/generation_policy/relation_type/ai_tic) — #58 DIRECT, no approval. These are DATA
+    # registries (a `<name>/<id>.py` declaring `<CONST> = {...}`), NOT executable-code/node-types — so the
+    # FLOOR distinguishes them: declarative-direct authoring is DIRECT (render→the registry's OWN gate→
+    # write→commit→rediscover; no operator-approval, NO resolve/approve/dispatch/claude-p). It MIRRORS
+    # create_projection (the precedent) EXACTLY, but factored into ONE shared helper over the
+    # _CORPUS_REGISTRIES table (reuse-don't-parallel — NO copy-pasted per-registry body, NO 2nd author path).
+    # NOT here: lifter/form — their row carries a CALLABLE (extract/match), executable code that pprint can't
+    # serialize + MCP-JSON can't carry → GATED code-authoring, flagged for the operator (see _CORPUS_REGISTRIES).
+    def _write_registry_file(self, kind: str, spec: dict) -> dict:
+        """The SHARED declarative-direct write-half for the 6 corpus/cognition registries (the proper
+        long-term home create_projection's BAR2 seam wished for — `Suite.create_*` over a shared helper).
+        Mirrors create_projection's mechanism, parametrized by the `_CORPUS_REGISTRIES` row:
+          render `<CONST> = {...}` source (the declared row verbatim, pprint — PYTHON literal, not json) →
+          THE CORRECTNESS GATE: import-in-tempdir via the registry's OWN `discover()` (a malformed spec
+          RAISES in the registry's `_build_*`, BEFORE any write to the live dir — registry-is-truth, a bad
+          row never goes live) → atomic write into the live `<name>/<id>.py` → git-commit via the shared
+          `_commit_or_rollback` (path-scoped, revertible) → rediscover the live registry (go live in-process).
+        Returns {id, kind, path, live, spec}. Fail loud on a non-dict spec / illegal id / existing id.
+        THE FLOOR: this writes a DATA file (declarative authoring) — it NEVER dispatches claude -p; a
+        node-type / executable-code create stays GATED, off this path."""
+        import tempfile as _tempfile
+        import pprint as _pprint
+        if kind not in self._CORPUS_REGISTRIES:
+            raise ValueError(f"_write_registry_file: unknown registry kind {kind!r} — known: "
+                             f"{sorted(self._CORPUS_REGISTRIES)} (registry-is-truth; fail loud).")
+        dir_attr, reg_attr, RegClass, const = self._CORPUS_REGISTRIES[kind]
+        if not isinstance(spec, dict):
+            raise TypeError(f"create_{kind} needs a dict spec (the registry ROW), got {type(spec).__name__}")
+        rid = spec.get("id")
+        if not rid or not isinstance(rid, str) or not rid.isidentifier():
+            raise ValueError(
+                f"create_{kind}: `id` must be a valid python identifier (it becomes {kind}/<id>.py — "
+                f"addressable by file, like a role/skill/projection). Got {rid!r} — fail loud, never unnamed.")
+        reg = getattr(self, reg_attr)
+        if rid in reg:
+            raise ValueError(
+                f"{kind} {rid!r} already exists — create_{kind} is for a NEW entry. Fail loud "
+                f"(registry-is-truth; existing: {sorted(reg)}).")
+        # RENDER the row module source: `<CONST> = {...}` (the declared row verbatim). Filter to the
+        # registry's OWN known FIELDS (the `<CONST>_FIELDS` tuple on the module) so a typo'd field is
+        # dropped before the gate sees it — but the gate ALSO catches an unknown field fail-loud, so this
+        # is belt-and-suspenders, not the gate. Trivial pprint serialization (PYTHON literal; bool/None
+        # round-trip — NOT json.dumps which would emit true/null). NO logic, NO behaviour — DATA.
+        _modname = RegClass.__module__               # e.g. "runtime.lifters"
+        import importlib as _importlib
+        _mod = _importlib.import_module(_modname)
+        _fields = getattr(_mod, f"{const}_FIELDS", None)
+        row = {k: v for k, v in spec.items() if (_fields is None or k in _fields)}
+        row["id"] = rid
+        # DEFENSE-IN-DEPTH (the table is the real gate, but be explicit): a value that is not a plain
+        # data literal (e.g. a CALLABLE — a lifter's extract / a form's match) CANNOT round-trip through
+        # the pprint DATA render. Such a registry is CODE-authoring, GATED, not data-create. Fail loud with
+        # a legible message rather than emit a non-importable module. (lifter/form aren't in the table, so
+        # this is a guard against a future row, not the live path.)
+        for k, v in row.items():
+            if callable(v):
+                raise ValueError(
+                    f"create_{kind}: field {k!r} is a CALLABLE — declarative-direct data-create cannot "
+                    f"author executable code (pprint can't serialize a function). This registry needs a "
+                    f"CODE-render+gate authoring contract (flagged for the operator). Fail loud.")
+        source = (f'"""{kind}/{rid}.py — an agent-authored {kind} (create_{kind}, #58 declarative-direct).\n'
+                  f'A declared registry ROW. See runtime/{kind}.py + {kind}/AGENTS.md.\n'
+                  f'Its `id` MUST equal the file stem ({rid!r})."""\n\n'
+                  f"{const} = {_pprint.pformat(row, indent=4, sort_dicts=True)}\n")
+        # THE CORRECTNESS GATE — import-in-tempdir via the registry's OWN discover(). A malformed row
+        # (bad id / missing required / unknown field / bad type) RAISES in the registry's _build_*, BEFORE
+        # any write to the live dir. Mirrors create_projection's gate-in-tempdir (reuse the gate).
+        with _tempfile.TemporaryDirectory() as _td:
+            with open(os.path.join(_td, f"{rid}.py"), "w", encoding="utf-8") as _f:
+                _f.write(source)
+            gated = RegClass().discover([_td])       # RAISES on a malformed row (the gate)
+            if rid not in gated:
+                raise RuntimeError(
+                    f"create_{kind}: rendered module for {rid!r} did not discover as a {const} — refused "
+                    f"to write it (fail loud; a non-discovering row is a bug in the render).")
+        # WRITE atomically into the LIVE dir, git-commit (path-scoped, revertible), rediscover → go live.
+        base = getattr(self, dir_attr)
+        os.makedirs(base, exist_ok=True)
+        path = os.path.join(base, f"{rid}.py")
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as _f:
+            _f.write(source)
+        os.replace(tmp, path)                        # atomic; no partial file
+        sha = self._commit_or_rollback(path, f"create {kind} '{rid}' (direct)")
+        setattr(self, reg_attr, RegClass().discover([base]))   # rediscover → live in this process
+        self._emit("apply", f"created {kind} '{rid}' DIRECTLY — now a live {kind} · {sha[:8]}",
+                   node_name=rid, commit=sha)
+        self.refresh_map()
+        return {"id": rid, "kind": kind, "path": path,
+                "live": rid in getattr(self, reg_attr), "spec": row}
+
+    def create_mark_type(self, spec: dict) -> dict:
+        """#58 DIRECT — create a MARK_TYPE (the type vocabulary a mark carries: gold_likelihood/
+        ai_fingerprint/contradiction; value_shape + direction) LIVE, no approval. See runtime/mark_types.py."""
+        return self._write_registry_file("mark_type", spec)
+
+    def create_generation_policy(self, spec: dict) -> dict:
+        """#58 DIRECT — create a GENERATION_POLICY (the rep_penalty LADDER regime run_role reads; NOTHING
+        static) LIVE, no approval. See runtime/generation_policies.py."""
+        return self._write_registry_file("generation_policy", spec)
+
+    def create_relation_type(self, spec: dict) -> dict:
+        """#58 DIRECT — create a RELATION_TYPE (typed/directional corpus relation: principle_beneath/
+        fragment_of/contradicts/sibling) LIVE, no approval. See runtime/relation_types.py."""
+        return self._write_registry_file("relation_type", spec)
+
+    def create_ai_tic(self, spec: dict) -> dict:
+        """#58 DIRECT — create an AI_TIC (the fingerprint marker vocabulary: framework_imposition/
+        versioning/false_finality/…) LIVE, no approval. See runtime/ai_tics.py."""
+        return self._write_registry_file("ai_tic", spec)
+
+    # === MARKS — the suite-side API over STORE-2's append_mark/marks_for/marks_by_type ================
+    # A MARK targets a CLAIM or SPAN (the `target` string), carries a REGISTERED mark_type (from the
+    # mark_types registry — the type VOCABULARY), and round-trips by target AND by mark_type. The Suite
+    # owns the mark_type GATE (fail-loud on an unknown type — rule 8, registry-is-truth); store.append_mark
+    # stays DUMB on purpose (its docstring: it won't import the registry — the Suite is the gate). REUSE
+    # STORE-2's append_mark/marks_for/marks_by_type — NO parallel mark store. The FLOOR holds: a mark is a
+    # store append (telemetry-class write), never a resolve/approve/dispatch.
+    def mark(self, target: str, mark_type: str, **fields) -> dict:
+        """Append a MARK on a claim/span `target`, of a REGISTERED `mark_type`. The mark_type GATE bites
+        here (fail-loud on an unknown type — never a fabricated mark_type; the type vocabulary is the
+        mark_types registry, registry-is-truth). Extra `fields` (value/confidence/source_pass/evidence/…)
+        splat through to the open mark record. Returns the persisted record. Reuses store.append_mark
+        (the dumb store leaf) — the Suite is the only gate."""
+        if not isinstance(target, str) or not target.strip():
+            raise ValueError(f"mark: `target` must be a non-empty string (the claim/span it marks). "
+                             f"Got {target!r} — fail loud.")
+        if mark_type not in self.mark_type_registry:
+            raise ValueError(
+                f"mark: unknown mark_type {mark_type!r} — registered: {sorted(self.mark_type_registry)} "
+                f"(registry-is-truth: a mark_type that is not a discovered file does not exist; author one "
+                f"via create_mark_type. Fail loud — never a fabricated mark_type).")
+        rec = {"target": target, "mark_type": mark_type, **fields}
+        return self.store.append_mark(rec)
+
+    def marks_for(self, target: str) -> list[dict]:
+        """Every mark on `target`, oldest-first (the mark thread at that claim/span). Reuses
+        store.marks_for (persistence-survives-reload; an unmarked target → [])."""
+        return self.store.marks_for(target)
+
+    def marks_by_type(self, mark_type: str) -> list[dict]:
+        """Every mark of `mark_type` across targets, oldest-first (the cross-target view of one mark kind).
+        Reuses store.marks_by_type. FAIL LOUD on an unknown mark_type (registry-is-truth) — a typo'd type
+        would silently return [] and look like 'no marks', masking the error."""
+        if mark_type not in self.mark_type_registry:
+            raise ValueError(
+                f"marks_by_type: unknown mark_type {mark_type!r} — registered: "
+                f"{sorted(self.mark_type_registry)} (fail loud; a typo'd type silently returns []).")
+        return self.store.marks_by_type(mark_type)
+
     def edit_role(self, rid: str, spec: dict, *, model: str | None = None) -> dict:
         """C7.4 — RE-PROPOSE an existing role (edit = author a replacement that surfaces for approval).
         A PROTECTED role (one the runtime imports by name) is REFUSED — surfaced as a needs-tim question
@@ -8950,11 +9148,24 @@ class Suite:
         # ADDITIVE — every prior key (utterance/roles/role_addresses/context_variables) is unchanged.
         projections = sorted(self.projection_registry)
         spaces = [p.id for p in self.projection_registry.embeddable()]
+        # The 6 OTHER file-discovered corpus/cognition registries (719f82d) — ADVERTISE their ids in the
+        # composition select so the agent can SEE + USE them where it composes (registry-is-truth: drop a
+        # `<name>/<id>.py` → restart → it appears here with NO code change). These are the discovery/
+        # capture vocabulary a corpus-reading role/rule/cascade composes with: lifters (code extractors) ·
+        # mark_types (the type vocab for marks) · generation_policies (the rep_penalty regimes run_role
+        # reads — NOTHING static) · relation_types · ai_tics · forms (effort-routing). ADDITIVE — every
+        # prior key is unchanged.
         return {"utterance": "utterance", "roles": roles,
                 "role_addresses": [f"run://<turn>/{r}" for r in roles],
                 "context_variables": ctx_vars,
                 "projections": projections,
-                "projection_spaces": [f"vec://<item>#space={s}" for s in spaces]}
+                "projection_spaces": [f"vec://<item>#space={s}" for s in spaces],
+                "lifters": sorted(self.lifter_registry),
+                "mark_types": sorted(self.mark_type_registry),
+                "generation_policies": sorted(self.generation_policy_registry),
+                "relation_types": sorted(self.relation_type_registry),
+                "ai_tics": sorted(self.ai_tic_registry),
+                "forms": sorted(self.form_registry)}
 
     def field_types(self) -> dict:
         """C7.5 — the closed field-type registry the FE schema-editor reads (registry-is-truth — the
