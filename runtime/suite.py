@@ -9734,9 +9734,25 @@ class Suite:
                     p = os.path.relpath(p, cwd)
                 files.append({"path": p, "text": t[:_corp.WALK_MAX_CHARS]})
         walked = len(files)
+        # G25 — the SELF-REFRESHING corpus: skip a file only if its record exists AND its SOURCE text is
+        # unchanged (content-hash compare — the ONE hasher, store/vector_index.content_hash). A CHANGED
+        # file re-ingests WITHOUT force (the new record supersedes via list_corpus latest-seq-wins, and
+        # capture re-embeds → the vector refreshes). An OLD record without a stored source_hash keeps the
+        # conservative path-keyed skip (backward-compatible; a force run stamps hashes). NOTE: deletions
+        # are out of scope (a record for a removed file goes stale — flagged, not silent).
+        from store.vector_index import content_hash as _chash
+        for f in files:
+            f["hash"] = _chash(f["text"])
         if not force:
-            have = {r.get("source_address") for r in self.list_corpus(project=project)}
-            files = [f for f in files if f"code://{f['path']}" not in have]
+            have = {r.get("source_address"): r.get("source_hash")
+                    for r in self.list_corpus(project=project)}
+            def _skip(f):
+                key = f"code://{f['path']}"
+                if key not in have:
+                    return False                            # never ingested → ingest
+                stored = have[key]
+                return (stored is None) or (stored == f["hash"])   # hash-less old record OR unchanged → skip
+            files = [f for f in files if not _skip(f)]
         skipped_existing = walked - len(files)
         remaining = max(0, len(files) - max_files)
         files = files[:max_files]
@@ -9753,7 +9769,8 @@ class Suite:
             if not dig:          # F2 per-unit resilience — a failed unit is NAMED below, never fabricated
                 continue
             records.append({"source_address": f"code://{f['path']}", "output": dig,
-                            "kind": "capture", "projection": projection})
+                            "kind": "capture", "projection": projection,
+                            "source_hash": f["hash"]})      # G25: the staleness key, rides onto the index event
         if records:
             self.capture_corpus(records, project=project, session=session, round=round)
         # NAME the failures (no invisible failed units — the no-silent-failure floor): which path + why.

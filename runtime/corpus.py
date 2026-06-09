@@ -175,7 +175,7 @@ def write_record(store, *, source_address: str, output: Any, kind: str, lineage:
     store.set_ref(address, cas)             # deterministic pointer (resume-safe: re-run overwrites same)
     # INDEX via a DISTINCT durable event kind (NOT op.run — that's a closed engine-run grammar). The log
     # IS the index (#54 pattern, its own kind) — no maintained index, no new store.
-    ev = store.append_event({
+    ev_row = {
         "kind": CORPUS_EVENT_KIND,
         "cas": cas,
         "address": address,
@@ -184,7 +184,13 @@ def write_record(store, *, source_address: str, output: Any, kind: str, lineage:
         "model": model,
         "projection": projection,
         "lineage": lin,
-    })
+    }
+    # G25 (schema-additive): when the writer supplies a source_hash (the SOURCE text's content-hash —
+    # ingest_paths does), it rides onto the INDEX event too, so the staleness check at re-ingest is a
+    # cheap row-read (list_corpus), never an N-record content fetch.
+    if extra.get("source_hash"):
+        ev_row["source_hash"] = extra["source_hash"]
+    ev = store.append_event(ev_row)
     return {**ev, "cas": cas, "address": address}
 
 
