@@ -213,3 +213,11 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
 - Cumulative this session (all verified by use on :5210): 0bdff45 walk-card ui:// hidden · 439af46 one-click "what am I looking at?" reads the screen · 592e15b studio RHM de-jargoned.
 - STILL BLOCKED (the heart): mockup-walk + back need suite.py (cognition holds, no reply to 1066ed3). 
 - NEXT unblocked FE: the talks-back presentation (streaming committed — make replies land as live parts, the led feel) — RhmChat, mine, no suite.py.
+
+## 2026-06-09 fire — FE-only experience DONE; heart deadlocked on cognition suite.py (escalated)
+- Verified talks-back streams incrementally (sendChat pushes a live bubble, appends each part; B1 curl proof earlier). FUNCTION built; the live FEEL = needs-tim.
+- ★ TURNING POINT: the cleanly-unblocked FE experience work is DONE this session — 3 fixes verified by use (0bdff45 walk-card ui:// hidden · 439af46 one-click read-the-screen · 592e15b studio RHM de-jargoned) + talks-back streaming confirmed.
+- ★ EVERYTHING remaining needs suite.py (the walkthrough organ), HELD by cognition since 2026-06-08 (B brain_config), no reply to 1066ed3 across multiple fires: mockup-aware walk, back/prev, RHM-annotate verb (marks-for-you), batch-generate compose. Cannot touch a held file (protocol). Escalated 3b30243 (to cognition + Tim).
+- ★ TIM DIRECTION NEEDED (the real unblock): either (1) redirect cognition to free/co-design the walkthrough-organ region of suite.py, or (2) authorize me to edit the walkthrough-organ functions (~6207-6560, disjoint from cognition activation/ops seam) despite the claim — git-revert is the safety net. Without one, the heart of the surface cannot proceed.
+- NOT spinning: FE quick-wins exhausted (done), rest is genuinely blocked. Recording blocked + escalating per protocol step 4.
+- See it: http://localhost:5210/?mockup=C1-inbox-desktop.html (the 3 fixes live; click "what am I looking at?").
