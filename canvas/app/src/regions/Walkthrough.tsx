@@ -36,10 +36,12 @@ export function Walkthrough() {
           </div>
         ) : (
           <>
-            {/* the element this step concerns — click to re-spotlight it (reuses resolveUiTarget) */}
-            <div className="wt-target wt-guide-target">showing: {session.raw?.guide_address || session.item}
-              <button className="b ghost sm" data-ui-ref="ui://walkthrough/show-again" style={{ marginLeft: 8 }} title="spotlight this element again"
-                onClick={() => resolveUiTarget(session.raw?.ui_target || session.item)}>↪ show again</button></div>
+            {/* the element this step concerns — click to re-spotlight it (reuses resolveUiTarget). The raw
+               address (ui://…) is the machine locus, kept as data-ui-ref but NOT shown to the operator — the
+               narration below already says what this is in plain language; a raw address is dev-jargon. */}
+            <div className="wt-target wt-guide-target" data-ui-ref={session.raw?.guide_address || undefined}>showing this part of the screen
+              <button className="b ghost sm" data-ui-ref="ui://walkthrough/show-again" style={{ marginLeft: 8 }} title="point it out on the screen again"
+                onClick={() => resolveUiTarget(session.raw?.ui_target || session.item)}>↪ show me again</button></div>
             {/* the NARRATION — the corpus how-to (address_help): how_to_use ∨ what_this_is, never empty */}
             <div className="wt-frame wt-guide-frame">{session.framing || ('This is ' + session.item)}</div>
             <div className="wt-foot">
