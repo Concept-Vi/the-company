@@ -106,6 +106,16 @@ Roles fire model calls through `fabric/` guards (a model runs only INSIDE a role
 - **`score_options`** — the **option-panel REDUCE role** (⑩, mode=role): takes the N per-lens approaches
   → `{scored:[{lens,score,why}], recommendation, grafts}` — scores each + a recommendation that may graft
   runner-up strengths. Mirrors `reduce_synth`'s reduce-role shape.
+- **`mine_exchange`** — the **transcript-miner MAP role** (COMPOSITIONS ③): reads ONE conversation
+  exchange (Tim-message + my-response, riding in the unit) → a self-improvement extract `{decision,
+  rationale, tim_correction, my_error, bug_fix, needs_tim, frustration, pattern_tag}` (7 optional + the
+  required `pattern_tag`). In the `mining` cast (cast-beyond-listening; listening untouched). Fanned over
+  exchanges via `run_items`; the cross-exchange embed-CLUSTER of pattern_tags into named failure-patterns
+  (→ drafts `feedback-*.md` for review) is the follow-on (needs the embedder).
+- **`judge_mining`** — the **transcript-miner CONFIRM role** (③, no-fiction gate): validates ONE
+  `mine_exchange` extract against its RAW exchange → `{grounded:bool, unsupported:str, confidence:float}`
+  (did the miner fabricate a decision/correction not in the exchange?). A single-generate validator
+  (mirrors `verify_lens`; E4 caveat — soft, model-binding accepts a stronger tiebreak). In `mining`.
 
 **Where new things go:** a new role = a new file `roles/<id>.py` declaring its `ROLE` dict (its `id`
 MUST equal the file name). Put it in a mode's cast by adding that mode to its `mode_scope`. Make it a
