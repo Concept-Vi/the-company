@@ -131,6 +131,19 @@ def write_record(store, *, source_address: str, output: Any, kind: str, lineage:
         raise CorpusError(
             f"corpus-record needs a string `source_address` (the unit this record describes — the retrieval "
             f"key). Got {source_address!r} — fail loud.")
+    # G18 (fail-loud at the boundary, not a raw OSError downstream): the source_address is a RETRIEVAL KEY
+    # (a short ADDRESS — e.g. `code://suite/run_role`, a file path, a unit id), NOT the unit's content. It
+    # becomes the corpus run:// address → a ref FILENAME (store.set_ref → _safe), so a content-blob passed
+    # as source_address overflows the filename ([Errno 36] File name too long). Guard it here with guidance:
+    # content goes in `output`; source_address names WHAT the record describes. (A path/address is well under
+    # this; the bound is generous so any legitimate address passes, only content-blobs trip it.)
+    if len(source_address) > 200 or "\n" in source_address:
+        raise CorpusError(
+            f"corpus-record `source_address` looks like CONTENT, not a retrieval key (len={len(source_address)}"
+            f"{', has newlines' if chr(10) in source_address else ''}). It is the ADDRESS the record is keyed by "
+            f"(it becomes the run:// corpus address → a ref filename), so it must be a SHORT key — a file path, "
+            f"a `code://<file>/<symbol>`, or a unit id. Put the file/unit CONTENT in `output`, and pass its "
+            f"address/path as `source_address`. (Capturing repo files: source_address=the path, output=the digest.)")
     if not kind or not isinstance(kind, str):
         raise CorpusError(
             f"corpus-record needs a string `kind` (what KIND of record — e.g. 'capture'/'reduce'/'lift'). "
