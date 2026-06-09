@@ -344,6 +344,19 @@ class Suite:
         }
         self.role_registry = role_registry or RoleRegistry().discover([self.roles_dir])
         self.ROLE_REGISTRY = {rid: self.role_registry[rid].spec for rid in self.role_registry}
+        # B-FIX (P3) — PROTECTED_ROLES DERIVED, not a second-copy literal. The spike subset comes from its
+        # SOURCE (cognition.SPIKE_ROLES — the roles cognition.py imports by name); the suite-owned config
+        # roles stay declared on the class (suite.py's own by-name dependencies; no other source-of-truth).
+        # The union is the full protected set. A fail-loud drift guard: cognition's spike set must be a
+        # subset of what we protect (if cognition adds a spike role, the assert FAILS until it's reflected —
+        # never a silent gap). Imported here (not at class-body) to avoid the class/cognition import cycle.
+        from runtime import cognition as _cog_pr
+        _spike = tuple(sorted(_cog_pr.SPIKE_ROLES))            # focus/recall/ground (registry-derived)
+        self.PROTECTED_ROLES = tuple(dict.fromkeys(_spike + self._SUITE_OWNED_PROTECTED_ROLES))
+        assert set(_cog_pr.SPIKE_ROLES) <= set(self.PROTECTED_ROLES), (
+            f"PROTECTED_ROLES drift: cognition.SPIKE_ROLES {sorted(_cog_pr.SPIKE_ROLES)} is not fully "
+            f"protected by {sorted(self.PROTECTED_ROLES)} — a cognition-imported spike role would be "
+            f"deletable, which bricks import. Fail loud (rules 3+4).")
         # Cognition Engine GROUP N — the SAVED-CASCADE registry (a saved cascade = a declared ActionRegistry
         # row). REUSE coherence_actions.ActionRegistry (the one-door validator+store EXISTS — never a 2nd
         # registry); persisted to a json file UNDER THE STORE ROOT (ext4 — never /mnt/c), so a reload sees
@@ -739,6 +752,59 @@ class Suite:
         if role:
             runs = [r for r in runs if r.get("role") == role]
         return {"runs": runs[:limit], "total_records": len(runs)}
+
+    def route_run_output(self, run_address: str, destination: str, *, turn_id: str | None = None,
+                         params: dict | None = None) -> dict:
+        """E4 (chain save/re-run + output-DESTINATION) — direct a DISCOVERED run's output to a named
+        destination/lane. The chain SAVE + RE-RUN half of E4 is the SAVED-CASCADE (save_cascade/run_cascade,
+        GROUP N — a declared re-runnable pipeline); this is the remaining bit: route a DIRECT run's output to
+        a named address/lane WITHOUT a saved cascade (the "I ran something, now land/surface/forward it"
+        convenience).
+
+        REUSE-don't-parallel (the lane law): the output is READ via `resolve_address` (the canonical
+        scheme-dispatching resolver — the SAME path the inject edge + the run-index discovery use), and the
+        effect is performed by `rules.route` over the SAME `DESTINATION_KINDS` (`address`/`lane`/`surface`/
+        `inject`/`chain`). NO second router, NO destination logic re-implemented here.
+
+        THE FLOOR HOLDS BY CONSTRUCTION (C9.2 / the lane law): `rules.route` can ONLY do the five
+        non-consequential `DESTINATION_KINDS` — `FORBIDDEN_DESTINATION_VERBS` (resolve/approve/dispatch) are
+        rejected at `Rule` construction AND absent from `DESTINATION_KINDS`, so routing a run output can
+        NEVER forge an operator approve or launch a build. `surface` rides `surface_review` → an `ask`
+        (resolved=None), never a resolve.
+
+        Args:
+          run_address — the run:// (or cas://) address of the output to route (a DISCOVERED address from
+                        list_runs/find_runs, or any resolvable address).
+          destination — one of `DESTINATION_KINDS` (address|lane|surface|inject|chain). An unknown kind
+                        fails loud (the route's own validation), never a silent no-op.
+          turn_id     — the turn key the landed address is namespaced under (defaults to a fresh `route-…`
+                        so a standalone route still lands at a unique, discoverable address).
+          params      — destination params (e.g. {lane: "<name>"} for lane, {title: …} for surface,
+                        {chain_role: …} for chain) — passed through to `rules.route` verbatim.
+
+        Returns the `route()` outcome record ({rule, destination, fired, acted, address?/lane?/surfaced?}).
+        Fail-loud on an unresolvable address (resolve_address raises) — never route a None/empty output."""
+        from runtime import cognition as _cog
+        from runtime import rules as _rules
+        import time as _time
+        if destination not in _rules.DESTINATION_KINDS:
+            raise ValueError(
+                f"route_run_output: unknown destination {destination!r} — the routable kinds are "
+                f"{list(_rules.DESTINATION_KINDS)} (registry-is-truth; never a fabricated destination). "
+                f"NONE may be resolve/approve/dispatch (the build-dispatch floor is unforgeable).")
+        tid = turn_id or "route-" + _time.strftime("%Y%m%d-%H%M%S-") + str(int(_time.monotonic() * 1000) % 100000)
+        # READ the run output via the canonical resolver (run:///cas:// → head→get_content). Fail loud on an
+        # unresolvable address (on_missing='raise' — never route an empty/None output as if it were content).
+        value = _cog.resolve_address(self.store, run_address, turn_id=tid, on_missing="raise")
+        # Build the routing DECISION the way a fired G3 rule would, and let rules.route perform the effect.
+        decision = {"fire": True, "destination": destination, "value": value,
+                    "rule": f"run-output:{run_address}", "params": params or {},
+                    "reason": f"route_run_output({run_address} → {destination})"}
+        # the emit adapter mirrors save_cascade's (route emits `emit(kind, {dict})`; _emit is (kind, summary,
+        # **meta)) — reuse the SAME shape, no parallel emit.
+        return _rules.route(decision, store=self.store, suite=self, turn_id=tid,
+                            emit=lambda k, p: self._emit(k, p.get("summary", k),
+                                                         **{kk: vv for kk, vv in p.items() if kk != "summary"}))
 
     # =================================================================================================
     # SAVED CASCADES (Cognition Engine GROUP N · the saving + running FACE over the runner)
@@ -2481,6 +2547,26 @@ class Suite:
         _res = self.resolution_spec_for(mode)
         ctx += self._resolve_context_at(self.current_locus(), graph_id=graph_id, intent=intent,
                                         resolution=_res)
+        # GROUP J — the cognition↔resolution feedback loop: the PRIOR turns' swarm cognition (the system's
+        # OWN thinking, the roles' run://<turn>/<role> outputs) resolves into THIS turn's context. A SECOND,
+        # DEDICATED R2 call anchored at the FIXED `R2_COGNITION_ANCHOR` (a stable ui:// address, parses like
+        # the per-turn ui://cognition/<turn> the staged path emits) — so it fires WITH OR WITHOUT a canvas
+        # locus (the locus call above returns '' on a plain chat with no selection; this one does not depend
+        # on it). It supplies the ONLY resolution spec that admits the 'cognition' stratum (the explicit
+        # opt-in `_r2_gather` gates on) — every OTHER R2 caller's strata omits it, so the address-attached
+        # reads (`context_at`/`surface_intent_at`) are byte-for-byte unchanged (no global-cognition leak).
+        # The in-flight turn is excluded by construction (its `cognition.turn.done` fires later, in the
+        # epilogue, AFTER this context is assembled — so only PRIOR completed turns resolve). Suppressed in
+        # `off` mode (the presence dial off resolves nothing — consistent with the off lens admitting none).
+        # REUSE: `_resolve_context_at` → `_r2_gather` → `_r2_score_and_cap` (the same scorer/cap), the run
+        # INDEX (#54, E2-incremental), and `resolve_address` (the canonical resolver). No second system.
+        if mode != "off":
+            _cog_res = {"strata": frozenset({"cognition"}), "howto_detail": "none",
+                        "framing": ("YOUR OWN PRIOR THINKING (the swarm of roles you ran on RECENT turns "
+                                    "produced this — your cognition fed back as context; treat it as what "
+                                    "you were already reasoning, and build on it, don't repeat it)")}
+            ctx += self._resolve_context_at(self.R2_COGNITION_ANCHOR, graph_id=None, intent=intent,
+                                            resolution=_cog_res)
         return ctx
 
     def _describe_ui_address(self, address: str) -> str:
@@ -3281,6 +3367,16 @@ class Suite:
         run_addr = self._r2_run_counterpart(locus, graph_id)
         if run_addr is not None and _ok("run"):
             items.extend(self._r2_run_strata(run_addr, locus))
+        # GROUP J — the cognition↔resolution loop (the system sees its own thinking). The prior turns' swarm
+        # cognition is NOT address-attached + NOT locus-walked — it is conversation-global. So it is gated as
+        # an EXPLICIT POSITIVE OPT-IN (`"cognition" in admit`), NOT via `_ok` (which is True for the default
+        # admit-all `resolution=None` — that would SILENTLY leak global cognition into the address-attached
+        # reads `context_at`/`surface_intent_at`, violating their "locus-attached context only" contract with
+        # NO test failure). ONLY the dedicated cognition-resolution call in `_chat_context` supplies a spec
+        # whose `strata` admits 'cognition' (at the fixed anchor); every other caller's frozenset omits it, so
+        # this stratum is byte-for-byte invisible to them. The items already carry their own anchor address.
+        if admit is not None and "cognition" in admit:
+            items.extend(self._r2_cognition_strata(now=now))
         deduped = self._r2_dedup(items)
         # `_raw` is dedup-INTERNAL identity (added above for X8); strip it before returning so the gather's
         # output shape stays {kind,address,ts,text,pinned} — X3 persists this bundle into the payload, and
@@ -3474,6 +3570,14 @@ class Suite:
             if not capped:
                 return ""
             lines = "\n".join("  · " + (it.get("text", "") or "") for it in capped)
+            # GROUP J — the framing is spec-driven: a resolution spec MAY supply its own `framing` header
+            # (the cognition-resolution call does — "this is your OWN prior thinking", not "info at the
+            # operator's locus", which would mislabel the conversation-global cognition anchor). Absent a
+            # `framing` key (every pre-J caller: resolution=None, or a spec without it) the default locus
+            # header is byte-for-byte unchanged.
+            framing = resolution.get("framing") if resolution is not None else None
+            if framing:
+                return "\n" + framing + ":\n" + lines + "\n"
             return ("\nCONTEXT RESOLVED AT YOUR LOCUS (info attached to the address the operator is at — "
                     f"{locus} — and its ancestors, bounded by relevance/recency decay; this is what's "
                     "relevant HERE, answer with respect to it):\n" + lines + "\n")
@@ -8615,10 +8719,23 @@ class Suite:
     # — they are OPERATOR-face (like /api/build-intent), off the agent face (no self-author-and-approve).
     # =============================================================================================
 
-    # Roles the runtime imports BY NAME at module import (cognition.py:80-82 + the load-bearing config
-    # roles): deleting/renaming one breaks `import runtime.cognition` system-wide. We REFUSE to delete
-    # these even on operator approve — a brick is never an acceptable outcome of an approve (advisor E).
-    PROTECTED_ROLES = ("focus", "recall", "ground", "judge", "verify_jury", "voice", "check", "connect")
+    # Roles the runtime depends on BY NAME — deleting/renaming one bricks the system. We REFUSE to delete
+    # these even on operator approve (a brick is never an acceptable approve outcome — advisor E).
+    #
+    # B-FIX (P3 — derive, don't second-copy): PROTECTED_ROLES had TWO classes of role conflated in one
+    # hardcoded literal. They have DIFFERENT sources of truth, so the de-hardcode derives each from ITS
+    # source rather than re-listing:
+    #   (a) the SPIKE roles cognition.py imports by name at module load (focus/recall/ground —
+    #       cognition.py:118-120, exposed as `cognition.SPIKE_ROLES`): a SECOND COPY of that set. We DERIVE
+    #       it from cognition.SPIKE_ROLES in __init__ (registry-is-truth) — add a spike role there and it
+    #       protects here with NO edit. A fail-loud drift guard asserts the derived superset still covers it.
+    #   (b) the load-bearing CONFIG roles suite.py's OWN machinery binds by name (judge — the finished-thought
+    #       endpoint, suite.py:5124/5188; voice — the voice circuit, ~1690s; connect — the NL→graph verb,
+    #       ~1262; check; verify_jury — the jury verdict): these are suite-OWNED dependencies with no other
+    #       source-of-truth to derive from (no role-file `protected` marker exists, and that file is not this
+    #       lane's to add — surfaced, not faked). They stay declared HERE, the honest single source for "the
+    #       roles suite.py itself depends on by name". The full PROTECTED_ROLES is the union, built in __init__.
+    _SUITE_OWNED_PROTECTED_ROLES = ("judge", "verify_jury", "voice", "check", "connect")
 
     def _roles_dir_path(self, rid: str) -> str:
         from runtime.authoring import _safe_role_id

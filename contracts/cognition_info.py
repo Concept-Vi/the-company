@@ -32,7 +32,10 @@ from typing import Any
 
 # Bumped when the SERIALIZATION shape changes (additively). Lets the FE reason about which
 # serialized fields it can expect. Distinct from any one registry's own version marker.
-SCHEMA_VER = 1
+# v2: the corpus pillar's file-discovered registries (projections/spaces + lifters/mark_types/
+# generation_policies/relation_types/ai_tics/forms) are now serialized keys — schema-additive,
+# so an older FE ignores them; a v2-aware FE keys off schema_ver>=2 to expect the 6 registries.
+SCHEMA_VER = 2
 
 
 # =====================================================================================================
@@ -129,6 +132,15 @@ def _serialize_role(rid: str, role: Any) -> dict:
         "input_addresses": list(spec.get("input_addresses") or ()),
         "trigger": spec.get("trigger"),
         "render_hint": spec.get("render_hint"),
+        # #58 FULL-SCHEMA projection — the per-request CONFIG fields the agent can set on a role
+        # (create_role exposes the full ROLE_FIELDS). Projected verbatim from the declared spec so a
+        # role's full declared shape is one-source-visible on the surface — never re-derived FE-side.
+        # Present-only (a role that doesn't declare them omits the key, like render_hint).
+        **({"thinking": spec["thinking"]} if "thinking" in spec else {}),
+        **({"tools": spec["tools"]} if "tools" in spec else {}),
+        **({"knobs": spec["knobs"]} if "knobs" in spec else {}),
+        **({"context": spec["context"]} if "context" in spec else {}),
+        **({"model_binding": spec["model_binding"]} if "model_binding" in spec else {}),
         # the role's declared routing rules AS DATA (06 §C — the chain/injection edges the view draws).
         # Verbatim declared dicts (descriptive OR AST-shaped); the FE reads `when`/`destination` to draw.
         "rules": list(spec.get("rules") or []),
@@ -160,6 +172,13 @@ def build_cognition_info(
     destination_kinds: dict[str, str] | None = None,
     casts: dict[str, list] | None = None,
     node_states: list[dict] | None = None,
+    projections: Any | None = None,
+    lifters: Any | None = None,
+    mark_types: Any | None = None,
+    generation_policies: Any | None = None,
+    relation_types: Any | None = None,
+    ai_tics: Any | None = None,
+    forms: Any | None = None,
 ) -> dict:
     """Serialize the cognition registries for the frontend — the SIBLING of build_object_info.
 
@@ -176,6 +195,18 @@ def build_cognition_info(
         "casts":        {"<mode>": ["<role id>", ...]},  # the cast per presence mode
         "node_states":  [...],                           # cognition status vocabulary (the dot legend)
         "event_kinds":  {"<kind>": {desc, fields}},      # THE EMIT-CONTRACT the FE binds to (06 §F#3)
+        # --- the corpus pillar's file-discovered registries (Cognition Engine K1/P1 + NEWMOD) ---
+        # Each projected via its registry's own as_records() (registry-is-truth — the discovered set,
+        # never a hand-listed one). The FE/agent SEE the lens/lifter/mark-type/policy/relation/tic/form
+        # vocabularies in the SAME live view as roles/rules; drop a file → restart → it appears here.
+        "projections":  [...],                           # the lens set (K1) — the capture/space vocabulary
+        "spaces":       ["<projection id>", ...],         # the embeddable lens subset (the Group-L vec spaces)
+        "lifters":      [...],                           # code EXTRACTORS (frontmatter/links/blocks) — `extract` is a qualname
+        "mark_types":   [...],                           # the mark VOCABULARY (the mark-pass draws a registered type)
+        "generation_policies": [...],                     # the rep_penalty ladders / decode regimes (O2)
+        "relation_types": [...],                          # the near/far relation vocabulary (find_relations)
+        "ai_tics":      [...],                           # the generic-AI fingerprint markers (the inversion subtract-set)
+        "forms":        [...],                           # the form→stage/policy routing (effort-by-form) — `match` is a qualname
       }
 
     GENERATED FROM the registries (rule 3, one source): UI, runtime, and tools all project from the
@@ -184,9 +215,13 @@ def build_cognition_info(
     value isn't a dict — raise rather than emit a silently-malformed projection.
 
     `roles` is the file-discovered RoleRegistry (dict-like {id: Role}). `rules` is the declared-rule
-    map {id: Rule}. The remaining args are the net-new cognition registries (EDGE_KINDS, THOUGHT_SHAPES,
-    ACTIVATION_CONTEXTS, RULE_OPS, DESTINATION_KINDS) — passed IN (this module imports nothing from the
-    runtime, mirroring contracts/ being the spine that imports nothing above it)."""
+    map {id: Rule}. The remaining vocab args are the net-new cognition registries (EDGE_KINDS,
+    THOUGHT_SHAPES, ACTIVATION_CONTEXTS, RULE_OPS, DESTINATION_KINDS). `projections`/`lifters`/
+    `mark_types`/`generation_policies`/`relation_types`/`ai_tics`/`forms` are the corpus pillar's
+    file-discovered registries — each an object exposing `as_records()` (and `projections` also
+    `embeddable()` for `spaces`); each OPTIONAL (None => absent => `[]`, schema-additive so the existing
+    caller that passes none still gets a valid shape). ALL passed IN — this module imports nothing from
+    the runtime (the spine imports nothing above it)."""
     out_roles: dict = {}
     for rid in sorted(roles):
         out_roles[rid] = _serialize_role(rid, roles[rid])
@@ -230,4 +265,18 @@ def build_cognition_info(
         "node_states": [dict(s) for s in (node_states or [])],
         "event_kinds": {k: {"desc": v["desc"], "fields": dict(v["fields"])}
                         for k, v in COGNITION_EVENT_KINDS.items()},
+        # The corpus pillar's file-discovered registries (rule 3, ONE source: each is its OWN
+        # registry's as_records() — the discovered set verbatim, never a hand-listed literal). Passed IN
+        # (this module imports nothing from runtime — the spine that imports nothing above it); None =>
+        # absent => [] (schema-additive: an older caller that doesn't pass them still gets a valid shape).
+        # projections/spaces ride the SAME kwarg home as the 6 new registries (the uniform serialization
+        # home the SUITE lane flagged) — projections via as_records(), spaces via the embeddable() subset.
+        "projections": projections.as_records() if projections is not None else [],
+        "spaces": [p.id for p in projections.embeddable()] if projections is not None else [],
+        "lifters": lifters.as_records() if lifters is not None else [],
+        "mark_types": mark_types.as_records() if mark_types is not None else [],
+        "generation_policies": generation_policies.as_records() if generation_policies is not None else [],
+        "relation_types": relation_types.as_records() if relation_types is not None else [],
+        "ai_tics": ai_tics.as_records() if ai_tics is not None else [],
+        "forms": forms.as_records() if forms is not None else [],
     }

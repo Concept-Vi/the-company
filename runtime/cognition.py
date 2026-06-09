@@ -264,6 +264,8 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
     shape — finish_reason is an OUT-PARAM, NEVER folded into the returned dict). This makes the O3 value
     AVAILABLE at the engine seam; PERSISTING it into the agent-facing `op.run` run-record is the MCP
     wrapper's emit (`mcp_face/server.py` — a different lane; flagged for that owner, not edited here).
+    `meta` is read on the DEFAULT (policy=None) path; the policy-LADDER path manages its own finish_reason
+    internally (a local `meta` per rung to drive escalation) and does NOT surface it to a `meta=` caller.
     embed-op ignores meta (no completion to read a finish_reason from).
 
     `ctx` must carry `utterance` for the default input axis. Fail loud: a transport/empty/parse/schema

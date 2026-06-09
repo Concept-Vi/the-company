@@ -155,14 +155,55 @@ except Exception as e:
 check("O2.5 run_role(policy=<unknown>) RAISES (a regime that is not a discovered file does not exist)",
       raised)
 
-# ── NOTE (flagged, not green): the transport does not yet forward repetition_penalty ──────────────
-print("\n[NOTE] the rep_penalty value is registry-sourced + the ladder logic is real; the PENALTY does")
-print("       NOT reach vLLM until fabric/transport.py forwards `repetition_penalty` (coordinate-with-owner).")
-import inspect as _inspect
-_tsrc = _inspect.getsource(cognition.transport.openai_transport)
-check("NOTE confirmed: the live transport copies only temperature/max_tokens/top_p — repetition_penalty "
-      "is NOT yet forwarded (flagged cross-lane follow-up, asserted not silently assumed-working)",
-      "repetition_penalty" not in _tsrc)
+# ── TRANSPORT PASSTHROUGH NOW CLOSED (FABRIC-2): the rep_penalty value REACHES vLLM ───────────────
+# WAS: a NOTE asserting the transport copied ONLY temperature/max_tokens/top_p (the gap WIRING flagged).
+# The FABRIC-2 lane added a single-source sampling passthrough (`_apply_sampling` over `_SAMPLING_KEYS`)
+# called by BOTH chat transports, so the ladder rung now lands in the request body. We prove it
+# BEHAVIOURALLY against the REAL transport (capture the bytes it would send) — NOT by string-matching its
+# source (which a single-sourced helper would defeat). The ladder→model EFFECT is now end-to-end.
+print("\n[TRANSPORT] the rep_penalty ladder VALUE now reaches vLLM — the passthrough closed (FABRIC-2).")
+import json as _json
+import urllib.request as _urlreq
+
+
+class _FakeR:
+    def __init__(self, b): self._b = b
+    def read(self): return self._b
+    def __enter__(self): return self
+    def __exit__(self, *a): return False
+
+
+_cap = {}
+_real_uo = _urlreq.urlopen
+
+
+def _fake_uo(req, timeout=None):
+    _cap["body"] = _json.loads(req.data.decode())
+    return _FakeR(_json.dumps({"choices": [{"finish_reason": "stop",
+                  "message": {"role": "assistant", "content": "hi"}}]}).encode())
+
+
+_urlreq.urlopen = _fake_uo
+try:
+    _t = cognition.transport.openai_transport()
+    _t("m", [{"role": "user", "content": "hi"}], repetition_penalty=1.2, temperature=0.0, max_tokens=8)
+finally:
+    _urlreq.urlopen = _real_uo
+check("TRANSPORT confirmed: the live openai_transport now FORWARDS repetition_penalty into the request "
+      "body (the ladder→model effect is end-to-end; was the flagged cross-lane gap, now closed)",
+      _cap.get("body", {}).get("repetition_penalty") == 1.2)
+
+_cap2 = {}
+_urlreq.urlopen = lambda req, timeout=None: (_cap2.__setitem__("body", _json.loads(req.data.decode())),
+    _FakeR(_json.dumps({"choices": [{"finish_reason": "stop",
+        "message": {"role": "assistant", "content": "hi"}}]}).encode()))[1]
+try:
+    cognition.transport.openai_transport()("m", [{"role": "user", "content": "hi"}], temperature=0.0, max_tokens=8)
+finally:
+    _urlreq.urlopen = _real_uo
+check("TRANSPORT byte-identical: a call WITHOUT repetition_penalty leaves it OUT of the body (additive — "
+      "absent → unchanged; the passthrough is behaviour-preserving)",
+      "repetition_penalty" not in _cap2.get("body", {}))
 
 print(f"\n{'ALL PASS' if ok else 'FAILURES PRESENT'} — {PASS} checks passed — O2: run_role reads the "
       "rep_penalty LADDER from the file-discovered generation-policy registry (NOTHING static); escalates "
