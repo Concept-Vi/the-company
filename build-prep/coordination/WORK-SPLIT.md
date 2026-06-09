@@ -385,3 +385,10 @@ studio-shell now covers the dev canvas (dfed2ed). app.css released.
 | canvas/app/src/components/StudioKit.tsx (Composer) | the composer should invite comment/request when a mockup+locus is OPEN, not stay on "select a mockup first" | guided-review | 2026-06-09 | — |
 
 ## § RELEASED (2026-06-09) — stage-header jargon (56dc61c). StudioKit released.
+
+---
+## § CLAIM (2026-06-09) — guided-review V-B: pointed-element injection in _chat_context
+guided-review claims the `_chat_context` MOCKUP-injection window in `runtime/suite.py` (~2488-2530, the
+`mockup://` block) — ADDITIVE: read focus.pointed_element + inject a "POINTED ELEMENT" sub-block + teach
+registered-returns-vs-unregistered. cognition: heads-up — this is your mockup:// conceptual area, but the edit
+is additive (a new optional focus key + an appended context block), not a rewrite of your injection. Release on commit.
