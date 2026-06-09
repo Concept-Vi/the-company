@@ -326,3 +326,24 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
 - VERIFIED BY USE so far (real UI clicks, real annotation store): click rail card → locus binds (ui://inbox) → type comment "Make the inbox heading larger and center it" → 💬 comment → PERSISTED (composer thread shows it + /api/annotations?address=ui://inbox returns the record) → ✨ generate → button flips "… generating" + disabled (FE busy state correct) → dispatches a REAL claude -p plan (in flight; monitoring). The comment→generate chain is proven end-to-end through the real store up to the dispatch; the proposal-render is the last beat (slow claude -p, monitoring).
 - ★ REAL BUG FOUND (mine, to fix): the DEEP-LINK ?mockup= path opens the mockup but does NOT bind its address as the locus — App.tsx deep-link effect calls setReviewMockup(mk) with NO address arg, so locus="(none)", composer disabled. The corpus HAS the address (ui://inbox); the rail-card path passes it (setReviewMockup(f,a)), the deep-link path drops it. FIX: in the deep-link effect, set the address from corpus once loaded (or have setReviewMockup fall back to the corpus base address when none passed). This is why a deep-linked mockup couldn't be commented on until you click its rail card.
 - NEEDS-TIM still: the felt quality of the rendered proposal (once it lands); the model-mismatch you reported (now mootable — model is pin-able via /api/rhm-config, kimi works).
+
+## 2026-06-09 — ★★ F2 MAKE-OR-BREAK VERIFIED END-TO-END BY USE (chrome, kimi-k2.6 RHM)
+- THE FOUNDING PROMISE WORKS. Real browser, real store, real model (kimi-k2.6:cloud pinned via /api/rhm-config):
+  click rail card → locus binds ui://inbox → typed comment "Make the inbox heading larger and center it" →
+  💬 comment → PERSISTED to the annotation store (verified: /api/annotations?address=ui://inbox returns it) →
+  ✨ generate → button "… generating" (busy state correct) → REAL claude -p plan dispatch → SUCCESS, RENDERED:
+  "proposed edit for C1-inbox-desktop.html · mode plan · N files would change" + kimi READ my comment + the
+  mockup (found the PENDING note, targeted the .ibx-head "4 awaiting" heading, planned the change). Comprehensible
+  prose, NOT a diff. Plan-safe (mode plan). DOM-confirmed (screenshot tool grabbed a stale tab — DOM is the evidence).
+- So: comment → generate → RHM proposes the edit grounded in the comment, end-to-end, by use. The exact loop that
+  was broken (store-mismatch) + that the critical-review confirmed broken → NOW WORKS (Q2+Q3+route+FE all proven).
+- ★ SIDE-DISCOVERY: cognition's UNIFIED V-A WORKFLOW IS ACTIVELY RUNNING (files written 200-385s ago):
+  roles/register_element.py, design/_system/candidates.json, registry_writeback.py, canvas/app/src/components/
+  RegistryProposals.tsx all present + UNCOMMITTED; refcheck.py modified (RG6 confirm in progress); cascade.json
+  not yet written (RG7 pending); commit-phase not yet run. So the handoff WORKED — cognition picked up the workflow
+  + is building V-A. I am STAYING OUT (their lane + their workflow's commit phase owns those files; never touch
+  another session's live uncommitted work). My F2 test was independent (plan-mode, scoped to the mockup).
+- BUG (mine, to fix when the tree's calm): deep-link ?mockup= doesn't bind the address (App.tsx setReviewMockup(mk)
+  no addr → locus none → composer disabled until you click the rail card). Fix: Review.tsx corpus effect binds the
+  address when a mockup's open without one. HELD — not editing canvas/app while cognition's RegistryProposals.tsx
+  is uncommitted in the tree (avoid the hot-tree collision); fix after V-A lands.
