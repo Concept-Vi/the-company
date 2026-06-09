@@ -207,3 +207,9 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
 - BLOCKED (the heart): the walk walking the MOCKUP (not canvas ui:// toolbar) + back-control need suite.py (the organ stepper), which cognition HOLDS (B brain_config). Messaged cognition to free/co-design (1066ed3); no reply yet. This is the core "take me through what I am looking at" piece.
 - NEXT unblocked FE: the talks-back presentation (streaming committed; make replies land as live parts not a chat box) + RhmChat jargon (RECORD/DEBRIEF/model name, studio-scoped). Both mine, no suite.py.
 - Stable instance for Tim to SEE it: http://localhost:5210/?mockup=C1-inbox-desktop.html (+&guide for the walk). My screenshot tool grabs stale tabs; Tims browser renders correctly.
+
+## 2026-06-09 fire — studio-scoped RHM jargon hidden (verified by use)
+- 592e15b: RhmChat gets an additive `studio` prop; the studio mount hides the model name + the twin record/debrief controls (canvas-noise for a non-dev reviewer). VERIFIED BY USE both faces: studio RHM head = just "right-hand-man" (no model/record/debrief); canvas RHM UNCHANGED (still "· cyankiwi/Qwen3.5-4B-AWQ-4bit" + record). Canvas preserved, no suite.py.
+- Cumulative this session (all verified by use on :5210): 0bdff45 walk-card ui:// hidden · 439af46 one-click "what am I looking at?" reads the screen · 592e15b studio RHM de-jargoned.
+- STILL BLOCKED (the heart): mockup-walk + back need suite.py (cognition holds, no reply to 1066ed3). 
+- NEXT unblocked FE: the talks-back presentation (streaming committed — make replies land as live parts, the led feel) — RhmChat, mine, no suite.py.
