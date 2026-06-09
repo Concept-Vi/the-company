@@ -526,10 +526,13 @@ def run_reduce(addresses: list, mode: str, role: str = "", reduce_rule: str = ""
             raise ValueError("run_reduce(mode='role'): pass a reduce-role id (e.g. 'reduce_synth').")
         kw["role"] = _resolve_role(role)
     elif mode == "rule":
-        if reduce_rule not in _REDUCE_RULES:
+        rule = _cog.resolve_reduce_rule(reduce_rule)        # single-source: static + tally-by:<field> (M1)
+        if rule is None:
             raise ValueError(f"run_reduce(mode='rule'): unknown reduce_rule {reduce_rule!r} — named "
-                             f"built-ins are {sorted(_REDUCE_RULES)} (fail loud, never a fabricated rule).")
-        kw["reduce_rule"] = _REDUCE_RULES[reduce_rule]
+                             f"built-ins are {sorted(_REDUCE_RULES)}, plus the PARAMETERISED "
+                             f"'tally-by:<field>' (group-by-count over <field>, e.g. 'tally-by:label'). "
+                             f"Fail loud, never a fabricated rule.")
+        kw["reduce_rule"] = rule
     res = _cog.run_reduce(list(addresses), SUITE.store, **kw)
     return {"turn_id": turn_id, "mode": mode, "joined": res.joined, "inputs": res.inputs,
             "skipped": res.skipped, "wall_s": res.wall_s, "detail": res.detail}
@@ -540,9 +543,11 @@ def reduce_rule_names() -> dict:
     """INSPECT the named deterministic reduce-rules `run_reduce(mode='rule')` accepts — PROJECTED from the
     single-source _REDUCE_RULES dict (the B-fix: derive, never a hardcoded second list; PART 4.4). A
     reduce-rule is a PURE function over the N read-back values, selected BY NAME over the MCP boundary (a
-    callable can't cross MCP). Read-only. Returns {names:[…]} (currently count·concat·first; adding one is
-    a row in _REDUCE_RULES and it appears here with no other edit)."""
-    return {"names": sorted(_REDUCE_RULES)}
+    callable can't cross MCP). Read-only. Returns {names:[…], parameterised:[…]} — `names` are the static
+    rules (adding one is a row in _REDUCE_RULES, appears here with no other edit); `parameterised` are the
+    name:arg patterns (tally-by:<field> = group-by-count over <field>, e.g. 'tally-by:label')."""
+    return {"names": sorted(_REDUCE_RULES),
+            "parameterised": ["tally-by:<field> — group-by-count over <field> (e.g. 'tally-by:label' → {counts:{value:n}})"]}
 
 
 # --- SAVED CASCADES (GROUP N · save a proven pipeline → re-run it; AK4 frozen recipes) ----------------

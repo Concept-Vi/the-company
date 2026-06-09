@@ -1766,6 +1766,36 @@ REDUCE_RULES = {
 }
 
 
+def _tally_by(field: str):
+    """Factory for `tally-by:<field>` (M1 — the JOIN-side GROUP-BY-COUNT the compose-eval found missing:
+    MAP is fully generic (run_items over any role) but the reduce side had no histogram — 'count per label'
+    had no deterministic primitive). Returns a PURE (values)->dict that groups the map-outputs by their
+    `field` value and counts each group → {tally_by, counts:{value:n}, n}. A value missing the field is
+    counted under '(no <field>)' — VISIBLE, never silently dropped (the no-silent-failure floor). Model-free,
+    replay-identical (C0.2)."""
+    def rule(values):
+        counts: dict = {}
+        for v in values:
+            key = v.get(field) if isinstance(v, dict) else None
+            key = str(key) if key is not None else f"(no {field})"
+            counts[key] = counts.get(key, 0) + 1
+        return {"tally_by": field, "counts": counts, "n": len(values)}
+    rule.__name__ = f"tally-by:{field}"
+    return rule
+
+
+def resolve_reduce_rule(name: str):
+    """SINGLE-SOURCE resolver: a reduce_rule NAME → its PURE callable, or None (the caller fails loud).
+    Static names come from REDUCE_RULES; the PARAMETERISED `tally-by:<field>` (M1) is built on demand from
+    the field after the colon. BOTH faces (run_reduce MCP · run_cascade) resolve through THIS — so a new
+    rule or parameterised pattern is added ONCE, here (registry-is-truth; no second resolver)."""
+    if name in REDUCE_RULES:
+        return REDUCE_RULES[name]
+    if name and name.startswith("tally-by:") and len(name) > len("tally-by:"):
+        return _tally_by(name[len("tally-by:"):])
+    return None
+
+
 def run_reduce(addresses, store, *, turn_id: str, mode: str,
                role: "Role | None" = None,
                reduce_rule: "Callable[[list], Any] | None" = None,
@@ -2090,12 +2120,13 @@ def run_cascade(action: dict, store, *, turn_id: str,
                 rkw["role"] = role
             elif reduce_mode == "rule":
                 rname = step.get("reduce_rule")
-                if rname not in reduce_rules:
+                rule = resolve_reduce_rule(rname)            # single-source (static + tally-by:<field>)
+                if rule is None:
                     raise ValueError(
                         f"run_cascade: step {i} reduce_mode='rule' names reduce_rule {rname!r} which is not "
-                        f"a known named rule {sorted(reduce_rules)} — a callable can't cross a decl, select "
-                        f"by name; fail loud (rule 8, never a fabricated rule).")
-                rkw["reduce_rule"] = reduce_rules[rname]
+                        f"a known rule {sorted(REDUCE_RULES)} (or the 'tally-by:<field>' pattern) — a callable "
+                        f"can't cross a decl, select by name; fail loud (rule 8, never a fabricated rule).")
+                rkw["reduce_rule"] = rule
             elif reduce_mode == "cluster":
                 rkw["cluster_threshold"] = step.get("cluster_threshold", 0.85)
             else:
