@@ -497,30 +497,51 @@ a synthetic idle/event/clock tick FIRES the cast and LANDS its output at surface
 
 `Suite.autodetect_mode(candidate)` already honours the off/suggest/auto TOGGLE over a SUPPLIED candidate
 (proven by `autodetect_setter_acceptance`); I1 builds the **detector that PRODUCES** one. **Deterministic +
-registry-driven** (NOTHING static): the signal→candidate map is DECLARED DATA, walked first-match-wins —
-no model (non-deterministic + GPU), no inline if/else ladder. The detector FEEDS `autodetect_mode` (never
-`set_mode` directly — the toggle owns the posture; a suggestion SURFACES via the existing `mode` event,
-never a silent switch outside the declared posture). The periodic CALLER is the same needs-tim seam as H.
+FILE-DISCOVERED-registry-driven** (NOTHING static): the signal→candidate map is the **file-discovered
+`mode_detection_rules/` registry** (`runtime/mode_detection_rules.py` → `Suite.mode_detection_rule_registry`),
+walked first-match-wins by the declared **`priority`** — no model (non-deterministic + GPU), no inline
+if/else ladder, **and no hardcoded list** (the rules USED to be a `MODE_DETECTION_RULES = [...]` literal
+with lambda predicates; that was a CODE-edit-to-add + a SECOND predicate mechanism, so it was converted to
+a file-discovered registry whose conditions are declared `rules.RULE_OPS` data-ASTs — see
+[[mode_detection_rules — constitution]]). The detector FEEDS `autodetect_mode` (never `set_mode` directly —
+the toggle owns the posture; a suggestion SURFACES via the existing `mode` event, never a silent switch
+outside the declared posture). The periodic CALLER is the same needs-tim seam as H.
 
-- **`detect_mode_candidate`** — a pure READ → `{candidate, why, signal, rule_index}` (candidate=None ⇒ no
-  rule matched). A rule whose candidate is not in `suite.MODES` FAILS LOUD (rule 8).
+- **`detect_mode_candidate`** — a pure READ that walks `suite.mode_detection_rule_registry.ordered()`
+  (ascending `priority`) over the `activity_signal` snapshot → `{candidate, why, signal, rule, priority,
+  rule_index}` (candidate=None ⇒ no rule matched). A rule whose candidate is not in `suite.MODES` FAILS
+  LOUD (rule 8 — validated at DETECT time, since the registry can't see the live mode set at discovery).
+  Each rule's `when` is pre-validated at registry discovery (`rules.validate_ast`) + evaluated PURE
+  (`rules.evaluate`).
 - **`propose_mode`** — runs the detector and, if the candidate DIFFERS from the live mode, feeds it to
   `autodetect_mode` (off no-ops · suggest surfaces · auto switches). A candidate equal to the live mode is
   a no-op.
 
-**The two net-new registries (drift homes — mirror `RULE_OPS`; `tests/activation_drivers_acceptance.py`
-asserts both stay reflected HERE):**
+**The detection-rule REGISTRY (the file-discovered registry — drift home is its OWN constitution
+[[mode_detection_rules — constitution]]; `tests/mode_autodetect_acceptance.py` asserts the discovered rules
+stay reflected there + the registry named HERE, mirroring `projections_acceptance` → `projections/AGENTS.md`):**
+
+- **`mode_detection_rules/`** (`runtime/mode_detection_rules.py:ModeDetectionRuleRegistry`) — the
+  file-discovered signal→candidate rules. Each `mode_detection_rules/<id>.py` declares a module-level
+  `MODE_DETECTION_RULE = {id · candidate · why · when · priority}`: `when` is a `rules.RULE_OPS` data-AST
+  over the `activity_signal` keys (idle_seconds/last_activity/mode/inbox/recent_kinds), `priority` orders
+  first-match-wins (ascending — **NOT** listdir/filename order; detection is order-bearing). Add/tune a
+  rule = a **FILE** (add-a-row=a-FILE, no code edit), mirroring `roles/`/`projections/`. The seed rules:
+  `background` (priority 10 — long idle), `focus` (20 — active + clear inbox), `listening` (30 — inbox>0).
+  A malformed rule FAILS LOUD at discovery; a removed file un-registers on `rediscover`.
+
+**The other net-new drift-home registry (`tests/activation_drivers_acceptance.py` asserts it stays reflected HERE):**
 
 - **`OPERATOR_ACTIVITY_KINDS`** (`runtime/activation.py`) — the event kinds that count as operator
   activity for the idle gate (`chat`/`cognition.turn.done`/operator graph acts); the system's OWN
   background activity (`activation`/`op.run`/mid-wave `cognition.*`) is deliberately EXCLUDED so a
-  background tick can't reset its own idle clock.
-- **`MODE_DETECTION_RULES`** (`runtime/activation.py`) — the declared signal→candidate detection rules
-  (deterministic, first-match-wins; each row `{candidate, why, when(signal)→bool}`). Add/tune a rule = a
-  row here. A signal matching no rule → no candidate (clean no-op).
+  background tick can't reset its own idle clock. The shared `activity_signal` reader's `inbox` count is
+  the inbox-lanes `counts.escalations` (the live-escalation lane — items the operator must work).
 
-Add a driver/detector helper, an `OPERATOR_ACTIVITY_KINDS` member, or a `MODE_DETECTION_RULES` row ⇒
-reflect it here, or `tests/activation_drivers_acceptance.py` fails loud.
+Add a driver/detector helper or an `OPERATOR_ACTIVITY_KINDS` member ⇒ reflect it here (or
+`tests/activation_drivers_acceptance.py` fails loud); add/tune a detection rule ⇒ a FILE in
+`mode_detection_rules/` + reflect it in [[mode_detection_rules — constitution]] (or
+`tests/mode_autodetect_acceptance.py` fails loud).
 
 ## The live cognition VIEW backend (Concurrent Cognition L-fe-be · `contracts/cognition_info.py` + `runtime/suite.py` + `runtime/bridge.py` · §F net-new backend)
 

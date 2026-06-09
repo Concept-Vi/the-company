@@ -295,6 +295,19 @@ class Suite:
         # forms) land, they instantiate here the SAME way and the selects project them too.
         self.projections_dir = os.path.join(os.path.dirname(self.nodes_dir), "projections")
         self.projection_registry = ProjectionRegistry().discover([self.projections_dir])
+        # Concurrent Cognition Group I — the FILE-DISCOVERED MODE-DETECTION-RULE registry (the
+        # signal→candidate vocabulary of the mode auto-detector). Discovered exactly like
+        # projection_registry above (the `mode_detection_rules/` sibling of `nodes/`), so the detector
+        # (activation.detect_mode_candidate) walks the live discovered rules rather than a hardcoded list:
+        # drop a `mode_detection_rules/<id>.py`, restart the bridge, and the rule joins the detector's
+        # first-match-wins walk with NO code change (the registry-is-truth bar). Each rule's `when` is a
+        # rules.RULE_OPS data-AST (the ONE predicate language — never a lambda); the registry orders by the
+        # declared `priority` (detection is order-bearing — first-match-wins, NOT listdir order). The
+        # detector READS the registry + the activity_signal snapshot (the floor — it produces a candidate +
+        # feeds the toggle, never a resolve/dispatch). Drift home: mode_detection_rules/AGENTS.md.
+        from runtime.mode_detection_rules import ModeDetectionRuleRegistry
+        self.mode_detection_rules_dir = os.path.join(os.path.dirname(self.nodes_dir), "mode_detection_rules")
+        self.mode_detection_rule_registry = ModeDetectionRuleRegistry().discover([self.mode_detection_rules_dir])
         # The OTHER 6 file-discovered corpus/cognition registries (719f82d) — discovered the SAME way
         # as projection_registry (the ONE registry mechanism, reuse-don't-parallel). Each is a sibling
         # `<name>/` dir of `nodes/`. They feed the authoring selects (available_inputs) + the create_*

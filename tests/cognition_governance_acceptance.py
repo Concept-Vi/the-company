@@ -78,7 +78,10 @@ COG_SOURCES = ["runtime/cognition.py", "runtime/rules.py", "runtime/roles.py",
                "mcp_face/server.py", "runtime/skills.py",
                "runtime/projections.py", "runtime/corpus.py",
                "runtime/lifters.py", "runtime/mark_types.py", "runtime/generation_policies.py",
-               "runtime/relation_types.py", "runtime/ai_tics.py", "runtime/forms.py"] + \
+               "runtime/relation_types.py", "runtime/ai_tics.py", "runtime/forms.py",
+               # Group I — the mode-detection-rule registry: a cognition-layer registry that PRODUCES a
+               # candidate mode + feeds the toggle; the floor must cover it (it emits no resolve/dispatch).
+               "runtime/mode_detection_rules.py"] + \
     [f"roles/{f}" for f in os.listdir("roles") if f.endswith(".py")]
 # coverage-regression guard: the new surfaces MUST stay scanned (so the guard can't silently shrink).
 check("C9.2 the floor source-invariant COVERS the MCP agent face + the skills registry (new surfaces)",
@@ -89,6 +92,9 @@ check("C9.2 the floor source-invariant COVERS the 6 wired corpus/cognition regis
       "(lifters/mark_types/generation_policies/relation_types/ai_tics/forms)",
       all(f"runtime/{m}.py" in COG_SOURCES for m in
           ("lifters", "mark_types", "generation_policies", "relation_types", "ai_tics", "forms")))
+check("C9.2 the floor source-invariant COVERS the mode-detection-rule registry (Group I — it produces a "
+      "candidate + feeds the toggle, never a resolve/dispatch)",
+      "runtime/mode_detection_rules.py" in COG_SOURCES)
 floor_breach = []
 for src in COG_SOURCES:
     with open(src) as fh:
