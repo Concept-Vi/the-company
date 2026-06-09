@@ -234,3 +234,34 @@ def find_corpus(store, *, project: str | None = None, kind: str | None = None,
     if source_address is not None:
         rows = [r for r in rows if r.get("source_address") == source_address]
     return rows
+
+
+# ── The DETERMINISTIC repo walk (① ingest_paths' step 0 — promoted from build-prep/cognition-self-
+# improvement/exocortex_ingest.py, the proven pattern; G21 first-class). NO model, NO network — a sorted,
+# junk-skipping file walk producing the unit list the digest fan consumes. Lives HERE because the corpus
+# module owns the record/ingest contract (reuse-don't-parallel: ONE walk, not one per caller).
+WALK_SKIP_DIRS = {"__pycache__", ".git", "node_modules", ".venv", ".data", "dist", "build"}
+WALK_EXTS = (".py", ".md")
+WALK_MAX_CHARS = 6000   # the per-file slice fed to the digest role (a digest needs the head, not the whole)
+
+
+def walk_files(roots, *, exts=WALK_EXTS, max_chars=WALK_MAX_CHARS, skip_dirs=WALK_SKIP_DIRS):
+    """DETERMINISTIC walk → [{path, text}], sorted (stable order = resume-stable). Skips junk dirs,
+    binaries (decode errors), and near-empty files (<80 chars — a digest of nothing is noise)."""
+    import os as _os
+    out = []
+    for root in roots:
+        for dirpath, dirnames, filenames in _os.walk(root):
+            dirnames[:] = sorted(d for d in dirnames if d not in skip_dirs)
+            for fn in sorted(filenames):
+                if not fn.endswith(tuple(exts)):
+                    continue
+                p = _os.path.join(dirpath, fn)
+                try:
+                    t = open(p, encoding="utf-8").read()
+                except (UnicodeDecodeError, OSError):
+                    continue
+                if len(t) < 80:
+                    continue
+                out.append({"path": p, "text": t[:max_chars]})
+    return out

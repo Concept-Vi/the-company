@@ -9638,6 +9638,72 @@ class Suite:
             return ""
         return str(output).strip()
 
+    def ingest_paths(self, *, roots: list | None = None, paths: list | None = None,
+                     project: str = "company", session: str = "ingest", round: str = "1",
+                     projection: str = "repo", max_files: int = 50, force: bool = False) -> dict:
+        """① REPO-EXOCORTEX INGEST, first-class (G21 — promoted from the proven exocortex_ingest.py
+        pattern). Walk `roots` (and/or take explicit `paths`) → fan roles/repo_digest over the file
+        contents CONCURRENTLY (cognition.run_items — the swarm) → capture+embed each digest as a corpus
+        record keyed `code://<path>` (the SHORT retrieval key; content rides in `output` — the G18
+        contract) into the embeddable space `projection` — so query_corpus/corpus(op='query') can ASK
+        the codebase instead of cold-reading it.
+
+        INCREMENTAL (resume-safe): paths whose `code://<path>` already has a corpus record are SKIPPED
+        unless force=True (re-running over the whole repo just adds the not-yet-ingested — bounded
+        batches compose to full coverage). `max_files` bounds one call (an MCP call must not run for
+        many minutes); the response reports `remaining` so the caller knows to call again.
+        NOTE (flagged, not built): skip-if-present is path-keyed, NOT content-hash — a CHANGED file is
+        not re-ingested unless force=True; the sha-refresh pass is the staleness follow-on
+        (store/vector_index.index_staleness is the read seam for it).
+
+        REUSE-DON'T-PARALLEL: runtime.corpus.walk_files (the one walk) + cognition.run_items (the one
+        fan) + self.capture_corpus (the ONE capture+embed seam — lineage-gated, fail-loud on a down
+        embedder, never a silent unembedded record). THE FLOOR: pure run:// computation."""
+        from runtime import cognition as _cog
+        from runtime import corpus as _corp
+        rd = self.role_registry.get("repo_digest")
+        if rd is None:
+            raise RuntimeError("ingest_paths: roles/repo_digest.py is not discovered — cannot digest "
+                               "(the describe-role is the ingest's lens; restore it or create one).")
+        files = _corp.walk_files(roots) if roots else []
+        if paths:
+            for p in paths:
+                try:
+                    t = open(p, encoding="utf-8").read()
+                except (UnicodeDecodeError, OSError) as e:
+                    raise ValueError(f"ingest_paths: cannot read {p!r} ({e.__class__.__name__}) — "
+                                     f"fail loud, never a silent skip of an EXPLICIT path.") from e
+                files.append({"path": p, "text": t[:_corp.WALK_MAX_CHARS]})
+        walked = len(files)
+        if not force:
+            have = {r.get("source_address") for r in self.list_corpus(project=project)}
+            files = [f for f in files if f"code://{f['path']}" not in have]
+        skipped_existing = walked - len(files)
+        remaining = max(0, len(files) - max_files)
+        files = files[:max_files]
+        if not files:
+            return {"walked": walked, "skipped_existing": skipped_existing, "digested": 0, "captured": 0,
+                    "remaining": remaining, "corpus_total": len(self.list_corpus(project=project))}
+        units = [f"FILE {f['path']}:\n\n{f['text']}" for f in files]
+        res = _cog.run_items(rd, units, self.store, turn_id=f"ingest-{session}", max_tokens=200)
+        resolved = res.resolved if isinstance(res.resolved, dict) else {i: v for i, v in enumerate(res.resolved)}
+        records = []
+        for i, f in enumerate(files):
+            dig = resolved.get(i)
+            if not dig:          # F2 per-unit resilience — a failed unit is NAMED below, never fabricated
+                continue
+            records.append({"source_address": f"code://{f['path']}", "output": dig,
+                            "kind": "capture", "projection": projection})
+        if records:
+            self.capture_corpus(records, project=project, session=session, round=round)
+        # NAME the failures (no invisible failed units — the no-silent-failure floor): which path + why.
+        fail_by_i = {fi: err for (fi, err) in (res.failed or [])}
+        failed_files = [{"path": files[fi]["path"], "error": str(err)[:200]}
+                        for fi, err in fail_by_i.items() if fi < len(files)]
+        return {"walked": walked, "skipped_existing": skipped_existing, "digested": len(records),
+                "captured": len(records), "failed": failed_files, "remaining": remaining,
+                "corpus_total": len(self.list_corpus(project=project))}
+
     def capture_corpus(self, records: list[dict], *, project: str, session: str, round: str = "1",
                        embed_fn=None) -> dict:
         """CAPTURE-EMBED ONE-SOURCE — the SINGLE capture+embed-on-write seam BOTH faces call (the MCP
