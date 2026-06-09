@@ -21,6 +21,7 @@ from store.fs_store import FsStore
 from runtime.registry import NodeRegistry
 from runtime.suite import Suite
 from runtime import generate_mockup            # the committed generate-for-mockups ENGINE (own-test green)
+from runtime import activation_driver          # Group H/I — the always-on activation CALLER (dormant-by-default)
 from runtime import cognition as _cog          # the ONE cognition engine (run_role/run_items/run_reduce/
 #                                                resolve_address) — the SAME functions mcp_face/server.py calls
 from fabric import config as fcfg
@@ -74,6 +75,10 @@ BRIDGE_ROUTES = (
     "/api/cognition/role/dry_run", "/api/cognition/rule/attach", "/api/cognition/rule/detach",
     "/api/cognition/rule/validate", "/api/cognition/rule/dry_run", "/api/trial/turn",
     "/api/trial/feedback", "/api/trial/reflection",
+    # Group H/I — the always-on CALLER seam (manual/external drive of one activation tick). The autonomous
+    # background loop behind this caller is OFF by default (COMPANY_ACTIVATION_LOOP, needs-tim); this POST
+    # is the LIVE manual-drive door (firing it fires roles = computation, floor-clean by construction).
+    "/api/activation/tick",
 )
 
 MOCKUPS_DIR = os.path.join(ROOT, "design", "mockups")           # the design-review portal + corpus
@@ -400,6 +405,18 @@ def _stream_parts(parts_gen, *, speak_fn, emit_fn, gone, split_sentences, on_par
 SUITE = Suite(FsStore(fcfg.STORE_DIR),
               NodeRegistry().discover([os.path.join(ROOT, "nodes")]))
 DEMO = "codebase"
+
+# ── Group H/I — the always-on activation CALLER (DORMANT by default) ─────────────────────────────
+# ONE long-lived ActivationCaller holds the rollup driver's held cursor (the H3 discipline — a fresh
+# driver per tick would re-consolidate every wave). BOTH the manual POST /api/activation/tick AND the
+# autonomous loop drive THIS instance, so the cursor is held across manual + loop ticks alike.
+# maybe_start_activation_loop SPAWNS NOTHING unless COMPANY_ACTIVATION_LOOP is deliberately set (the
+# wire_armed()-analog dormancy gate, default OFF) — so importing this module / constructing SUITE stands
+# up NO thread + NO autonomous tick. Arming the live cadence is a behavior change the operator greenlights
+# → needs-tim; this build NEVER auto-starts the loop. The manual endpoint stays the live external-drive
+# seam regardless (firing it fires roles = computation, the G9/C9.2 floor holds by construction).
+ACTIVATION_CALLER = activation_driver.ActivationCaller(suite=SUITE)
+_ACTIVATION_LOOP_THREAD = activation_driver.maybe_start_activation_loop(ACTIVATION_CALLER)
 
 
 # =================================================================================================
@@ -1480,6 +1497,17 @@ class H(BaseHTTPRequestHandler):
                 b = self._body()
                 SUITE.set_mode(b["mode"])
                 self._send(200, json.dumps(SUITE.now(DEMO)))
+            elif self.path == "/api/activation/tick":     # Group H/I — manual/external drive of ONE activation tick.
+                # The LIVE external-drive seam for the always-on caller (the autonomous loop is OFF by default,
+                # needs-tim). Fires the DUE clock-driven drivers (background idle-gate + the held-cursor rollup +
+                # the mode auto-detector→toggle) on the ONE module-level ActivationCaller (cursor held across
+                # manual + loop ticks), and fires SENSE only if a real `sense_event` is supplied in the body
+                # (a clock tick fabricates none). Floor-clean by construction: every effect routes through the
+                # reused H/I drivers over the non-consequential DESTINATION_KINDS — no resolve/approve/dispatch.
+                b = self._body()
+                res = ACTIVATION_CALLER.activation_tick(sense_event=b.get("sense_event"),
+                                                        mode=b.get("mode"))
+                self._send(200, json.dumps(res.as_dict()))
             elif self.path == "/api/rhm-config":          # configure model/provider + persona
                 b = self._body()
                 self._send(200, json.dumps(SUITE.set_rhm_config(b)))
