@@ -122,8 +122,10 @@ check("model_projections() EXCLUDES the code lens 'lineage' (the produced_by spl
       "lineage" not in model_ids)
 check("code_projections() = the code lenses", {p.id for p in reg.code_projections()} == {"lineage"})
 embed_ids = {p.id for p in reg.embeddable()}
-check("embeddable() = the embeds:true lenses (the Group-L spaces)",
-      embed_ids == {"topics", "principles", "worldview"})
+check("embeddable() = the embeds:true lenses (the Group-L spaces) — the discovery seeds are present "
+      "(registry-is-truth: a NEW embeds:true lens like 'repo' for ① extends the space set, not breaks it)",
+      {"topics", "principles", "worldview"} <= embed_ids
+      and all(p.spec.get("embeds") for p in reg.embeddable()))
 recs = reg.as_records()
 check("as_records() = one dict per lens, verbatim spec", len(recs) == len(reg) and all("id" in r for r in recs))
 

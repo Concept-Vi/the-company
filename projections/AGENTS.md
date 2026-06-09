@@ -38,6 +38,7 @@ silent skip); a non-`PROJECTION`/`_`-file is skipped (mirroring the role/skill n
 **The projections (the live set — the drift home; `tests/projections_acceptance.py` asserts each is reflected here):**
 - **`what`** — content · model · no-embed · string. A <=15-word statement of what the file IS. The seed lens.
 - **`topics`** — content · model · **embeds** · array. The subjects/areas it covers → the topics SPACE.
+- **`repo`** — content · model · **embeds** · text. What a repo file IS (purpose + concepts) → the repo SPACE (COMPOSITION ① repo-exocortex; the repo_digest role produces it). The G15 unblock — ① needs an embeddable `repo` space to ingest into.
 - **`principles`** — meaning · model · **embeds** · array. The underlying principles/intents it expresses
   (may be several) → the principle SPACE (the space M3 corroboration runs over cross-SESSION — which is
   why the corpus-record carries session/round/project lineage from the start).
