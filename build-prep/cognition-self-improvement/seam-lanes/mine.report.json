@@ -1,0 +1,45 @@
+{
+  "lane": "mine",
+  "composition": "③ TRANSCRIPT MINER (COMPOSITIONS.md section ③) — the MAP-half role + a bounded real mining run",
+  "files_written": [
+    "roles/mine_exchange.py"
+  ],
+  "new_role_ids": ["mine_exchange"],
+  "how_verified": [
+    "RoleRegistry().discover(['roles']) shows mine_exchange LIVE — can_fire=True, op=generate, is_jury=False, mode_scope={mining}; output_schema has the 8 fields (7 optional str defaults + required pattern_tag); MineExchangeOut() with no pattern_tag fails loud (ValidationError) — schema gate proven.",
+    "cast_for_mode('mining')=[judge_mining, mine_exchange]; cast_for_mode('listening') does NOT contain mine_exchange — the cast-beyond-listening seam holds, listening untouched (mining mode → its own cast; an unknown mode → empty cast).",
+    "BY USE: bounded mining run fired run_items(mine_exchange, 13 exchange-units) on the RESIDENT chat-4b (cyankiwi/Qwen3.5-4B-AWQ @ :8000, 8.0GB resident, verified via `company gpu`). Result: role_id=mine_exchange, n_units=13, n_runs=13, n_failed=0, n_skipped=0 — every extract Pydantic-validated (well-formed) and read back via resolve_run_ref. NO embedder/GPU window needed (pure MAP, op=generate). Extracts dumped to /tmp/mining_extracts.json.",
+    "FLOOR: tests/cognition_governance_acceptance.py PASSES 42/42 (mine_exchange is on the scanned roles/*.py cognition path and emits no resolve/approve/dispatch, launches no claude -p — pure ROLE dict + Pydantic class).",
+    "tests/roles_acceptance.py reds ONLY on `drift: ['judge_mining', 'mine_exchange']` (the drift-home reflection in roles/AGENTS.md) — EXPECTED, next beat reflects the new roles; every other roles-acceptance check passes. roles/AGENTS.md is forbidden to me."
+  ],
+  "status": "built-verified",
+  "needs_tim": "The cross-exchange embed-CLUSTER of pattern_tags into recurring failure-pattern GROUPS (the ③ REDUCE half: run_reduce(mode='cluster') over space='history') is the FOLLOW-ON — it needs the bge-m3 embedder window (service embed-bge @ :8001), which is NOT resident (only chat-4b is). The full all-transcripts mining (462 jsonl files) + the capture/embed-into-space='history' path also need that window. Flagged, not green-painted. This beat used run_items (pure MAP) NOT capture() — capture embeds on write and would fail-loud on the down embedder; that is by design for this beat.",
+  "notes": "MIRRORED roles/verify_lens.py EXACTLY — self-registering ROLE dict + Pydantic out class, the exchange rides in the unit at ctx['utterance'] (input_addresses=('utterance',); tim_message/my_response/session_id/ts are KEYS in the unit dict, NOT declared inputs — same discipline as verify_lens's {lens,change,bar}). op:generate, mode_scope:{mining} (cast-beyond-listening; unknown mode → empty cast → listening untouched). RICHER field-types per the task: 7 optional str-defaulted signal fields + the always-emitted required pattern_tag (the cluster key). NOT a draws-jury (the ③ CONFIRM jury is judge_mining, the OTHER lane). FILE-DISJOINT: only roles/mine_exchange.py written; did not touch judge_mining.py, roles/AGENTS.md, runtime/*, mcp_face/*. NOT committed. EXTRACTOR (deterministic, /tmp/extract_exchanges.py, throwaway scaffold): filters meta types + isCompactSummary + isSidechain + tool_result-only user records + command-injected turns; pairs a genuine Tim user-message with the following assistant TEXT blocks, SKIPPING PAST tool_result records (which are themselves type 'user') so the assistant's POST-TOOL conclusion is captured, not just the pre-tool preamble (a boundary bug caught by the advisor and fixed before the final run — the truncated first pass dropped the substantive response-half of every tool-using turn). Caps each field ~3500 chars. Source file f609942f (35 genuine exchanges; the largest recent file with real Tim dialogue — other recent files were thin/orchestrated).",
+  "findings": {
+    "source": "f609942f-fc17-47f5-a739-966343e5a54c.jsonl (2026-06-08 session, 35 genuine Tim exchanges; bounded to 13 spread across the session). This is the SECOND run, after fixing the extractor's reply-boundary bug — the response-halves now include post-tool conclusions, which materially enriched the extracts.",
+    "pattern_tags_recurring": {
+      "verify-by-use": 2,
+      "test-as-design-probe": 1,
+      "write-findings-into-criteria": 1,
+      "correct-sequence": 1,
+      "ui-architecture-split": 1,
+      "confirm-completed-work": 1,
+      "self-improvement-cycle": 1,
+      "no-response-requested": 1,
+      "verify-before-claiming": 1,
+      "verify-state-before-claiming": 1,
+      "unification-law": 1,
+      "use-models-not-avoid": 1
+    },
+    "theme_clustering_eyeball": "Even at N=13 a dominant cluster emerges — VERIFICATION/GROUNDING DISCIPLINE: verify-by-use ×2 + verify-before-claiming + verify-state-before-claiming + test-as-design-probe = 5/13. Tim repeatedly pushing 'ground it with evidence, check ACTUAL state, don't assert stale claims, use tests to find what to BUILD not just to harvest bugs'. A second cluster is CORRECTING-MY-AVOIDANCE/ORDER: correct-sequence (order backwards) + use-models-not-avoid ('stop avoiding the models') + write-findings-into-criteria (consolidate, don't scatter) — me defaulting to the wrong sequence or routing-around, Tim redirecting. These two clusters map directly onto standing feedback-*.md memory (verify-before-claiming, make-each-thing-work-never-route-around).",
+    "notable_tim_corrections": [
+      "test-as-design-probe (unit 0): 'stop patching bugs and instead use tests to identify what to BUILD — the missing output sink and mode-driven loadout' — my_error: I assumed the test was just harvesting bugs and glossed over the design implications of the concurrency cap and discarded output.",
+      "correct-sequence (unit 2): 'I thought you were going to write all the files first with what you know, THEN add to them after research and reasoning' — my_error: I had the order backwards.",
+      "write-findings-into-criteria (unit 1): 'write all findings, critical assessments, and reasoning about improvements INTO the completion criteria' — my_error: I let findings stay scattered across tasks.",
+      "verify-state-before-claiming (unit 10): 'stop asserting stale resident status — the no-GPU-window was a contended-steady-state eviction scenario, not the current state' — my_error: I asserted the system runs on resident 4B without verifying current GPU state (a stale claim).",
+      "use-models-not-avoid (unit 12): 'stop avoiding the models; the test MUST use the models to classify even if the MCP path is blocked or hallucinates' — my_error: I attempted the rejected MCP draft-role path before realizing the direct engine approach was the only one."
+    ],
+    "bug_and_frustration_and_needs_tim_surfaced": "The richer (post-fix) run surfaced a full-spectrum extract on unit 12: bug_fix = 'the result-pairing code where res.resolved was a dict keyed by index caused KeyError 21 — fixed the .get'; needs_tim = 'the 4B contradicted itself, flagging CLI verbs and boolean toggles as registry candidates despite its own reasoning'; frustration = 'the model over-called registry-candidate and hallucinated registry overlaps, contradicting its own reasoning'. unit 4 surfaced a UI-architecture split (backend contract layer vs FE visual-rendering) as a decision for Tim; unit 11 captured the unification-law (take ALL found code into scope, unify it, never route around).",
+    "self_improvement_signal": "The miner WORKS as a self-improvement organ: from ONE session it surfaced (a) my recurring failure modes — wrong order, routing-around models, asserting stale/unverified state, treating tests as bug-harvest not design-probes, scattered findings — and (b) Tim's exact corrections of each, PLUS a real bug+frustration+needs-tim triple it pulled from a single exchange. The dominant tag-cluster (verification/grounding discipline, 5/13) is precisely the verify-before-claiming bar — which this very lane re-proved when the advisor caught the extractor truncation bug. The downstream embed-cluster (follow-on) would group these tags across ALL 462 transcripts into named standing failure-patterns + draft feedback-*.md files for me to confirm and write."
+  }
+}
