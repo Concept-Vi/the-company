@@ -1,0 +1,134 @@
+{
+  "IA-desktop.html": [
+    "Information architecture — desktop",
+    "desktop",
+    "IA proposals",
+    "ui://chrome"
+  ],
+  "IA-mobile.html": [
+    "Information architecture — mobile",
+    "mobile",
+    "IA proposals",
+    "ui://chrome"
+  ],
+  "SCENARIO-PLAYER.html": [
+    "Scenario player — RHM presence",
+    "tool",
+    "Elevated / living instrument",
+    "ui://chat"
+  ],
+  "A2-rhm-mobile-elevated.html": [
+    "RHM — mobile, elevated",
+    "mobile",
+    "Elevated / living instrument",
+    "ui://chat"
+  ],
+  "A3-settings-elevated.html": [
+    "Settings — elevated",
+    "desktop",
+    "Elevated / living instrument",
+    "ui://settings"
+  ],
+  "A1-canvas-empty-desktop.html": [
+    "Canvas — empty / first-run",
+    "desktop",
+    "A · operating surface",
+    "ui://canvas"
+  ],
+  "A2-canvas-desktop.html": [
+    "Canvas — running chain",
+    "desktop",
+    "A · operating surface",
+    "ui://canvas"
+  ],
+  "A2-canvas-mobile.html": [
+    "Canvas — running chain",
+    "mobile",
+    "A · operating surface",
+    "ui://canvas"
+  ],
+  "A3-inspector-desktop.html": [
+    "Node selected → inspector",
+    "desktop",
+    "A · operating surface",
+    "ui://inspector"
+  ],
+  "A11-portals-desktop.html": [
+    "Portals — live transclusion",
+    "desktop",
+    "A · operating surface",
+    "ui://canvas"
+  ],
+  "A12-workshop-desktop.html": [
+    "Workshop — full-detail node",
+    "desktop",
+    "A · operating surface",
+    "ui://canvas"
+  ],
+  "B3-walkthrough-desktop.html": [
+    "Walkthrough — RHM drives the view",
+    "desktop",
+    "B · right-hand-man + review",
+    "ui://chat"
+  ],
+  "B4-presence-dial-desktop.html": [
+    "Presence dial — 8 modes",
+    "desktop",
+    "B · right-hand-man + review",
+    "ui://toolbar/presence"
+  ],
+  "B4-presence-dial-mobile.html": [
+    "Presence dial — 8 modes",
+    "mobile",
+    "B · right-hand-man + review",
+    "ui://toolbar/presence"
+  ],
+  "B6-twin-desktop.html": [
+    "The twin — model-of-Tim",
+    "desktop",
+    "B · right-hand-man + review",
+    "ui://chat"
+  ],
+  "C1-inbox-desktop.html": [
+    "Inbox — three lanes",
+    "desktop",
+    "C · inbox + decisions",
+    "ui://inbox"
+  ],
+  "C3-build-review-desktop.html": [
+    "Demonstrate-first build-review",
+    "desktop",
+    "C · inbox + decisions",
+    "ui://inbox/build-review"
+  ],
+  "C5-replay-desktop.html": [
+    "Replay / decision trajectory",
+    "desktop",
+    "C · inbox + decisions",
+    "ui://inbox"
+  ],
+  "D6-wire-states-desktop.html": [
+    "Wire failure & lifecycle states",
+    "desktop",
+    "D · self-build / the wire",
+    "ui://inbox/build-review"
+  ],
+  "D7-selfmod-desktop.html": [
+    "Self-mod — revert latest change",
+    "desktop",
+    "D · self-build / the wire",
+    "ui://inbox"
+  ],
+  "E1-fleet-desktop.html": [
+    "Live model fleet — chat + embed",
+    "desktop",
+    "E · models · F · frame",
+    "ui://settings"
+  ],
+  "F4-activity-desktop.html": [
+    "Activity / now + event stream",
+    "desktop",
+    "E · models · F · frame",
+    "ui://canvas"
+  ]
+}

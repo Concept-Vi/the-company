@@ -89,30 +89,16 @@ def _read_feedback(mockup):
 # annotate all bind to that locus for free). A file with NO meta entry STILL appears (honest, never
 # dropped) with a derived title + an UNGROUPED bucket — the corpus is truth, the meta is only enrichment.
 # STUDIO.html itself is excluded (it is the legacy standalone tool, not a reviewable surface).
-_CORPUS_META = {
-    "IA-desktop.html":            ("Information architecture — desktop", "desktop", "IA proposals",                 "ui://chrome"),
-    "IA-mobile.html":             ("Information architecture — mobile",  "mobile",  "IA proposals",                 "ui://chrome"),
-    "SCENARIO-PLAYER.html":       ("Scenario player — RHM presence",     "tool",    "Elevated / living instrument", "ui://chat"),
-    "A2-rhm-mobile-elevated.html":("RHM — mobile, elevated",             "mobile",  "Elevated / living instrument", "ui://chat"),
-    "A3-settings-elevated.html":  ("Settings — elevated",                "desktop", "Elevated / living instrument", "ui://settings"),
-    "A1-canvas-empty-desktop.html":("Canvas — empty / first-run",        "desktop", "A · operating surface",        "ui://canvas"),
-    "A2-canvas-desktop.html":     ("Canvas — running chain",             "desktop", "A · operating surface",        "ui://canvas"),
-    "A2-canvas-mobile.html":      ("Canvas — running chain",             "mobile",  "A · operating surface",        "ui://canvas"),
-    "A3-inspector-desktop.html":  ("Node selected → inspector",          "desktop", "A · operating surface",        "ui://inspector"),
-    "A11-portals-desktop.html":   ("Portals — live transclusion",        "desktop", "A · operating surface",        "ui://canvas"),
-    "A12-workshop-desktop.html":  ("Workshop — full-detail node",        "desktop", "A · operating surface",        "ui://canvas"),
-    "B3-walkthrough-desktop.html":("Walkthrough — RHM drives the view",  "desktop", "B · right-hand-man + review",  "ui://chat"),
-    "B4-presence-dial-desktop.html":("Presence dial — 8 modes",          "desktop", "B · right-hand-man + review",  "ui://toolbar/presence"),
-    "B4-presence-dial-mobile.html":("Presence dial — 8 modes",           "mobile",  "B · right-hand-man + review",  "ui://toolbar/presence"),
-    "B6-twin-desktop.html":       ("The twin — model-of-Tim",            "desktop", "B · right-hand-man + review",  "ui://chat"),
-    "C1-inbox-desktop.html":      ("Inbox — three lanes",                "desktop", "C · inbox + decisions",        "ui://inbox"),
-    "C3-build-review-desktop.html":("Demonstrate-first build-review",    "desktop", "C · inbox + decisions",        "ui://inbox/build-review"),
-    "C5-replay-desktop.html":     ("Replay / decision trajectory",       "desktop", "C · inbox + decisions",        "ui://inbox"),
-    "D6-wire-states-desktop.html":("Wire failure & lifecycle states",    "desktop", "D · self-build / the wire",    "ui://inbox/build-review"),
-    "D7-selfmod-desktop.html":    ("Self-mod — revert latest change",    "desktop", "D · self-build / the wire",    "ui://inbox"),
-    "E1-fleet-desktop.html":      ("Live model fleet — chat + embed",    "desktop", "E · models · F · frame",       "ui://settings"),
-    "F4-activity-desktop.html":   ("Activity / now + event stream",      "desktop", "E · models · F · frame",       "ui://canvas"),
-}
+# _CORPUS_META — a DECLARED registry (design/_system/corpus-meta.json), NOT a hardcoded code dict
+# (no-hardcoding / registry-is-truth law, Tim 2026-06-09 — this WAS an inline dict, a flagged violation).
+# Shape {file: [title, platform, group, address]}; a JSON list unpacks exactly like the old 4-tuple, so the
+# `_corpus_index` consumer is byte-unchanged. WHY it's now data: the generate engine (runtime/generate_mockup)
+# can read the SAME file to map a mockup → its ui:// address WITHOUT importing bridge.py — the prerequisite
+# for the comment→generate loop (F2/Q1: gather a mockup's annotations at its address). Editing the corpus =
+# editing the JSON, no code change.
+_CORPUS_META_PATH = os.path.join(ROOT, "design", "_system", "corpus-meta.json")
+with open(_CORPUS_META_PATH, encoding="utf-8") as _cf:
+    _CORPUS_META = json.load(_cf)
 
 
 def _corpus_index():
