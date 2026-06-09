@@ -27,6 +27,55 @@ from fabric import config as fcfg
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CANVAS = os.path.join(ROOT, "canvas", "index.html")
+
+# BRIDGE_ROUTES — the SINGLE SOURCE of the bridge route table (registry-is-truth, AGENTS.md rules 3+8).
+# Every path the do_GET/do_POST dispatcher handles via a `path == "…"` / `self.path == "…"` literal is
+# listed here ONCE. `Suite.capabilities()['api_verbs']` PROJECTS the /api/* subset from this (a projection by
+# the INTRINSIC path-prefix, NOT a hand-maintained classification) — so adding an /api/ route here makes it
+# appear in capabilities() with no second list to keep in sync (this de-hardcodes the old literal api_verbs
+# list suite.py carried, which suite.py couldn't derive because it can't import bridge.py at module load —
+# capabilities() lazy-imports BRIDGE_ROUTES at call time, when both modules are loaded). The TEETH that make
+# this the single source rather than a relabeled third copy: tests/bridge_routes_acceptance.py greps the
+# dispatcher's `path ==` / `self.path ==` literals and fail-louds if this set drifts from them (both
+# directions) — so a route can't be dispatched-but-unlisted or listed-but-undispatched. Add/remove a route
+# in do_GET/do_POST ⇒ add/remove it HERE (or the drift test fails loud). Non-/api paths (the served pages
+# `/studio`, `/design-system.css`, the `/mockups/` prefix) are part of the table but excluded from api_verbs
+# by the /api/ projection.
+BRIDGE_ROUTES = (
+    # served pages / static (non-/api — in the table, excluded from api_verbs by the prefix projection)
+    "/studio", "/design-system.css", "/mockups/",
+    # --- GET routes ---
+    "/api/stream", "/api/mockup-feedback", "/api/mockup-feedback/status", "/api/corpus", "/api/graph",
+    "/api/graphs", "/api/object_info", "/api/cognition_info", "/api/types", "/api/models",
+    "/api/chat-models", "/api/fit", "/api/surfaced", "/api/events", "/api/now", "/api/chat",
+    "/api/conversations", "/api/conversation", "/api/rhm-config", "/api/inbox", "/api/last-change",
+    "/api/self-change-log", "/api/panels", "/api/capabilities", "/api/ui_info", "/api/scope",
+    "/api/address-help", "/api/context", "/api/up-translate", "/api/self-changes-at", "/api/annotations",
+    "/api/presentation-pref", "/api/chats", "/api/address-history", "/api/stale-at", "/api/ref-versions",
+    "/api/review/current", "/api/review/status", "/api/journey/replay", "/api/journeys", "/api/voice",
+    "/api/personas", "/api/trial/sessions", "/api/trial/transcript", "/api/cognition/models_for_role",
+    "/api/cognition/inputs", "/api/cognition/field_types", "/api/cognition/list_runs",
+    "/api/cognition/find_runs", "/api/cognition/find_relations", "/api/cognition/corpus", "/api/roles",
+    "/api/run-stats", "/api/knobs", "/api/voice/engine-knobs", "/api/voice/paths",
+    # --- POST routes ---
+    "/api/stt", "/api/voice/stt-partial", "/api/tts", "/api/voice/finished-thought", "/api/voice/switch",
+    "/api/voice/log", "/api/run", "/api/set", "/api/move", "/api/node", "/api/connect", "/api/delete-node",
+    "/api/conversation/new", "/api/model/load", "/api/model/config", "/api/mode", "/api/coa",
+    "/api/surface-output", "/api/surface-review", "/api/capture-idea", "/api/defer-offer",
+    "/api/revive-offer", "/api/build-intent", "/api/cognition/create_role", "/api/cognition/create_skill",
+    "/api/cognition/create_context", "/api/act", "/api/annotate", "/api/apply",
+    "/api/propose", "/api/decision", "/api/resolve", "/api/revert", "/api/checkpoint", "/api/pin",
+    "/api/react", "/api/attach-chat", "/api/approve-reach", "/api/intent-at",
+    "/api/review/start", "/api/review/next", "/api/guide/start", "/api/walkthrough/start",
+    "/api/journey/start", "/api/journey/step", "/api/journey/stop", "/api/debrief/start",
+    "/api/mockup-generate", "/api/cognition/embed", "/api/cognition/preview_turn",
+    "/api/cognition/run_role", "/api/cognition/run_items", "/api/cognition/run_reduce",
+    "/api/cognition/role/propose", "/api/cognition/role/edit", "/api/cognition/role/delete",
+    "/api/cognition/role/dry_run", "/api/cognition/rule/attach", "/api/cognition/rule/detach",
+    "/api/cognition/rule/validate", "/api/cognition/rule/dry_run", "/api/trial/turn",
+    "/api/trial/feedback", "/api/trial/reflection",
+)
+
 MOCKUPS_DIR = os.path.join(ROOT, "design", "mockups")           # the design-review portal + corpus
 FEEDBACK_DIR = os.path.join(MOCKUPS_DIR, ".feedback")           # one JSONL per mockup (filename-keyed)
 DESIGN_CSS = os.path.join(ROOT, "design", "design-system.css")  # the generated corpus stylesheet
@@ -1713,17 +1762,40 @@ class H(BaseHTTPRequestHandler):
                     b.get("role", "embed"), utterance=b.get("utterance", b.get("text", "")),
                     model=b.get("model", ""), inputs=b.get("inputs"),
                     ensure=bool(b.get("ensure", False)), ensure_evict=bool(b.get("ensure_evict", False)))))
-            elif self.path == "/api/cognition/corpus":     # GROUP D1: CAPTURE — persist ONE corpus record
-                # The WRITE half of /api/cognition/corpus (the GET is the list/read). Delegates to
-                # Suite.write_corpus_record → runtime/corpus.write_record: the LINEAGE GATE bites
-                # (session/round/project REQUIRED — a record without lineage raises CorpusError → 400,
-                # fail loud). Returns {address, cas, ...}. NOT /api/corpus (the mockup gallery).
+            elif self.path == "/api/cognition/corpus":     # GROUP D1: CAPTURE — persist + EMBED-on-write
+                # The WRITE half of /api/cognition/corpus (the GET is the list/read). CAPTURE-EMBED
+                # ONE-SOURCE: delegates to Suite.capture_corpus — the SHARED capture+embed-on-write seam the
+                # MCP `capture` tool ALSO calls (one source, NOT a duplicated bridge embed path). This closes
+                # the SUITE-3 silent no-op: the route USED to call ONLY write_corpus_record and never embed,
+                # so an FE/bridge capture wrote a record but NEVER populated the space → find_relations
+                # silently returned nothing over it (brushed the no-silent-failure law). Now BOTH faces
+                # populate identically. The LINEAGE GATE still bites (session/round/project REQUIRED — a
+                # record without lineage raises CorpusError → 400, fail loud); a projection naming a
+                # NON-embeddable space RAISES (→ 400) rather than silently capturing-only (the WHOLE POINT).
+                # Back-compat: accepts the SINGLE-record body shape {source_address, output, kind?, lineage,
+                # projection?, model?, **extra} (lineage carries session/round/project) OR a {records:[…],
+                # project, session, round} batch shape. Returns {captured, embedded, n_records}; the
+                # single-record top-level address/cas are surfaced for callers that read the old shape.
                 b = self._body()
-                self._send(200, json.dumps(SUITE.write_corpus_record(
-                    source_address=b["source_address"], output=b["output"], kind=b["kind"],
-                    lineage=b["lineage"], model=b.get("model"), projection=b.get("projection"),
-                    **{k: v for k, v in b.items()
-                       if k not in ("source_address", "output", "kind", "lineage", "model", "projection")})))
+                if "records" in b:                          # batch shape (project/session/round at top level)
+                    out = SUITE.capture_corpus(
+                        list(b["records"]), project=b["project"], session=b["session"],
+                        round=b.get("round", "1"))
+                else:                                        # single-record shape (lineage holds the axes)
+                    lin = b["lineage"]
+                    rec = {"source_address": b["source_address"], "output": b["output"],
+                           "kind": b.get("kind", "capture"), "projection": b.get("projection"),
+                           "model": b.get("model"),
+                           **{k: v for k, v in b.items() if k not in (
+                               "source_address", "output", "kind", "lineage", "model", "projection")}}
+                    out = SUITE.capture_corpus(
+                        [rec], project=lin["project"], session=lin["session"], round=lin.get("round", "1"))
+                resp = dict(out)
+                if out["captured"]:                          # surface the first record's address/cas at top
+                    resp["address"] = out["captured"][0]["address"]   # level (back-compat with the old shape)
+                    resp["cas"] = out["captured"][0]["cas"]
+                    resp["seq"] = out["captured"][0].get("seq")
+                self._send(200, json.dumps(resp))
             elif self.path == "/api/cognition/create_role":    # DIRECT create (#58 — declarative, no approval)
                 # Reuses Suite.create_role (the SAME render+gate+write+commit+rediscover path the MCP
                 # create_role tool calls). The CORRECTNESS gate bites (a malformed spec is refused fail-loud,

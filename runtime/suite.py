@@ -1131,14 +1131,24 @@ class Suite:
                 "MODE_AUTODETECT": self.MODE_AUTODETECT,
                 "MODE_AUTODETECT_OPTIONS": list(self.MODE_AUTODETECT_OPTIONS),
             },
-            "api_verbs": ["/api/run", "/api/now", "/api/chat", "/api/graph", "/api/graphs",
-                          "/api/types", "/api/object_info", "/api/cognition_info", "/api/events", "/api/inbox",
-                          "/api/panels", "/api/models", "/api/stream", "/api/move",
-                          "/api/ui_info", "/api/surface-review", "/api/capture-idea",
-                          "/api/build-intent",
-                          "/api/review/start", "/api/review/current", "/api/review/next",
-                          "/api/review/status"],
+            # api_verbs — PROJECTED from bridge.BRIDGE_ROUTES (registry-is-truth, the B-fix): the /api/*
+            # subset of the SINGLE-SOURCE route table, by the intrinsic path-prefix (NOT a hand-maintained
+            # classification — add an /api/ route to BRIDGE_ROUTES and it appears here, no second list). Lazy
+            # import: suite.py cannot import bridge.py at module load (circular — bridge imports Suite), but
+            # by call-time both modules are loaded, so the import resolves. A drift test
+            # (tests/bridge_routes_acceptance.py) keeps BRIDGE_ROUTES == the dispatcher's own route literals,
+            # so this projection is truth, never a relabeled third copy.
+            "api_verbs": self._api_verbs(),
         }
+
+    @staticmethod
+    def _api_verbs() -> list:
+        """The /api/* subset of bridge.BRIDGE_ROUTES (the SINGLE-SOURCE bridge route table) — the B-fix
+        de-hardcode of the old literal api_verbs list. Lazy import (suite.py can't import bridge.py at
+        module load — circular), sorted for stable output. registry-is-truth: a new /api/ route in
+        BRIDGE_ROUTES appears here with no edit; the drift test keeps BRIDGE_ROUTES == the live dispatcher."""
+        from runtime import bridge as _bridge
+        return sorted(r for r in _bridge.BRIDGE_ROUTES if r.startswith("/api/"))
 
     def _authoring_preamble(self) -> str:
         """Put the registry on the brain's easy path so the correct values are effortless and nothing
@@ -1146,7 +1156,7 @@ class Suite:
         cap = self.capabilities()
         return ("REGISTERED VALUES — author using ONLY these; do NOT invent anything not listed:\n"
                 f"- models: {cap['models']}\n- modes: {cap['modes']}\n- node-types: {cap['node_types']}\n"
-                f"- api verbs (for fetch): {cap['api_verbs']}\n"
+                f"- api routes (the bridge route table — GET + POST): {cap['api_verbs']}\n"
                 "If doing this correctly REQUIRES a value or capability NOT in these lists, do NOT make one "
                 "up — output EXACTLY one line and nothing else: NEEDS: <what you need, and why>.")
 
@@ -9493,6 +9503,117 @@ class Suite:
         from runtime import corpus as _corpus
         return _corpus.write_record(self.store, source_address=source_address, output=output, kind=kind,
                                     lineage=lineage, model=model, projection=projection, **extra)
+
+    @staticmethod
+    def _embed_text(output) -> str:
+        """CAPTURE-EMBED ONE-SOURCE — derive the embeddable TEXT from a captured role output. A str is the
+        text itself; a dict/list (a structured lens output) is serialized to compact, key-sorted JSON
+        (DETERMINISTIC — the SAME output → the SAME text → the SAME content-hash, so re-embedding a
+        re-captured record is a true no-op under build_index's incremental diff). Falls back to str() for any
+        other scalar. An empty/blank result returns "" → the caller SKIPS it from the embed batch
+        (embed_corpus_to_spaces fail-louds on empty text — a blank lens output is not embeddable, never a
+        fabricated vector). Lives HERE (not in mcp_face/server.py) because `capture_corpus` is the ONE
+        capture+embed seam BOTH faces call — the embed-text derivation must travel WITH it (move-don't-copy).
+
+        ASSUMPTION (flagged needs-tim — UNVALIDATABLE on a stub embedder): a projection declares no embed-text
+        KEY (`field` is a SHAPE descriptor 'string'/'array'/'enum', NOT a key into the output — see
+        runtime/projections.py), and the real capture output_schema is built DYNAMICALLY from
+        model_projections(), so there is no registry source of truth to project the embed-text from.
+        Whole-output stringification is the minimal, no-invented-structure default ("embed the rendered
+        structured output"); whether the embedded text is the LENS CONTENT vs. JSON structural noise is a
+        refinement only a LIVE :8001 embed can validate — confirm at live-embed time. Do NOT bake a
+        value-extraction heuristic that invents an output shape (author-from-the-registry-never-invent)."""
+        import json as _json
+        if isinstance(output, str):
+            return output.strip()
+        if isinstance(output, (dict, list)):
+            try:
+                return _json.dumps(output, sort_keys=True, ensure_ascii=False).strip()
+            except (TypeError, ValueError):
+                return str(output).strip()
+        if output is None:
+            return ""
+        return str(output).strip()
+
+    def capture_corpus(self, records: list[dict], *, project: str, session: str, round: str = "1",
+                       embed_fn=None) -> dict:
+        """CAPTURE-EMBED ONE-SOURCE — the SINGLE capture+embed-on-write seam BOTH faces call (the MCP
+        `capture` tool AND the `/api/cognition/corpus` POST route). It REPLACES the two divergent paths the
+        SUITE-3 report flagged: the MCP tool embedded-on-write, but the bridge route only wrote the record and
+        NEVER embedded — so capturing via /api SILENTLY did not populate the space (find_relations stayed
+        empty). This method makes BOTH faces populate identically; neither silently no-ops (AGENTS.md rule 4 —
+        no-silent-failure: a capture either populates the space or fails loud, never quietly writes a record
+        nobody can find by relation).
+
+        `records` = `[{source_address, output, kind?, projection?, model?, **extra}, ...]` — each is ONE
+        capture: the `output` is the (possibly structured) lens output; `kind` defaults to 'capture';
+        `projection` (optional) names the lens — when it names an EMBEDDABLE lens the output is embedded into
+        that space. `project`/`session`/`round` are the REQUIRED lineage ride INTO every record (the gate
+        bites in write_corpus_record → corpus.write_record — a record without lineage RAISES, never defaulted;
+        corroboration M3 + the inversion-finder L2 need the placement, so retrofitting = full re-capture).
+
+        SEQUENCING GATE (lineage-FIRST): ALL records are written via write_corpus_record FIRST (lineage rides
+        IN the record before the first embed). THEN, for the records whose `projection` is embeddable, the
+        embed-text (`_embed_text`) is collected and embedded via cognition.embed_corpus_to_spaces — the REUSE
+        delegate to vector_index.build_index(space=), NO second vector path.
+
+        FAIL-LOUD (the WHOLE POINT — registry-is-truth + no-silent-fallback): the embeddable decision is OWNED
+        by embed_corpus_to_spaces (NOT pre-filtered here — pre-filtering would silently drop a
+        projection-present-but-non-embeddable record to embedded=None, the exact silent no-op this lane
+        closes). So a record naming a projection that is NOT an embeddable space RAISES (you asked for a space
+        you can't have). A record with NO projection is legitimately capture-only (not embedded — never an
+        error). A DOWN embedder degrades-with-warning per space (build_index's sanctioned loud degrade —
+        degraded=True, no vectors, no crash); re-run when up populates the space.
+
+        Returns `{captured:[{i, source_address, address, cas, seq, projection}], embedded, n_records}`:
+        `captured` are the persisted records (read back via read_corpus_record); `embedded` is the per-space
+        embed result `{spaces, records, degraded}` when ANY record was embeddable, else None (capture-only).
+
+        DELEGATE: Suite.write_corpus_record (→ corpus.write_record) + cognition.embed_corpus_to_spaces (→
+        store/vector_index.build_index). FLOOR (C9.2 / rule 9): a corpus.record telemetry write + a store
+        put_vector WRITE — emits NO resolve/approve/dispatch, launches NO claude -p. `embed_fn` is the SAME
+        injection seam build_index/embed_corpus_to_spaces expose (a test injects seeded vectors / an
+        embedder-down stub) — the live default is complete_embeddings."""
+        from runtime import cognition as _cog
+        lineage = {"session": session, "round": round, "project": project}
+        captured: list[dict] = []
+        embed_recs: list[dict] = []           # the {source_address, text, projection} embed inputs
+        any_projection = False
+        for i, rec in enumerate(records):
+            source_address = rec.get("source_address")
+            output = rec.get("output")
+            projection = rec.get("projection") or None
+            extra = {k: v for k, v in rec.items()
+                     if k not in ("source_address", "output", "kind", "projection", "model")}
+            ev = self.write_corpus_record(
+                source_address=source_address, output=output, kind=rec.get("kind", "capture"),
+                lineage=lineage, model=rec.get("model"), projection=projection, **extra)
+            captured.append({"i": i, "source_address": source_address, "address": ev["address"],
+                             "cas": ev["cas"], "seq": ev.get("seq"), "projection": projection})
+            if projection:
+                any_projection = True
+                # The embeddable-text the lens produced, keyed to the unit. Only NON-EMPTY text rides the
+                # embed batch (embed_corpus_to_spaces fail-louds on empty — a blank lens output is not
+                # embeddable; skipping it here keeps a multi-record capture from a hard abort on one blank).
+                _txt = self._embed_text(output)
+                if _txt:
+                    embed_recs.append({"source_address": source_address, "text": _txt,
+                                       "projection": projection})
+        # POPULATE THE QUERYABLE SPACE — embed_corpus_to_spaces OWNS the embeddable decision (registry-is-truth
+        # via projection_registry.embeddable()) AND the fail-loud: a record naming a non-embeddable projection
+        # RAISES inside it (never silently dropped here — the SUITE-3 anti-pattern). NO pre-filter. We only
+        # call it when SOME record carried a projection (a fully un-projected capture is capture-only, the
+        # legitimate embedded=None case — distinct from "asked for a non-embeddable space", which fails loud).
+        embedded = None
+        if any_projection and embed_recs:
+            # Only pass embed_fn when a caller INJECTS one (a seeded/embedder-down stub) — passing
+            # embed_fn=None EXPLICITLY would shadow embed_corpus_to_spaces's live-default seam (it keys on
+            # the kwarg's PRESENCE, not its value), and a test's setdefault-injected stub would never reach
+            # build_index. The live default is complete_embeddings (the :8001 embedder).
+            _kw = {"embed_fn": embed_fn} if embed_fn is not None else {}
+            embedded = _cog.embed_corpus_to_spaces(
+                self.store, embed_recs, self.projection_registry.embeddable(), **_kw)
+        return {"captured": captured, "embedded": embedded, "n_records": len(records)}
 
     def read_corpus_record(self, address: str) -> dict | None:
         """D1 — read a corpus record back by its run:// address (head→get_content, the canonical resolver

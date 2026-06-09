@@ -186,24 +186,10 @@ def _cog_emit(kind: str, payload: dict) -> None:
     SUITE._emit(kind, summary, **{k: v for k, v in payload.items() if k != "summary"})
 
 
-def _embed_text(output) -> str:
-    """CAPTURE-WIRING — derive the embeddable TEXT from a captured role output. A str is the text itself;
-    a dict/list (a structured lens output) is serialized to compact, key-sorted JSON (deterministic — the
-    SAME output → the SAME text → the SAME content-hash, so re-embedding a re-captured record is a true
-    no-op under build_index's incremental diff). Falls back to str() for any other scalar. An empty/blank
-    result returns "" → the caller SKIPS it from the embed batch (embed_corpus_to_spaces fail-louds on
-    empty text — a blank lens output is not embeddable, never a fabricated vector)."""
-    import json as _json
-    if isinstance(output, str):
-        return output.strip()
-    if isinstance(output, (dict, list)):
-        try:
-            return _json.dumps(output, sort_keys=True, ensure_ascii=False).strip()
-        except (TypeError, ValueError):
-            return str(output).strip()
-    if output is None:
-        return ""
-    return str(output).strip()
+# NOTE: the embed-text derivation that used to live HERE (`_embed_text`) MOVED to `Suite._embed_text`
+# (runtime/suite.py) when the capture+embed-on-write was hoisted into the shared `Suite.capture_corpus`
+# seam (CAPTURE-EMBED ONE-SOURCE). It travels WITH the seam BOTH faces call — move-don't-copy, so the
+# bridge's /api/cognition/corpus route gets the SAME embed-text derivation, never a divergent or absent one.
 
 
 def _resolve_role(role_id_or_fields):
@@ -687,70 +673,56 @@ def capture(role: str, units: list, project: str, session: str, round: str = "1"
     role outputs. To tag a record to a specific lens, pass `projection` (a lens id — see
     cognition_info().projections); absent → one un-projected record per unit.
 
-    POPULATES THE QUERYABLE SPACE (SUITE-3 capture-wiring): when `projection` names an EMBEDDABLE lens
-    (embeds==True → a vector space), the captured outputs are embedded into that space via
-    cognition.embed_corpus_to_spaces (the REUSE delegate to vector_index.build_index(space=) — NO second
-    vector path) AFTER the lineage-gated records are written (the sequencing gate: lineage rides IN the
-    record before the first embed). So a real capture run AUTO-POPULATES the space find_relations reads —
-    closing the "no live caller" gap. A non-embeddable / absent projection → capture-only (records written,
-    space untouched). A DOWN embedder → build_index's sanctioned LOUD degrade-with-warning (degraded=True,
-    no vectors, no crash); re-run when up populates the space.
+    POPULATES THE QUERYABLE SPACE (CAPTURE-EMBED ONE-SOURCE): the write+embed-on-write is HOISTED into the
+    SHARED Suite.capture_corpus — the ONE seam this tool AND the bridge `/api/cognition/corpus` route both
+    call (one source, NOT a duplicated bridge embed path). When `projection` names an EMBEDDABLE lens
+    (embeds==True → a vector space), capture_corpus embeds the captured outputs into that space AFTER the
+    lineage-gated records are written (the sequencing gate: lineage rides IN the record before the first
+    embed). So a real capture run AUTO-POPULATES the space find_relations reads. A NON-embeddable projection
+    FAILS LOUD (you asked for a space you can't have — no silent capture-only); NO projection → capture-only
+    (records written, embedded=None, no error). A DOWN embedder → the sanctioned LOUD degrade-with-warning
+    (degraded=True, no vectors, no crash); re-run when up populates the space. THIS tool owns only the FAN
+    (run_items over units); capture_corpus owns the write+embed both faces share.
 
     Returns {project, session, round, role, turn_id, n_units, captured:[{i, source_address, address, cas,
-    seq}], embedded, skipped, failed, wall_s}. `captured` are the persisted records (inspect via
+    seq, projection}], embedded, skipped, failed, wall_s}. `captured` are the persisted records (inspect via
     read_corpus_record/inspect_address; feed downstream via list_corpus/find_corpus). `embedded` is the
     per-space embed result {spaces, records, degraded} when the projection is embeddable, else None.
     `skipped`/`failed` carry units that did not produce a record (F2 per-unit resilience — a poison unit
     never silently vanishes).
 
-    DELEGATE: run_items (cognition.py) + Suite.write_corpus_record (→ corpus.py) +
-    cognition.embed_corpus_to_spaces (→ store/vector_index.build_index). FLOOR: a corpus.record telemetry
-    write + a store put_vector WRITE — emits NO resolve/approve/dispatch."""
+    DELEGATE: run_items (cognition.py — the FAN) + Suite.capture_corpus (the shared write+embed seam →
+    corpus.py + store/vector_index.build_index). FLOOR: a corpus.record telemetry write + a store put_vector
+    WRITE — emits NO resolve/approve/dispatch."""
     r = _resolve_role(role)
     units = list(units)
     turn_id = "mcp-capture-" + _time.strftime("%Y%m%d-%H%M%S") + f"-{int(_time.monotonic()*1000) % 100000}"
     res = _cog.run_items(r, units, SUITE.store, turn_id=turn_id, emit=_cog_emit,
                          max_tokens=max_tokens, temperature=temperature)
-    lineage = {"session": session, "round": round, "project": project}
-    captured = []
-    embed_recs = []                                # the {source_address, text, projection} embed inputs
+    # CAPTURE-EMBED ONE-SOURCE (this lane): the FAN (run_items above) is the MCP face's own concern — but the
+    # write+embed-on-write is HOISTED into the shared Suite.capture_corpus, the ONE seam this tool AND the
+    # bridge's POST /api/cognition/corpus route both call (neither silently no-ops; both populate the space
+    # identically). This tool builds the per-unit records (source_address + the OK output + the lens) and
+    # hands them off; capture_corpus owns the lineage-gated write_corpus_record loop, the _embed_text
+    # derivation, and the embed_corpus_to_spaces populate (registry-is-truth embeddable decision + fail-loud
+    # on a non-embeddable projection). NO duplicated embed path here anymore (the run-glue-mirror anti-pattern
+    # SUITE-3 flagged is exactly what this closes).
+    proj = projection or None
+    capture_records = []
     for i, output in sorted(res.resolved.items()):
         unit = units[i]
         # The source-address retrieval key: a string unit IS its address; a literal is repr'd so it still
         # has a stable key (the record's source_address is required + a string — corpus.py gate).
         source_address = unit if isinstance(unit, str) else repr(unit)
-        ev = SUITE.write_corpus_record(
-            source_address=source_address, output=output, kind=record_kind, lineage=lineage,
-            model=getattr(r, "model", None), projection=(projection or None))
-        captured.append({"i": i, "source_address": source_address, "address": ev["address"],
-                         "cas": ev["cas"], "seq": ev.get("seq")})
-        # CAPTURE-WIRING (SUITE-3 — ENGINE-2's flagged hand-off): the embeddable-text the lens produced,
-        # keyed to the unit. _embed_text stringifies a structured output deterministically (a str passes
-        # through; a dict/list → compact JSON) so the lens output becomes embeddable. Only non-empty text
-        # is embeddable (embed_corpus_to_spaces fail-louds on empty — pre-filtered here so a blank output
-        # is skipped from the embed batch, not a hard abort of a multi-record capture).
-        _txt = _embed_text(output)
-        if _txt:
-            embed_recs.append({"source_address": source_address, "text": _txt, "projection": projection})
-
-    # CAPTURE-WIRING — POPULATE THE QUERYABLE SPACE. The corpus records are durable + lineage-gated above
-    # (the sequencing GATE: lineage is in the record BEFORE the first embed); now, when `projection` is an
-    # EMBEDDABLE lens (embeds==True → a vector space), embed the captured outputs into that space via
-    # cognition.embed_corpus_to_spaces (the thin REUSE delegate to vector_index.build_index(space=) — NO
-    # second vector path; this is its first LIVE caller, closing ENGINE-2's "no live caller" gap so a real
-    # capture run auto-populates the space find_relations reads). registry-is-truth: only an embeddable lens
-    # becomes a space (embed_corpus_to_spaces fail-louds on a non-embeddable projection); a non-embeddable
-    # or absent projection → capture-only (records written, no space populated), reported as embedded:None.
-    embedded = None
-    if projection and embed_recs:
-        _embeddable = SUITE.projection_registry.embeddable()
-        if projection in {p.id for p in _embeddable}:
-            # EMBEDDER-DOWN: embed_corpus_to_spaces uses build_index's sanctioned LOUD degrade-with-warning
-            # (a durable `warning` event, no vectors written, degraded=True) — a transient :8001 outage does
-            # NOT abort the capture; re-run when up populates the space. Still fail-loud (never a silent []).
-            embedded = _cog.embed_corpus_to_spaces(SUITE.store, embed_recs, _embeddable)
+        capture_records.append({"source_address": source_address, "output": output, "kind": record_kind,
+                                "projection": proj, "model": getattr(r, "model", None)})
+    out = SUITE.capture_corpus(capture_records, project=project, session=session, round=round)
+    # capture_corpus returns {captured, embedded, n_records}; the i-key on each captured row is the index
+    # within capture_records, which (sorted by run-item index) preserves the per-unit mapping. Carry the
+    # tool's own run-shape fields (turn_id/n_units/skipped/failed/wall_s) — the FAN telemetry capture_corpus
+    # does not own (it is face-agnostic write+embed; the fan is the MCP face's).
     return {"project": project, "session": session, "round": round, "role": r.id, "turn_id": turn_id,
-            "n_units": len(units), "captured": captured, "embedded": embedded,
+            "n_units": len(units), "captured": out["captured"], "embedded": out["embedded"],
             "skipped": res.skipped, "failed": res.failed, "wall_s": res.wall_s}
 
 
