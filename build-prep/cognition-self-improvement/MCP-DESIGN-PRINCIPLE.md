@@ -43,5 +43,20 @@ KEEP as-is (already right / distinct): `run_role` · `run_items` · `run_reduce`
 4. **Coverage pass** — expose the still-direct-only capabilities (the compositions ②/③/⑥/⑦/⑩ as runnable via the MCP; `ingest_paths` for path-keyed ingest [G21]; etc.) until direct is unnecessary.
 5. **Eval** — the fresh-agent intuitiveness test → refactor → re-eval.
 
+## THE MANDATE (widened — Tim 2026-06-10)
+**The whole MCP** — all capabilities, all use — not only the named compositions. And **not only gap-closing**: opportunities · additions · upgrades · anything that makes the collective better is in scope. **Tim is not a developer and cannot give terminology or specific instructions** — so this is NOT spec-driven from him; cognition OWNS the architect judgment, drives it from the system's evidence + design reasoning, and surfaces OUTCOMES for Tim to react to (never asks him *what* to build). Standing frame at full scope: not-a-developer → the AI supplies the domain depth; expand-don't-echo; make-the-calls-myself; render outcomes for his reaction.
+
+**TWO ENGINES** (both feed the backlog; cognition drives):
+1. **FLOOR — eval-driven (find friction):** fresh agents drive real compositional flows MCP-only; their friction = the gap list (mcp-compose-eval.workflow.js).
+2. **CEILING — opportunity-generation (make it excellent):** cognition proactively analyses the WHOLE surface + the engine's latent capabilities + REFERENCE MCPs (substrate-mcp's `suggest_tool`/`get_type_graph`/`get_neighborhood`/`traverse_links` — a maturer compositional/navigational face to learn from) + the compositions' needs → upgrades, not just fixes.
+
+**THE UPGRADE DIMENSIONS (where "better" lives, beyond consolidation):**
+- **Composability/chaining** — outputs→inputs (`run://`) frictionless; consistent address-in/address-out; a result carries what feeds the next step.
+- **Discovery/self-description** — ONE intuitive "what can I compose + how do they connect" map (`cognition_info` as the composition vocabulary, enriched with chain-shapes + examples).
+- **Self-teaching responses** — a result suggests the next move (cf. substrate `suggest_tool`); errors that teach (G18 generalised).
+- **Response ergonomics everywhere** — `detail=concise|detailed` across all reads; high-signal-not-IDs; pagination/limits.
+- **Coverage** — every engine capability + composition (②/③/⑥/⑦/⑩) reachable as an MCP tool (direct unnecessary).
+- **Whole-surface coherence** — consistent names/params/op-enums/shapes so the MCP feels like ONE designed thing.
+
 ## STANDING RULES (every face change)
 Reuse-don't-parallel (extend the consolidated tool, never add a flat sibling) · registry-is-truth (the `kind`/`op` enums DERIVE from the live registries, not hardcoded lists) · CQRS (reads vs the floor's writes) · helpful fail-loud errors · `detail=concise` default · meaningful context (no raw hashes/vectors in responses) · update the tool description like onboarding a new hire · **never ADD a flat tool — add an `op`** · verify by fresh-agent use. NO Gemini.
