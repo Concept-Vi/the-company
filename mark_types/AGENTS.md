@@ -37,6 +37,10 @@ non-`MARK_TYPE`/`_`-file is skipped.
   is surfacing, OPPOSITE direction. The seed that EXERCISES the surface-vs-subtract split.
 - **`contradiction`** — span · **surface**. This unit contradicts another (a tension surfaced for review;
   render-not-judge — the operator decides).
+- **`built_twice`** — claim · **surface**. The same logic/vocabulary built in 2+ places — a unification
+  target surfaced for review (COMPOSITION ② drift-radar's `judge_drift` confirm). Value `{with, shared, source}`.
+- **`overlap`** — claim · **surface**. Significant shared responsibility between near units — a softer
+  unification candidate than `built_twice` (② drift-radar). Value `{with, shared, source}`.
 
 **The floor + render-not-judge:** a mark-type is DECLARED DATA — a vocabulary, not an action. Reading is
 a READ (`subtractive`/`as_records`, never `resolve`). A mark DESCRIBES a disposition; judgement of
