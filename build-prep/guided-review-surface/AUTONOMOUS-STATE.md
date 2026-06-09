@@ -288,3 +288,9 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
 - This composes with F2 (Q3): a derived element locus (ui://inbox/layers) prefix-matches ui://inbox → generate gathers it.
 - Also answered Tim's bridge confusion: his "mockups gone" = his bridge not running; mine (:5230) shows all 22 because I run my own bridge. Fix = `company up` (offered, awaiting his yes).
 - NEXT (chrome up): P2 tldraw-toolbar bleed-through (top-left corner leak — tldraw button above studio; fix = hide tldraw UI in review via a data-view hook) — was mid-investigation when Tim asked about clickability.
+
+## 2026-06-09 fire — P2 tldraw-bleed FIXED + verified (chrome up)
+- e0a164d: the operating-canvas tldraw UI chrome (toolbar/menu-zone/page-menu/watermark) was poking ABOVE the studio at the corners (the critical-review's biggest feel-leak; a tldraw button was topmost at [20,20]). Fix: body[data-view] hook (App.tsx) + CSS hides .tlui-layout/.tl-watermark while body[data-view=review]. Board stays mounted under the opaque studio; canvas view untouched; view-switch (not tldraw UI) stays.
+- VERIFIED BY USE (:5230, chrome): body[data-view]=review, tlui-layout display:none, [20,20] now the view-switch button (was tldraw), [60,60] studio-frame, view-switch+settings still clickable.
+- ★ THE FELT DEV-STUFF LEAKS Tim's review named are now CLOSED + verified: occlusions (view-switch z700 ✅, settings z800 ✅, tldraw-bleed ✅), jargon (walk-card/stage/rail/studio-RHM/composer ✅), element-selection (any element ✅). The make-or-break backend (Q2+Q3+route ✅). 
+- REMAINING (needs chrome or Tim): F2 full FE click-through (comment→generate→proposal renders, needs a live model run); R1 multi-element/Tim feel; S1 model-mismatch (needs Tim's two model names); B1 talks-back feel; T1 locus-chip-on-turn; T2 back-control (cognition suite.py).
