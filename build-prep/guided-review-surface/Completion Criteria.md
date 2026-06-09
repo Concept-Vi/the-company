@@ -987,3 +987,81 @@ Tim: "it shouldn't need me in the loop to build it, and it should be made so tha
 - **REGISTRY-DRIVEN / reconfigurable** — the generate behavior is DECLARED DATA, not hardcoded: a `generate-config` registry carrying {prompt/instruction template · model/agent · plan-vs-apply default · routing (mockup-edit vs live build-intent) · scope rule}. Changing how generate works = editing the config, no code change (no-hardcoding law).
 - **The engine core (file-disjoint, build now):** a generate-config registry (NEW declared data) + a dispatcher that reads config + a mockup's captured feedback (/api/mockup-feedback, already built) → builds the instruction → calls implement.py dispatch_decision (plan-safe-by-default) → on apply, commits (git-revertible). REUSE dispatch_decision (the claude -p spawner) — no parallel wire.
 - **Follow-on (after B1 releases bridge.py):** the thin /api/<generate> trigger route (bridge.py) + the FE "generate" button. Sequenced behind B1's bridge.py claim — NOT behind Tim.
+
+---
+# ════════ FOUND-IN-USE (2026-06-09) — challenges hit, now IN SCOPE (Tim's grow-scope law) ════════
+> Everything below was hit while building/using the surface. Per Tim's law (anything you come across that is
+> a challenge or a thing to work through → ADD IT TO SCOPE), these are appended as real two-faced criteria —
+> NOT one-off fixes or STATE notes. Honest status: ✅verified-by-use · 🟡built-unverified · 🔴not-built/needs-chrome.
+
+## Group P — Occlusion / stacking (a CLASS of bug, found 3×)
+### P1 · Every overlay/control is verified VISUALLY-ON-TOP, not just present · MOSTLY ✅
+- **FUNCTION:** every floating control (view-switch, settings panel, future overlays) is the topmost clickable
+  element where it renders — verified by `elementFromPoint`, never by DOM-presence. ROOT of 3 bugs Tim caught:
+  view-switch z60 under review z600 (FIXED z700 11e2d66 ✅) · settings-scrim z500 under review (FIXED z800
+  ed44eab ✅) · tldraw chrome bleeds through review (P2, 🔴).
+- **FORM:** nothing buried behind the review surface; the operator can see+click every control.
+- *Status:* ✅ for view-switch + settings (verified topmost); the STANDING RULE (verify-on-top, not present)
+  is now law. 🔴 tldraw (P2).
+### P2 · tldraw editor chrome occluded in review · 🔴 needs-chrome
+- **FUNCTION:** in review view, the tldraw editor UI (drawing toolbar, shape tools, "MADE WITH TLDRAW" badge,
+  the `#_rh__main > *:nth-child…` CSS-text leak) is hidden/occluded — the studio surface must fully cover the
+  operating canvas's own chrome (likely the same z-index/stacking-context class as P1). Confirmed by the
+  critical review (biggest remaining feel-leak).
+- **FORM:** review surface reads as ONE clean designed place — no operating-tool chrome bleeding through.
+- *Status:* 🔴 not built — needs chrome to verify the occlusion. A priority.
+
+## Group Q — The make-or-break store-mismatch (F2 seam), now precisely scoped
+### Q1 · comment → generate connects (the annotation store IS the feedback source) · 🔴 the make-or-break
+- **FUNCTION:** a comment made in the studio (→ annotation store) is found by generate-for-mockups. DECISION:
+  generate reads the ANNOTATION store (shared truth; the `.feedback` jsonl is retired, Review.tsx:14), NOT the
+  jsonl. Verified by-use BROKEN (critical review: comment → generate → "no actionable feedback").
+- **FORM:** the operator comments, clicks generate, and the RHM proposes from THAT comment (the result-card
+  already renders prose, agent-confirmed).
+- *Status:* 🔴 the founding loop. Build = Q2 + Q3.
+### Q2 · corpus-meta as a DECLARED registry (registry-is-truth violation found) · 🔴
+- **FUNCTION:** `bridge.py:_CORPUS_META` (the mockup→ui://address + title/group map) is a HARDCODED code dict
+  — a no-hardcoding violation. Extract to `design/_system/corpus-meta.json` (declared data; bridge + the
+  generate engine both read). This is what lets the engine map a mockup→its address WITHOUT importing bridge.
+- **FORM:** n/a (substrate) — verified structurally (no hardcoded map; both consumers read the registry).
+- *Status:* 🔴 net-new. The prerequisite for Q1's engine read. (Flag-hardcoding law.)
+### Q3 · generate gathers annotations at the mockup's address (+ descendants) · 🔴
+- **FUNCTION:** generate_mockup gathers `annotations_for(address)` (replicate fs_store read of
+  `<store>/annotations.jsonl` filtered by address) at the mockup's base address; element-level comments
+  (children) gathered via the descendant-walk (ties to D3). Engine half = python-verifiable (no chrome).
+- **FORM:** comment-on-element AND comment-on-whole both feed generate (Tim: both levels).
+- *Status:* 🔴 net-new; engine-half verifiable without chrome.
+
+## Group R — Element/whole selection (E), the deixis that never worked
+### R1 · element-level deixis actually fires (was claimed-built, wasn't) · 🟡 built+hardened, needs Tim click
+- **FUNCTION:** clicking an addressed element inside the mockup iframe selects it (locus narrows); the mockups
+  never sent studio-deixis (0/23) so it never worked — now the parent attaches the click delegate
+  (idempotent, onLoad + retry-effect, bc90871). BOTH levels: element click → element; background / "⤢ whole
+  screen" → whole mockup (Tim: not either/or).
+- **FORM:** you can point at any part of a screen OR the whole screen and comment there.
+- *Status:* 🟡 built + tsc/build-clean; behavioral verify = Tim click-test (chrome down).
+
+## Group S — Model visibility/control from the review surface
+### S1 · change + see the RHM model from review · 🟡 partial
+- **FUNCTION:** settings reachable from review (⚙ in view-switch, ed44eab ✅, opens to Brain&persona model
+  picker); the model picker lists alternatives + cold-loads on pick. OPEN: (a) the reported settings-vs-RHM
+  model MISMATCH (couldn't reproduce — needs Tim's two model names) (b) surface the studio RHM's current model
+  on the review surface ("running on: X") — I hid it de-jargoning, but Tim wants to track/change it.
+- **FORM:** the operator sees what model the RHM runs on + changes it without leaving review.
+- *Status:* 🟡 settings-from-review ✅; model-mismatch + model-visibility-on-review 🔴 (needs Tim retest).
+
+## Group T — FORM gaps the critical review named (each now scope)
+### T1 · persistent "talking about: X" locus chip on the chat turn · 🔴
+- a visible chip on the RHM turn showing the grounded locus (plain, not raw ui://). FORM gap.
+### T2 · BACK pace-control in the walk (confirmed) · 🔴 (cross-lane: organ stepper = suite.py/cognition)
+- next exists; back/prev is forward-cursor-only (the walk organ, cognition's suite.py). Flagged to cognition.
+### T3 · "what's been said here" read-face · 🟡 (the Composer thread renders; a locus read-face beyond it 🔴)
+- the comment thread renders at the locus (StudioKit:199-211 ✅); a fuller "everything resolved here" read-face is open.
+
+## Group U — Verification + environment hygiene (process challenges, now standing rules)
+### U1 · verify by REAL interaction, never DOM-presence · STANDING RULE
+- every FE claim verified by actually clicking/seeing (elementFromPoint, real MouseEvent, screenshot read) —
+  NOT "element exists in DOM." The occlusions + never-wired deixis all passed shallow checks + reached Tim.
+### U2 · browser/process hygiene each fire · STANDING RULE
+- close pages / cap open tabs every fire; a chrome process leak (~4971 procs/7.3GB) was the hidden cause of
+  the session-long flakiness (wedged evals, dying servers, SIGTERM'd commands). Clean spawned procs.
