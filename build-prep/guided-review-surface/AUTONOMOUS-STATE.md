@@ -243,3 +243,9 @@ then each fire = poll the channel + answer, NO code. When ready AND cognition's 
 - E (element-selection deixis) remains BUILT (on main, wireDeixis in HEAD) but UNVERIFIED — chrome gone, so verification now = Tim clicking an element on his refresh, OR a future chrome reconnect. Honest: NOT claimed working; the React iframe onLoad timing is the suspected risk if it doesn't fire.
 - LESSON: clean up spawned browser pages each fire (close_page / cap open tabs) — the leak is what degraded everything. Going forward: one page, reuse it, close extras.
 - NEXT: Tim click-test E (does clicking a mockup element narrow the locus? does background/whole-screen return to whole?). If broken → fix iframe onLoad timing (effect-based attach with retry). A (settings) is fixed+verified+committed.
+
+## 2026-06-09 fire — hardened element-deixis (the fragile onLoad → robust attach)
+- bc90871: element-select attach was onLoad-only (load-timing-fragile for a key-remounting iframe → likely why my one test showed no select). Now idempotent attachDeixis() via BOTH onLoad AND a retry effect (polls iframe doc until ready+wired, ~2.4s, dedup via __deixisWired). Both levels preserved (element click → element locus; background/whole-screen btn → whole mockup).
+- VERIFIED what I can without chrome: tsc clean + production build clean (1037 modules). Behavioral (does clicking an element select) = Tim click-test — chrome MCP still down (took it with the leak cleanup; may reconnect next session).
+- STATE of Tim 5 bugs: A settings-occlusion ✅fixed+verified+committed(ed44eab) · E element-select 🟡built+hardened+compile/build-clean, NEEDS Tim click-test · B/C model 🟡needs Tim retest(settings now opens) + his model names · D selection-mode = the element/whole selection (E).
+- NEXT: Tim click-test E. If it selects → done. If not → I have chrome-free options exhausted; would need chrome reconnect to debug further OR Tim describes what happens.
