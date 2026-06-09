@@ -83,8 +83,10 @@ with open(os.path.join(ROOT, "runtime", "AGENTS.md"), encoding="utf-8") as f:
     agents_md = f.read()
 check("OPERATOR_ACTIVITY_KINDS is named in its drift home runtime/AGENTS.md",
       "OPERATOR_ACTIVITY_KINDS" in agents_md)
-check("MODE_DETECTION_RULES is named in its drift home runtime/AGENTS.md",
-      "MODE_DETECTION_RULES" in agents_md)
+# The detection rules are now a FILE-DISCOVERED registry (mode_detection_rules/) — named in runtime/AGENTS.md;
+# its OWN drift home is mode_detection_rules/AGENTS.md (asserted by tests/mode_autodetect_acceptance.py).
+check("the mode_detection_rules registry is named in runtime/AGENTS.md",
+      "mode_detection_rules" in agents_md)
 check("the H drivers (background_tick/sense_tick/RollupDriver) are reflected in the drift home",
       "background_tick" in agents_md and "sense_tick" in agents_md and "RollupDriver" in agents_md)
 check("the I detector (detect_mode_candidate/propose_mode) is reflected in the drift home",
@@ -206,22 +208,27 @@ check("H3 · tick 3 does NOT re-consolidate the already-consolidated wave (curso
 
 # ---------------------------------------------------------------------------------------------------
 # I1 — the MODE AUTO-DETECTOR (produces a candidate → feeds the existing toggle).
+# The detector is now a FILE-DISCOVERED registry (mode_detection_rules/) — the FULL proof (registry-is-
+# truth, order-bearing priority, data-AST conditions, the fail-loud + floor + drift homes) lives in
+# tests/mode_autodetect_acceptance.py. Here: a SMOKE check that the detector reads the registry, is
+# deterministic, and feeds the off/suggest/auto toggle (the H-driver lane's stake in the detector).
 # ---------------------------------------------------------------------------------------------------
-# every declared rule's candidate is a REGISTERED mode (no fabrication).
+# the detector reads the file-discovered registry (not a hardcoded list) — every discovered rule's
+# candidate is a REGISTERED mode (no fabrication; validated ∈ MODES at detect time).
 s = fresh_suite()
-for i, rule in enumerate(act.MODE_DETECTION_RULES):
-    check(f"I1 · MODE_DETECTION_RULES[{i}] candidate {rule['candidate']!r} is a registered mode",
-          rule["candidate"] in s.MODES)
+for rule in s.mode_detection_rule_registry.ordered():
+    check(f"I1 · mode_detection_rules[{rule.id!r}] candidate {rule.candidate!r} is a registered mode",
+          rule.candidate in s.MODES)
 
-# DETERMINISTIC: an idle signal past 10x threshold → the 'background' candidate (first matching rule).
+# DETERMINISTIC: an idle signal past the background threshold → the 'background' candidate (first match).
 s = fresh_suite(); s.set_mode("listening")
 s.store.append_event({"kind": "chat", "summary": "old",
                       "ts": datetime.fromtimestamp(now - 10000, timezone.utc).isoformat()})
 det = act.detect_mode_candidate(s, now_epoch=now)
 check("I1 · a long-idle signal deterministically detects the 'background' candidate",
       det["candidate"] == "background" and det["why"])
-check("I1 · the detector is a pure READ → it carries the signal + the rule index it matched",
-      det["rule_index"] is not None and det["signal"]["idle_seconds"] >= 900)
+check("I1 · the detector is a pure READ → it carries the signal + the matched rule id",
+      det["rule"] == "background" and det["signal"]["idle_seconds"] >= 900)
 
 # the detector FEEDS the toggle (not set_mode). NOTE: set_mode/set_rhm_config emit operator-activity
 # events, so we CONFIGURE first, then seed the stale activity event LAST (the controlled idle signal).
@@ -235,8 +242,6 @@ def _seeded(mode_, toggle_, age_s=10000):
 
 # Under 'suggest' it SURFACES, never switches.
 s = _seeded("listening", "suggest")
-det = act.detect_mode_candidate(s, now_epoch=now)
-cand = det["candidate"]
 ev0 = len([e for e in s.events_since(-1) if e.get("kind") == "mode"])
 out = act.propose_mode(s, now_epoch=now)
 ev1 = len([e for e in s.events_since(-1) if e.get("kind") == "mode"])
@@ -258,30 +263,6 @@ s2 = _seeded("listening", "off")
 out = act.propose_mode(s2, now_epoch=now)
 check("I1 · propose_mode under 'off' NO-OPs (toggle posture honoured; no silent switch)",
       out["toggle_result"]["action"] == "noop" and s2.get_mode() == "listening")
-
-# a candidate EQUAL to the live mode is a no-op (don't re-propose the mode already on). Put the suite
-# in the very mode the long-idle signal would detect, so the candidate == the live mode.
-s3 = _seeded("listening", "auto")
-live_cand = act.detect_mode_candidate(s3, now_epoch=now)["candidate"]
-s3.set_mode(live_cand)
-s3.store.append_event({"kind": "chat", "summary": "old",
-                       "ts": datetime.fromtimestamp(now - 10000, timezone.utc).isoformat()})
-out = act.propose_mode(s3, now_epoch=now)
-check("I1 · a candidate equal to the live mode is a no-op (no re-propose)",
-      out["toggle_result"] is None and "already the live mode" in out["reason"])
-
-# a rule proposing an UNREGISTERED mode fails loud (rule 8).
-_orig = act.MODE_DETECTION_RULES
-try:
-    act.MODE_DETECTION_RULES = [{"candidate": "nonsense", "why": "x", "when": lambda s: True}]
-    raised = False
-    try:
-        act.detect_mode_candidate(fresh_suite())
-    except ValueError as e:
-        raised = "unregistered mode" in str(e)
-    check("I1 · a rule proposing an unregistered mode FAILS LOUD (rule 8)", raised)
-finally:
-    act.MODE_DETECTION_RULES = _orig
 
 
 # ---------------------------------------------------------------------------------------------------

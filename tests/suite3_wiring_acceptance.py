@@ -261,6 +261,14 @@ cap_body = cap_src.split('"""', 2)[-1] if '"""' in cap_src else cap_src
 for forbidden in ("resolve_surfaced", "dispatch_decision", ".approve(", "drive_dispatchable"):
     check(f"capture's CODE BODY makes no {forbidden} call (the floor — capture is computation)",
           forbidden not in cap_body)
+# CAPTURE-EMBED ONE-SOURCE: the embed-on-write logic MOVED to Suite.capture_corpus (the shared seam both
+# faces call). The floor teeth must follow the code — scan capture_corpus's body too (a write+embed, never
+# an action). This is the load-bearing floor check now that capture (server.py) is thin glue around it.
+cc_src = _ins.getsource(Suite.capture_corpus)
+cc_body = cc_src.split('"""', 2)[-1] if '"""' in cc_src else cc_src
+for forbidden in ("resolve_surfaced", "dispatch_decision", ".approve(", "drive_dispatchable"):
+    check(f"capture_corpus's CODE BODY makes no {forbidden} call (the floor — the SHARED capture seam is computation)",
+          forbidden not in cc_body)
 ci_src = _ins.getsource(Suite.cognition_info)
 ci_body = ci_src.split('"""', 2)[-1] if '"""' in ci_src else ci_src
 check("cognition_info is a pure read projection (no resolve/dispatch in its body)",

@@ -406,7 +406,12 @@ def activity_signal(suite, *, now_epoch: float | None = None) -> dict:
                 last_act_kind = k
     idle_seconds = None if last_act_ts is None else max(0.0, now_epoch - last_act_ts)
     try:
-        inbox = len(suite.inbox_lanes().get("awaiting", [])) if hasattr(suite, "inbox_lanes") else 0
+        # The items awaiting the operator are inbox_lanes()'s `live_escalations` lane (resolved is None) —
+        # NOT a key named `awaiting` (which inbox_lanes never returns). Reading the wrong key would make
+        # `inbox` permanently 0, killing the inbox-based detection rules (focus's inbox==0 / listening's
+        # inbox>0) silently. Use the counts.escalations count (the lane's own count, fail-loud-legible).
+        lanes = suite.inbox_lanes() if hasattr(suite, "inbox_lanes") else {}
+        inbox = int(lanes.get("counts", {}).get("escalations", 0))
     except Exception:
         inbox = 0
     return {
@@ -534,66 +539,48 @@ class RollupDriver:
 # and a suggestion SURFACES legibly via the existing 'mode' event — it never silently auto-switches
 # outside the declared posture).
 #
-# DETERMINISTIC + REGISTRY-DRIVEN (NOTHING static): the signal→candidate mapping is DECLARED DATA
-# (MODE_DETECTION_RULES, the ACTIVATION_CONTEXTS discipline) walked top-to-bottom — NOT a model (a model
-# would be non-deterministic + GPU-bound; the criteria say deterministic-where-possible) and NOT an inline
-# if/else ladder. Each rule's candidate MUST be a registered mode (autodetect_mode fail-louds otherwise);
-# the rules reference modes by id and are validated against suite.MODES at detect time.
+# DETERMINISTIC + REGISTRY-DRIVEN (NOTHING static): the signal→candidate mapping is FILE-DISCOVERED
+# DECLARED DATA — the `mode_detection_rules/` registry (suite.mode_detection_rule_registry), walked in
+# first-match-wins PRIORITY order. NOT a model (a model would be non-deterministic + GPU-bound; the
+# criteria say deterministic-where-possible), NOT an inline if/else ladder, and NOT a hardcoded list (the
+# rules USED to be a `MODE_DETECTION_RULES = [...]` literal here with lambda predicates — converted to a
+# file-discovered registry so add-a-rule = a FILE not a code edit, and each condition is a declared
+# rules.RULE_OPS data-AST not a lambda; see mode_detection_rules/AGENTS.md + runtime/mode_detection_rules.py).
+# Each rule's candidate MUST be a registered mode (validated ∈ suite.MODES at detect time — the registry
+# can't see the live mode set at discovery; fail-loud here, rule 8). A rule's `when` is pre-validated at
+# discovery (rules.validate_ast) + evaluated PURE via rules.evaluate over the activity_signal snapshot.
 #
 # The always-on CALLER (a tick that runs the detector on a cadence) is the SAME needs-tim seam as the H
 # drivers; detect_mode_candidate/propose_mode are the tickable mechanism it would call. Proven by USE:
 # a signal that matches a rule produces the declared candidate, which drives the toggle.
 # =====================================================================================================
 
-# The DECLARED detection rules (deterministic, top-to-bottom; first match wins). Each row:
-#   when(signal) -> bool   : a pure predicate over the activity_signal() snapshot (no model, no IO).
-#   candidate              : the mode id to propose (validated ∈ suite.MODES at detect time).
-#   why                    : a one-line legible rationale (surfaces with the suggestion — FORM: legible).
-# Add/tune a rule = a row here (registry-driven). A signal matching NO rule → no candidate (clean no-op,
-# never a fabricated mode — rule 8).
-MODE_DETECTION_RULES: list[dict] = [
-    {
-        "candidate": "background",
-        "why": "the operator has been quiet for a long while — drop to a low-noise background presence",
-        "when": lambda s: (s.get("idle_seconds") is not None
-                           and s["idle_seconds"] >= 10 * DEFAULT_IDLE_SECONDS),
-    },
-    {
-        "candidate": "focus",
-        "why": "sustained operator activity with nothing piling up — protect deep work with a tight window",
-        "when": lambda s: (s.get("idle_seconds") is not None
-                           and s["idle_seconds"] < DEFAULT_IDLE_SECONDS
-                           and (s.get("inbox") or 0) == 0),
-    },
-    {
-        "candidate": "listening",
-        "why": "items are awaiting the operator — be present and conversational",
-        "when": lambda s: (s.get("inbox") or 0) > 0,
-    },
-]
-
 
 def detect_mode_candidate(suite, *, now_epoch: float | None = None) -> dict:
-    """I1 · THE DETECTOR — read the live signal, walk the DECLARED MODE_DETECTION_RULES (deterministic,
-    first-match-wins), and PRODUCE a candidate mode (or None). A pure READ: it fires nothing, switches
-    nothing, emits nothing — it only computes WHAT mode the signal suggests. The candidate is validated
-    against suite.MODES (a rule referencing an unregistered mode FAILS LOUD — rule 8, never propose a
-    fabricated mode). Returns {candidate, why, signal, rule_index} (candidate=None ⇒ no rule matched)."""
+    """I1 · THE DETECTOR — read the live signal, walk the FILE-DISCOVERED mode-detection-rule registry
+    (deterministic, first-match-wins by declared priority), and PRODUCE a candidate mode (or None). A pure
+    READ: it fires nothing, switches nothing, emits nothing — it only computes WHAT mode the signal
+    suggests. The candidate is validated against suite.MODES (a rule referencing an unregistered mode
+    FAILS LOUD — rule 8, never propose a fabricated mode). The rules' `when` conditions are declared
+    rules.RULE_OPS data-ASTs (pre-validated at registry discovery; evaluated PURE via rules.evaluate over
+    the activity_signal snapshot). Returns {candidate, why, signal, rule, priority, rule_index}
+    (candidate=None ⇒ no rule matched; rule_index is the ordinal in the priority-ordered walk)."""
     sig = activity_signal(suite, now_epoch=now_epoch)
     modes = set(suite.MODES)
-    for i, rule in enumerate(MODE_DETECTION_RULES):
-        cand = rule["candidate"]
+    for i, rule in enumerate(suite.mode_detection_rule_registry.ordered()):
+        cand = rule.candidate
         if cand not in modes:
-            raise ValueError(f"detect_mode_candidate: rule {i} proposes unregistered mode {cand!r} "
-                             f"— one of {sorted(modes)} (rule 8: never fabricate a mode).")
+            raise ValueError(f"detect_mode_candidate: rule {rule.id!r} proposes unregistered mode "
+                             f"{cand!r} — one of {sorted(modes)} (rule 8: never fabricate a mode).")
         try:
-            matched = bool(rule["when"](sig))
-        except Exception as exc:                             # a malformed predicate fails loud (rule 4)
-            raise ValueError(f"detect_mode_candidate: rule {i} predicate raised {exc!r}") from exc
+            matched = rule.matches(sig)
+        except Exception as exc:                             # a malformed condition fails loud (rule 4)
+            raise ValueError(f"detect_mode_candidate: rule {rule.id!r} condition raised {exc!r}") from exc
         if matched:
-            return {"candidate": cand, "why": rule["why"], "signal": sig, "rule_index": i}
+            return {"candidate": cand, "why": rule.why, "signal": sig, "rule": rule.id,
+                    "priority": rule.priority, "rule_index": i}
     return {"candidate": None, "why": "no detection rule matched the live signal", "signal": sig,
-            "rule_index": None}
+            "rule": None, "priority": None, "rule_index": None}
 
 
 def propose_mode(suite, *, now_epoch: float | None = None) -> dict:
