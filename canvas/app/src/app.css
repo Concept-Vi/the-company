@@ -1409,6 +1409,13 @@ button.set-pill:hover{border-color:var(--sig);color:var(--ink)}
 /* z-index 700 (above the review surface's 600): the view-switch + ⚙ settings must float ABOVE the review
    workspace, or in review the whole bar (incl. switch-back-to-canvas AND settings) is buried + unclickable —
    the bug Tim caught. The earlier z-index:60 sat under the z-600 studio shell. */
+/* P2 (Tim caught): in REVIEW the tldraw editor UI chrome (toolbar, menu-zone, page-menu, watermark) pokes
+   ABOVE the studio at the corners — operating-tool chrome bleeding into the review surface. Hide the whole
+   tldraw UI layer while reviewing (the board stays mounted under the opaque studio; only the chrome is hidden;
+   the view-switch is NOT tldraw UI so it stays). Scoped to body[data-view="review"] — canvas view untouched. */
+body[data-view="review"] .tlui-layout,
+body[data-view="review"] .tl-watermark_SEE-LICENSE,
+body[data-view="review"] [class*="tl-watermark"]{display:none !important}
 .view-switch button{font:var(--fs-meta)/1 var(--font-mono);color:var(--dim);background:transparent;
   border:none;border-radius:var(--r-pill);padding:5px 12px;cursor:pointer;letter-spacing:.04em}
 .view-switch button.on{color:var(--ink-accent);background:var(--acc)}

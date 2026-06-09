@@ -143,6 +143,12 @@ function Hud() {
     if (ctrl.proposal?.interactive) setMobileTab('rhm')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ctrl.proposal?.interactive])
+  // data-view on <body> (Tim 2026-06-09): the tldraw editor (operating canvas) keeps running UNDER the review
+  // surface, and its UI chrome (toolbar/menu-zone/watermark) pokes ABOVE the studio at the corners (verified:
+  // a tldraw button paints over the studio at top-left). Mirroring `view` to <body> lets ONE CSS rule hide the
+  // tldraw UI layer while reviewing (app.css `body[data-view="review"] .tlui-layout`), so the review surface is
+  // one clean place — no operating-tool chrome bleeding through. Canvas view unaffected.
+  useEffect(() => { document.body.dataset.view = view; return () => { delete document.body.dataset.view } }, [view])
   // DEEP-LINK / capture (Tim 2026-06-09): open the surface to an EXACT state by URL param, so it can be
   // screenshot deterministically (no fragile chrome clicks) AND shared as a state link (aligns with the
   // address system — a link IS an address into the surface). Runs once on mount. Purely additive: no param
