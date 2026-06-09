@@ -71,6 +71,25 @@ Roles fire model calls through `fabric/` guards (a model runs only INSIDE a role
   cast (fired explicitly via `run_role`/`run_items`); the repo-processing test fixture (map a folder of
   files through it). Proof that authoring is the agent's: written + git-committed `[self-apply]` + live
   in `cognition_info` with NO surfaced item.
+- **`register_element`** — the **Registry-Generation chain's MAP role** (RG3): reads ONE candidate mockup
+  element + its grounded context (parent dossier · mockup summary · exemplars · the feature inventory) →
+  a PROPOSED registry dossier (`{address, represents, howto, capabilities, maps_to_feature, confidence}`)
+  in the 82 existing `ui://` entries' voice. `op:generate`, `mode_scope:{registration}` (the cast-beyond-
+  listening seam fires it). Fired over N candidates by `run_items` (RG4). NO-FICTION is the make-or-break:
+  capabilities ⊆ the closed vocabulary, `maps_to_feature` a real inventory id or the literal `proposed` —
+  it PROPOSES, never writes (operator-only floor). Mirrors `screen_reader`.
+- **`confirm_registration`** — the **Registry-Generation chain's CONFIRM gate, Layer 2** (RG6): the
+  accuracy **jury** (`draws:3` + a pure `quorum_grounded` `verdict_rule`). Each draw sees the PROPOSED
+  dossier AND the ELEMENT it claims to represent → judges ONE boolean `grounded` (is `represents` accurate
+  + `howto` honest to the element?); the N draws → a deterministic strict-majority quorum. In no cast
+  (fired explicitly via `run_jury`). **TWO-LAYER design:** the no-fiction GUARANTEE is the DETERMINISTIC
+  floor `design/_system/refcheck.py::check_dossier` (Layer 1 — model-independent: catches fabricated
+  capability/feature/code refs regardless of model strength); THIS jury is the SOFT accuracy judgment on
+  top. `confirm_status()` (in this role's file) ANDs them via a declared `runtime/rules.py` RULE_OPS data-
+  AST → `confirmed` ⟺ quorum AND refcheck.passed; else FLAGGED (variance-not-error → flag, never dropped).
+  **⚠ E4 caveat** (shared with `verify_jury`): N draws on ONE 4B are correlated — variance, not
+  independent error — so Layer 2 is SOFT; the verdict_rule shape accepts a future stronger-model/cloud
+  tiebreak (C2.5 / `models_for_role`) as an ENHANCEMENT, never a requirement.
 
 **Where new things go:** a new role = a new file `roles/<id>.py` declaring its `ROLE` dict (its `id`
 MUST equal the file name). Put it in a mode's cast by adding that mode to its `mode_scope`. Make it a
