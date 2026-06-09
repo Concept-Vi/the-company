@@ -78,8 +78,15 @@ check("a minimal well-formed relation-type builds", good.id == "ok")
 # 4 · CONSUMER READS
 dir_ids = {r.id for r in reg.directed()}
 sym_ids = {r.id for r in reg.symmetric()}
-check("directed() = the directed seeds", dir_ids == {"principle_beneath", "fragment_of", "contradicts"})
-check("symmetric() = the symmetric seed (sibling)", sym_ids == {"sibling"})
+# NOTHING-static: the registry GROWS (e.g. the substrate-lift precedes/depends_on) — assert the SEEDS are
+# present + the MECHANISM is exact (directed() ≡ the discovered directed set), never a pinned snapshot.
+check("directed() contains the directed seeds (subset — the registry grows)",
+      {"principle_beneath", "fragment_of", "contradicts"} <= dir_ids)
+check("directed() ≡ exactly the discovered directed entries (the mechanism)",
+      dir_ids == {rid for rid in reg if reg[rid].directed})
+check("symmetric() contains the symmetric seed (sibling)", {"sibling"} <= sym_ids)
+check("symmetric() ≡ exactly the discovered symmetric entries",
+      sym_ids == {rid for rid in reg if not reg[rid].directed})
 recs = reg.as_records()
 check("as_records() = one dict per relation-type, verbatim spec", len(recs) == len(reg) and all("id" in r for r in recs))
 
