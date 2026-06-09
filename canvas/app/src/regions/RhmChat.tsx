@@ -21,7 +21,11 @@ import { useState } from 'react'
 import { useApp } from '../AppContext'
 import { ProposeAffordance } from './ProposeAffordance'
 
-export function RhmChat() {
+export function RhmChat({ studio = false }: { studio?: boolean } = {}) {
+  // `studio` (Tim 2026-06-09): in the design-REVIEW surface the operator is a non-developer reviewing a
+  // mockup — so canvas-oriented dev affordances (the model name, the twin record/debrief controls) are
+  // noise that read as "development stuff." This prop hides them in the studio ONLY; the canvas mount
+  // (default studio=false) is byte-unchanged. The real chat organ, threads, locus + input are kept in both.
   const { cfg, chat, chatBusy, chatMsg, recording, indicated, recordingSession, threads, threadId, setChatMsg, sendChat, recordToggle, micPressed, toggleRecordConversation, startDebriefSession, newConversation, openConversation, indicate } = useApp()
   // minimize — collapse the chat to just its header so the canvas is visible behind it (esp. on mobile,
   // where the panel otherwise fills the screen). A plain in-component toggle; the body is hidden via the
@@ -30,7 +34,7 @@ export function RhmChat() {
   return (
     <div className={'hud rhm' + (min ? ' min' : '')} data-ui-ref="chat">
       <div className="rhm-head">
-        right-hand-man <span className="muted">· {cfg.model || 'default model'}</span>
+        right-hand-man {!studio && <span className="muted">· {cfg.model || 'default model'}</span>}
         <span className="rhm-min" data-ui-ref="ui://chat/minimize" title={min ? 'expand the chat' : 'minimize — see the canvas'} onClick={() => setMin(m => !m)}>{min ? '▢' : '▁'}</span>
       </div>
       {/* S2 — conversation threads: start fresh + reopen a previous one. Lives in the RHM (Tim, chat-local). */}
@@ -45,6 +49,7 @@ export function RhmChat() {
       {/* V3 — the memory loop: record this conversation as a trial session, then debrief over the recorded
           sessions (reuses the walkthrough organ). Chat-LOCAL: no A3 equivalent, so it stays here (lifted OUT
           of the retired .rhm-cfg gear into this small standalone control). */}
+      {!studio && (
       <div className="rhm-mem">
         <button className={'b ghost' + (recordingSession ? ' rec' : '')} data-ui-ref="ui://chat/record"
           title="record this conversation as a session (so it can be debriefed + feeds the twin)"
@@ -53,6 +58,7 @@ export function RhmChat() {
           title="walk back through the recorded sessions (debrief)"
           onClick={startDebriefSession}>debrief</button>
       </div>
+      )}
       <div className="rhm-log">
         {chat.length === 0 && <div className="muted">ask about the system — it answers from live state, and says so when it can't see something.</div>}
         {chat.map((t, i) => (

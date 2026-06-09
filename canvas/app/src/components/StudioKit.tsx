@@ -285,8 +285,9 @@ export function RhmPanel({ children }: { children?: ReactNode }) {
           )}
         </div>
       )}
-      {/* the REAL organ — same brain/persona/threads as the canvas, bound to the locus via focus.selected. */}
-      <RhmChat />
+      {/* the REAL organ — same brain/persona/threads as the canvas, bound to the locus via focus.selected.
+         studio: hide the canvas-oriented dev affordances (model name, twin record/debrief) for the non-dev reviewer. */}
+      <RhmChat studio />
       {children}
     </div>
   )
