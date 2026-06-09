@@ -193,8 +193,8 @@ export function Composer() {
     <div className="studio-composer" data-ui-ref="ui://studio/composer">
       <div className="studio-composer-locus">
         {hasLocus
-          ? <>comment at <b>{reviewAddress}</b></>
-          : <span className="muted">select a mockup to point at its surface, then comment or request a change</span>}
+          ? <>commenting on <b>this part of the screen</b></>  /* the raw ui:// locus is the machine address — kept as the binding, not shown; "this part" reads at the operator's altitude */
+          : <span className="muted">pick a screen, then comment or ask for a change</span>}
       </div>
       {/* the THREAD read back from the SHARED annotation store (proves persist-to-shared-store, not jsonl) */}
       {hasLocus && (
