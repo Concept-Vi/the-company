@@ -39,7 +39,7 @@ field is genuinely supported by the source text.
    it emits no resolve/approve/dispatch, launches no `claude -p`. The verdict is a JUDGEMENT; the act on
    it (FLAG, never drop — variance-not-error) lives downstream, and the memory write is the agent's, after
    confirm (③ step 5: "drafts, I confirm before writing"). E4 caveat applies: this is a SINGLE-4B SOFT
-   judgement (variance, not independent error) — it raises confidence + flags, it is not a hard proof; a
+   judgement (variance, not independent error) — it strengthens the verdict + flags, it is not a hard proof; a
    stronger model from the widened catalog (C2.5 / models_for_role) MAY bind it as an enhancement when a
    GPU window permits, never a requirement.
 
@@ -56,12 +56,12 @@ class JudgeMiningOut(BaseModel):
 
     The verdict is the boolean `grounded` (is every NON-EMPTY claimed field actually supported by the raw
     exchange?), the `unsupported` field NAMES the first/worst claim that has no basis in the source (the
-    "why" for a fail — empty "" when grounded), and `confidence` is the judge's self-rated certainty in the
-    verdict. The fields are TIED: grounded==false ⟹ unsupported is non-empty (names the ungrounded field);
-    grounded==true ⟹ unsupported == "". complete() validates/retries against this schema (fail-loud, C1.4)."""
+    "why" for a fail — empty "" when grounded). The fields are TIED: grounded==false ⟹ unsupported is non-empty (names the
+    ungrounded field); grounded==true ⟹ unsupported == "". NO confidence float (G16, the no-confidence
+    law) — the boolean verdict + the named unsupported field ARE the evidence, not a self-rated certainty.
+    complete() validates/retries against this schema (fail-loud, C1.4)."""
     grounded: bool       # is EVERY non-empty claimed field genuinely supported by the raw exchange?
     unsupported: str = ""  # the claim/field that is NOT grounded (which one + why), or "" when grounded
-    confidence: float = 0.0  # the judge's certainty in this verdict (0.0–1.0)
 
 
 ROLE = {
@@ -104,18 +104,16 @@ ROLE = {
         "  - if `grounded` is false, `unsupported` MUST name the ungrounded field and say briefly why it "
         "is not supported by the raw exchange; if `grounded` is true, `unsupported` MUST be the empty "
         "string \"\".\n"
-        "  - `confidence` is your certainty in this verdict, 0.0 to 1.0.\n"
         "\n"
         "Return ONLY JSON with exactly these fields:\n"
         '  "grounded": boolean,\n'
-        '  "unsupported": the ungrounded field + why (a short phrase), or "" when grounded,\n'
-        '  "confidence": a number 0.0-1.0.\n'
+        '  "unsupported": the ungrounded field + why (a short phrase), or "" when grounded.\n'
         "\n"
         'Example (faithful — Tim did correct me, the extract reflects it): {"grounded": true, '
-        '"unsupported": "", "confidence": 0.9}\n'
+        '"unsupported": ""}\n'
         'Example (fabricated — extract claims a tim_correction with no basis in the raw exchange): '
         '{"grounded": false, "unsupported": "tim_correction: the raw exchange contains no correction from '
-        'Tim — he asked a question and I answered; nothing was corrected", "confidence": 0.85}'
+        'Tim — he asked a question and I answered; nothing was corrected"}'
     ),
     "output_schema": JudgeMiningOut,
     # DEFAULT input axis — ("utterance",) ONLY. `extract`/`raw_exchange` are KEYS inside the unit dict that

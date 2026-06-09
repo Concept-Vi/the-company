@@ -108,8 +108,9 @@ Roles fire model calls through `fabric/` guards (a model runs only INSIDE a role
   cast (cast-beyond-listening; listening untouched). Fanned over the lenses via `run_items` → a diverse
   option-space for Tim's A/B/C forks.
 - **`score_options`** — the **option-panel REDUCE role** (⑩, mode=role): takes the N per-lens approaches
-  → `{scored:[{lens,score,why}], recommendation, grafts}` — scores each + a recommendation that may graft
-  runner-up strengths. Mirrors `reduce_synth`'s reduce-role shape.
+  → `{scored:[{lens,rank,why}], recommendation, grafts}` — RANKS each (ordinal, 1=strongest) + a
+  recommendation that may graft runner-up strengths. `rank` is an int ordinal not a 0..1 score (G16
+  no-confidence: tags+counts, no fake-precision float). Mirrors `reduce_synth`'s reduce-role shape.
 - **`mine_exchange`** — the **transcript-miner MAP role** (COMPOSITIONS ③): reads ONE conversation
   exchange (Tim-message + my-response, riding in the unit) → a self-improvement extract `{decision,
   rationale, tim_correction, my_error, bug_fix, needs_tim, frustration, pattern_tag}` (7 optional + the
@@ -117,8 +118,9 @@ Roles fire model calls through `fabric/` guards (a model runs only INSIDE a role
   exchanges via `run_items`; the cross-exchange embed-CLUSTER of pattern_tags into named failure-patterns
   (→ drafts `feedback-*.md` for review) is the follow-on (needs the embedder).
 - **`judge_mining`** — the **transcript-miner CONFIRM role** (③, no-fiction gate): validates ONE
-  `mine_exchange` extract against its RAW exchange → `{grounded:bool, unsupported:str, confidence:float}`
-  (did the miner fabricate a decision/correction not in the exchange?). A single-generate validator
+  `mine_exchange` extract against its RAW exchange → `{grounded:bool, unsupported:str}` (did the miner
+  fabricate a decision/correction not in the exchange?). NO confidence float (G16 no-confidence: the
+  boolean verdict + the named unsupported field ARE the evidence). A single-generate validator
   (mirrors `verify_lens`; E4 caveat — soft, model-binding accepts a stronger tiebreak). In `mining`.
 - **`decompose_seed`** — the **spec-compiler's seed→groups role** (COMPOSITIONS ⑦, 1×1): a dense seed →
   `{groups:[{group_id, what, systems_touched}]}` (the loop-prep "group by system, not implementation-order"). In the `spec` cast.
