@@ -58,23 +58,12 @@ def list_graphs() -> list:
     return SUITE.list_graphs()
 
 
-@mcp.tool()
-def create_node(graph: str, type: str, config: dict = {}, node_id: str = "") -> str:
-    """Add a node of `type` to `graph` (GENERIC — works for any registered type). Returns its id."""
-    return SUITE.create_node(graph, type, dict(config), node_id or None)
-
-
+# create_node/delete_node/propose_node/apply_node → CONSOLIDATED into mcp_face/tools/node.py
+# (node(op=create|delete|propose|apply) — MCP-DESIGN-PRINCIPLE). The flat defs are removed.
 @mcp.tool()
 def connect(graph: str, from_node: str, from_port: str, to_node: str, to_port: str) -> str:
     """Wire from_node.from_port -> to_node.to_port in `graph`."""
     SUITE.connect(graph, from_node, from_port, to_node, to_port)
-    return "ok"
-
-
-@mcp.tool()
-def delete_node(graph: str, node: str) -> str:
-    """Remove `node` from `graph` along with any edges touching it."""
-    SUITE.delete_node(graph, node)
     return "ok"
 
 
@@ -105,20 +94,8 @@ def get_results(graph: str) -> dict:
 
 
 # --- self-growth: build-dispatch + the surfaced-decision inbox (D7/D4) ---
-@mcp.tool()
-def propose_node(name: str, spec: str) -> dict:
-    """Build-dispatch: ask the brain to WRITE a new node-type module. Returns {name, code}.
-    Proposing is safe; APPLYING is CONFIRM-gated (see apply_node)."""
-    return SUITE.propose_node(name, spec)
-
-
-@mcp.tool()
-def apply_node(surfaced_id: str) -> str:
-    """Apply a proposed node by its surfaced id — succeeds ONLY if the OPERATOR has approved it
-    (resolved=='approve'). The agent cannot self-approve (approval is not on this face)."""
-    return SUITE.apply_node(surfaced_id)
-
-
+# propose_node/apply_node → CONSOLIDATED into mcp_face/tools/node.py (node(op=propose|apply); the FLOOR
+# is preserved — apply reads operator approval from the substrate, the agent cannot self-approve).
 @mcp.tool()
 def list_surfaced() -> list:
     """Decisions the system surfaced for the operator (each carries a default + resolution)."""
@@ -272,27 +249,8 @@ def list_skills_contexts() -> dict:
     return {"skills": _rows(sk), "contexts": _rows(cx)}
 
 
-@mcp.tool()
-def list_runs(op: str = "", run_op: str = "", limit: int = 50) -> dict:
-    """DISCOVER past engine runs — the agent-face RUN INDEX (#54 storage-discovery). Lists past
-    run_role / run_items / run_reduce runs + their run:// output addresses, NEWEST-FIRST, so an agent can
-    feed a discovered output as an INPUT (run_role inputs=/run_items items=, resolved via inspect_address/
-    resolve_address) or re-run it — instead of only reading a run whose address it already KNOWS. REUSES
-    Suite.list_runs (a READ-TIME projection over the op.run event log — the log IS the index, no parallel
-    store). `op` filters to one engine run-op (cognition.run_role|run_items|run_reduce); `run_op` filters by
-    the operation (generate|embed|role|rule|cluster). Read-only. Returns {runs:[{address, op, run_op,
-    turn_id, role, duration_ms, seq, ts}], total_records}."""
-    return SUITE.list_runs(op=(op or None), run_op=(run_op or None), limit=limit)
-
-
-@mcp.tool()
-def find_runs(role: str = "", op: str = "", run_op: str = "", limit: int = 50) -> dict:
-    """DISCOVER past engine runs FILTERED by role (and/or op/run_op) — the query face of the run index
-    (#54). REUSES Suite.find_runs (thin reuse of list_runs). E.g. find_runs(role='ground') → the past runs
-    of the 'ground' role + their run:// addresses. Read-only. Returns the same {runs, total_records} shape."""
-    return SUITE.find_runs(role=(role or None), op=(op or None), run_op=(run_op or None), limit=limit)
-
-
+# list_runs/find_runs → CONSOLIDATED into mcp_face/tools/runs.py (runs(op=list|find) — the #54 run index;
+# get_results/get_state/get_events STAY as distinct nouns per the don't-god-tool rule). Flat defs removed.
 @mcp.tool()
 def inspect_address(address: str, turn_id: str = "") -> dict:
     """INSPECT a RUN OUTPUT (or any addressed content) by address — reads a PAST run's output back.
@@ -678,27 +636,8 @@ def delete_role(role_id: str) -> dict:
     return SUITE.delete_role(role_id)
 
 
-@mcp.tool()
-def validate_rule(ast: dict, destination: str = "") -> dict:
-    """INSPECT/validate a rule AST against the closed grammar (RULE_OPS) + the destination check.
-    REUSES Suite.validate_rule (the /api/cognition/rule/validate path). Read-only — pure validation."""
-    return SUITE.validate_rule(ast, destination=destination or None)
-
-
-@mcp.tool()
-def dry_run_rule(ast: dict, sample_resolved: dict = {}, destination: str = "inject",
-                 params: dict = {}, on_missing: str = "raise") -> dict:
-    """RUN a rule's routing DECISION over sample resolved values (no effect). REUSES Suite.dry_run_rule
-    (the /api/cognition/rule/dry_run path). Read-only — the routing decision, never the effect."""
-    return SUITE.dry_run_rule(ast, dict(sample_resolved), destination=destination,
-                              params=(dict(params) or None), on_missing=on_missing)
-
-
-@mcp.tool()
-def attach_rule(role_id: str, rule: dict) -> dict:
-    """CREATE — attach a declared rule onto a role: SURFACES for the operator (a constrained edit_role).
-    REUSES Suite.attach_rule (the /api/cognition/rule/attach path). Surfaces; never self-applies."""
-    return SUITE.attach_rule(role_id, rule)
+# validate_rule/dry_run_rule/attach_rule → CONSOLIDATED into mcp_face/tools/rule.py
+# (rule(op=validate|dry_run|attach) — MCP-DESIGN-PRINCIPLE). The flat defs are removed.
 
 
 # NOTE (the floor, reframed by #58): AUTHORING (create_role/create_skill/create_context) applies
@@ -856,22 +795,7 @@ def find_relations(item: str, near_space: str, far_space: str, k: int = 10, min_
     return SUITE.find_relations(item, near_space=near_space, far_space=far_space, k=k, min_score=min_score)
 
 
-@mcp.tool()
-def findings_for(address: str) -> dict:
-    """READ the MARKS / gold-likelihood PROFILE at a corpus address — every finding a mark-pass left on
-    `address`, oldest-first (the detection thread). A mark = a finding record; the gold-likelihood profile
-    is findings_for(item) composed with its evidence — a READ, never a stored score (Tim sees-WHY and can
-    overrule; positive-only — frequency only promotes). REUSES the coherence finding store
-    (Suite.store.findings_for over the append-only findings.jsonl — the SAME store coherence writes; the
-    address IS the key). An address with no findings returns an HONEST empty list (not yet marked), never
-    a fabricated mark. Read-only.
-
-    Returns {address, total, findings:[{kind, address, state, source, evidence, ts, …}]}. NOTE: writing
-    marks (`mark`) is a later STORE pass (marks-generalization — a claim/span target + mark_type
-    retrieval); this tool is the READ side, available now. DELEGATE: Suite.store.findings_for
-    (store/fs_store.py)."""
-    rows = SUITE.store.findings_for(address)
-    return {"address": address, "total": len(rows), "findings": rows}
+# findings_for → CONSOLIDATED into mcp_face/tools/marks.py (marks(by='findings', target=)). Flat def removed.
 
 
 # --- CREATE (declarative-direct — a projection LENS, like create_role/create_skill; #58) ----------
@@ -1049,26 +973,8 @@ def mark(target: str, mark_type: str, value: object = None, confidence: float = 
     return SUITE.mark(target, mark_type, **fields)
 
 
-@mcp.tool()
-def marks_for(target: str) -> dict:
-    """READ every MARK on a claim/span `target`, oldest-first (the mark thread there — the M2 gold-
-    likelihood PROFILE is marks_for(target) composed with evidence, a READ not a stored score). An
-    unmarked target → an HONEST empty list. REUSES Suite.marks_for (store.marks_for over marks.jsonl;
-    persistence-survives-reload). Read-only. Returns {target, total, marks:[…]}. DELEGATE: Suite.marks_for.
-    (DISTINCT from findings_for, which reads the legacy coherence findings.jsonl by address — marks carry a
-    claim/span target + a registered mark_type, the marks-generalization's two retrieval keys.)"""
-    ms = SUITE.marks_for(target)
-    return {"target": target, "total": len(ms), "marks": ms}
-
-
-@mcp.tool()
-def marks_by_type(mark_type: str) -> dict:
-    """READ every MARK of `mark_type` across targets, oldest-first (the cross-target view of one mark kind
-    — e.g. every ai_fingerprint mark, the M4 denoising surface). FAIL LOUD on an unknown mark_type
-    (registry-is-truth — a typo'd type would silently look like 'no marks'). REUSES Suite.marks_by_type.
-    Read-only. Returns {mark_type, total, marks:[…]}. DELEGATE: Suite.marks_by_type + the mark_types gate."""
-    ms = SUITE.marks_by_type(mark_type)
-    return {"mark_type": mark_type, "total": len(ms), "marks": ms}
+# marks_for/marks_by_type → CONSOLIDATED into mcp_face/tools/marks.py (marks(by=target|type|findings)).
+# The WRITE tool `mark(...)` above STAYS (CQRS — reads consolidated, the write is its own verb). Flat reads removed.
 
 
 if __name__ == "__main__":
