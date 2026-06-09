@@ -41,24 +41,64 @@ class AuthoringError(Exception):
     discover. Fail loud; never write a broken file to the live roles/ tree."""
 
 
-# --- C7.5 · the closed field-type registry (registry-is-truth; an unknown type fails loud) --------
-# Maps an operator-facing field-type → the Python annotation rendered into the generated BaseModel.
-# A closed set by construction (mirrors RULE_OPS being a closed grammar). Adding a type = a row here
-# (+ reflect it in the FE-HANDOFF doc). The FE schema-editor reads this set from /api/cognition/field_types.
+# --- C7.5 / B2 · the field-type registry (registry-is-truth; an unknown type fails loud) -----------
+# Maps an operator-facing field-type → how it renders into the generated Pydantic BaseModel. A CLOSED
+# set by construction (mirrors RULE_OPS being a closed grammar). Adding a type = a row here (+ reflect
+# it in the FE-HANDOFF doc + the constitution). The FE schema-editor reads this set from
+# /api/cognition/field_types.
+#
+# B2 — RICHER TYPES (the type grammar is widened, NOT replaced; output_schema is ALREADY real Pydantic).
+# Each row carries a `kind` DISCRIMINATOR the recursive renderer dispatches on:
+#   - "scalar"  — a fixed Python annotation (the 6 original flat scalars). The renderer emits the
+#                 annotation VERBATIM (a flat-scalar role renders BYTE-IDENTICAL to before — the
+#                 additive law). `default` is the bare-field default literal/factory.
+#   - "enum"    — Literal[...] over the field's declared `values` (the annotation is COMPUTED per field;
+#                 requires `from typing import Literal`, emitted ONLY when an enum appears).
+#   - "object"  — a NESTED object → a generated sub-BaseModel from the field's declared `fields` (recursive).
+#   - "list[object]" — a LIST of nested objects → list[<SubModel>] from the field's declared `fields`.
+# The `optional` flag (→ T | None, default None) and the `default` per-field value are FIELD MODIFIERS
+# applied AFTER the annotation is computed — they are not type rows.
+# `params` names the spec keys a kind REQUIRES at render time (the FE/agent learns the shape from here;
+# fail-loud if absent — never an enum with no values, never an object with no fields).
 FIELD_TYPES: dict[str, dict] = {
-    "str":        {"annotation": "str",             "default": "''",   "gloss": "a text field"},
-    "int":        {"annotation": "int",             "default": "0",    "gloss": "an integer"},
-    "float":      {"annotation": "float",           "default": "0.0",  "gloss": "a decimal number"},
-    "bool":       {"annotation": "bool",            "default": "False","gloss": "a true/false flag"},
-    "list[str]":  {"annotation": "list[str]",       "default": "list", "gloss": "a list of strings"},
-    "list[int]":  {"annotation": "list[int]",       "default": "list", "gloss": "a list of integers"},
+    "str":          {"kind": "scalar", "annotation": "str",       "default": "''",    "gloss": "a text field"},
+    "int":          {"kind": "scalar", "annotation": "int",       "default": "0",     "gloss": "an integer"},
+    "float":        {"kind": "scalar", "annotation": "float",     "default": "0.0",   "gloss": "a decimal number"},
+    "bool":         {"kind": "scalar", "annotation": "bool",      "default": "False", "gloss": "a true/false flag"},
+    "list[str]":    {"kind": "scalar", "annotation": "list[str]", "default": "list",  "gloss": "a list of strings"},
+    "list[int]":    {"kind": "scalar", "annotation": "list[int]", "default": "list",  "gloss": "a list of integers"},
+    "enum":         {"kind": "enum",   "params": ["values"],
+                     "gloss": "one of a fixed set of string choices (Literal[...])"},
+    "object":       {"kind": "object", "params": ["fields"],
+                     "gloss": "a nested object (its own field-set → a sub-model)"},
+    "list[object]": {"kind": "list[object]", "params": ["fields"],
+                     "gloss": "a list of nested objects (each its own field-set → a sub-model)"},
 }
+# `dict` is an operator-friendly alias the FE/agent may use for a nested object / list-of-objects.
+FIELD_TYPE_ALIASES: dict[str, str] = {"list[dict]": "list[object]", "dict": "object"}
 
 
 def field_types() -> dict[str, dict]:
-    """The closed field-type registry as a STATUS read (the FE schema-editor's dropdown source —
-    registry-is-truth, never a hardcoded FE list). Mirrors how knobs_for()/roles() expose registries."""
-    return {k: {"annotation": v["annotation"], "gloss": v["gloss"]} for k, v in FIELD_TYPES.items()}
+    """The field-type registry as a STATUS read (the FE schema-editor's dropdown source —
+    registry-is-truth, never a hardcoded FE list). Mirrors how knobs_for()/roles() expose registries.
+    B2: each row carries its `kind` + (for the richer kinds) the `params` it requires, so a face learns
+    the per-type shape (enum→values, object/list[object]→fields) from the registry, not from an example."""
+    out: dict[str, dict] = {}
+    for k, v in FIELD_TYPES.items():
+        row: dict[str, Any] = {"kind": v["kind"], "gloss": v["gloss"]}
+        if "annotation" in v:
+            row["annotation"] = v["annotation"]
+        if "params" in v:
+            row["params"] = list(v["params"])
+        out[k] = row
+    # The aliases are FIRST-CLASS rows (kind="alias") so EVERY value has a uniform shape (a `kind`) —
+    # a consumer iterating `for name, row in field_types().items(): row["kind"]` never trips. An alias
+    # row points at the structural kind it resolves to (`alias_of`), so a face knows list[dict]/dict
+    # resolve to list[object]/object without fabricating (registry-is-truth).
+    for alias, canon in FIELD_TYPE_ALIASES.items():
+        out[alias] = {"kind": "alias", "alias_of": canon,
+                      "gloss": f"alias for {canon} ({FIELD_TYPES[canon]['gloss']})"}
+    return out
 
 
 def _safe_role_id(rid: Any) -> str:
@@ -80,6 +120,169 @@ def _safe_role_id(rid: Any) -> str:
 def _schema_class_name(rid: str) -> str:
     """Derive the generated output_schema class name from the role id ('my_role' → 'MyRoleOut')."""
     return "".join(p.capitalize() for p in re.split(r"[^a-z0-9]+", rid) if p) + "Out"
+
+
+def _pascal(name: str) -> str:
+    """A field/segment name → a PascalCase fragment for a sub-model class name."""
+    return "".join(p.capitalize() for p in re.split(r"[^A-Za-z0-9]+", name) if p)
+
+
+# --- B2 · the recursive field renderer (the richer-type grammar) ----------------------------------
+# A "render plan" the renderer builds per output-field-set:
+#   - submodels: ordered list of (class_name, [field-line, ...]) sub-BaseModels, EMITTED BEFORE the
+#     classes that reference them (define-before-use; depth-first, deduped by class name) — so no
+#     forward refs / model_rebuild() needed.
+#   - field_lines: the `name: annotation = default` lines for the OWNING class body.
+#   - needs_literal: True iff any enum appeared (→ conditional `from typing import Literal` import).
+# Fail loud (AuthoringError) on: a malformed field, an unknown type, an enum with no/empty values,
+# an object/list[object] with no fields, a default whose value can't be a valid Python literal.
+
+class _RenderCtx:
+    """Mutable accumulator threaded through the recursive render (sub-models + the literal-import flag)."""
+    def __init__(self) -> None:
+        self.submodels: list[tuple[str, list[str]]] = []   # (class_name, field_lines), define-order
+        self._seen: set[str] = set()                       # class names already emitted (dedup)
+        self.needs_literal: bool = False
+
+    def add_submodel(self, cls: str, field_lines: list[str]) -> None:
+        if cls in self._seen:
+            return
+        self._seen.add(cls)
+        self.submodels.append((cls, field_lines))
+
+
+def _resolve_field_type(rid: str, fname: str, ftype: Any) -> tuple[str, dict]:
+    """Resolve a declared field `type` (honouring the aliases) to (canonical-type, registry-row).
+    Fail loud on an unknown type — rule 8, never invent a type."""
+    if not isinstance(ftype, str):
+        raise AuthoringError(
+            f"role {rid!r}: field {fname!r} type must be a string, got {ftype!r}. Fail loud.")
+    canon = FIELD_TYPE_ALIASES.get(ftype, ftype)
+    row = FIELD_TYPES.get(canon)
+    if row is None:
+        known = sorted(FIELD_TYPES) + sorted(FIELD_TYPE_ALIASES)
+        raise AuthoringError(
+            f"role {rid!r}: field {fname!r} has unknown type {ftype!r} — one of {known} "
+            f"(the closed field-type registry; never invent a type — rule 8). Fail loud.")
+    return canon, row
+
+
+def _render_default(rid: str, fname: str, value: Any) -> str:
+    """Render a per-field `default` value to a valid Python literal via repr. Reject a value repr
+    can't round-trip to a literal (e.g. a class/function) — fail loud, never emit invalid Python."""
+    # Only plain JSON-shaped values are valid declared defaults (the spec is JSON-authored data).
+    if not isinstance(value, (str, int, float, bool, list, dict, type(None))):
+        raise AuthoringError(
+            f"role {rid!r}: field {fname!r} default {value!r} is not a JSON-shaped literal "
+            f"(str/int/float/bool/list/dict/None). Fail loud — never emit invalid Python.")
+    return repr(value)
+
+
+def _build_field_line(rid: str, field: Any, ctx: _RenderCtx, *, owner_cls: str) -> str:
+    """Render ONE output field (recursive for object / list[object]) to a `name: ann = default` line,
+    appending any generated sub-models to ctx. owner_cls scopes the sub-model class names."""
+    if not isinstance(field, dict):
+        raise AuthoringError(f"role {rid!r}: each output field must be a dict, got {field!r}")
+    fname = field.get("name")
+    if not isinstance(fname, str) or not fname.isidentifier() or fname.startswith("_"):
+        raise AuthoringError(
+            f"role {rid!r}: output field name {fname!r} must be a plain identifier (no '_'-prefix). "
+            f"Fail loud.")
+    ftype = field.get("type", "str")
+    canon, row = _resolve_field_type(rid, fname, ftype)
+    kind = row["kind"]
+
+    # --- compute the annotation by KIND ---
+    if kind == "scalar":
+        ann = row["annotation"]
+        base_default = row["default"]                      # the bare-field default literal/factory
+    elif kind == "enum":
+        values = field.get("values")
+        if not isinstance(values, list) or not values:
+            raise AuthoringError(
+                f"role {rid!r}: enum field {fname!r} must declare a non-empty `values` list. Fail loud.")
+        for v in values:
+            if not isinstance(v, str):
+                raise AuthoringError(
+                    f"role {rid!r}: enum field {fname!r} values must all be strings, got {v!r}. Fail loud.")
+        ctx.needs_literal = True
+        ann = "Literal[" + ", ".join(repr(v) for v in values) + "]"
+        base_default = repr(values[0])                     # default to the first choice (a valid member)
+    elif kind in ("object", "list[object]"):
+        sub_fields = field.get("fields")
+        if not isinstance(sub_fields, list) or not sub_fields:
+            raise AuthoringError(
+                f"role {rid!r}: {kind} field {fname!r} must declare a non-empty `fields` list "
+                f"(the nested object's own field-set). Fail loud.")
+        sub_cls = owner_cls + _pascal(fname)
+        # RECURSE: build the sub-model's body FIRST (so a nested object's own sub-models are emitted
+        # before it — define-before-use, depth-first).
+        sub_lines: list[str] = []
+        seen: set[str] = set()
+        for sf in sub_fields:
+            sfn = sf.get("name") if isinstance(sf, dict) else None
+            if isinstance(sfn, str):
+                if sfn in seen:
+                    raise AuthoringError(
+                        f"role {rid!r}: nested object {fname!r} has duplicate field {sfn!r}. Fail loud.")
+                seen.add(sfn)
+            sub_lines.append(_build_field_line(rid, sf, ctx, owner_cls=sub_cls))
+        ctx.add_submodel(sub_cls, sub_lines)
+        if kind == "object":
+            ann = sub_cls
+            base_default = None                            # a nested object has no scalar default; see below
+        else:  # list[object]
+            ann = f"list[{sub_cls}]"
+            base_default = "list"
+    else:                                                  # unreachable (closed registry)
+        raise AuthoringError(f"role {rid!r}: field {fname!r} has unhandled kind {kind!r}. Fail loud.")
+
+    # --- apply the per-field MODIFIERS (optional, default) AFTER the annotation is computed ---
+    optional = bool(field.get("optional"))
+    has_default = "default" in field
+    desc = field.get("description")
+    desc_kw = f", description={desc!r}" if desc else ""
+
+    if optional:
+        ann = f"{ann} | None"
+        # an optional field defaults to None unless a default is explicitly declared.
+        if has_default:
+            default_expr = f"Field(default={_render_default(rid, fname, field['default'])}{desc_kw})"
+        else:
+            default_expr = f"Field(default=None{desc_kw})" if desc else "None"
+        return f"    {fname}: {ann} = {default_expr}"
+
+    # not optional:
+    if has_default:
+        return f"    {fname}: {ann} = Field(default={_render_default(rid, fname, field['default'])}{desc_kw})"
+    if kind == "object":
+        # a required nested object with no declared default must still be constructable; a sub-model
+        # with all-defaulted fields → default_factory=<SubModel>. Use Field default_factory.
+        return f"    {fname}: {ann} = Field(default_factory={ann}{desc_kw})"
+    if base_default == "list":
+        return f"    {fname}: {ann} = Field(default_factory=list{desc_kw})"
+    if desc:
+        return f"    {fname}: {ann} = Field(default={base_default}{desc_kw})"
+    return f"    {fname}: {ann} = {base_default}"
+
+
+def _render_output_fields(rid: str, cls: str, out_fields: list) -> tuple[list[str], list[tuple[str, list[str]]], bool]:
+    """Render the full output-field-set for the main schema class. Returns
+    (main-class field-lines, ordered sub-models, needs_literal). Fail loud on a duplicate top-level
+    field. A role with NO fields gets the minimal {ok: bool} schema (a valid fire-able BaseModel)."""
+    ctx = _RenderCtx()
+    field_lines: list[str] = []
+    seen: set[str] = set()
+    for f in out_fields:
+        fn = f.get("name") if isinstance(f, dict) else None
+        if isinstance(fn, str):
+            if fn in seen:
+                raise AuthoringError(f"role {rid!r}: duplicate output field {fn!r}. Fail loud.")
+            seen.add(fn)
+        field_lines.append(_build_field_line(rid, f, ctx, owner_cls=cls))
+    if not field_lines:
+        field_lines.append("    ok: bool = True   # minimal schema (no fields declared) — still a valid BaseModel")
+    return field_lines, ctx.submodels, ctx.needs_literal
 
 
 def render_role_source(spec: dict) -> str:
@@ -112,43 +315,16 @@ def render_role_source(spec: dict) -> str:
     rid = _safe_role_id(spec.get("id"))
     cls = _schema_class_name(rid)
 
-    # --- the structured-output fields → the BaseModel body (C7.5) ---
+    # --- the structured-output fields → the BaseModel body (C7.5 · B2 RICHER TYPES) ---
+    # The recursive renderer (B2) handles scalars (byte-identical to the original flat path), enums
+    # (Literal[...]), nested objects (→ a sub-BaseModel), list[object]/list[dict] (→ list[SubModel]),
+    # and the optional/default per-field modifiers. It returns the main-class field-lines + any
+    # generated sub-models (emitted BEFORE the main class) + whether a `from typing import Literal`
+    # import is needed (only when an enum appeared).
     out_fields = spec.get("output_fields") or []
     if not isinstance(out_fields, list):
         raise AuthoringError(f"role {rid!r}: output_fields must be a list, got {type(out_fields).__name__}")
-    field_lines: list[str] = []
-    seen: set[str] = set()
-    for f in out_fields:
-        if not isinstance(f, dict):
-            raise AuthoringError(f"role {rid!r}: each output field must be a dict, got {f!r}")
-        fname = f.get("name")
-        if not isinstance(fname, str) or not fname.isidentifier() or fname.startswith("_"):
-            raise AuthoringError(
-                f"role {rid!r}: output field name {fname!r} must be a plain identifier (no '_'-prefix). "
-                f"Fail loud.")
-        if fname in seen:
-            raise AuthoringError(f"role {rid!r}: duplicate output field {fname!r}. Fail loud.")
-        seen.add(fname)
-        ftype = f.get("type", "str")
-        if ftype not in FIELD_TYPES:
-            raise AuthoringError(
-                f"role {rid!r}: field {fname!r} has unknown type {ftype!r} — one of {sorted(FIELD_TYPES)} "
-                f"(the closed field-type registry; never invent a type — rule 8). Fail loud.")
-        ann = FIELD_TYPES[ftype]["annotation"]
-        default = FIELD_TYPES[ftype]["default"]
-        desc = f.get("description")
-        if desc:
-            field_lines.append(
-                f"    {fname}: {ann} = Field(default_factory={default}, description={desc!r})"
-                if default == "list" else
-                f"    {fname}: {ann} = Field(default={default}, description={desc!r})")
-        else:
-            field_lines.append(
-                f"    {fname}: {ann} = Field(default_factory={default})"
-                if default == "list" else
-                f"    {fname}: {ann} = {default}")
-    if not field_lines:
-        field_lines.append("    ok: bool = True   # minimal schema (no fields declared) — still a valid BaseModel")
+    field_lines, submodels, needs_literal = _render_output_fields(rid, cls, out_fields)
 
     # --- the ROLE declared dict (DATA — verbatim what the file consumers read) ---
     # #58 DIRECT-CREATE: the renderer now emits the FULL role schema the agent can set — every
@@ -204,13 +380,23 @@ def render_role_source(spec: dict) -> str:
     else:
         body = body + f",\n    'output_schema': {cls},\n}}"
 
+    # B2: the conditional `from typing import Literal` (ONLY when an enum appeared — so a flat-scalar
+    # role's bytes are UNCHANGED), and the generated sub-models EMITTED BEFORE the main class
+    # (define-before-use; no forward refs / model_rebuild needed).
+    literal_import = "from typing import Literal\n" if needs_literal else ""
+    submodel_blocks = ""
+    for sub_cls, sub_lines in submodels:
+        submodel_blocks += f"class {sub_cls}(BaseModel):\n" + "\n".join(sub_lines) + "\n\n\n"
+
     src = (
         f'"""roles/{rid}.py — authored cognition role (Concurrent Cognition C7.4/C7.5 · #58 direct-create).\n'
         f'Authored through the cognition surface — DIRECTLY via create_role (the agent authors live, #58)\n'
         f'OR via propose_role→operator-approve→apply_role (surfacing, kept available). Either way validated\n'
         f'by import-in-a-temp-dir (the correctness gate) before it reached the live roles/ tree. A declared\n'
         f'role: the output_schema is a real BaseModel subclass (fail-loud requirement); rules are declared ASTs."""\n'
+        + literal_import +
         f"from pydantic import BaseModel, Field\n\n\n"
+        + submodel_blocks +
         f"class {cls}(BaseModel):\n"
         + "\n".join(field_lines) + "\n\n\n"
         f"ROLE = {body}\n"

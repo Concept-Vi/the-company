@@ -218,8 +218,13 @@ try:
     check("available_inputs lists the utterance + the fire-able roles' run:// addresses",
           inp["utterance"] == "utterance" and "tagger" in inp["roles"])
     ft = suite.field_types()
-    check("field_types is the closed registry (str/int/float/bool/list[str]/list[int])",
-          set(ft) == {"str", "int", "float", "bool", "list[str]", "list[int]"})
+    # B2 (Cognition Engine): field_types is a TYPE-REGISTRY widened beyond the flat scalars — it now also
+    # carries the richer kinds (enum/object/list[object]) + the list[dict]/dict aliases. The 6 flat
+    # scalars are still present (additive — a flat-scalar role renders byte-identical); the set GREW.
+    check("field_types carries the 6 flat scalars (additive — still present after B2)",
+          {"str", "int", "float", "bool", "list[str]", "list[int]"} <= set(ft))
+    check("field_types is now a widened TYPE REGISTRY (B2: enum/object/list[object] richer kinds)",
+          {"enum", "object", "list[object]"} <= set(ft) and ft["enum"]["kind"] == "enum")
 
     # ====================================================================================
     # 5 · DELETE — non-protected surfaces + applies (un-registers); protected refused
