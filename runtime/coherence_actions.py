@@ -72,6 +72,11 @@ def build_action(decl: dict, *, models: set, roles: set | None = None, rule_reso
         if fan is not None and (not isinstance(fan, str) or not fan):
             return {"ok": False, "error": f"step {i}: fan_field must be a non-empty string naming a LIST "
                     f"field of the previous step's output (e.g. 'groups')."}
+        mt = step.get("max_tokens")
+        if mt is not None and (not isinstance(mt, int) or isinstance(mt, bool) or mt <= 0):
+            return {"ok": False, "error": f"step {i}: max_tokens {mt!r} must be a positive int — the "
+                    f"optional per-step output BUDGET (a multi-doc synth step may need ~5000 where the "
+                    f"runner default is 256; declare it ON the step, the runner honours it)."}
     action = {"name": name, "steps": steps, "output_schema": decl.get("output_schema", {}),
               "schema_ver": decl.get("schema_ver", 1)}
     return {"ok": True, "action": action}

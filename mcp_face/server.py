@@ -608,6 +608,9 @@ def save_cascade(decl: dict) -> dict:
                     →items; else role.
       · reduce_mode/reduce_rule/cluster_threshold — for a reduce step (mode role|rule|cluster; rule selects
                     a NAMED reduce-rule via reduce_rule_names()).
+      · max_tokens — OPTIONAL per-step output BUDGET (positive int; validated). Declare it on a step whose
+                    output is LARGE (e.g. a multi-doc synth needs ~5000 where the default is 256) — a
+                    too-small budget truncates the role's JSON mid-string. OMIT → the runner default.
 
     THE SEAM (output→input): step 0 reads run_cascade(inputs); step N reads step N-1's output address(es).
     A `role` step consumes ONE value, `items` a LIST, `reduce` a LIST→ONE (the runner persists the reduce's

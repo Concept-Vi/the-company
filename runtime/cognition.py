@@ -207,6 +207,12 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
              policy: str | None = None, meta: dict | None = None) -> dict:
     """Fire ONE request at the resident 4B for `role`, returning VALIDATED JSON (a dict).
 
+    RETURN SHAPE (read this before harness-coding against it — the confusion has produced false
+    "0 findings" twice): the dict returned IS the role's validated output DIRECTLY — e.g. a
+    screen_reader call returns {"what_this_is": …}, NOT {"output": {…}}. The {"output": …, "address": …}
+    NESTING exists ONLY on the MCP face (mcp_face wraps the engine result for the tool response).
+    In-engine callers read fields straight off the return value.
+
     Mirrors `Suite.is_finished_thought`/the judge EXACTLY: `client.complete(openai_transport(...))`.
     `json=True` makes the transport set `response_format: {"type": "json_object"}` (verified the
     resident vLLM honours it); `schema=` makes `complete()` parse + validate + retry on a malformed
@@ -2125,7 +2131,12 @@ def run_cascade(action: dict, store, *, turn_id: str,
         # CLOUD-tier routing is N2 net-new transport in fabric/, NOT this lane — a cloud model id here FAILS
         # LOUD downstream in the client (no silent fallback). needs-tim: a multi-endpoint per-step router (N2).
         step_model = step.get("model") or model
-        kw_common = {"max_tokens": max_tokens}
+        # A per-step `max_tokens` override (additive, validated at the save door — build_action). The
+        # spec-compiler lesson: triad_synth's 3-doc JSON output died ("Unterminated string") at the
+        # runner-wide default and needed ~5000 — an output BUDGET is per-step knowledge that belongs to
+        # the DECL, exactly like the per-step `model` override above. Absent → the runner-wide default.
+        step_max_tokens = int(step.get("max_tokens") or max_tokens)
+        kw_common = {"max_tokens": step_max_tokens}
 
         if kind == "retrieve":
             # ── RETRIEVE step (G4 — the corpus-RAG primitive): consume ONE query value (the prior step's
@@ -2175,7 +2186,7 @@ def run_cascade(action: dict, store, *, turn_id: str,
                     f"outputs of a prior MAP step — there is no prior step to reduce. Fail loud (a reduce "
                     f"needs upstream addresses; put a map/items step before it).")
             rkw = {"turn_id": turn_id, "mode": reduce_mode, "emit": None,
-                   "base_url": base_url, "model": step_model, "max_tokens": max_tokens}
+                   "base_url": base_url, "model": step_model, "max_tokens": step_max_tokens}
             if reduce_mode == "role":
                 rkw["role"] = role
             elif reduce_mode == "rule":
