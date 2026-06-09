@@ -42,8 +42,31 @@ DEFAULT/unspaced entries ONLY (a spaced entry NEVER leaks into the default corpu
 retrieval and crash `retrieve._cosine` when two projections differ in dim); a named space returns the
 SOURCE items (round-trips); `FsStore.ALL_SPACES` enumerates everything. `build_index(space=…)` keys its
 incremental diff on the SPACED address (the same item in two spaces is independent). All params are optional
-kwargs — every prior caller is unchanged. NEXT (a later STORE pass, NOT done here): marks-generalization —
-the finding/disposition store extended with a claim/span target + `mark_type` retrieval.
+kwargs — every prior caller is unchanged.
+
+**Marks store (cognition-engine GROUP M) = the finding store, GENERALIZED.** A MARK is what a mark-pass
+(`run_role`/`run_reduce`) writes about a source item; it GENERALIZES the coherence finding record along two
+axes the finding shape can't carry (Implementation Guide §4.2, superseding M1's "same shape" claim):
+(1) a **TARGET**, not just an address — a CLAIM or a SPAN (a sub-region) as well as a plain address; (2) a
+**`mark_type`** (a string id from the mark-types registry — a SEPARATE lane; the store codes against it as an
+opaque id, never imports the registry) plus the mark payload (`value/confidence/source_pass/evidence`). Marks
+ride a SIBLING `marks.jsonl` leaf (`FsStore.append_mark` / `marks_for(target)` / `marks_by_type(mark_type)` /
+`all_marks`), REUSING the `append_finding`/`findings_for` open-record + append-only + field-match pattern (this
+is GENERALIZE, not PARALLEL — many `.jsonl` leaves on the ONE root, like pins/dispositions/annotations/chat;
+the store rule forbids a second store/backend/resolver, not a second leaf). **WHY a sibling leaf, not
+`findings.jsonl`:** `all_findings()` feeds `coherence_detect.burn_down` (the orphan backlog rollup), which
+counts EVERY finding record — so a mark in `findings.jsonl` would silently inflate the live burn-down. The
+sibling leaf leaves the finding read-path BYTE-FOR-BYTE untouched (old findings still read exactly as before —
+preservation trivial by construction) and a mark NEVER leaks into the finding/burn-down corpus — the SAME "a
+spaced entry never leaks into the default corpus" discipline the space-keyed vectors use. **Portable by FIELD,
+not string-parse:** `target` + `mark_type` are EXPLICIT record fields, so the per-type/per-target filter is a
+clean field match a Supabase backend implements as `WHERE mark_type = X` / `WHERE target = X` — the store
+treats `target` as an OPAQUE string (does NOT define/parse the `claim://`/`span://` grammar — that S0/C1 gate
+is the Suite/contract lane, mirroring `append_annotation`). STRUCTURAL fail-loud (like `put_vector`'s dim
+guard): a mark with a missing/empty `target` or `mark_type` is REFUSED (an unfindable mark is a silent black
+hole, store rule 4). Proven by `tests/marks_acceptance.py`. **NEXT (SEPARATE lanes, NOT done here):** the
+suite-side mark API (`runtime/suite.py`), the `mark` MCP tool (`mcp_face/server.py`), and the mark-types
+registry — this pass is the STORE persistence + by-target/by-type query ONLY.
 
 ## Relates to
 

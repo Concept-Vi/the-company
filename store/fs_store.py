@@ -645,6 +645,112 @@ class FsStore:
                 latest = rec   # last line wins
         return latest
 
+    # --- marks store (cognition-engine GROUP M) = the finding store, GENERALIZED ---
+    # A MARK is what a mark-pass (run_role/run_reduce) writes about a source item. It GENERALIZES the
+    # coherence finding record (above) along two axes the finding shape can't carry (Implementation Guide
+    # §4.2, which supersedes M1's "same shape" over-claim):
+    #   1. TARGET, not just an address. A finding is keyed by `address`; a mark targets a CLAIM or a SPAN
+    #      (a sub-region of an item) as well as a plain address. `target` is the retrieval key and is an
+    #      OPAQUE STRING here — the store turns it into bytes and back, exactly as append_annotation does NOT
+    #      validate its `ui://` address (the S0/C1 grammar gate is the Suite/contract's job, where the
+    #      semantic work lives). Illustrative shapes a caller may use: a bare `code://`/`ui://` address, a
+    #      `claim://<item>#<n>` claim handle, or a `span://<item>#<start>-<end>` span handle — the store
+    #      neither defines nor parses that grammar; it field-matches the whole string.
+    #   2. mark_type + the mark payload. A mark carries `mark_type` (a string id FROM the mark-types
+    #      registry — built by a SEPARATE lane; this store codes against it as an opaque id, never imports
+    #      the registry) plus the run-1 mark payload `{value, confidence, source_pass, evidence}`. The
+    #      finding's `{kind, state, source}` can't carry a mark_type-keyed retrieval.
+    # WHY a sibling `marks.jsonl` leaf and NOT `findings.jsonl` (this is GENERALIZE, not PARALLEL — the
+    # store rule forbids a second STORE/backend/resolver, NOT a second leaf-file on the ONE root; pins/
+    # dispositions/annotations/chat already prove many `.jsonl` leaves = one store): `all_findings()` feeds
+    # coherence_detect.burn_down (the orphan backlog rollup) which counts EVERY finding record — so a mark
+    # written into findings.jsonl would silently inflate the live burn-down by a mark. The sibling leaf
+    # leaves the finding read-path BYTE-FOR-BYTE untouched, so old findings still read exactly as before
+    # (the preservation guarantee is trivial by construction) and a mark NEVER leaks into the finding/
+    # burn-down corpus — the SAME "a spaced entry never leaks into the default corpus" discipline the
+    # space-keyed vectors use. The shape REUSES append_finding/findings_for exactly (open-record, append-
+    # only, address/key field-match) — this IS the finding store's pattern, generalized to a second target+
+    # mark_type dimension.
+    # PORTABLE BY FIELD, not string-parse (store constitution, mirroring put_vector's space/source): `target`
+    # and `mark_type` are EXPLICIT record fields, so the per-type / per-target filter is a clean field match a
+    # Supabase backend implements as `WHERE mark_type = X` / `WHERE target = X` — no address-string parsing.
+    def append_mark(self, rec: dict) -> dict:
+        """Persist a MARK — `{target, mark_type, value?, confidence?, source_pass?, evidence?, ...}` — to an
+        append-only `marks.jsonl` at the store root (its OWN leaf, separate from findings.jsonl). Open-record
+        like append_finding/append_annotation: `{ts, **rec}` splat through, so a mark-pass may carry any extra
+        fields (run-1's `value/confidence/source_pass/evidence`, or new ones) without a schema edit. `target`
+        and `mark_type` are the two retrieval keys (field matches, portable to a SQL `WHERE`). Append-only so
+        a target accrues a mark THREAD (re-running a mark-pass re-appends; a reader folds to current — the same
+        own/reflect property findings have). The store stays DUMB: it does NOT validate the target grammar
+        (the S0/C1 gate is the Suite/contract lane, mirroring append_annotation) and does NOT import the
+        mark-types registry (mark_type is an opaque string id from a separate lane). STRUCTURAL fail-loud (like
+        put_vector's dim guard — structural, not semantic): `target` and `mark_type` must be present + non-empty
+        strings, else the mark has no retrieval key and would be a silent black hole (store rule 4 — fail loud,
+        never write an unfindable record)."""
+        import json as _j
+        from datetime import datetime, timezone
+        target = rec.get("target")
+        mark_type = rec.get("mark_type")
+        if not isinstance(target, str) or not target.strip():
+            raise ValueError(f"append_mark: a mark must carry a non-empty string `target` (got {target!r}) — "
+                             "it is the retrieval key; an unfindable mark is a silent black hole (fail-loud).")
+        if not isinstance(mark_type, str) or not mark_type.strip():
+            raise ValueError(f"append_mark: a mark must carry a non-empty string `mark_type` (got {mark_type!r}) "
+                             "— it is the second retrieval key (from the mark-types registry); fail-loud.")
+        out = {"ts": datetime.now(timezone.utc).isoformat(), **rec}
+        with (self.root / "marks.jsonl").open("a", encoding="utf-8") as f:
+            f.write(_j.dumps(out) + "\n")
+        return out
+
+    def marks_for(self, target: str) -> list[dict]:
+        """Every mark on `target`, oldest-first (the mark thread at that claim/span/address). Field-matches
+        the append-only `marks.jsonl` by the `target` field — `target` IS the key (a clean SQL `WHERE target=X`
+        for a Supabase backend). Reads disk every call (no cache), so a SECOND Suite over the same store root
+        sees a prior Suite's marks (persistence-survives-reload). Mirrors findings_for exactly, on the marks
+        leaf. An unmarked target → `[]` (the additive default; never an error)."""
+        import json as _j
+        path = self.root / "marks.jsonl"
+        if not path.exists():
+            return []
+        out = []
+        for l in path.read_text(encoding="utf-8").splitlines():
+            if not l.strip():
+                continue
+            rec = _j.loads(l)
+            if rec.get("target") == target:
+                out.append(rec)
+        return out
+
+    def marks_by_type(self, mark_type: str) -> list[dict]:
+        """Every mark of `mark_type`, oldest-first (the cross-target view of one mark kind — e.g. every
+        `ai-fingerprint` mark, or every `principle-beneath` mark). Field-matches the append-only `marks.jsonl`
+        by the `mark_type` field (a clean SQL `WHERE mark_type=X` for a Supabase backend). Reads disk every
+        call (persistence-survives-reload). The SECOND retrieval projection over the SAME leaf — the marks
+        generalization's second axis (by-type retrieval, which the finding store's address-only key can't do).
+        An absent mark_type → `[]` (additive default; never an error)."""
+        import json as _j
+        path = self.root / "marks.jsonl"
+        if not path.exists():
+            return []
+        out = []
+        for l in path.read_text(encoding="utf-8").splitlines():
+            if not l.strip():
+                continue
+            rec = _j.loads(l)
+            if rec.get("mark_type") == mark_type:
+                out.append(rec)
+        return out
+
+    def all_marks(self) -> list[dict]:
+        """Every mark record, oldest-first (for a cross-mark rollup / the patterned-visibility render).
+        Append-only over the marks leaf — the marks sibling of all_findings (and DISTINCT from it: marks
+        NEVER appear in all_findings, so coherence_detect.burn_down's orphan count is unpolluted)."""
+        import json as _j
+        path = self.root / "marks.jsonl"
+        if not path.exists():
+            return []
+        return [_j.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
+
     # --- pin-state overlay (X7 · Convergence): operator's "keep this in view" override ---
     def append_pin(self, address: str, target_ts: str, pinned: bool) -> dict:
         """X7 — record a pin/unpin of an attached item, as an APPEND-ONLY control-state record.
