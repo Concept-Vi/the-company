@@ -21,7 +21,7 @@ _VALID_OPS = ("generate", "embed", "similarity", "retrieve", "detect", "reduce",
 
 
 def build_action(decl: dict, *, models: set, roles: set | None = None, rule_resolver=None,
-                 check_resolver=None) -> dict:
+                 check_resolver=None, panel_resolver=None, jury_roles: set | None = None) -> dict:
     """Validate an action declaration through ONE door (compiled / hand-written / saved all gate here —
     mirrors _build_role / the CC-1 build_chain insight). Enforces registry-is-truth: every step's `model`
     must be a member of `models` (the live model registry — chat + embed), never a hardcoded literal (the
@@ -54,9 +54,10 @@ def build_action(decl: dict, *, models: set, roles: set | None = None, rule_reso
         is_rule_reduce = (op == "reduce" and step.get("reduce_mode", "role") == "rule")
         is_retrieve = (op == "retrieve")                     # G4: role-less semantic fetch
         is_check = (op == "check")                           # G3·S3a: role-less deterministic gate
+        is_panel = (step.get("kind") == "panel")             # G3·S3b: role-less (panel= names the row)
         role_id = step.get("role")
         if roles is not None:
-            if not role_id and not is_rule_reduce and not is_retrieve and not is_check:
+            if not role_id and not is_rule_reduce and not is_retrieve and not is_check and not is_panel:
                 return {"ok": False, "error": f"step {i}: declares no `role` — every step fires a model IN "
                         f"a role EXCEPT a rule-reduce, retrieve, or check (all role-less: pure rule / "
                         f"semantic fetch / deterministic gate). Add a registered role id, or use one of "
@@ -71,6 +72,20 @@ def build_action(decl: dict, *, models: set, roles: set | None = None, rule_reso
                 return {"ok": False, "error": f"step {i}: reduce_mode='rule' names reduce_rule {rname!r} "
                         f"which does not resolve — pick a named rule (see reduce_rule_names()) or the "
                         f"parameterised 'tally-by:<field>' pattern."}
+        if step.get("kind") == "jury" and jury_roles is not None:
+            if role_id not in jury_roles:
+                return {"ok": False, "error": f"step {i}: kind='jury' needs a JURY role (draws>1 + a "
+                        f"verdict_rule) — {role_id!r} is not one. Jury roles: {sorted(jury_roles)}."}
+        if is_panel:
+            pname = step.get("panel")
+            if not pname:
+                return {"ok": False, "error": f"step {i}: kind='panel' needs `panel` — a registered "
+                        f"verdict_panels/<id> row name."}
+            if panel_resolver is not None:
+                try:
+                    panel_resolver(pname)
+                except KeyError as e:
+                    return {"ok": False, "error": f"step {i}: {e.args[0]}"}
         if op == "check":
             cname = step.get("check")
             if not cname:

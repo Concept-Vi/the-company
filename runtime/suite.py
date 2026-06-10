@@ -872,10 +872,14 @@ class Suite:
         # N3 save/run parity: pass the LIVE role registry + the rule resolver so ok:True ⇒ runnable
         # (the cold-agent eval saved a decl the runner then rejected — the one door is now one door).
         from runtime.checks import CheckRegistry as _CR
+        from runtime.verdict_panels import PanelRegistry as _PR
         built = _act.build_action(decl, models=self._cascade_models(),
                                   roles=set(self.role_registry),
                                   rule_resolver=_cogn.resolve_reduce_rule,
-                                  check_resolver=_CR().discover().get)
+                                  check_resolver=_CR().discover().get,
+                                  panel_resolver=_PR().discover().get,
+                                  jury_roles={r for r in self.role_registry
+                                              if getattr(self.role_registry.get(r), "draws", 1) > 1})
         if not built.get("ok"):
             return built
         self.cascade_registry.save(built["action"])
@@ -971,11 +975,13 @@ class Suite:
             return out
 
         from runtime.checks import CheckRegistry as _CR
+        from runtime.verdict_panels import PanelRegistry as _PR
         return _cog.run_cascade(action, self.store, turn_id=turn_id, inputs=inputs,
                                 resolve_role=_resolve_role,
                                 reduce_rules=_cog.REDUCE_RULES,
                                 retrieve_fn=_retrieve,
                                 check_resolver=_CR().discover().get,
+                                panel_resolver=_PR().discover().get,
                                 emit=lambda k, p: self._emit(k, p.get("summary", k),
                                                              **{kk: vv for kk, vv in p.items() if kk != "summary"}),
                                 max_tokens=max_tokens)

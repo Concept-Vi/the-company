@@ -2078,7 +2078,7 @@ def _cluster_units(read, *, threshold: float, embed_fn=None, base_url: str = RES
 # never a code-build. (Source-invariant-scanned by cognition_governance_acceptance.)
 # =====================================================================================================
 
-CASCADE_KINDS = ("role", "items", "reduce", "retrieve", "check")   # the closed primitive selectors (drift home: runtime/AGENTS.md)
+CASCADE_KINDS = ("role", "items", "reduce", "retrieve", "check", "jury", "panel")   # the closed primitive selectors (drift home: runtime/AGENTS.md)
 
 
 def _cascade_step_kind(step: dict) -> str:
@@ -2114,6 +2114,7 @@ def run_cascade(action: dict, store, *, turn_id: str,
                 reduce_rules: "dict[str, Callable] | None" = None,
                 retrieve_fn: "Callable | None" = None,
                 check_resolver: "Callable[[str], Callable] | None" = None,
+                panel_resolver: "Callable[[str], dict] | None" = None,
                 emit: "Callable[[str, dict], None] | None" = None,
                 base_url: str = RESIDENT_BASE_URL, model: str = RESIDENT_MODEL,
                 max_tokens: int = 256) -> dict:
@@ -2171,7 +2172,7 @@ def run_cascade(action: dict, store, *, turn_id: str,
         # ever an address-naming token, which confused authors + made save-ok decls unrunnable). Every
         # OTHER step kind fires a model in a role → role required, fail loud with the real reason.
         is_rule_reduce = (kind == "reduce" and step.get("reduce_mode", "role") == "rule")
-        if not role_id and not is_rule_reduce and kind not in ("retrieve", "check"):
+        if not role_id and not is_rule_reduce and kind not in ("retrieve", "check", "panel"):
             raise ValueError(
                 f"run_cascade: step {i} of {name!r} declares no `role` — this step kind ({kind!r}) fires "
                 f"a model IN a role, so a registered role id is required. (Only a rule-reduce, retrieve, "
@@ -2249,7 +2250,14 @@ def run_cascade(action: dict, store, *, turn_id: str,
                 unit_vals = [resolve_address(store, a, turn_id=turn_id) for a in unit_addrs]
             elif inputs is not None and i == 0:
                 unit_vals = inputs if isinstance(inputs, list) else [inputs]
-                unit_addrs = [None] * len(unit_vals)
+                # step-0 LITERALS get MINTED addresses (as run_items does) — without them a drop-mode
+                # check had nothing to thread and the empty-thread guard fired on PASSING units (the
+                # first gauntlet run's misleading 'dropped EVERY unit ([])' — nothing was dropped).
+                unit_addrs = []
+                for j, uv in enumerate(unit_vals):
+                    ua = f"run://{turn_id}/{i}-check-in/{j}"
+                    store.set_ref(ua, store.put_content(uv))
+                    unit_addrs.append(ua)
             else:
                 raise ValueError(f"run_cascade: step {i} (check) has nothing to check — pass `inputs` "
                                  f"or place it after a producing step. Fail loud.")
@@ -2280,6 +2288,53 @@ def run_cascade(action: dict, store, *, turn_id: str,
                     f"({[v['reasons'][:1] for v in dropped][:3]}…) — an empty thread would silently "
                     f"starve the chain. Fail loud; inspect {address}.")
             run_op, op_kind = "check", "cognition.run_cascade.check"
+            items_visibility = {}
+
+        elif kind in ("jury", "panel"):
+            # ── JURY / PANEL step (G3·S3b — the judgment primitives as chain steps): consume ONE value
+            # (the prior step's single output, or `inputs` on step 0) → run_jury (N varied draws of ONE
+            # role, deterministic verdict_rule) or run_panel (1 fire × N DIFFERENT lens-roles,
+            # deterministic quorum). 1→1 on the thread; the verdict is the step output. Richer per-unit
+            # context (e.g. a panel's `element` per unit) arrives with S1 — v1 threads the value as the
+            # utterance every seat/draw reads.
+            if prev_addresses is not None:
+                if len(prev_addresses) != 1:
+                    raise ValueError(
+                        f"run_cascade: step {i} ({kind}) consumes ONE value but the prior step produced "
+                        f"{len(prev_addresses)} addresses — put a reduce/check before it. Fail loud.")
+                val = resolve_address(store, prev_addresses[0], turn_id=turn_id)
+            elif inputs is not None and i == 0:
+                val = inputs
+            else:
+                raise ValueError(f"run_cascade: step {i} ({kind}) has nothing to judge — pass `inputs` "
+                                 f"or place it after a producing step. Fail loud.")
+            ctx = {"utterance": val if isinstance(val, str) else json.dumps(val, ensure_ascii=False)}
+            t0 = time.monotonic()
+            if kind == "jury":
+                jres = run_jury(role, ctx, store, turn_id=f"{turn_id}-s{i}",
+                                base_url=base_url, model=step_model, max_tokens=step_max_tokens)
+                final_output = {"verdict": jres.verdict, "kind": "jury", "role": role.id}
+                label = role.id
+            else:
+                if panel_resolver is None:
+                    raise ValueError(
+                        f"run_cascade: step {i} of {name!r} is a panel step but no panel_resolver was "
+                        f"injected — the caller (Suite.run_cascade) wires the verdict-panel registry. Fail loud.")
+                pname = step.get("panel")
+                if not pname:
+                    raise ValueError(f"run_cascade: step {i} (panel) declares no `panel` name — pick a "
+                                     f"registered verdict_panels/<id> row. Fail loud.")
+                prow = panel_resolver(pname)                 # KeyErrors loud on an unknown panel
+                final_output = run_panel(prow, ctx, store, turn_id=f"{turn_id}-s{i}",
+                                         resolve_role=resolve_role, base_url=base_url,
+                                         model=step_model, max_tokens=step_max_tokens)
+                label = pname
+            ms = int((time.monotonic() - t0) * 1000)
+            address = f"run://{turn_id}/{i}-{kind}-{label}"
+            cas = store.put_content(final_output)
+            store.set_ref(address, cas)
+            out_addresses = [address]
+            run_op, op_kind = kind, f"cognition.run_cascade.{kind}"
             items_visibility = {}
 
         elif kind == "reduce":
