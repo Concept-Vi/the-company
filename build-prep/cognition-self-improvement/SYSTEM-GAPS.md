@@ -346,3 +346,7 @@ Tim, closing the walk: my harness memory of him is useful but trapped — only C
 - 🔴 **Q10:** chains-section vs list_cascades one-source (likely collapses with Q3).
 - 🔴 **Q11:** ingest path-identity AGAIN (3 duplicate records, literal-path keying) — P8b's ingest-side normalization is now eval-evidenced twice.
 - 🟡 **Q12:** strip build-lineage jargon (GROUP N/AK4/#58…) from agent-facing descriptions — repeatedly named noise, never blocking.
+
+## 2026-06-10 — Q-sweep 1: Q2+Q3+Q4+Q6+Q9 CLOSED
+- ✅ **Q3 (the real bug):** ActionRegistry._reload_if_stale — every read stats cascades.json, re-parses on mtime change (verified: an out-of-process write became visible without restart). Q10 collapses with it (one source, now fresh). ✅ **Q2:** list_surfaced scoped — concise rows default (278KB→4.5KB), sid= drill-down, status=/unresolved_only= slices, teaching error. ✅ **Q4:** the inputs-shape rule ON run_cascade's param doc. ✅ **Q6:** an empty flows list points at the cascades registry (populated path unchanged). ✅ **Q9:** the capabilities overview carries the operator-memory pointer ("READ IT before preparing anything he will see").
+- Tim's /mcp reconnect LANDED mid-beat (the operator tool live on this session's face). Remaining Q: Q1 (schema enums — the big one) · Q5 (digest honesty) · Q7 (features section) · Q8 (jury-as-items warn) · Q11 (ingest path identity) · Q12 (jargon strip).
