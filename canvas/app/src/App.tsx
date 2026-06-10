@@ -24,6 +24,8 @@
 import { useState, useEffect } from 'react'
 import { Tldraw, useEditor } from 'tldraw'
 import { NodeShapeUtil, Edges } from './NodeShape'
+import { ForagerShapeUtil } from './ForagerShape'
+import { ForagerBar } from './regions/ForagerBar'
 import { useAppController } from './useAppController'
 import { AppContext, useApp } from './AppContext'
 import { PanelErrorBoundary } from './components/PanelErrorBoundary'
@@ -214,6 +216,12 @@ function Hud() {
           <PanelErrorBoundary name="walkthrough">
             <Walkthrough />
           </PanelErrorBoundary>
+          {/* S7-FE · THE CONTEXT FORAGER — corpus search → circles on the SAME canvas (a second shape
+             vocabulary beside the graph nodes; the coexistence rule keeps the loaders blind to each
+             other's shapes). Top-center, starts minimized. Per-panel boundary like every overlay. */}
+          <PanelErrorBoundary name="forager">
+            <ForagerBar />
+          </PanelErrorBoundary>
           <OpPanels />
           <Activity />
           {/* F5: the rhm-chat panel was the unprotected white-screen gap (fe-map §5) — the most-exercised
@@ -368,7 +376,7 @@ export default function App() {
   return (
     <div style={{ position: 'fixed', inset: 0 }}>
       <Tldraw
-        shapeUtils={[NodeShapeUtil]}
+        shapeUtils={[NodeShapeUtil, ForagerShapeUtil]}
         // BUMP THIS whenever the NodeShape props schema changes — tldraw persists the store to
         // IndexedDB under this key and VALIDATES every record on load; a snapshot written by an older
         // schema (e.g. before `error` was added to the node props) fails with
@@ -376,7 +384,8 @@ export default function App() {
         // which white-screens the canvas. Bumping the key makes tldraw ignore the stale snapshot and
         // rebuild from the backend (nodes/positions are backend-authoritative — reflects-never-owns —
         // so only the local camera resets). v2→v3: the interactive-surface merge added node.props.error.
-        persistenceKey="company-canvas-v3"
+        // v3→v4: the FORAGER shape type registered (S7-FE) — a v3 snapshot knows no 'forager' record.
+        persistenceKey="company-canvas-v4"
         components={{ StylePanel: null, ActionsMenu: null, QuickActions: null }}
       >
         <Hud />

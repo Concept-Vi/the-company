@@ -208,6 +208,13 @@ export const api = {
   // cognition.* emit-contract). Registry-driven (rule 8): a new role/rule appears here with NO FE code, so
   // the River draws its tributaries + the dots paint their status FROM this — never a hardcoded role list.
   cognitionInfo: () => fetch('/api/cognition_info').then(jr),
+  // S7-FE · the FORAGER's search door — semantic corpus query + per-hit record heads (the bridge's
+  // /api/corpus-query, S7: Suite.query_corpus + find_corpus enrichment server-side). The honest-empty
+  // contract rides through untouched: embedder down → {hits:[], note:'embed endpoint unreachable …'}
+  // (the note is RENDERED by ForagerBar, never swallowed); a non-2xx is normalized to {error} by jr (loud).
+  corpusQuery: (text: string, space: string | null, k = 16) =>
+    fetch('/api/corpus-query?text=' + encodeURIComponent(text) +
+      (space ? '&space=' + encodeURIComponent(space) : '') + '&k=' + k).then(jr),
   // STUDIO (G4) · the review-corpus index — every reviewable mockup file actually on disk + its curated
   // meta {file,title,platform,group,address}. The studio gallery binds THIS (registry-is-truth: the disk
   // listing is the source), never a hardcoded FE list, so a new mockup appears the moment its file lands.
