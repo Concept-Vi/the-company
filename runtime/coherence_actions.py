@@ -17,10 +17,11 @@ import os
 
 from runtime import coherence_detect as _cd
 
-_VALID_OPS = ("generate", "embed", "similarity", "retrieve", "detect", "reduce")
+_VALID_OPS = ("generate", "embed", "similarity", "retrieve", "detect", "reduce", "check")
 
 
-def build_action(decl: dict, *, models: set, roles: set | None = None, rule_resolver=None) -> dict:
+def build_action(decl: dict, *, models: set, roles: set | None = None, rule_resolver=None,
+                 check_resolver=None) -> dict:
     """Validate an action declaration through ONE door (compiled / hand-written / saved all gate here —
     mirrors _build_role / the CC-1 build_chain insight). Enforces registry-is-truth: every step's `model`
     must be a member of `models` (the live model registry — chat + embed), never a hardcoded literal (the
@@ -52,12 +53,14 @@ def build_action(decl: dict, *, models: set, roles: set | None = None, rule_reso
         # N3 runner-parity checks (only when the caller supplies the live registries):
         is_rule_reduce = (op == "reduce" and step.get("reduce_mode", "role") == "rule")
         is_retrieve = (op == "retrieve")                     # G4: role-less semantic fetch
+        is_check = (op == "check")                           # G3·S3a: role-less deterministic gate
         role_id = step.get("role")
         if roles is not None:
-            if not role_id and not is_rule_reduce and not is_retrieve:
+            if not role_id and not is_rule_reduce and not is_retrieve and not is_check:
                 return {"ok": False, "error": f"step {i}: declares no `role` — every step fires a model IN "
-                        f"a role EXCEPT a rule-reduce or a retrieve (both role-less: pure rule / semantic "
-                        f"fetch). Add a registered role id, or use one of those step kinds."}
+                        f"a role EXCEPT a rule-reduce, retrieve, or check (all role-less: pure rule / "
+                        f"semantic fetch / deterministic gate). Add a registered role id, or use one of "
+                        f"those step kinds."}
             if role_id and role_id not in roles:
                 return {"ok": False, "error": f"step {i}: role {role_id!r} is not a REGISTERED role "
                         f"(registry-is-truth — author it first via create(kind='role'), or pick from the "
@@ -68,6 +71,20 @@ def build_action(decl: dict, *, models: set, roles: set | None = None, rule_reso
                 return {"ok": False, "error": f"step {i}: reduce_mode='rule' names reduce_rule {rname!r} "
                         f"which does not resolve — pick a named rule (see reduce_rule_names()) or the "
                         f"parameterised 'tally-by:<field>' pattern."}
+        if op == "check":
+            cname = step.get("check")
+            if not cname:
+                return {"ok": False, "error": f"step {i}: op='check' needs `check` — a registered "
+                        f"checks/<id> row name (the declared deterministic gate)."}
+            if check_resolver is not None:
+                try:
+                    check_resolver(cname)
+                except KeyError as e:
+                    return {"ok": False, "error": f"step {i}: {e.args[0]}"}
+            of = step.get("on_fail", "flag")
+            if of not in ("flag", "drop"):
+                return {"ok": False, "error": f"step {i}: on_fail {of!r} — declared modes are "
+                        f"flag (annotate, thread all) | drop (thread passing; drops recorded)."}
         fan = step.get("fan_field")
         if fan is not None and (not isinstance(fan, str) or not fan):
             return {"ok": False, "error": f"step {i}: fan_field must be a non-empty string naming a LIST "

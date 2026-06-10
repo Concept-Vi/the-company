@@ -871,9 +871,11 @@ class Suite:
         from runtime import cognition as _cogn
         # N3 save/run parity: pass the LIVE role registry + the rule resolver so ok:True ⇒ runnable
         # (the cold-agent eval saved a decl the runner then rejected — the one door is now one door).
+        from runtime.checks import CheckRegistry as _CR
         built = _act.build_action(decl, models=self._cascade_models(),
                                   roles=set(self.role_registry),
-                                  rule_resolver=_cogn.resolve_reduce_rule)
+                                  rule_resolver=_cogn.resolve_reduce_rule,
+                                  check_resolver=_CR().discover().get)
         if not built.get("ok"):
             return built
         self.cascade_registry.save(built["action"])
@@ -968,10 +970,12 @@ class Suite:
                     out.append(rows[0]["address"])           # newest record for that source
             return out
 
+        from runtime.checks import CheckRegistry as _CR
         return _cog.run_cascade(action, self.store, turn_id=turn_id, inputs=inputs,
                                 resolve_role=_resolve_role,
                                 reduce_rules=_cog.REDUCE_RULES,
                                 retrieve_fn=_retrieve,
+                                check_resolver=_CR().discover().get,
                                 emit=lambda k, p: self._emit(k, p.get("summary", k),
                                                              **{kk: vv for kk, vv in p.items() if kk != "summary"}),
                                 max_tokens=max_tokens)

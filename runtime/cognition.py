@@ -2078,7 +2078,7 @@ def _cluster_units(read, *, threshold: float, embed_fn=None, base_url: str = RES
 # never a code-build. (Source-invariant-scanned by cognition_governance_acceptance.)
 # =====================================================================================================
 
-CASCADE_KINDS = ("role", "items", "reduce", "retrieve")   # the closed primitive selectors (drift home: runtime/AGENTS.md)
+CASCADE_KINDS = ("role", "items", "reduce", "retrieve", "check")   # the closed primitive selectors (drift home: runtime/AGENTS.md)
 
 
 def _cascade_step_kind(step: dict) -> str:
@@ -2099,6 +2099,8 @@ def _cascade_step_kind(step: dict) -> str:
         return kind
     if step.get("op") == "retrieve":
         return "retrieve"                                  # G4 — the corpus-RAG primitive (semantic fetch)
+    if step.get("op") == "check":
+        return "check"                                     # G3·S3a — a declared deterministic gate
     if step.get("op") == "reduce":
         return "reduce"
     if step.get("fan") or step.get("items") is not None:
@@ -2111,6 +2113,7 @@ def run_cascade(action: dict, store, *, turn_id: str,
                 resolve_role: "Callable[[str], Role]",
                 reduce_rules: "dict[str, Callable] | None" = None,
                 retrieve_fn: "Callable | None" = None,
+                check_resolver: "Callable[[str], Callable] | None" = None,
                 emit: "Callable[[str, dict], None] | None" = None,
                 base_url: str = RESIDENT_BASE_URL, model: str = RESIDENT_MODEL,
                 max_tokens: int = 256) -> dict:
@@ -2168,12 +2171,12 @@ def run_cascade(action: dict, store, *, turn_id: str,
         # ever an address-naming token, which confused authors + made save-ok decls unrunnable). Every
         # OTHER step kind fires a model in a role → role required, fail loud with the real reason.
         is_rule_reduce = (kind == "reduce" and step.get("reduce_mode", "role") == "rule")
-        if not role_id and not is_rule_reduce and kind != "retrieve":
+        if not role_id and not is_rule_reduce and kind not in ("retrieve", "check"):
             raise ValueError(
                 f"run_cascade: step {i} of {name!r} declares no `role` — this step kind ({kind!r}) fires "
-                f"a model IN a role, so a registered role id is required. (Only a rule-reduce or a "
-                f"retrieve step may omit it — both are role-less: pure rule / semantic fetch.) "
-                f"Fail loud (rule 8).")
+                f"a model IN a role, so a registered role id is required. (Only a rule-reduce, retrieve, "
+                f"or check step may omit it — all role-less: pure rule / semantic fetch / deterministic "
+                f"gate.) Fail loud (rule 8).")
         role = resolve_role(role_id) if role_id else None
         # A per-step `model` override is honoured on the RESIDENT endpoint (the engine pins RESIDENT_BASE_URL).
         # CLOUD-tier routing is N2 net-new transport in fabric/, NOT this lane — a cloud model id here FAILS
@@ -2223,6 +2226,60 @@ def run_cascade(action: dict, store, *, turn_id: str,
             out_addresses = list(fetched)
             final_output = {"query": query_text, "addresses": list(fetched)}
             run_op, op_kind = "retrieve", "cognition.run_cascade.retrieve"
+            items_visibility = {}
+
+        elif kind == "check":
+            # ── CHECK step (G3·S3a — a DECLARED deterministic gate): consume the prior step's address
+            # LIST (or `inputs` on step 0 as a 1-list), run the NAMED check on each resolved value, and
+            # ROUTE: default on_fail='flag' threads ALL units onward with verdicts persisted; a declared
+            # on_fail='drop' threads only the passing units — every dropped unit RECORDED in the step
+            # output (flag-never-drop: a drop is a declared, visible routing, never a silent loss).
+            # Role-less + model-less: same value, same verdict, always.
+            if check_resolver is None:
+                raise ValueError(
+                    f"run_cascade: step {i} of {name!r} is a check step but no check_resolver was "
+                    f"injected — the caller (Suite.run_cascade) wires the checks registry. Fail loud.")
+            cname = step.get("check")
+            if not cname:
+                raise ValueError(f"run_cascade: step {i} (check) declares no `check` name — pick a "
+                                 f"registered checks/<id> row. Fail loud.")
+            cfn = check_resolver(cname)                      # KeyErrors loud on an unknown check
+            if prev_addresses is not None:
+                unit_addrs = list(prev_addresses)
+                unit_vals = [resolve_address(store, a, turn_id=turn_id) for a in unit_addrs]
+            elif inputs is not None and i == 0:
+                unit_vals = inputs if isinstance(inputs, list) else [inputs]
+                unit_addrs = [None] * len(unit_vals)
+            else:
+                raise ValueError(f"run_cascade: step {i} (check) has nothing to check — pass `inputs` "
+                                 f"or place it after a producing step. Fail loud.")
+            on_fail = step.get("on_fail", "flag")
+            if on_fail not in ("flag", "drop"):
+                raise ValueError(f"run_cascade: step {i} (check) on_fail {on_fail!r} — declared modes "
+                                 f"are flag (annotate, thread all) | drop (thread passing; drops recorded).")
+            t0 = time.monotonic()
+            verdicts = []
+            for ua, uv in zip(unit_addrs, unit_vals):
+                v = cfn(uv)
+                verdicts.append({"address": ua, "passed": bool(v.get("passed")),
+                                 "reasons": list(v.get("reasons", []))})
+            ms = int((time.monotonic() - t0) * 1000)
+            passing = [v["address"] for v in verdicts if v["passed"] and v["address"]]
+            dropped = [v for v in verdicts if not v["passed"]]
+            address = f"run://{turn_id}/{i}-check-{cname}"
+            final_output = {"check": cname, "on_fail": on_fail, "n": len(verdicts),
+                            "passed": sum(1 for v in verdicts if v["passed"]),
+                            "verdicts": verdicts,
+                            "dropped": dropped if on_fail == "drop" else []}
+            cas = store.put_content(final_output)
+            store.set_ref(address, cas)
+            out_addresses = passing if on_fail == "drop" else [a for a in unit_addrs if a]
+            if on_fail == "drop" and not out_addresses:
+                raise ValueError(
+                    f"run_cascade: step {i} (check {cname!r}, on_fail=drop) dropped EVERY unit "
+                    f"({[v['reasons'][:1] for v in dropped][:3]}…) — an empty thread would silently "
+                    f"starve the chain. Fail loud; inspect {address}.")
+            run_op, op_kind = "check", "cognition.run_cascade.check"
             items_visibility = {}
 
         elif kind == "reduce":
