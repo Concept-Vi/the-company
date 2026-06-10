@@ -84,8 +84,12 @@ COG_SOURCES = ["runtime/cognition.py", "runtime/rules.py", "runtime/roles.py",
                "runtime/mode_detection_rules.py",
                # CALLER — the always-on activation tick: an executable cognition path that FIRES the H/I
                # drivers+detector; the floor must cover it (the tick is computation — no resolve/dispatch).
-               "runtime/activation_driver.py"] + \
-    [f"roles/{f}" for f in os.listdir("roles") if f.endswith(".py")]
+               "runtime/activation_driver.py",
+               # GC1 — the FLOW registry: committed production lines, MCP-invoked. Executable
+               # cognition paths → the floor must cover the loader AND every row (flows/*.py below).
+               "runtime/flows.py"] + \
+    [f"roles/{f}" for f in os.listdir("roles") if f.endswith(".py")] + \
+    [f"flows/{f}" for f in os.listdir("flows") if f.endswith(".py")]
 # coverage-regression guard: the new surfaces MUST stay scanned (so the guard can't silently shrink).
 check("C9.2 the floor source-invariant COVERS the MCP agent face + the skills registry (new surfaces)",
       "mcp_face/server.py" in COG_SOURCES and "runtime/skills.py" in COG_SOURCES)
@@ -101,6 +105,9 @@ check("C9.2 the floor source-invariant COVERS the mode-detection-rule registry (
 check("C9.2 the floor source-invariant COVERS the always-on activation caller (CALLER — the tick fires "
       "the H/I drivers+detector; computation only, never a resolve/dispatch/claude -p)",
       "runtime/activation_driver.py" in COG_SOURCES)
+check("C9.2 the floor source-invariant COVERS the FLOW registry (GC1 — loader + every flows/<id>.py row; "
+      "flows are repo-authored, MCP-invoked, proposes-only)",
+      "runtime/flows.py" in COG_SOURCES and any(s.startswith("flows/") for s in COG_SOURCES))
 floor_breach = []
 for src in COG_SOURCES:
     with open(src) as fh:

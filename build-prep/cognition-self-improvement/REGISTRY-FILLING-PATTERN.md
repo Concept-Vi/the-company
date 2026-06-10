@@ -80,18 +80,20 @@ An instance of the pattern is fully specified by:
 Everything else — the chain skeleton, the dedupe, the jury, the gate, the resume-safe batch state —
 is THE SAME every time and should exist ONCE.
 
-## GC1 — the MCP consequence (Tim's multi-part point)
+## GC1 — the MCP consequence (Tim's multi-part point) — BUILT 2026-06-10
 
 The chain proved that **agents default to the ungrounded design** (I did, with the grounded module in
-my own session history). So per the path-of-least-resistance law: the pattern is not done until
-invoking it through the company MCP is EASIER than rebuilding it. Today the proven chain lives in a
-build-prep script the MCP face cannot see — that is the gap. Two candidate shapes (open, not decided):
-- a **saved cascade** once the remaining engine seams close (the {mockup}-keyed ground chaining, the
-  resolve-once shared ctx, the jury+refcheck composite step — the manual module IS their spec), or
-- a **first-class flow tool** (a `flows`/`chains` resource on the face) that runs the chain with the
-  six parameters above as its arguments.
-ASSUMPTION to test: the saved-cascade shape is preferable because it keeps one execution engine
-(reuse-don't-parallel); the flow tool is a fallback if the seams stay open long.
+my own session history). The resolution, now LIVE: the **FLOW registry** (`runtime/flows.py` +
+`flows/<id>.py` rows + the `flows` MCP tool, op=list|describe|run). The grounded chains are ONE call:
+`flows(op='run', flow='registry_generation')`. The boundary that holds the floor:
+- a flow is **repo-AUTHORED** (committed, reviewed code) — never authored through the MCP;
+- a flow is **MCP-INVOKED** by name with DECLARED params (unknown params refuse with a teaching error);
+- every row declares `proposes_only: True` (enforced at discovery) and `flows/*.py` is scanned by the
+  floor's source-invariant (43 governance checks green).
+Founding rows: registry_generation · transcript_mine · pattern_cluster. DECLARATIVE chains still go
+through save_cascade (the one-door split: data-chains = cascades; code-chains = flows). OPEN extension
+(logged): a gated propose_flow authoring path mirroring propose_role, for when an agent should be able
+to PROPOSE a new code-chain through the face.
 
 ## GC3 — the extension Tim seeded: addresses as ACCUMULATION POINTS
 
