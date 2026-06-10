@@ -1577,3 +1577,19 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
   .studio-rail{display:none}   /* phone: stage + rhm-panel; rail collapses (a bottom-sheet corpus picker is a later design pass) */
   .studio-rhm{border-left:none;border-top:1px solid var(--studio-card-border)}
 }
+
+/* S1 (overnight) · THE BUILDER SIDE-PANEL (.claude-panel) — Claude Code embedded in the surface.
+   Inherits the whole .rhm vocabulary (same card anatomy: head/log/indicating/input — one language,
+   rule: kit/corpus tokens only). Sits STACKED ABOVE the RHM chat on the right rail-edge (the two
+   conversation partners share a corner: Viv below, the builder above), starts MINIMIZED (a quiet
+   header bar — present, never imposing). Workshop-stability: a fixed place, contents flow. */
+.claude-panel{right:12px;bottom:336px;height:300px}
+.claude-panel.min{height:auto}
+.claude-panel .rhm-head{color:var(--acc)}
+/* the builder's activity lines (tool use) read as quiet machinery, not conversation */
+.claude-panel .msg .txt.muted{font-size:var(--fs-meta)}
+@media (max-width: 699px){
+  /* fe-map §4: in-canvas overlays hide at phone width; the builder rides the chat sheet later
+     (a dedicated mobile surface is a follow-up — stated honestly, not pretended). */
+  .claude-panel{display:none}
+}

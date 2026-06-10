@@ -19,7 +19,17 @@ import subprocess
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PANEL_PERMISSION = os.environ.get("COMPANY_PANEL_PERMISSION", "plan")
-CLAUDE_BIN = os.environ.get("COMPANY_CLAUDE_BIN", "claude")
+def _find_claude() -> str:
+    """Resolve the claude binary ABSOLUTELY (the wire's lived failure: a service-started bridge has
+    no ~/.local/bin on PATH → 'claude not found' dispatch litter in the inbox). Env wins; then
+    PATH; then the known install home. Fail-loud at call time if none exist."""
+    import shutil
+    cand = os.environ.get("COMPANY_CLAUDE_BIN") or shutil.which("claude") \
+        or os.path.expanduser("~/.local/bin/claude")
+    return cand
+
+
+CLAUDE_BIN = _find_claude()
 TURN_TIMEOUT_S = int(os.environ.get("COMPANY_PANEL_TIMEOUT_S", "600"))
 
 PANEL_BRIEFING = (
@@ -33,9 +43,25 @@ PANEL_BRIEFING = (
 )
 
 
+# The panel session gets the COMPANY'S OWN MCP (the Atlas's #1 ranked upgrade): the embedded builder
+# holds every company tool — registries, cognition, the operator memory — not just the filesystem.
+# Same stdio launch the session-level registration uses (one source of the server identity); strict
+# config so the panel session loads ONLY this server (deterministic toolset, no surprise plugins).
+_MCP_CONFIG = json.dumps({"mcpServers": {"company": {
+    "type": "stdio",
+    "command": os.path.join(REPO_ROOT, ".venv", "bin", "python"),
+    "args": [os.path.join(REPO_ROOT, "mcp_face", "server.py")],
+}}})
+
+
 def _turn_cmd(prompt: str, *, resume: str | None, system_append: str | None) -> list:
     cmd = [CLAUDE_BIN, "-p", prompt, "--output-format", "stream-json", "--verbose",
-           "--permission-mode", PANEL_PERMISSION]
+           "--permission-mode", PANEL_PERMISSION,
+           "--mcp-config", _MCP_CONFIG, "--strict-mcp-config",
+           # the company face carries NO consequential verbs (the floor: no resolve/approve/dispatch
+           # exists on it), so pre-allowing the whole server is consistent with plan-mode safety —
+           # the builder reads/computes through company tools frictionlessly; EDITS stay gated.
+           "--allowedTools", "mcp__company"]
     if resume:
         cmd += ["--resume", resume]
     if system_append:

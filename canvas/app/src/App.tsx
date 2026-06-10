@@ -40,6 +40,7 @@ import { Grow } from './regions/Grow'
 import { OpPanels } from './regions/OpPanels'
 import { Activity } from './regions/Activity'
 import { RhmChat } from './regions/RhmChat'
+import { ClaudeChat } from './regions/ClaudeChat'
 import { Walkthrough } from './regions/Walkthrough'
 import { Workshop } from './regions/Workshop'
 import { Settings } from './regions/Settings'
@@ -220,6 +221,13 @@ function Hud() {
              existing per-panel boundary discipline (PRESERVE-LIST item 1). */}
           <PanelErrorBoundary name="chat">
             <RhmChat />
+          </PanelErrorBoundary>
+          {/* S1 (overnight) · THE BUILDER SIDE-PANEL — Claude Code embedded in the surface (the second
+             conversation partner: Viv = the entity below; the builder = the contractor above, same
+             indicated locus). Starts minimized; plan-mode backend; changes go through the WireRequest
+             gate. Per-panel boundary like every panel (a render-throw degrades to a card). */}
+          <PanelErrorBoundary name="builder">
+            <ClaudeChat />
           </PanelErrorBoundary>
           {/* L-fe · the LIVE COGNITION VIEW (the commander's bridge, E2/06). EXTEND not replace: it is one
              MORE in-canvas overlay beside the chat/activity (removes/replaces nothing). It sits at the chat
