@@ -87,9 +87,13 @@ COG_SOURCES = ["runtime/cognition.py", "runtime/rules.py", "runtime/roles.py",
                "runtime/activation_driver.py",
                # GC1 — the FLOW registry: committed production lines, MCP-invoked. Executable
                # cognition paths → the floor must cover the loader AND every row (flows/*.py below).
-               "runtime/flows.py"] + \
+               "runtime/flows.py",
+               # GC7 — the VERDICT-PANEL registry: declared lens-seats + deterministic quorum
+               # (run_panel). Dir is verdict_panels/ — panels/ is the (JSON-only) UI-panels module.
+               "runtime/verdict_panels.py"] + \
     [f"roles/{f}" for f in os.listdir("roles") if f.endswith(".py")] + \
-    [f"flows/{f}" for f in os.listdir("flows") if f.endswith(".py")]
+    [f"flows/{f}" for f in os.listdir("flows") if f.endswith(".py")] + \
+    [f"verdict_panels/{f}" for f in os.listdir("verdict_panels") if f.endswith(".py")]
 # coverage-regression guard: the new surfaces MUST stay scanned (so the guard can't silently shrink).
 check("C9.2 the floor source-invariant COVERS the MCP agent face + the skills registry (new surfaces)",
       "mcp_face/server.py" in COG_SOURCES and "runtime/skills.py" in COG_SOURCES)

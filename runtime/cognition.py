@@ -1675,6 +1675,54 @@ def run_jury(role: "Role", ctx: dict, store, *, turn_id: str,
     return result
 
 
+def run_panel(panel: dict, ctx: dict, store, *, turn_id: str,
+              resolve_role: "Callable[[str], Any]",
+              base_url: str = RESIDENT_BASE_URL, model: str = RESIDENT_MODEL,
+              max_tokens: int = 200) -> dict:
+    """GC7 — the PERSPECTIVE-DIVERSE jury: ONE varied-LENS fire per SEAT, a deterministic quorum over
+    the seats. The sibling of run_jury with the axes swapped — run_jury = N varied draws × 1 role
+    (self-consistency); run_panel = 1 deliberate draw × N DIFFERENT roles (judgment diversity; the E4
+    caveat — correlated draws measure variance, not independent error — is the reason it exists).
+
+    `panel` — a PanelRegistry row ({id, seats:[role ids], quorum:int, ...}; runtime/verdict_panels.py —
+    the file-discovered registry, Tim's "easy to add additional roles" made data; the dir is
+    verdict_panels/, NOT panels/ — that existing module is the declarative UI panels). `resolve_role` is
+    injected (the caller's live role registry — engine purity, no Suite import). EVERY seat fires
+    run_role at temperature 0 (the lenses provide the diversity, not sampling) over the SAME ctx.
+
+    THE SEAT CONTRACT (fail-loud): each seat's validated output must carry `grounded: bool`. The
+    verdict is DETERMINISTIC (L2, no model): grounded_seats >= panel.quorum. A seat that ERRORS is a
+    recorded dissent ({grounded: False, error: ...}) — flag-not-crash, the panel still verdicts (a
+    down lens must not silently pass a dossier). Returns {verdict, seats:[{seat, grounded, reason}],
+    grounded_seats, quorum, n_seats}. THE FLOOR: judges only — no resolve/approve/dispatch."""
+    seats = panel["seats"]
+    results = []
+    for sid in seats:
+        role = resolve_role(sid)
+        if role is None:
+            raise ValueError(f"run_panel({panel['id']!r}): seat {sid!r} is not a registered role — "
+                             f"fail loud (a panel never fires a fabricated seat).")
+        try:
+            out = run_role(role, ctx, store=store, base_url=base_url, model=model,
+                           max_tokens=max_tokens, temperature=0.0)
+            g = out.get("grounded")
+            if not isinstance(g, bool):
+                raise ValueError(f"seat {sid!r} output carries no bool 'grounded' field "
+                                 f"(the SEAT CONTRACT) — got fields {sorted(out)}")
+            results.append({"seat": sid, "grounded": g,
+                            "reason": out.get("reason") or out.get("note") or ""})
+        except Exception as e:                              # a failed seat = a recorded DISSENT, never a silent pass
+            results.append({"seat": sid, "grounded": False, "error": f"{type(e).__name__}: {e}"[:200]})
+    grounded_n = sum(1 for r in results if r["grounded"])
+    verdict = grounded_n >= panel["quorum"]
+    out = {"verdict": verdict, "seats": results, "grounded_seats": grounded_n,
+           "quorum": panel["quorum"], "n_seats": len(seats), "panel": panel["id"]}
+    if store is not None:
+        cas = store.put_content(out)
+        store.set_ref(f"run://{turn_id}/panel-{panel['id']}", cas)
+    return out
+
+
 # =================================================================================================
 # C 2/4 — THE CROSS-UNIT REDUCE (run_reduce): the net-new JOIN engine.
 #
