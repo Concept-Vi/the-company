@@ -26,7 +26,10 @@ ROLE = {'id': 'voice_lens',
                     'and ALLOWED to be technical; howto.how_to_change names code files BY DESIGN. '
                     "grounded=true if the two prose fields are at the operator's altitude; false "
                     'only if HTML tags, selectors, code identifiers, or developer jargon leak into '
-                    'THOSE TWO fields. Return JSON: {"grounded": true|false, "reason": one short '
+                    'THOSE TWO fields. DOMAIN VOCABULARY IS NOT JARGON: words the operator uses daily '
+                    '(activity feed, node, diff, inbox, wire, canvas, walkthrough, build) are his '
+                    'language — jargon means CODE identifiers, file paths, selectors, HTML tags, '
+                    'function names. Return JSON: {"grounded": true|false, "reason": one short '
                     'clause}.',
  'mode_scope': ['registration'],
     'output_schema': VoiceLensOut,
