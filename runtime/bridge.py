@@ -718,6 +718,8 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.capabilities()))
             elif path == "/api/ui_info":                   # C1: the UI-component registry (sibling of object_info)
                 self._send(200, json.dumps(SUITE.ui_info()))
+            elif path == "/api/registry/proposals":        # RG8: the pending registry-proposal batch (read)
+                self._send(200, json.dumps(SUITE.registry_proposals()))
             elif path == "/api/scope":                     # S3: ui://→code://→scope[] (the address→code join)
                 self._send(200, json.dumps(SUITE.resolve_scope(q["address"])))
             elif path == "/api/address-help":              # D2: the COMPOSED affordance bundle for one ui:// address
@@ -1948,6 +1950,11 @@ class H(BaseHTTPRequestHandler):
                 v = SUITE.resolve_surfaced(b["id"], b["choice"], b.get("reason", ""),
                                            session_id=b.get("session"), position=b.get("position"))
                 self._send(200, json.dumps({"ok": True, "verdict": v, "surfaced": SUITE.list_surfaced()}))
+            elif self.path == "/api/registry/approve":   # RG9: the OPERATOR's batch approve (UI channel —
+                # operator-consent by construction, like /api/resolve; never on the MCP face). The kept
+                # pending dossiers are written via the existing all-or-nothing registry_writeback.
+                b = self._body()
+                self._send(200, json.dumps(SUITE.registry_apply_batch(skip=b.get("skip") or [])))
             elif self.path == "/api/decision":           # a decision as a view over the log (audit)
                 b = self._body()
                 self._send(200, json.dumps(SUITE.decision_view(b["id"])))

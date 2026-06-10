@@ -35,6 +35,7 @@ import { History } from './regions/History'
 import { Versions } from './regions/Versions'
 import { SelfChanges } from './regions/SelfChanges'
 import { Inbox } from './regions/Inbox'
+import RegistryProposals from './components/RegistryProposals'
 import { Grow } from './regions/Grow'
 import { OpPanels } from './regions/OpPanels'
 import { Activity } from './regions/Activity'
@@ -309,6 +310,12 @@ function Hud() {
              render-throw degrades to a contained card, never a white-screen. */}
           <PanelErrorBoundary name="fleet">
             <Fleet />
+          </PanelErrorBoundary>
+          {/* RG8: the registry-proposal batch surface — the operator floor for the registry-generation
+             chain (adopted+wired in the wide pass: routes /api/registry/proposals + /approve serve it;
+             rest-state is an honest empty card). Same rail, same error-boundary discipline as fleet. */}
+          <PanelErrorBoundary name="registry-proposals">
+            <RegistryProposals />
           </PanelErrorBoundary>
         </div>
         {/* F2: the MOBILE NAV — a bottom tabbar (corpus .tabbar component) shown ONLY at <699px. It replaces

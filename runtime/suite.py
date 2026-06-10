@@ -8474,6 +8474,70 @@ class Suite:
                                             capabilities=Capabilities(**caps), **handle))
         return _build(entries)
 
+    def registry_proposals(self) -> dict:
+        """RG8 — the PENDING registry-proposal batch for the operator surface (RegistryProposals.tsx).
+        Reads the reconciled chain artifact (.build/rg10/reconciled.json) and serves the confirmed-class
+        dossiers whose address is NOT yet in addresses.json (= proposed, awaiting the operator's batch
+        approve). Post-write-back this is honestly EMPTY (the surface's rest state). reflects-never-owns:
+        a pure read; the write is registry_apply_batch on the operator's approve. Serves the CURRENT
+        no-confidence schema (grounding tag; the surface renders it — the announced RG3 change)."""
+        import json as _json
+        rec_path = ".build/rg10/reconciled.json"
+        if not os.path.exists(rec_path):
+            return {"batch_id": None, "proposals": []}
+        rec = _json.load(open(rec_path, encoding="utf-8"))
+        registry = _json.load(open("design/_system/addresses.json", encoding="utf-8"))["addresses"]
+        pending = []
+        for e in rec.get("entries", []):
+            if e.get("class") != "confirmed":
+                continue
+            d = e.get("dossier") or {}
+            addr = e.get("address")
+            if not addr or addr in registry:
+                continue                                   # written (or decided keep-curated) — not pending
+            pending.append({"address": addr, "represents": d.get("represents", ""),
+                            "howto": d.get("howto") or {}, "capabilities": d.get("capabilities") or [],
+                            "maps_to_feature": d.get("maps_to_feature", "proposed"),
+                            "grounding": d.get("grounding", "uncertain"),
+                            "mockup_file": (e.get("sources") or [None])[0],
+                            "flagged": bool(e.get("panel") and not (e.get("panel") or {}).get("verdict", True)),
+                            "flag_reason": None})
+        return {"batch_id": "rg10-reconciled" if pending else None, "proposals": pending}
+
+    def registry_apply_batch(self, skip: list | None = None) -> dict:
+        """RG9 — the OPERATOR-approved write-back for the pending batch (the POST the approve button
+        fires; the bridge is the operator channel, so this is operator-consent by construction — the
+        same trust as /api/resolve). Applies the pending set minus `skip` through the EXISTING
+        registry_writeback (merge → stamp → re-parse, all-or-nothing, curated-content refusal intact).
+        Fail-loud on an empty pending set (nothing to approve is not a silent ok)."""
+        import json as _json
+        import sys as _sys
+        if "design/_system" not in " ".join(_sys.path):
+            _sys.path.insert(0, os.path.join(os.getcwd(), "design", "_system"))
+        import registry_writeback as _wb
+        skip_set = set(skip or [])
+        pend = self.registry_proposals()["proposals"]
+        keep = [p for p in pend if p["address"] not in skip_set]
+        if not keep:
+            raise ValueError("registry_apply_batch: nothing to write (the pending set is empty or fully "
+                             "skipped) — fail loud, not a silent ok.")
+        cands = _json.load(open("design/_system/candidates.json", encoding="utf-8"))["candidates"]
+        entries = []
+        for p in keep:
+            mockup = p.get("mockup_file")
+            cand = next((c for c in cands if c.get("mockup_file") == mockup), None)
+            entries.append({"address": p["address"], "represents": p["represents"], "howto": p["howto"],
+                            "capabilities": p["capabilities"], "maps_to_feature": p["maps_to_feature"],
+                            "mockup_file": mockup, "outerHTML": (cand or {}).get("outerHTML", ""),
+                            "run": "rg8-surface-approve", "model": "operator-approved batch"})
+        report = _wb.registry_writeback(entries, write=True, skip_already_stamped=True)
+        self._emit("apply", f"registry batch approved from the surface — "
+                   f"{sum(1 for m in report['merged'] if m['status'] == 'added')} added",
+                   address="ui://registry/proposals")
+        return {"ok": True, "added": sum(1 for m in report["merged"] if m["status"] == "added"),
+                "skipped_identical": sum(1 for m in report["merged"] if m["status"] == "skipped"),
+                "stamp_skipped": len(report.get("stamp_skipped", []))}
+
     def ui_info(self) -> dict:
         return self.build_ui_info()
 
