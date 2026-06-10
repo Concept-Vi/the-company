@@ -280,11 +280,67 @@ twin), and META-memory: a condition row is a memory about when to remember.
 resolver gives HOW — every piece already has a native home in what's built or designed.** The
 blueprint is assembly with intent, not invention.
 
+## 10.5 · Round 3 — THE UI AS RESOLUTION (Tim's ask: "how it maintains the resolution principle
+without hardcoding, how the interface itself could potentially be one or many AI resolutions and/or
+rules")
+
+**The headline: the interface is the resolver wearing a face.** What an agent receives as injected
+context, Tim receives as a rendered surface — ONE resolution pipeline, two output formats (prompts
+for models, surfaces for him). A screen is never written down as a screen; it is resolved every time
+from the same axes (where he's looking · when it is · who is looking — other principals later see
+different surfaces from the same system). The UI is not a system that displays the brain; the UI IS
+the brain's output rendered spatially.
+
+**The no-hardcoding anatomy — four separations (each with a native home):**
+1. **Components are VOCABULARY, not sentences** — the only coded things are primitive renderers
+   (card, list, node, overlay, river, dial, timeline): the design system as the UI's node-types,
+   registry-discovered, declaring what data-kinds they render. Everything composed is data. THE TEST:
+   adding a new view must never require code (at most a new primitive). panels/ (JSON rows) is the
+   level-1 proof already built.
+2. **Bindings are ADDRESSES, never wires** — a component renders "whatever this address resolves to";
+   reflects-never-owns extended from reflecting state to BEING COMPOSED.
+3. **Composition is RULES** — declared, deterministic, renderable; the rules engine's third consumer
+   (routing · memory-conditions · layout). Renderable ⇒ **the screen can explain itself**: tap any
+   element → which rule fired, which address, which memory returned. The interface becomes
+   inspectable like the rest of the system.
+4. **Presentation is LEARNED** — how things render (form/altitude/detail) is judgment → roles +
+   the presentation-feedback loop (F1, named in the operable-interface build; presentation_prefs
+   per-address exists). The altitude-transformation layer's visible half.
+
+**"One or many" = BOTH, at two grains (mirrors concurrent cognition exactly):** MANY at fine grain —
+each region is a separate concurrent resolution (small model or rule) filling itself live; the screen
+as spatial swarm output (the Pulse→River→Nodes view was conceived as this). ONE at coarse grain — the
+RHM composes what story the moment's surface tells. ⇒ **The RHM's speech and the screen are the same
+act**: presentations of resolutions — voice renders temporally, surface renders spatially
+(render-for-cognition picks the axis per content). Viv talking and the canvas arranging itself are
+one voice in two dimensions.
+
+**The honest tension + its resolution — resolution vs PLACE:** a fully-resolved surface where
+everything moves means nothing is where Tim left it — and he recognizes BY shape/place. Counterweight:
+**the spatial frame is the UI's IDENTITY; the content is its MEMORY** (the same identity/memory split
+as the brain — frame loads unconditionally, content resolves conditionally). Workshop model: the
+bench stays; what's on it changes with the job. The resolver proposes rearrangement; big spatial
+changes go through his gate / learned preference, never silently.
+
+**Growth:** new surfaces ride the proposal lifecycle (propose → accept → wire builds → the address
+registry updates automatically — Tim's own earlier directive: every UI change triggers drift+address
+updates "so the system would automatically show agents things"). Registration is part of becoming
+Real; the surface and its self-knowledge grow in lockstep. Anticipatory resolution pre-warms surfaces
+as the now shifts.
+
+**Assembled:** primitives = vocabulary · addresses = bindings · rules = composition · roles =
+presentation-judgment · proposal lifecycle = growth · the RHM = the composer · the spatial frame =
+the surface's identity. Nothing hardcoded but the alphabet.
+
 ## 11 · Open threads (updated)
 
 1. ~~The garden question~~ → ANSWERED (9.8): full interactive surface, memory-at-addresses.
 2. **Anticipatory resolution dial** — reactive/warm/hot; surfaced to Tim as a character-trait
    decision. AWAITING HIS SHAPE.
+2b. **The STABILITY dial (round 3's live end)** — how much may the surface move on its own:
+   museum (nothing moves without his hand) / workshop (places stable, contents fluid — the lead's
+   instinct for Tim) / stage (the RHM re-sets the scene freely). Interacts with the anticipation
+   dial. AWAITING HIS SHAPE.
 3. **The now-vocabulary:** modes as the coarse time-coordinates (Tim: "great ideas about the
    vocabulary of nows"); fine grain TBD in the rules language.
 4. **The audience boundary** — now per-PRINCIPAL (9.2), not just per-agent. Scoped gates for future
