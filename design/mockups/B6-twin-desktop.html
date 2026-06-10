@@ -167,10 +167,10 @@
   <!-- ── TOP BAR — identity · presence · the EXISTS/PROPOSED legend (honesty contract, in the chrome) ── -->
   <header class="top">
     <span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
-    <span class="presence" data-ui-ref="ui://toolbar/presence"><span class="dot"></span>background<span class="ch">· presence dial ▾</span></span>
+    <span class="presence" data-ui-ref="ui://toolbar/presence"><span class="dot"></span>background<span class="ch" data-ui-ref="ui://toolbar/presence/presence-dial">· presence dial ▾</span></span>
     <div class="legend">
       <span class="lg exists"><span class="sw"></span>exists · verified</span>
-      <span class="lg proposed"><span class="sw"></span>proposed · over real substrate</span>
+      <span class="lg proposed" data-ui-ref="ui://chat/substrate"><span class="sw"></span>proposed · over real substrate</span>
     </div>
   </header>
 
@@ -191,15 +191,15 @@
 
   <!-- ── CANVAS — the explicit model-of-Tim, a real CONTENT node, VOLATILE → status RAN (never cached) ── -->
   <main class="canvas" data-ui-ref="ui://canvas">
-    <div class="nodecap" style="left:380px;top:150px">◔ the twin's explicit grounding · a content node</div>
+    <div class="nodecap" style="left:380px;top:150px" data-ui-ref="ui://canvas/twin-grounding">◔ the twin's explicit grounding · a content node</div>
     <div class="node target" data-ui-ref="run://system/model_of_tim" style="left:330px;top:196px">
       <div class="bar"><span class="mono-chip">◔</span><span class="ty">model_of_tim</span><span class="kindlabel">content · ran</span></div>
       <div class="body">Tim's synthesised principles/laws — the twin reasons FROM this (explicit), plus a later corpus-trained implicit model.
         <div class="cfg">
           <span class="pill">path <b>foundation/system/principles.md</b></span>
-          <span class="pill vol">VOLATILE · fail-loud</span>
+          <span class="pill vol" data-ui-ref="ui://system/model_of_tim/volatile">VOLATILE · fail-loud</span>
         </div>
-        <div class="out">## Single origin&nbsp;&nbsp;The Company is one entity…&nbsp;&nbsp;## No silent failures&nbsp;&nbsp;Operations succeed or fail loud…</div>
+        <div class="out" data-ui-ref="ui://run/system/model_of_tim/manifest">## Single origin&nbsp;&nbsp;The Company is one entity…&nbsp;&nbsp;## No silent failures&nbsp;&nbsp;Operations succeed or fail loud…</div>
       </div>
       <div class="addr"><span>run://system/model_of_tim</span><span class="sdot s-ran"></span></div>
       <span class="port out"></span><span class="ptag" style="right:-50px;top:calc(50% - 9px)">Text · principles</span>
@@ -224,20 +224,20 @@
 
       <div class="twinhd">
         <span class="av">◈</span>
-        <span class="ttl">The twin · model-of-Tim<small>provenance grading · cold-start</small></span>
+        <span class="ttl" data-ui-ref="ui://twin/grading">The twin · model-of-Tim<small>provenance grading · cold-start</small></span>
       </div>
 
       <!-- ════ EXISTS — the explicit grounding (model_of_tim digest into the twin's context) ════ -->
       <section class="sec">
         <div class="sechd"><span class="h">Grounding — the explicit model of Tim</span><span class="badge exists">exists</span></div>
         <div class="secbody">
-          <div class="ground">
+          <div class="ground" data-ui-ref="ui://twin/model_of_tim">
             The twin reasons from Tim's <b>explicit</b> principles — read live from a content node, never fabricated.
             <div class="src"><span class="ic">◔</span><span>node <span class="ref">run://system/model_of_tim</span> · VOLATILE</span><span class="ok">✓ read</span></div>
-            <div class="digest">compact digest in context (≤2600 chars · headers + statements):<br>
-              <span class="b">• Single origin</span> — the Company is one entity<br>
+            <div class="digest" data-ui-ref="ui://twin/digest">compact digest in context (≤2600 chars · headers + statements):<br>
+              <span class="b" data-ui-ref="ui://twin/single-origin">• Single origin</span> — the Company is one entity<br>
               <span class="b">• No silent failures</span> — succeed or fail loud<br>
-              <span class="b">• No confidence</span> — posture, not a score<br>
+              <span class="b" data-ui-ref="ui://twin/uncertainty">• No confidence</span> — posture, not a score<br>
               <span style="color:var(--tx-3)">…drillable to the full text via the node</span>
             </div>
           </div>
@@ -256,7 +256,7 @@
           <div class="turn">
             <span class="who">Twin</span>
             <span class="txt">"Reading your single-origin principle, I'd keep one coherent voice across channels — but that's my inference, not your word."
-              <br><span class="gtag working"><span class="d"></span>working</span><span class="src-note">source: twin · never trains</span></span>
+              <br><span class="gtag working"><span class="d"></span>working</span><span class="src-note" data-ui-ref="ui://twin/never-trains">source: twin · never trains</span></span>
           </div>
           <div class="turn">
             <span class="who">Tim</span>
@@ -283,9 +283,9 @@
             <div class="candidate">"…keep one coherent voice across channels…" <span style="color:var(--fail)">— twin text, resubmitted as a 'user' turn (red-team F4)</span>
               <div class="meta">claimed role=user · actual source=twin</div>
             </div>
-            <div class="verdict-col">✕ rejected<br>echo-guarded</div>
+            <div class="verdict-col" data-ui-ref="ui://twin/verdict">✕ rejected<br>echo-guarded</div>
           </div>
-          <div class="why">
+          <div class="why" data-ui-ref="ui://twin/guards">
             two guards (<b>training_signal()</b>): <b>source≠twin</b> (source travels with the turn, not launderable by role)
             + the text must not <b>echo</b> any twin/assistant turn in history. Result: the twin can never train on its own output → no model-collapse.
           </div>
@@ -296,7 +296,7 @@
       <section class="sec prop">
         <div class="sechd"><span class="h">Predicting Tim's judgement</span><span class="badge proposed">proposed</span></div>
         <div class="secbody">
-          <div class="coldstart">
+          <div class="coldstart" data-ui-ref="ui://twin/coldstart">
             The mechanism above is live. What is <b>not</b> yet built is the twin actually <b>predicting</b> what Tim would decide.
             <div class="abstain">
               <span class="ic">⃠</span>
@@ -306,7 +306,7 @@
             <div class="gapnote">
               <span>depends on:</span><span class="dep">corpus ingestion (D8) — not built</span><span>→ turns the mechanism into a learned model of Tim.</span>
             </div>
-            <div class="noconf">
+            <div class="noconf" data-ui-ref="ui://twin/noconf">
               note: <b>no confidence score</b> is shown — by law there is "no confidence anywhere" (posture, not a number).
               A meter here would be double-fiction: unbuilt AND against the principle. Deliberately absent.
             </div>
@@ -327,7 +327,7 @@
   <nav class="tabbar" data-ui-ref="ui://tabbar">
     <a><span class="ic">▦</span>Canvas</a>
     <a><span class="ic">✦</span>Inbox</a>
-    <a class="on"><span class="ic">◈</span>Twin</a>
+    <a class="on" data-ui-ref="ui://tabbar/twin"><span class="ic">◈</span>Twin</a>
     <a><span class="ic">▶</span>Run</a>
   </nav>
 </div></body></html>

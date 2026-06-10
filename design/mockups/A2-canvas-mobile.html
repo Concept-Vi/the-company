@@ -147,7 +147,7 @@
     <div class="node" data-kind="content" style="left:26px;top:96px">
       <div class="bar"><span class="mono-chip">▦</span><span class="ty">codebase</span><span class="kindlabel">content</span></div>
       <div class="body">reads the repo into context
-        <div class="cfg"><span class="pill">root <b>~/company</b></span><span class="pill">volatile→ran</span></div>
+        <div class="cfg"><span class="pill">root <b>~/company</b></span><span class="pill" data-ui-ref="ui://canvas/chain-status">volatile→ran</span></div>
       </div>
       <div class="addr"><span>run://demo/code</span><span class="sdot s-ran"></span></div>
       <span class="port out"></span><span class="ptag" style="right:-40px;top:calc(50% - 8px)">Text</span>
@@ -194,7 +194,7 @@
     <div class="box code">Answer using ONLY the provided code. Cite file paths. Be concise.</div>
 
     <p class="fld">Inputs · typed ports</p>
-    <div class="box code">question ← constant <span style="color:var(--tx-3)">(Text)</span><br>context&nbsp;&nbsp;← codebase <span style="color:var(--tx-3)">(Text)</span></div>
+    <div class="box code" data-ui-ref="ui://canvas/chain">question ← constant <span style="color:var(--tx-3)">(Text)</span><br>context&nbsp;&nbsp;← codebase <span style="color:var(--tx-3)">(Text)</span></div>
 
     <p class="fld">Act on this output</p>
     <div class="act">
@@ -208,7 +208,7 @@
   <nav class="tabbar" data-ui-ref="ui://tabbar" style="display:flex">
     <a class="on"><span class="ic">▦</span>Canvas</a>
     <a><span class="ic">✦</span>Inbox</a>
-    <a><span class="ic">◈</span>RHM</a>
+    <a data-ui-ref="ui://tabbar/rhm"><span class="ic">◈</span>RHM</a>
     <a><span class="ic">▶</span>Run</a>
   </nav>
 </div></body></html>

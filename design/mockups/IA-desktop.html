@@ -515,7 +515,7 @@ body{
       <div class="chip" draggable="true"><span class="mono content">C</span><span class="cn">codebase</span><span class="ck">cont</span></div>
       <div class="chip" draggable="true"><span class="mono content">P</span><span class="cn">portal</span><span class="ck">ref</span></div>
       <div class="chip" draggable="true"><span class="mono content">K</span><span class="cn">constant</span><span class="ck">cont</span></div>
-      <div class="chip" draggable="true"><span class="mono content">M</span><span class="cn">model_of_tim</span><span class="ck">cont</span></div>
+      <div class="chip" draggable="true"><span class="mono content">M</span><span class="cn" data-ui-ref="ui://palette/model_of_tim">model_of_tim</span><span class="ck">cont</span></div>
       <div class="rail-grp">config slot</div>
       <div class="chip" draggable="true"><span class="mono model">◑</span><span class="cn">rhm_mode</span><span class="ck">dial</span></div>
     </div>
@@ -541,7 +541,7 @@ body{
       <div class="node" data-st="live" style="left:24px;top:96px" data-ui-ref="ui://canvas/node/codebase">
         <span class="port out"></span>
         <div class="nh"><span class="nk"></span><span class="nn">codebase</span><span class="naddr">·live</span></div>
-        <div class="nbody">reads the live repo into one context — volatile, always re-runs</div>
+        <div class="nbody" data-ui-ref="ui://canvas/node/codebase/reads">reads the live repo into one context — volatile, always re-runs</div>
         <span class="nstate"><span class="sdot"></span>live</span>
       </div>
 
@@ -549,7 +549,7 @@ body{
       <div class="node" data-st="cached" style="left:24px;top:214px" data-ui-ref="ui://canvas/node/model_of_tim">
         <span class="port out"></span>
         <div class="nh"><span class="nk"></span><span class="nn">model_of_tim</span><span class="naddr">·cache</span></div>
-        <div class="nbody">principles.md — the explicit model of Tim</div>
+        <div class="nbody" data-ui-ref="ui://canvas/node/model_of_tim/principles">principles.md — the explicit model of Tim</div>
         <span class="nstate"><span class="sdot"></span>cached</span>
       </div>
 
@@ -557,7 +557,7 @@ body{
       <div class="node selected" data-st="ran" style="left:318px;top:206px" data-ui-ref="ui://canvas/node/ask">
         <span class="port in"></span><span class="port out"></span>
         <div class="nh"><span class="nk"></span><span class="nn">ask</span><span class="naddr">ui://…/ask</span></div>
-        <div class="nbody">How does the memo gate decide whether a node re-runs?</div>
+        <div class="nbody" data-ui-ref="ui://canvas/node/ask/memo-gate">How does the memo gate decide whether a node re-runs?</div>
         <span class="nstate"><span class="sdot"></span>ran · 1.4s</span>
       </div>
 
@@ -565,7 +565,7 @@ body{
       <div class="node" data-st="idle" style="left:628px;top:88px" data-ui-ref="ui://canvas/node/join">
         <span class="port in"></span><span class="port out"></span>
         <div class="nh"><span class="nk"></span><span class="nn">join</span><span class="naddr">·idle</span></div>
-        <div class="nbody">merge two inputs to one text</div>
+        <div class="nbody" data-ui-ref="ui://canvas/node/join/merge">merge two inputs to one text</div>
         <span class="nstate"><span class="sdot"></span>idle</span>
       </div>
 
@@ -573,15 +573,15 @@ body{
       <div class="node" data-st="await" style="left:628px;top:348px" data-ui-ref="ui://canvas/node/rollup">
         <span class="port in"></span><span class="port out"></span>
         <div class="nh"><span class="nk"></span><span class="nn">cost-rollup</span><span class="naddr">·await</span></div>
-        <div class="nbody">awaiting this morning's runs</div>
+        <div class="nbody" data-ui-ref="ui://canvas/node/rollup/awaiting">awaiting this morning's runs</div>
         <span class="nstate"><span class="sdot"></span>awaiting you</span>
       </div>
 
       <!-- a failed node (so the full state vocabulary reads by sight) -->
       <div class="node" data-st="failed" style="left:318px;top:392px" data-ui-ref="ui://canvas/node/embed-corpus">
         <span class="port in"></span><span class="port out"></span>
-        <div class="nh"><span class="nk"></span><span class="nn">embed-corpus</span><span class="naddr">·fail</span></div>
-        <div class="nbody">embedding service :8001 unreachable — fails loud</div>
+        <div class="nh"><span class="nk"></span><span class="nn" data-ui-ref="ui://canvas/node/embed-corpus">embed-corpus</span><span class="naddr">·fail</span></div>
+        <div class="nbody" data-ui-ref="ui://canvas/node/embed-corpus/status">embedding service :8001 unreachable — fails loud</div>
         <span class="nstate"><span class="sdot"></span>failed</span>
       </div>
 
@@ -589,7 +589,7 @@ body{
       <div class="node" data-st="building" style="left:318px;top:80px" data-ui-ref="ui://canvas/node/new-panel">
         <span class="port in"></span><span class="port out"></span>
         <div class="nh"><span class="nk"></span><span class="nn">retrieve</span><span class="naddr">·build</span></div>
-        <div class="nbody">wiring — top-k cosine ranking</div>
+        <div class="nbody" data-ui-ref="ui://canvas/node/new-panel/wiring">wiring — top-k cosine ranking</div>
         <span class="nstate"><span class="sdot"></span>building</span>
       </div>
 
@@ -598,33 +598,33 @@ body{
         <div class="ci"><span class="g">↻</span>run from here</div>
         <div class="ci"><span class="g">＋</span>wire to…</div>
         <div class="ci"><span class="g">⊕</span>portal this output</div>
-        <div class="ci"><span class="g">✦</span>surface output → queue</div>
+        <div class="ci" data-ui-ref="ui://canvas/surface-output"><span class="g">✦</span>surface output → queue</div>
         <div class="sep"></div>
-        <div class="ci"><span class="g">◈</span>ask vi about this</div>
+        <div class="ci" data-ui-ref="ui://canvas/ask-vi"><span class="g">◈</span>ask vi about this</div>
         <div class="ci danger"><span class="g">🗑</span>delete</div>
       </div>
 
       <!-- a hover-preview bubble on another node (pointer-only: hover = preview output, no click) -->
       <div class="preview" style="left:184px;top:60px">
         <div class="pvh"><i></i>hover preview · codebase</div>
-        <div class="pvb">19,361 files · 600k char cap — the live repo as one context.</div>
+        <div class="pvb" data-ui-ref="ui://canvas/stats">19,361 files · 600k char cap — the live repo as one context.</div>
       </div>
 
       <!-- show-me spotlight (off by default; the teach button rings the selected node) -->
       <div class="spotlight" id="spotlight" style="left:310px;top:198px;width:188px;height:96px"></div>
       <div class="show-cap" id="showCap" style="left:512px;top:200px">
-        <div class="sct">show me · step 2 of 4</div>
-        <div class="scb">This is the <b>ask</b> node — it fired because its inputs resolved. Its answer is in the inspector. →</div>
+        <div class="sct" data-ui-ref="ui://canvas/step-2">show me · step 2 of 4</div>
+        <div class="scb" data-ui-ref="ui://canvas/ask-node">This is the <b>ask</b> node — it fired because its inputs resolved. Its answer is in the inspector. →</div>
       </div>
     </div>
 
     <!-- board chrome: pointer affordance hints + zoom -->
     <div class="board-hint">
-      <span class="hk"><b>drag</b> a chip to wire</span>
-      <span class="hk"><b>marquee</b> to multi-select</span>
-      <span class="hk"><b>right-click</b> a node for verbs</span>
+      <span class="hk" data-ui-ref="ui://canvas/drag"><b>drag</b> a chip to wire</span>
+      <span class="hk" data-ui-ref="ui://canvas/marquee"><b>marquee</b> to multi-select</span>
+      <span class="hk" data-ui-ref="ui://canvas/verbs"><b>right-click</b> a node for verbs</span>
     </div>
-    <div class="zoomctl"><button>＋</button><button>−</button><button title="fit">⊡</button></div>
+    <div class="zoomctl"><button data-ui-ref="ui://canvas/plus">＋</button><button>−</button><button title="fit">⊡</button></div>
   </main>
 
   <!-- ═══════════ RIGHT RAIL — Inspector · Address-help · Queue ═══════════ -->
@@ -637,18 +637,18 @@ body{
         <div class="region-b">
           <div class="insp-subject">
             <span class="ik"></span>
-            <span class="it"><span class="itn">ask</span><span class="ita">ui://canvas/node/ask</span></span>
+            <span class="it"><span class="itn">ask</span><span class="ita" data-ui-ref="ui://inspector/ask">ui://canvas/node/ask</span></span>
             <span class="ist"><span class="d"></span>ran</span>
           </div>
 
-          <div class="cfg-grp-l">config — the type's declared slots</div>
-          <div class="cfg-row"><span class="cl">model</span><span class="cv model"><span class="mdot"></span>deepseek-v4-pro</span></div>
-          <div class="cfg-row"><span class="cl">base_url</span><span class="cv">local · :8000</span></div>
-          <div class="cfg-row"><span class="cl">question</span><span class="cv">↳ from selection</span></div>
+          <div class="cfg-grp-l" data-ui-ref="ui://inspector/config">config — the type's declared slots</div>
+          <div class="cfg-row"><span class="cl">model</span><span class="cv model" data-ui-ref="ui://inspector/model"><span class="mdot"></span>deepseek-v4-pro</span></div>
+          <div class="cfg-row"><span class="cl">base_url</span><span class="cv" data-ui-ref="ui://inspector/local">local · :8000</span></div>
+          <div class="cfg-row"><span class="cl">question</span><span class="cv" data-ui-ref="ui://inspector/selection">↳ from selection</span></div>
 
           <div class="outp">
             <div class="ol"><span class="od"></span>output</div>
-            <div class="ob">It hashes <code>(type,version,config,inputs)</code>. Unchanged → it serves the cached result. A volatile node like <code>codebase</code> bypasses the gate, so it always re-runs.</div>
+            <div class="ob" data-ui-ref="ui://inspector/eng-memo">It hashes <code>(type,version,config,inputs)</code>. Unchanged → it serves the cached result. A volatile node like <code>codebase</code> bypasses the gate, so it always re-runs.</div>
           </div>
 
           <!-- ★ the LATENT panel/extend self-grow affordance — first-class, NOT RHM-only -->
@@ -656,7 +656,7 @@ body{
             <div class="gt"><span class="star">★</span>grow the interface itself</div>
             <div class="gbtns">
               <span class="gb">＋ add a panel</span>
-              <span class="gb">⌗ extend w/ component</span>
+              <span class="gb" data-ui-ref="ui://grow/extend">⌗ extend w/ component</span>
             </div>
             <div class="gn">propose → review diff → approve · git-reversible · the controls to grow the UI, surfaced</div>
           </div>
@@ -665,24 +665,24 @@ body{
 
       <!-- ── ADDRESS-HELP (mid) — "what can I do here?" + the addressed-locus family ── -->
       <section class="region ahelp" data-ui-ref="ui://address-help">
-        <div class="region-h"><span class="rh-ic">⌖</span><span class="rh-t">what can I do here?</span><span class="rh-meta">at · ask</span></div>
+        <div class="region-h"><span class="rh-ic">⌖</span><span class="rh-t" data-ui-ref="ui://address-help/help-query">what can I do here?</span><span class="rh-meta">at · ask</span></div>
         <div class="region-b">
           <div class="ah-3">
             <div class="ah-leg"><span class="lh">is</span><span class="lb">An <b>ask</b> node — LLM Q&amp;A over its resolved inputs.</span></div>
-            <div class="ah-leg"><span class="lh">you can</span><span class="lb">Re-run it · change its <b>model</b> · wire its answer onward · ask vi about it.</span></div>
+            <div class="ah-leg"><span class="lh">you can</span><span class="lb" data-ui-ref="ui://address-help/utterance">Re-run it · change its <b>model</b> · wire its answer onward · ask vi about it.</span></div>
             <div class="ah-leg"><span class="lh">how</span><span class="lb">Right-click for verbs, or say <b>"rerun ask and route to my inbox."</b></span></div>
           </div>
 
           <!-- progressively-disclosed addressed-locus family — chips, NOT an 8-deep scroll -->
-          <div class="disc"><span class="di">💬</span><span class="dl">comments &amp; chat here</span><span class="dc">2</span><span class="chev">›</span></div>
+          <div class="disc"><span class="di">💬</span><span class="dl" data-ui-ref="ui://address-help/comments-chat">comments &amp; chat here</span><span class="dc">2</span><span class="chev">›</span></div>
           <div class="disc-body">
-            <div class="thread-turn"><span class="tw">tim · pinned</span>Keep this on the local model — latency matters here.</div>
-            <div class="thread-turn"><span class="tw">vi · chat-at-address</span>Noted — base_url pinned to :8000.</div>
+            <div class="thread-turn" data-ui-ref="ui://address-help/keep-local"><span class="tw" data-ui-ref="ui://address-help/pinned">tim · pinned</span>Keep this on the local model — latency matters here.</div>
+            <div class="thread-turn"><span class="tw" data-ui-ref="ui://address-help/chat-at-address">vi · chat-at-address</span>Noted — base_url pinned to :8000.</div>
           </div>
 
           <div class="disc"><span class="di">⧗</span><span class="dl">history at this address</span><span class="dc">7</span><span class="chev">›</span></div>
           <div class="disc-body">
-            <div class="ledger"><span>ran → cached → ran</span><span class="when">3 events today</span></div>
+            <div class="ledger"><span>ran → cached → ran</span><span class="when" data-ui-ref="ui://address-help/events">3 events today</span></div>
             <div class="ledger"><span>last output changed</span><span class="when">14:22</span></div>
           </div>
 
@@ -692,7 +692,7 @@ body{
             <div class="ledger"><span>v2</span><span class="when">13:40</span></div>
           </div>
 
-          <div class="disc"><span class="di">⟲</span><span class="dl">self-changes here</span><span class="dc">1</span><span class="chev">›</span></div>
+          <div class="disc"><span class="di">⟲</span><span class="dl" data-ui-ref="ui://address-help/self-changes">self-changes here</span><span class="dc">1</span><span class="chev">›</span></div>
           <div class="disc-body">
             <div class="ledger"><span class="sha">a3f1c2</span><span>added model slot</span><span class="when">yest.</span></div>
           </div>
@@ -711,22 +711,22 @@ body{
 
           <!-- a build-result waiting for review — the wire's surfaced-for-review item -->
           <div class="queue-card lane-review" data-ui-ref="ui://inbox/build-result">
-            <div class="qh"><span class="qlane">build result · review</span><span class="qwhen">2m</span></div>
-            <div class="qbody">The self-build added a <b>retrieve</b> node + wired it. Verified by use.</div>
+            <div class="qh"><span class="qlane" data-ui-ref="ui://inbox/build-result">build result · review</span><span class="qwhen">2m</span></div>
+            <div class="qbody" data-ui-ref="ui://inbox/build-result/utterance">The self-build added a <b>retrieve</b> node + wired it. Verified by use.</div>
             <div class="qmeta">⌗ 2 files changed · diff ready · git-reversible</div>
-            <div class="qacts"><button class="qa-ok">accept</button><button class="qa-no">send back</button><button class="qa-cm">diff</button></div>
+            <div class="qacts"><button class="qa-ok" data-ui-ref="ui://inbox/build-result/accept">accept</button><button class="qa-no">send back</button><button class="qa-cm" data-ui-ref="ui://inbox/build-result/diff">diff</button></div>
           </div>
 
           <div class="queue-card lane-decision" data-ui-ref="ui://inbox/decision">
             <div class="qh"><span class="qlane">decision</span><span class="qwhen">8m</span></div>
-            <div class="qbody">Cost rollup is ready — open it now, or hold for the 15:00 runs?</div>
-            <div class="qacts"><button class="qa-ok">open</button><button class="qa-no">hold</button></div>
+            <div class="qbody" data-ui-ref="ui://inbox/decision/rollup">Cost rollup is ready — open it now, or hold for the 15:00 runs?</div>
+            <div class="qacts"><button class="qa-ok" data-ui-ref="ui://inbox/decision/open">open</button><button class="qa-no">hold</button></div>
           </div>
 
           <div class="queue-card lane-question">
             <div class="qh"><span class="qlane">question</span><span class="qwhen">12m</span></div>
             <div class="qbody">embed-corpus failed — :8001 down. Retry, or switch the ear?</div>
-            <div class="qacts"><button class="qa-ok">retry</button><button class="qa-cm">comment</button></div>
+            <div class="qacts"><button class="qa-ok">retry</button><button class="qa-cm" data-ui-ref="ui://inbox/walk/comment">comment</button></div>
           </div>
 
         </div>
@@ -745,7 +745,7 @@ body{
         <span class="orb"></span>
       </div>
       <div class="say">I'm here — and I see the <em>ask</em> node you've selected.</div>
-      <div class="mode">listening · deepseek-v4-pro</div>
+      <div class="mode" data-ui-ref="ui://rhm/mode">listening · deepseek-v4-pro</div>
     </div>
 
     <!-- the conversation — ABOUT the selected ask node (the simultaneity thread) -->
@@ -754,15 +754,15 @@ body{
         <div class="indicate" title="your message is about this element"><span>⌖</span>ui://canvas/node/ask<span class="x">✕</span></div>
         <div class="turn you">
           <span class="who">you<span class="grade gold" title="gold — your own words">◆</span></span>
-          <div class="bubble">Why did the ask node re-run this time?</div>
+          <div class="bubble" data-ui-ref="ui://rhm/ask-node">Why did the ask node re-run this time?</div>
         </div>
         <div class="turn vi">
           <span class="who">vi<span class="grade work" title="working-grade inference">◇</span></span>
-          <div class="bubble">Its <code>codebase</code> input is volatile, so the memo gate couldn't skip it — that forced <code>ask</code> to recompute. Want me to pin the model so the answer stays on the local engine?</div>
+          <div class="bubble" data-ui-ref="ui://rhm/utterance">Its <code>codebase</code> input is volatile, so the memo gate couldn't skip it — that forced <code>ask</code> to recompute. Want me to pin the model so the answer stays on the local engine?</div>
         </div>
       </div>
       <div class="rhm-input">
-        <input placeholder="ask vi about the selected node…"/>
+        <input placeholder="ask vi about the selected node…" data-ui-ref="ui://rhm/ask" />
         <span class="ib mic" title="auto-listen on">👂</span>
         <span class="ib send">→</span>
       </div>
@@ -770,7 +770,7 @@ body{
 
     <!-- the Tune/activity strip — settings-resident latent caps as peeking readouts (not a modal that hides the hero) -->
     <div class="rhm-tune" data-ui-ref="ui://tune">
-      <div class="tune-h">★ /api/knobs · live model knobs<span class="more">all knobs ›</span></div>
+      <div class="tune-h" data-ui-ref="ui://tune/knobs">★ /api/knobs · live model knobs<span class="more">all knobs ›</span></div>
       <div class="knob-row"><span class="kl">temperature</span><span class="ktrack"><i style="width:42%"></i></span><span class="kv">0.6</span></div>
       <div class="knob-row"><span class="kl">max_tokens</span><span class="ktrack"><i style="width:70%"></i></span><span class="kv">4k</span></div>
       <div class="knob-row"><span class="kl">top_p</span><span class="ktrack"><i style="width:88%"></i></span><span class="kv">0.9</span></div>
@@ -787,19 +787,19 @@ body{
 
       <div class="tune-divider"></div>
 
-      <div class="tune-h">activity · ambient<span class="more">feed ›</span></div>
+      <div class="tune-h" data-ui-ref="ui://tune/activity-feed">activity · ambient<span class="more">feed ›</span></div>
       <div class="act-strip">
         <div class="act-row"><i style="background:var(--gold)"></i><span class="at">ask · ran</span><span class="aw">1.4s</span></div>
-        <div class="act-row"><i style="background:var(--kind-content)"></i><span class="at">retrieve · building</span><span class="aw">now</span></div>
+        <div class="act-row"><i style="background:var(--kind-content)"></i><span class="at" data-ui-ref="ui://tune/retrieve">retrieve · building</span><span class="aw">now</span></div>
         <div class="act-row"><i style="background:var(--fail)"></i><span class="at">embed-corpus · failed</span><span class="aw">2m</span></div>
       </div>
 
       <div class="tune-divider"></div>
 
       <!-- the remaining settings-resident latent caps, collapsed as one-tap chips -->
-      <div class="tune-chip"><span class="tg">★</span>R2 composition · live tuning<span class="tn">setter</span></div>
-      <div class="tune-chip"><span class="tg">★</span>voice trial · debrief<span class="tn">record→reflect</span></div>
-      <div class="tune-chip"><span class="tg">★</span>self-change-log · full ledger<span class="tn">[self-apply]</span></div>
+      <div class="tune-chip" data-ui-ref="ui://tune/composition"><span class="tg">★</span>R2 composition · live tuning<span class="tn">setter</span></div>
+      <div class="tune-chip"><span class="tg">★</span>voice trial · debrief<span class="tn" data-ui-ref="ui://tune/record-reflect">record→reflect</span></div>
+      <div class="tune-chip"><span class="tg">★</span>self-change-log · full ledger<span class="tn" data-ui-ref="ui://tune/self-apply">[self-apply]</span></div>
     </div>
   </section>
 

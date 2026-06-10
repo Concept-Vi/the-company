@@ -145,7 +145,7 @@
       <path d="M 678 252 C 760 252 760 318 836 318" fill="none" stroke="var(--kind-process)" stroke-width="1.8" opacity=".7"/>
     </svg>
 
-    <div class="zoomhint">CAN-zoom <span class="z"></span> <b>0.78</b> · expanded</div>
+    <div class="zoomhint" data-ui-ref="ui://canvas/zoomhint">CAN-zoom <span class="z"></span> <b>0.78</b> · expanded</div>
 
     <!-- CONTENT · codebase — VOLATILE, so it bypasses the memo gate → always re-runs = RAN (never cached) -->
     <div class="node" data-kind="content" style="left:54px;top:172px">
@@ -160,7 +160,7 @@
     <!-- CONTENT · constant — stable value → memo gate hit → CACHED -->
     <div class="node" data-kind="content" style="left:54px;top:334px">
       <div class="bar"><span class="mono-chip">C</span><span class="ty">constant</span><span class="kindlabel">content</span></div>
-      <div class="body"><div class="out">"What does the memo gate do, and which file holds it?"</div></div>
+      <div class="body"><div class="out" data-ui-ref="ui://canvas/utterance">"What does the memo gate do, and which file holds it?"</div></div>
       <div class="addr"><span>run://demo/q</span><span class="sdot s-cache"></span></div>
       <span class="port out"></span><span class="ptag" style="right:-44px;top:calc(50% - 9px)">Text</span>
     </div>
@@ -170,7 +170,7 @@
       <div class="bar"><span class="mono-chip">A</span><span class="ty">ask</span><span class="kindlabel">process · ran</span></div>
       <div class="body">grounded answer over the codebase
         <div class="cfg"><span class="pill" style="border-color:var(--kind-model);color:var(--kind-model)">model <b style="color:var(--kind-model)">deepseek-v4-pro</b></span></div>
-        <div class="out">The memo gate skips re-running a node when its (type, version, config, inputs) hash is unchanged — runtime/scheduler.py…</div>
+        <div class="out" data-ui-ref="ui://canvas/memo-gate">The memo gate skips re-running a node when its (type, version, config, inputs) hash is unchanged — runtime/scheduler.py…</div>
       </div>
       <div class="addr"><span>run://demo/ask</span><span class="sdot s-ran"></span></div>
       <span class="port in" style="top:36%"></span><span class="ptag" style="left:-42px;top:calc(36% - 9px)">Text</span>
@@ -183,7 +183,7 @@
       <div class="bar"><span class="mono-chip">E</span><span class="ty">embed</span><span class="kindlabel">process · ran</span></div>
       <div class="body">text → vector
         <div class="cfg"><span class="pill">model <b>BGE-M3</b></span><span class="pill">1024d</span></div>
-        <div class="out" style="color:var(--kind-model)">[0.018, −0.07, 0.114, 0.002, −0.041, …]</div>
+        <div class="out" style="color:var(--kind-model)" data-ui-ref="ui://canvas/running-chain">[0.018, −0.07, 0.114, 0.002, −0.041, …]</div>
       </div>
       <div class="addr"><span>run://demo/embed</span><span class="sdot s-ran"></span></div>
       <span class="port in"></span><span class="ptag" style="left:-42px;top:calc(50% - 9px)">Text</span>
@@ -229,14 +229,14 @@
       <div style="display:flex;align-items:center;gap:9px;margin-bottom:14px">
         <span class="mono-chip" style="width:22px;height:22px;background:var(--kind-process);border-radius:6px;display:grid;place-items:center;font-family:Bricolage Grotesque;font-weight:800;color:var(--ink-accent)">A</span>
         <span class="display" style="font-weight:700;font-size:15px">ask</span>
-        <span class="mono" style="font-size:10px;color:var(--tx-3);margin-left:auto">process · ran</span>
+        <span class="mono" style="font-size:10px;color:var(--tx-3);margin-left:auto" data-ui-ref="ui://canvas/status">process · ran</span>
       </div>
 
       <p class="fld">Model <span style="color:var(--tx-3)">· config slot (fabric)</span></p>
       <div class="box sel-row"><span><b style="color:var(--kind-model)">deepseek-v4-pro</b> · cloud</span><span style="color:var(--tx-3)">▾</span></div>
 
       <p class="fld">System prompt</p>
-      <div class="box code">Answer using ONLY the provided code. Cite file paths. Be concise.</div>
+      <div class="box code" data-ui-ref="ui://canvas/instructions">Answer using ONLY the provided code. Cite file paths. Be concise.</div>
 
       <p class="fld">Inputs <span style="color:var(--tx-3)">· typed</span></p>
       <div class="box code" style="margin-bottom:14px">question ← constant <span style="color:var(--tx-3)">(Text)</span><br>context&nbsp;&nbsp;← codebase <span style="color:var(--tx-3)">(Text)</span></div>
@@ -244,8 +244,8 @@
       <p class="seclbl">Act on this output</p>
       <div class="act">
         <button class="btn">↻ rerun</button>
-        <button class="btn">→ inbox</button>
-        <button class="btn">⊕ build</button>
+        <button class="btn" data-ui-ref="ui://canvas/toolbar/inbox">→ inbox</button>
+        <button class="btn" data-ui-ref="ui://canvas/build">⊕ build</button>
       </div>
     </div>
   </aside>

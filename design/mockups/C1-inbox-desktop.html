@@ -132,11 +132,11 @@
   <header class="top"><span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
     <!-- EVT-now presence: any surfaced item with resolved is None → "awaiting your approval" (suite.py:489-490) -->
     <span class="presence"><span class="dot"></span>focus · awaiting your approval ▾</span>
-    <div class="verbs"><button class="btn">◐ layers</button><button class="btn">＋ wire</button><button class="btn">↻ force</button><button class="btn run">▶ run <span class="k">⏎</span></button></div>
+    <div class="verbs"><button class="btn" data-ui-ref="ui://inbox/toolbar">◐ layers</button><button class="btn" data-ui-ref="ui://inbox/wire">＋ wire</button><button class="btn" data-ui-ref="ui://inbox/force">↻ force</button><button class="btn run" data-ui-ref="ui://inbox/run">▶ run <span class="k">⏎</span></button></div>
   </header>
 
   <nav class="rail collapsible">
-    <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span></h4>
+    <h4 data-ui-ref="ui://inbox/process"><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span></h4>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">L</span><span class="label">llm</span></div>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">E</span><span class="label">embed</span></div>
@@ -147,24 +147,24 @@
 
   <main class="canvas">
     <!-- the canvas waits; the operator's attention is on the inbox. Drilling an item moves the view to its subject (ui:// resolver). -->
-    <div class="dim-note">
-      <span class="display">Four things need you.</span>
+    <div class="dim-note" data-ui-ref="ui://inbox/decision-focus">
+      <span class="display" data-ui-ref="ui://inbox/summon">Four things need you.</span>
       Pre-triaged — test &amp; agent noise filtered out. Each is framed as a value-choice first; drill any to its ground, or open the build review.
       <span class="play">↘ drill moves the canvas to the thing a decision concerns</span>
     </div>
   </main>
 
-  <footer class="foot"><span class="live">● live</span><span>event-stream connected</span><span style="margin-left:auto">company · <span class="await">4 awaiting you</span> · 2 resolved (audit)</span></footer>
+  <footer class="foot" data-ui-ref="ui://inbox/foot"><span class="live">● live</span><span>event-stream connected</span><span style="margin-left:auto">company · <span class="await" data-ui-ref="ui://inbox/await">4 awaiting you</span> · 2 resolved (audit)</span></footer>
 
   <!-- THE INBOX — right panel, normal width, standing triage state (the Inbox tab is on) -->
   <aside class="panel" data-ui-ref="ui://inbox">
     <div class="tabs"><span class="tab">⊙ Inspector</span><span class="tab on">✦ Inbox <span class="badge">4</span></span><span class="tab">◈ RHM</span></div>
 
     <!-- "N awaiting you" head = counts.escalations = len(live_escalations) -->
-    <div class="ibx-head"><span class="n">4</span><span class="lab">awaiting you</span></div>
+    <div class="ibx-head"><span class="n">4</span><span class="lab" data-ui-ref="ui://inbox/awaiting">awaiting you</span></div>
 
     <!-- test-origin excluded note — the REAL counts.test_origin_excluded (fail-loud-legible, never hidden) -->
-    <div class="ibx-excluded" title="items created under a test/adversarial run are tagged test_origin at creation and excluded from your lanes — but the count is shown, never hidden (suite.py:965-967, governance.py:101-103)">
+    <div class="ibx-excluded" title="items created under a test/adversarial run are tagged test_origin at creation and excluded from your lanes — but the count is shown, never hidden (suite.py:965-967, governance.py:101-103)" data-ui-ref="ui://inbox/excluded">
       <span class="i">⊘</span> test-origin excluded: <b>14</b> &nbsp;·&nbsp; filtered at source, not hidden
     </div>
 
@@ -174,29 +174,29 @@
 
       <!-- a build_result_review (kind, INERT to dispatcher) — the J3/J7 build-review moment; its full card is C3 -->
       <div class="item live" data-ui-ref="ui://inbox/build-review">
-        <div class="ihead"><span class="kind build">⚙ build_result_review</span><span class="id">s31-build_result_review</span></div>
-        <div class="coa">A build finished — the “sentiment” node is ready to go live.</div>
-        <div class="rec">Demonstrate-first: see it working, then accept or send back with a why. <b>Recommended: review now.</b></div>
+        <div class="ihead"><span class="kind build">⚙ build_result_review</span><span class="id" data-ui-ref="ui://inbox/build-review/s31-build_result_review">s31-build_result_review</span></div>
+        <div class="coa" data-ui-ref="ui://inbox/build-review/sentiment-node">A build finished — the “sentiment” node is ready to go live.</div>
+        <div class="rec" data-ui-ref="ui://inbox/build-review/remark">Demonstrate-first: see it working, then accept or send back with a why. <b>Recommended: review now.</b></div>
         <div class="ifoot">
-          <span class="drill">↘ drill to ground</span>
-          <button class="review">▷ review the build</button>
+          <span class="drill" data-ui-ref="ui://inbox/build-review/drill">↘ drill to ground</span>
+          <button class="review" data-ui-ref="ui://inbox/build-review/review">▷ review the build</button>
         </div>
       </div>
 
       <!-- a surfaced node RESULT (surface_output → live_escalations, drillable via coa) -->
       <div class="item live" data-ui-ref="ui://inbox/coa">
         <div class="ihead"><span class="kind">result</span><span class="id">s30-result</span></div>
-        <div class="coa">A retrieval chain returned a low-confidence top result — keep it, or widen the corpus?</div>
-        <div class="rec">The <code>retrieve</code> node ranked 5; the top score is below your usual bar. <b>Recommended: widen the corpus, then re-run.</b></div>
+        <div class="coa" data-ui-ref="ui://inbox/coa/keep-or-widen">A retrieval chain returned a low-confidence top result — keep it, or widen the corpus?</div>
+        <div class="rec" data-ui-ref="ui://inbox/coa/recommendation">The <code>retrieve</code> node ranked 5; the top score is below your usual bar. <b>Recommended: widen the corpus, then re-run.</b></div>
         <div class="ifoot">
-          <span class="drill">↘ drill to the node + raw output</span>
-          <button class="open">open value-choice</button>
+          <span class="drill" data-ui-ref="ui://inbox/coa/drill">↘ drill to the node + raw output</span>
+          <button class="open" data-ui-ref="ui://inbox/coa/open-value-choice">open value-choice</button>
         </div>
       </div>
 
       <!-- a generative idea-capture item (origin=generative, kind=idea) — a live escalation until triaged -->
       <div class="item live">
-        <div class="ihead"><span class="kind">idea</span><span class="id">s28-review · generative</span></div>
+        <div class="ihead"><span class="kind">idea</span><span class="id" data-ui-ref="ui://inbox/s28-review">s28-review · generative</span></div>
         <div class="coa">Idea you captured: “a node that scores tone across a whole thread.”</div>
         <div class="rec">Filed mid-flow; resurfaced for triage. <b>Recommended: turn into a build-intent, or defer.</b></div>
         <div class="ifoot">
@@ -208,7 +208,7 @@
       <!-- a panel proposal awaiting a look (propose_panel → surface_review, action="review") — the 4th live escalation -->
       <div class="item live">
         <div class="ihead"><span class="kind">review</span><span class="id">s24-review · responsive</span></div>
-        <div class="coa">A proposed settings panel is ready for your look before it goes live.</div>
+        <div class="coa" data-ui-ref="ui://inbox/coa/settings">A proposed settings panel is ready for your look before it goes live.</div>
         <div class="rec">Self-mod proposed a declarative panel; validated, registry-checked, reversible. <b>Recommended: approve, or send back with a why.</b></div>
         <div class="ifoot">
           <span class="drill">↘ see the proposed panel</span>
@@ -235,7 +235,7 @@
 
     <!-- ── LANE 3 · resolved_for_you (resolved is not None — already handled, audit only, needn't be worked) ── -->
     <div class="lane resolved">
-      <div class="lane-head"><span class="dot"></span>resolved for you <span class="c">· 2 · audit</span></div>
+      <div class="lane-head" data-ui-ref="ui://inbox/resolve"><span class="dot"></span>resolved for you <span class="c">· 2 · audit</span></div>
       <div class="rrow">
         <span class="v approve">approved</span>
         <span class="t">build-intent: add a `wordcount` node — accepted, now live</span>

@@ -114,7 +114,7 @@
   <header class="top">
     <span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
     <!-- ui://toolbar/presence in its OPENED state — the dial below is this control expanded -->
-    <span class="presence" data-ui-ref="ui://toolbar/presence"><span class="dot"></span>focus<span class="ch">· dial open ▾</span></span>
+    <span class="presence" data-ui-ref="ui://toolbar/presence"><span class="dot"></span>focus<span class="ch" data-ui-ref="ui://toolbar/presence/dial">· dial open ▾</span></span>
     <div class="verbs">
       <button class="btn">◐ layers</button>
       <button class="btn">＋ wire</button>
@@ -188,7 +188,7 @@
       <div class="mode on">
         <div class="mhead"><span class="glyph">◎</span><span class="mname">focus</span>
           <span class="vol"><i style="height:6px;background:var(--acc)"></i><i style="height:4px;background:var(--acc)"></i><i style="height:3px;background:var(--acc)"></i></span></div>
-        <div class="desc">You are in deep work — extremely brief (a line or two), no elaboration unless asked.</div>
+        <div class="desc" data-ui-ref="ui://toolbar/presence/deep-work">You are in deep work — extremely brief (a line or two), no elaboration unless asked.</div>
       </div>
 
       <!-- walkthrough — loud (actively guides) -->
@@ -200,14 +200,14 @@
 
       <!-- watch-and-react -->
       <div class="mode">
-        <div class="mhead"><span class="glyph">👁</span><span class="mname">watch-and-react</span>
+        <div class="mhead"><span class="glyph">👁</span><span class="mname" data-ui-ref="ui://toolbar/presence/watch-and-react">watch-and-react</span>
           <span class="vol"><i style="height:7px"></i><i style="height:5px"></i><i style="height:4px"></i></span></div>
         <div class="desc">Observes over your shoulder; comments only when relevant, briefly.</div>
       </div>
 
       <!-- decide-for-me — ACTS (deterministic by governance posture), carries a governance strip -->
       <div class="mode loud">
-        <div class="mhead"><span class="glyph">⚡</span><span class="mname">decide-for-me</span>
+        <div class="mhead"><span class="glyph">⚡</span><span class="mname" data-ui-ref="ui://toolbar/presence/decide-for-me">decide-for-me</span>
           <span class="vol"><i style="height:12px"></i><i style="height:10px"></i><i style="height:13px"></i></span></div>
         <div class="desc">Acts on the reversible / AUTO classes itself (deterministic by consequence); still cannot self-approve — anything needing approval is surfaced.</div>
         <div class="gov">
@@ -215,7 +215,7 @@
           <span class="t auto">AUTO → acts</span>
           <span class="t surface">SURFACE/CONFIRM → asks you</span>
           <span class="t locked">LOCKED → never</span>
-          <span class="no">✕ cannot self-approve</span>
+          <span class="no" data-ui-ref="ui://toolbar/presence/self-approve">✕ cannot self-approve</span>
         </div>
       </div>
 

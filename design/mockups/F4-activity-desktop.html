@@ -116,7 +116,7 @@
     <div class="verbs"><button class="btn">◐ layers</button><button class="btn">＋ wire</button><button class="btn">↻ force</button><button class="btn run">▶ run <span class="k">⏎</span></button></div>
   </header>
 
-  <nav class="rail collapsible">
+  <nav class="rail collapsible" data-ui-ref="ui://canvas/rail">
     <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span></h4>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">⌕</span><span class="label">retrieve</span></div>
@@ -131,33 +131,33 @@
     <div class="now">
       <div class="tile"><div class="k">graph</div><div class="v" style="font-size:16px;font-family:'IBM Plex Mono';font-weight:600">codebase</div><div class="sub">the operated graph</div></div>
       <div class="tile"><div class="k">nodes resolved</div><div class="v">7<small> / 7</small></div><div class="sub">nodes_resolved / nodes_total</div></div>
-      <div class="tile presence-tile"><div class="k">presence · mode</div><div class="v">ready · all resolved <small style="color:var(--tx-3)">· focus</small></div><div class="sub">derived: pending=0 &amp; all resolved → "ready · all resolved"</div></div>
+      <div class="tile presence-tile"><div class="k">presence · mode</div><div class="v" data-ui-ref="ui://activity/status">ready · all resolved <small style="color:var(--tx-3)">· focus</small></div><div class="sub">derived: pending=0 &amp; all resolved → "ready · all resolved"</div></div>
     </div>
     <div class="now" style="grid-template-columns:repeat(4,1fr);margin-top:-6px">
       <div class="tile"><div class="k">surfaced pending</div><div class="v">0</div><div class="sub">nothing awaiting you</div></div>
-      <div class="tile" style="grid-column:span 3"><div class="k">last event</div><div class="v" style="font-size:13px;font-family:'IBM Plex Mono';font-weight:500;color:var(--tx-2)">#214 · run — codebase graph ran (3 cached, 4 ran)</div><div class="sub">now().last_event = recent_events(1)[0]</div></div>
+      <div class="tile" style="grid-column:span 3"><div class="k">last event</div><div class="v" style="font-size:13px;font-family:'IBM Plex Mono';font-weight:500;color:var(--tx-2)" data-ui-ref="ui://activity/run">#214 · run — codebase graph ran (3 cached, 4 ran)</div><div class="sub">now().last_event = recent_events(1)[0]</div></div>
     </div>
 
     <!-- ── THE LIVE STREAM — tail of the one shared log; pushed over SSE ── -->
     <div class="streamhd">
       <span class="ttl">Activity</span>
       <span class="live"><i></i>live · SSE</span>
-      <span class="cursor">cursor seq 214 · gapless reconnect · heartbeat 15s</span>
+      <span class="cursor" data-ui-ref="ui://activity/heartbeat">cursor seq 214 · gapless reconnect · heartbeat 15s</span>
     </div>
 
     <div class="log">
       <!-- each row: seq · kind (REAL emitted kind) · summary · which face wrote it (both faces share the log) -->
-      <div class="ev k-decision"><span class="seq">#214</span><span class="kdot"></span><span class="kind">run</span><span class="sum"><b>codebase</b> graph ran — 4 ran, 3 cached (memo gate)</span><span class="face">op</span></div>
-      <div class="ev k-warn"><span class="seq">#213</span><span class="kdot"></span><span class="kind">warning</span><span class="sum">model registry returned empty — falling back to the default brain</span><span class="face">agent</span></div>
-      <div class="ev k-decision"><span class="seq">#212</span><span class="kdot"></span><span class="kind">decision.implemented</span><span class="sum">build closed — <b>sentiment</b> node surfaced for review</span><span class="face">internal</span></div>
-      <div class="ev k-decision"><span class="seq">#211</span><span class="kdot"></span><span class="kind">decision.verify</span><span class="sum">build verified by use — affected suites green</span><span class="face">internal</span></div>
-      <div class="ev k-review"><span class="seq">#210</span><span class="kdot"></span><span class="kind">review.advance</span><span class="sum">walkthrough advanced — gate opened, next item fired</span><span class="face">op</span></div>
+      <div class="ev k-decision"><span class="seq">#214</span><span class="kdot"></span><span class="kind">run</span><span class="sum" data-ui-ref="ui://activity/sum"><b>codebase</b> graph ran — 4 ran, 3 cached (memo gate)</span><span class="face">op</span></div>
+      <div class="ev k-warn"><span class="seq">#213</span><span class="kdot"></span><span class="kind">warning</span><span class="sum" data-ui-ref="ui://activity/registry-fallback">model registry returned empty — falling back to the default brain</span><span class="face">agent</span></div>
+      <div class="ev k-decision"><span class="seq">#212</span><span class="kdot"></span><span class="kind">decision.implemented</span><span class="sum" data-ui-ref="ui://activity/build-review">build closed — <b>sentiment</b> node surfaced for review</span><span class="face">internal</span></div>
+      <div class="ev k-decision"><span class="seq">#211</span><span class="kdot"></span><span class="kind">decision.verify</span><span class="sum" data-ui-ref="ui://activity/verified">build verified by use — affected suites green</span><span class="face">internal</span></div>
+      <div class="ev k-review"><span class="seq">#210</span><span class="kdot"></span><span class="kind">review.advance</span><span class="sum" data-ui-ref="ui://activity/walkthrough">walkthrough advanced — gate opened, next item fired</span><span class="face">op</span></div>
       <div class="ev k-decision"><span class="seq">#209</span><span class="kdot"></span><span class="kind">decision.surfaced_for_review</span><span class="sum">build_result_review surfaced → live escalation</span><span class="face">internal</span></div>
       <div class="ev k-mode"><span class="seq">#208</span><span class="kdot"></span><span class="kind">mode</span><span class="sum">presence → <b>focus</b></span><span class="face">op</span></div>
-      <div class="ev k-ask"><span class="seq">#207</span><span class="kdot"></span><span class="kind">ask</span><span class="sum"><b>ask</b> node answered — grounded in 2 inputs</span><span class="face">op</span></div>
-      <div class="ev k-create"><span class="seq">#206</span><span class="kdot"></span><span class="kind">connect</span><span class="sum">connected constant → llm (Text → Text)</span><span class="face">op</span></div>
-      <div class="ev k-create"><span class="seq">#205</span><span class="kdot"></span><span class="kind">create</span><span class="sum">created node <b>llm</b> on codebase</span><span class="face">op</span></div>
-      <div class="ev k-decision"><span class="seq">#204</span><span class="kdot"></span><span class="kind">grow</span><span class="sum">node-type proposal applied — rediscovered registry</span><span class="face">op</span></div>
+      <div class="ev k-ask"><span class="seq">#207</span><span class="kdot"></span><span class="kind">ask</span><span class="sum" data-ui-ref="ui://activity/ask-grounded"><b>ask</b> node answered — grounded in 2 inputs</span><span class="face">op</span></div>
+      <div class="ev k-create"><span class="seq">#206</span><span class="kdot"></span><span class="kind">connect</span><span class="sum" data-ui-ref="ui://activity/connected-constant">connected constant → llm (Text → Text)</span><span class="face">op</span></div>
+      <div class="ev k-create"><span class="seq">#205</span><span class="kdot"></span><span class="kind">create</span><span class="sum" data-ui-ref="ui://activity/created-node">created node <b>llm</b> on codebase</span><span class="face">op</span></div>
+      <div class="ev k-decision"><span class="seq">#204</span><span class="kdot"></span><span class="kind">grow</span><span class="sum" data-ui-ref="ui://activity/registry">node-type proposal applied — rediscovered registry</span><span class="face">op</span></div>
       <div class="ev"><span class="seq"></span><span class="kdot" style="background:transparent"></span><span class="heartbeat">· · · heartbeat · stream open · waiting for next event · · ·</span></div>
     </div>
 
@@ -175,11 +175,11 @@
     </div>
     <h5>event kinds (real)</h5>
     <div class="legend">
-      <div class="row"><span class="d" style="background:var(--kind-process)"></span>compose / run — create·connect·config·move·run</div>
-      <div class="row"><span class="d" style="background:var(--kind-content)"></span>converse — ask·chat</div>
-      <div class="row"><span class="d" style="background:var(--await)"></span>decision / review — decision.*·review.*·resolve</div>
-      <div class="row"><span class="d" style="background:var(--kind-model)"></span>mode — presence change</div>
-      <div class="row"><span class="d" style="background:var(--fail)"></span>warning — fail-loud, never silent</div>
+      <div class="row" data-ui-ref="ui://canvas/act"><span class="d" style="background:var(--kind-process)"></span>compose / run — create·connect·config·move·run</div>
+      <div class="row" data-ui-ref="ui://canvas/converse"><span class="d" style="background:var(--kind-content)"></span>converse — ask·chat</div>
+      <div class="row" data-ui-ref="ui://canvas/decision-review"><span class="d" style="background:var(--await)"></span>decision / review — decision.*·review.*·resolve</div>
+      <div class="row" data-ui-ref="ui://canvas/mode"><span class="d" style="background:var(--kind-model)"></span>mode — presence change</div>
+      <div class="row" data-ui-ref="ui://canvas/warning"><span class="d" style="background:var(--fail)"></span>warning — fail-loud, never silent</div>
     </div>
     <h5>face</h5>
     <div class="legend">op · agent (MCP) · internal (wire/cron) — all write the ONE log.</div>

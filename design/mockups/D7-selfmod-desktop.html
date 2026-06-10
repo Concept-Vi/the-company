@@ -165,7 +165,7 @@
     <div class="verbs"><button class="btn">◐ layers</button><button class="btn">＋ wire</button><button class="btn">↻ force</button><button class="btn run" data-ui-ref="ui://toolbar/run">▶ run <span class="k">⏎</span></button></div>
   </header>
 
-  <nav class="rail">
+  <nav class="rail" data-ui-ref="ui://inbox/ask">
     <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span></h4>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">L</span><span class="label">llm</span></div>
@@ -190,7 +190,7 @@
   <aside class="panel" data-ui-ref="ui://workshop">
     <div class="tabs"><span class="tab">⊙ Inspector</span><span class="tab">✦ Inbox</span><span class="tab on">⌁ Workshop</span></div>
 
-    <div class="ws-head">self-modification · revert &amp; audit <span class="muted">· D7 → J8 grow the system</span></div>
+    <div class="ws-head">self-modification · revert &amp; audit <span class="muted" data-ui-ref="ui://workshop/audit">· D7 → J8 grow the system</span></div>
     <div class="ws-sub">What the system changed about <em>itself</em> — and how to roll it back. The safety net is git, not the operator gate: every self-apply is a revertible commit.</div>
 
     <div class="legend">
@@ -217,7 +217,7 @@
           <button class="revert-btn" title="git revert this commit — bounded, recoverable; the revert is itself a commit"><span>⟲</span> revert</button>
         </div>
       </div>
-      <div class="revert-note">
+      <div class="revert-note" data-ui-ref="ui://workshop/self-changes/sm-revert">
         <b>Built behaviour:</b> reverting is <b>immediate — no confirm, no preview</b> (the revert is itself git-reversible).
         It runs <code>git revert --no-edit</code>, re-discovers the node registry (a removed file un-registers), and emits a <code>revert</code> event.
         <b>Operator-only.</b> · Source: <code>last_self_change()</code> suite.py:2205 · <code>revert_self_change()</code> suite.py:2219 · <code>/api/last-change</code>, <code>/api/revert</code> bridge.py:127,344 · App.tsx:1558.
@@ -242,7 +242,7 @@
             <div class="subj"><s>apply panel 'tone-router'</s></div>
             <div class="meta">
               <span class="sha">3b9e110</span><span class="when">~2h ago</span>
-              <span class="rv-mark">⟲ reverted by 9c4d0a2</span>
+              <span class="rv-mark" data-ui-ref="ui://workshop/revert">⟲ reverted by 9c4d0a2</span>
             </div>
           </div>
           <button class="rb dis" title="already reverted">⟲ revert</button>
@@ -258,7 +258,7 @@
         <div class="led-row">
           <span class="led"></span>
           <div class="body">
-            <div class="subj">add extension 'token-usage-panel'</div>
+            <div class="subj" data-ui-ref="ui://workshop/extend">add extension 'token-usage-panel'</div>
             <div class="meta"><span class="sha">c1f88ad</span><span class="when">yesterday</span><span class="files">extension · 1 file</span></div>
           </div>
           <button class="rb" title="reverting a non-tip commit may git-conflict">⟲ revert</button>
@@ -288,7 +288,7 @@
 
     <!-- the real activity-log echo — where the revert/apply/grow events actually land (EVT-now) -->
     <div class="evt-strip" data-ui-ref="ui://activity">
-      <div class="evt-h">⊹ activity · self-mod events <span style="margin-left:auto;color:var(--ok)">● live (real)</span></div>
+      <div class="evt-h" data-ui-ref="ui://activity/evt-now">⊹ activity · self-mod events <span style="margin-left:auto;color:var(--ok)">● live (real)</span></div>
       <div class="evt"><span class="k revert">revert</span><span>rolled back self-change 3b9e110</span></div>
       <div class="evt"><span class="k apply">apply</span><span>approved + applied 'sentiment' — now a live node-type · 7af3c2e</span></div>
       <div class="evt"><span class="k grow">grow</span><span>brain wrote a 'sentiment' node — surfaced for approval</span></div>

@@ -343,6 +343,7 @@ def registry_writeback(
     mockups_dir: str = _DEFAULT_MOCKUPS,
     element_map_path: str = _DEFAULT_ELEMENT_MAP,
     write: bool = True,
+    skip_already_stamped: bool = False,
 ) -> dict:
     """Apply a CONFIRMED, OPERATOR-APPROVED batch of dossier entries.
 
@@ -403,6 +404,7 @@ def registry_writeback(
         by_file.setdefault(mf, []).append(entry)
 
     stamped = []
+    stamp_skipped = []                                   # reported, never silent
     file_buffers: dict = {}
     for mf, file_entries in by_file.items():
         mock_path = os.path.join(mockups_dir, mf)
@@ -416,8 +418,23 @@ def registry_writeback(
             buf = f.read()
         for entry in file_entries:
             address = entry["address"]
-            buf = _stamp_html(buf, entry.get("outerHTML"), address)
-            stamped.append({"address": address, "mockup_file": mf})
+            # skip_already_stamped (additive, default False = the original fail-loud): an element
+            # whose outerHTML ROOT already carries an (ancestor's) data-ui-ref cannot take a second
+            # stamp — with the flag, its registry entry still merges and the skip is REPORTED
+            # (stamp_skipped), never silent. Without the flag the batch refuses, as before.
+            try:
+                buf = _stamp_html(buf, entry.get("outerHTML"), address)
+                stamped.append({"address": address, "mockup_file": mf})
+            except WritebackError as _se:
+                _msg = str(_se)
+                if skip_already_stamped and ("ALREADY carries a data-ui-ref" in _msg
+                                             or "AMBIGUOUS" in _msg):
+                    # both stamp-conflict classes (ancestor-stamped root · ambiguous locate) are
+                    # RECORDED for the selector-hardening pass — the registry entry still merges.
+                    stamp_skipped.append({"address": address, "mockup_file": mf,
+                                          "why": _msg[:160]})
+                else:
+                    raise
         file_buffers[mock_path] = buf
 
     # ── PHASE 3: write (only now that the WHOLE batch validated) ──
@@ -452,6 +469,7 @@ def registry_writeback(
 
     return {
         "merged": merged,
+        "stamp_skipped": stamp_skipped,
         "stamped": stamped,
         "registered_after": registered_after,
         "still_unregistered": still_unregistered,  # should be empty on a clean round-trip

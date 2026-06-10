@@ -115,15 +115,15 @@
   <header class="top">
     <span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
     <span class="presence"><span class="dot"></span>background · 3 builds returned ▾</span>
-    <div class="verbs"><button class="btn">◐ layers</button><button class="btn">＋ wire</button><button class="btn run">▶ run <span class="k">⏎</span></button></div>
+    <div class="verbs"><button class="btn">◐ layers</button><button class="btn" data-ui-ref="ui://inbox/build-review/wire">＋ wire</button><button class="btn run">▶ run <span class="k">⏎</span></button></div>
   </header>
 
   <nav class="rail collapsible">
     <h4><span>How a build comes back</span></h4>
     <div class="legend">A dispatched build either CLOSES (happy path → the C3 demonstrate-first card) or it returns as one of these — each surfaced loud, never a silent dead end.</div>
-    <div class="lk"><i style="background:var(--fail)"></i>failed / refused — needs you</div>
+    <div class="lk" data-ui-ref="ui://inbox/build-review/failed-refused"><i style="background:var(--fail)"></i>failed / refused — needs you</div>
     <div class="lk"><i style="background:var(--await)"></i>held / deferred — re-offered</div>
-    <div class="lk"><i style="background:var(--kind-model)"></i>design review — FORM half-of-done</div>
+    <div class="lk" data-ui-ref="ui://inbox/build-review/form-half-of-done"><i style="background:var(--kind-model)"></i>design review — FORM half-of-done</div>
   </nav>
 
   <main class="canvas">
@@ -140,29 +140,29 @@
         <div class="rbody">
           <div class="title">A build ran but failed verify-by-use — not accepted.</div>
           <div class="why">The change was made, but verification (affected suites + drift + adversarial) didn't pass. It did <b>not</b> close <code>implemented</code>; the reason is attached. Send back with a why, or look at what failed.</div>
-          <div class="record"><span>for the record</span><span class="ev">decision.verify · verify-fail</span><span class="car">⌄ open backstage</span></div>
+          <div class="record"><span>for the record</span><span class="ev">decision.verify · verify-fail</span><span class="car" data-ui-ref="ui://inbox/build-review/backstage">⌄ open backstage</span></div>
         </div>
         <div class="ract"><button class="b send">↩ send back with a why</button><button class="b">see what failed</button><span class="note">no `implemented`</span></div>
       </div>
 
       <!-- 2 · scope-overrun -->
       <div class="rcard fail" data-ui-ref="ui://inbox/build-review">
-        <div class="rh"><span class="stamp">scope-overrun</span><span class="kind">build_result_review · refused close</span></div>
+        <div class="rh"><span class="stamp" data-ui-ref="ui://inbox/build-review/scope-overrun">scope-overrun</span><span class="kind">build_result_review · refused close</span></div>
         <div class="rbody">
           <div class="title">The build changed more than it declared — refused to auto-close.</div>
           <div class="why">Changed files exceeded the declared scope. An <b>empty declared scope is deny-all</b>, so an undeclared build can never silently close. The diff is here; approve the wider scope, or send it back tighter.</div>
           <div class="record"><span>for the record</span><span class="ev">scope-diff · overrun</span><span class="car">⌄ open diff</span></div>
         </div>
-        <div class="ract"><button class="b send">↩ send back tighter</button><button class="b">review the diff</button><span class="note">deny-all default</span></div>
+        <div class="ract"><button class="b send">↩ send back tighter</button><button class="b">review the diff</button><span class="note" data-ui-ref="ui://inbox/build-review/deny-all-default">deny-all default</span></div>
       </div>
 
       <!-- 3 · FORM-unverifiable → design review -->
       <div class="rcard design" data-ui-ref="ui://inbox/build-review">
-        <div class="rh"><span class="stamp">design review</span><span class="kind">FORM gate · cannot auto-close</span></div>
+        <div class="rh"><span class="stamp" data-ui-ref="ui://inbox/build-review/design-review">design review</span><span class="kind">FORM gate · cannot auto-close</span></div>
         <div class="rbody">
           <div class="title">This build touched an operator-facing surface — FORM needs your eye.</div>
-          <div class="why">Any change under the front-end can't auto-close: <b>FORM is half of done</b>, and no design-critic is wired yet. It routes to design review so the look/feel gets judged, not just the logic.</div>
-          <div class="record"><span>for the record</span><span class="ev">FORM gate · unverifiable</span><span class="car">⌄ open surface</span></div>
+          <div class="why" data-ui-ref="ui://inbox/build-review/why">Any change under the front-end can't auto-close: <b>FORM is half of done</b>, and no design-critic is wired yet. It routes to design review so the look/feel gets judged, not just the logic.</div>
+          <div class="record"><span>for the record</span><span class="ev" data-ui-ref="ui://inbox/build-review/form-gate">FORM gate · unverifiable</span><span class="car">⌄ open surface</span></div>
         </div>
         <div class="ract"><button class="b primary">▷ review the surface</button><button class="b send">↩ send back</button><span class="note">FORM = half of done</span></div>
       </div>
@@ -171,33 +171,33 @@
       <div class="rcard fail" data-ui-ref="ui://inbox/build-review">
         <div class="rh"><span class="stamp">launch-fail</span><span class="kind">re-queued · responsive</span></div>
         <div class="rbody">
-          <div class="title">The builder couldn't start cleanly — re-queued, loud.</div>
+          <div class="title" data-ui-ref="ui://inbox/build-review/failure-state">The builder couldn't start cleanly — re-queued, loud.</div>
           <div class="why">A bad <code>claude -p</code> round-trip (a LaunchError, or it exceeded the wall-clock cap). It was <b>re-queued as a review item</b>, never a silent no-op. Retry, or hold.</div>
           <div class="record"><span>for the record</span><span class="ev">LaunchError · re-queue</span><span class="car">⌄ open log</span></div>
         </div>
-        <div class="ract"><button class="b">↻ retry</button><button class="b">hold</button><span class="note">loud re-queue</span></div>
+        <div class="ract"><button class="b">↻ retry</button><button class="b" data-ui-ref="ui://inbox/build-review/hold">hold</button><span class="note" data-ui-ref="ui://inbox/build-review/loud-requeue">loud re-queue</span></div>
       </div>
 
       <!-- 5 · cap-deferred -->
       <div class="rcard hold" data-ui-ref="ui://inbox/build-review">
-        <div class="rh"><span class="stamp">cap-deferred</span><span class="kind">deferred · re-offered next pass</span></div>
+        <div class="rh"><span class="stamp" data-ui-ref="ui://inbox/build-review/cap-deferred">cap-deferred</span><span class="kind">deferred · re-offered next pass</span></div>
         <div class="rbody">
-          <div class="title">More builds were ready than the concurrency cap allows — these wait.</div>
+          <div class="title" data-ui-ref="ui://inbox/build-review/queue-cap">More builds were ready than the concurrency cap allows — these wait.</div>
           <div class="why">The cap dispatched the first few; the remainder were <b>deferred and surfaced loud</b> (no silent truncation). Each is re-offered next pass — exactly-once is the event log, not the cursor. Nothing is lost.</div>
           <div class="record"><span>for the record</span><span class="ev">cap · defer (no truncation)</span><span class="car">⌄ see queue</span></div>
         </div>
-        <div class="ract"><button class="b">raise the cap</button><button class="b">let it wait</button><span class="note">re-offered</span></div>
+        <div class="ract"><button class="b" data-ui-ref="ui://inbox/build-review/raise-cap">raise the cap</button><button class="b">let it wait</button><span class="note">re-offered</span></div>
       </div>
 
       <!-- 6 · crashed-resurfaced -->
       <div class="rcard hold" data-ui-ref="ui://inbox/build-review">
         <div class="rh"><span class="stamp">crashed</span><span class="kind">re-surfaced · not re-launched</span></div>
         <div class="rbody">
-          <div class="title">A build was claimed but vanished mid-flight — brought back to you.</div>
+          <div class="title" data-ui-ref="ui://inbox/build-review/claim-vanished">A build was claimed but vanished mid-flight — brought back to you.</div>
           <div class="why">A dispatch claimed work but reached <b>no terminal status</b> (no implemented / no verify). It was <b>re-surfaced loud</b> and will <b>not</b> auto-re-launch (exactly-once). You decide whether to re-issue it.</div>
           <div class="record"><span>for the record</span><span class="ev">decision.crashed · exactly-once</span><span class="car">⌄ open trail</span></div>
         </div>
-        <div class="ract"><button class="b">re-issue the build</button><button class="b">drop it</button><span class="note">won't auto-relaunch</span></div>
+        <div class="ract"><button class="b" data-ui-ref="ui://inbox/build-review/re-issue">re-issue the build</button><button class="b">drop it</button><span class="note" data-ui-ref="ui://inbox/build-review/notes">won't auto-relaunch</span></div>
       </div>
 
     </div>
@@ -214,11 +214,11 @@
       <span class="lab">The six returns, by mechanism</span>
       <div class="row"><span class="s">verify-fail</span>verify-by-use failed → no <code>implemented</code></div>
       <div class="row"><span class="s">scope-overrun</span>changed &gt; declared; empty = deny-all</div>
-      <div class="row"><span class="s">FORM</span>surface touched → design review</div>
+      <div class="row" data-ui-ref="ui://inbox/build-review/form"><span class="s">FORM</span>surface touched → design review</div>
       <div class="row"><span class="s">launch-fail</span>bad <code>claude -p</code> → loud re-queue</div>
       <div class="row"><span class="s">cap-deferred</span>over the cap → re-offered, no loss</div>
-      <div class="row"><span class="s">crashed</span>no terminal event → re-surfaced, no relaunch</div>
-      <span class="lab" style="margin-top:16px">Why you only see the return</span>
+      <div class="row" data-ui-ref="ui://inbox/build-review/failure-surface"><span class="s">crashed</span>no terminal event → re-surfaced, no relaunch</div>
+      <span class="lab" style="margin-top:16px" data-ui-ref="ui://inbox/build-review/why-only-see-return">Why you only see the return</span>
       The pipeline (CHECK→CLAIM→GATE→LAUNCH→VERIFY→CLOSE) is internal and off both faces. You operate on the <b>outcome</b>, not the circuit — frontstage outcomes, backstage machinery.
     </div>
   </aside>

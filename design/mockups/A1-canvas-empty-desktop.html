@@ -130,7 +130,7 @@
   <!-- ── LEFT RAIL — the palette: ALL 16 node types, grouped by the TWO real kinds ── -->
   <nav class="rail collapsible" data-ui-ref="ui://rail/palette">
     <div class="railhd">Node palette</div>
-    <div class="railsub">Drag a node onto the stage to begin.</div>
+    <div class="railsub" data-ui-ref="ui://rail/palette/drag-hint">Drag a node onto the stage to begin.</div>
 
     <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span><span class="ct">11</span></h4>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
@@ -145,7 +145,7 @@
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">Tt</span><span class="label">titlecase</span></div>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">#</span><span class="label">wordcount</span></div>
 
-    <h4><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span><span class="ct">5</span></h4>
+    <h4 data-ui-ref="ui://rail/palette/content-5"><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span><span class="ct">5</span></h4>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">C</span><span class="label">constant</span></div>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">▦</span><span class="label">codebase</span><span class="vol">VOLATILE</span></div>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">T</span><span class="label">model_of_tim</span><span class="vol">VOLATILE</span></div>
@@ -157,7 +157,7 @@
   <main class="canvas" data-ui-ref="ui://canvas">
 
     <!-- quiet graph marker (no nodes yet) -->
-    <div class="graphchip">graph <b>codebase</b> · 0 nodes</div>
+    <div class="graphchip" data-ui-ref="ui://canvas/graph">graph <b>codebase</b> · 0 nodes</div>
 
     <!-- the "start here" affordance — grounded to CAN-compose -->
     <div class="empty">
@@ -168,7 +168,7 @@
         </svg>
         <span class="plus">+</span>
       </div>
-      <h1>An empty stage, ready to compose.</h1>
+      <h1 data-ui-ref="ui://canvas/empty-stage">An empty stage, ready to compose.</h1>
       <p>This is the canvas. A graph here <b>is</b> the program — place nodes, wire their typed ports, and run. Nothing is running yet.</p>
       <span class="hint"><span class="arrow">←</span> drag a node from the palette to begin</span>
 
@@ -176,12 +176,12 @@
         <!-- start move 1: compose from scratch (CAN-compose) -->
         <div class="start compose">
           <div class="st-hd"><span class="ic">＋</span>Start composing</div>
-          <div class="st-sub">Drag any of the 16 nodes onto the stage, then wire and run. The core loop (J1).</div>
+          <div class="st-sub" data-ui-ref="ui://canvas/j1">Drag any of the 16 nodes onto the stage, then wire and run. The core loop (J1).</div>
         </div>
         <!-- start move 2: the REAL demo only (the codebase Q&A chain the app boots) — no fictional templates -->
         <div class="start demo">
-          <div class="st-hd"><span class="ic">▦</span>Open the demo</div>
-          <div class="st-sub">Load the codebase&nbsp;Q&amp;A chain — ask a question of this system's own source.</div>
+          <div class="st-hd" data-ui-ref="ui://canvas/demo"><span class="ic">▦</span>Open the demo</div>
+          <div class="st-sub" data-ui-ref="ui://canvas/codebase-q-a">Load the codebase&nbsp;Q&amp;A chain — ask a question of this system's own source.</div>
         </div>
       </div>
     </div>
@@ -190,13 +190,13 @@
     <div class="kindkey">
       <b><i style="background:var(--kind-process)"></i>process</b>
       <b><i style="background:var(--kind-content)"></i>content</b>
-      <span class="note">— colour = kind</span>
+      <span class="note" data-ui-ref="ui://canvas/colour-kind">— colour = kind</span>
     </div>
   </main>
 
   <!-- ── THIN ACTIVITY STRIP — EVT-now: presence = "empty" (nothing running yet) ── -->
   <footer class="foot" data-ui-ref="ui://activity">
-    <span class="pres"><i></i>presence · empty</span>
+    <span class="pres" data-ui-ref="ui://activity/presence"><i></i>presence · empty</span>
     <span>nothing running yet — the now-view is quiet</span>
     <span style="margin-left:auto">graph: codebase · 0 nodes · event-stream connected</span>
   </footer>
@@ -215,7 +215,7 @@
             <circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8 12h8"/>
           </svg>
         </div>
-        <h3>Nothing selected</h3>
+        <h3 data-ui-ref="ui://canvas/empty-state">Nothing selected</h3>
         <p>Select a node to inspect and configure it here. Its config fields, typed inputs and output appear in this panel.</p>
       </div>
     </div>
@@ -224,8 +224,8 @@
   <!-- mobile tab-bar (hidden on desktop; present so the responsive system from design-system.css resolves) -->
   <nav class="tabbar">
     <a class="on"><span class="ic">▦</span>Canvas</a>
-    <a><span class="ic">✦</span>Inbox</a>
-    <a><span class="ic">◈</span>RHM</a>
+    <a data-ui-ref="ui://canvas/inbox"><span class="ic">✦</span>Inbox</a>
+    <a data-ui-ref="ui://canvas/rhm"><span class="ic">◈</span>RHM</a>
     <a><span class="ic">▶</span>Run</a>
   </nav>
 </div></body></html>

@@ -167,18 +167,18 @@
   <!-- ── TOP BAR — identity · presence dial set to WALKTHROUGH · verbs ── -->
   <header class="top">
     <span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
-    <span class="presence"><span class="dot"></span>walkthrough<span class="ch">· RHM is driving ▾</span></span>
+    <span class="presence"><span class="dot"></span>walkthrough<span class="ch" data-ui-ref="ui://chat/driving">· RHM is driving ▾</span></span>
     <div class="verbs">
-      <button class="btn">◐ <span class="lbl">layers</span></button>
-      <button class="btn">＋ <span class="lbl">wire</span></button>
-      <button class="btn">↻ <span class="lbl">force</span></button>
+      <button class="btn" data-ui-ref="ui://chat/layers">◐ <span class="lbl">layers</span></button>
+      <button class="btn" data-ui-ref="ui://chat/wire">＋ <span class="lbl">wire</span></button>
+      <button class="btn" data-ui-ref="ui://chat/force">↻ <span class="lbl">force</span></button>
       <button class="btn run">▶ <span class="lbl">run</span> <span class="k">⏎</span></button>
     </div>
   </header>
 
   <!-- ── LEFT RAIL — palette grouped by the TWO real kinds (dimmed under the walk, but present) ── -->
-  <nav class="rail collapsible">
-    <div class="railhd">Node palette</div>
+  <nav class="rail collapsible" data-ui-ref="ui://chat/rail">
+    <div class="railhd" data-ui-ref="ui://chat/node-palette">Node palette</div>
     <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span><span class="ct">11</span></h4>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">L</span><span class="label">llm</span></div>
@@ -235,7 +235,7 @@
     <!-- DIMMED downstream neighbour — kind=process, real status -->
     <div class="node dim" data-kind="process" style="left:850px;top:430px">
       <div class="bar"><span class="mono-chip">⋈</span><span class="ty">join</span><span class="kindlabel">process · idle</span></div>
-      <div class="body">awaiting upstream<div class="cfg"><span class="pill">sep <b>\n</b></span></div></div>
+      <div class="body" data-ui-ref="ui://chat/awaiting-upstream">awaiting upstream<div class="cfg"><span class="pill">sep <b>\n</b></span></div></div>
       <div class="addr"><span>run://demo/join</span><span class="sdot s-idle"></span></div>
       <span class="port in"></span><span class="port out"></span>
     </div>
@@ -247,7 +247,7 @@
       <div class="bar"><span class="mono-chip">A</span><span class="ty">ask</span><span class="kindlabel">process · ran</span></div>
       <div class="body">grounded answer over the codebase
         <div class="cfg"><span class="pill" style="border-color:var(--kind-model);color:var(--kind-model)">model <b style="color:var(--kind-model)">deepseek-v4-pro</b></span></div>
-        <div class="out">The memo gate skips re-running a node when its (type, version, config, inputs) hash is unchanged — runtime/scheduler.py…</div>
+        <div class="out" data-ui-ref="ui://run/demo/ask/memo-gate">The memo gate skips re-running a node when its (type, version, config, inputs) hash is unchanged — runtime/scheduler.py…</div>
       </div>
       <div class="addr"><span>run://demo/ask</span><span class="sdot s-ran"></span></div>
       <span class="port in" style="top:40%"></span><span class="ptag" style="left:-42px;top:calc(40% - 9px)">Text</span>
@@ -286,19 +286,19 @@
       <!-- THE CARD — the RHM speaking the COA value-framing of the current item -->
       <!-- ui://walkthrough = the present_current framing region (WALK-present · present_current) -->
       <div class="card" data-ui-ref="ui://walkthrough">
-        <div class="frame">Is this grounded answer good enough to ship to the inbox?</div>
+        <div class="frame" data-ui-ref="ui://walkthrough/ground-check">Is this grounded answer good enough to ship to the inbox?</div>
         <p class="speaks">The <b>ask</b> node ran cleanly and cited <b>scheduler.py</b>. I read it as accurate but a little thin on the <i>VOLATILE bypass</i> — your call on whether that matters here.</p>
 
         <!-- COA: 2-3 options + a recommendation -->
         <div class="opts">
           <div class="opt rec">
             <span class="key">A</span>
-            <span class="ot">Ship it as-is to the inbox<small>good enough; surfaces as a resolved-for-you item</small></span>
+            <span class="ot" data-ui-ref="ui://walkthrough/ship-as-is">Ship it as-is to the inbox<small>good enough; surfaces as a resolved-for-you item</small></span>
             <span class="rectag">my pick</span>
           </div>
           <div class="opt">
             <span class="key">B</span>
-            <span class="ot">Force a re-run with a fuller prompt<small>I'll add "cover the VOLATILE bypass" and re-ask</small></span>
+            <span class="ot" data-ui-ref="ui://walkthrough/force">Force a re-run with a fuller prompt<small>I'll add "cover the VOLATILE bypass" and re-ask</small></span>
           </div>
           <div class="opt">
             <span class="key">C</span>
@@ -309,25 +309,25 @@
         <!-- WALK-uiresolve — the ui:// resolver shown ACTING (the keystone mechanism) -->
         <div class="resolver">
           <span class="ic">⊹</span><span>resolved</span>
-          <span class="ref">ui://node/run/demo/ask</span>
+          <span class="ref" data-ui-ref="ui://walkthrough/ask">ui://node/run/demo/ask</span>
           <span class="arrow">→</span>
-          <span class="tgt">camera · data-ui-ref</span>
+          <span class="tgt" data-ui-ref="ui://walkthrough/camera">camera · data-ui-ref</span>
           <span class="ok">✓ drove view</span>
         </div>
 
         <!-- VERDICT — operator-only resolve vocab ONLY: approve · reject · decide · comment · skip -->
         <!-- ui://walkthrough/verdict = the resolve control (INB-resolve · resolve_surfaced) -->
         <div class="verdict" data-ui-ref="ui://walkthrough/verdict">
-          <div class="lbl">your verdict <span class="oo">operator-only</span></div>
+          <div class="lbl">your verdict <span class="oo" data-ui-ref="ui://walkthrough/verdict/operator-only">operator-only</span></div>
           <div class="vrow">
-            <button class="btn vbtn approve">✓ approve</button>
+            <button class="btn vbtn approve" data-ui-ref="ui://walkthrough/verdict/approve">✓ approve</button>
             <button class="btn vbtn reject">✕ reject</button>
             <button class="btn vbtn">⟐ decide</button>
           </div>
           <div class="vrow2">
             <button class="btn vbtn">✎ comment</button>
             <button class="btn vbtn">↷ skip</button>
-            <button class="btn vbtn next">Next ▷ <span class="k">→</span></button>
+            <button class="btn vbtn next" data-ui-ref="ui://walkthrough/verdict/next">Next ▷ <span class="k">→</span></button>
           </div>
         </div>
 
@@ -336,10 +336,10 @@
           <div class="head">why <span style="color:var(--tx-3)">· captured with the verdict</span>
             <span class="v"><span class="mic"></span>listening…</span>
           </div>
-          <div class="field"><span class="typed">"Good enough for now — flag the bypass gap for the next pass</span><span class="caret"></span></div>
+          <div class="field"><span class="typed" data-ui-ref="ui://walkthrough/utterance">"Good enough for now — flag the bypass gap for the next pass</span><span class="caret"></span></div>
         </div>
 
-        <div class="idempotent">resolve is idempotent · one terminal verdict per item · the why is recorded</div>
+        <div class="idempotent" data-ui-ref="ui://walkthrough/idempotent">resolve is idempotent · one terminal verdict per item · the why is recorded</div>
       </div>
     </div>
   </aside>

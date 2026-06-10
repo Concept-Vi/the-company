@@ -120,18 +120,18 @@
 <body><div class="app">
   <header class="top"><span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
     <span class="presence"><span class="dot"></span>focus</span>
-    <div class="verbs"><button class="btn">◐ layers</button><button class="btn">＋ wire</button><button class="btn">↻ force</button><button class="btn run">▶ run <span class="k">⏎</span></button></div>
+    <div class="verbs"><button class="btn" data-ui-ref="ui://canvas/layers">◐ layers</button><button class="btn" data-ui-ref="ui://canvas/wire">＋ wire</button><button class="btn" data-ui-ref="ui://canvas/force">↻ force</button><button class="btn run" data-ui-ref="ui://canvas/run">▶ run <span class="k">⏎</span></button></div>
   </header>
 
-  <nav class="rail collapsible">
+  <nav class="rail collapsible" data-ui-ref="ui://canvas/process-ask">
     <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span></h4>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">L</span><span class="label">llm</span></div>
-    <h4><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span></h4>
+    <h4 data-ui-ref="ui://canvas/content"><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span></h4>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">▦</span><span class="label">codebase</span></div>
   </nav>
 
-  <main class="canvas">
+  <main class="canvas" data-ui-ref="ui://canvas/ask-workshop">
     <div class="scrim"></div>
     <!-- the same node, faint behind — "opened full" -->
     <div class="node ghost" data-kind="process" style="position:absolute">
@@ -144,24 +144,24 @@
       <div class="ws-head">
         <span class="mono-chip">A</span>
         <span class="ttl">ask <span class="id">· ask</span></span>
-        <span class="mode-tag">workshop · full render</span>
-        <span class="status"><span class="sdot s-ran"></span>process · ran</span>
+        <span class="mode-tag" data-ui-ref="ui://workshop/full-render">workshop · full render</span>
+        <span class="status" data-ui-ref="ui://workshop/process-status"><span class="sdot s-ran"></span>process · ran</span>
         <span class="close">✕</span>
       </div>
 
       <!-- one identity, two faces: ui:// TYPE address + run:// live INSTANCE ref -->
       <div class="ws-addr">
         <div class="pair"><span class="lbl">type</span><span class="ui">ui://canvas/node</span></div>
-        <span class="arrow">→ resolved onto graph →</span>
+        <span class="arrow" data-ui-ref="ui://workshop/graph-visual">→ resolved onto graph →</span>
         <div class="pair"><span class="lbl">instance</span><span class="run">run://codebase/ask</span></div>
-        <span class="layer">provenance layer · <b>ORIGIN</b> (operator-authored)</span>
+        <span class="layer" data-ui-ref="ui://workshop/provenance">provenance layer · <b>ORIGIN</b> (operator-authored)</span>
       </div>
 
       <div class="ws-body">
         <!-- MAIN — the FULL output (the real overlay's .full block) -->
         <div class="ws-main">
           <div class="ws-secthd">Full output <span class="pill">Text · run://codebase/ask</span></div>
-          <div class="ws-full">The memo gate is the engine's "re-run only what changed" mechanism. Each node carries a content hash keyed on (type, version, config, input-port hashes). On a run the scheduler compares the freshly-computed key against the stored one: equal → the prior result is served and the node is marked **cached**; different → the node fires, produces a new result, and is marked **ran**. This is why an unchanged branch stays frozen across runs while only the edited path recomputes.
+          <div class="ws-full" data-ui-ref="ui://workshop/memo">The memo gate is the engine's "re-run only what changed" mechanism. Each node carries a content hash keyed on (type, version, config, input-port hashes). On a run the scheduler compares the freshly-computed key against the stored one: equal → the prior result is served and the node is marked **cached**; different → the node fires, produces a new result, and is marked **ran**. This is why an unchanged branch stays frozen across runs while only the edited path recomputes.
 
 It lives in runtime/scheduler.py. Two node kinds are VOLATILE (codebase, model_of_tim) — they bypass the memo gate and always re-read, because their truth is outside the graph (the filesystem, the operator-model). For everything else, the gate is what makes the surface cheap to re-run: pressing ▶ run repeatedly costs only the work that actually changed.
 
@@ -170,14 +170,14 @@ A node that can never resolve its inputs is **stuck** — distinct from a pruned
 
         <!-- SIDE — read context (config + ports). The EDITOR is the inspector (A3), not here. -->
         <div class="ws-side">
-          <h5>Config (read)</h5>
+          <h5 data-ui-ref="ui://workshop/config">Config (read)</h5>
           <div class="cfgrow"><span class="key">model</span><span class="val model">deepseek-v4-pro:cloud</span></div>
           <div class="cfgrow"><span class="key">system</span><span class="val">"Answer using only the input…"</span></div>
           <div class="cfgrow"><span class="key">base_url</span><span class="val">(default fabric)</span></div>
           <div class="cfgrow"><span class="key">retries</span><span class="val">2</span></div>
-          <div class="note">ask's real fields only — model · system · base_url · retries. (No temperature/top_p — those are llm-only.)</div>
+          <div class="note" data-ui-ref="ui://workshop/ask-fields">ask's real fields only — model · system · base_url · retries. (No temperature/top_p — those are llm-only.)</div>
 
-          <h5>Ports</h5>
+          <h5 data-ui-ref="ui://workshop/ports">Ports</h5>
           <div class="portrow"><span class="io">in</span>question<span class="ty">Text</span></div>
           <div class="portrow"><span class="io">in</span>context<span class="ty">Text</span></div>
           <div class="portrow"><span class="io">out</span>answer<span class="ty">Text</span></div>

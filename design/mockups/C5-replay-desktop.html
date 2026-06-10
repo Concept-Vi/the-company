@@ -180,7 +180,7 @@
   <header class="top"><span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
     <!-- presence here is QUIET (cache-tone): the audit is forensic, not an escalation awaiting you -->
     <span class="presence"><span class="dot"></span>reviewing the record ▾</span>
-    <div class="verbs"><button class="btn">◐ layers</button><button class="btn">↻ replay</button><button class="btn">▶ run <span class="k">⏎</span></button></div>
+    <div class="verbs"><button class="btn" data-ui-ref="ui://inbox/layers">◐ layers</button><button class="btn" data-ui-ref="ui://inbox/replay">↻ replay</button><button class="btn">▶ run <span class="k">⏎</span></button></div>
   </header>
 
   <nav class="rail collapsible">
@@ -204,7 +204,7 @@
       <span class="mode">operator-directed · forensic</span>
     </div>
     <!-- O3: the real window difference, depicted honestly as a labelled limit, not hidden -->
-    <div class="window-note" title="decision_view reads recent_events(999) — a windowed read; session_view reads events_since(-1), the full tail (suite.py:2496 vs 2504). The audit states its window rather than implying unbounded history.">
+    <div class="window-note" title="decision_view reads recent_events(999) — a windowed read; session_view reads events_since(-1), the full tail (suite.py:2496 vs 2504). The audit states its window rather than implying unbounded history." data-ui-ref="ui://activity/audit-window">
       ⚠ audit window: <b>last 999 events</b> for a single decision (decision_view · recent_events(999)). Session &amp; whole-path lenses read the full tail (events_since(-1)) — no truncation.
     </div>
 
@@ -221,8 +221,8 @@
             <div class="lin-rail"><span class="seq">seq 412</span><span class="ts">14:02:09Z</span></div>
             <div class="lin-knot"></div>
             <div class="lin-card">
-              <div class="row1"><span class="kind resolve">resolve</span><span class="choice-pill approve">approve</span><span class="bind-tag">⛓ the root · others bind to seq 412</span></div>
-              <div class="why">operator approved <span style="color:var(--tx)">s31-build_result_review</span> — “the ‘sentiment’ node, demonstrated, is correct; ship it.”</div>
+              <div class="row1"><span class="kind resolve">resolve</span><span class="choice-pill approve">approve</span><span class="bind-tag" data-ui-ref="ui://activity/root-bind">⛓ the root · others bind to seq 412</span></div>
+              <div class="why" data-ui-ref="ui://activity/s31-build-result-review">operator approved <span style="color:var(--tx)">s31-build_result_review</span> — “the ‘sentiment’ node, demonstrated, is correct; ship it.”</div>
               <div class="meta"><span class="fld">surfaced=<b>s31-build_result_review</b></span><span class="fld">choice=<b>approve</b></span><span class="fld">reason=<b>“demonstrated correct”</b></span><span class="fld">session=<b>walk-0418</b></span><span class="fld">position=<b>3</b></span></div>
             </div>
           </div>
@@ -244,7 +244,7 @@
             <div class="lin-knot"></div>
             <div class="lin-card">
               <div class="row1"><span class="kind implemented">decision.implemented</span></div>
-              <div class="why">build closed — implemented + self-verified; surfaced back demonstrate-first (its full card is C3).</div>
+              <div class="why" data-ui-ref="ui://activity/build-closed">build closed — implemented + self-verified; surfaced back demonstrate-first (its full card is C3).</div>
               <div class="meta"><span class="fld">surfaced=<b>s31-build_result_review</b></span><span class="fld">commit=<b>4af1c0e2</b></span><span class="fld">node_name=<b>sentiment</b></span></div>
             </div>
           </div>
@@ -255,7 +255,7 @@
             <div class="lin-knot"></div>
             <div class="lin-card">
               <div class="row1"><span class="kind commit">criterion.commit</span><span class="bind-tag">⛓ derived from seq 412</span></div>
-              <div class="why">criterion <code style="font-family:'IBM Plex Mono';font-size:10px">node-sentiment-live</code> committed — bound to the same verdict seq (no ungoverned criterion write).</div>
+              <div class="why" data-ui-ref="ui://activity/criterion">criterion <code style="font-family:'IBM Plex Mono';font-size:10px">node-sentiment-live</code> committed — bound to the same verdict seq (no ungoverned criterion write).</div>
               <div class="meta"><span class="fld bind">derived_from=<b>412</b></span><span class="fld">surfaced=<b>s31-build_result_review</b></span><span class="fld">commit=<b>4af1c0e2</b></span></div>
             </div>
           </div>
@@ -265,8 +265,8 @@
         <div style="margin-top:16px;padding:10px 12px;border:1px dashed var(--line-2);border-radius:var(--r);background:var(--s1)">
           <div style="font-family:'IBM Plex Mono';font-size:10px;color:var(--tx-3);margin-bottom:7px">the other branch — when the verdict is NOT approve, the wire REQUEUES (never dispatches):</div>
           <div class="lin-card" style="margin-left:0;border-color:var(--line-2)">
-            <div class="row1"><span class="kind requeue">review.requeue</span><span class="choice-pill reject">reject</span><span class="bind-tag" style="color:var(--await)">⛓ derived from a reject seq</span></div>
-            <div class="why">a reject/needs-change verdict on seq <b>N</b> → <code style="font-family:'IBM Plex Mono';font-size:10px">requeue_from_verdict</code> mints a fresh surfaced item, carrying the why; verified <code style="font-family:'IBM Plex Mono';font-size:10px">kind=resolve · surfaced==sid · choice≠approve</code>.</div>
+            <div class="row1"><span class="kind requeue">review.requeue</span><span class="choice-pill reject">reject</span><span class="bind-tag" style="color:var(--await)" data-ui-ref="ui://activity/derived">⛓ derived from a reject seq</span></div>
+            <div class="why" data-ui-ref="ui://activity/verdict">a reject/needs-change verdict on seq <b>N</b> → <code style="font-family:'IBM Plex Mono';font-size:10px">requeue_from_verdict</code> mints a fresh surfaced item, carrying the why; verified <code style="font-family:'IBM Plex Mono';font-size:10px">kind=resolve · surfaced==sid · choice≠approve</code>.</div>
             <div class="meta"><span class="fld bind" style="border-color:var(--line-2)">derived_from=<b>N</b></span><span class="fld">requeued_from=<b>s27-…</b></span><span class="fld">verdict=<b>reject</b></span></div>
           </div>
         </div>
@@ -279,9 +279,9 @@
         <span class="fn">decision_view(sid) · events where surfaced==sid · suite.py:2496</span></div>
       <div class="reg-body">
         <div class="subject" data-ui-ref="ui://inbox/coa">
-          <span class="sid">s31-build_result_review</span>
+          <span class="sid" data-ui-ref="ui://inbox/coa/s31-build_result_review">s31-build_result_review</span>
           <span style="font-size:12px;color:var(--tx)">“the ‘sentiment’ node — built, demonstrated, shipped”</span>
-          <span class="verdict">resolved · approve</span>
+          <span class="verdict" data-ui-ref="ui://inbox/coa/resolved">resolved · approve</span>
         </div>
         <!-- every event with surfaced==s31, in seq order — the chronological PATH, not the endpoint -->
         <div class="traj">
@@ -300,18 +300,18 @@
     <!-- ════ REGISTER 3 · the RAW oldest-first STREAM (replay / events.jsonl) ════ -->
     <section class="reg" data-ui-ref="ui://activity/replay">
       <div class="reg-head"><span class="n">lens 3</span><span class="t">Raw stream — the whole captured path, oldest-first</span>
-        <span class="fn">replay(limit) · reversed(recent_events) · suite.py:2514 · store events.jsonl</span></div>
+        <span class="fn" data-ui-ref="ui://activity/replay/trace">replay(limit) · reversed(recent_events) · suite.py:2514 · store events.jsonl</span></div>
       <div class="reg-body">
-        <div class="reg-lead" style="margin-bottom:11px">The unfiltered append-only log — every event across BOTH faces (bridge + MCP), since it tails the shared file. This is the trajectory that trains the twin (I1). Each line is the real record shape: <code>seq · ts · kind · summary</code> (+ meta).</div>
+        <div class="reg-lead" style="margin-bottom:11px" data-ui-ref="ui://activity/replay/trajectory">The unfiltered append-only log — every event across BOTH faces (bridge + MCP), since it tails the shared file. This is the trajectory that trains the twin (I1). Each line is the real record shape: <code>seq · ts · kind · summary</code> (+ meta).</div>
         <div class="stream">
           <div class="sline"><span class="sq">404</span><span class="tm">13:54:01</span><span class="kd run">run</span><span class="sm">ran 2, cached 3 · graph main</span></div>
-          <div class="sline"><span class="sq">405</span><span class="tm">13:55:02</span><span class="kd other">decision.intent</span><span class="sm">build-intent — score sentiment</span></div>
+          <div class="sline"><span class="sq">405</span><span class="tm">13:55:02</span><span class="kd other" data-ui-ref="ui://activity/replay/decision.intent">decision.intent</span><span class="sm">build-intent — score sentiment</span></div>
           <div class="sline"><span class="sq">406</span><span class="tm">13:56:10</span><span class="kd other">mode</span><span class="sm">presence → decide-for-me</span></div>
-          <div class="sline"><span class="sq">408</span><span class="tm">13:58:40</span><span class="kd other">decision.surfaced_for_review</span><span class="sm">COA surfaced · s31</span></div>
-          <div class="sline"><span class="sq">410</span><span class="tm">14:01:33</span><span class="kd other">review.comment</span><span class="sm">operator: “show me it first”</span></div>
+          <div class="sline"><span class="sq">408</span><span class="tm">13:58:40</span><span class="kd other" data-ui-ref="ui://activity/replay/decision.surfaced_for_review">decision.surfaced_for_review</span><span class="sm">COA surfaced · s31</span></div>
+          <div class="sline"><span class="sq">410</span><span class="tm">14:01:33</span><span class="kd other" data-ui-ref="ui://activity/replay/comment">review.comment</span><span class="sm">operator: “show me it first”</span></div>
           <div class="sline"><span class="sq">412</span><span class="tm">14:02:09</span><span class="kd resolve">resolve</span><span class="sm">approve · s31 · “demonstrated correct”</span></div>
-          <div class="sline"><span class="sq">413</span><span class="tm">14:02:10</span><span class="kd dispatch">decision.dispatch</span><span class="sm">derived_from=412</span></div>
-          <div class="sline"><span class="sq">414</span><span class="tm">14:03:00</span><span class="kd other">decision.verify</span><span class="sm">affected suites + drift + critic</span></div>
+          <div class="sline"><span class="sq">413</span><span class="tm">14:02:10</span><span class="kd dispatch" data-ui-ref="ui://activity/replay/decision.dispatch">decision.dispatch</span><span class="sm">derived_from=412</span></div>
+          <div class="sline"><span class="sq">414</span><span class="tm">14:03:00</span><span class="kd other" data-ui-ref="ui://activity/replay/decision.verify">decision.verify</span><span class="sm">affected suites + drift + critic</span></div>
           <div class="sline"><span class="sq">421</span><span class="tm">14:08:55</span><span class="kd other">decision.implemented</span><span class="sm">commit 4af1c0e2 · node sentiment</span></div>
           <div class="sline"><span class="sq">422</span><span class="tm">14:08:56</span><span class="kd commit">criterion.commit</span><span class="sm">derived_from=412</span></div>
           <div class="sline"><span class="sq">423</span><span class="tm">14:09:30</span><span class="kd run">run</span><span class="sm">ran 1, cached 4 · graph main</span></div>
@@ -327,19 +327,19 @@
   <aside class="panel" data-ui-ref="ui://inbox/coa">
     <div class="tabs"><span class="tab">⊙ Inspector</span><span class="tab">✦ Inbox</span><span class="tab on">⛓ Audit</span></div>
 
-    <h4>Audit a decision <span class="proposed">surfaces /api/decision · ui:// address [proposed]</span></h4>
+    <h4 data-ui-ref="ui://inbox/coa/audit">Audit a decision <span class="proposed" data-ui-ref="ui://inbox/coa/surfaces">surfaces /api/decision · ui:// address [proposed]</span></h4>
     <!-- each pivots to its decision_view(sid). The verdict tag = the terminal resolved value (approve/decide/reject). -->
     <div class="audrow on"><span class="v approve">appr</span><span class="t">“sentiment” node — built &amp; shipped</span><span class="sid">s31</span></div>
     <div class="audrow"><span class="v decide">dec</span><span class="t">route-by-tone — escalate negatives</span><span class="sid">s14</span></div>
     <div class="audrow"><span class="v reject">rej</span><span class="t">auto-summarise threads — sent back</span><span class="sid">s27</span></div>
     <div class="audrow"><span class="v approve">appr</span><span class="t">add `wordcount` node — accepted</span><span class="sid">s19</span></div>
 
-    <h4 style="margin-top:18px">Audit a session <span class="proposed">session_view · full tail</span></h4>
+    <h4 style="margin-top:18px">Audit a session <span class="proposed" data-ui-ref="ui://inbox/coa/session_view">session_view · full tail</span></h4>
     <!-- session_view(session_id): every event tagged with this session, full tail (no 999 window) -->
     <div class="sess">◇ walk-0418 <span class="c">9 events</span></div>
     <div class="sess">◇ walk-0411 <span class="c">14 events</span></div>
 
     <h4 style="margin-top:18px">Whole path</h4>
-    <div class="sess">∞ replay(200) <span class="c">the twin's set</span></div>
+    <div class="sess" data-ui-ref="ui://inbox/coa/replay">∞ replay(200) <span class="c" data-ui-ref="ui://inbox/coa/twin-set">the twin's set</span></div>
   </aside>
 </div></body></html>

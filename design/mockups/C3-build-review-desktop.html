@@ -117,8 +117,8 @@
     <div class="verbs"><button class="btn">◐ layers</button><button class="btn">＋ wire</button><button class="btn">↻ force</button><button class="btn run" data-ui-ref="ui://toolbar/run">▶ run <span class="k">⏎</span></button></div>
   </header>
 
-  <nav class="rail collapsible">
-    <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span></h4>
+  <nav class="rail collapsible" data-ui-ref="ui://inbox/build-review/process-a">
+    <h4 data-ui-ref="ui://inbox/build-review/process"><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span></h4>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">L</span><span class="label">llm</span></div>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">E</span><span class="label">embed</span></div>
@@ -131,8 +131,8 @@
 
   <main class="canvas" data-ui-ref="ui://canvas">
     <!-- the operator's eyes are on the review, not the graph. The canvas waits: ▷ show me drops the new node here, placed + runnable. -->
-    <div class="dim-note">
-      <span class="display">A build just completed.</span>
+    <div class="dim-note" data-ui-ref="ui://canvas/build-review">
+      <span class="display" data-ui-ref="ui://canvas/build-status">A build just completed.</span>
       It's surfaced for your review on the right — the wire built it backstage and is now showing you the working outcome.
       <span class="play">▷ show me drops the new node here, placed &amp; runnable</span>
     </div>
@@ -145,7 +145,7 @@
     <div class="tabs"><span class="tab">⊙ Inspector</span><span class="tab on">✦ Inbox <span class="badge">1</span></span><span class="tab">◈ RHM</span></div>
 
     <div class="ibx-lane ibx-builds">
-      <div class="ibx-lane-head">decision → build <span class="muted">· 1</span></div>
+      <div class="ibx-lane-head" data-ui-ref="ui://inbox/decision-build">decision → build <span class="muted">· 1</span></div>
 
       <!-- BuildIntentCard · bi-done (status==='implemented') -->
       <div class="bi-card bi-done" data-ui-ref="ui://inbox/build-review">
@@ -155,7 +155,7 @@
         </div>
 
         <div class="bi-meta">
-          <span class="bi-class" title="declared consequence class — its governance posture decides whether it auto-runs or surfaces">decision_build</span>
+          <span class="bi-class" title="declared consequence class — its governance posture decides whether it auto-runs or surfaces" data-ui-ref="ui://inbox/build-review/decision_build">decision_build</span>
           <span class="bi-scope" title="the declared scope — paths a verified build is allowed to touch (empty = deny-all)">scope: <b>runtime/nodes/</b>, <b>runtime/registry.py</b></span>
         </div>
 
@@ -167,13 +167,13 @@
         </div>
 
         <!-- derived_from — the 3-part bind the wire stamped (intent ← decision ← proposal). Provenance, not the headline. -->
-        <div class="bi-prov" title="what this build was derived from — the wire's 3-part bind">
+        <div class="bi-prov" title="what this build was derived from — the wire's 3-part bind" data-ui-ref="ui://inbox/build-review/derived-source">
           derived from <code>decision://inbox/route-by-tone</code> · <code>intent://build/sentiment-node</code> · <code>proposal://brain/0xa1</code>
         </div>
 
         <!-- SECONDARY / for-the-record — the changed-files diff, COLLAPSED by default -->
         <div class="bi-record">
-          <div class="bi-record-toggle" title="the technical record — changed files + the build's own log (for reference, not the review)">
+          <div class="bi-record-toggle" title="the technical record — changed files + the build's own log (for reference, not the review)" data-ui-ref="ui://inbox/build-review/record">
             <span class="car">⌃</span> for the record <span class="ct">· 3 file(s) changed</span>
           </div>
           <!-- (collapsed; the diff + summary live behind the disclosure. The operator never has to read edits to review.) -->
@@ -194,10 +194,10 @@ Verified by use: placed + ran on a scratch graph, output resolved.</pre>
         <div class="bi-verdict">
           <div class="bi-verdict-row">
             <button class="b accept" title="accept → it goes live">✓ accept</button>
-            <button class="b sendback" title="send back with a reason → re-queued to the wire">↩ send back</button>
+            <button class="b sendback" title="send back with a reason → re-queued to the wire" data-ui-ref="ui://inbox/build-review/sendback">↩ send back</button>
           </div>
           <textarea class="bi-why" placeholder="why send it back? (the reason is captured into the path)"></textarea>
-          <div class="bi-op-only"><span class="lk">⚿</span> operator-only — an agent can never self-approve its own build</div>
+          <div class="bi-op-only" data-ui-ref="ui://inbox/build-review/agent-guard"><span class="lk">⚿</span> operator-only — an agent can never self-approve its own build</div>
         </div>
       </div>
     </div>

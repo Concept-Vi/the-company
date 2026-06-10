@@ -180,7 +180,7 @@
     <!-- THE SOURCE — a real process node (ask), output addressed run://demo/answer. EXISTING. -->
     <div class="node sel src" data-kind="process" data-ui-ref="ui://canvas/node" style="left:54px;top:150px;width:232px">
       <div class="bar"><span class="mono-chip">A</span><span class="ty">ask</span><span class="kindlabel">process · ran</span></div>
-      <div class="body">the source artefact
+      <div class="body" data-ui-ref="ui://canvas/node/memo">the source artefact
         <div class="cfg"><span class="pill" style="border-color:var(--kind-model);color:var(--kind-model)">model <b style="color:var(--kind-model)">deepseek-v4-pro</b></span></div>
         <div class="out">The memo gate skips re-running a node when its (type, version, config, inputs) hash is unchanged — runtime/scheduler.py…</div>
       </div>
@@ -202,14 +202,14 @@
       <div class="phd"><span class="mono-chip">⊕</span><span class="ty">portal</span><span class="kindlabel">content · window</span>
         <span class="livebadge"><i></i>live</span></div>
       <div class="pbodywin">The memo gate skips re-running a node when its (type, version, config, inputs) hash is unchanged — runtime/scheduler.py…</div>
-      <div class="pref">↪ <span class="arrow">reflects</span> <b>run://demo/answer</b> · same hash <b>sha:9f2a…</b></div>
+      <div class="pref" data-ui-ref="ui://canvas/portal-window/reflects">↪ <span class="arrow">reflects</span> <b>run://demo/answer</b> · same hash <b>sha:9f2a…</b></div>
     </div>
 
     <!-- PORTAL #3 — DANGLING ref → output None. HONEST empty state (no crash, no fabrication). EXISTING behaviour. -->
     <div class="portal empty" data-ui-ref="ui://canvas/portal-window" style="left:900px;top:246px">
       <div class="phd"><span class="mono-chip">⊕</span><span class="ty">portal</span><span class="kindlabel">content</span>
         <span class="emptybadge">∅ no source</span></div>
-      <div class="pbodywin">— nothing to show (ref does not resolve)</div>
+      <div class="pbodywin" data-ui-ref="ui://canvas/portal-window/resolve">— nothing to show (ref does not resolve)</div>
       <div class="pref">↪ <span style="color:var(--tx-3)">run://demo/nonexistent</span></div>
     </div>
 
@@ -241,10 +241,10 @@
       <div class="kindrow">
         <span class="mono-chip">⊕</span>
         <span class="display">portal</span>
-        <span class="mono">content · live window</span>
+        <span class="mono" data-ui-ref="ui://inspector/portal">content · live window</span>
       </div>
 
-      <p class="fld">Reference address <span class="opt">· config.ref · the address this window reflects</span></p>
+      <p class="fld">Reference address <span class="opt" data-ui-ref="ui://inspector/config-ref">· config.ref · the address this window reflects</span></p>
       <div class="box sel-row"><span class="box code" style="margin:0;padding:0;border:0;background:none"><b style="color:var(--kind-content)">run://demo/answer</b></span><span style="color:var(--tx-3)">▾</span></div>
 
       <p class="fld">Resolution <span class="opt">· how the output is produced</span></p>

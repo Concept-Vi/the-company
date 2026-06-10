@@ -356,7 +356,7 @@ body{
   <!-- TOP BAR -->
   <div class="topbar">
     <div class="orb"></div>
-    <h1>mockup&nbsp;<em>studio</em></h1>
+    <h1 data-ui-ref="ui://studio/mockup-studio">mockup&nbsp;<em>studio</em></h1>
     <span class="tag">design-review portal</span>
     <div class="portal-note">
       <span>Review the mockups, tell the right-hand-man what to change. <b>Nothing here is built into the real app</b> — this iterates the mockup corpus before the build.</span>
@@ -374,13 +374,13 @@ body{
     <div class="stage-bar">
       <div class="now" id="nowTitle">Select a mockup to begin<small></small></div>
       <div class="seg" id="frameSeg">
-        <button data-frame="phone">Phone · 390</button>
+        <button data-frame="phone" data-ui-ref="ui://mockup/phone">Phone · 390</button>
         <button data-frame="desktop" class="on">Desktop · 1440</button>
       </div>
-      <button class="icon-btn" id="reloadBtn" title="Reload the mockup">↻ Reload</button>
+      <button class="icon-btn" id="reloadBtn" title="Reload the mockup" data-ui-ref="ui://mockup/reload">↻ Reload</button>
     </div>
     <div class="stage-body" id="stageBody">
-      <div class="stage-empty">Choose a mockup from the rail<span>it loads live in the device frame</span></div>
+      <div class="stage-empty" data-ui-ref="ui://mockup-studio/choose">Choose a mockup from the rail<span>it loads live in the device frame</span></div>
     </div>
   </section>
 
@@ -392,7 +392,7 @@ body{
     </div>
 
     <div class="thread" id="thread">
-      <div class="empty">No mockup selected.<br>The feedback thread for the chosen mockup appears here.</div>
+      <div class="empty" data-ui-ref="ui://mockup/empty">No mockup selected.<br>The feedback thread for the chosen mockup appears here.</div>
     </div>
 
     <div class="composer" id="composer" style="display:none">

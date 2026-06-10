@@ -141,22 +141,22 @@ select.ctrl{appearance:none;background-image:linear-gradient(180deg,transparent,
 <body><div class="app">
 
   <!-- ── TOP BAR ── -->
-  <header class="top">
+  <header class="top" data-ui-ref="ui://inspector/controls">
     <span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
     <span class="presence"><span class="dot"></span>focus<span class="ch">· present ▾</span></span>
     <div class="verbs">
       <button class="btn">◐ <span class="lbl">layers</span></button>
       <button class="btn">＋ <span class="lbl">wire</span></button>
-      <button class="btn">↻ <span class="lbl">force</span></button>
+      <button class="btn" data-ui-ref="ui://inspector/force">↻ <span class="lbl">force</span></button>
       <button class="btn run">▶ <span class="lbl">run</span> <span class="k">⏎</span></button>
     </div>
   </header>
 
   <!-- ── LEFT RAIL — palette grouped by the TWO real kinds; llm highlighted (it's selected) ── -->
   <nav class="rail collapsible">
-    <div class="railhd">Node palette</div>
+    <div class="railhd" data-ui-ref="ui://inspector/palette">Node palette</div>
 
-    <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span><span class="ct">11</span></h4>
+    <h4 data-ui-ref="ui://inspector/process-11"><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span><span class="ct">11</span></h4>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
     <div class="chip on"><span class="mono-chip" style="background:var(--kind-process)">L</span><span class="label">llm</span></div>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">E</span><span class="label">embed</span></div>
@@ -165,7 +165,7 @@ select.ctrl{appearance:none;background-image:linear-gradient(180deg,transparent,
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">⑂</span><span class="label">gate</span></div>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">⋈</span><span class="label">join</span></div>
 
-    <h4><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span><span class="ct">5</span></h4>
+    <h4 data-ui-ref="ui://inspector/content"><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span><span class="ct">5</span></h4>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">C</span><span class="label">constant</span></div>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">▦</span><span class="label">codebase</span></div>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">T</span><span class="label">model_of_tim</span></div>
@@ -236,7 +236,7 @@ select.ctrl{appearance:none;background-image:linear-gradient(180deg,transparent,
 
       <!-- model — enum, options_from = chat_models (from the live registry) -->
       <div class="field" data-ui-ref="ui://inspector/model-field">
-        <label>model <span class="t">enum</span><span class="src">↻ from live model fleet</span></label>
+        <label data-ui-ref="ui://inspector/model-field/model-enum">model <span class="t">enum</span><span class="src">↻ from live model fleet</span></label>
         <div class="selwrap">
           <span class="modeldot"></span>
           <!-- options mirror the LIVE fabric registry (ground truth: ~/company MAP.md REGISTRY block / available_models()). Refresh from there; do not invent names. -->
@@ -264,11 +264,11 @@ select.ctrl{appearance:none;background-image:linear-gradient(180deg,transparent,
           <div class="num"><input class="ctrl" type="number" min="0" max="2" step="0.1" value="0.7"><span class="range">0–2</span></div>
         </div>
         <div class="field">
-          <label>top_p <span class="t">num</span></label>
+          <label data-ui-ref="ui://inspector/top_p">top_p <span class="t">num</span></label>
           <div class="num"><input class="ctrl" type="number" min="0" max="1" step="0.05" value="1" ><span class="range">0–1</span></div>
         </div>
         <div class="field">
-          <label>max_tokens <span class="t">num</span></label>
+          <label data-ui-ref="ui://inspector/max_tokens">max_tokens <span class="t">num</span></label>
           <div class="num"><input class="ctrl" type="number" min="1" step="1" value="512"><span class="range">≥1</span></div>
         </div>
       </div>
@@ -277,21 +277,21 @@ select.ctrl{appearance:none;background-image:linear-gradient(180deg,transparent,
       <div class="formhd" style="margin-top:16px">Connection</div>
       <div class="tworow">
         <div class="field">
-          <label>base_url <span class="t">string</span></label>
-          <input class="ctrl" type="text" value="" placeholder="(default fabric endpoint)" style="font-family:'IBM Plex Mono';font-size:11.5px">
+          <label data-ui-ref="ui://inspector/base_url">base_url <span class="t">string</span></label>
+          <input class="ctrl" type="text" value="" placeholder="(default fabric endpoint)" style="font-family:'IBM Plex Mono';font-size:11.5px" data-ui-ref="ui://inspector/endpoint">
         </div>
         <div class="field">
-          <label>retries <span class="t">num</span></label>
+          <label data-ui-ref="ui://inspector/retries">retries <span class="t">num</span></label>
           <div class="num"><input class="ctrl" type="number" min="0" max="10" step="1" value="2"><span class="range">0–10</span></div>
         </div>
       </div>
 
       <!-- config edited but not re-run → memo gate would re-fire on next run -->
-      <div class="dirty"><i></i>config changed — re-runs on next ▶ run (or ↻ rerun now)</div>
+      <div class="dirty" data-ui-ref="ui://inspector/run-trigger"><i></i>config changed — re-runs on next ▶ run (or ↻ rerun now)</div>
 
       <!-- ── OUTPUT — what this node produced ── -->
       <div class="outhd">Output <span class="pill">Text</span></div>
-      <div class="outbox">The memo gate avoids recomputation: a node re-runs only when its (type, version, config, input-hash) changes — otherwise the prior result is served as "cached." It lives in runtime/scheduler.py, keyed per node so unchanged branches stay frozen across runs.</div>
+      <div class="outbox" data-ui-ref="ui://inspector/memo">The memo gate avoids recomputation: a node re-runs only when its (type, version, config, input-hash) changes — otherwise the prior result is served as "cached." It lives in runtime/scheduler.py, keyed per node so unchanged branches stay frozen across runs.</div>
 
       <!-- address + status (status ∈ idle/ran/cached/stuck — here: ran) -->
       <div class="addrrow">
@@ -302,7 +302,7 @@ select.ctrl{appearance:none;background-image:linear-gradient(180deg,transparent,
       <!-- ── ACT ON THIS OUTPUT — ↻ rerun (force) / → inbox / ⊕ build ── -->
       <div class="actlbl">Act on this output</div>
       <div class="act" data-ui-ref="ui://inspector/act">
-        <button class="btn force"><span><span class="gly">↻</span> rerun</span><span class="sub">force re-run</span></button>
+        <button class="btn force" data-ui-ref="ui://inspector/act/force"><span><span class="gly">↻</span> rerun</span><span class="sub">force re-run</span></button>
         <button class="btn"><span>→ inbox</span><span class="sub">surface output</span></button>
         <button class="btn"><span>⊕ build</span><span class="sub">build from this</span></button>
       </div>
@@ -313,8 +313,8 @@ select.ctrl{appearance:none;background-image:linear-gradient(180deg,transparent,
   <!-- mobile tab-bar (hidden on desktop; present so the responsive system resolves) -->
   <nav class="tabbar">
     <a class="on"><span class="ic">▦</span>Canvas</a>
-    <a><span class="ic">✦</span>Inbox</a>
-    <a><span class="ic">◈</span>RHM</a>
+    <a data-ui-ref="ui://inspector/inbox"><span class="ic">✦</span>Inbox</a>
+    <a data-ui-ref="ui://inspector/rhm"><span class="ic">◈</span>RHM</a>
     <a><span class="ic">▶</span>Run</a>
   </nav>
 </div></body></html>

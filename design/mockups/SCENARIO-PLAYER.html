@@ -473,12 +473,12 @@ body{
       <div class="ctl-group">
         <span class="ctl-label">scenario — step the surface through its states</span>
         <div class="stepper" id="stepper">
-          <button class="step" data-s="idle"><span class="sd"></span>idle</button>
+          <button class="step" data-s="idle" data-ui-ref="ui://chat/idle"><span class="sd"></span>idle</button>
           <button class="step" data-s="listening"><span class="sd"></span>auto-listen</button>
-          <button class="step" data-s="ptt"><span class="sd"></span>push-to-talk</button>
+          <button class="step" data-s="ptt" data-ui-ref="ui://scenario-player/ptt"><span class="sd"></span>push-to-talk</button>
           <button class="step" data-s="thinking"><span class="sd"></span>thinking</button>
-          <button class="step" data-s="reply"><span class="sd"></span>reply</button>
-          <button class="step" data-s="consent"><span class="sd"></span>consent</button>
+          <button class="step" data-s="reply" data-ui-ref="ui://chat/reply"><span class="sd"></span>reply</button>
+          <button class="step" data-s="consent" data-ui-ref="ui://scenario/consent"><span class="sd"></span>consent</button>
           <button class="step" data-s="running"><span class="sd"></span>running</button>
           <button class="step" data-s="minimized"><span class="sd"></span>minimized</button>
           <button class="step" data-s="empty"><span class="sd"></span>empty</button>
@@ -495,7 +495,7 @@ body{
       <div class="ctl-group">
         <span class="ctl-label">framing</span>
         <div class="frame-toggle" id="frameToggle">
-          <button class="on" data-f="phone">phone 390</button>
+          <button class="on" data-f="phone" data-ui-ref="ui://scenario/phone-390">phone 390</button>
           <button data-f="desktop">desktop 1440</button>
         </div>
       </div>
@@ -524,7 +524,7 @@ body{
         <!-- desktop-only: left canvas gutter -->
         <div class="gutter left">
           <span class="gtitle">canvas — the graph behind</span>
-          <div class="canvas-ghost">the composition canvas</div>
+          <div class="canvas-ghost" data-ui-ref="ui://chat/composition">the composition canvas</div>
         </div>
 
         <!-- THE CONVERSATION COLUMN (the same on phone + desktop) -->
@@ -580,7 +580,7 @@ body{
               <div class="pbody">Rerun <b>ask</b>, then route its output to your inbox.</div>
               <div class="ptarget">↻ run://demo/ask  →  ✦ inbox</div>
               <div class="pacts">
-                <button class="approve">approve</button>
+                <button class="approve" data-ui-ref="ui://chat/approve">approve</button>
                 <button class="decline">not now</button>
               </div>
             </div>
@@ -599,13 +599,13 @@ body{
           <!-- EMPTY / first-run -->
           <div class="empty only o-empty">
             <div class="orbwrap" style="margin:0 auto 4px"><span class="orb"></span></div>
-            <div class="et">Nothing here yet.</div>
-            <div class="es">Ask the company about itself, point at a node,<br>or just start talking — vi is listening.</div>
+            <div class="et" data-ui-ref="ui://chat/empty">Nothing here yet.</div>
+            <div class="es" data-ui-ref="ui://chat/vi-listening">Ask the company about itself, point at a node,<br>or just start talking — vi is listening.</div>
           </div>
 
           <!-- MINIMIZED canvas-behind -->
           <div class="minim-canvas">
-            <div class="mc-hint">conversation minimized — the canvas is yours</div>
+            <div class="mc-hint" data-ui-ref="ui://chat/minimized">conversation minimized — the canvas is yours</div>
             <div class="mc-nodes">
               <div class="mc-node"><i style="background:var(--acc)"></i>ask · ran</div>
               <div class="mc-node" style="animation-delay:-4s"><i style="background:var(--kind-content)"></i>codebase</div>
@@ -623,13 +623,13 @@ body{
           <!-- INPUT -->
           <div class="inputwrap">
             <div class="inputbar std-input">
-              <input placeholder="ask the company about itself…" />
+              <input placeholder="ask the company about itself…" data-ui-ref="ui://scenario-player/ask-rhm" />
               <span class="iconbtn mic autolisten" id="micBtn" title="auto-listen on — tap to stop">👂</span>
               <span class="iconbtn send">→</span>
             </div>
             <!-- PUSH-TO-TALK held control (distinct from auto-listen) -->
             <div class="inputbar ptt-input" style="background:none;border:none;padding:0;box-shadow:none">
-              <button class="ptt">
+              <button class="ptt" data-ui-ref="ui://chat/ptt">
                 <span class="pttlabel">release to send</span>
                 <span class="levels"><b></b><b></b><b></b><b></b><b></b><b></b><b></b></span>
               </button>
@@ -648,7 +648,7 @@ body{
 
         <!-- desktop-only: right inbox/run gutter -->
         <div class="gutter right">
-          <span class="gtitle">inbox · run — outputs land here</span>
+          <span class="gtitle" data-ui-ref="ui://chat/inbox-run">inbox · run — outputs land here</span>
           <div class="canvas-ghost">3 awaiting · 1 ready</div>
         </div>
 

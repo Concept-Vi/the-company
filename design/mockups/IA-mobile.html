@@ -568,7 +568,7 @@ body{
           <!-- the nodes — coloured BY STATE (the surfaced node-state vocabulary) -->
           <div class="node" data-st="ran" style="left:24px;top:120px;animation-delay:-2s" data-name="codebase" data-kind="content · volatile" data-state="ran">
             <div class="nstate"><span class="led ran"></span>ran</div>
-            <div class="nname">codebase</div><div class="nkind">content · reads the repo</div>
+            <div class="nname">codebase</div><div class="nkind" data-ui-ref="ui://board/content">content · reads the repo</div>
           </div>
           <div class="node" data-st="ran" style="left:170px;top:202px;animation-delay:-6s" data-name="ask" data-kind="process" data-state="ran">
             <div class="nstate"><span class="led ran"></span>ran</div>
@@ -580,11 +580,11 @@ body{
           </div>
           <div class="node" data-st="stuck" style="left:230px;top:372px;animation-delay:-4s" data-name="rollup" data-kind="process" data-state="stuck">
             <div class="nstate"><span class="led stuck"></span>stuck</div>
-            <div class="nname">rollup</div><div class="nkind">process · awaiting input</div>
+            <div class="nname">rollup</div><div class="nkind" data-ui-ref="ui://board/process">process · awaiting input</div>
           </div>
           <div class="node" data-st="live" style="left:120px;top:476px;animation-delay:-11s" data-name="portal" data-kind="reference" data-state="live">
             <div class="nstate"><span class="led live"></span>live</div>
-            <div class="nname">portal</div><div class="nkind">reference · resolved live</div>
+            <div class="nname">portal</div><div class="nkind" data-ui-ref="ui://board/status">reference · resolved live</div>
           </div>
           <div class="node" data-st="failed" style="left:248px;top:212px;animation-delay:-7s" data-name="retrieve" data-kind="process" data-state="failed">
             <div class="nstate"><span class="led failed"></span>failed</div>
@@ -599,8 +599,8 @@ body{
 
           <!-- the floating thumb cluster (bottom-right): Run + ＋ FAB -->
           <div class="thumb-cluster">
-            <button class="fab run" id="runBtn" title="run the graph">▶</button>
-            <button class="fab" id="fabBtn" title="add a node">＋</button>
+            <button class="fab run" id="runBtn" title="run the graph" data-ui-ref="ui://chrome/run">▶</button>
+            <button class="fab" id="fabBtn" title="add a node" data-ui-ref="ui://chrome/fab">＋</button>
           </div>
 
           <!-- scrim + palette short-sheet + inspector sheet (contextual to Board only) -->
@@ -609,7 +609,7 @@ body{
           <div class="palette-sheet">
             <div class="sheet-grip"></div>
             <div class="sect-head">add a node <span class="tag">16 types · auto-discovered</span></div>
-            <div class="pal-search">⌕&nbsp; filter node types…</div>
+            <div class="pal-search" data-ui-ref="ui://board/filter">⌕&nbsp; filter node types…</div>
             <div class="palette-grid">
               <div class="pal-chip process"><span class="mono">A</span><span class="pl">ask</span></div>
               <div class="pal-chip process"><span class="mono">L</span><span class="pl">llm</span></div>
@@ -622,7 +622,7 @@ body{
               <div class="pal-chip process"><span class="mono">J</span><span class="pl">join</span></div>
               <div class="pal-chip content"><span class="mono">P</span><span class="pl">portal</span></div>
               <div class="pal-chip model"><span class="mono">◑</span><span class="pl">rhm_mode</span></div>
-              <div class="pal-chip content"><span class="mono">T</span><span class="pl">model_of_tim</span></div>
+              <div class="pal-chip content"><span class="mono">T</span><span class="pl" data-ui-ref="ui://board/model_of_tim">model_of_tim</span></div>
             </div>
           </div>
 
@@ -635,17 +635,17 @@ body{
             <div class="insp-body">
               <div class="insp-block">
                 <div class="il">config</div>
-                <div class="cfg-row"><span class="k">model</span><span class="v">deepseek-v4-pro</span></div>
-                <div class="cfg-row"><span class="k">base_url</span><span class="v">localhost:8000</span></div>
+                <div class="cfg-row"><span class="k">model</span><span class="v" data-ui-ref="ui://board/identity">deepseek-v4-pro</span></div>
+                <div class="cfg-row"><span class="k">base_url</span><span class="v" data-ui-ref="ui://chrome/url-display">localhost:8000</span></div>
               </div>
               <div class="insp-block">
                 <div class="il">output</div>
-                <div class="out-card">It hashes <code>(type, version, config, inputs)</code> — unchanged, it serves the cached result; a volatile node always re-runs.</div>
+                <div class="out-card" data-ui-ref="ui://board/it-hashes">It hashes <code>(type, version, config, inputs)</code> — unchanged, it serves the cached result; a volatile node always re-runs.</div>
               </div>
               <div class="insp-acts">
                 <button class="wire">＋ wire</button>
                 <button class="portal">⊕ portal</button>
-                <button class="del">🗑 delete</button>
+                <button class="del" data-ui-ref="ui://toolbar/del">🗑 delete</button>
               </div>
             </div>
           </div>
@@ -672,26 +672,26 @@ body{
             <span class="orb"></span>
             <span class="orb-glyph" id="orbGlyph">👂</span>
           </div>
-          <div class="say-line" id="sayLine">I'm listening — go ahead.</div>
+          <div class="say-line" id="sayLine" data-ui-ref="ui://board/listen">I'm listening — go ahead.</div>
         </div>
 
         <div class="thread">
           <div class="turn you">
             <span class="who">you<span class="grade gold" title="gold — your own words">◆</span></span>
-            <div class="bubble">How does the memo gate decide whether a node re-runs?</div>
+            <div class="bubble" data-ui-ref="ui://board/question">How does the memo gate decide whether a node re-runs?</div>
           </div>
-          <div class="consult-chip">◆ consult · the system read its own code</div>
+          <div class="consult-chip" data-ui-ref="ui://board/consult">◆ consult · the system read its own code</div>
           <div class="turn vi">
             <span class="who">vi<span class="grade work" title="working-grade">◇</span></span>
-            <div class="bubble">It hashes <code>(type, version, config, inputs)</code>. Unchanged, it skips and serves the cached result. A volatile node like <code>codebase</code> bypasses the gate, so it always re-runs.</div>
+            <div class="bubble" data-ui-ref="ui://board/utterance">It hashes <code>(type, version, config, inputs)</code>. Unchanged, it skips and serves the cached result. A volatile node like <code>codebase</code> bypasses the gate, so it always re-runs.</div>
           </div>
 
           <!-- the build/panel/extend OFFER card — auto-raises (surfaced self-mod) -->
           <div class="offer">
             <div class="oh"><span class="spark"></span>vi offers<span class="kind">panel</span></div>
-            <div class="obody">I can grow a <b>memo-gate settings panel</b> so you can tune the hash inputs without code.</div>
-            <div class="otarget">⊕ ui://settings/panels · 1 new field-group · reversible</div>
-            <div class="oacts"><button class="approve">approve</button><button class="decline">not now</button></div>
+            <div class="obody" data-ui-ref="ui://chrome/memo-gate">I can grow a <b>memo-gate settings panel</b> so you can tune the hash inputs without code.</div>
+            <div class="otarget" data-ui-ref="ui://chrome/settings/panels">⊕ ui://settings/panels · 1 new field-group · reversible</div>
+            <div class="oacts"><button class="approve" data-ui-ref="ui://board/approve">approve</button><button class="decline" data-ui-ref="ui://chrome/decline">not now</button></div>
           </div>
 
           <div class="thinking-row">
@@ -705,12 +705,12 @@ body{
           <span class="f1-label">shape how vi presents — it remembers</span>
           <span class="f1-chip"><span class="ic">↧</span>terser</span>
           <span class="f1-chip on"><span class="ic">↥</span>more</span>
-          <span class="f1-chip"><span class="ic">→</span>lead with the why</span>
+          <span class="f1-chip" data-ui-ref="ui://board/lead-why"><span class="ic">→</span>lead with the why</span>
         </div>
 
         <!-- the big push-to-talk control (dominant thumb target) -->
         <div class="talk-input">
-          <button class="ptt-btn" id="pttBtn">
+          <button class="ptt-btn" id="pttBtn" data-ui-ref="ui://chrome/ptt">
             <span class="ic">🎙</span>
             <span class="pl" id="pttLabel">hold to speak</span>
             <span class="levels"><b></b><b></b><b></b><b></b><b></b></span>
@@ -720,21 +720,21 @@ body{
       </section>
 
       <!-- ═══════════ ▤ QUEUE ═══════════ -->
-      <section class="view" id="queue" data-view="queue">
+      <section class="view" id="queue" data-view="queue" data-ui-ref="ui://queue/decision">
         <div class="queue-head">
           <h2>Queue</h2>
-          <div class="qmeta"><b>3</b> need you · pre-triaged · lane by tint</div>
+          <div class="qmeta" data-ui-ref="ui://board/need-you"><b>3</b> need you · pre-triaged · lane by tint</div>
         </div>
         <div class="qlist">
           <div class="qcard decision">
             <div class="qtop"><span class="qlane">decision</span><span class="qwhen">2m ago</span></div>
-            <div class="qwhat">Route the model brief to your reading list, or hold for the cost rollup?</div>
-            <div class="qsub">framed as a value-choice · <code>coa</code> · the rollup lands ~next run</div>
+            <div class="qwhat" data-ui-ref="ui://board/resolve">Route the model brief to your reading list, or hold for the cost rollup?</div>
+            <div class="qsub" data-ui-ref="ui://board/rollup">framed as a value-choice · <code>coa</code> · the rollup lands ~next run</div>
             <div class="qacts"><button class="ok">route it</button><button>hold</button><button>say more</button></div>
           </div>
           <div class="qcard build-review">
-            <div class="qtop"><span class="qlane">build · review</span><span class="qwhen">8m ago</span></div>
-            <div class="qwhat">Built the memo-gate panel you approved — 2 files changed.</div>
+            <div class="qtop"><span class="qlane" data-ui-ref="ui://board/build-review">build · review</span><span class="qwhen">8m ago</span></div>
+            <div class="qwhat" data-ui-ref="ui://chrome/build-status">Built the memo-gate panel you approved — 2 files changed.</div>
             <div class="qsub">implemented · surfaced for review · <code>[self-apply]</code> · revert recovers</div>
             <div class="qacts"><button class="ok">accept</button><button class="rej">send back</button><button>diff</button></div>
           </div>
@@ -742,18 +742,18 @@ body{
             <div class="qtop"><span class="qlane">question</span><span class="qwhen">14m ago</span></div>
             <div class="qwhat">The retrieve node failed — no corpus wired. Want me to add an embed step?</div>
             <div class="qsub">abstained rather than guess · points at <code>ui://canvas/node/retrieve</code></div>
-            <div class="qacts"><button class="ok">yes, add it</button><button>not now</button><button>show me</button></div>
+            <div class="qacts"><button class="ok">yes, add it</button><button>not now</button><button data-ui-ref="ui://chrome/show-me">show me</button></div>
           </div>
         </div>
         <!-- capture / surface-output footer — route something INTO the queue (surfaced latent) -->
         <div class="qfoot">
-          <div class="cap"><span class="ic">✦</span>capture an idea</div>
+          <div class="cap" data-ui-ref="ui://board/idea-capture"><span class="ic">✦</span>capture an idea</div>
           <div class="cap"><span class="ic">⇢</span>surface an output</div>
         </div>
       </section>
 
       <!-- ═══════════ ⚙ TUNE ═══════════ -->
-      <section class="view" id="tune" data-view="tune">
+      <section class="view" id="tune" data-view="tune" data-ui-ref="ui://chrome/tune">
         <div class="tune-head">
           <h2>Tune</h2>
           <div class="tsub">everything · consolidated · one decision at a time</div>
@@ -776,10 +776,10 @@ body{
 
           <!-- modes + SUB-TYPES (surfaced: sub-types now SELECTABLE, not static pills) -->
           <div class="tcard">
-            <div class="sect-head">presence mode <span class="tag latent">★ sub-types selectable</span></div>
+            <div class="sect-head" data-ui-ref="ui://chrome/presence">presence mode <span class="tag latent">★ sub-types selectable</span></div>
             <div class="pills">
               <span class="pill on">listening</span><span class="pill">focus</span><span class="pill">walkthrough</span>
-              <span class="pill">watch &amp; react</span><span class="pill">decide for me</span><span class="pill">off</span>
+              <span class="pill" data-ui-ref="ui://board/watch-react">watch &amp; react</span><span class="pill" data-ui-ref="ui://board/decide">decide for me</span><span class="pill">off</span>
             </div>
             <div class="sect-head" style="margin:13px 0 7px">sub-type · refines the resolution</div>
             <div class="pills">
@@ -789,18 +789,18 @@ body{
 
           <!-- ★ the SELF-GROW affordance — the #1 latent (was RHM-only) -->
           <div class="tcard gold">
-            <div class="sect-head"><span class="star">★</span>grow the interface <span class="tag latent">the #1 latent</span></div>
-            <div class="dim" style="line-height:1.6">the interface that can grow itself — now with direct controls. propose → see → approve → reversible.</div>
+            <div class="sect-head" data-ui-ref="ui://board/latent"><span class="star">★</span>grow the interface <span class="tag latent">the #1 latent</span></div>
+            <div class="dim" style="line-height:1.6" data-ui-ref="ui://board/manifest">the interface that can grow itself — now with direct controls. propose → see → approve → reversible.</div>
             <div class="grow-acts">
               <button><span class="gic">⊞</span>new panel<span class="gd">a settings group</span></button>
-              <button><span class="gic">◆</span>new component<span class="gd">real .tsx, build-gated</span></button>
+              <button data-ui-ref="ui://chrome/new-component"><span class="gic">◆</span>new component<span class="gd">real .tsx, build-gated</span></button>
               <button><span class="gic">⋔</span>new node-type<span class="gd">writes nodes/*.py</span></button>
             </div>
           </div>
 
           <!-- ★ /api/knobs dynamic per-model knob surface ("all the knobs") -->
           <div class="tcard gold">
-            <div class="sect-head"><span class="star">★</span>all the knobs <span class="tag latent">/api/knobs · per loaded model</span></div>
+            <div class="sect-head" data-ui-ref="ui://board/knobs"><span class="star">★</span>all the knobs <span class="tag latent">/api/knobs · per loaded model</span></div>
             <div class="dim" style="margin-bottom:9px">resolved live for whatever model is loaded — tool-capability probed.</div>
             <div class="knob"><div class="kl"><span>temperature</span><b>0.7</b></div><div class="track"><div class="fill" style="width:35%"></div><div class="thumb" style="left:35%"></div></div></div>
             <div class="knob"><div class="kl"><span>max_tokens</span><b>4096</b></div><div class="track"><div class="fill" style="width:50%"></div><div class="thumb" style="left:50%"></div></div></div>
@@ -810,7 +810,7 @@ body{
 
           <!-- ★ R2 composition LIVE tuning (now SETTERS, not display-only) -->
           <div class="tcard gold">
-            <div class="sect-head"><span class="star">★</span>context composition <span class="tag latent">R2 · live setter</span></div>
+            <div class="sect-head" data-ui-ref="ui://board/comp-setter"><span class="star">★</span>context composition <span class="tag latent">R2 · live setter</span></div>
             <div class="dim" style="margin-bottom:9px">tune how the system composes its own context — from the interface, not just at boot.</div>
             <div class="knob r2"><div class="kl"><span>recency λ</span><b>0.42</b></div><div class="track"><div class="fill" style="width:42%"></div><div class="thumb" style="left:42%"></div></div></div>
             <div class="knob r2"><div class="kl"><span>proximity weight</span><b>0.6</b></div><div class="track"><div class="fill" style="width:60%"></div><div class="thumb" style="left:60%"></div></div></div>
@@ -837,18 +837,18 @@ body{
             <div class="sect-head"><span class="star">★</span>voice trial <span class="tag latent">record → debrief</span></div>
             <div class="trial">
               <div class="rec"><span class="rdot"></span></div>
-              <div class="tm"><div class="tt">record a spoken turn</div><div class="ts">turn · feedback · reflection → transcript</div></div>
+              <div class="tm"><div class="tt" data-ui-ref="ui://board/record-turn">record a spoken turn</div><div class="ts" data-ui-ref="ui://chrome/turn-feedback-reflection">turn · feedback · reflection → transcript</div></div>
               <div class="deb">debrief →</div>
             </div>
           </div>
 
           <!-- ★ full self-change-log ledger -->
           <div class="tcard gold">
-            <div class="sect-head"><span class="star">★</span>self-change log <span class="tag latent">full ledger</span></div>
+            <div class="sect-head" data-ui-ref="ui://board/ledger"><span class="star">★</span>self-change log <span class="tag latent">full ledger</span></div>
             <div class="ledger">
-              <div class="lrow"><span class="lsha">a3f1c0</span><span class="lsub">[self-apply] grow memo-gate panel</span><span class="lwhen">8m</span></div>
-              <div class="lrow"><span class="lsha">9b27ee</span><span class="lsub">[self-apply] add judge role binding</span><span class="lwhen">1h</span></div>
-              <div class="lrow revert"><span class="lsha">↺ c41d</span><span class="lsub">revert surface panel</span><span class="lwhen">3h</span></div>
+              <div class="lrow"><span class="lsha">a3f1c0</span><span class="lsub" data-ui-ref="ui://board/memo-gate">[self-apply] grow memo-gate panel</span><span class="lwhen">8m</span></div>
+              <div class="lrow"><span class="lsha">9b27ee</span><span class="lsub" data-ui-ref="ui://board/judge-binding">[self-apply] add judge role binding</span><span class="lwhen">1h</span></div>
+              <div class="lrow revert"><span class="lsha">↺ c41d</span><span class="lsub" data-ui-ref="ui://board/revert">revert surface panel</span><span class="lwhen">3h</span></div>
             </div>
           </div>
 
@@ -856,7 +856,7 @@ body{
           <div class="tcard">
             <div class="sect-head">fleet · model layer <span class="tag">status by light</span></div>
             <div class="frow"><span class="fled up"></span><span class="fn">deepseek-v4-pro</span><span class="fs">up · brain</span></div>
-            <div class="frow"><span class="fled up"></span><span class="fn">bge-m3 · embed</span><span class="fs">up</span></div>
+            <div class="frow"><span class="fled up"></span><span class="fn" data-ui-ref="ui://board/embed">bge-m3 · embed</span><span class="fs">up</span></div>
             <div class="frow"><span class="fled loading"></span><span class="fn">kokoro · tts</span><span class="fs">loading</span></div>
             <div class="frow"><span class="fled down"></span><span class="fn">xtts · tts</span><span class="fs">down</span></div>
           </div>
@@ -870,7 +870,7 @@ body{
           <div class="tcard">
             <div class="sect-head">versions · journeys</div>
             <div class="frow"><span class="fled up"></span><span class="fn">ask output</span><span class="fs">3 versions</span></div>
-            <div class="frow"><span class="fled up"></span><span class="fn">first-contact tour</span><span class="fs">replay</span></div>
+            <div class="frow"><span class="fled up"></span><span class="fn" data-ui-ref="ui://board/first-contact">first-contact tour</span><span class="fs">replay</span></div>
           </div>
 
         </div>
@@ -879,10 +879,10 @@ body{
     </div><!-- /viewstack -->
 
     <!-- ═══════════ THE TAB BAR ═══════════ -->
-    <nav class="tabbar" id="tabbar">
+    <nav class="tabbar" id="tabbar" data-ui-ref="ui://chrome/tabbar">
       <button class="tab on" data-tab="board"><span class="ic">◈</span>board</button>
       <button class="tab" data-tab="talk"><span class="ic">◇</span>talk</button>
-      <button class="tab" data-tab="queue"><span class="ic">▤</span>queue<span class="badge">3</span></button>
+      <button class="tab" data-tab="queue" data-ui-ref="ui://chrome/queue"><span class="ic">▤</span>queue<span class="badge">3</span></button>
       <button class="tab" data-tab="tune"><span class="ic">⚙</span>tune</button>
     </nav>
   </div>

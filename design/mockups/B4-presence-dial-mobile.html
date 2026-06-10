@@ -93,7 +93,7 @@ body{display:flex;justify-content:center;background:var(--bg)}
       <div class="grab"></div>
       <div class="shead"><span class="nm">Presence</span><span class="now">● focus</span></div>
       <p class="ssub">Eight postures. The mode <b>is a node</b> (<span class="mono">rhm_mode</span>). Tap to set; default <b>listening</b>.</p>
-      <div class="regfed">↻ directives from <b>capabilities().mode_directives</b> — registry is truth</div>
+      <div class="regfed" data-ui-ref="ui://toolbar/presence/directives">↻ directives from <b>capabilities().mode_directives</b> — registry is truth</div>
 
       <div class="mode loud"><div class="mhead"><span class="glyph">◉</span><span class="mname">listening</span>
         <span class="vol"><i style="height:15px"></i><i style="height:11px"></i><i style="height:8px"></i></span></div>
@@ -105,7 +105,7 @@ body{display:flex;justify-content:center;background:var(--bg)}
 
       <div class="mode"><div class="mhead"><span class="glyph">◌</span><span class="mname">background</span>
         <span class="vol"><i style="height:8px"></i><i style="height:5px"></i><i style="height:3px"></i></span></div>
-        <div class="desc">Minimal — surfaces only what genuinely needs you; otherwise a one-line ack.</div></div>
+        <div class="desc" data-ui-ref="ui://toolbar/presence/minimal">Minimal — surfaces only what genuinely needs you; otherwise a one-line ack.</div></div>
 
       <div class="mode on"><div class="mhead"><span class="glyph">◎</span><span class="mname">focus</span>
         <span class="vol"><i style="height:6px;background:var(--acc)"></i><i style="height:4px;background:var(--acc)"></i><i style="height:3px;background:var(--acc)"></i></span></div>
@@ -113,17 +113,17 @@ body{display:flex;justify-content:center;background:var(--bg)}
 
       <div class="mode loud"><div class="mhead"><span class="glyph">➤</span><span class="mname">walkthrough</span>
         <span class="vol"><i style="height:15px"></i><i style="height:12px"></i><i style="height:9px"></i></span></div>
-        <div class="desc">Actively guides — narrates each step and directs your attention.</div></div>
+        <div class="desc" data-ui-ref="ui://toolbar/presence/narrate">Actively guides — narrates each step and directs your attention.</div></div>
 
       <div class="mode"><div class="mhead"><span class="glyph">👁</span><span class="mname">watch-and-react</span>
         <span class="vol"><i style="height:7px"></i><i style="height:5px"></i><i style="height:4px"></i></span></div>
-        <div class="desc">Observes over your shoulder; comments only when relevant, briefly.</div></div>
+        <div class="desc" data-ui-ref="ui://toolbar/presence/observation">Observes over your shoulder; comments only when relevant, briefly.</div></div>
 
       <div class="mode loud"><div class="mhead"><span class="glyph">⚡</span><span class="mname">decide-for-me</span>
         <span class="vol"><i style="height:12px"></i><i style="height:10px"></i><i style="height:13px"></i></span></div>
         <div class="desc">Acts on the reversible / AUTO classes itself (deterministic by consequence); still cannot self-approve — anything needing approval is surfaced.</div>
         <div class="gov">routes by posture, not confidence:
-          <span class="t auto">AUTO→acts</span><span class="t surface">SURFACE/CONFIRM→asks</span><span class="t locked">LOCKED→never</span><span class="no">✕ no self-approve</span></div></div>
+          <span class="t auto">AUTO→acts</span><span class="t surface">SURFACE/CONFIRM→asks</span><span class="t locked">LOCKED→never</span><span class="no" data-ui-ref="ui://toolbar/presence/no-self-approve">✕ no self-approve</span></div></div>
 
       <div class="mode off"><div class="mhead"><span class="glyph">○</span><span class="mname">off</span>
         <span class="vol"><i style="height:3px"></i></span></div>
@@ -135,7 +135,7 @@ body{display:flex;justify-content:center;background:var(--bg)}
     <a><span class="ic">▦</span>Canvas</a>
     <a><span class="ic">✦</span>Inbox</a>
     <a class="on"><span class="ic">◑</span>RHM</a>
-    <a><span class="ic">▶</span>Run</a>
+    <a data-ui-ref="ui://tabbar/run"><span class="ic">▶</span>Run</a>
   </nav>
 </div>
 </body></html>

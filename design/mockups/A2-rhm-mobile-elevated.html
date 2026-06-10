@@ -240,7 +240,7 @@ body{
         <span class="listening">👂</span>
       </div>
       <div class="say">I'm listening — go ahead.</div>
-      <div class="mode">auto-listen · deepseek-v4-pro</div>
+      <div class="mode" data-ui-ref="ui://chat/mode">auto-listen · deepseek-v4-pro</div>
     </section>
 
     <!-- THE CONVERSATION -->
@@ -273,7 +273,7 @@ body{
         <div class="ptarget">↻ run://demo/ask  →  ✦ inbox</div>
         <div class="pacts">
           <button class="approve">approve</button>
-          <button class="decline">not now</button>
+          <button class="decline" data-ui-ref="ui://chat/decline">not now</button>
         </div>
       </div>
 
@@ -305,7 +305,7 @@ body{
       <a><span class="ic">▦</span>Canvas</a>
       <a><span class="ic">✦</span>Inbox<span class="badge">3</span></a>
       <a class="on"><span class="ic">◈</span>RHM</a>
-      <a><span class="ic">▶</span>Run</a>
+      <a data-ui-ref="ui://chat/run"><span class="ic">▶</span>Run</a>
     </nav>
   </div>
   <div class="grain"></div>

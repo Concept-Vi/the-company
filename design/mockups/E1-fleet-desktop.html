@@ -125,7 +125,7 @@
   <header class="top">
     <span class="brand">the&nbsp;<em>company</em><span class="tag">// operating surface</span></span>
     <span class="presence"><span class="dot"></span>focus · present ▾</span>
-    <div class="verbs"><button class="btn">◐ layers</button><button class="btn">＋ wire</button><button class="btn">↻ force</button><button class="btn run">▶ run <span class="k">⏎</span></button></div>
+    <div class="verbs"><button class="btn">◐ layers</button><button class="btn" data-ui-ref="ui://settings/wire">＋ wire</button><button class="btn" data-ui-ref="ui://settings/force">↻ force</button><button class="btn run" data-ui-ref="ui://settings/run">▶ run <span class="k">⏎</span></button></div>
   </header>
 
   <nav class="rail collapsible">
@@ -135,7 +135,7 @@
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">L</span><span class="label">llm</span></div>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">E</span><span class="label">embed</span></div>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">⌕</span><span class="label">retrieve</span></div>
-    <h4><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span></h4>
+    <h4 data-ui-ref="ui://settings/content"><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span></h4>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-content)">C</span><span class="label">constant</span></div>
   </nav>
 
@@ -152,7 +152,7 @@
       <span class="port in"></span><span class="ptag" style="left:-42px;top:calc(50% - 9px)">Text</span>
       <span class="port out"></span><span class="ptag" style="right:-44px;top:calc(50% - 9px)">Text</span>
     </div>
-    <div class="seltie"><i></i>model slot → live fleet ▸</div>
+    <div class="seltie" data-ui-ref="ui://canvas/model-slot"><i></i>model slot → live fleet ▸</div>
   </main>
 
   <footer class="foot">
@@ -172,12 +172,12 @@
         <b>live registry</b>, never a hand-typed list.</p>
 
       <!-- the model field, opened (this IS ui://inspector/model-field) -->
-      <div class="fieldlbl">model <span class="t">enum</span><span class="src">↻ from live model fleet</span></div>
+      <div class="fieldlbl">model <span class="t">enum</span><span class="src" data-ui-ref="ui://inspector/model-fleet">↻ from live model fleet</span></div>
       <div class="field" data-ui-ref="ui://inspector/model-field">
 
         <!-- chat vs embed — DISTINCT lists from DISTINCT endpoints -->
         <div class="kindtabs">
-          <div class="kindtab on">chat<span class="ep">models_at('chat') · DEFAULT_BASE_URL</span></div>
+          <div class="kindtab on">chat<span class="ep" data-ui-ref="ui://inspector/model-field/models_at">models_at('chat') · DEFAULT_BASE_URL</span></div>
           <div class="kindtab">embed<span class="ep">models_at('embed') · DEFAULT_EMBED_URL</span></div>
         </div>
 
@@ -187,7 +187,7 @@
         <div class="fleethd" data-ui-ref="ui://models">chat fleet <span class="c">· 15 live</span></div>
 
         <div class="grp">cloud</div>
-        <div class="mrow on"><span class="nm">deepseek-v4-pro:cloud</span><span class="def">default brain</span><span class="where cloud">cloud</span></div>
+        <div class="mrow on"><span class="nm">deepseek-v4-pro:cloud</span><span class="def" data-ui-ref="ui://inspector/model-field/default-brain">default brain</span><span class="where cloud">cloud</span></div>
         <div class="mrow"><span class="nm">deepseek-v4-flash:cloud</span><span class="where cloud">cloud</span></div>
         <div class="mrow"><span class="nm">kimi-k2.6:cloud</span><span class="where cloud">cloud</span></div>
         <div class="mrow"><span class="nm">kimi-k2.5:cloud</span><span class="where cloud">cloud</span></div>
@@ -205,7 +205,7 @@
         <div class="mrow"><span class="nm">huihui_ai/qwen3-vl-abliterated:30b-a3b</span><span class="where local">local</span></div>
         <div class="mrow"><span class="nm">nomic-embed-text:latest</span><span class="where local">local</span></div>
 
-        <div class="note">⊘ <b>Gemini hard-filtered</b> at the transport — never appears, by config (config.py:29-35)</div>
+        <div class="note" data-ui-ref="ui://inspector/model-field/transport-filter">⊘ <b>Gemini hard-filtered</b> at the transport — never appears, by config (config.py:29-35)</div>
 
         <!-- the EMBED side — DISTINCT endpoint. The audit names bge-m3 as the embed default; the embed
              endpoint's full contents are NOT enumerated in anything read → shown honestly, not invented. -->
@@ -214,7 +214,7 @@
         <div class="note">ⓘ the embed endpoint's full list is <b>not enumerated</b> in the audit — only the default
           (<b>bge-m3</b>, inventory line 51) is named; the registry would fill the rest from <code>/v1/models</code> at that endpoint.</div>
         <div class="failloud">
-          <div class="h"><i></i>if the embed endpoint is unconfigured</div>
+          <div class="h" data-ui-ref="ui://inspector/model-field/endpoint-status"><i></i>if the embed endpoint is unconfigured</div>
           The embed list does <b>not</b> silently borrow the chat endpoint. <code>models_at('embed')</code> raises:
           “no embedding endpoint configured (<code>DEFAULT_EMBED_URL</code> absent) — cannot list embed models
           without inventing a fallback.” You see the failure, not a wrong list.
@@ -224,9 +224,9 @@
     </div>
   </aside>
 
-  <nav class="tabbar">
+  <nav class="tabbar" data-ui-ref="ui://settings/Canvas">
     <a class="on"><span class="ic">▦</span>Canvas</a>
-    <a><span class="ic">✦</span>Inbox</a>
+    <a data-ui-ref="ui://settings/inbox"><span class="ic">✦</span>Inbox</a>
     <a><span class="ic">◈</span>RHM</a>
     <a><span class="ic">▶</span>Run</a>
   </nav>

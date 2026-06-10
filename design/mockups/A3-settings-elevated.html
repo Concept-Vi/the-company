@@ -176,14 +176,14 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
   <div class="masthead">
     <div>
       <div class="tag">the company · control</div>
-      <h1>Settings</h1>
+      <h1 data-ui-ref="ui://settings/rhm-config">Settings</h1>
     </div>
     <button class="close">✕ close</button>
   </div>
 
   <div class="body">
     <!-- SECTION RAIL — recognition by sight -->
-    <nav class="rail">
+    <nav class="rail" data-ui-ref="ui://settings/brain-persona">
       <button class="navitem on"><span class="ico">◈</span><span><span class="nm">Brain &amp; persona</span><span class="bl">the model that thinks · the voice · the fit</span></span></button>
       <button class="navitem"><span class="ico">◐</span><span><span class="nm">Modes</span><span class="bl">presence + how context resolves</span></span></button>
       <button class="navitem"><span class="ico">🎙</span><span><span class="nm">Voice</span><span class="bl">the ear, the engine, the path</span></span></button>
@@ -195,11 +195,11 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
     <div class="content">
 
       <!-- THE FIT METER — one legible meter + an honest verdict -->
-      <div class="shead"><span class="stag">resource fit</span><h2>The card</h2><span class="badge sig">fits the card</span></div>
+      <div class="shead"><span class="stag" data-ui-ref="ui://settings/resource-fit">resource fit</span><h2>The card</h2><span class="badge sig">fits the card</span></div>
       <div class="fit">
         <div class="ftop">
-          <span class="fttl">16 GB · RTX 4080</span>
-          <span class="fverdict"><b>11.4 GB</b> of 16.0 GB committed</span>
+          <span class="fttl" data-ui-ref="ui://settings/hardware">16 GB · RTX 4080</span>
+          <span class="fverdict" data-ui-ref="ui://settings/resource-meter"><b>11.4 GB</b> of 16.0 GB committed</span>
         </div>
         <div class="meter">
           <span class="seg-brain" style="width:46%">brain</span>
@@ -219,7 +219,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
           <div class="mdl">deepseek-v4-pro</div>
           <div class="sub">● local · loaded · 32k context</div>
         </div>
-        <button class="swap">swap ▾</button>
+        <button class="swap" data-ui-ref="ui://settings/swap">swap ▾</button>
       </div>
 
       <!-- ADVANCED KNOBS fold away — the direct answer to "form-row after form-row" -->
@@ -227,9 +227,9 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
         <summary>◇ tuning · temperature · tokens · context · endpoint <span class="chev">›</span></summary>
         <div class="knobs">
           <div class="knob"><span class="kl">temperature</span><span class="kv">0.7 <span class="u">spread</span></span></div>
-          <div class="knob"><span class="kl">max output tokens</span><span class="kv">1024 <span class="u">cap</span></span></div>
+          <div class="knob"><span class="kl" data-ui-ref="ui://settings/token-limits">max output tokens</span><span class="kv">1024 <span class="u">cap</span></span></div>
           <div class="knob"><span class="kl">context window</span><span class="kv">32768 <span class="u">restart</span></span></div>
-          <div class="knob"><span class="kl">reply timeout</span><span class="kv">180 <span class="u">sec</span></span></div>
+          <div class="knob"><span class="kl" data-ui-ref="ui://settings/timeout">reply timeout</span><span class="kv">180 <span class="u">sec</span></span></div>
           <div class="knob" style="grid-column:1/-1"><span class="kl">endpoint · provider base url</span><span class="kv">http://localhost:11434/v1</span></div>
         </div>
       </details>
@@ -240,13 +240,13 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.025;z
         <div class="face p1 on">
           <div class="av">V</div>
           <div class="nm">Vi</div>
-          <div class="sh">calm-authority · the default right-hand-man</div>
+          <div class="sh" data-ui-ref="ui://settings/rhm">calm-authority · the default right-hand-man</div>
           <div class="eng">voice engine · qwen3tts</div>
         </div>
         <div class="face p2">
           <div class="av">A</div>
           <div class="nm">Atlas</div>
-          <div class="sh">analytic · precise · low-affect read</div>
+          <div class="sh" data-ui-ref="ui://settings/analytic">analytic · precise · low-affect read</div>
           <div class="eng">voice engine · xtts</div>
         </div>
         <div class="face p3">
