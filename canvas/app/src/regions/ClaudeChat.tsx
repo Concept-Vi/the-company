@@ -85,6 +85,9 @@ export function ClaudeChat() {
       const reader = r.body.getReader()
       const dec = new TextDecoder()
       let buf = ''
+      let sawDone = false                                   // fail-loud: a stream that ends without a
+                                                            // terminal event must ANNOUNCE itself (the
+                                                            // bridge-restart-mid-turn lesson, 2026-06-11)
       for (;;) {
         const { done, value } = await reader.read()
         if (done) break
@@ -97,10 +100,11 @@ export function ClaudeChat() {
           if (ev.type === 'init' && ev.session_id) sessionRef.current = ev.session_id
           else if (ev.type === 'tool') push({ role: 'act', text: `${ev.name}${ev.detail ? ' · ' + ev.detail : ''}` })
           else if (ev.type === 'text' && ev.text) push({ role: 'builder', text: ev.text })
-          else if (ev.type === 'error') push({ role: 'act', text: `error: ${ev.error}` })
-          else if (ev.type === 'done' && ev.is_error) push({ role: 'act', text: `turn failed: ${ev.result}` })
+          else if (ev.type === 'error') { sawDone = true; push({ role: 'act', text: `error: ${ev.error}` }) }
+          else if (ev.type === 'done') { sawDone = true; if (ev.is_error) push({ role: 'act', text: `turn failed: ${ev.result}` }) }
         }
       }
+      if (!sawDone) push({ role: 'act', text: 'the turn ended without completing (backend interrupted?) — ask again' })
     } catch (e: any) {
       push({ role: 'act', text: `stream broke: ${e?.message || e}` })
     } finally {
