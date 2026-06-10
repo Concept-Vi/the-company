@@ -101,6 +101,8 @@ def run(stranded_after_s: int = 7200, stale_decision_days: int = 7, surface: int
     for it in s.inbox.list():
         if it.get("resolved") is not None or it.get("status") in ("requeue", "implemented", "resolved"):
             continue
+        if (it.get("payload") or {}).get("kind") == "floor_walk_report":
+            continue                                       # the walk's own live card is never litter
         ts = it.get("ts") or 0
         age_d = (now - ts) / 86400 if ts else None
         if age_d is None or age_d > cutoff_days:
