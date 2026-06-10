@@ -126,8 +126,11 @@ def run_batch(time_budget_s: int = 420, max_files: int = 25,
                                     "error": f"0/{len(units)} extracts — failed: {str(res.failed)[:200]}"}
             json.dump(state, open(STATE, "w"), indent=1)
             continue
-        # records carry the ORIGINAL exchange index (new[j][0]), not the unit position j — the durable key
-        records = [{"source_address": f"exchange://{sid}/{new[j][0]}", "output": out, "projection": "history"}
+        # records carry the ORIGINAL exchange index (new[j][0]), not the unit position j — the durable key.
+        # ts_source = the exchange's ORIGINAL timestamp (the forager's time-period facet; the research
+        # found only 173/1420 records carry it — this stops the gap growing; backfill re-stamps the rest).
+        records = [{"source_address": f"exchange://{sid}/{new[j][0]}",
+                    "output": dict(out, ts_source=new[j][1].get("ts")), "projection": "history"}
                    for j, out in sorted(resolved.items()) if isinstance(out, dict)]
         cap = s.capture_corpus(records, project="company", session="g23-mine", round=rnd)
         state["failed"].pop(sid, None)
