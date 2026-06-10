@@ -52,6 +52,9 @@ def main() -> dict:
         p = inner[len("code://"):]
         if p.startswith("/"):
             continue                                        # a stray absolute-path record (pre-normalization) — skip, noted
+        if not os.path.exists(p):
+            continue                                        # a STALE record (deleted file / phantom path-spelling —
+                                                            # e.g. the eval's 'company/'-prefixed ingest); skip, noted
         v = (get_vector(s.store, key) or {}).get("vector")
         if v:
             vecs[inner] = v
@@ -77,15 +80,42 @@ def main() -> dict:
             doc_findings.append({"doc": p, "module": d, "sim_to_module": round(sim, 3), "n_files": len(sibs)})
     doc_findings.sort(key=lambda x: x["sim_to_module"])
 
-    # ── channel A · BUILT-TWICE (near-pairs → clusters → judge) ──
+    # ── channel A · BUILT-TWICE (near-pairs → relation filter → clusters → judge) ──
     code_addrs = [a for a, p in paths.items() if os.path.basename(p) != "AGENTS.md"]
-    pairs = []
+
+    def relation(pa: str, pb: str) -> str | None:
+        """GC11 — the DETERMINISTIC intent-relation between two near files (the same arc as
+        refcheck/prose_check: a judgment the model kept misfiring on becomes a data check).
+        A named relation = KNOWN-INTENTIONAL nearness — never sent to the judge, reported in its
+        own bucket. None = relation-less, the judge's actual job."""
+        na, nb = os.path.basename(pa), os.path.basename(pb)
+        sa, sb = na.rsplit(".", 1)[0], nb.rsplit(".", 1)[0]
+        # test-of: tests/<x>_acceptance.py ↔ the module named <x> (either direction)
+        for t, m, sm in ((pa, pb, sb), (pb, pa, sa)):
+            if t.startswith("tests/") and (sm in os.path.basename(t).replace("_acceptance", "")
+                                           or os.path.basename(t).replace("_acceptance.py", "") in sm):
+                return "test-of (a test mirrors its module's vocabulary BY DESIGN)"
+        # anchor/summary-of: ANCHOR.md ↔ a doc in the same dir
+        if {na, nb} & {"ANCHOR.md", "README.md"} and os.path.dirname(pa) == os.path.dirname(pb):
+            return "summary-of (an anchor/readme intentionally restates its dir's main doc)"
+        # series-sibling: numbered docs of one design series (00-X.md / 03-Y.md in one dir)
+        if (os.path.dirname(pa) == os.path.dirname(pb)
+                and na[:2].isdigit() and nb[:2].isdigit()):
+            return "series-sibling (numbered chapters of one design series)"
+        return None
+
+    pairs, intentional = [], []
     for i, a in enumerate(code_addrs):
         va = vecs[a]
         for b in code_addrs[i + 1:]:
             c = cos(va, vecs[b])
             if c >= PAIR_T:
-                pairs.append((round(c, 3), a, b))
+                rel = relation(paths[a], paths[b])
+                if rel:
+                    intentional.append({"a": paths[a], "b": paths[b], "cosine": round(c, 3),
+                                        "relation": rel.split(" ")[0]})
+                else:
+                    pairs.append((round(c, 3), a, b))
     pairs.sort(reverse=True)
     parent = {}
     def find(x):
@@ -124,12 +154,14 @@ def main() -> dict:
                    source_pass="drift-radar-2026-06-10", evidence=f"cosine {top_sim}")
 
     confirmed = [j for j in judged if j["verdict"] in ("built-twice", "overlap")]
-    out = {"space_size": len(vecs), "near_pairs": len(pairs), "clusters_judged": len(judged),
+    out = {"space_size": len(vecs), "near_pairs": len(pairs),
+           "intentional_pairs": intentional, "clusters_judged": len(judged),
            "confirmed": confirmed, "distinct": sum(1 for j in judged if j["verdict"] == "distinct"),
            "doc_drift_candidates": doc_findings, "thresholds": {"pair": PAIR_T, "doc": DOC_T}}
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     json.dump(out, open(OUT, "w"), indent=1)
-    return {"near_pairs": len(pairs), "clusters_judged": len(judged),
+    return {"near_pairs": len(pairs), "intentional_filtered": len(intentional),
+            "clusters_judged": len(judged),
             "confirmed_marks": len(confirmed), "distinct": out["distinct"],
             "doc_drift_candidates": len(doc_findings)}
 
