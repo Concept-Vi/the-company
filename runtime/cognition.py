@@ -2224,7 +2224,7 @@ def run_cascade(action: dict, store, *, turn_id: str,
         # N3 — role is OPTIONAL on a rule-reduce step (the rule is a PURE function; a role there was only
         # ever an address-naming token, which confused authors + made save-ok decls unrunnable). Every
         # OTHER step kind fires a model in a role → role required, fail loud with the real reason.
-        is_rule_reduce = (kind == "reduce" and step.get("reduce_mode", "role") == "rule")
+        is_rule_reduce = (kind == "reduce" and step.get("reduce_mode", "role") in ("rule", "cluster"))
         if not role_id and not is_rule_reduce and kind not in ("retrieve", "check", "panel"):
             raise ValueError(
                 f"run_cascade: step {i} of {name!r} declares no `role` — this step kind ({kind!r}) fires "

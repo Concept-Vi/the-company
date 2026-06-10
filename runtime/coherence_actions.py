@@ -52,12 +52,15 @@ def build_action(decl: dict, *, models: set, roles: set | None = None, rule_reso
                     f"never a hardcoded literal (no-hardcoding)"}
         # N3 runner-parity checks (only when the caller supplies the live registries):
         is_rule_reduce = (op == "reduce" and step.get("reduce_mode", "role") == "rule")
+        # role-OPTIONAL reduces: rule (pure function) AND cluster (embedder-only — no generation
+        # role fires). The reduce_rule validation below applies to RULE mode only.
+        is_roleless_reduce = (op == "reduce" and step.get("reduce_mode", "role") in ("rule", "cluster"))
         is_retrieve = (op == "retrieve")                     # G4: role-less semantic fetch
         is_check = (op == "check")                           # G3·S3a: role-less deterministic gate
         is_panel = (step.get("kind") == "panel")             # G3·S3b: role-less (panel= names the row)
         role_id = step.get("role")
         if roles is not None:
-            if not role_id and not is_rule_reduce and not is_retrieve and not is_check and not is_panel:
+            if not role_id and not is_roleless_reduce and not is_retrieve and not is_check and not is_panel:
                 return {"ok": False, "error": f"step {i}: declares no `role` — every step fires a model IN "
                         f"a role EXCEPT a rule-reduce, retrieve, or check (all role-less: pure rule / "
                         f"semantic fetch / deterministic gate). Add a registered role id, or use one of "

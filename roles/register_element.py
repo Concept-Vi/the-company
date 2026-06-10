@@ -178,7 +178,13 @@ ROLE = {
     #   "exemplars", "inventory"             → (c) SHARED across all N units, delivered ONCE via run_items'
     #                                            shared ctx (the bare-name extra-input path) — the
     #                                            context-efficiency win (no N× re-inline).
-    "input_addresses": ("utterance", "run://<turn>/screen_reader/{mockup}", "exemplars", "inventory"),
+    # G3·S1 RESOLVED (2026-06-10): the per-mockup ground was declared as a TEMPLATED run:// address
+    # ("run://<turn>/screen_reader/{mockup}") as a FORWARD CONTRACT — the {mockup} chainer never
+    # existed in run_role (the docstring above flagged it). The engine now delivers per-unit ground
+    # FOR REAL via run_items' unit_ctx ({field} templates over unit dicts) under the BARE NAME
+    # `ground` — so the declaration becomes the real mechanism (the cascade's items step declares
+    # unit_ctx={"ground": "run://rg-ground/{mockup}"}). One contract, one vehicle.
+    "input_addresses": ("utterance", "ground", "exemplars", "inventory"),
     # FORWARD CONTRACT (declarative, like judge.py's prose `context`): the shared resolve-once grounding.
     # NOT a proven prompt-injection path — run_role does not auto-resolve the role-spec `context` field into
     # the prompt today (it is delivered via run_items' shared ctx, the bare-name input_addresses above).

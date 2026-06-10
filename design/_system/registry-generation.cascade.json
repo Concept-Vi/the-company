@@ -1,11 +1,8 @@
 {
   "_doc": "REGISTRY-GENERATION CASCADE (RG7) — the V-A chain declared as DATA, not a hand-orchestration script (registry-is-truth / no-hardcoding). The swarm reads the design surface -> proposes registry entries -> Tim approves -> the address registry grows -> previously-dead elements resolve richly. This file is the [J] meeting point: [M] authors this spec; [C]'s engine (runtime/cognition.run_cascade via runtime/suite.save_cascade/run_cascade) runs it. Save it with `save_cascade(<this decl>)`; fire it with `run_cascade('registry-generation', inputs=<candidates.json candidates list, or run:///cas:// thereof>)`.",
-
   "_authored": "build-prep/registry-generation/{COMPLETION-CRITERIA,IMPLEMENTATION-GUIDE,RESEARCH-SYNTHESIS,COORDINATION}.md — RG7, the cascade spec. Grounded on main 2026-06-09.",
-
   "name": "registry-generation",
   "schema_ver": 1,
-
   "steps": [
     {
       "op": "generate",
@@ -41,19 +38,21 @@
       "_cardinality": "role: consumes ONE (step 1's single address) -> produces ONE."
     }
   ],
-
   "output_schema": {
     "_doc": "The cascade's final output = the CONFIRMED reconciled set at run://<turn>/2-confirm_registration. Each entry is a register_element dossier (roles/register_element.py :: RegisterElementOut) carrying its confirm verdict (grounded? + flags) + provenance (the run://, model, confidence — introspective-data-building). Declared loosely (the runner reads steps, not this schema; this documents the shape consumers — RG8/RG9 — depend on).",
     "address": "str — the PROPOSED ui:// (nested under the parent's registered address)",
     "represents": "str — the 82-entries' short voice (e.g. 'RUN-run')",
-    "howto": { "what": "str", "what_you_can_do": "str", "how_to_change": "str" },
+    "howto": {
+      "what": "str",
+      "what_you_can_do": "str",
+      "how_to_change": "str"
+    },
     "capabilities": "list[str] — subset of the closed vocabulary (pointable·spotlit·presentable·openable·driven), NEVER invented",
     "maps_to_feature": "str — a Feature & Function Inventory id (design/register.json features[].id) COPIED VERBATIM, OR the literal 'proposed' if un-built (never an invented/adapted id — the smoke showed the model coins INB-* ids by analogy; the floor + verbatim instruction catch it)",
     "grounding": "the NO-CONFIDENCE tag (G16) — one of built|proposed|uncertain|defer (a discrete grounding STATE, replacing the old confidence:float which was empirically flat noise; the routing/triage signal the operator reads)",
     "_confirm_added": "the confirm gate adds the verdict (grounded quorum) + refcheck pass/flags so RG8 can mark flagged entries (grounding != built, or floor-FLAGGED) for extra Tim scrutiny",
     "_provenance": "run://, model, grounding-tag per entry (introspective-data-building; no confidence float — G16)"
   },
-
   "_chain_documented_5_phases": {
     "_doc": "The IMPLEMENTATION-GUIDE's 5-phase chain is extract -> ground -> map -> reduce -> confirm. Only map->reduce->confirm are EXECUTABLE cascade steps in today's run_cascade (every step must declare a registered `role` and a VALID op; the run:// thread is positional). extract + ground are documented PRECONDITIONS/precompute, NOT roleless steps forced into the runner (that would fail-loud on extract / silently mis-thread ground). This object records the full chain so the spec represents all 5 phases honestly.",
     "1_EXTRACT": "design/_system/parse.py --extract-candidates (deterministic, RG1, BUILT) -> design/_system/candidates.json (940 units on main). Roleless + op outside _VALID_OPS -> a PRECONDITION that produces the cascade's `inputs`, not a step.",
@@ -62,7 +61,6 @@
     "4_REDUCE": "step 1 above (run_reduce cluster-dedup; tree-nest/howto-merge = documented extension).",
     "5_CONFIRM": "step 2 above (confirm_registration jury + refcheck gate)."
   },
-
   "_run_thread": {
     "_doc": "The run:// output->input wiring is IMPLICIT/POSITIONAL in run_cascade — NOT a declared per-step field. Step 0 reads `inputs`; step N>0 reads step N-1's output address(es). The cardinality rule (role 1->1, items list->list, reduce list->1) makes the thread legal. Do NOT add `input_from`/`input_addresses` keys to a step — the runner ignores them (it reads only role/op/kind/model/fan/items/reduce_mode/reduce_rule/cluster_threshold). The thread for THIS cascade:",
     "inputs": "candidates list (RG1's candidates.json `candidates`) — the cascade argument",
@@ -70,8 +68,6 @@
     "step1_reduce": "run://<turn>-s0/register_element/<j> (LIST) -> run://<turn>/1-reduce_synth (ONE)",
     "step2_confirm": "run://<turn>/1-reduce_synth (ONE) -> run://<turn>/2-confirm_registration (ONE = final_address)"
   },
-
   "_models_note": "NO per-step `model` is declared. registry-is-truth: build_action FAILS LOUD on a step `model` outside the live model registry (chat ∪ embed). Omitting it means each step runs on the role's model_binding / the resident default (the run_cascade `model=` arg) — a registry-resolved binding, NOT a hardcoded literal. A per-step model can be added later as a registry ref (e.g. a stronger model on confirm via models_for_role) without changing this chain's shape.",
-
-  "_validation": "SHAPE-VALID: `from runtime import coherence_actions; coherence_actions.build_action(<this decl>, models=set())` returns ok:True (non-mutating — does NOT touch cascades.json; per-step model omitted so the registry check is skipped; build_action rebuilds {name, steps, output_schema, schema_ver} and DROPS the leading-underscore doc keys, which is why they are safe here). END-TO-END RUNNABLE is NOT claimed: the ground/exemplars/inventory shared-context provisioning + the {mockup}-keyed wiring + the confirm jury-vs-run_role firing are [C]'s engine seams (the convergence round, RG10). Two honest statuses: shape-valid (verified) vs runnable (needs the engine seams — needs-tim/[C])."
+  "_validation": "RUNNABLE END-TO-END since 2026-06-10 (G3 closed): saved as the live cascade 'registry-generation' (run_cascade) — items+unit_ctx per-mockup ground (S1) · shared exemplars/inventory (S2) · declared dossier_refcheck+prose_clean gates (S3a) · cluster reduce. Proven live: 6 units → gate1 5/6 (a fabrication caught through the DECLARED check) → gate2 6/6 → 4 clusters. The per-cluster panel CONFIRM loop stays flow-side until a panel-fan step kind exists (noted, additive). The flow (flows/registry_generation) is the batching/staging wrapper."
 }
