@@ -968,6 +968,11 @@ export function useAppController(editor: Editor) {
       // wire door leaves the current indication UNTOUCHED — you point with the rest of the surface, then
       // describe the change in the door. (The door reads `indicated`, never becomes it.)
       if (tgt?.closest?.('[data-ui-ref="ui://canvas/wire-request"]')) return
+      // S1 · the BUILDER-PANEL exclusion (same class as the chat guard — the second conversation
+      // partner gets the same conversing-not-indicating rule). A click into the builder's input/send/
+      // build-this must NOT re-indicate ui://chat/builder — that would overwrite the pointed target the
+      // conversation (and a minted change) is ABOUT. The panel READS `indicated`, never BECOMES it.
+      if (tgt?.closest?.('[data-ui-ref="ui://chat/builder"]')) return
       // F1 · the ADDRESS-HELP panel exclusion (same class as the chat + wire-door guards above). The help
       // panel (ui://inspector/help) is where the operator READS what-this-is + DRILLS the mechanism + SHAPES
       // how it presents (the F1 feedback affordance) — all ABOUT the currently-indicated element. A click

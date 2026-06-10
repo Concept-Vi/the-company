@@ -19,7 +19,7 @@ import { useApp } from '../AppContext'
 type PanelMsg = { role: 'user' | 'builder' | 'act', text: string }
 
 export function ClaudeChat() {
-  const { indicated, indicate } = useApp()
+  const { indicated, indicate, mintBuildIntent } = useApp()
   const [msgs, setMsgs] = useState<PanelMsg[]>([])
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
@@ -98,6 +98,24 @@ export function ClaudeChat() {
           <button className="ind-clear" onClick={() => indicate(null)} title="stop indicating">✕</button>
         </div>
       )}
+      {/* S1-handoff · BUILD THIS — the seam from conversation to consequence: the builder's LAST
+         description becomes a build-intent AT the pointed address (reuses ctrl.mintBuildIntent →
+         /api/intent-at → the wire's existing review/approve gate; plan-mode dispatch unless armed).
+         The panel never mutates anything itself — this button is the ONLY exit, and it exits into
+         Tim's gate. Enabled only when there's a pointed element AND a builder description to carry. */}
+      {(() => {
+        const lastCc = [...msgs].reverse().find(m => m.role === 'builder')?.text
+        return (indicated && lastCc) ? (
+          <div className="rhm-mem">
+            <button className="b ghost" data-ui-ref="ui://chat/builder-build-this"
+              title="turn the builder's last description into a build-intent at the pointed element (goes to your approval, never builds directly)"
+              onClick={async () => {
+                const r = await mintBuildIntent(`[described by the builder panel] ${lastCc}`)
+                if (r) push({ role: 'act', text: 'build-intent minted — it is in your inbox for review/approve' })
+              }}>⚒ build this</button>
+          </div>
+        ) : null
+      })()}
       <div className="rhm-input">
         <input placeholder="ask the builder — point at something first if it's about a thing"
           data-ui-ref="ui://chat/builder-input" value={input}
