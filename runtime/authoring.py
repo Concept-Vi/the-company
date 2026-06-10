@@ -101,6 +101,39 @@ def field_types() -> dict[str, dict]:
     return out
 
 
+def output_fields_rows(schema_cls) -> list:
+    """PROJECT a live role's output_schema CLASS back into the authorable [{name, type, values?}] rows
+    render_role_source consumes — the inspect→edit ROUND-TRIP (GC12: edit_role merges a partial spec
+    onto the LIVE role, and the live role's spec carries the CLASS, not the rows; without this
+    projection a partial edit silently DROPPED every undeclared field from the replacement render).
+    Literal → enum+values; builtins → their registry names; a nested BaseModel → object with its own
+    projected fields; unknown annotations FAIL LOUD (an unrepresentable field must not silently vanish
+    from a replacement — the exact bug this function exists to kill)."""
+    import typing as _t
+    rows = []
+    for fn, fi in schema_cls.model_fields.items():
+        ann = fi.annotation
+        if _t.get_origin(ann) is _t.Literal:
+            rows.append({"name": fn, "type": "enum", "values": list(_t.get_args(ann))})
+            continue
+        base = {str: "str", int: "int", float: "float", bool: "bool", dict: "dict"}.get(ann)
+        if base is None and _t.get_origin(ann) is list:
+            inner = (_t.get_args(ann) or [str])[0]
+            if hasattr(inner, "model_fields"):
+                rows.append({"name": fn, "type": "list[object]", "fields": output_fields_rows(inner)})
+                continue
+            base = f"list[{getattr(inner, '__name__', 'str')}]"
+        if base is None and hasattr(ann, "model_fields"):
+            rows.append({"name": fn, "type": "object", "fields": output_fields_rows(ann)})
+            continue
+        if base is None:
+            raise AuthoringError(
+                f"output_fields_rows: field {fn!r} has an unrepresentable annotation {ann!r} — refusing "
+                f"to project it (a dropped field would silently vanish from a replacement render).")
+        rows.append({"name": fn, "type": base})
+    return rows
+
+
 def _safe_role_id(rid: Any) -> str:
     """A role id must be a plain lower identifier (it becomes the file name AND the ROLE['id'], which
     roles._build_role asserts equals the module name). Reject path-traversal / non-identifiers — the

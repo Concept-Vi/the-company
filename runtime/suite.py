@@ -9307,7 +9307,17 @@ class Suite:
             q = (f"role {rid!r} is imported by name by the runtime (cognition.py / config) — editing its "
                  f"shape could break system import. This needs your eyes before any change.")
             return {"protected": True, "needs": q, "id": self._ask_operator(q, f"edit_role({rid})")}
-        spec = dict(spec); spec["id"] = rid
+        # GC12 — MERGE the partial spec onto the LIVE role (edit = change what you name, keep the
+        # rest). The old path rendered the raw partial: edit_role('x', {prompt_template: ...}) produced
+        # a replacement with NO output fields (the s105 proposal would have wiped voice_lens's schema —
+        # gated, but wrong by design). The live spec carries the SCHEMA CLASS; output_fields_rows
+        # projects it back to authorable rows (fail-loud on an unrepresentable field — never a silent drop).
+        live = self.role_registry[rid]
+        base = {k: v for k, v in live.spec.items() if k != "output_schema"}
+        if "output_fields" not in base and getattr(live, "output_schema", None) is not None:
+            base["output_fields"] = _auth.output_fields_rows(live.output_schema)
+        spec = {**base, **{k: v for k, v in dict(spec).items() if v is not None}}
+        spec["id"] = rid
         source = _auth.render_role_source(spec)
         err = _auth.gate_role_source(rid, source)
         if err:
