@@ -90,10 +90,14 @@ COG_SOURCES = ["runtime/cognition.py", "runtime/rules.py", "runtime/roles.py",
                "runtime/flows.py",
                # GC7 — the VERDICT-PANEL registry: declared lens-seats + deterministic quorum
                # (run_panel). Dir is verdict_panels/ — panels/ is the (JSON-only) UI-panels module.
-               "runtime/verdict_panels.py"] + \
+               "runtime/verdict_panels.py",
+               # GC15 — the OPERATOR-MEMORY registry: the system's evidence-backed memory of Tim
+               # (pure data rows; loader scanned + every row below).
+               "runtime/operator_memory.py"] + \
     [f"roles/{f}" for f in os.listdir("roles") if f.endswith(".py")] + \
     [f"flows/{f}" for f in os.listdir("flows") if f.endswith(".py")] + \
-    [f"verdict_panels/{f}" for f in os.listdir("verdict_panels") if f.endswith(".py")]
+    [f"verdict_panels/{f}" for f in os.listdir("verdict_panels") if f.endswith(".py")] + \
+    [f"operator_memory/{f}" for f in os.listdir("operator_memory") if f.endswith(".py")]
 # coverage-regression guard: the new surfaces MUST stay scanned (so the guard can't silently shrink).
 check("C9.2 the floor source-invariant COVERS the MCP agent face + the skills registry (new surfaces)",
       "mcp_face/server.py" in COG_SOURCES and "runtime/skills.py" in COG_SOURCES)
