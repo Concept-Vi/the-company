@@ -171,5 +171,6 @@ routing/verdict rule is a pure declared function — L2) · let a role emit `res
 `build-prep/concurrent-cognition/` (the G2 criteria + guide).
 
 ## Agent-authored entries (auto-reflected)
+- **`voice_lens`** — agent-authored role (created via the declarative-direct face). Panel seat (GC7): judges whether a registry dossier reads at the OPERATOR'S altitude — plain language, no HTML/code-speak, the voice of the 
 <!-- created live by the create face; one line per entry — keeps the
      drift-home acceptance green; refine the prose by integration. -->
