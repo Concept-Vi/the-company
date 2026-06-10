@@ -385,3 +385,6 @@ Tim, closing the walk: my harness memory of him is useful but trapped — only C
 
 ## 2026-06-10 — the floor walk HARDENED by its own first runs (the new-organ shakedown)
 - ✅ Two real defects found by verifying the walker itself: the unmounted-detector FP (sibling-relative `./<stem>` imports unmatched — BlastRadiusReach + ContextBundle were ALIVE inside BuildIntentCard; stale card retired, detector widened) · the phantom cleanup done the append-only way (kind='retired' TOMBSTONES via the existing capture — the corpus supersedes, never deletes) + the latest-record read made EXPLICIT max-seq (the naive loop trusted iteration order and kept the OLDEST). **Honest steady-state: 0 stranded · 0 unmounted · 0 phantoms · 41 stale decisions — the inbox litter is now the ONLY finding, and it needs a batch-retire proposal to owners/Tim.**
+
+## 2026-06-10 — the LITTER SWEEP: Tim's inbox is real again
+- ✅ 37/41 stale decisions batch-retired by deterministic class (test-probes · empty-title test reviews · Viv trial-debriefs · probe/eval leftovers) — status lane only, resolved untouched. **KEPT (real): s60 (a build review, wire lane's) · s78/s79 (B3 parked offers — live consent conversations) + the fresh walk card.** The inbox went 41-stale → 3 real items. Floor-walk refinement: its own live card self-excludes from the stale detector.
