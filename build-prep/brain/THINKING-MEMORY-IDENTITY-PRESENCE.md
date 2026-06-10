@@ -207,19 +207,90 @@ mind that serves it. (The system can run this test on me — eval-driven, like e
 
 ---
 
-## 9 · Open threads (the conversation's live ends)
+## 9 · Round 2 — Tim's confirmations + the riff extensions (2026-06-10, same conversation)
 
-1. **The garden question:** does Tim want to SEE the memory (a memory surface in the UI — browse,
-   correct, prune) or trust the gates and never look? Or seasonal: garden the STANDING rows, never
-   the raw record?
-2. **The now-vocabulary:** should modes/the presence dial BE the time-coordinate system (conditions
-   written in mode-language), or is "activity" finer-grained than mode?
-3. **The audience boundary (the entity's skin):** does an external agent get a thin Tim-projection,
-   or none? Who decides per-row?
-4. **The identity charter:** lift the one-entity invariants into explicit rows, or leave them
-   implicit in constitutions?
-5. **The greeting resolution:** what does caught-up-in-one-glance actually contain, and which surface
-   owns it (the RHM's first words? a canvas region? both)?
-6. **Cross-project mounting:** the corpus already carries project lineage — is common memory one
-   corpus with project axes (lean) or federated spaces? (Lean answer: one, it's already built that
-   way.)
+Tim's response confirmed and extended nearly every thread. His words + what each unlocked:
+
+**9.1 · "Context resolves rather than constantly appending" — TIM CONFIRMED the paradigm.** The
+defining inversion of the industry default: the context window is a VIEW, not a STORE. The record
+appends (once, durably); the working context of any moment is resolved fresh at a position. THE SAME
+LAW AS THE CANVAS — reflects-never-owns, governing both the visual surface and the cognitive surface.
+(Lived proof: this session compacted twice; the lead rebuilt from substrate each time, by design.)
+
+**9.2 · The who-axis is a PARAMETER, not a projection — "it's for me, and different for other users
+in the future. So the *who* sets memory as well."** Memory-of-Tim = row one of memory-of-whoever. The
+operator is a value resolution takes; Tim is its first and primary value. The asymmetry law
+generalizes: never misremember ANY principal. What stays uniquely Tim's is the GATE (the will); a
+future second user gets a SCOPED gate over their own territory. Keep "who" a value now (near-zero
+cost), never a constant (enormous retrofit).
+
+**9.3 · "All the when's and where's and modes and everything else, that's values, data, resolution"
+— and the condition language ALREADY EXISTS.** Reuse-catch (loud): do NOT invent a memory-condition
+DSL. The concurrent-cognition rules engine — a declared rule as data over resolved values,
+deterministic, RENDERABLE, no eval — IS the condition language. A memory condition is a rule whose
+firing INJECTS instead of routes. One evaluator, two consumers. Renderable ⇒ Tim can SEE when a
+memory will return, drawn on the surface.
+
+**9.4 · Multi-substrate simultaneity — "structure, relations, vectors, procedural, all sorts" =
+WRITE ONCE, PROJECT MANY.** Not competing stores; simultaneous PROJECTIONS of one memory: file
+(structure — bootable, versioned) · links (relations — traversable) · embedding (vector — searchable
+by meaning) · check/flow (procedural — memory you can EXECUTE; a deterministic floor is a remembered
+lesson with teeth). The corpus already half-does this (file+address+embedding, content-hash keeps the
+vector honest). Law to declare: each retrieval kind reads its native projection; the immune system
+keeps projections coherent. WEAKEST projection today: the declared relation/link layer.
+
+**9.5 · Retrieval is a CHAIN — the registry-filling pattern RUN IN REVERSE.** "Different kinds of
+retrieval with the concurrency and chains" (Tim). A gradient of effort: address lookup (free) →
+vector shortlist (cheap) → ANALYTICAL retrieval (a swarm of concurrent 4B roles reads candidates
+through lenses → reduce → floor → inject). ground→map→reduce→floor, reading instead of writing. The
+same engine that FORMS memory RETRIEVES it. One machine, two directions.
+
+**9.6 · ANTICIPATORY RESOLUTION (new idea, surfaced to Tim as his dial to set).** Concurrent
+cognition stages part N's speech while resolving N+1 — applied to memory: as the now shifts, the
+resolver pre-retrieves ahead of need; "thinking ahead" is physically pre-resolution. Reactive → warm
+(pre-resolve on now-shifts) → hot (speculative overnight chains staging tomorrow's context). The dial
+= how much idle compute becomes foresight; it is a CHARACTER TRAIT of the entity. Concurrent
+cognition and the memory system are the same design at two timescales: presence speaks now; memory
+resolves next.
+
+**9.7 · "You're on my local machine, 'you' are just files" — the entity is the files; models are
+rented compute.** TIM DIRECTED: all of the lead's harness memories go into the substrate. Model-swap
+is identity-safe (replace every model tonight; the Company is still the Company tomorrow). Better
+models raise the ceiling of judgment; richer substrate + better resolution raise the FLOOR of
+knowledge — and the floor is what compounds.
+
+**9.8 · The garden question is ANSWERED: full interactive cognition surface.** Tim: "I definitely
+want to see it in the UI, managing it and interacting with Vi's cognition, visualising the data
+movements, and configuring and doing stuff in there." Shape (render-for-cognition): NOT a list-app —
+memory renders AT ITS ADDRESSES (go to the thing to see what's remembered about it); conditions as
+readable/editable overlays; proposed rows confirmed in place; data movements (condition fires,
+injections, retrieval chains) rendered as flows — the Pulse→River→Nodes cognition view serves both,
+because cognition runs and memory movements are both data moving through resolution. Watching
+resolution IS watching Vi think.
+
+**9.9 · Different KINDS of memory (Tim).** Kinds = row-types in the same substrate, differing on four
+axes: mutation rules (sacred Tim-sourced vs replaceable derived) · return-conditions (always/when/
+asked) · gates (Tim-confirm vs floor vs free) · native projections (which of 9.4 apply). Includes
+working (run:// outputs), record, meaning, standing, self, procedural, relational, predictive (the
+twin), and META-memory: a condition row is a memory about when to remember.
+
+## 10 · The assembled picture (after round 2)
+
+**Addresses give WHERE · rules give WHEN · projections give WHO · registries give WHAT · the
+resolver gives HOW — every piece already has a native home in what's built or designed.** The
+blueprint is assembly with intent, not invention.
+
+## 11 · Open threads (updated)
+
+1. ~~The garden question~~ → ANSWERED (9.8): full interactive surface, memory-at-addresses.
+2. **Anticipatory resolution dial** — reactive/warm/hot; surfaced to Tim as a character-trait
+   decision. AWAITING HIS SHAPE.
+3. **The now-vocabulary:** modes as the coarse time-coordinates (Tim: "great ideas about the
+   vocabulary of nows"); fine grain TBD in the rules language.
+4. **The audience boundary** — now per-PRINCIPAL (9.2), not just per-agent. Scoped gates for future
+   users; design later, keep "who" a value now.
+5. **The identity charter:** explicit rows vs implicit constitutions — still open.
+6. **The greeting resolution:** contents + owning surface — still open.
+7. **Cross-project mounting:** one corpus with project axes (lean, already built that way) — confirm
+   when the second project mounts.
+8. **The relation/link projection** — the weakest of the four; needs its declared layer (9.4).
