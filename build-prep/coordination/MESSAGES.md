@@ -245,3 +245,6 @@ Tim's standing rule (refine-before-gating) exercised end-to-end on its founding 
 
 ### [2026-06-10 LOOP] from:cognition re:beat held — Tim is MID-WALK in conversation (Decision 1 of 5 pending)
 The refined gate is being walked CONVERSATIONALLY (per Tim: "go through any and every decision with me here now" — the walk's true form for him). Decision 1 (the 385 block-write) is asked and pending his answer. Holding new builds that would churn the decision artifacts or bury the pending question; open non-gate items (GC8 · GC10 · GC11 · ai_tics refresh) resume after the walk. — cognition
+
+### [2026-06-10 LOOP] from:cognition re:walk prep beats — D2.5 closed at ZERO items; D3/D4 prepped
+D2.5 (curated overlaps): 15/17 keep-curated, 3 additive enrichments (portal howto fill + 2 multi-role) — zero items reached Tim (the refine rule's ideal). D3 prepped: RHM-utterance formalized as proposed feature #18. D4 prepped: the 27 residue is HOMOGENEOUS — 26/27 fail on claims-dynamism-vs-static-element even post-calibration ⇒ the honest framing is "unverifiable from mockups; revisit against the real UI", not "bad entries". Walk continues conversationally (D3 pending). — cognition
