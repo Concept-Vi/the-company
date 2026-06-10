@@ -1704,3 +1704,41 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
   .app-shell[data-mtab="canvas"] .as-canvas .forager-bar{display:flex;position:fixed;top:52px;left:8px;
     right:8px;width:auto;margin-left:0;max-height:46vh;overflow:auto;z-index:330}
 }
+
+/* ============================================================================================
+   THE MOBILE SHELL — TOTAL RETHINK (Tim, 2026-06-11: "its current mobile design is unusable...
+   needs total rethought"). Principle: ON THE PHONE, THE CANVAS IS THE SCREEN. Chrome is one slim
+   row + the tabbar; EVERYTHING else is a sheet you summon. No static panel may own screen space.
+   ============================================================================================ */
+@media (max-width: 699px){
+  /* ROOT-CAUSE FIX (found by use): the desktop entrance animation (inst-rise, fill-mode both)
+     permanently PINS transform:translateY(0) on every animated region — CSS animations outrank
+     normal declarations, so the sheets' hidden transform (translateY(110%)) could NEVER apply.
+     The palette/panel sat statically over the canvas on every phone since the sheets were built.
+     Kill the entrance animation at phone width (the flourish is desktop's). */
+  .as-top,.as-rail,.as-panel,.as-canvas .activity,.as-canvas .rhm{animation:none !important}
+
+  /* THE TOP CHROME — one slim thumb-scrollable row, never a wall: the toolbar's buttons stay
+     reachable but flow in ONE horizontal scroll lane (no wrapping into rows). Compact paddings. */
+  /* the scroll lane must be the INNER .toolbar (the buttons' real flex parent) — styling only the
+     .as-top cell left the inner container free to wrap-and-clip (found by use). */
+  .as-top{height:44px;max-height:44px;overflow:hidden}
+  .as-top .toolbar{display:flex;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;gap:6px;
+    align-items:center;height:44px;max-height:44px;padding:4px 8px;scrollbar-width:none;width:100%}
+  .as-top .toolbar::-webkit-scrollbar{display:none}
+  .as-top .toolbar .b,.as-top .toolbar button,.as-top .toolbar select{flex:none;white-space:nowrap;
+    padding:4px 8px;font-size:11px}
+  .as-top .toolbar .title{flex:none;white-space:nowrap}
+  .as-top .notice{display:none}  /* the inline notice can't share a 44px lane — it gets the toast home below */
+
+  /* NOTICES — a proper mobile home: a toast pinned above the tabbar (was: an absolutely-placed
+     fragment floating over the canvas). */
+  .notice{position:fixed;left:8px;right:8px;bottom:64px;top:auto;max-width:none;margin:0;z-index:355;
+    background:var(--s1);border:1px solid var(--line);border-radius:6px;padding:7px 10px}
+  .notice:empty{display:none}
+
+  /* THE FORAGER on the canvas tab: present as its slim header only until tapped (it must not own
+     a band of the screen by default). */
+  .app-shell[data-mtab="canvas"] .as-canvas .forager-bar{max-height:42vh}
+  .app-shell[data-mtab="canvas"] .as-canvas .forager-bar.min{max-height:36px;overflow:hidden}
+}
