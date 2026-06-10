@@ -46,6 +46,13 @@ export function GreetingCard() {
       .catch(() => {})                                        // bridge down → no greeting; the rest of the shell stands
   }, [])
 
+  // the MOBILE TOP BAR's status text is the greeting's entry point on the phone (no floating pill)
+  useEffect(() => {
+    const h = () => setOpen(true)
+    window.addEventListener('open-greeting', h)
+    return () => window.removeEventListener('open-greeting', h)
+  }, [])
+
   if (!g) return null
   return (
     <>

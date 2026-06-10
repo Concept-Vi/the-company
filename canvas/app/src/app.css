@@ -1766,29 +1766,40 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
   .tray-change input{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:4px;
     color:var(--tx);padding:7px 9px;font:inherit}
 
-  /* THE TOP ROW — three things + the fold. Everything else hides until the fold opens (stacked,
-     full-width, labeled — never scroll-hidden). The view-switch joins the flow (it escaped the
-     lane as an absolute element — the overlap Tim photographed). */
-  /* the view-switch is a FIXED overlay (z:700) from OUTSIDE the toolbar — the real overlap culprit
-     (found by computed-layout inspection, not guessing). On the phone it keeps its top-left corner
-     and the toolbar lane CLEARS it with padding; the row then reads: [switch][status…][⋯][mode]. */
-  .view-switch{top:7px;left:8px}
-  .as-top .toolbar{flex-wrap:nowrap;overflow:visible;padding-left:184px}
-  .as-top .toolbar > .b:not(.tools-fold),.as-top .toolbar > button:not(.tools-fold){display:none}
-  .as-top .toolbar > .title{display:none}
-  .as-top .toolbar .presence{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
-  .as-top .toolbar .tools-fold{display:inline-flex !important;flex:none}
-  /* the fold: open = the toolbar grows downward, hidden controls appear stacked + full width */
-  .as-top:has(.toolbar.fold-open){height:auto;max-height:60vh;overflow:auto}
-  .toolbar.fold-open{flex-wrap:wrap}
-  .toolbar.fold-open > .b,.toolbar.fold-open > button{display:flex !important;width:100%;
-    justify-content:flex-start;padding:9px 10px;font-size:12px}
-  .toolbar.fold-open > .tools-fold{width:auto}
-
-  /* the greeting pill joins the header line (left of nothing-floating law); the card stays full-width */
-  .greeting-pill{top:6px;right:8px;z-index:365;height:32px;font-size:10px}
+  /* ═══ ONE BAR (the redesign): the phone's top is ONLY .m-topbar. The desktop toolbar, the
+     fixed view-switch, and the greeting pill are simply NOT ON THE PHONE — nothing can overlap
+     because nothing else exists at the top. The toolbar's full button set lives INSIDE the tools
+     sheet (stacked + labeled), the workspace switch with it, the greeting opens from the status. */
+  .as-top{display:none}
+  .view-switch{display:none}
+  .greeting-pill{display:none}
   .greeting-card{top:52px}
+  .m-topbar{display:flex;position:fixed;top:0;left:0;right:0;height:44px;z-index:360;gap:6px;
+    align-items:center;padding:5px 8px;background:var(--s0);border-bottom:1px solid var(--line);
+    pointer-events:auto}
+  .m-status{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    text-align:left;background:none;border:none;color:var(--sig);font:inherit;font-size:11px;
+    letter-spacing:.03em;cursor:pointer;padding:6px 2px}
+  .m-tools-btn{flex:none;font-size:11px}
+  .m-mode{flex:none;max-width:108px;background:var(--bg);border:1px solid var(--line);
+    border-radius:4px;color:var(--tx);font:inherit;font-size:11px;padding:5px 4px}
+  .m-tools-sheet{position:fixed;top:44px;left:0;right:0;max-height:62vh;overflow:auto;z-index:359;
+    background:var(--s1);border-bottom:1px solid var(--line);padding:10px;display:flex;
+    flex-direction:column;gap:8px;box-shadow:var(--shadow)}
+  .m-tools-ws{display:flex;gap:6px}
+  .m-tools-ws .b{flex:1}
+  /* the full toolbar INSIDE the sheet: every control visible, stacked, labeled — never scroll-hidden */
+  .m-tools-sheet .toolbar{position:static;display:flex;flex-direction:column;gap:6px;padding:0;
+    background:none;border:none;box-shadow:none}
+  .m-tools-sheet .toolbar > .b,.m-tools-sheet .toolbar > button{display:flex !important;width:100%;
+    justify-content:flex-start;padding:10px;font-size:12px}
+  .m-tools-sheet .toolbar > .title,.m-tools-sheet .toolbar > .presence,
+  .m-tools-sheet .toolbar > .mode-sel,.m-tools-sheet .toolbar > .mode-desc,
+  .m-tools-sheet .toolbar .tools-fold,.m-tools-sheet .toolbar .notice{display:none !important}
 
   /* desktop-gesture surfaces with no phone face yet: never squat uninvited (the tray replaces them) */
   .wire-door,.annotate-bar,.journey-bar{display:none !important}
 }
+
+/* desktop: the mobile bar does not exist (the one-bar regime is the PHONE face only) */
+@media (min-width: 700px){ .m-topbar{display:none} }

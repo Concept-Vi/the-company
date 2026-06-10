@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <!-- maximum-scale/user-scalable: the surface is an APP — accidental page-zoom (double-tap/pinch
+       on chrome) zoomed the whole interface with no way back (Tim's phone finding). tldraw's own
+       canvas zoom is unaffected. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>the company · canvas</title>
   <!-- Launch full-screen (no browser chrome) when added to the iOS/Android home screen -->
   <meta name="apple-mobile-web-app-capable" content="yes" />

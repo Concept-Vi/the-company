@@ -147,11 +147,12 @@ export function ForagerBar() {
 
   return (
     <div className={'hud rhm forager-bar' + (min ? ' min' : '')} data-ui-ref="ui://forager">
-      <div className="rhm-head">
+      {/* the WHOLE header toggles (Tim's phone finding: the tiny square was the only live pixel —
+          "I can't click on the forager thing"). Tap anywhere on the strip = open/close. */}
+      <div className="rhm-head" style={{ cursor: 'pointer' }} onClick={() => setMin(m => !m)}>
         forager <span className="muted">· search the corpus → circles{shapes.length ? ` · ${shapes.length} on canvas` : ''}</span>
         <span className="rhm-min" data-ui-ref="ui://forager/minimize"
-          title={min ? 'expand the forager' : 'minimize the forager'}
-          onClick={() => setMin(m => !m)}>{min ? '▢' : '▁'}</span>
+          title={min ? 'expand the forager' : 'minimize the forager'}>{min ? '▾ open' : '▴ close'}</span>
       </div>
       <div className="rhm-input">
         <input placeholder="search the corpus — hits land as circles" data-ui-ref="ui://forager/input"

@@ -52,7 +52,43 @@ import { Fleet } from './regions/Fleet'
 import { CognitionView } from './regions/CognitionView'
 import { Review } from './regions/Review'
 import { WireRequest } from './components/WireRequest'
-import { api } from './api'
+import { api, MODES } from './api'
+
+
+// THE MOBILE TOP BAR (Tim, 2026-06-11: "it should just be one bar... I don't care if you need to
+// fully redesign it"). Purpose-built, phone-only (CSS): [status — tap = the greeting] [tools] [mode].
+// EVERYTHING else leaves the top: the desktop toolbar + view-switch render INSIDE the tools sheet
+// (reuse-don't-parallel: same buttons, same handlers, stacked + labeled by CSS), the greeting pill
+// is desktop-only. Nothing overlaps because nothing else is THERE.
+function MobileTopBar({ view, setView }: { view: 'canvas' | 'review', setView: (v: 'canvas' | 'review') => void }) {
+  const { now, changeMode } = useApp() as any
+  const [tools, setTools] = useState(false)
+  const pending = now?.surfaced_pending || 0
+  return (
+    <div className="m-topbar">
+      <button className="m-status" title="what happened while you were away — tap to catch up"
+        onClick={() => window.dispatchEvent(new CustomEvent('open-greeting'))}>
+        {pending ? `● ${pending} waiting · catch up` : (now?.presence || '…')}
+      </button>
+      <button className="b ghost m-tools-btn" onClick={() => setTools(o => !o)}>{tools ? '✕' : '⋯ tools'}</button>
+      {now && (
+        <select className="mode-sel m-mode" value={now.mode || 'listening'} title="presence dial"
+          onChange={e => changeMode(e.target.value)}>
+          {MODES.map((m: string) => <option key={m} value={m}>{m}</option>)}
+        </select>
+      )}
+      {tools && (
+        <div className="m-tools-sheet" onClick={e => { if ((e.target as HTMLElement).tagName === 'BUTTON') setTools(false) }}>
+          <div className="m-tools-ws">
+            <button className={'b ghost' + (view === 'canvas' ? ' on' : '')} onClick={() => setView('canvas')}>▦ canvas workspace</button>
+            <button className={'b ghost' + (view === 'review' ? ' on' : '')} onClick={() => setView('review')}>▤ design review</button>
+          </div>
+          <Toolbar />
+        </div>
+      )}
+    </div>
+  )
+}
 
 // I5 · the ANNOTATE-FACE affordance. Renders ONLY when the operator has indicated a ui:// element whose
 // bare-click face is 'annotate' (ctrl.clickMode === 'annotate' — the canonical route_click rule, single-
@@ -207,6 +243,7 @@ function Hud() {
       <div className="app-shell" data-mtab={mobileTab} style={view === 'review' ? { display: 'none' } : undefined}>
         {/* F2: as-rail/as-panel get .as-sheet so that at <699px they become bottom-sheets the tabbar toggles
            (instead of fixed-px islands that overlap the canvas). Above 699px .as-sheet is inert. */}
+        <MobileTopBar view={view} setView={setView} />
         <div className="as-top"><Toolbar /></div>
         <div className="as-rail as-sheet"><Palette /></div>
         {/* the canvas cell is a passthrough — the tldraw board renders behind the shell; overlays that must
