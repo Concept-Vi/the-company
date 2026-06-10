@@ -375,6 +375,157 @@
       "label": "legacy skeleton served at / (must resolve to React app)",
       "code": "runtime/bridge.py:do_GET",
       "build_required": true
+    },
+    {
+      "id": "CAN-brand",
+      "area": "canvas",
+      "label": "The company branding header at the top of the canvas.",
+      "code": "",
+      "status": "proposed",
+      "proposed_at": [
+        "ui://canvas/brand"
+      ]
+    },
+    {
+      "id": "INB-propose",
+      "area": "inbox",
+      "label": "A proposal control on the inbox, offering a declarative panel for self-modification.",
+      "code": "runtime/suite.py (propose_node / the propose panel path)",
+      "status": "built"
+    },
+    {
+      "id": "INB-retry",
+      "area": "inbox",
+      "label": "The retry control on the inbox.",
+      "code": "runtime/suite.py (requeue_from_verdict)",
+      "status": "built"
+    },
+    {
+      "id": "NODE-model",
+      "area": "nodes",
+      "label": "The model selector on a process node card.",
+      "code": "canvas/app (model dropdowns) + /api/models — per-kind model selection",
+      "status": "built"
+    },
+    {
+      "id": "NODE-resolve",
+      "area": "nodes",
+      "label": "The resolve control on the inspector panel.",
+      "code": "runtime/scheduler.py (reactive resolution)",
+      "status": "built"
+    },
+    {
+      "id": "RHM-identity",
+      "area": "rhm",
+      "label": "The company's listening header on the chat screen.",
+      "code": "",
+      "status": "proposed",
+      "proposed_at": [
+        "ui://chat/brand",
+        "ui://chat/title"
+      ]
+    },
+    {
+      "id": "RHM-listen",
+      "area": "rhm",
+      "label": "The listening state indicator on the RHM chat interface.",
+      "code": "runtime/suite.py (is_finished_thought + the listening cast)",
+      "status": "built"
+    },
+    {
+      "id": "RHM-persona",
+      "area": "rhm",
+      "label": "The persona selector on the chat interface.",
+      "code": "voice personas + set_rhm_config (runtime/suite.py)",
+      "status": "built"
+    },
+    {
+      "id": "RHM-presence",
+      "area": "rhm",
+      "label": "The RHM presence orb — the living face of the system's current state.",
+      "code": "",
+      "status": "proposed",
+      "proposed_at": [
+        "ui://chrome/rhm"
+      ]
+    },
+    {
+      "id": "RHM-process",
+      "area": "rhm",
+      "label": "The process control dashboard where you are viewing a specific step in a workflow (an 'ask' node) and selecting which AI model to run it wit",
+      "code": "",
+      "status": "proposed",
+      "proposed_at": [
+        "ui://settings/process"
+      ]
+    },
+    {
+      "id": "RHM-status",
+      "area": "rhm",
+      "label": "The status indicator on the chat interface showing the system's current operational state.",
+      "code": "",
+      "status": "proposed",
+      "proposed_at": [
+        "ui://chat/status"
+      ]
+    },
+    {
+      "id": "RHM-thinking",
+      "area": "rhm",
+      "label": "The thinking state indicator on the chat control.",
+      "code": "",
+      "status": "proposed",
+      "proposed_at": [
+        "ui://chat/thinking"
+      ]
+    },
+    {
+      "id": "RHM-utterance",
+      "area": "rhm",
+      "label": "The chat's utterance input — where the operator speaks/types to the RHM",
+      "code": "canvas RhmChat input + the /api chat seam",
+      "status": "built"
+    },
+    {
+      "id": "RHM-voice",
+      "area": "rhm",
+      "label": "The voice configuration control in the settings rail.",
+      "code": "voice/ engines + set_rhm_config — the voice configuration seam",
+      "status": "built"
+    },
+    {
+      "id": "SM-evolve",
+      "area": "selfmod",
+      "label": "The evolution control on the grow panel.",
+      "code": "the grow/self-mod propose path (runtime/suite.py grow seams)",
+      "status": "built"
+    },
+    {
+      "id": "WIRE-layers",
+      "area": "wire",
+      "label": "The layers control on the build-review card.",
+      "code": "",
+      "status": "proposed",
+      "proposed_at": [
+        "ui://inbox/build-review/layers"
+      ]
+    },
+    {
+      "id": "WIRE-resolve",
+      "area": "wire",
+      "label": "The 'Send Back' control on the build review card.",
+      "code": "runtime/implement.py + review verdicts (the send-back path)",
+      "status": "built"
+    },
+    {
+      "id": "WIRE-trail",
+      "area": "wire",
+      "label": "A 'Wire Failure & Lifecycle States' dashboard card within the build-review inbox.",
+      "code": "",
+      "status": "proposed",
+      "proposed_at": [
+        "ui://inbox/build-review/⌄open-trail"
+      ]
     }
   ],
   "views": [
