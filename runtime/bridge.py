@@ -79,6 +79,9 @@ BRIDGE_ROUTES = (
     # background loop behind this caller is OFF by default (COMPANY_ACTIVATION_LOOP, needs-tim); this POST
     # is the LIVE manual-drive door (firing it fires roles = computation, floor-clean by construction).
     "/api/activation/tick",
+    # S1 (overnight) — the BUILDER side-panel: one streaming turn of the embedded Claude Code session.
+    # OPERATOR FACE ONLY (never on mcp_face); plan-mode by default (COMPANY_PANEL_PERMISSION).
+    "/api/claude/turn",
 )
 
 MOCKUPS_DIR = os.path.join(ROOT, "design", "mockups")           # the design-review portal + corpus
@@ -1062,6 +1065,70 @@ class H(BaseHTTPRequestHandler):
             except Exception:
                 pass
 
+    def _claude_stream(self):
+        """S1 (overnight) — the BUILDER side-panel turn: stream one Claude Code session turn as NDJSON.
+        Body: {prompt, session_id?, address?}. The pointed-at ui:// address's help bundle rides in as
+        the turn's context block (the indicated-chip semantics of the RHM chat, aimed at the builder).
+        OPERATOR FACE ONLY + plan-mode default (see runtime/ui_claude_session.py — the floor note).
+        Events: {type:init,session_id} · {type:text,text} · {type:tool,name,detail} ·
+        {type:done,result,session_id,num_turns,is_error} · {type:error,error}. Client-disconnect
+        terminates the subprocess (no stranded claude processes)."""
+        from runtime.ui_claude_session import run_turn
+        b = self._body()
+        prompt = b.get("prompt")
+        sid = b.get("session_id") or None
+        address = b.get("address") or None
+        self.send_response(200)
+        self.send_header("Content-Type", "application/x-ndjson")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "close")
+        self.end_headers()
+
+        import select as _sel, socket as _sock
+        gone = [False]
+
+        def emit(obj):
+            try:
+                self.wfile.write((json.dumps(obj) + "\n").encode()); self.wfile.flush()
+            except (BrokenPipeError, ConnectionResetError, OSError):
+                gone[0] = True
+
+        def client_gone():
+            if gone[0]:
+                return True
+            try:
+                r, _, _ = _sel.select([self.connection], [], [], 0)
+                if r and self.connection.recv(1, _sock.MSG_PEEK) == b"":
+                    gone[0] = True
+            except Exception:
+                pass
+            return gone[0]
+
+        try:
+            if not prompt:
+                raise ValueError("/api/claude/turn needs {prompt} (fail loud)")
+            ctx = None
+            if address:
+                try:                                          # the pointed-at element's bundle — degrade-clean
+                    h = SUITE.address_help(address)
+                    bits = [f"Address: {address}"]
+                    for leg in ("what_this_is", "how_to_use"):
+                        v = (h.get(leg) or {}) if isinstance(h.get(leg), dict) else h.get(leg)
+                        if v:
+                            bits.append(f"{leg}: {json.dumps(v, default=str)[:600]}")
+                    ctx = "\n".join(bits)
+                except Exception as e:
+                    ctx = f"Address: {address} (help bundle unavailable: {type(e).__name__})"
+            for ev in run_turn(prompt, session_id=sid, context_block=ctx, should_stop=client_gone):
+                emit(ev)
+                if gone[0]:
+                    return
+        except Exception as e:                                # fail loud — to the client
+            try:
+                emit({"type": "error", "error": f"{type(e).__name__}: {e}"})
+            except Exception:
+                pass
+
     def _voice_stream(self):
         """Tier-1 STREAMING voice turn: hear → think-IN-PARTS → SPEAK part-by-part. The win over
         /api/voice/turn: instead of synthesising the WHOLE reply before any audio (the ~28s-on-a-long-
@@ -1408,6 +1475,9 @@ class H(BaseHTTPRequestHandler):
                 return
             if self.path.split("?")[0] == "/api/chat/stream":    # B1: TEXT-streaming turn — parts appear incrementally
                 self._chat_stream()
+                return
+            if self.path.split("?")[0] == "/api/claude/turn":    # S1: the BUILDER side-panel (Claude Code session turn)
+                self._claude_stream()
                 return
             if self.path == "/api/run":
                 b = self._body()
