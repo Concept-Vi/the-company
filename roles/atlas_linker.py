@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 class AtlasLinkerOut(BaseModel):
     tags: list[str] = Field(default_factory=list, description='3-7 kebab-case topic tags for the page')
-    atlas_notes: list[str] = Field(default_factory=list, description='0-3 Atlas domain notes this page belongs to, chosen ONLY from: Channels, Custom Apps Integration, Routines, Hooks & Extension Fabric, Feature Atlas, Memory Systems, Config & UI Data Model, Docs Inventory')
+    atlas_notes: list[str] = Field(default_factory=list, description='JSON array of strings, zero to three entries, each exactly one of the eight Atlas domain note titles; [] if none fit')
     summary: str = Field(default='', description='one sentence, max 25 words, saying what the page covers')
 
 
@@ -19,15 +19,19 @@ ROLE = {'id': 'atlas_linker',
  'prompt_template': 'You are organizing the Claude Code Atlas, a documentation corpus about Claude '
                     "Code (Anthropic's agentic coding tool), MCP, and the Claude platform.\n"
                     '\n'
-                    'Given one documentation page below (path, title, headings, excerpt), '
-                    'produce:\n'
-                    '- tags: 3-7 kebab-case topic tags (specific, retrieval-useful; e.g. hooks, '
-                    'mcp-servers, session-resume, permission-rules)\n'
-                    '- atlas_notes: which Atlas domain notes this page belongs to (0-3), chosen '
-                    'ONLY from this exact list: Channels | Custom Apps Integration | Routines | '
-                    'Hooks & Extension Fabric | Feature Atlas | Memory Systems | Config & UI Data '
-                    'Model | Docs Inventory\n'
-                    '- summary: one sentence (max 25 words) stating what the page covers.\n'
+                    'Return ONLY a JSON object shaped exactly like this example:\n'
+                    '{"tags": ["hooks", "mcp-servers", "lifecycle-events"], '
+                    '"atlas_notes": ["Hooks & Extension Fabric"], '
+                    '"summary": "Reference for every hook event, its JSON schema, and decision control."}\n'
+                    '\n'
+                    'Rules:\n'
+                    '- tags: 3-7 kebab-case topic tags, specific and retrieval-useful (e.g. hooks, '
+                    'mcp-servers, session-resume, permission-rules).\n'
+                    '- atlas_notes: a JSON array of strings. Zero to three entries. Each entry MUST '
+                    'be exactly one of: "Channels", "Custom Apps Integration", "Routines", '
+                    '"Hooks & Extension Fabric", "Feature Atlas", "Memory Systems", '
+                    '"Config & UI Data Model", "Docs Inventory". Use [] if none fit well.\n'
+                    '- summary: one sentence, max 25 words, stating what the page covers.\n'
                     '\n'
                     'PAGE:\n'
                     '{utterance}',
