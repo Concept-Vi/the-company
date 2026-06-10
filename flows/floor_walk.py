@@ -81,10 +81,14 @@ def run(stranded_after_s: int = 7200, stale_decision_days: int = 7, surface: int
             if not f.endswith(".tsx") or f.startswith("_"):
                 continue
             stem = f[:-4]
-            # imported anywhere OTHER than its own file?
+            # imported anywhere OTHER than its own file? Match BOTH import spellings — the path form
+            # (components/<stem>) AND the sibling-relative form (./<stem>, ../components/<stem>): the
+            # first run flagged BlastRadiusReach+ContextBundle as dead while BuildIntentCard imports
+            # them via './<stem>' (a detector FP caught by verify-by-use — the detector itself walked).
             own = open(os.path.join(comp_dir, f), encoding="utf-8").read()
             rest = src_text.replace(own, "", 1)
-            if not re.search(rf"from\s+['\"][^'\"]*components/{re.escape(stem)}['\"]", rest):
+            pat = rf"from\s+['\"](?:[^'\"]*components/|\./|\.\./components/){re.escape(stem)}['\"]"
+            if not re.search(pat, rest):
                 unmounted.append({"component": f, "death_mode": "built-but-never-imported"})
 
     # 3 · STALE DECISIONS (unresolved + un-retired + old)
@@ -105,15 +109,20 @@ def run(stranded_after_s: int = 7200, stale_decision_days: int = 7, surface: int
                           "title": (p.get("title") or p.get("id") or "")[:60],
                           "age_days": round(age_d, 1) if age_d else "unknown"})
 
-    # 4 · PHANTOM CORPUS SOURCES (records whose code:// file is gone)
-    phantoms = []
-    for r in s.list_corpus(project="company"):
+    # 4 · PHANTOM CORPUS SOURCES (records whose code:// file is gone). A source whose LATEST
+    # record is kind='retired' (the append-only tombstone, written via the existing capture) is
+    # RESOLVED hygiene, not a phantom — the corpus never deletes, it supersedes (latest-seq-wins).
+    latest: dict = {}                                  # sa -> (seq, record_kind); EXPLICIT max-seq
+    for r in s.list_corpus(project="company"):         # (list order is newest-first — never assume)
         sa = r.get("source_address") or ""
         if sa.startswith("code://"):
-            p = sa[len("code://"):]
-            if not p.startswith("/") and not os.path.exists(p):
-                phantoms.append(sa)
-    phantoms = sorted(set(phantoms))
+            seq = r.get("seq") or 0
+            if sa not in latest or seq > latest[sa][0]:
+                latest[sa] = (seq, r.get("record_kind") or r.get("kind") or "")
+    latest_kind = {sa: k for sa, (_q, k) in latest.items()}
+    phantoms = sorted(sa for sa, k in latest_kind.items()
+                      if k != "retired" and not sa[len("code://"):].startswith("/")
+                      and not os.path.exists(sa[len("code://"):]))
 
     report = {"ts": now, "stranded_files": stranded, "unmounted_components": unmounted,
               "stale_decisions": stale, "phantom_sources": phantoms,
