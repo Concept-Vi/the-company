@@ -18,6 +18,7 @@
   "cross_journeys": [],
   "addresses": [
     "ui://settings/modes",
+    "ui://studio/rhm",
     "ui://toolbar",
     "ui://toolbar/presence",
     "ui://toolbar/run"
@@ -25,6 +26,7 @@
   "build_to": {
     "components": [
       "settings",
+      "studio",
       "toolbar"
     ],
     "design_lint": "check.py --target canvas/app/src --fail-on  (the FORM gate)",
