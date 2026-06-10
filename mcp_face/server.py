@@ -96,9 +96,36 @@ def get_results(graph: str) -> dict:
 # propose_node/apply_node → CONSOLIDATED into mcp_face/tools/node.py (node(op=propose|apply); the FLOOR
 # is preserved — apply reads operator approval from the substrate, the agent cannot self-approve).
 @mcp.tool()
-def list_surfaced() -> list:
-    """Decisions the system surfaced for the operator (each carries a default + resolution)."""
-    return SUITE.list_surfaced()
+def list_surfaced(sid: str = "", status: str = "", unresolved_only: bool = False,
+                  limit: int = 40, detail: str = "concise") -> dict:
+    """Decisions the system surfaced for the operator (each carries a default + resolution).
+
+    SCOPED (Q2 — the eval hit a 278KB single-shot dump): the default is CONCISE rows
+    ({id, action, title, status, resolved}) newest-first, capped by `limit`. Narrow with
+    `sid` (ONE item, full payload — the drill-down), `status` (inbox|presented|responded|resolved|
+    requeue|implemented), or `unresolved_only=True` (the live-escalations slice).
+    `detail='detailed'` returns full payloads for the (still-capped) row set."""
+    rows = SUITE.list_surfaced()
+    if sid:
+        hit = next((r for r in rows if r.get("id") == sid), None)
+        if hit is None:
+            raise ValueError(f"no surfaced item {sid!r} — pick an id from list_surfaced() (concise rows).")
+        return {"item": hit}
+    if status:
+        rows = [r for r in rows if r.get("status") == status]
+    if unresolved_only:
+        rows = [r for r in rows if r.get("resolved") is None
+                and r.get("status") not in ("requeue", "implemented")]
+    total = len(rows)
+    rows = rows[-limit:][::-1]                               # newest-first, capped
+    if detail == "detailed":
+        return {"total": total, "shown": len(rows), "items": rows}
+    return {"total": total, "shown": len(rows),
+            "items": [{"id": r.get("id"), "action": r.get("action"),
+                       "title": ((r.get("payload") or {}).get("title") or
+                                 (r.get("payload") or {}).get("id") or "")[:80],
+                       "status": r.get("status"), "resolved": r.get("resolved")} for r in rows],
+            "note": "concise rows — list_surfaced(sid='<id>') for one item's full payload"}
 
 
 @mcp.tool()
@@ -179,6 +206,8 @@ def capabilities(section: str = "") -> dict:
     ch = _chains()
     overview["chains"] = (f"{len(ch['flows'])} flows + {len(ch['cascades']) if isinstance(ch['cascades'], list) else '?'} "
                           f"saved cascades — capabilities(section='chains')")
+    overview["operator"] = ("the system's memory of working with its OPERATOR (rules + evidence) — "
+                            "operator(op='rules'); READ IT before preparing anything he will see")
     return {"sections": overview,
             "note": "concise map — call capabilities(section='<name>') for one section's full payload"}
 
@@ -684,9 +713,12 @@ def run_cascade(name: str, inputs=None, max_tokens: int = 256) -> dict:
     find_runs/list_runs see every step), the final addressed output is returned. REUSES Suite.run_cascade.
 
     `name`   — a saved cascade name (see list_cascades / save_cascade).
-    `inputs` — the FIRST step's argument. A run://·cas:// address is RESOLVED via the engine resolver; a
-               literal is used as-is; None → the role's default framing. A missing/unresolvable step input
-               FAILS LOUD (the engine raises — no silent skip).
+    `inputs` — the FIRST step's argument; ITS SHAPE FOLLOWS STEP 0 (each list_cascades row's
+               input_schema/inputs_hint states it): a MAP (items) step 0 takes a LIST — pass a
+               JSON-encoded array string (e.g. '["a","b"]') or a real list; a single-value step 0
+               takes one string/address. A run://·cas:// address RESOLVES via the engine resolver;
+               a literal is used as-is; None → the role's default framing. A missing/unresolvable
+               step input FAILS LOUD (no silent skip).
 
     Returns {action, turn_id, steps:[{step, role, kind, op, addresses, address?}…], final_address,
     final_output, final_addresses}. THE FLOOR: run:// computation only — NO resolve/approve/dispatch, NO

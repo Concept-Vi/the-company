@@ -142,8 +142,24 @@ class ActionRegistry:
     def __init__(self, path: str):
         self.path = path
         self._actions: dict = {}
-        if os.path.exists(path):
-            self._actions = {a["name"]: a for a in json.load(open(path, encoding="utf-8")).get("actions", [])}
+        self._mtime: float = -1.0
+        self._reload_if_stale()
+
+    def _reload_if_stale(self):
+        """Q3 (eval#4's one real bug): the registry used to load cascades.json ONCE at init — a
+        long-lived process (the MCP server) never saw out-of-process saves (the gauntlet was invisible
+        to the cold agents; chains-vs-list disagreed). Every READ now stats the file and re-reads on an
+        mtime change (the freshness FlowRegistry gets from rediscover-per-call). Cheap: one stat per
+        read; the parse only on real change."""
+        try:
+            m = os.path.getmtime(self.path)
+        except OSError:
+            self._actions, self._mtime = {}, -1.0
+            return
+        if m != self._mtime:
+            self._actions = {a["name"]: a for a in
+                             json.load(open(self.path, encoding="utf-8")).get("actions", [])}
+            self._mtime = m
 
     def _flush(self):
         os.makedirs(os.path.dirname(self.path), exist_ok=True)
@@ -165,9 +181,11 @@ class ActionRegistry:
         self._flush()
 
     def get(self, name: str) -> dict | None:
+        self._reload_if_stale()
         return self._actions.get(name)
 
     def all(self) -> list:
+        self._reload_if_stale()
         return list(self._actions.values())
 
 

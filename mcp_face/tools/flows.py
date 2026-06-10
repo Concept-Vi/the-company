@@ -38,8 +38,16 @@ def register(mcp, suite):
         from runtime.flows import FlowRegistry
         reg = FlowRegistry().discover()
         if op == "list":
-            return {"flows": [{"id": r["id"], "label": r["label"], "description": r["description"],
-                               "params": r["params"]} for r in reg.rows()]}
+            rows = [{"id": r["id"], "label": r["label"], "description": r["description"],
+                     "params": r["params"]} for r in reg.rows()]
+            out = {"flows": rows}
+            if not rows:
+                # Q6 — an empty list must never read as 'no chains exist': the OTHER chain registry
+                # (saved cascades) may be populated; point there instead of misleading a cold agent.
+                out["note"] = ("no flows registered in THIS environment — but saved CASCADES (the "
+                               "declared data-chains) may exist: list_cascades / run_cascade, or "
+                               "capabilities(section='chains') for both registries together.")
+            return out
         if op == "describe":
             if not flow:
                 raise ValueError("flows(op='describe') needs flow= — one of: " + ", ".join(sorted(reg)))
