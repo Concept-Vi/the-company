@@ -38,3 +38,6 @@ Add a row = add a FILE + reflect it here (the drift home). Loader: `runtime/flow
 - **repo_ingest** — ①/G21: the repo-exocortex ingest — walk → repo_digest MAP → capture+embed into
   space='repo' keyed code://<path>; hash-aware incremental (G25); the floor for drift-radar and
   ask-the-codebase.
+- **drift_radar** — ②: the built-twice/overlap/doc-drift sweep over the repo space — near-pair
+  clusters → judge_drift confirm (conservative) → surface-direction marks + findings; zero-results
+  fail loud (a silent 'all clean' is not a believable radar).
