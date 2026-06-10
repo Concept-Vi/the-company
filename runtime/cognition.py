@@ -2186,6 +2186,35 @@ def run_cascade(action: dict, store, *, turn_id: str,
         raise ValueError(f"run_cascade: action {name!r} has no steps — nothing to execute (fail loud).")
     reduce_rules = reduce_rules or {}
 
+    # S2 (G3) — the RESOLVE-ONCE shared block: cascade-level named inputs resolved ONCE at run start,
+    # available to EVERY role/items step's ctx (the context-efficiency law — exemplars/vocabularies
+    # resolved one time, never N×). CLOSED entry vocabulary (reuse-only, no new scheme):
+    #   {"address": "run://…|cas://…"}  — the canonical resolver;
+    #   {"text": "…"}                   — a literal baked in the decl;
+    #   {"corpus_query": "…", "space"?, "k"?} — the retrieve seam (top hits' ids joined as text).
+    # Richer staging (file projections etc.) belongs to a FLOW wrapper that prepares run:// addresses
+    # first (the S4 split: flows stage, cascades declare). Fail-loud on an unknown entry shape.
+    shared_block: dict = {}
+    for _sname, _sspec in (action.get("shared") or {}).items():
+        if not isinstance(_sspec, dict) or len(_sspec.keys() & {"address", "text", "corpus_query"}) != 1:
+            raise ValueError(
+                f"run_cascade: shared entry {_sname!r} must be exactly one of "
+                f"{{address|text|corpus_query}} — got {_sspec!r}. Fail loud.")
+        if "text" in _sspec:
+            shared_block[_sname] = _sspec["text"]
+        elif "address" in _sspec:
+            shared_block[_sname] = resolve_address(store, _sspec["address"], turn_id=turn_id)
+        else:
+            if retrieve_fn is None:
+                raise ValueError(f"run_cascade: shared entry {_sname!r} is a corpus_query but no "
+                                 f"retrieve_fn was injected. Fail loud.")
+            _hits = retrieve_fn(_sspec["corpus_query"], space=_sspec.get("space") or None,
+                                k=int(_sspec.get("k", 4)))
+            if not _hits:
+                raise ValueError(f"run_cascade: shared entry {_sname!r} corpus_query found NOTHING — "
+                                 f"an empty shared input would silently starve every step. Fail loud.")
+            shared_block[_sname] = "\n".join(str(h) for h in _hits)
+
     step_records: list[dict] = []
     prev_addresses: list[str] | None = None   # the prior step's output address(es) — the thread
 
@@ -2448,6 +2477,7 @@ def run_cascade(action: dict, store, *, turn_id: str,
                     f"`items` on the step, or place it after a map step. Fail loud.")
             t0 = time.monotonic()
             res = run_items(role, units, store, turn_id=f"{turn_id}-s{i}", emit=None,
+                            ctx=shared_block or None,                # S2 — the resolve-once shared inputs
                             unit_ctx=step.get("unit_ctx") or None,   # S1 — per-unit templated inputs
                             base_url=base_url, model=step_model, **kw_common)
             ms = int((time.monotonic() - t0) * 1000)
@@ -2490,7 +2520,7 @@ def run_cascade(action: dict, store, *, turn_id: str,
                            if isinstance(inputs, str) and _scheme(inputs) is not None else inputs)
             else:
                 primary = ""   # the role's default "Utterance:" framing (run_role default-input path)
-            ctx = {"utterance": primary}
+            ctx = {**shared_block, "utterance": primary}     # S2 — the resolve-once shared inputs
             t0 = time.monotonic()
             out = run_role(role, ctx, base_url=base_url, model=step_model, store=store, **kw_common)
             ms = int((time.monotonic() - t0) * 1000)

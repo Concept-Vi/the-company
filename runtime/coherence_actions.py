@@ -116,8 +116,19 @@ def build_action(decl: dict, *, models: set, roles: set | None = None, rule_reso
             return {"ok": False, "error": f"step {i}: max_tokens {mt!r} must be a positive int — the "
                     f"optional per-step output BUDGET (a multi-doc synth step may need ~5000 where the "
                     f"runner default is 256; declare it ON the step, the runner honours it)."}
+    shared = decl.get("shared")
+    if shared is not None:
+        if not isinstance(shared, dict):
+            return {"ok": False, "error": "shared must be a dict of name -> {address|text|corpus_query}"}
+        for sname, sspec in shared.items():
+            if not isinstance(sspec, dict) or len(sspec.keys() & {"address", "text", "corpus_query"}) != 1:
+                return {"ok": False, "error": f"shared entry {sname!r}: exactly one of "
+                        "{address|text|corpus_query} (S2 — the resolve-once shared inputs; richer "
+                        "staging belongs in a flow that prepares run:// addresses first)."}
     action = {"name": name, "steps": steps, "output_schema": decl.get("output_schema", {}),
               "schema_ver": decl.get("schema_ver", 1)}
+    if shared is not None:
+        action["shared"] = shared
     return {"ok": True, "action": action}
 
 
