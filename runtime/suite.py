@@ -2090,6 +2090,71 @@ class Suite:
     def _mode_directive(self, mode: str) -> str:
         return self.MODE_DIRECTIVES.get(mode, "")
 
+    # ── DIALS — adjustable character traits (Track-1; Tim: "they should be dials. I should be able
+    # to adjust them, and not need to make a decision"). Definitions = dials/ registry rows; VALUES
+    # persist here on the system graph's dials node (the same seam as the presence mode above).
+    DIALS_NODE = "dials"
+
+    def _ensure_dials_node(self) -> None:
+        g = self.store.load_graph(self.SYSTEM_GRAPH)
+        if not g or not any(n.id == self.DIALS_NODE for n in g.nodes):
+            self.create_node(self.SYSTEM_GRAPH, "constant", config={}, node_id=self.DIALS_NODE)
+
+    def _dials_cfg(self) -> dict:
+        g = self.store.load_graph(self.SYSTEM_GRAPH)
+        if g:
+            for n in g.nodes:
+                if n.id == self.DIALS_NODE:
+                    return dict(n.config)
+        return {}
+
+    def set_dial(self, dial: str, value: str | None = None, overrides: list | None = None) -> dict:
+        """Turn a dial (and/or set its condition-scoped overrides). Validated against the dials
+        registry, fail-loud. Overrides ({when, value}) are declared data in the rules-engine shape —
+        STORED now, EVALUATED once the now-organ/rules wiring exists (the flat value applies until
+        then; conditions COMBINE per the rules engine when it lands)."""
+        from runtime.dials import DialRegistry
+        reg = DialRegistry().discover()
+        names = reg.position_names(dial)                     # KeyError teaches the registered set
+        rec = dict(self._dials_cfg().get(dial) or {})
+        if value is not None:
+            if value not in names:
+                raise ValueError(f"unknown position {value!r} for dial {dial!r} — one of {names}.")
+            rec["value"] = value
+        if overrides is not None:
+            if not isinstance(overrides, list):
+                raise ValueError("overrides must be a list of {when, value}.")
+            for o in overrides:
+                if not isinstance(o, dict) or not o.get("when") or o.get("value") not in names:
+                    raise ValueError(f"bad override {o!r} — each needs a non-empty 'when' (declared "
+                                     f"condition data) and a 'value' in {names}.")
+            rec["overrides"] = overrides
+        self._ensure_dials_node()
+        self.set_config(self.SYSTEM_GRAPH, self.DIALS_NODE, {dial: rec})   # editing a parameter (same verb)
+        self._emit("dial", f"{dial} → {rec.get('value', reg.get(dial)['default'])}",
+                   address="ui://chrome/toolbar")            # character knobs live by the presence dial
+        return self.dial_state(dial)
+
+    def dial_state(self, dial: str | None = None) -> dict:
+        """Current dial state(s): registry definition + the persisted value (default when unset) +
+        any stored overrides (honestly marked unevaluated until the rules wiring lands)."""
+        from runtime.dials import DialRegistry
+        reg = DialRegistry().discover()
+        cfg = self._dials_cfg()
+        def one(did: str) -> dict:
+            row = reg.get(did)
+            rec = cfg.get(did) or {}
+            return {"dial": did, "label": row["label"],
+                    "value": rec.get("value", row["default"]),
+                    "default": row["default"],
+                    "positions": row["positions"],
+                    "overrides": rec.get("overrides", []),
+                    "overrides_evaluated": False,            # honest: awaiting the now-organ + rules wiring
+                    "governs": row["governs"]}
+        if dial is not None:
+            return one(dial)
+        return {"dials": [one(d) for d in sorted(reg)]}
+
     # --- E1: the mode SUB-TYPE (the instance parameter in §6.2's (mode-type) × (instance) factoring) ---
     # The sub-type is a SECOND rhm_mode-node config key ('submode'), edited by the SAME verb as the mode
     # (set_config). Schema-additive: an rhm_mode node WITHOUT a 'submode' key reads as None → the
