@@ -44,6 +44,7 @@ import { Activity } from './regions/Activity'
 import { RhmChat } from './regions/RhmChat'
 import { ClaudeChat } from './regions/ClaudeChat'
 import { GreetingCard } from './regions/GreetingCard'
+import { MobileTray } from './regions/MobileTray'
 import { Walkthrough } from './regions/Walkthrough'
 import { Workshop } from './regions/Workshop'
 import { Settings } from './regions/Settings'
@@ -243,6 +244,11 @@ function Hud() {
              organ; this is its face. */}
           <PanelErrorBoundary name="greeting">
             <GreetingCard />
+          </PanelErrorBoundary>
+          {/* THE MOBILE TRAY — long-press points; the selection raises the verbs (explain · ask ·
+             change · clear). Mobile-only (CSS); the desktop point-mode flow is untouched. */}
+          <PanelErrorBoundary name="tray">
+            <MobileTray />
           </PanelErrorBoundary>
           {/* L-fe · the LIVE COGNITION VIEW (the commander's bridge, E2/06). EXTEND not replace: it is one
              MORE in-canvas overlay beside the chat/activity (removes/replaces nothing). It sits at the chat

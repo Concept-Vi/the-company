@@ -1742,3 +1742,50 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
   .app-shell[data-mtab="canvas"] .as-canvas .forager-bar{max-height:42vh}
   .app-shell[data-mtab="canvas"] .as-canvas .forager-bar.min{max-height:36px;overflow:hidden}
 }
+
+/* ============================================================================================
+   MOBILE COMMAND MODEL (Tim's design, 2026-06-11): LONG-PRESS = point · the TRAY = the verbs ·
+   the top row = workspace/status/mode + the tools fold. Nothing uninvited, nothing scroll-hidden.
+   ============================================================================================ */
+.ui-pointed{outline:2px solid var(--acc) !important;outline-offset:2px;border-radius:4px}
+.mobile-tray{display:none}
+@media (max-width: 699px){
+  .app-shell{-webkit-touch-callout:none}
+  .app-shell input,.app-shell textarea{-webkit-touch-callout:default;-webkit-user-select:text}
+
+  /* THE TRAY — slim, above the tabbar, raised only by a selection */
+  .mobile-tray{display:flex;flex-direction:column;gap:6px;position:fixed;left:8px;right:8px;
+    bottom:64px;z-index:356;background:var(--s1);border:1px solid var(--acc);border-radius:8px;
+    padding:8px 10px;pointer-events:auto;max-height:46vh;overflow:auto}
+  .tray-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .tray-chip{cursor:pointer}
+  .tray-verbs{display:flex;gap:6px}
+  .tray-verbs .b{flex:1;font-size:11px;padding:7px 4px;white-space:nowrap}
+  .tray-explain{display:flex;flex-direction:column;gap:4px;font-size:var(--fs-meta);line-height:1.5}
+  .tray-change{display:flex;gap:6px}
+  .tray-change input{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:4px;
+    color:var(--tx);padding:7px 9px;font:inherit}
+
+  /* THE TOP ROW — three things + the fold. Everything else hides until the fold opens (stacked,
+     full-width, labeled — never scroll-hidden). The view-switch joins the flow (it escaped the
+     lane as an absolute element — the overlap Tim photographed). */
+  .view-switch{position:static !important;transform:none !important;flex:none}
+  .as-top .toolbar{flex-wrap:nowrap;overflow:visible}
+  .as-top .toolbar > .b:not(.tools-fold),.as-top .toolbar > button:not(.tools-fold){display:none}
+  .as-top .toolbar > .title{display:none}
+  .as-top .toolbar .presence{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+  .as-top .toolbar .tools-fold{display:inline-flex !important;flex:none}
+  /* the fold: open = the toolbar grows downward, hidden controls appear stacked + full width */
+  .as-top:has(.toolbar.fold-open){height:auto;max-height:60vh;overflow:auto}
+  .toolbar.fold-open{flex-wrap:wrap}
+  .toolbar.fold-open > .b,.toolbar.fold-open > button{display:flex !important;width:100%;
+    justify-content:flex-start;padding:9px 10px;font-size:12px}
+  .toolbar.fold-open > .tools-fold{width:auto}
+
+  /* the greeting pill joins the header line (left of nothing-floating law); the card stays full-width */
+  .greeting-pill{top:6px;right:8px;z-index:365;height:32px;font-size:10px}
+  .greeting-card{top:52px}
+
+  /* desktop-gesture surfaces with no phone face yet: never squat uninvited (the tray replaces them) */
+  .wire-door,.annotate-bar,.journey-bar{display:none !important}
+}

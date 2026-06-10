@@ -956,6 +956,63 @@ export function useAppController(editor: Editor) {
   // the input's ui://chat/input would OVERWRITE the locus → every message becomes "about the input/send".
   // So a click anywhere inside the chat region (the .rhm container is bare-keyed "chat") leaves the
   // current indication UNTOUCHED — you point with the rest of the surface, then talk in the chat.
+  // ── MOBILE POINTING (Tim's design, 2026-06-11): LONG-PRESS = point. No toggle. The set
+  // ACCUMULATES across taps/tabs (multi-select: long-press elsewhere adds; long-press a selected
+  // thing removes it). Regular taps stay completely normal. Desktop's point-mode is untouched.
+  const [pointedSet, setPointedSet] = useState<string[]>([])
+  const pointedSetRef = useRef<string[]>([])
+  const togglePointed = (addr: string) => {
+    const cur = pointedSetRef.current
+    const next = cur.includes(addr) ? cur.filter(a => a !== addr) : [...cur, addr]
+    pointedSetRef.current = next; setPointedSet(next)
+    document.querySelectorAll('.ui-pointed').forEach(el => {
+      const ref = (el as HTMLElement).dataset?.uiRef
+      if (ref && !next.includes(ref)) el.classList.remove('ui-pointed')
+    })
+    if (!cur.includes(addr)) {
+      document.querySelectorAll(`[data-ui-ref="${CSS.escape(addr)}"]`).forEach(el => el.classList.add('ui-pointed'))
+      indicate(addr)                                      // last-pointed = the indicated locus (compat)
+    }
+  }
+  const clearPointed = () => {
+    pointedSetRef.current = []; setPointedSet([])
+    document.querySelectorAll('.ui-pointed').forEach(el => el.classList.remove('ui-pointed'))
+    indicate(null)
+  }
+  useEffect(() => {
+    if (window.innerWidth > 699) return                   // the long-press gesture is the PHONE face
+    let timer: any = null, sx = 0, sy = 0, target: string | null = null, fired = false
+    const HOLD_MS = 480, MOVE_PX = 9
+    const down = (e: PointerEvent) => {
+      const el = (e.target as HTMLElement)?.closest?.('[data-ui-ref]') as HTMLElement | null
+      const ref = el?.dataset?.uiRef
+      // only FULL addresses point (ui:// chrome+canvas, run:// instances, exchange:// circles);
+      // the chat/builder/tray's own controls never become the subject (the conversing guard).
+      if (!ref || !/^(ui|run|exchange):\/\//.test(ref)) return
+      if (el.closest('[data-ui-ref="chat"], [data-ui-ref="ui://chat/builder"], .mobile-tray')) return
+      sx = e.clientX; sy = e.clientY; target = ref; fired = false
+      timer = setTimeout(() => { fired = true; togglePointed(target!) }, HOLD_MS)
+    }
+    const move = (e: PointerEvent) => {
+      if (timer && (Math.abs(e.clientX - sx) > MOVE_PX || Math.abs(e.clientY - sy) > MOVE_PX)) {
+        clearTimeout(timer); timer = null                 // a drag is a drag — never a point
+      }
+    }
+    const up = () => { if (timer) { clearTimeout(timer); timer = null } }
+    const ctx = (e: Event) => { if (fired) e.preventDefault() }   // iOS long-press menu suppression
+    document.addEventListener('pointerdown', down, true)
+    document.addEventListener('pointermove', move, true)
+    document.addEventListener('pointerup', up, true)
+    document.addEventListener('contextmenu', ctx, true)
+    return () => {
+      document.removeEventListener('pointerdown', down, true)
+      document.removeEventListener('pointermove', move, true)
+      document.removeEventListener('pointerup', up, true)
+      document.removeEventListener('contextmenu', ctx, true)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       if (!indicateModeRef.current) return                  // I1-gate: indicate only fires in the deliberate mode (Tim) — otherwise clicks are normal
@@ -2553,6 +2610,7 @@ export function useAppController(editor: Editor) {
     buildFromOutput, deleteSelected, sendChat, changeMode, cycleLayers, portalSelected,
     resolveUiTarget, startWalk, startGuide, endWalk, respondStep, nextStep, dispatch, recordToggle, fieldValue,
     setField, revertLast, revertSelfChangeAt, approveApply, doRun, refreshFleet, indicate, clickMode, annotateLocus, mintBuildIntent, setPresentationPrefAt,
+    pointedSet, togglePointed, clearPointed,
     approveProposal, dismissProposal, steerProposal, deferProposal, setAsideProposal, reviveOffer, toggleJourneyRecording, replayJourney, switchPersona,
     // A3/E2-FE · the consolidated Settings handlers
     openSettings, loadSettingsData, setCfgSlot,

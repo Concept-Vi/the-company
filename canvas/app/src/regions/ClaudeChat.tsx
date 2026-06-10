@@ -13,7 +13,7 @@
 // FORM: kit/corpus vocabulary only (.hud card, .msg/.who/.txt log shape, .rhm-indicating chip,
 // .b buttons) — zero literal colors. Self-contained state (the session is panel-local; the
 // controller's `indicated` is the only shared read) + per-panel error boundary at the mount.
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useApp } from '../AppContext'
 import { useForagerSelection } from '../ForagerShape'
 
@@ -38,6 +38,12 @@ export function ClaudeChat() {
   const foragerSel = useForagerSelection()
   const sessionRef = useRef<string | null>(null)
   const logRef = useRef<HTMLDivElement | null>(null)
+  // the MOBILE TRAY's "ask" verb hands its pointed set here (replace-semantics, same as give-to-builder)
+  useEffect(() => {
+    const h = (e: any) => { if (e?.detail?.block) { setCtxBlock(e.detail.block); setMin(false) } }
+    window.addEventListener('builder-context', h)
+    return () => window.removeEventListener('builder-context', h)
+  }, [])
 
   const push = (m: PanelMsg) => {
     setMsgs(prev => [...prev, m])

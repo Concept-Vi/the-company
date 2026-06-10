@@ -1,3 +1,4 @@
+import { useState } from 'react'
 // F0 (carved from App.tsx:1331–1371) · the toolbar region. data-ui-ref="toolbar" preserved.
 // U1 PRESERVE: the RUN button is `onClick={() => doRun()}` (arrow-wrapped) + the retry is too — NEVER
 // `onClick={doRun}` (that passes React's MouseEvent as `force` and re-introduces the canvas-RUN latch).
@@ -5,13 +6,17 @@ import { MODES } from '../api'
 import { useApp } from '../AppContext'
 
 export function Toolbar() {
+  // MOBILE TOOLS FOLD (Tim 2026-06-11): on the phone the top row keeps ONLY workspace/status/mode;
+  // every other control lives behind this ⋯ fold (revealed stacked + labeled — nothing hidden by
+  // scrolling, ever). Desktop: the fold button is display:none, the row is unchanged.
+  const [toolsOpen, setToolsOpen] = useState(false)
   const {
     now, running, chatBusy, runElapsed, runError, modeDesc, layerView, notice,
     doRun, changeMode, wireSelected, portalSelected, deleteSelected, cycleLayers, fitGraph, reload, setRunError, startGuide, openSettings,
     indicateMode, toggleIndicateMode,
   } = useApp()
   return (
-    <div className="hud toolbar" data-ui-ref="toolbar">
+    <div className={"hud toolbar" + (toolsOpen ? " fold-open" : "")} data-ui-ref="toolbar">
       <span className="title">the&nbsp;<em>company</em></span>
       {now && (
         <span className={'presence ' + (now.mode === 'off' ? 'off' : running || chatBusy ? 'busy' : now.surfaced_pending ? 'warn' : 'ok')}>
@@ -27,6 +32,8 @@ export function Toolbar() {
           <button className="b ghost sm" style={{ marginLeft: 4 }} onClick={() => setRunError(null)} title="dismiss">✕</button>
         </span>
       )}
+      <button className="b ghost tools-fold" onClick={() => setToolsOpen(o => !o)}
+        title="all tools">{toolsOpen ? '✕ tools' : '⋯ tools'}</button>
       {now && (
         // U11: the dropdown's title shows the CURRENT mode's description; each option carries its own.
         <select className="mode-sel" data-ui-ref="ui://toolbar/presence" value={now.mode || 'listening'} onChange={e => changeMode(e.target.value)}
