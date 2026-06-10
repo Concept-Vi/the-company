@@ -44,6 +44,9 @@ POLICY = {
     # role module is GATED (imported in a temp dir) before any write, so a bad approve can never brick
     # RoleRegistry.discover (the whole cognition layer). `role_delete` is its removal sibling.
     "role_build": CONFIRM, "role_delete": CONFIRM,
+    # GC10 — a PROPOSED flow (executable production-line code) lands only on the operator's
+    # approve of its SOURCE (the gate scans + tempdir-imports at propose AND apply).
+    "flow_build": CONFIRM,
 }
 # never graduate to AUTO, no matter the earned trust (D4/D7 forever-confirm)
 LOCKED = {"source_data", "external", "frozen_contract"}

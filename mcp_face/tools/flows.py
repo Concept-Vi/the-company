@@ -10,7 +10,7 @@ discovery); running one emits NO resolve/approve/dispatch and launches NO claude
 
 def register(mcp, suite):
     @mcp.tool()
-    def flows(op: str, flow: str = "", params: dict | None = None) -> dict:
+    def flows(op: str, flow: str = "", params: dict | None = None, spec: dict | None = None) -> dict:
         """RUN A PROVEN PRODUCTION LINE (a 'flow') — the registered multi-step chains, ONE call each.
 
         WHY THIS EXISTS: chains like the registry-filling line need a designed CONTEXT PACKAGE per
@@ -22,6 +22,10 @@ def register(mcp, suite):
           · 'list'     — every registered flow: id + label + one-line description + declared params.
           · 'describe' — ONE flow's full row (flow= required): the chain's stages, params with
                          defaults and descriptions, where its outputs land.
+          · 'propose'  — PROPOSE a NEW flow (spec= {id, label, description, params, body}; `body`
+                         is the run() code). GATED: a body touching operator verbs or process
+                         launches refuses immediately; a clean proposal SURFACES for the operator's
+                         approval of the source — it lands only on his approve (you cannot apply it).
           · 'run'      — invoke it (flow= required; params= optional dict matching the DECLARED
                          params — unknown names refuse loud with the declared set named). Flows are
                          BOUNDED (time-budget params) and resume-safe where stateful; the return is
@@ -40,8 +44,13 @@ def register(mcp, suite):
             if not flow:
                 raise ValueError("flows(op='describe') needs flow= — one of: " + ", ".join(sorted(reg)))
             return {"flow": reg.get(flow).spec}
+        if op == "propose":
+            if not isinstance(spec, dict):
+                raise ValueError("flows(op='propose') needs spec= {id, label, description, params, body} "
+                                 "— body is the run() code (str). The operator approves the source.")
+            return suite.propose_flow(spec)
         if op == "run":
             if not flow:
                 raise ValueError("flows(op='run') needs flow= — one of: " + ", ".join(sorted(reg)))
             return {"flow": flow, "result": reg.get(flow).run(**(params or {}))}
-        raise ValueError(f"unknown op {op!r} — flows ops are list | describe | run (fail loud).")
+        raise ValueError(f"unknown op {op!r} — flows ops are list | describe | run | propose (fail loud).")

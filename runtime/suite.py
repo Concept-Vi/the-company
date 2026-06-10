@@ -8987,6 +8987,67 @@ class Suite:
                 desc=str(d["payload"].get("description") or ""))
         return guard("role_build", do=_do, confirmed=self.inbox.is_approved(surfaced_id))
 
+    def propose_flow(self, spec: dict) -> dict:
+        """GC10 — an agent PROPOSES a new FLOW (a code production-line): render (authoring.render_flow_source,
+        the ONE renderer) → GATE (forbidden-verb scan + import-in-tempdir through the REAL loader; a flow
+        that touches operator verbs or process launches refuses HERE, before anything surfaces) → SURFACE
+        for the operator (action class `flow_build`, default reject). Executable code stays GATED — the
+        operator approves the SOURCE; apply_flow lands it only on his approve. Returns {id, flow_id, source}."""
+        from runtime import authoring as _auth
+        if not isinstance(spec, dict):
+            raise TypeError(f"propose_flow needs a dict spec, got {type(spec).__name__}")
+        source = _auth.render_flow_source(spec)
+        fid = _auth._safe_entry_id(spec.get("id"), "flow")
+        from runtime.flows import FlowRegistry
+        if fid in FlowRegistry().discover():
+            raise ValueError(f"flow {fid!r} already exists — propose_flow is for a NEW flow. Fail loud.")
+        err = _auth.gate_flow_source(fid, source)
+        if err:
+            raise ValueError(f"propose_flow({fid!r}): REFUSED at the gate — {err}")
+        sid = self.inbox.surface("flow_build", {"id": fid, "source": source}, default="reject")
+        self._emit("grow", f"a new flow '{fid}' was proposed — surfaced for approval (the source is the "
+                   f"review object)", node_name=fid, surfaced=sid, address="ui://chrome/inbox")
+        return {"id": sid, "flow_id": fid, "source": source}
+
+    def apply_flow(self, surfaced_id: str) -> str:
+        """GC10 — land an OPERATOR-APPROVED flow proposal: re-gate the source (defense in depth — the gate
+        runs at propose AND at apply), write flows/<id>.py atomically, reflect the drift home
+        (flows/AGENTS.md, the N6 pattern), commit-or-rollback. Runs ONLY on the operator's approve (the
+        guard reads the substrate — no caller flag can bypass)."""
+        from runtime import authoring as _auth
+        from runtime.governance import guard
+        d = self.inbox.get(surfaced_id)
+        if not d or d.get("action") != "flow_build":
+            raise ValueError(f"apply_flow: surfaced {surfaced_id!r} is not a flow_build. Fail loud.")
+        def _do():
+            fid = _auth._safe_entry_id(d["payload"]["id"], "flow")
+            source = d["payload"]["source"]
+            err = _auth.gate_flow_source(fid, source)
+            if err:
+                raise RuntimeError(f"apply_flow({fid!r}): the approved source no longer gates — {err}")
+            path = os.path.join("flows", f"{fid}.py")
+            os.makedirs("flows", exist_ok=True)
+            tmp = path + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                f.write(source if source.endswith("\n") else source + "\n")
+            os.replace(tmp, path)
+            try:
+                _refl = self._reflect_drift_home("flows", fid, "flow",
+                                                 desc=str(d["payload"].get("description") or ""))
+                sha = self._commit_or_rollback(path, f"add flow '{fid}' (operator-approved proposal)",
+                                               extra_paths=[_refl[0]] if _refl else None,
+                                               restore={_refl[0]: _refl[1]} if _refl else None)
+            except BaseException:
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+                raise
+            self._emit("apply", f"approved + applied flow '{fid}' — now a registered production line · "
+                       f"{sha[:8]}", node_name=fid, commit=sha, address="ui://chrome/workshop")
+            return path
+        return guard("flow_build", do=_do, confirmed=self.inbox.is_approved(surfaced_id))
+
     def _write_role_file(self, rid: str, source: str, commit_msg: str, *, emit_msg: str,
                          desc: str = "") -> str:
         """The shared CONSEQUENTIAL write-half of role authoring — the factored body BOTH the

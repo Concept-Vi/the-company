@@ -581,3 +581,70 @@ def gate_entry_source(eid: str, source: str, *, kind: str) -> str | None:
     finally:
         import shutil
         shutil.rmtree(d, ignore_errors=True)
+
+
+# ── GC10 · FLOW authoring (the gated code-chain path — propose→operator-approve→apply) ──────────────
+FORBIDDEN_FLOW_PATTERNS = (
+    # the floor, enforced AT THE GATE (before surfacing, again before landing): a proposed flow body
+    # must not reach the operator-only verbs or launch builds. Pattern-level (a determined human
+    # reviewer is the real gate — the operator approves the SOURCE; this kills the obvious paths loud).
+    "resolve(", "resolve_surfaced", ".approve", "dispatch_decision", "claude -p", "claude_p",
+    "subprocess", "os.system", "set_status(",
+)
+
+
+def render_flow_source(spec: dict) -> str:
+    """Render a proposed FLOW row + run() body into a flows/<id>.py module (GC10 — mirrors
+    render_role_source: ONE renderer, the gate validates the RESULT). `spec` carries the FLOW fields
+    (id/label/description/params) + `body` (the run() body as code lines, str). The rendered module
+    declares proposes_only=True UNCONDITIONALLY — a proposed flow cannot opt out of the floor."""
+    fid = _safe_entry_id(spec.get("id"), "flow")
+    body = spec.get("body")
+    if not isinstance(body, str) or not body.strip():
+        raise AuthoringError(f"flow {fid!r}: needs a non-empty `body` — the run() body (code, str).")
+    params = spec.get("params") or {}
+    if not isinstance(params, dict):
+        raise AuthoringError(f"flow {fid!r}: params must be a dict of name -> {{desc, default}}.")
+    sig = ", ".join(f"{n}={p.get('default')!r}" for n, p in params.items()) or ""
+    body_lines = "\n".join(f"    {ln}" for ln in body.splitlines())
+    return (
+        f'"""flows/{fid}.py — PROPOSED flow (GC10 gated authoring: an agent proposed it; the operator '
+        f'approved the SOURCE; landed via apply_flow — the propose→accept→Real lifecycle for the '
+        f'system\'s own toolset)."""\n\n'
+        f"FLOW = {{\n"
+        f"    \"id\": {fid!r},\n"
+        f"    \"label\": {str(spec.get('label') or fid)!r},\n"
+        f"    \"description\": {str(spec.get('description') or '')!r},\n"
+        f"    \"params\": {params!r},\n"
+        f"    \"proposes_only\": True,\n"
+        f"}}\n\n\n"
+        f"def run({sig}) -> dict:\n{body_lines}\n"
+    )
+
+
+def gate_flow_source(fid: str, source: str) -> str | None:
+    """The CORRECTNESS + FLOOR gate for a flow module (mirrors gate_role_source): (1) forbidden-verb
+    scan (loud, names the pattern); (2) import-in-tempdir; (3) the FLOW row + run() callable validate
+    through the REAL loader (one validator — runtime.checks-style reuse). Returns None if clean, else
+    the refusal reason."""
+    low = source
+    for pat in FORBIDDEN_FLOW_PATTERNS:
+        if pat in low:
+            return (f"the proposed body contains {pat!r} — a flow PROPOSES only (no operator verbs, "
+                    f"no process launches). The floor refuses it at the gate.")
+    import tempfile, os as _os
+    with tempfile.TemporaryDirectory() as td:
+        d = _os.path.join(td, "flows")
+        _os.makedirs(d)
+        with open(_os.path.join(d, f"{fid}.py"), "w", encoding="utf-8") as f:
+            f.write(source)
+        cwd = _os.getcwd()
+        try:
+            _os.chdir(td)
+            from runtime.flows import FlowRegistry
+            FlowRegistry().discover()
+        except Exception as e:
+            return f"the rendered module fails the flow loader: {type(e).__name__}: {e}"
+        finally:
+            _os.chdir(cwd)
+    return None

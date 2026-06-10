@@ -45,4 +45,3 @@ Add a row = add a FILE + reflect it here (the drift home). Loader: `runtime/flow
 ## Agent-authored entries (auto-reflected)
 <!-- created live by the create face; one line per entry — keeps the
      drift-home acceptance green; refine the prose by integration. -->
-- **`gc10_probe`** — agent-authored flow (created via the declarative-direct face). 
