@@ -62,8 +62,16 @@ TASK D — RUN AN EXISTING COMPOSITION (the use-existing flow). Through the MCP 
 2) Run ONE of them end-to-end with a reasonable input, and read the result.
 Report the friction: could you tell what cascades exist + what each needs as input? Was running one obvious? Did the result come back legible? If none ran cleanly, exactly why (the gap).`,
     { label: 'D-run-existing', phase: 'Eval', schema: SCHEMA }),
+
+  () => agent(`${FRESH}
+TASK E — THE FULL KNOWLEDGE LOOP (feed → ask → tally — the newest capabilities, cold). Through the MCP only:
+1) FEED: get the file build-prep/cognition-self-improvement/MCP-DESIGN-PRINCIPLE.md into the system's queryable memory (find the tool for ingesting; use it on that one explicit path).
+2) ASK: query the system's memory: "what are the rules for designing MCP tools here?" — get real ranked results and read one back.
+3) TALLY: run any registered classification role over 4-5 short texts of your choosing, then reduce the outputs to a COUNT PER LABEL (a histogram) using a deterministic rule — no model in the reduce.
+Report the friction at each hop: was the ingest tool discoverable + did its response teach you anything? was asking obvious? was the per-label tally achievable with a NAMED rule this time (it required building a custom role in an earlier eval)?`,
+    { label: 'E-knowledge-loop', phase: 'Eval', schema: SCHEMA }),
 ])
 
 const ok = evals.filter(Boolean)
-log(`Eval: ${ok.length}/4 · outcomes: ${ok.map(e=>e.task+'='+e.outcome).join(' · ')}`)
+log(`Eval: ${ok.length}/5 · outcomes: ${ok.map(e=>e.task+'='+e.outcome).join(' · ')}`)
 return { evals: ok }
