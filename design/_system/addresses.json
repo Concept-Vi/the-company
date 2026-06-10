@@ -5962,6 +5962,412 @@
         "run": "rg10-refined",
         "model": "chat-4b (floor+prose+panel gated)"
       }
+    },
+    "ui://activity/audit": {
+      "region": "activity",
+      "capabilities": [
+        "presentable",
+        "spotlit"
+      ],
+      "represents": "EVT-log",
+      "howto": "WHAT: The forensic audit dashboard on the activity feed. WHAT YOU CAN DO: View the complete chronological path of events for a decision, read the raw activity log, and review the specific causal chain that authorized the final outcome. HOW TO CHANGE IT: The head reads suite.py:now (live state); the feed is the captured trajectory — it reflects, it doesn't drive.",
+      "maps_to_feature": "EVT-log",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://canvas/foot": {
+      "region": "canvas",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "RUN-status",
+      "howto": "WHAT: The status footer at the bottom of the running workspace. WHAT YOU CAN DO: Read the live state of the data processing pipeline (e.g., 'live', 'ran ask', 'event-stream connected') and see the resolution count (4/4 resolved). HOW TO CHANGE IT: It lives in the footer region (canvas/app/src/regions/Footer.tsx); changing the text or state indicators is a code change there.",
+      "maps_to_feature": "RUN-status",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://canvas/inspector": {
+      "region": "canvas",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "INSPECT-panel",
+      "howto": "WHAT: The Inspector panel on the canvas — the control surface for viewing and configuring a selected node. WHAT YOU CAN DO: Select a node on the board to view its configuration fields, typed inputs, and outputs here; the panel reflects the live state of that node. HOW TO CHANGE IT: The panel region is defined in canvas/app/src/regions/Inspector.tsx; changing its fields or structure requires code edits there.",
+      "maps_to_feature": "NODE-config",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://canvas/legend": {
+      "region": "canvas",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "LEGEND-kinds",
+      "howto": "WHAT: The legend panel on the canvas showing the two real kinds (process and content) and their four status vocabulary. WHAT YOU CAN DO: View the visual keys for the system's node types and their current run-states to understand the map's semantics. HOW TO CHANGE IT: It lives in the canvas region (canvas/app/src/NodeShape.tsx:NodeShapeUtil); changing the legend is a code change there.",
+      "maps_to_feature": "NODE-kinds",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://canvas/node/memo-gate": {
+      "region": "canvas",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "NODE-memo",
+      "howto": "WHAT: The memo gate on a node card, explaining when a node skips re-running. WHAT YOU CAN DO: Read the condition that allows the node to skip re-running based on its hash unchanged. HOW TO CHANGE IT: The text is a static annotation; changing the logic requires editing runtime/scheduler.py, but the visible text is not a code region.",
+      "maps_to_feature": "ENG-memo",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://canvas/portal": {
+      "region": "canvas",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "Portal window",
+      "howto": "WHAT: The live window frame that opens onto another address (e.g., run://demo/answer). WHAT YOU CAN DO: View the remote content as a live, translucent overlay; the frame reflects the source's state without copying it. HOW TO CHANGE IT: It lives in the canvas region (canvas/app/src/NodeShape.tsx) wired to the source's output; changing the frame style or connection logic is a code edit there.",
+      "maps_to_feature": "NODE-portal",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://canvas/process": {
+      "region": "canvas",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "NODE-process",
+      "howto": "WHAT: The 'Process' node header on the canvas, displaying the kind and label of a specific node in the composition. WHAT YOU CAN DO: Select this node to inspect its full output, configuration, status, and input/output ports; use it to view provenance details. HOW TO CHANGE IT: It lives in the canvas region (canvas/app/src/NodeShape.tsx); changing the node's kind or label requires a code edit there.",
+      "maps_to_feature": "NODE-kinds",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://canvas/tabbar": {
+      "region": "canvas",
+      "capabilities": [
+        "pointable",
+        "driven"
+      ],
+      "represents": "CAN-tabbar",
+      "howto": "WHAT: The navigation strip at the top of the canvas workspace. WHAT YOU CAN DO: Switch between the main canvas, the Inbox, the RHM view, and the Run state to navigate the workspace's different modes. HOW TO CHANGE IT: It lives in the canvas region (canvas/app/src/NodeShape.tsx); changing the tabs is a code change there.",
+      "maps_to_feature": "CAN-compose",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://canvas/workshop": {
+      "region": "canvas",
+      "capabilities": [
+        "pointable",
+        "openable"
+      ],
+      "represents": "Workshop entry",
+      "howto": "WHAT: The workshop control on the canvas footer. WHAT YOU CAN DO: Open the detailed workshop view for the 'ask' process node, showing its full output, configuration, and status. HOW TO CHANGE IT: It lives in the footer region (canvas/app/src/regions/Footer.tsx); changing the content or behavior is a code change there.",
+      "maps_to_feature": "WS-workshop",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://chat/inbox": {
+      "region": "chat",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "RHM-inbox",
+      "howto": "WHAT: The inbox indicator on the RHM chat presence — a live counter showing the number of active conversations or pending items awaiting the operator. WHAT YOU CAN DO: See the current count of active conversations or pending system states at a glance; clicking it (if openable) would likely reveal the list of those items. HOW TO CHANGE IT: The surface is RHMChat.tsx (the chat region); the count logic is driven by the live state of the conversation queue in suite.py:chat.",
+      "maps_to_feature": "RHM-chat",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://chat/memo-gate": {
+      "region": "chat",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "ENG-memo",
+      "howto": "WHAT: The inquiry point on the Scenario Player where the system explains its memo-gate logic. WHAT YOU CAN DO: Ask the system how it decides whether a node re-runs based on live state. HOW TO CHANGE IT: The surface is the Scenario Player interface; the logic is defined in the memo-gate wire.",
+      "maps_to_feature": "ENG-memo",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://chat/process-11": {
+      "region": "chat",
+      "capabilities": [
+        "presentable",
+        "spotlit"
+      ],
+      "represents": "Process 11 node",
+      "howto": "WHAT: A status indicator for the 'Model of Tim' content node in the Twin system's technical dashboard. WHAT YOU CAN DO: View the node's current volatile status (marked as 'RAN'), read its content digest, and observe the provenance grading and echo-guard rules applied to the system's turns. HOW TO CHANGE IT: The surface is the technical dashboard region; the state is driven by the volatile content node logic.",
+      "maps_to_feature": "ENG-volatile",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://chat/rhm": {
+      "region": "chat",
+      "capabilities": [
+        "openable",
+        "driven"
+      ],
+      "represents": "RHM-chat",
+      "howto": "WHAT: The living conversational entity that acts as your voice and presence for the Company. WHAT YOU CAN DO: Ask it about the system state, listen to its voice, record sessions, and configure its model and persona. HOW TO CHANGE IT: The surface is RhmChat.tsx; the brain is suite.py:chat — your turns train the twin, and its working-grade inference drives the system.",
+      "maps_to_feature": "RHM-chat",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://chat/utterance": {
+      "region": "chat",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "The memo-gate change summary",
+      "howto": "WHAT: A summary statement of the memo-gate change awaiting review. WHAT YOU CAN DO: Read the summary to understand the change, then approve, reject, comment, or skip it as part of the review process. HOW TO CHANGE IT: The surface is the Walkthrough region (RhmChat.tsx); the content generation is driven by the system's state analysis (suite.py:chat).",
+      "maps_to_feature": "proposed",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://chat/walk": {
+      "region": "chat",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "WALK-present",
+      "howto": "WHAT: The 'Walkthrough' view on the chat interface, where the system highlights a specific item to guide the operator's attention. WHAT YOU CAN DO: Approve, reject, decide, comment, or skip the current highlighted item; you can also speak to the system to push a voice command. HOW TO CHANGE IT: The surface is RhmChat.tsx; the session logic is suite.py:chat (specifically the WALK-session wire for guiding attention).",
+      "maps_to_feature": "WALK-present",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://inbox/audit": {
+      "region": "inbox",
+      "capabilities": [
+        "presentable",
+        "spotlit"
+      ],
+      "represents": "INB-audit",
+      "howto": "WHAT: The audit footer on the forensic dashboard. WHAT YOU CAN DO: View the complete chronological path of events for a decision, read the raw activity log, and review the specific causal chain that authorized the final outcome. HOW TO CHANGE IT: The footer is the visible organ of the dashboard region; the log tracing logic lives in the runtime suite (audit tracing).",
+      "maps_to_feature": "EVT-log",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://inbox/build-review/foot": {
+      "region": "inbox",
+      "capabilities": [
+        "pointable",
+        "presentable",
+        "spotlit"
+      ],
+      "represents": "WIRE-status",
+      "howto": "WHAT: The status footer on the build review card. WHAT YOU CAN DO: Read the live state of the build (live, closed, implemented) and the event stream connection status. HOW TO CHANGE IT: It lives in the build-review region (runtime/suite.py:review_verdicts); changing the status text is a code change there.",
+      "maps_to_feature": "WIRE-status",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://inbox/build-review/lifecycle-states": {
+      "region": "inbox",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "WIRE-states",
+      "howto": "WHAT: The legend explaining the lifecycle outcomes of a dispatched build. WHAT YOU CAN DO: Read the rules governing how a build either closes successfully or returns as a specific failure state for review. HOW TO CHANGE IT: The legend text is the decision→implementation wire (guarded close + surface_review); changing it requires a code update in the review verdicts region.",
+      "maps_to_feature": "WIRE-states",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://inbox/build-review/verdict": {
+      "region": "inbox",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "WIRE-verdict",
+      "howto": "WHAT: A verdict marker on the build-review card indicating the item's current state. WHAT YOU CAN DO: Read the status ('held', 'deferred', 're-offered') to understand the item's lifecycle stage and required action. HOW TO CHANGE IT: The state is determined by the review verdict logic in suite.py:review_verdicts; changing the visible label requires updating that verdict logic.",
+      "maps_to_feature": "WIRE-states",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://inbox/decision": {
+      "region": "inbox",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "INB-decision",
+      "howto": "WHAT: The decision card in the inbox's action lane, presenting a pre-triaged value-choice. WHAT YOU CAN DO: Drill into the item to see its ground truth or open the build review; the system translates the raw technical decision into a Commander-altitude value choice (what it means, 2-3 options with trade-offs, and a recommendation). HOW TO CHANGE IT: The card is the visible organ in Inbox.tsx; the compilation logic is suite.py:coa (the decision-compiler); you decide on value, never the raw code fork.",
+      "maps_to_feature": "INB-coa",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://inbox/idea": {
+      "region": "inbox",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "INB-idea",
+      "howto": "WHAT: A triage note in the inbox indicating a mid-flow item that has resurfaced for review. WHAT YOU CAN DO: Read the status of the resurfaced item and the recommended action (turn into a build-intent or defer). HOW TO CHANGE IT: The note is surfaced in Inbox.tsx; the underlying state and recommendation logic live in suite.py:inbox_lanes.",
+      "maps_to_feature": "INB-idea",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://inspector/status": {
+      "region": "inspector",
+      "capabilities": [
+        "presentable",
+        "spotlit"
+      ],
+      "represents": "NODE-status",
+      "howto": "WHAT: The live status bar on the Node Inspector panel. WHAT YOU CAN DO: Read the node's current state (live, running, inputs cached, resolution count, and event stream connection) at a glance. HOW TO CHANGE IT: It lives in the Inspector.tsx region; the status text is driven by the node's runtime state (likely via a state wire or status query).",
+      "maps_to_feature": "NODE-status",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://rail/palette/node-kinds": {
+      "region": "rail",
+      "capabilities": [
+        "pointable",
+        "spotlit"
+      ],
+      "represents": "NODE-kinds",
+      "howto": "WHAT: The 'Node palette' — the rack of build-blocks displaying every known node-type (grouped by kind: process, acts, content, holds). WHAT YOU CAN DO: Click a block to drop that node on the board; select two and use the wire tool to connect them. HOW TO CHANGE IT: The rack fills itself from the live registry; adding a node-type (nodes/<name>.py) makes a new block appear here automatically, no palette code change required.",
+      "maps_to_feature": "NODE-kinds",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://settings/endpoint": {
+      "region": "settings",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "RHM-config endpoint",
+      "howto": "WHAT: The endpoint configuration field within the Living Instrument settings panel. WHAT YOU CAN DO: Read the provider base URL for the current endpoint and update it if the setting is changeable. HOW TO CHANGE IT: The surface is Settings.tsx; the value is managed via the existing config path (suite.py:set_rhm_config) under the RHM-config feature.",
+      "maps_to_feature": "RHM-config",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://tabbar/canvas": {
+      "region": "tabbar",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "CAN-compose",
+      "howto": "WHAT: The 'Canvas' navigation button in the mobile tabbar. WHAT YOU CAN DO: Tap this to switch the view to the live 'running chain' map, where you can zoom and interact with the data flow visualization. HOW TO CHANGE IT: It is the 'Canvas' link in the .tabbar region (canvas/app/src/App.tsx); changing its label or icon is a code change there.",
+      "maps_to_feature": "CAN-compose",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://tabbar/inbox": {
+      "region": "tabbar",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "INB-surface",
+      "howto": "WHAT: The Inbox entry point in the mobile navigation bar. WHAT YOU CAN DO: Switch the view to the Inbox surface where decisions and approvals are managed. HOW TO CHANGE IT: It lives in the .tabbar region (App.tsx); changing the label or icon is a code change there.",
+      "maps_to_feature": "INB-surface",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://toolbar/force": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable",
+        "spotlit"
+      ],
+      "represents": "RUN-force",
+      "howto": "WHAT: The force control on the toolbar. WHAT YOU CAN DO: Click this to immediately trigger a forced system action, overriding normal state checks. HOW TO CHANGE IT: It lives in the toolbar region (canvas/app/src/regions/Toolbar.tsx); changing its behavior is a code change there.",
+      "maps_to_feature": "ENG-force",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://toolbar/presence/resp": {
+      "region": "toolbar",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "RHM-text-mode",
+      "howto": "WHAT: The text-only response switch on the presence dial. WHAT YOU CAN DO: Click this to force the RHM to reply only in concise text, ignoring visual or complex modes; click again to restore the previous posture. HOW TO CHANGE IT: It lives in the presence dial region (runtime/suite.py:set_mode); changing the text-only behavior is a code change there.",
+      "maps_to_feature": "RHM-modes",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
+    },
+    "ui://twin/addresses.json": {
+      "region": "twin",
+      "capabilities": [
+        "pointable",
+        "presentable"
+      ],
+      "represents": "Twin's address ledger",
+      "howto": "WHAT: The address ledger for the Twin system, displaying the current node configuration. WHAT YOU CAN DO: View the current addresses and their state within the Twin's operational context. HOW TO CHANGE IT: It reads from the twin's configuration region (runtime/suite.py:training_signal context); changes require updating the twin's address mapping.",
+      "maps_to_feature": "RHM-twin",
+      "provenance": {
+        "run": "rg10-conflict-resolution",
+        "model": "lead-investigated"
+      }
     }
   }
 }

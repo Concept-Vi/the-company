@@ -158,7 +158,7 @@
       <div class="bar"><span class="mono-chip">A</span><span class="ty">ask</span><span class="kindlabel">process · ran</span></div>
       <div class="body">grounded answer over the codebase
         <div class="cfg"><span class="pill" style="border-color:var(--kind-model);color:var(--kind-model)">model <b style="color:var(--kind-model)">deepseek-v4-pro</b></span></div>
-        <div class="out">The memo gate skips re-running a node when its (type, version, config, inputs) hash is unchanged — runtime/scheduler.py…</div>
+        <div class="out" data-ui-ref="ui://canvas/node/memo-gate">The memo gate skips re-running a node when its (type, version, config, inputs) hash is unchanged — runtime/scheduler.py…</div>
       </div>
       <div class="addr"><span>run://demo/ask</span><span class="sdot s-ran"></span></div>
       <span class="port in"></span><span class="ptag" style="left:-38px;top:calc(50% - 8px)">Text</span>
@@ -206,8 +206,8 @@
 
   <!-- ── BOTTOM TAB-BAR — Canvas · Inbox · RHM · Run (system component; await lives here as a badge, never on a node) ── -->
   <nav class="tabbar" data-ui-ref="ui://tabbar" style="display:flex">
-    <a class="on"><span class="ic">▦</span>Canvas</a>
-    <a><span class="ic">✦</span>Inbox</a>
+    <a class="on" data-ui-ref="ui://tabbar/canvas"><span class="ic">▦</span>Canvas</a>
+    <a data-ui-ref="ui://tabbar/inbox"><span class="ic">✦</span>Inbox</a>
     <a data-ui-ref="ui://tabbar/rhm"><span class="ic">◈</span>RHM</a>
     <a><span class="ic">▶</span>Run</a>
   </nav>

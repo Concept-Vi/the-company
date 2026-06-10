@@ -124,7 +124,7 @@
   </header>
 
   <nav class="rail collapsible" data-ui-ref="ui://canvas/process-ask">
-    <h4><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span></h4>
+    <h4 data-ui-ref="ui://canvas/process"><span class="kdot" style="background:var(--kind-process)"></span><span class="label">Process</span></h4>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">A</span><span class="label">ask</span></div>
     <div class="chip"><span class="mono-chip" style="background:var(--kind-process)">L</span><span class="label">llm</span></div>
     <h4 data-ui-ref="ui://canvas/content"><span class="kdot" style="background:var(--kind-content)"></span><span class="label">Content</span></h4>
@@ -136,7 +136,7 @@
     <!-- the same node, faint behind — "opened full" -->
     <div class="node ghost" data-kind="process" style="position:absolute">
       <div class="bar"><span class="mono-chip">A</span><span class="ty">ask</span><span class="kindlabel">process · ran</span></div>
-      <div class="body">question + context → answer</div>
+      <div class="body" data-ui-ref="ui://canvas/workshop">question + context → answer</div>
     </div>
 
     <!-- ── THE WORKSHOP OVERLAY — full-detail surface on one node ── -->

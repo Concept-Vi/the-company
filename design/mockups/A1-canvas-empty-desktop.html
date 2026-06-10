@@ -122,7 +122,7 @@
       <!-- on an empty stage there is nothing to layer/force/run yet → quiet until a node exists -->
       <button class="btn quiet">◐ <span class="lbl">layers</span></button>
       <button class="btn quiet">＋ <span class="lbl">wire</span></button>
-      <button class="btn quiet">↻ <span class="lbl">force</span></button>
+      <button class="btn quiet" data-ui-ref="ui://toolbar/force">↻ <span class="lbl">force</span></button>
       <button class="btn quiet" disabled data-ui-ref="ui://toolbar/run">▶ <span class="lbl">run</span> <span class="k">⏎</span></button>
     </div>
   </header>
@@ -202,7 +202,7 @@
   </footer>
 
   <!-- ── RIGHT PANEL — docked instrument, empty-state (nothing selected; inbox 0 → no badge) ── -->
-  <aside class="panel">
+  <aside class="panel" data-ui-ref="ui://canvas/inspector">
     <div class="tabs">
       <span class="tab on">⊙ Inspector</span>
       <span class="tab">✦ Inbox</span>
@@ -222,7 +222,7 @@
   </aside>
 
   <!-- mobile tab-bar (hidden on desktop; present so the responsive system from design-system.css resolves) -->
-  <nav class="tabbar">
+  <nav class="tabbar" data-ui-ref="ui://canvas/tabbar">
     <a class="on"><span class="ic">▦</span>Canvas</a>
     <a data-ui-ref="ui://canvas/inbox"><span class="ic">✦</span>Inbox</a>
     <a data-ui-ref="ui://canvas/rhm"><span class="ic">◈</span>RHM</a>

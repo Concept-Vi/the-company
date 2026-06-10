@@ -184,7 +184,7 @@
   </header>
 
   <nav class="rail collapsible">
-    <h4>Audit lenses</h4>
+    <h4 data-ui-ref="ui://inbox/audit">Audit lenses</h4>
     <div class="chip on"><span class="mono-chip">⛓</span><span class="label">Causal lineage</span></div>
     <div class="chip on"><span class="mono-chip">↳</span><span class="label">Decision trajectory</span></div>
     <div class="chip on"><span class="mono-chip">≣</span><span class="label">Raw stream</span></div>
@@ -199,7 +199,7 @@
        decision belongs to ui://inbox/coa. -->
   <main class="audit" data-ui-ref="ui://activity">
     <div class="audit-head">
-      <span class="h">Decision trajectory audit</span>
+      <span class="h" data-ui-ref="ui://activity/audit">Decision trajectory audit</span>
       <span class="sub">how did we get here — the captured path, reconstructed from the append-only log</span>
       <span class="mode">operator-directed · forensic</span>
     </div>
