@@ -369,3 +369,7 @@ Tim, closing the walk: my harness memory of him is useful but trapped — only C
 ## 2026-06-10 — B5 batch 2 (the migration is ~2/3 done)
 - ◑ **B5:** five more rules migrated (investigate_before_coding · use_existing_resources · record_expansively · render_for_cognition · no_deferral — the last with the standing-rule lineage note pointing at the confirmed conditional-memory refinement). **Registry: 7 confirmed + 13 proposed.** One more batch (~5: expand-dont-echo variants already mined; remaining candidates: confirm-before-writing · look-at-output · not-a-developer/AI-supplies-domain-knowledge · maximal-capture · incomplete-work-in-scope) then the migratable set is exhausted.
 - DESIGN NOTE for Tim's gate: 13 one-word confirms is approaching a refine-before-gating violation — the BATCH-CONFIRM form ("confirm all 13" / per-row veto) should be offered, mirroring the registry walk's block-approve.
+
+## 2026-06-10 — B5 COMPLETE: the harness→system memory migration is done
+- ✅ **B5 (3 batches):** the migratable working-with-Tim knowledge is FULLY in the system registry — **25 rows: 7 confirmed + 18 proposed**, every one with his verbatim evidence. What stayed harness-side BY DESIGN: project-state notes (session context, not knowledge-of-Tim). The remaining gate: Tim's BLOCK-CONFIRM of the 18 (offered as one decision with per-row veto — the refine rule applied to his own memory).
+- **THE BOARD'S LAST LANES: B3 rolling (fire on staleness) · B4 consolidation drafts (other-lane docs, propose-not-apply) · Track 1 (the brain conversation, Tim's).**
