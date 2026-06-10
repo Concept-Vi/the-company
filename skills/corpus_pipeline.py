@@ -15,7 +15,7 @@ launches claude -p (a skill is declarative content).
 SKILL = {
     "id": "corpus_pipeline",
     "label": "The 3-layer corpus pipeline",
-    "description": "Recipe: capture(describe over N units)→run_items(extract)→run_items(project)→[engine embed pass]→run_reduce(cluster then synthesize)→findings_for. The order + each step's output→next-input wiring.",
+    "description": "Recipe: capture(describe over N units)→run_items(extract)→run_items(project)→[engine embed pass]→run_reduce(cluster then synthesize)→marks(by='target'). The order + each step's output→next-input wiring.",
     "content": (
         "THE 3-LAYER CORPUS PIPELINE — turn a corpus of N units into discoverable, addressed,\n"
         "queryable knowledge. Drive these REAL MCP tools IN THIS ORDER; each step's OUTPUT is the\n"
@@ -35,8 +35,8 @@ SKILL = {
         "    inversion-finder).\n"
         "  RETURNS {captured:[{i, source_address, address, cas, seq}], skipped, failed, turn_id, ...}.\n"
         "  WIRING: `captured[*].address` are the record addresses; read one back with\n"
-        "    read_corpus_record(address) / inspect_address(address); list/filter the set with\n"
-        "    list_corpus(project=P) / find_corpus(project=P, projection=<lens>). `skipped`/`failed`\n"
+        "    corpus(op='read', address=<it>) / inspect_address(address); list/filter the set with\n"
+        "    corpus(op='list'|'find', project=P, projection=<lens>). `skipped`/`failed`\n"
         "    carry units that produced NO record (per-unit resilience — a poison unit never vanishes).\n"
         "\n"
         "LAYER 1b — EXTRACT, then PROJECT (refine the captured units, still the MAP):\n"
@@ -77,16 +77,16 @@ SKILL = {
         "  finding per group. Chaining run_items (MAP) → run_reduce (JOIN) is the map-vs-reduce recipe —\n"
         "  see skill://map_reduce_composition.\n"
         "\n"
-        "READ THE RESULT — findings_for(address):\n"
-        "  findings_for(<a corpus address>) READS the MARKS / gold-likelihood profile a mark-pass left on\n"
+        "READ THE RESULT — marks(by='target', target=<address>):\n"
+        "  marks(by='target') READS the mark THREAD on that address — the gold-likelihood profile left on\n"
         "  that address (oldest-first, positive-only, see-WHY). An address with no findings returns an\n"
-        "  HONEST empty list. NOTE: WRITING marks (`mark`) is a later STORE pass and is NOT a tool today —\n"
-        "  findings_for is the READ side only. To ENCODE a pattern you discovered, author a new lens with\n"
-        "  create_projection and run another capture round (see skill://patterned_visibility).\n"
+        "  HONEST empty list (marks(by='findings', address=...) reads the legacy coherence findings).\n"
+        "  WRITING a mark is the `mark` tool (mark_type registry-gated). To ENCODE a pattern, author a lens with\n"
+        "  create(kind='projection') and run another capture round (see skill://patterned_visibility).\n"
         "\n"
         "ONE-LINE FLOW:\n"
         "  cognition_info → capture(describe) → run_items(extract) → run_items(project) →\n"
         "  [engine capture+embed pass over embeddable lenses] → run_reduce(cluster) →\n"
-        "  run_reduce(role: synthesize) → findings_for / list_corpus to read it back."
+        "  run_reduce(role: synthesize) → marks(by='target') / corpus(op='list') to read it back."
     ),
 }

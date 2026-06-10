@@ -21,6 +21,9 @@ def register(mcp, suite):
                         meaning. `text` (required) = the question; `space` (optional) = an embeddable
                         space to search (e.g. 'repo' for the codebase — see cognition_info().spaces);
                         `k` = how many. This is the primary 'ask-the-codebase' retrieve.
+                        detail="detailed" → each hit carries its record's CONTENT inline (the answer in
+                        ONE call, P5); the default stays ids+scores. Every hit id is directly
+                        op='read'-able (the round-trip).
           op="list"   — list records, newest-first; narrow with `project`.
           op="find"   — filter records by `project` / `kind` / `projection` / `source_address`.
           op="read"   — fetch ONE record's full content by its `address` (a run:// from list/find).
@@ -43,7 +46,20 @@ def register(mcp, suite):
             if not text:
                 return {"error": "corpus(op='query') needs `text` (the question). Optional: `space` "
                         "(an embeddable space, e.g. 'repo' — cognition_info().spaces), `k`."}
-            return {"op": op, **suite.query_corpus(text, space=(space or None), k=k)}
+            out = {"op": op, **suite.query_corpus(text, space=(space or None), k=k)}
+            # P5 — answers, not just pointers (the re-eval: ask→read cost 1+k calls): detailed inlines
+            # each hit's record content; a hit whose source was never captured states that honestly.
+            if detail == "detailed":
+                enriched = []
+                for h in out.get("ranked", []):
+                    hid = h.get("id")
+                    rows = suite.find_corpus(source_address=hid) if hid else []
+                    rec = suite.read_corpus_record(rows[0]["address"]) if rows else None
+                    enriched.append({**h, "content": (rec or {}).get("output"),
+                                     "record_address": rows[0]["address"] if rows else None})
+                out["ranked"] = enriched
+            out["note"] = (out.get("note") or "") + " · every hit id is corpus(op='read', address=<id>)-able"
+            return out
         if op == "list":
             rows = suite.list_corpus(project=(project or None))
             return {"op": op, "project": project or None, "total": len(rows), "detail": detail,
