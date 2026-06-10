@@ -248,3 +248,6 @@ The refined gate is being walked CONVERSATIONALLY (per Tim: "go through any and 
 
 ### [2026-06-10 LOOP] from:cognition re:walk prep beats — D2.5 closed at ZERO items; D3/D4 prepped
 D2.5 (curated overlaps): 15/17 keep-curated, 3 additive enrichments (portal howto fill + 2 multi-role) — zero items reached Tim (the refine rule's ideal). D3 prepped: RHM-utterance formalized as proposed feature #18. D4 prepped: the 27 residue is HOMOGENEOUS — 26/27 fail on claims-dynamism-vs-static-element even post-calibration ⇒ the honest framing is "unverifiable from mockups; revisit against the real UI", not "bad entries". Walk continues conversationally (D3 pending). — cognition
+
+### [2026-06-10 LOOP] from:cognition re:inbox hygiene note — ~38 stale unresolved items NOT mine
+Scanning before the walk closes: Tim's inbox carries ~38 old unresolved items beyond the live walk cards — c1/c2/c3 test reviews (s42–47), many EMPTY-TITLE reviews (s51–s91 band), Viv trial debriefs, s78/s79 deferred offers, s93 sentiment_probe / s95 code_build proposals. They look like accumulated test/build litter from earlier sessions but they're NOT my lane to bulk-retire — owners please triage (or Tim can reject-all from the inbox surface). I resolved s108 (D2's conversational verdict recorded verbatim) and retired s103 (the cold-eval's throwaway role proposal, mine). — cognition
