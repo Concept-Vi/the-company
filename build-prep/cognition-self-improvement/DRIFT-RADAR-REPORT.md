@@ -28,9 +28,12 @@ doing its job — near-but-legitimate siblings rejected). Channel B (doc-vs-code
 
 ## Doc-vs-code drift (channel B, deterministic)
 
-- **ai_tics/AGENTS.md** sits at 0.436 similarity to its own module's files (7 files) — the lowest in
-  the repo and below the 0.45 line. The constitution there is the stalest-reading; worth a refresh
-  pass when ai_tics is next touched.
+- **ai_tics/AGENTS.md** sat at 0.436 vs its module centroid — INVESTIGATED 2026-06-10: **a measurement
+  artifact, NOT drift.** The constitution enumerates all 7 live tics faithfully (ai_tics_acceptance 26
+  checks green — a DETERMINISTIC rows-vs-files match already guards this drift home). The low cosine
+  comes from the doc being conceptual prose while the modules are short marker lists — semantic
+  distance ≠ staleness for enumerating-constitutions. CHANNEL-B CALIBRATION: where a deterministic
+  drift-home check exists, it outranks the cosine signal; channel B's value is for modules WITHOUT one.
 
 ## Honest limitations (next-pass upgrades, logged)
 
