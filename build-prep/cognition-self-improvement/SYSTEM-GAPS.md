@@ -365,3 +365,7 @@ Tim, closing the walk: my harness memory of him is useful but trapped — only C
 
 ## 2026-06-10 — B5 batch 1 (the harness→system migration begins)
 - ◑ **B5:** the 5 most absolute harness rules → status='proposed' operator-memory rows with his verbatim words (no_versioning · no_silent_failures · make_each_thing_work · no_time_estimates · flag_hardcoding). Registry: 7 confirmed + 8 proposed. **Tim's gate: operator(op='proposed') lists them; his one-word confirms flip each standing.** ~10 more migratable Tim-rules remain in the harness notes (batches of ≤5; project-state notes stay harness-side by design).
+
+## 2026-06-10 — B5 batch 2 (the migration is ~2/3 done)
+- ◑ **B5:** five more rules migrated (investigate_before_coding · use_existing_resources · record_expansively · render_for_cognition · no_deferral — the last with the standing-rule lineage note pointing at the confirmed conditional-memory refinement). **Registry: 7 confirmed + 13 proposed.** One more batch (~5: expand-dont-echo variants already mined; remaining candidates: confirm-before-writing · look-at-output · not-a-developer/AI-supplies-domain-knowledge · maximal-capture · incomplete-work-in-scope) then the migratable set is exhausted.
+- DESIGN NOTE for Tim's gate: 13 one-word confirms is approaching a refine-before-gating violation — the BATCH-CONFIRM form ("confirm all 13" / per-row veto) should be offered, mirroring the registry walk's block-approve.
