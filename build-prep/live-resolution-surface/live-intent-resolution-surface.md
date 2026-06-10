@@ -92,25 +92,25 @@ It does this by:
 
 
 
-1\. extracting anchors from ordinary conversation,
+1. extracting anchors from ordinary conversation,
 
-2\. generating possible interpretations,
+2. generating possible interpretations,
 
-3\. making those possibilities visible,
+3. making those possibilities visible,
 
-4\. letting the user react,
+4. letting the user react,
 
-5\. converting reactions into tags, observations, decisions, and memory,
+5. converting reactions into tags, observations, decisions, and memory,
 
-6\. narrowing the possible artifact space,
+6. narrowing the possible artifact space,
 
-7\. activating schemas,
+7. activating schemas,
 
-8\. revealing missing information,
+8. revealing missing information,
 
-9\. closing decisions,
+9. closing decisions,
 
-10\. compiling an executable handoff package for downstream AI workflows.
+10. compiling an executable handoff package for downstream AI workflows.
 
 
 
@@ -3750,43 +3750,43 @@ Recommended embedding ladders:
 
 
 
-1\. **Raw utterance embeddings**
+1. **Raw utterance embeddings**
 
 &#x20;  For semantic recall of what was said.
 
 
 
-2\. **Tag bundle embeddings**
+2. **Tag bundle embeddings**
 
 &#x20;  For matching behavioural and preference patterns.
 
 
 
-3\. **Observation embeddings**
+3. **Observation embeddings**
 
 &#x20;  For recalling interpreted meaning.
 
 
 
-4\. **Project state embeddings**
+4. **Project state embeddings**
 
 &#x20;  For finding similar projects.
 
 
 
-5\. **Schema embeddings**
+5. **Schema embeddings**
 
 &#x20;  For matching current state to possible artifact schemas.
 
 
 
-6\. **Generated option embeddings**
+6. **Generated option embeddings**
 
 &#x20;  For tracking which generated directions were accepted or rejected.
 
 
 
-7\. **Handoff package embeddings**
+7. **Handoff package embeddings**
 
 &#x20;  For comparing final specs and successful outputs.
 
@@ -6222,25 +6222,25 @@ The UI should proactively:
 
 
 
-1\. generate possibilities,
+1. generate possibilities,
 
-2\. reveal missing pieces,
+2. reveal missing pieces,
 
-3\. show assumptions,
+3. show assumptions,
 
-4\. detect repeated patterns,
+4. detect repeated patterns,
 
-5\. show conflicts,
+5. show conflicts,
 
-6\. open relevant schemas,
+6. open relevant schemas,
 
-7\. generate previews,
+7. generate previews,
 
-8\. suggest useful next surfaces,
+8. suggest useful next surfaces,
 
-9\. compile partial outputs,
+9. compile partial outputs,
 
-10\. let the user steer with minimal effort.
+10. let the user steer with minimal effort.
 
 
 
@@ -6390,25 +6390,25 @@ When the user provides input:
 
 
 
-1\. event is stored,
+1. event is stored,
 
-2\. local workers process in parallel,
+2. local workers process in parallel,
 
-3\. memory is retrieved,
+3. memory is retrieved,
 
-4\. tags and anchors are extracted,
+4. tags and anchors are extracted,
 
-5\. observations are generated,
+5. observations are generated,
 
-6\. schemas are suggested or updated,
+6. schemas are suggested or updated,
 
-7\. missing fields are detected,
+7. missing fields are detected,
 
-8\. UI surfaces are proposed,
+8. UI surfaces are proposed,
 
-9\. larger model arbiter reviews merged state,
+9. larger model arbiter reviews merged state,
 
-10\. final response and UI update are rendered.
+10. final response and UI update are rendered.
 
 
 
@@ -6990,13 +6990,13 @@ Start with four artifact families:
 
 
 
-1\. **Software / Product Idea**
+1. **Software / Product Idea**
 
-2\. **Document / Report / Explanation**
+2. **Document / Report / Explanation**
 
-3\. **Workflow / Automation**
+3. **Workflow / Automation**
 
-4\. **Visual / Interface Concept**
+4. **Visual / Interface Concept**
 
 
 
@@ -7144,25 +7144,25 @@ The MVP succeeds if:
 
 
 
-1\. a user can start with a vague idea,
+1. a user can start with a vague idea,
 
-2\. the system extracts meaningful anchors,
+2. the system extracts meaningful anchors,
 
-3\. the system generates useful options,
+3. the system generates useful options,
 
-4\. the user can react instead of specify,
+4. the user can react instead of specify,
 
-5\. reactions update tags and observations,
+5. reactions update tags and observations,
 
-6\. schemas activate appropriately,
+6. schemas activate appropriately,
 
-7\. missing information becomes visible,
+7. missing information becomes visible,
 
-8\. decisions are tracked,
+8. decisions are tracked,
 
-9\. assumptions are visible,
+9. assumptions are visible,
 
-10\. a useful handoff spec can be exported.
+10. a useful handoff spec can be exported.
 
 
 
@@ -8178,25 +8178,25 @@ The system is working when:
 
 
 
-1\. the user can begin without knowing what they want,
+1. the user can begin without knowing what they want,
 
-2\. the system creates useful visible structure quickly,
+2. the system creates useful visible structure quickly,
 
-3\. generated options help the user react,
+3. generated options help the user react,
 
-4\. reactions turn into meaningful state changes,
+4. reactions turn into meaningful state changes,
 
-5\. the user feels understood without needing to over-explain,
+5. the user feels understood without needing to over-explain,
 
-6\. the system remembers useful patterns,
+6. the system remembers useful patterns,
 
-7\. schemas activate without making the interface feel scripted,
+7. schemas activate without making the interface feel scripted,
 
-8\. assumptions are visible,
+8. assumptions are visible,
 
-9\. decisions are traceable,
+9. decisions are traceable,
 
-10\. the final output is usable by downstream AI workflows.
+10. the final output is usable by downstream AI workflows.
 
 
 
