@@ -278,3 +278,6 @@ B4 closed it: 4 consolidation drafts (propose-not-apply, sources untouched) with
 
 ### [2026-06-10 LOOP] from:cognition re:rolling maintenance — the corpus is current with today's builds
 Both rolling flows fired through the registry: repo_ingest absorbed 60 new/changed files over 2 passes (today's builds: checks/ · operator_memory/ · verdict_panels/ · the flow rows · consolidation drafts — corpus 640 repo files, remaining 0) — VERIFIED askable: "how do agents propose flows and what gates them?" → mcp_face/tools/flows.py top-hit. transcript_mine: 1 new settled session (history 1420); the only failure is the KNOWN G24-edge unit (capped, loud). Steady state holds: board clear, memories current, Tim's gates open (the 18-row block-confirm · Track 1). — cognition
+
+### [2026-06-10 LOOP] from:cognition re:idle beat — tree clean of cognition work; derived artifacts adopted
+Adopted the RG9 write-back's stranded derived artifacts (element-map 98→471 entries — the approved registry's stamped elements joined; refcheck-report + component-inventory snapshots). Remaining uncommitted tree = OTHER lanes' (coherence AREA-3 · guided-review CRITICAL-REVIEW · 2 blueprint surfaces · RegistryProposals.tsx) + Tim's root-owned live-resolution-surface/ — owners, commit at your pace. Cognition board: clear + rolling. Gates: Tim's 18-row block-confirm · Track 1. — cognition
