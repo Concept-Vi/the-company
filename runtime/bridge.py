@@ -82,6 +82,8 @@ BRIDGE_ROUTES = (
     # S1 (overnight) — the BUILDER side-panel: one streaming turn of the embedded Claude Code session.
     # OPERATOR FACE ONLY (never on mcp_face); plan-mode by default (COMPANY_PANEL_PERMISSION).
     "/api/claude/turn",
+    # S2 (overnight) — the GREETING (caught-up-in-one-glance: the night/away-time at Tim's altitude).
+    "/api/greeting",
 )
 
 MOCKUPS_DIR = os.path.join(ROOT, "design", "mockups")           # the design-review portal + corpus
@@ -701,6 +703,9 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.events(60)))
             elif path == "/api/now":
                 self._send(200, json.dumps(SUITE.now(gid)))
+            elif path == "/api/greeting":                  # S2: caught-up-in-one-glance (Tim's arrival face)
+                q = parse_qs(urlparse(self.path).query)
+                self._send(200, json.dumps(SUITE.greeting(since=(q.get("since") or [None])[0])))
             elif path == "/api/chat":
                 self._send(200, json.dumps(SUITE.chat_history(40)))
             elif path == "/api/conversations":               # S2: the previous threads (reopen list)

@@ -1616,6 +1616,93 @@ class Suite:
             "last_event": recent[0] if recent else None,
         }
 
+    # ── S2 (overnight) · THE NOW-ORGAN + THE GREETING ─────────────────────────────────────────────
+    # Track-1: presence is a CONSTRUCTION — when Tim arrives, the system assembles "what is now" and
+    # meets him caught-up-in-one-glance. now_signal() is the machine face (the values conditions read:
+    # the activity vocabulary GC14's conditions will bind to); greeting() is Tim's face (the night/
+    # away-time composed at his altitude, deterministic — no model; Viv narrates it on request).
+
+    def now_signal(self) -> dict:
+        """The 'what is now' VALUES — the signal conditions read (GC14's binding surface). Honest
+        scope: this EXPOSES the now; it does not yet EVALUATE stored conditions (dial overrides stay
+        overrides_evaluated=False until condition `when`s are declared rule-ASTs, not freeform)."""
+        ev = self.store.recent_events(40)
+        last_op = None
+        for e in self.store.recent_events(400):              # newest-first: Tim's last touch = chat/resolve
+            if e.get("kind") in ("chat", "resolve"):
+                last_op = e.get("ts")
+                break
+        if not last_op:                                       # deeper fallback: his last chat message's ts
+            try:
+                hist = self.chat_history(200)
+                user_ts = [m.get("ts") for m in hist if m.get("role") == "user" and m.get("ts")]
+                last_op = user_ts[-1] if user_ts else None
+            except Exception:
+                last_op = None
+        sig = {
+            "mode": self.get_mode(),
+            "dials": {d["dial"]: d["value"] for d in self.dial_state()["dials"]},
+            "surfaced_pending": len([d for d in self.inbox.list() if d.get("resolved") is None]),
+            "last_operator_contact": last_op,
+            "recent_kinds": sorted({e.get("kind") for e in ev[:15] if e.get("kind")}),
+        }
+        return sig
+
+    def greeting(self, since: str | None = None) -> dict:
+        """CAUGHT-UP-IN-ONE-GLANCE (morning bar #1): what happened since Tim's last touch, what waits
+        on his gate, what is in flight, and any memory whose return-condition has come true — composed
+        DETERMINISTICALLY at his altitude (render-ready; the RHM narrates it, the FE renders it).
+        `since` overrides the detected last-contact (the store only sees SURFACE touches — chat/resolve;
+        a CLI night is invisible to it, so the morning card passes the night's real start)."""
+        import subprocess as _sp
+        sig = self.now_signal()
+        since = since or sig["last_operator_contact"]
+        # the night's work — committed reality, never self-report (the wire's git-ground-truth law)
+        args = ["git", "log", "--oneline", "--no-decorate", "-40"]
+        if since:
+            args.insert(2, f"--since={since}")
+        try:
+            lines = _sp.run(args, capture_output=True, text=True, timeout=10).stdout.strip().splitlines()
+        except Exception:
+            lines = []
+        # Tim's altitude: the HEADLINE of each commit (first clause), never the full engineering text
+        def _headline(l: str) -> str:
+            m = l.split(" ", 1)[1] if " " in l else l
+            for cut in (": ", " — ", " ("):
+                if cut in m:
+                    head, rest = m.split(cut, 1)
+                    if len(head) > 24:                        # a real headline, not a bare prefix
+                        return head[:110]
+                    return (head + cut + rest)[:110]
+            return m[:110]
+        built = [_headline(l) for l in lines]
+        # what waits on him — the gate, newest first, titled
+        waits = []
+        for it in self.inbox.list():
+            if it.get("resolved") is None and it.get("status") not in ("requeue", "implemented", "resolved"):
+                p = it.get("payload") or {}
+                t = p.get("title") or p.get("intent") or p.get("id") or it.get("action") or "untitled"
+                waits.append({"id": it.get("id"), "title": str(t)[:110]})   # untitled items stay VISIBLE
+        # memories whose return-condition has come true — FIRST INSTANCE (honest provenance: the
+        # deferred-27's condition references FE-work-becoming-now; the S1 build made it true. This
+        # instance is LEAD-JUDGED + recorded; automatic condition evaluation is the designed GC14
+        # next layer — no pretend-automation here.)
+        returned = []
+        rows = self.find_corpus(source_address="deferred://rg10/static-unverifiable-27")
+        if rows:
+            c = (self.store.get_content(rows[-1]["cas"]) or {}).get("output") or {}
+            returned.append({
+                "memory": "deferred://rg10/static-unverifiable-27",
+                "condition": (c.get("return_when") or "")[:160],
+                "fired_because": "FE work became the current activity (the builder panel build, "
+                                 "2026-06-10 overnight) — first condition-fired return; judged by the "
+                                 "lead, automation is GC14's next layer",
+                "what_returns": (c.get("what") or "")[:240],
+            })
+        return {"since": since, "built": built[:24], "built_total": len(built),
+                "waiting_on_you": waits[:10], "waiting_total": len(waits),
+                "now": sig, "returned_memories": returned}
+
     # --- modes / the presence dial: the mode IS a node (context-05, D1-D3) ---
     # E1 — THE MODE TYPE-REGISTRY (the modes-and-context-resolution-are-ONE-system criterion, direction
     # §6/§6.5). Each entry is a `ModeSpec` carrying its directive (behaviour) AND its `resolution`
