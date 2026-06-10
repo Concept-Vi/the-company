@@ -5,6 +5,7 @@ shared Suite. Same brain + same substrate as the UI bridge (runtime.suite.Suite)
 Verbs are GENERIC over node-type — adding a node-type adds zero tools.
 """
 from __future__ import annotations
+import json
 import os
 import sys
 
@@ -135,11 +136,17 @@ def inbox() -> dict:
 
 
 @mcp.tool()
-def capabilities() -> dict:
-    """The source of truth for WHAT EXISTS — real models, node-types, RHM verbs, panels, api verbs.
-    Author from these; never invent. If you need something not here, ask the operator (don't fabricate).
-    (M3 dedup: the cognition.roles block is slimmed to ids here — the full per-role specs live in
-    cognition_info(role='<id>') / cognition_info(section='roles'), the ONE discovery face for them.)"""
+def capabilities(section: str = "") -> dict:
+    """The source of truth for WHAT EXISTS — models, node-types, RHM verbs, panels, api verbs, AND the
+    runnable CHAINS (flows + saved cascades). Author from these; never invent. If you need something
+    not here, ask the operator (don't fabricate).
+
+    SCOPED (P4 — the eval's firehose finding; mirrors cognition_info): call with NO args for the
+    CONCISE map (every section name + a size hint — pick from it), then `section='<name>'` for ONE
+    section's full payload. `section='chains'` lists the registered production-line FLOWS (run via the
+    flows tool) + the saved CASCADES (run via run_cascade) — the one-call multi-step chains.
+    (M3 dedup: the cognition.roles block is ids-only — full per-role specs live in
+    cognition_info(role='<id>').)"""
     cap = SUITE.capabilities()
     cog = cap.get("cognition")
     if isinstance(cog, dict) and "roles" in cog:
@@ -148,7 +155,32 @@ def capabilities() -> dict:
             [x.get("id", x) if isinstance(x, dict) else x for x in r] if isinstance(r, list) else r
         cap = {**cap, "cognition": {**cog, "roles": {
             "ids": ids, "full_specs": "cognition_info(role='<id>') or cognition_info(section='roles')"}}}
-    return cap
+
+    def _chains() -> dict:
+        from runtime.flows import FlowRegistry
+        freg = FlowRegistry().discover()
+        casc = SUITE.list_cascades()
+        rows = casc.get("cascades", casc) if isinstance(casc, dict) else casc
+        return {"flows": [{"id": f["id"], "label": f["label"]} for f in freg.rows()],
+                "run_flows_via": "flows(op='describe'|'run', flow='<id>')",
+                "cascades": rows,
+                "run_cascades_via": "run_cascade(name='<name>', inputs=...)"}
+
+    if section:
+        if section == "chains":
+            return {"section": "chains", **_chains()}
+        if section not in cap:
+            raise ValueError(f"unknown capabilities section {section!r} — live sections: "
+                             f"{sorted(cap) + ['chains']} (registry-is-truth; call with no args for the map).")
+        return {"section": section, section: cap[section]}
+    # the CONCISE map (no args): names + size hints + the chains pointer — pick a section, then scope.
+    overview = {k: f"{len(json.dumps(v, default=str))} bytes — capabilities(section='{k}')"
+                for k, v in cap.items()}
+    ch = _chains()
+    overview["chains"] = (f"{len(ch['flows'])} flows + {len(ch['cascades']) if isinstance(ch['cascades'], list) else '?'} "
+                          f"saved cascades — capabilities(section='chains')")
+    return {"sections": overview,
+            "note": "concise map — call capabilities(section='<name>') for one section's full payload"}
 
 
 # =================================================================================================
@@ -162,7 +194,7 @@ def capabilities() -> dict:
 #
 # THE FLOOR (C9.2, reframed by #58 — Tim's correction): the propose→surface→operator-approval gate on
 # AUTHORING (creating a role/skill/context) was the AI's DEFAULT, not Tim's constraint. So the agent
-# CREATES roles/skills/contexts DIRECTLY + LIVE here (`create_role`/`create_skill`/`create_context` →
+# CREATES roles/skills/contexts DIRECTLY + LIVE here (`create(kind='role'|'skill'|'context')` →
 # the direct Suite methods), no operator approval. What STILL holds: (1) the CORRECTNESS gate — a
 # malformed entry is REFUSED fail-loud (validate-in-tempdir), never written; (2) the BUILD-DISPATCH
 # floor — NO tool here emits `dispatch_decision` or launches `claude -p` (the wire's autonomous
@@ -241,8 +273,23 @@ def cognition_info(section: str = "", role: str = "", detail: str = "concise") -
                 out["prompt_template"] = live.spec["prompt_template"]
             os_cls = getattr(live, "output_schema", None)
             if os_cls is not None and hasattr(os_cls, "model_fields"):
-                out["output_fields"] = [{"name": fn, "type": str(fi.annotation)}
-                                        for fn, fi in os_cls.model_fields.items()]
+                # P9 — ROUND-TRIPPABLE rows: emit the REGISTRY type names create(kind='role') consumes
+                # ('str'/'bool'/'enum'+values/...), never Python reprs ("<class 'str'>") — the re-eval:
+                # inspect→copy→create must round-trip (the inspector's own _authoring_hint promises it).
+                def _row(fn, fi):
+                    ann = fi.annotation
+                    import typing as _t
+                    if _t.get_origin(ann) is _t.Literal:
+                        return {"name": fn, "type": "enum", "values": list(_t.get_args(ann))}
+                    base = {str: "str", int: "int", float: "float", bool: "bool",
+                            list: "list[str]", dict: "object"}.get(ann)
+                    if base is None and _t.get_origin(ann) is list:
+                        inner = (_t.get_args(ann) or [str])[0]
+                        base = f"list[{getattr(inner, '__name__', 'str')}]"
+                    if base is None:
+                        base = getattr(ann, "__name__", None) or str(ann)   # a nested sub-model → its name
+                    return {"name": fn, "type": base}
+                out["output_fields"] = [_row(fn, fi) for fn, fi in os_cls.model_fields.items()]
             out["_authoring_hint"] = ("these ARE the authorable fields — create(kind='role', spec={id, "
                                       "prompt_template, output_fields:[{name,type,values?}], op, ...}); "
                                       "prompt_template may reference {utterance} (the input run_role/"
@@ -444,10 +491,10 @@ def run_draft(draft_role: dict, utterance: str = "", model: str = "",
               ensure: bool = False, ensure_evict: bool = False, policy: str = "") -> dict:
     """CONFIGURE + RUN a ONE-OFF DRAFT role (the G1 ephemeral-run path) — fire an INLINE role spec ONCE
     over a single utterance WITHOUT registering or committing it. The motivating gap (SYSTEM-GAPS G1): a
-    bounded one-off classify/extract forces `create_role` (which COMMITS a throwaway role → registry
+    bounded one-off classify/extract forces `create(kind='role')` (which COMMITS a throwaway role → registry
     pollution + a `.git/index.lock` race) or dropping below the MCP. `run_draft` closes it.
 
-    `draft_role` is a DRAFT FIELD-SPEC (a dict, the SAME shape `create_role`/`propose_role`/`dry_run_role`
+    `draft_role` is a DRAFT FIELD-SPEC (a dict, the SAME shape `create(kind='role')`/`propose_role`/`dry_run_role`
     consume — NOT a registered id): `{id (plain lower identifier), prompt_template, output_fields:
     [{name, type, description?}], op?, input_addresses?, requires?, ...}`. It is rendered → loaded from a
     TEMP module → discovered (the SAME RoleRegistry the live roles use, via `_resolve_role`'s dict branch
@@ -500,9 +547,9 @@ def run_draft_items(draft_role: dict, items: list, max_tokens: int = 256,
     """CONFIGURE + RUN the DRAFT MAP (the G1 ephemeral-fan path + ⑪ grunt-offload's missing primitive) —
     fan a ONE-OFF INLINE role spec over N input-UNITS WITHOUT registering or committing the role. This is
     THE primitive a bounded one-off classify needs: "classify these 39 candidates once" → one
-    `run_draft_items` call, NOT a `create_role` that pollutes the registry (+ a `.git/index.lock` race).
+    `run_draft_items` call, NOT a `create(kind='role')` that pollutes the registry (+ a `.git/index.lock` race).
 
-    `draft_role` is a DRAFT FIELD-SPEC (a dict, the SAME shape `create_role`/`dry_run_role` consume — NOT
+    `draft_role` is a DRAFT FIELD-SPEC (a dict, the SAME shape `create(kind='role')`/`dry_run_role` consume — NOT
     a registered id): `{id, prompt_template, output_fields:[{name, type, description?}], op?,
     input_addresses?, requires?, ...}`. It is rendered → loaded from a TEMP module → discovered (the SAME
     RoleRegistry the live roles use, via `_resolve_role`'s dict branch → `authoring.load_role_from_source`,
@@ -665,7 +712,7 @@ def propose_role(spec: dict) -> dict:
     renders + GATES the role module, then SURFACES it for the OPERATOR to approve (it is NOT applied
     here). REUSES Suite.propose_role (the /api/cognition/role/propose path). `spec` carries id +
     output_fields + prompt_template (or a natural-language `brief` the brain drafts from). Returns
-    {id (surfaced id), role_id, source}. Use create_role for the direct, no-approval path (#58)."""
+    {id (surfaced id), role_id, source}. Use create(kind='role') for the direct, no-approval path (#58)."""
     return SUITE.propose_role(spec, model=spec.get("model"))
 
 
@@ -689,7 +736,7 @@ def delete_role(role_id: str) -> dict:
 # (rule(op=validate|dry_run|attach) — MCP-DESIGN-PRINCIPLE). The flat defs are removed.
 
 
-# NOTE (the floor, reframed by #58): AUTHORING (create_role/create_skill/create_context) applies
+# NOTE (the floor, reframed by #58): AUTHORING (create(kind='role'|'skill'|'context')) applies
 # DIRECTLY here — Tim's call: the create-approval gate was the AI's default, not his constraint. What
 # stays operator-only is the WIRE's autonomous repo-mutation: NO MCP tool emits dispatch_decision or
 # launches `claude -p` (the build-dispatch floor), and resolve_surfaced (the build-dispatch trigger via
@@ -720,7 +767,7 @@ def delete_role(role_id: str) -> dict:
 #
 # THE FLOOR (C9.2): every tool below is a READ or a corpus.record-telemetry / put_content-store write —
 # NONE emits resolve/approve/dispatch and NONE launches `claude -p`. `create_projection` is a DECLARATIVE
-# create (a `projections/<id>.py` lens DATA file) → DIRECT, like create_role/create_skill (#58: authoring
+# create (a `projections/<id>.py` lens DATA file) → DIRECT, like create(kind='role'|'skill') (#58: authoring
 # is the agent's, correctness-gated). NODE-TYPE / executable-code create stays GATED (off this face).
 # NOT here yet (no dead tools): `run_cascade` (the cascade-RUNNER is unbuilt — PART 4.1, NET-NEW ENGINE
 # lane); `mark` (marks-generalization is a later STORE pass — `findings_for` only READS the store, safe);
