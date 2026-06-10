@@ -49,6 +49,9 @@ Start at `Company Build Hub.md`. Contracts = `contracts/` notes (C1–C8). Engin
 
 > If "where does this go?" isn't obvious from this table + the module constitutions, that's a bug in the repo's self-description — flag it.
 
+## Gap pressure — a discovered law + standing build candidates (2026-06-10, awaiting a builder)
+Every operation that runs **constrained against a declared registry is also a sensor for that registry**: where reality presses on a missing/wrong entry, the operation *leaks* (out-of-vocabulary values, insisted-on ids, repeated tool-misuse) — and if that residue is **recorded instead of swallowed**, gaps surface as a free byproduct of normal work. Proven by use three independent times (an Atlas tagging fan whose drop log proposed a missing 9th category via 115 drops in 6 variants; RG10's insisted-ids → `gc9_gap_intake.py`; the hand-kept [[SYSTEM-GAPS]] ledger). It needs four of this repo's existing laws composed — closed vocabulary (rule 8), grounded operation, fail-loud (rule 4), residue-as-data — remove any one and the sensor dies. **Full capture + evidence pointers + build candidates C1–C7** (drops in the run envelope · drops event kind + query face · `registry_load` starvation gauge · cluster-rollup → surfaced proposals · `op="sense"` shadow-pass · MCP-face misuse ledger · constitution surfacing): [[GAP-PRESSURE-CANDIDATES]] (`build-prep/cognition-self-improvement/`). If you are a session looking for high-value engine work: read it, verify its claims against the live system, build, and flip its status markers.
+
 ## The convention
 **Every folder** has an `AGENTS.md` (its **constitution**): what it is · what it must guarantee · where new things go · how to extend · its seam · what would violate it. **Read a folder's constitution before editing it.** `MAP.md` is the loadable map of the whole thing.
 

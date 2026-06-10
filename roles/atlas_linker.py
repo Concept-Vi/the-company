@@ -30,7 +30,7 @@ ROLE = {'id': 'atlas_linker',
                     '- atlas_notes: a JSON array of strings. Zero to three entries. Each entry MUST '
                     'be exactly one of: "Channels", "Custom Apps Integration", "Routines", '
                     '"Hooks & Extension Fabric", "Feature Atlas", "Memory Systems", '
-                    '"Config & UI Data Model", "Docs Inventory". Use [] if none fit well.\n'
+                    '"Config & UI Data Model", "Docs Inventory", "MCP". Use [] if none fit well.\n'
                     '- summary: one sentence, max 25 words, stating what the page covers.\n'
                     '\n'
                     'PAGE:\n'
