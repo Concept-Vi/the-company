@@ -1,4 +1,4 @@
-"""mcp_face/tools/operator.py — the OPERATOR-MEMORY tool (GC15 on the face).
+"""mcp_face/tools/operator.py — the OPERATOR-MEMORY tool.
 
 ONE resource (the system's memory of working with Tim), an `op` selector. Registry-is-truth
 (file-discovered, rediscovered per call). READ-ONLY on this face — new rows arrive via the mining's

@@ -46,8 +46,9 @@ def register(mcp, suite):
         {utterance} — the input run_role/run_items places each unit at — plus any names you declare in
         input_addresses (resolved addresses); an existing role's authorable shape is inspectable via
         cognition_info(role='<id>') which returns prompt_template + output_fields. Each kind renders→gates-in-tempdir→writes→commits→rediscovers (a malformed spec FAILS LOUD,
-        never written). Returns {kind, id, path, live, spec, reflect_in} — `reflect_in` names the drift-home
-        doc to reflect the new entry in (keeps tests/<kind>_acceptance green). FLOOR: declarative DATA only —
+        never written). Returns {kind, id, path, live, spec, reflected: True, reflected_in} — the drift-home
+        doc is reflected AUTOMATICALLY in the same commit (nothing left for you to do; `reflected_in`
+        names where). FLOOR: declarative DATA only —
         never resolve/approve/dispatch; a node-type / executable-code create stays GATED, off this tool
         (graph nodes are node(op=create))."""
         kinds = _kinds()

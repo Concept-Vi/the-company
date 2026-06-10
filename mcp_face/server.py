@@ -101,7 +101,7 @@ def list_surfaced(sid: str = "", status: Literal["", "inbox", "presented", "resp
                   limit: int = 40, detail: Literal["concise", "detailed"] = "concise") -> dict:
     """Decisions the system surfaced for the operator (each carries a default + resolution).
 
-    SCOPED (Q2 — the eval hit a 278KB single-shot dump): the default is CONCISE rows
+    SCOPED: the default is CONCISE rows
     ({id, action, title, status, resolved}) newest-first, capped by `limit`. Narrow with
     `sid` (ONE item, full payload — the drill-down), `status` (inbox|presented|responded|resolved|
     requeue|implemented), or `unresolved_only=True` (the live-escalations slice).
@@ -169,11 +169,11 @@ def capabilities(section: str = "") -> dict:
     runnable CHAINS (flows + saved cascades). Author from these; never invent. If you need something
     not here, ask the operator (don't fabricate).
 
-    SCOPED (P4 — the eval's firehose finding; mirrors cognition_info): call with NO args for the
+    SCOPED (mirrors cognition_info): call with NO args for the
     CONCISE map (every section name + a size hint — pick from it), then `section='<name>'` for ONE
     section's full payload. `section='chains'` lists the registered production-line FLOWS (run via the
     flows tool) + the saved CASCADES (run via run_cascade) — the one-call multi-step chains.
-    (M3 dedup: the cognition.roles block is ids-only — full per-role specs live in
+    (The cognition.roles block is ids-only — full per-role specs live in
     cognition_info(role='<id>').)"""
     cap = SUITE.capabilities()
     cog = cap.get("cognition")
@@ -292,7 +292,7 @@ def cognition_info(section: str = "", role: str = "", detail: str = "concise") -
     """INSPECT the cognition registries — the ONE place to learn 'what can I compose with' (roles ·
     rules · projections/spaces · mark_types · casts · rule_ops · destination_kinds · activation
     contexts · ...). REUSES Suite.cognition_info() (the SAME projection /api/cognition_info serves —
-    registry-is-truth, generated from the live registries). Scope it (M2/M3 — don't pull the firehose):
+    registry-is-truth, generated from the live registries). Scope it — don't pull the firehose:
 
       role="<id>"        — ONE role's full spec (the per-role inspector; e.g. role='verify_lens').
       section="<name>"   — ONE section in full (e.g. section='roles' | 'projections' | 'mark_types';
@@ -371,7 +371,7 @@ def cognition_info(section: str = "", role: str = "", detail: str = "concise") -
 def models_for_role(requires: str = "", role: str = "") -> dict:
     """INSPECT (the MODEL select): which models fit. Pass EITHER:
       role="<id>"     — a registered role; its declared requirements (spec.model_binding.requires)
-                        are looked up for you (N7 — the tool finally takes the role its name promises).
+                        are looked up for you (the tool takes the role its name promises).
       requires="..."  — capability strings directly (comma-separated, e.g. 'embed' or 'chat,json').
     Returns the model-ids whose `provides` ⊇ the requirements + the live providers the swarm binds
     against. REUSES Suite.models_for_role (the /api/cognition/models_for_role path)."""
@@ -411,7 +411,7 @@ def list_skills_contexts() -> dict:
     runtime.cognition.skill_registry()/context_registry() (the SAME registries resolve_address reads via
     skill://<id> / context://<id>). Read-only. Returns {skills:[{id,label,description}], contexts:[…]}.
 
-    CREATE: skills/contexts are now authored DIRECTLY + LIVE via create_skill/create_context (#56/#58 —
+    CREATE: skills/contexts are authored DIRECTLY + LIVE via create(kind='skill'|'context') (
     the skill-writing-skill, no operator approval; correctness-gated). This is READ; CREATE is those tools."""
     sk = _cog.skill_registry()
     cx = _cog.context_registry()
@@ -448,7 +448,7 @@ def run_role(role: str, utterance: str = "", op: str = "generate", model: str = 
       op="generate" (default) → the role's structured-JSON output (validated against its output_schema).
       op="embed"              → a dense vector {vector, dim, model} via the local embedder. **EMBED via
                                 MCP (headline):** if the embedder isn't resident, `ensure=True` requests
-                                the GATED #50 actuator (capabilities.ensure_resident) to load it;
+                                the GATED resource actuator (capabilities.ensure_resident) to load it;
                                 `ensure_evict=True` additionally authorizes largest-first eviction. With
                                 ensure=False (default) a down embedder FAILS LOUD (never a silent degrade).
 
@@ -686,18 +686,18 @@ def reduce_rule_names() -> dict:
 # --- SAVED CASCADES (GROUP N · save a proven pipeline → re-run it; AK4 frozen recipes) ----------------
 @mcp.tool()
 def save_cascade(decl: dict) -> dict:
-    """SAVE a proven multi-step pipeline as a re-runnable CASCADE (GROUP N · N1 · AK4 — a frozen recipe an
+    """SAVE a proven multi-step pipeline as a re-runnable CASCADE (a frozen recipe an
     agent reuses without re-deriving). A cascade = a declared chain validated through the EXISTING one door
     (coherence_actions.build_action — REUSED, NOT a 2nd validator) + persisted (survives reload). REUSES
     Suite.save_cascade.
 
     `decl` = {name(str), steps:[{...}], output_schema?(dict)}. EACH STEP:
       · op        — the OPERATION (REQUIRED, validated): generate|embed|reduce (+similarity/retrieve/detect,
-                    which have no engine primitive yet → out-of-lane, flagged needs-tim/N2).
+                    which have no engine primitive yet — declared but not yet runnable).
       · role      — the role id to fire (REQUIRED at run time; resolved from the live role registry).
       · model     — OPTIONAL per-step model. MUST be a member of the LIVE model registry (chat ∪ embed) or
                     build_action FAILS LOUD (registry-is-truth, no hardcoded literal). OMIT it → the
-                    resident default brain (recommended; NO cloud router here — N2, needs-tim).
+                    resident default brain (recommended; there is NO cloud-model router here).
       · kind      — OPTIONAL primitive selector: role(run_role · 1→1) | items(run_items · MAP 1→N) |
                     reduce(run_reduce · JOIN N→1). DEFAULT: op=reduce→reduce; a `fan:true`/`items:[…]` step
                     →items; else role.
@@ -717,7 +717,7 @@ def save_cascade(decl: dict) -> dict:
 
 @mcp.tool()
 def list_cascades() -> dict:
-    """LIST the saved cascades (the discoverable re-runnable pipelines — AK4 · registry-is-truth). Each row
+    """LIST the saved cascades (the discoverable re-runnable pipelines — registry-is-truth). Each row
     is the full decl (name·steps·output_schema) so an agent reads the steps/ops/models BEFORE run_cascade.
     REUSES Suite.list_cascades. Read-only. Returns {cascades:[…]}."""
     return {"cascades": SUITE.list_cascades()}
@@ -725,7 +725,7 @@ def list_cascades() -> dict:
 
 @mcp.tool()
 def run_cascade(name: str, inputs=None, max_tokens: int = 256) -> dict:
-    """RUN a saved cascade END-TO-END (GROUP N · N3 — the largest net-new). Loads the saved decl (fail-loud
+    """RUN a saved cascade END-TO-END. Loads the saved decl (fail-loud
     if unknown — never a fabricated cascade), then fires the GROUP-N runner (cognition.run_cascade) which
     rides the EXISTING engine primitives (run_role/run_items/run_reduce — NO 2nd engine): each step's output
     threads → the next step's input via the run:// resolver, each step is PERSISTED + op.run-INDEXED (so
@@ -763,7 +763,7 @@ def propose_role(spec: dict) -> dict:
     renders + GATES the role module, then SURFACES it for the OPERATOR to approve (it is NOT applied
     here). REUSES Suite.propose_role (the /api/cognition/role/propose path). `spec` carries id +
     output_fields + prompt_template (or a natural-language `brief` the brain drafts from). Returns
-    {id (surfaced id), role_id, source}. Use create(kind='role') for the direct, no-approval path (#58)."""
+    {id (surfaced id), role_id, source}. Use create(kind='role') for the direct, no-approval path."""
     return SUITE.propose_role(spec, model=spec.get("model"))
 
 
@@ -845,7 +845,7 @@ def capture(role: str, units: list, project: str, session: str, round: str = "1"
 
     LINEAGE IS A REQUIRED GATE (PART 4.7 — fail-loud, never defaulted): `project` · `session` · `round`
     are REQUIRED and ride INTO every record. A record without all three is UNCORROBORATABLE cross-session
-    (M3 corroboration is cross-SESSION) and unplaceable by the inversion-finder (L2) — so it is REFUSED at
+    (corroboration is cross-SESSION) and unplaceable by the pattern-finder — so it is REFUSED at
     write (CorpusError). Supply them; this is not optional metadata.
 
     `role` is a registered describe-role id (see cognition_info().roles) OR a draft field-set (dict path

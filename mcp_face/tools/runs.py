@@ -24,7 +24,7 @@ def register(mcp, suite):
     @mcp.tool()
     def runs(op: Literal["list", "find"], role: str = "", run_kind: str = "", run_op: str = "",
              since: int = -1, limit: int = 50) -> dict:
-        """DISCOVER past engine runs — the agent-face RUN INDEX (#54 storage-discovery). Lists past
+        """DISCOVER past engine runs — the agent-face RUN INDEX. Lists past
         run_role / run_items / run_reduce runs + their run:// output addresses, NEWEST-FIRST, so an
         agent can feed a DISCOVERED output as an INPUT (run_role inputs= / run_items items=, resolved
         via inspect_address) or re-run it — instead of only reading a run whose address it already

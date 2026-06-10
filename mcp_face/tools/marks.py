@@ -33,7 +33,7 @@ def register(mcp, suite):
         """READ marks / findings (the detection layer — what a mark-pass left). Read-only. Pick `by`:
 
           by="target"   — every MARK on a claim/span `target`, oldest-first (the mark THREAD there; the
-                           M2 gold-likelihood PROFILE is this composed with its evidence — a READ, never a
+                           gold-likelihood PROFILE is this composed with its evidence — a READ, never a
                            stored score; Tim sees-WHY and overrules, positive-only). `target` (required)
                            is the marked thing (a corpus address, a claim id, a span ref). An unmarked
                            target → an HONEST empty list (never a fabricated mark).

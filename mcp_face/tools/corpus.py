@@ -16,7 +16,7 @@ def register(mcp, suite):
     def corpus(op: Literal["query", "list", "find", "read"], project: str = "", kind: str = "", projection: str = "",
                source_address: str = "", address: str = "", text: str = "", space: str = "",
                k: int = 8, detail: str = "concise", limit: int = 50) -> dict:
-        """Read the corpus — the engine's durable, embedded, addressed records (① repo-exocortex's
+        """Read the corpus — the engine's durable, embedded, addressed records (the repo-exocortex's
         'ask the codebase', + every capture pass's output). Pick `op`:
 
           op="query"  — ASK the corpus a natural-language question; returns the top-k nearest records by
@@ -24,7 +24,7 @@ def register(mcp, suite):
                         space to search (e.g. 'repo' for the codebase — see cognition_info().spaces);
                         `k` = how many. This is the primary 'ask-the-codebase' retrieve.
                         detail="detailed" → each hit carries its record's CONTENT inline (the answer in
-                        ONE call, P5); the default stays ids+scores. Every hit id is directly
+                        ONE call); the default stays ids+scores. Every hit id is directly
                         op='read'-able (the round-trip).
           op="list"   — list records, newest-first; narrow with `project`.
           op="find"   — filter records by `project` / `kind` / `projection` / `source_address`.
