@@ -1769,8 +1769,11 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
   /* THE TOP ROW — three things + the fold. Everything else hides until the fold opens (stacked,
      full-width, labeled — never scroll-hidden). The view-switch joins the flow (it escaped the
      lane as an absolute element — the overlap Tim photographed). */
-  .view-switch{position:static !important;transform:none !important;flex:none}
-  .as-top .toolbar{flex-wrap:nowrap;overflow:visible}
+  /* the view-switch is a FIXED overlay (z:700) from OUTSIDE the toolbar — the real overlap culprit
+     (found by computed-layout inspection, not guessing). On the phone it keeps its top-left corner
+     and the toolbar lane CLEARS it with padding; the row then reads: [switch][status…][⋯][mode]. */
+  .view-switch{top:7px;left:8px}
+  .as-top .toolbar{flex-wrap:nowrap;overflow:visible;padding-left:184px}
   .as-top .toolbar > .b:not(.tools-fold),.as-top .toolbar > button:not(.tools-fold){display:none}
   .as-top .toolbar > .title{display:none}
   .as-top .toolbar .presence{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
