@@ -1189,7 +1189,10 @@ button.b:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
   .app-shell[data-mtab="inbox"]   .as-panel.as-sheet{transform:translateY(0)}
   /* the rhm chat lives in the canvas cell; on mobile it becomes the 'rhm' bottom-sheet (toggled, not always-on) */
   .as-canvas .rhm{display:none}
-  .app-shell[data-mtab="rhm"] .as-canvas .rhm{display:flex;position:fixed;left:0;right:0;bottom:58px;top:auto;
+  /* :not(.claude-panel):not(.forager-bar) — the builder + forager INHERIT the .rhm card anatomy
+     (one vocabulary), so without the exclusions the rhm tab would reveal ALL THREE stacked
+     (found by use on the mobile pass — each cousin has its own tab/home). */
+  .app-shell[data-mtab="rhm"] .as-canvas .rhm:not(.claude-panel):not(.forager-bar){display:flex;position:fixed;left:0;right:0;bottom:58px;top:auto;
     width:auto;height:auto;max-height:60vh;z-index:340;border-radius:8px 8px 0 0}
   /* A2 (G-36) · the ACTIVITY feed — an AMBIENT trace (not a conditional card), so it gets its own tabbar
      entry + bottom-sheet (the 'activity' tab), mirroring the .rhm template byte-for-byte (same cell, same
@@ -1589,9 +1592,17 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
 /* the builder's activity lines (tool use) read as quiet machinery, not conversation */
 .claude-panel .msg .txt.muted{font-size:var(--fs-meta)}
 @media (max-width: 699px){
-  /* fe-map §4: in-canvas overlays hide at phone width; the builder rides the chat sheet later
-     (a dedicated mobile surface is a follow-up — stated honestly, not pretended). */
-  .claude-panel{display:none}
+  /* NATIVE MOBILE (Tim's standing rule: every design ships BOTH faces). The builder gets its OWN
+     bottom-sheet + tabbar entry — the .rhm/.activity template mirrored byte-for-byte. Hidden until
+     its tab; the sheet FORCES the body open (the desktop starts-minimized state must not leave a
+     bare header as the whole mobile surface). */
+  .as-canvas .claude-panel{display:none}
+  .app-shell[data-mtab="builder"] .as-canvas .claude-panel{display:flex;position:fixed;left:0;right:0;
+    bottom:58px;top:auto;width:auto;height:auto;max-height:62vh;z-index:340;border-radius:8px 8px 0 0}
+  .app-shell[data-mtab="builder"] .claude-panel.min .rhm-log,
+  .app-shell[data-mtab="builder"] .claude-panel.min .rhm-input,
+  .app-shell[data-mtab="builder"] .claude-panel.min .rhm-indicating,
+  .app-shell[data-mtab="builder"] .claude-panel.min .rhm-mem{display:flex}
 }
 
 /* FORAGER v1 (S7-FE) · THE SEARCH LANE (.forager-bar) — corpus search → circles on the canvas.
@@ -1679,5 +1690,17 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
 .greet-returned{border-left:2px solid var(--acc);padding-left:var(--sp-2)}
 .greet-mem{font-size:var(--fs-meta);line-height:1.5}
 @media (max-width: 699px){
-  .greeting-pill,.greeting-card{display:none}  /* mobile = the named gap (honest), same as the panel */
+  /* NATIVE MOBILE: the greeting matters MOST on the phone (it's the primary arrival surface).
+     The pill tucks under the top bar; the card goes full-width and thumb-scrollable. */
+  .greeting-pill{top:60px;right:8px}
+  .greeting-card{top:92px;left:8px;right:8px;width:auto;max-height:55vh;z-index:350}
+}
+
+/* NATIVE MOBILE · the forager rides the CANVAS tab (it is a canvas tool): full-width strip under the
+   top bar, starts as its minimized header, expands in place. Hidden on other tabs (one surface per
+   screen, the data-mtab law). Circles are tldraw shapes — already touch-native (tap = select). */
+@media (max-width: 699px){
+  .as-canvas .forager-bar{display:none}
+  .app-shell[data-mtab="canvas"] .as-canvas .forager-bar{display:flex;position:fixed;top:52px;left:8px;
+    right:8px;width:auto;margin-left:0;max-height:46vh;overflow:auto;z-index:330}
 }

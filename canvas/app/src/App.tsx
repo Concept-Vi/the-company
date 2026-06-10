@@ -350,6 +350,9 @@ function Hud() {
           <a className={mobileTab === 'palette' ? 'on' : ''} onClick={() => setMobileTab('palette')}><span className="ic">＋</span>add</a>
           <a className={mobileTab === 'inbox' ? 'on' : ''} onClick={() => setMobileTab('inbox')}><span className="ic">▤</span>panel</a>
           <a className={mobileTab === 'rhm' ? 'on' : ''} onClick={() => setMobileTab('rhm')}><span className="ic">◈</span>rhm</a>
+          {/* NATIVE MOBILE (Tim's rule: both faces, always): the BUILDER gets its own thumb-reachable
+             sheet — the second conversation partner earns the same standing as the first. */}
+          <a className={mobileTab === 'builder' ? 'on' : ''} onClick={() => setMobileTab('builder')}><span className="ic">⚒</span>builder</a>
           {/* A2 (G-36): the ACTIVITY feed tab — the ambient trace gets a thumb-reachable home (its own
              bottom-sheet, the .rhm-template reveal). Sits between rhm and run. */}
           <a className={mobileTab === 'activity' ? 'on' : ''} onClick={() => setMobileTab('activity')}><span className="ic">≋</span>feed</a>
