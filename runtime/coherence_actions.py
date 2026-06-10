@@ -100,6 +100,13 @@ def build_action(decl: dict, *, models: set, roles: set | None = None, rule_reso
             if of not in ("flag", "drop"):
                 return {"ok": False, "error": f"step {i}: on_fail {of!r} — declared modes are "
                         f"flag (annotate, thread all) | drop (thread passing; drops recorded)."}
+        uc = step.get("unit_ctx")
+        if uc is not None and (not isinstance(uc, dict)
+                               or not all(isinstance(k, str) and isinstance(v, str) and "{" in v
+                                          for k, v in uc.items())):
+            return {"ok": False, "error": f"step {i}: unit_ctx must map input names to address TEMPLATES "
+                    "containing {field} placeholders substituted from each unit dict "
+                    "(e.g. {'ground': 'run://<turn>/screen_reader/{mockup}'}) — S1, the per-unit context."}
         fan = step.get("fan_field")
         if fan is not None and (not isinstance(fan, str) or not fan):
             return {"ok": False, "error": f"step {i}: fan_field must be a non-empty string naming a LIST "

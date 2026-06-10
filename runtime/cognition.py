@@ -1094,6 +1094,7 @@ class ItemsResult:
 
 def run_items(role: "Role", items: list, store, *, turn_id: str,
               ctx: dict | None = None,
+              unit_ctx: dict | None = None,
               budget: "SlotBudget | None" = None,
               on_missing: str = "raise",
               emit: "Callable[[str, dict], None] | None" = None,
@@ -1206,9 +1207,32 @@ def run_items(role: "Role", items: list, store, *, turn_id: str,
             # PLAIN exception (NOT a _ResolutionError) so the barrier routes it to .failed, not the re-raise.
             # build the per-unit ctx: the resolved unit at "utterance" (the role's primary input → the
             # default byte-identical run_role path) + the shared ctx's declared extra inputs.
-            unit_ctx = dict(shared_ctx)
-            unit_ctx["utterance"] = resolved_unit
-            out = run_role(role, unit_ctx, base_url=base_url, model=model,
+            call_ctx = dict(shared_ctx)
+            call_ctx["utterance"] = resolved_unit
+            # S1 (G3) — PER-UNIT templated inputs: `unit_ctx` maps a declared input name to an address
+            # TEMPLATE whose {field} placeholders substitute from THIS unit's dict fields, then resolve
+            # through the canonical resolver — each unit sees ITS OWN group's context (the registry
+            # chain's {mockup}-keyed ground, previously only threadable by hand). Fail-loud: a non-dict
+            # unit under a template, a missing field, or an unresolvable address all raise (RESOLUTION
+            # class — fatal to the fan, a misconfiguration not a flaky unit). Absent unit_ctx →
+            # byte-identical to before.
+            if unit_ctx:
+                if not isinstance(unit, dict):
+                    raise _ResolutionError(ValueError(
+                        f"run_items: unit {i} is not a dict but unit_ctx templates "
+                        f"{sorted(unit_ctx)} need unit fields to substitute — fail loud."))
+                for _name, _tmpl in unit_ctx.items():
+                    try:
+                        _addr = _tmpl.format(**unit)
+                    except KeyError as ke:
+                        raise _ResolutionError(ValueError(
+                            f"run_items: unit {i} lacks field {ke.args[0]!r} required by unit_ctx "
+                            f"template {_tmpl!r} — fail loud, never a silent empty input.")) from ke
+                    try:
+                        call_ctx[_name] = resolve_address(store, _addr, turn_id=turn_id)
+                    except BaseException as e:
+                        raise _ResolutionError(e) from e
+            out = run_role(role, call_ctx, base_url=base_url, model=model,
                            max_tokens=max_tokens, temperature=temperature, store=store)
             cas = store.put_content(out)                     # immutable content (write-once)
             store.set_ref(addresses[i], cas)                 # the run:// pointer (atomic set_ref)
@@ -2424,6 +2448,7 @@ def run_cascade(action: dict, store, *, turn_id: str,
                     f"`items` on the step, or place it after a map step. Fail loud.")
             t0 = time.monotonic()
             res = run_items(role, units, store, turn_id=f"{turn_id}-s{i}", emit=None,
+                            unit_ctx=step.get("unit_ctx") or None,   # S1 — per-unit templated inputs
                             base_url=base_url, model=step_model, **kw_common)
             ms = int((time.monotonic() - t0) * 1000)
             # FAIL LOUD ON A PROCESSING FAILURE (the lane law: "a missing step input / DOWN MODEL → fail
