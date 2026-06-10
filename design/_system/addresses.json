@@ -295,7 +295,11 @@
       ],
       "represents": "CAN-compose",
       "code": "canvas/app/src/regions/Toolbar.tsx (wire) / runtime/suite.py:set_config",
-      "howto": "WHAT: the ＋ wire control. WHAT YOU CAN DO: select exactly two nodes on the board (left then right) and click it to connect them — it wires the left node's first output to the right node's first input; if the types have no compatible ports it tells you, never wires blindly. HOW TO CHANGE IT: the connect gesture is wireSelected in the controller (useAppController.ts); the wire itself is type-checked and owned by the backend (/api/connect)."
+      "howto": "WHAT: the ＋ wire control. WHAT YOU CAN DO: select exactly two nodes on the board (left then right) and click it to connect them — it wires the left node's first output to the right node's first input; if the types have no compatible ports it tells you, never wires blindly. HOW TO CHANGE IT: the connect gesture is wireSelected in the controller (useAppController.ts); the wire itself is type-checked and owned by the backend (/api/connect).",
+      "roles": [
+        "CAN-compose",
+        "WIRE-intent"
+      ]
     },
     "ui://toolbar/portal": {
       "region": "toolbar",
@@ -303,7 +307,11 @@
         "pointable"
       ],
       "represents": "NODE-portal",
-      "code": "canvas/app/src/regions/Toolbar.tsx (portal) / nodes/portal.py"
+      "code": "canvas/app/src/regions/Toolbar.tsx (portal) / nodes/portal.py",
+      "howto": "WHAT: The portal control on the board's command strip. WHAT YOU CAN DO: Open the portal to access the system's deep configuration and extension layers. HOW TO CHANGE IT: It lives in the toolbar region (Toolbar.tsx); changing its behavior is a code change there, surfaced via the build-intent wire.",
+      "provenance": {
+        "howto_filled_by": "rg10-curated-pass (curated field was empty)"
+      }
     },
     "ui://toolbar/delete": {
       "region": "toolbar",
@@ -321,7 +329,12 @@
       ],
       "represents": "CAN-layers",
       "code": "canvas/app/src/regions/Toolbar.tsx (layers) / canvas/app/src/useAppController.ts:cycleLayers",
-      "howto": "WHAT: the ◐ layers control. WHAT YOU CAN DO: click to cycle the board's focus through three views — all · origin only (operator-authored nodes, system-derived ones dimmed) · system only (the reverse). It's a viewing lens, it changes nothing in the graph. HOW TO CHANGE IT: cycleLayers in the controller (useAppController.ts) toggles the dimming classes on the body."
+      "howto": "WHAT: the ◐ layers control. WHAT YOU CAN DO: click to cycle the board's focus through three views — all · origin only (operator-authored nodes, system-derived ones dimmed) · system only (the reverse). It's a viewing lens, it changes nothing in the graph. HOW TO CHANGE IT: cycleLayers in the controller (useAppController.ts) toggles the dimming classes on the body.",
+      "roles": [
+        "CAN-layers",
+        "NODE-layer",
+        "SM-revert"
+      ]
     },
     "ui://toolbar/fit": {
       "region": "toolbar",
