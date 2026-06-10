@@ -43,19 +43,31 @@ def _sample(entries, n=4):
 def compose_triage_walk() -> dict:
     s = _suite()
     rec = json.load(open(REC, encoding="utf-8"))
+    # the REFINED classes (post-cascade, 2026-06-10: jury → panel → calibrated panel → deterministic
+    # prose floor → re-describe; the standing refine-before-gating rule — Tim's gate gets the minimum)
     by_cls = {k: [e for e in rec["entries"] if e["class"] == k]
-              for k in ("confirmed", "conflict", "floor", "jury")}
-    # dup guard — one live triage walk's blocks (an unresolved block with our marker → refuse)
+              for k in ("confirmed", "conflict", "floor", "panel")}
+    # dup guard — one live triage walk's blocks. LIVE = unresolved AND not retired via the status
+    # lane ('requeue' is how a superseded card is retired without touching the operator's resolved).
     for it in s.inbox.list():
         p = it.get("payload") or {}
-        if p.get("kind") == "registry_triage_block" and it.get("resolved") is None:
+        if (p.get("kind") == "registry_triage_block" and it.get("resolved") is None
+                and it.get("status") not in ("requeue", "implemented")):
             raise RuntimeError(f"a live triage block already exists ({it.get('id')}) — fail loud, no duplicate walk.")
 
+    features = [e["proposed_feature"]["row"] for e in by_cls["floor"]
+                if (e.get("proposed_feature") or {}).get("status") == "proposed"]
+    # one proposed feature can carry several elements (the GC9 merge) — dedupe by id for the block
+    feat_by_id = {}
+    for r in features:
+        feat_by_id.setdefault(r["id"], r)
     blocks = [
-        {"block": "confirmed", "title": f"Approve {len(by_cls['confirmed'])} confirmed registry entries as a block?",
-         "decision": ("ONE decision: these passed BOTH gates (the deterministic no-fiction floor AND the "
-                      "accuracy jury). Approving writes them into the address registry — each element then "
-                      "explains itself at your altitude. Reject sends the batch back with your reason."),
+        {"block": "confirmed", "title": f"Approve {len(by_cls['confirmed'])} refined registry entries as a block?",
+         "decision": ("ONE decision: every entry here passed the deterministic no-fiction floor, the "
+                      "deterministic prose check, AND a diverse review panel (grounding + element-fit "
+                      "lenses) — many after autonomous correction rounds. Approving writes them into the "
+                      "address registry: each element then explains itself at your altitude. Reject sends "
+                      "the batch back with your reason."),
          "count": len(by_cls["confirmed"]), "sample": _sample(by_cls["confirmed"]),
          "addresses": [e["address"] for e in by_cls["confirmed"]]},
         {"block": "conflict", "title": f"{len(by_cls['conflict'])} elements your screens DESCRIBE DIFFERENTLY — walk them?",
@@ -67,20 +79,22 @@ def compose_triage_walk() -> dict:
                         "variants": [{"mockup": v["mockup"], "maps_to_feature": v["maps_to_feature"],
                                       "grounding": v["grounding"], "represents": v["represents"]}
                                      for v in e.get("variants", [])]} for e in by_cls["conflict"]]},
-        {"block": "floor", "title": f"{len(by_cls['floor'])} likely INVENTORY GAPS — concepts the feature list doesn't name",
-         "decision": ("The model insists these elements represent features that don't exist in the inventory "
-                      "(e.g. NODE-model, RHM-identity) — even after correction. That reads as the INVENTORY "
-                      "being incomplete, not the model lying. Reviewing these may grow the feature inventory "
-                      "itself; each entry shows the name the model keeps reaching for."),
-         "count": len(by_cls["floor"]),
-         "gaps": [{"address": e["address"], "insisted_feature": e["dossier"].get("maps_to_feature"),
-                   "represents": e["dossier"].get("represents")} for e in by_cls["floor"]]},
-        {"block": "jury", "title": f"{len(by_cls['jury'])} entries the accuracy jury couldn't agree on — re-jury with a diverse panel first?",
-         "decision": ("The jury today is 3 draws of ONE model — it measures self-consistency, not independent "
-                      "judgement, so this pile is mostly variance. Before spending your eyes on 222 items: "
-                      "approve a re-jury with DIVERSE panel seats (distinct lenses), which should shrink this "
-                      "to a short genuinely-doubtful list. Or walk a sample now to calibrate."),
-         "count": len(by_cls["jury"]), "sample": _sample(by_cls["jury"], 6)},
+        {"block": "features", "title": f"{len(feat_by_id)} PROPOSED FEATURES for the inventory (most flesh out the RHM)",
+         "decision": ("These elements represent concepts the feature inventory doesn't name — the model "
+                      "insisted on them through every correction, and each is now a concrete proposed "
+                      "inventory row (name, area, plain-language label; fully derived from existing data — "
+                      "nothing invented). Approving grows the feature inventory itself; 8 of these complete "
+                      "the right-hand-man area's self-description."),
+         "count": len(feat_by_id), "features": list(feat_by_id.values())},
+        {"block": "residue", "title": f"{len(by_cls['panel'])} entries the panel still rejects after every refinement — the true residue",
+         "decision": ("Every autonomous refinement is exhausted (diverse panel, calibration, deterministic "
+                      "prose floor, corrected re-description) — these still fail, each with NAMED reasons "
+                      "from the content lenses. Walk them individually, or reject the lot (their elements "
+                      "stay candidates for a future pass)."),
+         "count": len(by_cls["panel"]),
+         "residue": [{"address": e["address"],
+                      "dissents": [x.get("reason", "")[:120] for x in (e.get("panel", {}).get("seats") or [])
+                                   if not x.get("grounded")]} for e in by_cls["panel"]]},
     ]
     ids = []
     for b in blocks:
