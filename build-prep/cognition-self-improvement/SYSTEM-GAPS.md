@@ -330,3 +330,19 @@ Tim, closing the walk: my harness memory of him is useful but trapped — only C
 ## 2026-06-10 — B2/GC10 DONE: agents can PROPOSE production lines; only Tim lands them
 - ✅ **propose_flow:** the gated code-chain circuit — authoring.render_flow_source (proposes_only forced True) + gate_flow_source (forbidden-verb scan: resolve/approve/dispatch/claude -p/subprocess/os.system + tempdir-import through the REAL loader) at PROPOSE and again at APPLY · flow_build=CONFIRM (POLICY) · apply_flow runs only on the substrate-read approve (no caller flag) · N6 auto-reflect on landing. The face: flows(op='propose', spec={id,label,description,params,body}). FULL CIRCUIT VERIFIED: evil-body gate refusal · surface-not-land · GovernanceError sans approve · approved→landed→discovered→ran. **Tim's propose→accept→build→Real lifecycle now covers the system's own toolset.**
 - Board: B1 ✓ B2 ✓ — remaining: B3 rolling · B4 consolidation drafts · B5 memory migration · B6 smalls · B7 eval#4 (now warranted: flows+propose, panels, checks, operator memory, declared chains all landed since eval#3).
+
+## 2026-06-10 — EVAL #4 (7 cold agents incl. Task G governed-growth) — the Q-series backlog
+**7/7 completed; TWO outcomes 'smooth' (A: the full compose loop · D: run-existing) — the FIRST smooth verdicts in four rounds.** Trajectory: missing-capabilities (M) → tool-seams (N) → description-drift + 1 regression (P) → now SCHEMA-LAYER polish + SERVER-STALENESS. The compose spine drew cold praise again ("addresses out of one step are literally the input type of the next"; "save_cascade answering the next call's open question is the single best affordance in the server — worth generalizing").
+**★ STALENESS CLUSTER (explains 3 findings — NOT face design):** the live MCP server predates GC15/B2/the gauntlet — Task G couldn't find the operator tool (found the memory via space='history' and STILL extracted the right two rules: verify-by-use + concrete-over-abstract — the content works even when the door is hidden); flows(op='propose') absent; run_cascade('registration-gauntlet') unknown + capabilities-chains vs list_cascades disagreed (the ActionRegistry loads cascades.json at INIT and never re-reads — out-of-process saves invisible). → **Q3 (real bug): cascade_registry re-reads on file mtime change (match FlowRegistry's rediscover-per-call).** needs-tim: /mcp reconnect (operator · panel · flows-propose · fresh cascades all land).
+- 🔴 **Q1 (A's top gap):** legal values into JSON-SCHEMA ENUMS (create.kind · run_role.op · run_reduce.mode · runs.* · corpus.op · flows.op · panel.op · marks.by) — the schema layer is where a cold agent looks first.
+- 🔴 **Q2:** list_surfaced = a 278KB no-param firehose — apply the P4 scoping (concise rows default + id/status/limit params).
+- 🔴 **Q3:** the cascade-registry staleness (above).
+- 🔴 **Q4:** run_cascade.inputs param description carries the JSON-array convention + input_schema in EVERY list_cascades row (half done).
+- 🔴 **Q5:** corpus op='read' returns a capture DIGEST framed as 'full content' — say what it is + how to reach the source.
+- 🔴 **Q6:** empty-registry responses cross-point (empty flows list ↔ cascades; empty corpus space → ingest hint).
+- 🔴 **Q7:** the FEATURE INVENTORY has no MCP surface (register_element's no-fiction contract points at it!) — capabilities(section='features').
+- 🔴 **Q8:** a jury role declared kind='items' silently runs single-draw — warn at save (jury semantics dropped).
+- 🔴 **Q9:** operator-memory discoverability — a pointer line in capabilities/cognition_info overviews.
+- 🔴 **Q10:** chains-section vs list_cascades one-source (likely collapses with Q3).
+- 🔴 **Q11:** ingest path-identity AGAIN (3 duplicate records, literal-path keying) — P8b's ingest-side normalization is now eval-evidenced twice.
+- 🟡 **Q12:** strip build-lineage jargon (GROUP N/AK4/#58…) from agent-facing descriptions — repeatedly named noise, never blocking.
