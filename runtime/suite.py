@@ -8956,10 +8956,12 @@ class Suite:
             # body create_role uses (reuse-don't-parallel: ONE write path; this is "minus the approve").
             return self._write_role_file(
                 rid, source, f"add cognition role '{rid}'",
-                emit_msg=f"approved + applied role '{rid}' — now a live cognition role")
+                emit_msg=f"approved + applied role '{rid}' — now a live cognition role",
+                desc=str(d["payload"].get("description") or ""))
         return guard("role_build", do=_do, confirmed=self.inbox.is_approved(surfaced_id))
 
-    def _write_role_file(self, rid: str, source: str, commit_msg: str, *, emit_msg: str) -> str:
+    def _write_role_file(self, rid: str, source: str, commit_msg: str, *, emit_msg: str,
+                         desc: str = "") -> str:
         """The shared CONSEQUENTIAL write-half of role authoring — the factored body BOTH the
         approval-gated `apply_role` AND the DIRECT `create_role` (#58) call. RE-GATES the rendered
         module (import in a temp dir — defense-in-depth: a bad role NEVER reaches the live roles/ tree,
@@ -8983,10 +8985,22 @@ class Suite:
         os.replace(tmp, path)                               # atomic; no partial file
         # N6 — auto-reflect the new role in roles/AGENTS.md, SAME commit (the cold-agent eval twice left
         # the drift red after an MCP create — the reflect is now the system's own job, never a follow-up).
-        _refl = self._reflect_drift_home(self.roles_dir, rid, "role", desc=str(spec.get("description") or ""))
-        sha = self._commit_or_rollback(path, commit_msg,
-                                       extra_paths=[_refl[0]] if _refl else None,
-                                       restore={_refl[0]: _refl[1]} if _refl else None)
+        # `desc` is PASSED IN (the P1 regression: this line once read the CALLER'S `spec` local —
+        # NameError on every create(kind='role') through the face; only a cold-agent eval caught it).
+        # The reflect+commit are WRAPPED: a failure here must not STRAND the just-written role file
+        # (P1's secondary damage: three uncommitted, unreflected roles/*.py littered the tree) — the
+        # written file is removed and the error re-raised (fail loud + clean, never half-created).
+        try:
+            _refl = self._reflect_drift_home(self.roles_dir, rid, "role", desc=desc)
+            sha = self._commit_or_rollback(path, commit_msg,
+                                           extra_paths=[_refl[0]] if _refl else None,
+                                           restore={_refl[0]: _refl[1]} if _refl else None)
+        except BaseException:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+            raise
         self._rediscover_roles()                            # committed → NOW make it live
         self._emit("apply", f"{emit_msg} · {sha[:8]}",
                    node_name=rid, commit=sha, address="ui://chrome/workshop")
@@ -9025,7 +9039,8 @@ class Suite:
         source = _auth.render_role_source(spec)             # the ONE renderer — the FULL schema
         path = self._write_role_file(                       # gate + write + commit + rediscover (DIRECT)
             rid, source, f"create cognition role '{rid}' (direct)",
-            emit_msg=f"created role '{rid}' DIRECTLY — now a live cognition role")
+            emit_msg=f"created role '{rid}' DIRECTLY — now a live cognition role",
+            desc=str(spec.get("description") or ""))
         return {"role_id": rid, "path": path, "live": rid in self.role_registry, "source": source}
 
     def _entry_dir(self, kind: str) -> str:

@@ -70,8 +70,16 @@ TASK E — THE FULL KNOWLEDGE LOOP (feed → ask → tally — the newest capabi
 3) TALLY: run any registered classification role over 4-5 short texts of your choosing, then reduce the outputs to a COUNT PER LABEL (a histogram) using a deterministic rule — no model in the reduce.
 Report the friction at each hop: was the ingest tool discoverable + did its response teach you anything? was asking obvious? was the per-label tally achievable with a NAMED rule this time (it required building a custom role in an earlier eval)?`,
     { label: 'E-knowledge-loop', phase: 'Eval', schema: SCHEMA }),
+
+  () => agent(`${FRESH}
+TASK F — THE PRODUCTION LINES (the newest face — proven chains, cold). Through the MCP only:
+1) DISCOVER whether this system has any pre-built multi-step chains/production-lines you can run as one call (find the tool; list what exists).
+2) Pick the one that looks SAFEST + CHEAPEST to actually run, read its description/params, and RUN it with conservative params (prefer a tiny/zero-cost invocation).
+3) Read the result back and say what the chain actually did.
+Report the friction: could you FIND the chains tool without being told its name? did list/describe teach you enough to choose safely? did the params validate helpfully when unsure? would you have known these chains existed if you hadn't been told to look?`,
+    { label: 'F-flows-cold', phase: 'Eval', schema: SCHEMA }),
 ])
 
 const ok = evals.filter(Boolean)
-log(`Eval: ${ok.length}/5 · outcomes: ${ok.map(e=>e.task+'='+e.outcome).join(' · ')}`)
+log(`Eval: ${ok.length}/6 · outcomes: ${ok.map(e=>e.task+'='+e.outcome).join(' · ')}`)
 return { evals: ok }
