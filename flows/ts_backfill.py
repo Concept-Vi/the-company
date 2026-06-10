@@ -22,7 +22,9 @@ FLOW = {
     "params": {
         "budget": {"desc": "max records to re-stamp this run (bounded batches compose)", "default": 600},
     },
-    "proposes_only": False,
+    # proposes_only is the FLOOR contract (no resolve/approve/dispatch) — corpus capture is a
+    # declarative data write, the same class as transcript_mine's captures. True is honest.
+    "proposes_only": True,
 }
 
 
