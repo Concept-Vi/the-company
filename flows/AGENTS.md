@@ -41,6 +41,10 @@ Add a row = add a FILE + reflect it here (the drift home). Loader: `runtime/flow
 - **drift_radar** — ②: the built-twice/overlap/doc-drift sweep over the repo space — near-pair
   clusters → judge_drift confirm (conservative) → surface-direction marks + findings; zero-results
   fail loud (a silent 'all clean' is not a believable radar).
+- **floor_walk** — the standing cross-lane sweep for work that died between sessions (Tim's
+  wide-pass made standing): stranded settled files · built-but-never-imported components · stale
+  unresolved decisions · phantom corpus sources. Deterministic, report+one-card; adoption is the
+  follow-up judgment work.
 
 ## Agent-authored entries (auto-reflected)
 <!-- created live by the create face; one line per entry — keeps the
