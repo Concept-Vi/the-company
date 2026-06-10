@@ -1593,3 +1593,21 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
      (a dedicated mobile surface is a follow-up — stated honestly, not pretended). */
   .claude-panel{display:none}
 }
+
+/* S2-FE · THE GREETING — the arrival face (morning bar #1). The pill is a quiet standing presence
+   near the toolbar (workshop-stability: a fixed place); the card is the one-glance brief. Tokens
+   only — the returned-memory block leads with the signal color (the system remembering on its own
+   is the headline act). */
+.greeting-pill{position:absolute;top:64px;right:12px;pointer-events:auto;font-size:var(--fs-meta)}
+.greeting-card{position:absolute;top:96px;right:12px;width:380px;max-height:62vh;overflow:auto;
+  background:var(--s1);border:1px solid var(--line);border-radius:6px;padding:11px 13px;
+  pointer-events:auto;display:flex;flex-direction:column}
+.greet-body{display:flex;flex-direction:column;gap:var(--sp-3);padding-top:var(--sp-2)}
+.greet-h{font-family:"Fraunces",serif;color:var(--sig);font-size:12px;font-weight:600;margin-bottom:var(--sp-1)}
+.greet-line{font-size:var(--fs-meta)}
+.greet-item{font-size:var(--fs-meta);line-height:1.5}
+.greet-returned{border-left:2px solid var(--acc);padding-left:var(--sp-2)}
+.greet-mem{font-size:var(--fs-meta);line-height:1.5}
+@media (max-width: 699px){
+  .greeting-pill,.greeting-card{display:none}  /* mobile = the named gap (honest), same as the panel */
+}

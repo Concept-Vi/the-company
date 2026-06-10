@@ -41,6 +41,7 @@ import { OpPanels } from './regions/OpPanels'
 import { Activity } from './regions/Activity'
 import { RhmChat } from './regions/RhmChat'
 import { ClaudeChat } from './regions/ClaudeChat'
+import { GreetingCard } from './regions/GreetingCard'
 import { Walkthrough } from './regions/Walkthrough'
 import { Workshop } from './regions/Workshop'
 import { Settings } from './regions/Settings'
@@ -228,6 +229,12 @@ function Hud() {
              gate. Per-panel boundary like every panel (a render-throw degrades to a card). */}
           <PanelErrorBoundary name="builder">
             <ClaudeChat />
+          </PanelErrorBoundary>
+          {/* S2-FE · THE GREETING — the system meets Tim on arrival (caught-up-in-one-glance; the
+             pill stands quietly, the card auto-opens after a real away-gap). /api/greeting is the
+             organ; this is its face. */}
+          <PanelErrorBoundary name="greeting">
+            <GreetingCard />
           </PanelErrorBoundary>
           {/* L-fe · the LIVE COGNITION VIEW (the commander's bridge, E2/06). EXTEND not replace: it is one
              MORE in-canvas overlay beside the chat/activity (removes/replaces nothing). It sits at the chat
