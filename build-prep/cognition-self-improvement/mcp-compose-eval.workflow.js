@@ -78,8 +78,16 @@ TASK F — THE PRODUCTION LINES (the newest face — proven chains, cold). Throu
 3) Read the result back and say what the chain actually did.
 Report the friction: could you FIND the chains tool without being told its name? did list/describe teach you enough to choose safely? did the params validate helpfully when unsure? would you have known these chains existed if you hadn't been told to look?`,
     { label: 'F-flows-cold', phase: 'Eval', schema: SCHEMA }),
+
+  () => agent(`${FRESH}
+TASK G — THE GOVERNED GROWTH LOOP (the newest face, cold). Through the MCP only:
+1) OPERATOR MEMORY: you are about to prepare something the system's human operator will review. BEFORE doing so, discover what the system knows about working with him (find the tool yourself). Name the TWO rules that would most change how you present to him, and say why.
+2) PROPOSE A PRODUCTION LINE: propose (NOT create) a trivial new flow — spec {id:'eval_g_probe', label, description, params:{}, body:'return {"ok": true}'}. Report what happened: did it land immediately or surface for approval? Was the boundary (what YOU can do vs what only the operator can) clear from the tool's teaching?
+3) RUN A DECLARED CHAIN WITH GATES: run the saved cascade 'registration-gauntlet' with inputs = a small dossier JSON of your own construction (use cognition_info/capabilities to find REAL feature ids — invented ids should be CAUGHT). Report the verdict and whether the gate behavior taught you anything.
+Report friction at each hop; honesty rules apply (a smooth run is a real result).`,
+    { label: 'G-governed-growth', phase: 'Eval', schema: SCHEMA }),
 ])
 
 const ok = evals.filter(Boolean)
-log(`Eval: ${ok.length}/6 · outcomes: ${ok.map(e=>e.task+'='+e.outcome).join(' · ')}`)
+log(`Eval: ${ok.length}/7 · outcomes: ${ok.map(e=>e.task+'='+e.outcome).join(' · ')}`)
 return { evals: ok }
