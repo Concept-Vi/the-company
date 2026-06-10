@@ -42,6 +42,26 @@
       ]
     },
     {
+      "region": "chrome",
+      "component": null,
+      "status": "planned",
+      "note": "region in addresses.json with no component mapping",
+      "addresses": [
+        "ui://view-switch"
+      ]
+    },
+    {
+      "region": "cognition",
+      "component": null,
+      "status": "planned",
+      "note": "region in addresses.json with no component mapping",
+      "addresses": [
+        "ui://cognition",
+        "ui://cognition/pulse",
+        "ui://cognition/river"
+      ]
+    },
+    {
       "region": "grow",
       "component": null,
       "status": "planned",
@@ -115,6 +135,24 @@
         "ui://settings/modes",
         "ui://settings/roles",
         "ui://settings/voice"
+      ]
+    },
+    {
+      "region": "studio",
+      "component": null,
+      "status": "planned",
+      "note": "region in addresses.json with no component mapping",
+      "addresses": [
+        "ui://studio",
+        "ui://studio/composer",
+        "ui://studio/generate",
+        "ui://studio/generate/result",
+        "ui://studio/rail",
+        "ui://studio/rhm",
+        "ui://studio/rhm/help",
+        "ui://studio/stage",
+        "ui://studio/stage/device-desktop",
+        "ui://studio/stage/device-phone"
       ]
     },
     {

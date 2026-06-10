@@ -18,6 +18,14 @@
     },
     {
       "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://toolbar/force",
+      "region": "toolbar",
+      "feature": "RUN-force",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
       "address": "ui://toolbar/run",
       "region": "toolbar",
       "feature": "RUN-run",
@@ -34,6 +42,22 @@
     },
     {
       "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://rail/palette/drag-hint",
+      "region": "rail",
+      "feature": "Drag instruction",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://rail/palette/content-5",
+      "region": "rail",
+      "feature": "A content node block in the palette rack",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
       "address": "ui://canvas",
       "region": "canvas",
       "feature": "CAN-compose",
@@ -42,10 +66,106 @@
     },
     {
       "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://canvas/graph",
+      "region": "canvas",
+      "feature": "NODE-count",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://canvas/empty-stage",
+      "region": "canvas",
+      "feature": "CAN-compose",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://canvas/j1",
+      "region": "canvas",
+      "feature": "J1-loop",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://canvas/demo",
+      "region": "canvas",
+      "feature": "Demo entry",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://canvas/codebase-q-a",
+      "region": "canvas",
+      "feature": "Codebase Q&A entry",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://canvas/colour-kind",
+      "region": "canvas",
+      "feature": "The semantic rule defining node identity",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
       "address": "ui://activity",
       "region": "activity",
       "feature": "EVT-now",
       "code": "runtime/suite.py:now",
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://activity/presence",
+      "region": "activity",
+      "feature": "EVT-presence",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://canvas/inspector",
+      "region": "canvas",
+      "feature": "INSPECT-panel",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://canvas/empty-state",
+      "region": "canvas",
+      "feature": "Empty board state",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://canvas/tabbar",
+      "region": "canvas",
+      "feature": "CAN-tabbar",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://canvas/inbox",
+      "region": "canvas",
+      "feature": "INB-entry",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A1-canvas-empty-desktop.html",
+      "address": "ui://canvas/rhm",
+      "region": "canvas",
+      "feature": "RHM-verbs",
+      "code": null,
       "registered": true
     },
     {
@@ -74,6 +194,14 @@
     },
     {
       "screen": "A11-portals-desktop.html",
+      "address": "ui://rail/palette/node-kinds",
+      "region": "rail",
+      "feature": "NODE-kinds",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A11-portals-desktop.html",
       "address": "ui://canvas",
       "region": "canvas",
       "feature": "CAN-compose",
@@ -90,10 +218,10 @@
     },
     {
       "screen": "A11-portals-desktop.html",
-      "address": "ui://canvas/portal-window",
+      "address": "ui://canvas/node/memo",
       "region": "canvas",
-      "feature": "NODE-portal",
-      "code": "nodes/portal.py",
+      "feature": "MEMO-memo",
+      "code": null,
       "registered": true
     },
     {
@@ -110,6 +238,30 @@
       "region": "canvas",
       "feature": "NODE-portal",
       "code": "nodes/portal.py",
+      "registered": true
+    },
+    {
+      "screen": "A11-portals-desktop.html",
+      "address": "ui://canvas/portal-window/reflects",
+      "region": "canvas",
+      "feature": "NODE-portal reflection",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A11-portals-desktop.html",
+      "address": "ui://canvas/portal-window",
+      "region": "canvas",
+      "feature": "NODE-portal",
+      "code": "nodes/portal.py",
+      "registered": true
+    },
+    {
+      "screen": "A11-portals-desktop.html",
+      "address": "ui://canvas/portal-window/resolve",
+      "region": "canvas",
+      "feature": "NODE-portal resolve state",
+      "code": null,
       "registered": true
     },
     {
@@ -121,11 +273,163 @@
       "registered": true
     },
     {
+      "screen": "A11-portals-desktop.html",
+      "address": "ui://inspector/portal",
+      "region": "inspector",
+      "feature": "Portal window",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A11-portals-desktop.html",
+      "address": "ui://inspector/config-ref",
+      "region": "inspector",
+      "feature": "NODE-config reference",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A12-workshop-desktop.html",
+      "address": "ui://canvas/layers",
+      "region": "canvas",
+      "feature": "CAN-layers",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A12-workshop-desktop.html",
+      "address": "ui://canvas/wire",
+      "region": "canvas",
+      "feature": "WIRE-intent",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A12-workshop-desktop.html",
+      "address": "ui://canvas/force",
+      "region": "canvas",
+      "feature": "ENG-force",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A12-workshop-desktop.html",
+      "address": "ui://canvas/run",
+      "region": "canvas",
+      "feature": "RUN-run",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A12-workshop-desktop.html",
+      "address": "ui://canvas/process-ask",
+      "region": "canvas",
+      "feature": "Process A ask L llm Content rail",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A12-workshop-desktop.html",
+      "address": "ui://canvas/process",
+      "region": "canvas",
+      "feature": "NODE-process",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A12-workshop-desktop.html",
+      "address": "ui://canvas/content",
+      "region": "canvas",
+      "feature": "Content kind indicator",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A12-workshop-desktop.html",
+      "address": "ui://canvas/ask-workshop",
+      "region": "canvas",
+      "feature": "ENG-memo",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A12-workshop-desktop.html",
+      "address": "ui://canvas/workshop",
+      "region": "canvas",
+      "feature": "Workshop entry",
+      "code": null,
+      "registered": true
+    },
+    {
       "screen": "A12-workshop-desktop.html",
       "address": "ui://workshop",
       "region": "workshop",
       "feature": "WS-workshop",
       "code": "runtime/suite.py:ui_info",
+      "registered": true
+    },
+    {
+      "screen": "A12-workshop-desktop.html",
+      "address": "ui://workshop/full-render",
+      "region": "workshop",
+      "feature": "WS-full-render",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A12-workshop-desktop.html",
+      "address": "ui://workshop/process-status",
+      "region": "workshop",
+      "feature": "Process status indicator",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A12-workshop-desktop.html",
+      "address": "ui://workshop/graph-visual",
+      "region": "workshop",
+      "feature": "ASK-graph state",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A12-workshop-desktop.html",
+      "address": "ui://workshop/provenance",
+      "region": "workshop",
+      "feature": "WS-provenance",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A12-workshop-desktop.html",
+      "address": "ui://workshop/memo",
+      "region": "workshop",
+      "feature": "The memo gate mechanism",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A12-workshop-desktop.html",
+      "address": "ui://workshop/config",
+      "region": "workshop",
+      "feature": "WS-config",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A12-workshop-desktop.html",
+      "address": "ui://workshop/ask-fields",
+      "region": "workshop",
+      "feature": "ASK-field-spec",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A12-workshop-desktop.html",
+      "address": "ui://workshop/ports",
+      "region": "workshop",
+      "feature": "NODE-ports",
+      "code": null,
       "registered": true
     },
     {
@@ -161,6 +465,78 @@
       "registered": true
     },
     {
+      "screen": "A2-canvas-desktop.html",
+      "address": "ui://canvas/zoomhint",
+      "region": "canvas",
+      "feature": "CAN-zoom",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-desktop.html",
+      "address": "ui://canvas/utterance",
+      "region": "canvas",
+      "feature": "The memo gate query",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-desktop.html",
+      "address": "ui://canvas/memo-gate",
+      "region": "canvas",
+      "feature": "ENG-memo",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-desktop.html",
+      "address": "ui://canvas/running-chain",
+      "region": "canvas",
+      "feature": "Raw coordinate string",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-desktop.html",
+      "address": "ui://canvas/foot",
+      "region": "canvas",
+      "feature": "RUN-status",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-desktop.html",
+      "address": "ui://canvas/status",
+      "region": "canvas",
+      "feature": "RUN-status",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-desktop.html",
+      "address": "ui://canvas/instructions",
+      "region": "canvas",
+      "feature": "System constraint directive",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-desktop.html",
+      "address": "ui://canvas/toolbar/inbox",
+      "region": "canvas",
+      "feature": "INB-trigger",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-desktop.html",
+      "address": "ui://canvas/build",
+      "region": "canvas",
+      "feature": "BUILD-trigger",
+      "code": null,
+      "registered": true
+    },
+    {
       "screen": "A2-canvas-mobile.html",
       "address": "ui://toolbar",
       "region": "toolbar",
@@ -178,10 +554,26 @@
     },
     {
       "screen": "A2-canvas-mobile.html",
+      "address": "ui://canvas/chain-status",
+      "region": "canvas",
+      "feature": "RUN-chain-status",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-mobile.html",
       "address": "ui://canvas/node",
       "region": "canvas",
       "feature": "NODE-kinds",
       "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil / runtime/suite.py:create_node",
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-mobile.html",
+      "address": "ui://canvas/node/memo-gate",
+      "region": "canvas",
+      "feature": "NODE-memo",
+      "code": null,
       "registered": true
     },
     {
@@ -194,10 +586,122 @@
     },
     {
       "screen": "A2-canvas-mobile.html",
+      "address": "ui://canvas/chain",
+      "region": "canvas",
+      "feature": "CONST-constant",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-mobile.html",
       "address": "ui://tabbar",
       "region": "tabbar",
       "feature": "CAN-compose",
       "code": "canvas/app/src/app.css .tabbar (mobile nav \u2014 responsive chrome) / canvas/app/src/App.tsx (tabbar)",
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-mobile.html",
+      "address": "ui://tabbar/canvas",
+      "region": "tabbar",
+      "feature": "CAN-compose",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-mobile.html",
+      "address": "ui://tabbar/inbox",
+      "region": "tabbar",
+      "feature": "INB-surface",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A2-canvas-mobile.html",
+      "address": "ui://tabbar/rhm",
+      "region": "tabbar",
+      "feature": "RHM \u25c8",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A2-rhm-mobile-elevated.html",
+      "address": "ui://chat/mode",
+      "region": "chat",
+      "feature": "RHM-modes",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A2-rhm-mobile-elevated.html",
+      "address": "ui://chat/decline",
+      "region": "chat",
+      "feature": "RHM-decline",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A2-rhm-mobile-elevated.html",
+      "address": "ui://chat/inbox",
+      "region": "chat",
+      "feature": "RHM-inbox",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A2-rhm-mobile-elevated.html",
+      "address": "ui://chat/rhm",
+      "region": "chat",
+      "feature": "RHM-chat",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A2-rhm-mobile-elevated.html",
+      "address": "ui://chat/run",
+      "region": "chat",
+      "feature": "RUN-run",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/controls",
+      "region": "inspector",
+      "feature": "Top command strip",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/force",
+      "region": "inspector",
+      "feature": "NODE-force",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/palette",
+      "region": "inspector",
+      "feature": "NODE-config",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/process-11",
+      "region": "inspector",
+      "feature": "Process node identifier",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/content",
+      "region": "inspector",
+      "feature": "NODE-content label",
+      "code": null,
       "registered": true
     },
     {
@@ -214,6 +718,14 @@
       "region": "canvas",
       "feature": "NODE-kinds",
       "code": "canvas/app/src/NodeShape.tsx:NodeShapeUtil / runtime/suite.py:create_node",
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/status",
+      "region": "inspector",
+      "feature": "NODE-status",
+      "code": null,
       "registered": true
     },
     {
@@ -234,10 +746,186 @@
     },
     {
       "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/model-field/model-enum",
+      "region": "inspector",
+      "feature": "MOD-enum",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/top_p",
+      "region": "inspector",
+      "feature": "NODE-config",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/max_tokens",
+      "region": "inspector",
+      "feature": "NODE-config: max_tokens",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/base_url",
+      "region": "inspector",
+      "feature": "NODE-config:base_url",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/endpoint",
+      "region": "inspector",
+      "feature": "Fabric endpoint control",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/retries",
+      "region": "inspector",
+      "feature": "NODE-retries",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/run-trigger",
+      "region": "inspector",
+      "feature": "NODE-trigger",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/memo",
+      "region": "inspector",
+      "feature": "Caching strategy note",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
       "address": "ui://inspector/act",
       "region": "inspector",
       "feature": "ENG-force",
       "code": "canvas/app/src/regions/Inspector.tsx (act) / runtime/scheduler.py:run",
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/act/force",
+      "region": "inspector",
+      "feature": "ENG-force",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/inbox",
+      "region": "inspector",
+      "feature": "INB-lanes",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-inspector-desktop.html",
+      "address": "ui://inspector/rhm",
+      "region": "inspector",
+      "feature": "RHM control",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-settings-elevated.html",
+      "address": "ui://settings/rhm-config",
+      "region": "settings",
+      "feature": "RHM-config",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-settings-elevated.html",
+      "address": "ui://settings/brain-persona",
+      "region": "settings",
+      "feature": "RHM-config",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-settings-elevated.html",
+      "address": "ui://settings/resource-fit",
+      "region": "settings",
+      "feature": "Resource fit control",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-settings-elevated.html",
+      "address": "ui://settings/hardware",
+      "region": "settings",
+      "feature": "HARD-spec",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-settings-elevated.html",
+      "address": "ui://settings/resource-meter",
+      "region": "settings",
+      "feature": "RHM-config",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-settings-elevated.html",
+      "address": "ui://settings/swap",
+      "region": "settings",
+      "feature": "RHM-config",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-settings-elevated.html",
+      "address": "ui://settings/token-limits",
+      "region": "settings",
+      "feature": "RHM-config knob",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-settings-elevated.html",
+      "address": "ui://settings/timeout",
+      "region": "settings",
+      "feature": "RHM-timeout",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-settings-elevated.html",
+      "address": "ui://settings/endpoint",
+      "region": "settings",
+      "feature": "RHM-config endpoint",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-settings-elevated.html",
+      "address": "ui://settings/rhm",
+      "region": "settings",
+      "feature": "RHM-config",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "A3-settings-elevated.html",
+      "address": "ui://settings/analytic",
+      "region": "settings",
+      "feature": "RHM-config",
+      "code": null,
       "registered": true
     },
     {
@@ -250,11 +938,91 @@
     },
     {
       "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://chat/driving",
+      "region": "chat",
+      "feature": "RHM-driving",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://chat/layers",
+      "region": "chat",
+      "feature": "RHM-layers",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://chat/wire",
+      "region": "chat",
+      "feature": "WIRE-intent",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://chat/force",
+      "region": "chat",
+      "feature": "RHM-force",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://chat/rail",
+      "region": "chat",
+      "feature": "RHM-rail",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://chat/node-palette",
+      "region": "chat",
+      "feature": "NODE-kinds",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://chat/walk",
+      "region": "chat",
+      "feature": "WALK-present",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://chat/utterance",
+      "region": "chat",
+      "feature": "The memo-gate change summary",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://chat/awaiting-upstream",
+      "region": "chat",
+      "feature": "Upstream pending state",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
       "address": "run://demo/ask",
       "region": null,
       "feature": null,
       "code": null,
       "registered": false
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://run/demo/ask/memo-gate",
+      "region": "run",
+      "feature": "ENG-memo",
+      "code": null,
+      "registered": true
     },
     {
       "screen": "B3-walkthrough-desktop.html",
@@ -266,6 +1034,46 @@
     },
     {
       "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://walkthrough/ground-check",
+      "region": "walkthrough",
+      "feature": "WALK-ground-check",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://walkthrough/ship-as-is",
+      "region": "walkthrough",
+      "feature": "SHIP-as-is",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://walkthrough/force",
+      "region": "walkthrough",
+      "feature": "WALK-force",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://walkthrough/ask",
+      "region": "walkthrough",
+      "feature": "NODE-ask",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://walkthrough/camera",
+      "region": "walkthrough",
+      "feature": "WALK-focus",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
       "address": "ui://walkthrough/verdict",
       "region": "chat",
       "feature": "INB-resolve",
@@ -273,6 +1081,46 @@
       "registered": true
     },
     {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://walkthrough/verdict/operator-only",
+      "region": "walkthrough",
+      "feature": "Operator-only verdict surface",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://walkthrough/verdict/approve",
+      "region": "walkthrough",
+      "feature": "INB-resolve",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://walkthrough/verdict/next",
+      "region": "walkthrough",
+      "feature": "WALK-next",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://walkthrough/utterance",
+      "region": "walkthrough",
+      "feature": "WALK-utterance",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B3-walkthrough-desktop.html",
+      "address": "ui://walkthrough/idempotent",
+      "region": "walkthrough",
+      "feature": "WALK-idempotent",
+      "code": null,
+      "registered": true
+    },
+    {
       "screen": "B4-presence-dial-desktop.html",
       "address": "ui://toolbar/presence",
       "region": "toolbar",
@@ -282,10 +1130,58 @@
     },
     {
       "screen": "B4-presence-dial-desktop.html",
+      "address": "ui://toolbar/presence/dial",
+      "region": "toolbar",
+      "feature": "RHM-modes",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B4-presence-dial-desktop.html",
       "address": "ui://toolbar/presence",
       "region": "toolbar",
       "feature": "RHM-modes",
       "code": "runtime/suite.py:set_mode",
+      "registered": true
+    },
+    {
+      "screen": "B4-presence-dial-desktop.html",
+      "address": "ui://toolbar/presence/resp",
+      "region": "toolbar",
+      "feature": "RHM-text-mode",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B4-presence-dial-desktop.html",
+      "address": "ui://toolbar/presence/deep-work",
+      "region": "toolbar",
+      "feature": "RHM-modes",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B4-presence-dial-desktop.html",
+      "address": "ui://toolbar/presence/watch-and-react",
+      "region": "toolbar",
+      "feature": "RHM-modes",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B4-presence-dial-desktop.html",
+      "address": "ui://toolbar/presence/decide-for-me",
+      "region": "toolbar",
+      "feature": "RHM-decide",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B4-presence-dial-desktop.html",
+      "address": "ui://toolbar/presence/self-approve",
+      "region": "toolbar",
+      "feature": "RHM-self-approve guard",
+      "code": null,
       "registered": true
     },
     {
@@ -302,6 +1198,46 @@
       "region": "toolbar",
       "feature": "RHM-modes",
       "code": "runtime/suite.py:set_mode",
+      "registered": true
+    },
+    {
+      "screen": "B4-presence-dial-mobile.html",
+      "address": "ui://toolbar/presence/directives",
+      "region": "toolbar",
+      "feature": "RHM-directives",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B4-presence-dial-mobile.html",
+      "address": "ui://toolbar/presence/minimal",
+      "region": "toolbar",
+      "feature": "Minimal presence surface",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B4-presence-dial-mobile.html",
+      "address": "ui://toolbar/presence/narrate",
+      "region": "toolbar",
+      "feature": "RHM-narrate",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B4-presence-dial-mobile.html",
+      "address": "ui://toolbar/presence/observation",
+      "region": "toolbar",
+      "feature": "RHM-observation",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B4-presence-dial-mobile.html",
+      "address": "ui://toolbar/presence/no-self-approve",
+      "region": "toolbar",
+      "feature": "RHM-modes",
+      "code": null,
       "registered": true
     },
     {
@@ -313,11 +1249,43 @@
       "registered": true
     },
     {
+      "screen": "B4-presence-dial-mobile.html",
+      "address": "ui://tabbar/run",
+      "region": "tabbar",
+      "feature": "RUN-run",
+      "code": null,
+      "registered": true
+    },
+    {
       "screen": "B6-twin-desktop.html",
       "address": "ui://toolbar/presence",
       "region": "toolbar",
       "feature": "RHM-modes",
       "code": "runtime/suite.py:set_mode",
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://toolbar/presence/presence-dial",
+      "region": "toolbar",
+      "feature": "RHM-modes",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://chat/substrate",
+      "region": "chat",
+      "feature": "RHM-substrate",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://chat/process-11",
+      "region": "chat",
+      "feature": "Process 11 node",
+      "code": null,
       "registered": true
     },
     {
@@ -330,11 +1298,35 @@
     },
     {
       "screen": "B6-twin-desktop.html",
+      "address": "ui://canvas/twin-grounding",
+      "region": "canvas",
+      "feature": "TWIN-grounding",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
       "address": "run://system/model_of_tim",
       "region": null,
       "feature": null,
       "code": null,
       "registered": false
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://system/model_of_tim/volatile",
+      "region": "system",
+      "feature": "VOLATILE reference",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://run/system/model_of_tim/manifest",
+      "region": "run",
+      "feature": "System manifesto card",
+      "code": null,
+      "registered": true
     },
     {
       "screen": "B6-twin-desktop.html",
@@ -362,10 +1354,186 @@
     },
     {
       "screen": "B6-twin-desktop.html",
+      "address": "ui://twin/grading",
+      "region": "twin",
+      "feature": "RHM-twin grading",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://twin/model_of_tim",
+      "region": "twin",
+      "feature": "RHM-twin content node",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://twin/digest",
+      "region": "twin",
+      "feature": "RHM-twin digest",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://twin/single-origin",
+      "region": "twin",
+      "feature": "RHM-twin single-origin node",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://twin/uncertainty",
+      "region": "twin",
+      "feature": "Twin confidence state",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://twin/never-trains",
+      "region": "twin",
+      "feature": "RHM-twin-no-train",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://twin/verdict",
+      "region": "twin",
+      "feature": "Echo-guarded verdict",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://twin/guards",
+      "region": "twin",
+      "feature": "TWIN-guards",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://twin/coldstart",
+      "region": "twin",
+      "feature": "Cold-start state",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://twin/noconf",
+      "region": "twin",
+      "feature": "RHM-noconf",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://twin/addresses.json",
+      "region": "twin",
+      "feature": "Twin's address ledger",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
       "address": "ui://tabbar",
       "region": "tabbar",
       "feature": "CAN-compose",
       "code": "canvas/app/src/app.css .tabbar (mobile nav \u2014 responsive chrome) / canvas/app/src/App.tsx (tabbar)",
+      "registered": true
+    },
+    {
+      "screen": "B6-twin-desktop.html",
+      "address": "ui://tabbar/twin",
+      "region": "tabbar",
+      "feature": "Twin entry",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/toolbar",
+      "region": "inbox",
+      "feature": "INB-toolbar",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/wire",
+      "region": "inbox",
+      "feature": "WIRE-intent",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/force",
+      "region": "inbox",
+      "feature": "INB-force",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/run",
+      "region": "inbox",
+      "feature": "RUN-run",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/process",
+      "region": "inbox",
+      "feature": "INB-process",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/decision",
+      "region": "inbox",
+      "feature": "INB-decision",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/decision-focus",
+      "region": "inbox",
+      "feature": "INB-idea",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/summon",
+      "region": "inbox",
+      "feature": "INB-summary",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/foot",
+      "region": "inbox",
+      "feature": "INB-foot",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/await",
+      "region": "inbox",
+      "feature": "INB-queue-count",
+      "code": null,
       "registered": true
     },
     {
@@ -378,6 +1546,22 @@
     },
     {
       "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/awaiting",
+      "region": "inbox",
+      "feature": "INB-attention",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/excluded",
+      "region": "inbox",
+      "feature": "INB-excluded",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
       "address": "ui://inbox/build-review",
       "region": "inbox",
       "feature": "WIRE-review",
@@ -386,10 +1570,114 @@
     },
     {
       "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/build-review/s31-build_result_review",
+      "region": "inbox",
+      "feature": "A specific build-result review card within the inbox lane",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/build-review/sentiment-node",
+      "region": "inbox",
+      "feature": "Sentiment node status",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/build-review/remark",
+      "region": "inbox",
+      "feature": "Demonstrate-first remark",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/build-review/drill",
+      "region": "inbox",
+      "feature": "Drill-to-ground control",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/build-review/review",
+      "region": "inbox",
+      "feature": "WIRE-review trigger",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
       "address": "ui://inbox/coa",
       "region": "inbox",
       "feature": "INB-coa",
       "code": "runtime/suite.py:coa",
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/coa/keep-or-widen",
+      "region": "inbox",
+      "feature": "A low-confidence retrieval decision card",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/coa/recommendation",
+      "region": "inbox",
+      "feature": "INB-coa recommendation",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/coa/drill",
+      "region": "inbox",
+      "feature": "Drill control on the CoA card",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/coa/open-value-choice",
+      "region": "inbox",
+      "feature": "The compile trigger for a course-of-action",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/s28-review",
+      "region": "inbox",
+      "feature": "INB-s28-review",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/idea",
+      "region": "inbox",
+      "feature": "INB-idea",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/coa/settings",
+      "region": "inbox",
+      "feature": "INB-coa-settings",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C1-inbox-desktop.html",
+      "address": "ui://inbox/resolve",
+      "region": "inbox",
+      "feature": "INB-resolve",
+      "code": null,
       "registered": true
     },
     {
@@ -414,6 +1702,22 @@
       "region": "toolbar",
       "feature": "RUN-run",
       "code": "canvas/app/src/regions/Toolbar.tsx (run) / runtime/suite.py:run",
+      "registered": true
+    },
+    {
+      "screen": "C3-build-review-desktop.html",
+      "address": "ui://inbox/build-review/process-a",
+      "region": "inbox",
+      "feature": "Process rail",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C3-build-review-desktop.html",
+      "address": "ui://inbox/build-review/process",
+      "region": "inbox",
+      "feature": "Process verdict",
+      "code": null,
       "registered": true
     },
     {
@@ -426,6 +1730,30 @@
     },
     {
       "screen": "C3-build-review-desktop.html",
+      "address": "ui://canvas/build-review",
+      "region": "canvas",
+      "feature": "BUILD-result surface",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C3-build-review-desktop.html",
+      "address": "ui://canvas/build-status",
+      "region": "canvas",
+      "feature": "BUILD-status",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C3-build-review-desktop.html",
+      "address": "ui://inbox/build-review/foot",
+      "region": "inbox",
+      "feature": "WIRE-status",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C3-build-review-desktop.html",
       "address": "ui://inbox",
       "region": "inbox",
       "feature": "INB-lanes",
@@ -434,10 +1762,82 @@
     },
     {
       "screen": "C3-build-review-desktop.html",
+      "address": "ui://inbox/decision-build",
+      "region": "inbox",
+      "feature": "decision\u2192build lane",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C3-build-review-desktop.html",
       "address": "ui://inbox/build-review",
       "region": "inbox",
       "feature": "WIRE-review",
       "code": "runtime/suite.py:review_verdicts",
+      "registered": true
+    },
+    {
+      "screen": "C3-build-review-desktop.html",
+      "address": "ui://inbox/build-review/decision_build",
+      "region": "inbox",
+      "feature": "A build-result review card in the inbox",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C3-build-review-desktop.html",
+      "address": "ui://inbox/build-review/derived-source",
+      "region": "inbox",
+      "feature": "WIRE-provenance",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C3-build-review-desktop.html",
+      "address": "ui://inbox/build-review/record",
+      "region": "inbox",
+      "feature": "The technical record of changed files",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C3-build-review-desktop.html",
+      "address": "ui://inbox/build-review/sendback",
+      "region": "inbox",
+      "feature": "WIRE-requeue",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C3-build-review-desktop.html",
+      "address": "ui://inbox/build-review/agent-guard",
+      "region": "inbox",
+      "feature": "AGENT-guard",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://inbox/layers",
+      "region": "inbox",
+      "feature": "INB-layers",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://inbox/replay",
+      "region": "inbox",
+      "feature": "INB-replay",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://inbox/audit",
+      "region": "inbox",
+      "feature": "INB-audit",
+      "code": null,
       "registered": true
     },
     {
@@ -450,10 +1850,90 @@
     },
     {
       "screen": "C5-replay-desktop.html",
+      "address": "ui://activity/audit",
+      "region": "activity",
+      "feature": "EVT-log",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://activity/audit-window",
+      "region": "activity",
+      "feature": "EVT-log",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://activity/root-bind",
+      "region": "activity",
+      "feature": "SEQ-412 anchor",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://activity/s31-build-result-review",
+      "region": "activity",
+      "feature": "S31-build-result-review",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://activity/build-closed",
+      "region": "activity",
+      "feature": "C3 build closure",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://activity/criterion",
+      "region": "activity",
+      "feature": "Criterion audit",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://activity/derived",
+      "region": "activity",
+      "feature": "A static forensic annotation on a rejected sequence",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://activity/verdict",
+      "region": "activity",
+      "feature": "ENG-resolve",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
       "address": "ui://inbox/coa",
       "region": "inbox",
       "feature": "INB-coa",
       "code": "runtime/suite.py:coa",
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://inbox/coa/s31-build_result_review",
+      "region": "inbox",
+      "feature": "Build result review card",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://inbox/coa/resolved",
+      "region": "inbox",
+      "feature": "INB-coa verdict",
+      "code": null,
       "registered": true
     },
     {
@@ -466,10 +1946,146 @@
     },
     {
       "screen": "C5-replay-desktop.html",
+      "address": "ui://activity/replay/trace",
+      "region": "activity",
+      "feature": "INB-replay trace",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://activity/replay/trajectory",
+      "region": "activity",
+      "feature": "I1-logs",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://activity/replay/decision.intent",
+      "region": "activity",
+      "feature": "decision intent marker",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://activity/replay/decision.surfaced_for_review",
+      "region": "activity",
+      "feature": "decision.surfaced_for_review",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://activity/replay/comment",
+      "region": "activity",
+      "feature": "WIRE-review",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://activity/replay/decision.dispatch",
+      "region": "activity",
+      "feature": "decision dispatch",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://activity/replay/decision.verify",
+      "region": "activity",
+      "feature": "decision verification checkpoint",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
       "address": "ui://inbox/coa",
       "region": "inbox",
       "feature": "INB-coa",
       "code": "runtime/suite.py:coa",
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://inbox/coa/audit",
+      "region": "inbox",
+      "feature": "INB-coa audit surface",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://inbox/coa/surfaces",
+      "region": "inbox",
+      "feature": "INB-coa surface",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://inbox/coa/session_view",
+      "region": "inbox",
+      "feature": "Session view label",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://inbox/coa/replay",
+      "region": "inbox",
+      "feature": "INB-replay",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "C5-replay-desktop.html",
+      "address": "ui://inbox/coa/twin-set",
+      "region": "inbox",
+      "feature": "The twin's set",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/wire",
+      "region": "inbox",
+      "feature": "WIRE-intent",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/lifecycle-states",
+      "region": "inbox",
+      "feature": "WIRE-states",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/failed-refused",
+      "region": "inbox",
+      "feature": "A failed or refused build verdict needing operator action",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/verdict",
+      "region": "inbox",
+      "feature": "WIRE-verdict",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/form-half-of-done",
+      "region": "inbox",
+      "feature": "FORM half-of-done",
+      "code": null,
       "registered": true
     },
     {
@@ -490,10 +2106,10 @@
     },
     {
       "screen": "D6-wire-states-desktop.html",
-      "address": "ui://inbox/build-review",
+      "address": "ui://inbox/build-review/backstage",
       "region": "inbox",
-      "feature": "WIRE-review",
-      "code": "runtime/suite.py:review_verdicts",
+      "feature": "Backstage entry",
+      "code": null,
       "registered": true
     },
     {
@@ -506,10 +2122,18 @@
     },
     {
       "screen": "D6-wire-states-desktop.html",
-      "address": "ui://inbox/build-review",
+      "address": "ui://inbox/build-review/scope-overrun",
       "region": "inbox",
-      "feature": "WIRE-review",
-      "code": "runtime/suite.py:review_verdicts",
+      "feature": "A scope-overrun verdict card",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/deny-all-default",
+      "region": "inbox",
+      "feature": "WIRE-review default state",
+      "code": null,
       "registered": true
     },
     {
@@ -522,10 +2146,146 @@
     },
     {
       "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/design-review",
+      "region": "inbox",
+      "feature": "Design verdict stamp",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/why",
+      "region": "inbox",
+      "feature": "WIRE-why",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/form-gate",
+      "region": "inbox",
+      "feature": "FORM gate status",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
       "address": "ui://inbox/build-review",
       "region": "inbox",
       "feature": "WIRE-review",
       "code": "runtime/suite.py:review_verdicts",
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/failure-state",
+      "region": "inbox",
+      "feature": "A failed build re-queue alert",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/hold",
+      "region": "inbox",
+      "feature": "WIRE-hold",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/loud-requeue",
+      "region": "inbox",
+      "feature": "A re-queue trigger on a build review card",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review",
+      "region": "inbox",
+      "feature": "WIRE-review",
+      "code": "runtime/suite.py:review_verdicts",
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/cap-deferred",
+      "region": "inbox",
+      "feature": "A deferred verdict stamp on a build review",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/queue-cap",
+      "region": "inbox",
+      "feature": "WIRE-capacity-alert",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/raise-cap",
+      "region": "inbox",
+      "feature": "WIRE-raise",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review",
+      "region": "inbox",
+      "feature": "WIRE-review",
+      "code": "runtime/suite.py:review_verdicts",
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/claim-vanished",
+      "region": "inbox",
+      "feature": "A vanished build claim",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/re-issue",
+      "region": "inbox",
+      "feature": "Re-issue trigger",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/notes",
+      "region": "inbox",
+      "feature": "WIRE-failure-note",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/form",
+      "region": "inbox",
+      "feature": "FORM-trigger",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/failure-surface",
+      "region": "inbox",
+      "feature": "Failure surface state",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D6-wire-states-desktop.html",
+      "address": "ui://inbox/build-review/why-only-see-return",
+      "region": "inbox",
+      "feature": "WIRE-failure-state",
+      "code": null,
       "registered": true
     },
     {
@@ -550,6 +2310,14 @@
       "region": "toolbar",
       "feature": "RUN-run",
       "code": "canvas/app/src/regions/Toolbar.tsx (run) / runtime/suite.py:run",
+      "registered": true
+    },
+    {
+      "screen": "D7-selfmod-desktop.html",
+      "address": "ui://inbox/ask",
+      "region": "inbox",
+      "feature": "INB-ask",
+      "code": null,
       "registered": true
     },
     {
@@ -570,6 +2338,14 @@
     },
     {
       "screen": "D7-selfmod-desktop.html",
+      "address": "ui://workshop/audit",
+      "region": "workshop",
+      "feature": "Self-Modification Audit",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D7-selfmod-desktop.html",
       "address": "ui://workshop/self-changes",
       "region": "workshop",
       "feature": "SM-revert",
@@ -578,10 +2354,74 @@
     },
     {
       "screen": "D7-selfmod-desktop.html",
+      "address": "ui://workshop/self-changes/sm-revert",
+      "region": "workshop",
+      "feature": "SM-revert",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D7-selfmod-desktop.html",
+      "address": "ui://workshop/revert",
+      "region": "workshop",
+      "feature": "SM-revert",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D7-selfmod-desktop.html",
+      "address": "ui://workshop/extend",
+      "region": "workshop",
+      "feature": "Extension authoring entry",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "D7-selfmod-desktop.html",
       "address": "ui://activity",
       "region": "activity",
       "feature": "EVT-now",
       "code": "runtime/suite.py:now",
+      "registered": true
+    },
+    {
+      "screen": "D7-selfmod-desktop.html",
+      "address": "ui://activity/evt-now",
+      "region": "activity",
+      "feature": "EVT-now",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "E1-fleet-desktop.html",
+      "address": "ui://settings/wire",
+      "region": "settings",
+      "feature": "Wire control",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "E1-fleet-desktop.html",
+      "address": "ui://settings/force",
+      "region": "settings",
+      "feature": "RHM-force",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "E1-fleet-desktop.html",
+      "address": "ui://settings/run",
+      "region": "settings",
+      "feature": "RUN-run",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "E1-fleet-desktop.html",
+      "address": "ui://settings/content",
+      "region": "settings",
+      "feature": "RHM-content",
+      "code": null,
       "registered": true
     },
     {
@@ -602,10 +2442,26 @@
     },
     {
       "screen": "E1-fleet-desktop.html",
+      "address": "ui://canvas/model-slot",
+      "region": "canvas",
+      "feature": "Model selection indicator",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "E1-fleet-desktop.html",
       "address": "ui://inspector",
       "region": "inspector",
       "feature": "NODE-config",
       "code": "contracts/node_type.py / canvas/app/src/regions/Inspector.tsx (Inspector)",
+      "registered": true
+    },
+    {
+      "screen": "E1-fleet-desktop.html",
+      "address": "ui://inspector/model-fleet",
+      "region": "inspector",
+      "feature": "FLEET-refresh",
+      "code": null,
       "registered": true
     },
     {
@@ -618,10 +2474,66 @@
     },
     {
       "screen": "E1-fleet-desktop.html",
+      "address": "ui://inspector/model-field/models_at",
+      "region": "inspector",
+      "feature": "MOD-registry model selector",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "E1-fleet-desktop.html",
       "address": "ui://models",
       "region": "models",
       "feature": "MOD-registry",
       "code": "runtime/suite.py:available_models",
+      "registered": true
+    },
+    {
+      "screen": "E1-fleet-desktop.html",
+      "address": "ui://inspector/model-field/default-brain",
+      "region": "inspector",
+      "feature": "MOD-embed",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "E1-fleet-desktop.html",
+      "address": "ui://inspector/model-field/transport-filter",
+      "region": "inspector",
+      "feature": "Transport filter note",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "E1-fleet-desktop.html",
+      "address": "ui://inspector/model-field/endpoint-status",
+      "region": "inspector",
+      "feature": "MOD-embed-status",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "E1-fleet-desktop.html",
+      "address": "ui://settings/Canvas",
+      "region": "settings",
+      "feature": "Canvas entry",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "E1-fleet-desktop.html",
+      "address": "ui://settings/inbox",
+      "region": "settings",
+      "feature": "INB-lanes",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://canvas/rail",
+      "region": "canvas",
+      "feature": "Process rail",
+      "code": null,
       "registered": true
     },
     {
@@ -630,6 +2542,142 @@
       "region": "activity",
       "feature": "EVT-now",
       "code": "runtime/suite.py:now",
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://activity/status",
+      "region": "activity",
+      "feature": "EVT-now",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://activity/run",
+      "region": "activity",
+      "feature": "RUN-run",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://activity/heartbeat",
+      "region": "activity",
+      "feature": "EVT-now",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://activity/sum",
+      "region": "activity",
+      "feature": "SUM-memo",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://activity/registry-fallback",
+      "region": "activity",
+      "feature": "Registry fallback message",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://activity/build-review",
+      "region": "activity",
+      "feature": "Build closure status",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://activity/verified",
+      "region": "activity",
+      "feature": "Build verification status",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://activity/walkthrough",
+      "region": "activity",
+      "feature": "WALK-next",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://activity/ask-grounded",
+      "region": "activity",
+      "feature": "ASK-grounded",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://activity/connected-constant",
+      "region": "activity",
+      "feature": "The constant bridge link",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://activity/created-node",
+      "region": "activity",
+      "feature": "NODE-creation event",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://activity/registry",
+      "region": "activity",
+      "feature": "Registry proposal state",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://canvas/act",
+      "region": "canvas",
+      "feature": "Process type label",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://canvas/converse",
+      "region": "canvas",
+      "feature": "The conversational interface on the canvas",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://canvas/decision-review",
+      "region": "canvas",
+      "feature": "Decision/Review control",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://canvas/mode",
+      "region": "canvas",
+      "feature": "MODE-presence",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "F4-activity-desktop.html",
+      "address": "ui://canvas/warning",
+      "region": "canvas",
+      "feature": "ENG-volatile",
+      "code": null,
       "registered": true
     },
     {
@@ -658,6 +2706,14 @@
     },
     {
       "screen": "IA-desktop.html",
+      "address": "ui://palette/model_of_tim",
+      "region": "palette",
+      "feature": "SM-node",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
       "address": "ui://canvas",
       "region": "canvas",
       "feature": "CAN-compose",
@@ -667,18 +2723,34 @@
     {
       "screen": "IA-desktop.html",
       "address": "ui://canvas/node/codebase",
-      "region": null,
-      "feature": null,
+      "region": "canvas",
+      "feature": "NODE-codebase",
       "code": null,
-      "registered": false
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/node/codebase/reads",
+      "region": "canvas",
+      "feature": "VOLATILE-context",
+      "code": null,
+      "registered": true
     },
     {
       "screen": "IA-desktop.html",
       "address": "ui://canvas/node/model_of_tim",
-      "region": null,
-      "feature": null,
+      "region": "canvas",
+      "feature": "NODE-cached",
       "code": null,
-      "registered": false
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/node/model_of_tim/principles",
+      "region": "canvas",
+      "feature": "NODE-principles",
+      "code": null,
+      "registered": true
     },
     {
       "screen": "IA-desktop.html",
@@ -690,11 +2762,27 @@
     },
     {
       "screen": "IA-desktop.html",
-      "address": "ui://canvas/node/join",
-      "region": null,
-      "feature": null,
+      "address": "ui://canvas/node/ask/memo-gate",
+      "region": "canvas",
+      "feature": "ENG-memo query",
       "code": null,
-      "registered": false
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/node/join",
+      "region": "canvas",
+      "feature": "NODE-ports",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/node/join/merge",
+      "region": "canvas",
+      "feature": "merge control",
+      "code": null,
+      "registered": true
     },
     {
       "screen": "IA-desktop.html",
@@ -706,11 +2794,35 @@
     },
     {
       "screen": "IA-desktop.html",
-      "address": "ui://canvas/node/embed-corpus",
-      "region": null,
-      "feature": null,
+      "address": "ui://canvas/node/rollup/awaiting",
+      "region": "canvas",
+      "feature": "The awaiting state indicator",
       "code": null,
-      "registered": false
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/node/embed-corpus",
+      "region": "canvas",
+      "feature": "embed-corpus",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/node/embed-corpus",
+      "region": "canvas",
+      "feature": "embed-corpus",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/node/embed-corpus/status",
+      "region": "canvas",
+      "feature": "Embed status indicator",
+      "code": null,
+      "registered": true
     },
     {
       "screen": "IA-desktop.html",
@@ -722,10 +2834,138 @@
     },
     {
       "screen": "IA-desktop.html",
+      "address": "ui://canvas/node/new-panel/wiring",
+      "region": "canvas",
+      "feature": "WIRE-intent",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/surface-output",
+      "region": "canvas",
+      "feature": "Surface output indicator",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/ask-vi",
+      "region": "canvas",
+      "feature": "ask-vi invocation",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/stats",
+      "region": "canvas",
+      "feature": "CAN-stats",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/step-2",
+      "region": "canvas",
+      "feature": "STEP-indicator",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/ask-node",
+      "region": "canvas",
+      "feature": "ASK-node",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/drag",
+      "region": "canvas",
+      "feature": "CAN-drag",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/marquee",
+      "region": "canvas",
+      "feature": "CAN-multigraph",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/verbs",
+      "region": "canvas",
+      "feature": "RHM-verbs",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://canvas/plus",
+      "region": "canvas",
+      "feature": "CAN-plus",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
       "address": "ui://inspector",
       "region": "inspector",
       "feature": "NODE-config",
       "code": "contracts/node_type.py / canvas/app/src/regions/Inspector.tsx (Inspector)",
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://inspector/ask",
+      "region": "inspector",
+      "feature": "ASK-node",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://inspector/config",
+      "region": "inspector",
+      "feature": "NODE-config",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://inspector/model",
+      "region": "inspector",
+      "feature": "NODE-model",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://inspector/local",
+      "region": "inspector",
+      "feature": "NODE-local",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://inspector/selection",
+      "region": "inspector",
+      "feature": "Selection origin indicator",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://inspector/eng-memo",
+      "region": "inspector",
+      "feature": "ENG-memo",
+      "code": null,
       "registered": true
     },
     {
@@ -738,11 +2978,83 @@
     },
     {
       "screen": "IA-desktop.html",
+      "address": "ui://grow/extend",
+      "region": "grow",
+      "feature": "SM-extension",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
       "address": "ui://address-help",
       "region": null,
       "feature": null,
       "code": null,
       "registered": false
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://address-help/help-query",
+      "region": "address-help",
+      "feature": "Help query entry",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://address-help/utterance",
+      "region": "address-help",
+      "feature": "utterance control",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://address-help/comments-chat",
+      "region": "address-help",
+      "feature": "Communication access point",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://address-help/keep-local",
+      "region": "address-help",
+      "feature": "Local latency guard",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://address-help/pinned",
+      "region": "address-help",
+      "feature": "Pinned status indicator",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://address-help/chat-at-address",
+      "region": "address-help",
+      "feature": "RHM-chat",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://address-help/events",
+      "region": "address-help",
+      "feature": "Event count indicator",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://address-help/self-changes",
+      "region": "address-help",
+      "feature": "Self-change instruction",
+      "code": null,
+      "registered": true
     },
     {
       "screen": "IA-desktop.html",
@@ -755,18 +3067,74 @@
     {
       "screen": "IA-desktop.html",
       "address": "ui://inbox/build-result",
-      "region": null,
-      "feature": null,
+      "region": "inbox",
+      "feature": "WIRE-review",
       "code": null,
-      "registered": false
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://inbox/build-result",
+      "region": "inbox",
+      "feature": "WIRE-review",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://inbox/build-result/utterance",
+      "region": "inbox",
+      "feature": "build-utterance",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://inbox/build-result/accept",
+      "region": "inbox",
+      "feature": "The resolve action on a build result",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://inbox/build-result/diff",
+      "region": "inbox",
+      "feature": "Build-diff view",
+      "code": null,
+      "registered": true
     },
     {
       "screen": "IA-desktop.html",
       "address": "ui://inbox/decision",
-      "region": null,
-      "feature": null,
+      "region": "inbox",
+      "feature": "INB-decision",
       "code": null,
-      "registered": false
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://inbox/decision/rollup",
+      "region": "inbox",
+      "feature": "Decision rollup status",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://inbox/decision/open",
+      "region": "inbox",
+      "feature": "The open command on the decision board",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://inbox/walk/comment",
+      "region": "inbox",
+      "feature": "WALK-comment",
+      "code": null,
+      "registered": true
     },
     {
       "screen": "IA-desktop.html",
@@ -778,11 +3146,627 @@
     },
     {
       "screen": "IA-desktop.html",
+      "address": "ui://rhm/mode",
+      "region": "rhm",
+      "feature": "RHM-mode",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://rhm/ask-node",
+      "region": "rhm",
+      "feature": "Ask node re-run indicator",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://rhm/utterance",
+      "region": "rhm",
+      "feature": "Volatile input explanation",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://rhm/ask",
+      "region": "rhm",
+      "feature": "The ask node input",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
       "address": "ui://tune",
       "region": null,
       "feature": null,
       "code": null,
       "registered": false
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://tune/knobs",
+      "region": "tune",
+      "feature": "TUNE-knobs",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://tune/activity-feed",
+      "region": "tune",
+      "feature": "Activity feed header",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://tune/retrieve",
+      "region": "tune",
+      "feature": "Retrieve status label",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://tune/composition",
+      "region": "tune",
+      "feature": "R2 composition control",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://tune/record-reflect",
+      "region": "tune",
+      "feature": "The record-reflect control on the Commander's Bridge",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-desktop.html",
+      "address": "ui://tune/self-apply",
+      "region": "tune",
+      "feature": "Self-apply control",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/content",
+      "region": "board",
+      "feature": "Content readout",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/process",
+      "region": "board",
+      "feature": "Process state indicator",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/status",
+      "region": "board",
+      "feature": "Board status indicator",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://chrome/run",
+      "region": "chrome",
+      "feature": "RUN-run",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://chrome/fab",
+      "region": "chrome",
+      "feature": "The floating action button",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/filter",
+      "region": "board",
+      "feature": "NODE-types filter",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/model_of_tim",
+      "region": "board",
+      "feature": "A model instance on the board",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/identity",
+      "region": "board",
+      "feature": "The system's current identity label",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://chrome/url-display",
+      "region": "chrome",
+      "feature": "System address display",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/it-hashes",
+      "region": "board",
+      "feature": "The volatile node's hash state",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://toolbar/del",
+      "region": "toolbar",
+      "feature": "Delete control",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/listen",
+      "region": "board",
+      "feature": "VOICE-listen",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/question",
+      "region": "board",
+      "feature": "ENG-memo",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/consult",
+      "region": "board",
+      "feature": "Consult chip",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/utterance",
+      "region": "board",
+      "feature": "The volatile node's execution note",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://chrome/memo-gate",
+      "region": "chrome",
+      "feature": "Memo-gate settings panel",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://chrome/settings/panels",
+      "region": "chrome",
+      "feature": "Panel status indicator",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/approve",
+      "region": "board",
+      "feature": "ENG-resolve",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://chrome/decline",
+      "region": "chrome",
+      "feature": "Decline control",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/lead-why",
+      "region": "board",
+      "feature": "Board intro directive",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://chrome/ptt",
+      "region": "chrome",
+      "feature": "PTT voice trigger",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://queue/decision",
+      "region": "queue",
+      "feature": "A decision card in the queue lane",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/need-you",
+      "region": "board",
+      "feature": "Need-you lane",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/resolve",
+      "region": "board",
+      "feature": "Board prompt",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/rollup",
+      "region": "board",
+      "feature": "ROLL-up",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/build-review",
+      "region": "board",
+      "feature": "WIRE-review",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://chrome/build-status",
+      "region": "chrome",
+      "feature": "Build completion notification",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://chrome/show-me",
+      "region": "chrome",
+      "feature": "Show-me trigger",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/idea-capture",
+      "region": "board",
+      "feature": "INB-idea",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://chrome/tune",
+      "region": "chrome",
+      "feature": "TUNE-control",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://chrome/presence",
+      "region": "chrome",
+      "feature": "Presence mode selector",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/watch-react",
+      "region": "board",
+      "feature": "Board-watch-react",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/decide",
+      "region": "board",
+      "feature": "RHM-decide",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/latent",
+      "region": "board",
+      "feature": "The #1 latent",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/manifest",
+      "region": "board",
+      "feature": "Board-manifest",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://chrome/new-component",
+      "region": "chrome",
+      "feature": "New component entry",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/knobs",
+      "region": "board",
+      "feature": "ENG-volatile",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/comp-setter",
+      "region": "board",
+      "feature": "R2 composition control",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/record-turn",
+      "region": "board",
+      "feature": "VOICE-record",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://chrome/turn-feedback-reflection",
+      "region": "chrome",
+      "feature": "The turn-feedback-reflection control strip",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/ledger",
+      "region": "board",
+      "feature": "The self-change ledger",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/memo-gate",
+      "region": "board",
+      "feature": "MEMO-gate",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/judge-binding",
+      "region": "board",
+      "feature": "Judge role binding control",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/revert",
+      "region": "board",
+      "feature": "SM-revert",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/embed",
+      "region": "board",
+      "feature": "Brand identifier",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://board/first-contact",
+      "region": "board",
+      "feature": "First-contact tour entry",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://chrome/tabbar",
+      "region": "chrome",
+      "feature": "Board navigation strip",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "IA-mobile.html",
+      "address": "ui://chrome/queue",
+      "region": "chrome",
+      "feature": "Queue entry",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "SCENARIO-PLAYER.html",
+      "address": "ui://chat/idle",
+      "region": "chat",
+      "feature": "RHM-idle",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "SCENARIO-PLAYER.html",
+      "address": "ui://scenario-player/ptt",
+      "region": "scenario-player",
+      "feature": "RHM-verbs",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "SCENARIO-PLAYER.html",
+      "address": "ui://chat/reply",
+      "region": "chat",
+      "feature": "RHM-verbs",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "SCENARIO-PLAYER.html",
+      "address": "ui://scenario/consent",
+      "region": "scenario",
+      "feature": "The consent checkpoint in the Scenario Player",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "SCENARIO-PLAYER.html",
+      "address": "ui://scenario/phone-390",
+      "region": "scenario",
+      "feature": "Phone view toggle",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "SCENARIO-PLAYER.html",
+      "address": "ui://chat/composition",
+      "region": "chat",
+      "feature": "The composition canvas",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "SCENARIO-PLAYER.html",
+      "address": "ui://chat/memo-gate",
+      "region": "chat",
+      "feature": "ENG-memo",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "SCENARIO-PLAYER.html",
+      "address": "ui://chat/approve",
+      "region": "chat",
+      "feature": "RHM-decide",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "SCENARIO-PLAYER.html",
+      "address": "ui://chat/empty",
+      "region": "chat",
+      "feature": "The empty state of the RHM-chat",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "SCENARIO-PLAYER.html",
+      "address": "ui://chat/vi-listening",
+      "region": "chat",
+      "feature": "RHM-chat listening prompt",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "SCENARIO-PLAYER.html",
+      "address": "ui://chat/minimized",
+      "region": "chat",
+      "feature": "RHM-minimized",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "SCENARIO-PLAYER.html",
+      "address": "ui://scenario-player/ask-rhm",
+      "region": "scenario-player",
+      "feature": "RHM-query input",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "SCENARIO-PLAYER.html",
+      "address": "ui://chat/ptt",
+      "region": "chat",
+      "feature": "RHM-verbs",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "SCENARIO-PLAYER.html",
+      "address": "ui://chat/inbox-run",
+      "region": "chat",
+      "feature": "INB-run",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "STUDIO.html",
+      "address": "ui://studio/mockup-studio",
+      "region": "studio",
+      "feature": "The Mockup Studio portal",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "STUDIO.html",
+      "address": "ui://mockup/phone",
+      "region": "mockup",
+      "feature": "Phone status indicator",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "STUDIO.html",
+      "address": "ui://mockup/reload",
+      "region": "mockup",
+      "feature": "Reload control",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "STUDIO.html",
+      "address": "ui://mockup-studio/choose",
+      "region": "mockup-studio",
+      "feature": "Mockup rail entry",
+      "code": null,
+      "registered": true
+    },
+    {
+      "screen": "STUDIO.html",
+      "address": "ui://mockup/empty",
+      "region": "mockup",
+      "feature": "Empty state for the Mockup Studio",
+      "code": null,
+      "registered": true
     }
   ],
   "orphans": {
@@ -791,19 +3775,25 @@
       "run://system/model_of_tim",
       "ui://address-help",
       "ui://canvas/node/ask",
-      "ui://canvas/node/codebase",
-      "ui://canvas/node/embed-corpus",
-      "ui://canvas/node/join",
-      "ui://canvas/node/model_of_tim",
       "ui://canvas/node/new-panel",
       "ui://canvas/node/rollup",
-      "ui://inbox/build-result",
-      "ui://inbox/decision",
       "ui://palette",
       "ui://rhm",
       "ui://tune"
     ],
     "unused": [
+      "ui://activity/lineage",
+      "ui://activity/now",
+      "ui://canvas/context",
+      "ui://canvas/legend",
+      "ui://canvas/model_of_tim",
+      "ui://canvas/node/ask-process",
+      "ui://canvas/node/inspect",
+      "ui://canvas/node/llm-process",
+      "ui://canvas/palette",
+      "ui://canvas/portal",
+      "ui://canvas/portal-window/memo-gate",
+      "ui://canvas/rail/palette",
       "ui://canvas/wire-request",
       "ui://chat/debrief",
       "ui://chat/input",
@@ -812,7 +3802,11 @@
       "ui://chat/new-conversation",
       "ui://chat/record",
       "ui://chat/send",
+      "ui://chat/tabs",
       "ui://chat/threads",
+      "ui://chat/twin",
+      "ui://chrome/inspector",
+      "ui://chrome/palette",
       "ui://cognition",
       "ui://cognition/pulse",
       "ui://cognition/river",
@@ -820,17 +3814,23 @@
       "ui://grow/dispatch",
       "ui://grow/reject",
       "ui://inbox/build-intent",
+      "ui://inbox/build-review/show-me",
+      "ui://inbox/build-review/verify-fail",
       "ui://inbox/context-bundle",
       "ui://inbox/context-pin",
+      "ui://inbox/self-apply",
       "ui://inbox/target",
       "ui://inbox/walk",
       "ui://inspector/build",
       "ui://inspector/freshness",
+      "ui://inspector/grow",
       "ui://inspector/help",
       "ui://inspector/history",
+      "ui://inspector/model-field/registry-note",
       "ui://inspector/surface",
       "ui://inspector/versions",
       "ui://inspector/workshop",
+      "ui://run/demo/ask/grounded-answer",
       "ui://settings",
       "ui://settings/brain",
       "ui://settings/close",
@@ -857,19 +3857,22 @@
       "ui://toolbar/reload",
       "ui://toolbar/teach",
       "ui://toolbar/wire",
+      "ui://toolbar/workshop",
+      "ui://tune/voice-trial",
       "ui://view-switch",
       "ui://walkthrough/next",
       "ui://walkthrough/reason",
       "ui://walkthrough/show-again",
-      "ui://walkthrough/voice"
+      "ui://walkthrough/voice",
+      "ui://workshop/sentiment-node"
     ]
   },
   "summary": {
     "screens": 23,
-    "addressed_elements": 98,
-    "distinct_addresses_used": 39,
-    "registered_addresses": 82,
-    "unregistered_orphans": 15,
-    "unused_orphans": 58
+    "addressed_elements": 471,
+    "distinct_addresses_used": 409,
+    "registered_addresses": 483,
+    "unregistered_orphans": 9,
+    "unused_orphans": 83
   }
 }

@@ -1,7 +1,7 @@
 {
   "_what": "Drift findings for every code: ref in register.json (features[].code) + addresses.json (addresses.*.code). Produced by _system/refcheck.py (read ~/company READ-ONLY). drift[] is the lead's repair worklist; the lead repairs the registries centrally. 'points_at' = what the ref now lands on; 'expected' = the symbol hint derived from the owner's label. NOTE: represents[] in views[] are feature-ids, not code refs \u2014 code refs live in features[].code, so THAT is what this validates (see report (d)).",
-  "snapshot": "~/company @ 72c72368a74cfc0fb850c80489398920a58af022 2026-06-07 16:34:07 +1000 \u2014 line numbers are as-of this revision (the repo is under an active build loop; re-run after the registries are repaired).",
-  "checked": 188,
+  "snapshot": "~/company @ 2d704fdd7562b5c45c5621b3e5924167f283412a 2026-06-09 15:40:04 +1000 \u2014 line numbers are as-of this revision (the repo is under an active build loop; re-run after the registries are repaired).",
+  "checked": 215,
   "ok": [
     {
       "ref": "scheduler.py:37",
@@ -96,7 +96,7 @@
       "candidates": [
         "stuck"
       ],
-      "points_at": "file runtime/suite.py exists; defines _last_run_stuck @ line 642",
+      "points_at": "file runtime/suite.py exists; defines _last_run_stuck @ line 1274",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -160,20 +160,6 @@
       "repair_target": null
     },
     {
-      "ref": "suite.py:349",
-      "full_code": "suite.py:349",
-      "source": "register",
-      "owner": "NODE-ports",
-      "represents": "typed ports Text/Any/Vector/Number",
-      "candidates": [
-        "ports"
-      ],
-      "points_at": "voice_log (def @ line 342, +7)",
-      "resolved": "runtime/suite.py",
-      "line_content": "`data` carries turn_id (correlate to the server turn), ms, and event-specific fields.\"\"\"",
-      "repair_target": null
-    },
-    {
       "ref": "nodes/portal.py",
       "full_code": "nodes/portal.py",
       "source": "register",
@@ -212,7 +198,7 @@
         "set_config",
         "set_position"
       ],
-      "points_at": "file runtime/suite.py exists; defines set_config @ line 734",
+      "points_at": "file runtime/suite.py exists; defines set_config @ line 1366",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -226,7 +212,7 @@
       "candidates": [
         "drag"
       ],
-      "points_at": "file canvas/app/src/registryStore.ts exists; defines DRAG_CONN @ line 50",
+      "points_at": "file canvas/app/src/registryStore.ts exists; defines DRAG_CONN @ line 57",
       "resolved": "canvas/app/src/registryStore.ts",
       "line_content": null,
       "repair_target": null
@@ -268,7 +254,7 @@
       "candidates": [
         "layers"
       ],
-      "points_at": "file canvas/app/src/useAppController.ts exists; defines cycleLayers @ line 828",
+      "points_at": "file canvas/app/src/useAppController.ts exists; defines cycleLayers @ line 1618",
       "resolved": "canvas/app/src/useAppController.ts",
       "line_content": null,
       "repair_target": null
@@ -282,9 +268,9 @@
       "candidates": [
         "multigraph"
       ],
-      "points_at": "_emit (def @ line 285, +0)",
+      "points_at": "__init__ (def @ line 267, +18)",
       "resolved": "runtime/suite.py",
-      "line_content": "def _emit(self, kind: str, summary: str, **meta) -> None:",
+      "line_content": "self.skills_dir = os.path.join(os.path.dirname(self.nodes_dir), \"skills\")",
       "repair_target": null
     },
     {
@@ -296,7 +282,7 @@
       "candidates": [
         "run"
       ],
-      "points_at": "file runtime/suite.py exists; defines run @ line 774",
+      "points_at": "file runtime/suite.py exists; defines run @ line 1406",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -310,7 +296,7 @@
       "candidates": [
         "status"
       ],
-      "points_at": "file runtime/suite.py exists; defines session_status @ line 4046",
+      "points_at": "file runtime/suite.py exists; defines session_status @ line 7125",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -324,7 +310,7 @@
       "candidates": [
         "chat"
       ],
-      "points_at": "file runtime/suite.py exists; defines chat @ line 3347",
+      "points_at": "file runtime/suite.py exists; defines chat @ line 5814",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -338,7 +324,7 @@
       "candidates": [
         "verbs"
       ],
-      "points_at": "file runtime/suite.py exists; defines available_verbs @ line 2127",
+      "points_at": "file runtime/suite.py exists; defines _api_verbs @ line 1145",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -380,7 +366,7 @@
       "candidates": [
         "react"
       ],
-      "points_at": "file runtime/suite.py exists; defines react @ line 3559",
+      "points_at": "file runtime/suite.py exists; defines react @ line 6068",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -394,7 +380,7 @@
       "candidates": [
         "config"
       ],
-      "points_at": "file runtime/suite.py exists; defines set_config @ line 734",
+      "points_at": "file runtime/suite.py exists; defines set_config @ line 1366",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -436,7 +422,7 @@
       "candidates": [
         "session"
       ],
-      "points_at": "file runtime/suite.py exists; defines _session_lock @ line 263",
+      "points_at": "file runtime/suite.py exists; defines _session_lock @ line 522",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -452,7 +438,7 @@
         "present_current",
         "ui_target"
       ],
-      "points_at": "file runtime/suite.py exists; defines present_current @ line 3956",
+      "points_at": "file runtime/suite.py exists; defines present_current @ line 6789",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -466,7 +452,7 @@
       "candidates": [
         "next"
       ],
-      "points_at": "file runtime/suite.py exists; defines next @ line 4004",
+      "points_at": "file runtime/suite.py exists; defines next @ line 7083",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -494,7 +480,7 @@
       "candidates": [
         "lanes"
       ],
-      "points_at": "file runtime/suite.py exists; defines inbox_lanes @ line 3767",
+      "points_at": "file runtime/suite.py exists; defines inbox_lanes @ line 6276",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -508,7 +494,7 @@
       "candidates": [
         "coa"
       ],
-      "points_at": "file runtime/suite.py exists; defines coa @ line 3792",
+      "points_at": "file runtime/suite.py exists; defines coa @ line 6323",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -536,7 +522,7 @@
       "candidates": [
         "target"
       ],
-      "points_at": "file runtime/suite.py exists; defines _registry_ui_target @ line 3935",
+      "points_at": "file runtime/suite.py exists; defines _resolve_named_target @ line 2745",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -550,7 +536,7 @@
       "candidates": [
         "surface"
       ],
-      "points_at": "file runtime/suite.py exists; defines surface_output @ line 3812",
+      "points_at": "file runtime/suite.py exists; defines surface_output @ line 6542",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -564,7 +550,7 @@
       "candidates": [
         "idea"
       ],
-      "points_at": "file runtime/suite.py exists; defines idea_capture @ line 3861",
+      "points_at": "file runtime/suite.py exists; defines idea_capture @ line 6591",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -578,7 +564,7 @@
       "candidates": [
         "resolve"
       ],
-      "points_at": "file runtime/suite.py exists; defines _resolve_context_at @ line 1957",
+      "points_at": "file runtime/suite.py exists; defines _resolve_role @ line 908",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -592,7 +578,7 @@
       "candidates": [
         "replay"
       ],
-      "points_at": "file runtime/suite.py exists; defines replay @ line 6455",
+      "points_at": "file runtime/suite.py exists; defines replay @ line 10942",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -607,7 +593,7 @@
         "intent",
         "surface_build_intent"
       ],
-      "points_at": "file runtime/suite.py exists; defines surface_build_intent @ line 4261",
+      "points_at": "file runtime/suite.py exists; defines surface_build_intent @ line 7340",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -637,7 +623,7 @@
         "dispatch",
         "dispatch_decision"
       ],
-      "points_at": "file runtime/suite.py exists; defines dispatch_decision @ line 4715",
+      "points_at": "file runtime/suite.py exists; defines dispatch_decision @ line 7924",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -667,7 +653,7 @@
         "review",
         "build_result_review"
       ],
-      "points_at": "file runtime/suite.py exists; defines surface_review @ line 3846",
+      "points_at": "file runtime/suite.py exists; defines surface_review @ line 6576",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -709,7 +695,7 @@
       "candidates": [
         "node"
       ],
-      "points_at": "file runtime/suite.py exists; defines create_node @ line 680",
+      "points_at": "file runtime/suite.py exists; defines create_node @ line 1312",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -723,7 +709,7 @@
       "candidates": [
         "panel"
       ],
-      "points_at": "file runtime/suite.py exists; defines propose_panel @ line 5778",
+      "points_at": "file runtime/suite.py exists; defines propose_panel @ line 10232",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -737,7 +723,7 @@
       "candidates": [
         "extension"
       ],
-      "points_at": "file runtime/suite.py exists; defines propose_extension @ line 5873",
+      "points_at": "file runtime/suite.py exists; defines propose_extension @ line 10334",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -751,7 +737,7 @@
       "candidates": [
         "revert"
       ],
-      "points_at": "file runtime/suite.py exists; defines _is_revert_subject @ line 5506",
+      "points_at": "file runtime/suite.py exists; defines _is_revert_subject @ line 9862",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -765,7 +751,7 @@
       "candidates": [
         "registry"
       ],
-      "points_at": "file runtime/suite.py exists; defines _registry_ui_target @ line 3935",
+      "points_at": "file runtime/suite.py exists; defines mode_registry @ line 1922",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -807,7 +793,7 @@
       "candidates": [
         "resolve"
       ],
-      "points_at": "file runtime/governance.py exists; defines resolve @ line 153",
+      "points_at": "file runtime/governance.py exists; defines resolve @ line 184",
       "resolved": "runtime/governance.py",
       "line_content": null,
       "repair_target": null
@@ -821,7 +807,7 @@
       "candidates": [
         "VOICE"
       ],
-      "points_at": "file canvas/app/src/useAppController.ts exists; defines runVoiceTurn @ line 1224",
+      "points_at": "file canvas/app/src/useAppController.ts exists; defines voiceReaderRef @ line 335",
       "resolved": "canvas/app/src/useAppController.ts",
       "line_content": null,
       "repair_target": null
@@ -835,7 +821,7 @@
       "candidates": [
         "stream"
       ],
-      "points_at": "file runtime/bridge.py exists; defines _stream @ line 323",
+      "points_at": "file runtime/bridge.py exists; defines _stream_parts @ line 274",
       "resolved": "runtime/bridge.py",
       "line_content": null,
       "repair_target": null
@@ -849,7 +835,7 @@
       "candidates": [
         "now"
       ],
-      "points_at": "file runtime/suite.py exists; defines now @ line 894",
+      "points_at": "file runtime/suite.py exists; defines now @ line 1526",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -863,7 +849,7 @@
       "candidates": [
         "log"
       ],
-      "points_at": "file runtime/suite.py exists; defines voice_log @ line 342",
+      "points_at": "file runtime/suite.py exists; defines voice_log @ line 922",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -892,7 +878,7 @@
         "cap",
         "object_info"
       ],
-      "points_at": "file runtime/suite.py exists; defines object_info @ line 629",
+      "points_at": "file runtime/suite.py exists; defines object_info @ line 1261",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -1054,7 +1040,7 @@
       "candidates": [
         "field"
       ],
-      "points_at": "file runtime/suite.py exists (no line given)",
+      "points_at": "file runtime/suite.py exists; defines field_types @ line 9574",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -1104,7 +1090,7 @@
       "candidates": [
         "review"
       ],
-      "points_at": "file runtime/suite.py exists; defines surface_review @ line 3846",
+      "points_at": "file runtime/suite.py exists; defines surface_review @ line 6576",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -1118,7 +1104,7 @@
       "candidates": [
         "intent"
       ],
-      "points_at": "file runtime/suite.py exists; defines surface_build_intent @ line 4261",
+      "points_at": "file runtime/suite.py exists; defines surface_build_intent @ line 7340",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -1160,7 +1146,7 @@
       "candidates": [
         "pin"
       ],
-      "points_at": "file runtime/suite.py exists; defines pin @ line 3135",
+      "points_at": "file runtime/suite.py exists; defines pin @ line 5115",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -1384,7 +1370,7 @@
       "candidates": [
         "changes"
       ],
-      "points_at": "file runtime/suite.py exists; defines self_changes_at @ line 5675",
+      "points_at": "file runtime/suite.py exists; defines self_changes_at @ line 10129",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -1640,7 +1626,7 @@
       "candidates": [
         "conversation"
       ],
-      "points_at": "file canvas/app/src/useAppController.ts exists; defines newConversation @ line 1436",
+      "points_at": "file canvas/app/src/useAppController.ts exists; defines newConversation @ line 2400",
       "resolved": "canvas/app/src/useAppController.ts",
       "line_content": null,
       "repair_target": null
@@ -1654,7 +1640,7 @@
       "candidates": [
         "conversation"
       ],
-      "points_at": "file runtime/suite.py exists; defines new_conversation @ line 3314",
+      "points_at": "file runtime/suite.py exists; defines new_conversation @ line 5462",
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
@@ -2180,6 +2166,18 @@
       "repair_target": null
     },
     {
+      "ref": "canvas/app/src/regions/AddressHelp.tsx (AddressHelp)",
+      "full_code": "canvas/app/src/regions/AddressHelp.tsx (AddressHelp) / runtime/suite.py:address_help",
+      "source": "addresses",
+      "owner": "ui://inspector/help",
+      "represents": "WALK-uiresolve",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/AddressHelp.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/AddressHelp.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
       "ref": "runtime/suite.py:address_help",
       "full_code": "canvas/app/src/regions/AddressHelp.tsx (AddressHelp) / runtime/suite.py:address_help",
       "source": "addresses",
@@ -2370,9 +2368,355 @@
       "resolved": "runtime/suite.py",
       "line_content": null,
       "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/CognitionView.tsx (cog)",
+      "full_code": "canvas/app/src/regions/CognitionView.tsx (cog) / contracts/cognition_info.py / runtime/cognition.py",
+      "source": "addresses",
+      "owner": "ui://cognition",
+      "represents": "COGNITION",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/CognitionView.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/CognitionView.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "contracts/cognition_info.py",
+      "full_code": "canvas/app/src/regions/CognitionView.tsx (cog) / contracts/cognition_info.py / runtime/cognition.py",
+      "source": "addresses",
+      "owner": "ui://cognition",
+      "represents": "COGNITION",
+      "candidates": [],
+      "points_at": "file contracts/cognition_info.py exists (no line given)",
+      "resolved": "contracts/cognition_info.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/cognition.py",
+      "full_code": "canvas/app/src/regions/CognitionView.tsx (cog) / contracts/cognition_info.py / runtime/cognition.py",
+      "source": "addresses",
+      "owner": "ui://cognition",
+      "represents": "COGNITION",
+      "candidates": [],
+      "points_at": "file runtime/cognition.py exists (no line given)",
+      "resolved": "runtime/cognition.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/CognitionView.tsx (pulse)",
+      "full_code": "canvas/app/src/regions/CognitionView.tsx (pulse) / canvas/app/src/useAppController.ts:foldCognition",
+      "source": "addresses",
+      "owner": "ui://cognition/pulse",
+      "represents": "COGNITION",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/CognitionView.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/CognitionView.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/useAppController.ts:foldCognition",
+      "full_code": "canvas/app/src/regions/CognitionView.tsx (pulse) / canvas/app/src/useAppController.ts:foldCognition",
+      "source": "addresses",
+      "owner": "ui://cognition/pulse",
+      "represents": "COGNITION",
+      "candidates": [],
+      "points_at": "file canvas/app/src/useAppController.ts exists (no line given)",
+      "resolved": "canvas/app/src/useAppController.ts",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/CognitionView.tsx (river)",
+      "full_code": "canvas/app/src/regions/CognitionView.tsx (river)",
+      "source": "addresses",
+      "owner": "ui://cognition/river",
+      "represents": "COGNITION",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/CognitionView.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/CognitionView.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/Review.tsx (studio)",
+      "full_code": "canvas/app/src/regions/Review.tsx (studio) / runtime/bridge.py:_corpus_index",
+      "source": "addresses",
+      "owner": "ui://studio",
+      "represents": "STUDIO-review",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/Review.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/Review.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/bridge.py:_corpus_index",
+      "full_code": "canvas/app/src/regions/Review.tsx (studio) / runtime/bridge.py:_corpus_index",
+      "source": "addresses",
+      "owner": "ui://studio",
+      "represents": "STUDIO-review",
+      "candidates": [],
+      "points_at": "file runtime/bridge.py exists (no line given)",
+      "resolved": "runtime/bridge.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/components/StudioKit.tsx (Rail)",
+      "full_code": "canvas/app/src/components/StudioKit.tsx (Rail) / runtime/bridge.py:_corpus_index",
+      "source": "addresses",
+      "owner": "ui://studio/rail",
+      "represents": "STUDIO-gallery",
+      "candidates": [],
+      "points_at": "file canvas/app/src/components/StudioKit.tsx exists (no line given)",
+      "resolved": "canvas/app/src/components/StudioKit.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/bridge.py:_corpus_index",
+      "full_code": "canvas/app/src/components/StudioKit.tsx (Rail) / runtime/bridge.py:_corpus_index",
+      "source": "addresses",
+      "owner": "ui://studio/rail",
+      "represents": "STUDIO-gallery",
+      "candidates": [],
+      "points_at": "file runtime/bridge.py exists (no line given)",
+      "resolved": "runtime/bridge.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/components/StudioKit.tsx (Stage)",
+      "full_code": "canvas/app/src/components/StudioKit.tsx (Stage)",
+      "source": "addresses",
+      "owner": "ui://studio/stage",
+      "represents": "STUDIO-stage",
+      "candidates": [],
+      "points_at": "file canvas/app/src/components/StudioKit.tsx exists (no line given)",
+      "resolved": "canvas/app/src/components/StudioKit.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/components/StudioKit.tsx (Stage device toggle)",
+      "full_code": "canvas/app/src/components/StudioKit.tsx (Stage device toggle)",
+      "source": "addresses",
+      "owner": "ui://studio/stage/device-desktop",
+      "represents": "STUDIO-stage",
+      "candidates": [
+        "desktop"
+      ],
+      "points_at": "file canvas/app/src/components/StudioKit.tsx exists (no line given)",
+      "resolved": "canvas/app/src/components/StudioKit.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/components/StudioKit.tsx (Stage device toggle)",
+      "full_code": "canvas/app/src/components/StudioKit.tsx (Stage device toggle)",
+      "source": "addresses",
+      "owner": "ui://studio/stage/device-phone",
+      "represents": "STUDIO-stage",
+      "candidates": [
+        "phone"
+      ],
+      "points_at": "file canvas/app/src/components/StudioKit.tsx exists (no line given)",
+      "resolved": "canvas/app/src/components/StudioKit.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/components/StudioKit.tsx (Composer)",
+      "full_code": "canvas/app/src/components/StudioKit.tsx (Composer) / runtime/suite.py:annotate / runtime/bridge.py:surface_intent_at",
+      "source": "addresses",
+      "owner": "ui://studio/composer",
+      "represents": "STUDIO-feedback",
+      "candidates": [],
+      "points_at": "file canvas/app/src/components/StudioKit.tsx exists (no line given)",
+      "resolved": "canvas/app/src/components/StudioKit.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:annotate",
+      "full_code": "canvas/app/src/components/StudioKit.tsx (Composer) / runtime/suite.py:annotate / runtime/bridge.py:surface_intent_at",
+      "source": "addresses",
+      "owner": "ui://studio/composer",
+      "represents": "STUDIO-feedback",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/bridge.py:surface_intent_at",
+      "full_code": "canvas/app/src/components/StudioKit.tsx (Composer) / runtime/suite.py:annotate / runtime/bridge.py:surface_intent_at",
+      "source": "addresses",
+      "owner": "ui://studio/composer",
+      "represents": "STUDIO-feedback",
+      "candidates": [],
+      "points_at": "file runtime/bridge.py exists (no line given)",
+      "resolved": "runtime/bridge.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/components/StudioKit.tsx (RhmPanel)",
+      "full_code": "canvas/app/src/components/StudioKit.tsx (RhmPanel) / canvas/app/src/regions/RhmChat.tsx / runtime/suite.py:chat",
+      "source": "addresses",
+      "owner": "ui://studio/rhm",
+      "represents": "RHM-modes",
+      "candidates": [],
+      "points_at": "file canvas/app/src/components/StudioKit.tsx exists (no line given)",
+      "resolved": "canvas/app/src/components/StudioKit.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/regions/RhmChat.tsx",
+      "full_code": "canvas/app/src/components/StudioKit.tsx (RhmPanel) / canvas/app/src/regions/RhmChat.tsx / runtime/suite.py:chat",
+      "source": "addresses",
+      "owner": "ui://studio/rhm",
+      "represents": "RHM-modes",
+      "candidates": [],
+      "points_at": "file canvas/app/src/regions/RhmChat.tsx exists (no line given)",
+      "resolved": "canvas/app/src/regions/RhmChat.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:chat",
+      "full_code": "canvas/app/src/components/StudioKit.tsx (RhmPanel) / canvas/app/src/regions/RhmChat.tsx / runtime/suite.py:chat",
+      "source": "addresses",
+      "owner": "ui://studio/rhm",
+      "represents": "RHM-modes",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/components/StudioKit.tsx (RhmPanel help)",
+      "full_code": "canvas/app/src/components/StudioKit.tsx (RhmPanel help) / runtime/suite.py:address_help",
+      "source": "addresses",
+      "owner": "ui://studio/rhm/help",
+      "represents": "REPO-knowledge",
+      "candidates": [],
+      "points_at": "file canvas/app/src/components/StudioKit.tsx exists (no line given)",
+      "resolved": "canvas/app/src/components/StudioKit.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/suite.py:address_help",
+      "full_code": "canvas/app/src/components/StudioKit.tsx (RhmPanel help) / runtime/suite.py:address_help",
+      "source": "addresses",
+      "owner": "ui://studio/rhm/help",
+      "represents": "REPO-knowledge",
+      "candidates": [],
+      "points_at": "file runtime/suite.py exists (no line given)",
+      "resolved": "runtime/suite.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/components/StudioKit.tsx (generate button)",
+      "full_code": "canvas/app/src/components/StudioKit.tsx (generate button) / runtime/bridge.py:/api/mockup-generate / runtime/generate_mockup.py:generate_for_mockup",
+      "source": "addresses",
+      "owner": "ui://studio/generate",
+      "represents": "STUDIO-feedback",
+      "candidates": [],
+      "points_at": "file canvas/app/src/components/StudioKit.tsx exists (no line given)",
+      "resolved": "canvas/app/src/components/StudioKit.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/bridge.py:/api/mockup-generate",
+      "full_code": "canvas/app/src/components/StudioKit.tsx (generate button) / runtime/bridge.py:/api/mockup-generate / runtime/generate_mockup.py:generate_for_mockup",
+      "source": "addresses",
+      "owner": "ui://studio/generate",
+      "represents": "STUDIO-feedback",
+      "candidates": [],
+      "points_at": "file runtime/bridge.py exists (no line given)",
+      "resolved": "runtime/bridge.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/generate_mockup.py:generate_for_mockup",
+      "full_code": "canvas/app/src/components/StudioKit.tsx (generate button) / runtime/bridge.py:/api/mockup-generate / runtime/generate_mockup.py:generate_for_mockup",
+      "source": "addresses",
+      "owner": "ui://studio/generate",
+      "represents": "STUDIO-feedback",
+      "candidates": [],
+      "points_at": "file runtime/generate_mockup.py exists (no line given)",
+      "resolved": "runtime/generate_mockup.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/components/StudioKit.tsx (generate result)",
+      "full_code": "canvas/app/src/components/StudioKit.tsx (generate result) / runtime/generate_mockup.py:generate_for_mockup",
+      "source": "addresses",
+      "owner": "ui://studio/generate/result",
+      "represents": "STUDIO-feedback",
+      "candidates": [],
+      "points_at": "file canvas/app/src/components/StudioKit.tsx exists (no line given)",
+      "resolved": "canvas/app/src/components/StudioKit.tsx",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "runtime/generate_mockup.py:generate_for_mockup",
+      "full_code": "canvas/app/src/components/StudioKit.tsx (generate result) / runtime/generate_mockup.py:generate_for_mockup",
+      "source": "addresses",
+      "owner": "ui://studio/generate/result",
+      "represents": "STUDIO-feedback",
+      "candidates": [],
+      "points_at": "file runtime/generate_mockup.py exists (no line given)",
+      "resolved": "runtime/generate_mockup.py",
+      "line_content": null,
+      "repair_target": null
+    },
+    {
+      "ref": "canvas/app/src/App.tsx (Hud view-switch chip)",
+      "full_code": "canvas/app/src/App.tsx (Hud view-switch chip)",
+      "source": "addresses",
+      "owner": "ui://view-switch",
+      "represents": "VIEW-switch",
+      "candidates": [
+        "switch"
+      ],
+      "points_at": "file canvas/app/src/App.tsx exists (no line given)",
+      "resolved": "canvas/app/src/App.tsx",
+      "line_content": null,
+      "repair_target": null
     }
   ],
-  "drift": [],
+  "drift": [
+    {
+      "ref": "suite.py:349",
+      "full_code": "suite.py:349",
+      "source": "register",
+      "owner": "NODE-ports",
+      "represents": "typed ports Text/Any/Vector/Number",
+      "candidates": [
+        "ports"
+      ],
+      "points_at": "__init__ (def @ line 267, +82) (deep in body / beyond window \u2014 verify the ref still intends this)",
+      "resolved": "runtime/suite.py",
+      "line_content": "#   invented here. lifter/form stay fully LISTABLE (selects) + GOVERNED (floor) \u2014 only data-CREATE",
+      "repair_target": null,
+      "severity": "review"
+    }
+  ],
   "unverifiable": [
     {
       "ref": "nodes/*.py",
@@ -2425,24 +2769,12 @@
       "resolved": null,
       "line_content": null,
       "repair_target": null
-    },
-    {
-      "ref": "canvas/app/src/regions/AddressHelp.tsx (AddressHelp)",
-      "full_code": "canvas/app/src/regions/AddressHelp.tsx (AddressHelp) / runtime/suite.py:address_help",
-      "source": "addresses",
-      "owner": "ui://inspector/help",
-      "represents": "WALK-uiresolve",
-      "candidates": [],
-      "points_at": "file 'canvas/app/src/regions/AddressHelp.tsx' not found under ~/company code dirs",
-      "resolved": null,
-      "line_content": null,
-      "repair_target": null
     }
   ],
   "summary": {
-    "checked": 188,
-    "ok": 183,
-    "drift": 0,
-    "unverifiable": 5
+    "checked": 215,
+    "ok": 210,
+    "drift": 1,
+    "unverifiable": 4
   }
 }
