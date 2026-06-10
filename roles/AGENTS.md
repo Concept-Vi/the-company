@@ -169,3 +169,8 @@ routing/verdict rule is a pure declared function — L2) · let a role emit `res
 ## Read next
 [[Company Map]] (the whole picture) · [[runtime — constitution]] (what fires these) · the triad at
 `build-prep/concurrent-cognition/` (the G2 criteria + guide).
+
+## Agent-authored entries (auto-reflected)
+<!-- created live by the create face; one line per entry — keeps the
+     drift-home acceptance green; refine the prose by integration. -->
+- **`eval_p1probe`** — agent-authored role (created via the declarative-direct face). P1 regression probe (throwaway)
