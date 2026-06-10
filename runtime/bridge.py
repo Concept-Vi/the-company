@@ -84,6 +84,8 @@ BRIDGE_ROUTES = (
     "/api/claude/turn",
     # S2 (overnight) — the GREETING (caught-up-in-one-glance: the night/away-time at Tim's altitude).
     "/api/greeting",
+    # S7 (overnight) — the FORAGER's search door: semantic corpus query (+ record heads) for the canvas.
+    "/api/corpus-query",
 )
 
 MOCKUPS_DIR = os.path.join(ROOT, "design", "mockups")           # the design-review portal + corpus
@@ -706,6 +708,30 @@ class H(BaseHTTPRequestHandler):
             elif path == "/api/greeting":                  # S2: caught-up-in-one-glance (Tim's arrival face)
                 q = parse_qs(urlparse(self.path).query)
                 self._send(200, json.dumps(SUITE.greeting(since=(q.get("since") or [None])[0])))
+            elif path == "/api/corpus-query":              # S7: the forager's search door (semantic + heads)
+                q = self._qs(urlparse(self.path))
+                text, space = q.get("text"), q.get("space") or None
+                if not text:
+                    self._send(400, json.dumps({"error": "/api/corpus-query needs ?text= (fail loud)"}))
+                else:
+                    res = SUITE.query_corpus(text, space=space, k=int(q.get("k") or 16))
+                    # enrich each hit with its index row + a content head (the circle's River detail)
+                    hits = []
+                    for h in res.get("ranked", []):
+                        rid = h["id"]
+                        sa = rid.split("#", 1)[0].removeprefix("vec://") if rid.startswith("vec://") else rid
+                        rows = SUITE.find_corpus(source_address=sa)
+                        row = rows[-1] if rows else {}
+                        content = {}
+                        if row.get("cas"):
+                            content = (SUITE.store.get_content(row["cas"]) or {}).get("output") or {}
+                        head = json.dumps(content, ensure_ascii=False, default=str)[:400] if content else ""
+                        hits.append({"address": sa, "score": h.get("score"),
+                                     "kind": row.get("record_kind"), "projection": row.get("projection"),
+                                     "session": (row.get("lineage") or {}).get("session"),
+                                     "ts_source": content.get("ts_source"), "head": head})
+                    self._send(200, json.dumps({"query": text, "space": res.get("space"),
+                                                "note": res.get("note"), "hits": hits}))
             elif path == "/api/chat":
                 self._send(200, json.dumps(SUITE.chat_history(40)))
             elif path == "/api/conversations":               # S2: the previous threads (reopen list)
