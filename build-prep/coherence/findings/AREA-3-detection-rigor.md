@@ -391,3 +391,112 @@ dead from absence.** Build the graph that way and the autonomous loop can trust 
 will, three times over, swear a dead route is whole.
 
 — *Area 3, written to leave the idea bigger and more real. The one number to carry forward: 3 of 82.*
+
+---
+
+## ADDENDUM — second-pass corroboration + three complementary findings (2026-06-08, later run)
+
+> A second Area-C agent re-explored independently and **converged on every load-bearing claim above**
+> (consumer-side substring is the live gap; three-leg hybrid; half-migration is candidate-only). Rather
+> than restate, this addendum records only what the second pass adds that the body above does not have:
+> a verified failure-mode of AST itself, an explicit per-edge-type decision matrix, and the verified
+> route→**method** binding (the body verified route *extraction* parity, not the method binding). All
+> evidence re-anchored. **Verified** = ran a probe this run; **observed** = file:line; **idea** = proposal.
+
+### A1 · The AST-walk-bleed finding — "AST" alone is not the upgrade; *structure-aware* AST is
+
+The body shows regex==AST on route *extraction* (§2.1, 115=115). The complementary risk is on the route→
+**method** binding, and it bites hard. **[verified]** My first probe extracted route→method by
+`ast.walk(if_node)` collecting `SUITE.*` calls under each `if self.path==R:`. It returned **`/api/run ->
+{59 distinct methods}`** — garbage. Cause: `do_POST` is a *flat* `if … return / if … return` sequence
+inside one `try` **[observed: `runtime/bridge.py:740-772`]**, and `ast.walk` on an `If` node descends into
+the chained/sibling structure, bleeding every later branch's `SUITE.*` calls into the first route.
+
+**The lesson the body doesn't state:** "regex vs AST" is the wrong axis. A *naive* AST fabricates edges
+just as a regex does — the real axis is **method-matches-the-control-flow-structure**. Detection rigor is
+structural fidelity, not tool choice. This matters for the autonomous loop because a fabricated
+route→method edge (`/api/run` "calls" 59 methods) would make *every* one of those 59 read as wired,
+manufacturing exactly the false-wire the body measures — via AST, not regex.
+
+**[verified] The structure-aware fix works.** Treating each `if self.path==R:` as its own scoping unit
+(collect only `SUITE.*` in that `if`'s own body, recurse through `Try`/nested-`if`, never bleed siblings):
+```
+routes resolved: 58 | route→method edges: 68 | routes→exactly-1-method: 48/58
+  /api/chat -> chat   /api/coa -> coa   /api/capture-idea -> idea_capture
+  /api/run -> run, state   /api/move -> set_position, state   (the 2-method = POST-then-return-state)
+```
+48 of 58 routes bind to **exactly one** Suite method; the rest to two, the second almost always the
+read-after-write `state()`. This is the **route→method leg the regex gate produces *none* of** — and it is
+what lets a finding become *compound*: "`/api/knobs` binds to `Suite.<m>`, and no FE caller reaches
+`/api/knobs`, so `<m>` is operator-unwired — *unless* MCP (the second face) or an internal caller reaches
+it." That compound statement is the difference between a finding the loop trusts and one that cries wolf.
+
+### A2 · The per-edge-type rigor matrix (the explicit decision spine)
+
+The body's three-leg hybrid is correct; this makes the *per-edge* method assignment explicit, so the
+builder picks the right tool per edge instead of one tool for all. **[idea, grounded in the body's evidence]**
+
+| Edge type | Cheap heuristic | Static AST | Runtime introspection | Recommended |
+|---|---|---|---|---|
+| FE surface → /api route | **OK** (string literals) | tightens | n/a | cheap-OK; no computed paths exist (body §3) |
+| /api route → Suite **method** | **fails** | **exact** (structure-aware, A1) | exact | **static AST** (A1) |
+| Suite method → Suite method | fails | partial; **DI seams invisible** | exact (trace) | AST + runtime-cue |
+| node-type/model/panel exists | brittle | hard (importlib) | **exact** (live registry) | **introspection** (= Leg B) |
+| Suite method → **MCP tool** | fails + **unscanned** | good (`@mcp.tool()`) | exact | **static AST over `mcp_face`** (A3) |
+| ui:// → code it represents | n/a | **cannot** (symbolic tag) | n/a | **declare it** (A4) |
+| mechanism migrated-to / coexists | fails | **cannot** | **cannot** | **declared migration + git-diff** (body §8) |
+
+The spine claim: **a finding's trust = the trust of its weakest constituent edge.** The regex gate fails
+because it asserts a strong conclusion ("unwired") from one weak 2-surface witness; the hybrid earns trust
+because the conclusion rests on the *intersection* of independent witnesses, and reports confidence when
+they disagree.
+
+### A3 · `mcp_face` is a missed caller surface AND a second dynamic-dispatch exposure
+
+The body counts the MCP face's 20 `SUITE.*` edges (§3) as part of the static graph — correct. The
+complementary point: **`reachability()` as written never looks there.** Its caller corpus is *only*
+`canvas/app/src` + `tests/` **[observed: `runtime/suite.py:7069-7076`]**. So a Suite method exposed *only*
+as an MCP tool (no `/api` route, no FE/test mention) reads as fully unreachable — a guaranteed false
+orphan. `mcp_face/server.py` is also a *registry-driven* exposure ("adding a node-type adds zero tools"
+**[observed: `mcp_face/server.py:5`]**) — so its reachable *capability* set is registry-driven (Leg B),
+not enumerable by reading the file. This is the concrete proof that the false-positive incident is
+**structural** (a 2-of-≥6-surface scanner), not bad luck: the missed surfaces are `mcp_face`, `ops/cli`,
+`roles/`, `nodes/`, and the internal `runtime/*` call graph **[verified: `grep -rl "/api/"`+`SUITE.`]**.
+
+### A4 · The ui://→code edge is the FE side's broken middle link (E6)
+
+The body notes `addresses.json` as the FE declared-truth leg (§3). The complementary gap: the
+address→code link is a **symbolic hand-tag**, not resolvable. `represents` values are `WIRE-review`,
+`MOD-registry`, `RHM-modes` **[verified: read from `design/_system/addresses.json`, 71 entries]** — none is
+a `code://` address. So the anchor §6 promise "click a finding, drop to the element it's about, RHM
+explains it" has a broken middle: ui→`represents` is machine-readable, `represents`→code is human
+convention. **[idea]** Make `represents` a real resolvable address (`code://runtime/suite.py#method` or a
+typed registry ref) — honours "more types not more tools," and is the small change that lets `address_help`
+walk from a clicked gap to the responsible code. Until then, mark E6 *aspirational-pending-declaration*,
+not *extractable*.
+
+### A5 · External prior art the body didn't cite (failure-mode-targeted)
+
+Corroborates the body's tool table from the *indirect-dispatch* literature specifically:
+- **[external]** FSE-2025 *"Do you have 5 min? Improving Call Graph Analysis with Runtime Cues"* and
+  **iResolveX** (arXiv 2601.17888, multi-layered indirect-call resolution) — a few minutes of dynamic
+  observation "largely enhances" a static call graph "for free." This is direct external validation of the
+  body's Leg C (event log) and of resolving the DI seams (A2 row 3) by runtime cues — the
+  state-of-the-art answer for exactly the `critic or self._default_critic` indirect-call pattern
+  **[observed: `runtime/suite.py:7225, 7276`]**.
+- **[external]** vulture's own remedy for dynamic FPs is a **whitelist + confidence score** (github
+  jendrikseipp/vulture); knip's is **declare-your-entry-points** (knip.dev). Both map onto this repo's
+  `_ORPHAN_ROUTES` whitelist — so the body's recommendation to add a **confidence signal per finding**
+  (registry=certain, AST=high, scan=medium, runtime-cue=corroborating, git-heuristic=low) and gate
+  auto-action on it is the industry-standard trust layer, not a local invention.
+
+### A6 · Addendum verdict
+
+Two independent Area-C passes reaching the same thesis from different probes is itself the strongest
+signal in this file: the consumer-side reachability gap, the three-leg hybrid, and the
+honestly-bounded migration class are **robust conclusions**, not one agent's framing. The additions —
+structure-aware AST is the real upgrade (not "AST" as a slogan); the explicit per-edge matrix; the
+missed `mcp_face`/CLI surfaces; the broken ui→code link — sharpen *how* to build it without changing
+*what* to build. **The make-or-break is winnable as the hybrid; a regex gate with more globs is not it.**
+
+— *Area 3 addendum. Carry-forward numbers: 3 of 82 (false-wire, body) · 48 of 58 (clean route→method, this run) · 2 of 6 surfaces scanned (the structural false-orphan cause).*
