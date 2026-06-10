@@ -931,5 +931,37 @@ def mark(target: str, mark_type: str, value: object = None, confidence: float = 
 # The WRITE tool `mark(...)` above STAYS (CQRS — reads consolidated, the write is its own verb). Flat reads removed.
 
 
+# --- P2 · the ONE-PLACE error guard (after ALL registrations — registry-derived, covers every tool) --
+# The re-eval's P1 surfaced a RAW internal NameError verbatim to a cold agent ("name 'spec' is not
+# defined") — indistinguishable from a contract error, undebuggable from the agent seat. The guard:
+# DELIBERATE contract errors (ValueError/KeyError — the teaching errors every tool raises on a bad
+# call) pass through UNTOUCHED; anything else is re-raised as a clearly-labelled INTERNAL error naming
+# the tool + the exception type — "a BUG in the tool, not your call" (fail-loud + honest, never a
+# silent swallow, never a leaked raw traceback line posing as guidance).
+def _guard_tools():
+    import functools as _ft
+    for _name, _tool in mcp._tool_manager._tools.items():
+        _orig = _tool.fn
+
+        def _mk(name, orig):
+            @_ft.wraps(orig)
+            def _guarded(*a, **kw):
+                try:
+                    return orig(*a, **kw)
+                except (ValueError, KeyError):
+                    raise                                   # a TEACHING error — the tool's own contract voice
+                except Exception as e:
+                    raise RuntimeError(
+                        f"INTERNAL ERROR in tool {name!r}: {type(e).__name__}: {e} — this is a BUG in "
+                        f"the tool, not your call (your params passed validation). Report it; the "
+                        f"self_change_log shows recent edits to the face.") from e
+            return _guarded
+
+        _tool.fn = _mk(_name, _orig)
+
+
+_guard_tools()
+
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")

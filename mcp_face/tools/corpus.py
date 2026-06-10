@@ -73,6 +73,16 @@ def register(mcp, suite):
                 return {"error": "corpus(op='read') needs `address` — a run:// corpus record address "
                         "(from op='list'/'find') OR a SOURCE address (e.g. the code:// ids op='query' "
                         "returns — they round-trip here)."}
+            # P8 — ONE file, ONE id regardless of path SPELLING: a code:// address carrying an absolute
+            # path under the repo (or a './' prefix) normalizes to the canonical repo-relative id before
+            # lookup (the eval: every spelling variant read as 'not ingested' for the same file).
+            if address.startswith("code://"):
+                import os as _os
+                p = address[len("code://"):]
+                repo = _os.getcwd()
+                if _os.path.isabs(p) and _os.path.commonpath([repo, _os.path.abspath(p)]) == repo:
+                    p = _os.path.relpath(p, repo)
+                address = "code://" + _os.path.normpath(p)
             rec = suite.read_corpus_record(address)
             if rec is not None:
                 return {"op": op, "address": address, "record": rec}

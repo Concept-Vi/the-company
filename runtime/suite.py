@@ -879,7 +879,10 @@ class Suite:
         self.cascade_registry.save(built["action"])
         self._emit("cascade.save", f"saved cascade {built['action']['name']!r} "
                    f"({len(built['action']['steps'])} steps)", cascade=built["action"]["name"])
-        return built
+        # P7 — the author sees the input contract AT SAVE TIME (the re-eval: the hint lived one tool
+        # away in list_cascades, exactly where the question arises it wasn't). Same one-source derivation.
+        hint, schema = self._cascade_input_contract(built["action"]["steps"])
+        return {**built, "inputs_hint": hint, "input_schema": schema}
 
     def list_cascades(self) -> list:
         """The saved cascades (registry-is-truth — the discoverable re-runnable pipelines, AK4). Each is the
@@ -892,21 +895,35 @@ class Suite:
             a = dict(a)
             steps = a.get("steps") or []
             if steps:
-                s0 = steps[0]
-                k0 = s0.get("kind") or ("reduce" if s0.get("op") == "reduce" else
-                                        "items" if (s0.get("fan") or s0.get("items") is not None) else "role")
-                if s0.get("items") is not None:
-                    a["inputs_hint"] = "inputs ignored — step 0 declares its own baked `items` list"
-                elif k0 == "items":
-                    a["inputs_hint"] = ("step 0 is a MAP (items) — pass `inputs` as a JSON-encoded ARRAY of "
-                                        "units, e.g. '[\"a\",\"b\"]' or a JSON array of unit dicts")
-                elif len(steps) > 1 and steps[1].get("fan_field"):
-                    a["inputs_hint"] = (f"step 0 takes ONE string/address (the seed); step 1 then fans over "
-                                        f"its {steps[1]['fan_field']!r} list field")
-                else:
-                    a["inputs_hint"] = "step 0 takes ONE value — a plain string, or a run://·cas:// address"
+                hint, schema = self._cascade_input_contract(steps)
+                a["inputs_hint"], a["input_schema"] = hint, schema
             out.append(a)
         return out
+
+    @staticmethod
+    def _cascade_input_contract(steps: list) -> tuple:
+        """The DERIVED step-0 input contract — (prose inputs_hint, machine-readable input_schema). P7:
+        symmetric with output_schema (the re-eval: 'input contracts are half-discoverable'); derived from
+        the FIRST step's shape in ONE place (save_cascade's success payload AND list_cascades both read
+        it — one source, never a hand-written second description)."""
+        s0 = steps[0]
+        k0 = s0.get("kind") or ("reduce" if s0.get("op") == "reduce" else
+                                "items" if (s0.get("fan") or s0.get("items") is not None) else "role")
+        if s0.get("items") is not None:
+            return ("inputs ignored — step 0 declares its own baked `items` list",
+                    {"type": "none", "reason": "step 0 carries its own items"})
+        if k0 == "items":
+            return (("step 0 is a MAP (items) — pass `inputs` as a JSON-encoded ARRAY of "
+                     "units, e.g. '[\"a\",\"b\"]' or a JSON array of unit dicts"),
+                    {"type": "array", "items": "string | object (a unit) | run://·cas:// address",
+                     "encoding": "a JSON-encoded array string is accepted"})
+        if len(steps) > 1 and steps[1].get("fan_field"):
+            return ((f"step 0 takes ONE string/address (the seed); step 1 then fans over "
+                     f"its {steps[1]['fan_field']!r} list field"),
+                    {"type": "string", "role": "the seed value step 0 consumes",
+                     "then": f"step 1 fans over step 0's {steps[1]['fan_field']!r} list field"})
+        return ("step 0 takes ONE value — a plain string, or a run://·cas:// address",
+                {"type": "string", "accepts": "a plain value OR a run://·cas:// address"})
 
     def get_cascade(self, name: str) -> dict | None:
         """One saved cascade decl by name (None if absent — honest, not a fabricated row)."""
