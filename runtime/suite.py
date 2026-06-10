@@ -2608,7 +2608,11 @@ class Suite:
         nodes = "; ".join(
             f"{n['id']}({n['type']}, {'resolved' if n['content_hash'] else 'unresolved'})"
             for n in st["nodes"]) or "(none)"
-        evs = "; ".join(f"{e['kind']}: {e['summary']}" for e in self.store.recent_events(6)) or "(none)"
+        # e.get('summary') — index-family events (corpus.record etc.) carry NO summary; a flood of
+        # them in the tail must never crash a turn (found 2026-06-11 when the ts-backfill filled the
+        # tail and every chat would have 500'd).
+        evs = "; ".join(f"{e['kind']}: {e.get('summary', '')}".rstrip(': ')
+                        for e in self.store.recent_events(6)) or "(none)"
 
         # --- WHOLE-INTERFACE grounding (Tim: "everything it needs to be aware of in the whole
         # interface") — every value below comes from the LIVE registry/state, never fabricated. The
@@ -2830,6 +2834,22 @@ class Suite:
                                     "you were already reasoning, and build on it, don't repeat it)")}
             ctx += self._resolve_context_at(self.R2_COGNITION_ANCHOR, graph_id=None, intent=intent,
                                             resolution=_cog_res)
+        # S3 (overnight) · THE OPERATOR STRATUM — every RHM turn IS presenting to Tim, so his
+        # CONFIRMED standing rules (operator_memory, evidence-backed) ride the context as one compact
+        # block. Mode-gated by the SAME lever as howto (focus/background keep their tight budgets);
+        # fail-soft: a registry hiccup never breaks a turn (warned, not swallowed silently).
+        try:
+            from runtime.dials import DialRegistry  # noqa: F401 (locality: the dials/opmem family)
+            from runtime.operator_memory import OperatorMemoryRegistry
+            _res_spec = self.resolution_spec_for()
+            if mode != "off" and (_res_spec.get("howto_detail") or "full") != "none":
+                _rules = OperatorMemoryRegistry().discover().rows(status="confirmed")
+                if _rules:
+                    ctx += ("\n\nTHE OPERATOR'S STANDING RULES (his own confirmed corrections — they "
+                            "govern HOW you present everything above):\n" +
+                            "\n".join(f"· {r['rule']}" for r in _rules[:9]))
+        except Exception as e:
+            self._emit("warning", f"operator stratum unavailable in RHM context ({type(e).__name__})")
         return ctx
 
     def _describe_ui_address(self, address: str) -> str:
