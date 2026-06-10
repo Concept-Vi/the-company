@@ -317,3 +317,7 @@ Tim, closing the walk: my harness memory of him is useful but trapped — only C
 
 ## 2026-06-10 — B1c DONE (S1 per-unit ctx)
 - ✅ **G3·S1:** run_items(unit_ctx={name: "run://<turn>/x/{field}"}) — per-unit template substitution + canonical resolution; the registry chain's {mockup}-keyed ground is now ENGINE-NATIVE (was the manual module's seam 2). Cascade items-steps declare it (`unit_ctx` validated at save). Deterministic verify: per-group grounds routed correctly; fail-loud on missing field / non-dict unit. **B1 remaining: S2 shared resolve-once block (the resolver-vocabulary decision) → S4 the registry chain as a saved cascade (the G3 proof).**
+
+## 2026-06-10 — B1d DONE (S2 shared block) — G3's engine seams are ALL CLOSED
+- ✅ **G3·S2:** cascade-level `shared:` block (resolve-once → every role/items fire's ctx). Closed entry vocabulary {address|text|corpus_query} — the resolver-vocabulary DECISION made (mine, technical): reuse-only, no new scheme; file-projections etc. are a FLOW's staging job (prepare run:// addresses, then declare). Verified deterministically (3 fires, 2 cascades, all saw the block; bad shapes refuse at save AND run).
+- **G3 ENGINE LEDGER: S1 ✓ S2 ✓ S3a ✓ S3b ✓ S4(split) ✓ — remaining: the PROOF (registry_generation re-expressed as a saved cascade + thin flow wrapper).**
