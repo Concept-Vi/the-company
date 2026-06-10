@@ -1109,6 +1109,9 @@ class H(BaseHTTPRequestHandler):
         prompt = b.get("prompt")
         sid = b.get("session_id") or None
         address = b.get("address") or None
+        # FORAGER D1 (additive) — the operator's SELECTED CONTEXT SET from the canvas (multi-selected
+        # forager circles → "give to builder"). An opaque pre-composed block; absent = today's body.
+        set_block = b.get("context_block") or None
         self.send_response(200)
         self.send_header("Content-Type", "application/x-ndjson")
         self.send_header("Cache-Control", "no-cache")
@@ -1150,6 +1153,18 @@ class H(BaseHTTPRequestHandler):
                     ctx = "\n".join(bits)
                 except Exception as e:
                     ctx = f"Address: {address} (help bundle unavailable: {type(e).__name__})"
+            # FORAGER D1 (additive) — compose the selection-set block WITH the pointed-address bundle
+            # when both ride the turn (the locus first, then the sculpted set). FAIL-SAFE: a non-string
+            # degrades through json (never raises out), a hard 8KB cap bounds a misbehaving client, and
+            # any error here NEVER kills the turn — the prompt still runs (degrade-clean, like the
+            # address bundle above). The block is opaque to run_turn (context_block was already so).
+            if set_block:
+                try:
+                    cb = set_block if isinstance(set_block, str) else json.dumps(set_block, default=str)
+                    cb = cb[:8192]
+                    ctx = f"{ctx}\n\n{cb}" if ctx else cb
+                except Exception:
+                    pass
             for ev in run_turn(prompt, session_id=sid, context_block=ctx, should_stop=client_gone):
                 emit(ev)
                 if gone[0]:

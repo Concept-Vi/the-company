@@ -6381,6 +6381,200 @@
         "run": "rg10-conflict-resolution",
         "model": "lead-investigated"
       }
+    },
+    "ui://forager": {
+      "region": "forager",
+      "capabilities": [
+        "pointable",
+        "spotlit"
+      ],
+      "represents": "FORAGER-search",
+      "code": "canvas/app/src/regions/ForagerBar.tsx (the search lane) / runtime/bridge.py:/api/corpus-query",
+      "howto": "WHAT: the context forager — the top-center search bar that turns a corpus query into circles on the canvas (search → circles → whittle → hand the set to the builder). WHAT YOU CAN DO: type a query, pick a space (the registry's embeddable projections), submit — hits land as circles beside the graph nodes; chips filter the visible set by the hits' real kind/session fields. HOW TO CHANGE IT: the bar is ForagerBar.tsx; the search door is the bridge's /api/corpus-query (Suite.query_corpus + per-hit head enrichment)."
+    },
+    "ui://forager/input": {
+      "region": "forager",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "FORAGER-search",
+      "code": "canvas/app/src/regions/ForagerBar.tsx (query input)",
+      "howto": "WHAT: the forager's query box. WHAT YOU CAN DO: type what you're hunting for and press Enter — the search is explicit-submit only (never per-keystroke; the embedder is a real load). HOW TO CHANGE IT: ForagerBar.search() → api.corpusQuery → /api/corpus-query."
+    },
+    "ui://forager/search": {
+      "region": "forager",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "FORAGER-search",
+      "code": "canvas/app/src/regions/ForagerBar.tsx (submit)",
+      "howto": "WHAT: the forager's submit control. WHAT YOU CAN DO: fire the corpus search — hits land as circles near the viewport center (a re-hit pulses its existing circle, never duplicates). HOW TO CHANGE IT: same path as the input — ForagerBar.search()."
+    },
+    "ui://forager/minimize": {
+      "region": "forager",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "FORAGER-search",
+      "code": "canvas/app/src/regions/ForagerBar.tsx (min toggle)",
+      "howto": "WHAT: the collapse toggle. WHAT YOU CAN DO: fold the forager to its quiet header (it starts minimized — present, never imposing) and reopen it when you want to forage. HOW TO CHANGE IT: panel-local state in ForagerBar, the same .min pattern as the chat panels."
+    },
+    "ui://forager/clear": {
+      "region": "forager",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "FORAGER-search",
+      "code": "canvas/app/src/regions/ForagerBar.tsx (clear) / canvas/app/src/ForagerShape.tsx:clearForagerShapes",
+      "howto": "WHAT: clear the forage. WHAT YOU CAN DO: remove every forager circle in one click — graph nodes are untouched (the clear filters type==='forager' only; the coexistence rule). HOW TO CHANGE IT: clearForagerShapes in ForagerShape.tsx."
+    },
+    "ui://chat/builder-give-set": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "FORAGER-handoff",
+      "code": "canvas/app/src/regions/ClaudeChat.tsx (give to builder) / runtime/bridge.py:_claude_stream context_block",
+      "howto": "WHAT: the hand-off from the sculpted context set to the builder. WHAT YOU CAN DO: multi-select forager circles on the canvas, then click 'N selected → give to builder' — the selection composes into a bounded context block that rides your NEXT message to the builder (the current set replaces any earlier one). HOW TO CHANGE IT: ClaudeChat.giveToBuilder composes the block; the bridge folds it into the turn's context (additive context_block field)."
+    },
+    "ui://chat/builder": {
+      "region": "chat",
+      "capabilities": [
+        "pointable",
+        "spotlit"
+      ],
+      "represents": "BUILDER-panel",
+      "code": "canvas/app/src/regions/ClaudeChat.tsx / runtime/ui_claude_session.py:run_turn",
+      "howto": "WHAT: the builder — a real Claude Code session embedded in the surface (the contractor beside Viv the entity; same indicated locus). WHAT YOU CAN DO: point at anything, then ask what it is, why it works that way, or say you want it changed — it investigates the actual repo and answers plainly; changes go through your approval, always (plan-mode backend, the WireRequest gate). HOW TO CHANGE IT: the panel is ClaudeChat.tsx; turns stream through /api/claude/turn → run_turn (--resume keeps the conversation)."
+    },
+    "ui://chat/builder-minimize": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "BUILDER-panel",
+      "code": "canvas/app/src/regions/ClaudeChat.tsx (min toggle)",
+      "howto": "WHAT: the builder panel's collapse toggle. WHAT YOU CAN DO: fold the builder to its header (it starts minimized) and reopen it to converse. HOW TO CHANGE IT: panel-local state in ClaudeChat."
+    },
+    "ui://chat/builder-input": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "BUILDER-panel",
+      "code": "canvas/app/src/regions/ClaudeChat.tsx (input)",
+      "howto": "WHAT: the builder's ask box. WHAT YOU CAN DO: type a question or a change you want and press Enter — if you've pointed at an element, its context rides in with your message. HOW TO CHANGE IT: ClaudeChat.send() → POST /api/claude/turn."
+    },
+    "ui://chat/builder-send": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "BUILDER-panel",
+      "code": "canvas/app/src/regions/ClaudeChat.tsx (send)",
+      "howto": "WHAT: the builder's send control. WHAT YOU CAN DO: send the typed message (disabled while a turn is streaming — one ask, one turn). HOW TO CHANGE IT: ClaudeChat.send()."
+    },
+    "ui://chat/builder-build-this": {
+      "region": "chat",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "BUILDER-handoff",
+      "code": "canvas/app/src/regions/ClaudeChat.tsx (build this) / runtime/bridge.py:/api/intent-at",
+      "howto": "WHAT: the seam from conversation to consequence. WHAT YOU CAN DO: turn the builder's last description into a build-intent at the pointed element — it lands in your inbox for review/approve (it never builds directly). HOW TO CHANGE IT: mintBuildIntent → /api/intent-at → the wire's existing review/approve gate."
+    },
+    "ui://chrome/greeting": {
+      "region": "chrome",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "GREETING-arrival",
+      "code": "canvas/app/src/regions/GreetingCard.tsx (pill) / runtime/suite.py:greeting",
+      "howto": "WHAT: the 'while you were away' pill — the system meets you on arrival. WHAT YOU CAN DO: click it to open the one-glance brief (what was built, what waits on you, what returned on its own); it auto-opens after a real away-gap. HOW TO CHANGE IT: the organ is Suite.greeting (/api/greeting); this is its face."
+    },
+    "ui://chrome/greeting-card": {
+      "region": "chrome",
+      "capabilities": [
+        "pointable",
+        "spotlit"
+      ],
+      "represents": "GREETING-arrival",
+      "code": "canvas/app/src/regions/GreetingCard.tsx (card) / runtime/suite.py:greeting",
+      "howto": "WHAT: the arrival brief — caught-up-in-one-glance. WHAT YOU CAN DO: read the night's headlines (git ground truth), what waits on you, and any memory that returned on its own; close it with ✕. HOW TO CHANGE IT: the content comes from Suite.greeting; the card is GreetingCard.tsx."
+    },
+    "ui://registry/proposals": {
+      "region": "registry",
+      "capabilities": [
+        "pointable",
+        "spotlit"
+      ],
+      "represents": "REGISTRY-proposals",
+      "code": "canvas/app/src/components/RegistryProposals.tsx / runtime/bridge.py:/api/registry/proposals",
+      "howto": "WHAT: the registry-proposal batch surface — the operator floor for the registry-generation chain. WHAT YOU CAN DO: review the proposed registry rows and approve them into the live registry (rest-state is an honest empty card). HOW TO CHANGE IT: served by /api/registry/proposals (+ /approve); the surface is RegistryProposals.tsx."
+    },
+    "ui://registry/proposals/refresh": {
+      "region": "registry",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "REGISTRY-proposals",
+      "code": "canvas/app/src/components/RegistryProposals.tsx (refresh)",
+      "howto": "WHAT: re-read the proposed batch. WHAT YOU CAN DO: pull the latest proposals from the chain without reloading the app. HOW TO CHANGE IT: RegistryProposals.refresh() → GET /api/registry/proposals."
+    },
+    "ui://registry/proposals/notice": {
+      "region": "registry",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "REGISTRY-proposals",
+      "code": "canvas/app/src/components/RegistryProposals.tsx (notice line)",
+      "howto": "WHAT: the surface's own notice line. WHAT YOU CAN DO: read the outcome of your last action here (approved / failed loud) — it never silently swallows a result. HOW TO CHANGE IT: panel-local notice state in RegistryProposals."
+    },
+    "ui://registry/proposals/approve-bar": {
+      "region": "registry",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "REGISTRY-proposals",
+      "code": "canvas/app/src/components/RegistryProposals.tsx (footer bar)",
+      "howto": "WHAT: the approval footer. WHAT YOU CAN DO: act on the reviewed batch from one place (the approve control lives here with the batch counts). HOW TO CHANGE IT: RegistryProposals.tsx footer."
+    },
+    "ui://registry/proposals/approve": {
+      "region": "registry",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "REGISTRY-proposals",
+      "code": "canvas/app/src/components/RegistryProposals.tsx (approve) / runtime/bridge.py:/api/registry/proposals/approve",
+      "howto": "WHAT: the approve control — your gate. WHAT YOU CAN DO: approve the selected registry proposals; only then do they become live registry rows (nothing applies without this click). HOW TO CHANGE IT: POST /api/registry/proposals/approve."
+    },
+    "ui://settings/cognition": {
+      "region": "settings",
+      "capabilities": [
+        "pointable",
+        "spotlit"
+      ],
+      "represents": "COGNITION-authoring",
+      "code": "canvas/app/src/regions/Settings.tsx (cognition section) / runtime/bridge.py:/api/cognition/*",
+      "howto": "WHAT: the cognition section of Settings — the engine, on your surface. WHAT YOU CAN DO: author a role (applied live, no approval — the declarative-direct rule), run a role over an utterance, and see the runs; every select reads the live registry. HOW TO CHANGE IT: the routes are /api/cognition/* (models_for_role · inputs · field_types · run_role · create_role); the section is Settings.tsx."
+    },
+    "ui://studio/rhm/read": {
+      "region": "studio",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "STUDIO-review",
+      "code": "canvas/app/src/components/StudioKit.tsx (read button) / sendChat(screen_reader)",
+      "howto": "WHAT: 'what am I looking at?' — the one-click primed read. WHAT YOU CAN DO: have the right-hand-man read the open mockup and tell you what it is and what you can do, in plain language. HOW TO CHANGE IT: it fires sendChat with the open mockup as focus (the screen_reader role narrates)."
+    },
+    "ui://studio/stage/whole": {
+      "region": "studio",
+      "capabilities": [
+        "pointable"
+      ],
+      "represents": "STUDIO-review",
+      "code": "canvas/app/src/components/StudioKit.tsx (whole screen)",
+      "howto": "WHAT: pop back to the whole screen. WHAT YOU CAN DO: when you've drilled into one element of a mockup, return your comments to the whole-screen level (both levels, never either/or). HOW TO CHANGE IT: setReviewMockup(reviewMockup, baseAddr) in StudioKit."
     }
   }
 }

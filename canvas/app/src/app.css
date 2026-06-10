@@ -1594,6 +1594,76 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
   .claude-panel{display:none}
 }
 
+/* FORAGER v1 (S7-FE) · THE SEARCH LANE (.forager-bar) — corpus search → circles on the canvas.
+   Wears the .rhm card anatomy (one chat-card language: head/input rows, the min collapse) but lives
+   TOP-CENTER over the canvas cell (the walkthrough's slot family). Centered by margin, NOT transform:
+   the .as-canvas .rhm entrance animation (inst-rise) animates `transform` with fill-mode `both`, so a
+   transform-based centering would be clobbered by its final keyframe. Specificity note: `.as-canvas
+   .rhm` (0,2,0) pins right:0/bottom:0/height:312px — this rule matches it at (0,2,0) and sits LATER
+   in the file, so the top-center re-pin wins by order. */
+.as-canvas .forager-bar{top:0;left:50%;right:auto;bottom:auto;width:520px;margin-left:-260px;
+  height:auto;max-height:46vh;overflow:auto;pointer-events:auto}
+/* the WALKTHROUGH shares the top-center slot (.as-canvas .walkthrough, conditional — renders only while
+   a walk session is live). When a walk is up it OWNS the slot: the forager yields rather than stacking
+   over the walk card (PF1: no overlaps). :has() — the app's Chrome/PWA target supports it. */
+.as-canvas:has(.walkthrough) .forager-bar{display:none}
+.as-canvas .forager-bar .rhm-head{color:var(--acc)}
+.forager-bar .rhm-input{margin-top:9px}
+.forager-bar .rhm-input select{flex:none;max-width:140px;background:var(--bg);border:1px solid var(--line);
+  color:var(--ink);border-radius:var(--r-sm);padding:var(--sp-1);font-family:inherit;font-size:var(--fs-meta)}
+.forager-bar .rhm-input select:focus{outline:none;border-color:var(--sig)}
+/* the honest note line — info rests dim; an error is LOUD (fail-loud, A3) */
+.forager-note{margin-top:8px;font-size:var(--fs-meta);color:var(--dim)}
+.forager-note.err{color:var(--err)}
+/* C1 chips — derived from the loaded hits' REAL kind/session fields. FOCUS semantics: a chip ON keeps
+   its value visible and HIDES the non-matching circles (filter, never delete) — the lit chip is the
+   live filter signal */
+.forager-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.forager-chip{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:999px;
+  padding:2px 8px;font-family:var(--font-mono);font-size:var(--fs-micro);cursor:pointer}
+.forager-chip:hover{border-color:var(--sig)}
+.forager-chip .n{color:var(--dim);margin-left:4px}
+.forager-chip.on{background:var(--sig);color:var(--bg);border-color:var(--sig)}
+.forager-chip.on .n{color:var(--bg)}
+.forager-chip.fc-clear{margin-left:auto;color:var(--dim)}
+.forager-chip.fc-clear:hover{color:var(--err);border-color:var(--err)}
+/* the min collapse for the bar's own rows (.rhm.min already hides .rhm-input) */
+.forager-bar.min .forager-note,.forager-bar.min .forager-chips,.forager-bar.min .kit-empty{display:none}
+
+/* THE FORAGER CIRCLE — the second shape vocabulary: a DISC (vs the graph's rectangular card), so the
+   two populations read apart at a glance (A2 FORM). The ring's tint carries the cosine score (inline
+   color-mix off --sig, set by the shape component — token-derived, the established pattern). Semantic
+   zoom: label at distance, kind/session/head detail close-up (B3-light's in-place River). */
+.forager-circle{width:100%;height:100%;border-radius:50%;background:var(--s1);border:2px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;
+  padding:14px;overflow:hidden;color:var(--ink)}
+.forager-circle .fc-label{font-family:var(--font-mono);font-size:var(--fs-micro);max-width:100%;
+  overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  word-break:break-all}
+.forager-circle .fc-kind{font-size:var(--fs-micro);color:var(--sig);text-transform:uppercase;
+  letter-spacing:var(--tr-label);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.forager-circle .fc-head{font-size:var(--fs-micro);color:var(--dim);line-height:1.35;max-width:100%;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;word-break:break-word}
+/* the LAND/PULSE gesture — plays on creation AND on a re-hit (the shape keys its inner div by the
+   `hits` prop, so a dedupe re-hit remounts → the announce replays; B2's "re-hit pulses, never dupes") */
+@keyframes forager-land{0%{transform:scale(.55);opacity:0}60%{transform:scale(1.07);opacity:1}100%{transform:scale(1);opacity:1}}
+.forager-circle.land{animation:forager-land .5s cubic-bezier(.2,.8,.2,1) both}
+@media (prefers-reduced-motion:reduce){.forager-circle.land{animation:none}}
+
+/* D1 · the SET CHIP's give-button in the builder panel (the .rhm-indicating vocabulary, action-toned) */
+.forager-set .ind-give{flex:1 1 auto;min-width:0;background:transparent;border:0;color:var(--sig);
+  cursor:pointer;font-family:var(--font-mono);font-size:var(--fs-meta);text-align:left;padding:0}
+.forager-set .ind-give:hover{text-decoration:underline}
+
+@media (max-width:699px){
+  /* PF2 · mobile stated honestly: the forager is a desktop sculpting surface v1 — hidden <699px.
+     G-25 specificity law, the FULL accounting: the bar carries .rhm, so the rhm bottom-sheet rule
+     `.app-shell[data-mtab="rhm"] .as-canvas .rhm` (0,4,0, display:flex) MATCHES it — a (0,2,0) hide
+     would lose and the forager would surface as a second sheet over the chat. This selector ties at
+     (0,4,0) and sits later in the file, so the hide ALWAYS wins (verified vs the sheet rule). */
+  .app-shell .as-canvas .rhm.forager-bar{display:none}
+}
+
 /* S2-FE · THE GREETING — the arrival face (morning bar #1). The pill is a quiet standing presence
    near the toolbar (workshop-stability: a fixed place); the card is the one-glance brief. Tokens
    only — the returned-memory block leads with the signal color (the system remembering on its own

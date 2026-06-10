@@ -47,6 +47,27 @@ export function foragerLabel(address: string): string {
   return (segs.slice(-2).join('/') || tail).slice(0, 42)
 }
 
+// the RECOGNIZABLE label (verified-by-use gap: exchange:// tails are UUIDs — a circle labelled
+// "104a58a7…/227" defeats recognition-by-sight, Tim's whole method). Prefer the record's own MEANING
+// from the content head — the named extract fields first (pattern_tag/decision/…), then ANY first
+// non-empty string value (covers repo-space digests without hardcoding their schema) — and only then
+// the address tail. The head is the REAL indexed content (registry-is-truth), not an invented caption.
+export function foragerLabelFromHit(h: ForagerHit): string {
+  try {
+    const c = JSON.parse(h.head || '')
+    if (c && typeof c === 'object' && !Array.isArray(c)) {
+      for (const k of ['pattern_tag', 'decision', 'title', 'summary', 'what', 'purpose']) {
+        const v = (c as any)[k]
+        if (typeof v === 'string' && v.trim()) return v.trim().slice(0, 48)
+      }
+      for (const v of Object.values(c)) {
+        if (typeof v === 'string' && v.trim()) return v.trim().slice(0, 48)
+      }
+    }
+  } catch { /* head absent or not JSON — the address tail below is the honest fallback */ }
+  return foragerLabel(h.address)
+}
+
 export class ForagerShapeUtil extends ShapeUtil<ForagerShape> {
   static override type = 'forager' as const
   static override props = {
@@ -136,7 +157,7 @@ export function placeForagerHits(editor: Editor, hits: ForagerHit[]): { created:
   for (const h of hits) {
     if (!h?.address) continue
     const props = {
-      w: FORAGER_D, h: FORAGER_D, address: h.address, label: foragerLabel(h.address),
+      w: FORAGER_D, h: FORAGER_D, address: h.address, label: foragerLabelFromHit(h),
       kind: h.kind || '', session: h.session || '', score: typeof h.score === 'number' ? h.score : 0,
       content_head: h.head || '',
     }
