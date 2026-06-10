@@ -6,11 +6,13 @@ flows/<id>.py (file-discovered, rediscovered per call — a new committed row ap
 THE FLOOR: flows are repo-AUTHORED + MCP-INVOKED; every row declares proposes_only=True (enforced at
 discovery); running one emits NO resolve/approve/dispatch and launches NO claude -p.
 """
+from typing import Literal
+
 
 
 def register(mcp, suite):
     @mcp.tool()
-    def flows(op: str, flow: str = "", params: dict | None = None, spec: dict | None = None) -> dict:
+    def flows(op: Literal["list", "describe", "run", "propose"], flow: str = "", params: dict | None = None, spec: dict | None = None) -> dict:
         """RUN A PROVEN PRODUCTION LINE (a 'flow') — the registered multi-step chains, ONE call each.
 
         WHY THIS EXISTS: chains like the registry-filling line need a designed CONTEXT PACKAGE per

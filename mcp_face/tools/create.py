@@ -9,6 +9,8 @@ FLOOR; executable-code/node-types stay GATED off this face). Reuse-don't-paralle
 existing Suite.create_<kind> (each a render→gate→write→commit→rediscover via the shared helper). The
 drift-home reflection is surfaced in the response (M4 — self-teaching, not a silent gap).
 """
+from typing import Literal
+
 
 # kind → the drift-home a fresh entry of that kind should be reflected in (M4 self-teaching response).
 _DRIFT_HOME = {
@@ -20,13 +22,19 @@ _DRIFT_HOME = {
 
 
 def register(mcp, suite):
+    # Q1 + registry-is-truth: the kind enum DERIVES from the live Suite's create_<kind>
+    # methods at registration (a new declarative kind = a new Suite method = the enum grows
+    # on next server start — never a hand-listed set).
+    _kinds = tuple(sorted(n[len('create_'):] for n in dir(suite)
+                          if n.startswith('create_') and n != 'create_node'))
+    KindT = Literal.__getitem__(_kinds)
     def _kinds():
         # registry-is-truth: the declarative kinds = Suite.create_<kind> MINUS 'node' (graph, not a registry).
         return sorted(k[len("create_"):] for k in dir(suite)
                       if k.startswith("create_") and callable(getattr(suite, k)) and k != "create_node")
 
     @mcp.tool()
-    def create(kind: str, spec: dict, model: str = "") -> dict:
+    def create(kind: KindT, spec: dict, model: str = "") -> dict:
         """Author a NEW declarative registry entry — DIRECT, live, correctness-gated (no operator approval:
         declarative authoring is the agent's). ONE tool for every file-discovered registry; pick `kind`:
           role · skill · context · projection · mark_type · generation_policy · relation_type · ai_tic

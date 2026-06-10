@@ -16,11 +16,13 @@ DELIBERATELY NOT FOLDED HERE (distinct resources — honoured the don't-god-tool
 Folding those in would build a god-tool whose params (graph / address-vs-graph-id) are ignored for
 most ops — the exact confusion the principle's trade-off section forbids. Left for a separate lane.
 """
+from typing import Literal
+
 
 
 def register(mcp, suite):
     @mcp.tool()
-    def runs(op: str, role: str = "", run_kind: str = "", run_op: str = "",
+    def runs(op: Literal["list", "find"], role: str = "", run_kind: str = "", run_op: str = "",
              since: int = -1, limit: int = 50) -> dict:
         """DISCOVER past engine runs — the agent-face RUN INDEX (#54 storage-discovery). Lists past
         run_role / run_items / run_reduce runs + their run:// output addresses, NEWEST-FIRST, so an

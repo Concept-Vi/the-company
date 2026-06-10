@@ -7,11 +7,13 @@ default — the flat list_corpus returned 65k chars; concise returns only the hi
 Read-only — no resolve/approve/dispatch (the floor). Reuse-don't-parallel: wraps the existing Suite
 methods (list_corpus/find_corpus/read_corpus_record/query_corpus), no new engine.
 """
+from typing import Literal
+
 
 
 def register(mcp, suite):
     @mcp.tool()
-    def corpus(op: str, project: str = "", kind: str = "", projection: str = "",
+    def corpus(op: Literal["query", "list", "find", "read"], project: str = "", kind: str = "", projection: str = "",
                source_address: str = "", address: str = "", text: str = "", space: str = "",
                k: int = 8, detail: str = "concise", limit: int = 50) -> dict:
         """Read the corpus — the engine's durable, embedded, addressed records (① repo-exocortex's

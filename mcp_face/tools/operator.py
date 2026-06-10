@@ -4,11 +4,13 @@ ONE resource (the system's memory of working with Tim), an `op` selector. Regist
 (file-discovered, rediscovered per call). READ-ONLY on this face — new rows arrive via the mining's
 proposals + Tim's confirmation, never via a tool write. THE FLOOR: pure reads.
 """
+from typing import Literal
+
 
 
 def register(mcp, suite):
     @mcp.tool()
-    def operator(op: str, rule: str = "") -> dict:
+    def operator(op: Literal["rules", "describe", "proposed"], rule: str = "") -> dict:
         """READ THE SYSTEM'S MEMORY OF ITS OPERATOR (Tim) — the confirmed rules for working with him,
         each carrying his verbatim words as evidence. IF YOU ARE ABOUT TO INTERACT WITH TIM, SURFACE
         SOMETHING TO HIM, OR PREPARE ANYTHING HE WILL SEE: read op='rules' FIRST and follow them —

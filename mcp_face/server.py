@@ -5,6 +5,7 @@ shared Suite. Same brain + same substrate as the UI bridge (runtime.suite.Suite)
 Verbs are GENERIC over node-type — adding a node-type adds zero tools.
 """
 from __future__ import annotations
+from typing import Literal
 import json
 import os
 import sys
@@ -96,8 +97,8 @@ def get_results(graph: str) -> dict:
 # propose_node/apply_node → CONSOLIDATED into mcp_face/tools/node.py (node(op=propose|apply); the FLOOR
 # is preserved — apply reads operator approval from the substrate, the agent cannot self-approve).
 @mcp.tool()
-def list_surfaced(sid: str = "", status: str = "", unresolved_only: bool = False,
-                  limit: int = 40, detail: str = "concise") -> dict:
+def list_surfaced(sid: str = "", status: Literal["", "inbox", "presented", "responded", "resolved", "requeue", "implemented"] = "", unresolved_only: bool = False,
+                  limit: int = 40, detail: Literal["concise", "detailed"] = "concise") -> dict:
     """Decisions the system surfaced for the operator (each carries a default + resolution).
 
     SCOPED (Q2 — the eval hit a 278KB single-shot dump): the default is CONCISE rows
@@ -613,7 +614,7 @@ _REDUCE_RULES = _cog.REDUCE_RULES
 
 
 @mcp.tool()
-def run_reduce(addresses: list, mode: str, role: str = "", reduce_rule: str = "",
+def run_reduce(addresses: list, mode: Literal["role", "rule", "cluster"], role: str = "", reduce_rule: str = "",
                cluster_threshold: float = 0.85, max_tokens: int = 512) -> dict:
     """CONFIGURE + RUN the cross-unit JOIN — REDUCE a set of map-output run:// addresses into ONE output.
     REUSES runtime.cognition.run_reduce (the net-new JOIN engine — never a parallel reducer).

@@ -18,11 +18,13 @@ this wrapper:
 The instance-ops (create/delete) and the type-ops (propose/apply) take DISJOINT params, so the docstring
 per-op guide + the missing-param teaching errors carry the load of steering the agent to the right fields.
 """
+from typing import Literal
+
 
 
 def register(mcp, suite):
     @mcp.tool()
-    def node(op: str, graph: str = "", type: str = "", config: dict = {},
+    def node(op: Literal["create", "delete", "propose", "apply"], graph: str = "", type: str = "", config: dict = {},
              node_id: str = "", name: str = "", spec: str = "", surfaced_id: str = "") -> dict:
         """Act on a graph-NODE — the unit of a composition graph (canvas). Pick `op`:
 

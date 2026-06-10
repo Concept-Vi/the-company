@@ -22,11 +22,13 @@ THE STORE DISTINCTION (load-bearing — the cold agent picks `by` from the docst
     long-term home would be a Suite.findings_for wrapper mirroring marks_for; until that lands we mirror
     the existing flat tool's direct store reach (the create_projection in-lane precedent, server.py:910).
 """
+from typing import Literal
+
 
 
 def register(mcp, suite):
     @mcp.tool()
-    def marks(by: str, target: str = "", mark_type: str = "", address: str = "",
+    def marks(by: Literal["target", "type", "findings"], target: str = "", mark_type: str = "", address: str = "",
               detail: str = "concise", limit: int = 100) -> dict:
         """READ marks / findings (the detection layer — what a mark-pass left). Read-only. Pick `by`:
 

@@ -11,11 +11,13 @@ The floor: `validate`/`dry_run` are PURE reads (no effect, never route()). `atta
 CONSTRAINED edit_role — they SURFACE a role_build proposal for the operator (propose-not-apply); they
 never self-apply, and the destination grammar forbids the dispatch/claude-p verbs at construction.
 """
+from typing import Literal
+
 
 
 def register(mcp, suite):
     @mcp.tool()
-    def rule(op: str, ast: dict = {}, destination: str = "", sample_resolved: dict = {},
+    def rule(op: Literal["validate", "dry_run", "attach", "detach"], ast: dict = {}, destination: str = "", sample_resolved: dict = {},
              params: dict = {}, on_missing: str = "raise", role_id: str = "",
              rule: dict = {}, rule_id: str = "") -> dict:
         """Work with a role's declarative routing RULES — the deterministic 'when <condition> → route the

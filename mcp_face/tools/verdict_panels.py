@@ -5,11 +5,13 @@ MCP-DESIGN-PRINCIPLE shape). Registry-is-truth: the runnable set IS verdict_pane
 (file-discovered, rediscovered per call). THE FLOOR: a panel JUDGES — its verdict flags/confirms for
 the operator's review; running one emits NO resolve/approve/dispatch.
 """
+from typing import Literal
+
 
 
 def register(mcp, suite):
     @mcp.tool()
-    def panel(op: str, panel: str = "", utterance: str = "", element: str = "") -> dict:
+    def panel(op: Literal["list", "describe", "run"], panel: str = "", utterance: str = "", element: str = "") -> dict:
         """JUDGE something through a DIVERSE PANEL — N different lens-roles, one fire each, a
         deterministic quorum (the perspective-diverse jury: where run_role draws measure one judge's
         self-consistency, a panel's seats catch DIFFERENT failure modes — grounding vs voice vs
