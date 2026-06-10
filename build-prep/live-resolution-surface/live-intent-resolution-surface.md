@@ -1,12 +1,12 @@
-\# Live Intent Resolution Surface
+# Live Intent Resolution Surface
 
 
 
-\## Master Specification of the Idea
+## Master Specification of the Idea
 
 
 
-\### Conceptual Source of Truth v0.1
+### Conceptual Source of Truth v0.1
 
 
 
@@ -14,11 +14,11 @@
 
 
 
-\## 0. Document Purpose
+## 0. Document Purpose
 
 
 
-This document defines the \*\*idea itself\*\* before it becomes a product specification, technical specification, interface design, or build plan.
+This document defines the **idea itself** before it becomes a product specification, technical specification, interface design, or build plan.
 
 
 
@@ -34,11 +34,11 @@ The system described here is called:
 
 
 
-\# Live Intent Resolution Surface
+# Live Intent Resolution Surface
 
 
 
-A shorter working name may later become \*\*Intent Compiler\*\*, \*\*Intent Surface\*\*, \*\*Pre-Spec Engine\*\*, or \*\*Adaptive Specification Canvas\*\*, but for now \*\*Live Intent Resolution Surface\*\* best captures the whole idea.
+A shorter working name may later become **Intent Compiler**, **Intent Surface**, **Pre-Spec Engine**, or **Adaptive Specification Canvas**, but for now **Live Intent Resolution Surface** best captures the whole idea.
 
 
 
@@ -46,11 +46,11 @@ A shorter working name may later become \*\*Intent Compiler\*\*, \*\*Intent Surf
 
 
 
-\# 1. Core Definition
+# 1. Core Definition
 
 
 
-A \*\*Live Intent Resolution Surface\*\* is a universal, schema-driven, generative AI system that begins with vague human intent and progressively turns it into a complete, executable specification for producing any distinguishable thing.
+A **Live Intent Resolution Surface** is a universal, schema-driven, generative AI system that begins with vague human intent and progressively turns it into a complete, executable specification for producing any distinguishable thing.
 
 
 
@@ -58,25 +58,25 @@ It starts before the user has:
 
 
 
-\* a clear idea
+* a clear idea
 
-\* a prompt
+* a prompt
 
-\* a brief
+* a brief
 
-\* a specification
+* a specification
 
-\* requirements
+* requirements
 
-\* constraints
+* constraints
 
-\* success criteria
+* success criteria
 
-\* a defined artifact type
+* a defined artifact type
 
-\* a known output format
+* a known output format
 
-\* a build plan
+* a build plan
 
 
 
@@ -118,7 +118,7 @@ In one line:
 
 
 
-> \*\*A Live Intent Resolution Surface turns “I have a vague idea” into “here is the exact thing to build, generate, launch, or produce.”\*\*
+> **A Live Intent Resolution Surface turns “I have a vague idea” into “here is the exact thing to build, generate, launch, or produce.”**
 
 
 
@@ -126,7 +126,7 @@ In one line:
 
 
 
-\# 2. The Core Inversion
+# 2. The Core Inversion
 
 
 
@@ -178,7 +178,7 @@ The core inversion is:
 
 
 
-The system is therefore the \*\*workflow before the workflow\*\*.
+The system is therefore the **workflow before the workflow**.
 
 
 
@@ -190,7 +190,7 @@ It creates the input that other AI workflows need.
 
 
 
-\# 3. What This Is
+# 3. What This Is
 
 
 
@@ -198,7 +198,7 @@ The Live Intent Resolution Surface is:
 
 
 
-\## 3.1 A pre-specification system
+## 3.1 A pre-specification system
 
 
 
@@ -206,7 +206,7 @@ It creates the project brief, requirements, rules, context, constraints, decisio
 
 
 
-\## 3.2 An intent elicitation engine
+## 3.2 An intent elicitation engine
 
 
 
@@ -214,7 +214,7 @@ It draws out what the user means without expecting them to already have the lang
 
 
 
-\## 3.3 A schema-rendered generative interface
+## 3.3 A schema-rendered generative interface
 
 
 
@@ -222,7 +222,7 @@ The interface changes based on the active idea, current state, missing informati
 
 
 
-\## 3.4 A non-linear dynamic wizard
+## 3.4 A non-linear dynamic wizard
 
 
 
@@ -230,7 +230,7 @@ It guides the user, but not through a rigid script. It has structure, phases, ob
 
 
 
-\## 3.5 A universal artifact resolver
+## 3.5 A universal artifact resolver
 
 
 
@@ -238,7 +238,7 @@ It can theoretically work for any distinguishable output: app, document, route, 
 
 
 
-\## 3.6 A living project model
+## 3.6 A living project model
 
 
 
@@ -246,7 +246,7 @@ The system continuously maintains a structured model of what is known, unknown, 
 
 
 
-\## 3.7 A reaction-based creation surface
+## 3.7 A reaction-based creation surface
 
 
 
@@ -258,7 +258,7 @@ The user does not need to manually specify everything. The system generates opti
 
 
 
-\# 4. What This Is Not
+# 4. What This Is Not
 
 
 
@@ -322,7 +322,7 @@ Execution agents build, write, code, deploy, or publish. This system prepares th
 
 
 
-\# 5. The Central Thesis
+# 5. The Central Thesis
 
 
 
@@ -334,7 +334,7 @@ The limiting factor is no longer only generation.
 
 
 
-The limiting factor is often \*\*specification\*\*.
+The limiting factor is often **specification**.
 
 
 
@@ -342,21 +342,21 @@ Most people do not naturally think in full specifications. They think in fragmen
 
 
 
-\* “I need something like…”
+* “I need something like…”
 
-\* “It should feel more like this.”
+* “It should feel more like this.”
 
-\* “Not that.”
+* “Not that.”
 
-\* “I know what I don’t want.”
+* “I know what I don’t want.”
 
-\* “I can picture it, but I can’t explain it.”
+* “I can picture it, but I can’t explain it.”
 
-\* “I need a system for this.”
+* “I need a system for this.”
 
-\* “I want the end result but don’t know the steps.”
+* “I want the end result but don’t know the steps.”
 
-\* “I don’t know what kind of thing this is yet.”
+* “I don’t know what kind of thing this is yet.”
 
 
 
@@ -364,11 +364,11 @@ The Live Intent Resolution Surface exists because:
 
 
 
-> \*\*AI can increasingly make anything, but users still need help discovering what the anything should be.\*\*
+> **AI can increasingly make anything, but users still need help discovering what the anything should be.**
 
 
 
-The system bridges the gap between \*\*latent human intent\*\* and \*\*machine-actionable specification\*\*.
+The system bridges the gap between **latent human intent** and **machine-actionable specification**.
 
 
 
@@ -376,7 +376,7 @@ The system bridges the gap between \*\*latent human intent\*\* and \*\*machine-a
 
 
 
-\# 6. Foundational Doctrine
+# 6. Foundational Doctrine
 
 
 
@@ -388,7 +388,7 @@ These are not merely design preferences. They are the conceptual laws of the pro
 
 
 
-\## 6.1 Do not ask the user to know what they do not know
+## 6.1 Do not ask the user to know what they do not know
 
 
 
@@ -412,7 +412,7 @@ Better:
 
 
 
-\## 6.2 The user steers through judgement, not specification writing
+## 6.2 The user steers through judgement, not specification writing
 
 
 
@@ -428,7 +428,7 @@ The system converts those reactions into structure.
 
 
 
-\## 6.3 Reactions are valid input
+## 6.3 Reactions are valid input
 
 
 
@@ -456,7 +456,7 @@ The system must treat these as first-class input signals.
 
 
 
-\## 6.4 Rejections are as valuable as acceptances
+## 6.4 Rejections are as valuable as acceptances
 
 
 
@@ -468,7 +468,7 @@ The system should remember what was rejected, why it appears to have been reject
 
 
 
-\## 6.5 Generate options before asking blank questions
+## 6.5 Generate options before asking blank questions
 
 
 
@@ -492,7 +492,7 @@ Generated options give the user something to respond to.
 
 
 
-\## 6.6 Make the invisible visible
+## 6.6 Make the invisible visible
 
 
 
@@ -504,27 +504,27 @@ It should show:
 
 
 
-\* possible directions
+* possible directions
 
-\* current assumptions
+* current assumptions
 
-\* missing information
+* missing information
 
-\* decisions made
+* decisions made
 
-\* unresolved contradictions
+* unresolved contradictions
 
-\* active schemas
+* active schemas
 
-\* candidate artifact types
+* candidate artifact types
 
-\* generated previews
+* generated previews
 
-\* what the system thinks it understands
+* what the system thinks it understands
 
 
 
-\## 6.7 Be structured internally, unscripted externally
+## 6.7 Be structured internally, unscripted externally
 
 
 
@@ -536,7 +536,7 @@ But the user should not experience that as a rigid intake form.
 
 
 
-\## 6.8 Do not collapse too early
+## 6.8 Do not collapse too early
 
 
 
@@ -556,7 +556,7 @@ It should keep multiple branches alive until user reactions, tags, and context m
 
 
 
-\## 6.9 Avoid fake certainty
+## 6.9 Avoid fake certainty
 
 
 
@@ -580,7 +580,7 @@ Use:
 
 
 
-\## 6.10 Keep assumptions visible
+## 6.10 Keep assumptions visible
 
 
 
@@ -588,11 +588,11 @@ The system may assume, infer, or default — but important assumptions must be v
 
 
 
-Assumptions should live on an \*\*Assumption Shelf\*\*.
+Assumptions should live on an **Assumption Shelf**.
 
 
 
-\## 6.11 Close decisions before execution
+## 6.11 Close decisions before execution
 
 
 
@@ -604,21 +604,21 @@ Every required choice must be:
 
 
 
-\* answered by the user,
+* answered by the user,
 
-\* inferred from memory,
+* inferred from memory,
 
-\* selected from options,
+* selected from options,
 
-\* defaulted,
+* defaulted,
 
-\* delegated,
+* delegated,
 
-\* or marked as an explicit assumption.
+* or marked as an explicit assumption.
 
 
 
-\## 6.12 The interface is part of the reasoning
+## 6.12 The interface is part of the reasoning
 
 
 
@@ -630,7 +630,7 @@ The screen is an active reasoning surface. Cards, maps, branches, panels, slider
 
 
 
-\## 6.13 Memory should store patterns, not just facts
+## 6.13 Memory should store patterns, not just facts
 
 
 
@@ -638,31 +638,31 @@ Memory should include:
 
 
 
-\* repeated preferences
+* repeated preferences
 
-\* recurring rejections
+* recurring rejections
 
-\* interaction style
+* interaction style
 
-\* abstraction level
+* abstraction level
 
-\* tolerated uncertainty
+* tolerated uncertainty
 
-\* preferred modalities
+* preferred modalities
 
-\* decision style
+* decision style
 
-\* useful metaphors
+* useful metaphors
 
-\* prior artifacts
+* prior artifacts
 
-\* prior schemas
+* prior schemas
 
-\* prior assumptions
+* prior assumptions
 
 
 
-\## 6.14 The final output must be executable
+## 6.14 The final output must be executable
 
 
 
@@ -674,7 +674,7 @@ The system must produce a package that downstream AI workflows can use to build,
 
 
 
-\## 6.15 Universal does not mean generic
+## 6.15 Universal does not mean generic
 
 
 
@@ -690,7 +690,7 @@ The right pattern is:
 
 
 
-> \*\*Universal entry layer → artifact-specific schema → executable output.\*\*
+> **Universal entry layer → artifact-specific schema → executable output.**
 
 
 
@@ -698,7 +698,7 @@ The right pattern is:
 
 
 
-\# 7. Core Conceptual Loop
+# 7. Core Conceptual Loop
 
 
 
@@ -706,11 +706,11 @@ The fundamental loop is:
 
 
 
-\# Expose → Generate → React → Trace → Resolve → Render → Compile
+# Expose → Generate → React → Trace → Resolve → Render → Compile
 
 
 
-\## 7.1 Expose
+## 7.1 Expose
 
 
 
@@ -722,7 +722,7 @@ This may be a sentence, fragment, correction, click, selection, rejection, or em
 
 
 
-\## 7.2 Generate
+## 7.2 Generate
 
 
 
@@ -730,7 +730,7 @@ The system generates possible meanings, structures, options, surfaces, examples,
 
 
 
-\## 7.3 React
+## 7.3 React
 
 
 
@@ -738,7 +738,7 @@ The user responds to what was generated.
 
 
 
-\## 7.4 Trace
+## 7.4 Trace
 
 
 
@@ -746,7 +746,7 @@ The system records the reaction as tags, counts, observations, relationships, de
 
 
 
-\## 7.5 Resolve
+## 7.5 Resolve
 
 
 
@@ -754,7 +754,7 @@ The system updates what is known, unknown, likely relevant, no longer relevant, 
 
 
 
-\## 7.6 Render
+## 7.6 Render
 
 
 
@@ -762,7 +762,7 @@ The system updates the live interface based on the new state.
 
 
 
-\## 7.7 Compile
+## 7.7 Compile
 
 
 
@@ -774,17 +774,17 @@ This loop repeats at multiple scales:
 
 
 
-\* within a single question,
+* within a single question,
 
-\* within a screen,
+* within a screen,
 
-\* within a schema,
+* within a schema,
 
-\* within a project,
+* within a project,
 
-\* across multiple sessions,
+* across multiple sessions,
 
-\* across the user’s long-term memory.
+* across the user’s long-term memory.
 
 
 
@@ -792,11 +792,11 @@ This loop repeats at multiple scales:
 
 
 
-\# 8. Key Terminology
+# 8. Key Terminology
 
 
 
-\## 8.1 Latent Intent
+## 8.1 Latent Intent
 
 
 
@@ -812,7 +812,7 @@ Example:
 
 
 
-\## 8.2 Anchor
+## 8.2 Anchor
 
 
 
@@ -824,43 +824,43 @@ Anchors include:
 
 
 
-\* who
+* who
 
-\* what
+* what
 
-\* when
+* when
 
-\* where
+* where
 
-\* why
+* why
 
-\* how
+* how
 
-\* emotion
+* emotion
 
-\* object
+* object
 
-\* action
+* action
 
-\* constraint
+* constraint
 
-\* comparison
+* comparison
 
-\* dislike
+* dislike
 
-\* example
+* example
 
-\* deadline
+* deadline
 
-\* audience
+* audience
 
-\* resource
+* resource
 
-\* environment
+* environment
 
 
 
-\## 8.3 Artifact
+## 8.3 Artifact
 
 
 
@@ -872,41 +872,41 @@ Examples:
 
 
 
-\* app
+* app
 
-\* route
+* route
 
-\* story
+* story
 
-\* report
+* report
 
-\* workflow
+* workflow
 
-\* image
+* image
 
-\* design
+* design
 
-\* video
+* video
 
-\* automation
+* automation
 
-\* presentation
+* presentation
 
-\* plan
+* plan
 
-\* decision
+* decision
 
-\* shortcut
+* shortcut
 
-\* interface
+* interface
 
-\* policy
+* policy
 
-\* physical object
+* physical object
 
 
 
-\## 8.4 Artifact Type
+## 8.4 Artifact Type
 
 
 
@@ -918,7 +918,7 @@ Example:
 
 
 
-\*\*Software Application\*\* is an artifact type.
+**Software Application** is an artifact type.
 
 
 
@@ -926,7 +926,7 @@ It usually requires users, features, data, interface, platform, permissions, wor
 
 
 
-\## 8.5 Progressive Type Resolution
+## 8.5 Progressive Type Resolution
 
 
 
@@ -942,7 +942,7 @@ Example:
 
 
 
-\## 8.6 Schema
+## 8.6 Schema
 
 
 
@@ -954,27 +954,27 @@ A schema defines:
 
 
 
-\* required fields
+* required fields
 
-\* optional fields
+* optional fields
 
-\* dependent fields
+* dependent fields
 
-\* decision points
+* decision points
 
-\* constraints
+* constraints
 
-\* validation rules
+* validation rules
 
-\* possible UI components
+* possible UI components
 
-\* possible outputs
+* possible outputs
 
-\* downstream workflows
+* downstream workflows
 
 
 
-\## 8.7 Live Surface
+## 8.7 Live Surface
 
 
 
@@ -986,7 +986,7 @@ The live surface may include conversation, maps, cards, branches, previews, deci
 
 
 
-\## 8.8 Tag
+## 8.8 Tag
 
 
 
@@ -998,21 +998,21 @@ Examples:
 
 
 
-\* prefers\_visual\_interface
+* prefers\_visual\_interface
 
-\* rejects\_static\_document
+* rejects\_static\_document
 
-\* mentions\_deadline
+* mentions\_deadline
 
-\* wants\_autonomy
+* wants\_autonomy
 
-\* uncertain\_artifact\_type
+* uncertain\_artifact\_type
 
-\* likes\_branching\_structure
+* likes\_branching\_structure
 
 
 
-\## 8.9 Tag Count
+## 8.9 Tag Count
 
 
 
@@ -1024,7 +1024,7 @@ Tag counts are used to detect patterns over time.
 
 
 
-\## 8.10 Structured Observation
+## 8.10 Structured Observation
 
 
 
@@ -1040,7 +1040,7 @@ Example:
 
 
 
-\## 8.11 Evidence Trace
+## 8.11 Evidence Trace
 
 
 
@@ -1052,25 +1052,25 @@ An evidence trace may include:
 
 
 
-\* raw statements
+* raw statements
 
-\* tags
+* tags
 
-\* counts
+* counts
 
-\* accepted options
+* accepted options
 
-\* rejected options
+* rejected options
 
-\* observations
+* observations
 
-\* decisions
+* decisions
 
-\* prior memories
+* prior memories
 
 
 
-\## 8.12 Assumption
+## 8.12 Assumption
 
 
 
@@ -1082,7 +1082,7 @@ Assumptions must be visible and correctable when they materially affect the outp
 
 
 
-\## 8.13 Decision
+## 8.13 Decision
 
 
 
@@ -1094,7 +1094,7 @@ Decisions may be explicit, inferred, defaulted, delegated, or assumed.
 
 
 
-\## 8.14 Decision Ledger
+## 8.14 Decision Ledger
 
 
 
@@ -1102,7 +1102,7 @@ A persistent record of decisions, including what was decided, why, when, and bas
 
 
 
-\## 8.15 Assumption Shelf
+## 8.15 Assumption Shelf
 
 
 
@@ -1114,7 +1114,7 @@ The user can accept, edit, reject, or leave assumptions in place.
 
 
 
-\## 8.16 Missing Information Map
+## 8.16 Missing Information Map
 
 
 
@@ -1122,7 +1122,7 @@ A view of unresolved details required for specification or execution.
 
 
 
-\## 8.17 Decision Closure
+## 8.17 Decision Closure
 
 
 
@@ -1130,7 +1130,7 @@ The process of resolving all required decisions enough for autonomous execution.
 
 
 
-\## 8.18 Execution Readiness
+## 8.18 Execution Readiness
 
 
 
@@ -1138,7 +1138,7 @@ The degree to which the current project state can be handed to downstream AI sys
 
 
 
-\## 8.19 Handoff Package
+## 8.19 Handoff Package
 
 
 
@@ -1150,25 +1150,25 @@ It may include:
 
 
 
-\* project brief
+* project brief
 
-\* artifact type
+* artifact type
 
-\* requirements
+* requirements
 
-\* constraints
+* constraints
 
-\* design rules
+* design rules
 
-\* technical details
+* technical details
 
-\* assumptions
+* assumptions
 
-\* decisions
+* decisions
 
-\* acceptance criteria
+* acceptance criteria
 
-\* execution instructions
+* execution instructions
 
 
 
@@ -1176,7 +1176,7 @@ It may include:
 
 
 
-\# 9. Ontology
+# 9. Ontology
 
 
 
@@ -1184,7 +1184,7 @@ The ontology defines the core objects in the system and how they relate.
 
 
 
-\## 9.1 Top-Level Objects
+## 9.1 Top-Level Objects
 
 
 
@@ -1246,11 +1246,11 @@ Execution Workflow
 
 
 
-\## 9.2 Object Definitions
+## 9.2 Object Definitions
 
 
 
-\### User
+### User
 
 
 
@@ -1262,25 +1262,25 @@ The user has:
 
 
 
-\* identity
+* identity
 
-\* preferences
+* preferences
 
-\* recurring patterns
+* recurring patterns
 
-\* past projects
+* past projects
 
-\* accepted assumptions
+* accepted assumptions
 
-\* rejected patterns
+* rejected patterns
 
-\* interaction style
+* interaction style
 
-\* memory profile
+* memory profile
 
 
 
-\### Session
+### Session
 
 
 
@@ -1292,23 +1292,23 @@ A session has:
 
 
 
-\* user
+* user
 
-\* project
+* project
 
-\* events
+* events
 
-\* messages
+* messages
 
-\* UI interactions
+* UI interactions
 
-\* generated surfaces
+* generated surfaces
 
-\* state changes
+* state changes
 
 
 
-\### Project
+### Project
 
 
 
@@ -1320,33 +1320,33 @@ A project has:
 
 
 
-\* working description
+* working description
 
-\* active artifact candidates
+* active artifact candidates
 
-\* active schemas
+* active schemas
 
-\* known details
+* known details
 
-\* unknown details
+* unknown details
 
-\* assumptions
+* assumptions
 
-\* decisions
+* decisions
 
-\* tags
+* tags
 
-\* observations
+* observations
 
-\* generated options
+* generated options
 
-\* rejected options
+* rejected options
 
-\* handoff package
+* handoff package
 
 
 
-\### Intent
+### Intent
 
 
 
@@ -1358,7 +1358,7 @@ Intent may be vague at first.
 
 
 
-\### Anchor
+### Anchor
 
 
 
@@ -1384,7 +1384,7 @@ negative preference: not boring
 
 
 
-\### Artifact
+### Artifact
 
 
 
@@ -1392,7 +1392,7 @@ The thing to be created, generated, built, planned, routed, decided, or produced
 
 
 
-\### Artifact Type
+### Artifact Type
 
 
 
@@ -1404,25 +1404,25 @@ Example:
 
 
 
-\* report
+* report
 
-\* workflow
+* workflow
 
-\* app
+* app
 
-\* website
+* website
 
-\* route
+* route
 
-\* story
+* story
 
-\* image
+* image
 
-\* automation
+* automation
 
 
 
-\### Schema
+### Schema
 
 
 
@@ -1430,7 +1430,7 @@ The structure required to define or generate a particular artifact type.
 
 
 
-\### Property
+### Property
 
 
 
@@ -1446,7 +1446,7 @@ A route has origin, destination, time, transport mode, constraints, and optimisa
 
 
 
-\### Constraint
+### Constraint
 
 
 
@@ -1458,7 +1458,7 @@ Constraints may be explicit or inferred.
 
 
 
-\### Dependency
+### Dependency
 
 
 
@@ -1478,7 +1478,7 @@ Database structure depends on data requirements.
 
 
 
-\### Tag
+### Tag
 
 
 
@@ -1486,7 +1486,7 @@ A discrete label attached to input, state, or behaviour.
 
 
 
-\### Observation
+### Observation
 
 
 
@@ -1494,7 +1494,7 @@ An interpreted statement derived from evidence traces.
 
 
 
-\### Memory
+### Memory
 
 
 
@@ -1502,7 +1502,7 @@ Stored context that can influence future interpretation or generation.
 
 
 
-\### Assumption
+### Assumption
 
 
 
@@ -1510,7 +1510,7 @@ A provisional belief or default used to continue progress.
 
 
 
-\### Decision
+### Decision
 
 
 
@@ -1518,7 +1518,7 @@ A resolved choice affecting the project.
 
 
 
-\### Question
+### Question
 
 
 
@@ -1530,7 +1530,7 @@ Questions are not always shown as text. They may be represented as cards, slider
 
 
 
-\### Option
+### Option
 
 
 
@@ -1538,7 +1538,7 @@ A generated possibility shown to the user.
 
 
 
-\### Reaction
+### Reaction
 
 
 
@@ -1546,7 +1546,7 @@ A user response to an option, surface, question, or generated artifact.
 
 
 
-\### Surface
+### Surface
 
 
 
@@ -1554,7 +1554,7 @@ A generated interface region used to make part of the idea visible and interacti
 
 
 
-\### UI Component
+### UI Component
 
 
 
@@ -1566,29 +1566,29 @@ Examples:
 
 
 
-\* card
+* card
 
-\* map
+* map
 
-\* branch
+* branch
 
-\* panel
+* panel
 
-\* slider
+* slider
 
-\* timeline
+* timeline
 
-\* checklist
+* checklist
 
-\* preview
+* preview
 
-\* assumption shelf
+* assumption shelf
 
-\* decision ledger
+* decision ledger
 
 
 
-\### State
+### State
 
 
 
@@ -1596,7 +1596,7 @@ The current structured representation of the project.
 
 
 
-\### Handoff Package
+### Handoff Package
 
 
 
@@ -1604,7 +1604,7 @@ The compiled specification sent to downstream workflows.
 
 
 
-\### Execution Workflow
+### Execution Workflow
 
 
 
@@ -1616,7 +1616,7 @@ A downstream system that builds, writes, designs, generates, deploys, publishes,
 
 
 
-\## 9.3 Core Relationships
+## 9.3 Core Relationships
 
 
 
@@ -1682,7 +1682,7 @@ The system is not simply a linear pipeline. These relationships loop continuousl
 
 
 
-\# 10. Artifact Taxonomy
+# 10. Artifact Taxonomy
 
 
 
@@ -1728,7 +1728,7 @@ Thing
 
 
 
-\## 10.1 Universal Artifact Properties
+## 10.1 Universal Artifact Properties
 
 
 
@@ -1784,7 +1784,7 @@ Different artifact types specialise these properties differently.
 
 
 
-\## 10.2 Information Artifacts
+## 10.2 Information Artifacts
 
 
 
@@ -1796,31 +1796,31 @@ Examples:
 
 
 
-\* document
+* document
 
-\* report
+* report
 
-\* memo
+* memo
 
-\* brief
+* brief
 
-\* research summary
+* research summary
 
-\* presentation
+* presentation
 
-\* knowledge base
+* knowledge base
 
-\* specification
+* specification
 
-\* guide
+* guide
 
-\* policy
+* policy
 
-\* explanation
+* explanation
 
-\* article
+* article
 
-\* lesson
+* lesson
 
 
 
@@ -1828,27 +1828,27 @@ Common required properties:
 
 
 
-\* audience
+* audience
 
-\* purpose
+* purpose
 
-\* source material
+* source material
 
-\* claims
+* claims
 
-\* structure
+* structure
 
-\* tone
+* tone
 
-\* format
+* format
 
-\* level of detail
+* level of detail
 
-\* evidence requirements
+* evidence requirements
 
-\* desired action
+* desired action
 
-\* distribution context
+* distribution context
 
 
 
@@ -1856,19 +1856,19 @@ Possible schemas:
 
 
 
-\* report schema
+* report schema
 
-\* executive brief schema
+* executive brief schema
 
-\* research synthesis schema
+* research synthesis schema
 
-\* explainer schema
+* explainer schema
 
-\* presentation schema
+* presentation schema
 
-\* policy schema
+* policy schema
 
-\* tutorial schema
+* tutorial schema
 
 
 
@@ -1876,19 +1876,19 @@ Common UI surfaces:
 
 
 
-\* outline builder
+* outline builder
 
-\* audience map
+* audience map
 
-\* tone selector
+* tone selector
 
-\* evidence board
+* evidence board
 
-\* argument structure
+* argument structure
 
-\* section cards
+* section cards
 
-\* summary preview
+* summary preview
 
 
 
@@ -1896,7 +1896,7 @@ Common UI surfaces:
 
 
 
-\## 10.3 Interactive Artifacts
+## 10.3 Interactive Artifacts
 
 
 
@@ -1908,29 +1908,29 @@ Examples:
 
 
 
-\* app
+* app
 
-\* website
+* website
 
-\* web tool
+* web tool
 
-\* dashboard
+* dashboard
 
-\* calculator
+* calculator
 
-\* configurator
+* configurator
 
-\* interactive guide
+* interactive guide
 
-\* chatbot
+* chatbot
 
-\* wizard
+* wizard
 
-\* form
+* form
 
-\* simulation
+* simulation
 
-\* game-like experience
+* game-like experience
 
 
 
@@ -1938,31 +1938,31 @@ Common required properties:
 
 
 
-\* users
+* users
 
-\* use cases
+* use cases
 
-\* interaction flow
+* interaction flow
 
-\* inputs
+* inputs
 
-\* outputs
+* outputs
 
-\* states
+* states
 
-\* permissions
+* permissions
 
-\* interface model
+* interface model
 
-\* data requirements
+* data requirements
 
-\* feedback loops
+* feedback loops
 
-\* platform
+* platform
 
-\* error states
+* error states
 
-\* success criteria
+* success criteria
 
 
 
@@ -1970,15 +1970,15 @@ Possible schemas:
 
 
 
-\* user flow schema
+* user flow schema
 
-\* state machine schema
+* state machine schema
 
-\* UI screen schema
+* UI screen schema
 
-\* interaction pattern schema
+* interaction pattern schema
 
-\* data input/output schema
+* data input/output schema
 
 
 
@@ -1986,19 +1986,19 @@ Common UI surfaces:
 
 
 
-\* flow map
+* flow map
 
-\* screen cards
+* screen cards
 
-\* state diagram
+* state diagram
 
-\* feature board
+* feature board
 
-\* user journey map
+* user journey map
 
-\* data model panel
+* data model panel
 
-\* prototype preview
+* prototype preview
 
 
 
@@ -2006,7 +2006,7 @@ Common UI surfaces:
 
 
 
-\## 10.4 Software Artifacts
+## 10.4 Software Artifacts
 
 
 
@@ -2018,27 +2018,27 @@ Examples:
 
 
 
-\* mobile app
+* mobile app
 
-\* desktop app
+* desktop app
 
-\* API
+* API
 
-\* browser extension
+* browser extension
 
-\* automation script
+* automation script
 
-\* local tool
+* local tool
 
-\* SaaS product
+* SaaS product
 
-\* internal admin tool
+* internal admin tool
 
-\* AI agent system
+* AI agent system
 
-\* plugin
+* plugin
 
-\* integration
+* integration
 
 
 
@@ -2046,31 +2046,31 @@ Common required properties:
 
 
 
-\* target users
+* target users
 
-\* problem
+* problem
 
-\* features
+* features
 
-\* platform
+* platform
 
-\* architecture
+* architecture
 
-\* data model
+* data model
 
-\* permissions
+* permissions
 
-\* integrations
+* integrations
 
-\* security constraints
+* security constraints
 
-\* deployment context
+* deployment context
 
-\* monitoring
+* monitoring
 
-\* testing
+* testing
 
-\* acceptance criteria
+* acceptance criteria
 
 
 
@@ -2078,19 +2078,19 @@ Possible schemas:
 
 
 
-\* PRD schema
+* PRD schema
 
-\* technical architecture schema
+* technical architecture schema
 
-\* feature schema
+* feature schema
 
-\* database schema
+* database schema
 
-\* API schema
+* API schema
 
-\* deployment schema
+* deployment schema
 
-\* test plan schema
+* test plan schema
 
 
 
@@ -2098,19 +2098,19 @@ Common UI surfaces:
 
 
 
-\* feature cards
+* feature cards
 
-\* user story board
+* user story board
 
-\* data model map
+* data model map
 
-\* integration checklist
+* integration checklist
 
-\* architecture diagram
+* architecture diagram
 
-\* release plan
+* release plan
 
-\* acceptance criteria builder
+* acceptance criteria builder
 
 
 
@@ -2118,7 +2118,7 @@ Common UI surfaces:
 
 
 
-\## 10.5 Visual Artifacts
+## 10.5 Visual Artifacts
 
 
 
@@ -2130,29 +2130,29 @@ Examples:
 
 
 
-\* image
+* image
 
-\* diagram
+* diagram
 
-\* logo
+* logo
 
-\* brand system
+* brand system
 
-\* interface mockup
+* interface mockup
 
-\* infographic
+* infographic
 
-\* poster
+* poster
 
-\* layout
+* layout
 
-\* style guide
+* style guide
 
-\* map
+* map
 
-\* visual metaphor
+* visual metaphor
 
-\* icon set
+* icon set
 
 
 
@@ -2160,29 +2160,29 @@ Common required properties:
 
 
 
-\* purpose
+* purpose
 
-\* audience
+* audience
 
-\* medium
+* medium
 
-\* dimensions
+* dimensions
 
-\* style
+* style
 
-\* references
+* references
 
-\* subject matter
+* subject matter
 
-\* composition
+* composition
 
-\* constraints
+* constraints
 
-\* usage context
+* usage context
 
-\* accessibility requirements
+* accessibility requirements
 
-\* export format
+* export format
 
 
 
@@ -2190,17 +2190,17 @@ Possible schemas:
 
 
 
-\* visual brief schema
+* visual brief schema
 
-\* brand schema
+* brand schema
 
-\* composition schema
+* composition schema
 
-\* diagram schema
+* diagram schema
 
-\* UI mockup schema
+* UI mockup schema
 
-\* image generation schema
+* image generation schema
 
 
 
@@ -2208,17 +2208,17 @@ Common UI surfaces:
 
 
 
-\* moodboard
+* moodboard
 
-\* style cards
+* style cards
 
-\* layout grid
+* layout grid
 
-\* reference board
+* reference board
 
-\* composition preview
+* composition preview
 
-\* visual contrast set
+* visual contrast set
 
 
 
@@ -2226,7 +2226,7 @@ Common UI surfaces:
 
 
 
-\## 10.6 Narrative Artifacts
+## 10.6 Narrative Artifacts
 
 
 
@@ -2238,23 +2238,23 @@ Examples:
 
 
 
-\* story
+* story
 
-\* script
+* script
 
-\* game narrative
+* game narrative
 
-\* explainer narrative
+* explainer narrative
 
-\* case study
+* case study
 
-\* scenario
+* scenario
 
-\* campaign story
+* campaign story
 
-\* brand narrative
+* brand narrative
 
-\* training scenario
+* training scenario
 
 
 
@@ -2262,31 +2262,31 @@ Common required properties:
 
 
 
-\* audience
+* audience
 
-\* genre
+* genre
 
-\* tone
+* tone
 
-\* characters
+* characters
 
-\* setting
+* setting
 
-\* conflict
+* conflict
 
-\* arc
+* arc
 
-\* structure
+* structure
 
-\* point of view
+* point of view
 
-\* pacing
+* pacing
 
-\* length
+* length
 
-\* ending
+* ending
 
-\* medium
+* medium
 
 
 
@@ -2294,19 +2294,19 @@ Possible schemas:
 
 
 
-\* story schema
+* story schema
 
-\* character schema
+* character schema
 
-\* world schema
+* world schema
 
-\* plot schema
+* plot schema
 
-\* scene schema
+* scene schema
 
-\* script schema
+* script schema
 
-\* case study schema
+* case study schema
 
 
 
@@ -2314,17 +2314,17 @@ Common UI surfaces:
 
 
 
-\* character board
+* character board
 
-\* plot timeline
+* plot timeline
 
-\* scene cards
+* scene cards
 
-\* world map
+* world map
 
-\* tone selector
+* tone selector
 
-\* narrative arc visualisation
+* narrative arc visualisation
 
 
 
@@ -2332,7 +2332,7 @@ Common UI surfaces:
 
 
 
-\## 10.7 Media Artifacts
+## 10.7 Media Artifacts
 
 
 
@@ -2344,23 +2344,23 @@ Examples:
 
 
 
-\* video
+* video
 
-\* audio
+* audio
 
-\* podcast
+* podcast
 
-\* animation
+* animation
 
-\* music cue
+* music cue
 
-\* voiceover
+* voiceover
 
-\* social clip
+* social clip
 
-\* explainer video
+* explainer video
 
-\* motion graphic
+* motion graphic
 
 
 
@@ -2368,29 +2368,29 @@ Common required properties:
 
 
 
-\* audience
+* audience
 
-\* platform
+* platform
 
-\* duration
+* duration
 
-\* format
+* format
 
-\* script
+* script
 
-\* visual style
+* visual style
 
-\* audio style
+* audio style
 
-\* pacing
+* pacing
 
-\* assets
+* assets
 
-\* distribution channel
+* distribution channel
 
-\* production constraints
+* production constraints
 
-\* call to action
+* call to action
 
 
 
@@ -2398,17 +2398,17 @@ Possible schemas:
 
 
 
-\* video brief schema
+* video brief schema
 
-\* script schema
+* script schema
 
-\* shot list schema
+* shot list schema
 
-\* storyboard schema
+* storyboard schema
 
-\* audio schema
+* audio schema
 
-\* social media schema
+* social media schema
 
 
 
@@ -2416,17 +2416,17 @@ Common UI surfaces:
 
 
 
-\* storyboard
+* storyboard
 
-\* timeline
+* timeline
 
-\* shot cards
+* shot cards
 
-\* script panel
+* script panel
 
-\* asset board
+* asset board
 
-\* platform formatter
+* platform formatter
 
 
 
@@ -2434,7 +2434,7 @@ Common UI surfaces:
 
 
 
-\## 10.8 Process Artifacts
+## 10.8 Process Artifacts
 
 
 
@@ -2446,25 +2446,25 @@ Examples:
 
 
 
-\* workflow
+* workflow
 
-\* SOP
+* SOP
 
-\* automation
+* automation
 
-\* business process
+* business process
 
-\* onboarding flow
+* onboarding flow
 
-\* approval process
+* approval process
 
-\* checklist
+* checklist
 
-\* operating rhythm
+* operating rhythm
 
-\* recurring routine
+* recurring routine
 
-\* handoff sequence
+* handoff sequence
 
 
 
@@ -2472,31 +2472,31 @@ Common required properties:
 
 
 
-\* trigger
+* trigger
 
-\* actors
+* actors
 
-\* steps
+* steps
 
-\* sequence
+* sequence
 
-\* inputs
+* inputs
 
-\* outputs
+* outputs
 
-\* conditions
+* conditions
 
-\* exceptions
+* exceptions
 
-\* tools
+* tools
 
-\* owners
+* owners
 
-\* timing
+* timing
 
-\* dependencies
+* dependencies
 
-\* success criteria
+* success criteria
 
 
 
@@ -2504,17 +2504,17 @@ Possible schemas:
 
 
 
-\* workflow schema
+* workflow schema
 
-\* automation schema
+* automation schema
 
-\* checklist schema
+* checklist schema
 
-\* SOP schema
+* SOP schema
 
-\* lifecycle schema
+* lifecycle schema
 
-\* exception-handling schema
+* exception-handling schema
 
 
 
@@ -2522,17 +2522,17 @@ Common UI surfaces:
 
 
 
-\* process map
+* process map
 
-\* swimlane diagram
+* swimlane diagram
 
-\* checklist builder
+* checklist builder
 
-\* trigger/action board
+* trigger/action board
 
-\* exception map
+* exception map
 
-\* automation opportunity panel
+* automation opportunity panel
 
 
 
@@ -2540,7 +2540,7 @@ Common UI surfaces:
 
 
 
-\## 10.9 Decision Artifacts
+## 10.9 Decision Artifacts
 
 
 
@@ -2552,25 +2552,25 @@ Examples:
 
 
 
-\* recommendation
+* recommendation
 
-\* comparison
+* comparison
 
-\* ranked options
+* ranked options
 
-\* decision matrix
+* decision matrix
 
-\* trade-off analysis
+* trade-off analysis
 
-\* risk assessment
+* risk assessment
 
-\* go/no-go decision
+* go/no-go decision
 
-\* prioritisation
+* prioritisation
 
-\* diagnosis
+* diagnosis
 
-\* selection framework
+* selection framework
 
 
 
@@ -2578,25 +2578,25 @@ Common required properties:
 
 
 
-\* decision question
+* decision question
 
-\* options
+* options
 
-\* criteria
+* criteria
 
-\* constraints
+* constraints
 
-\* evidence
+* evidence
 
-\* trade-offs
+* trade-offs
 
-\* risks
+* risks
 
-\* stakeholders
+* stakeholders
 
-\* threshold
+* threshold
 
-\* recommendation format
+* recommendation format
 
 
 
@@ -2604,15 +2604,15 @@ Possible schemas:
 
 
 
-\* decision matrix schema
+* decision matrix schema
 
-\* trade-off schema
+* trade-off schema
 
-\* prioritisation schema
+* prioritisation schema
 
-\* risk schema
+* risk schema
 
-\* recommendation schema
+* recommendation schema
 
 
 
@@ -2620,17 +2620,17 @@ Common UI surfaces:
 
 
 
-\* comparison cards
+* comparison cards
 
-\* criteria sliders
+* criteria sliders
 
-\* decision matrix
+* decision matrix
 
-\* trade-off map
+* trade-off map
 
-\* risk board
+* risk board
 
-\* recommendation preview
+* recommendation preview
 
 
 
@@ -2638,7 +2638,7 @@ Common UI surfaces:
 
 
 
-\## 10.10 Route / Plan Artifacts
+## 10.10 Route / Plan Artifacts
 
 
 
@@ -2650,25 +2650,25 @@ Examples:
 
 
 
-\* travel route
+* travel route
 
-\* itinerary
+* itinerary
 
-\* daily plan
+* daily plan
 
-\* project plan
+* project plan
 
-\* launch plan
+* launch plan
 
-\* study plan
+* study plan
 
-\* workout plan
+* workout plan
 
-\* migration plan
+* migration plan
 
-\* roadmap
+* roadmap
 
-\* schedule
+* schedule
 
 
 
@@ -2676,25 +2676,25 @@ Common required properties:
 
 
 
-\* starting state
+* starting state
 
-\* destination or outcome
+* destination or outcome
 
-\* timing
+* timing
 
-\* constraints
+* constraints
 
-\* available resources
+* available resources
 
-\* sequence
+* sequence
 
-\* optimisation goal
+* optimisation goal
 
-\* dependencies
+* dependencies
 
-\* contingencies
+* contingencies
 
-\* checkpoints
+* checkpoints
 
 
 
@@ -2702,15 +2702,15 @@ Possible schemas:
 
 
 
-\* itinerary schema
+* itinerary schema
 
-\* roadmap schema
+* roadmap schema
 
-\* schedule schema
+* schedule schema
 
-\* milestone plan schema
+* milestone plan schema
 
-\* route optimisation schema
+* route optimisation schema
 
 
 
@@ -2718,17 +2718,17 @@ Common UI surfaces:
 
 
 
-\* timeline
+* timeline
 
-\* map
+* map
 
-\* milestone board
+* milestone board
 
-\* calendar view
+* calendar view
 
-\* dependency chain
+* dependency chain
 
-\* route alternatives
+* route alternatives
 
 
 
@@ -2736,7 +2736,7 @@ Common UI surfaces:
 
 
 
-\## 10.11 Social / Organisational Artifacts
+## 10.11 Social / Organisational Artifacts
 
 
 
@@ -2748,25 +2748,25 @@ Examples:
 
 
 
-\* meeting
+* meeting
 
-\* workshop
+* workshop
 
-\* team process
+* team process
 
-\* onboarding experience
+* onboarding experience
 
-\* community ritual
+* community ritual
 
-\* policy rollout
+* policy rollout
 
-\* event
+* event
 
-\* training session
+* training session
 
-\* stakeholder communication
+* stakeholder communication
 
-\* governance structure
+* governance structure
 
 
 
@@ -2774,27 +2774,27 @@ Common required properties:
 
 
 
-\* participants
+* participants
 
-\* roles
+* roles
 
-\* purpose
+* purpose
 
-\* timing
+* timing
 
-\* format
+* format
 
-\* facilitation style
+* facilitation style
 
-\* materials
+* materials
 
-\* decisions required
+* decisions required
 
-\* communication channels
+* communication channels
 
-\* risks
+* risks
 
-\* follow-up actions
+* follow-up actions
 
 
 
@@ -2802,15 +2802,15 @@ Possible schemas:
 
 
 
-\* workshop schema
+* workshop schema
 
-\* meeting schema
+* meeting schema
 
-\* event schema
+* event schema
 
-\* communication plan schema
+* communication plan schema
 
-\* governance schema
+* governance schema
 
 
 
@@ -2818,17 +2818,17 @@ Common UI surfaces:
 
 
 
-\* participant map
+* participant map
 
-\* agenda builder
+* agenda builder
 
-\* role board
+* role board
 
-\* communication timeline
+* communication timeline
 
-\* facilitation flow
+* facilitation flow
 
-\* follow-up tracker
+* follow-up tracker
 
 
 
@@ -2836,7 +2836,7 @@ Common UI surfaces:
 
 
 
-\## 10.12 Physical / Spatial Artifacts
+## 10.12 Physical / Spatial Artifacts
 
 
 
@@ -2848,25 +2848,25 @@ Examples:
 
 
 
-\* object
+* object
 
-\* room layout
+* room layout
 
-\* installation
+* installation
 
-\* signage
+* signage
 
-\* packaging
+* packaging
 
-\* hardware concept
+* hardware concept
 
-\* workspace setup
+* workspace setup
 
-\* physical workflow
+* physical workflow
 
-\* exhibition
+* exhibition
 
-\* display
+* display
 
 
 
@@ -2874,27 +2874,27 @@ Common required properties:
 
 
 
-\* physical context
+* physical context
 
-\* dimensions
+* dimensions
 
-\* materials
+* materials
 
-\* users
+* users
 
-\* constraints
+* constraints
 
-\* environment
+* environment
 
-\* safety
+* safety
 
-\* manufacturing or assembly method
+* manufacturing or assembly method
 
-\* durability
+* durability
 
-\* cost
+* cost
 
-\* usage pattern
+* usage pattern
 
 
 
@@ -2902,15 +2902,15 @@ Possible schemas:
 
 
 
-\* object design schema
+* object design schema
 
-\* spatial layout schema
+* spatial layout schema
 
-\* packaging schema
+* packaging schema
 
-\* signage schema
+* signage schema
 
-\* physical workflow schema
+* physical workflow schema
 
 
 
@@ -2918,17 +2918,17 @@ Common UI surfaces:
 
 
 
-\* layout canvas
+* layout canvas
 
-\* dimension panel
+* dimension panel
 
-\* material board
+* material board
 
-\* use-context map
+* use-context map
 
-\* prototype sketch
+* prototype sketch
 
-\* constraint checklist
+* constraint checklist
 
 
 
@@ -2936,7 +2936,7 @@ Common UI surfaces:
 
 
 
-\## 10.13 Hybrid Artifacts
+## 10.13 Hybrid Artifacts
 
 
 
@@ -2952,17 +2952,17 @@ A contractor onboarding system might include:
 
 
 
-\* workflow artifact
+* workflow artifact
 
-\* document artifact
+* document artifact
 
-\* interactive artifact
+* interactive artifact
 
-\* software artifact
+* software artifact
 
-\* social/organisational artifact
+* social/organisational artifact
 
-\* automation artifact
+* automation artifact
 
 
 
@@ -2974,7 +2974,7 @@ It should not force everything into a single type.
 
 
 
-Instead, it should maintain an \*\*artifact composition\*\*:
+Instead, it should maintain an **artifact composition**:
 
 
 
@@ -2982,21 +2982,21 @@ Instead, it should maintain an \*\*artifact composition\*\*:
 
 Primary artifact:
 
-\- Interactive onboarding journey
+- Interactive onboarding journey
 
 
 
 Supporting artifacts:
 
-\- checklist
+- checklist
 
-\- email sequence
+- email sequence
 
-\- manager guide
+- manager guide
 
-\- access automation
+- access automation
 
-\- progress dashboard
+- progress dashboard
 
 ```
 
@@ -3006,7 +3006,7 @@ Supporting artifacts:
 
 
 
-\# 11. Progressive Type Resolution
+# 11. Progressive Type Resolution
 
 
 
@@ -3062,7 +3062,7 @@ If later input contradicts the current path, the system can reopen branches.
 
 
 
-\## 11.1 Type Resolution States
+## 11.1 Type Resolution States
 
 
 
@@ -3122,7 +3122,7 @@ Specification Compiler — resolved
 
 
 
-\## 11.2 Evidence Traces Instead of Scores
+## 11.2 Evidence Traces Instead of Scores
 
 
 
@@ -3142,11 +3142,11 @@ Candidate: Interactive Surface
 
 Evidence:
 
-\- User said “whole interface is the interactive surface”
+- User said “whole interface is the interactive surface”
 
-\- User said “non-linear dynamic live wizard”
+- User said “non-linear dynamic live wizard”
 
-\- Tags:
+- Tags:
 
 &#x20; - generative\_ui: 6
 
@@ -3156,7 +3156,7 @@ Evidence:
 
 &#x20; - dislikes\_static\_form: 4
 
-\- Decisions:
+- Decisions:
 
 &#x20; - interface should be schema-rendered
 
@@ -3182,7 +3182,7 @@ Interactive Surface: 91%
 
 
 
-\# 12. Tags, Counts, and Observations
+# 12. Tags, Counts, and Observations
 
 
 
@@ -3194,7 +3194,7 @@ Structured observations are the meaning layer above them.
 
 
 
-\## 12.1 Tag Categories
+## 12.1 Tag Categories
 
 
 
@@ -3202,7 +3202,7 @@ Useful tag categories include:
 
 
 
-\### Intent Tags
+### Intent Tags
 
 
 
@@ -3214,25 +3214,25 @@ Examples:
 
 
 
-\* wants\_to\_build
+* wants\_to\_build
 
-\* wants\_to\_explain
+* wants\_to\_explain
 
-\* wants\_to\_automate
+* wants\_to\_automate
 
-\* wants\_to\_decide
+* wants\_to\_decide
 
-\* wants\_to\_design
+* wants\_to\_design
 
-\* wants\_to\_plan
+* wants\_to\_plan
 
-\* wants\_to\_generate
+* wants\_to\_generate
 
-\* wants\_to\_launch
+* wants\_to\_launch
 
 
 
-\### Artifact Tags
+### Artifact Tags
 
 
 
@@ -3244,25 +3244,25 @@ Examples:
 
 
 
-\* possible\_app
+* possible\_app
 
-\* possible\_report
+* possible\_report
 
-\* possible\_workflow
+* possible\_workflow
 
-\* possible\_story
+* possible\_story
 
-\* possible\_visual
+* possible\_visual
 
-\* possible\_route
+* possible\_route
 
-\* possible\_interface
+* possible\_interface
 
-\* possible\_automation
+* possible\_automation
 
 
 
-\### Preference Tags
+### Preference Tags
 
 
 
@@ -3274,23 +3274,23 @@ Examples:
 
 
 
-\* prefers\_visual
+* prefers\_visual
 
-\* prefers\_spatial
+* prefers\_spatial
 
-\* prefers\_non\_linear
+* prefers\_non\_linear
 
-\* prefers\_concise
+* prefers\_concise
 
-\* prefers\_autonomy
+* prefers\_autonomy
 
-\* prefers\_examples
+* prefers\_examples
 
-\* prefers\_generated\_options
+* prefers\_generated\_options
 
 
 
-\### Rejection Tags
+### Rejection Tags
 
 
 
@@ -3302,21 +3302,21 @@ Examples:
 
 
 
-\* rejects\_static\_form
+* rejects\_static\_form
 
-\* rejects\_chat\_only
+* rejects\_chat\_only
 
-\* rejects\_confidence\_scores
+* rejects\_confidence\_scores
 
-\* rejects\_manual\_specification
+* rejects\_manual\_specification
 
-\* rejects\_overly\_linear\_flow
+* rejects\_overly\_linear\_flow
 
-\* rejects\_corporate\_tone
+* rejects\_corporate\_tone
 
 
 
-\### Constraint Tags
+### Constraint Tags
 
 
 
@@ -3328,23 +3328,23 @@ Examples:
 
 
 
-\* deadline\_pressure
+* deadline\_pressure
 
-\* low\_budget
+* low\_budget
 
-\* local\_first
+* local\_first
 
-\* privacy\_sensitive
+* privacy\_sensitive
 
-\* limited\_user\_time
+* limited\_user\_time
 
-\* technical\_constraint
+* technical\_constraint
 
-\* platform\_constraint
+* platform\_constraint
 
 
 
-\### Knowledge Tags
+### Knowledge Tags
 
 
 
@@ -3356,19 +3356,19 @@ Examples:
 
 
 
-\* user\_uncertain
+* user\_uncertain
 
-\* user\_has\_domain\_knowledge
+* user\_has\_domain\_knowledge
 
-\* user\_lacks\_terminology
+* user\_lacks\_terminology
 
-\* user\_knows\_feeling\_not\_spec
+* user\_knows\_feeling\_not\_spec
 
-\* user\_needs\_examples
+* user\_needs\_examples
 
 
 
-\### Interaction Tags
+### Interaction Tags
 
 
 
@@ -3380,21 +3380,21 @@ Examples:
 
 
 
-\* responds\_to\_contrast
+* responds\_to\_contrast
 
-\* responds\_to\_metaphor
+* responds\_to\_metaphor
 
-\* responds\_to\_visualisation
+* responds\_to\_visualisation
 
-\* corrects\_language
+* corrects\_language
 
-\* builds\_iteratively
+* builds\_iteratively
 
-\* prefers\_system\_level\_framing
+* prefers\_system\_level\_framing
 
 
 
-\### State Tags
+### State Tags
 
 
 
@@ -3406,17 +3406,17 @@ Examples:
 
 
 
-\* idea\_unformed
+* idea\_unformed
 
-\* artifact\_type\_unresolved
+* artifact\_type\_unresolved
 
-\* schema\_active
+* schema\_active
 
-\* missing\_info\_present
+* missing\_info\_present
 
-\* ready\_for\_spec\_compile
+* ready\_for\_spec\_compile
 
-\* execution\_ready
+* execution\_ready
 
 
 
@@ -3424,7 +3424,7 @@ Examples:
 
 
 
-\## 12.2 Tag Counts
+## 12.2 Tag Counts
 
 
 
@@ -3432,15 +3432,15 @@ Counts accumulate over:
 
 
 
-\* a single message,
+* a single message,
 
-\* a session,
+* a session,
 
-\* a project,
+* a project,
 
-\* all user history,
+* all user history,
 
-\* all projects globally.
+* all projects globally.
 
 
 
@@ -3452,27 +3452,27 @@ Example:
 
 Project-level tag counts:
 
-\- wants\_universal\_system: 12
+- wants\_universal\_system: 12
 
-\- prefers\_generative\_ui: 9
+- prefers\_generative\_ui: 9
 
-\- rejects\_linear\_wizard: 6
+- rejects\_linear\_wizard: 6
 
-\- wants\_no\_manual\_input: 8
+- wants\_no\_manual\_input: 8
 
-\- schema\_based\_generation: 7
+- schema\_based\_generation: 7
 
 
 
 User-level tag counts:
 
-\- prefers\_spatial\_metaphor: 21
+- prefers\_spatial\_metaphor: 21
 
-\- asks\_for\_terminology\_mapping: 14
+- asks\_for\_terminology\_mapping: 14
 
-\- likes\_deep\_structure: 17
+- likes\_deep\_structure: 17
 
-\- rejects\_shallow\_certainty: 9
+- rejects\_shallow\_certainty: 9
 
 ```
 
@@ -3482,7 +3482,7 @@ Tag counts do not prove truth. They show accumulated interpretive evidence.
 
 
 
-\## 12.3 Structured Observations
+## 12.3 Structured Observations
 
 
 
@@ -3490,17 +3490,17 @@ A structured observation should include:
 
 
 
-\* observation text
+* observation text
 
-\* supporting tags
+* supporting tags
 
-\* source events
+* source events
 
-\* scope
+* scope
 
-\* durability
+* durability
 
-\* possible effect
+* possible effect
 
 
 
@@ -3518,13 +3518,13 @@ The user appears to prefer interfaces that make abstract structure spatially vis
 
 Supporting tags:
 
-\- prefers\_visual
+- prefers\_visual
 
-\- prefers\_spatial
+- prefers\_spatial
 
-\- live\_surface
+- live\_surface
 
-\- branching\_structure
+- branching\_structure
 
 
 
@@ -3542,7 +3542,7 @@ Prefer map, canvas, branch, card, and surface metaphors over linear form layouts
 
 
 
-\## 12.4 Observation Layers
+## 12.4 Observation Layers
 
 
 
@@ -3550,7 +3550,7 @@ Observations can exist at different levels.
 
 
 
-\### Event-level observation
+### Event-level observation
 
 
 
@@ -3562,7 +3562,7 @@ Based on one interaction.
 
 
 
-\### Session-level observation
+### Session-level observation
 
 
 
@@ -3574,7 +3574,7 @@ Based on a pattern within the current session.
 
 
 
-\### Project-level observation
+### Project-level observation
 
 
 
@@ -3586,7 +3586,7 @@ Based on the evolving project.
 
 
 
-\### User-level observation
+### User-level observation
 
 
 
@@ -3598,7 +3598,7 @@ Based on repeated user behaviour.
 
 
 
-\### Global-pattern observation
+### Global-pattern observation
 
 
 
@@ -3614,7 +3614,7 @@ Based on many users or many projects.
 
 
 
-\# 13. Multi-Layer Representation Model
+# 13. Multi-Layer Representation Model
 
 
 
@@ -3622,7 +3622,7 @@ Every meaningful input should be represented in multiple layers.
 
 
 
-\## 13.1 Surface Layer
+## 13.1 Surface Layer
 
 
 
@@ -3638,7 +3638,7 @@ Example:
 
 
 
-\## 13.2 Extraction Layer
+## 13.2 Extraction Layer
 
 
 
@@ -3662,7 +3662,7 @@ interface implication: interactive
 
 
 
-\## 13.3 Tag Layer
+## 13.3 Tag Layer
 
 
 
@@ -3684,7 +3684,7 @@ rejects\_static\_form
 
 
 
-\## 13.4 Observation Layer
+## 13.4 Observation Layer
 
 
 
@@ -3700,7 +3700,7 @@ The system should behave more like a live surface than a form.
 
 
 
-\## 13.5 Schema Layer
+## 13.5 Schema Layer
 
 
 
@@ -3708,19 +3708,19 @@ The system should behave more like a live surface than a form.
 
 Possible active schemas:
 
-\- Generative UI schema
+- Generative UI schema
 
-\- Adaptive wizard schema
+- Adaptive wizard schema
 
-\- Intent elicitation schema
+- Intent elicitation schema
 
-\- State-driven interface schema
+- State-driven interface schema
 
 ```
 
 
 
-\## 13.6 Graph Layer
+## 13.6 Graph Layer
 
 
 
@@ -3738,7 +3738,7 @@ state\_driven\_rendering → depends\_on → active\_schema
 
 
 
-\## 13.7 Embedding Layer
+## 13.7 Embedding Layer
 
 
 
@@ -3750,49 +3750,49 @@ Recommended embedding ladders:
 
 
 
-1\. \*\*Raw utterance embeddings\*\*
+1\. **Raw utterance embeddings**
 
 &#x20;  For semantic recall of what was said.
 
 
 
-2\. \*\*Tag bundle embeddings\*\*
+2\. **Tag bundle embeddings**
 
 &#x20;  For matching behavioural and preference patterns.
 
 
 
-3\. \*\*Observation embeddings\*\*
+3\. **Observation embeddings**
 
 &#x20;  For recalling interpreted meaning.
 
 
 
-4\. \*\*Project state embeddings\*\*
+4\. **Project state embeddings**
 
 &#x20;  For finding similar projects.
 
 
 
-5\. \*\*Schema embeddings\*\*
+5\. **Schema embeddings**
 
 &#x20;  For matching current state to possible artifact schemas.
 
 
 
-6\. \*\*Generated option embeddings\*\*
+6\. **Generated option embeddings**
 
 &#x20;  For tracking which generated directions were accepted or rejected.
 
 
 
-7\. \*\*Handoff package embeddings\*\*
+7\. **Handoff package embeddings**
 
 &#x20;  For comparing final specs and successful outputs.
 
 
 
-\## 13.8 Execution Layer
+## 13.8 Execution Layer
 
 
 
@@ -3808,15 +3808,15 @@ Example:
 
 Possible next actions:
 
-\- render contrast cards for interface model
+- render contrast cards for interface model
 
-\- open schema panel for generative UI
+- open schema panel for generative UI
 
-\- create assumption shelf
+- create assumption shelf
 
-\- generate first-screen mockups
+- generate first-screen mockups
 
-\- compile terminology section
+- compile terminology section
 
 ```
 
@@ -3826,7 +3826,7 @@ Possible next actions:
 
 
 
-\# 14. State Model
+# 14. State Model
 
 
 
@@ -3838,7 +3838,7 @@ It is the central object that all workers read from and write to.
 
 
 
-\## 14.1 Project State Fields
+## 14.1 Project State Fields
 
 
 
@@ -3850,69 +3850,69 @@ A project state should include:
 
 Project
 
-\- project\_id
+- project\_id
 
-\- user\_id
+- user\_id
 
-\- session\_id
+- session\_id
 
-\- working\_title
+- working\_title
 
-\- working\_description
+- working\_description
 
-\- current\_phase
+- current\_phase
 
-\- current\_surface\_mode
+- current\_surface\_mode
 
-\- raw\_history
+- raw\_history
 
-\- anchors
+- anchors
 
-\- tags
+- tags
 
-\- tag\_counts
+- tag\_counts
 
-\- observations
+- observations
 
-\- artifact\_candidates
+- artifact\_candidates
 
-\- active\_artifact\_composition
+- active\_artifact\_composition
 
-\- active\_schemas
+- active\_schemas
 
-\- schema\_fields
+- schema\_fields
 
-\- known\_fields
+- known\_fields
 
-\- missing\_fields
+- missing\_fields
 
-\- assumptions
+- assumptions
 
-\- decisions
+- decisions
 
-\- rejections
+- rejections
 
-\- generated\_options
+- generated\_options
 
-\- generated\_surfaces
+- generated\_surfaces
 
-\- user\_preferences\_applied
+- user\_preferences\_applied
 
-\- constraints
+- constraints
 
-\- dependencies
+- dependencies
 
-\- open\_questions
+- open\_questions
 
-\- execution\_readiness
+- execution\_readiness
 
-\- handoff\_package
+- handoff\_package
 
 ```
 
 
 
-\## 14.2 Example Project State
+## 14.2 Example Project State
 
 
 
@@ -4082,7 +4082,7 @@ Project
 
 
 
-\## 14.3 State Change Principle
+## 14.3 State Change Principle
 
 
 
@@ -4118,7 +4118,7 @@ This requires preserving evidence traces.
 
 
 
-\# 15. Lifecycle
+# 15. Lifecycle
 
 
 
@@ -4126,7 +4126,7 @@ The lifecycle describes how a project moves from nothing to execution-ready.
 
 
 
-\## 15.1 Stage 0 — Zero-State Entry
+## 15.1 Stage 0 — Zero-State Entry
 
 
 
@@ -4138,19 +4138,19 @@ The system may know nothing about:
 
 
 
-\* the user
+* the user
 
-\* their preferences
+* their preferences
 
-\* their domain
+* their domain
 
-\* their goal
+* their goal
 
-\* their artifact type
+* their artifact type
 
-\* their constraints
+* their constraints
 
-\* their desired output
+* their desired output
 
 
 
@@ -4178,7 +4178,7 @@ The system should not show a complex dashboard at this point.
 
 
 
-\## 15.2 Stage 1 — First Expression
+## 15.2 Stage 1 — First Expression
 
 
 
@@ -4212,7 +4212,7 @@ possible domain: information / interactive / visual
 
 
 
-\## 15.3 Stage 2 — Anchor Extraction
+## 15.3 Stage 2 — Anchor Extraction
 
 
 
@@ -4220,21 +4220,21 @@ The system identifies initial anchors:
 
 
 
-\* who is involved
+* who is involved
 
-\* what is being changed or made
+* what is being changed or made
 
-\* when it matters
+* when it matters
 
-\* why it matters
+* why it matters
 
-\* what the user dislikes
+* what the user dislikes
 
-\* what the user is comparing it to
+* what the user is comparing it to
 
-\* what output types are implied
+* what output types are implied
 
-\* what constraints are already known
+* what constraints are already known
 
 
 
@@ -4246,7 +4246,7 @@ One anchor is enough to begin.
 
 
 
-\## 15.4 Stage 3 — Possibility Generation
+## 15.4 Stage 3 — Possibility Generation
 
 
 
@@ -4286,7 +4286,7 @@ The purpose is to create a reaction surface.
 
 
 
-\## 15.5 Stage 4 — Reaction Capture
+## 15.5 Stage 4 — Reaction Capture
 
 
 
@@ -4318,7 +4318,7 @@ hybrid\_artifact\_likely: +1
 
 
 
-\## 15.6 Stage 5 — Evidence Accumulation
+## 15.6 Stage 5 — Evidence Accumulation
 
 
 
@@ -4344,7 +4344,7 @@ They want an interactive way to understand and navigate a process.
 
 
 
-\## 15.7 Stage 6 — Artifact Composition
+## 15.7 Stage 6 — Artifact Composition
 
 
 
@@ -4360,25 +4360,25 @@ Example:
 
 Primary artifact:
 
-\- Interactive walkthrough
+- Interactive walkthrough
 
 
 
 Supporting artifacts:
 
-\- process map
+- process map
 
-\- explanatory text
+- explanatory text
 
-\- decision points
+- decision points
 
-\- generated examples
+- generated examples
 
 ```
 
 
 
-\## 15.8 Stage 7 — Schema Activation
+## 15.8 Stage 7 — Schema Activation
 
 
 
@@ -4394,13 +4394,13 @@ Example:
 
 Active schemas:
 
-\- interactive guide
+- interactive guide
 
-\- process map
+- process map
 
-\- explanation artifact
+- explanation artifact
 
-\- user journey
+- user journey
 
 ```
 
@@ -4410,23 +4410,23 @@ Each schema brings:
 
 
 
-\* required fields
+* required fields
 
-\* missing fields
+* missing fields
 
-\* UI components
+* UI components
 
-\* possible questions
+* possible questions
 
-\* option types
+* option types
 
-\* validation rules
+* validation rules
 
-\* output formats
+* output formats
 
 
 
-\## 15.9 Stage 8 — Surface Rendering
+## 15.9 Stage 8 — Surface Rendering
 
 
 
@@ -4438,19 +4438,19 @@ It may show:
 
 
 
-\* branch map
+* branch map
 
-\* process nodes
+* process nodes
 
-\* audience card
+* audience card
 
-\* missing fields
+* missing fields
 
-\* generated preview
+* generated preview
 
-\* assumption shelf
+* assumption shelf
 
-\* decision ledger
+* decision ledger
 
 
 
@@ -4458,7 +4458,7 @@ The interface should appear to grow naturally from the idea.
 
 
 
-\## 15.10 Stage 9 — Gap Resolution
+## 15.10 Stage 9 — Gap Resolution
 
 
 
@@ -4474,15 +4474,15 @@ Example:
 
 To make this buildable, we still need:
 
-\- who will use it
+- who will use it
 
-\- where it will live
+- where it will live
 
-\- what process it explains
+- what process it explains
 
-\- how interactive it should be
+- how interactive it should be
 
-\- what “done” means
+- what “done” means
 
 ```
 
@@ -4492,7 +4492,7 @@ Instead of asking all questions at once, the system generates useful surfaces.
 
 
 
-\## 15.11 Stage 10 — Decision Closure
+## 15.11 Stage 10 — Decision Closure
 
 
 
@@ -4500,17 +4500,17 @@ Required choices are closed through:
 
 
 
-\* user selection
+* user selection
 
-\* generated options
+* generated options
 
-\* inference
+* inference
 
-\* defaults
+* defaults
 
-\* assumptions
+* assumptions
 
-\* delegation
+* delegation
 
 
 
@@ -4534,7 +4534,7 @@ User selected “interactive walkthrough” and rejected static explanation.
 
 
 
-\## 15.12 Stage 11 — Specification Assembly
+## 15.12 Stage 11 — Specification Assembly
 
 
 
@@ -4546,31 +4546,31 @@ This may include:
 
 
 
-\* purpose
+* purpose
 
-\* audience
+* audience
 
-\* artifact type
+* artifact type
 
-\* features
+* features
 
-\* content
+* content
 
-\* interaction model
+* interaction model
 
-\* constraints
+* constraints
 
-\* style
+* style
 
-\* assumptions
+* assumptions
 
-\* decisions
+* decisions
 
-\* success criteria
+* success criteria
 
 
 
-\## 15.13 Stage 12 — Execution Handoff
+## 15.13 Stage 12 — Execution Handoff
 
 
 
@@ -4582,21 +4582,21 @@ Examples:
 
 
 
-\* design workflow
+* design workflow
 
-\* coding workflow
+* coding workflow
 
-\* document generation workflow
+* document generation workflow
 
-\* image generation workflow
+* image generation workflow
 
-\* automation workflow
+* automation workflow
 
-\* launch workflow
+* launch workflow
 
 
 
-\## 15.14 Stage 13 — Feedback and Memory
+## 15.14 Stage 13 — Feedback and Memory
 
 
 
@@ -4608,17 +4608,17 @@ The system learns:
 
 
 
-\* what worked
+* what worked
 
-\* what was rejected
+* what was rejected
 
-\* what defaults were accepted
+* what defaults were accepted
 
-\* what style the user preferred
+* what style the user preferred
 
-\* what schema fields were often needed
+* what schema fields were often needed
 
-\* what future sessions can skip or pre-fill
+* what future sessions can skip or pre-fill
 
 
 
@@ -4626,7 +4626,7 @@ The system learns:
 
 
 
-\# 16. Memory Model
+# 16. Memory Model
 
 
 
@@ -4638,11 +4638,11 @@ Memory is accumulated structure that reduces future user effort.
 
 
 
-\## 16.1 Memory Types
+## 16.1 Memory Types
 
 
 
-\### User Memory
+### User Memory
 
 
 
@@ -4654,25 +4654,25 @@ Includes:
 
 
 
-\* preferences
+* preferences
 
-\* recurring dislikes
+* recurring dislikes
 
-\* explanation style
+* explanation style
 
-\* interaction style
+* interaction style
 
-\* preferred output formats
+* preferred output formats
 
-\* preferred level of detail
+* preferred level of detail
 
-\* domain interests
+* domain interests
 
-\* decision-making style
+* decision-making style
 
-\* accepted defaults
+* accepted defaults
 
-\* recurring metaphors
+* recurring metaphors
 
 
 
@@ -4692,7 +4692,7 @@ User dislikes shallow confidence scores.
 
 
 
-\### Project Memory
+### Project Memory
 
 
 
@@ -4704,27 +4704,27 @@ Includes:
 
 
 
-\* anchors
+* anchors
 
-\* decisions
+* decisions
 
-\* assumptions
+* assumptions
 
-\* tags
+* tags
 
-\* generated options
+* generated options
 
-\* rejections
+* rejections
 
-\* active schemas
+* active schemas
 
-\* partial specs
+* partial specs
 
-\* unresolved questions
+* unresolved questions
 
 
 
-\### Session Memory
+### Session Memory
 
 
 
@@ -4736,7 +4736,7 @@ Useful for short-term coherence.
 
 
 
-\### Preference Memory
+### Preference Memory
 
 
 
@@ -4762,7 +4762,7 @@ prefers\_autonomous\_execution
 
 
 
-\### Rejection Memory
+### Rejection Memory
 
 
 
@@ -4788,7 +4788,7 @@ rejects\_manual\_requirements\_work
 
 
 
-\### Decision Memory
+### Decision Memory
 
 
 
@@ -4816,7 +4816,7 @@ User considered confidence scores subjective and shallow.
 
 
 
-\### Assumption Memory
+### Assumption Memory
 
 
 
@@ -4836,7 +4836,7 @@ When user asks for a project base, assume they want conceptual structure before 
 
 
 
-\### Artifact Memory
+### Artifact Memory
 
 
 
@@ -4844,7 +4844,7 @@ Prior artifacts, outputs, templates, schemas, and generated results.
 
 
 
-\### Process Memory
+### Process Memory
 
 
 
@@ -4868,7 +4868,7 @@ User often starts broad, validates the conceptual framing, then asks for a deepe
 
 
 
-\## 16.2 Memory Scopes
+## 16.2 Memory Scopes
 
 
 
@@ -4906,17 +4906,17 @@ Example:
 
 prefers\_visual\_structure:
 
-\- event count: 1
+- event count: 1
 
-\- project count: 7
+- project count: 7
 
-\- user count: 23
+- user count: 23
 
 ```
 
 
 
-\## 16.3 Memory Durability
+## 16.3 Memory Durability
 
 
 
@@ -4948,7 +4948,7 @@ Suggested durability states:
 
 
 
-\## 16.4 Memory Retrieval
+## 16.4 Memory Retrieval
 
 
 
@@ -4956,25 +4956,25 @@ The system should retrieve memory based on:
 
 
 
-\* current input
+* current input
 
-\* active tags
+* active tags
 
-\* active schemas
+* active schemas
 
-\* artifact candidates
+* artifact candidates
 
-\* user identity
+* user identity
 
-\* project similarity
+* project similarity
 
-\* current phase
+* current phase
 
-\* UI mode
+* UI mode
 
-\* missing fields
+* missing fields
 
-\* prior accepted assumptions
+* prior accepted assumptions
 
 
 
@@ -5010,7 +5010,7 @@ Then it can generate better options.
 
 
 
-\# 17. Data Architecture
+# 17. Data Architecture
 
 
 
@@ -5018,7 +5018,7 @@ The conceptual storage model uses multiple databases because no single structure
 
 
 
-\## 17.1 Event Store
+## 17.1 Event Store
 
 
 
@@ -5030,17 +5030,17 @@ Purpose:
 
 
 
-\* replay
+* replay
 
-\* audit
+* audit
 
-\* debugging
+* debugging
 
-\* process learning
+* process learning
 
-\* evidence traces
+* evidence traces
 
-\* state reconstruction
+* state reconstruction
 
 
 
@@ -5048,31 +5048,31 @@ Events include:
 
 
 
-\* user messages
+* user messages
 
-\* system messages
+* system messages
 
-\* UI clicks
+* UI clicks
 
-\* selections
+* selections
 
-\* rejections
+* rejections
 
-\* generated options
+* generated options
 
-\* worker outputs
+* worker outputs
 
-\* state changes
+* state changes
 
-\* decisions
+* decisions
 
-\* assumptions
+* assumptions
 
-\* spec compilations
+* spec compilations
 
 
 
-\## 17.2 Graph Database
+## 17.2 Graph Database
 
 
 
@@ -5084,25 +5084,25 @@ Best for:
 
 
 
-\* artifacts
+* artifacts
 
-\* schemas
+* schemas
 
-\* dependencies
+* dependencies
 
-\* users
+* users
 
-\* projects
+* projects
 
-\* decisions
+* decisions
 
-\* assumptions
+* assumptions
 
-\* tags
+* tags
 
-\* observations
+* observations
 
-\* constraints
+* constraints
 
 
 
@@ -5128,7 +5128,7 @@ Tag → supports → observation
 
 
 
-\## 17.3 Vector Database
+## 17.3 Vector Database
 
 
 
@@ -5140,19 +5140,19 @@ Best for:
 
 
 
-\* retrieving similar ideas
+* retrieving similar ideas
 
-\* matching vague language
+* matching vague language
 
-\* finding prior projects
+* finding prior projects
 
-\* matching observations
+* matching observations
 
-\* matching schemas
+* matching schemas
 
-\* finding generated examples
+* finding generated examples
 
-\* clustering patterns
+* clustering patterns
 
 
 
@@ -5160,23 +5160,23 @@ Recommended vector collections:
 
 
 
-\* raw utterances
+* raw utterances
 
-\* project summaries
+* project summaries
 
-\* observations
+* observations
 
-\* tag bundles
+* tag bundles
 
-\* schemas
+* schemas
 
-\* generated options
+* generated options
 
-\* final handoff packages
+* final handoff packages
 
 
 
-\## 17.4 Document Store
+## 17.4 Document Store
 
 
 
@@ -5188,25 +5188,25 @@ Best for:
 
 
 
-\* project state JSON
+* project state JSON
 
-\* user profile object
+* user profile object
 
-\* active schemas
+* active schemas
 
-\* partial specs
+* partial specs
 
-\* generated surfaces
+* generated surfaces
 
-\* decision ledgers
+* decision ledgers
 
-\* assumption shelves
+* assumption shelves
 
-\* handoff packages
+* handoff packages
 
 
 
-\## 17.5 Relational Database
+## 17.5 Relational Database
 
 
 
@@ -5218,27 +5218,27 @@ Best for:
 
 
 
-\* users
+* users
 
-\* sessions
+* sessions
 
-\* projects
+* projects
 
-\* permissions
+* permissions
 
-\* worker jobs
+* worker jobs
 
-\* timestamps
+* timestamps
 
-\* model runs
+* model runs
 
-\* workflow states
+* workflow states
 
-\* billing or usage if needed
+* billing or usage if needed
 
 
 
-\## 17.6 Queue / Workflow Engine
+## 17.6 Queue / Workflow Engine
 
 
 
@@ -5250,25 +5250,25 @@ Every user interaction may trigger jobs such as:
 
 
 
-\* extract anchors
+* extract anchors
 
-\* tag input
+* tag input
 
-\* update memory
+* update memory
 
-\* update graph
+* update graph
 
-\* retrieve similar projects
+* retrieve similar projects
 
-\* generate options
+* generate options
 
-\* detect missing fields
+* detect missing fields
 
-\* recommend UI
+* recommend UI
 
-\* compile state
+* compile state
 
-\* validate consistency
+* validate consistency
 
 
 
@@ -5276,7 +5276,7 @@ Every user interaction may trigger jobs such as:
 
 
 
-\# 18. Schema System
+# 18. Schema System
 
 
 
@@ -5292,7 +5292,7 @@ Schemas make it specific.
 
 
 
-\## 18.1 What a Schema Is
+## 18.1 What a Schema Is
 
 
 
@@ -5304,31 +5304,31 @@ A schema defines:
 
 
 
-\* what needs to be known
+* what needs to be known
 
-\* what is optional
+* what is optional
 
-\* what depends on what
+* what depends on what
 
-\* what questions can be asked
+* what questions can be asked
 
-\* what options can be generated
+* what options can be generated
 
-\* what UI components can be rendered
+* what UI components can be rendered
 
-\* what validation rules apply
+* what validation rules apply
 
-\* what output formats can be compiled
+* what output formats can be compiled
 
-\* what downstream workflows can execute it
-
-
-
-\## 18.2 Schema Types
+* what downstream workflows can execute it
 
 
 
-\### Artifact Schema
+## 18.2 Schema Types
+
+
+
+### Artifact Schema
 
 
 
@@ -5340,21 +5340,21 @@ Example:
 
 
 
-\* web app
+* web app
 
-\* report
+* report
 
-\* route
+* route
 
-\* story
+* story
 
-\* workflow
+* workflow
 
-\* diagram
+* diagram
 
 
 
-\### Sub-Artifact Schema
+### Sub-Artifact Schema
 
 
 
@@ -5366,21 +5366,21 @@ Example:
 
 
 
-\* login flow
+* login flow
 
-\* onboarding checklist
+* onboarding checklist
 
-\* character profile
+* character profile
 
-\* executive summary
+* executive summary
 
-\* data table
+* data table
 
-\* settings screen
+* settings screen
 
 
 
-\### Process Schema
+### Process Schema
 
 
 
@@ -5392,21 +5392,21 @@ Example:
 
 
 
-\* discovery
+* discovery
 
-\* onboarding
+* onboarding
 
-\* approval
+* approval
 
-\* testing
+* testing
 
-\* launch
+* launch
 
-\* migration
+* migration
 
 
 
-\### Decision Schema
+### Decision Schema
 
 
 
@@ -5418,19 +5418,19 @@ Example:
 
 
 
-\* choose platform
+* choose platform
 
-\* choose tone
+* choose tone
 
-\* choose audience
+* choose audience
 
-\* choose output format
+* choose output format
 
-\* prioritise features
+* prioritise features
 
 
 
-\### Surface Schema
+### Surface Schema
 
 
 
@@ -5442,19 +5442,19 @@ Example:
 
 
 
-\* possibility cards
+* possibility cards
 
-\* branch map
+* branch map
 
-\* assumption shelf
+* assumption shelf
 
-\* decision ledger
+* decision ledger
 
-\* missing information map
+* missing information map
 
 
 
-\### Handoff Schema
+### Handoff Schema
 
 
 
@@ -5466,17 +5466,17 @@ Example:
 
 
 
-\* PRD
+* PRD
 
-\* technical spec
+* technical spec
 
-\* creative brief
+* creative brief
 
-\* workflow automation spec
+* workflow automation spec
 
-\* image generation brief
+* image generation brief
 
-\* launch plan
+* launch plan
 
 
 
@@ -5484,7 +5484,7 @@ Example:
 
 
 
-\## 18.3 Schema Anatomy
+## 18.3 Schema Anatomy
 
 
 
@@ -5496,47 +5496,47 @@ A schema should contain:
 
 Schema
 
-\- id
+- id
 
-\- name
+- name
 
-\- description
+- description
 
-\- artifact\_family
+- artifact\_family
 
-\- parent\_schemas
+- parent\_schemas
 
-\- child\_schemas
+- child\_schemas
 
-\- activation\_triggers
+- activation\_triggers
 
-\- required\_fields
+- required\_fields
 
-\- optional\_fields
+- optional\_fields
 
-\- dependent\_fields
+- dependent\_fields
 
-\- constraints
+- constraints
 
-\- common\_assumptions
+- common\_assumptions
 
-\- common\_decisions
+- common\_decisions
 
-\- validation\_rules
+- validation\_rules
 
-\- UI\_components
+- UI\_components
 
-\- option\_generators
+- option\_generators
 
-\- output\_templates
+- output\_templates
 
-\- downstream\_workflows
+- downstream\_workflows
 
 ```
 
 
 
-\## 18.4 Example Schema: Interactive Guide
+## 18.4 Example Schema: Interactive Guide
 
 
 
@@ -5554,93 +5554,93 @@ Create an experience that guides a user through information or actions interacti
 
 Required fields:
 
-\- target user
+- target user
 
-\- guide purpose
+- guide purpose
 
-\- starting point
+- starting point
 
-\- end state
+- end state
 
-\- steps or sections
+- steps or sections
 
-\- interaction model
+- interaction model
 
-\- content type
+- content type
 
-\- completion criteria
+- completion criteria
 
 
 
 Optional fields:
 
-\- progress tracking
+- progress tracking
 
-\- branching logic
+- branching logic
 
-\- user roles
+- user roles
 
-\- saved state
+- saved state
 
-\- notifications
+- notifications
 
-\- analytics
+- analytics
 
 
 
 Dependent fields:
 
-\- branching logic depends on user choices
+- branching logic depends on user choices
 
-\- screen structure depends on steps
+- screen structure depends on steps
 
-\- progress tracking depends on completion criteria
+- progress tracking depends on completion criteria
 
-\- content depth depends on audience knowledge level
+- content depth depends on audience knowledge level
 
 
 
 Common decisions:
 
-\- linear vs branching
+- linear vs branching
 
-\- static vs adaptive
+- static vs adaptive
 
-\- text-heavy vs visual
+- text-heavy vs visual
 
-\- guided vs exploratory
+- guided vs exploratory
 
 
 
 UI components:
 
-\- step map
+- step map
 
-\- branch cards
+- branch cards
 
-\- progress path
+- progress path
 
-\- content module cards
+- content module cards
 
-\- preview panel
+- preview panel
 
 
 
 Outputs:
 
-\- interaction spec
+- interaction spec
 
-\- content structure
+- content structure
 
-\- screen flow
+- screen flow
 
-\- build instructions
+- build instructions
 
 ```
 
 
 
-\## 18.5 Example Schema: Report
+## 18.5 Example Schema: Report
 
 
 
@@ -5658,83 +5658,83 @@ Create a structured written artifact that explains, analyses, recommends, or rec
 
 Required fields:
 
-\- audience
+- audience
 
-\- purpose
+- purpose
 
-\- topic
+- topic
 
-\- scope
+- scope
 
-\- evidence
+- evidence
 
-\- structure
+- structure
 
-\- tone
+- tone
 
-\- required sections
+- required sections
 
-\- conclusion or recommendation
+- conclusion or recommendation
 
 
 
 Optional fields:
 
-\- citations
+- citations
 
-\- charts
+- charts
 
-\- appendices
+- appendices
 
-\- executive summary
+- executive summary
 
-\- methodology
+- methodology
 
-\- distribution format
+- distribution format
 
 
 
 Dependent fields:
 
-\- tone depends on audience
+- tone depends on audience
 
-\- evidence depth depends on use case
+- evidence depth depends on use case
 
-\- structure depends on purpose
+- structure depends on purpose
 
-\- recommendation depends on criteria
+- recommendation depends on criteria
 
 
 
 UI components:
 
-\- outline builder
+- outline builder
 
-\- audience card
+- audience card
 
-\- evidence board
+- evidence board
 
-\- section map
+- section map
 
-\- claim/reason/evidence grid
+- claim/reason/evidence grid
 
 
 
 Outputs:
 
-\- report brief
+- report brief
 
-\- outline
+- outline
 
-\- draft
+- draft
 
-\- final document specification
+- final document specification
 
 ```
 
 
 
-\## 18.6 Schema Activation
+## 18.6 Schema Activation
 
 
 
@@ -5746,21 +5746,21 @@ Evidence can come from:
 
 
 
-\* anchors
+* anchors
 
-\* tags
+* tags
 
-\* user selections
+* user selections
 
-\* rejected options
+* rejected options
 
-\* explicit statements
+* explicit statements
 
-\* memories
+* memories
 
-\* domain patterns
+* domain patterns
 
-\* current surface mode
+* current surface mode
 
 
 
@@ -5792,7 +5792,7 @@ resolved
 
 
 
-\## 18.7 Schema Composition
+## 18.7 Schema Composition
 
 
 
@@ -5810,17 +5810,17 @@ A “contractor onboarding journey” may combine:
 
 ```text
 
-\- onboarding process schema
+- onboarding process schema
 
-\- interactive guide schema
+- interactive guide schema
 
-\- checklist schema
+- checklist schema
 
-\- document schema
+- document schema
 
-\- notification workflow schema
+- notification workflow schema
 
-\- manager handoff schema
+- manager handoff schema
 
 ```
 
@@ -5834,7 +5834,7 @@ The system should support artifact compositions rather than forcing single class
 
 
 
-\# 19. Generative UI Model
+# 19. Generative UI Model
 
 
 
@@ -5850,11 +5850,11 @@ It is a live adaptive surface.
 
 
 
-\## 19.1 Core Principle
+## 19.1 Core Principle
 
 
 
-> \*\*The screen is part of the conversation.\*\*
+> **The screen is part of the conversation.**
 
 
 
@@ -5862,31 +5862,31 @@ The user should be able to think through the interface by:
 
 
 
-\* typing
+* typing
 
-\* clicking
+* clicking
 
-\* rejecting
+* rejecting
 
-\* dragging
+* dragging
 
-\* choosing
+* choosing
 
-\* grouping
+* grouping
 
-\* annotating
+* annotating
 
-\* ranking
+* ranking
 
-\* comparing
+* comparing
 
-\* accepting assumptions
+* accepting assumptions
 
-\* editing generated objects
+* editing generated objects
 
 
 
-\## 19.2 Surface Modes
+## 19.2 Surface Modes
 
 
 
@@ -5894,7 +5894,7 @@ The system should use different surface modes depending on project state.
 
 
 
-\### Empty Surface
+### Empty Surface
 
 
 
@@ -5906,15 +5906,15 @@ Purpose:
 
 
 
-\* reduce intimidation
+* reduce intimidation
 
-\* invite messy input
+* invite messy input
 
-\* avoid premature structure
+* avoid premature structure
 
 
 
-\### Anchor Surface
+### Anchor Surface
 
 
 
@@ -5930,19 +5930,19 @@ Example:
 
 I heard:
 
-\- you want to build something
+- you want to build something
 
-\- it should help users define ideas
+- it should help users define ideas
 
-\- it should use generative UI
+- it should use generative UI
 
-\- it should avoid fixed forms
+- it should avoid fixed forms
 
 ```
 
 
 
-\### Possibility Cloud
+### Possibility Cloud
 
 
 
@@ -5958,21 +5958,21 @@ Example:
 
 This might become:
 
-\- product idea
+- product idea
 
-\- workflow system
+- workflow system
 
-\- interface framework
+- interface framework
 
-\- AI agent orchestration layer
+- AI agent orchestration layer
 
-\- specification compiler
+- specification compiler
 
 ```
 
 
 
-\### Contrast Board
+### Contrast Board
 
 
 
@@ -5998,7 +5998,7 @@ D. Fully autonomous compiler
 
 
 
-\### Branch Map
+### Branch Map
 
 
 
@@ -6028,7 +6028,7 @@ Live Surface
 
 
 
-\### Schema Panel
+### Schema Panel
 
 
 
@@ -6044,23 +6044,23 @@ Example:
 
 Generative UI Schema:
 
-\- state source
+- state source
 
-\- component types
+- component types
 
-\- rendering rules
+- rendering rules
 
-\- interaction events
+- interaction events
 
-\- update cycle
+- update cycle
 
-\- validation
+- validation
 
 ```
 
 
 
-\### Missing Information Map
+### Missing Information Map
 
 
 
@@ -6076,21 +6076,21 @@ Example:
 
 Still unresolved:
 
-\- first screen
+- first screen
 
-\- MVP schemas
+- MVP schemas
 
-\- tag ontology
+- tag ontology
 
-\- handoff format
+- handoff format
 
-\- storage model
+- storage model
 
 ```
 
 
 
-\### Assumption Shelf
+### Assumption Shelf
 
 
 
@@ -6098,7 +6098,7 @@ Shows current assumptions.
 
 
 
-\### Decision Ledger
+### Decision Ledger
 
 
 
@@ -6106,7 +6106,7 @@ Shows accepted decisions and why.
 
 
 
-\### Preview Surface
+### Preview Surface
 
 
 
@@ -6114,7 +6114,7 @@ Shows generated mockups, documents, diagrams, workflows, or examples.
 
 
 
-\### Handoff Compiler
+### Handoff Compiler
 
 
 
@@ -6126,7 +6126,7 @@ Shows the final specification being assembled.
 
 
 
-\## 19.3 UI Components
+## 19.3 UI Components
 
 
 
@@ -6172,7 +6172,7 @@ Core components include:
 
 
 
-\## 19.4 Interaction Events
+## 19.4 Interaction Events
 
 
 
@@ -6180,33 +6180,33 @@ The system should treat these as meaningful input events:
 
 
 
-\* user typed message
+* user typed message
 
-\* user clicked option
+* user clicked option
 
-\* user rejected option
+* user rejected option
 
-\* user accepted assumption
+* user accepted assumption
 
-\* user edited assumption
+* user edited assumption
 
-\* user dragged item into group
+* user dragged item into group
 
-\* user ranked options
+* user ranked options
 
-\* user compared A vs B
+* user compared A vs B
 
-\* user asked for more
+* user asked for more
 
-\* user asked for less
+* user asked for less
 
-\* user paused or skipped
+* user paused or skipped
 
-\* user selected autopilot
+* user selected autopilot
 
-\* user overrode the system
+* user overrode the system
 
-\* user marked something as important
+* user marked something as important
 
 
 
@@ -6214,7 +6214,7 @@ Every interaction should update the state.
 
 
 
-\## 19.5 Proactive UI Behaviours
+## 19.5 Proactive UI Behaviours
 
 
 
@@ -6244,7 +6244,7 @@ The UI should proactively:
 
 
 
-\## 19.6 Generated UI from Schema
+## 19.6 Generated UI from Schema
 
 
 
@@ -6278,51 +6278,51 @@ Example:
 
 
 
-If active schema is \*\*story\*\*, render:
+If active schema is **story**, render:
 
 
 
-\* character board
+* character board
 
-\* plot arc
+* plot arc
 
-\* genre cards
+* genre cards
 
-\* tone selector
+* tone selector
 
-\* scene map
-
-
-
-If active schema is \*\*workflow\*\*, render:
+* scene map
 
 
 
-\* trigger/action map
-
-\* swimlanes
-
-\* checklist
-
-\* exception paths
-
-\* automation opportunities
+If active schema is **workflow**, render:
 
 
 
-If active schema is \*\*software app\*\*, render:
+* trigger/action map
+
+* swimlanes
+
+* checklist
+
+* exception paths
+
+* automation opportunities
 
 
 
-\* feature cards
+If active schema is **software app**, render:
 
-\* user flows
 
-\* screen map
 
-\* data model
+* feature cards
 
-\* acceptance criteria
+* user flows
+
+* screen map
+
+* data model
+
+* acceptance criteria
 
 
 
@@ -6330,7 +6330,7 @@ If active schema is \*\*software app\*\*, render:
 
 
 
-\# 20. Worker Architecture
+# 20. Worker Architecture
 
 
 
@@ -6342,7 +6342,7 @@ It should be a concurrent intent-resolution engine.
 
 
 
-\## 20.1 Compute Assumption
+## 20.1 Compute Assumption
 
 
 
@@ -6350,27 +6350,27 @@ Assume access to:
 
 
 
-\* 32 concurrent local processes,
+* 32 concurrent local processes,
 
-\* fast local 4B model,
+* fast local 4B model,
 
-\* up to 6 concurrent larger/cloud/Ollama models,
+* up to 6 concurrent larger/cloud/Ollama models,
 
-\* multiple local embedding models,
+* multiple local embedding models,
 
-\* graph database,
+* graph database,
 
-\* vector database,
+* vector database,
 
-\* document store,
+* document store,
 
-\* relational database,
+* relational database,
 
-\* queue/workflow engine.
+* queue/workflow engine.
 
 
 
-\## 20.2 Architecture Pattern
+## 20.2 Architecture Pattern
 
 
 
@@ -6378,11 +6378,11 @@ Use:
 
 
 
-\# Fan-Out → Fan-In → Arbiter → Render
+# Fan-Out → Fan-In → Arbiter → Render
 
 
 
-\## 20.3 Turn Cycle
+## 20.3 Turn Cycle
 
 
 
@@ -6412,7 +6412,7 @@ When the user provides input:
 
 
 
-\## 20.4 Local Worker Roles
+## 20.4 Local Worker Roles
 
 
 
@@ -6470,7 +6470,7 @@ Possible local workers:
 
 
 
-\## 20.5 Larger Model Roles
+## 20.5 Larger Model Roles
 
 
 
@@ -6482,7 +6482,7 @@ Suggested six larger-model slots:
 
 
 
-\### 1. Orchestrator
+### 1. Orchestrator
 
 
 
@@ -6490,7 +6490,7 @@ Chooses the next overall move.
 
 
 
-\### 2. Schema Resolver
+### 2. Schema Resolver
 
 
 
@@ -6498,7 +6498,7 @@ Determines which schemas should be foreground, supporting, rejected, or resolved
 
 
 
-\### 3. Concept Synthesiser
+### 3. Concept Synthesiser
 
 
 
@@ -6506,7 +6506,7 @@ Turns messy evolving state into coherent conceptual language.
 
 
 
-\### 4. Critic / Validator
+### 4. Critic / Validator
 
 
 
@@ -6514,7 +6514,7 @@ Checks for contradictions, premature narrowing, missing dependencies, and weak a
 
 
 
-\### 5. Surface Strategist
+### 5. Surface Strategist
 
 
 
@@ -6522,7 +6522,7 @@ Chooses the best user-facing interaction pattern.
 
 
 
-\### 6. Spec Compiler
+### 6. Spec Compiler
 
 
 
@@ -6530,7 +6530,7 @@ Converts the project state into clean handoff packages.
 
 
 
-\## 20.6 Fan-In Merger
+## 20.6 Fan-In Merger
 
 
 
@@ -6568,7 +6568,7 @@ What should the user see next?
 
 
 
-\## 20.7 Arbiter Rules
+## 20.7 Arbiter Rules
 
 
 
@@ -6576,17 +6576,17 @@ The arbiter should prefer:
 
 
 
-\* useful next interaction over comprehensive interrogation,
+* useful next interaction over comprehensive interrogation,
 
-\* generated options over blank questions,
+* generated options over blank questions,
 
-\* visible assumptions over hidden inference,
+* visible assumptions over hidden inference,
 
-\* maintaining ambiguity over premature narrowing,
+* maintaining ambiguity over premature narrowing,
 
-\* closing decisions when safe,
+* closing decisions when safe,
 
-\* asking only when user judgement is genuinely needed.
+* asking only when user judgement is genuinely needed.
 
 
 
@@ -6594,7 +6594,7 @@ The arbiter should prefer:
 
 
 
-\# 21. Decision Closure Model
+# 21. Decision Closure Model
 
 
 
@@ -6602,7 +6602,7 @@ Autonomous execution requires decisions to be closed.
 
 
 
-\## 21.1 Decision Types
+## 21.1 Decision Types
 
 
 
@@ -6632,7 +6632,7 @@ Autonomous execution requires decisions to be closed.
 
 
 
-\## 21.2 Closure Methods
+## 21.2 Closure Methods
 
 
 
@@ -6666,7 +6666,7 @@ A decision can be closed by:
 
 
 
-\## 21.3 Decision Ledger Entry
+## 21.3 Decision Ledger Entry
 
 
 
@@ -6690,13 +6690,13 @@ User described the product as a non-linear dynamic live wizard where the whole i
 
 Evidence:
 
-\- generative\_ui: repeated
+- generative\_ui: repeated
 
-\- dynamic\_surface: repeated
+- dynamic\_surface: repeated
 
-\- rejects\_static\_form: repeated
+- rejects\_static\_form: repeated
 
-\- user explicitly agreed to schema-generated UI
+- user explicitly agreed to schema-generated UI
 
 
 
@@ -6718,7 +6718,7 @@ UI architecture must support state-driven component generation.
 
 
 
-\# 22. Execution Readiness
+# 22. Execution Readiness
 
 
 
@@ -6726,7 +6726,7 @@ Execution readiness means the project is specified enough that a downstream work
 
 
 
-\## 22.1 Readiness Dimensions
+## 22.1 Readiness Dimensions
 
 
 
@@ -6766,7 +6766,7 @@ Execution route
 
 
 
-\## 22.2 Readiness States
+## 22.2 Readiness States
 
 
 
@@ -6796,7 +6796,7 @@ Use descriptive states, not numeric scores.
 
 
 
-\## 22.3 Example Readiness Map
+## 22.3 Example Readiness Map
 
 
 
@@ -6828,7 +6828,7 @@ Execution handoff format   partial
 
 
 
-\# 23. Handoff Package
+# 23. Handoff Package
 
 
 
@@ -6840,7 +6840,7 @@ It may later trigger building, writing, designing, automating, publishing, or ge
 
 
 
-\## 23.1 Handoff Package Contents
+## 23.1 Handoff Package Contents
 
 
 
@@ -6910,7 +6910,7 @@ Validation checks
 
 
 
-\## 23.2 Handoff Package Types
+## 23.2 Handoff Package Types
 
 
 
@@ -6946,7 +6946,7 @@ Examples:
 
 
 
-\# 24. MVP Scope
+# 24. MVP Scope
 
 
 
@@ -6954,7 +6954,7 @@ The MVP should prove the core loop, not the entire universal vision.
 
 
 
-\## 24.1 MVP Goal
+## 24.1 MVP Goal
 
 
 
@@ -6962,27 +6962,27 @@ Prove that a vague idea can become a structured, schema-backed, exportable speci
 
 
 
-\* conversation,
+* conversation,
 
-\* generated options,
+* generated options,
 
-\* user reactions,
+* user reactions,
 
-\* tags and counts,
+* tags and counts,
 
-\* visible assumptions,
+* visible assumptions,
 
-\* schema activation,
+* schema activation,
 
-\* missing field resolution,
+* missing field resolution,
 
-\* decision closure,
+* decision closure,
 
-\* partial spec compilation.
+* partial spec compilation.
 
 
 
-\## 24.2 MVP Artifact Families
+## 24.2 MVP Artifact Families
 
 
 
@@ -6990,13 +6990,13 @@ Start with four artifact families:
 
 
 
-1\. \*\*Software / Product Idea\*\*
+1\. **Software / Product Idea**
 
-2\. \*\*Document / Report / Explanation\*\*
+2\. **Document / Report / Explanation**
 
-3\. \*\*Workflow / Automation\*\*
+3\. **Workflow / Automation**
 
-4\. \*\*Visual / Interface Concept\*\*
+4\. **Visual / Interface Concept**
 
 
 
@@ -7004,73 +7004,73 @@ These are different enough to prove universality, but manageable enough to build
 
 
 
-\## 24.3 MVP Core Features
+## 24.3 MVP Core Features
 
 
 
-\### Required
+### Required
 
 
 
-\* freeform input
+* freeform input
 
-\* event store
+* event store
 
-\* project state object
+* project state object
 
-\* anchor extraction
+* anchor extraction
 
-\* tag extraction
+* tag extraction
 
-\* tag counts
+* tag counts
 
-\* structured observations
+* structured observations
 
-\* possibility cards
+* possibility cards
 
-\* reaction capture
+* reaction capture
 
-\* assumption shelf
+* assumption shelf
 
-\* decision ledger
+* decision ledger
 
-\* schema activation
+* schema activation
 
-\* missing information map
+* missing information map
 
-\* schema-rendered panels
+* schema-rendered panels
 
-\* partial spec compiler
+* partial spec compiler
 
-\* exportable handoff package
-
-
-
-\### Useful but not required for first proof
+* exportable handoff package
 
 
 
-\* persistent long-term user memory
-
-\* graph visualisation
-
-\* multi-user collaboration
-
-\* full downstream execution
-
-\* rich drag-and-drop canvas
-
-\* advanced embeddings
-
-\* complex ontology editor
-
-\* agent marketplace
-
-\* deployment automation
+### Useful but not required for first proof
 
 
 
-\## 24.4 MVP Non-Goals
+* persistent long-term user memory
+
+* graph visualisation
+
+* multi-user collaboration
+
+* full downstream execution
+
+* rich drag-and-drop canvas
+
+* advanced embeddings
+
+* complex ontology editor
+
+* agent marketplace
+
+* deployment automation
+
+
+
+## 24.4 MVP Non-Goals
 
 
 
@@ -7078,23 +7078,23 @@ The MVP should not try to:
 
 
 
-\* support every artifact type,
+* support every artifact type,
 
-\* generate full production apps,
+* generate full production apps,
 
-\* solve all downstream execution,
+* solve all downstream execution,
 
-\* create perfect ontology,
+* create perfect ontology,
 
-\* build a complex visual editor first,
+* build a complex visual editor first,
 
-\* over-automate before the core loop works,
+* over-automate before the core loop works,
 
-\* pretend it understands with confidence scores.
+* pretend it understands with confidence scores.
 
 
 
-\## 24.5 MVP First Screen
+## 24.5 MVP First Screen
 
 
 
@@ -7124,19 +7124,19 @@ After the first input, the surface begins generating:
 
 
 
-\* “what I heard”
+* “what I heard”
 
-\* possible directions
+* possible directions
 
-\* first anchors
+* first anchors
 
-\* early assumptions
+* early assumptions
 
-\* next useful moves
+* next useful moves
 
 
 
-\## 24.6 MVP Success Criteria
+## 24.6 MVP Success Criteria
 
 
 
@@ -7170,7 +7170,7 @@ The MVP succeeds if:
 
 
 
-\# 25. Example End-to-End Session
+# 25. Example End-to-End Session
 
 
 
@@ -7178,7 +7178,7 @@ This example shows the intended behaviour.
 
 
 
-\## 25.1 Zero-State
+## 25.1 Zero-State
 
 
 
@@ -7216,7 +7216,7 @@ No template selection.
 
 
 
-\## 25.2 User First Input
+## 25.2 User First Input
 
 
 
@@ -7228,7 +7228,7 @@ User says:
 
 
 
-\## 25.3 System Extraction
+## 25.3 System Extraction
 
 
 
@@ -7276,7 +7276,7 @@ possible\_interactive\_guide: +1
 
 
 
-\## 25.4 Surface Update
+## 25.4 Surface Update
 
 
 
@@ -7284,7 +7284,7 @@ The screen shows:
 
 
 
-\### What I heard
+### What I heard
 
 
 
@@ -7300,7 +7300,7 @@ The format is still open.
 
 
 
-\### This could become
+### This could become
 
 
 
@@ -7324,7 +7324,7 @@ The user can click, reject, compare, or type.
 
 
 
-\## 25.5 User Reaction
+## 25.5 User Reaction
 
 
 
@@ -7336,7 +7336,7 @@ User says:
 
 
 
-\## 25.6 System Update
+## 25.6 System Update
 
 
 
@@ -7386,29 +7386,29 @@ Artifact composition:
 
 Primary:
 
-\- guided onboarding journey
+- guided onboarding journey
 
 
 
 Supporting:
 
-\- checklist modules
+- checklist modules
 
-\- visual roadmap
+- visual roadmap
 
-\- lightweight task structure
+- lightweight task structure
 
 
 
 Rejected for MVP:
 
-\- full contractor portal
+- full contractor portal
 
 ```
 
 
 
-\## 25.7 Schema Activation
+## 25.7 Schema Activation
 
 
 
@@ -7418,19 +7418,19 @@ Active schemas:
 
 ```text
 
-\- onboarding process
+- onboarding process
 
-\- guided journey
+- guided journey
 
-\- checklist
+- checklist
 
-\- visual roadmap
+- visual roadmap
 
 ```
 
 
 
-\## 25.8 Missing Information Map
+## 25.8 Missing Information Map
 
 
 
@@ -7464,7 +7464,7 @@ Progress tracking         optional
 
 
 
-\## 25.9 Proactive Option Generation
+## 25.9 Proactive Option Generation
 
 
 
@@ -7506,7 +7506,7 @@ User selects:
 
 
 
-\## 25.10 Decision Closure
+## 25.10 Decision Closure
 
 
 
@@ -7540,7 +7540,7 @@ User accepts assumption.
 
 
 
-\## 25.11 Spec Compilation Begins
+## 25.11 Spec Compilation Begins
 
 
 
@@ -7582,21 +7582,21 @@ Day 5: Review and handoff
 
 Includes:
 
-\- milestone checklist
+- milestone checklist
 
-\- manager notes
+- manager notes
 
-\- required access list
+- required access list
 
-\- contractor-facing guidance
+- contractor-facing guidance
 
-\- progress tracking optional
+- progress tracking optional
 
 ```
 
 
 
-\## 25.12 Handoff Package
+## 25.12 Handoff Package
 
 
 
@@ -7644,23 +7644,23 @@ Clear, lightweight, guided, practical, not corporate-heavy
 
 Functional Requirements:
 
-\- show day-by-day path
+- show day-by-day path
 
-\- include checklist items
+- include checklist items
 
-\- separate contractor and manager responsibilities
+- separate contractor and manager responsibilities
 
-\- indicate completion status
+- indicate completion status
 
-\- support easy editing
+- support easy editing
 
 
 
 Open Assumptions:
 
-\- web-based or document-based delivery to be decided
+- web-based or document-based delivery to be decided
 
-\- progress tracking can be manual in v1
+- progress tracking can be manual in v1
 
 
 
@@ -7680,7 +7680,7 @@ This package can then go into a conventional AI design/build workflow.
 
 
 
-\# 26. Example Applied to This Project Itself
+# 26. Example Applied to This Project Itself
 
 
 
@@ -7688,7 +7688,7 @@ The current project — the Live Intent Resolution Surface — can also be repre
 
 
 
-\## 26.1 Working Description
+## 26.1 Working Description
 
 
 
@@ -7696,7 +7696,7 @@ A universal, schema-driven, generative AI interface that starts with vague human
 
 
 
-\## 26.2 Current Anchors
+## 26.2 Current Anchors
 
 
 
@@ -7722,7 +7722,7 @@ scope: universal / artifact-agnostic
 
 
 
-\## 26.3 Current Artifact Composition
+## 26.3 Current Artifact Composition
 
 
 
@@ -7730,31 +7730,31 @@ scope: universal / artifact-agnostic
 
 Primary artifact:
 
-\- Pre-specification AI system
+- Pre-specification AI system
 
 
 
 Supporting artifacts:
 
-\- live generative UI
+- live generative UI
 
-\- artifact taxonomy
+- artifact taxonomy
 
-\- schema engine
+- schema engine
 
-\- memory engine
+- memory engine
 
-\- decision closure engine
+- decision closure engine
 
-\- spec compiler
+- spec compiler
 
-\- downstream workflow router
+- downstream workflow router
 
 ```
 
 
 
-\## 26.4 Current Decisions
+## 26.4 Current Decisions
 
 
 
@@ -7792,29 +7792,29 @@ The final output should be executable by downstream workflows.
 
 
 
-\## 26.5 Current Missing Fields
+## 26.5 Current Missing Fields
 
 
 
 ```text
 
-\- exact MVP interface
+- exact MVP interface
 
-\- first artifact schemas
+- first artifact schemas
 
-\- schema file format
+- schema file format
 
-\- database selection
+- database selection
 
-\- tag ontology v0
+- tag ontology v0
 
-\- event model
+- event model
 
-\- worker orchestration details
+- worker orchestration details
 
-\- handoff package format
+- handoff package format
 
-\- prototype success criteria
+- prototype success criteria
 
 ```
 
@@ -7828,11 +7828,11 @@ This master specification is the first major closure of the concept-definition l
 
 
 
-\# 27. Product Boundaries
+# 27. Product Boundaries
 
 
 
-\## 27.1 In Scope
+## 27.1 In Scope
 
 
 
@@ -7840,35 +7840,35 @@ The system should support:
 
 
 
-\* vague idea intake
+* vague idea intake
 
-\* anchor extraction
+* anchor extraction
 
-\* generated possibilities
+* generated possibilities
 
-\* user reaction capture
+* user reaction capture
 
-\* tag and count accumulation
+* tag and count accumulation
 
-\* structured observations
+* structured observations
 
-\* schema activation
+* schema activation
 
-\* dynamic UI rendering
+* dynamic UI rendering
 
-\* assumption tracking
+* assumption tracking
 
-\* decision tracking
+* decision tracking
 
-\* missing information mapping
+* missing information mapping
 
-\* specification compilation
+* specification compilation
 
-\* handoff to downstream AI workflows
+* handoff to downstream AI workflows
 
 
 
-\## 27.2 Out of Scope for Initial Versions
+## 27.2 Out of Scope for Initial Versions
 
 
 
@@ -7876,25 +7876,25 @@ The early product does not need to fully solve:
 
 
 
-\* every artifact type,
+* every artifact type,
 
-\* every possible downstream builder,
+* every possible downstream builder,
 
-\* perfect memory,
+* perfect memory,
 
-\* perfect ontology,
+* perfect ontology,
 
-\* multi-agent autonomy,
+* multi-agent autonomy,
 
-\* deployment automation,
+* deployment automation,
 
-\* enterprise governance,
+* enterprise governance,
 
-\* visual canvas sophistication,
+* visual canvas sophistication,
 
-\* plugin ecosystem,
+* plugin ecosystem,
 
-\* cross-user learning.
+* cross-user learning.
 
 
 
@@ -7902,7 +7902,7 @@ These can come later.
 
 
 
-The first proof is the \*\*intent-to-spec loop\*\*.
+The first proof is the **intent-to-spec loop**.
 
 
 
@@ -7910,11 +7910,11 @@ The first proof is the \*\*intent-to-spec loop\*\*.
 
 
 
-\# 28. Core System Modules
+# 28. Core System Modules
 
 
 
-\## 28.1 Event Ingest
+## 28.1 Event Ingest
 
 
 
@@ -7922,7 +7922,7 @@ Receives all user and UI input.
 
 
 
-\## 28.2 State Manager
+## 28.2 State Manager
 
 
 
@@ -7930,7 +7930,7 @@ Maintains the current project state.
 
 
 
-\## 28.3 Anchor Extractor
+## 28.3 Anchor Extractor
 
 
 
@@ -7938,7 +7938,7 @@ Pulls concrete details from vague input.
 
 
 
-\## 28.4 Tagger
+## 28.4 Tagger
 
 
 
@@ -7946,7 +7946,7 @@ Applies discrete labels to input and behaviour.
 
 
 
-\## 28.5 Observation Generator
+## 28.5 Observation Generator
 
 
 
@@ -7954,7 +7954,7 @@ Creates meaningful interpretations from evidence traces.
 
 
 
-\## 28.6 Memory Manager
+## 28.6 Memory Manager
 
 
 
@@ -7962,7 +7962,7 @@ Stores and retrieves user, project, session, and artifact memory.
 
 
 
-\## 28.7 Schema Resolver
+## 28.7 Schema Resolver
 
 
 
@@ -7970,7 +7970,7 @@ Activates, deactivates, composes, and foregrounds schemas.
 
 
 
-\## 28.8 Surface Generator
+## 28.8 Surface Generator
 
 
 
@@ -7978,7 +7978,7 @@ Creates UI components from current state and active schemas.
 
 
 
-\## 28.9 Option Generator
+## 28.9 Option Generator
 
 
 
@@ -7986,7 +7986,7 @@ Creates choices, contrast sets, examples, and previews.
 
 
 
-\## 28.10 Decision Manager
+## 28.10 Decision Manager
 
 
 
@@ -7994,7 +7994,7 @@ Tracks and closes decisions.
 
 
 
-\## 28.11 Assumption Manager
+## 28.11 Assumption Manager
 
 
 
@@ -8002,7 +8002,7 @@ Creates, displays, accepts, rejects, and updates assumptions.
 
 
 
-\## 28.12 Missing Information Detector
+## 28.12 Missing Information Detector
 
 
 
@@ -8010,7 +8010,7 @@ Identifies unresolved fields and blocking gaps.
 
 
 
-\## 28.13 Handoff Compiler
+## 28.13 Handoff Compiler
 
 
 
@@ -8018,7 +8018,7 @@ Creates the final specification package.
 
 
 
-\## 28.14 Execution Router
+## 28.14 Execution Router
 
 
 
@@ -8030,11 +8030,11 @@ Sends the handoff package to downstream workflows.
 
 
 
-\# 29. Design Risks
+# 29. Design Risks
 
 
 
-\## 29.1 Premature narrowing
+## 29.1 Premature narrowing
 
 
 
@@ -8046,17 +8046,17 @@ Mitigation:
 
 
 
-\* keep branches open,
+* keep branches open,
 
-\* use artifact composition,
+* use artifact composition,
 
-\* preserve rejected and archived paths,
+* preserve rejected and archived paths,
 
-\* require evidence traces for resolution.
+* require evidence traces for resolution.
 
 
 
-\## 29.2 Overwhelming the user
+## 29.2 Overwhelming the user
 
 
 
@@ -8068,17 +8068,17 @@ Mitigation:
 
 
 
-\* progressive disclosure,
+* progressive disclosure,
 
-\* one useful next move,
+* one useful next move,
 
-\* simple default view,
+* simple default view,
 
-\* advanced evidence view optional.
+* advanced evidence view optional.
 
 
 
-\## 29.3 Hidden assumptions
+## 29.3 Hidden assumptions
 
 
 
@@ -8090,15 +8090,15 @@ Mitigation:
 
 
 
-\* assumption shelf,
+* assumption shelf,
 
-\* decision ledger,
+* decision ledger,
 
-\* user-editable state.
+* user-editable state.
 
 
 
-\## 29.4 Shallow tagging
+## 29.4 Shallow tagging
 
 
 
@@ -8110,19 +8110,19 @@ Mitigation:
 
 
 
-\* tag ontology,
+* tag ontology,
 
-\* tag consolidation,
+* tag consolidation,
 
-\* observation layer,
+* observation layer,
 
-\* evidence review,
+* evidence review,
 
-\* scope and durability.
+* scope and durability.
 
 
 
-\## 29.5 Universal but vague
+## 29.5 Universal but vague
 
 
 
@@ -8134,17 +8134,17 @@ Mitigation:
 
 
 
-\* universal entry layer,
+* universal entry layer,
 
-\* specific artifact schemas,
+* specific artifact schemas,
 
-\* schema composition,
+* schema composition,
 
-\* execution-oriented handoff.
+* execution-oriented handoff.
 
 
 
-\## 29.6 Interface complexity
+## 29.6 Interface complexity
 
 
 
@@ -8156,13 +8156,13 @@ Mitigation:
 
 
 
-\* define surface modes,
+* define surface modes,
 
-\* use schema-rendered components,
+* use schema-rendered components,
 
-\* keep the main interaction simple,
+* keep the main interaction simple,
 
-\* hide advanced trace views by default.
+* hide advanced trace views by default.
 
 
 
@@ -8170,7 +8170,7 @@ Mitigation:
 
 
 
-\# 30. Design Success Conditions
+# 30. Design Success Conditions
 
 
 
@@ -8220,7 +8220,7 @@ The practical success condition is:
 
 
 
-\# 31. The First Buildable Loop
+# 31. The First Buildable Loop
 
 
 
@@ -8266,11 +8266,11 @@ Everything else supports it.
 
 
 
-\# 32. Recommended v0.1 Implementation Shape
+# 32. Recommended v0.1 Implementation Shape
 
 
 
-\## 32.1 Backend
+## 32.1 Backend
 
 
 
@@ -8306,7 +8306,7 @@ HandoffPackage
 
 
 
-\## 32.2 Frontend
+## 32.2 Frontend
 
 
 
@@ -8336,7 +8336,7 @@ Spec Preview
 
 
 
-\## 32.3 First Schemas
+## 32.3 First Schemas
 
 
 
@@ -8358,7 +8358,7 @@ visual\_interface
 
 
 
-\## 32.4 First Worker Set
+## 32.4 First Worker Set
 
 
 
@@ -8398,7 +8398,7 @@ This is enough to prove the system.
 
 
 
-\# 33. North Star
+# 33. North Star
 
 
 
@@ -8410,7 +8410,7 @@ The north star is:
 
 
 
-> \*\*A universal front-end for creation.\*\*
+> **A universal front-end for creation.**
 
 
 
@@ -8454,11 +8454,11 @@ The thing becomes real.
 
 
 
-\# 34. Final Master Description
+# 34. Final Master Description
 
 
 
-The \*\*Live Intent Resolution Surface\*\* is a universal pre-specification system for AI creation. It begins with unresolved human intent and uses conversation, generated possibilities, interactive surfaces, tags, counts, structured observations, schemas, memory, assumptions, and decision closure to progressively form a complete artifact specification. It is structured but unscripted, universal but schema-specific, conversational but not chat-only, proactive but transparent, autonomous but user-steered. Its purpose is to create the missing bridge between a person who does not yet know what they want and an AI workflow that needs exact instructions to build it.
+The **Live Intent Resolution Surface** is a universal pre-specification system for AI creation. It begins with unresolved human intent and uses conversation, generated possibilities, interactive surfaces, tags, counts, structured observations, schemas, memory, assumptions, and decision closure to progressively form a complete artifact specification. It is structured but unscripted, universal but schema-specific, conversational but not chat-only, proactive but transparent, autonomous but user-steered. Its purpose is to create the missing bridge between a person who does not yet know what they want and an AI workflow that needs exact instructions to build it.
 
 
 
@@ -8466,11 +8466,11 @@ The \*\*Live Intent Resolution Surface\*\* is a universal pre-specification syst
 
 
 
-\# 35. Final One-Line Version
+# 35. Final One-Line Version
 
 
 
-\*\*A live generative surface that turns vague human intent into executable specifications for making anything.\*\*
+**A live generative surface that turns vague human intent into executable specifications for making anything.**
 
 
 
