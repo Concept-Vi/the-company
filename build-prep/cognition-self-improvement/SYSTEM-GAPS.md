@@ -394,3 +394,8 @@ The doc had grown journal-style — closures recorded in later sections while th
 
 ## 2026-06-10 — G2 CLOSED: the last small build on the board
 - ✅ **G2:** RoleRegistry reads refresh-if-stale via a dir SIGNATURE (mtime + name-set; pure mtime was FLAKY — this fs quantizes to ~10ms ticks, measured with evidence; same-tick replace+remove were invisible). Out-of-process role files now land/leave a long-lived server without restart — the cascade registry's Q3 pattern, hardened. **THE TRUE OPEN SET IS NOW 4:** G8 (a lesson, not a build) · the G24-edge (bounded curiosity) · GC8 + GC14 (Track-1 design pieces, Tim's conversation). Nothing buildable remains.
+
+## 2026-06-10 — TRACK-1 DIALS BUILT (character traits as adjustable values)
+- ✅ **dials/ registry + Suite.set_dial/dial_state + `dials` MCP tool:** anticipation (reactive/warm/hot, def warm) · stability (museum/workshop/stage, def workshop). Values on the system graph (presence-mode seam); condition-scoped overrides STORED+validated in the rules-engine shape (conditions combine — Tim), `overrides_evaluated:False` honest until the now-organ/rules wiring. Verified by use (fresh-suite persistence, non-wiping merge, 3 fail-loud probes, discovery gate); floor enrolled (43/43 + drift 5/5).
+- 🔌 **CONSUMER SEAMS (named, unbuilt):** the resolver/now-organ reads `anticipation`; the RHM surface-composer reads `stability`. Their builds MUST read the dial (the dials/AGENTS.md "never" list forbids ignoring it). needs-tim: /mcp reconnect lands the `dials` tool.
+- 🧭 **The standing shape:** every future character/behavior question defaults to "declare a dial," not "make a decision."

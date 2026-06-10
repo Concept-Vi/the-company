@@ -335,12 +335,15 @@ the surface's identity. Nothing hardcoded but the alphabet.
 ## 11 · Open threads (updated)
 
 1. ~~The garden question~~ → ANSWERED (9.8): full interactive surface, memory-at-addresses.
-2. **Anticipatory resolution dial** — reactive/warm/hot; surfaced to Tim as a character-trait
-   decision. AWAITING HIS SHAPE.
-2b. **The STABILITY dial (round 3's live end)** — how much may the surface move on its own:
-   museum (nothing moves without his hand) / workshop (places stable, contents fluid — the lead's
-   instinct for Tim) / stage (the RHM re-sets the scene freely). Interacts with the anticipation
-   dial. AWAITING HIS SHAPE.
+2. ~~Anticipation + stability dials~~ → **BUILT AS DIALS (Tim's resolution of the resolution:
+   "they should be dials. I should be able to adjust them, and not need to make a decision")** —
+   the dials/ registry (anticipation: reactive/warm/hot, default warm · stability:
+   museum/workshop/stage, default workshop), values persist on the system graph, adjustable via the
+   `dials` MCP tool / Suite.set_dial. **The meta-move matters: character traits are themselves
+   values-data-resolution** — a would-be decision became a knob, and dials can carry
+   CONDITION-SCOPED overrides ({when, value} — Tim: "I liked that conditions can combine"), stored
+   now, evaluated when the now-organ + rules wiring lands. Every future character question defaults
+   to this shape: not "decide," but "declare a dial."
 3. **The now-vocabulary:** modes as the coarse time-coordinates (Tim: "great ideas about the
    vocabulary of nows"); fine grain TBD in the rules language.
 4. **The audience boundary** — now per-PRINCIPAL (9.2), not just per-agent. Scoped gates for future
