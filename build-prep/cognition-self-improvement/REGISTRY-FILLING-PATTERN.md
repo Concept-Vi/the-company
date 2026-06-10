@@ -36,7 +36,7 @@ SOURCE → GROUND → MAP → DEDUPE → FLOOR → JURY → SURFACE → [Tim APP
    - **the unit itself** (the thing to describe)
    - **the parent/neighbour records** (already-approved entries the new one nests under)
    - **the ground** (the once-resolved whole-context from stage 2)
-   - **exemplars + closed vocabularies** (real existing entries as the voice to match; the finite
+   - **exemplars + closed vocabularies** (real existing entries as the voice to match — a voice originally established BY an AI under Tim's direction; the finite
      lists of allowed values, with the copy-verbatim-or-say-proposed instruction)
 
 4. **DEDUPE** — the embedder clusters the proposals; recurring sames collapse to one representative
@@ -60,7 +60,7 @@ SOURCE → GROUND → MAP → DEDUPE → FLOOR → JURY → SURFACE → [Tim APP
 | Stage | Without it (observed, not hypothetical) |
 |---|---|
 | GROUND + context package | bare units → invention by design (Tim's prediction; also the literal first-draft failure at scale) |
-| exemplars | the voice drifts from the 82 hand-written entries' altitude |
+| exemplars | the voice drifts from the 82 existing entries' altitude (themselves AI-written under Tim's direction when he first introduced the idea — the voice was never hand-authored) |
 | closed vocabularies | free-text capability/feature fields → unjoinable data |
 | FLOOR | invented-but-plausible ids pass the prompt instruction (RG10 caught real ones: INB-focus, NODE-act) |
 | flag-never-drop | uncertain-but-real entries silently vanish |
