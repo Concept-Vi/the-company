@@ -9862,17 +9862,24 @@ class Suite:
         files = _corp.walk_files(roots) if roots else []
         if paths:
             for p in paths:
+                # N5+Q11 — ONE id per file, whatever the SPELLING (eval-evidenced twice: 3 duplicate
+                # records for one file). Normalize BEFORE the read so every spelling READS and KEYS the
+                # same: absolute-under-repo → relative; './' stripped (normpath); a leading
+                # '<repo-basename>/' prefix (an agent cwd'd ABOVE the repo) stripped when the suffix
+                # exists and the literal doesn't (never guessing over a real literal path).
+                cwd = os.getcwd()
+                if os.path.isabs(p) and os.path.commonpath([cwd, os.path.abspath(p)]) == cwd:
+                    p = os.path.relpath(p, cwd)
+                p = os.path.normpath(p)
+                base = os.path.basename(cwd)
+                if p.startswith(base + os.sep) and not os.path.exists(p) and os.path.exists(p[len(base) + 1:]):
+                    p = p[len(base) + 1:]
                 try:
                     t = open(p, encoding="utf-8").read()
                 except (UnicodeDecodeError, OSError) as e:
                     raise ValueError(f"ingest_paths: cannot read {p!r} ({e.__class__.__name__}) — paths "
                                      f"are cwd-relative (cwd={os.getcwd()!r}) or absolute; fail loud, "
                                      f"never a silent skip of an EXPLICIT path.") from e
-                # N5 — ONE id per file: normalize an absolute path under the repo to the same RELATIVE
-                # form the walk emits (an absolute and a relative spelling must not mint two code:// ids).
-                cwd = os.getcwd()
-                if os.path.isabs(p) and os.path.commonpath([cwd, os.path.abspath(p)]) == cwd:
-                    p = os.path.relpath(p, cwd)
                 files.append({"path": p, "text": t[:_corp.WALK_MAX_CHARS]})
         walked = len(files)
         # G25 — the SELF-REFRESHING corpus: skip a file only if its record exists AND its SOURCE text is

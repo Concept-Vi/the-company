@@ -194,12 +194,28 @@ def capabilities(section: str = "") -> dict:
                 "cascades": rows,
                 "run_cascades_via": "run_cascade(name='<name>', inputs=...)"}
 
+    def _features() -> dict:
+        # Q7 — the FEATURE INVENTORY (design/register.json): the closed id-set register_element's
+        # no-fiction contract checks against. The eval: the contract POINTED here but no MCP surface
+        # exposed it — an agent constructing a dossier had no way to pick a REAL id.
+        with open(os.path.join(ROOT, "design", "register.json"), encoding="utf-8") as f:
+            reg = json.load(f)
+        return {"features": [{"id": x["id"], "area": x["area"], "label": x.get("label", ""),
+                              "status": x.get("status", "built" if x.get("code") else "")}
+                             for x in reg.get("features", [])],
+                "note": ("the closed maps_to_feature vocabulary — copy an id VERBATIM, or use the "
+                         "literal 'proposed' for an un-built element (anything else fails the "
+                         "deterministic floor)")}
+
     if section:
         if section == "chains":
             return {"section": "chains", **_chains()}
+        if section == "features":
+            return {"section": "features", **_features()}
         if section not in cap:
             raise ValueError(f"unknown capabilities section {section!r} — live sections: "
-                             f"{sorted(cap) + ['chains']} (registry-is-truth; call with no args for the map).")
+                             f"{sorted(cap) + ['chains', 'features']} (registry-is-truth; call with no "
+                             f"args for the map).")
         return {"section": section, section: cap[section]}
     # the CONCISE map (no args): names + size hints + the chains pointer — pick a section, then scope.
     overview = {k: f"{len(json.dumps(v, default=str))} bytes — capabilities(section='{k}')"
@@ -207,6 +223,8 @@ def capabilities(section: str = "") -> dict:
     ch = _chains()
     overview["chains"] = (f"{len(ch['flows'])} flows + {len(ch['cascades']) if isinstance(ch['cascades'], list) else '?'} "
                           f"saved cascades — capabilities(section='chains')")
+    overview["features"] = ("the feature inventory — the closed maps_to_feature id-set "
+                            "(76 ids) — capabilities(section='features')")
     overview["operator"] = ("the system's memory of working with its OPERATOR (rules + evidence) — "
                             "operator(op='rules'); READ IT before preparing anything he will see")
     return {"sections": overview,

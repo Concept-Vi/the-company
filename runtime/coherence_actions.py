@@ -75,6 +75,12 @@ def build_action(decl: dict, *, models: set, roles: set | None = None, rule_reso
                 return {"ok": False, "error": f"step {i}: reduce_mode='rule' names reduce_rule {rname!r} "
                         f"which does not resolve — pick a named rule (see reduce_rule_names()) or the "
                         f"parameterised 'tally-by:<field>' pattern."}
+        if (jury_roles is not None and role_id in jury_roles
+                and step.get("kind") in ("items", "role", None) and op == "generate"):
+            return {"ok": False, "error": f"step {i}: {role_id!r} is a JURY role (draws>1 + a verdict "
+                    f"rule) but the step kind would fire it as SINGLE DRAWS — its jury semantics would "
+                    f"silently drop (eval#4 Q8). Declare kind='jury' (1->1 verdict step), or pick a "
+                    f"non-jury role for a map/role step."}
         if step.get("kind") == "jury" and jury_roles is not None:
             if role_id not in jury_roles:
                 return {"ok": False, "error": f"step {i}: kind='jury' needs a JURY role (draws>1 + a "

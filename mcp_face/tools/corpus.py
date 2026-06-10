@@ -28,7 +28,10 @@ def register(mcp, suite):
                         op='read'-able (the round-trip).
           op="list"   — list records, newest-first; narrow with `project`.
           op="find"   — filter records by `project` / `kind` / `projection` / `source_address`.
-          op="read"   — fetch ONE record's full content by its `address` (a run:// from list/find).
+          op="read"   — fetch ONE record by its `address` (a run:// from list/find, or a code:// source id).
+                        HONESTY: for an INGESTED FILE the record is a capture DIGEST (a model's one-paragraph
+                        summary + metadata), NOT the file's raw text — the corpus stores digests of sources.
+                        The source itself lives at the code:// path on disk (outside this face).
 
         `detail`: "concise" (default) returns high-signal fields only {source_address, projection, seq,
         address}; "detailed" returns the full records. `limit` (default 50) caps list/find. Read-only."""
