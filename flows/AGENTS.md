@@ -35,3 +35,6 @@ Add a row = add a FILE + reflect it here (the drift home). Loader: `runtime/flow
   space='history' (durable memory); exchange-granular idempotent; bounded batches.
 - **pattern_cluster** — ③/G13: the self-study REDUCE — tally + embed-cluster every mined pattern_tag
   into named weighted groups; feeds G13-PATTERN-REPORT.md.
+- **repo_ingest** — ①/G21: the repo-exocortex ingest — walk → repo_digest MAP → capture+embed into
+  space='repo' keyed code://<path>; hash-aware incremental (G25); the floor for drift-radar and
+  ask-the-codebase.

@@ -253,16 +253,25 @@ WALK_MAX_CHARS = 6000   # the per-file slice fed to the digest role (a digest ne
 
 def walk_files(roots, *, exts=WALK_EXTS, max_chars=WALK_MAX_CHARS, skip_dirs=WALK_SKIP_DIRS):
     """DETERMINISTIC walk → [{path, text}], sorted (stable order = resume-stable). Skips junk dirs,
-    binaries (decode errors), and near-empty files (<80 chars — a digest of nothing is noise)."""
+    binaries (decode errors), and near-empty files (<80 chars — a digest of nothing is noise).
+
+    Two hardenings (2026-06-10, found completing ① — walk(["."]) returned 13,663 'files'):
+      · HIDDEN dirs are skipped as a CLASS (any '.'-prefixed dir), not by name — the named list missed
+        `.voice-venv`/`.litellm-venv` (13k venv files would have been digested as repo) and `.build`
+        (run artifacts). The named skips remain for the non-hidden junk dirs.
+      · paths are NORMALIZED (normpath strips './') — walk(["."]) and walk(["runtime"]) must mint THE
+        SAME `code://<path>` id for one file (one-file-one-id, the N5 law; './AGENTS.md' vs 'AGENTS.md'
+        would silently double-ingest the whole repo)."""
     import os as _os
     out = []
     for root in roots:
         for dirpath, dirnames, filenames in _os.walk(root):
-            dirnames[:] = sorted(d for d in dirnames if d not in skip_dirs)
+            dirnames[:] = sorted(d for d in dirnames
+                                 if d not in skip_dirs and not d.startswith("."))
             for fn in sorted(filenames):
                 if not fn.endswith(tuple(exts)):
                     continue
-                p = _os.path.join(dirpath, fn)
+                p = _os.path.normpath(_os.path.join(dirpath, fn))
                 try:
                     t = open(p, encoding="utf-8").read()
                 except (UnicodeDecodeError, OSError):
