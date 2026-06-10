@@ -201,8 +201,40 @@ class RoleRegistry:
 
     def __init__(self):
         self.roles: dict[str, Role] = {}
+        self._dirs: list[str] = []
+        self._dir_mtimes: dict[str, float] = {}
+
+    def _refresh_if_stale(self) -> None:
+        """G2 — the long-lived-server freshness edge (the cascade registry's Q3 mtime pattern applied
+        to roles): a roles/<id>.py written by ANOTHER process (atomic tmp+os.replace bumps the dir
+        mtime) was invisible to a running MCP server/bridge until restart. Every dict-like READ now
+        stats the discovered dirs (one stat per dir — cheap) and REDISCOVERS on change. In-process
+        create_role keeps its explicit rediscover (unchanged); this catches the out-of-process writes."""
+        if not self._dirs:
+            return
+        stale = False
+        for d in self._dirs:
+            if self._dir_mtimes.get(d) != self._dir_sig(d):
+                stale = True
+                break
+        if stale:
+            self.rediscover(self._dirs)
+
+    @staticmethod
+    def _dir_sig(d: str):
+        """The dir's change signature: (mtime, the .py name-set). mtime ALONE is quantized to ~10ms
+        ticks on this filesystem (measured: a replace + remove in one tick were invisible) — the
+        name-set makes ADD/REMOVE deterministic regardless of tick; mtime still catches in-place
+        replaces across ticks."""
+        try:
+            return (os.path.getmtime(d), frozenset(f for f in os.listdir(d) if f.endswith(".py")))
+        except OSError:
+            return None
 
     def discover(self, dirs: list[str]) -> "RoleRegistry":
+        self._dirs = list(dirs)
+        for d in dirs:
+            self._dir_mtimes[d] = self._dir_sig(d)
         for d in dirs:
             if not os.path.isdir(d):
                 continue
@@ -246,16 +278,21 @@ class RoleRegistry:
         return self.roles[role_id].spec
 
     # --- dict-like (so it IS the ROLE_REGISTRY mapping for suite.py) ---
+    # every read path refreshes-if-stale first (G2) — transparent freshness for ALL callers.
     def __getitem__(self, role_id: str) -> Role:
+        self._refresh_if_stale()
         return self.roles[role_id]
 
     def __contains__(self, role_id: str) -> bool:
+        self._refresh_if_stale()
         return role_id in self.roles
 
     def __iter__(self):
+        self._refresh_if_stale()
         return iter(self.roles)
 
     def get(self, role_id: str, default=None):
+        self._refresh_if_stale()
         return self.roles.get(role_id, default)
 
 
