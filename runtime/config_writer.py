@@ -213,6 +213,101 @@ def _validate_settings_block(pointer: str, block) -> None:
                     f"Each handler's `command` is a shell command Claude Code RUNS on that event.")
 
 
+# keybindings (CC-04, reopened): ground truth = Atlas keybindings.md, verified 2026-06-12.
+#   file ~/.claude/keybindings.json; object with a `bindings` ARRAY of {context, bindings:{keystroke:
+#   action|null}}; action format namespace:action; null UNBINDS; auto-detected (no restart). These are
+#   the CLOSED context names and the shortcuts Claude Code REFUSES to rebind — fail-loud on a bad one
+#   (never write a context Claude Code won't honour, never pretend a reserved rebind took).
+KB_CONTEXTS = (
+    "Global", "Chat", "Autocomplete", "Settings", "Confirmation", "Tabs", "Help", "Transcript",
+    "HistorySearch", "Task", "ThemePicker", "Attachments", "Footer", "MessageSelector", "DiffDialog",
+    "ModelPicker", "Select", "Plugin", "Scroll", "Doctor",
+)
+# reserved single keystrokes that CANNOT be rebound (Atlas keybindings.md reserved-shortcuts). Compared
+# case-insensitively against the keystroke string; a binding (non-null action) to one is refused loud.
+KB_RESERVED = ("ctrl+c", "ctrl+d", "ctrl+m")
+
+
+def _kb_blocks(block) -> list:
+    """Normalize a keybindings `block` to a list of {context, bindings} blocks. Accepts either one block
+    dict OR a list of them (the handler may set several contexts at once). Fail-loud on a bad shape."""
+    if isinstance(block, dict):
+        return [block]
+    if isinstance(block, list):
+        return block
+    raise WriteRefusal(
+        "a keybindings write `block` must be a {context, bindings} object (or a list of them) — "
+        f"got {type(block).__name__}. See Atlas keybindings.md.")
+
+
+def _validate_keybindings_block(block) -> None:
+    """A keybindings write supplies one-or-more {context, bindings:{keystroke: action|null}} blocks.
+    Validate the CLOSED context set + the action shape (namespace:action or null=unbind) + the reserved-
+    shortcut refusal — the content gate for CC-04 (non-executable, but still: never write a context
+    Claude Code won't honour, never claim a reserved rebind)."""
+    blocks = _kb_blocks(block)
+    if not blocks:
+        raise WriteRefusal("a keybindings write needs at least one {context, bindings} block — empty is "
+                           "nothing to write.")
+    for blk in blocks:
+        if not isinstance(blk, dict):
+            raise WriteRefusal(f"each keybindings block must be an object {{context, bindings}}; got "
+                               f"{type(blk).__name__}.")
+        ctx = blk.get("context")
+        if ctx not in KB_CONTEXTS:
+            raise WriteRefusal(
+                f"keybindings: {ctx!r} is not a Claude Code context — one of {list(KB_CONTEXTS)} "
+                f"(grounded in the Atlas; fail loud, never write a context Claude Code ignores).")
+        km = blk.get("bindings")
+        if not isinstance(km, dict) or not km:
+            raise WriteRefusal(
+                f"keybindings[{ctx}].bindings must be a non-empty object {{keystroke: action|null}} "
+                f"(action='namespace:action', or null to UNBIND a default).")
+        for keystroke, action in km.items():
+            if not isinstance(keystroke, str) or not keystroke.strip():
+                raise WriteRefusal(f"keybindings[{ctx}]: a keystroke key must be a non-empty string.")
+            # a non-null action binds the keystroke; refuse a BIND to a reserved single shortcut (an
+            # unbind, action=null, is harmless — it just clears a chord prefix).
+            if action is not None and keystroke.strip().lower() in KB_RESERVED:
+                raise WriteRefusal(
+                    f"keybindings: {keystroke!r} is a RESERVED shortcut (one of {list(KB_RESERVED)} — "
+                    f"hardcoded interrupt/exit/Enter) and cannot be rebound. Claude Code would ignore "
+                    f"it; refusing rather than writing a binding that silently won't take (fail loud).")
+            if action is not None and (not isinstance(action, str) or ":" not in action):
+                raise WriteRefusal(
+                    f"keybindings[{ctx}][{keystroke}] action {action!r} must be 'namespace:action' "
+                    f"(e.g. 'chat:externalEditor') or null to unbind. Atlas keybindings.md.")
+
+
+def _merge_keybindings(path: str, block) -> str:
+    """Merge the posted {context, bindings} block(s) into the keybindings.json at `path`, returning the
+    JSON text to write. Existing context keymaps are updated key-by-key (override / null-unbind); a new
+    context is appended; $schema/$docs are preserved. Idempotent re-merge of the same block is a no-op."""
+    data = {"bindings": []}
+    if os.path.isfile(path):
+        raw = open(path, encoding="utf-8").read()
+        data = json.loads(raw) if raw.strip() else {"bindings": []}
+        if not isinstance(data, dict):
+            raise WriteRefusal(f"{path} is not a JSON object — refusing to merge keybindings (the file "
+                               f"must be the {{$schema?, $docs?, bindings:[...]}} shape).")
+    arr = data.get("bindings")
+    if not isinstance(arr, list):
+        arr = []
+    idx = {b.get("context"): b for b in arr if isinstance(b, dict)}
+    for blk in _kb_blocks(block):
+        ctx, km = blk.get("context"), (blk.get("bindings") or {})
+        cur = idx.get(ctx)
+        if cur is None:
+            cur = {"context": ctx, "bindings": {}}
+            arr.append(cur)
+            idx[ctx] = cur
+        if not isinstance(cur.get("bindings"), dict):
+            cur["bindings"] = {}
+        cur["bindings"].update(km)                         # key-by-key (override / null-unbind)
+    data["bindings"] = arr
+    return json.dumps(data, indent=2) + "\n"
+
+
 def _validate_text_body(kind: str, body) -> None:
     if not isinstance(body, str) or not body.strip():
         raise WriteRefusal(
@@ -344,6 +439,8 @@ class ConfigWriter:
         # content validation (WHAT)
         if kind == "settings":
             _validate_settings_block(row.get("pointer"), block)
+        elif kind == "keybindings":
+            _validate_keybindings_block(block)            # a dedicated-JSON kind (CC-04), not a body
         else:
             _validate_text_body(kind, body)
 
@@ -392,6 +489,14 @@ class ConfigWriter:
             else:
                 data[pointer] = block
             payload = json.dumps(data, indent=2) + "\n"
+        elif kind == "keybindings":
+            # the dedicated keybindings.json (CC-04): an object with a `bindings` ARRAY of
+            # {context, bindings:{keystroke: action|null}} blocks. `block` carries one (or more) such
+            # blocks; we MERGE by context — the matching context's keymap is updated key-by-key (a
+            # later set of ctrl+e overrides an earlier; an action set to null UNBINDS, the native
+            # semantics), a new context is appended. $schema/$docs at top level are preserved. This is
+            # NOT settings.json's pointer-merge — keybindings has its own array-by-context shape.
+            payload = _merge_keybindings(path, block)
         else:
             payload = body if body.endswith("\n") else body + "\n"
         self._atomic_write(path, payload)
@@ -419,6 +524,16 @@ class ConfigWriter:
             if isinstance(block, dict):
                 return all(cur.get(k) == v for k, v in block.items())
             return cur == block
+        if kind == "keybindings":
+            data = json.loads(text)
+            by_ctx = {b.get("context"): (b.get("bindings") or {})
+                      for b in (data.get("bindings") or []) if isinstance(b, dict)}
+            for blk in _kb_blocks(block):                  # every posted (context, keymap) must have landed
+                ctx, km = blk.get("context"), (blk.get("bindings") or {})
+                got = by_ctx.get(ctx)
+                if got is None or not all(got.get(k) == v for k, v in km.items()):
+                    return False
+            return True
         return text == (body if body.endswith("\n") else body + "\n")
 
     # ---- native CLI (claude mcp / plugin) + structured git/gh — both via the cli_allowlist registry ----

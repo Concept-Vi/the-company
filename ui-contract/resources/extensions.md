@@ -3,7 +3,7 @@ type: contract-entry
 resource: extensions
 summary: The packaged-capability surface — skills (SKILL.md), custom slash commands (now merged into skills), and plugins (a .claude-plugin/plugin.json bundling skills/agents/hooks/MCP-servers/LSP/monitors/output-styles), plus marketplaces, install/enable, and the `/reload-plugins` lifecycle; the company exposes no skill/plugin manager, so this resource contracts the native surface a UI editor+installer renders, with the bridge gap named.
 schemes: []
-status: planned
+status: building
 relates-to: ["[[hooks]]", "[[mcp-servers]]", "[[output-style]]", "[[extensibility-patterns]]", "[[session]]"]
 ---
 
@@ -72,7 +72,7 @@ Claude Code skills (https://code.claude.com/docs/en/skills), custom commands (me
 op: extensions.list
 resource: extensions
 kind: list
-status: planned
+status: building
 direction: outbound
 atlas: [CC-03.1, CC-13.1]
 tasks:
@@ -82,6 +82,7 @@ tasks:
   - alias: "show available commands"
   - alias: "browse my extensions"
 bindings:
+  - { kind: mcp, tool: config_extensions, op: "op='list'", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric ③): the MCP face reads SKILL.md / plugin state via the R3 config_writer. The handler runtime/capability_handlers/config_authoring.py:extensions backs both faces (DRY). live-verify pending (lead): a REAL .claude write / native claude-CLI round-trip." }
   - { kind: tui, command: "claude (interactive) then /help (commands+skills) · /plugin (plugins+marketplaces) · /agents (agents)", transport: claude-tui, exposure: "n/a — interactive", status: planned, note: "NATIVE only. Bundled skills (/code-review /debug /loop /batch /claude-api /run /verify) listed in /help marked Skill. No company endpoint mirrors it. https://code.claude.com/docs/en/skills#bundled-skills" }
 liveness: snapshot
 live-twin: "live-change-detection updates skills within a session; no company stream"
@@ -98,7 +99,7 @@ Adjacent: [[extensions#op: extensions.act]] (author/install/enable), [[hooks]] (
 op: extensions.get
 resource: extensions
 kind: get
-status: planned
+status: building
 direction: outbound
 atlas: [CC-03.1, CC-13.1]
 tasks:
@@ -107,6 +108,7 @@ tasks:
   - alias: "open a skill for editing"
   - alias: "inspect a plugin's components"
 bindings:
+  - { kind: mcp, tool: config_extensions, op: "op='get'", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric ③): the MCP face reads a SKILL.md via the R3 config_writer. The handler runtime/capability_handlers/config_authoring.py:extensions backs both faces (DRY). live-verify pending (lead): a REAL .claude write / native claude-CLI round-trip." }
   - { kind: cli, command: "(read the SKILL.md / plugin.json file directly; or /plugin in claude-tui for the manager view)", transport: claude-cli, exposure: "n/a — claude CLI", status: planned, note: "NATIVE: a skill/plugin is files on disk; the company exposes no structured reader. https://code.claude.com/docs/en/plugins-reference" }
 liveness: snapshot
 live-twin: "none — static between file edits"
@@ -122,7 +124,7 @@ Adjacent: [[extensions#op: extensions.list]] (the inventory), [[extensions#op: e
 op: extensions.act
 resource: extensions
 kind: act
-status: planned
+status: building
 direction: outbound
 atlas: [CC-03.2, CC-03.3, CC-13.2, CC-13.3, CC-13.4, CC-13.5]
 tasks:
@@ -143,8 +145,9 @@ tasks:
   - alias: "enable a plugin"
 caller: required
 bindings:
+  - { kind: mcp, tool: config_extensions, op: "op='act' (create/update-skill + install/update/uninstall/validate-plugin + add-marketplace)", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric ③): the MCP face authors a SKILL.md or runs `claude plugin …` (exec-tier consent for install) via the R3 config_writer; delete-skill is a named building gap. The handler runtime/capability_handlers/config_authoring.py:extensions backs both faces (DRY). live-verify pending (lead): a REAL .claude write / native claude-CLI round-trip." }
   - { kind: cli, command: "author SKILL.md/plugin.json files · `claude plugin init <n>` (scaffold) · `claude plugin validate` · /plugin marketplace add <repo> · /plugin install <name>@<marketplace> · /reload-plugins · --plugin-dir/--plugin-url (test)", transport: claude-cli, exposure: "n/a — claude CLI", status: planned, note: "NATIVE writer surface (claude CLI + /plugin claude-tui). https://code.claude.com/docs/en/skills + https://code.claude.com/docs/en/plugins + https://code.claude.com/docs/en/discover-plugins" }
-  - { kind: http, method: POST, path: "/extensions  (PLANNED — no such bridge route)", transport: bridge-http, exposure: "exposure.json#bridge-http", status: planned, note: "GAP: BRIDGE_ROUTES (runtime/bridge.py:45) has NO Claude-Code skill/plugin authoring or install route. (/api/cognition/create_skill is a COMPOSITION skill, unrelated.) A manager must write skill/plugin files, drive /plugin install, and reload. Unbuilt." }
+  - { kind: http, method: POST, path: "/extensions  (Wire-phase-owned, pending — MCP face built)", transport: bridge-http, exposure: "exposure.json#bridge-http", status: planned, note: "GAP: BRIDGE_ROUTES (runtime/bridge.py:45) has NO Claude-Code skill/plugin authoring or install route. (/api/cognition/create_skill is a COMPOSITION skill, unrelated.) A manager must write skill/plugin files, drive /plugin install, and reload. The bridge arm is Wire-phase-owned (pending); the MCP face is live now." }
 liveness: none
 emits: []
 consequences:

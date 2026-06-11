@@ -55,23 +55,29 @@ BUILDING_LIKE = {"building", "live"}
 
 # the hand-derived ground truth headline (COVERAGE.md, 2026-06-12) — what the machine join is
 # compared against. NOT a target to force-match: a divergence is reported as a real finding.
-# Refreshed 2026-06-12 to the LIVE join after CC-10 (model.act) + CC-20 (cost-usage.get) flipped
-# planned->building (commits 8e40de3/cb3d3d4) and the ③④⑤ fabric lanes began landing. This constant is
-# the regression anchor for FUTURE drift: tools/coverage.py --render-md regenerates the machine block IN
-# COVERAGE.md from the live corpus, so the block always matches; this GROUND_TRUTH is what the generator
-# corroborates ITSELF against (exit 0 = match, exit 3 = a NEW real divergence to inspect — never
-# force-matched). Update it deliberately (here) whenever a real status flip is intended, so an
-# UNINTENDED flip still surfaces as exit 3.
+# Refreshed 2026-06-12 to the LIVE join after the ③④⑤ Capability Fabric lanes LANDED: L-③-config
+# (CC-03/04/11/12/13/26/27/29/32), L-④-dev (CC-06/16/17/19/30), L-⑤-auto (CC-20/21/22/24) flipped
+# planned->building behind real MCP-face bindings (the bridge arms are Wire-phase-owned, still planned).
+# This is the DELIBERATE refresh the comment below mandates: these status flips ARE the intended ③④⑤
+# build, so the anchor moves WITH them (13/22/45 -> 31/4/93), re-arming the instrument so a FUTURE
+# unintended flip still surfaces as exit 3. This constant is the regression anchor for FUTURE drift:
+# tools/coverage.py --render-md regenerates the machine block IN COVERAGE.md from the live corpus, so
+# the block always matches; this GROUND_TRUTH is what the generator corroborates ITSELF against (exit
+# 0 = match, exit 3 = a NEW real divergence to inspect — never force-matched). Update it deliberately
+# (here) whenever a real status flip is intended, so an UNINTENDED flip still surfaces as exit 3.
 GROUND_TRUTH = {
-    "covered_classes": 13,
-    "planned_only_classes": 22,
+    "covered_classes": 31,
+    "planned_only_classes": 4,
     "unmapped_classes": 0,
     "total_classes": 35,
     "affordances_defined": 123,
     "affordances_reached": 123,
-    "affordances_building": 45,
-    "affordances_planned_only": 78,
-    "covered_set": {"CC-05","CC-07","CC-08","CC-09","CC-10","CC-14","CC-15","CC-18","CC-20","CC-23","CC-25","CC-33","CC-35"},
+    "affordances_building": 93,
+    "affordances_planned_only": 30,
+    "covered_set": {"CC-03","CC-04","CC-05","CC-06","CC-07","CC-08","CC-09","CC-10","CC-11","CC-12",
+                    "CC-13","CC-14","CC-15","CC-16","CC-17","CC-18","CC-19","CC-20","CC-21","CC-22",
+                    "CC-23","CC-24","CC-25","CC-26","CC-27","CC-29","CC-30","CC-32","CC-33","CC-34",
+                    "CC-35"},
 }
 
 

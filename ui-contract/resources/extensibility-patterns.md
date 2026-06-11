@@ -3,7 +3,7 @@ type: contract-entry
 resource: extensibility-patterns
 summary: The meta-resource for customizing Claude Code — the chooser across the customization mechanisms (skills · custom commands · hooks · MCP servers · output styles · subagents · CLAUDE.md · plugins-as-package · settings precedence), the shared path placeholders (${CLAUDE_PROJECT_DIR}/${CLAUDE_PLUGIN_ROOT}/${CLAUDE_PLUGIN_DATA}), and the scope/precedence laws that govern them all; the company exposes no customization face, so this entry is documentation-as-data a UI uses to route an intent to the right mechanism.
 schemes: []
-status: planned
+status: building
 relates-to: ["[[hooks]]", "[[mcp-servers]]", "[[extensions]]", "[[output-style]]", "[[permission]]", "[[claude-memory]]"]
 ---
 
@@ -74,7 +74,7 @@ The shared SCOPE + PRECEDENCE laws (a UI must surface the effective source, neve
 op: extensibility-patterns.get
 resource: extensibility-patterns
 kind: get
-status: planned
+status: building
 direction: outbound
 atlas: [CC-27.1, CC-27.2]
 tasks:
@@ -86,6 +86,7 @@ tasks:
   - alias: "pick the right extension mechanism"
   - alias: "settings precedence rules"
 bindings:
+  - { kind: mcp, tool: config_patterns, op: "op='resolve'|'describe'", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric ③): the MCP face resolves the chooser PURELY (direct-read — documentation-as-data, no file, no R3). The handler runtime/capability_handlers/config_authoring.py:patterns backs both faces (DRY). live-verify pending (lead): a REAL .claude write / native claude-CLI round-trip." }
   - { kind: cli, command: "(reference — the chooser is documentation across the output-styles/skills/plugins/hooks docs; the company exposes no routing endpoint)", transport: claude-cli, exposure: "n/a — claude CLI", status: planned, note: "no enumerable company registry; canonical source = the customization comparison tables. https://code.claude.com/docs/en/output-styles#comparisons-to-related-features" }
 liveness: snapshot
 live-twin: "none — static reference (grows as Claude Code adds mechanisms)"

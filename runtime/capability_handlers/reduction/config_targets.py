@@ -72,7 +72,14 @@ CONFIG_TARGETS = {
               "plugin install fetches+runs third-party code."),
     # ── reopened boundaries (Tim's explicit steer — buildable R3 config-face capabilities) ──
     "config.keybindings": dict(
-        kind="keybindings", dangerous=False, schema="keybindings.config",
+        # keybindings live in a DEDICATED file (~/.claude/keybindings.json — Atlas keybindings.md, NOT
+        # settings.json), USER-scope only (it governs the operator's TUI; per-project keybindings are
+        # not a Claude Code surface). The scope_files override pins the single real target so scope_path
+        # never falls through to SCOPES (= settings.json) — that fall-through was a foundation bug this
+        # lane closes (the kind="keybindings" payload would have clobbered settings.json). Object with a
+        # `bindings` array; auto-detected (no restart); non-executable, reversible.
+        kind="keybindings", pointer="bindings", dangerous=False, schema="keybindings.config",
+        scope_files={"user": "~/.claude/keybindings.json"},
         teach="a keybinding writes ~/.claude/keybindings.json — a host-config the operator owns "
               "(governs the interactive TUI; inert against headless). Non-executable, reversible (CC-04)."),
     "config.telemetry": dict(

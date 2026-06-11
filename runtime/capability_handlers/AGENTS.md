@@ -2,7 +2,10 @@
 type: module-constitution
 module: runtime/capability_handlers
 build: capability-fabric
-governs: ["runtime/capability_handlers/__init__.py", "runtime/capability_handlers/reduction/*.py"]
+governs: ["runtime/capability_handlers/__init__.py", "runtime/capability_handlers/reduction/*.py",
+          "runtime/capability_handlers/r3.py", "runtime/capability_handlers/config_authoring.py",
+          "runtime/capability_handlers/dev_bridges.py", "runtime/capability_handlers/automation.py",
+          "mcp_face/tools/config_authoring.py", "mcp_face/tools/dev_bridges.py", "mcp_face/tools/automation.py"]
 relates-to: ["[[MAP]]", "[[Company State]]", "runtime/AGENTS.md",
              "ui-contract/CONTRACT-FORMAT.md", "ui-contract/CONVENTIONS.md"]
 status: living
@@ -42,6 +45,8 @@ toward `live` in the UI-Contract corpus. Spec: build-prep "Capability Fabric —
   primitives live here): `config_targets` (③ .claude write targets + consent tier), `cli_allowlist`
   (R3 native-CLI argv templates), `session_capabilities` (R1-prime in-session caps — liveness:stream,
   no typed return_shape), `host_reads` (declarative-direct redacted host reads).
+- `r3.py` (the R3 CLIENT — added with L-③-config) — the socket-thin client the ③ (+ ④ git/ci, ⑤ routines) handlers call to reach the config_writer SERVICE without crossing the floor themselves. TWO modes, one law: IN-PROCESS (`r3.bind(writer)` — the bridge binds one ConfigWriter over the live store at startup; the unit tests bind a scratch writer over an isolated tmp store + scratch HOME) OR HTTP (POST to 127.0.0.1:$COMPANY_CONFIG_WRITER_PORT — the same /read /write /cli /git /consent routes) when nothing is bound. A down service raises `R3Unavailable` (teaching, names `company up config-writer`) — NO silent fallback. Either mode, the config_writer stays the SOLE .claude writer.
+- `config_authoring.py` (③, WIRED 2026-06-12 — L-③-config) — the CONFIG-AUTHORING family: `hooks` (CC-12, R3 settings hook blocks — DANGEROUS command → consent beat), `mcp_servers` (CC-11, R3 `claude mcp …` — stdio spec EXEC-tier), `output_style` (CC-26, R3 file authoring — non-dangerous; set-style/statusline/delete are named building gaps), `slash_commands` (CC-03, R3 command .md — DANGEROUS prompt body), `extensions` (CC-13 + CC-34 reopened, R3 SKILL.md authoring + `claude plugin …` + the native `claude update`/`install` updater — exec-tier), `patterns` (CC-27, direct-read PURE chooser resolver — documentation-as-data, no file/R3), plus the REOPENED config-face capabilities `keybindings` (CC-04, R3 ~/.claude/keybindings.json — USER-scope only, refuses non-user loud, merge-by-context + null-unbind, reserved-shortcut refusal), `telemetry` (CC-32, R3 settings env data-posture flags — closed flag set), `provider` (CC-29, R3 settings env CLAUDE_CODE_USE_*/ANTHROPIC_* — closed key set). All write through the `r3` client to the config_writer; reads are face-direct via `r3.read`. Wires its nine fns onto HANDLERS on import; the MCP face (`mcp_face/tools/config_authoring.py`) calls `load_all()` + delegates (DRY: one handler, two faces — byte-identical dict). FOUNDATION FIX this lane closed: config_targets `config.keybindings` resolved to settings.json (would have clobbered it); now pinned to ~/.claude/keybindings.json (user-only `scope_files`), and config_writer grew a `keybindings` kind (JSON object, merge `bindings` by context). Proven by `tests/config_authoring_acceptance.py` (46 checks by USE on a scratch tree — consent beats, refusals, redaction, the injection floor, DRY delegation). NEEDED-ARMS reported to the Wire (declared, NOT built — bridge.py is Wire-phase-owned): the `/api/config/*` literal arms below.
 - `automation.py` (⑤, WIRED 2026-06-12 — L-⑤-auto) — the AUTOMATION family: `routines` (CC-21, R3 native-CLI intent + direct-read), `workflows` (CC-22, R1 /goal deliver-intent + R2 /loop wire-job + a link to the LIVE consult-fan), `cost` (CC-20, direct-read fold over agent_sessions.turn `usage`), `auth` (CC-24.1 reopened, direct-read redacted credential method). Wires its four fns onto HANDLERS on import; the MCP face (`mcp_face/tools/automation.py`) imports it (NOT `load_all`, to stay file-disjoint from ③④) and delegates. Proven by `tests/automation_acceptance.py` (73 checks, stubs).
 - `dev_bridges.py` (④, WIRED 2026-06-12 — L-④-dev) — the DEV-BRIDGES family: `git` (CC-06, R3 structured git/gh via the config_writer — sha/exit, NOT prose), `code_intel` (CC-16, R1-prime in-session LSP — builds a bridge-session spawn intent; PROSE result, liveness:stream, NO return_shape), `computer_use` (CC-17, R1-prime web-fetch/web-search intent; browser/computer REFUSED-LOUD as not-WSL/macOS-interactive host boundaries — never green-painted), `code_review` (CC-19, R2 — writes a wire-job intent + job-id + watch cursor behind /api/resolve; never spawns), `ci` (CC-30, R3 — scaffold a .github/workflows file write + reads; mention/event inbound = no op, boundary). Wires its five fns onto HANDLERS on import; the MCP face (`mcp_face/tools/dev_bridges.py`) calls `load_all()` + delegates (DRY: one handler, two faces — byte-identical dict). Adds the CC-34 native-updater rows (`claude update`/`claude install`) to `cli_allowlist` under config.extensions. Proven by `tests/dev_bridges_acceptance.py` (48 checks, stubs — incl. argv injection-resistance, the host-boundary refusals, the R1-prime/R2 intent shapes, and the DRY delegation). NEEDED-ARM reported to the Wire: a config_writer `/ci-scaffold` generic-file-write for the .github/workflows root.
 
@@ -75,3 +80,26 @@ toward `live` in the UI-Contract corpus. Spec: build-prep "Capability Fabric —
 validity, readonly coherence, the §4+reopened inventory, the registration seam + honest stub, ctor
 fail-loud, the advisory cross-grain bridge). The HARD one-handler-two-faces drift test is
 `tests/capability_handlers_acceptance.py` (runs once the faces exist).
+
+
+## NEEDED-ARMS for the Wire phase (bridge.py literal `path ==` arms — declared here, NOT built by these lanes)
+
+bridge.py is Wire-phase-owned (the lanes do NOT edit it). Each arm dispatches a literal route to the
+SAME handler the MCP face calls (DRY at the handler, literal at the dispatch — the drift test stays
+intact, §3.3). The Wire appends these to the do_GET/do_POST chain + `BRIDGE_ROUTES`:
+
+### ③ CONFIG-AUTHORING (`/api/config/*` → `HANDLERS["config.*"].fn(self.suite, **body)`)
+- `GET  /api/config/hooks`        + `POST /api/config/hooks`        → `config.hooks`        (op=list/get | act)
+- `GET  /api/config/mcp-servers`  + `POST /api/config/mcp-servers`  → `config.mcp_servers`  (op=list/get | act)
+- `GET  /api/config/output-style` + `POST /api/config/output-style` → `config.output_style` (op=list/get | act)
+- `GET  /api/config/commands`     + `POST /api/config/commands`     → `config.slash_commands`(op=list/get | act)
+- `GET  /api/config/plugins`      + `POST /api/config/plugins`      → `config.extensions`   (op=list/get | act, incl. CC-34 update-native/install-native)
+- `GET  /api/config/patterns`     → `config.patterns` (op=resolve/describe — pure read, no POST)
+- `GET  /api/config/keybindings`  + `POST /api/config/keybindings`  → `config.keybindings`  (CC-04 reopened; op=list/get | act)
+- `GET  /api/config/telemetry`    + `POST /api/config/telemetry`    → `config.telemetry`    (CC-32 reopened; op=list/get | act=set-flag)
+- `GET  /api/config/provider`     + `POST /api/config/provider`     → `config.provider`     (CC-29 reopened; op=list/get | act=set-provider)
+
+The bridge process must `r3.bind(ConfigWriter(...))` (in-process, the live store) OR leave it unbound to
+proxy the config_writer service over HTTP — either is the floor (config_writer is the sole writer). The
+async/consequence bridge arms for ④ (R1-prime code-intel/computer-use receipts, R2 code-review job) and
+⑤ are declared in those lanes' reports.
