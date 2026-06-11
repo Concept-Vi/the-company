@@ -1,7 +1,7 @@
 ---
 type: contract-entry
 resource: output-style
-summary: The terminal presentation surface — the output STYLE (a system-prompt modifier setting Claude's role/tone/format: built-in Default/Proactive/Explanatory/Learning or a custom Markdown file) and the STATUS LINE (a shell script fed JSON session data that renders a persistent bottom bar); the company exposes neither, so this resource contracts the native surface a UI editor renders, with the bridge gap named.
+summary: "The terminal presentation surface — the output STYLE (a system-prompt modifier setting Claude's role/tone/format: built-in Default/Proactive/Explanatory/Learning or a custom Markdown file) and the STATUS LINE (a shell script fed JSON session data that renders a persistent bottom bar); the company exposes neither, so this resource contracts the native surface a UI editor renders, with the bridge gap named."
 schemes: []
 status: planned
 relates-to: ["[[extensions]]", "[[context-window]]", "[[cost-usage]]", "[[model]]"]

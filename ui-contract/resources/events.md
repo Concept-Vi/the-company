@@ -78,7 +78,7 @@ liveness: snapshot
 live-twin: "[[events#op: events.watch]]"
 emits: []
 verification:
-  filtered-poll: {state: probe-verified, run: agent_sessions_mailbox_acceptance (watch op: only agent_sessions.*, honest cursor), date: 2026-06-12}
+  filtered-poll: {state: probe-verified, run: "agent_sessions_mailbox_acceptance (watch op: only agent_sessions.*, honest cursor)", date: 2026-06-12}
 ```
 MCP request: `sessions(op="watch", since=-1, session="", limit=50, detail=)`. Response:
 `{op, session, total, since, next_since, detail, events, note}` — pagination never skips
