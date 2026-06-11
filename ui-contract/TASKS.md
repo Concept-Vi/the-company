@@ -63,6 +63,23 @@ Statuses ride the ops (CONTRACT-FORMAT §4.2); rows whose op is `planned` say so
 | what is the fabric's concurrency cap · check the cap before fanning out *(alias)* | [[fabric-config#op: fabric-config.get]] | |
 | is the session supervisor up · fabric health *(alias)* | [[fabric-config#op: fabric-config.get]] | |
 
+## Context management & checkpoints (F2 — in-process Claude Code features, NOT yet fabric)
+> Every row here is **PLANNED**: these are interactive-TUI / Agent-SDK capabilities the Company
+> supervisor does not yet bridge (it spawns headless `claude -p`). The op entries carry the
+> grounded behavior + the named gap. A fabric-only consumer reaching for these has found a
+> recorded boundary, not a dead end.
+
+| intent / alias | op | params |
+|---|---|---|
+| how full is the context window · what is eating my tokens *(alias)* | [[context-window#op: context-window.get]] | **PLANNED** — in-process /context + statusline feed; no fabric endpoint |
+| compact the conversation to free context · run compaction now *(alias)* | [[context-window#op: context-window.compact]] | focus=<instruction> · **PLANNED** — /compact (TUI) or SDK prompt; auto-compaction is on by default |
+| clear context and start fresh between tasks · wipe the context *(alias)* | [[context-window#op: context-window.clear]] | **PLANNED** — /clear (parks the old session, resumable); /btw for an aside that never enters history |
+| ask a quick aside without growing context | [[context-window#op: context-window.clear]] | mode=btw · **PLANNED** |
+| show the points I can rewind this session to · show the rewind menu *(alias)* | [[checkpoint#op: checkpoint.list]] | **PLANNED** — /rewind menu (TUI) / accumulate SDK UserMessage.uuid |
+| rewind this session to an earlier prompt · go back to before that broke *(alias)* | [[checkpoint#op: checkpoint.restore]] | scope=code\|conversation\|both · **PLANNED** — /rewind restore actions / SDK rewind_files (files-only) |
+| undo Claude's file edits back to a point · undo the last changes *(alias)* | [[checkpoint#op: checkpoint.restore]] | scope=code · **PLANNED** |
+| compress one side of a chosen point · targeted compact at a checkpoint *(alias)* | [[checkpoint#op: checkpoint.summarize]] | direction=from-here\|up-to-here · **PLANNED** — /rewind "Summarize from/up to here" |
+
 ## Not exposed locally (honest rows — reach for these and you found a recorded boundary)
 | intent | status |
 |---|---|
@@ -70,3 +87,5 @@ Statuses ride the ops (CONTRACT-FORMAT §4.2); rows whose op is `planned` say so
 | rename/retitle a session record | NOT EXPOSED — titles are importer-derived (fallback chain); no update op exists yet |
 | change the fabric's cap/timeout/permission via an API | NOT EXPOSED BY DESIGN — operator env + service restart; raising the cap is a recorded decision ([[fabric-config#Caller]]) |
 | reach the supervisor from off this machine | NOT EXPOSED BY DESIGN — 127.0.0.1 only, no env to widen (exposure law B3) |
+| read/compact/clear a session's context window through an API | NOT EXPOSED — in-process only (/context, /compact, /clear). The supervisor could inject /compact as a turn but no contracted op means it; observation rides the SDK compact_boundary marker / OTEL claude_code.compaction event ([[context-window#Caller]]) |
+| rewind code or conversation to a checkpoint through an API | NOT EXPOSED — checkpoints are session-local, operated via the /rewind TUI menu or the Agent SDK rewind_files (which restores FILES ONLY). The supervisor never enables file-checkpointing on its headless sessions ([[checkpoint#Caller]]). For "preserve original, try another way" the fabric path is fork: [[session#op: session.create]] fork=true |

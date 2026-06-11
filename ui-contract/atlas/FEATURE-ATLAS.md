@@ -80,3 +80,25 @@ below; F2–F8 lanes append theirs under their classes.
 
 ### CC-25 · Configuration & Settings System
 - CC-25.1 — read the fabric's live operating configuration (cap, timeout, permission, bind)
+
+## Affordances seeded by F2 (Sessions & lifecycle deep — context mgmt + checkpoints)
+
+### CC-05 · Context Management & Window Optimization (deep)
+- CC-05.2 — targeted compaction: compress ONE side of a chosen point ([[checkpoint#op: checkpoint.summarize]] — TUI /rewind "Summarize from/up to here")
+- CC-05.3 — read live context-window usage + breakdown by category ([[context-window#op: context-window.get]] — /context, statusline feed)
+- CC-05.4 — whole-conversation compaction, manual and automatic, with optional focus ([[context-window#op: context-window.compact]] — /compact, auto-compaction, microcompaction)
+- CC-05.5 — reset context between tasks / ask without growing it ([[context-window#op: context-window.clear]] — /clear, /btw)
+
+### CC-08 · Checkpoints & Session Management (deep)
+- CC-08.7 — list a session's within-session restore points ([[checkpoint#op: checkpoint.list]] — /rewind menu / SDK UserMessage.uuid)
+- CC-08.8 — rewind code and/or conversation to a restore point ([[checkpoint#op: checkpoint.restore]] — /rewind restore actions / SDK rewind_files)
+- CC-08.9 — restore FILES ONLY to a point, conversation intact (the SDK rewind_files semantics; a sub-mode of [[checkpoint#op: checkpoint.restore]])
+
+> F2 honesty: every CC-05.2–05.5 and CC-08.7–08.9 affordance is `planned` — these are
+> in-process Claude Code features (interactive TUI + Agent SDK) the Company supervisor does NOT
+> yet bridge. The fabric-fork affordance CC-08.4 (seeded by F1) is the one native-lifecycle
+> capability that IS realized through a real endpoint ([[session#op: session.create]] fork=true);
+> checkpointing.md itself names fork as the "preserve the original, try a different approach"
+> alternative to in-place rewind. Grounded in: checkpointing.md, agent-sdk/file-checkpointing.md,
+> context-window.md, sessions.md (branch-a-session), glossary.md, how-claude-code-works.md,
+> monitoring-usage.md, statusline.md, errors.md (all in vault claude-code-atlas, fetched 2026-06-10).

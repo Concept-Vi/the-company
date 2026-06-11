@@ -65,3 +65,37 @@ machine-diff (V24) is an open obligation, stated loudly per the format's fail-lo
 - **Inventory source:** the `ops/cli/app.py` dispatch chain + per-noun modules. HONEST GAP:
   no exported machine-readable command registry constant yet — extract_reality will need one
   (same obligation class as §9.2); recorded here so V21 has its target, never silently passed.
+
+## `tui-interactive` — the Claude Code interactive terminal (F2: a NON-fabric surface, declared for honesty)
+- **Protocol:** the interactive `claude` TUI — slash commands (`/rewind`, `/compact`, `/context`,
+  `/clear`, `/btw`, `/branch`, `/resume`) and key chords (`Esc Esc`). NOT a programmatic transport:
+  no socket, no API, no machine-readable request shape.
+- **Exposure:** `process-local` — it is a human-driven terminal, not reachable by any fabric
+  consumer. The Company supervisor spawns headless `claude -p`, which has NO interactive TUI, so
+  the supervisor cannot drive these surfaces at all.
+- **Caller identity:** the human at the terminal. There is no fabric caller.
+- **Inventory source:** NONE that the Company exposes — this is precisely the F2 gap. The
+  authoritative inventory of these surfaces is the Claude Code docs (vault `claude-code-atlas`:
+  checkpointing.md, context-window.md, interactive-mode.md, commands.md, sessions.md), cited
+  per-op. V21 would FAIL a fabric binding on this transport because no machine-readable Company
+  inventory exists; every F2 binding marked `kind: tui` is therefore `status: planned` and carries
+  no exposure registry key (`exposure: "n/a — interactive"`). Recorded loudly, never silently
+  passed — when these are bridged (Atlas CC-18, SDK-shaped), they migrate to `agent-sdk` below.
+
+## `agent-sdk` — the Claude Agent SDK in-process API (F2: a NON-fabric surface, declared for honesty)
+- **Protocol:** the `@anthropic-ai/claude-agent-sdk` (TS) / `claude_agent_sdk` (Python) in-process
+  library: `ClaudeAgentOptions(enable_file_checkpointing=…)`, `rewind_files(uuid)` / `rewindFiles`,
+  `/compact` sent as a prompt string, the `compact_boundary` system message, the `PreCompact` hook,
+  `UserMessage.uuid` restore points (requires `extraArgs {replay-user-messages: null}`).
+- **Exposure:** `process-local` — an in-process SDK call inside whatever program holds the session.
+  The Company supervisor uses headless `claude -p` over stream-json but does NOT use the SDK's
+  checkpointing/compaction options, so these are not wired through any Company endpoint today.
+- **Caller identity:** the SDK program holding the `ClaudeSDKClient` / `query()` session. No fabric
+  caller.
+- **Inventory source:** the Agent SDK reference (vault `claude-code-atlas`:
+  agent-sdk/file-checkpointing.md, agent-sdk/agent-loop.md, agent-sdk/typescript.md,
+  agent-sdk/subagents.md), cited per-op. As with `tui-interactive`, NO machine-readable Company
+  inventory exists; F2 `kind: sdk` bindings are `status: planned` with `exposure: "n/a — Agent SDK
+  in-process"`. Bridging them is owned by the headless/SDK lane (Atlas CC-18); F2 records the
+  capability and the absent bridge. This is the natural carrier for a future fabric checkpoint/
+  context endpoint.

@@ -63,3 +63,7 @@ retrieval bridge to consumer vocabulary). Escapes need an inline `lint-ok:` just
 ## Journey ambiguity classes (V19 — each MUST have a journey)
 - "history vs live vs messages": a transcript is the past, a watch is the present, mail is
   addressed communication — `journeys/message-and-read-reply.md` carries the disambiguation.
+- "session state management" (F2): rewind/restore REVERTS, targeted-summarize COMPRESSES one
+  side, compact COMPRESSES the whole conversation, clear DISCARDS-and-parks, fork COPIES-and-
+  preserves — five overlapping mechanisms, five distinct meanings. `journeys/manage-session-state.md`
+  carries the chooser (intent -> mechanism) and the two deciding axes (touches-files? preserves-original?).
