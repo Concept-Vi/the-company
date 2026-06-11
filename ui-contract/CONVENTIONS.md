@@ -137,8 +137,8 @@ non-fabric transports). The discriminator VALUES, registered here for V2 closure
   `mcp-servers`: the native `claude mcp …` management verbs + the `/mcp` OAuth flow (planned — no
   config-writer or auth bridge).
 - `create-skill` / `update-skill` / `delete-skill` / `scaffold-plugin` / `package-plugin` /
-  `add-marketplace` / `install-plugin` / `uninstall-plugin` / `enable-plugin` / `disable-plugin` /
-  `reload-plugins` — on `extensions`: skill authoring + the `/plugin` + `claude plugin` management
+  `add-marketplace` / `install-plugin` / `uninstall-plugin` / `enable-plugin` / `disable-plugin` / `reload-plugins`
+  — on `extensions`: skill authoring + the `/plugin` + `claude plugin` management
   surface (planned — no authoring or install bridge; the company's /api/cognition/create_skill is a
   COMPOSITION skill, unrelated).
 - `set-style` / `create-style` / `delete-style` / `set-statusline` / `clear-statusline` — on
@@ -152,3 +152,69 @@ EVENT names (`MessageDisplay`, `PostToolBatch`, etc.) and the output-style names
 `Explanatory`, `Learning`) are Claude Code identifiers, not UI directives. The word "panel" appears
 ONLY inside quoted native-surface names (the `/mcp` panel) where it is the product's own term, carried
 verbatim from the docs — `lint-ok:` because it names a Claude Code surface, not a company UI element.
+
+## Named-act registry — F1/F2 resource-control additions (native-surface steers; append-only)
+These lanes use the uniform verb `act` with an internal `act:` discriminator on resources whose
+write operations are steers over native Claude Code surfaces (auth, CI, git, routines, settings,
+diagnostics, workflows) rather than CRUD on a fabric object. The discriminator VALUES are the named
+acts, registered here for V2 closure. ALL are `planned` against the company today (no bridge route
+exists; every binding names the gap and rides the native `cli-local`/`tui-interactive`/`supervisor-http`
+transports) except where a spawn-extension is noted. Definitions restate the owning op's documented
+native behavior (each op fence cites its Claude Code doc URL + runtime line).
+
+### auth (credential steer — every form is a HOST action the company deliberately does not perform)
+- `relogin` — on `auth`: switch the active subscription/Console account via the native `/login` OAuth
+  flow (paste-code fallback in WSL/SSH/containers); takes effect on the NEXT session start, not mid-session.
+- `logout` — on `auth`: clear the stored credential via the native `/logout`; a HOST action, no company route.
+- `setup-token` — on `auth`: mint a one-year inference-scoped `CLAUDE_CODE_OAUTH_TOKEN` via `claude setup-token`
+  (prints the token, saves nothing; cannot establish Remote Control). HOST CLI, no company op.
+
+### ci (in-CI invocation — direction:inbound; the CI provider drives, no company face participates)
+- `mention` — on `ci`: a `@claude` mention in a GitHub/GitLab issue/PR/MR comment (interactive mode,
+  auto-detected from comment events; trigger phrase configurable, defaults to `@claude`).
+- `event` — on `ci`: a CI event (pull_request/push/`schedule:`/manual) matching the workflow trigger,
+  driving an automation-mode run with a fixed `prompt:` on the CI provider's runner.
+
+### diagnostics (single-session diagnostic steer — native levers the headless spawn omits)
+- `doctor` — on `diagnostics`: run `/doctor` (install/settings/MCP/context health). Interactive-host only;
+  no headless per-session form exists — a per-session health object would be net-new company work.
+- `set-debug` — on `diagnostics`: spawn with `--debug <filter>` (e.g. `api,hooks`) for category debug logging
+  (spawn threads `--verbose` but no `--debug` today).
+- `safe-mode` — on `diagnostics`: spawn under `--safe-mode`/`--bare` to isolate a problem (note: `--bare`
+  skips the MCP/keychain/CLAUDE.md the fabric depends on — isolation only, would break mcp__company access).
+
+### git (everyday git steer — native Bash-tool git under the session's permission posture)
+- `commit` — on `git`: stage + commit with a generated message; Claude emits `git add`/`git commit` via the
+  Bash tool under [[permission]]; the sha rides the turn transcript, not a structured company field.
+- `open-pr` — on `git`: create a pull request (`gh pr create` via Bash); needs the GitHub CLI/App in the session env.
+- `resume-from-pr` — on `git`: resume the session linked to a PR via the native `claude --from-pr <number|url>`
+  launch flag (the company spawn carries no `--from-pr` passthrough).
+- `rebase` — on `git`: rebase/merge/cherry-pick a branch via plain `git` through the Bash tool; none company-wrapped.
+
+### git worktree (isolation steer — `git.worktree` op; parallel-session/subagent file-collision isolation)
+- `create` / `enter` / `subagent-isolate` — on `git`: create an isolated worktree (`claude --worktree <name>`/`-w`,
+  default `.claude/worktrees/<name>/` on branch `worktree-<name>`, base = `worktree.baseRef`) / switch into one
+  (the `EnterWorktree` tool) / isolate subagents via `isolation: worktree` frontmatter (each gets a temp worktree,
+  auto-removed if it finishes without changes). `remove` reuses the F4 `remove` act. The company drives none, though
+  it IS the company's own self-build isolation mechanism internally.
+
+### routines (control surface for an existing routine — native claude.ai/code/routines + session-tool acts)
+- `run-now` — on `routines`: run a cloud routine immediately without waiting for the schedule (`/schedule run`).
+- `pause` — on `routines`: pause/resume a routine's schedule (the Repeats toggle on the routine detail page).
+- `one-off` — on `routines`: schedule a single non-repeating fire that auto-disables to **Ran** after firing.
+- `cancel-session-task` — on `routines`: cancel a session-scoped scheduled task by its 8-char id via the native
+  `CronDelete` tool (`Esc` clears a pending `/loop` wakeup; `CLAUDE_CODE_DISABLE_CRON=1` disables the scheduler).
+
+### settings (per-session configuration steer — native `--settings`/`--add-dir`/`env` levers the spawn omits)
+- `set-env` — on `settings`: set an environment variable for a session (planned spawn-extension: an `env` map ->
+  per-process environment; the spawn carries no env override today, inheriting the service account's settings).
+- `add-dirs` — on `settings`: grant a session access to extra directories (planned: an `add_dirs` array -> repeated
+  `--add-dir`). `set-at-spawn` (thread a settings file/inline JSON at spawn) reuses the F3 `set-at-spawn` act.
+
+### workflows (single steer over the native keep-going modes — none wired through the company)
+- `set-goal` — on `workflows`: set a `/goal <condition>` so a session keeps working toward a verifiable end
+  state without per-step prompting (evaluator = the configured small-fast model, default Haiku; needs hooks enabled).
+- `goal-status` — on `workflows`: check the goal status (`/goal` alone), surfacing the evaluator's short reason.
+- `clear-goal` — on `workflows`: clear/stop the goal (`/goal clear|stop|off|reset|none|cancel`).
+- `loop` — on `workflows`: start an interval keep-going loop (`/loop <interval> <prompt>`, cron-backed, session-scoped;
+  runs until `Esc`/expiry). The live MULTI-session capability is NOT here — it is [[session#op: session.post]] verb=consult.
