@@ -115,3 +115,76 @@ structure like the mockup screens" (square) and the embeddings (circle) become O
 - **Discrete vs continuous reconciliation:** the lattice is discrete at any n but continuous in the
   limit; which operations live at fixed-n (rendered, addressable) vs in the continuous embedding
   (search) is a design seam.
+
+---
+## 8 · THE INVARIANT LAW — everything is a variable (Tim Geldard, 2026-06-11)
+
+"There is no definition. The axes are variables. So are the divisions — everything is variables.
+Every integer is a variable, anything can fill it. The relative centre can change — it is the object
+of attention, whatever that is. This is an invariant system law, for agnostic systems. It's an
+instrument." (Tim's work.)
+
+THE SEPARATION (the heart of it): the **invariant** is the RELATIONSHIP — the square/circle duality
+about a shared centre, and the resonance law 2π/n=(1/n)^k, which holds at EVERY n (scale-invariant).
+The **variable** is everything that fills it — the axes (which dimensions), the divisions (n, the
+granularity), every integer slot (what data occupies it), and the CENTRE itself (what is attended
+to). Law = invariant relationship over variable content. That is what makes it a LAW, not a config,
+and AGNOSTIC — the same instrument renders any domain (code, finance, legal, visual, conversation):
+a domain is just an axis-assignment + content populating the lattice.
+
+THE RELATIVE CENTRE: Tim is the ROOT origin (the default whole-system frame). But the centre is
+RELATIVE — any point can become it. **Attention IS origin-selection**: look at a node → it becomes
+the centre → the whole space re-projects relative to it (radii/relevance recomputed around it). This
+absorbs his "looking" primitive (look = re-centre → resolve → inject) and his address-accumulation
+idea (an address is a junction; re-centring on it gathers the field relative to it).
+
+## 9 · THE ASSIGNMENTS (Tim: "you tell me what they are — you have the context")
+
+- **Embeddings = the CIRCLE.** They give a point its continuous position — radius (similarity-to-
+  centre = relevance) + angle (kind/direction). RELATIVE by nature: distance is always FROM the
+  current centre; re-centre → the semantic landscape re-forms. Transcendental, lands on grid points
+  only by coincidence (= on the axes).
+- **Directory structure / paths = the SQUARE.** The discrete integer lattice (i,j) — nameable,
+  indexable scaffold. Nesting = recursive subdivision (x/3 inside x/4). A path IS a grid coordinate
+  at a zoom level.
+- **Type registries = the ANGULAR sectors AND the axis-vocabulary.** Types partition the full turn
+  (2π) into kinds/directions; the registry is also the vocabulary from which AXES (commensurability
+  dimensions) are chosen. The resonance law binds #types (angular divisions) to available depth.
+- **Timestamps = the privileged AXIS, and the radial-recency reading.** Monotonic, shared by all
+  (his "time is the reference for sequence") → a natural axis. Dual: when the centre is "now,"
+  recency = radius. The scrubber moves the temporal centre.
+- **Nodes = the POPULATED points.** A thing occupying a slot: a square-coordinate (address/path) +
+  a circle-coordinate (embedding relative to centre). Where data populates the space.
+- **Edges = TYPED VECTORS = the moves.** An edge is a transform between points; its type (from the
+  registry) fixes which canonical move it is: translate (grid/structural), rotate (angular/change-
+  kind), scale (radial/change-altitude). contains=scale-in · precedes=angular-step-on-a-ring ·
+  supersedes=radial-replace. The type registry = the legal moves; edges = instances.
+- **Registries (ratified rows) = the DISCRETE lattice itself** — points brought onto the axes and
+  made permanent (the crystallized, trusted scaffold; the coincidence points).
+
+## 10 · THE FORBIDDEN, operationally (Tim: "you tell me")
+A position with a CIRCLE coordinate but no clean SQUARE coordinate, or vice versa. Three operational
+kinds, and they are THE WORK (not errors):
+- **Circle-without-square (un-addressed meaning):** the system FEELS it (embeds, it's near things)
+  but cannot NAME it (no ratified address). = the pipelines' residue / orphans / unknown-unknowns.
+  Operationally: the GATE'S INBOX — a forbidden point is a proposal waiting to be rotated onto an
+  axis (recognition = that rotation).
+- **Square-without-circle (un-meant structure):** has an address but drifted from any meaning =
+  dead/orphan code, built-but-nothing-means-it. Operationally: the DRIFT/DECAY list.
+- **The CORNER (maximal incommensurability, reachable only by a circle leaving the box):** meaning so
+  far from any structure that placing it requires EXPANDING THE BOX — a new axis, a new dimension.
+  Operationally: the ARCHITECTURE-GROWTH signal (forces a new dimension, not just a filled slot).
+  The system's to-do list IS its forbidden zones: rotate them onto the axes, or grow the box.
+
+## 11 · DISCRETE vs CONTINUOUS, what lives in each (Tim: "you tell me")
+- **DISCRETE (the square, fixed-n lattice):** everything ADDRESSABLE / NAVIGABLE / GATED / RATIFIED /
+  EXACT / SHARED. Registries, addresses, declared typed-relations, anything you point at, name,
+  commit, revert. = what's been brought onto the axes. Anything that must be exact and shared.
+- **CONTINUOUS (the circle, the limit):** everything FELT / SEARCHED / SIMILAR / RELATIVE / A-MATTER-
+  OF-DEGREE. Embeddings, relevance gradients, near-ness with no exact boundary. What you feel your
+  way through. = the unratified ocean.
+- **THE RELATIONSHIP:** the discrete is SAMPLED from the continuous at the current n. Render = sample
+  the continuous field at resolution n onto the lattice. Zoom in (↑n) = sample finer → more of the
+  continuous becomes discretely visible. THE GATE = permanently promoting a sample to the ratified
+  discrete lattice (stays when you zoom back out). Continuous = the field; discrete = the ratified
+  samples; n = current acuity; gate = makes a sample permanent.
