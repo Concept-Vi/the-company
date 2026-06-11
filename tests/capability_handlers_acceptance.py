@@ -13,12 +13,13 @@ WHAT IS BUILDABLE NOW vs HONESTLY PENDING (no green-paint, the standing law):
     directions (every key wrapped; every wrapper maps to a declared key).
   · DRY delegation: BUILT — a representative op through the FACE returns the byte-identical dict the
     HANDLER returns (the faces reimplement nothing; they delegate to ch.HANDLERS[key].fn).
-  · BRIDGE half (b): the `/api/{config,dev,auto}/*` literal arms DO NOT EXIST yet — bridge.py carries
-    ZERO fabric arms (the L-Wire lane owns bridge.py; the build's no-edit-bridge rule). This test
-    ASSERTS that honest state (zero arms) and marks the bridge-side DRY join 'building · pending
-    (Wire)'. It NEVER green-paints a bridge route that isn't there. When the Wire lands the arms (each
-    a literal `path ==` delegating to the SAME ch.HANDLERS[key].fn), the bridge-half checks below flip
-    on automatically — the harness re-derives from BRIDGE_ROUTES, not a literal.
+  · BRIDGE half (b): LANDED (the L-Wire lane). bridge.py now carries the `/api/{config,dev,auto}/*`
+    arms — a LITERAL GET read arm + POST write arm per path, each delegating to the SAME
+    ch.HANDLERS[key].fn (DRY at the handler, literal at the dispatch — §1.4/§3.3, NO generic arm). This
+    test's §4 join is FLIPPED ON: every fabric BRIDGE_ROUTES path <-> exactly one HANDLERS key (both
+    directions), every arm is drift-test-visible (literal path ==/self.path ==) and delegates via
+    self._capability(key, …), and §4c proves the bridge dispatch path returns the BYTE-IDENTICAL handler
+    outcome the MCP face does (re-derived from BRIDGE_ROUTES + bridge.py source, never a literal twin).
 
 Lead-only law: this exercises handlers + faces against STUBS — NO real claude/-p, NO schedule/CronDelete,
 NO model load, NO `.claude` mutation. The real rail round-trips are the lead's 'live-verify pending'.
@@ -208,27 +209,17 @@ for tool_name, key in sorted(FACE_TOOL_TO_KEY.items()):
           f"face={face_out[1][:90]!r} hdl={hdl_out[1][:90]!r}")
 
 
-# 4 · BRIDGE half (b) — HONESTLY pending (Wire handoff, never green) ----------------------------------
+# 4 · BRIDGE half (b) — the Wire LANDED: the join is FLIPPED ON (both directions, byte-identical) -----
 
-print("\n[4] bridge face (b): the /api/{config,dev,auto}/* arms — HONEST pending (Wire owns bridge.py)")
+print("\n[4] bridge face (b): the /api/{config,dev,auto}/* arms — LANDED (Wire). The DRY join is LIVE:")
+print("      every fabric (path) <-> exactly one HANDLERS key, both directions, byte-identical dict.")
+import re as _re
 from runtime.bridge import BRIDGE_ROUTES
 
-
-def _fabric_path(r):
-    p = r[0] if isinstance(r, (tuple, list)) and r else r
-    return p if isinstance(p, str) and (p.startswith("/api/config/")
-                                        or p.startswith("/api/dev/")
-                                        or p.startswith("/api/auto/")) else None
-
-
-fabric_arms = [p for p in (_fabric_path(r) for r in BRIDGE_ROUTES) if p]
-check("NO fabric bridge arms exist yet — bridge-half DRY join is 'building . pending (Wire)', "
-      "NOT green-painted", len(fabric_arms) == 0,
-      f"unexpected fabric arms present (the Wire landed them — flip the join ON): {fabric_arms}")
-print("      bridge-half status: building . pending (Wire) — when /api/{config,dev,auto}/* literal arms")
-print("      land (each delegating to the SAME ch.HANDLERS[key].fn), this section's join flips on:")
-print("        every fabric (path) <-> exactly one HANDLERS key, both directions, byte-identical dict.")
-
+# THE WIRE-ARM CONTRACT (the §4 mapping): the canonical HANDLERS-key -> bridge route(s) join. The Wire
+# lane built these LITERAL `path ==`/`self.path ==` arms (a GET read arm + a POST write arm per path,
+# both delegating to the SAME ch.HANDLERS[key].fn). The path string is listed ONCE per key (the drift
+# test keys on the path, not the method). This is the both-directions key<->path inventory.
 EXPECTED_WIRE_ARMS = {
     "config.hooks": ["/api/config/hooks"], "config.mcp_servers": ["/api/config/mcp-servers"],
     "config.output_style": ["/api/config/output-style"], "config.slash_commands": ["/api/config/commands"],
@@ -246,10 +237,77 @@ check("the Wire-arm contract names exactly the HANDLERS keys (the handoff is clo
       f"missing: {sorted(set(HANDLERS) - set(EXPECTED_WIRE_ARMS))} "
       f"extra: {sorted(set(EXPECTED_WIRE_ARMS) - set(HANDLERS))}")
 
+# 4a · BRIDGE_ROUTES inventory: every contracted fabric arm is REGISTERED, both directions ------------
+def _fabric_path(r):
+    p = r[0] if isinstance(r, (tuple, list)) and r else r
+    return p if isinstance(p, str) and (p.startswith("/api/config/")
+                                        or p.startswith("/api/dev/")
+                                        or p.startswith("/api/auto/")) else None
+
+
+fabric_arms = sorted(p for p in (_fabric_path(r) for r in BRIDGE_ROUTES) if p)
+expected_paths = sorted(p for paths in EXPECTED_WIRE_ARMS.values() for p in paths)
+check("the Wire LANDED — fabric arms now EXIST in BRIDGE_ROUTES (no longer pending)", len(fabric_arms) > 0,
+      "no /api/{config,dev,auto}/* arms in BRIDGE_ROUTES — the Wire has not landed")
+check("bridge->handler: every fabric BRIDGE_ROUTES path maps to a declared HANDLERS key (no orphan arm)",
+      fabric_arms == expected_paths,
+      f"only-in-routes: {sorted(set(fabric_arms) - set(expected_paths))} "
+      f"only-in-contract: {sorted(set(expected_paths) - set(fabric_arms))}")
+check("handler->bridge: every HANDLERS key has its fabric arm registered in BRIDGE_ROUTES (no gap)",
+      all(all(p in fabric_arms for p in paths) for paths in EXPECTED_WIRE_ARMS.values()),
+      f"keys missing a registered arm: "
+      f"{[k for k, ps in EXPECTED_WIRE_ARMS.items() if not all(p in fabric_arms for p in ps)]}")
+
+# 4b · the arms are LITERAL `path ==`/`self.path ==` (the drift test's recognizer) + delegate via the
+# SAME ch.HANDLERS[key].fn (DRY at the handler, literal at the dispatch — §1.4/§3.3; NO generic arm). --
+_bridge_src = open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                "runtime", "bridge.py"), encoding="utf-8").read()
+for key, paths in sorted(EXPECTED_WIRE_ARMS.items()):
+    for p in paths:
+        has_get = bool(_re.search(r'(?:^|\W)path\s*==\s*"' + _re.escape(p) + r'"', _bridge_src))
+        has_post = bool(_re.search(r'self\.path\s*==\s*"' + _re.escape(p) + r'"', _bridge_src))
+        check(f"bridge arm {p}: LITERAL GET + POST dispatch (drift-test-visible, no generic arm)",
+              has_get and has_post, f"get={has_get} post={has_post}")
+        # the arm delegates to the SAME handler key (DRY at the handler) — the _capability(key,…) call
+        # carries the key; we assert the key appears in a _capability(...) call in bridge.py.
+        check(f"bridge arm {p}: delegates via self._capability('{key}', …) (reimplements NOTHING)",
+              ('self._capability("' + key + '"') in _bridge_src,
+              f"no _capability('{key}') delegation found")
+
+# 4c · BYTE-IDENTICAL: the bridge dispatch path produces the IDENTICAL handler outcome the MCP face does
+# (DRY proven by USE, not just by inventory). We replay the bridge's OWN _capability dispatch (load_all,
+# pop op, call ch.get(key).fn(SUITE, op, **params)) WITHOUT a socket, and match it against the MCP face
+# outcome from §3 — same fn, same args ⇒ same dict (or same fail-loud error). The bridge reimplements
+# nothing, so it can diverge neither way. (Lead-only: stubs — no socket, no spawn, no shell, no model.)
+print("\n[4c] byte-identical: the REAL bridge.H._capability == MCP face dispatch (DRY proven by use)")
+
+# We invoke the ACTUAL bridge helper (bridge.H._capability), NOT a replica — so if the helper ever stops
+# delegating to ch.get(key).fn (e.g. someone reimplements logic in the bridge), this drifts + fails loud.
+# We bind a bare H via __new__ (no socket/__init__) and point the module-global SUITE the helper reads at
+# the SAME stub suite the MCP face uses, so both sides see the identical brain — same fn, same args, same
+# suite ⇒ same dict (or same fail-loud error). The bridge reimplements nothing, so it can diverge neither
+# way. The helper pops `op` from the request dict (the GET-query / POST-body shape) — we pass {op, **kw}.
+from runtime import bridge as _bridge
+_real_h = _bridge.H.__new__(_bridge.H)        # a bare handler — never opens a socket
+_saved_suite = _bridge.SUITE
+_bridge.SUITE = suite_cost                     # the helper reads the module global; align it to the stub
+try:
+    for tool_name, key in sorted(FACE_TOOL_TO_KEY.items()):
+        op, kw = _read_args(key)
+        face_out = _outcome(lambda o, kwargs: (m2.tools[tool_name](op=o, **kwargs)), op, kw)
+        # the REAL helper: request dict carries op + params (the on-the-wire shape); default_op is the op.
+        bridge_out = _outcome(lambda: _real_h._capability(key, dict(kw, op=op), op))
+        check(f"byte-identical {key}: REAL bridge._capability == MCP face (read {op})",
+              face_out == bridge_out, f"bridge={bridge_out[1][:80]!r} face={face_out[1][:80]!r}")
+finally:
+    _bridge.SUITE = _saved_suite               # restore (never leave the global mutated)
+
 
 # verdict --------------------------------------------------------------------------------------------
 
 print(f"\n=== {PASS} passed, {FAIL} failed ===")
-print("NOTE: bridge-half (b) is HONESTLY pending (Wire owns bridge.py — no-edit-bridge rule). The "
-      "MCP-face half (a) + DRY delegation are PROVEN. Real rail round-trips are the lead's live-verify.")
+print("NOTE: bridge-half (b) LANDED — the §4 join is LIVE (every fabric path <-> one HANDLERS key, both "
+      "directions, byte-identical bridge==face dispatch). MCP-face half (a) + DRY delegation PROVEN. The "
+      "REAL rail round-trips (R3 .claude write, claude mcp add, R2 review, R1-prime prose) stay the "
+      "lead's 'live-verify pending' — exercised here on STUBS only (no socket/spawn/shell/model).")
 sys.exit(0 if FAIL == 0 else 1)

@@ -57,9 +57,13 @@ BUILDING_LIKE = {"building", "live"}
 # compared against. NOT a target to force-match: a divergence is reported as a real finding.
 # Refreshed 2026-06-12 to the LIVE join after the ③④⑤ Capability Fabric lanes LANDED: L-③-config
 # (CC-03/04/11/12/13/26/27/29/32), L-④-dev (CC-06/16/17/19/30), L-⑤-auto (CC-20/21/22/24) flipped
-# planned->building behind real MCP-face bindings (the bridge arms are Wire-phase-owned, still planned).
-# This is the DELIBERATE refresh the comment below mandates: these status flips ARE the intended ③④⑤
-# build, so the anchor moves WITH them (13/22/45 -> 31/4/93), re-arming the instrument so a FUTURE
+# planned->building behind real MCP-face bindings. REFRESHED AGAIN 2026-06-12 when the L-Wire lane
+# LANDED the bridge arms: the literal /api/{config,dev,auto}/* GET+POST arms now make each fabric op's
+# binding cite a REAL reachable endpoint (§8), so the 8 stale "Wire-phase-owned, pending" HTTP bindings
+# flipped planned->building, moving the burndown 93->96 building / 30->27 planned-only (the +3: the
+# bridge-arm completion of CONFIG/DEV/AUTO ops whose http binding was the last planned leg). This is the
+# DELIBERATE refresh the comment below mandates: these status flips ARE the intended ③④⑤ build, so the
+# anchor moves WITH them (13/22/45 -> 31/4/93 -> 31/4/96), re-arming the instrument so a FUTURE
 # unintended flip still surfaces as exit 3. This constant is the regression anchor for FUTURE drift:
 # tools/coverage.py --render-md regenerates the machine block IN COVERAGE.md from the live corpus, so
 # the block always matches; this GROUND_TRUTH is what the generator corroborates ITSELF against (exit
@@ -72,8 +76,8 @@ GROUND_TRUTH = {
     "total_classes": 35,
     "affordances_defined": 123,
     "affordances_reached": 123,
-    "affordances_building": 93,
-    "affordances_planned_only": 30,
+    "affordances_building": 96,
+    "affordances_planned_only": 27,
     "covered_set": {"CC-03","CC-04","CC-05","CC-06","CC-07","CC-08","CC-09","CC-10","CC-11","CC-12",
                     "CC-13","CC-14","CC-15","CC-16","CC-17","CC-18","CC-19","CC-20","CC-21","CC-22",
                     "CC-23","CC-24","CC-25","CC-26","CC-27","CC-29","CC-30","CC-32","CC-33","CC-34",

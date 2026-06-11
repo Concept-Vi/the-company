@@ -25,6 +25,10 @@ from runtime import activation_driver          # Group H/I — the always-on act
 from runtime import cognition as _cog          # the ONE cognition engine (run_role/run_items/run_reduce/
 #                                                resolve_address) — the SAME functions mcp_face/server.py calls
 from fabric import config as fcfg
+from runtime import capability_handlers as _ch  # ③④⑤ Capability Fabric — the DRY handler layer
+#                                                 (one handler, two faces; the bridge arms below
+#                                                 delegate to the SAME ch.HANDLERS[key].fn the MCP
+#                                                 face calls — drift-tested byte-identical, §3.3)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CANVAS = os.path.join(ROOT, "canvas", "index.html")
@@ -95,6 +99,18 @@ BRIDGE_ROUTES = (
     "/api/chat/stream",
     "/api/voice/stream",
     "/api/voice/turn",
+    # ③④⑤ CAPABILITY FABRIC routes (Capability Fabric §4) — the L-Wire lane. Each path is dispatched
+    # by BOTH a GET arm (READ ops) and a POST arm (WRITE/act ops) in do_GET/do_POST above, each a
+    # LITERAL `path ==`/`self.path ==` delegating to the SAME ch.HANDLERS[key].fn the MCP face calls
+    # (DRY, §3.3). A path is listed ONCE here (the drift test keys on the path string, not method).
+    # ── ③ CONFIG-AUTHORING (rail R3 writes / direct-read reads) ──
+    "/api/config/hooks", "/api/config/mcp-servers", "/api/config/output-style", "/api/config/commands",
+    "/api/config/plugins", "/api/config/patterns", "/api/config/keybindings", "/api/config/telemetry",
+    "/api/config/provider",
+    # ── ④ DEV-BRIDGES (R3 git/ci · R1-prime code-intel/computer-use · R2 code-review) ──
+    "/api/dev/git", "/api/dev/code-intel", "/api/dev/computer-use", "/api/dev/code-review", "/api/dev/ci",
+    # ── ⑤ AUTOMATION (R3 routines · R1 goal/R2 loop · direct-read cost/auth) ──
+    "/api/auto/routines", "/api/auto/workflows", "/api/auto/cost", "/api/auto/auth",
 )
 
 MOCKUPS_DIR = os.path.join(ROOT, "design", "mockups")           # the design-review portal + corpus
@@ -602,6 +618,28 @@ class H(BaseHTTPRequestHandler):
         """A flat {key: value} from the query string (first value per key)."""
         return {k: v[0] for k, v in parse_qs(parsed.query).items()}
 
+    # ── ③④⑤ Capability Fabric — the DRY bridge→handler bridge (§3.3) ───────────────────────────────
+    # ONE dispatch helper the literal `path ==` arms below all route through. The arms stay LITERAL
+    # (the drift test greps `path == "/…"` / `self.path == "/…"`; a generic `path in {…}` arm would be
+    # invisible to it and break tests/bridge_routes_acceptance.py — §1.4/§3.3 REJECTED the generic arm).
+    # This helper carries NO route literal of its own, so it neither adds nor hides a BRIDGE_ROUTES entry.
+    # It loads the WIRED registry (idempotent), pulls `op` out of the request, and delegates the REST as
+    # **params to the SAME ch.HANDLERS[key].fn the MCP face calls — so the two faces return the identical
+    # handler dict (DRY). The handler declares its rail + fails LOUD on a bad op/act/scope (no silent
+    # no-op); the outer do_GET/do_POST try/except turns any raise into a 400 {error} teach-text (the
+    # CONVENTIONS carrier today). The face NEVER executes a rail — a sanctioned SERVICE does (the floor).
+    def _capability(self, key, src, default_op):
+        """Route a fabric request to its handler. `key` = the HANDLERS key (e.g. 'config.hooks'); `src`
+        = the request dict (query for GET, JSON body for POST); `default_op` = the op when unspecified
+        (reads default 'list'/'read'/'get'/'resolve'; writes carry op explicitly). Returns the handler
+        dict (the caller _send(200, json.dumps(...))s it). The SUITE module-global is the shared brain —
+        the SAME Suite the MCP face's handlers receive; the ③ config family ignores it (config-file/CLI
+        via R3), ④⑤ reads fold over it."""
+        _ch.load_all()                                   # idempotent — guarantees every family wired
+        params = dict(src)
+        op = params.pop("op", default_op)
+        return _ch.get(key).fn(SUITE, op, **params)
+
     def do_GET(self):
         parsed = urlparse(self.path)
         path = parsed.path                                 # path WITHOUT the query (exact matches hold)
@@ -960,6 +998,51 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.knobs_for(model=q.get("model"), base_url=q.get("base_url"))))
             elif path == "/api/voice/engine-knobs":        # S5: per-TTS-engine knob catalog (all, or ?engine=)
                 self._send(200, json.dumps(SUITE.voice_engine_knobs(q.get("engine"))))
+            # ─────────────────────── ③④⑤ CAPABILITY FABRIC — READ arms (GET) ───────────────────────
+            # Each route is a LITERAL `path ==` (the drift test greps these; a generic arm is REJECTED,
+            # §1.4). GET carries the READ ops (?op=list|get|read|resolve|describe, default per resource)
+            # → the DECLARATIVE-DIRECT / R3-read half of the handler; the consequential WRITE acts ride
+            # the matching POST arm (same path, same handler). Both faces (MCP op + this route) return the
+            # byte-identical handler dict (§3.3 DRY). Query params pass straight through as **params.
+            # ── ③ CONFIG-AUTHORING · /api/config/* (rail R3 writes / direct-read reads) ──
+            elif path == "/api/config/hooks":              # CC-12 hooks list/get
+                self._send(200, json.dumps(self._capability("config.hooks", q, "list")))
+            elif path == "/api/config/mcp-servers":        # CC-11 mcp-servers list/get
+                self._send(200, json.dumps(self._capability("config.mcp_servers", q, "list")))
+            elif path == "/api/config/output-style":       # CC-26 output-style list/get
+                self._send(200, json.dumps(self._capability("config.output_style", q, "list")))
+            elif path == "/api/config/commands":           # CC-03 slash-commands list/get
+                self._send(200, json.dumps(self._capability("config.slash_commands", q, "list")))
+            elif path == "/api/config/plugins":            # CC-13/CC-34 extensions list/get
+                self._send(200, json.dumps(self._capability("config.extensions", q, "list")))
+            elif path == "/api/config/patterns":           # CC-27 patterns resolve/describe (pure resolver)
+                self._send(200, json.dumps(self._capability("config.patterns", q, "resolve")))
+            elif path == "/api/config/keybindings":        # CC-04 (reopened) keybindings list/get
+                self._send(200, json.dumps(self._capability("config.keybindings", q, "get")))
+            elif path == "/api/config/telemetry":          # CC-32 (reopened) telemetry list/get
+                self._send(200, json.dumps(self._capability("config.telemetry", q, "get")))
+            elif path == "/api/config/provider":           # CC-29 (reopened) provider list/get
+                self._send(200, json.dumps(self._capability("config.provider", q, "get")))
+            # ── ④ DEV-BRIDGES · /api/dev/* (R3 git/ci · R1-prime code-intel/computer-use · R2 review) ──
+            elif path == "/api/dev/git":                   # CC-06 git status/log/worktrees (R3 read)
+                self._send(200, json.dumps(self._capability("dev.git", q, "list")))
+            elif path == "/api/dev/code-intel":            # CC-16 code-intel acts surface (R1-prime)
+                self._send(200, json.dumps(self._capability("dev.code_intel", q, "list")))
+            elif path == "/api/dev/computer-use":          # CC-17 computer-use acts surface (R1-prime)
+                self._send(200, json.dumps(self._capability("dev.computer_use", q, "list")))
+            elif path == "/api/dev/code-review":           # CC-19 code-review list/get (R2 jobs fold)
+                self._send(200, json.dumps(self._capability("dev.code_review", q, "list")))
+            elif path == "/api/dev/ci":                    # CC-30 ci list/get (R3 file read)
+                self._send(200, json.dumps(self._capability("dev.ci", q, "list")))
+            # ── ⑤ AUTOMATION · /api/auto/* (R3 routines · R1 goal/R2 loop · direct cost/auth) ──
+            elif path == "/api/auto/routines":             # CC-21 routines list/get
+                self._send(200, json.dumps(self._capability("auto.routines", q, "list")))
+            elif path == "/api/auto/workflows":            # CC-22 workflows list/get (mode catalog)
+                self._send(200, json.dumps(self._capability("auto.workflows", q, "list")))
+            elif path == "/api/auto/cost":                 # CC-20 cost/usage fold (direct-read)
+                self._send(200, json.dumps(self._capability("auto.cost", q, "read")))
+            elif path == "/api/auto/auth":                 # CC-24.1 auth method read (redacted, direct-read)
+                self._send(200, json.dumps(self._capability("auto.auth", q, "get")))
             elif path == "/api/voice/paths":               # Tier-4: the swappable voice-path registry (pipeline vs s2s)
                 self._send(200, json.dumps(SUITE.voice_paths()))
             else:
@@ -2161,6 +2244,46 @@ class H(BaseHTTPRequestHandler):
                     raise ValueError("/api/mockup-generate 'mode' must be 'plan' or 'apply' (fail loud)")
                 result = generate_mockup.generate_for_mockup(mockup.strip(), mode=mode)
                 self._send(200, json.dumps(result))
+            # ─────────────────────── ③④⑤ CAPABILITY FABRIC — WRITE arms (POST) ──────────────────────
+            # ── ③ CONFIG-AUTHORING · POST /api/config/* (the consequential R3 writes) ──
+            elif self.path == "/api/config/hooks":          # CC-12 hooks act (add/update/remove-hook, set-flag)
+                self._send(200, json.dumps(self._capability("config.hooks", self._body(), "act")))
+            elif self.path == "/api/config/mcp-servers":     # CC-11 mcp-servers act (claude mcp add/remove/…)
+                self._send(200, json.dumps(self._capability("config.mcp_servers", self._body(), "act")))
+            elif self.path == "/api/config/output-style":    # CC-26 output-style act (create-style/set-…)
+                self._send(200, json.dumps(self._capability("config.output_style", self._body(), "act")))
+            elif self.path == "/api/config/commands":         # CC-03 slash-commands act (create/update)
+                self._send(200, json.dumps(self._capability("config.slash_commands", self._body(), "act")))
+            elif self.path == "/api/config/plugins":          # CC-13/CC-34 extensions act (create-skill/install-plugin/…)
+                self._send(200, json.dumps(self._capability("config.extensions", self._body(), "act")))
+            elif self.path == "/api/config/patterns":         # CC-27 patterns (resolve/describe — pure read; POST allowed for symmetry)
+                self._send(200, json.dumps(self._capability("config.patterns", self._body(), "resolve")))
+            elif self.path == "/api/config/keybindings":      # CC-04 (reopened) keybindings act (set-binding/unbind)
+                self._send(200, json.dumps(self._capability("config.keybindings", self._body(), "act")))
+            elif self.path == "/api/config/telemetry":        # CC-32 (reopened) telemetry act (set-flag)
+                self._send(200, json.dumps(self._capability("config.telemetry", self._body(), "act")))
+            elif self.path == "/api/config/provider":         # CC-29 (reopened) provider act (set-provider)
+                self._send(200, json.dumps(self._capability("config.provider", self._body(), "act")))
+            # ── ④ DEV-BRIDGES · POST /api/dev/* (R3 git/ci writes · R1-prime intents · R2 wire job) ──
+            elif self.path == "/api/dev/git":                 # CC-06 git act (commit/open-pr/rebase/worktree-…) — R3 structured sha/exit
+                self._send(200, json.dumps(self._capability("dev.git", self._body(), "act")))
+            elif self.path == "/api/dev/code-intel":          # CC-16 code-intel act → R1-prime spawn intent + watch (prose result)
+                self._send(200, json.dumps(self._capability("dev.code_intel", self._body(), "act")))
+            elif self.path == "/api/dev/computer-use":        # CC-17 computer-use act → R1-prime intent (browser/computer refuse-loud, not-WSL)
+                self._send(200, json.dumps(self._capability("dev.computer_use", self._body(), "act")))
+            elif self.path == "/api/dev/code-review":         # CC-19 code-review act → R2 wire-job intent (via /api/resolve) + job/watch
+                self._send(200, json.dumps(self._capability("dev.code_review", self._body(), "act")))
+            elif self.path == "/api/dev/ci":                  # CC-30 ci act=scaffold → R3 .github/workflows write
+                self._send(200, json.dumps(self._capability("dev.ci", self._body(), "act")))
+            # ── ⑤ AUTOMATION · POST /api/auto/* (R3 routines · R1 goal/R2 loop · reopened auth acts) ──
+            elif self.path == "/api/auto/routines":           # CC-21 routines act (run-now/pause/one-off/cancel-session-task) — R3
+                self._send(200, json.dumps(self._capability("auto.routines", self._body(), "act")))
+            elif self.path == "/api/auto/workflows":          # CC-22 workflows act (set-goal/goal-status/clear-goal=R1, loop=R2)
+                self._send(200, json.dumps(self._capability("auto.workflows", self._body(), "act")))
+            elif self.path == "/api/auto/cost":               # CC-20 cost (read-only fold; POST allowed for the uniform shape)
+                self._send(200, json.dumps(self._capability("auto.cost", self._body(), "read")))
+            elif self.path == "/api/auto/auth":               # CC-24.2/.3/.4 (reopened) auth act (relogin/logout/setup-token) — R3 consent-gated
+                self._send(200, json.dumps(self._capability("auto.auth", self._body(), "act")))
             else:
                 self._send(404, "{}")
         except Exception as e:                          # fail loud to the UI

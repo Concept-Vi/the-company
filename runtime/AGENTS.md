@@ -535,6 +535,23 @@ projected from `bridge.BRIDGE_ROUTES` (the single-source route table) via a LAZY
 that sidesteps the circular import, with a drift test keeping `BRIDGE_ROUTES` == the live dispatcher. See "The
 substrate WENT LIVE" section below for the full close-out.)*
 
+**③④⑤ CAPABILITY FABRIC bridge arms (the L-Wire lane, 2026-06-12) — the literal-arm law.** The operator
+face for every ③④⑤ capability is `runtime/bridge.py`'s `/api/{config,dev,auto}/*` routes: each fabric path
+is dispatched by BOTH a GET read arm (`path == "/api/…"`) and a POST write arm (`self.path == "/api/…"`),
+each LITERAL. **NEVER refactor these into a generic `path in {…}` arm** — `tests/bridge_routes_acceptance.py`
+greps the dispatcher's `path ==`/`self.path ==` string literals and asserts they EQUAL `BRIDGE_ROUTES` both
+directions; a generic arm carries no literal, so every route behind it becomes a phantom-verb FAIL (arch
+§1.4). Add a route ⇒ add its GET+POST literal arms in do_GET/do_POST AND its path to `BRIDGE_ROUTES` (once;
+the drift test keys on the path string, not the method). DRY lives at the HANDLER, not the dispatch: every
+arm routes through `H._capability(key, src, default_op)` — it loads the WIRED `capability_handlers` registry
+(idempotent), pops `op` from the request (GET query `q` / POST `self._body()`), and delegates the rest to
+the SAME `capability_handlers.HANDLERS[key].fn` the MCP face calls, so the two faces return the
+byte-identical dict (proven by `tests/capability_handlers_acceptance.py` §4, which invokes the REAL
+`_capability`). The bridge NEVER executes a rail (the floor): a read returns on the call; an R3/R1-prime/R2
+act builds an intent/job/argv that a sanctioned SERVICE (config_writer / supervisor bridge-session / the
+wire) acts on, returning a receipt + watch cursor. A handler raise becomes a fail-loud 400 teach-text via
+the do_GET/do_POST try/except (no silent no-op).
+
 ## The cascade RUNNER (Cognition Engine GROUP N · `runtime/cognition.py` + `runtime/suite.py` + `mcp_face/server.py` · the LARGEST net-new of the corpus pillar)
 
 A **saved cascade** is a declared, named, RE-RUNNABLE pipeline — a frozen recipe (AK4) an agent reuses

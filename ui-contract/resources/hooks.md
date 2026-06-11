@@ -134,7 +134,7 @@ tasks:
 caller: required
 bindings:
   - { kind: mcp, tool: config_hooks, op: "op='act' (add-hook/update-hook/remove-hook/set-flag)", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric ③): the MCP face routes the hook write to the R3 config_writer (consent-gated — a hook command is exec). The handler runtime/capability_handlers/config_authoring.py:hooks backs both faces (DRY). live-verify pending (lead): a REAL .claude write / native claude-CLI round-trip." }
-  - { kind: http, method: POST, path: "/hooks  (Wire-phase-owned, pending — MCP face built)", transport: bridge-http, exposure: "exposure.json#bridge-http", status: planned, note: "GAP: BRIDGE_ROUTES (runtime/bridge.py:45) has zero hook routes. A hook editor must read the merged scope hierarchy AND write one scope's JSON file with validation. The bridge arm is Wire-phase-owned (pending); the MCP face is live now." }
+  - { kind: http, method: POST, path: "/api/config/hooks", transport: bridge-http, exposure: "exposure.json#bridge-http", status: building, note: "BUILT (Capability Fabric L-Wire): the literal POST /api/config/hooks arm (runtime/bridge.py do_POST) delegates to the SAME runtime.capability_handlers config.hooks handler the MCP face calls (DRY, drift-tested byte-identical). GET /api/config/hooks reads. Rail R3: the consent-gated write routes to the config_writer service. live-verify pending (lead): a REAL .claude hook write round-trip." }
 liveness: none
 emits: []
 consequences:
