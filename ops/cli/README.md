@@ -24,6 +24,7 @@ up exactly what a task needs with `company up` and free it with `company down`. 
 | `company ensure MODEL\|SERVICE [--evict] [--no-wait]` | the gated launch/select actuator: make a model resident on demand (no-op if up; load if it fits; `--evict` makes room largest-first; fail-loud if it can't fit even after evict). The ONE mechanism the engine + CLI share — reuses the `up`/`--evict` resource-manager. |
 | `company bench chat\|embed\|suite\|long-ctx [args]` | run a stack benchmark |
 | `company telemetry` | learned model load times + measured VRAM vs the registry estimates |
+| `company session [list\|new\|send\|stop]` | the supervised Claude Code fleet (Session Fabric): list the fleet · `new [--cwd D] [--resume ID] [--fork] [--name L] [--prompt "…"]` spawns through the session-supervisor service (the ONE spawn path) · `send <id> <msg…>` injects a turn · `stop <id>` tears one down. Needs `company up session-supervisor` first (fails loud + says so otherwise). |
 | `company help` | the built-in summary |
 
 `TARGET` = a **service key** (`bridge`, `chat-4b`), a **group** (`core`, `brain`,

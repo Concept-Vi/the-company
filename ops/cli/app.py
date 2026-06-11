@@ -27,6 +27,10 @@ stdlib-only. See README.md (use) and UPDATING.md (extend). Constitution: ../AGEN
   company combos           list runnable combinations (`company up @<name>` to start one)
   company bench KIND [args]       chat|embed|suite|long-ctx
   company telemetry        learned model load times + measured VRAM (vs estimates)
+  company session [SUB]    the supervised Claude Code fleet (Session Fabric): list ·
+                           new [--cwd D] [--resume ID] [--fork] [--name L] [--prompt "…"] ·
+                           send <id> <msg…> · stop <id>. Talks to the session-supervisor
+                           service (127.0.0.1:8771) — `company up session-supervisor` first.
   company help
 
 TARGET = a service key, a group (core|brain|voice|models|reach), `@combo`, or `all`.
@@ -167,6 +171,12 @@ def main():
         print(models.inventory()); return
     if cmd == "telemetry":
         print(telemetry.rollups()); return
+    if cmd == "session":
+        # Session Fabric F1.1 — the supervised-fleet type-view (the constitution's "more TYPES"
+        # growth shape). Thin: all logic in sessions.py; the supervisor service does the owning.
+        import sessions as _sessions
+        _sessions.run(args[1:])
+        return
     if cmd == "combos":
         cs = registry.combos(reg)
         if not cs:

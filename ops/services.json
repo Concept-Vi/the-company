@@ -52,6 +52,17 @@
    "health": "/api/now",
    "autostart": true
   },
+  "session-supervisor": {
+   "group": "core",
+   "title": "Session supervisor — owns the supervised Claude Code fleet (Session Fabric F1)",
+   "port": 8771,
+   "manage": {
+    "type": "user-unit",
+    "unit": "company-session-supervisor.service"
+   },
+   "health": "/health",
+   "note": "127.0.0.1 ONLY (exposure law, audit B3); spawns claude subprocesses ON DEMAND (idle = owns nothing); the SINGLE writer of agent_sessions.* events; consumes agent_sessions/mail.jsonl intents. Cap COMPANY_FABRIC_CONCURRENCY (default 3) · per-turn watchdog COMPANY_FABRIC_TURN_TIMEOUT_S (default 900s) · permission COMPANY_FABRIC_PERMISSION (default plan). Operator face: `company session`. On-demand per the no-boot-autostart law."
+  },
   "chat-4b": {
    "group": "brain",
    "title": "Qwen3.5-4B-AWQ (vLLM) \u2014 a local WORKER (not the RHM brain; the RHM main is a cloud model)",

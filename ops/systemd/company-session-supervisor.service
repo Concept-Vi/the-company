@@ -1,0 +1,17 @@
+[Unit]
+Description=Company session supervisor — owns the supervised Claude Code fleet (HTTP on 127.0.0.1:8771)
+After=network.target
+PartOf=company.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/tim/company
+ExecStart=/home/tim/company/.venv/bin/python runtime/session_supervisor.py 8771
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=company-session-supervisor
+
+[Install]
+WantedBy=company.target
