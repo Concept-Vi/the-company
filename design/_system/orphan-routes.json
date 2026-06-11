@@ -1,46 +1,225 @@
 {
-  "_doc": "The coherence disposition catalogue for built-but-unwired /api routes — a DECLARED registry the reachability gate reads (was a hardcoded _ORPHAN_ROUTES dict in suite.py until 2026-06-08; promoted to declared data per the no-hardcoding rule + as the first finding-store step). Each entry: route -> {tag, note}. tag = finish/defer disposition: to_wire (built, should have an FE caller) | to_build_ui (needs a screen — a Claude Design target) | voice_owned (the voice session's lane) | backend_only (legitimately no FE — agent/operator/internal). A route NOT here that has no real consumer is a NEW disconnection -> the gate fails. This generalises later into the persisted dispositioned finding-store (the coherence substrate).",
+  "_doc": "The coherence disposition catalogue for built-but-unwired /api routes \u2014 a DECLARED registry the reachability gate reads (was a hardcoded _ORPHAN_ROUTES dict in suite.py until 2026-06-08; promoted to declared data per the no-hardcoding rule + as the first finding-store step). Each entry: route -> {tag, note}. tag = finish/defer disposition: to_wire (built, should have an FE caller) | to_build_ui (needs a screen \u2014 a Claude Design target) | voice_owned (the voice session's lane) | backend_only (legitimately no FE \u2014 agent/operator/internal). A route NOT here that has no real consumer is a NEW disconnection -> the gate fails. This generalises later into the persisted dispositioned finding-store (the coherence substrate).",
   "routes": {
-    "/api/cognition/role/propose": {"tag": "to_build_ui", "note": "authoring UI — propose a role"},
-    "/api/cognition/role/edit": {"tag": "to_build_ui", "note": "authoring UI — edit a role"},
-    "/api/cognition/role/delete": {"tag": "to_build_ui", "note": "authoring UI — delete a role"},
-    "/api/cognition/role/dry_run": {"tag": "to_build_ui", "note": "authoring UI — dry-run a role in isolation"},
-    "/api/cognition/rule/validate": {"tag": "to_build_ui", "note": "authoring UI — validate a rule (closed grammar)"},
-    "/api/cognition/rule/dry_run": {"tag": "to_build_ui", "note": "authoring UI — dry-run a rule"},
-    "/api/cognition/rule/attach": {"tag": "to_build_ui", "note": "authoring UI — attach a rule"},
-    "/api/cognition/rule/detach": {"tag": "to_build_ui", "note": "authoring UI — detach a rule"},
-    "/api/cognition/preview_turn": {"tag": "to_build_ui", "note": "authoring UI — preview a full turn"},
-    "/api/cognition/models_for_role": {"tag": "to_build_ui", "note": "authoring UI — model-picker select"},
-    "/api/cognition/inputs": {"tag": "to_build_ui", "note": "authoring UI — input-address select"},
-    "/api/cognition/field_types": {"tag": "to_build_ui", "note": "authoring UI — output-schema field-type select"},
-
-    "/api/knobs": {"tag": "to_wire", "note": "G8.1 dynamic per-model knob surface — a CognitionView/config input"},
-    "/api/run-stats": {"tag": "to_wire", "note": "G7 run-record rollups (learning-by-use) — a CognitionView input"},
-    "/api/graphs": {"tag": "to_wire", "note": "C4 list every graph — a graph-picker FE"},
-    "/api/chats": {"tag": "to_wire", "note": "I7 the chat thread at a ui:// address — an addressed-thread view"},
-    "/api/attach-chat": {"tag": "to_wire", "note": "I7 attach a chat turn to a ui:// address"},
-    "/api/capture-idea": {"tag": "to_wire", "note": "A4 capture a fleeting idea — a capture affordance"},
-    "/api/decision": {"tag": "to_wire", "note": "a decision as an audit view over the log — an audit surface"},
-    "/api/self-change-log": {"tag": "to_wire", "note": "the self-modification audit ledger — an audit surface"},
-    "/api/checkpoint": {"tag": "to_wire", "note": "operator restore point — an undo/restore affordance (or operator/CLI)"},
-    "/api/context": {"tag": "to_wire", "note": "GET /api/context — the address-keyed context bundle; backend BUILT + tested, the FE consumer (an addressed-context inspector) is DESIGNED-not-built (StudioSeams). Surfaced by the AST consumer-fix 2026-06-08 (was false-wired by a prose mention)."},
-    "/api/scope": {"tag": "to_wire", "note": "S3 ui://->code://->scope resolver route; built + tested via SUITE.resolve_scope, no real HTTP consumer yet. Surfaced by the AST consumer-fix (was false-wired by a check()-label + docstring mention)."},
-
-    "/api/mockup-feedback": {"tag": "to_wire", "note": "legacy mockup feedback capture — the in-app studio surface persists feedback via /api/annotate (the shared organ); the standalone STUDIO.html still uses this. Surfaced by the AST consumer-fix (was false-wired by FE comments saying it's RETIRED)."},
-    "/api/mockup-feedback/status": {"tag": "to_wire", "note": "studio feedback-edit loop — flip a feedback entry applied/dismissed"},
-
-    "/api/surface-review": {"tag": "backend_only", "note": "agents/flows surface a review item here; not an FE action"},
-
-    "/api/voice/load": {"tag": "voice_owned", "note": "load a TTS voice — voice session"},
-    "/api/voice/unload": {"tag": "voice_owned", "note": "unload a TTS voice — voice session"},
-    "/api/voice/ears": {"tag": "voice_owned", "note": "list STT ears — voice session"},
-    "/api/voice/ear/load": {"tag": "voice_owned", "note": "load an STT ear — voice session"},
-    "/api/voice/ear/unload": {"tag": "voice_owned", "note": "unload an STT ear — voice session"},
-    "/api/voice/stt-partial": {"tag": "voice_owned", "note": "partial STT stream — voice session"},
-    "/api/voice/turn": {"tag": "voice_owned", "note": "a voice-trial/loop turn — voice session. Surfaced by the AST consumer-fix (was false-wired by a print-string + comment mention)."},
-    "/api/trial/turn": {"tag": "voice_owned", "note": "a voice-trial turn — voice session"},
-    "/api/trial/feedback": {"tag": "voice_owned", "note": "voice-trial feedback — voice session"},
-    "/api/trial/reflection": {"tag": "voice_owned", "note": "voice-trial reflection — voice session"},
-    "/api/trial/transcript": {"tag": "voice_owned", "note": "voice-trial transcript — voice session"}
+    "/api/cognition/role/propose": {
+      "tag": "to_build_ui",
+      "note": "authoring UI \u2014 propose a role"
+    },
+    "/api/cognition/role/edit": {
+      "tag": "to_build_ui",
+      "note": "authoring UI \u2014 edit a role"
+    },
+    "/api/cognition/role/delete": {
+      "tag": "to_build_ui",
+      "note": "authoring UI \u2014 delete a role"
+    },
+    "/api/cognition/role/dry_run": {
+      "tag": "to_build_ui",
+      "note": "authoring UI \u2014 dry-run a role in isolation"
+    },
+    "/api/cognition/rule/validate": {
+      "tag": "to_build_ui",
+      "note": "authoring UI \u2014 validate a rule (closed grammar)"
+    },
+    "/api/cognition/rule/dry_run": {
+      "tag": "to_build_ui",
+      "note": "authoring UI \u2014 dry-run a rule"
+    },
+    "/api/cognition/rule/attach": {
+      "tag": "to_build_ui",
+      "note": "authoring UI \u2014 attach a rule"
+    },
+    "/api/cognition/rule/detach": {
+      "tag": "to_build_ui",
+      "note": "authoring UI \u2014 detach a rule"
+    },
+    "/api/cognition/preview_turn": {
+      "tag": "to_build_ui",
+      "note": "authoring UI \u2014 preview a full turn"
+    },
+    "/api/cognition/models_for_role": {
+      "tag": "to_build_ui",
+      "note": "authoring UI \u2014 model-picker select"
+    },
+    "/api/cognition/inputs": {
+      "tag": "to_build_ui",
+      "note": "authoring UI \u2014 input-address select"
+    },
+    "/api/cognition/field_types": {
+      "tag": "to_build_ui",
+      "note": "authoring UI \u2014 output-schema field-type select"
+    },
+    "/api/knobs": {
+      "tag": "to_wire",
+      "note": "G8.1 dynamic per-model knob surface \u2014 a CognitionView/config input"
+    },
+    "/api/run-stats": {
+      "tag": "to_wire",
+      "note": "G7 run-record rollups (learning-by-use) \u2014 a CognitionView input"
+    },
+    "/api/graphs": {
+      "tag": "to_wire",
+      "note": "C4 list every graph \u2014 a graph-picker FE"
+    },
+    "/api/chats": {
+      "tag": "to_wire",
+      "note": "I7 the chat thread at a ui:// address \u2014 an addressed-thread view"
+    },
+    "/api/attach-chat": {
+      "tag": "to_wire",
+      "note": "I7 attach a chat turn to a ui:// address"
+    },
+    "/api/capture-idea": {
+      "tag": "to_wire",
+      "note": "A4 capture a fleeting idea \u2014 a capture affordance"
+    },
+    "/api/decision": {
+      "tag": "to_wire",
+      "note": "a decision as an audit view over the log \u2014 an audit surface"
+    },
+    "/api/self-change-log": {
+      "tag": "to_wire",
+      "note": "the self-modification audit ledger \u2014 an audit surface"
+    },
+    "/api/checkpoint": {
+      "tag": "to_wire",
+      "note": "operator restore point \u2014 an undo/restore affordance (or operator/CLI)"
+    },
+    "/api/context": {
+      "tag": "to_wire",
+      "note": "GET /api/context \u2014 the address-keyed context bundle; backend BUILT + tested, the FE consumer (an addressed-context inspector) is DESIGNED-not-built (StudioSeams). Surfaced by the AST consumer-fix 2026-06-08 (was false-wired by a prose mention)."
+    },
+    "/api/scope": {
+      "tag": "to_wire",
+      "note": "S3 ui://->code://->scope resolver route; built + tested via SUITE.resolve_scope, no real HTTP consumer yet. Surfaced by the AST consumer-fix (was false-wired by a check()-label + docstring mention)."
+    },
+    "/api/mockup-feedback": {
+      "tag": "to_wire",
+      "note": "legacy mockup feedback capture \u2014 the in-app studio surface persists feedback via /api/annotate (the shared organ); the standalone STUDIO.html still uses this. Surfaced by the AST consumer-fix (was false-wired by FE comments saying it's RETIRED)."
+    },
+    "/api/mockup-feedback/status": {
+      "tag": "to_wire",
+      "note": "studio feedback-edit loop \u2014 flip a feedback entry applied/dismissed"
+    },
+    "/api/surface-review": {
+      "tag": "backend_only",
+      "note": "agents/flows surface a review item here; not an FE action"
+    },
+    "/api/voice/load": {
+      "tag": "voice_owned",
+      "note": "load a TTS voice \u2014 voice session"
+    },
+    "/api/voice/unload": {
+      "tag": "voice_owned",
+      "note": "unload a TTS voice \u2014 voice session"
+    },
+    "/api/voice/ears": {
+      "tag": "voice_owned",
+      "note": "list STT ears \u2014 voice session"
+    },
+    "/api/voice/ear/load": {
+      "tag": "voice_owned",
+      "note": "load an STT ear \u2014 voice session"
+    },
+    "/api/voice/ear/unload": {
+      "tag": "voice_owned",
+      "note": "unload an STT ear \u2014 voice session"
+    },
+    "/api/voice/stt-partial": {
+      "tag": "voice_owned",
+      "note": "partial STT stream \u2014 voice session"
+    },
+    "/api/voice/turn": {
+      "tag": "voice_owned",
+      "note": "a voice-trial/loop turn \u2014 voice session. Surfaced by the AST consumer-fix (was false-wired by a print-string + comment mention)."
+    },
+    "/api/trial/turn": {
+      "tag": "voice_owned",
+      "note": "a voice-trial turn \u2014 voice session"
+    },
+    "/api/trial/feedback": {
+      "tag": "voice_owned",
+      "note": "voice-trial feedback \u2014 voice session"
+    },
+    "/api/trial/reflection": {
+      "tag": "voice_owned",
+      "note": "voice-trial reflection \u2014 voice session"
+    },
+    "/api/trial/transcript": {
+      "tag": "voice_owned",
+      "note": "voice-trial transcript \u2014 voice session"
+    },
+    "/api/auto/auth": {
+      "tag": "to_build_ui",
+      "note": "Capability Fabric \u2462\u2463\u2464 auto-face route \u2014 built, awaiting its Loop-2 (Face) caller; tracked-not-silent"
+    },
+    "/api/auto/cost": {
+      "tag": "to_build_ui",
+      "note": "Capability Fabric \u2462\u2463\u2464 auto-face route \u2014 built, awaiting its Loop-2 (Face) caller; tracked-not-silent"
+    },
+    "/api/auto/routines": {
+      "tag": "to_build_ui",
+      "note": "Capability Fabric \u2462\u2463\u2464 auto-face route \u2014 built, awaiting its Loop-2 (Face) caller; tracked-not-silent"
+    },
+    "/api/auto/workflows": {
+      "tag": "to_build_ui",
+      "note": "Capability Fabric \u2462\u2463\u2464 auto-face route \u2014 built, awaiting its Loop-2 (Face) caller; tracked-not-silent"
+    },
+    "/api/config/commands": {
+      "tag": "to_build_ui",
+      "note": "Capability Fabric \u2462\u2463\u2464 config-face route \u2014 built, awaiting its Loop-2 (Face) caller; tracked-not-silent"
+    },
+    "/api/config/hooks": {
+      "tag": "to_build_ui",
+      "note": "Capability Fabric \u2462\u2463\u2464 config-face route \u2014 built, awaiting its Loop-2 (Face) caller; tracked-not-silent"
+    },
+    "/api/config/keybindings": {
+      "tag": "to_build_ui",
+      "note": "Capability Fabric \u2462\u2463\u2464 config-face route \u2014 built, awaiting its Loop-2 (Face) caller; tracked-not-silent"
+    },
+    "/api/config/mcp-servers": {
+      "tag": "to_build_ui",
+      "note": "Capability Fabric \u2462\u2463\u2464 config-face route \u2014 built, awaiting its Loop-2 (Face) caller; tracked-not-silent"
+    },
+    "/api/config/output-style": {
+      "tag": "to_build_ui",
+      "note": "Capability Fabric \u2462\u2463\u2464 config-face route \u2014 built, awaiting its Loop-2 (Face) caller; tracked-not-silent"
+    },
+    "/api/config/patterns": {
+      "tag": "to_build_ui",
+      "note": "Capability Fabric \u2462\u2463\u2464 config-face route \u2014 built, awaiting its Loop-2 (Face) caller; tracked-not-silent"
+    },
+    "/api/config/plugins": {
+      "tag": "to_build_ui",
+      "note": "Capability Fabric \u2462\u2463\u2464 config-face route \u2014 built, awaiting its Loop-2 (Face) caller; tracked-not-silent"
+    },
+    "/api/config/provider": {
+      "tag": "to_build_ui",
+      "note": "Capability Fabric \u2462\u2463\u2464 config-face route \u2014 built, awaiting its Loop-2 (Face) caller; tracked-not-silent"
+    },
+    "/api/config/telemetry": {
+      "tag": "to_build_ui",
+      "note": "Capability Fabric \u2462\u2463\u2464 config-face route \u2014 built, awaiting its Loop-2 (Face) caller; tracked-not-silent"
+    },
+    "/api/dev/ci": {
+      "tag": "to_build_ui",
+      "note": "Capability Fabric \u2462\u2463\u2464 dev-face route \u2014 built, awaiting its Loop-2 (Face) caller; tracked-not-silent"
+    },
+    "/api/dev/code-intel": {
+      "tag": "to_build_ui",
+      "note": "Capability Fabric \u2462\u2463\u2464 dev-face route \u2014 built, awaiting its Loop-2 (Face) caller; tracked-not-silent"
+    },
+    "/api/dev/code-review": {
+      "tag": "to_build_ui",
+      "note": "Capability Fabric \u2462\u2463\u2464 dev-face route \u2014 built, awaiting its Loop-2 (Face) caller; tracked-not-silent"
+    },
+    "/api/dev/computer-use": {
+      "tag": "to_build_ui",
+      "note": "Capability Fabric \u2462\u2463\u2464 dev-face route \u2014 built, awaiting its Loop-2 (Face) caller; tracked-not-silent"
+    },
+    "/api/dev/git": {
+      "tag": "to_build_ui",
+      "note": "Capability Fabric \u2462\u2463\u2464 dev-face route \u2014 built, awaiting its Loop-2 (Face) caller; tracked-not-silent"
+    }
   }
 }
