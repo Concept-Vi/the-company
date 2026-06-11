@@ -55,7 +55,7 @@ company has NO per-session /doctor or threaded --debug today.**
 | field | type | volatile? | changed-by | address? -> resource | reality (2026-06-12) |
 |---|---|---|---|---|---|
 | fabric_health | object | yes | the supervisor's live state (session count flips per spawn/teardown) | -> [[fabric-config]] | LIVE-READABLE via `GET /health` (`runtime/session_supervisor.py:702-705`) — the company's one proven diagnostic read |
-| session_failure (turn-error / turn-timeout) | event | yes | the supervisor's turn loop: a turn exceeding `turn_timeout_s` is killed (`:478`), an underlying claude `is_error` result is recorded | -> [[events]], [[session]] | OBSERVABLE on the event stream / per-session watch. The supervisor consumes the `claude -p` result event; failures surface as session state + mail/error records (the cost/usage fields of that result are discarded today — an F6-noted gap) |
+| session_failure (turn-error / turn-timeout) | event | yes | the supervisor's turn loop: a turn exceeding `turn_timeout_s` is killed (`:478`), an underlying claude `is_error` result is recorded | -> [[events]], [[session]] | OBSERVABLE on the event stream / per-session watch. The supervisor consumes the `claude -p` result event; failures surface as session state + mail/error records; the cost/usage fields of that result are now CAPTURED onto the agent_sessions.turn event (CC-20, [[cost-usage]]) rather than discarded |
 | /doctor health object (install/settings/MCP/context) | object | yes | the native /doctor pass | — | NOT EXPOSED. /doctor is an interactive-host command; the spawn threads no equivalent. There is no company "session health" object beyond fabric_health + the failure events |
 | --debug log | text stream | yes | the native --debug flag | — | NOT THREADED. The spawn passes `--verbose` (`:260`) but NO `--debug`/`--debug-file`; per-session debug categories are not selectable through the company |
 
@@ -159,8 +159,8 @@ This op does not own a stream; it is the diagnostic READING of [[session#op: ses
 `since=`), keepalive, and termination are owned ONCE by [[events#op: events.watch]] — read them there.
 A turn that exceeds `turn_timeout_s` is killed by the supervisor (`runtime/session_supervisor.py:478`)
 and surfaces as a turn-timeout failure; an underlying `claude -p` `is_error` result surfaces as a
-turn-error. The cost/usage fields of the result event are discarded by the supervisor today (the
-F6-noted gap, [[cost-usage]]) — diagnostics sees the failure, not yet the spend.
+turn-error. The cost/usage fields of the result event are now CAPTURED onto the agent_sessions.turn event
+(CC-20, [[cost-usage]]) — diagnostics sees the failure AND the spend.
 ```contract:example
 captured: synthetic            # status=building — replaced by captured evidence at flip-to-live (V11)
 binding: http
@@ -184,7 +184,7 @@ toward the real seam rather than a fiction.**
 op: diagnostics.act
 resource: diagnostics
 kind: act
-status: planned
+status: building
 direction: outbound
 atlas: [CC-33.3, CC-33.4]
 tasks:
@@ -198,20 +198,20 @@ tasks:
   - alias: "troubleshoot a session"
   - alias: "safe mode"
 bindings:
-  - { kind: http, method: POST, path: "/spawn  (PLANNED: a debug/safe-mode/bare block on the body)", transport: supervisor-http, exposure: "exposure.json#supervisor-http", status: planned, note: "GAP: spawn() (runtime/session_supervisor.py:254) threads --verbose but NO --debug/--debug-file/--safe-mode/--bare. Wiring = a debug filter -> --debug <filter>, a flag -> --safe-mode/--bare. NOTE: --bare skips the MCP/keychain/CLAUDE.md the fabric depends on (it would break mcp__company access) — bare is for isolation only" }
+  - { kind: http, method: POST, path: "/spawn  (debug → --debug [categories], safe_mode → --safe-mode, bare → --bare on the body)", transport: supervisor-http, exposure: "exposure.json#supervisor-http", status: building, note: "BUILT (CC-33.4; runtime/session_supervisor.py _build_spawn_cmd + /spawn body, 2026-06-12): `debug` (string filter or true) threads --debug [categories], `safe_mode` threads --safe-mode, `bare` threads --bare (all Atlas-verified flags). WARNING preserved in the cmd-builder semantics: --bare skips the MCP/keychain/CLAUDE.md the fabric depends on (it would break mcp__company access) — bare is for isolation only, the caller owns that choice. live-verify pending (lead): a real spawn must confirm the debug stream/safe-mode took — built+unit-tested on the cmd-builder, NOT flipped live" }
   - { kind: cli, command: "/doctor   (HOST interactive command; inspects the host install, not a fabric session)", transport: cli-local, exposure: "n/a — Claude Code built-in", status: planned, note: "GAP + scope: /doctor is interactive-host only; it has no headless form the supervisor can invoke per-session. A per-session health object would be net-new company work" }
 liveness: none
 emits: []
 consequences:
-  - when: "debug/safe-mode set at spawn (planned)"
+  - when: "debug/safe-mode/bare set at spawn (BUILT; /doctor still planned)"
     expect: [agent_sessions.spawned]
-    bound: "the spawn's own bound ([[session#op: session.create]]); debug output would ride the session's stderr/stream — NOT a distinct fabric event"
-    evidence: "[[diagnostics#op: diagnostics.watch]] — the debug stream and resolved tool surface would be observed on the existing watch; an absence-of-dedicated-event outcome (CONTRACT-FORMAT section 6 V9)"
+    bound: "the spawn's own bound ([[session#op: session.create]]); debug output rides the session's stderr/stream — NOT a distinct fabric event. live-verify pending (lead)"
+    evidence: "[[diagnostics#op: diagnostics.watch]] — the debug stream and resolved tool surface are observed on the existing watch; a real spawn confirms the debug categories/safe-mode took (an absence-of-dedicated-event outcome, CONTRACT-FORMAT section 6 V9)"
 correlate: [session]
 verification:
-  doctor-per-session: {state: unverified, note: "/doctor has no headless form; no company op — planned"}
-  set-debug:          {state: unverified, note: "no --debug threaded — planned"}
-  safe-mode:          {state: unverified, note: "no --safe-mode threaded; --bare would break mcp__company — planned"}
+  doctor-per-session: {state: unverified, note: "STILL planned (CC-33.3): /doctor has no headless form; a per-session health object is net-new company work"}
+  set-debug:          {state: probe-verified, run: "session_supervisor_params_acceptance (cmd-builder: debug string→--debug <categories>, debug=true→bare --debug)", date: 2026-06-12, note: "BUILT (CC-33.4): a `debug` filter threads --debug [categories]; unit-proven on the built cmd. live-verify pending (lead): a REAL spawn must confirm the debug stream emits — NOT flipped live"}
+  safe-mode:          {state: probe-verified, run: "session_supervisor_params_acceptance (cmd-builder: safe_mode→--safe-mode, bare→--bare)", date: 2026-06-12, note: "BUILT (CC-33.4): safe_mode→--safe-mode, bare→--bare; unit-proven. --bare still BREAKS mcp__company by design (isolation-only). live-verify pending (lead): a real spawn must confirm the isolation took"}
 ```
 ### Description (purpose-free)
 Three planned diagnostic levers the native CLI supports and the company does not thread. (1) `/doctor`
@@ -246,8 +246,8 @@ isolation-only. Source: https://code.claude.com/docs/en/cli-reference.md, troubl
 ### Errors
 ```contract:error
 code: diagnostics.not-exposed | http: 501 | retryable: false
-when: any /doctor / --debug / safe-mode call against the company today
-teach: "Per-session diagnostics are PLANNED — the spawn threads --verbose but no --debug/--safe-mode, and /doctor has no headless form. For fabric health use [[diagnostics#op: diagnostics.get]] (GET /health); for session failures watch [[diagnostics#op: diagnostics.watch]]. On the host, the operator runs the interactive /doctor."
+when: a per-session /doctor health check is requested (CC-33.3 — the residual not-built lever)
+teach: "Per-session --debug/--safe-mode/--bare are now BUILT (the /spawn body threads them). A per-session /doctor is still PLANNED — it has no headless form, so a per-session health object is net-new company work. For fabric health use [[diagnostics#op: diagnostics.get]] (GET /health); for session failures watch [[diagnostics#op: diagnostics.watch]]; on the host, the operator runs the interactive /doctor."
 ```
 ```contract:error
 code: diagnostics.supervisor-down | http: 503 | retryable: true
@@ -255,14 +255,17 @@ when: GET /health connection refused (the supervisor process is not running)
 teach: "The session-supervisor is down. Start it with `company up session-supervisor`. This is the failure [[diagnostics#op: diagnostics.get]] is designed to detect — a refused connection to 127.0.0.1:8771, not a 5xx body."
 ```
 ```contract:example
-captured: synthetic            # status=planned -> synthetic legal AND loud; no --debug threaded (V11)
+captured: synthetic            # status=building, live-verify pending (lead): the spawn ACCEPTS debug/safe_mode/bare (cmd-builder unit-proven → --debug/--safe-mode/--bare); a REAL spawn confirming the debug stream emits is the lead's live-verify, so synthetic-and-loud, NOT captured-live (V11)
 binding: http
 request: |
-  POST /spawn HTTP/1.1   (PLANNED body extension)
-  {"cwd": "/home/tim/scratch", "name": "debug-1", "debug": {"filter": "api,hooks"}}
+  POST /spawn HTTP/1.1
+  {"cwd": "/home/tim/scratch", "name": "debug-1", "debug": "api,hooks"}
 response: |
-  HTTP/1.1 501 Not Implemented
-  {"error": "Per-session debug is planned; the spawn threads --verbose but no --debug/--safe-mode. Use GET /health for fabric health and the watch stream for session failures; run /doctor on the host for install health."}
+  HTTP/1.1 200 OK
+  {"ok": true, "session": {"id": "as-3c4d5e6f", "name": "debug-1", "state": "starting"}}
+  # built (CC-33.4): the body threads --debug api,hooks onto the spawn cmd (safe_mode→--safe-mode, bare→--bare likewise).
+  # a per-session /doctor (CC-33.3) is the unbuilt residual; run /doctor on the host for install health.
+  # live-verify pending (lead): confirm the debug categories actually stream on a real session.
 ```
 Adjacent: [[diagnostics#op: diagnostics.get]] (fabric health), [[diagnostics#op: diagnostics.watch]]
 (session failures), [[session#op: session.create]] (the spawn this would extend), [[settings#op:
@@ -270,8 +273,8 @@ settings.get]] (settings validity, which /doctor checks), [[surfaces#op: surface
 (keybinding warnings /doctor reports).
 
 ## Errors
-**Resource-level error vocabulary: `diagnostics.not-exposed` (the honest 501 for the planned
-/doctor + --debug levers), `diagnostics.supervisor-down` (the 503/refused-connection the health read
+**Resource-level error vocabulary: `diagnostics.not-exposed` (the honest 501 for the residual
+per-session /doctor — --debug/--safe-mode/--bare are now built), `diagnostics.supervisor-down` (the 503/refused-connection the health read
 is built to detect, teaching `company up`).** Both teach the in-corpus recovery: the live health read,
 the failure stream, and the host /doctor for install-level health. No error implies a per-session
 /doctor the company does not have.
@@ -280,7 +283,7 @@ the failure stream, and the host /doctor for install-level health. No error impl
 **No address-typed fields of its own: a diagnostic references the `session://` it inspects
 (dereferences to [[session]]) and the event surface its failures ride ([[events]]); it points at
 [[fabric-config]] (the health field set), [[settings]] (settings validity), [[surfaces]] (keybinding
-warnings), [[platform]] (install integrity + telemetry), and [[cost-usage]] (the discarded usage
-fields).** Debug category names, /doctor check names, and telemetry signal names are Claude Code
+warnings), [[platform]] (install integrity + telemetry), and [[cost-usage]] (the per-turn usage
+fields, now captured onto agent_sessions.turn).** Debug category names, /doctor check names, and telemetry signal names are Claude Code
 identifiers (https://code.claude.com/docs/en/troubleshooting.md, monitoring-usage.md), not fabric
 addresses — they never resolve to a corpus entry, by design.

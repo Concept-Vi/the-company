@@ -99,15 +99,19 @@ liveness: snapshot
 live-twin: "none for a fabric read (no endpoint). In-process the statusline reflects it continuously; a UI can poll /context."
 emits: []
 verification:
-  fabric-endpoint: {state: unverified, note: "NO Company endpoint. Grounded in context-window.md, statusline.md available-data, errors.md prompt-is-too-long."}
+  fabric-endpoint: {state: unverified, note: "NO Company endpoint for the live per-session /context usage breakdown (used_percentage / current_usage). STILL planned. PARTIAL adjacent signal as of 2026-06-12: agent_sessions.turn now carries a `usage` block (CC-20, [[cost-usage]]) whose per-model `model_usage` includes `contextWindow` (the window SIZE) + the turn's input/output/cache token counts — a coarser per-turn proxy, NOT the live category breakdown CC-05.3 contracts. Grounded in context-window.md, statusline.md available-data, errors.md prompt-is-too-long."}
 ```
 A `planned` op with no binding carries no green-painted request/response wire (§6 V11); the
 Representation fence is the shape a future endpoint would serve. The interim honest path for a
-fabric-only consumer: there is none for live per-session usage — it is genuinely in-process. The
-nearest fabric-visible signal is a session's growth via [[session#op: session.get]] (turns,
-jsonl_bytes), which is a coarse proxy, NOT the token breakdown.
+fabric-only consumer: there is none for the live per-session usage BREAKDOWN — it is genuinely
+in-process. The nearest fabric-visible signals are (1) the per-turn token counts + `contextWindow`
+on the new agent_sessions.turn `usage` block ([[cost-usage]]) — a coarse proxy, not the live
+category breakdown — and (2) a session's growth via [[session#op: session.get]] (turns,
+jsonl_bytes), coarser still. CC-05.3 stays `planned`: capturing per-turn usage did not build the
+live-breakdown read.
 Adjacent: [[context-window#op: context-window.compact]] (act on a full window);
-[[fabric-config#op: fabric-config.get]] (fabric-wide limits, a different layer entirely).
+[[fabric-config#op: fabric-config.get]] (fabric-wide limits, a different layer entirely);
+[[cost-usage]] (the per-turn `usage` block now carrying contextWindow + token counts — the partial adjacent signal).
 
 ## op: context-window.compact
 **`context-window.compact` is the planned whole-conversation compaction act — summarize history

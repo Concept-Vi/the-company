@@ -131,7 +131,7 @@ tasks:
 bindings:
   - { kind: http, method: POST, path: /inject, transport: supervisor-http, exposure: "exposure.json#supervisor-http", note: "the EXPOSED control-input: a user turn written to the held-open stdin. Owned by [[session#op: session.inject]] — this is its CC-18 lens" }
   - { kind: http, method: POST, path: /interrupt, transport: supervisor-http, exposure: "exposure.json#supervisor-http", note: "the EXPOSED interrupt: a control_request to stdin. Owned by [[session#op: session.interrupt]] — honestly UNPROVEN against a real turn (stub subprocesses ignore it)" }
-  - { kind: http, method: POST, path: "/spawn  (PLANNED: output_format/json_schema/include_partial on the body)", transport: supervisor-http, exposure: "exposure.json#supervisor-http", status: planned, note: "GAP: the supervisor hardcodes --output-format stream-json --verbose (runtime/session_supervisor.py:262) and requests NO --include-partial-messages, NO --json-schema. A consumer cannot choose json-result, structured-output, or token streaming. Native flags exist; the spawn does not carry them" }
+  - { kind: http, method: POST, path: "/spawn  (output_format → --output-format, include_partial → --include-partial-messages on the body)", transport: supervisor-http, exposure: "exposure.json#supervisor-http", status: building, note: "BUILT (CC-18.7; runtime/session_supervisor.py _build_spawn_cmd + /spawn body, 2026-06-12): an `output_format` field replaces the default --output-format value, `include_partial` adds --include-partial-messages (Atlas: requires --print + --output-format stream-json, both present). NOTE: --input-format stream-json stays FIXED (the injection contract); the supervisor's reader parses the stream-json shape, so choosing output_format=text/json on a held-open supervised session yields frames the fold cannot parse — honestly carried, a consumer wanting json-result should use a one-shot. RESIDUAL (still planned): --json-schema (structured output) is NOT wired. live-verify pending (lead): a real spawn must confirm the chosen format/partial deltas emit — built+unit-tested on the cmd-builder, NOT flipped live" }
 liveness: none
 emits: []
 consequences:
@@ -143,15 +143,15 @@ consequences:
     expect: [agent_sessions.turn]
     bound: "unbounded-with-evidence: an interrupt_sent frame appears immediately on the per-session watch; the turn event closes when claude yields. UNPROVEN against a real turn (stub ignores control_request)"
     evidence: "[[session#op: session.watch]] interrupt_sent frame; the watchdog reap (closed, reason names it) is the guaranteed ceiling"
-  - when: "output-format/structured-output selection (act=set-output) — PLANNED"
-    expect: []
-    bound: "n/a — not built"
-    evidence: "no company-visible outcome; the spawn-flag gap is the contract (named in bindings)"
+  - when: "output-format/partial-streaming selection (act=set-output) — BUILT for output_format/include_partial, structured-output (json_schema) still planned"
+    expect: [agent_sessions.spawned]
+    bound: "the spawn's own bound ([[session#op: session.create]]); the chosen output_format/include_partial thread onto the spawn cmd — observable only via the session's stream shape, NOT a distinct fabric event. live-verify pending (lead)"
+    evidence: "[[headless-control#op: headless-control.watch]] — a real spawn confirms the partial deltas / format; --json-schema remains the unbuilt residual"
 correlate: [session]
 verification:
   turn-write:    {state: probe-verified, run: "session_supervisor_acceptance section 4 (inject -> turn -> idle)", date: 2026-06-12, note: "the EXPOSED control-input slice; full identity is [[session#op: session.inject]]"}
   interrupt:     {state: unverified, note: "real-claude interrupt unproven — stubs ignore control_request; see [[session#op: session.interrupt]]"}
-  output-select: {state: unverified, note: "no spawn output-format param — planned"}
+  output-select: {state: probe-verified, run: "session_supervisor_params_acceptance (cmd-builder: output_format→--output-format, include_partial→--include-partial-messages, --input-format stays stream-json)", date: 2026-06-12, note: "BUILT (CC-18.7): output_format + include_partial thread to the flags; unit-proven on the built cmd. --json-schema structured-output is the unbuilt residual. live-verify pending (lead): a REAL spawn must confirm the format/partial deltas emit — NOT flipped live"}
 ```
 ### Description (purpose-free)
 The control-INPUT half of the headless protocol, split by what the company exposes. EXPOSED
@@ -199,8 +199,8 @@ teach: "Wait for idle, interrupt the current turn ([[session#op: session.interru
 ```
 ```contract:error
 code: headless-control.output-not-selectable | http: 501 | retryable: false
-when: act=set-output (any output-format/structured-output/partial-streaming selection)
-teach: "Output-format selection is PLANNED — the supervisor hardcodes --output-format stream-json --verbose and folds it to ndjson frames ([[headless-control#op: headless-control.watch]]). For one-shot structured output today, an operator runs claude -p --output-format json --json-schema directly, outside the fabric."
+when: act=set-output requesting a json_schema (structured-output) — the residual not-built lever
+teach: "output_format and include_partial are now BUILT (the /spawn body threads --output-format / --include-partial-messages); read the folded stream via [[headless-control#op: headless-control.watch]]. Structured output via --json-schema is still PLANNED. For one-shot structured output today, an operator runs claude -p --output-format json --json-schema directly, outside the fabric (https://code.claude.com/docs/en/headless.md). NOTE: choosing output_format=text/json on a HELD-OPEN supervised session yields a shape the supervisor's reader cannot fold — use a one-shot for those."
 ```
 Plus `session.unknown` (the registry's 404 teach, as on [[session#op: session.get]]).
 ```contract:example

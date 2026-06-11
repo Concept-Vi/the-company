@@ -1,9 +1,9 @@
 ---
 type: contract-entry
 resource: cost-usage
-summary: The cost/usage telemetry data model a UI renders — per-turn token+cost from the Claude Code result message, the OpenTelemetry metric set, the /cost & /usage views, the on-disk stats-cache, the headless --max-budget-usd cap, and the org Usage & Cost API. Today the data flows through the supervisor and is DISCARDED; the surface is planned, the gap code-cited.
+summary: The cost/usage telemetry data model a UI renders — per-turn token+cost from the Claude Code result message, the OpenTelemetry metric set, the /cost & /usage views, the on-disk stats-cache, the headless --max-budget-usd cap, and the org Usage & Cost API. The per-turn cost/usage is now CAPTURED onto the agent_sessions.turn event (CC-20 adoption path realized); reading it over the event stream is building, the org/OTel grains stay planned.
 schemes: []
-status: planned
+status: building
 relates-to: ["[[events]]", "[[session]]", "[[fabric-config]]", "[[knowledge-corpus]]"]
 ---
 
@@ -14,10 +14,11 @@ relates-to: ["[[events]]", "[[session]]", "[[fabric-config]]", "[[knowledge-corp
 session/turn (the result message), per a model, per a skill/plugin/subagent (the OTel
 attributes), per an org/workspace (the Usage & Cost API). A UI keys it by the resource it
 attaches to; this entry contracts the SHAPE of that telemetry.**
-This resource is `planned`. The DATA is real and partly already flowing through the company
-(see Representation's code-cite), but NO company endpoint surfaces, persists, or aggregates
-cost/usage today (verified — `grep -rilE '/cost|cost\.usage|token\.usage|stats-cache' runtime/
-mcp_face/ ops/` returns nothing in `~/company`). Every fact below is grounded in the Claude
+This resource is `building` on the per-turn grain: the result event's cost/usage is now CAPTURED
+onto the durable `agent_sessions.turn` event (CC-20 adoption path realized — see Representation's
+code-cite), so a consumer reads per-turn spend over the [[events]] stream with zero new transport.
+The OTel-metric, on-disk stats-cache, and org Usage-&-Cost grains remain `planned` (no company
+endpoint surfaces or aggregates them). Every fact below is grounded in the Claude
 Code Atlas + docs mirror — search via [[knowledge-corpus#op: knowledge-corpus.search]]
 (`vault: claude-code-atlas`). Primary cites: `Docs/claude-code/costs.md`,
 `Docs/claude-code/monitoring-usage.md`, `Docs/claude-code/analytics.md`,
@@ -48,15 +49,17 @@ is a CLIENT-SIDE ESTIMATE (see Errors). (Source:
     "contextWindow":            { "type": "integer" },
     "maxOutputTokens":          { "type": "integer" } } }
 ```
-**CODE-CITED GAP (the headline honesty of this entry):** the company session supervisor
-(`runtime/session_supervisor.py`) runs each turn under `--input-format stream-json
---output-format stream-json` and consumes the result event `ev` in `_turn_done` (line ~369),
-but extracts ONLY `num_turns` and `is_error` into the `agent_sessions.turn` event (line ~380,
-~384). `total_cost_usd` / `usage` / token counts carried by that same result event are NOT
-read and NOT persisted — the cost data flows through the fabric and is discarded. This is the
-exact adoption path: have the supervisor's emit helper stamp the `ModelUsage` fields onto the
-`agent_sessions.turn` event ([[events]]); cost/usage then becomes a `building` read over the
-event stream with zero new transport. (F10.1 gap-adoption candidate — see verification.)
+**CODE-CITED BUILD (the headline of this entry — the gap is now CLOSED on the per-turn grain):**
+the company session supervisor (`runtime/session_supervisor.py`) runs each turn under
+`--input-format stream-json --output-format stream-json` and consumes the result event `ev` in
+`_turn_done`. As of 2026-06-12 it calls `_extract_usage(ev)` and stamps a `usage` block —
+`{model?, input_tokens, output_tokens, cache_read_input_tokens, cache_creation_input_tokens,
+cost_usd?, model_usage?}` — onto the durable `agent_sessions.turn` event (the snake_case token
+fields + `total_cost_usd` the result message carries, per the Atlas cost-tracking docs). The cost
+data is NO LONGER discarded; cost/usage is a `building` read over the [[events]] stream with zero
+new transport. PROVEN: tests/session_supervisor_params_acceptance (the e2e check reads
+agent_sessions.turn off events.jsonl and asserts the usage block + tokens + cost_usd). The
+ModelUsage `costUSD` is a CLIENT-SIDE ESTIMATE (see Errors) — labelled, never the authoritative bill.
 
 ### (2) Metric — the OpenTelemetry counter set (opt-in, all providers)
 Exported when OTel is enabled. (Source: `Docs/claude-code/monitoring-usage.md`.)
@@ -93,7 +96,7 @@ claude.ai is NOT included. (Source: `Docs/claude-code/costs.md#using-the-usage-c
 | reality (Tim's install, 2026-06-12) | value |
 |---|---|
 | `~/.claude/stats-cache.json` | present, 15,077 bytes — the historical-totals source `/usage` reads |
-| supervisor cost capture | NONE — result-event cost/usage fields discarded (code-cite above), so the fabric has no cost history of its own yet |
+| supervisor cost capture | BUILT (2026-06-12) — _extract_usage stamps the result event's tokens+cost_usd onto agent_sessions.turn; the fabric now accrues its own per-turn cost history on the event stream |
 
 ### (4) Org — the Usage & Cost API + Analytics
 For org-wide attribution: the Usage & Cost API (`/v1/organizations/usage_report/messages`,
@@ -118,13 +121,14 @@ different data.**
 
 ## op: cost-usage.get
 **`cost-usage.get` is the cost/usage read — per-turn token+cost, the session running total, the
-historical stats — the spend data a consumer reads; planned as a company op, today read
-only via Claude Code's own /usage (local) or the org Usage & Cost API.**
+historical stats — the spend data a consumer reads; per-turn spend is now BUILDING (read off the
+agent_sessions.turn `usage` block over the [[events]] stream), with the local /usage and org
+Usage & Cost API as the other (planned/interim) grains.**
 ```contract:op
 op: cost-usage.get
 resource: cost-usage
 kind: get
-status: planned
+status: building
 direction: outbound
 atlas: [CC-20.1, CC-20.2]
 tasks:
@@ -135,13 +139,15 @@ tasks:
   - alias: "usage breakdown"
   - alias: "spend so far"
 bindings:
-  - { kind: cli, command: "claude /usage   (local session totals + plan bars + attribution; /cost shows the session cost breakdown)", transport: cli-local, exposure: "exposure.json#cli-local", status: planned, note: "BUILT-IN slash commands, not a company route; local-only, this-machine estimates" }
+  - { kind: mcp, tool: sessions, op-param: "op=watch (kind=agent_sessions.turn → the per-turn `usage` block)", server: company, exposure: "exposure.json#mcp-company", status: building, note: "BUILT (2026-06-12; runtime/session_supervisor.py _turn_done stamps `usage` onto agent_sessions.turn): per-turn spend is read off the SAME event face as [[events#op: events.list]] — no new endpoint. The `usage` block carries tokens + cost_usd (+ per-model model_usage). costUSD is a client-side ESTIMATE (Errors)" }
+  - { kind: http, method: GET, path: "/api/events  (filter kind=agent_sessions.turn, read .usage)", transport: bridge-http, exposure: "exposure.json#bridge-http", status: building, note: "BUILT: the bridge's event snapshot carries the agent_sessions.turn usage block — the HTTP twin of the MCP read above (same data, [[events#op: events.list]] mechanics)" }
+  - { kind: cli, command: "claude /usage   (local session totals + plan bars + attribution; /cost shows the session cost breakdown)", transport: cli-local, exposure: "exposure.json#cli-local", status: planned, note: "BUILT-IN slash commands, not a company route; local-only, this-machine estimates — the running-total/historical grain the per-turn event read does not aggregate yet" }
   - { kind: http, method: GET, path: "/v1/organizations/usage_report/messages", transport: anthropic-admin-api, exposure: "exposure.json#anthropic-admin-api", status: planned, note: "ORG grain; EXTERNAL Anthropic API, Admin key — see [[cost-usage#INVENTORY note]]; the company does not proxy it today" }
 liveness: snapshot
-live-twin: "none — accumulating totals, read point-in-time; the live per-turn signal would be [[events#op: events.watch]] IF the supervisor stamped cost onto turn events (see Representation gap)"
+live-twin: "[[events#op: events.watch]] — the per-turn `usage` block now rides every agent_sessions.turn live (the supervisor stamps it as of 2026-06-12); the accumulating historical totals are the snapshot grain this read does not aggregate yet"
 emits: []
 verification:
-  no-company-endpoint: {state: unverified, note: "GAP (code-cited): supervisor discards result-event cost/usage; no company read exists. ADOPTION PATH: stamp ModelUsage onto agent_sessions.turn → cost-usage.get becomes a building read over [[events]]. F10.1 candidate. Interim: /usage (local) + the Usage & Cost API (org)"}
+  per-turn-read: {state: probe-verified, run: "session_supervisor_params_acceptance (e2e: agent_sessions.turn carries a `usage` block with tokens + cost_usd off events.jsonl)", date: 2026-06-12, note: "BUILT: _turn_done stamps `usage` (CC-20 adoption path realized); per-turn spend reads over [[events]] with zero new transport. PROVEN by use against the real service (usage-emitting stub). The aggregated running-total/org grains stay planned (the /usage + Usage-&-Cost bindings)"}
 ```
 Interim honest paths: `claude /usage` and `/cost` for this machine's local estimates; the org
 Usage & Cost API for authoritative-ish attribution; `~/.claude/stats-cache.json` is directly

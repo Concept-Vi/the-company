@@ -118,7 +118,7 @@ fiction.**
 op: permission.act
 resource: permission
 kind: act
-status: planned
+status: building
 direction: outbound
 atlas: [CC-07.2, CC-07.3, CC-07.4]
 tasks:
@@ -132,7 +132,7 @@ tasks:
   - alias: "raise a session's permissions"
   - alias: "change permission mode mid-session"
 bindings:
-  - { kind: http, method: POST, path: "/spawn  (PLANNED extension: a permission block on the body)", transport: supervisor-http, exposure: "exposure.json#supervisor-http", status: planned, note: "GAP: spawn() (runtime/session_supervisor.py:254) accepts cwd/resume/fork/name/source ONLY — no permission/mode/allow/deny param. Every spawn is pinned to fabric_permission() + --allowedTools mcp__company. Wiring = add a permission block -> map to --permission-mode/--allowedTools/--disallowedTools" }
+  - { kind: http, method: POST, path: "/spawn  (permission.mode / permission_mode on the body → --permission-mode, overriding fabric_permission())", transport: supervisor-http, exposure: "exposure.json#supervisor-http", status: building, note: "BUILT (CC-07.2; runtime/session_supervisor.py _build_spawn_cmd + /spawn body, 2026-06-12): a per-spawn permission_mode (or a nested permission.mode block) overrides the fabric-wide fabric_permission() on --permission-mode. RESIDUAL (still planned): allow/deny/ask rule lists are NOT wired — every spawn still pins --allowedTools mcp__company (no --disallowedTools), so CC-07.3 (constrain tool surface) is unbuilt. live-verify pending (lead): a real spawn must confirm the chosen mode took (system/init permissionMode) — built+unit-tested on the cmd-builder, NOT flipped live" }
   - { kind: http, method: POST, path: "/permission  (PLANNED: mid-session set-mode control_request, the SDK setPermissionMode analogue)", transport: supervisor-http, exposure: "exposure.json#supervisor-http", status: planned, note: "GAP: no control surface writes a control_request to a live session's stdin for permission. The held-open stream-json transport CAN carry it; unbuilt" }
 liveness: none
 emits: []
@@ -146,8 +146,9 @@ consequences:
     evidence: "the next tool call's approval behaviour on [[session#op: session.watch]] (a write the new mode would have prompted now auto-approves, or vice-versa) — there is no fabric event for a mode change; its proof is behavioural"
 correlate: [session]
 verification:
-  spawn-with-mode: {state: unverified, note: "the spawn param does not exist — planned"}
-  set-mode-mid:    {state: unverified, note: "no control surface — planned"}
+  spawn-with-mode: {state: probe-verified, run: "session_supervisor_params_acceptance (cmd-builder: permission_mode OVERRIDES fabric_permission() on --permission-mode)", date: 2026-06-12, note: "BUILT (CC-07.2): per-spawn permission_mode threads to --permission-mode; unit-proven on the built cmd. live-verify pending (lead): a REAL spawn must confirm the mode took (system/init permissionMode) — NOT flipped live"}
+  spawn-with-rules: {state: unverified, note: "STILL planned (CC-07.3): allow/deny/ask not wired — every spawn pins --allowedTools mcp__company, no --disallowedTools"}
+  set-mode-mid:    {state: unverified, note: "STILL planned (CC-07.4): no mid-session control surface writes the permission control_request"}
 ```
 ### Description (purpose-free)
 Two planned capabilities the native model supports and the company does not yet expose. (1) At
@@ -195,19 +196,21 @@ teach: "Modes are default/acceptEdits/plan/dontAsk/bypassPermissions/auto (auto 
 ```
 ```contract:error
 code: permission.not-exposed | http: 501 | retryable: false
-when: any call against this op today
-teach: "Per-session permission setting is PLANNED — the fabric pins COMPANY_FABRIC_PERMISSION + mcp__company on every spawn. To run a session under a different posture today, an operator restarts the service with COMPANY_FABRIC_PERMISSION=<mode>; READ the live posture via [[permission#op: permission.get]]. The spawn-param gap is named in this op's bindings."
+when: a per-session RULE list (allow/deny/ask) or a MID-SESSION mode change is requested
+teach: "Per-spawn permission MODE is now BUILT (permission_mode → --permission-mode, overriding the fabric default). Still PLANNED: allow/deny/ask rule lists (the fabric pins --allowedTools mcp__company, no --disallowedTools) and the mid-session set-mode control_request. READ the live posture via [[permission#op: permission.get]]; to constrain the tool surface today an operator does it outside the fabric."
 ```
 ```contract:example
-captured: synthetic            # status=planned -> synthetic legal AND loud; no spawn permission param exists (V11)
+captured: synthetic            # status=building, live-verify pending (lead): the spawn ACCEPTS the mode (cmd-builder unit-proven, permission_mode→--permission-mode); a REAL spawn confirming the mode TOOK (system/init permissionMode) is the lead's live-verify, so synthetic-and-loud, NOT captured-live (V11)
 binding: http
 request: |
-  POST /spawn HTTP/1.1   (PLANNED body extension)
-  {"cwd": "/home/tim/scratch", "name": "editor-1",
-   "permission": {"mode": "acceptEdits", "deny": ["Bash(rm *)"]}}
+  POST /spawn HTTP/1.1
+  {"cwd": "/home/tim/scratch", "name": "editor-1", "permission": {"mode": "acceptEdits"}}
 response: |
-  HTTP/1.1 501 Not Implemented
-  {"error": "Per-session permission is planned; the fabric pins COMPANY_FABRIC_PERMISSION (plan) + --allowedTools mcp__company on every spawn. Read the live posture at GET /health .permission."}
+  HTTP/1.1 200 OK
+  {"ok": true, "session": {"id": "as-9f8e7d6c", "name": "editor-1", "state": "starting"}}
+  # built (CC-07.2): the body's permission.mode threads --permission-mode acceptEdits, overriding fabric_permission().
+  # NOTE: a deny:[...] rule list is NOT yet honoured (CC-07.3 residual) — every spawn still pins --allowedTools mcp__company.
+  # live-verify pending (lead): confirm the resolved mode via the session's system/init permissionMode.
 ```
 Adjacent: [[permission#op: permission.get]] (the live read that DOES work),
 [[session#op: session.create]] (the spawn this would extend),
@@ -215,9 +218,10 @@ Adjacent: [[permission#op: permission.get]] (the live read that DOES work),
 
 ## Errors
 **Resource-level error vocabulary: `permission.unsupported-mode` (closed-enum guard) and
-`permission.not-exposed` (the honest 501 every `planned` setter returns until the spawn-param seam
-is built).** Both teach the recovery in-corpus: read the live posture, or have the operator flip
-the fabric env. No error claims a capability the code does not have.
+`permission.not-exposed` (the honest 501 the RESIDUAL setters return — per-spawn MODE is now built; allow/deny/ask
+rule lists and the mid-session switch are not).** Both teach the recovery in-corpus: read the live posture, or
+constrain tools outside the fabric. No error claims a capability the code does not have; the built mode-at-spawn
+carries a live-verify-pending (lead) note, never claimed proven against a real turn.
 
 ## Links
 **No address-typed fields: a posture references the `session://` it governs (dereferences to

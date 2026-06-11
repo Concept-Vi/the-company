@@ -3,7 +3,7 @@ type: contract-entry
 resource: model
 summary: Which Claude model a session runs and how hard it reasons — the alias/name, the effort level, the thinking toggle, and the fallback chain; the company spawns every session on the account default with no model lever yet, so this resource is the native contract with the spawn-param gap named.
 schemes: []
-status: planned
+status: building
 relates-to: ["[[session]]", "[[permission]]", "[[agent-team]]", "[[headless-control]]", "[[fabric-config]]"]
 ---
 
@@ -110,7 +110,7 @@ NOT yet carry, named here so a UI builds the real seam.**
 op: model.act
 resource: model
 kind: act
-status: planned
+status: building
 direction: outbound
 atlas: [CC-10.2, CC-10.3, CC-10.4, CC-10.5]
 tasks:
@@ -129,7 +129,7 @@ tasks:
   - alias: "turn on extended thinking"
   - alias: "use the 1 million token context"
 bindings:
-  - { kind: http, method: POST, path: "/spawn  (PLANNED: model/effort/thinking/fallback on the body)", transport: supervisor-http, exposure: "exposure.json#supervisor-http", status: planned, note: "GAP: spawn() (runtime/session_supervisor.py:254) passes no --model/--effort/--fallback-model. Wiring = body fields -> those flags. CLAUDE_CODE_SUBAGENT_MODEL would govern any fan-spawned consults" }
+  - { kind: http, method: POST, path: "/spawn  (model/effort/fallback on the body → --model/--effort/--fallback-model)", transport: supervisor-http, exposure: "exposure.json#supervisor-http", status: building, note: "BUILT (runtime/session_supervisor.py _build_spawn_cmd + /spawn body, 2026-06-12): body fields model/effort/fallback thread to --model/--effort/--fallback-model (each grounded in the Atlas cli-reference). thinking is NOT a CLI flag (MAX_THINKING_TOKENS env / per-model) so it stays unbuilt here. CLAUDE_CODE_SUBAGENT_MODEL would govern any fan-spawned consults. live-verify pending (lead): a real spawn must confirm the chosen model actually ran (read system/init `model`) — built+unit-tested on the cmd-builder, NOT flipped live" }
   - { kind: http, method: POST, path: "/model  (PLANNED: mid-session set-model control_request, the /model analogue)", transport: supervisor-http, exposure: "exposure.json#supervisor-http", status: planned, note: "GAP: no control surface for mid-session model switch. A resumed session keeps its saved model regardless — the native invariant constrains what this op can promise" }
 liveness: none
 emits: []
@@ -144,9 +144,9 @@ consequences:
     evidence: "the per-session stream's text/result frames carry the fallback notice; in non-interactive mode a flagged request ENDS the turn with a refusal instead (is_error result) — the corpus contracts that this is expected routing, not a fault"
 correlate: [session]
 verification:
-  model-at-spawn: {state: unverified, note: "no spawn model param — planned"}
-  effort-at-spawn: {state: unverified, note: "no spawn effort param — planned"}
-  set-mid-session: {state: unverified, note: "no control surface; plus the resumed-session-keeps-model invariant limits it — planned"}
+  model-at-spawn: {state: probe-verified, run: "session_supervisor_params_acceptance (cmd-builder: model→--model, fallback→--fallback-model)", date: 2026-06-12, note: "BUILT: the /spawn body threads model/effort/fallback to the flags; unit-proven on the built cmd. live-verify pending (lead): a REAL spawn must confirm the model took (system/init `model`) — NOT flipped live"}
+  effort-at-spawn: {state: probe-verified, run: "session_supervisor_params_acceptance (cmd-builder: effort→--effort)", date: 2026-06-12, note: "BUILT: effort threads to --effort (Atlas-verified flag). live-verify pending (lead): a real spawn must confirm the effort took"}
+  set-mid-session: {state: unverified, note: "STILL planned — the mid-session /model control surface is not built; the resumed-session-keeps-model invariant also limits it"}
 ```
 ### Description (purpose-free)
 The native model/reasoning surface, all `planned` at the company layer. At spawn (planned): choose
@@ -195,18 +195,20 @@ teach: "Effort levels are low/medium/high/xhigh/max/ultracode/auto, and the mode
 ```
 ```contract:error
 code: model.not-exposed | http: 501 | retryable: false
-when: any model/effort selection against the fabric today
-teach: "Per-session model selection is PLANNED — the fabric spawns on the account default with no --model. To change models today, an operator sets ANTHROPIC_MODEL (or ANTHROPIC_DEFAULT_*_MODEL) on the service and restarts. OBSERVE a live session's resolved model via [[headless-control#op: headless-control.watch]] system/init."
+when: a MID-SESSION model switch is requested (act: set-model on a live session)
+teach: "Spawn-time model/effort/fallback selection is now BUILT (the /spawn body threads --model/--effort/--fallback-model). The MID-SESSION switch (/model analogue) is still PLANNED — no control surface writes it, and a resumed session keeps its saved model regardless. OBSERVE a live session's resolved model via [[headless-control#op: headless-control.watch]] system/init."
 ```
 ```contract:example
-captured: synthetic            # status=planned -> synthetic legal AND loud; no spawn model param exists (V11)
+captured: synthetic            # status=building, live-verify pending (lead): the spawn ACCEPTS the params (cmd-builder unit-proven); a REAL spawn confirming the model TOOK is the lead's live-verify, so this stays synthetic-and-loud, NOT a captured-live exchange (V11)
 binding: http
 request: |
-  POST /spawn HTTP/1.1   (PLANNED body extension)
-  {"cwd": "/home/tim/scratch", "name": "deep-1", "model": "opus", "effort": "xhigh"}
+  POST /spawn HTTP/1.1
+  {"cwd": "/home/tim/scratch", "name": "deep-1", "model": "opus", "effort": "xhigh", "fallback": ["sonnet", "haiku"]}
 response: |
-  HTTP/1.1 501 Not Implemented
-  {"error": "Per-session model is planned; the fabric spawns on the account default with no --model/--effort. Set ANTHROPIC_MODEL on the service to change globally; observe a session's resolved model via the per-session stream's system/init."}
+  HTTP/1.1 200 OK
+  {"ok": true, "session": {"id": "as-1a2b3c4d", "name": "deep-1", "state": "starting"}}
+  # built: the body threads --model opus --effort xhigh --fallback-model sonnet,haiku onto the spawn cmd.
+  # live-verify pending (lead): confirm the resolved model via the session's system/init `model` field.
 ```
 Adjacent: [[model#op: model.list]] (the values), [[session#op: session.create]] (the spawn this
 extends), [[agent-team]] (CLAUDE_CODE_SUBAGENT_MODEL governs teammate models),
@@ -214,9 +216,10 @@ extends), [[agent-team]] (CLAUDE_CODE_SUBAGENT_MODEL governs teammate models),
 
 ## Errors
 **Resource-level error vocabulary: `model.unsupported-effort` (closed-enum guard) and
-`model.not-exposed` (the honest 501 every selection returns until the spawn carries a model param).**
-Both teach the in-corpus recovery (operator env flip + the system/init observation). No error
-asserts a selection capability the supervisor lacks.
+`model.not-exposed` (the honest 501 the MID-SESSION switch returns — spawn-time selection is now BUILT).**
+Both teach the in-corpus recovery (the system/init observation; for mid-session, the resumed-keeps-model
+invariant). No error asserts a selection capability the supervisor lacks; the spawn-time params are
+built+unit-proven with a live-verify-pending (lead) note, never claimed proven against a real turn.
 
 ## Links
 **No address-typed fields: a selection references the `session://` it parameterises (dereferences to

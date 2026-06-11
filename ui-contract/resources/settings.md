@@ -145,7 +145,7 @@ real seam instead of a fiction.**
 op: settings.act
 resource: settings
 kind: act
-status: planned
+status: building
 direction: outbound
 atlas: [CC-25.2, CC-25.3]
 tasks:
@@ -159,7 +159,7 @@ tasks:
   - alias: "configure a session"
   - alias: "grant additional directory access"
 bindings:
-  - { kind: http, method: POST, path: "/spawn  (PLANNED extension: a settings/env/add_dirs block on the body)", transport: supervisor-http, exposure: "exposure.json#supervisor-http", status: planned, note: "GAP: spawn() (runtime/session_supervisor.py:254) accepts cwd/resume/fork/name/source ONLY — NO --settings, --add-dir, or env override. Every spawn inherits the SERVICE ACCOUNT's ~/.claude/settings.json. Wiring = a settings block -> --settings <json>, an add_dirs array -> repeated --add-dir, an env map -> per-process environment. The native flags are documented at https://code.claude.com/docs/en/cli-reference.md" }
+  - { kind: http, method: POST, path: "/spawn  (settings → --settings, add_dir → repeated --add-dir on the body)", transport: supervisor-http, exposure: "exposure.json#supervisor-http", status: building, note: "BUILT (CC-25.2/.3; runtime/session_supervisor.py _build_spawn_cmd + /spawn body, 2026-06-12): a `settings` field threads --settings <json|path>, an `add_dir` array threads repeated --add-dir (both Atlas-verified flags). RESIDUAL (still planned): a per-session `env` override is NOT wired — spawned sessions inherit the SERVICE ACCOUNT's environment. live-verify pending (lead): a real spawn must confirm the settings merged / the added dir is reachable — built+unit-tested on the cmd-builder, NOT flipped live" }
 liveness: none
 emits: []
 consequences:
@@ -169,9 +169,9 @@ consequences:
     evidence: "[[diagnostics#op: diagnostics.watch]] system/init for the resolved tool surface; for added directories, the named read is the next tool call succeeding against a path outside cwd on [[session#op: session.watch]] — an absence-of-dedicated-event outcome (CONTRACT-FORMAT section 6 V9)"
 correlate: [session]
 verification:
-  settings-at-spawn: {state: unverified, note: "the spawn param does not exist — planned"}
-  add-dirs-at-spawn: {state: unverified, note: "no --add-dir threaded — planned"}
-  env-at-spawn:      {state: unverified, note: "no per-session env override — planned"}
+  settings-at-spawn: {state: probe-verified, run: "session_supervisor_params_acceptance (cmd-builder: settings→--settings)", date: 2026-06-12, note: "BUILT (CC-25.2): the `settings` field threads --settings <json|path>; unit-proven on the built cmd. live-verify pending (lead): a REAL spawn must confirm the object merged — NOT flipped live"}
+  add-dirs-at-spawn: {state: probe-verified, run: "session_supervisor_params_acceptance (cmd-builder: add_dir list → repeated --add-dir)", date: 2026-06-12, note: "BUILT (CC-25.3): an `add_dir` array threads one --add-dir per dir; unit-proven. live-verify pending (lead): a real spawn must confirm a tool reaches the added dir"}
+  env-at-spawn:      {state: unverified, note: "STILL planned: a per-session env override is NOT wired — spawns inherit the service account's environment"}
 ```
 ### Description (purpose-free)
 Three planned spawn-time configuration levers the native CLI supports and the company does not yet
@@ -215,19 +215,22 @@ teach: "Settings must be valid JSON matching the settings.json schema (https://j
 ```
 ```contract:error
 code: settings.not-exposed | http: 501 | retryable: false
-when: any per-session settings/env/dir call against the fabric today
-teach: "Per-session configuration is PLANNED — the fabric spawns with a fixed flag set and threads no --settings/--add-dir/env. To change configuration today, an operator edits the service account's ~/.claude/settings.json (or the COMPANY_FABRIC_* env) and restarts the service; READ the live operating slice via [[settings#op: settings.get]]. The spawn-param gap is named in this op's bindings."
+when: a per-session ENV override is requested (the one residual config lever)
+teach: "Per-session --settings and --add-dir are now BUILT (the /spawn body threads them). A per-session ENV override is still PLANNED — spawned sessions inherit the service account's environment. To change env today, an operator edits the service environment (or COMPANY_FABRIC_* / the service account's ~/.claude/settings.json) and restarts; READ the live operating slice via [[settings#op: settings.get]]."
 ```
 ```contract:example
-captured: synthetic            # status=planned -> synthetic legal AND loud; no spawn settings param exists (V11)
+captured: synthetic            # status=building, live-verify pending (lead): the spawn ACCEPTS settings/add_dir (cmd-builder unit-proven → --settings/--add-dir); a REAL spawn confirming the config TOOK is the lead's live-verify, so synthetic-and-loud, NOT captured-live (V11)
 binding: http
 request: |
-  POST /spawn HTTP/1.1   (PLANNED body extension)
+  POST /spawn HTTP/1.1
   {"cwd": "/home/tim/scratch", "name": "wide-1",
-   "add_dirs": ["/home/tim/shared"], "env": {"CLAUDE_CODE_ENABLE_TELEMETRY": "1"}}
+   "settings": "{\"model\": \"sonnet\"}", "add_dir": ["/home/tim/shared"]}
 response: |
-  HTTP/1.1 501 Not Implemented
-  {"error": "Per-session configuration is planned; the fabric spawns with a fixed flag set (no --settings/--add-dir/env). Edit the service account ~/.claude/settings.json or COMPANY_FABRIC_* env and restart to change config globally; read the live operating slice via GET /health."}
+  HTTP/1.1 200 OK
+  {"ok": true, "session": {"id": "as-5e6f7a8b", "name": "wide-1", "state": "starting"}}
+  # built (CC-25.2/.3): the body threads --settings <json> and --add-dir /home/tim/shared onto the spawn cmd.
+  # NOTE: a per-session env:{...} override is NOT yet honoured (residual) — spawns inherit the service env.
+  # live-verify pending (lead): confirm the settings merged + the added dir is tool-reachable on a real session.
 ```
 Adjacent: [[settings#op: settings.get]] (the live read that DOES work), [[session#op: session.create]]
 (the spawn this would extend), [[permission#op: permission.act]] (the rule-surface sibling lever),
@@ -235,10 +238,11 @@ Adjacent: [[settings#op: settings.get]] (the live read that DOES work), [[sessio
 
 ## Errors
 **Resource-level error vocabulary: `settings.invalid-json` (the parse/validation guard, the same
-condition `/doctor` reports on the host) and `settings.not-exposed` (the honest 501 every per-session
-config setter returns until the spawn-param seam is built).** Both teach the in-corpus recovery — read
-the live operating slice, or have the operator edit the service settings/env + restart. No error
-asserts a configuration capability the supervisor lacks.
+condition `/doctor` reports on the host) and `settings.not-exposed` (the honest 501 the RESIDUAL env
+setter returns — --settings and --add-dir are now built).** Both teach the in-corpus recovery — read
+the live operating slice, or have the operator edit the service env + restart. No error asserts a
+configuration capability the supervisor lacks; the built --settings/--add-dir carry a live-verify-pending
+(lead) note, never claimed proven against a real turn.
 
 ## Links
 **No address-typed fields: a settings configuration references the `session://` it parameterises
