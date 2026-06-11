@@ -89,8 +89,8 @@ tasks:
   - alias: "what can I undo to"
   - alias: "show the rewind menu"
 bindings:
-  - { kind: tui, surface: "/rewind  (or Esc Esc on empty prompt) -> the menu lists each prompt sent this session", exposure: "n/a — interactive, not a Company endpoint", status: planned, note: "double-Esc with text in the box CLEARS the text instead (saved to input history); the menu opens only on an empty prompt" }
-  - { kind: sdk, call: "accumulate UserMessage.uuid from the response stream (requires extraArgs {replay-user-messages: null})", exposure: "n/a — Agent SDK in-process, no fabric transport", status: planned, note: "the SDK has no list-checkpoints call; you build the list by capturing uuids as messages arrive" }
+  - { kind: tui, transport: tui-interactive, surface: "/rewind  (or Esc Esc on empty prompt) -> the menu lists each prompt sent this session", exposure: "n/a — interactive, not a Company endpoint", status: planned, note: "double-Esc with text in the box CLEARS the text instead (saved to input history); the menu opens only on an empty prompt" }
+  - { kind: sdk, transport: agent-sdk, call: "accumulate UserMessage.uuid from the response stream (requires extraArgs {replay-user-messages: null})", exposure: "n/a — Agent SDK in-process, no fabric transport", status: planned, note: "the SDK has no list-checkpoints call; you build the list by capturing uuids as messages arrive" }
 liveness: snapshot
 live-twin: "none — static (the menu reflects the session's prompts as of when you open it)"
 emits: []
@@ -127,8 +127,8 @@ tasks:
   - alias: "undo the last changes"
   - alias: "go back to before that broke"
 bindings:
-  - { kind: tui, surface: "/rewind -> select a prompt -> 'Restore code and conversation' | 'Restore conversation' | 'Restore code'", exposure: "n/a — interactive", status: planned }
-  - { kind: sdk, call: "rewind_files(checkpoint_id) / rewindFiles(checkpointId) after resuming the session with an empty prompt", exposure: "n/a — Agent SDK in-process", status: planned, note: "SDK restores FILES ONLY; conversation/context stay intact — NOT equivalent to the TUI's 'Restore conversation'/'both'. Requires enable_file_checkpointing on BOTH the original run and the resume." }
+  - { kind: tui, transport: tui-interactive, surface: "/rewind -> select a prompt -> 'Restore code and conversation' | 'Restore conversation' | 'Restore code'", exposure: "n/a — interactive", status: planned }
+  - { kind: sdk, transport: agent-sdk, call: "rewind_files(checkpoint_id) / rewindFiles(checkpointId) after resuming the session with an empty prompt", exposure: "n/a — Agent SDK in-process", status: planned, note: "SDK restores FILES ONLY; conversation/context stay intact — NOT equivalent to the TUI's 'Restore conversation'/'both'. Requires enable_file_checkpointing on BOTH the original run and the resume." }
 liveness: none
 emits: []
 consequences:
@@ -195,7 +195,7 @@ tasks:
   - alias: "shrink part of the conversation"
   - alias: "targeted compact at a checkpoint"
 bindings:
-  - { kind: tui, surface: "/rewind -> select a prompt -> 'Summarize from here' | 'Summarize up to here' (optional focus instructions accepted)", exposure: "n/a — interactive", status: planned }
+  - { kind: tui, transport: tui-interactive, surface: "/rewind -> select a prompt -> 'Summarize from here' | 'Summarize up to here' (optional focus instructions accepted)", exposure: "n/a — interactive", status: planned }
 liveness: none
 emits: []
 consequences:

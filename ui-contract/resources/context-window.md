@@ -93,8 +93,8 @@ tasks:
   - alias: "context usage"
   - alias: "am I about to run out of context"
 bindings:
-  - { kind: tui, surface: "/context  (live breakdown by category + optimization suggestions); /memory shows which CLAUDE.md/auto-memory files loaded", exposure: "n/a — interactive", status: planned }
-  - { kind: sdk, call: "statusline JSON: context_window.used_percentage / remaining_percentage / current_usage / exceeds_200k_tokens", exposure: "n/a — in-process statusline feed", status: planned, note: "statusline scripts read this from stdin; it is not a Company endpoint" }
+  - { kind: tui, transport: tui-interactive, surface: "/context  (live breakdown by category + optimization suggestions); /memory shows which CLAUDE.md/auto-memory files loaded", exposure: "n/a — interactive", status: planned }
+  - { kind: sdk, transport: agent-sdk, call: "statusline JSON: context_window.used_percentage / remaining_percentage / current_usage / exceeds_200k_tokens", exposure: "n/a — in-process statusline feed", status: planned, note: "statusline scripts read this from stdin; it is not a Company endpoint" }
 liveness: snapshot
 live-twin: "none for a fabric read (no endpoint). In-process the statusline reflects it continuously; a UI can poll /context."
 emits: []
@@ -128,8 +128,8 @@ tasks:
   - alias: "free up context space"
   - alias: "run compaction now"
 bindings:
-  - { kind: tui, surface: "/compact   (optionally /compact <focus instructions>, e.g. /compact Focus on code samples and API usage)", exposure: "n/a — interactive", status: planned }
-  - { kind: sdk, call: "send '/compact' (optionally with focus) as a prompt string — an SDK input, not a CLI-only shortcut", exposure: "n/a — Agent SDK in-process", status: planned, note: "the PreCompact hook can run before compaction (trigger=manual|auto); the SDK emits a compact_boundary system message when it completes" }
+  - { kind: tui, transport: tui-interactive, surface: "/compact   (optionally /compact <focus instructions>, e.g. /compact Focus on code samples and API usage)", exposure: "n/a — interactive", status: planned }
+  - { kind: sdk, transport: agent-sdk, call: "send '/compact' (optionally with focus) as a prompt string — an SDK input, not a CLI-only shortcut", exposure: "n/a — Agent SDK in-process", status: planned, note: "the PreCompact hook can run before compaction (trigger=manual|auto); the SDK emits a compact_boundary system message when it completes" }
 liveness: none
 emits: []
 consequences:
@@ -194,7 +194,7 @@ tasks:
   - alias: "wipe the context"
   - alias: "start a clean slate"
 bindings:
-  - { kind: tui, surface: "/clear  (resets the window entirely; /rename before clearing makes the old session easy to /resume later). /btw <question> answers in a dismissible overlay, never entering history", exposure: "n/a — interactive", status: planned, note: "/clear starts a NEW session; the previous one stays stored under ~/.claude/projects/ and is resumable (glossary.md session)" }
+  - { kind: tui, transport: tui-interactive, surface: "/clear  (resets the window entirely; /rename before clearing makes the old session easy to /resume later). /btw <question> answers in a dismissible overlay, never entering history", exposure: "n/a — interactive", status: planned, note: "/clear starts a NEW session; the previous one stays stored under ~/.claude/projects/ and is resumable (glossary.md session)" }
 liveness: none
 emits: []
 consequences:
