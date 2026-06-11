@@ -146,6 +146,24 @@ machine inventory (CONTRACT-FORMAT §9.3; drift teeth `tests/supervisor_routes_a
 service-level checks); real-claude end-to-end (inject-to-idle ≤5s, interrupt semantics, WAKE/CONSULT on
 real ids) is the lead's verification slice — stated, not green-painted.
 
+**Per-turn cost/usage capture + spawn-param widening (CC-20 / CC-10·07.2·25.2·.3·18.7·33.4, 2026-06-12).**
+FAMILY 1: `_turn_done` no longer DISCARDS the `result` event's cost/usage — `_extract_usage(ev)` (module-level,
+Atlas-grounded: the result message carries snake_case `usage` tokens + `total_cost_usd`, plus the camelCase
+`modelUsage` per-model passthrough) stamps a `usage` block — `{model?, input/output/cache tokens, cost_usd?,
+model_usage?}` — onto the durable `agent_sessions.turn` event, so per-turn spend reads over `[[events]]` with
+zero new transport (cost-usage.get is now `building`). FAMILY 2: `spawn()` no longer hardcodes the claude
+command — a pure `_build_spawn_cmd(...)` cmd-builder threads OPTIONAL params, each defaulting to today's
+behaviour (BYTE-IDENTICAL when unset): `model`→--model, `effort`→--effort, `fallback`→--fallback-model (csv),
+`permission_mode`→--permission-mode (overriding the fabric default), `settings`→--settings, `add_dir`→repeated
+--add-dir, `output_format`→--output-format + `include_partial`→--include-partial-messages, `debug`→--debug
+[categories], `safe_mode`→--safe-mode, `bare`→--bare. The `--input-format stream-json` injection invariant is
+NEVER overridden. All threaded through the `/spawn` HTTP body too. Every flag is grounded in the Claude Code
+Atlas cli-reference (verified, never invented). Proven by `tests/session_supervisor_params_acceptance.py`
+(33 checks: the cmd-builder asserts each flag WITHOUT spawning + the byte-identical default; an e2e check reads
+the `usage` block off `agent_sessions.turn` on events.jsonl via a usage-emitting stub). The contract ops flipped
+`planned`→`building` carry an honest **live-verify pending (lead)** note: confirming a flag actually TOOK
+(e.g. the chosen model ran, read off `system/init`) needs a REAL spawn — the lead's slice, never green-painted.
+
 ## The rule engine (Concurrent Cognition G3 · `runtime/rules.py` · the L2 core)
 
 A **rule** is the deterministic routing primitive of the collective cognition (L2): a role emits

@@ -195,6 +195,47 @@ class Supervised:
         return key in (self.id, self.claude_session_id)
 
 
+def _extract_usage(ev: dict) -> dict | None:
+    """CC-20 (cost/usage capture): the claude `result` event carries cost + token usage that the
+    supervisor previously DISCARDED. Pull the standard fields off the result event into a flat
+    `usage` block stamped onto the durable agent_sessions.turn (read over [[events]] — zero new
+    transport). Grounded in the Claude Code Atlas (Docs/claude-code/agent-sdk/cost-tracking.md +
+    .../typescript.md#modelusage + .../python.md ResultMessage): BOTH success and error result
+    messages carry `usage` (snake_case token fields) and `total_cost_usd`; `modelUsage`/`model_usage`
+    is the per-model camelCase passthrough carrying per-model costUSD/contextWindow. costUSD is a
+    CLIENT-SIDE ESTIMATE, never the authoritative bill (cost-usage.md Errors). Returns None when the
+    event carries no usage AND no cost AND no model_usage — so a turn with nothing to report stamps
+    no empty noise. NO live spawn needed: verifiable by reading a turn record's event (the stub's
+    result event can carry these fields)."""
+    usage = ev.get("usage") if isinstance(ev.get("usage"), dict) else None
+    model_usage = ev.get("modelUsage")
+    if not isinstance(model_usage, dict):
+        model_usage = ev.get("model_usage") if isinstance(ev.get("model_usage"), dict) else None
+    cost = ev.get("total_cost_usd")
+    if cost is None:
+        cost = ev.get("cost_usd")        # tolerate the alternate spelling some result shapes use
+    if usage is None and model_usage is None and cost is None:
+        return None
+    out: dict = {}
+    # the model that ran the turn (result events carry it on some shapes; honest-absent otherwise)
+    model = ev.get("model")
+    if model is None and isinstance(model_usage, dict) and model_usage:
+        model = next(iter(model_usage))  # the single model key, the common case
+    if model is not None:
+        out["model"] = model
+    if isinstance(usage, dict):
+        # snake_case token fields per the result-message ResultMessage shape (Atlas python.md)
+        for k in ("input_tokens", "output_tokens",
+                  "cache_read_input_tokens", "cache_creation_input_tokens"):
+            if usage.get(k) is not None:
+                out[k] = usage[k]
+    if cost is not None:
+        out["cost_usd"] = cost
+    if isinstance(model_usage, dict) and model_usage:
+        out["model_usage"] = model_usage   # per-model camelCase passthrough (costUSD/contextWindow/…)
+    return out or None
+
+
 class SessionSupervisor:
     """Owns the fleet. All mutations to the fleet dict happen under self.lock; per-session
     stdin writes under the session's stdin_lock; events.jsonl writes ride FsStore's own lock
@@ -251,26 +292,97 @@ class SessionSupervisor:
                 f"deliberately by restarting the service with COMPANY_FABRIC_CONCURRENCY=<n>. "
                 f"CONSULT fans count against the same cap (copies ≤ cap).")
 
+    @staticmethod
+    def _build_spawn_cmd(*, claude_bin: str, resume: str | None, fork: bool,
+                         model: str | None = None, effort: str | None = None,
+                         fallback: "list[str] | str | None" = None,
+                         permission_mode: str | None = None,
+                         settings: str | None = None,
+                         add_dir: "list[str] | str | None" = None,
+                         output_format: str | None = None,
+                         include_partial: bool = False,
+                         debug: "str | bool | None" = None,
+                         safe_mode: bool = False, bare: bool = False) -> list[str]:
+        """The PURE claude-command builder (FAMILY 2: CC-10/07.2/25.2/.3/18.7/33.4). Every new param
+        is OPTIONAL and defaults to today's behaviour, so the built cmd is BYTE-IDENTICAL to the old
+        inline construction when none is passed (the unit test asserts exactly this). Unit-testable
+        WITHOUT spawning a real claude — assert on the returned list (lead-only law: this lane never
+        fires a real turn). Every flag is grounded in the Claude Code Atlas cli-reference (verified
+        2026-06-12 via knowledge-corpus, vault claude-code-atlas), NEVER invented:
+          --model (alias|name) · --effort low|medium|high|xhigh|max · --fallback-model <csv>  [CC-10]
+          --permission-mode <mode> overriding the fabric-wide fabric_permission()              [CC-07.2]
+          --settings <json|path> · --add-dir <d> (repeatable)                                  [CC-25.2/.3]
+          --output-format <fmt> (default stream-json) · --include-partial-messages             [CC-18.7]
+          --debug [categories] · --safe-mode · --bare                                          [CC-33.4]
+        The held-open transport invariants are PRESERVED: --input-format stream-json is fixed (the
+        T2 injection contract depends on it), --output-format defaults to stream-json (the reader
+        parses that shape), and --include-partial-messages / --debug-as-stream all require the
+        stream-json output the supervisor already runs under (Atlas: --include-partial-messages
+        requires --print + --output-format stream-json — both present)."""
+        # transport-fixed head: --input-format stream-json is NON-negotiable (the injection contract).
+        out_fmt = output_format or "stream-json"   # default preserves the reader's parse contract
+        cmd = [claude_bin, "-p",
+               "--input-format", "stream-json", "--output-format", out_fmt, "--verbose",
+               "--permission-mode", permission_mode or fabric_permission(),
+               "--mcp-config", _panel._MCP_CONFIG, "--strict-mcp-config",
+               "--allowedTools", "mcp__company"]
+        if model:
+            cmd += ["--model", model]
+        if effort:
+            cmd += ["--effort", effort]
+        if fallback:
+            # Atlas: --fallback-model accepts a comma-separated list tried in order.
+            fb = fallback if isinstance(fallback, str) else ",".join(str(x) for x in fallback)
+            if fb:
+                cmd += ["--fallback-model", fb]
+        if settings:
+            cmd += ["--settings", settings]   # path OR inline JSON string (Atlas cli-reference)
+        if add_dir:
+            dirs = [add_dir] if isinstance(add_dir, str) else list(add_dir)
+            for d in dirs:
+                if d:
+                    cmd += ["--add-dir", str(d)]   # repeatable: one flag per dir
+        if include_partial:
+            cmd += ["--include-partial-messages"]   # requires --output-format stream-json (held above)
+        if debug:
+            # --debug takes OPTIONAL category filtering (e.g. "api,hooks"); bare True = enable, no filter
+            if isinstance(debug, str) and debug.strip():
+                cmd += ["--debug", debug]
+            else:
+                cmd += ["--debug"]
+        if safe_mode:
+            cmd += ["--safe-mode"]
+        if bare:
+            cmd += ["--bare"]
+        if resume:
+            cmd += ["--resume", resume]
+        if fork:
+            cmd += ["--fork-session"]
+        return cmd
+
     def spawn(self, *, cwd: str | None = None, resume: str | None = None, fork: bool = False,
-              name: str | None = None, source: str = "http", wait_init: bool = True) -> Supervised:
+              name: str | None = None, source: str = "http", wait_init: bool = True,
+              model: str | None = None, effort: str | None = None,
+              fallback: "list[str] | str | None" = None, permission_mode: str | None = None,
+              settings: str | None = None, add_dir: "list[str] | str | None" = None,
+              output_format: str | None = None, include_partial: bool = False,
+              debug: "str | bool | None" = None, safe_mode: bool = False,
+              bare: bool = False) -> Supervised:
+        # the fork-requires-resume guard stays BEFORE we register the session (no half-built record)
+        if fork and not resume:
+            raise TeachingRefusal("REFUSED — fork=true requires resume=<session id>: a CONSULT is "
+                                  "a fork OF an existing session (--resume <id> --fork-session). "
+                                  "For a fresh session, spawn without fork.")
         with self.lock:
             self._cap_check(1)
             s = Supervised(name=name, cwd=cwd or REPO_ROOT, resume=resume, fork=fork, source=source)
             self.sessions[s.id] = s
         claude_bin = _panel._find_claude()           # call-time (env-overridable — the stub harness path)
-        cmd = [claude_bin, "-p",
-               "--input-format", "stream-json", "--output-format", "stream-json", "--verbose",
-               "--permission-mode", fabric_permission(),
-               "--mcp-config", _panel._MCP_CONFIG, "--strict-mcp-config",
-               "--allowedTools", "mcp__company"]
-        if resume:
-            cmd += ["--resume", resume]
-        if fork:
-            if not resume:
-                raise TeachingRefusal("REFUSED — fork=true requires resume=<session id>: a CONSULT is "
-                                      "a fork OF an existing session (--resume <id> --fork-session). "
-                                      "For a fresh session, spawn without fork.")
-            cmd += ["--fork-session"]
+        cmd = self._build_spawn_cmd(
+            claude_bin=claude_bin, resume=resume, fork=fork,
+            model=model, effort=effort, fallback=fallback, permission_mode=permission_mode,
+            settings=settings, add_dir=add_dir, output_format=output_format,
+            include_partial=include_partial, debug=debug, safe_mode=safe_mode, bare=bare)
         s.proc = subprocess.Popen(cmd, cwd=s.cwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE, text=True, bufsize=1)
         threading.Thread(target=self._reader, args=(s,), daemon=True,
@@ -379,10 +491,14 @@ class SessionSupervisor:
                       "claude_session_id": ev.get("session_id") or s.claude_session_id,
                       "num_turns": ev.get("num_turns"), "is_error": bool(ev.get("is_error"))})
         # DELIVER ack/reply is a CLAIM (durable class): the turn event + the mailbox reply.
+        usage = _extract_usage(ev)   # CC-20: capture the result event's cost+token usage (was discarded)
+        turn_meta = dict(session=s.id, claude_session_id=s.claude_session_id,
+                         name=s.name, duration_ms=dur_ms, is_error=bool(ev.get("is_error")),
+                         source=s.turn_source, intent_id=(intent or {}).get("id"))
+        if usage is not None:
+            turn_meta["usage"] = usage   # {model?, input/output/cache tokens, cost_usd?, model_usage?}
         self.emit("agent_sessions.turn", f"{s.name} · turn {s.turns} done",
-                  durable=True, session=s.id, claude_session_id=s.claude_session_id,
-                  name=s.name, duration_ms=dur_ms, is_error=bool(ev.get("is_error")),
-                  source=s.turn_source, intent_id=(intent or {}).get("id"))
+                  durable=True, **turn_meta)
         if intent:
             self._mail_reply(s, intent, result_text, is_error=bool(ev.get("is_error")))
         self.emit("agent_sessions.idle", f"{s.name} idle", durable=False,
@@ -765,9 +881,25 @@ class H(BaseHTTPRequestHandler):
             return
         try:
             if u.path == "/spawn":
+                # FAMILY 2: thread the optional launch params from the body. Each is omitted (None/
+                # falsy) when absent → spawn() reproduces today's byte-identical cmd. A nested
+                # "permission":{"mode":...} block (the contracted permission.act shape) maps to
+                # permission_mode; a top-level permission_mode is also honoured.
+                perm = body.get("permission")
+                perm_mode = body.get("permission_mode")
+                if perm_mode is None and isinstance(perm, dict):
+                    perm_mode = perm.get("mode")
                 s = SUP.spawn(cwd=body.get("cwd"), resume=body.get("resume"),
                               fork=bool(body.get("fork")), name=body.get("name"),
-                              source=body.get("source") or "http")
+                              source=body.get("source") or "http",
+                              model=body.get("model"), effort=body.get("effort"),
+                              fallback=body.get("fallback"), permission_mode=perm_mode,
+                              settings=body.get("settings"), add_dir=body.get("add_dir"),
+                              output_format=body.get("output_format"),
+                              include_partial=bool(body.get("include_partial")
+                                                   or body.get("include_partial_messages")),
+                              debug=body.get("debug"), safe_mode=bool(body.get("safe_mode")),
+                              bare=bool(body.get("bare")))
                 if body.get("prompt"):
                     SUP.inject(s, str(body["prompt"]), source=body.get("source") or "http")
                 self._send(200, {"ok": True, "session": s.record()})
