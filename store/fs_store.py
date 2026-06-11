@@ -979,3 +979,158 @@ class FsStore:
         import json as _j
         p = self.root / "surfaced" / (self._safe(sid) + ".json")
         return _j.loads(p.read_text()) if p.exists() else None
+
+    # --- agent-session MAILBOX (Session Fabric §C: sessions message sessions) -------------------------
+    # The fabric's one durable message leaf: `agent_sessions/mail.jsonl` — a SIBLING jsonl leaf on the
+    # ONE root (the marks.jsonl precedent: many leaves ≠ a second store), living INSIDE the agent_sessions/
+    # dir beside the registry's whole-record files (naming ruling N2 — dir `agent_sessions/`, never
+    # `fabric/`, never the review-session `sessions/`). EVERYTHING the MCP face does to the fabric reduces
+    # to an append here (the FLOOR split, synthesis §6.3): DELIVER/WAKE/CONSULT are INTENT records the
+    # SUPERVISOR service pops and acts on (the face never spawns `claude -p`); queue-class records are
+    # pulled by the target session itself at its next turn (sessions(op=inbox)).
+    #
+    # SHAPE (guide §C): {seq, id, ts, to: "session://<uuid>", from, verb, cas, thread, ...open record}.
+    # The BODY rides the cas:// object store (put_content — immutable, dedup'd), NEVER inline — the mail
+    # line stays small (<4KB ⇒ one O_APPEND write is never torn, the _append_ref_version argument) and a
+    # reader resolves `cas` via get_content. `to`/`from`/`verb`/`thread` are EXPLICIT record fields
+    # (portable-by-field: a Supabase backend filters WHERE to_session=X, no string parsing).
+    #
+    # SEQ UNIQUENESS — THE APPEND-EVENT LANDMINE, CLOSED HERE BY CONSTRUCTION: append_event's seq is
+    # NOT cross-process-unique (its own surfaced NOTE above) and the mailbox's writers are exactly the
+    # many-process workload (every Claude Code session runs its own MCP-face process over this one
+    # store). So the WHOLE read-last-seq → +1 → append rides under graph_lock("agent_sessions:mail")
+    # — the cross-process primitive (fcntl, the dispatch-claim precedent) — making mail seqs atomic +
+    # monotonic + unique ACROSS PROCESSES. Mail is intent-class (a claim, not narration): the append is
+    # flushed + fsync'd before return (the append_event durability class — an acknowledged post must
+    # survive a crash; guide §A "write inject intent to mailbox (durable)").
+    #
+    # CONSUMPTION = PER-CONSUMER CURSOR REFS (synthesis §2.3's cheaper design): NO read-modify-write
+    # status field on messages, ever. A durable consumer (the supervisor; any pull session that wants
+    # its position to survive) holds a ref `agent-mail-cursor://<consumer>` whose value is the last
+    # CONSUMED seq — reads are agent_mail_since(cursor), the advance is set_agent_mail_cursor (under its
+    # own per-consumer graph_lock; regression refused — replay is an explicit `since=`, never a silent
+    # cursor rollback). The ref rides set_ref/head, so every advance also lands in ref_history — the
+    # consumption trail for free (introspective-data). Retention: keep-forever by design (criteria N8).
+    def append_agent_mail(self, rec: dict) -> dict:
+        """Persist ONE fabric mail record — `{to, from, verb, cas, thread?, ...}` — to the append-only
+        `agent_sessions/mail.jsonl`. STRUCTURAL fail-loud (the append_mark discipline): `to` (the target
+        session address — the supervisor's and the inbox's retrieval key), `from` (the REPLY path),
+        `verb` (the routing decision the consumer honours) and `cas` (the body ref) must each be present
+        + non-empty strings, else the record is an unroutable/unanswerable black hole (store rule 4).
+        The store stays DUMB on semantics: it does NOT validate the verb vocabulary (the face/router
+        gates that against the live state machine) nor the session id's existence (the registry lane's
+        gate). Owns `seq`/`id`/`ts` (never caller-overridable); `thread` defaults to the mail id so every
+        message is born aggregatable (consult fan replies join on it). Cross-process-unique seq under
+        graph_lock; fsync'd before return (intent-class durability)."""
+        import json as _j
+        from datetime import datetime, timezone
+        for field, why in (("to", "the target session — the supervisor's pop filter + the inbox key"),
+                           ("from", "the reply path — an unanswerable message is a dead end"),
+                           ("verb", "the routing decision (deliver|wake|consult|queue) its consumer honours"),
+                           ("cas", "the body ref (put_content the message first; bodies never ride inline)")):
+            v = rec.get(field)
+            if not isinstance(v, str) or not v.strip():
+                raise ValueError(
+                    f"append_agent_mail: a mail record must carry a non-empty string `{field}` "
+                    f"(got {v!r}) — it is {why}. Fail loud, never write an unroutable record.")
+        d = self.root / "agent_sessions"
+        d.mkdir(parents=True, exist_ok=True)   # defensive — never assume __init__ or the registry lane ran first
+        path = d / "mail.jsonl"
+        with self.graph_lock("agent_sessions:mail"):   # CROSS-PROCESS: seq read→+1→append is one critical section
+            seq = 0
+            if path.exists():
+                with path.open("rb") as f:             # tail-read the last line (the append_event pattern)
+                    try:
+                        f.seek(-2, 2)
+                        while f.read(1) != b"\n":
+                            f.seek(-2, 1)
+                    except OSError:
+                        f.seek(0)
+                    last = f.readline().decode().strip()
+                if last:
+                    seq = _j.loads(last).get("seq", -1) + 1
+            out = {**rec}
+            out["seq"] = seq
+            out["id"] = f"mail-{seq}"
+            out["ts"] = datetime.now(timezone.utc).isoformat()
+            if not (isinstance(out.get("thread"), str) and out["thread"].strip()):
+                out["thread"] = out["id"]
+            with path.open("a", encoding="utf-8") as f:
+                f.write(_j.dumps(out) + "\n")
+                f.flush()
+                os.fsync(f.fileno())                   # durable: an acknowledged intent survives a crash
+            return out
+
+    def agent_mail_since(self, seq: int = -1, *, to: str | None = None, verb: str | None = None,
+                         thread: str | None = None, limit: int | None = None) -> list[dict]:
+        """Mail records with seq STRICTLY greater than `seq`, OLDEST-first (FIFO — consumption order;
+        the events_since semantics: a fresh consumer passes -1 for everything). Field-match filters
+        (each a clean SQL WHERE for a Supabase backend): `to` (a session:// address — your inbox),
+        `verb` (one routing class, e.g. the supervisor popping intents), `thread` (one conversation,
+        e.g. a consult fan's aggregate). `limit` keeps the FIRST N after the cursor (oldest-first, so
+        a paginating consumer never skips; the LAST returned record's seq is the next cursor). Reads
+        disk every call (persistence-survives-reload; a sibling process's appends are seen on the next
+        call). No mail / nothing matching → an HONEST empty list."""
+        import json as _j
+        path = self.root / "agent_sessions" / "mail.jsonl"
+        if not path.exists():
+            return []
+        out = []
+        for l in path.read_text(encoding="utf-8").splitlines():
+            if not l.strip():
+                continue
+            rec = _j.loads(l)
+            if rec.get("seq", -1) <= seq:
+                continue
+            if to is not None and rec.get("to") != to:
+                continue
+            if verb is not None and rec.get("verb") != verb:
+                continue
+            if thread is not None and rec.get("thread") != thread:
+                continue
+            out.append(rec)
+            if limit is not None and len(out) >= limit:
+                break
+        return out
+
+    def agent_mail_cursor(self, consumer: str) -> int:
+        """The durable per-consumer consumption cursor: the last mail seq `consumer` has CONSUMED
+        (-1 = never consumed — sees everything, the agent_mail_since fresh-consumer default). Read via
+        the ref seam (head of `agent-mail-cursor://<consumer>`). A corrupt cursor value FAILS LOUD
+        (never a silent reset-to-zero — that would silently replay or skip a consumer's whole box)."""
+        if not isinstance(consumer, str) or not consumer.strip():
+            raise ValueError(
+                "agent_mail_cursor: `consumer` must be a non-empty string — the cursor is PER-CONSUMER "
+                "(e.g. 'supervisor', or a session id reading its own inbox durably).")
+        raw = self.head(f"agent-mail-cursor://{consumer}")
+        if raw is None:
+            return -1
+        try:
+            return int(raw.strip())
+        except ValueError:
+            raise ValueError(
+                f"agent_mail_cursor: the stored cursor for {consumer!r} is corrupt ({raw!r}, not an "
+                f"int). Fail loud — a guessed cursor silently replays or skips mail. Inspect "
+                f"ref_history('agent-mail-cursor://{consumer}') for the trail; re-set it deliberately "
+                f"via set_agent_mail_cursor.") from None
+
+    def set_agent_mail_cursor(self, consumer: str, seq: int) -> dict:
+        """ADVANCE `consumer`'s consumption cursor to `seq` (the last seq it has fully consumed).
+        Monotonic by contract: a REGRESSION is refused fail-loud (replay is an explicit
+        agent_mail_since(since=<older>) read, never a silent cursor rollback that would re-deliver
+        intents — a re-popped WAKE is a duplicate spawn). Re-setting the SAME seq is idempotent-OK
+        (a consumer may safely re-ack after a crash). The read→compare→set rides under a per-consumer
+        graph_lock (cross-process: two processes sharing one consumer identity cannot interleave).
+        Each advance lands in ref_history (the consumption trail, free introspective data)."""
+        if not isinstance(seq, int) or isinstance(seq, bool):
+            raise ValueError(f"set_agent_mail_cursor: seq must be an int (got {seq!r}).")
+        with self.graph_lock(f"agent_sessions:cursor:{consumer}"):
+            cur = self.agent_mail_cursor(consumer)   # also validates `consumer` + fails loud on corruption
+            if seq < cur:
+                raise ValueError(
+                    f"set_agent_mail_cursor: refusing to move {consumer!r} BACKWARD ({cur} → {seq}) — "
+                    f"a silent rollback re-delivers consumed intents (a re-popped wake = a duplicate "
+                    f"spawn). To re-read old mail, pass since={seq} to agent_mail_since explicitly; "
+                    f"the cursor only advances.")
+            self.set_ref(f"agent-mail-cursor://{consumer}", str(seq))
+            return {"consumer": consumer, "cursor": seq, "previous": cur}

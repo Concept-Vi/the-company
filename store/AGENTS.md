@@ -68,6 +68,25 @@ hole, store rule 4). Proven by `tests/marks_acceptance.py`. **NEXT (SEPARATE lan
 suite-side mark API (`runtime/suite.py`), the `mark` MCP tool (`mcp_face/server.py`), and the mark-types
 registry — this pass is the STORE persistence + by-target/by-type query ONLY.
 
+**Agent-session MAILBOX (Session Fabric §C) = the fabric's one durable message leaf.** Sessions message
+sessions through `agent_sessions/mail.jsonl` — a sibling jsonl leaf INSIDE the `agent_sessions/` dir, beside
+the registry's whole-record files (naming ruling N2: dir `agent_sessions/`, never `fabric/`, never the
+review-session `sessions/`). `FsStore.append_agent_mail` (append-only, open-record `{seq, id, ts, to, from,
+verb, cas, thread, …}`; `to`/`from`/`verb`/`cas` each REQUIRED fail-loud — an unroutable/unanswerable record
+is a black hole, rule 4) / `agent_mail_since(seq, to=, verb=, thread=, limit=)` (strictly-greater cursor
+reads, oldest-first FIFO, field-match filters — Supabase-portable `WHERE`). Message BODIES always ride
+`put_content` (`cas://` — immutable, dedup'd; the mail line stays <4KB). **Seq uniqueness is CROSS-PROCESS by
+construction** — the read-last→+1→append rides `graph_lock("agent_sessions:mail")` (every Claude Code session
+runs its own MCP-face process over this one store; the surfaced `append_event` seq landmine is closed here,
+not inherited), and the append is fsync'd (intent-class durability: an acknowledged post survives a crash).
+**Consumption = per-consumer CURSOR REFS, never a status field RMW:** `agent_mail_cursor(consumer)` /
+`set_agent_mail_cursor(consumer, seq)` hold the last-consumed seq in a ref (`agent-mail-cursor://<consumer>`
+via `set_ref`/`head` — every advance lands in `ref_history`, the consumption trail for free); regression is
+REFUSED (replay = an explicit `since=`, never a silent rollback that re-pops a wake intent), corruption fails
+loud. The store stays DUMB on semantics: verb vocabulary + session existence are the face/registry lanes'
+gates (`mcp_face/tools/sessions.py` routes; ONLY the supervisor acts on deliver/wake/consult intents — the
+floor). Proven by `tests/agent_sessions_mailbox_acceptance.py` (incl. a real 4-process append storm).
+
 ## Relates to
 
 - **Called by** [[runtime — constitution]] — everything that persists, and everything read
