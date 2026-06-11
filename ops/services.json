@@ -54,14 +54,25 @@
   },
   "session-supervisor": {
    "group": "core",
-   "title": "Session supervisor — owns the supervised Claude Code fleet (Session Fabric F1)",
+   "title": "Session supervisor \u2014 owns the supervised Claude Code fleet (Session Fabric F1)",
    "port": 8771,
    "manage": {
     "type": "user-unit",
     "unit": "company-session-supervisor.service"
    },
    "health": "/health",
-   "note": "127.0.0.1 ONLY (exposure law, audit B3); spawns claude subprocesses ON DEMAND (idle = owns nothing); the SINGLE writer of agent_sessions.* events; consumes agent_sessions/mail.jsonl intents. Cap COMPANY_FABRIC_CONCURRENCY (default 3) · per-turn watchdog COMPANY_FABRIC_TURN_TIMEOUT_S (default 900s) · permission COMPANY_FABRIC_PERMISSION (default plan). Operator face: `company session`. On-demand per the no-boot-autostart law."
+   "note": "127.0.0.1 ONLY (exposure law, audit B3); spawns claude subprocesses ON DEMAND (idle = owns nothing); the SINGLE writer of agent_sessions.* events; consumes agent_sessions/mail.jsonl intents. Cap COMPANY_FABRIC_CONCURRENCY (default 3) \u00b7 per-turn watchdog COMPANY_FABRIC_TURN_TIMEOUT_S (default 900s) \u00b7 permission COMPANY_FABRIC_PERMISSION (default plan). Operator face: `company session`. On-demand per the no-boot-autostart law."
+  },
+  "config-writer": {
+   "group": "core",
+   "title": "Config writer \u2014 R3 rail: ALL .claude/host-config writes + claude mcp/plugin + git/gh (Capability Fabric \u2462\u2463\u2464)",
+   "port": 8772,
+   "manage": {
+    "type": "user-unit",
+    "unit": "company-config-writer.service"
+   },
+   "health": "/health",
+   "note": "127.0.0.1 ONLY (exposure law, audit B3). The SOLE writer of .claude/host config + the only process that shells `claude mcp`/`claude plugin` (argv-array, allowlisted) and structured `git`/`gh`. SECURITY = CONSENT-NOT-LOCKDOWN (Tim's sole-operator model): dangerous ops (native-CLI exec, config writes, plugin install, MCP register) are ENABLED, gated by a consent signal (per-call {consent:true} OR a standing /consent marker), NEVER walled off; git-revert is the backstop. Reads always allowed. Run-records every gated act (config_writer.act events, args redacted). The bridge /api/config|dev|auto routes + the company MCP \u2462\u2463\u2464 tools route here. On-demand (`company up config-writer`)."
   },
   "chat-4b": {
    "group": "brain",

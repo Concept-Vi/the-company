@@ -168,6 +168,7 @@ the `usage` block off `agent_sessions.turn` on events.jsonl via a usage-emitting
 
 The third executor rail of the ③④⑤ Capability Fabric (the other two: the session supervisor's R1/R1-prime
 interactive sessions, `implement.py`'s R2 headless wire). A bridge-style stdlib-HTTP service on
+**REGISTRY-IS-TRUTH (the binding to the completed L-FOUND-handlers reduction registries — arch §3.2):** this service holds NO inline allowlist of its own. WHAT each ③ act writes comes from `capability_handlers.reduction.config_targets` (handler-key → kind/pointer/`dangerous`/teach/scope-path); WHICH native CLI an act runs + its TIER (read/write/exec) comes from `capability_handlers.reduction.cli_allowlist` (the `handler-key:act` → argv-array template). A new capability is a new REGISTRY ROW, never a code edit here.
 **127.0.0.1:8772 only** (exposure law, audit B3 — widening is a recorded decision + a code change here, never
 an env flip), the ONLY process that mutates `.claude`/host config and the only one that shells the
 config-mutating native subcommands. Owns: scope-validated `.claude` READS (settings.json local/project/user,
@@ -185,23 +186,25 @@ add/add-json/remove/get/list/reset-project-choices`; `claude plugin install/unin
 doc inherited): Tim is the only user and is TRUSTED. The dangerous capabilities (native-CLI exec, config
 writes, plugin install, MCP register) are ENABLED, never walled off, never behind an auth wall — they are
 gated by a CONSENT SIGNAL so an agent cannot do something irreversible without a go-ahead, with git-revert as
-the backstop. Four consent classes (`config-write`, `mcp-register`, `plugin-install`, `vcs-write`); a gated
+the backstop. Four consent classes (`config-write`, `cli-write`, `cli-exec`, `git-write`); a gated
 act passes on either a per-call `{consent: true}` (the operator-vantage POST) OR a standing marker
-(`POST /consent`, a store ref `config_writer/consent:<class>`, revocable). An unconsented dangerous act is a
-**TeachingRefusal** (HTTP 409) that names the danger and BOTH consent paths — a consent PROMPT, never a denial;
+(`POST /consent`, a store ref `config_writer/consent:<class>`, revocable). An unconsented dangerous act returns a
+**200 PENDING-CONSENT PROPOSAL** (NOT a denial, NOT a 409) that names the danger and BOTH consent paths — the
+trusted operator with consent=true is never refused; genuine breakage (bad scope/key/content/path, nonzero
+CLI exit) is a teaching WriteRefusal (400/409);
 reads are always allowed; a cold agent may always PROPOSE. Beyond consent: scope-validation (the realpath+
 commonpath wall re-derived per config-file root — the bridge `_safe_mockup_path` PATTERN, reused not the
 function) and content-validation (a hook `command`, skill `body`, settings shape — the dangerous-payload gate,
 arch §5.2). Every gated act writes a run-record (`config_writer.act` events, args redacted — the
 Introspective-Data law); fail-loud throughout (unknown class/scope/missing consent/bad content/nonzero exit →
-a teaching error, never a silent no-op or fallback). HTTP: `GET /health` · `POST /read|/write|/cli|/vcs|/consent`
+a teaching error, never a silent no-op or fallback). HTTP: `GET /health` · `POST /read|/write|/cli|/git|/consent`
 (`CONFIG_WRITER_ROUTES` is the inventory source — CONTRACT-FORMAT §9.3/V21, drift-tested both directions).
 Faces: the `config-writer` row in `ops/services.json` (`company up config-writer`); the bridge `/api/config|dev|auto`
 routes + the company MCP ③④⑤ tools (L-③/④/⑤ lanes) route here. ✅ PROVEN by
-`tests/config_writer_acceptance.py` (45 checks by use against the real service on an ISOLATED tmp store +
-scratch `.claude`: scratch-config write→re-read round-trip, unconsented-dangerous-write refused-with-teaching
-then succeeds-with-consent, standing-consent grant/revoke, traversal/scope/content refusals, the CLI+VCS
-read-vs-write gate, argv-array injection-resistance, the run-record landing redacted, route drift). 🟡 NOT yet
+`tests/config_writer_acceptance.py` (37 checks by use against the real service on an ISOLATED tmp store +
+scratch `.claude`: scratch-config write→re-read round-trip, unconsented-dangerous-write → pending-consent proposal
+then succeeds-with-consent, standing-consent grant/revoke, traversal/scope/content refusals, the CLI+git
+tier gate (read ungated vs write/exec gated), argv-array injection-resistance, the redacted run-record, route drift). 🟡 NOT yet
 run (lead-only law — this worker fires no real config-mutating CLI): the REAL `claude mcp add` proven by
 `claude mcp list`, `claude plugin install` round-trip, a real `git commit` sha — **live-verify pending (lead)**,
 NEVER green-painted.
