@@ -42,6 +42,7 @@ toward `live` in the UI-Contract corpus. Spec: build-prep "Capability Fabric —
   primitives live here): `config_targets` (③ .claude write targets + consent tier), `cli_allowlist`
   (R3 native-CLI argv templates), `session_capabilities` (R1-prime in-session caps — liveness:stream,
   no typed return_shape), `host_reads` (declarative-direct redacted host reads).
+- `automation.py` (⑤, WIRED 2026-06-12 — L-⑤-auto) — the AUTOMATION family: `routines` (CC-21, R3 native-CLI intent + direct-read), `workflows` (CC-22, R1 /goal deliver-intent + R2 /loop wire-job + a link to the LIVE consult-fan), `cost` (CC-20, direct-read fold over agent_sessions.turn `usage`), `auth` (CC-24.1 reopened, direct-read redacted credential method). Wires its four fns onto HANDLERS on import; the MCP face (`mcp_face/tools/automation.py`) imports it (NOT `load_all`, to stay file-disjoint from ③④) and delegates. Proven by `tests/automation_acceptance.py` (73 checks, stubs).
 
 ## Laws this module encodes
 

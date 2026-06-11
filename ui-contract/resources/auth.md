@@ -3,7 +3,7 @@ type: contract-entry
 resource: auth
 summary: How a Claude Code session authenticates with Anthropic — the credential precedence chain (cloud-provider > AUTH_TOKEN > API_KEY > apiKeyHelper > OAuth token > subscription login), where credentials are stored, /login /logout and claude setup-token; the company inherits the service account's host credentials and threads NO per-session auth, so this resource contracts the native auth model with the per-session-identity gap named and surfaces nothing secret.
 schemes: []
-status: planned
+status: building
 relates-to: ["[[settings]]", "[[session]]", "[[platform]]", "[[cost-usage]]", "[[diagnostics]]"]
 ---
 
@@ -81,7 +81,7 @@ honest path being the host's own /status.**
 op: auth.get
 resource: auth
 kind: get
-status: planned
+status: building
 direction: outbound
 atlas: [CC-24.1]
 tasks:
@@ -91,6 +91,7 @@ tasks:
   - alias: "auth status"
   - alias: "who am I logged in as"
 bindings:
+  - { kind: mcp, tool: auth, op-param: "op=get", server: company, exposure: "exposure.json#mcp-company", status: building, note: "BUILT (2026-06-12; mcp_face/tools/automation.py auth() → runtime/capability_handlers/automation.py:auth, direct-read host_reads CC-24.1). Returns the credential METHOD + account label REDACTED (the secret never transits — _redact strips token/api_key/oauth/CLAUDE_CODE_OAUTH_TOKEN). live-verify pending (lead): a REAL `claude auth status`. The host ACTS (relogin/logout/setup-token) stay OUT — absence-of-row IS the boundary." }
   - { kind: http, method: GET, path: "/auth  (PLANNED: a non-secret auth-status endpoint)", transport: supervisor-http, exposure: "exposure.json#supervisor-http", status: planned, note: "GAP: no auth-status endpoint exists; the supervisor reads no credential and tracks no account. The native equivalent is the interactive /status 'auth method' line (human-only) and `claude auth status` (CLI, host). Neither is a company route. Wiring would mean the supervisor reporting the service account's resolved method WITHOUT the secret" }
 liveness: snapshot
 live-twin: "none — auth state changes only when the operator re-logins the host account + restarts the service"

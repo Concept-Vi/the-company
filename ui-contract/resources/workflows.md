@@ -3,7 +3,7 @@ type: contract-entry
 resource: workflows
 summary: Dynamic multi-step / keep-going coordination — the native Claude Code ways to keep ONE session working across turns (/goal until a condition holds, /loop on an interval, a Stop hook) and to push external events INTO a running session (channels), versus the Company's ONE real coordination primitive that IS built — the supervisor consult-fan (session.post verb=consult). Native surfaces are planned; the fan routes to F1's building session.post.
 schemes: []
-status: planned
+status: building
 relates-to: ["[[routines]]", "[[session]]", "[[session-message]]", "[[events]]"]
 ---
 
@@ -75,7 +75,7 @@ multi-session capability is NOT here but at [[session#op: session.post]] verb=co
 op: workflows.act
 resource: workflows
 kind: act
-status: planned
+status: building
 direction: outbound
 atlas: [CC-22.1, CC-22.2]
 tasks:
@@ -92,6 +92,7 @@ tasks:
   - alias: "autopilot until done"
   - alias: "babysit the PR until CI is green"
 bindings:
+  - { kind: mcp, tool: workflows, op-param: "op=act (act=set-goal|goal-status|clear-goal → R1; loop → R2)", server: company, exposure: "exposure.json#mcp-company", status: building, note: "BUILT (2026-06-12; capability_handlers/automation.py:workflows). set-goal/goal-status/clear-goal (R1) build a supervisor DELIVER intent (a /goal-prefixed turn, session-scoped — the supervisor injects, the handler never does); loop (R2) builds a wire JOB behind /api/resolve (operator-only — the wire launches). MULTI-session parallel is session_post(verb=consult) (LIVE), not here. Receipt+watch, never a pretended result. live-verify pending (lead): a REAL /goal turn + /loop job." }
   - { kind: cli, command: "/goal <condition>   (NATIVE — set; `/goal` alone = status; `/goal clear|stop|off|reset|none|cancel` = clear)", transport: tui-interactive, exposure: "n/a — interactive", status: planned, note: "GAP: no company face. /goal v2.1.139+. Also `claude -p \"/goal …\"` runs the loop to completion in one headless invocation (Ctrl+C to stop). Evaluator = the configured small-fast model (default Haiku)" }
   - { kind: cli, command: "/loop <interval> <prompt>   (NATIVE — interval keep-going; cron-backed)", transport: tui-interactive, exposure: "n/a — interactive", status: planned, note: "GAP: session-scoped; mechanics in [[routines]]. `/loop 20m /review-pr 1234` re-runs a saved skill each iteration" }
   - { kind: cli, command: "Stop hook in settings.json   (NATIVE — durable cross-session keep-going)", transport: tui-interactive, exposure: "n/a — interactive", status: planned, note: "GAP: a settings hook, not a company op; script (deterministic) or prompt (model-evaluated)" }
