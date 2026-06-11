@@ -1,0 +1,12 @@
+[Unit]
+Description=Company agent-sessions exporter — Claude Code jsonl → ~/corpora/claude-sessions markdown (oneshot; the .timer fires it)
+Documentation=file:///home/tim/company/ops/agent_sessions_exporter.py
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/tim/company
+ExecStart=/home/tim/company/.venv/bin/python ops/agent_sessions_exporter.py
+Nice=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=company-agent-sessions-exporter

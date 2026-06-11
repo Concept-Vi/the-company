@@ -1,0 +1,10 @@
+[Unit]
+Description=Company agent-sessions exporter timer — every 20 min (exporter quiesce window is 15 min; cadence per Session Fabric synthesis Round 1b)
+
+[Timer]
+OnCalendar=*:00/20
+Persistent=true
+Unit=company-agent-sessions-exporter.service
+
+[Install]
+WantedBy=timers.target

@@ -6,6 +6,7 @@ from gpu import committed_mb, read_gpu, budget_vram, is_gpu_service
 
 def status(reg):
     shared = shared_ports(reg)
+    kw = max(15, max((len(k) for k in reg["services"]), default=15) + 1)  # fit the longest key
     out = ["", "  THE COMPANY — service command center      (`company help` for commands)", ""]
     for g, gdesc in reg["groups"].items():
         members = [(k, v) for k, v in reg["services"].items() if v["group"] == g]
@@ -18,7 +19,7 @@ def status(reg):
             vm = budget_vram(reg, k) if is_gpu_service(v) else 0
             vram = f"~{vm/1000:.1f}G" if vm else ""
             note = f"   ⚠ {v['note']}" if v.get("note") else ""
-            out.append(f"    {sym}  {k:<15}{label:<22}{port:<7}{vram:<7}{v['title']}{note}")
+            out.append(f"    {sym}  {k:<{kw}}{label:<22}{port:<7}{vram:<7}{v['title']}{note}")
         out.append("")
     committed = committed_mb(reg)
     gpu = read_gpu()

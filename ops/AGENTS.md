@@ -91,7 +91,8 @@ Do **not** build duplicate command centers. The right shape (Tim, "one substrate
   capability-discrimination query, the data-driven add-a-row bar, the fail-loud loader). It COMPLEMENTS `suite.py`'s `MODEL_KNOBS` (per-request knobs, also by
   model-id) — knobs = "dials a request turns"; capabilities = "what the model can do." The DOWNSTREAM consumer is
   `suite.py:capability_providers()` (C2.5), which the lead wires to read this catalog (the one suite-side wire).
-- **cognitive-layers · RHM/modes · data/memory · jobs/cron** — not yet instantiated; same mechanism when they are.
+- **jobs/cron (timers)** — SEEDED 2026-06-11 with the `jobs` group: a timer-managed service is just a registry entry whose `manage.unit` is the `.timer` (the oneshot `.service` is what fires; `company up <key>` arms the timer; ◐ active = armed). First instance: `agent-sessions-exporter` (`ops/agent_sessions_exporter.py` — Claude session jsonl → `~/corpora/claude-sessions/` markdown under the Session Fabric filter law + secret redaction, READ-ONLY on `~/.claude`, every 20 min, quiesce >15 min; proven by `tests/agent_sessions_exporter_acceptance.py` + a clean full-corpus leak audit). Same mechanism, one more type — never a parallel scheduler.
+- **cognitive-layers · RHM/modes · data/memory** — not yet instantiated; same mechanism when they are.
 
 ## Files
 - `company` — launcher (stdlib-only; runs the `cli/` package; `company help`).
@@ -101,6 +102,7 @@ Do **not** build duplicate command centers. The right shape (Tim, "one substrate
     `models.py` (inventory + swap) · `capabilities.py` (**the model-TYPE capability registry**, by model-id; JOINs to gpu.py) · `bench.py` · `render.py` (status/health views).
   - `README.md` — use guide.   `UPDATING.md` — how to extend the CLI + the registry schema.
 - `services.json` — the registry (the source of truth; now also carries `vram_mb`, `serve`, `vram_ceiling_mb`).
+- `agent_sessions_exporter.py` — the transcript-memory exporter (jobs group; jsonl → markdown corpus under the filter law; its units are `company-agent-sessions-exporter.{service,timer}` in `systemd/`).
 - `model_capabilities.json` — the model-TYPE capability CATALOG (declared data, keyed by model-id; the file-discovered source `cli/capabilities.py` loads; add-a-model-capability = add-an-entry). Intrinsic facts only — NO vram (gpu.py JOINs that).
 - `STARTUP.md` — the command table + boot behaviour + open items.
 - `systemd/` — canonical unit + target files (the muscle).

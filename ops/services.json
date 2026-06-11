@@ -26,7 +26,8 @@
   "brain": "Language model(s) that answer",
   "voice": "Speech in and out",
   "models": "On-demand models \u2014 started per task, VRAM-budgeted, usually dormant",
-  "reach": "Network + always-on system services (the body's connection to the world)"
+  "reach": "Network + always-on system services (the body's connection to the world)",
+  "jobs": "Scheduled timers \u2014 derived-data builders (no port; \u25d0 active = timer armed, next fire on schedule)"
  },
  "services": {
   "canvas": {
@@ -518,6 +519,15 @@
     "type": "user-unit",
     "unit": "openclaw-gateway.service"
    }
+  },
+  "agent-sessions-exporter": {
+   "group": "jobs",
+   "title": "Claude session transcripts \u2192 ~/corpora/claude-sessions markdown (every 20 min)",
+   "manage": {
+    "type": "user-unit",
+    "unit": "company-agent-sessions-exporter.timer"
+   },
+   "note": "F1.4 transcript memory. Managed unit = the TIMER (`company up agent-sessions-exporter` arms it; the oneshot .service fires every 20 min). READ-ONLY on ~/.claude; filter law + redaction in ops/agent_sessions_exporter.py. Vault registration of the output dir is a separate (embedding-adjacent) step, not this service's."
   }
  }
 }
