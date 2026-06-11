@@ -70,6 +70,18 @@ HTTP API (127.0.0.1:<port>, default 8771 — the services.json row cites this sa
   POST /inject                 {session, message, source?}
   POST /interrupt              {session}   (control_request on stdin — see _interrupt note)
   POST /teardown               {session}
+  POST /bridge-session         {operator_consent, capabilities?, extra_tools?, cwd?, resume?,
+                                fork?, name?, prompt?, permission_mode?, model?, …}
+                               RAIL R1-prime (Capability Fabric ④): a CONSENT-GATED spawn with a
+                               WIDER --allowedTools (Bash/git/LSP-family/web + mcp__company) and an
+                               in-session write posture, for ④'s in-session git/LSP/web ops. The
+                               floor mcp__company-only spawn cannot carry those. operator_consent
+                               (the /api/resolve operator-vantage gate) is REQUIRED — refused-loud
+                               (403) without it: consent-not-lockdown, the profile is always
+                               available, git-revert backstops. computer/browser are macOS+
+                               interactive-only host boundaries (Atlas computer-use.md) — never
+                               bindable on this -p/Linux rail, refused-loud. Results ride back as
+                               PROSE on the turn stream (liveness:stream, NO typed return_shape).
 
 Run: .venv/bin/python runtime/session_supervisor.py [port]   ·   service: company up session-supervisor
 Proven by: tests/session_supervisor_acceptance.py (stub-binary service-level checks; real-claude
@@ -115,6 +127,7 @@ SUPERVISOR_ROUTES = (
     ("POST", "/inject"),
     ("POST", "/interrupt"),
     ("POST", "/teardown"),
+    ("POST", "/bridge-session"),   # RAIL R1-prime: consent-gated wider-allowlist spawn (④ in-session git/LSP/web)
 )
 MAIL_LEAF = "agent_sessions"           # naming law: agent_sessions everywhere (never fabric/, never sessions/)
 CURSOR_REF = "agent_sessions/cursor:supervisor"   # per-consumer mailbox cursor (a ref, §2.3 pattern)
@@ -152,6 +165,73 @@ class TeachingRefusal(Exception):
     way forward. Mapped to HTTP 429/409 — never a bare error."""
 
 
+# ─────────────────────────── RAIL R1-prime · the `bridge-session` spawn PROFILE ───────────────────
+# (Capability Fabric ③④⑤ — L-FOUND-R1prime; arch doc §3.1/§5.1/§5.4). The supervised sessions this
+# service normally owns are spawned `--allowedTools mcp__company` (the FLOOR — no Bash/Edit/LSP/web;
+# session_supervisor module-docstring + sessions.py floor note). That floor is correct for the
+# fabric's read/route work, but it makes ④'s IN-SESSION capabilities (git via Bash, LSP nav via the
+# Read/Edit family, web fetch/search) physically impossible: a session that "wants Bash and cannot
+# call it" is a silent no-op (violates no-silent-failures). R1-prime is the NAMED, deliberate spawn
+# POSTURE that opens a WIDER allowlist for exactly those ops — it is NOT "an intent kind", it is a new
+# security decision (arch doc §1.1 / Critique-A finding).
+#
+# SOLE-OPERATOR SECURITY MODEL (Tim's explicit steer — consent-not-lockdown): Tim is the only user and
+# is trusted. The wider profile is ALWAYS AVAILABLE — never locked out, never an auth wall. The gate is
+# a CONSENT BEAT: a dangerous wider spawn must carry an explicit `operator_consent` signal (the
+# /api/resolve operator-vantage precedent), and `git revert` is the backstop. An AGENT must not trigger
+# an irreversible wider spawn without that signal; the OPERATOR can always consent. The gate is a
+# marker, not a denial (build the gates as consent-flags, not lockouts).
+#
+# THE ALLOWLIST IS ATLAS-GROUNDED, NEVER INVENTED (verified 2026-06-12 via the Claude Code Atlas):
+#   · `--allowedTools` takes a comma-separated list of tool specifiers — bare names (`Bash`, `Read`,
+#     `Edit`, `WebFetch`, `WebSearch`) or parenthesized patterns (`Bash(git *)`, `Edit(/src/**)`)
+#     (Atlas Docs/claude-code/headless.md#auto-approve-tools · tools-reference.md). Example shipped in
+#     the docs: `--allowedTools "Bash,Read,Edit"`.
+#   · GIT is "native Bash-tool git" (corpus git.md:46) → granted by `Bash` (or the tighter `Bash(git *)`
+#     when git_only is asked). `gh pr create` likewise rides Bash.
+#   · LSP code-intel: the LSP tool is governed by the Read/Edit permission family (Atlas tools-reference:
+#     a `Read(...)` rule "Applies to Read, Grep, Glob, LSP") → granted by `Read`+`Edit` here.
+#   · WebFetch/WebSearch are ordinary session tools, grantable to a `-p` run by name.
+# COMPUTER-USE IS A HARD HOST/RAIL BOUNDARY, NOT A GRANT (the decisive Atlas correction to the arch
+# doc's §5.4 optimism): the built-in `computer-use` MCP server "is not available in non-interactive
+# mode with the -p flag" AND "Computer use in the CLI is not available on Linux or Windows" — it is
+# macOS + interactive-session ONLY (Atlas computer-use.md:29,:223). This R1-prime rail is a headless
+# `claude -p` session on a WSL2/Linux host, so the `computer` tool can NEVER resolve here. Asking for it
+# is REFUSED-LOUD (never an allowlist entry that would silently never bind — that is exactly the
+# requires_tool_grant failure §5.4 forbids being opaque). `browser` (Claude-in-Chrome) is beta + not-WSL
+# (corpus computer-use.md / chrome.md) — also refused-loud on this host, NEVER green-painted.
+
+# The wider tool set the profile grants by default (Atlas tool names; mcp__company stays so the session
+# keeps every company tool too). git rides Bash; LSP rides the Read/Edit family.
+BRIDGE_SESSION_TOOLS = ("mcp__company", "Bash", "Edit", "Read", "Glob", "Grep", "WebFetch", "WebSearch")
+# The default in-session write posture for the profile. `plan` would DEFEAT the profile (no writes);
+# `bypassPermissions` is over-broad. `acceptEdits` is the honest middle: file writes + common fs
+# commands auto-approve, other shell/network still ride the allowlist above (Atlas headless.md). The
+# spawn body may override via permission_mode (still consent-gated).
+BRIDGE_SESSION_PERMISSION = os.environ.get("COMPANY_BRIDGE_SESSION_PERMISSION", "acceptEdits")
+# The capabilities a caller may NAME on a bridge-session, → the tools each needs (the requires_tool_grant
+# registry surface, §5.4). `git`/`lsp`/`web` are grantable on this rail; `computer`/`browser` are the
+# host/rail boundaries that REFUSE LOUD (so the boundary is explicit, never an opaque failure).
+BRIDGE_SESSION_CAPABILITIES = {
+    "git": ("Bash",),                  # native Bash-tool git + gh (corpus git.md)
+    "lsp": ("Read", "Edit"),           # the LSP tool's permission family (Atlas tools-reference)
+    "web": ("WebFetch", "WebSearch"),  # ordinary -p-grantable session tools
+    "edit": ("Edit", "Read"),          # in-session file authoring (e.g. ci scaffold write)
+}
+# capabilities that CANNOT run on this rail (headless -p / Linux host) — naming one is a teaching refusal,
+# the value is the reason (surfaced, never silent — §5.4 requires_tool_grant honesty).
+BRIDGE_SESSION_UNAVAILABLE = {
+    "computer": ("computer use in the CLI is macOS-only AND requires an interactive session — it is "
+                 "explicitly NOT available in non-interactive `-p` mode (Atlas computer-use.md:29,:223). "
+                 "This R1-prime rail is a headless `-p` session on a WSL2/Linux host, so the `computer` "
+                 "tool can never bind here. There is no flag that changes this; it is a host+rail "
+                 "boundary, not a missing grant."),
+    "browser": ("Claude-in-Chrome browser automation is beta and NOT available on WSL/Windows "
+                "(corpus computer-use.md / chrome.md). On this host the browser tool cannot bind; this "
+                "stays needs-tim / planned, never green-painted to live."),
+}
+
+
 class Supervised:
     """One owned claude subprocess + its supervisor-side state. The state machine is
     starting → idle ⇄ busy → closed (truthful transitions — F1.2's bar; `closed` is terminal)."""
@@ -164,6 +244,7 @@ class Supervised:
         self.resume = resume
         self.fork = fork
         self.source = source
+        self.profile = "default"      # "default" = mcp__company-only floor; "bridge-session" = R1-prime wider posture
         self.state = "starting"
         self.created = time.time()
         self.created_iso = _now()
@@ -188,7 +269,7 @@ class Supervised:
             "created": self.created_iso, "last_activity": datetime.fromtimestamp(
                 self.last_activity, timezone.utc).isoformat(),
             "turns": self.turns, "pid": self.proc.pid if self.proc else None,
-            "close_reason": self.close_reason,
+            "close_reason": self.close_reason, "profile": self.profile,
         }
 
     def matches(self, key: str) -> bool:
@@ -360,6 +441,101 @@ class SessionSupervisor:
             cmd += ["--fork-session"]
         return cmd
 
+    @staticmethod
+    def _resolve_bridge_tools(capabilities: "list[str] | str | None",
+                              extra_tools: "list[str] | str | None") -> "tuple[list[str], list[str]]":
+        """Resolve a bridge-session's requested CAPABILITIES (git/lsp/web/edit) + any explicit
+        extra_tools into the concrete `--allowedTools` list, REFUSING LOUD on host/rail-boundary
+        capabilities (computer/browser). Pure + unit-testable (no spawn). Returns (tools, refusals):
+        `refusals` is the list of teaching reasons for any unavailable capability the caller named —
+        the caller (spawn_bridge_session) turns a non-empty refusals list into a TeachingRefusal so the
+        boundary is EXPLICIT, never an allowlist entry that silently never binds (§5.4 honesty)."""
+        refusals: list[str] = []
+        if capabilities is None:
+            caps: list[str] = []
+        elif isinstance(capabilities, str):
+            caps = [c.strip() for c in capabilities.replace(",", " ").split() if c.strip()]
+        else:
+            caps = [str(c).strip() for c in capabilities if str(c).strip()]
+        # start from the default wider set (every bridge-session is at least git+lsp+web+edit capable —
+        # the profile's whole purpose); naming caps NARROWS only when the caller asks for a subset.
+        if caps:
+            tools: list[str] = ["mcp__company"]
+            for c in caps:
+                if c in BRIDGE_SESSION_UNAVAILABLE:
+                    refusals.append(f"capability '{c}': {BRIDGE_SESSION_UNAVAILABLE[c]}")
+                    continue
+                grant = BRIDGE_SESSION_CAPABILITIES.get(c)
+                if grant is None:
+                    refusals.append(
+                        f"capability '{c}' is unknown — bridge-session capabilities are "
+                        f"{sorted(BRIDGE_SESSION_CAPABILITIES)} (grantable on this -p/Linux rail) and "
+                        f"{sorted(BRIDGE_SESSION_UNAVAILABLE)} (host/rail boundaries, refused-loud).")
+                    continue
+                for t in grant:
+                    if t not in tools:
+                        tools.append(t)
+        else:
+            tools = list(BRIDGE_SESSION_TOOLS)
+        # explicit extra tool NAMES (Atlas specifier strings) the caller appends verbatim — but a
+        # `computer`/`Computer`/`browser` specifier is STILL refused (the boundary holds regardless of
+        # how it is asked for; never let it slip in as a raw tool string).
+        if extra_tools:
+            extras = ([extra_tools] if isinstance(extra_tools, str) else list(extra_tools))
+            for t in extras:
+                t = str(t).strip()
+                if not t:
+                    continue
+                low = t.split("(")[0].strip().lower()
+                if low in BRIDGE_SESSION_UNAVAILABLE:
+                    refusals.append(f"tool '{t}': {BRIDGE_SESSION_UNAVAILABLE[low]}")
+                    continue
+                if t not in tools:
+                    tools.append(t)
+        return tools, refusals
+
+    @classmethod
+    def _build_bridge_session_cmd(cls, *, claude_bin: str, resume: str | None = None,
+                                  fork: bool = False,
+                                  capabilities: "list[str] | str | None" = None,
+                                  extra_tools: "list[str] | str | None" = None,
+                                  permission_mode: str | None = None,
+                                  model: str | None = None, effort: str | None = None,
+                                  fallback: "list[str] | str | None" = None,
+                                  settings: str | None = None,
+                                  add_dir: "list[str] | str | None" = None) -> list[str]:
+        """The PURE bridge-session (R1-prime) command builder. Identical transport head to
+        _build_spawn_cmd (held-open `--input-format stream-json` + stream-json output — the T2
+        injection contract), but the `--allowedTools` is the WIDER profile set (NOT `mcp__company`
+        only) and the permission posture defaults to BRIDGE_SESSION_PERMISSION (acceptEdits) so
+        in-session writes are possible (a `plan` posture would defeat the profile). Unit-testable
+        WITHOUT spawning a real claude (the lead-only law: assert on the returned list). RAISES
+        TeachingRefusal if a host/rail-boundary capability (computer/browser) is requested — the
+        boundary is loud, never an allowlist entry that never binds.
+
+        This delegates the non-tool/non-permission flags to _build_spawn_cmd, then SWAPS the
+        `--allowedTools` value — one source for the model/effort/settings/add-dir flag shapes."""
+        tools, refusals = cls._resolve_bridge_tools(capabilities, extra_tools)
+        if refusals:
+            raise TeachingRefusal(
+                "REFUSED — bridge-session requested a capability this R1-prime rail cannot grant:\n  "
+                + "\n  ".join(refusals)
+                + "\nDrop it from `capabilities`/`extra_tools`. The grantable set on this headless "
+                  "`-p`/Linux rail is git · lsp · web · edit (computer-use and the Chrome browser are "
+                  "macOS/interactive-only host boundaries — they cannot bind to a `-p` session and are "
+                  "never silently allowed).")
+        # build the base cmd with the profile's permission posture, then replace the allowedTools value.
+        base = cls._build_spawn_cmd(
+            claude_bin=claude_bin, resume=resume, fork=fork,
+            model=model, effort=effort, fallback=fallback,
+            permission_mode=permission_mode or BRIDGE_SESSION_PERMISSION,
+            settings=settings, add_dir=add_dir)
+        # _build_spawn_cmd emits `--allowedTools mcp__company` as a fixed pair; swap that single value
+        # for the wider comma-joined profile set (Atlas: --allowedTools is one comma-separated value).
+        i = base.index("--allowedTools")
+        base[i + 1] = ",".join(tools)
+        return base
+
     def spawn(self, *, cwd: str | None = None, resume: str | None = None, fork: bool = False,
               name: str | None = None, source: str = "http", wait_init: bool = True,
               model: str | None = None, effort: str | None = None,
@@ -399,6 +575,89 @@ class SessionSupervisor:
                   f"{s.name} · {'fork of ' + resume if fork else ('resume ' + resume if resume else 'new')}",
                   durable=True, session=s.id, name=s.name, cwd=s.cwd, resume=resume, fork=fork,
                   source=source, pid=s.proc.pid)
+        if wait_init:
+            deadline = time.time() + INIT_WAIT_S
+            while time.time() < deadline and s.state == "starting" and s.proc.poll() is None:
+                time.sleep(0.05)
+        return s
+
+    # ---------- RAIL R1-prime: the consent-gated bridge-session spawn ----------
+
+    def spawn_bridge_session(self, *, operator_consent: bool = False,
+                             capabilities: "list[str] | str | None" = None,
+                             extra_tools: "list[str] | str | None" = None,
+                             cwd: str | None = None, resume: str | None = None,
+                             fork: bool = False, name: str | None = None,
+                             source: str = "bridge-session", wait_init: bool = True,
+                             permission_mode: str | None = None,
+                             model: str | None = None, effort: str | None = None,
+                             fallback: "list[str] | str | None" = None,
+                             settings: str | None = None,
+                             add_dir: "list[str] | str | None" = None,
+                             prompt: str | None = None) -> Supervised:
+        """Spawn a session under the R1-prime PROFILE: a supervised `claude -p` with a WIDER
+        `--allowedTools` (Bash/git/LSP-family/web + mcp__company) and an in-session write posture
+        (acceptEdits by default), cwd defaulting to the repo root — the posture ④'s in-session
+        git/LSP/web ops need (the floor `mcp__company`-only spawn cannot carry them).
+
+        THE CONSENT GATE (sole-operator security model — consent-not-lockdown): the profile is ALWAYS
+        AVAILABLE; a wider spawn is REFUSED-LOUD unless `operator_consent=True` rides the call. This is
+        a CONSENT BEAT, not a lockout — the trusted operator can always consent (the /api/resolve
+        operator-vantage precedent), an AGENT cannot open the wider surface without the signal, and
+        `git revert` is the irreversibility backstop. The gate is a marker, never an auth wall.
+
+        RESULT SHAPE (arch doc's correction): a bridge-session's work rides back as PROSE on the turn
+        (turn_text → the mailbox reply / the watch stream) — `liveness: stream`, NO typed return_shape.
+        The supervisor does not synthesize a structured git-sha/LSP-symbol object; the corpus entries
+        for these ④ ops are contracted `liveness: stream` with no return_shape (honest — the prose IS
+        the carrier). git's STRUCTURED-sha path is a DIFFERENT rail (R3 plain-`git` argv), not this one.
+
+        LEAD-ONLY / live-verify pending: this method spawns a REAL claude when called by the running
+        service. The cmd-BUILDER (_build_bridge_session_cmd) is unit-tested without spawning; the live
+        round-trip (a real wider session committing via Bash-git, an LSP nav returning prose) is the
+        build lead's to verify — NEVER claimed live here, NEVER green-painted."""
+        if not operator_consent:
+            raise TeachingRefusal(
+                "REFUSED — a bridge-session opens a WIDER tool surface (Bash/git/LSP/web + file writes) "
+                "than the fabric floor (mcp__company-only). This rail is consent-gated, not locked: pass "
+                "operator_consent=true (the operator-vantage consent beat — the same gate /api/resolve "
+                "uses) to open it. The capability is available the moment consent rides the call; without "
+                "it an agent cannot widen the surface. `git revert` backstops anything irreversible.")
+        # resolve+validate the wider toolset BEFORE registering a session (no half-built record, the
+        # spawn() guard pattern). A host/rail-boundary capability (computer/browser) refuses here, loud.
+        claude_bin = _panel._find_claude()
+        cmd = self._build_bridge_session_cmd(
+            claude_bin=claude_bin, resume=resume, fork=fork,
+            capabilities=capabilities, extra_tools=extra_tools,
+            permission_mode=permission_mode, model=model, effort=effort,
+            fallback=fallback, settings=settings, add_dir=add_dir)
+        if fork and not resume:
+            raise TeachingRefusal("REFUSED — fork=true requires resume=<session id> (a fork is OF an "
+                                  "existing session). For a fresh bridge-session, spawn without fork.")
+        with self.lock:
+            self._cap_check(1)
+            s = Supervised(name=name or "bridge-session", cwd=cwd or REPO_ROOT,
+                           resume=resume, fork=fork, source=source)
+            s.profile = "bridge-session"                       # marks the wider posture on the record
+            self.sessions[s.id] = s
+        s.proc = subprocess.Popen(cmd, cwd=s.cwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE, text=True, bufsize=1)
+        threading.Thread(target=self._reader, args=(s,), daemon=True,
+                         name=f"reader-{s.id}").start()
+        threading.Thread(target=self._drain_stderr, args=(s,), daemon=True,
+                         name=f"stderr-{s.id}").start()
+        # the spawn event records the PROFILE + consent so the run-record carries the security decision
+        # (Introspective-Data-Building / §5.6: every R1-prime act writes who+consent+args — the misuse/
+        # refusal signal is gap-pressure). The allowlist is recorded so an audit can see the surface.
+        i = cmd.index("--allowedTools")
+        self.emit("agent_sessions.spawned",
+                  f"{s.name} · R1-prime bridge-session "
+                  f"({'fork of ' + resume if fork else ('resume ' + resume if resume else 'new')})",
+                  durable=True, session=s.id, name=s.name, cwd=s.cwd, resume=resume, fork=fork,
+                  source=source, pid=s.proc.pid, profile="bridge-session", operator_consent=True,
+                  allowed_tools=cmd[i + 1])
+        if prompt:
+            self.inject(s, str(prompt), source=source)
         if wait_init:
             deadline = time.time() + INIT_WAIT_S
             while time.time() < deadline and s.state == "starting" and s.proc.poll() is None:
@@ -904,6 +1163,34 @@ class H(BaseHTTPRequestHandler):
                     SUP.inject(s, str(body["prompt"]), source=body.get("source") or "http")
                 self._send(200, {"ok": True, "session": s.record()})
                 return
+            if u.path == "/bridge-session":
+                # RAIL R1-prime — the consent-gated WIDER-allowlist spawn (arch doc §3.1/§5.1). The
+                # operator-consent BEAT rides the body (`operator_consent: true`) — the same
+                # operator-vantage gate /api/resolve uses; without it spawn_bridge_session refuses LOUD
+                # (consent-not-lockdown: available, gated by a signal, git-revert backstopped). A
+                # host/rail-boundary capability (computer/browser) refuses loud too (macOS/interactive
+                # only — never bindable on this -p/Linux rail). Results ride back as PROSE on the
+                # session's turn stream (liveness:stream, NO typed return_shape) — watch via GET /watch.
+                perm = body.get("permission")
+                perm_mode = body.get("permission_mode")
+                if perm_mode is None and isinstance(perm, dict):
+                    perm_mode = perm.get("mode")
+                s = SUP.spawn_bridge_session(
+                    operator_consent=bool(body.get("operator_consent")),
+                    capabilities=body.get("capabilities"),
+                    extra_tools=body.get("extra_tools"),
+                    cwd=body.get("cwd"), resume=body.get("resume"),
+                    fork=bool(body.get("fork")), name=body.get("name"),
+                    source=body.get("source") or "bridge-session",
+                    permission_mode=perm_mode,
+                    model=body.get("model"), effort=body.get("effort"),
+                    fallback=body.get("fallback"), settings=body.get("settings"),
+                    add_dir=body.get("add_dir"), prompt=body.get("prompt"))
+                self._send(200, {"ok": True, "session": s.record(),
+                                 "liveness": "stream", "watch": f"/watch?session={s.id}",
+                                 "note": "R1-prime results ride back as PROSE on the turn stream — "
+                                         "watch the session; there is no typed return_shape."})
+                return
             if u.path in ("/inject", "/interrupt", "/teardown"):
                 s = SUP.find(str(body.get("session") or ""))
                 if s is None:
@@ -924,7 +1211,14 @@ class H(BaseHTTPRequestHandler):
                     self._send(200, {"ok": True, "session": s.record()})
                 return
         except TeachingRefusal as e:
-            self._send(429 if "cap" in str(e) else 409, {"error": str(e)})
+            msg = str(e)
+            # consent-gate refusal → 403 (forbidden until consent rides the call); cap → 429; else 409.
+            code = (403 if "consent-gated" in msg          # consent gate: forbidden until consent rides
+                    else 429 if "over the cap of" in msg  # concurrency cap (precise phrase — NOT bare
+                                                          # "cap", which matched "capability" in a
+                                                          # bridge-session boundary refusal)
+                    else 409)                  # state/boundary conflict (busy/closed/rail-boundary)
+            self._send(code, {"error": msg})
             return
         except Exception as e:
             self._send(500, {"error": f"INTERNAL: {e}"})

@@ -140,7 +140,7 @@ advanced only past handled intents (head-of-line hold = crash-safe ordering); du
 `re`=intent id, body in cas, `thread`=the intent's thread) ride the same leaf via `store.append_agent_mail`
 (seq-stamped + thread-joined → visible to seq-cursor inbox reads; the F1.5 contract lane closed the original
 raw-append seam, which made replies invisible to `agent_mail_since`). `SUPERVISOR_ROUTES` is the transport's
-machine inventory (CONTRACT-FORMAT §9.3; drift teeth `tests/supervisor_routes_acceptance.py`). Faces:
+machine inventory (CONTRACT-FORMAT §9.3; drift teeth `tests/supervisor_routes_acceptance.py`, now 29 checks incl. the R1-prime profile). Faces:
 `company session` (ops/cli/sessions.py) + the `session-supervisor` services.json row; contract entries in
 `ui-contract/resources/`. Proven by `tests/session_supervisor_acceptance.py` (27 stub-binary
 service-level checks); real-claude end-to-end (inject-to-idle ≤5s, interrupt semantics, WAKE/CONSULT on
@@ -163,6 +163,80 @@ Atlas cli-reference (verified, never invented). Proven by `tests/session_supervi
 the `usage` block off `agent_sessions.turn` on events.jsonl via a usage-emitting stub). The contract ops flipped
 `planned`→`building` carry an honest **live-verify pending (lead)** note: confirming a flag actually TOOK
 (e.g. the chosen model ran, read off `system/init`) needs a REAL spawn — the lead's slice, never green-painted.
+
+## The config writer (Capability Fabric R3 · `runtime/config_writer.py` · the SOLE config/VCS mutator)
+
+The third executor rail of the ③④⑤ Capability Fabric (the other two: the session supervisor's R1/R1-prime
+interactive sessions, `implement.py`'s R2 headless wire). A bridge-style stdlib-HTTP service on
+**127.0.0.1:8772 only** (exposure law, audit B3 — widening is a recorded decision + a code change here, never
+an env flip), the ONLY process that mutates `.claude`/host config and the only one that shells the
+config-mutating native subcommands. Owns: scope-validated `.claude` READS (settings.json local/project/user,
+~/.claude.json MCP servers, `.claude/commands/*`, `.claude/skills/*/SKILL.md`, output-styles); scope- AND
+content-validated `.claude` WRITES (atomic tmp+fsync+os.replace, prior file backed up to `.bak`, re-read
+verified — never green-painted); `claude mcp`/`claude plugin` invocation (argv-ARRAY, NEVER a shell string,
+allowlisted verbs — the dangerous value is one argv token, no `; rm -rf` injection); structured `git`/`gh`
+(argv-array, allowlisted, cwd-scoped → `{exit, stdout, stderr}` — the structured-sha alternative to R1-prime
+prose). Every scope/path/flag is grounded in the Claude Code Atlas (settings hierarchy local=
+.claude/settings.local.json · project=.claude/settings.json · user=~/.claude/settings.json; `claude mcp
+add/add-json/remove/get/list/reset-project-choices`; `claude plugin install/uninstall/enable/disable/validate`
++ `marketplace add`), verified 2026-06-12, NEVER invented.
+
+**SECURITY = CONSENT-NOT-LOCKDOWN** (Tim's sole-operator model — overrides any multi-user caution the arch
+doc inherited): Tim is the only user and is TRUSTED. The dangerous capabilities (native-CLI exec, config
+writes, plugin install, MCP register) are ENABLED, never walled off, never behind an auth wall — they are
+gated by a CONSENT SIGNAL so an agent cannot do something irreversible without a go-ahead, with git-revert as
+the backstop. Four consent classes (`config-write`, `mcp-register`, `plugin-install`, `vcs-write`); a gated
+act passes on either a per-call `{consent: true}` (the operator-vantage POST) OR a standing marker
+(`POST /consent`, a store ref `config_writer/consent:<class>`, revocable). An unconsented dangerous act is a
+**TeachingRefusal** (HTTP 409) that names the danger and BOTH consent paths — a consent PROMPT, never a denial;
+reads are always allowed; a cold agent may always PROPOSE. Beyond consent: scope-validation (the realpath+
+commonpath wall re-derived per config-file root — the bridge `_safe_mockup_path` PATTERN, reused not the
+function) and content-validation (a hook `command`, skill `body`, settings shape — the dangerous-payload gate,
+arch §5.2). Every gated act writes a run-record (`config_writer.act` events, args redacted — the
+Introspective-Data law); fail-loud throughout (unknown class/scope/missing consent/bad content/nonzero exit →
+a teaching error, never a silent no-op or fallback). HTTP: `GET /health` · `POST /read|/write|/cli|/vcs|/consent`
+(`CONFIG_WRITER_ROUTES` is the inventory source — CONTRACT-FORMAT §9.3/V21, drift-tested both directions).
+Faces: the `config-writer` row in `ops/services.json` (`company up config-writer`); the bridge `/api/config|dev|auto`
+routes + the company MCP ③④⑤ tools (L-③/④/⑤ lanes) route here. ✅ PROVEN by
+`tests/config_writer_acceptance.py` (45 checks by use against the real service on an ISOLATED tmp store +
+scratch `.claude`: scratch-config write→re-read round-trip, unconsented-dangerous-write refused-with-teaching
+then succeeds-with-consent, standing-consent grant/revoke, traversal/scope/content refusals, the CLI+VCS
+read-vs-write gate, argv-array injection-resistance, the run-record landing redacted, route drift). 🟡 NOT yet
+run (lead-only law — this worker fires no real config-mutating CLI): the REAL `claude mcp add` proven by
+`claude mcp list`, `claude plugin install` round-trip, a real `git commit` sha — **live-verify pending (lead)**,
+NEVER green-painted.
+
+**Rail R1-prime — the `bridge-session` spawn PROFILE (Capability Fabric ③④⑤, L-FOUND-R1prime, 2026-06-12).**
+The fabric's normal supervised sessions are spawned `--allowedTools mcp__company` (THE FLOOR — no Bash/
+Edit/LSP/web). That floor makes ④'s IN-SESSION capabilities (git via Bash, LSP code-intel via the Read/
+Edit family, WebFetch/WebSearch) physically impossible — a session that "wants Bash and cannot call it"
+is a silent no-op. R1-prime is the NAMED, deliberate spawn POSTURE that opens a WIDER allowlist for those
+ops. It is NOT "an intent kind"; it is a new security decision. Pieces: `spawn_bridge_session(...)` (the
+consent-gated entry), the pure `_build_bridge_session_cmd(...)` + `_resolve_bridge_tools(...)` cmd-builders,
+the `BRIDGE_SESSION_TOOLS`/`_CAPABILITIES`/`_UNAVAILABLE`/`_PERMISSION` registries, the `POST /bridge-session`
+route (+ its `SUPERVISOR_ROUTES` row), and `Supervised.profile` ("default" | "bridge-session"). **The consent
+gate (sole-operator security model — consent-not-lockdown, Tim's explicit steer):** the profile is ALWAYS
+AVAILABLE; a wider spawn is REFUSED-LOUD (HTTP 403) unless `operator_consent=true` rides the call — the
+operator-vantage consent beat (the `/api/resolve` precedent), NOT an auth wall. An AGENT cannot widen the
+surface without the signal; the trusted OPERATOR always can; `git revert` backstops irreversibility. **The
+allowlist is Atlas-grounded, never invented:** `--allowedTools` takes a comma-separated specifier list (bare
+names `Bash`/`Read`/`Edit`/`WebFetch`/`WebSearch` or patterns `Bash(git *)`) — git rides `Bash` (native
+Bash-tool git), LSP rides the `Read`/`Edit` family (Atlas tools-reference: a `Read(...)` rule applies to
+Read/Grep/Glob/LSP), web rides `WebFetch`/`WebSearch`. **The hard host/rail boundary (the decisive Atlas
+correction):** `computer`-use in the CLI is macOS-only AND explicitly NOT available in non-interactive `-p`
+mode (Atlas `computer-use.md:29,:223`), and `browser` (Claude-in-Chrome) is beta + not-WSL — so on this
+headless `-p`/WSL2-Linux rail NEITHER can ever bind. Requesting either is REFUSED-LOUD (never an allowlist
+entry that silently never binds), never green-painted to live. **Result shape (arch-doc correction):** a
+bridge-session's work rides back as PROSE on the turn stream (`liveness:stream`, NO typed `return_shape`) —
+the supervisor synthesizes no structured git-sha/LSP object; git's structured-sha path is a DIFFERENT rail
+(R3 plain-`git` argv). Proven by `tests/supervisor_routes_acceptance.py` (29 checks: the original 8 drift/OPS
+teeth + 21 R1-prime checks — wider allowlist present, floor untouched, transport head byte-preserved,
+capability narrowing git/lsp, computer/browser refused-loud as capability AND raw tool, unknown-cap refused,
+the consent gate refusing without `operator_consent`, the 403 mapping, the liveness:stream/no-return_shape
+arm, and the run-record stamping profile+consent+allowlist). **🟡 live-verify pending (lead):** a REAL wider
+session round-trip — a bridge-session committing via Bash-git, an LSP nav returning prose — needs a live
+spawn (lane law: this worker never fires `claude`); the cmd-builders + consent gate are unit-proven, the
+live round-trip is the build lead's, NEVER claimed live, NEVER green-painted.
 
 ## The rule engine (Concurrent Cognition G3 · `runtime/rules.py` · the L2 core)
 
