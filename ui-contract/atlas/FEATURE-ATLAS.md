@@ -155,3 +155,55 @@ below; F2–F8 lanes append theirs under their classes.
 ### CC-18 · Headless & Programmatic Use (SDK & Automation)
 - CC-18.6 — read a programmatic session's machine-readable output stream (stream-json fold)
 - CC-18.7 — choose a headless run's output format / structured-output schema / partial streaming
+
+## Affordances seeded by F7 (Reach — classes 14, 15, 16, 17, 19)
+
+### CC-14 · Voice & Audio Input/Output
+- CC-14.1 — speak a turn: record audio in, get the transcribed prompt + a reply ([[voice#op: voice.watch]])
+- CC-14.2 — switch the speech circuit: pick the TTS engine / voice / persona ([[voice#op: voice.act]] act=switch)
+- CC-14.3 — stream the spoken reply sentence-by-sentence (first audio while the brain still thinks; [[voice#op: voice.watch]])
+- CC-14.4 — list the available ears (STT) + engines (TTS) + personas, with up/loadable state ([[voice#op: voice.list]])
+- CC-14.5 — load/unload a GPU ear or TTS engine, VRAM-budgeted, and toggle voice on/off ([[voice#op: voice.act]])
+- CC-14.6 — push-to-talk vs auto-listen (VAD + finished-thought) modes (native CC-14; feel is device-only/unflipped)
+
+### CC-15 · Remote Control & Mobile Access
+- CC-15.1 — reach the Company from another device (the REAL path: tailnet HTTPS PWA; [[remote#op: remote.get]])
+- CC-15.2 — make a session controllable from the phone via native Remote Control (`--remote-control`; [[remote#op: remote.act]])
+- CC-15.3 — serve the surface over HTTPS for the mobile browser mic (secure-context; [[remote#op: remote.get]])
+- CC-15.4 — launch a session from a web/deep link (`claude://`; [[remote#op: remote.act]])
+
+### CC-16 · Code Intelligence (LSP) & Symbol Navigation
+- CC-16.1 — navigate symbols: go-to-definition / find-references / hover-type / workspace-symbol / implementations / call-hierarchy ([[code-intel#op: code-intel.act]])
+- CC-16.2 — read automatic post-edit diagnostics (type errors/warnings) ([[code-intel#op: code-intel.act]] act=diagnostics)
+- CC-16.3 — configure/activate a language server via a code-intelligence plugin (.lsp.json / lspServers) ([[code-intel#op: code-intel.act]])
+
+### CC-17 · Computer Use & Web Access
+- CC-17.1 — web access: WebFetch (lossy URL→extraction) + WebSearch ([[computer-use#op: computer-use.act]] act=web-fetch/web-search)
+- CC-17.2 — browser automation: open tabs, click, type, read console (Claude-in-Chrome; beta, not WSL; [[computer-use#op: computer-use.act]] act=browser)
+- CC-17.3 — computer use: screenshot + mouse/keyboard GUI control (API beta; [[computer-use#op: computer-use.act]] act=computer)
+
+### CC-19 · AI-Driven Code Review & Analysis
+- CC-19.1 — review a diff locally (`/code-review`, `/security-review`) ([[code-review#op: code-review.act]] act=review-local/security-review-local)
+- CC-19.2 — managed PR review: a fleet posts severity-tagged inline comments (GitHub Code Review; [[code-review#op: code-review.act]] act=review-pr)
+- CC-19.3 — self-hosted CI review via `claude -p` (GitHub Actions / GitLab) ([[code-review#op: code-review.act]] act=review-pr)
+
+> F7 honesty (status split, CONTRACT-FORMAT §4.2): CC-14 is `building` and REAL — the Company runs a
+> complete local voice stack (swappable STT-ear registry + 6 TTS engines + 5-persona cast) and a
+> proven end-to-end voice circuit (`/api/voice/turn`, `/api/voice/stream`); the device-only FEEL
+> (auto-listen VAD, on-device iOS playback, always-on activation) is unflipped/needs-tim, named never
+> green-painted (CC-14.6). CC-15 is `building` for the REAL path — the bridge+canvas served over
+> Tailscale HTTPS to Tim's iPhone PWA (verified on-device, `project-mobile-access-tailscale`);
+> native Remote Control + Deep Links (CC-15.2/.4) are `planned` (Anthropic-hosted, un-bridged — the
+> Company's mobile story is the tailnet, deliberately not the relay). CC-16/17/19 are ALL `planned`:
+> they are native in-session / in-browser / hosted capabilities the Company exposes NO endpoint for —
+> code intelligence runs inside a session's LSP tool, web/computer reach isn't even granted to a
+> default fabric session (`--allowedTools mcp__company`), Chrome is NOT-WSL (the host), and code
+> review's surfaces are TUI/Anthropic-hosted/CI (the CI `claude -p` path is buildable on the fabric
+> but un-packaged). Each `planned` op names its bridge gap + the real wiring seam. Grounded in:
+> Feature Atlas.md (classes 14/15/16/17/19), voice-dictation.md, remote-control.md, deep-links.md,
+> glossary.md, tools-reference.md, discover-plugins.md, plugins-reference.md, large-codebases.md,
+> costs.md, chrome.md, computer-use-tool.md, web-fetch-tool.md, code-review.md, github-actions.md,
+> gitlab-ci-cd.md, Custom Apps Integration.md (vaults claude-code-atlas + claude-platform-docs,
+> searched 2026-06-12) + the company ground truth: ops/services.json (voice + tailscale + pipeliner
+> rows), runtime/bridge.py (voice routes :864-:1290), voice/lifecycle.py, voice/personas.py,
+> project-voice-stack + project-mobile-access-tailscale (verified 2026-06-12).

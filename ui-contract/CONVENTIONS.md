@@ -94,3 +94,33 @@ re-exposed by an F1 op (noted):
 NOT UI directives — they appear in F3 prose with inline `lint-ok:` where the V5 seed list might
 otherwise flag them. The mode/effort enum VALUES (plan/acceptEdits/etc.) are Claude Code identifiers,
 not the banned UI words.
+
+## Named-act registry — F7 additions (Reach: voice / remote / code-intel / computer-use / code-review; append-only)
+Lane F7 uses the uniform verb `act` with an internal `act:` discriminator. The discriminator VALUES
+are the named acts (registered here for V2 closure). Voice acts are `building` (real bridge routes);
+all others are `planned` (native/hosted surfaces the company exposes no face for, gap named per op):
+- `switch` / `load` / `unload` / `toggle` — on `voice`: set the active engine/voice/persona / load a
+  GPU ear or TTS engine (VRAM-budgeted via the shared resource-manager) / unload (cgroup stop) /
+  toggle per-mode voice on-off. ALL `building` — real bridge routes (/api/voice/switch,
+  /api/voice/{load,unload}); fail-loud on unknown id or no-VRAM-fit, NEVER a silent kokoro fallback.
+- `remote-control` / `deep-link` — on `remote`: start native `--remote-control` / open a `claude://`
+  deep link (planned — Anthropic-hosted relay, NOT bridged; the company's mobile path is the tailnet PWA).
+- `definition` / `references` / `hover` / `document-symbols` / `workspace-symbol` / `implementations`
+  / `call-hierarchy` / `diagnostics` — on `code-intel`: the native LSP tool's navigation + post-edit
+  diagnostics (planned — the LSP tool runs in-session; no company endpoint).
+- `web-fetch` / `web-search` / `browser` / `computer` — on `computer-use`: WebFetch/WebSearch (native
+  session tools, NOT in the fabric grant) / Claude-in-Chrome browser automation (beta, NOT WSL) /
+  API computer-use (beta header) (all planned — no company face; default fabric grant is mcp__company only).
+- `review-local` / `security-review-local` / `review-pr` — on `code-review`: /code-review &
+  /security-review (TUI), managed GitHub Code Review, or a claude -p CI review (planned — no company
+  review face; the CI claude -p path is buildable on the fabric but un-packaged).
+
+## Purpose-free vocabulary — F7 note (lint-ok carve-outs)
+`/code-review`, `/security-review`, `/voice`, `/remote-control`, `/mobile` are Claude Code reserved
+slash-command names (and `claude://` is the native deep-link scheme), NOT UI directives — they appear
+in F7 prose where the V5 seed list ("page"/"screen"/"click") might otherwise flag adjacent words;
+the slash-command and scheme identifiers are Claude Code surface names, carried with inline `lint-ok:`
+where needed. "push-to-talk"/"tap-to-record" are native voice-dictation mode names (voice-dictation.md),
+not UI directives. Browser/Chrome/computer-use prose names native tool actions (open tab, click, type,
+screenshot) — these describe the NATIVE tool's documented behavior, lint-ok as capability description,
+never a UI instruction.
