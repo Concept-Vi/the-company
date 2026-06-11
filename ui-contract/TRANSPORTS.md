@@ -99,3 +99,31 @@ machine-diff (V24) is an open obligation, stated loudly per the format's fail-lo
   in-process"`. Bridging them is owned by the headless/SDK lane (Atlas CC-18); F2 records the
   capability and the absent bridge. This is the natural carrier for a future fabric checkpoint/
   context endpoint.
+
+## `substrate-mcp` — the knowledge-vault search face (F6) — EXTERNAL, wired in
+- **Protocol:** MCP over stdio. NOT company-owned code — it is a SEPARATE repo
+  (`/home/tim/repos/obsidian-overlord`, run as `…/.venv/bin/python -m substrate_mcp.server`,
+  state dir `…/.state`), wired into every Claude Code session via the user-scoped MCP config
+  (verified in `~/.claude.json` mcpServers, 2026-06-12). The company DEPENDS on it for the
+  knowledge-search capability; it does not own it (found-elsewhere ≠ company-owned — the
+  binding cites this external transport honestly rather than claiming a company face).
+- **Exposure:** `process-local` (stdio; no socket).
+- **Caller identity:** none — search needs no identity; the vaults are read-only reference.
+- **Inventory source:** the substrate server's OWN tool registry (its FastMCP tool set:
+  `search_semantic`, `list_vaults`, `get_status`, `get_by_address`, …). It has NO company-side
+  `OPS` constant (it is not company code) — for V21/V22 its inventory source is the external
+  server's tool list, recorded as an external dependency, never a phantom company route.
+- **F6 status:** `building` and VERIFIED-BY-USE — `list_vaults` + `get_status` + `search_semantic`
+  over `claude-code-atlas` (287f/6958c) and `claude-platform-docs` (811f/23274c) all ran live
+  2026-06-12; every cited fact in the F6 entries traces to a returned chunk's source address.
+
+## `anthropic-admin-api` — the Anthropic org Usage & Cost API (F6) — EXTERNAL, not proxied
+- **Protocol:** HTTPS to `api.anthropic.com` (`/v1/organizations/usage_report/messages`,
+  `/v1/organizations/me`, the Claude Code Analytics API). NOT a company face.
+- **Exposure:** `authed` — requires an Anthropic ADMIN key (`x-api-key: $ANTHROPIC_ADMIN_KEY`,
+  `anthropic-version` header); org-scoped data.
+- **Caller identity:** the org Admin key.
+- **Inventory source:** the Anthropic API reference (external). The company does NOT proxy this
+  today — `cost-usage.get`'s binding on it is `planned`, and the endpoint belongs in
+  INVENTORY-EXCLUSIONS.md as "external Anthropic API, not a company face" so the reality join
+  never phantom-fails on a route the company was never going to own.

@@ -102,3 +102,31 @@ below; F2–F8 lanes append theirs under their classes.
 > alternative to in-place rewind. Grounded in: checkpointing.md, agent-sdk/file-checkpointing.md,
 > context-window.md, sessions.md (branch-a-session), glossary.md, how-claude-code-works.md,
 > monitoring-usage.md, statusline.md, errors.md (all in vault claude-code-atlas, fetched 2026-06-10).
+
+## Affordances seeded by F6 (Knowledge & memory — classes 20, 23)
+
+### CC-20 · Cost Management & Usage Tracking
+- CC-20.1 — read what a session/turn has cost (per-turn token + estimated cost; the ModelUsage shape)
+- CC-20.2 — read usage broken down by model / skill / plugin / subagent (OTel metrics, /usage attribution, org Usage & Cost API)
+- CC-20.3 — cap a headless run's spend (`--max-budget-usd` — stops the session when exceeded)
+
+### CC-23 · CLAUDE.md, Memory & Persistent Context
+- CC-23.2 — semantically search the embedded knowledge corpora (Atlas + platform-docs + repo-exocortex)
+- CC-23.3 — list the CLAUDE.md/memory files loaded in a session (the /memory inventory + scope hierarchy)
+- CC-23.4 — edit a memory/instruction file (operator write to a scope-validated CLAUDE.md/rule/MEMORY.md)
+- CC-23.5 — remember/forget a learning (Claude-driven auto-memory + add-to-CLAUDE.md acts)
+
+### CC-35 · Glossary & Best Practices
+- CC-35.1 — look up a Claude Code term/best-practice from the docs mirror (a knowledge-corpus search, domain=claude-code-atlas)
+
+> F6 honesty note (status split, CONTRACT-FORMAT §4.2): CC-23.2 / CC-35.1 are `building` —
+> realized through real, proven-by-use MCP search faces (substrate-mcp + the company corpus
+> tool). CC-23.3/.4/.5 and ALL of CC-20 are `planned` — the DATA MODELS are contracted (so a UI
+> can render them) but NO company endpoint exposes them yet. The CC-20 gap is CODE-CITED: the
+> supervisor consumes the `claude -p` result event but discards its cost/usage fields
+> (runtime/session_supervisor.py _turn_done) — an F10.1 gap-adoption candidate with a clean
+> path (stamp ModelUsage onto agent_sessions.turn). CC-23.1 (transcript memory) was seeded by
+> F1 and is NOT re-owned here. Grounded in: memory.md, glossary.md, costs.md, monitoring-usage.md,
+> analytics.md, admin-setup.md, agent-sdk/typescript.md, claude-directory.md, Config & UI Data
+> Model.md, Memory Systems.md (vault claude-code-atlas) + usage-cost-api.md, admin-api.md (vault
+> claude-platform-docs), all searched 2026-06-12; substrate get_status/list_vaults run live 2026-06-12.

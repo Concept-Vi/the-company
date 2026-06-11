@@ -67,3 +67,6 @@ retrieval bridge to consumer vocabulary). Escapes need an inline `lint-ok:` just
   side, compact COMPRESSES the whole conversation, clear DISCARDS-and-parks, fork COPIES-and-
   preserves — five overlapping mechanisms, five distinct meanings. `journeys/manage-session-state.md`
   carries the chooser (intent -> mechanism) and the two deciding axes (touches-files? preserves-original?).
+- `remember` — on `claude-memory`: save a learning to auto-memory, or (on request) append an instruction to CLAUDE.md. (planned; today a Claude Code conversational behavior, not a company API)
+- `forget` — on `claude-memory`: trim/delete a stale memory entry. (planned; today via /memory or a direct edit)
+- `cap-budget` — on `cost-usage`: set the headless `--max-budget-usd` ceiling that stops a session when exceeded. (planned; a Claude Code headless flag the supervisor could thread through session.create)

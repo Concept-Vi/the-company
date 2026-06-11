@@ -89,3 +89,36 @@ Statuses ride the ops (CONTRACT-FORMAT §4.2); rows whose op is `planned` say so
 | reach the supervisor from off this machine | NOT EXPOSED BY DESIGN — 127.0.0.1 only, no env to widen (exposure law B3) |
 | read/compact/clear a session's context window through an API | NOT EXPOSED — in-process only (/context, /compact, /clear). The supervisor could inject /compact as a turn but no contracted op means it; observation rides the SDK compact_boundary marker / OTEL claude_code.compaction event ([[context-window#Caller]]) |
 | rewind code or conversation to a checkpoint through an API | NOT EXPOSED — checkpoints are session-local, operated via the /rewind TUI menu or the Agent SDK rewind_files (which restores FILES ONLY). The supervisor never enables file-checkpointing on its headless sessions ([[checkpoint#Caller]]). For "preserve original, try another way" the fabric path is fork: [[session#op: session.create]] fork=true |
+
+## Knowledge: search the corpora (F6 — building, proven by use)
+| intent / alias | op | params |
+|---|---|---|
+| how does Claude Code do X · look it up in the docs *(alias)* | [[knowledge-corpus#op: knowledge-corpus.search]] | vault=claude-code-atlas |
+| what does the Anthropic API doc say about Y | [[knowledge-corpus#op: knowledge-corpus.search]] | vault=claude-platform-docs |
+| ask the company codebase a question · ask the codebase *(alias)* | [[knowledge-corpus#op: knowledge-corpus.search]] | backend=company, space=repo |
+| look up a Claude Code term or best practice | [[knowledge-corpus#op: knowledge-corpus.search]] | vault=claude-code-atlas |
+| what knowledge corpora can I search · list the vaults *(alias)* | [[knowledge-corpus#op: knowledge-corpus.list]] | |
+| which memory holds this (knowledge vs history vs instructions) | [[which-corpus]] (journey) | route first |
+
+## Memory: CLAUDE.md & auto-memory (F6 — planned, data model contracted)
+| intent / alias | op | params |
+|---|---|---|
+| what CLAUDE.md and memory files are loaded · what is Claude remembering *(alias)* | [[claude-memory#op: claude-memory.list]] | **PLANNED** — interim: built-in `/memory` + read the scope paths |
+| add a convention to CLAUDE.md · edit a memory file *(alias)* | [[claude-memory#op: claude-memory.update]] | **PLANNED** — interim: edit the scope-path file directly |
+| remember that X · save this preference *(alias)* | [[claude-memory#op: claude-memory.act]] | act=remember **PLANNED** |
+| forget the stale note · stop remembering this *(alias)* | [[claude-memory#op: claude-memory.act]] | act=forget **PLANNED** |
+
+## Cost & usage telemetry (F6 — planned, data model contracted, gap code-cited)
+| intent / alias | op | params |
+|---|---|---|
+| what has this session cost · spend so far *(alias)* | [[cost-usage#op: cost-usage.get]] | **PLANNED** — interim: built-in `/usage` / `/cost` (local estimate) |
+| show usage by model/skill/plugin · usage breakdown *(alias)* | [[cost-usage#op: cost-usage.get]] | **PLANNED** — OTel metrics / `/usage` attribution / org Usage & Cost API |
+| cap this headless run's spend · set a spend limit *(alias)* | [[cost-usage#op: cost-usage.act]] | act=cap-budget, max_budget_usd=N **PLANNED** |
+
+## Not exposed locally (F6 honest rows)
+| intent | status |
+|---|---|
+| get authoritative org billing from the company | NOT A COMPANY FACE — EXTERNAL Anthropic Usage & Cost API (Admin key); local /usage is an ESTIMATE this-machine-only ([[cost-usage#Errors]]) |
+| programmatically list loaded memory via a company API | NOT EXPOSED YET — Claude Code's `/memory` is interactive, not machine-readable; company list op is an F10.1 gap-adoption candidate ([[claude-memory#op: claude-memory.list]]) |
+| read per-turn cost from the fabric event stream | NOT EXPOSED YET — the supervisor DISCARDS the result event's cost/usage fields (code-cited gap, [[cost-usage#Representation]]); adoption = stamp ModelUsage onto agent_sessions.turn |
+| semantically search past-session transcripts | PLANNED (F1's [[transcript#op: transcript.search]]) — the claude-sessions vault is not yet registered; this is a DIFFERENT corpus from the knowledge vaults ([[which-corpus]]) |
