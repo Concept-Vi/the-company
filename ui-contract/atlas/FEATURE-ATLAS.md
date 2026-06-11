@@ -308,3 +308,73 @@ below; F2–F8 lanes append theirs under their classes.
 > Grounded in: hooks.md, mcp.md, skills.md, plugins.md, plugins-reference.md, output-styles.md,
 > statusline.md, discover-plugins.md, plugin-marketplaces.md (vault claude-code-atlas, fetched
 > 2026-06-10), all searched/read 2026-06-12; mcp_face/server.py + runtime/bridge.py read live 2026-06-12.
+
+## Affordances seeded by F8 (Platform & admin)
+
+### CC-01 · CLI & Session Entry Points
+- CC-01.1 — the inventory of CLI entry points/flags that start or modify a session ([[surfaces#op: surfaces.list]] — the company drives exactly one: `claude -p`)
+
+### CC-02 · Interactive Surfaces (Terminal, Desktop, Web, IDE)
+- CC-02.1 — the inventory of interactive client kinds (terminal TUI, Desktop, Web, VS Code, JetBrains, Chrome) ([[surfaces#op: surfaces.list]] — all host-only; the fabric drives none)
+
+### CC-04 · Keyboard Shortcuts & Keybindings
+- CC-04.1 — the keybindings.json data model: contexts × namespaced actions, keystroke syntax, unbind/reserved rules ([[surfaces#op: surfaces.get-keybindings]] — host-only TUI config)
+
+### CC-24 · Authentication & Account Management
+- CC-24.1 — read which credential method/account a session is authenticated under ([[auth#op: auth.get]])
+- CC-24.2 — switch the active account / re-authenticate (/login, /logout) ([[auth#op: auth.act]])
+- CC-24.3 — supply or change a key/token credential (env / apiKeyHelper) ([[auth#op: auth.act]])
+- CC-24.4 — mint a long-lived CI token (`claude setup-token` -> CLAUDE_CODE_OAUTH_TOKEN) ([[auth#op: auth.act]])
+
+### CC-25 · Configuration & Settings System
+- CC-25.2 — thread a chosen settings file / inline JSON into a session at spawn (`--settings`) ([[settings#op: settings.act]])
+- CC-25.3 — grant a session additional directories / set per-session env (`--add-dir`, env) ([[settings#op: settings.act]])
+> (CC-25.1 — read the fabric's live operating configuration — was seeded by F1; F8 re-owns the read as [[settings#op: settings.get]], the settings/config lens on the same GET /health.)
+
+### CC-28 · Enterprise & Admin Features
+- CC-28.1 — central org configuration: managed policy (server/MDM/file), admin console, managed MCP, org analytics ([[platform#op: platform.enterprise]] — org-only; the fabric is a policy subject)
+
+### CC-29 · Cloud Provider Integrations (Bedrock, Vertex, Foundry)
+- CC-29.1 — route inference through a cloud provider (CLAUDE_CODE_USE_BEDROCK/_VERTEX/_FOUNDRY) ([[platform#op: platform.cloud-provider]] — host env, inherited by the fabric)
+
+### CC-31 · Large Codebase Support & Dev Containers
+- CC-31.1 — set up Claude Code for a monorepo/large codebase (nested CLAUDE.md, sparse worktrees, per-package skills, dev containers) ([[platform#op: platform.privacy]] description — host/project setup; LSP/code-intel is CC-16, a separate lane)
+
+### CC-32 · Data Privacy, Security & Compliance
+- CC-32.1 — the data posture: what is logged/retained, telemetry opt-in, provider-default behaviors, credential storage, and the company's OWN local-persistence boundary ([[platform#op: platform.privacy]])
+
+### CC-33 · Diagnostics, Debugging & Troubleshooting
+- CC-33.1 — read fabric health (supervisor up?, session counts, operating slice) ([[diagnostics#op: diagnostics.get]])
+- CC-33.2 — observe per-session failures (spawn-fail, turn-error, turn-timeout) + resolved tool surface ([[diagnostics#op: diagnostics.watch]])
+- CC-33.3 — run a per-session health check (/doctor) ([[diagnostics#op: diagnostics.act]])
+- CC-33.4 — thread debug categories / safe-mode for troubleshooting (`--debug`, `--safe-mode`, `--bare`) ([[diagnostics#op: diagnostics.act]])
+
+### CC-34 · Installation, Updates & Platform Support
+- CC-34.1 — install/update the Claude Code binary; platform support; updater health ([[platform#op: platform.install]] — host-only; the fabric drives an already-installed binary)
+
+### CC-35 · Glossary & Best Practices
+> (CC-35.1 — look up a Claude Code term/best-practice from the docs mirror — was seeded by F6; F8 re-owns it as the platform/glossary lens [[platform#op: platform.glossary]] over the SAME knowledge-corpus search.)
+
+> F8 honesty note (status split, CONTRACT-FORMAT §4.2): the F8 classes split sharply by whether a
+> capability is a FABRIC concern or a HOST/ORG concern.
+> - `building` (a real, proven-by-use company READ exists): CC-25.1 ([[settings#op: settings.get]]),
+>   CC-33.1 ([[diagnostics#op: diagnostics.get]]), CC-33.2 ([[diagnostics#op: diagnostics.watch]]) —
+>   all three are the settings/diagnostics LENSES on the F1/F3 `GET /health` + supervisor watch
+>   stream, proven by `session_supervisor_acceptance`; and CC-35.1 ([[platform#op: platform.glossary]])
+>   — the F6 knowledge-corpus search, proven by use 2026-06-12.
+> - `planned` (a company endpoint is namable but unbuilt; the spawn-param/control gap is CODE-CITED):
+>   CC-24.1 (auth status read), CC-25.2/.3 (settings/add-dir/env at spawn — `runtime/session_supervisor.py:259-265`
+>   threads a FIXED flag set), CC-33.3/.4 (per-session /doctor + --debug — spawn threads `--verbose`
+>   only, no `--debug`/`--safe-mode`). These are F10.1 gap-adoption candidates.
+> - OUT-OF-LOCAL-SCOPE (a HOST or ORG concern by design, not omission — routed to OUT-OF-SCOPE.md /
+>   INVENTORY-EXCLUSIONS.md with reasons): CC-01.1/CC-02.1/CC-04.1 (surfaces — the company drives one
+>   headless entry; interactive clients + keybindings are human-only), CC-24.2/.3/.4 (credential change
+>   = host act + usage-policy boundary), CC-28.1 (managed policy = org admin; fabric inherits it
+>   unoverridably), CC-29.1 (provider selection = host env; inherited transparently), CC-31.1 (host/
+>   project setup), CC-32.1 (org data agreement + host telemetry; the company's local-persistence
+>   boundary is STATED), CC-34.1 (install/update = host operator). Each is named, never silent (N5/C8).
+> Grounded in: settings.md, authentication.md, cli-reference.md, keybindings.md, troubleshooting.md,
+> setup.md, quickstart.md, admin-setup.md, server-managed-settings.md, managed-mcp.md, data-usage.md,
+> large-codebases.md, legal-and-compliance.md, monitoring-usage.md, glossary.md, platforms.md (vault
+> claude-code-atlas), all searched/read 2026-06-12; supervisor spawn + GET /health verified against
+> runtime/session_supervisor.py:254-265,478,697-705 (2026-06-12).
