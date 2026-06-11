@@ -323,11 +323,22 @@ class SessionSupervisor:
                     continue                          # non-JSON chatter — the result event is the contract
                 et = ev.get("type")
                 if et == "system" and ev.get("subtype") == "init":
+                    first = s.claude_session_id is None
                     s.claude_session_id = ev.get("session_id") or s.claude_session_id
                     if s.state == "starting":
                         s.state = "idle"
                     s.last_activity = time.time()
                     self._fan(s, {"type": "init", "claude_session_id": s.claude_session_id})
+                    # Persist the claude_session_id ↔ cwd link on first init (durable): the registry
+                    # fold's canonical-id mapping wants it, AND wake/consult resolve a target's cwd
+                    # from it — a session born in dir X must RESUME in dir X (claude --resume scopes
+                    # to the cwd's project dir; wrong cwd = "No conversation found"). Cross-directory
+                    # is the fabric's whole point (F1 cross-cwd gap, found in lead live-verification).
+                    if first and s.claude_session_id:
+                        self.emit("agent_sessions.registered",
+                                  f"{s.name} · {s.claude_session_id[:8]} @ {s.cwd}",
+                                  durable=True, session=s.id,
+                                  claude_session_id=s.claude_session_id, cwd=s.cwd, name=s.name)
                 elif et == "assistant":
                     for block in (ev.get("message") or {}).get("content") or []:
                         if block.get("type") == "text" and block.get("text"):
@@ -571,6 +582,29 @@ class SessionSupervisor:
                 self.store.set_ref(CURSOR_REF, str(offset))
         return offset
 
+    def _cwd_for(self, target: str, rec: dict) -> str | None:
+        """The directory a wake/consult must resume in. A claude session is scoped to the project
+        dir of the cwd it was born in; resuming elsewhere → 'No conversation found'. Resolution
+        order: an explicit cwd on the intent (the sender's registry hint) → the durable
+        agent_sessions.registered event for this claude_session_id → a live record → None (spawn
+        falls back to REPO_ROOT, which only works for sessions born here). Newest event wins."""
+        hint = rec.get("cwd")
+        if isinstance(hint, str) and hint.strip():
+            return hint
+        found = None
+        try:
+            for ev in self.store.events_since(-1):     # oldest→newest; last match wins
+                if (ev.get("kind") == "agent_sessions.registered"
+                        and ev.get("claude_session_id") == target and ev.get("cwd")):
+                    found = ev["cwd"]
+        except Exception as e:
+            print(f"[session-supervisor] cwd lookup for {target[:8]} failed: {e}",
+                  file=sys.stderr, flush=True)
+        if found:
+            return found
+        live = self.find(target)
+        return live.cwd if live else None
+
     def _handle_intent(self, rec: dict) -> bool:
         """True = consumed (acted or terminally refused-loud); False = hold the cursor and retry
         (the one non-terminal case: deliver to a session that is mid-turn)."""
@@ -608,7 +642,8 @@ class SessionSupervisor:
                     # already supervised-live → a wake degrades to deliver (truthful routing)
                     self.inject(live, body, source=rec.get("from") or "mailbox", intent=rec)
                     return True
-                s = self.spawn(resume=target, source=f"mailbox:{rec.get('from')}",
+                s = self.spawn(resume=target, cwd=self._cwd_for(target, rec),
+                               source=f"mailbox:{rec.get('from')}",
                                name=rec.get("name") or f"wake-{target[:8]}")
                 self.inject(s, body, source=rec.get("from") or "mailbox", intent=rec)
                 return True
@@ -622,8 +657,10 @@ class SessionSupervisor:
                     return True
                 with self.lock:
                     self._cap_check(copies)
+                cwd = self._cwd_for(target, rec)        # the fork must resume in the original's dir
                 for i in range(copies):
-                    s = self.spawn(resume=target, fork=True, source=f"mailbox:{rec.get('from')}",
+                    s = self.spawn(resume=target, fork=True, cwd=cwd,
+                                   source=f"mailbox:{rec.get('from')}",
                                    name=(rec.get("name") or f"consult-{target[:8]}") + f"-{i + 1}")
                     self.inject(s, body, source=rec.get("from") or "mailbox", intent=rec)
                 return True
