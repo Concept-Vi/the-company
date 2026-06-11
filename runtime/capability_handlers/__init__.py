@@ -104,7 +104,7 @@ HANDLERS: dict[str, Handler] = _declare(
     ("auto.routines",        "R3",          False, "routines list/get + run-now/pause/one-off (CC-21)"),
     ("auto.workflows",       "R1",          False, "workflows goal-steer (R1) + loop (R2) (CC-22)"),
     ("auto.cost",            "direct-read", True,  "cost/usage fold over agent_sessions.turn usage (CC-20)"),
-    ("auto.auth",            "direct-read", True,  "auth status read — credential method, redacted (CC-24.1)"),
+    ("auto.auth",            "R3",          False, "auth status read (redacted, CC-24.1) + reopened host-config acts relogin/logout/setup-token (CC-24.2/.3/.4)"),
 )
 
 

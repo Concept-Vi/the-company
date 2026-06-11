@@ -31,10 +31,16 @@ THE FOUR RESOURCES + their rails (arch §4 ⑤ table, every fact grounded in the
                   agent_sessions.turn (session_supervisor._extract_usage — verified built, §1.5; NOT
                   net-new). costUSD is a CLIENT-SIDE ESTIMATE, never the authoritative bill.
 
-  auto.auth      (CC-24.1, reopened) → direct-read: the credential METHOD, REDACTED (host_reads row
-                  `claude auth status` → JSON; the secret NEVER transits). The host ACTS
-                  (relogin/logout/setup-token = CC-24.2/.3/.4) are OUT — absence-of-row IS the boundary
-                  (§1.8/§5.2 C3). The act here is the REOPENED read Tim pulled back in.
+  auto.auth      (CC-24, reopened) → op="get" = direct-read: the credential METHOD, REDACTED
+                  (host_reads row `claude auth status` → JSON; the secret NEVER transits, §5.2 C3).
+                  op="act" = the REOPENED CC-24.2/.3/.4 host-config credential STEERS on rail R3
+                  (Tim's sole-operator steer overrides the arch's original §1.8 absence-of-row ruling):
+                  relogin=`claude auth login`, logout=`claude auth logout`, setup-token=`claude
+                  setup-token`. CONSENT-NOT-LOCKDOWN: ENABLED, consent-gated, NEVER locked out; the
+                  handler builds the intent (cli_allowlist argv), the config_writer SERVICE shells it.
+                  setup-token PRINTS a secret → returns_secret=True; the printed token is surfaced to
+                  the consenting OPERATOR ONLY and NEVER folded into the handler result (the redaction
+                  floor honoured by NOT returning the secret).
 
 THE FLOOR (the rail split is the security boundary):
   · direct-read (auth/cost/routines-read/workflows-read) — DECLARATIVE-DIRECT: shells nothing dangerous,
@@ -62,17 +68,22 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 from runtime import capability_handlers as ch
 from runtime.capability_handlers.reduction import host_reads as HR
+from runtime.capability_handlers.reduction import cli_allowlist as CLI
 
 # the closed op vocabulary per resource (the uniform-verb law — CONVENTIONS §). `act` carries an
 # internal `act:` discriminator (the named acts registered in CONVENTIONS' F1/F2 + the reopened CC-24).
 ROUTINES_OPS = ("list", "get", "act")
 WORKFLOWS_OPS = ("list", "get", "act")
 COST_OPS = ("read",)
-AUTH_OPS = ("get",)
+AUTH_OPS = ("get", "act")          # CC-24.1 read (.get) + the REOPENED host-config acts (.act)
 
 # the named acts per resource (CONVENTIONS named-act registry — closed; V2 closure). Each maps to a rail.
 ROUTINES_ACTS = ("run-now", "pause", "one-off", "cancel-session-task")
 WORKFLOWS_ACTS = ("set-goal", "goal-status", "clear-goal", "loop")
+# CC-24 REOPENED host-config acts (Tim's sole-operator steer: consent-not-lockdown, NOT absence-of-
+# row). relogin=`claude auth login`, logout=`claude auth logout`, setup-token=`claude setup-token`.
+# ALL ride R3 (the config_writer SERVICE shells them, consent-gated) — never locked out.
+AUTH_ACTS = ("relogin", "logout", "setup-token")
 
 # which workflows act rides which rail (arch §4 ⑤ table — goal=R1, loop=R2). Closed map; an act not here
 # is refused-loud (never a silent default rail).
@@ -341,31 +352,90 @@ def cost(suite, op: str = "read", session: str = "", since: int = -1, limit: int
     }
 
 
-# ─────────────────────────── auto.auth (CC-24.1, reopened) ───────────────────────────
+# ─────────────────────────── auto.auth (CC-24, reopened) ───────────────────────────
+# CC-24 is REOPENED under Tim's sole-operator steer: the credential acts are NOT absence-of-row
+# boundaries (the arch's original §1.8 multi-user-caution ruling) — they are BUILDABLE consent-gated
+# host-config ops. The operator is the ONLY user and is TRUSTED: dangerous capabilities are ENABLED,
+# gated by a CONSENT BEAT + git-revert backstop (re-login reverses a logout), NEVER locked out, NEVER
+# a multi-user auth wall. The handler builds the intent + names the consent path; the config_writer
+# SERVICE shells the native `claude` subcommand (the floor — this handler NEVER shells).
 
-def auth(suite, op: str = "get", **_p) -> dict:
-    """⑤ auth — the REOPENED credential-method READ (CC-24.1; Tim pulled it back in). direct-read: the
-    credential METHOD, REDACTED (host_reads row `claude auth status` → JSON; the secret NEVER transits —
-    §5.2 C3). The host ACTS (relogin/logout/setup-token = CC-24.2/.3/.4) are OUT — absence-of-row IS the
-    boundary, NOT a redacted endpoint that returns a secret (§1.8). The handler returns the read row + the
-    redaction contract; the config_writer/host surface runs the read (no secret ever reaches a wire)."""
+def auth(suite, op: str = "get", act: str = "", consent: bool = False, **_p) -> dict:
+    """⑤ auth — the REOPENED CC-24 credential surface (Tim's sole-operator steer). TWO ops:
+
+      op="get"  (CC-24.1) — DIRECT-READ: the credential METHOD, REDACTED (host_reads row
+                 `claude auth status` → JSON; the secret NEVER transits — §5.2 C3). Returns the read
+                 row + the redaction contract; the read output is _redact()-stripped before it leaves.
+      op="act"  (CC-24.2/.3/.4, REOPENED) — a host-config credential STEER on rail R3:
+                 relogin=`claude auth login` (re-auth / switch account — exec) · logout=`claude auth
+                 logout` (clear / switch the credential — write, reversed by re-login) · setup-token=
+                 `claude setup-token` (mint a one-year inference-only token — exec, PRINTS the secret).
+                 CONSENT-NOT-LOCKDOWN: ENABLED, consent-gated, NEVER an absence-of-row boundary. The
+                 handler builds the PROPOSED argv + the R3 routing + consent path; the config_writer
+                 service shells it. For setup-token (returns_secret) the config_writer surfaces its
+                 stdout to the CONSENTING OPERATOR ONLY — the handler NEVER folds the printed token
+                 into this result (the redaction floor honoured by NOT returning the secret)."""
     _validate_op("auto.auth", op, AUTH_OPS)
-    row = HR.read_for("auto.auth")
-    redact = HR.redaction_for("auto.auth")
-    return {
-        "resource": "auto.auth", "op": "get", "rail": "direct-read",
-        "read": {"source": row["source"], "argv": row["argv"], "schema": row["schema"]},
-        "redaction": {"fields_stripped": list(redact),
-                      "contract": "these fields are stripped at the source — the secret NEVER transits "
-                                  "the primitive (§5.2 C3). _redact() is the floor applied to the read "
-                                  "output before it leaves the handler."},
-        "boundary": "relogin/logout/setup-token (CC-24.2/.3/.4) are HOST acts — NO op, NO endpoint. "
-                    "Absence-of-row IS the boundary; there is NO redacted path that returns a secret.",
-        "teach": row["teach"],
-        "note": "live-verify pending (lead): a REAL `claude auth status` (method only, redacted). The "
-                "handler NEVER returns a secret — redaction is enforced on the read output, not hoped for.",
-        "_redact": "use automation._redact(output, fields_stripped) on the raw `claude auth status` JSON",
+
+    if op == "get":
+        row = HR.read_for("auto.auth")
+        redact = HR.redaction_for("auto.auth")
+        return {
+            "resource": "auto.auth", "op": "get", "rail": "direct-read",
+            "read": {"source": row["source"], "argv": row["argv"], "schema": row["schema"]},
+            "redaction": {"fields_stripped": list(redact),
+                          "contract": "these fields are stripped at the source — the secret NEVER "
+                                      "transits the primitive (§5.2 C3). _redact() is the floor applied "
+                                      "to the read output before it leaves the handler."},
+            "acts_available": list(AUTH_ACTS),
+            "teach": row["teach"],
+            "note": "live-verify pending (lead): a REAL `claude auth status` (method only, redacted). The "
+                    "handler NEVER returns a secret — redaction is enforced on the read output, not hoped for.",
+            "_redact": "use automation._redact(output, fields_stripped) on the raw `claude auth status` JSON",
+        }
+
+    # op == "act" — the REOPENED CC-24 host-config credential acts (R3, consent-gated, never locked out)
+    if act not in AUTH_ACTS:
+        raise ValueError(
+            f"auto.auth act: unknown act={act!r}. REOPENED named acts (CC-24, Tim's sole-operator steer): "
+            f"{list(AUTH_ACTS)} — relogin re-authenticates / switches account (`claude auth login`), "
+            f"logout clears the credential (`claude auth logout`), setup-token mints a one-year token "
+            f"(`claude setup-token`). ALL ride R3 (the config_writer service shells them, consent-gated); "
+            f"none is locked out (consent-not-lockdown). For the credential METHOD read, use op='get'.")
+    act_key = f"auto.auth:{act}"
+    argv = CLI.render_argv(act_key)              # argv ARRAY, fail-loud on a bad slot (none here)
+    tier = CLI.tier_of(act_key)
+    secret = CLI.returns_secret(act_key)
+    out = {
+        "resource": "auto.auth", "op": "act", "act": act, "rail": "R3",
+        "status": "intent-built",
+        "executor": "the config-writer service (sanctioned R3 shelling) — POST /cli, consent-gated "
+                    "(consent-not-lockdown; git-revert / re-login is the backstop).",
+        "proposed": {"tool": argv[0], "argv": argv, "tier": tier},
+        "consent": ("ride consent=true on the consequential R3 call, or a standing grant "
+                    "(config_writer /consent class=cli-{tier}) — the operator is trusted, the gate is a "
+                    "consent MARKER, never a denial").format(tier=tier)
+                   if not consent else "consented",
+        "reversible": ("logout is reversed by relogin (`claude auth login`); the credential is restored "
+                       "on the next login — git-revert-equivalent for a host credential."
+                       if act == "logout" else
+                       "relogin/setup-token establish/mint credentials; reversible by logout + re-login."),
+        "watch": "re-read via op='get' (the credential method changes after relogin/logout); a fresh "
+                 "`claude auth status` reflects the new posture. The consequence is observed, never returned.",
+        "note": "live-verify pending (lead): a REAL `claude auth login`/`logout`/`setup-token` (the handler "
+                "NEVER shells — it builds the intent; the R3 config_writer service acts, consent-gated).",
     }
+    if secret:
+        # the setup-token floor: the printed token NEVER enters this result. The config_writer surfaces
+        # stdout to the consenting operator only; we name the danger loud and return NO secret field.
+        out["returns_secret"] = True
+        out["secret_handling"] = (
+            "`claude setup-token` PRINTS a one-year inference-only token to stdout and saves nothing "
+            "(authentication.md). The config_writer surfaces that stdout to the CONSENTING OPERATOR "
+            "terminal ONLY; this handler returns NO token field — the redaction floor (§5.2 C3) is "
+            "honoured by NOT returning the secret, not by stripping it after the fact. Copy it from the "
+            "operator terminal and set CLAUDE_CODE_OAUTH_TOKEN yourself; it is never wire-readable.")
+    return out
 
 
 # ─────────────────────────── wire the family onto the pre-declared HANDLERS slots ───────────────────

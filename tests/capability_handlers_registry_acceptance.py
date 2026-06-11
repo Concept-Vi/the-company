@@ -105,7 +105,7 @@ EXPECTED = {
     "dev.git": "R3", "dev.code_intel": "R1-prime", "dev.computer_use": "R1-prime",
     "dev.code_review": "R2", "dev.ci": "R3",
     # ⑤ AUTOMATION (§4)
-    "auto.routines": "R3", "auto.workflows": "R1", "auto.cost": "direct-read", "auto.auth": "direct-read",
+    "auto.routines": "R3", "auto.workflows": "R1", "auto.cost": "direct-read", "auto.auth": "R3",
 }
 for k, r in EXPECTED.items():
     check(f"{k} declared on rail {r}", k in ch.HANDLERS and ch.HANDLERS[k].rail == r,

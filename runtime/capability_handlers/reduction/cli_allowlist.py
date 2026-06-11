@@ -14,9 +14,19 @@ Grounded in the Claude Code Atlas (verified 2026-06-12 — never invented):
   · `claude update` (apply an update now — no args) / `claude install [latest|stable|<version>]`
     (the NATIVE-UPDATER / installer; channel|version arg — CC-34 reopened, setup.md)
   · `git status/log/worktree …` / `git commit` / `gh pr create`  (common-workflows.md / git.md)
+  · `claude auth login` (re-authenticate / switch account — OAuth, reads pasted code from stdin
+    on WSL/SSH/containers) / `claude auth logout` (clear / switch the stored credential) /
+    `claude setup-token` (mint a one-year inference-only token — PRINTS the secret to stdout,
+    saves nothing) — CC-24 REOPENED host-config acts (authentication.md / troubleshoot-install.md)
 
 TIERS: read (ungated) · write (config-mutating, gated) · exec (registers/fetches+runs code: mcp add
 stdio spec §5.2 C1, plugin install — gated, highest).
+
+SOLE-OPERATOR FLOOR (Tim's steer — overrides the arch's original CC-24 'absence-of-row' boundary):
+the CC-24 host-config acts (relogin/logout/setup-token) are ENABLED, consent-gated, NEVER locked
+out. `auto.auth:setup-token` is exec-tier AND carries returns_secret=True — the config_writer
+MUST surface its stdout to the CONSENTING OPERATOR only and the handler NEVER folds the printed
+token into a wire result (the redaction floor, §5.2 C3 honoured by NOT returning the secret).
 """
 from __future__ import annotations
 import re
@@ -70,6 +80,18 @@ CLI_ALLOWLIST = {
     "dev.git:worktree-add": dict(tool="git", tier="write", sub=["worktree", "add"], slots=[("rest", "args")]),
     "dev.git:worktree-remove": dict(tool="git", tier="write", sub=["worktree", "remove"], slots=[("rest", "args")]),
     "dev.git:open-pr": dict(tool="gh", tier="write", sub=["pr", "create"], slots=[("rest", "args")]),
+    # ── auto.auth (CC-24 REOPENED — host-config credential acts; consent-gated, NEVER locked out) ──
+    # relogin = `claude auth login` (OAuth re-auth / account switch; reads the pasted code from stdin
+    # on WSL/SSH/containers — the operator's path). exec-tier (establishes a credential). No slots.
+    "auto.auth:relogin": dict(tool="claude", tier="exec", sub=["auth", "login"], slots=[]),
+    # logout = `claude auth logout` (clear / switch the stored credential). write-tier (reversible by
+    # re-login). No slots.
+    "auto.auth:logout": dict(tool="claude", tier="write", sub=["auth", "logout"], slots=[]),
+    # setup-token = `claude setup-token` (mint a one-year inference-only token — PRINTS the secret to
+    # stdout, saves nothing). exec-tier + returns_secret: the config_writer surfaces stdout to the
+    # consenting OPERATOR only; the handler NEVER returns the token (redaction floor, §5.2 C3).
+    "auto.auth:setup-token": dict(tool="claude", tier="exec", sub=["setup-token"], slots=[],
+                                  returns_secret=True),
 }
 
 
@@ -83,6 +105,13 @@ def cli_for(act_key: str) -> dict:
 
 def tier_of(act_key: str) -> str:
     return cli_for(act_key)["tier"]
+
+
+def returns_secret(act_key: str) -> bool:
+    """True iff this act prints a SECRET to stdout (e.g. `claude setup-token`). The config_writer
+    surfaces such stdout to the consenting operator only; the handler NEVER folds it into a wire
+    result (the redaction floor, §5.2 C3 — achieved by NOT returning the secret)."""
+    return bool(cli_for(act_key).get("returns_secret", False))
 
 
 def acts_for(handler_key: str) -> list[str]:

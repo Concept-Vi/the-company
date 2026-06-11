@@ -20,8 +20,9 @@ set — see [[platform#op: platform.cloud-provider]]; (2) `ANTHROPIC_AUTH_TOKEN`
 gateways); (3) `ANTHROPIC_API_KEY` (X-Api-Key, Console direct); (4) `apiKeyHelper` script output;
 (5) `CLAUDE_CODE_OAUTH_TOKEN` (long-lived, from `claude setup-token`, CI use); (6) subscription OAuth
 from `/login` (the default for Pro/Max/Team/Enterprise). This resource contracts the model a UI
-renders to show WHICH method is active and HOW to switch — every lever is `planned` or out-of-scope at
-the company layer because auth is a host concern the fabric inherits, never a company API.
+renders to show WHICH method is active and HOW to switch — the redacted status READ and the operator's
+own credential ACTS (relogin/logout/setup-token) are `building` company ops (Tim's sole-operator
+reopening, consent-gated); proxying a DIFFERENT user's credential stays out of scope (usage policy).
 
 ## Representation
 **An authentication state is the tuple (active method, account/subscription identity, storage
@@ -56,9 +57,10 @@ the key's org is disabled — `unset ANTHROPIC_API_KEY` to fall back; confirm wi
 
 ## State model
 **State model: stateless.** An authentication state has no lifecycle of its own — Claude Code resolves
-it once at session start from the precedence chain. `/login` and `/logout` MUTATE the host credential
-store (a host action, not a company op), and the next session start re-resolves. The session it
-authenticates owns the lifecycle ([[session#State model]]).
+it once at session start from the precedence chain. The reopened acts (`claude auth login`/`logout`,
+`claude setup-token`) MUTATE the host credential store via the config_writer R3 service (consent-gated),
+and the next session start re-resolves. The session it authenticates owns the lifecycle
+([[session#State model]]).
 
 ## Caller
 **The company never authenticates a consumer to Anthropic and never reads a credential; a fabric
@@ -73,10 +75,10 @@ third parties may not route requests through Free/Pro/Max plan credentials on be
 ## Operations
 
 ## op: auth.get
-**`auth.get` is the PLANNED auth-status read: which credential method and account a session is
-running under — named here because a control UI needs "what account am I on", but the company exposes
-NO auth status today (no credential is read, no /status proxy exists), so this op is planned with the
-honest path being the host's own /status.**
+**`auth.get` is the BUILT auth-status read: which credential method and account a session is running
+under, REDACTED — the company surfaces the METHOD (subscription / console-api / token) + account label
+via `claude auth status`, and the secret NEVER transits (the read output is _redact-stripped). The
+bridge HTTP arm is still planned (the Wire handoff); the MCP face op is reachable today.**
 ```contract:op
 op: auth.get
 resource: auth
@@ -118,15 +120,17 @@ Adjacent: [[platform#op: platform.cloud-provider]] (the highest-precedence crede
 apiKeyHelper setting key), [[auth#op: auth.act]] (the planned switch).
 
 ## op: auth.act
-**`auth.act` is the PLANNED credential steer: switch the active account, supply a key/token, or mint
-a long-lived CI token — every form is a HOST action (`/login`, `/logout`, `claude setup-token`, an env
-credential) the company deliberately does not perform, named here so a UI surfaces the right recovery
-rather than implying the company can change Anthropic credentials.**
+**`auth.act` is the REOPENED credential steer: relogin (`claude auth login`), logout (`claude auth
+logout`), or mint a long-lived token (`claude setup-token`) — under Tim's sole-operator steer these
+are BUILDABLE consent-gated R3 host-config ops (NOT a multi-user boundary), built on the company face
+as `auto.auth` op="act"; the config_writer R3 service shells the native CLI (the floor — the face
+never shells), and setup-token's printed token is surfaced to the consenting operator terminal ONLY,
+never folded into a wire result (the redaction floor).**
 ```contract:op
 op: auth.act
 resource: auth
 kind: act
-status: planned
+status: building
 direction: outbound
 atlas: [CC-24.2, CC-24.3, CC-24.4]
 tasks:
@@ -140,43 +144,50 @@ tasks:
   - alias: "change accounts"
   - alias: "generate an auth token"
 bindings:
-  - { kind: cli, command: "claude setup-token  /  /login  /  /logout   (HOST actions, NOT company routes)", transport: cli-local, exposure: "n/a — Claude Code built-in", status: planned, note: "GAP + boundary: changing credentials is intrinsically a HOST act. /login and /logout are interactive Claude Code commands; `claude setup-token` mints a 1-year CLAUDE_CODE_OAUTH_TOKEN (inference-scoped, cannot establish Remote Control). The company does not and should not proxy credential changes (usage-policy boundary). Listed as planned so the recovery is reachable from navigation, never as a built company capability" }
+  - { kind: mcp, tool: auth, op-param: "op=act, act=relogin|logout|setup-token", server: company, exposure: "exposure.json#mcp-company", status: building, note: "BUILT (2026-06-12; mcp_face/tools/automation.py auth(op=act) -> runtime/capability_handlers/automation.py:auth, rail R3). REOPENED by Tim's sole-operator steer (consent-not-lockdown): the handler builds the argv via the auto.auth:<act> cli_allowlist row (relogin=`claude auth login` exec, logout=`claude auth logout` write, setup-token=`claude setup-token` exec+returns_secret); the config_writer R3 service shells it, consent-gated. setup-token's printed token is surfaced to the consenting operator terminal ONLY and NEVER folded into the result (redaction floor). live-verify pending (lead): a REAL `claude auth login`/`logout`/`setup-token` round-trip." }
+  - { kind: http, method: POST, path: "/api/auto/auth  (PLANNED bridge arm — Wire handoff)", transport: bridge-http, exposure: "exposure.json#bridge-http", status: planned, note: "GAP: the bridge /api/auto/auth arm is not built (the L-Wire lane owns bridge.py per the no-edit-bridge rule). The MCP face op IS reachable today; the operator-vantage HTTP arm rides /api/resolve's consent precedent when the Wire lands it" }
 liveness: none
 emits: []
 consequences:
-  - when: "operator re-logins / logs out / sets a credential (host action, planned-as-out-of-band)"
+  - when: "the consented R3 act runs (relogin/logout/setup-token via the config_writer service)"
     expect: []
     bound: "takes effect on the NEXT session start, not mid-session — a running fabric session keeps its resolved credential until restart"
-    evidence: "no company event; the change is observable only by the host /status and by the next spawn's success/failure against the new credential — an absence-shaped outcome (CONTRACT-FORMAT section 6 V9)"
+    evidence: "no company event; the new credential posture is observable by re-reading [[auth#op: auth.get]] (`claude auth status`, method only, redacted) and by the next spawn's success/failure — an absence-shaped outcome (CONTRACT-FORMAT section 6 V9)"
 correlate: [session]
 verification:
-  relogin:     {state: unverified, note: "host action, no company op — planned"}
-  logout:      {state: unverified, note: "host action, no company op — planned"}
-  setup-token: {state: unverified, note: "host CLI, no company op — planned"}
+  relogin:     {state: unverified, note: "building — `claude auth login` argv built on R3; live-verify pending (lead): a REAL re-auth round-trip"}
+  logout:      {state: unverified, note: "building — `claude auth logout` argv built on R3 (reversed by relogin); live-verify pending (lead)"}
+  setup-token: {state: unverified, note: "building — `claude setup-token` argv built on R3 (returns_secret: token to operator terminal only, never returned); live-verify pending (lead)"}
 ```
 ### Description (purpose-free)
-The native account-management surface, every form a HOST action the company does not perform. `/login`
-opens a browser OAuth flow (or a paste-code fallback in WSL/SSH/containers) and switches the active
-subscription/Console account; `/logout` clears the stored credential. `claude setup-token` walks an
-OAuth authorization and PRINTS a one-year token to set as `CLAUDE_CODE_OAUTH_TOKEN` (it saves nothing;
-copy it) — inference-scoped, requires a Pro/Max/Team/Enterprise plan, and CANNOT establish Remote
-Control sessions; `--bare` mode does not read it (use `ANTHROPIC_API_KEY`/`apiKeyHelper` there). An env
-credential (`ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN`) supplied to the service process changes the
-resolved method per the precedence chain. None of these is a company op — the company inherits whatever
-the service account resolves. Source: https://code.claude.com/docs/en/authentication.md.
+The native account-management surface, REOPENED as consent-gated R3 company acts (Tim's sole-operator
+steer — the operator is the only user and is trusted, so these are enabled, not locked out). relogin
+runs `claude auth login` (OAuth, paste-code fallback in WSL/SSH/containers — reads the code from stdin)
+and switches the active subscription/Console account; logout runs `claude auth logout` and clears the
+stored credential (reversed by relogin — the git-revert-equivalent backstop). `claude setup-token`
+walks an OAuth authorization and PRINTS a one-year token to set as `CLAUDE_CODE_OAUTH_TOKEN` (it saves
+nothing; copy it) — inference-scoped, requires a Pro/Max/Team/Enterprise plan, and CANNOT establish
+Remote Control sessions; `--bare` mode does not read it (use `ANTHROPIC_API_KEY`/`apiKeyHelper` there).
+An env credential (`ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN`) supplied to the service process changes
+the resolved method per the precedence chain. The company face builds the argv and the config_writer
+R3 service shells it; setup-token's printed token reaches the consenting operator terminal ONLY, never
+a wire result. Source: https://code.claude.com/docs/en/authentication.md.
 ### Interaction semantics
 - **Credential change is next-start, not mid-session** — a live fabric session keeps its resolved auth
   until the supervisor restarts the subprocess.
 - **API key over subscription gotcha** — if the service account has both an active subscription and
   `ANTHROPIC_API_KEY` set, the key wins once approved; an expired key's org causes auth failure. The
   recovery (`unset ANTHROPIC_API_KEY` + restart) is operator-only.
-- **Usage-policy boundary** — the company must not route requests through another user's Pro/Max/Free
-  credentials; per-consumer Anthropic identity is therefore out of scope, not merely unbuilt.
+- **Consent-not-lockdown** — the operator's OWN credential acts (relogin/logout/setup-token) are
+  ENABLED, consent-gated; a cold MCP agent may PROPOSE but the consequential R3 act rides the
+  operator-consent seam (the same vantage precedent as /api/resolve). Per-CONSUMER Anthropic identity
+  (storing/proxying a DIFFERENT user's credential) remains out of scope by the usage policy — the
+  reopening is the SOLE operator steering their own host credential, never multi-user credential proxy.
 ### Errors
 ```contract:error
-code: auth.not-exposed | http: 501 | retryable: false
-when: any credential-changing call against the company
-teach: "Changing credentials is a HOST action, not a company capability. The operator runs /login or /logout in the interactive host session, or `claude setup-token` for a CI token, then restarts the service. The company inherits the service account's resolved credential and proxies none of this (usage-policy boundary). Recovery is operator-side; the boundary and native flow are named at [[auth#op: auth.act]] and https://code.claude.com/docs/en/authentication.md."
+code: auth.consent-required | http: 409 | retryable: true
+when: a credential-changing act (relogin/logout/setup-token) is called WITHOUT operator consent (consent-not-lockdown — the act is ENABLED but the consequential R3 run needs a consent signal)
+teach: "This act changes the host credential, so it needs an operator consent signal — it is NOT locked out (consent-not-lockdown). Re-call with consent=true (or hold a standing config_writer consent grant), then the config_writer R3 service runs `claude auth login`/`logout`/`setup-token`. Re-login reverses a logout; git-revert-equivalent is the backstop. Named at [[auth#op: auth.act]] and https://code.claude.com/docs/en/authentication.md. NOTE: proxying a DIFFERENT user's credential stays out of scope (usage policy) — this is the SOLE operator steering their own credential."
 ```
 ```contract:error
 code: auth.failed | http: 401 | retryable: false
@@ -184,26 +195,32 @@ when: a spawned session's underlying claude process fails to authenticate (expir
 teach: "The service account's credential is invalid or expired. Common cause: an ANTHROPIC_API_KEY whose org is disabled taking precedence over a valid subscription — `unset ANTHROPIC_API_KEY` and restart, or re-run /login on the host. Confirm with the host /status. This surfaces as a spawn/turn failure on [[session#op: session.watch]], not a company auth op."
 ```
 ```contract:example
-captured: synthetic            # status=planned -> synthetic legal AND loud; auth change is a host action (V11)
-binding: cli
-request: |
-  # HOST terminal (the service account), NOT a company route:
-  claude setup-token
-response: |
-  # walks OAuth, prints a 1-year token; operator sets it on the service + restarts:
-  export CLAUDE_CODE_OAUTH_TOKEN=<token>
-  # the company has no equivalent op — auth.act is planned/out-of-band.
+captured: synthetic            # status=building -> synthetic legal AND loud; replaced by captured evidence at flip-to-live (V11)
+binding: mcp
+request: auth(op="act", act="setup-token", consent=True)
+response: { "resource": "auto.auth", "op": "act", "act": "setup-token", "rail": "R3",
+            "status": "intent-built",
+            "executor": "the config-writer service (sanctioned R3 shelling) — POST /cli, consent-gated",
+            "proposed": { "tool": "claude", "argv": ["claude", "setup-token"], "tier": "exec" },
+            "consent": "consented",
+            "returns_secret": true,
+            "secret_handling": "the printed token reaches the consenting operator terminal ONLY; this handler returns NO token field (redaction floor, the secret never transits the wire)",
+            "watch": "re-read auth(op=get) — the credential method reflects the new posture",
+            "note": "live-verify pending (lead): a REAL `claude setup-token` round-trip" }
+# NOTE: no token field appears in the result — the secret never transits the wire (the floor by NOT returning it).
 ```
-Adjacent: [[auth#op: auth.get]] (the planned status read), [[platform#op: platform.cloud-provider]]
-(provider credentials, the highest-precedence method), [[platform#op: platform.privacy]] (the
-credential-storage + data boundary), [[session#op: session.create]] (where an auth failure surfaces).
+Adjacent: [[auth#op: auth.get]] (the redacted status read — re-read it to observe the new posture),
+[[platform#op: platform.cloud-provider]] (provider credentials, the highest-precedence method),
+[[platform#op: platform.privacy]] (the credential-storage + data boundary), [[session#op:
+session.create]] (where an auth failure surfaces).
 
 ## Errors
-**Resource-level error vocabulary: `auth.not-exposed` (the honest 501 every credential-change call
-returns — auth is a host concern by design, not merely unbuilt) and `auth.failed` (the 401 a spawn/turn
-shows when the service account's host credential is invalid, with the API-key-precedence gotcha and its
-recovery).** Both teach the in-corpus recovery and the host path. No error implies the company can read
-or change Anthropic credentials.
+**Resource-level error vocabulary: `auth.consent-required` (the 409 a credential-change act returns
+without an operator consent signal — consent-not-lockdown, the act is ENABLED but the consequential R3
+run needs consent) and `auth.failed` (the 401 a spawn/turn shows when the service account's host
+credential is invalid, with the API-key-precedence gotcha and its recovery).** Both teach the in-corpus
+recovery. The read (`auth.get`) surfaces only the credential METHOD, redacted — never a secret; the
+acts steer the SOLE operator's own credential, never a different user's (the usage-policy boundary held).
 
 ## Links
 **No address-typed fields: an auth state references the `session://` it authenticates (dereferences to

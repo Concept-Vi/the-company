@@ -31,7 +31,7 @@ from runtime import capability_handlers as ch
 # Imported so the face and the handler can NEVER drift on the op vocabulary.
 from runtime.capability_handlers.automation import (
     ROUTINES_OPS, WORKFLOWS_OPS, COST_OPS, AUTH_OPS,
-    ROUTINES_ACTS, WORKFLOWS_ACTS,
+    ROUTINES_ACTS, WORKFLOWS_ACTS, AUTH_ACTS,
 )
 
 # EXPORTED closed op inventory for this consolidated module (CONTRACT-FORMAT §9.2). One entry per
@@ -136,17 +136,30 @@ def register(mcp, suite):
         Read-only; shells nothing, spawns nothing."""
         return ch.HANDLERS["auto.cost"].fn(suite, op, session=session, since=since, limit=limit)
 
-    # ── auto.auth (CC-24.1, reopened) ───────────────────────────────────────────────────────────────────
+    # ── auto.auth (CC-24, reopened) ───────────────────────────────────────────────────────────────────
     @mcp.tool(annotations=_to_sdk_annotations(
-        CompanyToolAnnotations(readonly=_ro("auto.auth"), destructive=False, idempotent=True),
-        "Automation — auth status (credential method, REDACTED)"))
-    def auth(op: Literal["get"] = "get") -> dict:
-        """⑤ AUTH (CC-24.1, reopened by Tim's steer) — the credential METHOD, REDACTED. DIRECT-READ over
-        `claude auth status` (JSON); the secret NEVER transits the primitive — redaction is enforced on
-        the read output (the strip-fields are listed in the response). Returns the credential method
-        (subscription / console-api / token) + account label, never the token/api_key/oauth secret.
-        The host ACTS (relogin/logout/setup-token = CC-24.2/.3/.4) are OUT — absence-of-row IS the
-        boundary, NOT a redacted path that returns a secret (§1.8/§5.2 C3). Read-only."""
-        return ch.HANDLERS["auto.auth"].fn(suite, op)
+        CompanyToolAnnotations(readonly=_ro("auto.auth"), destructive=False, idempotent=False),
+        "Automation — auth (credential method READ, redacted · reopened host-config acts)"))
+    def auth(op: Literal["get", "act"] = "get", act: str = "", consent: bool = False) -> dict:
+        """⑤ AUTH (CC-24, reopened by Tim's sole-operator steer). Pick `op`:
+
+          op="get"  (CC-24.1) — DIRECT-READ the credential METHOD, REDACTED. `claude auth status` (JSON);
+                     the secret NEVER transits — redaction is enforced on the read output (the strip-
+                     fields are listed in the response). Returns the method (subscription / console-api /
+                     token) + account label, never the token/api_key/oauth secret.
+          op="act"  (CC-24.2/.3/.4, REOPENED) — a host-config credential STEER on rail R3, consent-gated,
+                     NEVER locked out (consent-not-lockdown; git-revert / re-login is the backstop):
+                     • relogin    — `claude auth login` (re-authenticate / switch account)
+                     • logout     — `claude auth logout` (clear / switch the credential; reversed by relogin)
+                     • setup-token— `claude setup-token` (mint a one-year inference-only token — PRINTS the
+                                    secret to the operator terminal; this face NEVER returns the token)
+                     This face NEVER shells: it returns the PROPOSED argv + the R3 routing + the consent
+                     path; the config_writer service shells it. `consent=true` rides the consequential call.
+
+        The credential acts are NOT absence-of-row boundaries (the arch's original ruling) — Tim reopened
+        them as buildable consent-gated capabilities. Every act returns an intent receipt + watch (re-read
+        op='get'), never a pretended result; setup-token's printed secret is surfaced to the operator
+        terminal ONLY (§5.2 C3 honoured by NOT returning it)."""
+        return ch.HANDLERS["auto.auth"].fn(suite, op, act=act, consent=consent)
 
     return routines, workflows, cost, auth

@@ -162,12 +162,24 @@ exists; every binding names the gap and rides the native `cli-local`/`tui-intera
 transports) except where a spawn-extension is noted. Definitions restate the owning op's documented
 native behavior (each op fence cites its Claude Code doc URL + runtime line).
 
-### auth (credential steer — every form is a HOST action the company deliberately does not perform)
-- `relogin` — on `auth`: switch the active subscription/Console account via the native `/login` OAuth
-  flow (paste-code fallback in WSL/SSH/containers); takes effect on the NEXT session start, not mid-session.
-- `logout` — on `auth`: clear the stored credential via the native `/logout`; a HOST action, no company route.
-- `setup-token` — on `auth`: mint a one-year inference-scoped `CLAUDE_CODE_OAUTH_TOKEN` via `claude setup-token`
-  (prints the token, saves nothing; cannot establish Remote Control). HOST CLI, no company op.
+### auth (credential steer — REOPENED as buildable R3 host-config acts; Tim's sole-operator steer)
+The arch's original ruling treated these as host actions with no company op (absence-of-row =
+boundary). Tim's sole-operator steer OVERRIDES that: the operator is the only user and is trusted, so
+these are ENABLED as consent-gated R3 ops on `auto.auth` op="act" (`building`) — NEVER locked out,
+NEVER a multi-user auth wall; consent-not-lockdown with re-login / git-revert as the backstop. The
+company face (`mcp_face/tools/automation.py` auth tool + the `auto.auth` handler) builds the argv via
+the `auto.auth:<act>` cli_allowlist row; the config_writer R3 service shells it (the floor — the face
+never shells). Grounded in authentication.md / troubleshoot-install.md:
+- `relogin` — on `auth`: re-authenticate / switch the active subscription/Console account via
+  `claude auth login` (OAuth; reads the pasted code from stdin on WSL/SSH/containers — the operator's
+  path). exec-tier. Takes effect on the NEXT session start, not mid-session.
+- `logout` — on `auth`: clear / switch the stored credential via `claude auth logout`. write-tier;
+  reversed by `relogin` (the git-revert-equivalent backstop for a host credential).
+- `setup-token` — on `auth`: mint a one-year inference-scoped `CLAUDE_CODE_OAUTH_TOKEN` via
+  `claude setup-token` (prints the token to stdout, saves nothing; cannot establish Remote Control).
+  exec-tier, `returns_secret`: the config_writer surfaces the printed token to the CONSENTING OPERATOR
+  terminal ONLY; the handler returns NO token field (the redaction floor §5.2 C3 honoured by NOT
+  returning the secret, not by post-hoc stripping).
 
 ### ci (in-CI invocation — direction:inbound; the CI provider drives, no company face participates)
 - `mention` — on `ci`: a `@claude` mention in a GitHub/GitLab issue/PR/MR comment (interactive mode,

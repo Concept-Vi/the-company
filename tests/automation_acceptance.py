@@ -93,15 +93,19 @@ print("=== automation_acceptance — the ⑤ AUTOMATION family (L-⑤-auto, stub
 
 # ── 1 · wiring ──
 print("\n[1] the four ⑤ handlers wire onto HANDLERS on the specced rails")
+# auto.auth flipped to R3 once it gained the REOPENED CC-24 host-config acts (its READ op is still a
+# direct-read served by the SAME fn; the declared rail is the WRITE rail — the routines/workflows
+# convention). Only auto.cost stays a pure direct-read (readonly).
 EXPECT_RAIL = {"auto.routines": "R3", "auto.workflows": "R1",
-               "auto.cost": "direct-read", "auto.auth": "direct-read"}
+               "auto.cost": "direct-read", "auto.auth": "R3"}
 for k, r in EXPECT_RAIL.items():
     h = ch.HANDLERS[k]
     check(f"{k}: built + rail {r}", h.built and h.rail == r, f"built={h.built} rail={h.rail}")
-check("auto.cost/auto.auth are readonly (direct-read coherence)",
-      ch.HANDLERS["auto.cost"].readonly and ch.HANDLERS["auto.auth"].readonly)
-check("auto.routines/auto.workflows are NOT readonly (write rails)",
-      not ch.HANDLERS["auto.routines"].readonly and not ch.HANDLERS["auto.workflows"].readonly)
+check("auto.cost is readonly (the one pure direct-read in ⑤)",
+      ch.HANDLERS["auto.cost"].readonly)
+check("auto.routines/auto.workflows/auto.auth are NOT readonly (write rails — R3/R1)",
+      not ch.HANDLERS["auto.routines"].readonly and not ch.HANDLERS["auto.workflows"].readonly
+      and not ch.HANDLERS["auto.auth"].readonly)
 
 # ── 2 · auto.cost — the usage fold ──
 print("\n[2] auto.cost — the fold over agent_sessions.turn `usage`")
@@ -124,21 +128,52 @@ check("broken store FAILS LOUD (not a zero total)",
       raises(lambda: A.cost(StubSuite(broken=True), "read"), RuntimeError))
 check("auto.cost unknown op fails loud", raises(lambda: A.cost(suite, "list"), ValueError))
 
-# ── 3 · auto.auth — redacted direct-read ──
-print("\n[3] auto.auth — credential method, REDACTED")
+# ── 3 · auto.auth — redacted direct-read READ + the REOPENED CC-24 host-config ACTS ──
+print("\n[3] auto.auth — credential method READ (redacted) + reopened acts (CC-24, Tim's steer)")
 a = A.auth(suite, "get")
-check("rail=direct-read", a["rail"] == "direct-read")
-check("names the `claude auth status` read source", a["read"]["argv"] == ["auth", "status"])
-check("redaction lists the secret fields", "token" in a["redaction"]["fields_stripped"]
+check("get rail=direct-read", a["rail"] == "direct-read")
+check("get names the `claude auth status` read source", a["read"]["argv"] == ["auth", "status"])
+check("get redaction lists the secret fields", "token" in a["redaction"]["fields_stripped"]
       and "CLAUDE_CODE_OAUTH_TOKEN" in a["redaction"]["fields_stripped"])
-check("names the host-act boundary (relogin/logout/setup-token OUT)",
-      "setup-token" in a["boundary"] and "Absence-of-row" in a["boundary"])
+check("get advertises the reopened acts (relogin/logout/setup-token AVAILABLE, not boundary)",
+      set(a["acts_available"]) == {"relogin", "logout", "setup-token"})
+check("get carries NO 'boundary'/'Absence-of-row' field (CC-24 acts are reopened, NOT locked out)",
+      "boundary" not in a and "Absence-of-row" not in str(a))
 # _redact actually strips a secret-bearing payload (the secret NEVER transits)
 raw = {"method": "subscription", "account": "tim@x", "token": "sk-SECRET", "nested": {"oauth": "zzz"}}
 red = _redact(raw, tuple(a["redaction"]["fields_stripped"]))
 check("_redact strips top-level secret", red["token"] == "[REDACTED]")
 check("_redact strips nested secret", red["nested"]["oauth"] == "[REDACTED]")
 check("_redact keeps the non-secret method", red["method"] == "subscription")
+# the REOPENED acts (consent-not-lockdown, R3, NEVER shelled here — the floor)
+relogin = A.auth(suite, "act", act="relogin")
+check("relogin rail=R3 (host-config act, NOT direct-read)", relogin["rail"] == "R3")
+check("relogin builds `claude auth login` argv (grounded, Atlas)",
+      relogin["proposed"]["argv"] == ["claude", "auth", "login"] and relogin["proposed"]["tier"] == "exec")
+check("relogin is intent-built, NEVER shelled here (the floor)", relogin["status"] == "intent-built")
+check("relogin names the R3 config-writer executor", "config-writer" in relogin["executor"])
+check("relogin consent-not-lockdown (consent path, never a denial)",
+      "consent" in relogin["consent"].lower() and "never a denial" in relogin["consent"])
+check("relogin flags live-verify pending (lead) — never green-painted",
+      "live-verify pending (lead)" in relogin["note"])
+logout = A.auth(suite, "act", act="logout")
+check("logout builds `claude auth logout` argv (write tier)",
+      logout["proposed"]["argv"] == ["claude", "auth", "logout"] and logout["proposed"]["tier"] == "write")
+check("logout reversibility names relogin (git-revert-equivalent backstop)",
+      "relogin" in logout["reversible"])
+st = A.auth(suite, "act", act="setup-token")
+check("setup-token builds `claude setup-token` argv (exec tier)",
+      st["proposed"]["argv"] == ["claude", "setup-token"] and st["proposed"]["tier"] == "exec")
+check("setup-token flags returns_secret=True (the printed-token danger named loud)",
+      st.get("returns_secret") is True and "secret_handling" in st)
+check("setup-token NEVER folds a token into the result (the redaction floor — by NOT returning it)",
+      all(k not in st for k in ("secret", "oauth_token", "claude_code_oauth_token", "token_value")))
+check("setup-token consent path present (consent-not-lockdown)",
+      "consent" in st and st["consent"])
+check("auto.auth act=consent=True echoes 'consented'",
+      A.auth(suite, "act", act="relogin", consent=True)["consent"] == "consented")
+check("auto.auth unknown ACT fails loud (names the reopened acts)",
+      raises(lambda: A.auth(suite, "act", act="nope"), ValueError))
 check("auto.auth unknown op fails loud", raises(lambda: A.auth(suite, "list"), ValueError))
 
 # ── 4 · auto.routines — read + R3 intent-builders ──
@@ -235,8 +270,12 @@ check("face exports an OPS inventory for the 4 resources",
 pairs = [
     ("cost", json.dumps(f_cost(op="read"), sort_keys=True, default=str),
      json.dumps(A.cost(suite, "read"), sort_keys=True, default=str)),
-    ("auth", json.dumps(f_auth(op="get"), sort_keys=True, default=str),
+    ("auth get", json.dumps(f_auth(op="get"), sort_keys=True, default=str),
      json.dumps(A.auth(suite, "get"), sort_keys=True, default=str)),
+    ("auth act=relogin", json.dumps(f_auth(op="act", act="relogin"), sort_keys=True, default=str),
+     json.dumps(A.auth(suite, "act", act="relogin"), sort_keys=True, default=str)),
+    ("auth act=setup-token", json.dumps(f_auth(op="act", act="setup-token", consent=True), sort_keys=True, default=str),
+     json.dumps(A.auth(suite, "act", act="setup-token", consent=True), sort_keys=True, default=str)),
     ("routines.list", json.dumps(f_routines(op="list"), sort_keys=True, default=str),
      json.dumps(A.routines(suite, "list"), sort_keys=True, default=str)),
     ("workflows set-goal", json.dumps(f_workflows(op="act", act="set-goal", session="a1", condition="x"), sort_keys=True, default=str),
