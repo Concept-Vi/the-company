@@ -133,7 +133,7 @@ teach: "The Company exposes no CI face. For GitHub, run `/install-github-app` (o
 ```contract:error
 code: ci.no-mention-response | http: 400 | retryable: false
 when: "Claude does not respond to @claude in CI"
-teach: "Verify the GitHub App is installed, workflows are enabled, the API key secret is set, and the comment contains `@claude` (not `/claude`). On GitLab, confirm the pipeline is being triggered, CI/CD variables are present, and `mcp__gitlab` is in --allowedTools so the job can write comments/MRs (sources: github-actions.md / gitlab-ci-cd.md troubleshooting)."
+teach: "Verify the GitHub App is installed, workflows are enabled, the API key secret is set, and the comment contains `@claude` (not `/claude`). On GitLab, confirm the pipeline is being triggered, CI/CD variables are present, and `mcp__gitlab` is in --allowedTools so the job can write comments/MRs (sources: https://code.claude.com/docs/en/github-actions.md / https://code.claude.com/docs/en/gitlab-ci-cd.md troubleshooting)."
 ```
 ```contract:example
 captured: synthetic            # status=planned → synthetic legal AND loud (V11); GitHub Actions, the real model
@@ -235,7 +235,7 @@ CI runner, not to a Company session.
 ```contract:error
 code: ci.no-trigger-match | http: 400 | retryable: false
 when: a mention/event does not start a run
-teach: "Confirm the comment contains `@claude` (not `/claude`), the GitHub App/workflow is enabled, and the secret is set; on GitLab confirm the pipeline triggers and mcp__gitlab is in --allowedTools. CI not running on Claude's own commits usually means the Actions user (not the App) authored them — use the App/custom-app identity (github-actions.md troubleshooting)."
+teach: "Confirm the comment contains `@claude` (not `/claude`), the GitHub App/workflow is enabled, and the secret is set; on GitLab confirm the pipeline triggers and mcp__gitlab is in --allowedTools. CI not running on Claude's own commits usually means the Actions user (not the App) authored them — use the App/custom-app identity (https://code.claude.com/docs/en/github-actions.md troubleshooting)."
 ```
 ```contract:example
 captured: synthetic            # status=planned → synthetic legal AND loud (V11)

@@ -180,7 +180,7 @@ teach: "Events are the closed set in [[hooks#op: hooks.event-catalog]] (source h
 ```contract:error
 code: hooks.not-exposed | http: 501 | retryable: false
 when: any call against hooks.act today
-teach: "Hook editing is PLANNED — the company has no settings-writer. Native path: edit the settings JSON (~/.claude/settings.json for all projects, .claude/settings.json[.local] per project) then Claude Code's file watcher reloads it; inspect via /hooks. The bridge gap is named in this op's bindings."
+teach: "Hook editing is PLANNED — the company has no settings-writer. Native path: edit the settings JSON (~/.claude/settings.json for all projects, .claude/settings.json[.local] per project) then Claude Code's file watcher reloads it; inspect via /hooks (https://code.claude.com/docs/en/hooks). The bridge gap is named in this op's bindings."
 ```
 Adjacent: [[hooks#op: hooks.get]] (the read), [[hooks#op: hooks.event-catalog]] (legal events), [[mcp-servers]] (mcp_tool handlers reference a connected server), [[extensions]] (plugins bundle hooks via hooks.json).
 

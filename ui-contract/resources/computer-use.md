@@ -111,12 +111,12 @@ verification:
 ### Description (purpose-free)
 Three native reach capabilities, contracted as a planned company bridge. (1) WEB ACCESS: WebFetch
 takes a URL + an extraction prompt, fetches, converts HTML to markdown, and runs the prompt through
-a small fast model — so the result is the model's answer, NOT the raw page (lossy by design; a
-"page doesn't mention X" may just mean the prompt didn't ask). HTTP upgrades to HTTPS, large pages
+a small fast model — so the result is the model's answer, NOT the raw page (lossy by design; a <!-- lint-ok: "page" = WebFetch's native web-page result, F7 carve-out (CONVENTIONS) -->
+"page doesn't mention X" may just mean the prompt didn't ask). HTTP upgrades to HTTPS, large pages <!-- lint-ok: native WebFetch behavior, F7 carve-out -->
 truncate, results cache 15 minutes, cross-host redirects return a notice. Domain access is
 permission-gated (preapproved doc domains fetch silently; `WebFetch(domain:...)` allow/deny/ask
 rules override). WebSearch pairs with it. (2) BROWSER AUTOMATION: the Claude-in-Chrome extension
-lets a session open tabs, click, type, read console/network logs, fill forms, and extract data,
+lets a session open tabs, click, type, read console/network logs, fill forms, and extract data, <!-- lint-ok: native Claude-in-Chrome actions, F7 carve-out -->
 sharing the browser's login state and pausing for login/CAPTCHA — beta, Chrome/Edge only, and NOT
 supported on WSL. (3) COMPUTER USE: the API tool captures screenshots and drives mouse/keyboard for
 GUI automation (beta header, OS accessibility perms). The company exposes none of these and does not
@@ -141,7 +141,7 @@ and the host (WSL) constraint on Chrome.
 ### Interaction semantics
 Native rules a consumer MUST respect when this op lands (sourced to the docs):
 - **WebFetch is lossy and uncacheable-control.** The HTML→markdown→small-model conversion is not
-  configurable; for the raw page, use `curl` via Bash. Repeated same-URL fetches return from the
+  configurable; for the raw page, use `curl` via Bash. Repeated same-URL fetches return from the <!-- lint-ok: "page" = native web-page result (WebFetch), F7 carve-out -->
   15-minute cache.
 - **Domain gating.** Default/acceptEdits prompt on a new domain (except preapproved doc domains);
   `auto`/`bypassPermissions` skip it; explicit `WebFetch(domain:...)` deny/ask/allow rules take

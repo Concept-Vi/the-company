@@ -149,12 +149,12 @@ verification:
 ```contract:error
 code: context-window.compaction-thrashing | http: n/a (no fabric face) | retryable: false
 when: a single file or tool output is so large that context refills immediately after each summary
-teach: "Claude Code stops auto-compacting after a few attempts and shows a thrashing error rather than looping. Recovery: /clear to reset, or remove the oversized input (a giant file read / tool output), then continue. See troubleshooting 'Auto-compaction stops with a thrashing error'. This is the documented degenerate case, not a fabric error."
+teach: "Claude Code stops auto-compacting after a few attempts and shows a thrashing error rather than looping. Recovery: [[context-window#op: context-window.clear]] to reset, or remove the oversized input (a giant file read / tool output), then continue. See troubleshooting 'Auto-compaction stops with a thrashing error'. This is the documented degenerate case, not a fabric error."
 ```
 ```contract:error
 code: context-window.prompt-too-long | http: n/a (no fabric face) | retryable: false
 when: the conversation plus attached files exceeds the model's window even after compaction
-teach: "Run /compact (or /clear), run /context to see what is consuming the window, disable unused MCP servers with /mcp disable <name> to drop their tool definitions, and trim large CLAUDE.md or move instructions into path-scoped rules. Re-enable auto-compact if DISABLE_AUTO_COMPACT was set. (Source: errors.md prompt-is-too-long.)"
+teach: "Run [[context-window#op: context-window.compact]] (or [[context-window#op: context-window.clear]]), run /context to see what is consuming the window, disable unused MCP servers with /mcp disable <name> to drop their tool definitions, and trim large CLAUDE.md or move instructions into path-scoped rules. Re-enable auto-compact if DISABLE_AUTO_COMPACT was set. (Source: errors.md prompt-is-too-long.)"
 ```
 ### Interaction semantics
 - **What survives compaction (load-bearing for a UI's expectations):** project-root CLAUDE.md and

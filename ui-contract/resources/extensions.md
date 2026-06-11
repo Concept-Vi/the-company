@@ -202,7 +202,7 @@ teach: "Accept the workspace trust dialog for this folder first — a skill can 
 ```contract:error
 code: extensions.not-exposed | http: 501 | retryable: false
 when: any call against extensions.act today
-teach: "Skill/plugin authoring + management is PLANNED — the company has no authoring or install bridge (its /api/cognition/create_skill is a COMPOSITION skill, unrelated). Native path: author SKILL.md / plugin.json files + use /plugin, claude plugin init/validate, --plugin-dir, /reload-plugins. The bridge gap is named in this op's bindings."
+teach: "Skill/plugin authoring + management is PLANNED — the company has no authoring or install bridge (its /api/cognition/create_skill is a COMPOSITION skill, unrelated). Native path: author SKILL.md / plugin.json files + use /plugin, claude plugin init/validate, --plugin-dir, /reload-plugins (https://code.claude.com/docs/en/plugins). The bridge gap is named in this op's bindings."
 ```
 Adjacent: [[extensions#op: extensions.list]] (verify), [[extensions#op: extensions.get]] (open for edit), [[hooks]] · [[mcp-servers]] · [[output-style]] (plugin component types), [[extensibility-patterns]] (which mechanism to choose).
 

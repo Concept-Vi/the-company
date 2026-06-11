@@ -151,7 +151,7 @@ must teach AROUND, not as catchable codes:
 ```contract:error
 code: checkpoint.untracked-change-lost | http: n/a (no fabric face) | retryable: false
 when: a UI offers "undo" expecting checkpoints to cover bash/external/directory changes
-teach: "Checkpoints track ONLY Write/Edit/NotebookEdit file CONTENT, same session, local files. Bash commands (rm/mv/cp), directory create/move/delete, external edits, and other sessions' edits are NOT reverted. For anything beyond session-local file content the recovery path is git — checkpoints complement but do not replace version control. (Source: checkpointing.md Limitations.)"
+teach: "Checkpoints track ONLY Write/Edit/NotebookEdit file CONTENT, same session, local files. Bash commands (rm/mv/cp), directory create/move/delete, external edits, and other sessions' edits are NOT reverted. For anything beyond session-local file content the recovery path is git — checkpoints complement but do not replace version control — for git-tracked recovery see [[git]]. (Source: https://code.claude.com/docs/en/checkpointing.md Limitations.)"
 ```
 ### Interaction semantics
 - **Preconditions:** a session with at least one prior prompt (so at least one restore point

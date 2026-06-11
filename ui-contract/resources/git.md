@@ -207,7 +207,7 @@ teach: "The Company has no worktree face. Create one natively: `claude --worktre
 ```contract:error
 code: git.worktree-trust-required | http: 403 | retryable: false
 when: "`--worktree` used interactively in a directory whose workspace-trust dialog hasn't been accepted"
-teach: "Run `claude` once in the directory and accept the trust dialog first; then `--worktree` works. Non-interactive `claude -p --worktree` skips the trust check (source: worktrees.md)."
+teach: "Run `claude` once in the directory and accept the trust dialog first; then `--worktree` works. Non-interactive `claude -p --worktree` skips the trust check (source: https://code.claude.com/docs/en/worktrees.md)."
 ```
 ```contract:example
 captured: synthetic            # status=planned → synthetic legal AND loud (V11)

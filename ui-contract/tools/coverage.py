@@ -27,6 +27,13 @@ Usage:
 Exit code:
   0 = generated cleanly AND matches the hand-derived ground truth
   3 = generated cleanly but DIVERGES from the hand-derived ground truth (a real finding to inspect)
+  4 = one or more contract:op fences FAILED TO PARSE (parse_errors non-empty). A malformed fence is
+      a HARD failure, not a warning: an op that does not parse contributes no atlas tags, so a broken
+      fence that is the SOLE op tagging an affordance would silently drop that affordance from the
+      'reached' count and undercount coverage. We refuse to emit a coverage verdict over an
+      incompletely-parsed corpus — fix the fence (run tools/validate_contract.py for the precise
+      YAML error) and re-run. Checked BEFORE the ground-truth comparison so a parse break can never
+      be masked by a coincidental MATCH.
   2 = fatal (corpus not found / unparseable)
 """
 from __future__ import annotations
@@ -308,6 +315,22 @@ def main():
               "The generator corroborates it (above) rather than overwriting prose this pass — "
               "rendering the full markdown body is the next safe increment once the ground-truth "
               "comparison stays MATCH across a few corpus edits.")
+
+    # HARD GATE: a malformed contract:op fence undercounts coverage silently (an unparsed op
+    # contributes no atlas tags; if it is the SOLE op tagging an affordance, that affordance silently
+    # drops from 'reached'). parse_errors is therefore a non-zero exit, checked BEFORE the
+    # match/divergence verdict so a parse break can never be masked by a coincidental MATCH. The
+    # loud PARSE ERRORS block was already printed by print_map(); here it becomes fail-loud.
+    if data["parse_errors"]:
+        n = len(data["parse_errors"])
+        sys.stderr.write(
+            f"FAIL — {n} contract:op fence(s) did not parse (see PARSE ERRORS above). Coverage is "
+            f"undercounted and NO verdict is emitted: an unparsed op contributes no atlas tags, so a "
+            f"broken fence that is the only op tagging an affordance would silently drop it from the "
+            f"'reached' count. Fix the fence(s) — run tools/validate_contract.py for the precise YAML "
+            f"error — and re-run.\n"
+        )
+        sys.exit(4)
 
     # exit code: 0 match, 3 divergence
     sys.exit(0 if not diffs else 3)

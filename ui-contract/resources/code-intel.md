@@ -142,12 +142,12 @@ Native rules a consumer MUST respect when this op lands (sourced to the docs):
 ```contract:error
 code: code-intel.not-exposed | http: 501 | retryable: false
 when: any call against this op today
-teach: "Symbol navigation + diagnostics are PLANNED — they run inside a spawned session's LSP tool, with no company endpoint. To use code intelligence today, an operator installs a code-intelligence plugin (e.g. /plugin install typescript-lsp@claude-plugins-official) + the language-server binary IN the working session. The bridge gap is named in this op's bindings."
+teach: "Symbol navigation + diagnostics are PLANNED — they run inside a spawned session's LSP tool, with no company endpoint. To use code intelligence today, an operator installs a code-intelligence plugin (e.g. /plugin install typescript-lsp@claude-plugins-official) + the language-server binary IN the working session via [[extensions#op: extensions.act]]. The bridge gap is named in this op's bindings."
 ```
 ```contract:error
 code: code-intel.server-inactive | http: 409 | retryable: false
 when: (when built) a navigation call against a session whose language server is not active
-teach: "Install the language's code-intelligence plugin and its server binary (see discover-plugins.md#code-intelligence: pyright/gopls/rust-analyzer/typescript-language-server/...). Until active, the LSP tool is inert and only grep-based search is available."
+teach: "Install the language's code-intelligence plugin and its server binary (see https://code.claude.com/docs/en/discover-plugins code-intelligence: pyright/gopls/rust-analyzer/typescript-language-server/...). Until active, the LSP tool is inert and only grep-based search is available."
 ```
 ```contract:example
 captured: synthetic            # status=planned → synthetic legal AND loud; no company LSP endpoint exists (V11)

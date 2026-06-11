@@ -118,7 +118,7 @@ different data.**
 
 ## op: cost-usage.get
 **`cost-usage.get` is the cost/usage read — per-turn token+cost, the session running total, the
-historical stats — the data a UI renders as a spend panel; planned as a company op, today read
+historical stats — the spend data a consumer reads; planned as a company op, today read
 only via Claude Code's own /usage (local) or the org Usage & Cost API.**
 ```contract:op
 op: cost-usage.get

@@ -129,7 +129,7 @@ teach: "The Company exposes no /goal or /loop face. Use them in a native `claude
 ```contract:error
 code: workflows.goal-unavailable | http: 403 | retryable: false
 when: "/goal is blocked"
-teach: "`/goal` needs the workspace trust dialog accepted and is unavailable when disableAllHooks is set at any settings level or allowManagedHooksOnly is set in managed settings (the evaluator is part of the hooks system). The command tells you why rather than silently no-op'ing (source: goal.md Requirements)."
+teach: "`/goal` needs the workspace trust dialog accepted and is unavailable when disableAllHooks is set at any settings level or allowManagedHooksOnly is set in managed settings (the evaluator is part of the hooks system). The command tells you why rather than silently no-op'ing (source: https://code.claude.com/docs/en/goal.md Requirements)."
 ```
 ```contract:example
 captured: synthetic            # status=planned → synthetic legal AND loud (V11)

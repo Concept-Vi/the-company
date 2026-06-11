@@ -98,7 +98,7 @@ ts, message (the resolved body text)}…], consumption}` — pass `since=next_si
 ```contract:error
 code: session-message.bad-cursor | http: n/a (mcp tool error) | retryable: false
 when: a DURABLE per-consumer cursor (the refs in [[CONVENTIONS]]) is corrupt or moved backward
-teach: "Cursors only advance; replay is an explicit since=<older> read, never a rollback. A corrupt stored cursor fails loud — inspect its ref history and re-set deliberately."
+teach: "Cursors only advance; replay is an explicit since=<older> read, never a rollback. A corrupt stored cursor fails loud — inspect its ref history and re-set deliberately per the cursor law in [[CONVENTIONS#Cursor / pagination law]]."
 ```
 ```contract:example
 captured: synthetic

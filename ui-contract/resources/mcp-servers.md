@@ -50,7 +50,7 @@ Claude Code connects to external tools via MCP servers, documented at https://co
 ## Operations
 
 ## op: mcp-servers.list
-**`mcp-servers.list` is the PLANNED roster read: every configured MCP server with its scope, transport, connection status, and tool count — the data behind `claude mcp list` and the `/mcp` panel, which the company does not surface through any face.**
+**`mcp-servers.list` is the PLANNED roster read: every configured MCP server with its scope, transport, connection status, and tool count — the data behind `claude mcp list` and the `/mcp` panel, which the company does not surface through any face.** <!-- lint-ok: "/mcp panel" is the native Claude Code interactive surface name, F4 carve-out (CONVENTIONS) -->
 ```contract:op
 op: mcp-servers.list
 resource: mcp-servers
@@ -189,7 +189,7 @@ teach: "Run /mcp in an interactive session and complete the browser login. If yo
 ```contract:error
 code: mcp-servers.not-exposed | http: 501 | retryable: false
 when: any call against mcp-servers.act today
-teach: "MCP-server management is PLANNED — the company has no config-writer or auth bridge. Native path: `claude mcp add/remove/list/get` + `/mcp` for OAuth. The bridge gap is named in this op's bindings. (Note: the company's OWN MCP face is mcp_face/server.py — that is the company tool surface, NOT a session's manageable server set.)"
+teach: "MCP-server management is PLANNED — the company has no config-writer or auth bridge. Native path: `claude mcp add/remove/list/get` + `/mcp` for OAuth (https://code.claude.com/docs/en/mcp#managing-your-servers). The bridge gap is named in this op's bindings. (Note: the company's OWN MCP face is mcp_face/server.py — that is the company tool surface, NOT a session's manageable server set.)"
 ```
 Adjacent: [[mcp-servers#op: mcp-servers.list]] (verify the add), [[mcp-servers#op: mcp-servers.get]] (inspect auth state), [[hooks]] (mcp_tool hooks need a connected server), [[extensions]] (plugins bundle MCP servers via .mcp.json/plugin.json — managed through plugin install, not /mcp).
 

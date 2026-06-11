@@ -103,7 +103,7 @@ The Company's mobile story is the tailnet PWA, NOT native Remote Control: the ph
 SAME local bridge/canvas the desktop does, over a private tailnet HTTPS origin. That HTTPS origin
 is load-bearing beyond convenience — it is the secure context the iOS browser mic requires, so it
 is what makes browser voice-in work on the phone ([[voice#Caller]]). A native iOS app would only
-be needed for eyes-off/locked-screen voice (a later, separate step).
+be needed for eyes-off/locked-device voice (a later, separate step).
 ```contract:example
 captured: synthetic            # status=building — the path is on-device-proven; this read is illustrative until harness-captured (V11)
 binding: http

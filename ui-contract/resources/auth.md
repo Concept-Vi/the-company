@@ -175,7 +175,7 @@ the service account resolves. Source: https://code.claude.com/docs/en/authentica
 ```contract:error
 code: auth.not-exposed | http: 501 | retryable: false
 when: any credential-changing call against the company
-teach: "Changing credentials is a HOST action, not a company capability. The operator runs /login or /logout in the interactive host session, or `claude setup-token` for a CI token, then restarts the service. The company inherits the service account's resolved credential and proxies none of this (usage-policy boundary)."
+teach: "Changing credentials is a HOST action, not a company capability. The operator runs /login or /logout in the interactive host session, or `claude setup-token` for a CI token, then restarts the service. The company inherits the service account's resolved credential and proxies none of this (usage-policy boundary). Recovery is operator-side; the boundary and native flow are named at [[auth#op: auth.act]] and https://code.claude.com/docs/en/authentication.md."
 ```
 ```contract:error
 code: auth.failed | http: 401 | retryable: false

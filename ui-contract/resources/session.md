@@ -134,7 +134,7 @@ id/name/state/title/cwd/last_activity; `detail="detailed"` returns full records)
 ```contract:error
 code: session.unknown-state | http: n/a (mcp tool error) | retryable: false
 when: state filter not in the closed vocabulary
-teach: "The registry's states are supervised-live (supervisor-owned, deliverable), unsupervised-live (alive, pull-only), closed (wake-able). Fix the filter; nothing is silently widened."
+teach: "The registry's states are supervised-live (supervisor-owned, deliverable), unsupervised-live (alive, pull-only), closed (wake-able). Fix the filter and re-read via [[session#op: session.list]]; nothing is silently widened."
 ```
 ```contract:example
 captured: synthetic            # status=building — replaced by captured evidence at flip-to-live (V11)
@@ -239,7 +239,7 @@ details: { "cap": 3, "live": "t0(idle), t1(idle), t2(busy)" }
 ```contract:error
 code: session.fork-needs-resume | http: 409 | retryable: false
 when: fork=true without resume=
-teach: "A CONSULT/fork is a copy OF an existing session. Pass resume=<id>, or spawn without fork for a fresh session."
+teach: "A CONSULT/fork is a copy OF an existing session. Pass resume=<id>, or use [[session#op: session.create]] without fork for a fresh session."
 ```
 ```contract:example
 captured: synthetic
@@ -345,7 +345,7 @@ verification:
 ```contract:error
 code: session.verb-state-conflict | http: 409 | retryable: false
 when: explicit verb illegal for target state — deliver→closed (nothing to inject into) · wake→supervised-live (double-spawn) · wake→unsupervised/unknown (a second writer silently BRANCHES a live session — T1)
-teach: "Use verb=auto (routes by state), or session.get first. A refusal after a passed pre-check is expected concurrency — verdict pass-via-refusal."
+teach: "Use verb=auto (routes by state), or [[session#op: session.get]] first. A refusal after a passed pre-check is expected concurrency — verdict pass-via-refusal."
 ```
 ```contract:error
 code: fabric.copies-cap | http: 429 | retryable: true
@@ -355,7 +355,7 @@ teach: "Fan ≤ cap (COMPANY_FABRIC_CONCURRENCY; read it via [[fabric-config#op:
 ```contract:error
 code: session.reply-path-missing | http: 400 | retryable: false
 when: from_session empty (or message empty — same refusal class)
-teach: "from_session is the REPLY PATH — pass your own session://<id> so answers route back to your inbox."
+teach: "from_session is the REPLY PATH — pass your own session://<id> so answers route back to your inbox, read via [[session-message#op: session-message.list]]."
 ```
 Plus `session.unknown` (the registry's 404-class teach, as on [[session#op: session.get]]).
 ### Interaction semantics

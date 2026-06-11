@@ -151,7 +151,7 @@ teach: "Built-ins: Default, Proactive, Explanatory, Learning. Custom styles must
 ```contract:error
 code: output-style.not-exposed | http: 501 | retryable: false
 when: any call against output-style.act today
-teach: "Output-style + status-line setting is PLANNED — the company has no presentation-config writer (/api/presentation-pref is the company UI's own altitude preference, unrelated). Native path: /config + outputStyle field for style; /statusline + statusLine object for the bar. The bridge gap is named in this op's bindings."
+teach: "Output-style + status-line setting is PLANNED — the company has no presentation-config writer (/api/presentation-pref is the company UI's own altitude preference, unrelated). Native path: /config + outputStyle field for style; /statusline + statusLine object for the bar (https://code.claude.com/docs/en/output-styles). The bridge gap is named in this op's bindings."
 ```
 Adjacent: [[output-style#op: output-style.get]] (the read), [[extensions]] (plugins ship output styles in output-styles/), [[context-window]] · [[cost-usage]] (the readings a status line displays).
 

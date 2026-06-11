@@ -193,12 +193,12 @@ teach: "The Company exposes no scheduling face. Create CLOUD routines at claude.
 ```contract:error
 code: routines.schedule-unavailable | http: 400 | retryable: false
 when: "`/schedule` returns 'Unknown command' in the CLI"
-teach: "`/schedule` requires a claude.ai subscription login and is hidden when ANTHROPIC_API_KEY/ANTHROPIC_AUTH_TOKEN/apiKeyHelper is set, when telemetry-disable env (DISABLE_TELEMETRY/DO_NOT_TRACK/CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC/DISABLE_GROWTHBOOK) is set, inside a Claude-Code-on-the-web session, or on CLI < v2.1.81. Manage at claude.ai/code/routines regardless (source: routines.md troubleshooting)."
+teach: "`/schedule` requires a claude.ai subscription login and is hidden when ANTHROPIC_API_KEY/ANTHROPIC_AUTH_TOKEN/apiKeyHelper is set, when telemetry-disable env (DISABLE_TELEMETRY/DO_NOT_TRACK/CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC/DISABLE_GROWTHBOOK) is set, inside a Claude-Code-on-the-web session, or on CLI < v2.1.81. Manage at claude.ai/code/routines regardless (source: https://code.claude.com/docs/en/routines.md troubleshooting)."
 ```
 ```contract:error
 code: routines.org-disabled | http: 403 | retryable: false
 when: "'Routines are disabled by your organization's policy'"
-teach: "A Team/Enterprise admin turned off the Routines toggle at claude.ai/admin-settings/claude-code. This is a server-side org setting and cannot be overridden locally — contact your admin."
+teach: "A Team/Enterprise admin turned off the Routines toggle at claude.ai/admin-settings/claude-code. This is a server-side org setting and cannot be overridden locally — contact your admin (https://code.claude.com/docs/en/routines.md)."
 ```
 ```contract:example
 captured: synthetic            # status=planned → synthetic legal AND loud (V11); no company face exists

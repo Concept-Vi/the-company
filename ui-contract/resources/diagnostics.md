@@ -252,7 +252,7 @@ teach: "Per-session diagnostics are PLANNED — the spawn threads --verbose but 
 ```contract:error
 code: diagnostics.supervisor-down | http: 503 | retryable: true
 when: GET /health connection refused (the supervisor process is not running)
-teach: "The session-supervisor is down. Start it with `company up session-supervisor`. This is the failure diagnostics.get is designed to detect — a refused connection to 127.0.0.1:8771, not a 5xx body."
+teach: "The session-supervisor is down. Start it with `company up session-supervisor`. This is the failure [[diagnostics#op: diagnostics.get]] is designed to detect — a refused connection to 127.0.0.1:8771, not a 5xx body."
 ```
 ```contract:example
 captured: synthetic            # status=planned -> synthetic legal AND loud; no --debug threaded (V11)

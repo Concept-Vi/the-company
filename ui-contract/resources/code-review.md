@@ -171,7 +171,7 @@ teach: "Code review is PLANNED — no company endpoint runs it. Locally, run /co
 ```contract:error
 code: code-review.managed-unavailable | http: 403 | retryable: false
 when: (re: the managed service) the org is ZDR, or Code Review is not admin-enabled
-teach: "Managed GitHub Code Review is unavailable for Zero-Data-Retention orgs and is off until an admin enables it (Team/Enterprise). Use a self-hosted claude -p review in GitHub Actions/GitLab CI instead (github-actions.md / gitlab-ci-cd.md)."
+teach: "Managed GitHub Code Review is unavailable for Zero-Data-Retention orgs and is off until an admin enables it (Team/Enterprise). Use a self-hosted claude -p review in GitHub Actions/GitLab CI instead (https://code.claude.com/docs/en/github-actions.md / https://code.claude.com/docs/en/gitlab-ci-cd.md)."
 ```
 ```contract:example
 captured: synthetic            # status=planned → synthetic legal AND loud; no company review endpoint exists (V11)
