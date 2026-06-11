@@ -105,6 +105,7 @@ Do **not** build duplicate command centers. The right shape (Tim, "one substrate
   - `README.md` — use guide.   `UPDATING.md` — how to extend the CLI + the registry schema.
 - `services.json` — the registry (the source of truth; now also carries `vram_mb`, `serve`, `vram_ceiling_mb`).
 - `agent_sessions_exporter.py` — the transcript-memory exporter (jobs group; jsonl → markdown corpus under the filter law; its units are `company-agent-sessions-exporter.{service,timer}` in `systemd/`).
+- `agent_sessions_importer.py` — the registry-catalog backfill (Session Fabric F1.2): one run scans `~/.claude/projects/*/*.jsonl` READ-ONLY (never writes/touches the catalog, never emits events — single-writer law) → one whole-record file per main session in `<store>/agent_sessions/` via `FsStore.save_agent_session`, with the exact title fallback chain + summarizer marking + coverage stats. Idempotent (skip-unchanged; `--force` to re-read; a non-closed record — the live supervisor's — is never stomped). On-demand, not a timer: re-run after catalog growth, or let the supervisor register sessions live. Proven by `tests/agent_sessions_registry_acceptance.py` + the real 1,065-record backfill.
 - `model_capabilities.json` — the model-TYPE capability CATALOG (declared data, keyed by model-id; the file-discovered source `cli/capabilities.py` loads; add-a-model-capability = add-an-entry). Intrinsic facts only — NO vram (gpu.py JOINs that).
 - `STARTUP.md` — the command table + boot behaviour + open items.
 - `systemd/` — canonical unit + target files (the muscle).

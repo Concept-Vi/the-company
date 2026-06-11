@@ -68,6 +68,22 @@ hole, store rule 4). Proven by `tests/marks_acceptance.py`. **NEXT (SEPARATE lan
 suite-side mark API (`runtime/suite.py`), the `mark` MCP tool (`mcp_face/server.py`), and the mark-types
 registry — this pass is the STORE persistence + by-target/by-type query ONLY.
 
+**Agent-session REGISTRY RECORDS (Session Fabric F1.2) = a Claude Code session's durable identity.**
+`save_agent_session`/`load_agent_session`/`list_agent_sessions`/`agent_session_mtimes` over
+`agent_sessions/*.json` — whole-record atomic (the `save_journey` clone for a DISTINCT noun: an
+agent-session id and a review-session id never collide; the review-session `sessions/` dir is untouched;
+naming ruling N2 — dir `agent_sessions/`, never `fabric/`). Record (OPEN, schema-additive): {id (the Claude
+session uuid — what `session://<id>` resolves by, `contracts/address.py`), name, cwd, state
+(supervised-live|unsupervised-live|closed), started, last_activity, title, title_source, summarizer,
++ envelope (project/jsonl_path/jsonl_bytes/turns/git_branch/…), schema_ver}. STRUCTURAL fail-loud: a record
+with a missing/empty `id` is REFUSED (an unresolvable session is a silent black hole, rule 4). Writers: the
+READ-ONLY catalog importer (`ops/agent_sessions_importer.py` — backfills history as state=closed, never
+touches a non-closed record) + the session supervisor. These records hold IDENTITY only; the live trajectory
+rides `agent_sessions.*` events on events.jsonl, and `Suite.list_agent_sessions` (runtime) is the fold that
+joins the two — `agent_session_mtimes` ({id → file mtime}) is that fold's records-side delta key, the
+counterpart of `events_since(high_water)`; a non-filesystem backend implements the same contract with its own
+change marker. Proven by `tests/agent_sessions_registry_acceptance.py`.
+
 **Agent-session MAILBOX (Session Fabric §C) = the fabric's one durable message leaf.** Sessions message
 sessions through `agent_sessions/mail.jsonl` — a sibling jsonl leaf INSIDE the `agent_sessions/` dir, beside
 the registry's whole-record files (naming ruling N2: dir `agent_sessions/`, never `fabric/`, never the

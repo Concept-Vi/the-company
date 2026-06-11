@@ -351,6 +351,26 @@ appends are immutable). `total_records` keeps the pre-E2 EVENT-count semantics (
 record). Proven by `tests/run_index_incremental_acceptance.py` (the 2nd call reads only the delta — spied; a
 sibling Suite rebuilds from the shared log; cold-scan-equal).
 
+**The agent-session REGISTRY fold (Session Fabric F1.2 — the run-index pattern's SECOND instance ·
+`runtime/suite.py`).** `Suite.list_agent_sessions`/`get_agent_session` project the session fabric's registry
+read-time from TWO shared-disk sources: whole-record identity files (`<store>/agent_sessions/*.json`,
+re-loaded only on `agent_session_mtimes` change — the records-side delta key) JOINED with the
+`agent_sessions.*` event tail folded past a high-water seq (`_agent_session_fold`, exactly the
+`_run_index_fold` discipline — derived, never authoritative in RAM; a fresh Suite rebuilds from disk;
+N processes converge). The closed event set is **`AGENT_SESSION_OPS`** (registered · spawned · turn · idle ·
+closed · adopted — the ENGINE_RUN_OPS mirror) with the CANONICAL EMIT SHAPE declared beside it (the single
+source the supervisor emits against); states are the closed `AGENT_SESSION_STATES`
+(supervised-live | unsupervised-live | closed). Rules the fold carries: the RECORD owns identity
+(name/cwd/title/started — refreshed on re-read), the LOG owns the trajectory (state/last_activity — a record
+rewrite can never roll back a state the log moved past); the CANONICAL-ID rule keys every row on the CLAUDE
+SESSION UUID (the supervisor's `as-…` local-handle emits canonicalize via `claude_session_id` / non-fork
+`resume` / a held alias; a CONSULT fork NEVER aliases onto the original — T4); unknown state filters and
+unknown ids RAISE teaching errors; malformed events are COUNTED in `fold_errors` (loud in every result),
+never allowed to brick the projection. `session://<id>` resolves through `cognition.py:resolve_address` to
+the registry record (sessions are addressable inputs — the skill://+context:// seam's second extension).
+Proven by `tests/agent_sessions_registry_acceptance.py` + the real 1,065-session backfill
+(`ops/agent_sessions_importer.py`, the catalog importer — see ops/AGENTS.md).
+
 ## GROUP J — the cognition↔resolution feedback loop (the system sees its OWN thinking · `runtime/suite.py`)
 
 R2 resolves operator-NOTEBOOK strata at the operator's locus; the swarm's per-turn cognition
