@@ -5,54 +5,54 @@
   "note": "CONTRACTED layer only; Layer-2 DEMONSTRATED empty (no live op, no harness run).",
   "totals": {
     "classes_defined": 35,
-    "classes_covered": 13,
-    "classes_planned_only": 22,
+    "classes_covered": 31,
+    "classes_planned_only": 4,
     "classes_unmapped": 0,
     "affordances_defined": 123,
     "affordances_reached": 123,
-    "affordances_building": 45,
-    "affordances_planned_only": 78,
-    "ops_parsed": 78
+    "affordances_building": 96,
+    "affordances_planned_only": 27,
+    "ops_parsed": 79
   },
   "classes": {
     "covered": [
+      "CC-03",
+      "CC-04",
       "CC-05",
+      "CC-06",
       "CC-07",
       "CC-08",
       "CC-09",
       "CC-10",
+      "CC-11",
+      "CC-12",
+      "CC-13",
       "CC-14",
       "CC-15",
+      "CC-16",
+      "CC-17",
       "CC-18",
+      "CC-19",
       "CC-20",
+      "CC-21",
+      "CC-22",
       "CC-23",
+      "CC-24",
       "CC-25",
+      "CC-26",
+      "CC-27",
+      "CC-29",
+      "CC-30",
+      "CC-32",
       "CC-33",
+      "CC-34",
       "CC-35"
     ],
     "planned_only": [
       "CC-01",
       "CC-02",
-      "CC-03",
-      "CC-04",
-      "CC-06",
-      "CC-11",
-      "CC-12",
-      "CC-13",
-      "CC-16",
-      "CC-17",
-      "CC-19",
-      "CC-21",
-      "CC-22",
-      "CC-24",
-      "CC-26",
-      "CC-27",
       "CC-28",
-      "CC-29",
-      "CC-30",
-      "CC-31",
-      "CC-32",
-      "CC-34"
+      "CC-31"
     ],
     "unmapped": []
   },
@@ -87,54 +87,54 @@
     },
     "CC-03.1": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "extensions",
           "op": "extensions.list",
-          "status": "planned"
+          "status": "building"
         },
         {
           "entry": "extensions",
           "op": "extensions.get",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-03.2": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "extensions",
           "op": "extensions.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-03.3": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "extensions",
           "op": "extensions.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-04.1": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "surfaces",
           "op": "surfaces.get-keybindings",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
@@ -205,49 +205,49 @@
     },
     "CC-06.1": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "git",
           "op": "git.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-06.2": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "git",
           "op": "git.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-06.3": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "git",
           "op": "git.worktree",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-06.4": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "git",
           "op": "git.worktree",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
@@ -590,78 +590,79 @@
     },
     "CC-11.1": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "mcp-servers",
           "op": "mcp-servers.list",
-          "status": "planned"
+          "status": "building"
         },
         {
           "entry": "mcp-servers",
           "op": "mcp-servers.get",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-11.2": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "mcp-servers",
           "op": "mcp-servers.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-11.3": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "mcp-servers",
           "op": "mcp-servers.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-11.4": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "mcp-servers",
           "op": "mcp-servers.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-11.5": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "mcp-servers",
           "op": "mcp-servers.list",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-12.1": {
       "statuses": [
+        "building",
         "planned"
       ],
       "ops": [
         {
           "entry": "hooks",
           "op": "hooks.get",
-          "status": "planned"
+          "status": "building"
         },
         {
           "entry": "hooks",
@@ -672,114 +673,114 @@
     },
     "CC-12.2": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "hooks",
           "op": "hooks.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-12.3": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "hooks",
           "op": "hooks.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-12.4": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "hooks",
           "op": "hooks.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-12.5": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "hooks",
           "op": "hooks.get",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-13.1": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "extensions",
           "op": "extensions.list",
-          "status": "planned"
+          "status": "building"
         },
         {
           "entry": "extensions",
           "op": "extensions.get",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-13.2": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "extensions",
           "op": "extensions.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-13.3": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "extensions",
           "op": "extensions.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-13.4": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "extensions",
           "op": "extensions.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-13.5": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "extensions",
           "op": "extensions.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
@@ -910,73 +911,73 @@
     },
     "CC-16.1": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "code-intel",
           "op": "code-intel.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-16.2": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "code-intel",
           "op": "code-intel.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-16.3": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "code-intel",
           "op": "code-intel.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-17.1": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "computer-use",
           "op": "computer-use.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-17.2": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "computer-use",
           "op": "computer-use.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-17.3": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "computer-use",
           "op": "computer-use.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
@@ -1086,37 +1087,37 @@
     },
     "CC-19.1": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "code-review",
           "op": "code-review.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-19.2": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "code-review",
           "op": "code-review.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-19.3": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "code-review",
           "op": "code-review.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
@@ -1158,13 +1159,13 @@
     },
     "CC-21.1": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "routines",
           "op": "routines.list",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
@@ -1194,37 +1195,37 @@
     },
     "CC-21.4": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "routines",
           "op": "routines.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-22.1": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "workflows",
           "op": "workflows.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-22.2": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "workflows",
           "op": "workflows.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
@@ -1313,49 +1314,49 @@
     },
     "CC-24.1": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "auth",
           "op": "auth.get",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-24.2": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "auth",
           "op": "auth.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-24.3": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "auth",
           "op": "auth.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-24.4": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "auth",
           "op": "auth.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
@@ -1402,73 +1403,73 @@
     },
     "CC-26.1": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "output-style",
           "op": "output-style.get",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-26.2": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "output-style",
           "op": "output-style.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-26.3": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "output-style",
           "op": "output-style.get",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-26.4": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "output-style",
           "op": "output-style.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-27.1": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "extensibility-patterns",
           "op": "extensibility-patterns.get",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-27.2": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "extensibility-patterns",
           "op": "extensibility-patterns.get",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
@@ -1486,25 +1487,25 @@
     },
     "CC-29.1": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "platform",
           "op": "platform.cloud-provider",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-30.1": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "ci",
           "op": "ci.create",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
@@ -1522,13 +1523,13 @@
     },
     "CC-30.3": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "ci",
           "op": "ci.create",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
@@ -1546,13 +1547,13 @@
     },
     "CC-32.1": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "platform",
-          "op": "platform.privacy",
-          "status": "planned"
+          "op": "platform.data-posture",
+          "status": "building"
         }
       ]
     },
@@ -1606,13 +1607,13 @@
     },
     "CC-34.1": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "platform",
           "op": "platform.install",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
