@@ -1,0 +1,82 @@
+---
+type: contract-atlas
+captured: 2026-06-12
+status: class ids FROZEN (CC-01…CC-35); affordances grow append-only per lane
+source: the 35 numbered classes verified verbatim against "Obsidian Builder/Spaces/Claude Code Atlas/Feature Atlas.md" (grep '^## [0-9]' = 35; the P0 audit's independent source)
+---
+
+# FEATURE-ATLAS — the 35 capability classes + affordances (coverage grain = the affordance)
+
+Class ids are frozen. Affordance sub-ids (CC-nn.m) are appended by the lane that first
+contracts them — append-only, never renumbered. F1 (Session Fabric) seeded the affordances
+below; F2–F8 lanes append theirs under their classes.
+
+| id | class |
+|---|---|
+| CC-01 | CLI & Session Entry Points |
+| CC-02 | Interactive Surfaces (Terminal, Desktop, Web, IDE) |
+| CC-03 | Slash Commands & Built-In Skills |
+| CC-04 | Keyboard Shortcuts & Keybindings |
+| CC-05 | Context Management & Window Optimization |
+| CC-06 | Git Integration & Worktrees |
+| CC-07 | Permissions & Approval Modes |
+| CC-08 | Checkpoints & Session Management |
+| CC-09 | Subagents & Agent Teams |
+| CC-10 | Model Selection & Reasoning |
+| CC-11 | MCP (Model Context Protocol) Integration |
+| CC-12 | Hooks & Automation |
+| CC-13 | Plugins, Skills, & Extension Packaging |
+| CC-14 | Voice & Audio Input/Output |
+| CC-15 | Remote Control & Mobile Access |
+| CC-16 | Code Intelligence (LSP) & Symbol Navigation |
+| CC-17 | Computer Use & Web Access |
+| CC-18 | Headless & Programmatic Use (SDK & Automation) |
+| CC-19 | AI-Driven Code Review & Analysis |
+| CC-20 | Cost Management & Usage Tracking |
+| CC-21 | Scheduled Tasks, Routines & Automation |
+| CC-22 | Dynamic Workflows & Task Coordination |
+| CC-23 | CLAUDE.md, Memory & Persistent Context |
+| CC-24 | Authentication & Account Management |
+| CC-25 | Configuration & Settings System |
+| CC-26 | Terminal Configuration & Output Styling |
+| CC-27 | Extensibility & Customization Patterns |
+| CC-28 | Enterprise & Admin Features |
+| CC-29 | Cloud Provider Integrations (Bedrock, Vertex, Foundry) |
+| CC-30 | CI/CD Integrations (GitHub Actions, GitLab, Automation) |
+| CC-31 | Large Codebase Support & Dev Containers |
+| CC-32 | Data Privacy, Security & Compliance |
+| CC-33 | Diagnostics, Debugging & Troubleshooting |
+| CC-34 | Installation, Updates & Platform Support |
+| CC-35 | Glossary & Best Practices |
+
+## Affordances seeded by F1 (Session Fabric)
+
+### CC-05 · Context Management & Window Optimization
+- CC-05.1 — carry full prior context into a continued conversation (resume preserves memory)
+
+### CC-08 · Checkpoints & Session Management
+- CC-08.1 — list/browse the catalog of every session this machine has run
+- CC-08.2 — inspect one session's full record (identity, envelope, liveness)
+- CC-08.3 — resume a closed session with context intact (`--resume`)
+- CC-08.4 — fork a session without touching the original (`--fork-session`)
+- CC-08.5 — watch one live session's activity as it happens
+- CC-08.6 — search the content of past sessions (transcript memory)
+
+### CC-09 · Subagents & Agent Teams
+- CC-09.1 — send a message/question to another session
+- CC-09.2 — fan one question to N parallel forked consultants
+- CC-09.3 — read a session's inbox (messages + replies addressed to it)
+- CC-09.4 — aggregate a fan's replies under one thread
+
+### CC-18 · Headless & Programmatic Use (SDK & Automation)
+- CC-18.1 — spawn a supervised headless session programmatically
+- CC-18.2 — inject a turn into a running session programmatically
+- CC-18.3 — interrupt an in-flight turn
+- CC-18.4 — tear down a session programmatically (no orphans)
+- CC-18.5 — observe the machine-readable event flow of the fleet
+
+### CC-23 · CLAUDE.md, Memory & Persistent Context
+- CC-23.1 — durable, filtered, redacted memory of every past session (transcript corpus)
+
+### CC-25 · Configuration & Settings System
+- CC-25.1 — read the fabric's live operating configuration (cap, timeout, permission, bind)
