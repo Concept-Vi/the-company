@@ -127,3 +127,40 @@ machine-diff (V24) is an open obligation, stated loudly per the format's fail-lo
   today — `cost-usage.get`'s binding on it is `planned`, and the endpoint belongs in
   INVENTORY-EXCLUSIONS.md as "external Anthropic API, not a company face" so the reality join
   never phantom-fails on a route the company was never going to own.
+
+## `claude-cli` — the Claude Code CLI binary's management subcommands (F4: a NON-fabric surface, declared for honesty)
+- **Protocol:** the `claude` binary's non-interactive management subcommands and launch flags —
+  `claude mcp add|add-json|add-from-claude-desktop|remove|list|get|reset-project-choices`,
+  `claude plugin init|validate`, `claude mcp serve`, and the `--plugin-dir`/`--plugin-url` launch
+  flags. NOT a programmatic transport: it is a local CLI of the `claude` binary (distinct from
+  `cli-local`, which is the COMPANY `company` console). No socket, no API, no machine-readable
+  request shape the Company exposes.
+- **Exposure:** `process-local` — a local binary on this host. NOT reachable by any fabric consumer;
+  the Company supervisor spawns headless `claude -p` and does not drive these management subcommands.
+- **Caller identity:** the operator at the shell. There is no fabric caller.
+- **Inventory source:** NONE that the Company exposes — this is precisely the F4 gap. The
+  authoritative inventory is the Claude Code docs (vault `claude-code-atlas`: mcp.md, plugins.md,
+  plugins-reference.md, skills.md, discover-plugins.md, plugin-marketplaces.md), cited per-op. V21
+  would FAIL a fabric binding on this transport because no machine-readable Company inventory exists;
+  every F4 `kind: cli`/`kind: tui` binding is therefore `status: planned` and carries no exposure
+  registry key (`exposure: "n/a — claude CLI"` / `"n/a — interactive"`). Recorded loudly, never
+  silently passed — when these management surfaces are bridged (a future settings/config-writer +
+  install bridge), they migrate to `bridge-http`.
+
+## `claude-tui` — the Claude Code interactive management menus (F4: a NON-fabric surface, declared for honesty)
+- **Protocol:** the interactive `claude` TUI's management surfaces — `/hooks` (read-only hook
+  browser), `/mcp` (MCP server panel + OAuth flow), `/plugin` (plugin/marketplace manager), `/config`
+  (output-style picker + settings), `/statusline` (NL status-line generator), `/help`/`/skills`/
+  `/agents` (extension listings), `/reload-plugins`. NOT a programmatic transport: no socket, no API,
+  no machine-readable request shape. (Distinct from F2's `tui-interactive`, which covers the
+  session/context slash commands; this id covers the EXTENSION-FABRIC management menus. A lane may
+  fold these two ids together later via a recorded decision; kept separate here so F4's gap is
+  legible without rewriting F2's transport.)
+- **Exposure:** `process-local` — human-driven terminal, not reachable by any fabric consumer. The
+  Company supervisor spawns headless `claude -p` (no interactive TUI), so it cannot drive these menus.
+- **Caller identity:** the human at the terminal. No fabric caller.
+- **Inventory source:** NONE that the Company exposes (the F4 gap). Authoritative inventory = the
+  Claude Code docs (vault `claude-code-atlas`: hooks.md, mcp.md, plugins.md, output-styles.md,
+  statusline.md, skills.md), cited per-op. V21 FAILS a fabric binding here for want of a
+  machine-readable Company inventory; F4 `kind: tui` bindings are `status: planned`,
+  `exposure: "n/a — interactive"`. Migrates to `bridge-http` when bridged.

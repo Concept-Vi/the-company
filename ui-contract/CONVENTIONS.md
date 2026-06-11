@@ -124,3 +124,31 @@ where needed. "push-to-talk"/"tap-to-record" are native voice-dictation mode nam
 not UI directives. Browser/Chrome/computer-use prose names native tool actions (open tab, click, type,
 screenshot) — these describe the NATIVE tool's documented behavior, lint-ok as capability description,
 never a UI instruction.
+
+## Named-act registry — F4 additions (Extension fabric; append-only)
+Lane F4 uses the uniform verb `act` with an internal `act:` discriminator on the extension-fabric
+control resources (hooks/mcp-servers/extensions/output-style), whose write operations are steers over
+native Claude Code config rather than CRUD on a fabric object. ALL are `planned` against the company
+(no bridge route exists — every binding names the gap and rides the `claude-cli`/`claude-tui`
+non-fabric transports). The discriminator VALUES, registered here for V2 closure:
+- `add-hook` / `update-hook` / `remove-hook` / `set-flag` — on `hooks`: add/update/remove a hook
+  handler in a chosen settings scope / flip `disableAllHooks` (planned — no settings-writer endpoint).
+- `add` / `add-json` / `remove` / `authenticate` / `import-desktop` / `reset-project-choices` — on
+  `mcp-servers`: the native `claude mcp …` management verbs + the `/mcp` OAuth flow (planned — no
+  config-writer or auth bridge).
+- `create-skill` / `update-skill` / `delete-skill` / `scaffold-plugin` / `package-plugin` /
+  `add-marketplace` / `install-plugin` / `uninstall-plugin` / `enable-plugin` / `disable-plugin` /
+  `reload-plugins` — on `extensions`: skill authoring + the `/plugin` + `claude plugin` management
+  surface (planned — no authoring or install bridge; the company's /api/cognition/create_skill is a
+  COMPOSITION skill, unrelated).
+- `set-style` / `create-style` / `delete-style` / `set-statusline` / `clear-statusline` — on
+  `output-style`: the `/config` output-style picker + `/statusline` generator (planned — no
+  presentation-config writer; /api/presentation-pref is the company UI's own altitude preference,
+  unrelated).
+
+## Purpose-free vocabulary — F4 note (lint-ok carve-outs)
+F4 prose names Claude Code reserved identifiers that the V5 seed list might otherwise flag: the hook
+EVENT names (`MessageDisplay`, `PostToolBatch`, etc.) and the output-style names (`Proactive`,
+`Explanatory`, `Learning`) are Claude Code identifiers, not UI directives. The word "panel" appears
+ONLY inside quoted native-surface names (the `/mcp` panel) where it is the product's own term, carried
+verbatim from the docs — `lint-ok:` because it names a Claude Code surface, not a company UI element.
