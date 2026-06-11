@@ -131,7 +131,7 @@ when: any attempt to scaffold or run a CI integration through a Company endpoint
 teach: "The Company exposes no CI face. For GitHub, run `/install-github-app` (or manually install apps/claude, add the ANTHROPIC_API_KEY secret, copy examples/claude.yml). For GitLab, add a `claude` job to .gitlab-ci.yml with a masked ANTHROPIC_API_KEY. For Bedrock/Vertex use OIDC/WIF (no static keys). For durable cron WITHOUT CI infra, see [[routines]] (cloud routines) — and note a GitHub Actions `schedule:` trigger is the CI alternative to a scheduled routine."
 ```
 ```contract:error
-code: ci.no-trigger-match | http: 400 | retryable: false
+code: ci.no-mention-response | http: 400 | retryable: false
 when: "Claude does not respond to @claude in CI"
 teach: "Verify the GitHub App is installed, workflows are enabled, the API key secret is set, and the comment contains `@claude` (not `/claude`). On GitLab, confirm the pipeline is being triggered, CI/CD variables are present, and `mcp__gitlab` is in --allowedTools so the job can write comments/MRs (sources: github-actions.md / gitlab-ci-cd.md troubleshooting)."
 ```
@@ -254,7 +254,8 @@ PRs/MRs), [[routines]] (the cloud GitHub-event trigger alternative that needs no
 
 ## Errors
 **Resource-level vocabulary: `ci.not-exposed` (the honest 501 for any Company CI endpoint),
-`ci.no-trigger-match` (the native mention/event mis-fire condition).** Each teaches the real
+`ci.no-mention-response` (the post-scaffold mention-gets-no-response condition on ci.create), and
+`ci.no-trigger-match` (the native mention/event mis-fire condition on ci.act).** Each teaches the real
 native recovery (install the App / add the GitLab job / check the trigger), and the cron-class
 errors redirect to [[routines]] for the no-CI-infra alternative. No error claims a Company CI
 service (verified 2026-06-12: no github-actions/gitlab/ci surface in `ops/cli/`, `runtime/`, or

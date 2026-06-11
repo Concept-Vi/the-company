@@ -3,7 +3,7 @@ type: contract-entry
 resource: permission
 summary: The tool-approval posture a Claude Code session runs under — the mode (default/acceptEdits/plan/dontAsk/bypassPermissions/auto) plus the allow/deny/ask rule lists that gate every tool call; the company exposes ONE fabric-wide posture today, the per-session rule surface is planned.
 schemes: []
-status: planned
+status: building
 relates-to: ["[[fabric-config]]", "[[session]]", "[[model]]", "[[headless-control]]"]
 ---
 

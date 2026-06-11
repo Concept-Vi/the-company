@@ -3,7 +3,7 @@ type: contract-entry
 resource: diagnostics
 summary: How Claude Code health, debug output, and failures are inspected — /doctor (install/settings/MCP/context health), /status, --debug categories, --safe-mode/--bare, the OTel telemetry export, and the error-event surface; the company's fabric exposes the supervisor /health read live (building) and folds per-session failures onto the event stream, while the native /doctor + --debug levers are planned (the spawn threads no --debug) with the gap named.
 schemes: []
-status: planned
+status: building
 relates-to: ["[[fabric-config]]", "[[session]]", "[[events]]", "[[headless-control]]", "[[settings]]", "[[platform]]", "[[surfaces]]"]
 ---
 
@@ -146,6 +146,10 @@ tasks:
 bindings:
   - { kind: http, method: GET, path: "/watch  (the supervisor ndjson per-session stream)", transport: supervisor-http, exposure: "exposure.json#supervisor-http", note: "the diagnostic lens reuses the SAME stream as [[session#op: session.watch]] / [[headless-control#op: headless-control.watch]] — there is no separate diagnostics stream. Failure-shaped events (is_error results, abnormal exit, the supervisor's timeout kill) and system/init resolved_tools are read off it. SSE mechanics owned by [[events#op: events.watch]] — this section links, never restates" }
 liveness: watch
+frames: "ndjson — one JSON event object per line on the supervisor's per-session `/watch` GET (the `agent_sessions.*` shape, `seq`/`type`/`session` + failure fields like `is_error`/`detail`); the SAME frame stream [[session#op: session.watch]] reads. This op restates no frame schema — the canonical event frame is owned by [[events#op: events.watch]] (section 10 C-C5)."
+resume: "`since=<seq>` query param on the supervisor `/watch` (the example uses `since=-1` for from-now); reconnect and re-read the gap via the snapshot lens of [[diagnostics#op: diagnostics.get]] / [[events#op: events.list]]. Resume mechanics are owned once by [[events#op: events.watch]] (Last-Event-ID on the bridge SSE twin); this lens links, never restates."
+keepalive: "owned by [[events#op: events.watch]] (~15s comment frames on the SSE surface); the supervisor ndjson `/watch` holds the connection open between events with no terminal frame — there is no separate diagnostics keepalive."
+termination: "no terminal frame — the server holds the stream open; client disconnect ends it (same as [[events#op: events.watch]]). A session reaching `idle`/exit emits its terminal `agent_sessions.*` event in-band but does NOT close the diagnostic stream."
 emits: []
 verification:
   failure-observable: {state: probe-verified, run: "session_supervisor_acceptance (turn-timeout kill + is_error surface on the watch stream)", date: 2026-06-12, note: "the failure lens on a proven F1 stream; this op adds NO new transport — it names the diagnostic READ of an existing building watch"}

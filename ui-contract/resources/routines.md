@@ -286,7 +286,7 @@ a pending `/loop` wakeup. None of these is a Company operation — each binding 
 control and the absent Company proxy.
 ### Errors
 ```contract:error
-code: routines.not-exposed | http: 501 | retryable: false
+code: routines.control-not-exposed | http: 501 | retryable: false
 when: any control call against a routine through a Company endpoint
 teach: "The Company proxies no routine controls. Use claude.ai/code/routines (Run now / Repeats toggle / token Regenerate-Revoke / delete), `/schedule run|update` in the CLI, or CronDelete for a session-scoped task. See [[routines#op: routines.create]] for creation."
 ```
@@ -303,8 +303,9 @@ Adjacent: [[routines#op: routines.create]] (save), [[routines#op: routines.list]
 [[ci]] (cron-in-CI), [[workflows]] (in-session keep-going).
 
 ## Errors
-**Resource-level vocabulary: `routines.not-exposed` (the honest 501 every op returns until a
-Company scheduling face is built), `routines.schedule-unavailable` (the native `/schedule`
+**Resource-level vocabulary: `routines.not-exposed` (the honest 501 create/manage returns until a
+Company scheduling face is built), `routines.control-not-exposed` (the same 501 on control calls —
+run/repeat/revoke/delete), `routines.schedule-unavailable` (the native `/schedule`
 hidden-command condition), `routines.org-disabled` (the admin Routines toggle).** Each teaches
 the real native recovery path; none claims a Company capability that the code does not have
 (verified 2026-06-12: no cron/schedule/routine noun in `ops/cli/`, no routine surface in

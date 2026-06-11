@@ -3,7 +3,7 @@ type: contract-entry
 resource: platform
 summary: The host-and-org layer Claude Code runs within — installation/updates/platform support, enterprise admin (managed policy), cloud-provider routing (Bedrock/Vertex/Foundry), large-codebase setup, data privacy/security, and the glossary; nearly all of this governs the HOST install and the Anthropic ORG, not the fabric, so this resource maps each class to its native model and marks it building/planned/out-of-local-scope WITH a reason — the company drives one installed claude binary and never administers the org.
 schemes: []
-status: planned
+status: building
 relates-to: ["[[auth]]", "[[settings]]", "[[diagnostics]]", "[[surfaces]]", "[[session]]", "[[cost-usage]]", "[[knowledge-corpus]]"]
 ---
 
@@ -134,6 +134,14 @@ bindings:
   - { kind: cli, command: "claude install [version] / claude update / claude doctor   (HOST commands; NOT company routes)", transport: cli-local, exposure: "n/a — Claude Code built-in", status: planned, note: "SCOPE: the company drives the binary at `_find_claude()` (runtime/session_supervisor.py:259, env-overridable) but never installs/updates it. Native installs auto-update in the background; homebrew/winget/npm need manual upgrade. Listed planned-and-routed so CC-34 is navigable; the actual install/update path is the host operator's" }
 liveness: none
 emits: []
+consequences:                    # the company performs NO install/update — proof is absence of any company write + the host-side / fabric-init observable (CONTRACT-FORMAT section 6 V9 absence-shaped)
+  - when: "an install/update is requested against the company (any binding)"
+    expect: []
+    evidence: "no company event fires — the supervisor never installs or updates the binary. The company-side outcome is the honest refusal `platform.out-of-local-scope` (501); the real install/update happens on the HOST (native auto-update in the background, or manual `brew/winget` upgrade), observable only on the host, never on a fabric stream."
+  - when: "the driven binary's resolved version is read after a host-side update"
+    expect: []
+    evidence: "the version of the `claude` the host resolved (`_find_claude()`, runtime/session_supervisor.py:259) surfaces on a fabric session's `system/init` (the stream-json init event carries model + tools + version) — read it via [[diagnostics#op: diagnostics.watch]] (system/init lens) or [[session#op: session.watch]]; there is no company version field."
+correlate: []                    # no company event is emitted — nothing to correlate (absence-shaped)
 verification:
   install-update: {state: unverified, note: "host operator concern; no company op by design — planned/out-of-local-scope"}
 ```
@@ -182,6 +190,14 @@ bindings:
   - { kind: http, method: GET, path: "(none — org admin console / MDM / managed-settings.json on the host)", transport: supervisor-http, exposure: "n/a — org/admin surface", status: planned, note: "SCOPE: managed settings are delivered server-side (Claude admin console), via MDM (macOS plist / Windows registry HKLM/HKCU), or file-based (/etc/claude-code/managed-settings.json on Linux/WSL, + managed-settings.d/ drop-ins). They OUTRANK all other scopes and cannot be overridden. The fabric INHERITS whatever the host has; the company administers none of it" }
 liveness: none
 emits: []
+consequences:                    # the company administers NO policy — proof is absence of any company write + the inherited-settings observable (CONTRACT-FORMAT section 6 V9 absence-shaped)
+  - when: "an enterprise-admin / managed-policy change is requested against the company (any binding)"
+    expect: []
+    evidence: "no company event fires — the supervisor edits no managed settings. The company-side outcome is the honest refusal `platform.out-of-local-scope` (501); managed policy is delivered by the ORG (admin console / MDM / `/etc/claude-code/managed-settings.json`) and the fabric INHERITS it unoverridably."
+  - when: "the resolved (managed-inclusive) settings of a fabric session are read"
+    expect: []
+    evidence: "the effective settings a session runs under — managed policy at the top of the precedence chain ([[settings#Identity]]) — are read via [[settings#op: settings.get]]; managed values appear as the unoverridable layer, not as a company-written field. The company surfaces what it inherited, it administers none of it."
+correlate: []                    # no company event is emitted — nothing to correlate (absence-shaped)
 verification:
   managed-policy: {state: unverified, note: "org admin concern; no company op by design — planned/out-of-local-scope"}
 ```
@@ -229,6 +245,14 @@ bindings:
   - { kind: http, method: POST, path: "(none — host env CLAUDE_CODE_USE_BEDROCK/_VERTEX/_FOUNDRY + provider creds)", transport: supervisor-http, exposure: "n/a — host env / external provider", status: planned, note: "SCOPE: provider selection is the HIGHEST auth-precedence method (see [[auth#Identity]]). It is set by the service account's environment + provider credentials (AWS/GCP/Azure), not a company op. The fabric INHERITS it: a provider-configured host means provider-routed sessions, transparently. The provider endpoints themselves are EXTERNAL (Anthropic/AWS/GCP/Azure), inventoried in INVENTORY-EXCLUSIONS.md, never company routes" }
 liveness: none
 emits: []
+consequences:                    # the company selects/switches NO provider — proof is absence of any company write + the inherited-routing observable (CONTRACT-FORMAT section 6 V9 absence-shaped)
+  - when: "a cloud-provider switch is requested against the company (any binding)"
+    expect: []
+    evidence: "no company event fires — the supervisor sets no `CLAUDE_CODE_USE_*` env and switches no provider. The company-side outcome is the honest refusal `platform.out-of-local-scope` (501); provider selection is the HIGHEST auth-precedence method ([[auth#Identity]]), set in the service account's HOST environment + provider credentials, never by a company op."
+  - when: "a provider-configured host spawns a fabric session (routing is INHERITED)"
+    expect: []
+    evidence: "if the host env carries `CLAUDE_CODE_USE_BEDROCK/_VERTEX/_FOUNDRY`, the session routes inference through that provider transparently; the resolved model/provider surfaces on the session's `system/init` ([[diagnostics#op: diagnostics.watch]] / [[session#op: session.watch]]). The provider endpoints are EXTERNAL (Anthropic/AWS/GCP/Azure), inventoried in INVENTORY-EXCLUSIONS.md, never company routes. UNVERIFIED end-to-end — no provider is configured on this host."
+correlate: []                    # no company event is emitted — nothing to correlate (absence-shaped)
 verification:
   provider-routing: {state: unverified, note: "host env concern; no company op — planned/out-of-local-scope. Provider-inherited routing is UNVERIFIED end-to-end (no provider configured on this host)"}
 ```

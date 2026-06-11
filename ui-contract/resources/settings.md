@@ -3,7 +3,7 @@ type: contract-entry
 resource: settings
 summary: Claude Code's configuration data model — the settings.json key set, the scope hierarchy (managed > CLI flags > local > project > user) and merge rules, environment variables, and the /config editor; the company spawns every session with a FIXED minimal flag set and threads NO settings, so this resource contracts the native config model with the per-session config gap named, and surfaces the fabric's effective operating config (cap, timeout, permission, bind) as the one live read.
 schemes: []
-status: planned
+status: building
 relates-to: ["[[fabric-config]]", "[[session]]", "[[permission]]", "[[model]]", "[[auth]]", "[[surfaces]]", "[[diagnostics]]"]
 ---
 
