@@ -5,14 +5,14 @@
   "note": "CONTRACTED layer only; Layer-2 DEMONSTRATED empty (no live op, no harness run).",
   "totals": {
     "classes_defined": 35,
-    "classes_covered": 11,
-    "classes_planned_only": 24,
+    "classes_covered": 13,
+    "classes_planned_only": 22,
     "classes_unmapped": 0,
     "affordances_defined": 123,
     "affordances_reached": 123,
-    "affordances_building": 32,
-    "affordances_planned_only": 91,
-    "ops_parsed": 77
+    "affordances_building": 45,
+    "affordances_planned_only": 78,
+    "ops_parsed": 78
   },
   "classes": {
     "covered": [
@@ -20,9 +20,11 @@
       "CC-07",
       "CC-08",
       "CC-09",
+      "CC-10",
       "CC-14",
       "CC-15",
       "CC-18",
+      "CC-20",
       "CC-23",
       "CC-25",
       "CC-33",
@@ -34,14 +36,12 @@
       "CC-03",
       "CC-04",
       "CC-06",
-      "CC-10",
       "CC-11",
       "CC-12",
       "CC-13",
       "CC-16",
       "CC-17",
       "CC-19",
-      "CC-20",
       "CC-21",
       "CC-22",
       "CC-24",
@@ -265,37 +265,37 @@
     },
     "CC-07.2": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "permission",
           "op": "permission.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-07.3": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "permission",
           "op": "permission.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-07.4": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "permission",
           "op": "permission.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
@@ -542,49 +542,49 @@
     },
     "CC-10.2": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "model",
           "op": "model.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-10.3": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "model",
           "op": "model.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-10.4": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "model",
           "op": "model.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-10.5": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "model",
           "op": "model.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
@@ -1045,6 +1045,11 @@
       "ops": [
         {
           "entry": "events",
+          "op": "events.list",
+          "status": "building"
+        },
+        {
+          "entry": "events",
           "op": "events.watch",
           "status": "building"
         },
@@ -1117,25 +1122,25 @@
     },
     "CC-20.1": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "cost-usage",
           "op": "cost-usage.get",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-20.2": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "cost-usage",
           "op": "cost-usage.get",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
@@ -1373,25 +1378,25 @@
     },
     "CC-25.2": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "settings",
           "op": "settings.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-25.3": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "settings",
           "op": "settings.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
@@ -1577,25 +1582,25 @@
     },
     "CC-33.3": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "diagnostics",
           "op": "diagnostics.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
     "CC-33.4": {
       "statuses": [
-        "planned"
+        "building"
       ],
       "ops": [
         {
           "entry": "diagnostics",
           "op": "diagnostics.act",
-          "status": "planned"
+          "status": "building"
         }
       ]
     },
