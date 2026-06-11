@@ -80,6 +80,47 @@ Statuses ride the ops (CONTRACT-FORMAT §4.2); rows whose op is `planned` say so
 | undo Claude's file edits back to a point · undo the last changes *(alias)* | [[checkpoint#op: checkpoint.restore]] | scope=code · **PLANNED** |
 | compress one side of a chosen point · targeted compact at a checkpoint *(alias)* | [[checkpoint#op: checkpoint.summarize]] | direction=from-here\|up-to-here · **PLANNED** — /rewind "Summarize from/up to here" |
 
+## Permissions (F3 — CC-07)
+| intent / alias | op | params |
+|---|---|---|
+| what permission mode will a spawned session run under · is the fabric read-only *(alias)* | [[permission#op: permission.get]] | |
+| can fabric sessions edit files or only plan | [[permission#op: permission.get]] | |
+| spawn a session that can edit files without prompting | [[permission#op: permission.act]] | mode=acceptEdits **PLANNED** |
+| lock a session to a fixed tool surface | [[permission#op: permission.act]] | mode=dontAsk, allow=[…] **PLANNED** |
+| change permission mode mid-session · raise a session's permissions *(alias)* | [[permission#op: permission.act]] | act=set-mode **PLANNED** |
+
+## Models & reasoning (F3 — CC-10)
+| intent / alias | op | params |
+|---|---|---|
+| what models can a session run · available models *(alias)* | [[model#op: model.list]] | **PLANNED** (interim: the alias table in [[model#Representation]]) |
+| spawn a session on a specific model · switch model *(alias)* | [[model#op: model.act]] | model=opus|sonnet|haiku|fable|opusplan **PLANNED** |
+| run a cheaper faster model for a simple task | [[model#op: model.act]] | model=haiku **PLANNED** |
+| make a session reason harder · select reasoning effort *(alias)* | [[model#op: model.act]] | effort=xhigh **PLANNED** |
+| use opus for planning then sonnet for execution | [[model#op: model.act]] | model=opusplan **PLANNED** |
+| set a fallback model if the primary is overloaded | [[model#op: model.act]] | fallback=[sonnet,haiku] **PLANNED** |
+| use the 1 million token context *(alias)* | [[model#op: model.act]] | model=opus[1m] **PLANNED** |
+
+## Subagents & teams (F3 — CC-09; the LIVE path is the fabric fan)
+| intent / alias | op | params |
+|---|---|---|
+| fan out parallel workers · ask N copies of a session in parallel *(the LIVE path)* | [[session#op: session.post]] | verb=consult, copies=N |
+| collect a fan's replies | [[session-message#op: session-message.list]] | thread=<from post> |
+| list live parallel workers · show running teammates *(alias)* | [[session#op: session.list]] | state=supervised-live |
+| create an agent team to work in parallel · run a parallel code review | [[agent-team#op: agent-team.act]] | act=create-team **PLANNED** (native teams) |
+| spawn a teammate from a subagent definition · delegate to a subagent *(alias)* | [[agent-team#op: agent-team.act]] | act=spawn-teammate, agent_type=… **PLANNED** |
+| require a teammate to plan before changing code | [[agent-team#op: agent-team.act]] | plan_approval=true **PLANNED** |
+| message a teammate · shut down a teammate *(alias)* | [[agent-team#op: agent-team.act]] | act=message-teammate / shutdown-teammate **PLANNED** |
+| list agent teams · available agent types *(alias)* | [[agent-team#op: agent-team.list]] | **PLANNED** (interim: [[session#op: session.list]]) |
+
+## Headless / SDK control (F3 — CC-18)
+| intent / alias | op | params |
+|---|---|---|
+| read a headless session's output stream as JSON · tail a headless session *(alias)* | [[headless-control#op: headless-control.watch]] | (= [[session#op: session.watch]], headless lens) |
+| what model and tools did a session resolve at init | [[headless-control#op: headless-control.watch]] | (system/init fields — fold gap noted) |
+| push a turn into a programmatic session · send stream-json input *(alias)* | [[headless-control#op: headless-control.act]] | act=turn (= [[session#op: session.inject]]) |
+| interrupt a headless session's current turn | [[headless-control#op: headless-control.act]] | act=interrupt (= [[session#op: session.interrupt]]) |
+| ask a headless session for structured JSON output | [[headless-control#op: headless-control.act]] | act=set-output, output_format=json **PLANNED** |
+
 ## Not exposed locally (honest rows — reach for these and you found a recorded boundary)
 | intent | status |
 |---|---|
@@ -122,3 +163,9 @@ Statuses ride the ops (CONTRACT-FORMAT §4.2); rows whose op is `planned` say so
 | programmatically list loaded memory via a company API | NOT EXPOSED YET — Claude Code's `/memory` is interactive, not machine-readable; company list op is an F10.1 gap-adoption candidate ([[claude-memory#op: claude-memory.list]]) |
 | read per-turn cost from the fabric event stream | NOT EXPOSED YET — the supervisor DISCARDS the result event's cost/usage fields (code-cited gap, [[cost-usage#Representation]]); adoption = stamp ModelUsage onto agent_sessions.turn |
 | semantically search past-session transcripts | PLANNED (F1's [[transcript#op: transcript.search]]) — the claude-sessions vault is not yet registered; this is a DIFFERENT corpus from the knowledge vaults ([[which-corpus]]) |
+| set a per-session permission mode / allow-deny rules | NOT EXPOSED YET (planned) — the fabric pins COMPANY_FABRIC_PERMISSION (default plan) + --allowedTools mcp__company on every spawn; per-session is [[permission#op: permission.act]] (spawn-param gap named). Operator path: COMPANY_FABRIC_PERMISSION=<mode> + restart |
+| select a session's model / effort / thinking | NOT EXPOSED YET (planned) — the spawn passes no --model/--effort ([[model#op: model.act]]). Operator path: ANTHROPIC_MODEL on the service + restart; OBSERVE the resolved model via [[headless-control#op: headless-control.watch]] system/init |
+| create or control a NATIVE Claude Code agent team | NOT EXPOSED BY DESIGN (no API) — native teams are driven inside a lead session, gated by CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1. The LIVE parallel path is the fabric fan ([[session#op: session.post]] verb=consult) |
+| run a native single-session subagent (Task/Agent tool) from a fabric session | NOT EXPOSED — fabric sessions run --allowedTools mcp__company, so the native Agent tool is outside their allow surface ([[permission]]); use the consult fan instead |
+| choose a headless run's output-format / structured-output schema / token streaming | NOT EXPOSED YET (planned) — the supervisor hardcodes --output-format stream-json --verbose and requests no --include-partial-messages/--json-schema ([[headless-control#op: headless-control.act]]). Operator path: run claude -p --output-format json --json-schema directly, outside the fabric |
+| read api-retry progress / token-level deltas of a fabric session | NOT EXPOSED — the supervisor's reader ignores system/api_retry and the spawn omits --include-partial-messages; the folded `text` frame is per-block, not per-token ([[headless-control#Representation]]) |

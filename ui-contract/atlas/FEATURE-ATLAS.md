@@ -130,3 +130,28 @@ below; F2–F8 lanes append theirs under their classes.
 > analytics.md, admin-setup.md, agent-sdk/typescript.md, claude-directory.md, Config & UI Data
 > Model.md, Memory Systems.md (vault claude-code-atlas) + usage-cost-api.md, admin-api.md (vault
 > claude-platform-docs), all searched 2026-06-12; substrate get_status/list_vaults run live 2026-06-12.
+
+## Affordances seeded by F3 (Execution & control)
+
+### CC-07 · Permissions & Approval Modes
+- CC-07.1 — read the permission posture a session runs under (mode + tool surface)
+- CC-07.2 — spawn a session under a chosen permission mode (default/acceptEdits/plan/dontAsk/bypassPermissions/auto)
+- CC-07.3 — constrain a session's tool surface with allow/deny/ask rules
+- CC-07.4 — change a live session's permission mode mid-session
+
+### CC-09 · Subagents & Agent Teams
+- CC-09.5 — define/spawn a subagent (system prompt + tool allowlist + model) that reports back
+- CC-09.6 — create a native agent TEAM (lead + teammates with a shared task list and a mailbox)
+- CC-09.7 — assign tasks to teammates / require plan-approval before they change code
+- CC-09.8 — message a specific teammate directly and shut a teammate down
+
+### CC-10 · Model Selection & Reasoning
+- CC-10.1 — list the available models/aliases a session can run
+- CC-10.2 — select the model a session runs (alias or full name; incl. opusplan, [1m])
+- CC-10.3 — set a session's reasoning effort level (low…max / ultracode)
+- CC-10.4 — toggle extended thinking for a session
+- CC-10.5 — set a fallback model chain for overload/unavailability
+
+### CC-18 · Headless & Programmatic Use (SDK & Automation)
+- CC-18.6 — read a programmatic session's machine-readable output stream (stream-json fold)
+- CC-18.7 — choose a headless run's output format / structured-output schema / partial streaming

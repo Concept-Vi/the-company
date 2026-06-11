@@ -70,3 +70,27 @@ retrieval bridge to consumer vocabulary). Escapes need an inline `lint-ok:` just
 - `remember` — on `claude-memory`: save a learning to auto-memory, or (on request) append an instruction to CLAUDE.md. (planned; today a Claude Code conversational behavior, not a company API)
 - `forget` — on `claude-memory`: trim/delete a stale memory entry. (planned; today via /memory or a direct edit)
 - `cap-budget` — on `cost-usage`: set the headless `--max-budget-usd` ceiling that stops a session when exceeded. (planned; a Claude Code headless flag the supervisor could thread through session.create)
+
+## Named-act registry — F3 additions (Execution & control; append-only)
+Lane F3 uses the uniform verb `act` with an internal `act:` discriminator on control/config
+resources whose every operation is a steer rather than a CRUD. The discriminator VALUES are the
+named acts (registered here for V2 closure); ALL are `planned` against the company today except where
+re-exposed by an F1 op (noted):
+- `set-at-spawn` / `set-mode` — on `permission`: launch under a chosen mode+rules / change a live
+  session's mode mid-session (planned — the spawn carries no permission param; mid-session set is the
+  SDK setPermissionMode analogue).
+- `set-at-spawn` / `set-model` / `set-effort` — on `model`: choose model/effort/thinking/fallback at
+  launch / switch model or effort mid-session (planned — the spawn carries no --model/--effort).
+- `create-team` / `spawn-teammate` / `assign-task` / `message-teammate` / `shutdown-teammate` /
+  `cleanup-team` — on `agent-team`: the native agent-team control verbs (planned — no native-team
+  company face; the LIVE parallel path is `session.post` verb=consult).
+- `turn` / `interrupt` / `set-output` — on `headless-control`: write a user turn / interrupt the
+  in-flight turn / select output-format+schema. `turn` and `interrupt` are RE-EXPOSED today via
+  [[session#op: session.inject]] / [[session#op: session.interrupt]] (building); `set-output` is
+  planned (the spawn hardcodes --output-format stream-json).
+
+## Purpose-free vocabulary — F3 note (lint-ok carve-outs)
+`ultrathink`/`ultracode` are Claude Code reserved keywords (a prompt keyword and an effort setting),
+NOT UI directives — they appear in F3 prose with inline `lint-ok:` where the V5 seed list might
+otherwise flag them. The mode/effort enum VALUES (plan/acceptEdits/etc.) are Claude Code identifiers,
+not the banned UI words.

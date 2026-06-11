@@ -39,10 +39,16 @@ is an accelerator — these flat files are sufficient on their own.
 
 ## Honest current status (F1 slice — update in place, never version)
 This corpus is UNDER BUILD beside the fabric it contracts. As of 2026-06-12 it carries the
-F1 Session-Fabric slice only: `session`, `session-message`, `events`, `transcript`,
-`fabric-config`. Statuses are honest per CONTRACT-FORMAT §4.2 — most F1 ops are `building`
-(code exists, run-proven by acceptance suites; NOT harness-flipped `live`), some `planned`
-(no code yet — bridge fabric routes, transcript search). No op in this corpus is `live`:
+F1 Session-Fabric slice (`session`, `session-message`, `events`, `transcript`, `fabric-config`)
+and the F3 Execution-&-control slice (`permission`, `model`, `agent-team`, `headless-control` —
+Atlas classes 7/9/10/18). Statuses are honest per CONTRACT-FORMAT §4.2 — most F1 ops are
+`building` (code exists, run-proven by acceptance suites; NOT harness-flipped `live`), some
+`planned` (no code yet — bridge fabric routes, transcript search). F3 is mostly `planned`: the
+supervisor spawn carries no permission/model/effort/output-format param, and there is no native
+agent-team face — so those control resources contract the NATIVE Claude Code surface with the
+exact spawn-param gap named per op, and route the live capability to the fabric (permission
+posture READ, the consult fan, inject/interrupt, the folded watch stream are the `building`
+slices F3 re-exposes through F1's endpoints). No op in this corpus is `live`:
 the corpus-only driving harness that flips statuses has not run yet. Examples are
 `captured: synthetic` and marked so. The generated layers (`INDEX.md`, `EXPOSURE.md`/
 `exposure.json`, `coverage/`, `evidence/`, `tools/validate.py` V1–V26) are NOT YET BUILT —
