@@ -136,9 +136,13 @@ reaped; the `implement.py` precedent, NOT `ui_claude_session`'s dead constant) �
 **The floor holds:** this is a SERVICE, never the MCP face — `mcp_face` imports neither this module nor
 `ui_claude_session`; the face writes intents to the mailbox, this service is the only process that
 launches/resumes claude. Mailbox consumption = per-consumer cursor ref (`agent_sessions/cursor:supervisor`),
-advanced only past handled intents (head-of-line hold = crash-safe ordering); durable replies (verb=reply,
-`re`=intent id, body in cas) ride the same leaf. Faces: `company session` (ops/cli/sessions.py) + the
-`session-supervisor` services.json row. Proven by `tests/session_supervisor_acceptance.py` (24 stub-binary
+advanced only past handled intents (head-of-line hold = crash-safe ordering); durable replies (verb=reply|error,
+`re`=intent id, body in cas, `thread`=the intent's thread) ride the same leaf via `store.append_agent_mail`
+(seq-stamped + thread-joined → visible to seq-cursor inbox reads; the F1.5 contract lane closed the original
+raw-append seam, which made replies invisible to `agent_mail_since`). `SUPERVISOR_ROUTES` is the transport's
+machine inventory (CONTRACT-FORMAT §9.3; drift teeth `tests/supervisor_routes_acceptance.py`). Faces:
+`company session` (ops/cli/sessions.py) + the `session-supervisor` services.json row; contract entries in
+`ui-contract/resources/`. Proven by `tests/session_supervisor_acceptance.py` (27 stub-binary
 service-level checks); real-claude end-to-end (inject-to-idle ≤5s, interrupt semantics, WAKE/CONSULT on
 real ids) is the lead's verification slice — stated, not green-painted.
 

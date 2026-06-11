@@ -64,6 +64,7 @@ flowchart TD
 | `tests/` | acceptance suites (the proofs) | [[tests — constitution]] | — |
 | `docs/` | meta-docs about the repo-as-knowledge-space | [[docs — constitution]] | — |
 | `ops/` | the service **command center** — see + run the runtime (`company` console + `services.json`); first of more | [[ops — constitution]] | — |
+| `ui-contract/` | the UI Contract corpus (the build's second product): purpose-free resource entries + transports/tasks/atlas a UI-building AI consumes INSTEAD of this repo's code — format frozen in `ui-contract/CONTRACT-FORMAT.md`; F1 slice carried, statuses honest (building/planned, nothing live until the driving harness flips it) | (README.md is its constitution) | F1.5/F9 |
 
 > [!note] Constitution links use **aliases**, not filenames (every file is `AGENTS.md`). The alias `"<module> — constitution"` lives in each note's frontmatter — see [[Vault Conventions]]. Links to `panels/ · tests/` etc. resolve once [[Vault Conventions|the convention]] is applied to those folders.
 
