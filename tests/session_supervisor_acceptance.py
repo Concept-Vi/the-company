@@ -150,7 +150,12 @@ def main():
         kinds = [e["kind"] for e in evs]
         check("agent_sessions.spawned ×3 on events.jsonl (single writer)",
               kinds.count("agent_sessions.spawned") == 3)
-        turn_evs = [e for e in evs if e["kind"] == "agent_sessions.turn"]
+        # BOUNDED WAIT (the test's own convention): the record flips idle/turns=1 in the reader
+        # thread BEFORE the durable claim's fsync completes — an immediate log read races that
+        # window (observed losing on WSL fsync latency). The claim is still the bar; the wait is.
+        turn_evs = wait_for(lambda: [e for e in _events(store_dir)
+                                     if e["kind"] == "agent_sessions.turn"] or None,
+                            10, "durable agent_sessions.turn claim")
         check("durable agent_sessions.turn claim written", len(turn_evs) == 1
               and turn_evs[0].get("session") == sids[0] and turn_evs[0].get("is_error") is False)
         check("inject while BUSY would refuse-loud (409 teach)", _busy_refusal_teaches(sids[1]))
@@ -185,6 +190,16 @@ def main():
               reply["verb"] == "reply" and reply["to"] == "session://tester")
         body = st.get_content(reply["cas"])
         check("reply body rides cas and carries the turn's text", "mailbox says hello" in body["text"])
+        # the closed raw-append seam: replies now ride store.append_agent_mail → seq-stamped +
+        # thread-joined, so a seq-cursor inbox read (sessions(op='inbox') / agent_mail_since)
+        # actually SEES them — the raw no-seq append made every reply invisible to those reads
+        check("reply is seq-stamped (inbox-visible, never the invisible raw-append shape)",
+              isinstance(reply.get("seq"), int))
+        check("reply joins the intent's thread (fan aggregation key; id-fallback — this "
+              "hand-appended intent carries no thread)", reply.get("thread") == intent_id)
+        inbox = st.agent_mail_since(-1, to="session://tester", verb="reply")
+        check("agent_mail_since(to=tester, verb=reply) round-trips the reply",
+              any(r.get("re") == intent_id for r in inbox))
         check("per-consumer cursor ref advanced", (st.head("agent_sessions/cursor:supervisor") or "0") != "0")
         turn2 = [e for e in _events(store_dir) if e["kind"] == "agent_sessions.turn"
                  and e.get("intent_id") == intent_id]

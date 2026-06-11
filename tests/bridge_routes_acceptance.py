@@ -42,8 +42,9 @@ def dispatched_routes() -> set:
     cut = text.index("def do_GET")
     body = text[cut:]
     routes = set()
-    # path == "/…"  /  self.path == "/…"
-    for m in re.finditer(r'(?:self\.)?path\s*==\s*"(/[^"]*)"', body):
+    # path == "/…"  /  self.path == "/…"  /  self.path.split("?")[0] == "/…" (the query-string form —
+    # /api/claude/turn dispatches through it; the extractor missing it made a real route look phantom)
+    for m in re.finditer(r'(?:self\.)?path(?:\.split\("\?"\)\[0\])?\s*==\s*"(/[^"]*)"', body):
         routes.add(m.group(1))
     # (self.)path.startswith("/…")  — the prefix routes (e.g. /mockups/)
     for m in re.finditer(r'(?:self\.)?path\.startswith\(\s*"(/[^"]*)"', body):

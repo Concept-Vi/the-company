@@ -47,8 +47,9 @@ MAILBOX (coordinate-by-contract, guide §C — this module CONSUMES the leaf, it
 Body text lives in cas (store.get_content) — messages stay small (<4KB single O_APPEND write,
 the fs_store ref-history atomicity argument). Consumption is a per-consumer CURSOR (a ref —
 `agent_sessions/cursor:supervisor` — holding the consumed byte offset; synthesis §2.3's
-cheaper-than-RMW design). Replies/acks are appended to the SAME leaf (verb: reply | error,
-`re` = the intent id) in the same single-write discipline, and the completed turn is claimed
+cheaper-than-RMW design). Replies/acks are appended to the SAME leaf via the store's own
+`append_agent_mail` (verb: reply | error, `re` = the intent id, `thread` = the intent's thread
+— seq-stamped + inbox-visible; the first commit's raw-append seam is closed), and the completed turn is claimed
 durably as an `agent_sessions.turn` event (the _emit_durable class — its loss would change
 behavior). F1 SIMPLIFICATION (stated, not hidden): intents are consumed strictly in order; an
 intent whose target is mid-turn HOLDS the cursor (head-of-line blocking, retried next poll) so
@@ -101,6 +102,20 @@ from runtime import ui_claude_session as _panel   # reuse: _find_claude + _MCP_C
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_PORT = 8771                    # next free beside the bridge's 8770 (audit N7 — the ONE number
                                        # services.json + the unit + the contract entries all cite)
+
+# THE INVENTORY SOURCE for the supervisor-http transport (CONTRACT-FORMAT §9.3 / V21: a transport
+# without a machine-readable registry fails contract validation — the BRIDGE_ROUTES law applied here,
+# (method, path) structured from birth per §9.1). tests/supervisor_routes_acceptance.py is the drift
+# teeth: this tuple and the do_GET/do_POST dispatch literals must match, BOTH directions.
+SUPERVISOR_ROUTES = (
+    ("GET", "/health"),
+    ("GET", "/sessions"),
+    ("GET", "/watch"),
+    ("POST", "/spawn"),
+    ("POST", "/inject"),
+    ("POST", "/interrupt"),
+    ("POST", "/teardown"),
+)
 MAIL_LEAF = "agent_sessions"           # naming law: agent_sessions everywhere (never fabric/, never sessions/)
 CURSOR_REF = "agent_sessions/cursor:supervisor"   # per-consumer mailbox cursor (a ref, §2.3 pattern)
 INIT_WAIT_S = float(os.environ.get("COMPANY_FABRIC_INIT_WAIT_S", "15"))  # spawn blocks briefly for init
@@ -451,28 +466,31 @@ class SessionSupervisor:
             return self.mail_path.stat().st_size if self.mail_path.exists() else 0
         return int(v)
 
-    def _mail_append(self, rec: dict) -> None:
-        """Append one reply/error record to the mailbox leaf — the SAME format + the same
-        single-write O_APPEND discipline the leaf is specced with (fs_store.py:245-258 argument;
-        bodies ride cas so a line stays <4KB). This writes the §C-specced FILE, not §C's tools;
-        when the store lane lands `append_session_msg` on FsStore this call migrates behind it
-        (flagged in the lane report — a seam, not a fork)."""
-        self.mail_path.parent.mkdir(parents=True, exist_ok=True)
-        with self.mail_path.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(rec) + "\n")
+    def _reply_thread(self, intent: dict) -> str:
+        """The reply's aggregation key: the intent's own thread (store-minted on every session_post),
+        falling back to the intent id for hand-appended intents that bypassed append_agent_mail —
+        a consult fan's N replies all join the ONE intent's thread either way."""
+        t = intent.get("thread")
+        return t if (isinstance(t, str) and t.strip()) else str(intent.get("id") or "")
 
     def _mail_reply(self, s: Supervised, intent: dict, text: str, *, is_error: bool) -> None:
+        """Append the durable reply via the store's OWN mailbox API (the seam the first commit
+        flagged, now closed: append_agent_mail stamps cross-process-unique `seq` + defaults `thread`,
+        so replies are VISIBLE to sessions(op='inbox') reads and aggregate under the intent's thread
+        — the raw no-seq append made them invisible to every seq-cursor read)."""
         cas = self.store.put_content({"text": text, "session": s.claude_session_id or s.id})
-        self._mail_append({"id": uuid.uuid4().hex, "ts": _now(),
-                           "to": intent.get("from"), "from": f"session://{s.claude_session_id or s.id}",
-                           "verb": "error" if is_error else "reply", "re": intent.get("id"), "cas": cas})
+        self.store.append_agent_mail({
+            "to": intent.get("from"), "from": f"session://{s.claude_session_id or s.id}",
+            "verb": "error" if is_error else "reply", "re": intent.get("id"),
+            "thread": self._reply_thread(intent), "cas": cas})
 
     def _mail_error(self, intent: dict, why: str) -> None:
-        cas = self.store.put_content({"text": why})
-        self._mail_append({"id": uuid.uuid4().hex, "ts": _now(),
-                           "to": intent.get("from"), "from": "session://supervisor",
-                           "verb": "error", "re": intent.get("id"), "cas": cas})
         print(f"[session-supervisor] intent {intent.get('id')} refused: {why}", file=sys.stderr, flush=True)
+        cas = self.store.put_content({"text": why})
+        self.store.append_agent_mail({
+            "to": intent.get("from"), "from": "session://supervisor",
+            "verb": "error", "re": intent.get("id"),
+            "thread": self._reply_thread(intent), "cas": cas})
 
     def _intent_body(self, rec: dict) -> str:
         if rec.get("cas"):
@@ -532,6 +550,14 @@ class SessionSupervisor:
         (the one non-terminal case: deliver to a session that is mid-turn)."""
         target = (rec.get("to") or "").removeprefix("session://")
         verb = rec.get("verb")
+        frm = rec.get("from")
+        if not (isinstance(frm, str) and frm.strip()):
+            # No reply path: neither the answer nor a refusal is mailable (append_agent_mail
+            # refuses a from-less record by the store's own law). Consume it LOUDLY — holding
+            # the cursor here would deadlock the whole mailbox behind one unroutable line.
+            print(f"[session-supervisor] intent {rec.get('id')} has no `from` — unroutable, "
+                  f"consumed without action (the reply path is mandatory)", file=sys.stderr, flush=True)
+            return True
         try:
             body = self._intent_body(rec)
         except Exception as e:

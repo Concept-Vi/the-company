@@ -52,7 +52,10 @@ from contracts.tools import ToolAnnotations as CompanyToolAnnotations   # the ho
 from mcp.types import ToolAnnotations as SDKToolAnnotations             # the SDK's hint carrier
 
 _VERBS = ("auto", "deliver", "wake", "consult")
-_OPS = ("list", "inbox", "watch", "describe")
+# EXPORTED closed op set — the contract corpus's machine inventory for this consolidated tool
+# (CONTRACT-FORMAT §9.2: every consolidated MCP tool module exports OPS; extract_reality.py
+# fails loud on a tool module without one). tests/supervisor_routes_acceptance.py is the teeth.
+OPS = ("list", "inbox", "watch", "describe")
 
 
 def _fabric_concurrency() -> int:
@@ -141,9 +144,9 @@ def register(mcp, suite):
         result is HONEST (no sessions / no mail / no events — never fabricated). The operator's
         `inbox` tool is a DIFFERENT thing (Tim's decision-triage lanes); this op="inbox" is the
         session-to-session mailbox."""
-        if op not in _OPS:
+        if op not in OPS:
             raise ValueError(
-                f"sessions: unknown op={op!r}. Valid: {list(_OPS)} — list=the fleet · "
+                f"sessions: unknown op={op!r}. Valid: {list(OPS)} — list=the fleet · "
                 f"inbox=a session's mail (needs `session`) · watch=live fabric events · "
                 f"describe=one session in full (needs `session`). To SEND, use session_post (CQRS).")
         if detail not in ("concise", "detailed"):

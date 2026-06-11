@@ -86,6 +86,15 @@ BRIDGE_ROUTES = (
     "/api/greeting",
     # S7 (overnight) — the FORAGER's search door: semantic corpus query (+ record heads) for the canvas.
     "/api/corpus-query",
+    # Proposal lifecycle (RG8/RG9) — dispatched since the register build but MISSING here until the
+    # F1.5 contract lane's drift-gate run caught it (the gate working as designed, both directions).
+    "/api/registry/proposals",
+    "/api/registry/approve",
+    # Voice/chat streaming doors — dispatched via the split("?")[0] form; invisible to the registry
+    # until the extractor learned that form (same F1.5 drift-gate catch).
+    "/api/chat/stream",
+    "/api/voice/stream",
+    "/api/voice/turn",
 )
 
 MOCKUPS_DIR = os.path.join(ROOT, "design", "mockups")           # the design-review portal + corpus
