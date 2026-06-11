@@ -12,7 +12,14 @@ path (intent-at → operator approve → dispatch_decision) — the panel HANDS 
 
 Transport: the claude CLI's stream-json (one subprocess per turn; --resume <session_id> carries the
 conversation across turns — Claude Code owns the session state, we hold only the id). No SDK
-dependency; mirrors implement.py's subprocess discipline."""
+dependency; mirrors implement.py's subprocess discipline.
+
+FLOOR NOTE UPDATE (Session Fabric F1, 2026-06-11): runtime/session_supervisor.py — an
+operator-sanctioned SERVICE, not the MCP face — imports _find_claude + _MCP_CONFIG from here
+(one source of the binary resolution + the strict company-MCP config). That import keeps this
+floor honest: mcp_face still NEVER imports this module (or the supervisor); process-launching
+stays off the face. NOTE: TURN_TIMEOUT_S below is a DEAD CONSTANT (defined, enforced nowhere —
+audit C3); the supervisor enforces its own wall-clock watchdog instead of inheriting this."""
 import json
 import os
 import subprocess
