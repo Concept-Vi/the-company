@@ -66,9 +66,11 @@ def build_fixture(root):
     lines.append(_line(type="user", message={"content": "<command-name>/foo</command-name>"}, **env))
     lines.append(_line(type="user", message={"content": "[Request interrupted by user]"}, **env))
     lines.append(_line(type="user", isMeta=True, message={"content": "META_NOISE"}, **env))
-    # real user turn with a pasted secret (conversation-text redaction)
+    # real user turn with a pasted secret (conversation-text redaction) + a pasted image block
     lines.append(_line(type="user", uuid="u-1",
-                       message={"content": "Deploy with key sk-ABCDEFGHIJKLMNOPQRSTUVWX please"}, **env))
+                       message={"content": [
+                           {"type": "text", "text": "Deploy with key sk-ABCDEFGHIJKLMNOPQRSTUVWX please"},
+                           {"type": "image", "source": {"data": "IMAGE_BASE64_NOISE"}}]}, **env))
     # assistant: thinking + text + tool_use (body must die, trace must live)
     lines.append(_line(type="assistant", message={"content": [
         {"type": "thinking", "thinking": "THOUGHT_PRIVATE_NOISE"},
@@ -155,6 +157,7 @@ def main():
         # ---- STRIP side (the law, exact)
         for marker in ["TOOL_RESULT_BODY_SECRET", "TOPLEVEL_TOOLUSERESULT_SECRET",
                        "TOOL_USE_BODY_NOISE", "THOUGHT_PRIVATE_NOISE",
+                       "IMAGE_BASE64_NOISE",
                        "ATTACHMENT_NOISE_BODY", "HUGE_SNAPSHOT_NOISE",
                        "SR_NOISE", "CAVEAT_NOISE", "META_NOISE",
                        "<system-reminder", "Caveat:", "<command-name",

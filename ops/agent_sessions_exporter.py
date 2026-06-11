@@ -268,6 +268,8 @@ class SessionExport:
                         texts.append(block.get("text", ""))
                     elif btype in ("tool_result", "advisor_tool_result"):
                         self.counters["tool_result_stripped"] += 1
+                    elif btype == "image":
+                        self.counters["image_stripped"] += 1   # pasted media — attachment-class, stripped
                     else:
                         self.unknown_block_types[str(btype)] += 1
             kept = [t for t in texts if t and not is_noise_user_text(t)]
@@ -313,6 +315,8 @@ class SessionExport:
                     self.counters["tool_use_traced"] += 1
                 elif btype in ("tool_result", "advisor_tool_result"):
                     self.counters["tool_result_stripped"] += 1
+                elif btype == "image":
+                    self.counters["image_stripped"] += 1       # attachment-class, stripped
                 else:
                     self.unknown_block_types[str(btype)] += 1
             for t in texts:
