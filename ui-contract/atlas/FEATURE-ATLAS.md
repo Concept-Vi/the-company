@@ -207,3 +207,104 @@ below; F2–F8 lanes append theirs under their classes.
 > searched 2026-06-12) + the company ground truth: ops/services.json (voice + tailscale + pipeliner
 > rows), runtime/bridge.py (voice routes :864-:1290), voice/lifecycle.py, voice/personas.py,
 > project-voice-stack + project-mobile-access-tailscale (verified 2026-06-12).
+
+## Affordances seeded by F5 (Automation — classes 6, 21, 22, 30)
+
+### CC-06 · Git Integration & Worktrees
+- CC-06.1 — automatic git context + commit/branch/PR/rebase/stash via the session's Bash tool ([[git#op: git.act]] — under [[permission]])
+- CC-06.2 — resume a session linked to a PR (`--from-pr <number|url>`) ([[git#op: git.act]])
+- CC-06.3 — create/enter an isolated git worktree for parallel work (`--worktree`/`-w`, the EnterWorktree tool, `git worktree`) ([[git#op: git.worktree]])
+- CC-06.4 — isolate subagents in their own worktrees (`isolation: worktree`); base branch via `worktree.baseRef`; non-git VCS via WorktreeCreate/Remove hooks ([[git#op: git.worktree]])
+
+### CC-21 · Scheduled Tasks, Routines & Automation
+- CC-21.1 — list a consumer's cloud routines / a session's scheduled tasks ([[routines#op: routines.list]] — `/schedule list`, claude.ai/code/routines, CronList)
+- CC-21.2 — create a recurring/one-off scheduled run (cloud routine schedule trigger, or session-scoped CronCreate/`/loop`) ([[routines#op: routines.create]])
+- CC-21.3 — trigger a routine on demand via a bearer-token HTTP `/fire` endpoint, or on GitHub repo events (cloud routine API/GitHub triggers) ([[routines#op: routines.create]])
+- CC-21.4 — run-now / pause / one-off / rotate-token / cancel an existing routine or task ([[routines#op: routines.act]] — claude.ai/code/routines controls, CronDelete, Esc)
+
+### CC-22 · Dynamic Workflows & Task Coordination
+- CC-22.1 — keep one session working toward a verifiable condition without per-step prompting (`/goal`, evaluator-gated) ([[workflows#op: workflows.act]])
+- CC-22.2 — keep one session working on an interval / via a Stop hook (`/loop`, settings Stop hook) ([[workflows#op: workflows.act]]; `/loop` cron mechanics in [[routines]])
+- CC-22.3 — push external events INTO a running session and react two-way (channels: Telegram/Discord/iMessage/fakechat plugins via `--channels`) ([[workflows#op: workflows.watch]])
+- (the LIVE Company parallel-coordination primitive — fan one question to N forked consultants — is NOT a CC-22 affordance here; it is CC-09.2 realized at [[session#op: session.post]] verb=consult, `building`)
+
+### CC-30 · CI/CD Integrations (GitHub Actions, GitLab, Automation)
+- CC-30.1 — scaffold a GitHub Actions integration (anthropics/claude-code-action@v1 via `/install-github-app`; @claude-mention auto-detection vs prompt-mode; `schedule:`/event triggers) ([[ci#op: ci.create]])
+- CC-30.2 — invoke an installed CI integration (a `@claude` comment, or a CI event matching the workflow trigger) ([[ci#op: ci.act]])
+- CC-30.3 — scaffold a GitLab CI/CD integration (a `.gitlab-ci.yml` `claude -p` job with mcp__gitlab + a masked ANTHROPIC_API_KEY); cloud-provider auth (Claude API key / Bedrock-OIDC / Vertex-WIF) for both ([[ci#op: ci.create]])
+
+> F5 honesty note (status split, CONTRACT-FORMAT §4.2): EVERY affordance above is `planned` —
+> there is NO company face for git, worktrees, routines, in-session keep-going, channels, or
+> CI/CD (verified 2026-06-12: no git/worktree/cron/schedule/routine/github-actions/gitlab noun
+> in `ops/cli/`, `runtime/`, or `mcp_face/`; the only git/worktree references in `runtime/` are
+> the Company's OWN recursive self-build self-commit, runtime/suite.py:8430-8644, which is the
+> system building itself, NOT a consumer git service). These resources contract the NATIVE Claude
+> Code surfaces (CLI flags, slash commands, the EnterWorktree tool, cloud routines, channel
+> plugins, the GitHub Action / GitLab job) so a UI can present and reason about them, and route
+> the genuinely LIVE adjacent capabilities to F1 where they exist: the consult-fan
+> ([[session#op: session.post]] verb=consult, `building`) for parallel coordination, and the spawn
+> `cwd`/`fork` params ([[session#op: session.create]]) for running a supervised session in a chosen
+> working tree. Cloud routines (CC-21) are entirely Anthropic-cloud-resident (claude.ai account,
+> per-routine bearer-token `/fire` under the experimental-cc-routine-2026-04-01 beta header, the
+> Claude GitHub App) — an external surface, never a local file. Grounded in: routines.md,
+> scheduled-tasks.md, desktop-scheduled-tasks.md, goal.md, channels.md, worktrees.md,
+> how-claude-code-works.md, github-actions.md, gitlab-ci-cd.md (vault claude-code-atlas) +
+> managed-agents/scheduled-deployments.md (vault claude-platform-docs), all fetched/searched
+> 2026-06-12; company code grepped live 2026-06-12.
+
+## Affordances seeded by F4 (Extension fabric — classes 3, 11, 12, 13, 26, 27)
+
+### CC-03 · Slash Commands & Built-In Skills
+- CC-03.1 — list available slash commands / skills (built-in, bundled, custom, plugin-namespaced)
+- CC-03.2 — create a custom slash command / skill (SKILL.md or .claude/commands/*.md, with invocation control + arguments)
+- CC-03.3 — invoke a skill with arguments ($ARGUMENTS / $N / $name substitution)
+
+### CC-11 · MCP (Model Context Protocol) Integration
+- CC-11.1 — list/inspect configured MCP servers + their connection status and tool count (claude mcp list/get, /mcp)
+- CC-11.2 — add an MCP server (stdio/http/sse/ws) at a chosen scope (local/project/user)
+- CC-11.3 — remove / import (from Claude Desktop) / reset-project-approval an MCP server
+- CC-11.4 — authenticate a remote MCP server (OAuth 2.0 via /mcp; headers; headersHelper; scope pinning)
+- CC-11.5 — read live MCP connection state (pending-approval / connected / failed / rejected; auto-reconnect)
+
+### CC-12 · Hooks & Automation
+- CC-12.1 — choose a lifecycle event to automate (the closed hook-event catalog + matcher grammar + blockability)
+- CC-12.2 — add a hook handler (command/http/mcp_tool/prompt/agent) under an event's matcher group at a chosen scope
+- CC-12.3 — update / remove a hook handler
+- CC-12.4 — disable all hooks temporarily (disableAllHooks; managed-hierarchy-aware)
+- CC-12.5 — inspect configured hooks + their source (the read-only /hooks menu)
+
+### CC-13 · Plugins, Skills, & Extension Packaging
+- CC-13.1 — list installed plugins + added marketplaces + their bundled components
+- CC-13.2 — scaffold / author a plugin (.claude-plugin/plugin.json manifest + skills/agents/hooks/MCP/LSP/monitors/output-styles)
+- CC-13.3 — add a plugin marketplace (github repo; official/community catalogs)
+- CC-13.4 — install / uninstall / enable / disable a plugin; test with --plugin-dir/--plugin-url; /reload-plugins
+- CC-13.5 — package existing standalone .claude/ configuration into a shareable, versioned plugin
+
+### CC-26 · Terminal Configuration & Output Styling
+- CC-26.1 — read the active output style + available styles (/config Output-style picker; outputStyle setting)
+- CC-26.2 — set / create an output style (built-in Default/Proactive/Explanatory/Learning or a custom Markdown file)
+- CC-26.3 — read the status-line config + its JSON data model (model/context/cost/git/rate-limit fields)
+- CC-26.4 — set / generate / remove a status line (a shell script fed JSON session data; /statusline + statusLine setting)
+
+### CC-27 · Extensibility & Customization Patterns
+- CC-27.1 — route an intent to the right customization mechanism (the chooser: skill vs hook vs MCP vs output-style vs CLAUDE.md vs subagent vs plugin)
+- CC-27.2 — apply the shared placeholders + scope/precedence laws (${CLAUDE_PROJECT_DIR}/${CLAUDE_PLUGIN_ROOT}/${CLAUDE_PLUGIN_DATA}; settings + skill + MCP precedence; workspace trust; managed force-enable)
+
+> F4 honesty note (status split, CONTRACT-FORMAT §4.2): EVERY F4 affordance is `planned` against
+> the Company. These are NATIVE Claude Code extension-fabric surfaces (hooks, MCP-server management,
+> skills/commands/plugins, output styles + status line, the customization chooser) that the Company
+> does NOT yet bridge — the entries contract the native data model a UI editor/installer renders and
+> name the bridge gap per op. CODE-CITED gaps (Observed 2026-06-12): the Company MCP face
+> `mcp_face/server.py` is a composition-substrate brain (FastMCP "company") and exposes NOTHING about
+> Claude Code hooks/skills/plugins/MCP-server-management; `BRIDGE_ROUTES` (runtime/bridge.py:45)
+> carries no hook/mcp-add/plugin-install/output-style/statusLine route. Two NEAR-MISSES that are
+> deliberately NOT claimed: `/api/cognition/create_skill` (runtime/bridge.py:1962) creates a
+> COMPOSITION skill in the substrate, NOT a Claude Code Agent Skill (SKILL.md); `/api/presentation-pref`
+> is the Company UI's own altitude presentation preference, NOT Claude Code's outputStyle/statusLine.
+> Native surfaces are carried on two NON-fabric transports declared in TRANSPORTS.md: `claude-cli`
+> (the `claude` binary's mcp/plugin subcommands + launch flags) and `claude-tui` (the interactive
+> /hooks /mcp /plugin /config /statusline menus); both fail V21 for want of a machine-readable Company
+> inventory, so all F4 bindings are `planned` and carry `exposure: "n/a — …"`, never a registry key.
+> Grounded in: hooks.md, mcp.md, skills.md, plugins.md, plugins-reference.md, output-styles.md,
+> statusline.md, discover-plugins.md, plugin-marketplaces.md (vault claude-code-atlas, fetched
+> 2026-06-10), all searched/read 2026-06-12; mcp_face/server.py + runtime/bridge.py read live 2026-06-12.
