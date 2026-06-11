@@ -172,6 +172,7 @@ class Supervised:
         self.turn_source: str | None = None
         self.turn_intent: dict | None = None        # the mailbox intent this turn answers (for the reply)
         self.turn_text: list[str] = []              # assistant text of the in-flight turn (reply body)
+        self.stderr_tail: list[str] = []            # last ~50 stderr lines (drained for life; close diagnostic)
         self.turns = 0
         self.proc: subprocess.Popen | None = None
         self.stdin_lock = threading.Lock()
@@ -274,6 +275,14 @@ class SessionSupervisor:
                                   stderr=subprocess.PIPE, text=True, bufsize=1)
         threading.Thread(target=self._reader, args=(s,), daemon=True,
                          name=f"reader-{s.id}").start()
+        # DRAIN stderr for the LIFE of the process. The OS pipe buffer (~64KB) MUST be emptied or a
+        # chatty child blocks writing to it and dies — observed as rc=1 on RESUME spawns only: a
+        # resume fires the SessionStart:resume hook AND replays the full conversation, overflowing
+        # what a fresh spawn never reaches (a fresh session's thin stderr masked this in the lane's
+        # stub-binary acceptance test, which never resumed a real claude). The drain IS the fix; the
+        # retained tail is kept only for the close diagnostic.
+        threading.Thread(target=self._drain_stderr, args=(s,), daemon=True,
+                         name=f"stderr-{s.id}").start()
         self.emit("agent_sessions.spawned",
                   f"{s.name} · {'fork of ' + resume if fork else ('resume ' + resume if resume else 'new')}",
                   durable=True, session=s.id, name=s.name, cwd=s.cwd, resume=resume, fork=fork,
@@ -283,6 +292,20 @@ class SessionSupervisor:
             while time.time() < deadline and s.state == "starting" and s.proc.poll() is None:
                 time.sleep(0.05)
         return s
+
+    # ---------- the per-session stderr drain (the rc=1-on-resume fix) ----------
+
+    def _drain_stderr(self, s: Supervised) -> None:
+        """Empty the child's stderr pipe for the life of the process so it can never block on a full
+        buffer. Keeps only the last 50 lines for the close diagnostic — the point is the DRAIN, not
+        capture."""
+        try:
+            for line in s.proc.stderr:
+                s.stderr_tail.append(line.rstrip("\n"))
+                if len(s.stderr_tail) > 50:
+                    del s.stderr_tail[0]
+        except Exception:
+            pass
 
     # ---------- the per-session stdout reader ----------
 
@@ -324,7 +347,10 @@ class SessionSupervisor:
             rc = s.proc.poll()
             if s.state != "closed":
                 try:
-                    self._close(s, reason=f"exited rc={rc}", kill=False)
+                    # Non-zero exits carry the drained stderr tail so the cause is never a mystery
+                    # (the rc=1 hunt is exactly why this is here — fail loud WITH evidence).
+                    tail = (" :: " + " | ".join(s.stderr_tail[-5:])) if (rc and s.stderr_tail) else ""
+                    self._close(s, reason=f"exited rc={rc}{tail}", kill=False)
                 except Exception as e:
                     print(f"[session-supervisor] close event write failed for {s.id}: {e}",
                           file=sys.stderr, flush=True)
