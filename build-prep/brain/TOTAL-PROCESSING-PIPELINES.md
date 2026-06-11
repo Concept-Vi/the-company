@@ -50,7 +50,7 @@ unknown-unknowns are not answered into existence; they are **left over** by tota
 
 Why this is affordable now (the pyramid — spend intelligence exactly where cheapness runs out):
 - **Vectors** (embedding models): total N×N comparison of everything against everything — cents.
-- **The resident 4B swarm** (~12–14 concurrent roles, ~2,700 tok/s measured on this card): bounded
+- **The resident 4B swarm** (32 concurrent roles optimal — the earlier ~12–14 figure was an AI error, since corrected; serving config max_num_seqs=34; ~2,700 tok/s measured on this card): bounded
   per-unit judgments — extraction, pairwise agreement, classification. The whole estate in hours.
 - **The reranker** (88M, runs on CPU): precision on close pairs — effectively free.
 - **Claude-class models**: synthesis of already-judged clusters ONLY. The scarce resource never does

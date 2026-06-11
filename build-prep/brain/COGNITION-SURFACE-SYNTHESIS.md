@@ -13,7 +13,7 @@ its face does not.**
 
 ### 1.1 Concurrent cognition — ON MAIN, proven by use
 - `runtime/cognition.py` (2555 ln) + `runtime/rules.py` (587 ln) + `contracts/cognition_info.py`.
-- One resident 4B runs ~12–14 concurrent rule-routed ROLES (measured, C0.5: knee = min(max_num_seqs−R,
+- One resident 4B runs concurrent rule-routed ROLES — 32 OPTIMAL (corrected; an earlier ~12–14 figure was an AI error since removed; serving max_num_seqs=34) (C0.5: knee = min(max_num_seqs−R,
   free_KV/per_role_ctx); util 0.63 holds ~14 even at deep main-context); structured outputs resolve at
   `run://<turn>/<role>`; a STAGED multi-part reply reads them via declared RULES.
 - **Rules are renderable data-ASTs** (closed grammar: and/or/not/eq/…/field/lit; no now/random/call;
