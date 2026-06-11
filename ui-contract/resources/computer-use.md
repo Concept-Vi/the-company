@@ -3,7 +3,7 @@ type: contract-entry
 resource: computer-use
 summary: Claude Code's reach beyond the editor — WebFetch (fetch+extract a URL, lossy by design) and WebSearch (native session tools), the Claude-in-Chrome browser-automation integration (open tabs, click, type, read console; beta, not WSL), and the API computer-use tool (screenshot+mouse/keyboard, beta header). Native in-session/in-browser capabilities; the company spawns sessions with mcp__company ONLY, so none are granted by default — contracted as the native surface with the gap named.
 schemes: []
-status: planned
+status: building
 relates-to: ["[[session]]", "[[permission]]", "[[headless-control]]", "[[knowledge-corpus]]"]
 ---
 
@@ -73,7 +73,7 @@ knows the real boundary and the spawn-permission + host (WSL) constraints.**
 op: computer-use.act
 resource: computer-use
 kind: act
-status: planned
+status: building
 direction: outbound
 atlas: [CC-17.1, CC-17.2, CC-17.3]
 tasks:
@@ -90,6 +90,7 @@ tasks:
   - alias: "control the computer"
   - alias: "take a screenshot and click"
 bindings:
+  - { kind: mcp, tool: dev_computer_use, op-param: "op=act", server: company, exposure: "exposure.json#mcp-company", status: building, note: "L-④-dev: RAIL R1-prime — web-fetch/web-search build a bridge-session spawn intent (prose result); browser (beta+not-WSL) and computer (macOS+interactive) REFUSE LOUD on this headless WSL -p rail (§5.4), never green-painted. live-verify pending (lead)" }
   - { kind: http, method: "POST (PLANNED)", path: "/api/computer-use  (does not exist)", transport: bridge-http, exposure: "exposure.json#bridge-http", status: planned, note: "GAP: no company endpoint drives WebFetch/WebSearch/Chrome/computer-use. Verified: no computer-use/chrome/browser-automation/screenshot face in runtime/ mcp_face/ ops/ (grep 2026-06-12). WebFetch/WebSearch are NATIVE session tools but excluded from the fabric grant (--allowedTools mcp__company, [[permission]]); Chrome is beta+NOT-WSL (host is WSL2); computer-use needs a beta header + OS perms. Wiring path = extend the spawn permission grant ([[permission#op: permission.act]]) to add WebFetch/WebSearch, then read results off the session stream ([[headless-control]])" }
 liveness: none
 emits: []

@@ -3,7 +3,7 @@ type: contract-entry
 resource: git
 summary: Claude Code's git surface — automatic git context in every session, commit/branch/PR/rebase/stash via the Bash tool, PR-linked resume (--from-pr), and isolated parallel worktrees (--worktree / -w, the EnterWorktree tool, .worktreeinclude, worktree.baseRef, WorktreeCreate/Remove hooks for non-git VCS). The Company exposes no dedicated git face; the supervisor's spawn cwd/fork params are the real adjacent seam, and the build's own commit-to-main law is documented for honesty.
 schemes: []
-status: planned
+status: building
 relates-to: ["[[session]]", "[[permission]]", "[[ci]]", "[[agent-team]]"]
 ---
 
@@ -76,7 +76,7 @@ permission posture, and PR-linked resume is a launch flag (`--from-pr`).**
 op: git.act
 resource: git
 kind: act
-status: planned
+status: building
 direction: outbound
 atlas: [CC-06.1, CC-06.2]
 tasks:
@@ -92,6 +92,7 @@ tasks:
   - alias: "open a PR"
   - alias: "switch branches"
 bindings:
+  - { kind: mcp, tool: dev_git, op-param: "op=act", server: company, exposure: "exposure.json#mcp-company", status: building, note: "L-④-dev: structured git/gh via the R3 config_writer service (sha/exit). Reads are dev_git op=get; writes ride the config_writer git-write consent beat (sole-operator consent-not-lockdown). live-verify pending (lead): a REAL git commit sha is the lead's slice" }
   - { kind: cli, command: "(in-session) > commit my changes   — Claude emits `git add`/`git commit` via the Bash tool under [[permission]]", transport: tui-interactive, exposure: "n/a — interactive", status: planned, note: "GAP: no dedicated company git op. Native git context is automatic; ops are Bash calls. The Company supervisor spawns `claude -p` which CAN run git, but exposes no git verb" }
   - { kind: cli, command: "claude --from-pr <number|url>   (NATIVE — resume a session linked to a PR)", transport: tui-interactive, exposure: "n/a — interactive", status: planned, note: "GAP: a launch flag, not a company op. The Company's spawn (runtime/session_supervisor.py:254) takes cwd/resume/fork/name/source ONLY — no --from-pr passthrough" }
   - { kind: cli, command: "gh pr create / git branch / git rebase   — via the Bash tool", transport: tui-interactive, exposure: "n/a — interactive", status: planned, note: "GAP: PR creation needs the GitHub CLI/App in the session env; rebase/merge/cherry-pick/stash are plain git through Bash. None company-wrapped" }
@@ -147,7 +148,7 @@ internally.**
 op: git.worktree
 resource: git
 kind: act
-status: planned
+status: building
 direction: outbound
 atlas: [CC-06.3, CC-06.4]
 tasks:
@@ -164,6 +165,7 @@ tasks:
   - alias: "parallel session isolation"
   - alias: "create a git worktree"
 bindings:
+  - { kind: mcp, tool: dev_git, op-param: "op=act,act=worktree-*", server: company, exposure: "exposure.json#mcp-company", status: building, note: "L-④-dev: git worktree create/remove via the R3 config_writer (argv-array). subagent spawn-cwd isolation stays the supervisor's" }
   - { kind: cli, command: "claude --worktree <name>   (or -w; omit name to auto-generate)   (NATIVE)", transport: tui-interactive, exposure: "n/a — interactive", status: planned, note: "GAP: no company face. Default `.claude/worktrees/<name>/` on branch `worktree-<name>`; base = worktree.baseRef (`fresh`=origin/HEAD default, `head`=local HEAD). `#1234` or a PR URL branches from pull/<n>/head into `.claude/worktrees/pr-<n>`. Trust dialog required when interactive; `claude -p --worktree` skips it" }
   - { kind: cli, command: "EnterWorktree(name|path)   (NATIVE in-session tool — 'work in a worktree'; switch between worktrees under .claude/worktrees/)", transport: tui-interactive, exposure: "n/a — interactive", status: planned, note: "GAP: a Claude Code tool, not a company op. Switching leaves the previous worktree on disk untouched" }
   - { kind: cli, command: "subagent frontmatter `isolation: worktree`   (NATIVE — each subagent gets a temp worktree, auto-removed if it finishes without changes)", transport: agent-sdk, exposure: "n/a — Agent SDK in-process", status: planned, note: "GAP: a subagent config; relates to [[agent-team]]. Uses the same baseRef as --worktree" }

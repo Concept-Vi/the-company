@@ -3,7 +3,7 @@ type: contract-entry
 resource: ci
 summary: CI/CD-triggered Claude Code — GitHub Actions (anthropics/claude-code-action@v1, installed via /install-github-app, auto-detecting @claude-mention vs prompt mode, fired by any GitHub event incl. schedule:) and GitLab CI/CD (a .gitlab-ci.yml job running headless `claude -p` with the mcp__gitlab tool). Both run on YOUR CI runners with provider secrets (Claude API / Bedrock-OIDC / Vertex-WIF); the Company exposes neither — they are external CI-provider integrations, contracted with the auth/secret model named.
 schemes: []
-status: planned
+status: building
 relates-to: ["[[routines]]", "[[git]]", "[[session]]", "[[permission]]", "[[model]]"]
 ---
 
@@ -78,7 +78,7 @@ guided GitHub setup) or add a `claude` job to `.gitlab-ci.yml` plus a masked sec
 op: ci.create
 resource: ci
 kind: create
-status: planned
+status: building
 direction: outbound
 atlas: [CC-30.1, CC-30.3]
 tasks:
@@ -94,6 +94,7 @@ tasks:
   - alias: "add a claude job to gitlab-ci"
   - alias: "automate PR review in CI"
 bindings:
+  - { kind: mcp, tool: dev_ci, op-param: "op=act,act=scaffold", server: company, exposure: "exposure.json#mcp-company", status: building, note: "L-④-dev: RAIL R3 — scaffold a .github/workflows/<name>.yml file write (same R3 primitive as a .claude write, different root). NEEDED-ARM: the config_writer generic .github/workflows write arm (POST /ci-scaffold) is reported to the Wire; the handler builds the request + fails LOUD until it lands (honest building). ci.act mention/event stay planned — inbound boundary, no company op" }
   - { kind: cli, command: "/install-github-app   (NATIVE CLI command — guided GitHub App + secrets setup; repo admin only; direct Claude API only)", transport: tui-interactive, exposure: "n/a — interactive", status: planned, note: "GAP: no company face. Installs `apps/claude` (Contents/Issues/Pull-requests read&write), adds ANTHROPIC_API_KEY secret, copies the example workflow. Manual path: install the App, add the secret, copy examples/claude.yml into .github/workflows/. Bedrock/Vertex skip the quickstart (custom-App + OIDC/WIF setup)" }
   - { kind: cli, command: ".gitlab-ci.yml `claude` job + masked ANTHROPIC_API_KEY variable   (NATIVE GitLab — beta, GitLab-maintained)", transport: tui-interactive, exposure: "n/a — interactive", status: planned, note: "GAP: no company face. Job installs the CLI (curl claude.ai/install.sh), optionally starts a gitlab-mcp-server, runs `claude -p \"$AI_FLOW_INPUT\" --permission-mode acceptEdits --allowedTools \"Bash Read Edit Write mcp__gitlab\"`. Rules gate on $CI_PIPELINE_SOURCE; a note webhook can pass AI_FLOW_INPUT/AI_FLOW_CONTEXT when a comment has @claude" }
 liveness: none

@@ -3,7 +3,7 @@ type: contract-entry
 resource: code-intel
 summary: Claude Code's LSP-backed code intelligence — go-to-definition, find-references, hover types, document/workspace symbols, implementations, call hierarchy, and automatic post-edit diagnostics, all from a language server installed via a code-intelligence plugin. A native in-session capability inside the sessions the company spawns; NO company endpoint exposes it — contracted as the native surface with the bridge gap named.
 schemes: []
-status: planned
+status: building
 relates-to: ["[[session]]", "[[headless-control]]", "[[knowledge-corpus]]"]
 ---
 
@@ -69,7 +69,7 @@ here so a UI builds toward the real seam (a session-scoped LSP face) rather than
 op: code-intel.act
 resource: code-intel
 kind: act
-status: planned
+status: building
 direction: outbound
 atlas: [CC-16.1, CC-16.2, CC-16.3]
 tasks:
@@ -86,6 +86,7 @@ tasks:
   - alias: "symbol search"
   - alias: "call hierarchy"
 bindings:
+  - { kind: mcp, tool: dev_code_intel, op-param: "op=act", server: company, exposure: "exposure.json#mcp-company", status: building, note: "L-④-dev: RAIL R1-prime — the handler builds a bridge-session spawn INTENT; the SUPERVISOR (spawn_bridge_session, operator_consent-gated) runs the in-session LSP; result rides back as PROSE on the turn stream — liveness:stream, NO typed return_shape (§1.1). live-verify pending (lead): a REAL prose round-trip is the lead's slice, NEVER green-painted" }
   - { kind: http, method: "POST (PLANNED: a session-scoped LSP face)", path: "/api/code-intel  (does not exist)", transport: bridge-http, exposure: "exposure.json#bridge-http", status: planned, note: "GAP: no company endpoint invokes the LSP tool or reads its diagnostics. The capability runs inside the spawned session's own context. Verified: no language-server/LSP/definition-finding face in runtime/ mcp_face/ ops/ (grep 2026-06-12). Wiring path = either (a) thread an LSP-plugin config into the spawn ([[headless-control]] --bare/plugin config) and read diagnostics off the stream, or (b) run a company-side language server" }
 liveness: none
 emits: []

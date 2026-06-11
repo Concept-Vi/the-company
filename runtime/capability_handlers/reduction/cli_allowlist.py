@@ -11,6 +11,8 @@ Grounded in the Claude Code Atlas (verified 2026-06-12 — never invented):
     `mcp add-json <name> <json>` / `mcp remove` / `mcp list|get` / `mcp reset-project-choices`  (mcp.md)
   · `claude plugin install/update/uninstall <plugin> [-s scope]` / `plugin validate <dir>` /
     `plugin marketplace add <url>`  (plugins-reference.md)
+  · `claude update` (apply an update now — no args) / `claude install [latest|stable|<version>]`
+    (the NATIVE-UPDATER / installer; channel|version arg — CC-34 reopened, setup.md)
   · `git status/log/worktree …` / `git commit` / `gh pr create`  (common-workflows.md / git.md)
 
 TIERS: read (ungated) · write (config-mutating, gated) · exec (registers/fetches+runs code: mcp add
@@ -53,6 +55,13 @@ CLI_ALLOWLIST = {
                                               slots=[("pos", "path")]),
     "config.extensions:add-marketplace": dict(tool="claude", tier="exec",
                                               sub=["plugin", "marketplace", "add"], slots=[("pos", "url")]),
+    # ── config.extensions (CC-34 reopened — the NATIVE-UPDATER / installer; a host dev-bridge) ──
+    # `claude update` applies an update immediately (no args; Atlas setup.md). `claude install`
+    # takes a release CHANNEL or version (`latest`|`stable`|<version>) — that arg becomes the
+    # auto-update default. exec-tier (it fetches+runs a new binary → highest consent class).
+    "config.extensions:update-native": dict(tool="claude", tier="exec", sub=["update"], slots=[]),
+    "config.extensions:install-native": dict(tool="claude", tier="exec", sub=["install"], slots=[
+        ("pos", "channel")]),   # channel|version: "latest"|"stable"|"1.2.3"
     # ── dev.git (CC-06) → git / gh — the structured path ──
     "dev.git:status": dict(tool="git", tier="read", sub=["status", "--porcelain=v1", "-b"], slots=[]),
     "dev.git:log": dict(tool="git", tier="read", sub=["log", "--no-color"], slots=[("rest", "args")]),
