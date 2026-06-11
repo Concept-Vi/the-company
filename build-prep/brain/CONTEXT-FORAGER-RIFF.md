@@ -81,3 +81,23 @@ patterns + the corpus's real facet-coverage) → the loop-prep TRIAD (Completion
 FUNCTION+FORM faces · Implementation Guide · Research Synthesis) → then the build loop eats it.
 v1 slice if the night allows: search box → circle nodes on canvas → click-expand → multi-select →
 "hand to builder" → the panel receives the set.
+
+---
+## 2026-06-11 · TIM'S CORRECTION OF V1 (binding for the rebuild — captured verbatim, also at deferred://forager/rebuild-spec)
+
+"What has been delivered is the most basic possible interpretation that could have come from it, and
+is not usable." The two design requirements v1 missed:
+
+1. **VECTORS AS COORDINATES.** "Just making them circles wasn't the point — it was intended to use
+the vectors as coordinates to populate the screen, so that I can see all the clusters and sizes and
+whatever, and use the data translated onto the surface." The semantic space itself renders: position
+= meaning, clusters visible, sizes meaningful. (Projection of the embedding space — e.g. UMAP/PCA
+class dimensionality reduction — onto the surface; render-for-cognition: he reads by SHAPE.)
+
+2. **A SUB-CANVAS, not the main graph.** "I expected it to be like a sub canvas that I have multiple
+interactions with — refining and adding — where I could click on and select and talk with Claude
+Code or the right-hand-man about, and then add selected nodes into the main graph when I was ready."
+The forager is its own room with its own physics; PROMOTION into the main canvas is a deliberate act.
+
+The S1 Claude Code integration as delivered also "is not what I meant and will need to be rebuilt."
+(Details pending the conversation he deferred.)
