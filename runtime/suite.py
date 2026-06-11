@@ -397,6 +397,18 @@ class Suite:
         self._run_index_lock = _t.Lock()
         self._run_index_rows: list[dict] = []   # projected ENGINE_RUN_OPS rows, oldest-first (one per concrete addr)
         self._run_index_hw: int = -1            # high-water: the largest event seq folded into _run_index_rows
+        # Session Fabric F1.2 — the agent-session REGISTRY fold (the run-index pattern, second instance).
+        # Two joined shared-disk sources (so N Suites over one store converge, never trusting RAM):
+        # whole-record files under agent_sessions/ (durable identity — importer backfill + supervisor
+        # writes; re-read ONLY on mtime change) + the agent_sessions.* event tail (the live trajectory —
+        # folded incrementally past a high-water seq, exactly like _run_index_fold). Derived-from-log/disk,
+        # never authoritative in-memory state (synthesis landmine 6: one Suite per process, N processes).
+        self._agent_session_lock = _t.Lock()
+        self._agent_session_rows: dict[str, dict] = {}      # id → projected row {id,name,cwd,state,last_activity,title,…}
+        self._agent_session_hw: int = -1                    # high-water: largest event seq folded into the rows
+        self._agent_session_rec_seen: dict[str, float] = {} # id → record-file mtime already folded (the records delta key)
+        self._agent_session_fold_errors: int = 0            # malformed agent_sessions.* events tolerated-but-counted (surfaced in list)
+        self._agent_session_aliases: dict[str, str] = {}    # supervisor local handle (as-…) → canonical claude session uuid
         # The bridge is a ThreadingHTTPServer → concurrent POST /api/review/next run in separate threads of
         # ONE process over this one Suite. The session-cursor advance is a read-modify-write (load→run→save)
         # with no lock → concurrent calls dropped advances (lost update). A per-session in-process lock
@@ -772,6 +784,220 @@ class Suite:
         if role:
             runs = [r for r in runs if r.get("role") == role]
         return {"runs": runs[:limit], "total_records": len(runs)}
+
+    # ── Session Fabric F1.2 · the AGENT-SESSION registry (sessions message sessions) ────────────────
+    # The closed event set for the session fabric — agent_sessions.* kinds, mirroring ENGINE_RUN_OPS
+    # (the runs index, above): the registry projection folds ONLY these kinds; a new fabric event is
+    # added HERE and nowhere else (registry-is-truth — the emit site and this filter name the SAME set).
+    # SINGLE-WRITER LAW (criteria audit C6, synthesis §3 option (a)): ONLY the session SUPERVISOR
+    # process emits these kinds — the bridge and the MCP face route fabric intents to it via the
+    # mailbox and emit nothing agent_sessions-shaped themselves (this is what keeps cross-process
+    # event-seq duplication, fs_store.py append_event's surfaced landmine, out of the fabric's reads).
+    # The IMPORTER does not emit either: backfilled history lands as whole-record files (durable
+    # identity), never as 1,000 synthetic events on the hottest shared file. Heartbeats are EXCLUDED
+    # from events.jsonl by the retention ruling (audit N8) — supervisor-local only, hence no
+    # agent_sessions.heartbeat kind in this set.
+    #
+    # CANONICAL EVENT SHAPE (the supervisor emits; this fold consumes — one source, defined here):
+    #   {kind: <one of AGENT_SESSION_OPS>, session: <claude session uuid>,
+    #    state?: <one of AGENT_SESSION_STATES — overrides the kind's default transition>,
+    #    name?, cwd?, title?, summary, seq, ts}
+    AGENT_SESSION_OPS = ("agent_sessions.registered", "agent_sessions.spawned", "agent_sessions.turn",
+                         "agent_sessions.idle", "agent_sessions.closed", "agent_sessions.adopted")
+
+    # The closed state vocabulary (criteria F1.2 "truthful state transitions"): supervised-live (the
+    # supervisor owns the subprocess — DELIVER injects), unsupervised-live (alive but not supervisor-
+    # owned — best-effort detection; the router treats it as NOT deliverable → mailbox queue), closed
+    # (no live process — WAKE re-spawns via --resume). Never a stored "alive" flag that can rot beyond
+    # these: liveness refinement is derived at read time by callers (the now() presence precedent).
+    AGENT_SESSION_STATES = ("supervised-live", "unsupervised-live", "closed")
+
+    # kind → the state transition it implies when the event carries no explicit `state` field. `turn`
+    # and `idle` are ACTIVITY (they move last_activity, never state) — None means "no transition".
+    _AGENT_SESSION_TRANSITIONS = {
+        "agent_sessions.registered": "unsupervised-live",   # a session announced itself (own MCP face/launcher)
+        "agent_sessions.spawned":    "supervised-live",     # the supervisor spawned/owns it
+        "agent_sessions.adopted":    "supervised-live",     # the supervisor took over an existing session
+        "agent_sessions.turn":       None,
+        "agent_sessions.idle":       None,
+        "agent_sessions.closed":     "closed",
+    }
+
+    def _apply_agent_session_event(self, e: dict) -> None:
+        """Fold ONE agent_sessions.* event into the registry rows (single source of the row-update rule,
+        the _project_run_event discipline). The LOG owns the trajectory (state + last_activity); the
+        whole-record file owns the IDENTITY (name/cwd/title — applied here only when the event carries
+        them, e.g. a registered/spawned emit naming the session). A malformed event (no session id, or an
+        out-of-vocabulary state) is COUNTED loud (`fold_errors` in every list result) but never bricks the
+        projection — one bad append on the shared log must not make the whole registry unreadable forever
+        (the fail-loud lives at the WRITER: the supervisor validates before emitting; this is the reader's
+        honest-accounting backstop, not a silent fallback).
+
+        CANONICAL ID RULE (the seam with the live supervisor, runtime/session_supervisor.py): the
+        registry's row key is the CLAUDE SESSION UUID (what session://<id> resolves, what the importer
+        keys the catalog by). The supervisor's emits carry `session=<as-… local handle>` plus the claude
+        uuid as `claude_session_id` (once init names it) and `resume` (on a WAKE re-spawn). So the fold
+        canonicalizes: claude_session_id wins; else `resume` — but ONLY when the event is not a FORK
+        (a CONSULT fork's `resume` is the ORIGINAL session, and folding the fork's events onto the
+        original would corrupt the one row CONSULT must never touch — T4's whole point); else a held
+        handle→uuid alias; else the handle itself. When a handle row already exists (a NEW spawn folds
+        under the handle until init names the uuid), the first uuid-carrying event MIGRATES that row
+        onto the canonical key — one session, one row, joined to the imported catalog record."""
+        sid = e.get("session")
+        canonical = e.get("claude_session_id") or (None if e.get("fork") else e.get("resume"))
+        if isinstance(canonical, str) and canonical.strip():
+            if isinstance(sid, str) and sid.strip() and sid != canonical:
+                self._agent_session_aliases[sid] = canonical
+                handle_row = self._agent_session_rows.pop(sid, None)
+                if handle_row is not None:                   # migrate the pre-init handle row onto the uuid
+                    canon_row = self._agent_session_rows.get(canonical)
+                    if canon_row is None:
+                        handle_row["id"] = canonical
+                        self._agent_session_rows[canonical] = handle_row
+                    else:                                    # join: catalog record row + the live handle row
+                        for k in ("name", "cwd"):
+                            if canon_row.get(k) is None and handle_row.get(k) is not None:
+                                canon_row[k] = handle_row[k]
+                        if handle_row.get("state"):          # the supervisor owns it — its state is the live truth
+                            canon_row["state"] = handle_row["state"]
+                        if (handle_row.get("last_activity") or "") > (canon_row.get("last_activity") or ""):
+                            canon_row["last_activity"] = handle_row["last_activity"]
+            sid = canonical
+        elif isinstance(sid, str) and sid in self._agent_session_aliases:
+            sid = self._agent_session_aliases[sid]
+        if not isinstance(sid, str) or not sid.strip():
+            self._agent_session_fold_errors += 1
+            return
+        row = self._agent_session_rows.get(sid)
+        if row is None:
+            row = {"id": sid, "name": None, "cwd": None, "state": None,
+                   "last_activity": None, "title": None, "title_source": None,
+                   "started": None, "summarizer": False}
+            self._agent_session_rows[sid] = row
+        for k in ("name", "cwd", "title"):                   # identity carried ON the event (optional)
+            if e.get(k) is not None:
+                row[k] = e.get(k)
+        st = e.get("state")
+        if st is None:
+            st = self._AGENT_SESSION_TRANSITIONS.get(e.get("kind"))
+        elif st not in self.AGENT_SESSION_STATES:
+            self._agent_session_fold_errors += 1
+            st = None
+        if st is not None:
+            row["state"] = st
+        if e.get("ts"):
+            row["last_activity"] = e.get("ts")
+        row["seq"] = e.get("seq")                            # the last folded event seq (a `since` cursor)
+
+    def _agent_session_fold(self) -> list[dict]:
+        """The INCREMENTAL registry fold (the _run_index_fold pattern, second instance) — return the
+        projected agent-session rows by joining the two shared-disk sources:
+
+          1. RECORD files (`<store>/agent_sessions/*.json`) — durable identity. Re-loaded ONLY when a
+             file's mtime moved (agent_session_mtimes — the records-side delta key, so the ~1,000-record
+             backfilled catalog is read once cold, then only on change). A record SEEDS a row (all fields,
+             including its stored state/last_activity — for an imported historical session the record is
+             the only truth there is); a RE-read record refreshes IDENTITY fields only (name/cwd/title/
+             title_source/started + envelope) — state/last_activity stay log-owned once a row exists, so
+             a slow record rewrite can never roll back a state the log has already moved past.
+          2. The agent_sessions.* EVENT tail — the live trajectory, folded past the held high-water seq
+             exactly like the run index (events_since reads the shared disk log, so a sibling process's
+             supervisor emits land here on the next call; cross-process safe by the same argument).
+
+        Held under _agent_session_lock (the bridge's threads race the read-modify-write otherwise).
+        Returns SNAPSHOT COPIES so callers filter/slice without holding the lock."""
+        with self._agent_session_lock:
+            # 1 — records delta (identity)
+            mtimes = self.store.agent_session_mtimes()
+            for sid, mt in mtimes.items():
+                if self._agent_session_rec_seen.get(sid) == mt:
+                    continue
+                rec = self.store.load_agent_session(sid)
+                if rec is None:                              # raced a writer mid-replace; next call catches it
+                    continue
+                self._agent_session_rec_seen[sid] = mt
+                row = self._agent_session_rows.get(sid)
+                if row is None:
+                    self._agent_session_rows[sid] = {
+                        "id": sid, "name": rec.get("name"), "cwd": rec.get("cwd"),
+                        "state": rec.get("state"), "last_activity": rec.get("last_activity"),
+                        "title": rec.get("title"), "title_source": rec.get("title_source"),
+                        "started": rec.get("started"), "summarizer": rec.get("summarizer", False),
+                        "seq": None,
+                    }
+                else:                                        # identity refresh only — the log owns state
+                    for k in ("name", "cwd", "title", "title_source", "started", "summarizer"):
+                        if rec.get(k) is not None:
+                            row[k] = rec.get(k)
+            # 2 — event tail (trajectory)
+            delta = self.events_since(self._agent_session_hw)
+            if delta:
+                self._agent_session_hw = delta[-1].get("seq", self._agent_session_hw)
+            for e in delta:
+                if e.get("kind") in self.AGENT_SESSION_OPS:
+                    self._apply_agent_session_event(e)
+            return [dict(r) for r in self._agent_session_rows.values()]
+
+    def list_agent_sessions(self, state: str | None = None, cwd: str | None = None,
+                            q: str | None = None, since: int = -1, limit: int = 200,
+                            include_summarizers: bool = True) -> dict:
+        """Session Fabric F1.2 — the registry LIST: every known Claude Code session (the backfilled
+        ~1,000-session catalog + everything the supervisor registers live), projected {id, name, cwd,
+        state, last_activity, title, title_source, started, summarizer, seq}, newest-activity first. A
+        READ-TIME projection over the agent_sessions/ records + the agent_sessions.* event log (log-IS-
+        the-index, the list_runs pattern — no parallel store; a fresh Suite rebuilds it all from shared
+        disk). `summarizer` rows are CC's INTERNAL summary one-shots — measured 2026-06-11: ~77% of the
+        historical catalog (817/1,065) is these machine sessions, so a fleet view passes
+        include_summarizers=False to see Tim's ~250 real conversations (T3-HYGIENE: machine traffic
+        must not silt a human-facing lane).
+
+        Filters: `state` (one of AGENT_SESSION_STATES — an unknown value RAISES the teaching error,
+        never silently returns everything), `cwd` (exact match), `q` (case-insensitive substring over
+        title+name+id — the registry half of the merged-search contract entry; content search lives in
+        the claude-sessions substrate vault, NOT here), `since` (exclusive event-seq cursor over the
+        row's last folded seq — rows touched only by records carry seq=None and are excluded by a
+        since-filter, which is honest: no event moved them). Returns {sessions, total, fold_errors} —
+        fold_errors > 0 means malformed fabric events were tolerated-and-counted (see
+        _apply_agent_session_event; loud in every result, never a silent fallback)."""
+        if state is not None and state not in self.AGENT_SESSION_STATES:
+            raise ValueError(
+                f"list_agent_sessions: unknown state {state!r} — the registry's closed state vocabulary "
+                f"is {list(self.AGENT_SESSION_STATES)} (supervised-live = supervisor-owned/deliverable; "
+                f"unsupervised-live = alive but pull-only; closed = wake-able via --resume). Fail loud, "
+                f"never filter on a fabricated state.")
+        rows = self._agent_session_fold()
+        if not include_summarizers:
+            rows = [r for r in rows if not r.get("summarizer")]
+        if state:
+            rows = [r for r in rows if r.get("state") == state]
+        if cwd:
+            rows = [r for r in rows if r.get("cwd") == cwd]
+        if q:
+            needle = q.lower()
+            rows = [r for r in rows if needle in " ".join(
+                str(r.get(k) or "") for k in ("title", "name", "id")).lower()]
+        if since is not None and since != -1:
+            rows = [r for r in rows if (r.get("seq") or -1) > since]
+        total = len(rows)
+        rows.sort(key=lambda r: (r.get("last_activity") or ""), reverse=True)
+        return {"sessions": rows[:limit], "total": total,
+                "fold_errors": self._agent_session_fold_errors}
+
+    def get_agent_session(self, sid: str) -> dict:
+        """The registry DESCRIBE: one session's projected row JOINED with its full durable record (the
+        envelope the row elides — project, jsonl_path, jsonl_bytes, turns, git_branch, …). The row's
+        log-derived state/last_activity win over the record's stored copies (the fold's own rule).
+        An unknown id RAISES fail-loud (never fabricate a session)."""
+        rows = {r["id"]: r for r in self._agent_session_fold()}
+        row = rows.get(sid)
+        rec = self.store.load_agent_session(sid)
+        if row is None and rec is None:
+            raise ValueError(
+                f"get_agent_session: unknown session {sid!r} — not in the registry (no agent_sessions/ "
+                f"record, no agent_sessions.* event). list_agent_sessions() shows what exists; the "
+                f"importer (ops/agent_sessions_importer.py) backfills the historical catalog. Fail loud, "
+                f"never fabricate a session.")
+        return {**(rec or {}), **(row or {})}
 
     def route_run_output(self, run_address: str, destination: str, *, turn_id: str | None = None,
                          params: dict | None = None) -> dict:

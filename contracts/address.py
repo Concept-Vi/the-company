@@ -9,6 +9,7 @@ Grammar:
   code://<file-stem>/<symbol>                          a code symbol (the S3 ui://→code:// join)
   skill://<id>                                         a declared reusable unit of instructions (SkillRegistry)
   context://<id>                                       a declared reusable unit of context (ContextRegistry)
+  session://<id>                                       a Claude Code agent session (the agent-session registry)
 Schema-additive: add optional fields + bump schema_ver; never break an existing one.
 
 Note on `ui://`: this scheme is a *label* in the address grammar only. Unlike
@@ -38,11 +39,26 @@ SCHEMES is purely additive (it widens the legal scheme set; mirrors the `ui://`/
 precedent), so no record shape and no `schema_ver` change. This is the FIRST real
 extension of the `resolve_address` seam: the schemes that USED to fail loud there now
 have a resolver. registry-is-truth — the ids live in their dirs, never a literal here.
+
+Note on `session://` (Session Fabric F1.2 — sessions message sessions): like
+`skill://`/`context://`, a *label* resolved by `runtime/cognition.py:resolve_address`,
+which reads the agent-session REGISTRY RECORD (`FsStore.load_agent_session` — the
+whole-record durable identity under `<store>/agent_sessions/`, backfilled by the
+importer + maintained by the session supervisor). `session://<id>` resolves to that
+session's registry record (id, name, cwd, title, state, last_activity, envelope);
+the LIVE trajectory view is the Suite's `list_agent_sessions` fold (log-IS-the-index),
+not this resolver. `<id>` is the Claude Code session uuid (the jsonl basename in
+`~/.claude/projects/<project>/<id>.jsonl`). Adding it to SCHEMES is purely additive
+(it widens the legal scheme set; mirrors the `skill://`/`context://` precedent), so
+no record shape and no `schema_ver` change. NOT `fabric://` (the model fabric owns
+that name) and NOT a second "session" noun in the store — the registry dir is
+`agent_sessions/`, distinct from the review-session `sessions/` dir (naming ruling,
+Session Fabric criteria audit N2).
 """
 from __future__ import annotations
 from pydantic import BaseModel, Field
 
-SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context")
+SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "session")
 
 
 class Provenance(BaseModel):

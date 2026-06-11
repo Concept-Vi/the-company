@@ -858,6 +858,12 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
                         content (C 3b — file-discovered, registry-is-truth). An UNKNOWN id RAISES fail-loud.
            context:// → `runtime/skills.py:ContextRegistry.read(id)` — the context's declared content
                         blob (C 3b). An UNKNOWN id RAISES fail-loud (never fabricate a missing context).
+           session:// → `store.load_agent_session(id)` — the agent-session REGISTRY RECORD (Session
+                        Fabric F1.2: durable identity — id/name/cwd/title/state/last_activity/envelope;
+                        the importer backfills it, the supervisor maintains it). An UNKNOWN id RAISES
+                        fail-loud. The LIVE trajectory view is Suite.list_agent_sessions (the fold) —
+                        this resolver returns the record, so any role/tool can take a session as an
+                        input address (and inspect_address works on sessions for free).
       3. A BARE NAME (no "://" at all — e.g. "utterance", "notes") is NOT an address: return the
          `BARE_NAME` sentinel so the CALLER reads it from the supplied ctx (bare names are ctx keys).
       4. ANY OTHER scheme — a REGISTERED scheme with no content-resolver yet (blob:// vec:// ui:// code://)
@@ -865,9 +871,10 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
          NEVER a silent empty. This RAISE is the extensible seam: when a resolver exists, add a dispatch
          branch here (and that scheme stops raising) — exactly as skill://+context:// just did (C 3b).
 
-    SCOPE (C 3b — the seam's FIRST real extension): skills + contexts ARE addressed now —
-    `resolve_address` resolves `run://` (an upstream output) + `cas://` (a content blob) + `skill://`
-    (a reusable instructions unit) + `context://` (a reusable context blob). It remains the ONE place
+    SCOPE (C 3b — the seam's FIRST real extension; session:// its second, Session Fabric F1.2): skills +
+    contexts + agent sessions ARE addressed now — `resolve_address` resolves `run://` (an upstream
+    output) + `cas://` (a content blob) + `skill://` (a reusable instructions unit) + `context://` (a
+    reusable context blob) + `session://` (an agent-session registry record). It remains the ONE place
     the next resolver (a `vec://` k-NN read, a `blob://` binary read) plugs in LATER; until then those
     schemes fail loud here — the seam is declared, not faked. The input-address INTENT (a role's input
     = any skill, any context, or any upstream output, set by address) is now fully realised.
@@ -901,12 +908,27 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
     if sch == "context":
         # C 3b — context://<id> → the context's declared content blob (file-discovered registry).
         return context_registry().read(addr[len("context://"):])
+    if sch == "session":
+        # Session Fabric F1.2 — session://<id> → the agent-session REGISTRY RECORD (durable identity:
+        # the whole-record file under <store>/agent_sessions/, written by the importer backfill + the
+        # session supervisor). Registry-is-truth: an unknown id RAISES — never fabricate a session.
+        # The record (a dict) is the resolved content; live state/last_activity refinement is the
+        # Suite's list_agent_sessions fold, which joins this record with the agent_sessions.* log.
+        sid = addr[len("session://"):]
+        rec = store.load_agent_session(sid)
+        if rec is None:
+            raise ValueError(
+                f"resolve_address: unknown session {sid!r} (address {addr!r}) — no agent_sessions/ "
+                f"registry record. Suite.list_agent_sessions() shows what exists; the importer "
+                f"(ops/agent_sessions_importer.py) backfills the historical catalog. Fail loud, "
+                f"never fabricate a session.")
+        return rec
     if sch is not None:
         # a REGISTERED scheme (blob/vec/ui/code) with no content-resolver wired into this dispatcher yet.
         raise ValueError(
             f"resolve_address: scheme {sch!r} not content-resolvable yet (address {addr!r}) — "
-            f"run:// + cas:// + skill:// + context:// resolve to content today (extensible: add a "
-            f"{sch}:// resolver branch here). Fail loud, NEVER a silent empty.")
+            f"run:// + cas:// + skill:// + context:// + session:// resolve to content today (extensible: "
+            f"add a {sch}:// resolver branch here). Fail loud, NEVER a silent empty.")
     if "://" in addr:
         # an UNREGISTERED scheme (foo://) — not in contracts.address.SCHEMES, no resolver. The seam's
         # future home for a new declared scheme (skill://+context:// graduated from here in C 3b).
@@ -914,8 +936,8 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
         raise ValueError(
             f"resolve_address: scheme {bad!r} not content-resolvable yet (address {addr!r}) — it is not "
             f"a registered scheme (contracts.address.SCHEMES) and has no resolver. run:// + cas:// + "
-            f"skill:// + context:// resolve now; this is the EXTENSIBLE seam where a {bad}:// resolver "
-            f"plugs in when the scheme exists. Fail loud, NEVER a silent empty.")
+            f"skill:// + context:// + session:// resolve now; this is the EXTENSIBLE seam where a {bad}:// "
+            f"resolver plugs in when the scheme exists. Fail loud, NEVER a silent empty.")
     # a BARE NAME (no "://") — not an address; the caller reads it from the supplied ctx.
     return BARE_NAME
 

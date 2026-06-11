@@ -390,6 +390,53 @@ class FsStore:
         d = self.root / "journeys"
         return sorted(p.stem for p in d.glob("*.json")) if d.exists() else []
 
+    # --- agent-session registry records (Session Fabric F1.2): the DURABLE IDENTITY of a Claude Code
+    # session in the fabric's registry — {id (the Claude session uuid), name, cwd, title, title_source,
+    # state (supervised-live|unsupervised-live|closed), started, last_activity, + envelope (git_branch,
+    # project, jsonl_path, jsonl_bytes, turns, …), schema_ver} — an OPEN record per the append_* {ts,**}
+    # additive convention. Clones the save_journey/save_session whole-record-atomic pattern for a DISTINCT
+    # noun: `agent_sessions/` is a SEPARATE dir from the review-session `sessions/` dir (an agent-session
+    # id and a review-session id never collide — the save_journey precedent; Session Fabric naming ruling
+    # N2: tool `sessions` · dir `agent_sessions/` · events `agent_sessions.*`, never `fabric/`). The LIVE
+    # state trajectory rides `agent_sessions.*` events on events.jsonl (log-IS-the-index, the runs-fold
+    # pattern in runtime/suite.py); these records hold what must survive without the log: who the session
+    # IS. Writers: the read-only importer (ops/agent_sessions_importer.py, backfilling the historical
+    # catalog as state=closed) + the session supervisor (the single agent_sessions.* event writer). ---
+    def save_agent_session(self, rec: dict) -> None:
+        """Persist one agent-session registry record atomically (crash-durable tmp+replace, the
+        save_journey guarantee). STRUCTURAL fail-loud (the append_mark discipline): a record with a
+        missing/empty `id` is REFUSED — an unaddressable session is a silent black hole (rule 4),
+        and `id` is what `session://<id>` resolves by."""
+        import json as _j
+        sid = rec.get("id")
+        if not isinstance(sid, str) or not sid.strip():
+            raise ValueError(
+                "save_agent_session: record has no `id` (the Claude session uuid) — refused. An "
+                "agent-session record without an id can never be resolved (session://<id>) or listed; "
+                "fail loud, never write an unfindable record.")
+        (self.root / "agent_sessions").mkdir(parents=True, exist_ok=True)
+        path = self.root / "agent_sessions" / (self._safe(sid) + ".json")
+        self._fsync_atomic_write(path, _j.dumps(rec, indent=2))
+
+    def load_agent_session(self, sid: str) -> dict | None:
+        import json as _j
+        p = self.root / "agent_sessions" / (self._safe(sid) + ".json")
+        return _j.loads(p.read_text()) if p.exists() else None
+
+    def list_agent_sessions(self) -> list[str]:
+        d = self.root / "agent_sessions"
+        return sorted(p.stem for p in d.glob("*.json")) if d.exists() else []
+
+    def agent_session_mtimes(self) -> dict[str, float]:
+        """{session id → record-file mtime} — the registry fold's cheap change-detection key (the suite
+        re-loads ONLY records whose mtime moved, mirroring the run-index's events_since(high_water) delta
+        discipline so a 1,000-record backfilled catalog isn't re-read on every list). A non-filesystem
+        backend implements the same contract with its own change marker (updated_at)."""
+        d = self.root / "agent_sessions"
+        if not d.exists():
+            return {}
+        return {p.stem: p.stat().st_mtime for p in d.glob("*.json")}
+
     # --- conversation threads (S2): a thread = a CONVERSATION (new / list / reopen). Metadata mirrors
     # save_session (atomic whole-record). The TURNS stay in the ONE append-only chat.jsonl carrying an
     # additive `thread_id` (the same one-source pattern as the `address` field for chats_for) — no parallel
