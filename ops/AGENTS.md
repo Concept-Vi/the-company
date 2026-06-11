@@ -92,6 +92,7 @@ Do **not** build duplicate command centers. The right shape (Tim, "one substrate
   model-id) — knobs = "dials a request turns"; capabilities = "what the model can do." The DOWNSTREAM consumer is
   `suite.py:capability_providers()` (C2.5), which the lead wires to read this catalog (the one suite-side wire).
 - **jobs/cron (timers)** — SEEDED 2026-06-11 with the `jobs` group: a timer-managed service is just a registry entry whose `manage.unit` is the `.timer` (the oneshot `.service` is what fires; `company up <key>` arms the timer; ◐ active = armed). First instance: `agent-sessions-exporter` (`ops/agent_sessions_exporter.py` — Claude session jsonl → `~/corpora/claude-sessions/` markdown under the Session Fabric filter law + secret redaction, READ-ONLY on `~/.claude`, every 20 min, quiesce >15 min; proven by `tests/agent_sessions_exporter_acceptance.py` + a clean full-corpus leak audit). Same mechanism, one more type — never a parallel scheduler.
+- **sessions (the supervised Claude Code fleet)** — SEEDED 2026-06-12 (Session Fabric F1): `company session` is the type-view (`cli/sessions.py`), the `session-supervisor` service row is the muscle (`runtime/session_supervisor.py`, 127.0.0.1:8771, unit in `systemd/`). The console talks HTTP to the service; it NEVER spawns claude itself — one spawn path for every face.
 - **cognitive-layers · RHM/modes · data/memory** — not yet instantiated; same mechanism when they are.
 
 ## Files
@@ -99,7 +100,8 @@ Do **not** build duplicate command centers. The right shape (Tim, "one substrate
 - `cli/` — the console package, one job per module:
   - `app.py` (dispatch + the `up` resource gate) · `registry.py` (reads services.json) ·
     `systemd.py` (start/stop/status/logs) · `gpu.py` (**the resource manager**) ·
-    `models.py` (inventory + swap) · `capabilities.py` (**the model-TYPE capability registry**, by model-id; JOINs to gpu.py) · `bench.py` · `render.py` (status/health views).
+    `models.py` (inventory + swap) · `capabilities.py` (**the model-TYPE capability registry**, by model-id; JOINs to gpu.py) · `bench.py` · `render.py` (status/health views) ·
+    `sessions.py` (**the supervised-fleet type-view** — `company session [list|new|send|stop]`, a thin stdlib HTTP face on the session-supervisor service at 127.0.0.1:8771; the SERVICE is the one launcher of claude subprocesses — the console never spawns one itself).
   - `README.md` — use guide.   `UPDATING.md` — how to extend the CLI + the registry schema.
 - `services.json` — the registry (the source of truth; now also carries `vram_mb`, `serve`, `vram_ceiling_mb`).
 - `agent_sessions_exporter.py` — the transcript-memory exporter (jobs group; jsonl → markdown corpus under the filter law; its units are `company-agent-sessions-exporter.{service,timer}` in `systemd/`).

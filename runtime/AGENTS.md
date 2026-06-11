@@ -117,6 +117,31 @@ proposes/surfaces, never dispatches" — only `dispatch_decision` stays off-face
 telemetry `_emit`, so a swallowed claim can never silently allow a double-launch. The live capability list
 lives in [[Company Map]] — traverse there rather than re-listing it here (the rule in [[Vault Conventions]]).
 
+## The session supervisor (Session Fabric F1 · `runtime/session_supervisor.py` · the fleet-owning service)
+
+The third claude-launching organ beside `ui_claude_session.py` (the operator panel's one-turn spawner) and
+`implement.py` (the wire's governed one-shot) — and the only one that HOLDS sessions: a bridge-style
+service (stdlib HTTP, **127.0.0.1:8771 only** — exposure law, audit B3: widening = a recorded decision +
+code change, no env flip) owning N concurrent `claude -p --input-format stream-json` subprocesses with
+held-open stdin (the T2-proven inject-while-idle physics; per-turn `--resume` re-spawn is the documented
+fallback). Verbs are routing decisions: DELIVER = inject into an owned live session · WAKE = spawn
+`--resume <id>` · CONSULT = spawn `--resume <id> --fork-session` N-fan (T4-proven non-destructive).
+**Laws it carries:** SINGLE WRITER of `agent_sessions.*` events (spawned/turn/idle/closed) on the shared
+log — the face/bridge route fabric intents via the mailbox leaf `agent_sessions/mail.jsonl` and emit
+nothing fabric-shaped (the cross-process seq landmine resolved by construction) · ENFORCED per-turn
+wall-clock watchdog (`COMPANY_FABRIC_TURN_TIMEOUT_S`, default 900 — silent hangs + init-less spawns are
+reaped; the `implement.py` precedent, NOT `ui_claude_session`'s dead constant) · concurrency cap
+`COMPANY_FABRIC_CONCURRENCY` (default 3, call-time read) with TEACHING refusals · permission posture
+`COMPANY_FABRIC_PERMISSION` default `plan` · no orphans (SIGTERM/atexit teardown + the unit's cgroup).
+**The floor holds:** this is a SERVICE, never the MCP face — `mcp_face` imports neither this module nor
+`ui_claude_session`; the face writes intents to the mailbox, this service is the only process that
+launches/resumes claude. Mailbox consumption = per-consumer cursor ref (`agent_sessions/cursor:supervisor`),
+advanced only past handled intents (head-of-line hold = crash-safe ordering); durable replies (verb=reply,
+`re`=intent id, body in cas) ride the same leaf. Faces: `company session` (ops/cli/sessions.py) + the
+`session-supervisor` services.json row. Proven by `tests/session_supervisor_acceptance.py` (24 stub-binary
+service-level checks); real-claude end-to-end (inject-to-idle ≤5s, interrupt semantics, WAKE/CONSULT on
+real ids) is the lead's verification slice — stated, not green-painted.
+
 ## The rule engine (Concurrent Cognition G3 · `runtime/rules.py` · the L2 core)
 
 A **rule** is the deterministic routing primitive of the collective cognition (L2): a role emits
