@@ -1,0 +1,11 @@
+[Unit]
+Description=Company claude-sessions reindex beat timer — fires ~5 min after each export (exporter is *:00/20; this is *:05/20) so it picks up that window's transcripts
+
+[Timer]
+# Offset 5 min past the exporter's *:00/20 cadence → 05, 25, 45 past the hour.
+OnCalendar=*:05/20
+Persistent=true
+Unit=company-claude-sessions-reindex.service
+
+[Install]
+WantedBy=company.target

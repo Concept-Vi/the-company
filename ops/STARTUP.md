@@ -27,7 +27,7 @@ thin shim that forwards here — there is a single brain.
 | Run a stack benchmark | `company bench chat\|embed\|suite\|long-ctx [args]` |
 | What it can do | `company help` |
 
-`company status` groups services (core · brain · voice · models · reach), shows live state
+`company status` groups services (core · brain · voice · models · reach · jobs), shows live state
 (▶ running · ◐ active-no-port-yet · ✖ failed · · stopped), each service's **~VRAM cost**, and
 a **GPU budget** line. `company up <model>` prints the VRAM it will add against what's already
 committed and **warns if the start would exceed 16 GB** (it surfaces the risk; it does not yet
@@ -39,6 +39,28 @@ Generic over the registry: works for any model service whose `serve` script uses
 `MODEL="${1:-...}"` pattern — verified for `chat-4b`, `embed-bge`, `chat-nemotron`, `chat-2b/08b`.
 `embed-jina-v5` and `embed-qwen3` set their model differently, so `swap` will refuse them
 cleanly (script left unchanged) until those scripts are normalized.
+
+### Jobs — scheduled derived-data beats (the `jobs` group)
+Timers, not ports. `◐ active` = armed (next fire on schedule); `· stopped` = disarmed.
+They are bound to `company.target` (`add-wants`, NOT `enable` — boot-autostart stays off), so
+they **rise and fall with the Company**: `company up/down jobs` (or `all`, or each by name) arms/
+disarms them, `systemctl --user start/stop company.target` does too, and `company status` shows
+them. No invisible orphan timers (Tim's requirement).
+
+The **interim transcript-search circuit** (throwaway — Tim is building the real memory system
+elsewhere) is two beats in this group, one feeding the next:
+
+| Beat | Fires | Does |
+|---|---|---|
+| `agent-sessions-exporter` | `*:00/20` (every 20 min) | Claude session jsonl → `~/corpora/claude-sessions/**/*.md` (filtered, redacted, idempotent). `ops/agent_sessions_exporter.py`. |
+| `claude-sessions-reindex` | `*:05/20` (5 min later) | substrate **DELTA** reindex of the `claude-sessions` vault so search stays current. Cheap-by-design: a marker (`~/corpora/claude-sessions/.reindex_marker.json`) gates it — if no transcript changed it exits doing nothing (no model load, no GPU). `ops/claude_sessions_reindex.py`. |
+
+The reindex embeds via the `embed-pplx` service (`company up embed-pplx`) into an **isolated**
+substrate state dir (`~/.cache/company/substrate-claude-sessions`, separate from the bge-m3
+substrate). Search it: `ops/wire_substrate_claude_sessions.py search "query" [--rerank]` (full
+substrate face) or `ops/transcript_search.py search "query"` (numpy fallback). If the embedder is
+down when there's work, the reindex **fails loud** (exit non-zero) and leaves the marker stale so
+the next fire retries — it never fakes an index.
 
 ### Underneath: systemd (the muscle — still usable directly)
 | Do | Command |
@@ -78,11 +100,17 @@ What the repo fully describes and can restore on a fresh machine:
 
 To reinstall the runtime layer:
 ```bash
-cp ops/systemd/*.service ops/systemd/*.target ~/.config/systemd/user/
+cp ops/systemd/*.service ops/systemd/*.timer ops/systemd/*.target ~/.config/systemd/user/
 systemctl --user daemon-reload
-# do NOT `enable` anything — boot-autostart is off by design; bring up on demand:
-company status        # confirm the map
+# Bind the job timers to the Company target (creates company.target.wants/ symlinks;
+# does NOT enable boot-autostart — company.target itself stays disabled):
+systemctl --user add-wants company.target \
+  company-agent-sessions-exporter.timer company-claude-sessions-reindex.timer
+systemctl --user daemon-reload
+# do NOT `enable` anything else — boot-autostart is off by design; bring up on demand:
+company status        # confirm the map (jobs included)
 company up            # the surface (canvas + bridge)
+company up jobs       # arm the scheduled beats (exporter + reindex)
 ```
 **What the repo does NOT carry (separate restore — flagged honestly):**
 - the model-serving venvs (`~/vllm-env`, `~/.voice-venvs/*`) and the model weights

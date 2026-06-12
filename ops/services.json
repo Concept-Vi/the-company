@@ -562,7 +562,16 @@
     "type": "user-unit",
     "unit": "company-agent-sessions-exporter.timer"
    },
-   "note": "F1.4 transcript memory. Managed unit = the TIMER (`company up agent-sessions-exporter` arms it; the oneshot .service fires every 20 min). READ-ONLY on ~/.claude; filter law + redaction in ops/agent_sessions_exporter.py. Vault registration of the output dir is a separate (embedding-adjacent) step, not this service's."
+   "note": "F1.4 transcript memory. Managed unit = the TIMER (`company up agent-sessions-exporter` arms it; the oneshot .service fires every 20 min). READ-ONLY on ~/.claude; filter law + redaction in ops/agent_sessions_exporter.py. Timer is WantedBy=company.target so it rises/falls with the Company (no orphan). The SECOND stage of the transcript-search circuit (export → reindex) is `claude-sessions-reindex`."
+  },
+  "claude-sessions-reindex": {
+   "group": "jobs",
+   "title": "Reindex beat — substrate DELTA reindex of claude-sessions after each export (~5 min offset)",
+   "manage": {
+    "type": "user-unit",
+    "unit": "company-claude-sessions-reindex.timer"
+   },
+   "note": "INTERIM transcript-search (throwaway; Tim is building the real memory system elsewhere). The SECOND beat of the circuit: Claude jsonl → [agent-sessions-exporter] → corpus markdown → [this] → searchable index. Managed unit = the TIMER (WantedBy=company.target; fires *:05/20, ~5 min after the exporter's *:00/20). The oneshot .service runs ops/claude_sessions_reindex.py in the substrate venv (obsidian-overlord/.venv). CHEAP-BY-DESIGN: compares the corpus' newest .md mtime + file count against ~/corpora/claude-sessions/.reindex_marker.json and EXITS doing nothing (no model load, no GPU) when nothing changed — the common case. When transcripts changed it runs a substrate DELTA scan (sha256 skips unchanged files) of the `claude-sessions` vault embedded by the `embed-pplx` service into an ISOLATED state dir (~/.cache/company/substrate-claude-sessions, separate from the bge-m3 substrate). FAIL LOUD: if files changed but embed-pplx is DOWN it exits non-zero and leaves the marker stale so the next fire retries (`company up embed-pplx` first, or it can self-ensure with --ensure-embedder). Search face: ops/wire_substrate_claude_sessions.py search / ops/transcript_search.py (numpy fallback)."
   }
  }
 }

@@ -7,4 +7,8 @@ Persistent=true
 Unit=company-agent-sessions-exporter.service
 
 [Install]
-WantedBy=timers.target
+# Bound to the Company target (not bare timers.target) so it rises/falls with the
+# Company and `company status` shows it as a managed member — Tim's requirement:
+# no invisible orphan timer. The TIMER (not the oneshot .service) is the member,
+# matching how ops/services.json declares this job's managed unit.
+WantedBy=company.target

@@ -1,0 +1,15 @@
+[Unit]
+Description=Company claude-sessions reindex beat — substrate DELTA reindex of the transcript corpus after each export (oneshot; the .timer fires it)
+Documentation=file:///home/tim/company/ops/claude_sessions_reindex.py
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/tim/company
+# Runs in the substrate venv (obsidian-overlord/.venv) which carries chromadb +
+# httpx + the substrate_mcp package the reindex imports. The cheap --check path
+# needs none of that, but the actual delta reindex does.
+ExecStart=/home/tim/repos/obsidian-overlord/.venv/bin/python ops/claude_sessions_reindex.py
+Nice=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=company-claude-sessions-reindex
