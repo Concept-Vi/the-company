@@ -170,7 +170,7 @@ consequences:
 correlate: [session]
 verification:
   settings-at-spawn: {state: probe-verified, run: "session_supervisor_params_acceptance (cmd-builder: settings→--settings)", date: 2026-06-12, note: "BUILT (CC-25.2): the `settings` field threads --settings <json|path>; unit-proven on the built cmd. live-verify pending (lead): a REAL spawn must confirm the object merged — NOT flipped live"}
-  add-dirs-at-spawn: {state: probe-verified, run: "session_supervisor_params_acceptance (cmd-builder: add_dir list → repeated --add-dir)", date: 2026-06-12, note: "BUILT (CC-25.3): an `add_dir` array threads one --add-dir per dir; unit-proven. live-verify pending (lead): a real spawn must confirm a tool reaches the added dir"}
+  add-dirs-at-spawn: {state: live-verified, run: "LEAD PROVE-BATCH 2026-06-12: Sonnet session spawned with add_dir=[/tmp/probe] (a dir OUTSIDE its cwd) successfully READ /tmp/probe/secret.txt and returned its contents — the --add-dir grant reached a tool.", date: 2026-06-12, note: "PROVEN-BY-USE (lead): a real spawn confirmed the added dir is tool-reachable."}
   env-at-spawn:      {state: unverified, note: "STILL planned: a per-session env override is NOT wired — spawns inherit the service account's environment"}
 ```
 ### Description (purpose-free)

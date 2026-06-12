@@ -89,6 +89,7 @@ live-twin: "none — static between operator env changes + restart"
 emits: []
 verification:
   posture-read: {state: probe-verified, run: "session_supervisor_acceptance section 1 (health asserts .permission)", date: 2026-06-12, note: "the field is the same one [[fabric-config#op: fabric-config.get]] proves; this op is the permission-lens NAME for it"}
+  spawn-mode-override: {state: live-verified, run: "LEAD PROVE-BATCH 2026-06-12: Sonnet session spawned with permission_mode=acceptEdits (a non-default override) → the session's own init reported permissionMode=acceptEdits. The per-session --permission-mode override threads AND takes.", date: 2026-06-12, note: "PROVEN-BY-USE (lead). NOTE: this supersedes the stale 'per-session override = NOT BUILT' line in the params table above — the supervisor-widening (②) added the permission_mode spawn param; it is built and now live-verified."}
 ```
 This op deliberately overlaps [[fabric-config#op: fabric-config.get]] — same wire read, different
 retrieval lens (a consumer asking "permissions" finds it here; one asking "fabric posture" finds it
