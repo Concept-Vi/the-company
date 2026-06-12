@@ -90,6 +90,9 @@ BRIDGE_ROUTES = (
     "/api/greeting",
     # S7 (overnight) — the FORAGER's search door: semantic corpus query (+ record heads) for the canvas.
     "/api/corpus-query",
+    # THE UNIVERSAL PROJECTION (Tim Geldard's equation, 2026-06-13) — the stores rendered for free:
+    # θ=kind (the sector registry), r=time-from-NOW, depth=nesting, phases=the ts cycles. Pure read.
+    "/api/projection",
     # Proposal lifecycle (RG8/RG9) — dispatched since the register build but MISSING here until the
     # F1.5 contract lane's drift-gate run caught it (the gate working as designed, both directions).
     "/api/registry/proposals",
@@ -755,6 +758,11 @@ class H(BaseHTTPRequestHandler):
             elif path == "/api/greeting":                  # S2: caught-up-in-one-glance (Tim's arrival face)
                 q = parse_qs(urlparse(self.path).query)
                 self._send(200, json.dumps(SUITE.greeting(since=(q.get("since") or [None])[0])))
+            elif path == "/api/projection":                # THE UNIVERSAL PROJECTION: the stores as points, free
+                q = self._qs(urlparse(self.path))
+                from runtime.projection import project as _uproject
+                evs = SUITE.store.events_since(int(q.get("since") or 0))
+                self._send(200, json.dumps(_uproject(evs, limit=int(q.get("limit") or 0))))
             elif path == "/api/corpus-query":              # S7: the forager's search door (semantic + heads)
                 q = self._qs(urlparse(self.path))
                 text, space = q.get("text"), q.get("space") or None
