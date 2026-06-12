@@ -224,8 +224,33 @@ def cmd_status(_args) -> int:
     return 0
 
 
+def _print_hit(rank: int, r: dict, *, was: int | None = None,
+               score: float | None = None) -> None:
+    m = r.get("metadata") or {}
+    dist = r.get("distance")
+    cos = (1.0 - dist) if isinstance(dist, (int, float)) else None
+    text = (r.get("text") or "").strip().replace("\n", " ")
+    head = f"\n#{rank}"
+    if was is not None:
+        head += f" (was #{was})"
+    if cos is not None:
+        head += f"  cos~{cos:.3f}"
+    if score is not None:
+        head += f"  rerank={score:.4f}"
+    print(head)
+    print(f"    addr: {m.get('address')}")
+    print(f"    {text[:280]}{'...' if len(text) > 280 else ''}")
+
+
 def cmd_search(args) -> int:
-    """Semantic search through the substrate's Chroma cosine face."""
+    """Semantic search through the substrate's Chroma cosine face.
+
+    SEAM (the chosen rerank seam): substrate-search returns candidates → the
+    Company's reusable rerank step (ops/rerank.py) re-orders them. The reranker
+    is OPTIONAL (--rerank, default off) so the embedding-only path is unchanged.
+    With --rerank we fetch a larger pool (--fetch, default max(k*4,20)) from the
+    embedder, then the cross-encoder re-scores each (query, candidate) pair on
+    CPU and we keep the top-k — printing BEFORE (embedding order) vs AFTER."""
     _require_embedder_up()
     cfg = _load_cfg()
     if not any(v.name == VAULT for v in cfg.vaults):
@@ -233,19 +258,59 @@ def cmd_search(args) -> int:
     embedder = make_embedder(cfg.embedding_provider, cfg.embedding_model,
                              base_url=cfg.ollama_base_url, api_key=cfg.ollama_api_key)
     chroma = SubstrateChroma(cfg.chroma_path, embedder)
-    results = chroma.query(VAULT, args.query, n_results=args.k)
-    if not results:
+
+    # --json: dump a candidate pool as JSON for the 2-stage rerank (the lean,
+    # canonical interim path — substrate-search runs in the overlord venv which
+    # has chromadb but NOT torch; the reranker runs in vllm-env which has torch
+    # but NOT chromadb; ops/rerank.py rerank-file bridges them). When --json is
+    # given, fetch the pool and write it; no rerank here.
+    out_json = getattr(args, "json", None)
+    if out_json:
+        fetch = args.fetch or max(args.k * 4, 20)
+        cand = chroma.query(VAULT, args.query, n_results=fetch)
+        if not cand:
+            sys.exit("FAIL: query returned 0 results (empty index?).")
+        with open(out_json, "w", encoding="utf-8") as fh:
+            json.dump({"query": args.query, "k": args.k, "candidates": cand},
+                      fh, ensure_ascii=False)
+        print(f"WROTE {len(cand)} candidates → {out_json}")
+        print(f"  next: vllm-env python ops/rerank.py rerank-file {out_json} -k {args.k}")
+        return 0
+
+    if not getattr(args, "rerank", False):
+        # --- embedding-only path (unchanged) ---
+        results = chroma.query(VAULT, args.query, n_results=args.k)
+        if not results:
+            sys.exit("FAIL: query returned 0 results (empty index?).")
+        print(f"\nTop {args.k} for: {args.query!r}\n" + "=" * 72)
+        for rank, r in enumerate(results, 1):
+            _print_hit(rank, r)
+        print()
+        return 0
+
+    # --- search + rerank path ---
+    fetch = args.fetch or max(args.k * 4, 20)
+    cand = chroma.query(VAULT, args.query, n_results=fetch)
+    if not cand:
         sys.exit("FAIL: query returned 0 results (empty index?).")
-    print(f"\nTop {args.k} for: {args.query!r}\n" + "=" * 72)
-    for rank, r in enumerate(results, 1):
-        m = r.get("metadata") or {}
-        dist = r.get("distance")
-        cos = (1.0 - dist) if isinstance(dist, (int, float)) else None
-        text = (r.get("text") or "").strip().replace("\n", " ")
-        print(f"\n#{rank}  cos~{cos:.3f}  dist={dist:.4f}" if cos is not None
-              else f"\n#{rank}  dist={dist}")
-        print(f"    addr: {m.get('address')}")
-        print(f"    {text[:280]}{'...' if len(text) > 280 else ''}")
+    # Import the reusable rerank step (lives next to this file).
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from rerank import Reranker  # noqa: E402
+    rr = Reranker(args.reranker, device="cpu")
+    t0 = time.time()
+    ranked = rr.rerank(args.query, cand,
+                       top_n=args.k, text_of=lambda c: c.get("text") or "")
+    dt = time.time() - t0
+
+    print(f"\nQuery: {args.query!r}")
+    print(f"Reranker: {args.reranker} (CPU) | fetched {len(cand)} → reranked "
+          f"to {len(ranked)} in {dt*1000:.0f}ms ({dt/len(cand)*1000:.0f}ms/cand)")
+    print("\nBEFORE (embedding cosine order):\n" + "-" * 72)
+    for rank, r in enumerate(cand[:args.k], 1):
+        _print_hit(rank, r)
+    print("\nAFTER (reranked):\n" + "-" * 72)
+    for r in ranked:
+        _print_hit(r["rank"], r["item"], was=r["orig_rank"], score=r["rerank_score"])
     print()
     return 0
 
@@ -264,10 +329,27 @@ def main() -> int:
     pi = sub.add_parser("index"); pi.add_argument("--full", action="store_true", default=True)
     pi.set_defaults(func=cmd_index)
     sub.add_parser("status").set_defaults(func=cmd_status)
+
+    def _add_rerank_flags(p):
+        # OPTIONAL rerank toggle on the search seam (default OFF → unchanged path).
+        p.add_argument("--rerank", action="store_true",
+                       help="re-order results with the cross-encoder rerank step (CPU)")
+        p.add_argument("--reranker", default=os.environ.get("COMPANY_RERANKER", "jina-v3"),
+                       choices=["jina-v3", "ms-marco"],
+                       help="rerank backend (jina-v3 listwise | ms-marco fast fallback)")
+        p.add_argument("--fetch", type=int, default=0,
+                       help="candidate pool size to fetch before rerank (default max(k*4,20))")
+        p.add_argument("--json", default=None,
+                       help="dump candidate pool to this JSON path for 2-stage rerank "
+                            "(then: vllm-env python ops/rerank.py rerank-file <path>)")
+
     ps = sub.add_parser("search"); ps.add_argument("query"); ps.add_argument("-k", type=int, default=5)
+    _add_rerank_flags(ps)
     ps.set_defaults(func=cmd_search)
     pa = sub.add_parser("all"); pa.add_argument("query"); pa.add_argument("-k", type=int, default=5)
-    pa.add_argument("--full", action="store_true", default=True); pa.set_defaults(func=cmd_all)
+    pa.add_argument("--full", action="store_true", default=True)
+    _add_rerank_flags(pa)
+    pa.set_defaults(func=cmd_all)
     args = ap.parse_args()
     return args.func(args)
 

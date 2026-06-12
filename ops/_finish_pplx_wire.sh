@@ -75,14 +75,34 @@ tail -1 /tmp/pplx_index.json 2>/dev/null | sed 's/^/  idx| /'
 if [ $rc -ne 0 ]; then emit "FAIL index rc=$rc (see /tmp/pplx_index.err)"; tail -5 /tmp/pplx_index.err | sed 's/^/  err| /'; exit 1; fi
 emit "INDEX_DONE"
 
-# 5) verification search
+# 5) verification search (embedding-only, overlord venv)
 emit "SEARCH probe=\"$PROBE\""
 "$OVPY" "$PYDRIVER" search "$PROBE" -k 5 > /tmp/pplx_search.txt 2>&1
 rc=$?
 sed 's/^/  q| /' /tmp/pplx_search.txt
 if [ $rc -ne 0 ]; then emit "FAIL search rc=$rc"; exit 1; fi
 
+# 6) RERANK verification on the REAL corpus — the reusable rerank step.
+#    Two-stage (lean): the substrate search (overlord venv: chromadb, no torch)
+#    dumps a candidate pool to JSON; ops/rerank.py (vllm-env: torch, no chromadb)
+#    reranks it on CPU. Shows BEFORE (embedding cosine) vs AFTER (reranked).
+RERANKER="${RERANKER:-jina-v3}"
+VLLMPY="$HOME/vllm-env/bin/python"
+emit "RERANK_DUMP candidate pool → /tmp/pplx_cand.json (fetch 20)"
+"$OVPY" "$PYDRIVER" search "$PROBE" -k 5 --json /tmp/pplx_cand.json --fetch 20 \
+  > /tmp/pplx_rerank_dump.txt 2>&1
+rc=$?; sed 's/^/  dump| /' /tmp/pplx_rerank_dump.txt
+if [ $rc -ne 0 ]; then emit "FAIL rerank dump rc=$rc"; exit 1; fi
+emit "RERANK $RERANKER (CPU) BEFORE/AFTER on real corpus"
+CUDA_VISIBLE_DEVICES="" "$VLLMPY" "$HOME/company/ops/rerank.py" --backend "$RERANKER" \
+  rerank-file /tmp/pplx_cand.json -k 5 > /tmp/pplx_rerank.txt 2>&1
+rc=$?
+grep -vE "Loading|Some weights|You are using|warnings|FutureWarning|UserWarning|it/s\]" \
+  /tmp/pplx_rerank.txt | sed 's/^/  rr| /'
+if [ $rc -ne 0 ]; then emit "FAIL rerank rc=$rc (jina-v3 slow on CPU? try RERANKER=ms-marco)"; exit 1; fi
+emit "RERANK_DONE see /tmp/pplx_rerank.txt (BEFORE vs AFTER ordering)"
+
 # write a compact result file
 "$OVPY" "$PYDRIVER" status > "$RESULT" 2>/dev/null
-emit "ALL_DONE result=$RESULT index=/tmp/pplx_index.json search=/tmp/pplx_search.txt"
+emit "ALL_DONE result=$RESULT index=/tmp/pplx_index.json search=/tmp/pplx_search.txt rerank=/tmp/pplx_rerank.txt"
 exit 0
