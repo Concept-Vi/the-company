@@ -1162,6 +1162,24 @@ class SessionSupervisor:
                 self.store.set_ref(CURSOR_REF, str(offset))
         return offset
 
+    def _resume_safe_cwd(self, target: str, rec: dict) -> str | None:
+        """Plain wake/consult cwd, VALIDATED: per-event cwd drifts as a session cd's around
+        (measured: record says /home/tim/vllm-tests, project dir encodes /home/tim), and a
+        --resume in the wrong cwd = 'No conversation found'. Where the registry record carries the
+        transcript path, validate candidates by re-encoding (resume_cwd_for — the same guard the
+        at-launch path already uses, ledger flagged-adoption 2026-06-13); only a record-less target
+        falls back to the unvalidated _cwd_for chain."""
+        src_rec = self.store.load_agent_session(target)
+        jp = (src_rec or {}).get("jsonl_path")
+        if isinstance(jp, str) and jp:
+            from runtime.session_pointintime import PointError, resume_cwd_for
+            try:
+                return resume_cwd_for(jp, rec.get("cwd"), (src_rec or {}).get("cwd"),
+                                      self._cwd_for(target, rec))
+            except PointError:
+                pass                                   # fall through — teaching happens at spawn failure
+        return self._cwd_for(target, rec)
+
     def _cwd_for(self, target: str, rec: dict) -> str | None:
         """The directory a wake/consult must resume in. A claude session is scoped to the project
         dir of the cwd it was born in; resuming elsewhere → 'No conversation found'. Resolution
@@ -1234,7 +1252,7 @@ class SessionSupervisor:
                     # already supervised-live → a wake degrades to deliver (truthful routing)
                     self.inject(live, body, source=rec.get("from") or "mailbox", intent=rec)
                     return True
-                s = self.spawn(resume=target, cwd=self._cwd_for(target, rec),
+                s = self.spawn(resume=target, cwd=self._resume_safe_cwd(target, rec),
                                source=f"mailbox:{rec.get('from')}",
                                name=rec.get("name") or f"wake-{target[:8]}")
                 self.inject(s, body, source=rec.get("from") or "mailbox", intent=rec)
@@ -1249,7 +1267,7 @@ class SessionSupervisor:
                     return True
                 with self.lock:
                     self._cap_check(copies)
-                cwd = self._cwd_for(target, rec)        # the fork must resume in the original's dir
+                cwd = self._resume_safe_cwd(target, rec)  # validated — the fork must resume where the transcript lives
                 for i in range(copies):
                     s = self.spawn(resume=target, fork=True, cwd=cwd,
                                    source=f"mailbox:{rec.get('from')}",
