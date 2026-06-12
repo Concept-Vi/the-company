@@ -55,7 +55,7 @@ _VERBS = ("auto", "deliver", "wake", "consult")
 # EXPORTED closed op set — the contract corpus's machine inventory for this consolidated tool
 # (CONTRACT-FORMAT §9.2: every consolidated MCP tool module exports OPS; extract_reality.py
 # fails loud on a tool module without one). tests/supervisor_routes_acceptance.py is the teeth.
-OPS = ("list", "inbox", "watch", "describe", "search")
+OPS = ("list", "inbox", "watch", "describe", "search", "timeline")
 
 
 def _fabric_concurrency() -> int:
@@ -107,7 +107,7 @@ def register(mcp, suite):
     @mcp.tool(annotations=_to_sdk_annotations(
         CompanyToolAnnotations(readonly=True, destructive=False, idempotent=True),
         "Session fabric — read (registry · mailbox · live events)"))
-    def sessions(op: Literal["list", "inbox", "watch", "describe", "search"], session: str = "",
+    def sessions(op: Literal["list", "inbox", "watch", "describe", "search", "timeline"], session: str = "",
                  q: str = "", state: str = "", cwd: str = "", since: int = -1,
                  thread: str = "", verb: str = "", limit: int = 50,
                  detail: str = "concise", mode: str = "auto") -> dict:
@@ -133,6 +133,14 @@ def register(mcp, suite):
                            `limit` (FIFO — pagination never skips). NOTE: deliver/wake/consult
                            records addressed to you are the SUPERVISOR's to act on (push); records
                            with verb="queue" are yours to pick up by reading this.
+          op="timeline" — a session's POINT-IN-TIME index (`session` required): its real distinct
+                           compaction boundaries ({n, ts, trigger, pre/post tokens, summarized,
+                           preserved_count, point:"compact:N"}) + life segments (turn counts, time
+                           spans) — WHERE along its life each moment sits. The points are
+                           LAUNCHABLE: session_post(to=…, verb='wake'|'consult', at='compact:N')
+                           wakes/consults a materialized copy AT that moment — context is that
+                           point's, not the tip (R3.4; the original is never touched). Pass any
+                           `since` ≥ 0 to force a rebuild (default: cached on transcript identity).
           op="watch"    — the live fabric trajectory: `agent_sessions.*` events (registered ·
                            spawned · turn · idle · closed · adopted) after event-seq `since`,
                            optionally for one `session`. Poll-shaped (this face is stdio; the
@@ -162,7 +170,8 @@ def register(mcp, suite):
                 f"sessions: unknown op={op!r}. Valid: {list(OPS)} — list=the fleet · "
                 f"inbox=a session's mail (needs `session`) · watch=live fabric events · "
                 f"describe=one session in full (needs `session`) · search=content search over "
-                f"transcripts, results are live handles (needs `q`). To SEND, use session_post (CQRS).")
+                f"transcripts, results are live handles (needs `q`) · timeline=a session's "
+                f"point-in-time compaction index (needs `session`). To SEND, use session_post (CQRS).")
         if detail not in ("concise", "detailed"):
             raise ValueError(f"sessions: detail must be 'concise' or 'detailed', got {detail!r}.")
 
@@ -227,6 +236,27 @@ def register(mcp, suite):
                     "consumption": "client-held cursor — pass since=next_since on your next read; "
                                    "re-reading is safe (this never consumes destructively)."}
 
+        if op == "timeline":
+            _registry_guard(suite, "agent_session_timeline")
+            sid = _sid(session, "session")
+            tl = suite.agent_session_timeline(sid, refresh=since >= 0)
+            bounds = tl.get("boundaries", [])
+            if detail == "concise":
+                bounds = [{k: x.get(k) for k in ("n", "ts", "trigger", "pre_tokens", "post_tokens",
+                                                 "messages_summarized", "preserved_count", "point")}
+                          for x in bounds]
+            return {"op": op, "session": _addr(sid), "started": tl.get("started"),
+                    "ended": tl.get("ended"), "events_total": tl.get("events_total"),
+                    "user_msgs": tl.get("user_msgs"), "assistant_msgs": tl.get("assistant_msgs"),
+                    "compactions": len(tl.get("boundaries", [])), "boundaries": bounds,
+                    "segments": tl.get("segments", []) if detail == "detailed"
+                                else len(tl.get("segments", [])),
+                    "detail": detail,
+                    "launch": f"session_post(to='{_addr(sid)}', verb='wake'|'consult', "
+                              f"at='compact:N', …) launches a materialized copy AT a point — "
+                              f"its context is that point's, not the tip; the original session "
+                              f"is never touched."}
+
         if op == "watch":
             if not hasattr(suite, "AGENT_SESSION_OPS"):
                 raise ValueError(
@@ -259,7 +289,8 @@ def register(mcp, suite):
         CompanyToolAnnotations(readonly=False, destructive=False, idempotent=False),
         "Session fabric — post a message/intent to a session"))
     def session_post(to: str, message: str, verb: Literal["auto", "deliver", "wake", "consult"] = "auto",
-                     copies: int = 1, from_session: str = "", thread: str = "") -> dict:
+                     copies: int = 1, from_session: str = "", thread: str = "",
+                     at: str = "") -> dict:
         """SEND a message to another Claude Code session (the fabric's one WRITE — CQRS twin of the
         `sessions` read tool). This NEVER spawns or touches a session directly: it appends a durable
         INTENT to the mailbox; the supervisor service acts on it (the floor — this face cannot launch
@@ -278,6 +309,15 @@ def register(mcp, suite):
                           (T4-verified byte-identical), works on live or closed targets, and fans:
                           `copies=N` forks N parallel consultants (N ≤ COMPANY_FABRIC_CONCURRENCY),
                           replies aggregating under one thread id.
+
+        `at`: POINT-IN-TIME launch (R3.4) — wake/consult the session AS IT WAS at a chosen moment,
+        not its tip: at="compact:N" (the state as compaction #N left it — sessions(op='timeline')
+        lists the points) · at="uuid:<event-uuid>" · at="ts:<iso-timestamp>". The supervisor
+        MATERIALIZES a new session file (the native-fork transform on the transcript's prefix at
+        that point) and launches THAT — the original session is NEVER touched, any liveness. Valid
+        with verb='wake' (the copy becomes a live session of its own), 'consult' (fan works:
+        copies=N materializes N independent copies), or 'auto' (routes to wake). NOT with
+        'deliver' (a tip-injection cannot time-travel).
 
         `to`: the target (session id or session://<id> — sessions(op='list') shows the fleet).
         `from_session`: REQUIRED — your reply path. Pass YOUR session id (session://<id>) so answers
@@ -320,6 +360,44 @@ def register(mcp, suite):
         _registry_guard(suite, "get_agent_session")
         row = suite.get_agent_session(sid)     # raises the registry's own teaching error on unknown
         state = row.get("state")
+        if at.strip():
+            # POINT-IN-TIME (R3.4): validate the point grammar HERE (fail at post-time, not in the
+            # supervisor's mailbox pass) + the existence of a transcript to cut. Target liveness is
+            # IRRELEVANT: the supervisor materializes a NEW session file (the native-fork transform
+            # on the prefix at the point) and launches THAT — the original is never touched, so the
+            # T1 second-writer danger does not exist on this path.
+            from runtime.session_pointintime import PointError, parse_point
+            try:
+                parse_point(at.strip())
+            except PointError as e:
+                raise ValueError(f"session_post: at={at!r} refused — {e}")
+            if verb == "deliver":
+                raise ValueError(
+                    "session_post: at= cannot ride verb='deliver' — a tip-injection cannot "
+                    "time-travel. Use verb='wake' (launch a copy AS the session at that point) or "
+                    "verb='consult' (ask N independent copies at that point).")
+            if not (isinstance(row.get("jsonl_path"), str) and row.get("jsonl_path")):
+                raise ValueError(
+                    f"session_post: {_addr(sid)} has no transcript path on its registry record — "
+                    f"a point-in-time launch cuts the transcript, so it needs jsonl_path. The "
+                    f"importer (ops/agent_sessions_importer.py) backfills it.")
+            resolved = "consult" if verb == "consult" else "wake"
+            cas = suite.store.put_content(message)
+            rec = {"to": _addr(sid), "from": from_session.strip(), "verb": resolved,
+                   "requested_verb": verb, "cas": cas, "copies": copies, "at": at.strip(),
+                   "state_at_post": state, "source": "mcp_face.session_post"}
+            if thread.strip():
+                rec["thread"] = thread.strip()
+            out = suite.store.append_agent_mail(rec)
+            return {"posted": out["id"], "seq": out["seq"], "to": out["to"], "verb": resolved,
+                    "requested_verb": verb, "at": at.strip(), "state_at_post": state,
+                    "copies": copies, "thread": out["thread"], "routed": "supervisor-at-launch",
+                    "what_happens": f"the supervisor MATERIALIZES {'%d independent copies' % copies if copies > 1 else 'a new session file'} "
+                                    f"of {_addr(sid)} cut at {at.strip()} (original untouched), "
+                                    f"registers + launches via --resume, and hands it your message; "
+                                    f"watch for agent_sessions.registered then .spawned then .turn",
+                    "replies": f"sessions(op='inbox', session='{from_session.strip()}', "
+                               f"thread='{out['thread']}')"}
         if verb == "auto":
             if state == "supervised-live":
                 resolved = "deliver"

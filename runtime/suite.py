@@ -1000,6 +1000,40 @@ class Suite:
                 f"never fabricate a session.")
         return {**(rec or {}), **(row or {})}
 
+    def agent_session_timeline(self, sid: str, refresh: bool = False) -> dict:
+        """Session Fabric R3.3 — a session's POINT-IN-TIME timeline: its real distinct compaction
+        boundaries ({n, ts, trigger, pre/post tokens, messages_summarized, preserved_count,
+        resume_cut_*, point:"compact:N"}) + life segments (turn counts, time spans) — the navigable
+        index "where along its life you are", and the launchable points session_post(at=…) takes.
+        Built by runtime/session_pointintime.build_timeline (payload boundary-copies deduped; both
+        measured post-compact-head eras cut correctly); CACHED as a durable registry-shaped record
+        (agent_sessions/timeline/<sid>.json) keyed on the transcript's bytes+mtime — a moved
+        transcript recomputes, `refresh=True` forces. Raises teaching-loud on an unknown session or
+        a stale/missing jsonl_path (never a fabricated empty timeline)."""
+        import os as _os
+        from runtime.session_pointintime import build_timeline as _build_tl
+        rec = self.get_agent_session(sid)                  # teaching-loud on unknown
+        path = rec.get("jsonl_path")
+        if not (isinstance(path, str) and path.strip()):
+            raise ValueError(
+                f"agent_session_timeline: session {sid!r} has no jsonl_path on its registry record — "
+                f"it was registered live (not imported). The importer (ops/agent_sessions_importer.py) "
+                f"stamps transcript paths; re-run it to backfill, then retry.")
+        if not _os.path.exists(path):
+            raise ValueError(
+                f"agent_session_timeline: transcript missing at {path} (registry record is stale — "
+                f"the session's project dir moved or the file was removed). Re-run the importer.")
+        st = _os.stat(path)
+        if not refresh:
+            cached = self.store.load_agent_session_timeline(sid)
+            if (cached and cached.get("source_bytes") == st.st_size
+                    and cached.get("source_mtime") == st.st_mtime):
+                return cached
+        tl = _build_tl(path)
+        tl["session"] = sid
+        self.store.save_agent_session_timeline(sid, tl)
+        return tl
+
     def route_run_output(self, run_address: str, destination: str, *, turn_id: str | None = None,
                          params: dict | None = None) -> dict:
         """E4 (chain save/re-run + output-DESTINATION) — direct a DISCOVERED run's output to a named

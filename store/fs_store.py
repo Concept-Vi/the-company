@@ -437,6 +437,24 @@ class FsStore:
             return {}
         return {p.stem: p.stat().st_mtime for p in d.glob("*.json")}
 
+    # --- agent-session TIMELINE cache (Session Fabric R3.3): one durable record per session at
+    # agent_sessions/timeline/<sid>.json — the compaction-timeline index runtime/session_pointintime
+    # builds (registry-shaped, the R11 frame: a RECORD other surfaces project from, never a parallel
+    # store). Staleness is the CALLER's contract: the record carries source_bytes+source_mtime and the
+    # suite recomputes when the transcript moved. Same whole-record-atomic write as the registry. ---
+    def save_agent_session_timeline(self, sid: str, rec: dict) -> None:
+        import json as _j
+        if not isinstance(sid, str) or not sid.strip():
+            raise ValueError("save_agent_session_timeline: empty session id — refused (unfindable record).")
+        d = self.root / "agent_sessions" / "timeline"
+        d.mkdir(parents=True, exist_ok=True)
+        self._fsync_atomic_write(d / (self._safe(sid) + ".json"), _j.dumps(rec, indent=2))
+
+    def load_agent_session_timeline(self, sid: str) -> dict | None:
+        import json as _j
+        p = self.root / "agent_sessions" / "timeline" / (self._safe(sid) + ".json")
+        return _j.loads(p.read_text()) if p.exists() else None
+
     # --- conversation threads (S2): a thread = a CONVERSATION (new / list / reopen). Metadata mirrors
     # save_session (atomic whole-record). The TURNS stay in the ONE append-only chat.jsonl carrying an
     # additive `thread_id` (the same one-source pattern as the `address` field for chats_for) — no parallel

@@ -1204,6 +1204,18 @@ class SessionSupervisor:
             self._mail_error(rec, f"unreadable intent body: {e}")
             return True
         try:
+            at = str(rec.get("at") or "").strip()
+            if at:
+                # POINT-IN-TIME LAUNCH (Session Fabric R3.4): wake/consult the target AS IT WAS at
+                # a chosen moment. The target session itself is NEVER opened for writing, whatever
+                # its liveness — a NEW session file is materialized (the native-fork transform on
+                # the transcript's prefix at the point) and THAT copy is launched via the existing
+                # spawn(--resume) path. No T1 second-writer hazard exists on this path.
+                if verb not in ("wake", "consult"):
+                    self._mail_error(rec, f"at={at} rides verb=wake|consult only — a deliver is a "
+                                          f"tip-injection and cannot time-travel.")
+                    return True
+                return self._at_launch(rec, verb, target, body, at)
             if verb == "deliver":
                 s = self.find(target)
                 if s is None or s.state == "closed":
@@ -1250,6 +1262,60 @@ class SessionSupervisor:
         except Exception as e:
             self._mail_error(rec, f"{verb} failed: {e}")
             return True
+        return True
+
+    def _at_launch(self, rec: dict, verb: str, target: str, body: str, at: str) -> bool:
+        """R3.4 — execute a wake/consult intent carrying `at=` (a point-in-time launch).
+
+        MATERIALIZE (runtime/session_pointintime.materialize_at_point — the native-fork transform
+        on the transcript's append-only prefix; source byte-untouched by the library's own law)
+        → REGISTER the copy (a durable agent_sessions/ record with materialized_from/at provenance
+        — registry-shaped, the R11 heart frame; state=closed until the spawn below flips it)
+        → LAUNCH the COPY through the existing spawn path (`claude --resume <new-sid>` in the
+        source session's cwd — same project dir, the materializer writes the file beside the
+        source) → INJECT the message. consult fans copies=N as N INDEPENDENT materializations
+        (each its own file+record — no shared mutable state between consultants).
+
+        Always returns True (consumed): every failure is a terminal teaching reply to the sender,
+        never a head-of-line hold (the target's liveness cannot unblock a bad point spec)."""
+        from runtime.session_pointintime import PointError, materialize_at_point, \
+            materialized_registry_record
+        src_rec = self.store.load_agent_session(target)
+        if not src_rec or not (isinstance(src_rec.get("jsonl_path"), str) and src_rec.get("jsonl_path")):
+            self._mail_error(rec, f"at-launch needs the target's transcript: session://{target} has "
+                                  f"no registry record with a jsonl_path. The importer "
+                                  f"(ops/agent_sessions_importer.py) backfills the catalog.")
+            return True
+        copies = int(rec.get("copies") or 1) if verb == "consult" else 1
+        cap = fabric_concurrency()
+        if copies > cap:
+            self._mail_error(rec, f"consult copies={copies} exceeds the concurrency cap {cap} "
+                                  f"(COMPANY_FABRIC_CONCURRENCY) — fan ≤ cap, or raise the cap "
+                                  f"deliberately on the service.")
+            return True
+        with self.lock:
+            self._cap_check(copies)
+        cwd = src_rec.get("cwd") or self._cwd_for(target, rec)
+        for i in range(copies):
+            try:
+                report = materialize_at_point(src_rec["jsonl_path"], at, source_sid=target)
+            except PointError as e:
+                self._mail_error(rec, f"at-launch {at} refused: {e}")
+                return True
+            reg = materialized_registry_record(
+                report, src_rec, registered_by=f"supervisor:{rec.get('from')}")
+            if not reg.get("cwd"):
+                reg["cwd"] = cwd
+            self.store.save_agent_session(reg)          # durable identity BEFORE the spawn (no orphan file)
+            name = ((rec.get("name") or f"{verb}@{at}·{target[:8]}")
+                    + (f"-{i + 1}" if copies > 1 else ""))
+            # provenance lives on the REGISTRY RECORD (materialized_from/at/cut_uuid — saved
+            # above) + the spawned event's resume field. No invented event kind: the
+            # AGENT_SESSION_OPS vocabulary is closed (registry-is-truth), and the record
+            # already carries the why.
+            s = self.spawn(resume=report["new_sid"], cwd=cwd,
+                           source=f"mailbox:{rec.get('from')}", name=name)
+            self.inject(s, body, source=rec.get("from") or "mailbox", intent=rec)
         return True
 
 

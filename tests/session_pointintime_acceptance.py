@@ -257,8 +257,161 @@ def main():
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
-    print(f"\nPASS — {PASS} checks green (R3.3 timeline + R3.4 materializer; no claude spawned — "
-          f"the live resume-at-point probe is the lead's, marked 🟡 in the ops doc).")
+    # ════ FAMILY 2 — the SUPERVISOR at-launch flow, end-to-end through the real service, against
+    # a STUB claude (NO real claude — lead-only law; the stub records its argv + answers turns).
+    # Proves: wake intent carrying at= → materialize beside the source → registry record with
+    # provenance → spawn `--resume <materialized-sid>` in the source's cwd → message injected →
+    # reply mail routes back. consult+at fans N INDEPENDENT materializations. ════
+    import signal
+    import subprocess
+    import time
+    import urllib.request
+
+    STUB = r'''#!/usr/bin/env python3
+import json, os, sys
+argv_dir = os.environ.get("STUB_ARGV_DIR")
+sid = None
+if "--resume" in sys.argv:
+    sid = sys.argv[sys.argv.index("--resume") + 1]
+if argv_dir:
+    with open(os.path.join(argv_dir, f"argv-{os.getpid()}.json"), "w") as f:
+        json.dump({"argv": sys.argv, "cwd": os.getcwd()}, f)
+print(json.dumps({"type": "system", "subtype": "init", "session_id": sid or "stub-fresh"}), flush=True)
+for line in sys.stdin:
+    line = line.strip()
+    if not line:
+        continue
+    try:
+        ev = json.loads(line)
+    except ValueError:
+        continue
+    if ev.get("type") != "user":
+        continue
+    print(json.dumps({"type": "assistant", "message": {"content": [
+        {"type": "text", "text": "answered from the materialized point"}]}}), flush=True)
+    print(json.dumps({"type": "result", "result": "answered from the materialized point",
+                      "session_id": sid or "stub-fresh", "num_turns": 1,
+                      "is_error": False}), flush=True)
+'''
+    tmp2 = tempfile.mkdtemp(prefix="pointintime-e2e-")
+    PORT = 8786
+    BASE = f"http://127.0.0.1:{PORT}"
+    sup = None
+    try:
+        store_dir = os.path.join(tmp2, "store")
+        argv_dir = os.path.join(tmp2, "argv")
+        os.makedirs(argv_dir)
+        proj = os.path.join(tmp2, "proj")
+        os.makedirs(proj)
+        src2 = make_fixture(proj)
+        src2_sha = sha(src2)
+
+        from store.fs_store import FsStore
+        st = FsStore(store_dir)
+        st.save_agent_session({"id": SRC_SID, "name": None, "cwd": tmp2, "state": "closed",
+                               "title": "fixture session", "jsonl_path": src2,
+                               "project": "proj", "schema_ver": 1})
+
+        stub = os.path.join(tmp2, "stub-claude")
+        with open(stub, "w") as f:
+            f.write(STUB)
+        os.chmod(stub, 0o755)
+        PY_BIN = os.path.join(ROOT, ".venv", "bin", "python")
+        if not os.path.exists(PY_BIN):
+            PY_BIN = sys.executable
+        env = dict(os.environ, COMPANY_STORE=store_dir, COMPANY_CLAUDE_BIN=stub,
+                   STUB_ARGV_DIR=argv_dir, COMPANY_FABRIC_CONCURRENCY="3",
+                   COMPANY_FABRIC_TURN_TIMEOUT_S="30", COMPANY_FABRIC_INIT_WAIT_S="5")
+        sup = subprocess.Popen(
+            [PY_BIN, os.path.join(ROOT, "runtime", "session_supervisor.py"), str(PORT)],
+            env=env, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        t0 = time.time()
+        while time.time() - t0 < 15:
+            try:
+                with urllib.request.urlopen(BASE + "/health", timeout=2) as r:
+                    if r.status == 200:
+                        break
+            except Exception:
+                pass
+            time.sleep(0.1)
+        else:
+            raise AssertionError("FAIL: at-launch e2e supervisor did not answer /health")
+
+        def _mail(verb_, at_, copies_=1):
+            cas = st.put_content("what was the state of the plan at this point?")
+            return st.append_agent_mail({"to": f"session://{SRC_SID}",
+                                         "from": "session://r3-test-lane", "verb": verb_,
+                                         "cas": cas, "at": at_, "copies": copies_})
+
+        def _wait_replies(thread, n, timeout=20):
+            t0 = time.time()
+            while time.time() - t0 < timeout:
+                rows = [r for r in st.agent_mail_since(-1, to="session://r3-test-lane")
+                        if r.get("thread") == thread]
+                if len(rows) >= n:
+                    return rows
+                time.sleep(0.2)
+            return [r for r in st.agent_mail_since(-1, to="session://r3-test-lane")
+                    if r.get("thread") == thread]
+
+        posted = _mail("wake", "compact:1")
+        replies = _wait_replies(posted["thread"], 1)
+        check("e2e wake@compact:1 → a reply (not an error) routes back to the sender",
+              len(replies) >= 1 and replies[0].get("verb") == "reply",
+              )
+        body0 = st.get_content(replies[0]["cas"]) if replies else {}
+        body0 = body0.get("text", "") if isinstance(body0, dict) else str(body0)
+        check("e2e the reply carries the stub session's turn text",
+              "answered from the materialized point" in body0)
+        mats = [r for r in (st.load_agent_session(x) for x in st.list_agent_sessions())
+                if r and r.get("materialized_from") == SRC_SID]
+        check("e2e a registry record exists with materialized_from + at + cut provenance",
+              len(mats) == 1 and mats[0]["materialized_at_point"] == "compact:1"
+              and mats[0].get("materialized_cut_uuid"))
+        new_sid_1 = mats[0]["id"]
+        check("e2e the materialized file sits BESIDE the source (same project dir)",
+              os.path.dirname(mats[0]["jsonl_path"]) == proj
+              and os.path.exists(mats[0]["jsonl_path"]))
+        argvs = []
+        for fn in os.listdir(argv_dir):
+            argvs.append(json.load(open(os.path.join(argv_dir, fn))))
+        check("e2e the stub was spawned with --resume <MATERIALIZED sid> (never the source sid)",
+              any("--resume" in a["argv"] and new_sid_1 in a["argv"] for a in argvs)
+              and not any(SRC_SID in a["argv"] for a in argvs))
+        check("e2e the spawn ran in the source session's cwd", any(a["cwd"] == tmp2 for a in argvs))
+        check("e2e the SOURCE transcript is byte-untouched after the whole flow",
+              sha(src2) == src2_sha)
+
+        posted2 = _mail("consult", "compact:2", copies_=2)
+        replies2 = _wait_replies(posted2["thread"], 2)
+        check("e2e consult@compact:2 copies=2 → TWO replies aggregate under one thread",
+              len(replies2) >= 2)
+        mats2 = [r for r in (st.load_agent_session(x) for x in st.list_agent_sessions())
+                 if r and r.get("materialized_from") == SRC_SID
+                 and r.get("materialized_at_point") == "compact:2"]
+        check("e2e consult fan = 2 INDEPENDENT materializations (2 files, 2 records)",
+              len(mats2) == 2
+              and len({m["jsonl_path"] for m in mats2}) == 2
+              and all(os.path.exists(m["jsonl_path"]) for m in mats2))
+
+        bad = _mail("wake", "compact:99")
+        badr = _wait_replies(bad["thread"], 1)
+        badbody = st.get_content(badr[0]["cas"]) if badr else {}
+        badbody = badbody.get("text", "") if isinstance(badbody, dict) else str(badbody)
+        check("e2e a bad point (compact:99) returns a TEACHING error reply, never silence",
+              len(badr) >= 1 and badr[0].get("verb") == "error" and "compact" in badbody)
+    finally:
+        if sup is not None:
+            try:
+                sup.send_signal(signal.SIGTERM)
+                sup.wait(timeout=10)
+            except Exception:
+                sup.kill()
+        shutil.rmtree(tmp2, ignore_errors=True)
+
+    print(f"\nPASS — {PASS} checks green (R3.3 timeline + R3.4 materializer + the supervisor "
+          f"at-launch flow vs the stub binary; no real claude spawned — the live resume-at-point "
+          f"probe is the lead's, marked 🟡 in the ops doc).")
 
 
 if __name__ == "__main__":
