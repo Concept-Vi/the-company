@@ -286,3 +286,21 @@ Researched 2026-06-11. Open-ended web scan per the directive "look for the lates
 - **mxbai-edge-colbert-17M** makes late-interaction *rescoring* essentially free — pairs with MUVERA-style storage in Qdrant if we go multi-vector.
 - **License tripwire:** the impressive Jina v5 line (text + omni) is CC BY-NC — fine to evaluate, not fine to build the Company's commercial spine on. Apache-2.0 lane: Qwen3-VL-Embedding, Qwen3-Embedding, Granite R2, EmbeddingGemma. MIT lane: pplx-embed.
 - Open questions this lane leaves for the next pass: GGUF/AWQ availability for Qwen3-VL-Embedding-2B (none observed yet); actual VRAM coexistence with the resident chat loadout; jina-v5-text license confirmation; Granite R2 dims/benchmarks from the HF card; whether RTEB private-set ranks reorder our shortlist.
+
+---
+## VERIFIED ON-DISK REPO IDS (2026-06-12 — corrected after 404s; these are the REAL ids)
+
+The download pass hit wrong-guess ids twice; the correct, verified-on-disk repos are:
+- **`lightonai/LateOn-Code`** — 1.3G (model.safetensors 569M + a Dense head). The SOTA primary
+  (ModernBERT-base, the one ColGrep uses). NOT `LateOn-Code-130M` (does not exist). Smaller sibling:
+  `lightonai/LateOn-Code-edge`.
+- **`ibm-granite/granite-embedding-97m-multilingual-r2`** — 1.2G (safetensors 186M). The R2 is **97m**,
+  not 107m (107m is the older R1: `ibm-granite/granite-embedding-107m-multilingual`).
+- `nomic-ai/nomic-embed-code-GGUF` → `nomic-embed-code.Q6_K.gguf` **5.5G** (verified real gguf, not an
+  LFS pointer). Serve via llama.cpp `--pooling last` + the query prefix.
+- `Qwen/Qwen3-VL-Embedding-2B` (4.0G) · `Qwen/Qwen3-VL-Reranker-2B` (4.0G) ·
+  `perplexity-ai/pplx-embed-v1-0.6b` (5.6G) · `perplexity-ai/pplx-embed-context-v1-4b` (22G) ·
+  `jinaai/jina-reranker-v3` (1.2G, NON-COMMERCIAL license — experiments only).
+
+LESSON CAPTURED: `hf download <id> 2>&1 | tail` returns TAIL's exit code, not the download's — it
+hid LateOn's 404 as a false success. Always capture `hf download`'s own exit code (no pipe).
