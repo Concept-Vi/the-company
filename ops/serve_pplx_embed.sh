@@ -23,3 +23,13 @@ export PPLX_EMBED_DTYPE="${PPLX_EMBED_DTYPE:-bfloat16}"
 
 echo "[serve_pplx_embed] PID=$$ model=$PPLX_EMBED_MODEL port=$PPLX_EMBED_PORT dtype=$PPLX_EMBED_DTYPE"
 exec python "$OPS/serve_pplx_embed.py"
+
+# PPLX_REMOTE_PATCH (2026-06-12, lead): the model's remote modeling.py targets an OLDER transformers —
+# it calls create_causal_mask(input_embeds=…, cache_position=…) but transformers 5.9.0 renamed
+# input_embeds→inputs_embeds and removed cache_position. Re-apply the fix on every start (idempotent),
+# covering both the snapshot source and any already-extracted modules copy, so a re-download can't re-break it.
+for mp in $(find "$HOME/.cache/huggingface/hub/models--perplexity-ai--pplx-embed-context-v1-4b/snapshots" -name modeling.py 2>/dev/null) \
+          $(find "$HOME/.cache/huggingface/modules/transformers_modules" -path "*pplx*" -name modeling.py 2>/dev/null); do
+  sed -i 's/input_embeds=inputs_embeds,/inputs_embeds=inputs_embeds,/' "$mp" 2>/dev/null
+  sed -i '/cache_position=dummy_cache_position,/d' "$mp" 2>/dev/null
+done
