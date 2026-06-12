@@ -1,0 +1,15 @@
+[Unit]
+Description=pplx-embed-context-v1-4b server (custom transformers embedder) on port 8007
+After=default.target
+
+[Service]
+Type=simple
+ExecStart=/home/tim/company/ops/serve_pplx_embed.sh
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=600
+
+[Install]
+WantedBy=default.target

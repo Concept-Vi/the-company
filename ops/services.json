@@ -342,6 +342,19 @@
    "vram_mb": 8000,
    "note": "CUSTOM server \u2014 NOT config-driven. vLLM lacks jina-v4 support, so it runs serve_jina_v4.py (raw transformers) in the jina-v4-env venv via serve_jina_v4.sh. Leave script-based."
   },
+  "embed-pplx": {
+   "group": "models",
+   "title": "pplx-embed-context-v1-4b (custom transformers embedder)",
+   "port": 8007,
+   "manage": {
+    "type": "user-unit",
+    "unit": "company-embed-pplx.service"
+   },
+   "health": "/health",
+   "serve": "~/company/ops/serve_pplx_embed.sh",
+   "vram_mb": 8200,
+   "note": "CUSTOM server \u2014 NOT config-driven (like embed-jina-v4). Arch PPLXQwen3Model / model_type bidirectional_pplx_qwen3 is remote-code (trust_remote_code, auto_map\u2192modeling.PPLXQwen3ContextualModel); vLLM 0.21 has no such arch (verified: absent from 356 supported archs, `vllm serve` fails at load_model) \u2192 runs ops/serve_pplx_embed.py (raw transformers) in ~/vllm-env via serve_pplx_embed.sh. OpenAI-compat POST /v1/embeddings; dim=2560; output is INT8 + UNNORMALIZED \u2014 compare via COSINE (model card). Contextual late-chunking model: flat `input` strings are embedded as single-chunk docs; optional `documents` (list[list[str]]) gives native per-chunk contextual embeddings. dtype bfloat16 (~8GB) \u2014 the card stores fp32. Interim transcript-search embedder (throwaway); ~10GB load authorized by Tim. Leave script-based."
+  },
   "embed-jina-v5": {
    "group": "models",
    "title": "jina-embeddings-v5 (vLLM)",
