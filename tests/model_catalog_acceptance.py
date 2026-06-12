@@ -83,22 +83,37 @@ def main():
     chatters = cap.suitable_models({"chat", "json"})
     check("a chat,json role resolves to the chat workers (incl resident) + cloud",
           RESIDENT in chatters and len(chatters) >= 3, detail=str(chatters))
-    # vision: no cataloged model provides it → [] (fail-loud-by-empty), NEVER a crash
+    # vision: the VL models (Qwen3-VL-Embedding/Reranker + jina-v4) now PROVIDE it (2026-06-12 —
+    # before that, vision was a negative-only tag; the catalog comment's "no model provides it yet"
+    # is no longer true). A vision-requiring role resolves to those models, NEVER a crash.
     try:
         vis = cap.suitable_models({"vision"})
-        check("a vision-requiring role resolves to [] (fail-loud-by-empty, no crash)", vis == [],
+        check("a vision-requiring role resolves to the VL models (>=2), not a crash", len(vis) >= 2,
               detail=str(vis))
     except Exception as e:
         check("a vision-requiring role does NOT raise", False, detail=f"raised {e!r}")
-    check("role_can_bind({vision}, any cataloged model) is False (none provide vision)",
-          all(cap.role_can_bind({"vision"}, m) is False for m in cap.MODEL_CAPABILITIES))
+    check("the resident 4B (a chat worker) does NOT provide vision",
+          cap.role_can_bind({"vision"}, RESIDENT) is False)
+    # fail-loud-by-empty is now demonstrated by stt — on disk but NOT cataloged (keyless services),
+    # so no model provides it → [] rather than a crash.
+    check("an stt-requiring role resolves to [] (fail-loud-by-empty — no cataloged stt provider)",
+          cap.suitable_models({"stt"}) == [], detail=str(cap.suitable_models({"stt"})))
+    rerankers = cap.suitable_models({"rerank"})
+    check("a rerank-requiring role resolves to the RERANKERS (>=2), not the embedders/chat",
+          len(rerankers) >= 2 and RESIDENT not in rerankers, detail=str(rerankers))
+    check("the rerankers do NOT also provide embed (a reranker is not an embedder)",
+          all("embed" not in cap.provides_for(m) for m in rerankers))
     tts = cap.suitable_models({"tts"})
     check("a tts role resolves to the model-id voice engines", len(tts) >= 1, detail=str(tts))
 
-    print("\n[3] GROUNDED, NOT FABRICATED — every provides ⊆ tags; embedders provide ONLY embed")
+    print("\n[3] GROUNDED, NOT FABRICATED — every provides ⊆ tags; every embedder provides embed")
     for mid in embedders:
-        check(f"{mid}: provides == [embed] (grounded in --runner pooling, no chat/tools fabricated)",
-              cap.provides_for(mid) == ["embed"], detail=str(cap.provides_for(mid)))
+        # pure text embedders provide exactly [embed]; MULTIMODAL embedders provide embed + vision.
+        # The grounded bar: every embedder genuinely provides embed (no chat/tools fabricated), and
+        # any extra tag is itself grounded (vision for the VL/jina-v4 multimodal embedders).
+        prov = set(cap.provides_for(mid))
+        check(f"{mid}: provides INCLUDES embed and ⊆ {{embed,vision}} (grounded, no chat/tools)",
+              "embed" in prov and prov <= {"embed", "vision"}, detail=str(cap.provides_for(mid)))
     for mid, spec in cap.MODEL_CAPABILITIES.items():
         check(f"{mid}: provides ⊆ CAPABILITY_TAGS (controlled vocab, no invented tag)",
               set(spec["provides"]) <= set(cap.CAPABILITY_TAGS), detail=str(spec["provides"]))

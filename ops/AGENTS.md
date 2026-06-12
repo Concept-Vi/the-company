@@ -59,10 +59,16 @@ Do **not** build duplicate command centers. The right shape (Tim, "one substrate
   (FAIL LOUD on missing/malformed/empty — never a silently-empty catalog), so **adding a model's capabilities
   = adding ONE entry to that file (no code edit)**, mirroring how `services.json` declares what RUNS. It now
   spans the **FULL declared model set** keyed by model-id (the resident 4B · the local chat workers
-  2B/0.8B/nemotron · the embedders bge/jina/qwen3 · the model-id voice engines orpheus/qwen3tts · the cloud
-  reasoner) — every `provides` GROUNDED in a hard services.json signal (`--runner pooling`→embed ·
-  `--tool-call-parser`→tools · `chat_template_nothink`→no-think), never fabricated; keyless services
-  (clone-TTS + STT ears with no `config.model`) are not model-id-keyable and are deliberately not invented.
+  2B/0.8B/nemotron · the served embedders bge/jina-v5/qwen3-8b · the **on-disk-not-yet-served retrieval
+  fleet** added 2026-06-12: code embedders nomic-embed-code/LateOn-Code · the MULTIMODAL embedders
+  Qwen3-VL-Embedding-2B + jina-v4 (provide `embed`+`vision`) · the RERANKERS ms-marco/jina-reranker-v3 +
+  the matched Qwen3-VL-Reranker-2B (provide `rerank`[+`vision`]) · pplx-embed-0.6b/context-4b · granite-97m ·
+  all-MiniLM · the model-id voice engines orpheus/qwen3tts · the cloud reasoner) — every `provides`
+  GROUNDED in a hard signal (`--runner pooling`→embed · `--tool-call-parser`→tools · `chat_template_nothink`→
+  no-think · for the not-yet-served fleet: the model card + `build-prep/brain/embedding-research-2026-06.md`,
+  source `declared`), never fabricated. The `rerank` tag was added 2026-06-12 (cross-encoder/late-interaction
+  scorers); `vision` flipped from negative-only to real-provider the same day. Keyless services (clone-TTS +
+  STT ears with no `config.model`) are still not model-id-keyable and are deliberately not invented.
   It owns ONLY model-intrinsic facts — it NEVER stores gpu_util/vram (rule 3); for those
   it **JOINs to `gpu.py`** (`service_key_for(model_id)` matches `config.model`, then `budget_vram`/residency —
   REUSED, never duplicated). Queries: `capabilities_for(model_id)` (the row + the JOIN), `role_can_bind(requires,

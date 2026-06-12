@@ -61,17 +61,24 @@ import systemd
 PROVENANCE = ("declared", "probed", "measured", "served")
 
 # The controlled capability-TAG vocabulary (the `provides`/`requires` axis). MATCHES the live
-# suite.py capability_providers() set (chat·json·tools·fast·no-think) + the negative (vision) the
-# verify-by-use exercises — so the lead's wire is a thin read, not a re-spelling — WIDENED (C2.5)
-# with the catalog's other model TYPES so the FULL declared set has somewhere true to land:
-#   embed   — an embedding model's only provide (services.json `--runner pooling`)
-#   tts     — a model-id-bearing voice engine (forward-looking: no role REQUIRES it yet)
-#   vision  — declared as a tag so a vision-requiring role's suitable_models([vision]) returns []
-#             (fail-loud-by-empty) rather than choking; no cataloged model provides it yet.
+# suite.py capability_providers() set (chat·json·tools·fast·no-think) — so the lead's wire is a thin
+# read, not a re-spelling — WIDENED (C2.5) with the catalog's other model TYPES so the FULL declared
+# set has somewhere true to land:
+#   embed   — an embedding model's provide (services.json `--runner pooling`); a MULTIMODAL embedder
+#             provides both embed AND vision (e.g. Qwen3-VL-Embedding, jina-embeddings-v4).
+#   rerank  — a cross-encoder / late-interaction-scoring model that re-orders a candidate set
+#             (NOT an embedder — emits a relevance score, not a stored vector). A VISUAL reranker
+#             (Qwen3-VL-Reranker) provides rerank AND vision. Added 2026-06-12 when the on-disk
+#             reranker fleet (ms-marco · jina-reranker-v3 · Qwen3-VL-Reranker) was cataloged.
+#   vision  — a model that ingests images/screenshots (the VL embedder + reranker now provide it;
+#             it was a negative-only tag until 2026-06-12 — "no cataloged model provides it yet" is
+#             no longer true). A vision-requiring role now resolves to the VL models.
+#   tts/stt — a model-id-bearing voice engine / speech recognizer (forward-looking: no role REQUIRES
+#             them yet; stt has no cataloged provider, so it is the current fail-loud-by-empty demo).
 # NOTE: json_schema is a structured-output CAPABILITY FIELD (with provenance), NOT a provides-tag —
 # no role in the cast requires it as a tag, and adding it to `provides` would diverge from the seam.
 CAPABILITY_TAGS = ("chat", "json", "tools", "fast", "no-think", "vision", "thinking", "reasoning",
-                   "embed", "tts", "stt")
+                   "embed", "rerank", "tts", "stt")
 
 # --- THE CATALOG — keyed by MODEL-ID (the HF/cloud string), the intrinsic half ------------------
 # DECLARED DATA, file-discovered (C2.5): the catalog is `ops/model_capabilities.json` — the SINGLE

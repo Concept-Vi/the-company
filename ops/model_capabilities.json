@@ -1,5 +1,5 @@
 {
-  "_doc": "The model-TYPE capability CATALOG — DECLARED DATA, keyed by MODEL-ID (the HF/cloud string). registry-is-truth (AGENTS.md rule 8): this FILE is the single source ops + cognition both read; cli/capabilities.py loads it into MODEL_CAPABILITIES at import (fail-loud if missing/malformed — never a silently-empty catalog). Adding a model's capabilities = adding ONE entry HERE (no code edit) — mirroring how services.json declares what runs. This is the intrinsic half (what the WEIGHTS can do); it NEVER stores gpu_util/vram (rule 3 — that is the service layer's job, gpu.py JOINs it). Each field carries {value, source} with a provenance from PROVENANCE (declared|probed|measured|served); `provides` is the capability TAG set (⊆ CAPABILITY_TAGS). Every `provides` is GROUNDED in a hard services.json signal (--tool-call-parser → tools; chat_template_nothink → no-think; --runner pooling → embed; a chat model → chat,json) — never fabricated. A genuine unknown is recorded honestly (value null, source declared). A services.json model with NO row here keeps hitting capabilities_for's explicit unknown→ASK fail-loud path (rule 8). DRIFT HOME: cli/capabilities.py docstring + ops/AGENTS.md models/VRAM section; drift assertion tests/model_capabilities_acceptance.py + tests/model_catalog_acceptance.py.",
+  "_doc": "The model-TYPE capability CATALOG — DECLARED DATA, keyed by MODEL-ID (the HF/cloud string). registry-is-truth (AGENTS.md rule 8): this FILE is the single source ops + cognition both read; cli/capabilities.py loads it into MODEL_CAPABILITIES at import (fail-loud if missing/malformed — never a silently-empty catalog). Adding a model's capabilities = adding ONE entry HERE (no code edit) — mirroring how services.json declares what runs. This is the intrinsic half (what the WEIGHTS can do); it NEVER stores gpu_util/vram (rule 3 — that is the service layer's job, gpu.py JOINs it). Each field carries {value, source} with a provenance from PROVENANCE (declared|probed|measured|served); `provides` is the capability TAG set (⊆ CAPABILITY_TAGS). Every `provides` is GROUNDED — for a SERVED model in a hard services.json signal (--tool-call-parser → tools; chat_template_nothink → no-think; --runner pooling → embed; a chat model → chat,json); for an ON-DISK-NOT-YET-SERVED model (the retrieval fleet added 2026-06-12: code/visual embedders, rerankers) in the model card + build-prep/brain/embedding-research-2026-06.md, recorded with source `declared` and an `_note` saying 'ON DISK, NOT yet served' — never fabricated. `rerank` (cross-encoder/late-interaction scorers) and real `vision` providers (the VL pair + jina-v4) joined the vocab 2026-06-12. A genuine unknown is recorded honestly (value null, source declared). A services.json model with NO row here keeps hitting capabilities_for's explicit unknown→ASK fail-loud path (rule 8). DRIFT HOME: cli/capabilities.py docstring + ops/AGENTS.md models/VRAM section; drift assertion tests/model_capabilities_acceptance.py + tests/model_catalog_acceptance.py.",
 
   "cyankiwi/Qwen3.5-4B-AWQ-4bit": {
     "_note": "RESIDENT worker (services.json chat-4b). UNCHANGED from the original inline row — values/behaviour preserved exactly (proven by tests/model_capabilities_acceptance.py: provides list, knee max_num_seqs=16, swarm KV=135574, context_ceiling=262144).",
@@ -140,6 +140,128 @@
     "concurrency_knee": {"value": null, "source": "declared"},
     "speed_profile": {"value": null, "source": "declared"},
     "provides": ["tts"]
+  },
+
+  "nomic-ai/nomic-embed-code-GGUF": {
+    "_note": "ON DISK (nomic-embed-code.Q6_K.gguf, 5.5G), NOT yet served — no services.json row; capabilities DECLARED from the model card + build-prep/brain/embedding-research-2026-06.md. A CODE embedding model (Qwen2.5-Coder-7B base, 3584-dim, last-token pooling). DISCIPLINE (silent-garbage traps): serve via llama.cpp with --pooling last AND prefix queries with 'Represent this query for searching relevant code: ' — wrong pooling/missing prefix returns confident garbage. Single-vector → joins natively into the store's vector layer (unlike LateOn's multi-vector). Role: the DEEP code space (allocated-window/dedicated-loadout indexing).",
+    "tools": {"value": false, "source": "declared", "note": "a code embedder."},
+    "json_schema": {"value": false, "source": "declared", "note": "embedder — no generative output."},
+    "thinking": {"value": false, "source": "declared", "note": "embedder."},
+    "context_ceiling": {"value": 32768, "source": "declared",
+                        "note": "Qwen2.5-Coder-7B base context; not yet served (no services.json max_model_len)."},
+    "concurrency_knee": {"value": null, "source": "declared", "note": "embedding throughput, not a generative KV knee."},
+    "speed_profile": {"value": null, "source": "declared"},
+    "provides": ["embed"]
+  },
+
+  "lightonai/LateOn-Code": {
+    "_note": "ON DISK (1.3G, model.safetensors 569M + a Dense head), NOT yet served. A LATE-INTERACTION (multi-vector / ColBERT-style, ModernBERT-base) CODE retrieval model — the SOTA primary that ColGrep uses. NOTE: multi-vector output does NOT drop into the store's single-vector index — it lives in its own tool (ColGrep/Next-Plaid) as the agents' live code-search instrument. Smaller sibling on the Hub: lightonai/LateOn-Code-edge.",
+    "tools": {"value": false, "source": "declared", "note": "a code retrieval model."},
+    "json_schema": {"value": false, "source": "declared", "note": "retrieval model — no generative output."},
+    "thinking": {"value": false, "source": "declared", "note": "retrieval model."},
+    "context_ceiling": {"value": 8192, "source": "declared", "note": "ModernBERT-base context; declared, not served."},
+    "concurrency_knee": {"value": null, "source": "declared", "note": "retrieval throughput, not a generative KV knee."},
+    "speed_profile": {"value": null, "source": "declared"},
+    "provides": ["embed"]
+  },
+
+  "Qwen/Qwen3-VL-Embedding-2B": {
+    "_note": "ON DISK (4.0G), NOT yet served. A MULTIMODAL embedder — text + images + screenshots + video in ONE space (2048-dim, MRL 64-2048, 32K ctx, instruction-aware). Matched-pair with Qwen/Qwen3-VL-Reranker-2B. Provides embed AND vision (the first cataloged model to provide vision). Role: the VISUAL space (mockup↔screenshot↔code joins, visual drift). VRAM ~4-5G (must be telemetry-proven co-resident with the chat brain).",
+    "tools": {"value": false, "source": "declared", "note": "an embedder."},
+    "json_schema": {"value": false, "source": "declared", "note": "embedder — no generative output."},
+    "thinking": {"value": false, "source": "declared", "note": "embedder."},
+    "context_ceiling": {"value": 32768, "source": "declared", "note": "32K per the model card; declared, not served."},
+    "concurrency_knee": {"value": null, "source": "declared", "note": "embedding throughput, not a generative KV knee."},
+    "speed_profile": {"value": null, "source": "declared"},
+    "provides": ["embed", "vision"]
+  },
+
+  "Qwen/Qwen3-VL-Reranker-2B": {
+    "_note": "ON DISK (4.0G), NOT yet served. The MATCHED multimodal RERANKER for Qwen3-VL-Embedding-2B — a single-tower cross-attention scorer that re-orders image/text candidate pairs (trained together with the embedder, so stage-two genuinely corrects stage-one). Provides rerank AND vision. NOT an embedder (emits a relevance score, not a stored vector).",
+    "tools": {"value": false, "source": "declared", "note": "a reranker."},
+    "json_schema": {"value": false, "source": "declared", "note": "reranker — emits scores, not structured text."},
+    "thinking": {"value": false, "source": "declared", "note": "reranker."},
+    "context_ceiling": {"value": 32768, "source": "declared", "note": "per the model card; declared, not served."},
+    "concurrency_knee": {"value": null, "source": "declared", "note": "scoring throughput, not a generative KV knee."},
+    "speed_profile": {"value": null, "source": "declared"},
+    "provides": ["rerank", "vision"]
+  },
+
+  "perplexity-ai/pplx-embed-v1-0.6b": {
+    "_note": "ON DISK (5.6G), NOT yet served. A TEXT embedder (1024-dim, 32K ctx, MIT license). Distinctive talent: quantization-aware training → native INT8 (4x) and binary (32x) compressed embeddings with quality intact — relevant when embedding the WHOLE company-data corpus. Smaller sibling of pplx-embed-context-v1-4b.",
+    "tools": {"value": false, "source": "declared", "note": "an embedder."},
+    "json_schema": {"value": false, "source": "declared", "note": "embedder."},
+    "thinking": {"value": false, "source": "declared", "note": "embedder."},
+    "context_ceiling": {"value": 32768, "source": "declared", "note": "32K per the model card; declared, not served."},
+    "concurrency_knee": {"value": null, "source": "declared", "note": "embedding throughput."},
+    "speed_profile": {"value": null, "source": "declared"},
+    "provides": ["embed"]
+  },
+
+  "perplexity-ai/pplx-embed-context-v1-4b": {
+    "_note": "ON DISK (25G full-precision), NOT yet served. A DOCUMENT-AWARE text embedder (2560-dim, MIT, native compression like its 0.6b sibling) — the 'context' variant embeds each passage CONDITIONED on the full surrounding document (the productized form of late chunking). Role: the company-data future (contracts, decks) where surrounding-context filing beats isolated-chunk. Replaced the redundant Qwen3-Embedding-4B as the mid-tier clerk.",
+    "tools": {"value": false, "source": "declared", "note": "an embedder."},
+    "json_schema": {"value": false, "source": "declared", "note": "embedder."},
+    "thinking": {"value": false, "source": "declared", "note": "embedder."},
+    "context_ceiling": {"value": 32768, "source": "declared", "note": "32K per the model card; declared, not served."},
+    "concurrency_knee": {"value": null, "source": "declared", "note": "embedding throughput."},
+    "speed_profile": {"value": null, "source": "declared"},
+    "provides": ["embed"]
+  },
+
+  "ibm-granite/granite-embedding-97m-multilingual-r2": {
+    "_note": "ON DISK (1.2G, safetensors 186M), NOT yet served. A TINY multilingual text embedder (97M, 384-dim, Apache-2.0, 12+ languages) — matches gte-multilingual-base (305M) quality at ~3x the speed, +14.6 over the R1 107m. CPU-runnable utility clerk for bulk/background embedding. NOTE: the R2 is 97m, NOT 107m (that is the older R1).",
+    "tools": {"value": false, "source": "declared", "note": "an embedder."},
+    "json_schema": {"value": false, "source": "declared", "note": "embedder."},
+    "thinking": {"value": false, "source": "declared", "note": "embedder."},
+    "context_ceiling": {"value": 8192, "source": "declared", "note": "per the model card; declared, not served."},
+    "concurrency_knee": {"value": null, "source": "declared", "note": "embedding throughput."},
+    "speed_profile": {"value": null, "source": "declared"},
+    "provides": ["embed"]
+  },
+
+  "jinaai/jina-embeddings-v4": {
+    "_note": "ON DISK (7.4G), NOT yet served — services.json embed-jina-v4 is a placeholder (config.model empty). A MULTIMODAL embedder (3.8B) with text/image/code adapters → provides embed AND vision. Per the research it scores BELOW jina-code-0.5b on code and is largely superseded by Qwen3-VL-Embedding-2B for the visual lane; cataloged for completeness (it is on disk).",
+    "tools": {"value": false, "source": "declared", "note": "an embedder."},
+    "json_schema": {"value": false, "source": "declared", "note": "embedder."},
+    "thinking": {"value": false, "source": "declared", "note": "embedder."},
+    "context_ceiling": {"value": 32768, "source": "declared", "note": "per the model card; declared, not served."},
+    "concurrency_knee": {"value": null, "source": "declared", "note": "embedding throughput."},
+    "speed_profile": {"value": null, "source": "declared"},
+    "provides": ["embed", "vision"]
+  },
+
+  "sentence-transformers/all-MiniLM-L6-v2": {
+    "_note": "ON DISK (888M), NOT yet served. The classic small sentence embedder (384-dim, 22M params) — a lightweight CPU-class general embedder. Cataloged for completeness (on disk, missing from the catalog).",
+    "tools": {"value": false, "source": "declared", "note": "an embedder."},
+    "json_schema": {"value": false, "source": "declared", "note": "embedder."},
+    "thinking": {"value": false, "source": "declared", "note": "embedder."},
+    "context_ceiling": {"value": 256, "source": "declared", "note": "all-MiniLM-L6-v2 truncates at 256 tokens; declared."},
+    "concurrency_knee": {"value": null, "source": "declared", "note": "embedding throughput."},
+    "speed_profile": {"value": null, "source": "declared"},
+    "provides": ["embed"]
+  },
+
+  "jinaai/jina-reranker-v3": {
+    "_note": "ON DISK (1.2G), NOT yet served. A LISTWISE text reranker (0.6B, Qwen3-0.6B backbone) — 'last but not late interaction': scores up to 64 documents in ONE forward pass with cross-document attention (candidates compete directly), vs per-pair cross-encoding. LICENSE: CC-BY-NC (non-commercial) — EXPERIMENTS ONLY, not for anything revenue-touching. NOT an embedder.",
+    "tools": {"value": false, "source": "declared", "note": "a reranker."},
+    "json_schema": {"value": false, "source": "declared", "note": "reranker — emits scores."},
+    "thinking": {"value": false, "source": "declared", "note": "reranker."},
+    "context_ceiling": {"value": 8192, "source": "declared", "note": "per the model card; declared, not served."},
+    "concurrency_knee": {"value": null, "source": "declared", "note": "scoring throughput."},
+    "speed_profile": {"value": null, "source": "declared"},
+    "provides": ["rerank"]
+  },
+
+  "cross-encoder/ms-marco-MiniLM-L-6-v2": {
+    "_note": "ON DISK (88M), NOT yet served. The classic CPU cross-encoder RERANKER — re-orders a retriever's top-N by reading (query, candidate) pairs together. Tiny, runs on CPU (zero GPU cost) — the 'free accuracy' precision stage in front of any embedding shortlist. NOT an embedder.",
+    "tools": {"value": false, "source": "declared", "note": "a reranker."},
+    "json_schema": {"value": false, "source": "declared", "note": "reranker — emits scores."},
+    "thinking": {"value": false, "source": "declared", "note": "reranker."},
+    "context_ceiling": {"value": 512, "source": "declared", "note": "MiniLM-L-6 cross-encoder pair length; declared."},
+    "concurrency_knee": {"value": null, "source": "declared", "note": "CPU scoring throughput."},
+    "speed_profile": {"value": null, "source": "declared"},
+    "provides": ["rerank"]
   },
 
   "deepseek-v4-pro:cloud": {
