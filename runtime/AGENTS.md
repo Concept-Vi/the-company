@@ -28,6 +28,15 @@ right-hand-man (C6). And `suite.py` holds **the Suite — the brain**: the engin
 RHM, the self-modification path, and **the decision→implementation wire** — the one object
 [[mcp_face — constitution]] and the bridge both speak to.
 
+**The cross-session fabric organs** (`runtime/session_channels.py`, Session Fabric R2.2–R2.5):
+channels (persistent named groups) · gatherings (momentary, promotable) · connection edges
+(folded from the durable mail leaf — the talk is the record) · coordination modes (direct
+router vs a conducted coordinator session, recursing via `origin.parent`). One leaf
+(`agent_sessions/channels.jsonl`, the mail.jsonl twin), closed vocabularies as module
+constants, channel posts riding the EXISTING mail intents (never wake — no broadcast may
+stampede-spawn). The fold lives beside Suite (not in it) for build-lane disjointness — an
+open seam, not a hidden one; the face is `mcp_face/tools/channels.py`.
+
 ## The corpus pillar (Cognition Engine K1/D1 · `runtime/projections.py` + `runtime/corpus.py`)
 
 The corpus pillar rides the cognition spine: a capture/map run over a corpus produces durable,
@@ -164,54 +173,22 @@ the `usage` block off `agent_sessions.turn` on events.jsonl via a usage-emitting
 `planned`→`building` carry an honest **live-verify pending (lead)** note: confirming a flag actually TOOK
 (e.g. the chosen model ran, read off `system/init`) needs a REAL spawn — the lead's slice, never green-painted.
 
-## The config writer (Capability Fabric R3 · `runtime/config_writer.py` · the SOLE config/VCS mutator)
+## The ③④⑤ command-wrapper layer — REMOVED (Session Fabric R1.4, 2026-06-13)
 
-The third executor rail of the ③④⑤ Capability Fabric (the other two: the session supervisor's R1/R1-prime
-interactive sessions, `implement.py`'s R2 headless wire). A bridge-style stdlib-HTTP service on
-**REGISTRY-IS-TRUTH (the binding to the completed L-FOUND-handlers reduction registries — arch §3.2):** this service holds NO inline allowlist of its own. WHAT each ③ act writes comes from `capability_handlers.reduction.config_targets` (handler-key → kind/pointer/`dangerous`/teach/scope-path); WHICH native CLI an act runs + its TIER (read/write/exec) comes from `capability_handlers.reduction.cli_allowlist` (the `handler-key:act` → argv-array template). A new capability is a new REGISTRY ROW, never a code edit here.
-**127.0.0.1:8772 only** (exposure law, audit B3 — widening is a recorded decision + a code change here, never
-an env flip), the ONLY process that mutates `.claude`/host config and the only one that shells the
-config-mutating native subcommands. Owns: scope-validated `.claude` READS (settings.json local/project/user,
-~/.claude.json MCP servers, `.claude/commands/*`, `.claude/skills/*/SKILL.md`, output-styles); scope- AND
-content-validated `.claude` WRITES (atomic tmp+fsync+os.replace, prior file backed up to `.bak`, re-read
-verified — never green-painted); `claude mcp`/`claude plugin` invocation (argv-ARRAY, NEVER a shell string,
-allowlisted verbs — the dangerous value is one argv token, no `; rm -rf` injection); structured `git`/`gh`
-(argv-array, allowlisted, cwd-scoped → `{exit, stdout, stderr}` — the structured-sha alternative to R1-prime
-prose). Every scope/path/flag is grounded in the Claude Code Atlas (settings hierarchy local=
-.claude/settings.local.json · project=.claude/settings.json · user=~/.claude/settings.json; `claude mcp
-add/add-json/remove/get/list/reset-project-choices`; `claude plugin install/uninstall/enable/disable/validate`
-+ `marketplace add`), verified 2026-06-12, NEVER invented.
+`runtime/capability_handlers/` (the config/dev/auto handler families + HANDLERS registry + reduction
+registries + the r3 client), the R3 `config_writer` service (`runtime/config_writer.py`, 127.0.0.1:8772,
+its systemd unit + services.json row), the 18 wrapper MCP tools (`mcp_face/tools/{config_authoring,
+dev_bridges,automation}.py`), the 18 bridge `/api/config|dev|auto` arms + `_capability` dispatcher, and
+their 6 acceptance suites were DELETED. They hand-wrapped what a real Claude Code session already does
+natively (settings/hooks/mcp/plugin/git/gh/scheduling/auth via its own CLI) — the wrong-approach line in
+the Session Fabric — Operational Requirements honest ledger. THE LAW THIS LEAVES BEHIND: the fabric
+drives REAL sessions (surface, don't rebuild) — a capability a session natively has is reached by DRIVING
+a session (supervisor spawn/inject, R1-prime wider-allowlist profile, R2 wire), never by hand-wrapping the
+CLI behind a company endpoint. Do not rebuild this layer.
 
-**SECURITY = CONSENT-NOT-LOCKDOWN** (Tim's sole-operator model — overrides any multi-user caution the arch
-doc inherited): Tim is the only user and is TRUSTED. The dangerous capabilities (native-CLI exec, config
-writes, plugin install, MCP register) are ENABLED, never walled off, never behind an auth wall — they are
-gated by a CONSENT SIGNAL so an agent cannot do something irreversible without a go-ahead, with git-revert as
-the backstop. Four consent classes (`config-write`, `cli-write`, `cli-exec`, `git-write`); a gated
-act passes on either a per-call `{consent: true}` (the operator-vantage POST) OR a standing marker
-(`POST /consent`, a store ref `config_writer/consent:<class>`, revocable). An unconsented dangerous act returns a
-**200 PENDING-CONSENT PROPOSAL** (NOT a denial, NOT a 409) that names the danger and BOTH consent paths — the
-trusted operator with consent=true is never refused; genuine breakage (bad scope/key/content/path, nonzero
-CLI exit) is a teaching WriteRefusal (400/409);
-reads are always allowed; a cold agent may always PROPOSE. Beyond consent: scope-validation (the realpath+
-commonpath wall re-derived per config-file root — the bridge `_safe_mockup_path` PATTERN, reused not the
-function) and content-validation (a hook `command`, skill `body`, settings shape — the dangerous-payload gate,
-arch §5.2). Every gated act writes a run-record (`config_writer.act` events, args redacted — the
-Introspective-Data law); fail-loud throughout (unknown class/scope/missing consent/bad content/nonzero exit →
-a teaching error, never a silent no-op or fallback). HTTP: `GET /health` · `POST /read|/write|/cli|/git|/consent`
-(`CONFIG_WRITER_ROUTES` is the inventory source — CONTRACT-FORMAT §9.3/V21, drift-tested both directions).
-Faces: the `config-writer` row in `ops/services.json` (`company up config-writer`); the bridge `/api/config|dev|auto`
-routes + the company MCP ③④⑤ tools (L-③/④/⑤ lanes) route here. ✅ PROVEN by
-`tests/config_writer_acceptance.py` (37 checks by use against the real service on an ISOLATED tmp store +
-scratch `.claude`: scratch-config write→re-read round-trip, unconsented-dangerous-write → pending-consent proposal
-then succeeds-with-consent, standing-consent grant/revoke, traversal/scope/content refusals, the CLI+git
-tier gate (read ungated vs write/exec gated), argv-array injection-resistance, the redacted run-record, route drift). 🟡 NOT yet
-run (lead-only law — this worker fires no real config-mutating CLI): the REAL `claude mcp add` proven by
-`claude mcp list`, `claude plugin install` round-trip, a real `git commit` sha — **live-verify pending (lead)**,
-NEVER green-painted.
-
-**Rail R1-prime — the `bridge-session` spawn PROFILE (Capability Fabric ③④⑤, L-FOUND-R1prime, 2026-06-12).**
+**Rail R1-prime — the `bridge-session` spawn PROFILE (a KEPT session-fabric spawn posture, 2026-06-12).**
 The fabric's normal supervised sessions are spawned `--allowedTools mcp__company` (THE FLOOR — no Bash/
-Edit/LSP/web). That floor makes ④'s IN-SESSION capabilities (git via Bash, LSP code-intel via the Read/
+Edit/LSP/web). That floor makes IN-SESSION capabilities (git via Bash, LSP code-intel via the Read/
 Edit family, WebFetch/WebSearch) physically impossible — a session that "wants Bash and cannot call it"
 is a silent no-op. R1-prime is the NAMED, deliberate spawn POSTURE that opens a WIDER allowlist for those
 ops. It is NOT "an intent kind"; it is a new security decision. Pieces: `spawn_bridge_session(...)` (the
@@ -231,8 +208,8 @@ mode (Atlas `computer-use.md:29,:223`), and `browser` (Claude-in-Chrome) is beta
 headless `-p`/WSL2-Linux rail NEITHER can ever bind. Requesting either is REFUSED-LOUD (never an allowlist
 entry that silently never binds), never green-painted to live. **Result shape (arch-doc correction):** a
 bridge-session's work rides back as PROSE on the turn stream (`liveness:stream`, NO typed `return_shape`) —
-the supervisor synthesizes no structured git-sha/LSP object; git's structured-sha path is a DIFFERENT rail
-(R3 plain-`git` argv). Proven by `tests/supervisor_routes_acceptance.py` (29 checks: the original 8 drift/OPS
+the supervisor synthesizes no structured git-sha/LSP object; a structured git-sha, if ever needed, is read from the
+session's own output — the R3 wrapper rail that once offered it is removed (R1.4). Proven by `tests/supervisor_routes_acceptance.py` (29 checks: the original 8 drift/OPS
 teeth + 21 R1-prime checks — wider allowlist present, floor untouched, transport head byte-preserved,
 capability narrowing git/lsp, computer/browser refused-loud as capability AND raw tool, unknown-cap refused,
 the consent gate refusing without `operator_consent`, the 403 mapping, the liveness:stream/no-return_shape
@@ -535,22 +512,13 @@ projected from `bridge.BRIDGE_ROUTES` (the single-source route table) via a LAZY
 that sidesteps the circular import, with a drift test keeping `BRIDGE_ROUTES` == the live dispatcher. See "The
 substrate WENT LIVE" section below for the full close-out.)*
 
-**③④⑤ CAPABILITY FABRIC bridge arms (the L-Wire lane, 2026-06-12) — the literal-arm law.** The operator
-face for every ③④⑤ capability is `runtime/bridge.py`'s `/api/{config,dev,auto}/*` routes: each fabric path
-is dispatched by BOTH a GET read arm (`path == "/api/…"`) and a POST write arm (`self.path == "/api/…"`),
-each LITERAL. **NEVER refactor these into a generic `path in {…}` arm** — `tests/bridge_routes_acceptance.py`
-greps the dispatcher's `path ==`/`self.path ==` string literals and asserts they EQUAL `BRIDGE_ROUTES` both
-directions; a generic arm carries no literal, so every route behind it becomes a phantom-verb FAIL (arch
-§1.4). Add a route ⇒ add its GET+POST literal arms in do_GET/do_POST AND its path to `BRIDGE_ROUTES` (once;
-the drift test keys on the path string, not the method). DRY lives at the HANDLER, not the dispatch: every
-arm routes through `H._capability(key, src, default_op)` — it loads the WIRED `capability_handlers` registry
-(idempotent), pops `op` from the request (GET query `q` / POST `self._body()`), and delegates the rest to
-the SAME `capability_handlers.HANDLERS[key].fn` the MCP face calls, so the two faces return the
-byte-identical dict (proven by `tests/capability_handlers_acceptance.py` §4, which invokes the REAL
-`_capability`). The bridge NEVER executes a rail (the floor): a read returns on the call; an R3/R1-prime/R2
-act builds an intent/job/argv that a sanctioned SERVICE (config_writer / supervisor bridge-session / the
-wire) acts on, returning a receipt + watch cursor. A handler raise becomes a fail-loud 400 teach-text via
-the do_GET/do_POST try/except (no silent no-op).
+**The literal-arm law (survives the ③④⑤ removal).** The 18 `/api/{config,dev,auto}/*` wrapper arms and
+their `_capability` dispatcher were REMOVED 2026-06-13 (Session Fabric R1.4 — they wrapped native session
+ability). The LAW they were built under still binds every remaining/new route: each dispatched path is a
+LITERAL `path ==`/`self.path ==` arm in do_GET/do_POST AND one `BRIDGE_ROUTES` entry — NEVER a generic
+`path in {…}` arm (`tests/bridge_routes_acceptance.py` greps the literals and asserts equality with
+`BRIDGE_ROUTES` both directions; a generic arm is a phantom-verb FAIL). A handler raise becomes a
+fail-loud 400 teach-text via the do_GET/do_POST try/except (no silent no-op).
 
 ## The cascade RUNNER (Cognition Engine GROUP N · `runtime/cognition.py` + `runtime/suite.py` + `mcp_face/server.py` · the LARGEST net-new of the corpus pillar)
 
