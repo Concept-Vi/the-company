@@ -1,280 +1,1722 @@
 {
   "_doc": "The model-TYPE capability CATALOG — DECLARED DATA, keyed by MODEL-ID (the HF/cloud string). registry-is-truth (AGENTS.md rule 8): this FILE is the single source ops + cognition both read; cli/capabilities.py loads it into MODEL_CAPABILITIES at import (fail-loud if missing/malformed — never a silently-empty catalog). Adding a model's capabilities = adding ONE entry HERE (no code edit) — mirroring how services.json declares what runs. This is the intrinsic half (what the WEIGHTS can do); it NEVER stores gpu_util/vram (rule 3 — that is the service layer's job, gpu.py JOINs it). Each field carries {value, source} with a provenance from PROVENANCE (declared|probed|measured|served); `provides` is the capability TAG set (⊆ CAPABILITY_TAGS). Every `provides` is GROUNDED — for a SERVED model in a hard services.json signal (--tool-call-parser → tools; chat_template_nothink → no-think; --runner pooling → embed; a chat model → chat,json); for an ON-DISK-NOT-YET-SERVED model (the retrieval fleet added 2026-06-12: code/visual embedders, rerankers) in the model card + build-prep/brain/embedding-research-2026-06.md, recorded with source `declared` and an `_note` saying 'ON DISK, NOT yet served' — never fabricated. `rerank` (cross-encoder/late-interaction scorers) and real `vision` providers (the VL pair + jina-v4) joined the vocab 2026-06-12. A genuine unknown is recorded honestly (value null, source declared). A services.json model with NO row here keeps hitting capabilities_for's explicit unknown→ASK fail-loud path (rule 8). DRIFT HOME: cli/capabilities.py docstring + ops/AGENTS.md models/VRAM section; drift assertion tests/model_capabilities_acceptance.py + tests/model_catalog_acceptance.py.",
-
   "cyankiwi/Qwen3.5-4B-AWQ-4bit": {
     "_note": "RESIDENT worker (services.json chat-4b). UNCHANGED from the original inline row — values/behaviour preserved exactly (proven by tests/model_capabilities_acceptance.py: provides list, knee max_num_seqs=16, swarm KV=135574, context_ceiling=262144).",
-    "tools": {"value": true, "source": "served",
-              "note": "live probe :8000 forced tool_choice → tool_call emitted; also --enable-auto-tool-choice + qwen3_xml parser in services.json"},
-    "json_schema": {"value": true, "source": "served",
-                    "note": "L-transport PROVED resident vLLM 0.21 CONSTRAINS the decode (neg-control: no-JSON prompt still conformant). Re-probed live."},
-    "thinking": {"value": false, "source": "declared",
-                 "note": "no-think model — chat_template_nothink.jinja (services.json); the day-one judge pick was chosen for exactly this"},
-    "context_ceiling": {"value": 262144, "source": "served",
-                        "note": "services.json chat-4b config.max_model_len_ceiling (reachable solo)"},
+    "tools": {
+      "value": true,
+      "source": "served",
+      "note": "live probe :8000 forced tool_choice → tool_call emitted; also --enable-auto-tool-choice + qwen3_xml parser in services.json"
+    },
+    "json_schema": {
+      "value": true,
+      "source": "served",
+      "note": "L-transport PROVED resident vLLM 0.21 CONSTRAINS the decode (neg-control: no-JSON prompt still conformant). Re-probed live."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "no-think model — chat_template_nothink.jinja (services.json); the day-one judge pick was chosen for exactly this"
+    },
+    "context_ceiling": {
+      "value": 262144,
+      "source": "served",
+      "note": "services.json chat-4b config.max_model_len_ceiling (reachable solo)"
+    },
     "concurrency_knee": {
       "value": {
         "max_num_seqs": 16,
         "kv_kb_per_token": 31.7,
         "formula": "min(max_num_seqs - R, free_KV_tokens / per_role_ctx)",
         "loadout_points": {
-          "voice_coresident_u0.49": {"kv_pool_tokens": 66036, "kv_gib": 2.14,
-                                     "roles_at_deep_main": "~1-2",
-                                     "note": "0.49 util + Orpheus co-resident; KV~one 64K conv → deep main collapses swarm to ~1-2"},
-          "swarm_mode_u0.63": {"kv_pool_tokens": 135574, "kv_gib": 4.38,
-                               "roles_at_deep_main": "~16",
-                               "note": "0.63 util + NO Orpheus; 64K main leaves ~71K → seq-cap(16) is the sole bind → ~16 roles"}
+          "voice_coresident_u0.49": {
+            "kv_pool_tokens": 66036,
+            "kv_gib": 2.14,
+            "roles_at_deep_main": "~1-2",
+            "note": "0.49 util + Orpheus co-resident; KV~one 64K conv → deep main collapses swarm to ~1-2"
+          },
+          "swarm_mode_u0.63": {
+            "kv_pool_tokens": 135574,
+            "kv_gib": 4.38,
+            "roles_at_deep_main": "~16",
+            "note": "0.63 util + NO Orpheus; 64K main leaves ~71K → seq-cap(16) is the sole bind → ~16 roles"
+          }
         }
       },
       "source": "measured",
       "note": "C0.5 (2026-06-07, lead-supervised). NOT the stale literal 32 — bind flips on main context depth; the swarm Semaphore reads this, sized per the resident loadout."
     },
-    "speed_profile": {"value": {"decode_tok_s": 100}, "source": "measured",
-                      "note": "approximate decode speed of the resident 4B-AWQ worker"},
-    "provides": ["chat", "json", "tools", "fast", "no-think"]
+    "speed_profile": {
+      "value": {
+        "decode_tok_s": 100
+      },
+      "source": "measured",
+      "note": "approximate decode speed of the resident 4B-AWQ worker"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "fast",
+      "no-think"
+    ]
   },
-
   "Qwen/Qwen3.5-2B": {
     "_note": "services.json chat-2b — a smaller local chat worker (combo small-pair). Same qwen3 chat template family: --enable-auto-tool-choice + qwen3_xml parser + chat_template_nothink.jinja (services.json) ground tools + no-think. tools 'declared' (not yet live-probed on this id — probe before binding); json declared from response_format support of the qwen chat family.",
-    "tools": {"value": true, "source": "declared",
-              "note": "services.json chat-2b config: --enable-auto-tool-choice + --tool-call-parser qwen3_xml. NOT yet live-probed on this id — probe before binding."},
-    "json_schema": {"value": null, "source": "declared",
-                    "note": "vLLM xgrammar likely available (same vLLM as the 4B) but UNVERIFIED on this id — record the gap honestly; probe before relying on grammar-constrained decode."},
-    "thinking": {"value": false, "source": "declared",
-                 "note": "chat_template_nothink.jinja in services.json chat-2b config — a no-think worker like the 4B."},
-    "context_ceiling": {"value": 4096, "source": "served",
-                        "note": "services.json chat-2b config.max_model_len (no max_model_len_ceiling declared); the JOIN refreshes if a ceiling is added."},
-    "concurrency_knee": {"value": {"max_num_seqs": 32}, "source": "declared",
-                         "note": "services.json chat-2b config.max_num_seqs=32; not C0.5-measured at this loadout — declared from the launch config."},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["chat", "json", "tools", "fast", "no-think"]
+    "tools": {
+      "value": true,
+      "source": "declared",
+      "note": "services.json chat-2b config: --enable-auto-tool-choice + --tool-call-parser qwen3_xml. NOT yet live-probed on this id — probe before binding."
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "vLLM xgrammar likely available (same vLLM as the 4B) but UNVERIFIED on this id — record the gap honestly; probe before relying on grammar-constrained decode."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "chat_template_nothink.jinja in services.json chat-2b config — a no-think worker like the 4B."
+    },
+    "context_ceiling": {
+      "value": 4096,
+      "source": "served",
+      "note": "services.json chat-2b config.max_model_len (no max_model_len_ceiling declared); the JOIN refreshes if a ceiling is added."
+    },
+    "concurrency_knee": {
+      "value": {
+        "max_num_seqs": 32
+      },
+      "source": "declared",
+      "note": "services.json chat-2b config.max_num_seqs=32; not C0.5-measured at this loadout — declared from the launch config."
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "fast",
+      "no-think"
+    ]
   },
-
   "Qwen/Qwen3.5-0.8B": {
     "_note": "services.json chat-08b — the smallest local chat worker (combo small-pair). Same qwen3 chat-template family signals as chat-2b/4b.",
-    "tools": {"value": true, "source": "declared",
-              "note": "services.json chat-08b config: --enable-auto-tool-choice + --tool-call-parser qwen3_xml. NOT yet live-probed."},
-    "json_schema": {"value": null, "source": "declared",
-                    "note": "xgrammar likely (same vLLM) but UNVERIFIED on this id — probe before relying."},
-    "thinking": {"value": false, "source": "declared",
-                 "note": "chat_template_nothink.jinja in services.json chat-08b config — a no-think worker."},
-    "context_ceiling": {"value": 4096, "source": "served",
-                        "note": "services.json chat-08b config.max_model_len."},
-    "concurrency_knee": {"value": {"max_num_seqs": 32}, "source": "declared",
-                         "note": "services.json chat-08b config.max_num_seqs=32; declared from the launch config, not C0.5-measured."},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["chat", "json", "tools", "fast", "no-think"]
+    "tools": {
+      "value": true,
+      "source": "declared",
+      "note": "services.json chat-08b config: --enable-auto-tool-choice + --tool-call-parser qwen3_xml. NOT yet live-probed."
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "xgrammar likely (same vLLM) but UNVERIFIED on this id — probe before relying."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "chat_template_nothink.jinja in services.json chat-08b config — a no-think worker."
+    },
+    "context_ceiling": {
+      "value": 4096,
+      "source": "served",
+      "note": "services.json chat-08b config.max_model_len."
+    },
+    "concurrency_knee": {
+      "value": {
+        "max_num_seqs": 32
+      },
+      "source": "declared",
+      "note": "services.json chat-08b config.max_num_seqs=32; declared from the launch config, not C0.5-measured."
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "fast",
+      "no-think"
+    ]
   },
-
   "stelterlab/NVIDIA-Nemotron-3-Nano-30B-A3B-AWQ": {
     "_note": "services.json chat-nemotron — a heavier local reasoner (30B-A3B MoE, AWQ, CPU-offloaded). NO qwen3_xml tool parser in its flags (--quantization compressed-tensors --cpu-offload-gb 6 --enforce-eager) → tools NOT declared on; a reasoner → thinking declared on. provides has chat+json (no tools, no fast — it is the slow heavy local option, cpu-offloaded + enforce-eager).",
-    "tools": {"value": null, "source": "declared",
-              "note": "services.json chat-nemotron has NO tool-call-parser flag → tool-calling UNVERIFIED. Record the gap; probe before binding a tools-requiring role."},
-    "json_schema": {"value": null, "source": "declared",
-                    "note": "UNVERIFIED on this id; probe before relying on grammar-constrained decode."},
-    "thinking": {"value": true, "source": "declared",
-                 "note": "Nemotron-3-Nano reasoner family — a thinker (cf. the cloud reasoners). Declared, verify by probe."},
-    "context_ceiling": {"value": 4096, "source": "served",
-                        "note": "services.json chat-nemotron config.max_model_len (cpu-offloaded; small ctx at this loadout)."},
-    "concurrency_knee": {"value": {"max_num_seqs": 8}, "source": "declared",
-                         "note": "services.json chat-nemotron config.max_num_seqs=8 (heavy, cpu-offloaded — low concurrency); declared, not C0.5-measured."},
-    "speed_profile": {"value": null, "source": "declared",
-                      "note": "cpu-offload-gb 6 + enforce-eager → slow; not the fast worker."},
-    "provides": ["chat", "json", "thinking", "reasoning"]
+    "tools": {
+      "value": null,
+      "source": "declared",
+      "note": "services.json chat-nemotron has NO tool-call-parser flag → tool-calling UNVERIFIED. Record the gap; probe before binding a tools-requiring role."
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "UNVERIFIED on this id; probe before relying on grammar-constrained decode."
+    },
+    "thinking": {
+      "value": true,
+      "source": "declared",
+      "note": "Nemotron-3-Nano reasoner family — a thinker (cf. the cloud reasoners). Declared, verify by probe."
+    },
+    "context_ceiling": {
+      "value": 4096,
+      "source": "served",
+      "note": "services.json chat-nemotron config.max_model_len (cpu-offloaded; small ctx at this loadout)."
+    },
+    "concurrency_knee": {
+      "value": {
+        "max_num_seqs": 8
+      },
+      "source": "declared",
+      "note": "services.json chat-nemotron config.max_num_seqs=8 (heavy, cpu-offloaded — low concurrency); declared, not C0.5-measured."
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared",
+      "note": "cpu-offload-gb 6 + enforce-eager → slow; not the fast worker."
+    },
+    "provides": [
+      "chat",
+      "json",
+      "thinking",
+      "reasoning"
+    ]
   },
-
   "BAAI/bge-m3": {
     "_note": "services.json embed-bge — an EMBEDDING model (vLLM pooling runner). --runner pooling in the flags grounds the embed tag. NOT a chat/tools/thinking model; provides is exactly [embed].",
-    "tools": {"value": false, "source": "declared", "note": "an embedder, not a chat/tool model."},
-    "json_schema": {"value": false, "source": "declared", "note": "embedder — no generative/structured output."},
-    "thinking": {"value": false, "source": "declared", "note": "embedder — no reasoning."},
-    "context_ceiling": {"value": 8192, "source": "declared",
-                        "note": "BGE-M3 input length; services.json embed-bge declares no max_model_len — declared from the model's known limit, the JOIN refreshes if set."},
-    "concurrency_knee": {"value": null, "source": "declared",
-                         "note": "embedding throughput, not a generative KV knee."},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["embed"]
+    "tools": {
+      "value": false,
+      "source": "declared",
+      "note": "an embedder, not a chat/tool model."
+    },
+    "json_schema": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder — no generative/structured output."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder — no reasoning."
+    },
+    "context_ceiling": {
+      "value": 8192,
+      "source": "declared",
+      "note": "BGE-M3 input length; services.json embed-bge declares no max_model_len — declared from the model's known limit, the JOIN refreshes if set."
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "embedding throughput, not a generative KV knee."
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "embed"
+    ]
   },
-
   "jinaai/jina-embeddings-v5-text-small": {
     "_note": "services.json embed-jina-v5 — an EMBEDDING model (vLLM pooling runner). --runner pooling grounds embed.",
-    "tools": {"value": false, "source": "declared", "note": "an embedder."},
-    "json_schema": {"value": false, "source": "declared", "note": "embedder."},
-    "thinking": {"value": false, "source": "declared", "note": "embedder."},
-    "context_ceiling": {"value": 8192, "source": "served",
-                        "note": "services.json embed-jina-v5 config.max_model_len=8192."},
-    "concurrency_knee": {"value": null, "source": "declared"},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["embed"]
+    "tools": {
+      "value": false,
+      "source": "declared",
+      "note": "an embedder."
+    },
+    "json_schema": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder."
+    },
+    "context_ceiling": {
+      "value": 8192,
+      "source": "served",
+      "note": "services.json embed-jina-v5 config.max_model_len=8192."
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "embed"
+    ]
   },
-
   "Qwen/Qwen3-Embedding-8B": {
     "_note": "services.json embed-qwen3 — a large EMBEDDING model (vLLM pooling runner, gpu_util 0.92). --runner pooling grounds embed.",
-    "tools": {"value": false, "source": "declared", "note": "an embedder."},
-    "json_schema": {"value": false, "source": "declared", "note": "embedder."},
-    "thinking": {"value": false, "source": "declared", "note": "embedder."},
-    "context_ceiling": {"value": 8192, "source": "declared",
-                        "note": "Qwen3-Embedding-8B input length; services.json embed-qwen3 declares no max_model_len — declared from the model's known limit, JOIN refreshes if set."},
-    "concurrency_knee": {"value": null, "source": "declared"},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["embed"]
+    "tools": {
+      "value": false,
+      "source": "declared",
+      "note": "an embedder."
+    },
+    "json_schema": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder."
+    },
+    "context_ceiling": {
+      "value": 8192,
+      "source": "declared",
+      "note": "Qwen3-Embedding-8B input length; services.json embed-qwen3 declares no max_model_len — declared from the model's known limit, JOIN refreshes if set."
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "embed"
+    ]
   },
-
   "Hariprasath28/orpheus-3b-4bit-AWQ": {
     "_note": "services.json tts-orpheus — a TTS VOICE engine (vLLM-backed, named voices + cued emotion, persona Pip). A model-id-bearing voice engine, so it is cataloged with a `tts` provides. SWAP-HOSTILE (~17min cold) — pin/pre-warm. NO role in the cast currently REQUIRES a voice tag — this is forward-looking completeness (the chat/embed/vision discrimination is the tested bar).",
-    "tools": {"value": false, "source": "declared", "note": "a TTS engine, not a chat/tool model."},
-    "json_schema": {"value": false, "source": "declared", "note": "TTS engine — no structured text output."},
-    "thinking": {"value": false, "source": "declared", "note": "TTS engine."},
-    "context_ceiling": {"value": 12288, "source": "served",
-                        "note": "services.json tts-orpheus config.max_model_len=12288 (the vLLM-backed engine's token window)."},
-    "concurrency_knee": {"value": null, "source": "declared", "note": "synthesis throughput, not a chat KV knee."},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["tts"]
+    "tools": {
+      "value": false,
+      "source": "declared",
+      "note": "a TTS engine, not a chat/tool model."
+    },
+    "json_schema": {
+      "value": false,
+      "source": "declared",
+      "note": "TTS engine — no structured text output."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "TTS engine."
+    },
+    "context_ceiling": {
+      "value": 12288,
+      "source": "served",
+      "note": "services.json tts-orpheus config.max_model_len=12288 (the vLLM-backed engine's token window)."
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "synthesis throughput, not a chat KV knee."
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "tts"
+    ]
   },
-
   "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign": {
     "_note": "services.json tts-qwen3tts — a TTS VOICE engine (transformers VoiceDesign, describe-a-voice, persona Sable). model-id-bearing → cataloged with `tts`. Forward-looking (no role requires tts yet).",
-    "tools": {"value": false, "source": "declared", "note": "a TTS engine."},
-    "json_schema": {"value": false, "source": "declared", "note": "TTS engine."},
-    "thinking": {"value": false, "source": "declared", "note": "TTS engine."},
-    "context_ceiling": {"value": null, "source": "declared", "note": "non-vLLM transformers engine — no served max_model_len."},
-    "concurrency_knee": {"value": null, "source": "declared"},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["tts"]
+    "tools": {
+      "value": false,
+      "source": "declared",
+      "note": "a TTS engine."
+    },
+    "json_schema": {
+      "value": false,
+      "source": "declared",
+      "note": "TTS engine."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "TTS engine."
+    },
+    "context_ceiling": {
+      "value": null,
+      "source": "declared",
+      "note": "non-vLLM transformers engine — no served max_model_len."
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "tts"
+    ]
   },
-
   "nomic-ai/nomic-embed-code-GGUF": {
     "_note": "ON DISK (nomic-embed-code.Q6_K.gguf, 5.5G), NOT yet served — no services.json row; capabilities DECLARED from the model card + build-prep/brain/embedding-research-2026-06.md. A CODE embedding model (Qwen2.5-Coder-7B base, 3584-dim, last-token pooling). DISCIPLINE (silent-garbage traps): serve via llama.cpp with --pooling last AND prefix queries with 'Represent this query for searching relevant code: ' — wrong pooling/missing prefix returns confident garbage. Single-vector → joins natively into the store's vector layer (unlike LateOn's multi-vector). Role: the DEEP code space (allocated-window/dedicated-loadout indexing).",
-    "tools": {"value": false, "source": "declared", "note": "a code embedder."},
-    "json_schema": {"value": false, "source": "declared", "note": "embedder — no generative output."},
-    "thinking": {"value": false, "source": "declared", "note": "embedder."},
-    "context_ceiling": {"value": 32768, "source": "declared",
-                        "note": "Qwen2.5-Coder-7B base context; not yet served (no services.json max_model_len)."},
-    "concurrency_knee": {"value": null, "source": "declared", "note": "embedding throughput, not a generative KV knee."},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["embed"]
+    "tools": {
+      "value": false,
+      "source": "declared",
+      "note": "a code embedder."
+    },
+    "json_schema": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder — no generative output."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder."
+    },
+    "context_ceiling": {
+      "value": 32768,
+      "source": "declared",
+      "note": "Qwen2.5-Coder-7B base context; not yet served (no services.json max_model_len)."
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "embedding throughput, not a generative KV knee."
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "embed"
+    ]
   },
-
   "lightonai/LateOn-Code": {
     "_note": "ON DISK (1.3G, model.safetensors 569M + a Dense head), NOT yet served. A LATE-INTERACTION (multi-vector / ColBERT-style, ModernBERT-base) CODE retrieval model — the SOTA primary that ColGrep uses. NOTE: multi-vector output does NOT drop into the store's single-vector index — it lives in its own tool (ColGrep/Next-Plaid) as the agents' live code-search instrument. Smaller sibling on the Hub: lightonai/LateOn-Code-edge.",
-    "tools": {"value": false, "source": "declared", "note": "a code retrieval model."},
-    "json_schema": {"value": false, "source": "declared", "note": "retrieval model — no generative output."},
-    "thinking": {"value": false, "source": "declared", "note": "retrieval model."},
-    "context_ceiling": {"value": 8192, "source": "declared", "note": "ModernBERT-base context; declared, not served."},
-    "concurrency_knee": {"value": null, "source": "declared", "note": "retrieval throughput, not a generative KV knee."},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["embed"]
+    "tools": {
+      "value": false,
+      "source": "declared",
+      "note": "a code retrieval model."
+    },
+    "json_schema": {
+      "value": false,
+      "source": "declared",
+      "note": "retrieval model — no generative output."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "retrieval model."
+    },
+    "context_ceiling": {
+      "value": 8192,
+      "source": "declared",
+      "note": "ModernBERT-base context; declared, not served."
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "retrieval throughput, not a generative KV knee."
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "embed"
+    ]
   },
-
   "Qwen/Qwen3-VL-Embedding-2B": {
     "_note": "ON DISK (4.0G), NOT yet served. A MULTIMODAL embedder — text + images + screenshots + video in ONE space (2048-dim, MRL 64-2048, 32K ctx, instruction-aware). Matched-pair with Qwen/Qwen3-VL-Reranker-2B. Provides embed AND vision (the first cataloged model to provide vision). Role: the VISUAL space (mockup↔screenshot↔code joins, visual drift). VRAM ~4-5G (must be telemetry-proven co-resident with the chat brain).",
-    "tools": {"value": false, "source": "declared", "note": "an embedder."},
-    "json_schema": {"value": false, "source": "declared", "note": "embedder — no generative output."},
-    "thinking": {"value": false, "source": "declared", "note": "embedder."},
-    "context_ceiling": {"value": 32768, "source": "declared", "note": "32K per the model card; declared, not served."},
-    "concurrency_knee": {"value": null, "source": "declared", "note": "embedding throughput, not a generative KV knee."},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["embed", "vision"]
+    "tools": {
+      "value": false,
+      "source": "declared",
+      "note": "an embedder."
+    },
+    "json_schema": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder — no generative output."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder."
+    },
+    "context_ceiling": {
+      "value": 32768,
+      "source": "declared",
+      "note": "32K per the model card; declared, not served."
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "embedding throughput, not a generative KV knee."
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "embed",
+      "vision"
+    ]
   },
-
   "Qwen/Qwen3-VL-Reranker-2B": {
     "_note": "ON DISK (4.0G), NOT yet served. The MATCHED multimodal RERANKER for Qwen3-VL-Embedding-2B — a single-tower cross-attention scorer that re-orders image/text candidate pairs (trained together with the embedder, so stage-two genuinely corrects stage-one). Provides rerank AND vision. NOT an embedder (emits a relevance score, not a stored vector).",
-    "tools": {"value": false, "source": "declared", "note": "a reranker."},
-    "json_schema": {"value": false, "source": "declared", "note": "reranker — emits scores, not structured text."},
-    "thinking": {"value": false, "source": "declared", "note": "reranker."},
-    "context_ceiling": {"value": 32768, "source": "declared", "note": "per the model card; declared, not served."},
-    "concurrency_knee": {"value": null, "source": "declared", "note": "scoring throughput, not a generative KV knee."},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["rerank", "vision"]
+    "tools": {
+      "value": false,
+      "source": "declared",
+      "note": "a reranker."
+    },
+    "json_schema": {
+      "value": false,
+      "source": "declared",
+      "note": "reranker — emits scores, not structured text."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "reranker."
+    },
+    "context_ceiling": {
+      "value": 32768,
+      "source": "declared",
+      "note": "per the model card; declared, not served."
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "scoring throughput, not a generative KV knee."
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "rerank",
+      "vision"
+    ]
   },
-
   "perplexity-ai/pplx-embed-v1-0.6b": {
     "_note": "ON DISK (5.6G), NOT yet served. A TEXT embedder (1024-dim, 32K ctx, MIT license). Distinctive talent: quantization-aware training → native INT8 (4x) and binary (32x) compressed embeddings with quality intact — relevant when embedding the WHOLE company-data corpus. Smaller sibling of pplx-embed-context-v1-4b.",
-    "tools": {"value": false, "source": "declared", "note": "an embedder."},
-    "json_schema": {"value": false, "source": "declared", "note": "embedder."},
-    "thinking": {"value": false, "source": "declared", "note": "embedder."},
-    "context_ceiling": {"value": 32768, "source": "declared", "note": "32K per the model card; declared, not served."},
-    "concurrency_knee": {"value": null, "source": "declared", "note": "embedding throughput."},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["embed"]
+    "tools": {
+      "value": false,
+      "source": "declared",
+      "note": "an embedder."
+    },
+    "json_schema": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder."
+    },
+    "context_ceiling": {
+      "value": 32768,
+      "source": "declared",
+      "note": "32K per the model card; declared, not served."
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "embedding throughput."
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "embed"
+    ]
   },
-
   "perplexity-ai/pplx-embed-context-v1-4b": {
     "_note": "ON DISK (25G full-precision), NOT yet served. A DOCUMENT-AWARE text embedder (2560-dim, MIT, native compression like its 0.6b sibling) — the 'context' variant embeds each passage CONDITIONED on the full surrounding document (the productized form of late chunking). Role: the company-data future (contracts, decks) where surrounding-context filing beats isolated-chunk. Replaced the redundant Qwen3-Embedding-4B as the mid-tier clerk.",
-    "tools": {"value": false, "source": "declared", "note": "an embedder."},
-    "json_schema": {"value": false, "source": "declared", "note": "embedder."},
-    "thinking": {"value": false, "source": "declared", "note": "embedder."},
-    "context_ceiling": {"value": 32768, "source": "declared", "note": "32K per the model card; declared, not served."},
-    "concurrency_knee": {"value": null, "source": "declared", "note": "embedding throughput."},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["embed"]
+    "tools": {
+      "value": false,
+      "source": "declared",
+      "note": "an embedder."
+    },
+    "json_schema": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder."
+    },
+    "context_ceiling": {
+      "value": 32768,
+      "source": "declared",
+      "note": "32K per the model card; declared, not served."
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "embedding throughput."
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "embed"
+    ]
   },
-
   "ibm-granite/granite-embedding-97m-multilingual-r2": {
     "_note": "ON DISK (1.2G, safetensors 186M), NOT yet served. A TINY multilingual text embedder (97M, 384-dim, Apache-2.0, 12+ languages) — matches gte-multilingual-base (305M) quality at ~3x the speed, +14.6 over the R1 107m. CPU-runnable utility clerk for bulk/background embedding. NOTE: the R2 is 97m, NOT 107m (that is the older R1).",
-    "tools": {"value": false, "source": "declared", "note": "an embedder."},
-    "json_schema": {"value": false, "source": "declared", "note": "embedder."},
-    "thinking": {"value": false, "source": "declared", "note": "embedder."},
-    "context_ceiling": {"value": 8192, "source": "declared", "note": "per the model card; declared, not served."},
-    "concurrency_knee": {"value": null, "source": "declared", "note": "embedding throughput."},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["embed"]
+    "tools": {
+      "value": false,
+      "source": "declared",
+      "note": "an embedder."
+    },
+    "json_schema": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder."
+    },
+    "context_ceiling": {
+      "value": 8192,
+      "source": "declared",
+      "note": "per the model card; declared, not served."
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "embedding throughput."
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "embed"
+    ]
   },
-
   "jinaai/jina-embeddings-v4": {
     "_note": "ON DISK (7.4G), NOT yet served — services.json embed-jina-v4 is a placeholder (config.model empty). A MULTIMODAL embedder (3.8B) with text/image/code adapters → provides embed AND vision. Per the research it scores BELOW jina-code-0.5b on code and is largely superseded by Qwen3-VL-Embedding-2B for the visual lane; cataloged for completeness (it is on disk).",
-    "tools": {"value": false, "source": "declared", "note": "an embedder."},
-    "json_schema": {"value": false, "source": "declared", "note": "embedder."},
-    "thinking": {"value": false, "source": "declared", "note": "embedder."},
-    "context_ceiling": {"value": 32768, "source": "declared", "note": "per the model card; declared, not served."},
-    "concurrency_knee": {"value": null, "source": "declared", "note": "embedding throughput."},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["embed", "vision"]
+    "tools": {
+      "value": false,
+      "source": "declared",
+      "note": "an embedder."
+    },
+    "json_schema": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder."
+    },
+    "context_ceiling": {
+      "value": 32768,
+      "source": "declared",
+      "note": "per the model card; declared, not served."
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "embedding throughput."
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "embed",
+      "vision"
+    ]
   },
-
   "sentence-transformers/all-MiniLM-L6-v2": {
     "_note": "ON DISK (888M), NOT yet served. The classic small sentence embedder (384-dim, 22M params) — a lightweight CPU-class general embedder. Cataloged for completeness (on disk, missing from the catalog).",
-    "tools": {"value": false, "source": "declared", "note": "an embedder."},
-    "json_schema": {"value": false, "source": "declared", "note": "embedder."},
-    "thinking": {"value": false, "source": "declared", "note": "embedder."},
-    "context_ceiling": {"value": 256, "source": "declared", "note": "all-MiniLM-L6-v2 truncates at 256 tokens; declared."},
-    "concurrency_knee": {"value": null, "source": "declared", "note": "embedding throughput."},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["embed"]
+    "tools": {
+      "value": false,
+      "source": "declared",
+      "note": "an embedder."
+    },
+    "json_schema": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "embedder."
+    },
+    "context_ceiling": {
+      "value": 256,
+      "source": "declared",
+      "note": "all-MiniLM-L6-v2 truncates at 256 tokens; declared."
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "embedding throughput."
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "embed"
+    ]
   },
-
   "jinaai/jina-reranker-v3": {
     "_note": "ON DISK (1.2G), NOT yet served. A LISTWISE text reranker (0.6B, Qwen3-0.6B backbone) — 'last but not late interaction': scores up to 64 documents in ONE forward pass with cross-document attention (candidates compete directly), vs per-pair cross-encoding. LICENSE: CC-BY-NC (non-commercial) — EXPERIMENTS ONLY, not for anything revenue-touching. NOT an embedder.",
-    "tools": {"value": false, "source": "declared", "note": "a reranker."},
-    "json_schema": {"value": false, "source": "declared", "note": "reranker — emits scores."},
-    "thinking": {"value": false, "source": "declared", "note": "reranker."},
-    "context_ceiling": {"value": 8192, "source": "declared", "note": "per the model card; declared, not served."},
-    "concurrency_knee": {"value": null, "source": "declared", "note": "scoring throughput."},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["rerank"]
+    "tools": {
+      "value": false,
+      "source": "declared",
+      "note": "a reranker."
+    },
+    "json_schema": {
+      "value": false,
+      "source": "declared",
+      "note": "reranker — emits scores."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "reranker."
+    },
+    "context_ceiling": {
+      "value": 8192,
+      "source": "declared",
+      "note": "per the model card; declared, not served."
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "scoring throughput."
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "rerank"
+    ]
   },
-
   "cross-encoder/ms-marco-MiniLM-L-6-v2": {
     "_note": "ON DISK (88M), NOT yet served. The classic CPU cross-encoder RERANKER — re-orders a retriever's top-N by reading (query, candidate) pairs together. Tiny, runs on CPU (zero GPU cost) — the 'free accuracy' precision stage in front of any embedding shortlist. NOT an embedder.",
-    "tools": {"value": false, "source": "declared", "note": "a reranker."},
-    "json_schema": {"value": false, "source": "declared", "note": "reranker — emits scores."},
-    "thinking": {"value": false, "source": "declared", "note": "reranker."},
-    "context_ceiling": {"value": 512, "source": "declared", "note": "MiniLM-L-6 cross-encoder pair length; declared."},
-    "concurrency_knee": {"value": null, "source": "declared", "note": "CPU scoring throughput."},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["rerank"]
+    "tools": {
+      "value": false,
+      "source": "declared",
+      "note": "a reranker."
+    },
+    "json_schema": {
+      "value": false,
+      "source": "declared",
+      "note": "reranker — emits scores."
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared",
+      "note": "reranker."
+    },
+    "context_ceiling": {
+      "value": 512,
+      "source": "declared",
+      "note": "MiniLM-L-6 cross-encoder pair length; declared."
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "CPU scoring throughput."
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "rerank"
+    ]
   },
-
   "deepseek-v4-pro:cloud": {
     "_note": "A CLOUD reasoner brain option — capabilities but NO local VRAM (B4 'two populations' trap). json_schema UNKNOWN for cloud (L-transport: cloud MAY 400 on response_format:json_schema) — recorded honestly (value null, declared). context_ceiling/concurrency_knee/speed null (no local card slot).",
-    "tools": {"value": true, "source": "declared",
-              "note": "ollama /api/show capabilities — verify by probe before binding"},
-    "json_schema": {"value": null, "source": "declared",
-                    "note": "UNKNOWN for cloud (L-transport: may 400). ASK / probe, never assume."},
-    "thinking": {"value": true, "source": "declared", "note": "a reasoner"},
-    "context_ceiling": {"value": null, "source": "declared", "note": "cloud — no local ceiling/VRAM"},
-    "concurrency_knee": {"value": null, "source": "declared",
-                         "note": "cloud-throttled, not a local KV knee"},
-    "speed_profile": {"value": null, "source": "declared"},
-    "provides": ["chat", "json", "tools", "thinking", "reasoning"]
+    "tools": {
+      "value": true,
+      "source": "declared",
+      "note": "ollama /api/show capabilities — verify by probe before binding"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "UNKNOWN for cloud (L-transport: may 400). ASK / probe, never assume."
+    },
+    "thinking": {
+      "value": true,
+      "source": "declared",
+      "note": "a reasoner"
+    },
+    "context_ceiling": {
+      "value": null,
+      "source": "declared",
+      "note": "cloud — no local ceiling/VRAM"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "cloud-throttled, not a local KV knee"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "thinking",
+      "reasoning"
+    ]
+  },
+  "ResembleAI/chatterbox": {
+    "_note": "ON DISK (11G). services.json tts-chatterbox — expressive TTS, non-vLLM custom launcher (so the services row is keyless; config.model now set as JOIN metadata).",
+    "tools": {
+      "value": false,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared"
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": null,
+      "source": "declared",
+      "note": "non-vLLM engine — no served max_model_len"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "tts"
+    ]
+  },
+  "FunAudioLLM/Fun-CosyVoice3-0.5B-2512": {
+    "_note": "ON DISK (9.1G). services.json tts-cosyvoice — non-vLLM (config carries repo/model_dir/_engine).",
+    "tools": {
+      "value": false,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared"
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": null,
+      "source": "declared",
+      "note": "non-vLLM engine"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "tts"
+    ]
+  },
+  "coqui/XTTS-v2": {
+    "_note": "ON DISK (2.0G). services.json tts-xtts — voice-clone TTS, non-vLLM custom launcher.",
+    "tools": {
+      "value": false,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared"
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": null,
+      "source": "declared",
+      "note": "non-vLLM engine"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "tts"
+    ]
+  },
+  "canopylabs/orpheus-3b-0.1-ft": {
+    "_note": "ON DISK (15G, full-precision). The Orpheus base fine-tune; the SERVED orpheus is the AWQ quant Hariprasath28/orpheus-3b-4bit-AWQ (tts-orpheus). Cataloged for inventory completeness.",
+    "tools": {
+      "value": false,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared"
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": null,
+      "source": "declared",
+      "note": "full-precision variant; the AWQ is the served one"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "tts"
+    ]
+  },
+  "nytopop/orpheus-3b-0.1-ft.w8a8": {
+    "_note": "ON DISK (4.5G). An Orpheus w8a8 quant variant (alternative to the served 4bit-AWQ).",
+    "tools": {
+      "value": false,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared"
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": null,
+      "source": "declared",
+      "note": "w8a8 quant variant"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "tts"
+    ]
+  },
+  "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice": {
+    "_note": "ON DISK (4.3G). The CustomVoice sibling of the served Qwen3-TTS VoiceDesign (tts-qwen3tts); clone-a-voice vs describe-a-voice. Non-vLLM transformers.",
+    "tools": {
+      "value": false,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared"
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": null,
+      "source": "declared",
+      "note": "non-vLLM transformers engine"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "tts"
+    ]
+  },
+  "mobiuslabsgmbh/faster-whisper-large-v3-turbo": {
+    "_note": "ON DISK (1.6G). services.json stt-whisper — the served ear (faster-whisper). Non-vLLM.",
+    "tools": {
+      "value": false,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared"
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": null,
+      "source": "declared",
+      "note": "ASR engine — no generative max_model_len"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "stt"
+    ]
+  },
+  "nvidia/parakeet-tdt-0.6b-v3": {
+    "_note": "ON DISK (4.7G). services.json stt-parakeet — fast NeMo ASR. Non-vLLM.",
+    "tools": {
+      "value": false,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared"
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": null,
+      "source": "declared",
+      "note": "ASR engine"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "stt"
+    ]
+  },
+  "nvidia/canary-qwen-2.5b": {
+    "_note": "ON DISK (4.8G). services.json stt-canary — NeMo Canary ASR. Non-vLLM.",
+    "tools": {
+      "value": false,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared"
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": null,
+      "source": "declared",
+      "note": "ASR engine"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "stt"
+    ]
+  },
+  "ibm-granite/granite-4.0-1b-speech": {
+    "_note": "ON DISK (4.4G). services.json stt-granite — Granite speech-to-text. Non-vLLM.",
+    "tools": {
+      "value": false,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared"
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": null,
+      "source": "declared",
+      "note": "ASR engine"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "stt"
+    ]
+  },
+  "hubertsiuzdak/snac_24khz": {
+    "_note": "ON DISK (76M). A neural AUDIO CODEC / vocoder used by Orpheus to decode tokens to waveform. NOT role-bindable (no capability tag fits a codec) — provides is empty by design; cataloged for inventory completeness, not for binding.",
+    "tools": {
+      "value": false,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared"
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": null,
+      "source": "declared"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": []
+  },
+  "unstructuredio/yolo_x_layout": {
+    "_note": "ON DISK (207M). A YOLOX document-LAYOUT detection model — ingests page images to find blocks/regions (used in doc parsing). Provides vision (image input).",
+    "tools": {
+      "value": false,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared"
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": null,
+      "source": "declared",
+      "note": "vision detection model"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "vision"
+    ]
+  },
+  "qwen3.5-9b-q8:latest": {
+    "_note": "OLLAMA LOCAL chat model. caps (ollama show): completion·tools·thinking. Served via the ollama service (not a vLLM services.json row).",
+    "tools": {
+      "value": true,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "ollama format=json supported; strict grammar-constrained decode UNVERIFIED — probe before relying"
+    },
+    "thinking": {
+      "value": true,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": 262144,
+      "source": "declared",
+      "note": "context length per `ollama show`"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "thinking",
+      "reasoning"
+    ]
+  },
+  "qwen3.6-35b-a3b-iq3s:latest": {
+    "_note": "OLLAMA LOCAL chat model (35B-A3B MoE, iq3_s). caps: completion·tools·thinking.",
+    "tools": {
+      "value": true,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "ollama format=json supported; strict grammar-constrained decode UNVERIFIED — probe before relying"
+    },
+    "thinking": {
+      "value": true,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": 262144,
+      "source": "declared",
+      "note": "context length per `ollama show`"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "thinking",
+      "reasoning"
+    ]
+  },
+  "gemma4-26b-a4b-q3km:latest": {
+    "_note": "OLLAMA LOCAL chat model (Gemma4 26B-A4B, q3_k_m). caps: completion·tools·thinking.",
+    "tools": {
+      "value": true,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "ollama format=json supported; strict grammar-constrained decode UNVERIFIED — probe before relying"
+    },
+    "thinking": {
+      "value": true,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": 262144,
+      "source": "declared",
+      "note": "context length per `ollama show`"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "thinking",
+      "reasoning"
+    ]
+  },
+  "qwen3.6-27b-q3km:latest": {
+    "_note": "OLLAMA LOCAL chat model (27B, q3_k_m). caps: completion·tools·thinking.",
+    "tools": {
+      "value": true,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "ollama format=json supported; strict grammar-constrained decode UNVERIFIED — probe before relying"
+    },
+    "thinking": {
+      "value": true,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": 262144,
+      "source": "declared",
+      "note": "context length per `ollama show`"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "thinking",
+      "reasoning"
+    ]
+  },
+  "nomic-embed-text:latest": {
+    "_note": "OLLAMA LOCAL embedder. caps (ollama show): embedding. Served via the ollama service.",
+    "tools": {
+      "value": false,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared"
+    },
+    "thinking": {
+      "value": false,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": 2048,
+      "source": "declared",
+      "note": "context length per `ollama show`"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "embed"
+    ]
+  },
+  "minimax-m3:cloud": {
+    "_note": "OLLAMA CLOUD reasoner. caps: completion·tools·thinking·vision.",
+    "tools": {
+      "value": true,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "ollama format=json supported; strict grammar-constrained decode UNVERIFIED — probe before relying"
+    },
+    "thinking": {
+      "value": true,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": 524288,
+      "source": "declared",
+      "note": "model context per `ollama show`; CLOUD — no local VRAM slot"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "thinking",
+      "reasoning",
+      "vision"
+    ]
+  },
+  "gemma4:31b-cloud": {
+    "_note": "OLLAMA CLOUD model. caps: completion·thinking·tools·vision.",
+    "tools": {
+      "value": true,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "ollama format=json supported; strict grammar-constrained decode UNVERIFIED — probe before relying"
+    },
+    "thinking": {
+      "value": true,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": 262144,
+      "source": "declared",
+      "note": "model context per `ollama show`; CLOUD — no local VRAM slot"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "thinking",
+      "reasoning",
+      "vision"
+    ]
+  },
+  "nemotron-3-super:cloud": {
+    "_note": "OLLAMA CLOUD reasoner (Nemotron-3-Super). caps: completion·thinking·tools.",
+    "tools": {
+      "value": true,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "ollama format=json supported; strict grammar-constrained decode UNVERIFIED — probe before relying"
+    },
+    "thinking": {
+      "value": true,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": 262144,
+      "source": "declared",
+      "note": "model context per `ollama show`; CLOUD — no local VRAM slot"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "thinking",
+      "reasoning"
+    ]
+  },
+  "deepseek-v4-flash:cloud": {
+    "_note": "OLLAMA CLOUD reasoner (DeepSeek-V4-Flash). caps: completion·tools·thinking. Sibling of the cataloged deepseek-v4-pro:cloud.",
+    "tools": {
+      "value": true,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "ollama format=json supported; strict grammar-constrained decode UNVERIFIED — probe before relying"
+    },
+    "thinking": {
+      "value": true,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": 1048576,
+      "source": "declared",
+      "note": "model context per `ollama show`; CLOUD — no local VRAM slot"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "thinking",
+      "reasoning"
+    ]
+  },
+  "kimi-k2.6:cloud": {
+    "_note": "OLLAMA CLOUD reasoner (Kimi-K2.6). caps: vision·thinking·completion·tools.",
+    "tools": {
+      "value": true,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "ollama format=json supported; strict grammar-constrained decode UNVERIFIED — probe before relying"
+    },
+    "thinking": {
+      "value": true,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": 262144,
+      "source": "declared",
+      "note": "model context per `ollama show`; CLOUD — no local VRAM slot"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "thinking",
+      "reasoning",
+      "vision"
+    ]
+  },
+  "glm-5.1:cloud": {
+    "_note": "OLLAMA CLOUD reasoner (GLM-5.1). caps: thinking·completion·tools.",
+    "tools": {
+      "value": true,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "ollama format=json supported; strict grammar-constrained decode UNVERIFIED — probe before relying"
+    },
+    "thinking": {
+      "value": true,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": 202752,
+      "source": "declared",
+      "note": "model context per `ollama show`; CLOUD — no local VRAM slot"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "thinking",
+      "reasoning"
+    ]
+  },
+  "glm-5:cloud": {
+    "_note": "OLLAMA CLOUD reasoner (GLM-5). caps: thinking·completion·tools.",
+    "tools": {
+      "value": true,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "ollama format=json supported; strict grammar-constrained decode UNVERIFIED — probe before relying"
+    },
+    "thinking": {
+      "value": true,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": 202752,
+      "source": "declared",
+      "note": "model context per `ollama show`; CLOUD — no local VRAM slot"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "thinking",
+      "reasoning"
+    ]
+  },
+  "gemini-3-flash-preview:cloud": {
+    "_note": "OLLAMA CLOUD model (Gemini-3-Flash preview). caps: completion·tools·thinking·vision.",
+    "tools": {
+      "value": true,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "ollama format=json supported; strict grammar-constrained decode UNVERIFIED — probe before relying"
+    },
+    "thinking": {
+      "value": true,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": 1048576,
+      "source": "declared",
+      "note": "model context per `ollama show`; CLOUD — no local VRAM slot"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "thinking",
+      "reasoning",
+      "vision"
+    ]
+  },
+  "qwen3.5:397b-cloud": {
+    "_note": "OLLAMA CLOUD model (Qwen3.5 397B). caps: completion·thinking·tools·vision.",
+    "tools": {
+      "value": true,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "ollama format=json supported; strict grammar-constrained decode UNVERIFIED — probe before relying"
+    },
+    "thinking": {
+      "value": true,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": 262144,
+      "source": "declared",
+      "note": "model context per `ollama show`; CLOUD — no local VRAM slot"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "thinking",
+      "reasoning",
+      "vision"
+    ]
+  },
+  "kimi-k2.5:cloud": {
+    "_note": "OLLAMA CLOUD reasoner (Kimi-K2.5). caps: vision·thinking·completion·tools.",
+    "tools": {
+      "value": true,
+      "source": "declared"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "ollama format=json supported; strict grammar-constrained decode UNVERIFIED — probe before relying"
+    },
+    "thinking": {
+      "value": true,
+      "source": "declared"
+    },
+    "context_ceiling": {
+      "value": 262144,
+      "source": "declared",
+      "note": "model context per `ollama show`; CLOUD — no local VRAM slot"
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "thinking",
+      "reasoning",
+      "vision"
+    ]
   }
 }

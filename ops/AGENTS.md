@@ -67,8 +67,15 @@ Do **not** build duplicate command centers. The right shape (Tim, "one substrate
   GROUNDED in a hard signal (`--runner pooling`→embed · `--tool-call-parser`→tools · `chat_template_nothink`→
   no-think · for the not-yet-served fleet: the model card + `build-prep/brain/embedding-research-2026-06.md`,
   source `declared`), never fabricated. The `rerank` tag was added 2026-06-12 (cross-encoder/late-interaction
-  scorers); `vision` flipped from negative-only to real-provider the same day. Keyless services (clone-TTS +
-  STT ears with no `config.model`) are still not model-id-keyable and are deliberately not invented.
+  scorers); `vision` flipped from negative-only to real-provider the same day. **2026-06-12 the catalog was
+  completed to the FULL on-disk + reachable fleet** (Tim: "all of those other ones actually need to be added"):
+  the voice TTS engines (chatterbox·cosyvoice·xtts·orpheus-variants·qwen3tts-CustomVoice → `tts`), the STT
+  ears (whisper·parakeet·canary·granite → `stt`), the OLLAMA local chat workers + embedder and the OLLAMA
+  CLOUD reasoners (grounded in `ollama show` capabilities), and support models (snac codec → provides `[]`;
+  yolo_x_layout → `vision`). The previously-keyless voice/STT `services.json` rows were given `config.model`
+  (the verified on-disk HF id) so the gpu.py JOIN/residency view resolves them — identity metadata, safe for
+  their non-vLLM custom launchers. `embed-jina-v4`/`embed-pplx` got identity but their serve flags + launch
+  remain UNVERIFIED (marked in the row `_note`); `tts-kokoro`'s on-disk id is still unconfirmed (flagged).
   It owns ONLY model-intrinsic facts — it NEVER stores gpu_util/vram (rule 3); for those
   it **JOINs to `gpu.py`** (`service_key_for(model_id)` matches `config.model`, then `budget_vram`/residency —
   REUSED, never duplicated). Queries: `capabilities_for(model_id)` (the row + the JOIN), `role_can_bind(requires,

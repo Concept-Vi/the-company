@@ -94,10 +94,11 @@ def main():
         check("a vision-requiring role does NOT raise", False, detail=f"raised {e!r}")
     check("the resident 4B (a chat worker) does NOT provide vision",
           cap.role_can_bind({"vision"}, RESIDENT) is False)
-    # fail-loud-by-empty is now demonstrated by stt — on disk but NOT cataloged (keyless services),
-    # so no model provides it → [] rather than a crash.
-    check("an stt-requiring role resolves to [] (fail-loud-by-empty — no cataloged stt provider)",
-          cap.suitable_models({"stt"}) == [], detail=str(cap.suitable_models({"stt"})))
+    # fail-loud-by-empty is demonstrated by an UNSATISFIABLE COMBINATION — no single model is both a
+    # chat worker AND an embedder (the two populations are disjoint) → [] rather than a crash. (This is
+    # durable as the catalog grows: stt now HAS providers, so a single-tag demo would no longer be empty.)
+    check("a {chat,embed}-requiring role resolves to [] (fail-loud-by-empty — disjoint populations)",
+          cap.suitable_models({"chat", "embed"}) == [], detail=str(cap.suitable_models({"chat", "embed"})))
     rerankers = cap.suitable_models({"rerank"})
     check("a rerank-requiring role resolves to the RERANKERS (>=2), not the embedders/chat",
           len(rerankers) >= 2 and RESIDENT not in rerankers, detail=str(rerankers))

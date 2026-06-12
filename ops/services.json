@@ -121,7 +121,11 @@
     "unit": "company-tts-kokoro.service"
    },
    "health": "/health",
-   "vram_mb": 900
+   "vram_mb": 900,
+   "config": {
+    "model": "",
+    "_note": "model-id NOT located on disk (kokoro runs but its weights id is unconfirmed) \u2014 left empty; flag for verification. Not cataloged (no verified id)."
+   }
   },
   "stt-whisper": {
    "group": "voice",
@@ -132,7 +136,10 @@
     "unit": "voicemode-whisper.service"
    },
    "vram_mb": 1500,
-   "note": "the live zero-install on-machine ear; serves the OpenAI-compat route /v1/audio/transcriptions (this build returns 404 for /inference). STT_DEFAULT=whispercpp. Registered in voice/stt.py STT_PROVIDERS."
+   "note": "the live zero-install on-machine ear; serves the OpenAI-compat route /v1/audio/transcriptions (this build returns 404 for /inference). STT_DEFAULT=whispercpp. Registered in voice/stt.py STT_PROVIDERS.",
+   "config": {
+    "model": "mobiuslabsgmbh/faster-whisper-large-v3-turbo"
+   }
   },
   "stt-parakeet": {
    "group": "voice",
@@ -150,7 +157,10 @@
     "port": 2031,
     "vram_mb": 5500
    },
-   "note": "managed as user-unit (flipped from manual 2026-06-06: cgroup teardown is orphan-safe; `company up/down` and voice/lifecycle agree). GPU ear \u2014 VERIFIED RUNNING 2026-06-05 (load\u2192up ~30s, ~5.1 GB resident, transcribes; unload frees). Own NeMo venv (CUDA-13). Live multilingual workhorse \u2192 candidate STT_DEFAULT. See voice/ears/REQUIREMENTS.md."
+   "note": "managed as user-unit (flipped from manual 2026-06-06: cgroup teardown is orphan-safe; `company up/down` and voice/lifecycle agree). GPU ear \u2014 VERIFIED RUNNING 2026-06-05 (load\u2192up ~30s, ~5.1 GB resident, transcribes; unload frees). Own NeMo venv (CUDA-13). Live multilingual workhorse \u2192 candidate STT_DEFAULT. See voice/ears/REQUIREMENTS.md.",
+   "config": {
+    "model": "nvidia/parakeet-tdt-0.6b-v3"
+   }
   },
   "stt-canary": {
    "group": "voice",
@@ -168,7 +178,10 @@
     "port": 2032,
     "vram_mb": 12000
    },
-   "note": "managed as user-unit (flipped from manual 2026-06-06: cgroup teardown is orphan-safe; `company up/down` and voice/lifecycle agree). GPU ear \u2014 heaviest (~10 GB resident, near-OOM); on-demand only, never co-resident with a local brain. Own NeMo venv. English-max + understanding. See voice/ears/REQUIREMENTS.md."
+   "note": "managed as user-unit (flipped from manual 2026-06-06: cgroup teardown is orphan-safe; `company up/down` and voice/lifecycle agree). GPU ear \u2014 heaviest (~10 GB resident, near-OOM); on-demand only, never co-resident with a local brain. Own NeMo venv. English-max + understanding. See voice/ears/REQUIREMENTS.md.",
+   "config": {
+    "model": "nvidia/canary-qwen-2.5b"
+   }
   },
   "stt-granite": {
    "group": "voice",
@@ -186,7 +199,10 @@
     "port": 2033,
     "vram_mb": 6500
    },
-   "note": "managed as user-unit (flipped from manual 2026-06-06: cgroup teardown is orphan-safe; `company up/down` and voice/lifecycle agree). GPU ear \u2014 own transformers venv (COMPANY_GRANITE_DEVICE=cpu dodges the GPU hazard). Compact top-accuracy cross-check. See voice/ears/REQUIREMENTS.md."
+   "note": "managed as user-unit (flipped from manual 2026-06-06: cgroup teardown is orphan-safe; `company up/down` and voice/lifecycle agree). GPU ear \u2014 own transformers venv (COMPANY_GRANITE_DEVICE=cpu dodges the GPU hazard). Compact top-accuracy cross-check. See voice/ears/REQUIREMENTS.md.",
+   "config": {
+    "model": "ibm-granite/granite-4.0-1b-speech"
+   }
   },
   "tts-chatterbox": {
    "group": "voice",
@@ -204,7 +220,10 @@
     "port": 4124,
     "vram_mb": 3800
    },
-   "note": "trial engine (persona Viv). Clones COMPANY_VOICE_REF. ~3.4 GB. See voice/engines/REQUIREMENTS.md."
+   "note": "trial engine (persona Viv). Clones COMPANY_VOICE_REF. ~3.4 GB. See voice/engines/REQUIREMENTS.md.",
+   "config": {
+    "model": "ResembleAI/chatterbox"
+   }
   },
   "tts-orpheus": {
    "group": "voice",
@@ -256,7 +275,8 @@
     "device": "cuda:0",
     "_engine": true,
     "_nonvllm": true,
-    "_note": "CosyVoice2-0.5B own repo \u2014 fixed footprint (vram_mb, no gpu_util). voice = persona voice_description (inference_instruct2)."
+    "_note": "CosyVoice2-0.5B own repo \u2014 fixed footprint (vram_mb, no gpu_util). voice = persona voice_description (inference_instruct2).",
+    "model": "FunAudioLLM/Fun-CosyVoice3-0.5B-2512"
    }
   },
   "tts-xtts": {
@@ -275,7 +295,10 @@
     "port": 4127,
     "vram_mb": 2500
    },
-   "note": "trial engine (persona Wren). Clones COMPANY_VOICE_REF; NON-COMMERCIAL license. ~2 GB. See voice/engines/REQUIREMENTS.md."
+   "note": "trial engine (persona Wren). Clones COMPANY_VOICE_REF; NON-COMMERCIAL license. ~2 GB. See voice/engines/REQUIREMENTS.md.",
+   "config": {
+    "model": "coqui/XTTS-v2"
+   }
   },
   "tts-qwen3tts": {
    "group": "voice",
@@ -340,7 +363,11 @@
    "health": "/v1/models",
    "serve": "~/vllm-tests/serve_jina_v4.sh",
    "vram_mb": 8000,
-   "note": "CUSTOM server \u2014 NOT config-driven. vLLM lacks jina-v4 support, so it runs serve_jina_v4.py (raw transformers) in the jina-v4-env venv via serve_jina_v4.sh. Leave script-based."
+   "note": "CUSTOM server \u2014 NOT config-driven. vLLM lacks jina-v4 support, so it runs serve_jina_v4.py (raw transformers) in the jina-v4-env venv via serve_jina_v4.sh. Leave script-based.",
+   "config": {
+    "model": "jinaai/jina-embeddings-v4",
+    "_note": "identity set 2026-06-12 (was empty placeholder). SERVE FLAGS + launch UNVERIFIED \u2014 jina-v4 is multimodal; confirm vLLM --runner pooling serves it before `company up`."
+   }
   },
   "embed-pplx": {
    "group": "models",
@@ -353,7 +380,11 @@
    "health": "/health",
    "serve": "~/company/ops/serve_pplx_embed.sh",
    "vram_mb": 8200,
-   "note": "CUSTOM server \u2014 NOT config-driven (like embed-jina-v4). Arch PPLXQwen3Model / model_type bidirectional_pplx_qwen3 is remote-code (trust_remote_code, auto_map\u2192modeling.PPLXQwen3ContextualModel); vLLM 0.21 has no such arch (verified: absent from 356 supported archs, `vllm serve` fails at load_model) \u2192 runs ops/serve_pplx_embed.py (raw transformers) in ~/vllm-env via serve_pplx_embed.sh. OpenAI-compat POST /v1/embeddings; dim=2560; output is INT8 + UNNORMALIZED \u2014 compare via COSINE (model card). Contextual late-chunking model: flat `input` strings are embedded as single-chunk docs; optional `documents` (list[list[str]]) gives native per-chunk contextual embeddings. dtype bfloat16 (~8GB) \u2014 the card stores fp32. Interim transcript-search embedder (throwaway); ~10GB load authorized by Tim. Leave script-based."
+   "note": "CUSTOM server \u2014 NOT config-driven (like embed-jina-v4). Arch PPLXQwen3Model / model_type bidirectional_pplx_qwen3 is remote-code (trust_remote_code, auto_map\u2192modeling.PPLXQwen3ContextualModel); vLLM 0.21 has no such arch (verified: absent from 356 supported archs, `vllm serve` fails at load_model) \u2192 runs ops/serve_pplx_embed.py (raw transformers) in ~/vllm-env via serve_pplx_embed.sh. OpenAI-compat POST /v1/embeddings; dim=2560; output is INT8 + UNNORMALIZED \u2014 compare via COSINE (model card). Contextual late-chunking model: flat `input` strings are embedded as single-chunk docs; optional `documents` (list[list[str]]) gives native per-chunk contextual embeddings. dtype bfloat16 (~8GB) \u2014 the card stores fp32. Interim transcript-search embedder (throwaway); ~10GB load authorized by Tim. Leave script-based.",
+   "config": {
+    "model": "perplexity-ai/pplx-embed-v1-0.6b",
+    "_note": "identity set 2026-06-12 (was empty placeholder; chose the 0.6b small variant \u2014 context-4b is the heavy doc-aware sibling). SERVE FLAGS + launch UNVERIFIED \u2014 pplx is a diffusion-pretrained arch; confirm vLLM servability before `company up`."
+   }
   },
   "embed-jina-v5": {
    "group": "models",
@@ -562,16 +593,16 @@
     "type": "user-unit",
     "unit": "company-agent-sessions-exporter.timer"
    },
-   "note": "F1.4 transcript memory. Managed unit = the TIMER (`company up agent-sessions-exporter` arms it; the oneshot .service fires every 20 min). READ-ONLY on ~/.claude; filter law + redaction in ops/agent_sessions_exporter.py. Timer is WantedBy=company.target so it rises/falls with the Company (no orphan). The SECOND stage of the transcript-search circuit (export → reindex) is `claude-sessions-reindex`."
+   "note": "F1.4 transcript memory. Managed unit = the TIMER (`company up agent-sessions-exporter` arms it; the oneshot .service fires every 20 min). READ-ONLY on ~/.claude; filter law + redaction in ops/agent_sessions_exporter.py. Timer is WantedBy=company.target so it rises/falls with the Company (no orphan). The SECOND stage of the transcript-search circuit (export \u2192 reindex) is `claude-sessions-reindex`."
   },
   "claude-sessions-reindex": {
    "group": "jobs",
-   "title": "Reindex beat — substrate DELTA reindex of claude-sessions after each export (~5 min offset)",
+   "title": "Reindex beat \u2014 substrate DELTA reindex of claude-sessions after each export (~5 min offset)",
    "manage": {
     "type": "user-unit",
     "unit": "company-claude-sessions-reindex.timer"
    },
-   "note": "INTERIM transcript-search (throwaway; Tim is building the real memory system elsewhere). The SECOND beat of the circuit: Claude jsonl → [agent-sessions-exporter] → corpus markdown → [this] → searchable index. Managed unit = the TIMER (WantedBy=company.target; fires *:05/20, ~5 min after the exporter's *:00/20). The oneshot .service runs ops/claude_sessions_reindex.py in the substrate venv (obsidian-overlord/.venv). CHEAP-BY-DESIGN: compares the corpus' newest .md mtime + file count against ~/corpora/claude-sessions/.reindex_marker.json and EXITS doing nothing (no model load, no GPU) when nothing changed — the common case. When transcripts changed it runs a substrate DELTA scan (sha256 skips unchanged files) of the `claude-sessions` vault embedded by the `embed-pplx` service into an ISOLATED state dir (~/.cache/company/substrate-claude-sessions, separate from the bge-m3 substrate). FAIL LOUD: if files changed but embed-pplx is DOWN it exits non-zero and leaves the marker stale so the next fire retries (`company up embed-pplx` first, or it can self-ensure with --ensure-embedder). Search face: ops/wire_substrate_claude_sessions.py search / ops/transcript_search.py (numpy fallback)."
+   "note": "INTERIM transcript-search (throwaway; Tim is building the real memory system elsewhere). The SECOND beat of the circuit: Claude jsonl \u2192 [agent-sessions-exporter] \u2192 corpus markdown \u2192 [this] \u2192 searchable index. Managed unit = the TIMER (WantedBy=company.target; fires *:05/20, ~5 min after the exporter's *:00/20). The oneshot .service runs ops/claude_sessions_reindex.py in the substrate venv (obsidian-overlord/.venv). CHEAP-BY-DESIGN: compares the corpus' newest .md mtime + file count against ~/corpora/claude-sessions/.reindex_marker.json and EXITS doing nothing (no model load, no GPU) when nothing changed \u2014 the common case. When transcripts changed it runs a substrate DELTA scan (sha256 skips unchanged files) of the `claude-sessions` vault embedded by the `embed-pplx` service into an ISOLATED state dir (~/.cache/company/substrate-claude-sessions, separate from the bge-m3 substrate). FAIL LOUD: if files changed but embed-pplx is DOWN it exits non-zero and leaves the marker stale so the next fire retries (`company up embed-pplx` first, or it can self-ensure with --ensure-embedder). Search face: ops/wire_substrate_claude_sessions.py search / ops/transcript_search.py (numpy fallback)."
   }
  }
 }
