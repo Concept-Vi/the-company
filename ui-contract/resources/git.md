@@ -105,7 +105,7 @@ consequences:
     evidence: "[[session#op: session.watch]] (the turn's text/tool frames carry the git output); there is no company `git.result` event — the outcome is behavioural/transcript-shaped"
 correlate: [session]
 verification:
-  git-ops: {state: unverified, note: "no company git face — native Bash git under [[permission]]"}
+  git-read: {state: live-verified, run: "LEAD PROVE-BATCH 2026-06-12: GET /api/dev/git?op=get&act=status → bridge → config_writer (R3, :8772) → ran /usr/bin/git status --porcelain=v1 -b, exit 0, real stdout (## main...origin/main, modified files). The full R3 rail (bridge→config_writer→native git→structured result) works end-to-end.", date: 2026-06-12, note: "PROVEN-BY-USE (lead). Supersedes the stale 'no company git face' claim — the ③④⑤ dev_bridges build added the dev.git R3 face. Writes (commit/pr/worktree) ride the same proven rail behind the consent beat; reads proven live. This is the headline proof that the R3 config/dev/mcp rail is real, not just wired."}
 ```
 ### Description (purpose-free)
 The everyday git workflow a session performs: stage and commit with a generated message, create a
