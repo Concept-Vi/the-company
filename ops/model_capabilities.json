@@ -533,7 +533,7 @@
     ]
   },
   "perplexity-ai/pplx-embed-context-v1-4b": {
-    "_note": "ON DISK (25G full-precision), NOT yet served. A DOCUMENT-AWARE text embedder (2560-dim, MIT, native compression like its 0.6b sibling) — the 'context' variant embeds each passage CONDITIONED on the full surrounding document (the productized form of late chunking). Role: the company-data future (contracts, decks) where surrounding-context filing beats isolated-chunk. Replaced the redundant Qwen3-Embedding-4B as the mid-tier clerk.",
+    "_note": "ON DISK (25G). SERVED via a CUSTOM transformers server (services.json embed-pplx -> ops/serve_pplx_embed.py; vLLM 0.21 can't load its PPLXQwen3 arch) — the LIVE transcript-search embedder (wired+verified by the retrieval session 2026-06-12). A DOCUMENT-AWARE text embedder (2560-dim, INT8 + unnormalized -> compare via cosine, MIT, native compression). The 'context' variant embeds each passage conditioned on the full surrounding document (late chunking). Replaced the redundant Qwen3-Embedding-4B as the mid-tier clerk.",
     "tools": {
       "value": false,
       "source": "declared",
@@ -603,7 +603,7 @@
     ]
   },
   "jinaai/jina-embeddings-v4": {
-    "_note": "ON DISK (7.4G), NOT yet served — services.json embed-jina-v4 is a placeholder (config.model empty). A MULTIMODAL embedder (3.8B) with text/image/code adapters → provides embed AND vision. Per the research it scores BELOW jina-code-0.5b on code and is largely superseded by Qwen3-VL-Embedding-2B for the visual lane; cataloged for completeness (it is on disk).",
+    "_note": "ON DISK (7.4G). SERVED via a CUSTOM transformers server (services.json embed-jina-v4 -> serve_jina_v4.py; vLLM lacks jina-v4 support). A MULTIMODAL embedder (3.8B) with text/image/code adapters -> provides embed AND vision. Per the research it scores BELOW jina-code-0.5b on code and is largely superseded by Qwen3-VL-Embedding-2B for the visual lane; kept as the cataloged multimodal embedder it already serves as.",
     "tools": {
       "value": false,
       "source": "declared",
