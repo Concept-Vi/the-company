@@ -1279,7 +1279,7 @@ class SessionSupervisor:
         Always returns True (consumed): every failure is a terminal teaching reply to the sender,
         never a head-of-line hold (the target's liveness cannot unblock a bad point spec)."""
         from runtime.session_pointintime import PointError, materialize_at_point, \
-            materialized_registry_record
+            materialized_registry_record, resume_cwd_for
         src_rec = self.store.load_agent_session(target)
         if not src_rec or not (isinstance(src_rec.get("jsonl_path"), str) and src_rec.get("jsonl_path")):
             self._mail_error(rec, f"at-launch needs the target's transcript: session://{target} has "
@@ -1295,7 +1295,17 @@ class SessionSupervisor:
             return True
         with self.lock:
             self._cap_check(copies)
-        cwd = src_rec.get("cwd") or self._cwd_for(target, rec)
+        # The resume cwd is the one that ENCODES to the transcript's project dir — NEVER trusted
+        # from the record alone: per-event cwd DRIFTS as a session cd's around (measured on the
+        # 41-boundary session: record says /home/tim/vllm-tests, project dir is -home-tim), and a
+        # --resume in the wrong cwd cannot find the session. resume_cwd_for validates candidates
+        # by re-encoding and refuses-teaching if none fit (rule 4 — no silent wrong-dir spawn).
+        try:
+            cwd = resume_cwd_for(src_rec["jsonl_path"], rec.get("cwd"), src_rec.get("cwd"),
+                                 self._cwd_for(target, rec))
+        except PointError as e:
+            self._mail_error(rec, str(e))
+            return True
         for i in range(copies):
             try:
                 report = materialize_at_point(src_rec["jsonl_path"], at, source_sid=target)

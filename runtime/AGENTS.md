@@ -173,6 +173,28 @@ the `usage` block off `agent_sessions.turn` on events.jsonl via a usage-emitting
 `planned`→`building` carry an honest **live-verify pending (lead)** note: confirming a flag actually TOOK
 (e.g. the chosen model ran, read off `system/init`) needs a REAL spawn — the lead's slice, never green-painted.
 
+## Point-in-time launch (Session Fabric R3.3/R3.4 · `runtime/session_pointintime.py`)
+
+View any session's life as a navigable COMPACTION TIMELINE and launch/message it AS IT WAS at any
+chosen moment. The library is PURE (no process spawn, no event emit — the supervisor consumes it):
+`parse_point` ("compact:N" · "uuid:<uuid>" · "ts:<iso>") · `build_timeline` (one streaming pass;
+payload boundary-copies deduped by uuid+preserved-set membership — the real 41-line session is 38
+REAL compactions; both measured post-compact-head eras cut correctly) · `materialize_at_point` (the
+NATIVE fork transform — Atlas session-storage.md sessionId-rewrite + uuid-remap, here deterministic
+uuid5 + forkedFrom provenance — applied to the transcript's append-only PREFIX at the cut; ONE new
+file beside the source, tmp+atomic, overwrite-refused, source re-stat'd fail-loud; full-field value
+remap so uuids quoted in prose are never mutated) · `verify_materialized` (append-order chain walk —
+duplicate uuids from preserved re-appends make a naive parent map cyclic) · `resume_cwd_for` (the
+drifted-cwd guard: per-event cwd wanders as sessions cd; only a cwd that ENCODES to the project dir
+can resume — validate by re-encoding, refuse-teaching). Seams: `Suite.agent_session_timeline`
+(cached record `agent_sessions/timeline/<sid>.json`) · face `sessions(op='timeline')` +
+`session_post(at=…)` (wake/consult only; bounds refuse at post time) · supervisor `_at_launch`
+(materialize → register with `materialized_from/at/cut_uuid` provenance → spawn `--resume <copy>` →
+inject; consult fans N independent copies). Teeth: `tests/session_pointintime_acceptance.py` (40).
+What would violate it: writing into an EXISTING catalog file (the law is additive-only on
+`~/.claude`); inventing an event kind for provenance (the record carries it); marking the live
+resume-at-point probe green without the lead actually running it.
+
 ## The ③④⑤ command-wrapper layer — REMOVED (Session Fabric R1.4, 2026-06-13)
 
 `runtime/capability_handlers/` (the config/dev/auto handler families + HANDLERS registry + reduction

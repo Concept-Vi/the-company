@@ -368,9 +368,22 @@ def register(mcp, suite):
             # T1 second-writer danger does not exist on this path.
             from runtime.session_pointintime import PointError, parse_point
             try:
-                parse_point(at.strip())
+                pt = parse_point(at.strip())
             except PointError as e:
                 raise ValueError(f"session_post: at={at!r} refused — {e}")
+            if pt["kind"] == "compact" and callable(getattr(suite, "agent_session_timeline", None)):
+                # BOUNDS bite at POST time, not in the mailbox: the cached timeline makes this
+                # nearly free, and a compact:N beyond the session's life should teach HERE (the
+                # supervisor re-resolves at launch anyway — two honest layers, same vocabulary).
+                try:
+                    tl = suite.agent_session_timeline(sid)
+                except ValueError:
+                    tl = None              # no transcript yet/registered-live — supervisor's layer teaches
+                if tl is not None and pt["n"] > len(tl.get("boundaries", [])):
+                    raise ValueError(
+                        f"session_post: at='compact:{pt['n']}' refused — {_addr(sid)} has "
+                        f"{len(tl.get('boundaries', []))} compaction points "
+                        f"(sessions(op='timeline', session=…) lists them with timestamps).")
             if verb == "deliver":
                 raise ValueError(
                     "session_post: at= cannot ride verb='deliver' — a tip-injection cannot "

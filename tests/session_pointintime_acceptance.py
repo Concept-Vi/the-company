@@ -243,6 +243,31 @@ def main():
               and rec["materialized_at_point"] == "compact:1"
               and rec["jsonl_path"] == rep1["new_path"] and rec["cwd"] == "/home/tim")
 
+        # ── the resume-cwd resolver (the measured drifted-cwd hazard) ──
+        from runtime.session_pointintime import encode_project_dir, resume_cwd_for
+        realish = os.path.join(tmp, "-home-tim")
+        os.makedirs(realish, exist_ok=True)
+        fake_jsonl = os.path.join(realish, "x.jsonl")
+        open(fake_jsonl, "w").close()
+        check("resume_cwd_for picks the candidate that ENCODES to the project dir (drifted "
+              "record cwd rejected)",
+              resume_cwd_for(fake_jsonl, "/home/tim/vllm-tests", "/home/tim") == "/home/tim")
+        check("resume_cwd_for falls back to the naive decode when no candidate fits "
+              "(/home/tim exists + re-encodes)",
+              resume_cwd_for(fake_jsonl, "/somewhere/else") == "/home/tim")
+        unresolvable = os.path.join(tmp, "proj-that-encodes-nothing")
+        os.makedirs(unresolvable, exist_ok=True)
+        bad_jsonl = os.path.join(unresolvable, "y.jsonl")
+        open(bad_jsonl, "w").close()
+        try:
+            resume_cwd_for(bad_jsonl, "/somewhere/else")
+            raise AssertionError("FAIL: unresolvable project dir should refuse")
+        except PointError as e:
+            check("resume_cwd_for REFUSES-teaching when no cwd can encode to the project dir "
+                  "(never a silent wrong-dir spawn)", "cannot resolve" in str(e))
+        check("encode_project_dir: '/' and '.' both encode to '-' (measured rule)",
+              encode_project_dir("/home/tim/.claude") == "-home-tim--claude")
+
         # ── adversarial: verify_materialized actually BITES (not a rubber stamp) ──
         bad_path = os.path.join(tmp, "cccccccc-1111-2222-3333-444444444444.jsonl")
         shutil.copyfile(rep1["new_path"], bad_path)
@@ -301,7 +326,11 @@ for line in sys.stdin:
         store_dir = os.path.join(tmp2, "store")
         argv_dir = os.path.join(tmp2, "argv")
         os.makedirs(argv_dir)
-        proj = os.path.join(tmp2, "proj")
+        # the project dir is NAMED AS THE REAL CATALOG NAMES IT — the encoded cwd ('/' and '.'
+        # → '-'): the supervisor's resume_cwd_for VALIDATES candidates by re-encoding against
+        # this name, so the fixture must mirror the real layout or the (correct) refusal fires.
+        from runtime.session_pointintime import encode_project_dir
+        proj = os.path.join(tmp2, encode_project_dir(tmp2))
         os.makedirs(proj)
         src2 = make_fixture(proj)
         src2_sha = sha(src2)

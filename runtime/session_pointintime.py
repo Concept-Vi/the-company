@@ -475,6 +475,38 @@ def verify_materialized(report: dict) -> dict:
             "cut_uuid_old": cut_uuid_old}
 
 
+def encode_project_dir(cwd: str) -> str:
+    """A cwd → its ~/.claude/projects/<encoded> directory name. VERIFIED encoding (measured against
+    the real catalog 2026-06-12): '/' → '-' and '.' → '-' (e.g. /home/tim/.claude/plugins/cache/
+    superpowers-marketplace/episodic-memory/1.0.15 → -home-tim--claude-plugins-cache-superpowers-
+    marketplace-episodic-memory-1-0-15). Dashes pass through, which makes DECODING ambiguous —
+    so resolution below VALIDATES candidates by re-encoding, never trusts a decode."""
+    return cwd.replace("/", "-").replace(".", "-")
+
+
+def resume_cwd_for(jsonl_path: str, *candidates) -> str:
+    """The cwd a `claude --resume` MUST run in for this transcript to be found: one that ENCODES to
+    the transcript's project directory name. MEASURED HAZARD (the 41-boundary session): per-event
+    `cwd` DRIFTS as a session cd's around (/home/tim/vllm-tests at line 0 → /home/tim → …), and the
+    importer's record can carry a drifted value — resuming with it lands in the WRONG project dir
+    ('No conversation found'). The project dir itself is the ground truth. Resolution: the first
+    candidate whose encoding matches → else the naive dash→slash decode IF it exists on disk and
+    re-encodes correctly → else a TEACHING refusal naming the mismatch (never a silent wrong-dir
+    spawn)."""
+    proj = os.path.basename(os.path.dirname(os.path.abspath(jsonl_path)))
+    for c in candidates:
+        if isinstance(c, str) and c.strip() and encode_project_dir(c.strip()) == proj:
+            return c.strip()
+    naive = proj.replace("-", "/")
+    if naive.startswith("/") and os.path.isdir(naive) and encode_project_dir(naive) == proj:
+        return naive
+    raise PointError(
+        f"cannot resolve the resume cwd for project dir {proj!r}: no candidate cwd "
+        f"({[c for c in candidates if c]}) encodes to it, and the naive decode "
+        f"({naive!r}) is not a directory. A --resume in the wrong cwd cannot find the session — "
+        f"pass an explicit cwd on the intent (the sender's registry hint).")
+
+
 def materialized_registry_record(report: dict, source_record: dict | None = None,
                                  *, registered_by: str = "") -> dict:
     """The registry record for a materialized session (schema-additive on the importer's shape —
