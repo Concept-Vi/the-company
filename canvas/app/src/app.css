@@ -1803,3 +1803,37 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
 
 /* desktop: the mobile bar does not exist (the one-bar regime is the PHONE face only) */
 @media (min-width: 700px){ .m-topbar{display:none} }
+
+/* ── THE LATTICE (the universal projection — Tim Geldard's equation) ─────────────────────────
+   The stores as points: kind=angle (sector registry), time=radius from NOW (centre), zoom expands
+   the recent inner rings. Covers the canvas like review; the same component IS both faces — the
+   canvas scales, the card docks bottom on phones. */
+.lattice-wrap { position: fixed; inset: 0; z-index: 600; background: var(--bg, #0d1117);
+  touch-action: none; }
+.lattice-wrap canvas { display: block; }
+.lattice-err { position: fixed; inset: 0; z-index: 600; display: grid; place-items: center;
+  background: var(--bg, #0d1117); color: var(--ink, #c9d1d9); font: 13px ui-monospace, monospace; }
+.lattice-foot { position: absolute; left: 12px; bottom: 10px; right: 12px; display: flex;
+  justify-content: space-between; align-items: center; gap: 12px; pointer-events: none;
+  color: var(--ink-dim, #8b949e); font: 11px ui-monospace, monospace; }
+.lattice-foot .lattice-zoom { pointer-events: auto; display: flex; align-items: center; gap: 6px; }
+.lattice-foot input[type=range] { width: 130px; accent-color: var(--accent, #d4a017); }
+.lattice-card { position: absolute; top: 56px; right: 12px; width: min(340px, calc(100vw - 24px));
+  background: var(--panel, #161b22); border: 1px solid var(--line, #30363d); border-radius: 10px;
+  padding: 10px 12px; color: var(--ink, #c9d1d9); font: 12px ui-monospace, monospace;
+  box-shadow: 0 8px 24px rgba(0,0,0,.45); }
+.lattice-card .lc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.lattice-card .lc-sector { color: var(--accent, #d4a017); font-weight: 600; }
+.lattice-card .lc-kind { color: var(--ink-dim, #8b949e); }
+.lattice-card .lc-x { margin-left: auto; background: none; border: none; color: var(--ink-dim, #8b949e);
+  cursor: pointer; font-size: 14px; padding: 2px 6px; }
+.lattice-card .lc-sum { margin: 4px 0; line-height: 1.45; }
+.lattice-card .lc-addr { color: var(--ink-dim, #8b949e); word-break: break-all; margin: 4px 0; }
+.lattice-card .lc-meta { color: var(--ink-dim, #8b949e); margin-top: 6px; }
+@media (max-width: 699px) {
+  /* phone face: the detail card docks as a bottom sheet above the foot; the foot lifts clear */
+  .lattice-card { top: auto; bottom: 52px; left: 10px; right: 10px; width: auto; }
+  .lattice-foot { bottom: 8px; }
+  .lattice-wrap { z-index: 350; top: 44px; } /* UNDER the m-topbar (360): the one bar stays
+                                       reachable — the escape hatch is law on phones */
+}

@@ -53,6 +53,7 @@ import { CognitionView } from './regions/CognitionView'
 import { Review } from './regions/Review'
 import { WireRequest } from './components/WireRequest'
 import { api, MODES } from './api'
+import LatticeView from './regions/LatticeView'
 
 
 // THE MOBILE TOP BAR (Tim, 2026-06-11: "it should just be one bar... I don't care if you need to
@@ -60,7 +61,7 @@ import { api, MODES } from './api'
 // EVERYTHING else leaves the top: the desktop toolbar + view-switch render INSIDE the tools sheet
 // (reuse-don't-parallel: same buttons, same handlers, stacked + labeled by CSS), the greeting pill
 // is desktop-only. Nothing overlaps because nothing else is THERE.
-function MobileTopBar({ view, setView }: { view: 'canvas' | 'review', setView: (v: 'canvas' | 'review') => void }) {
+function MobileTopBar({ view, setView }: { view: 'canvas' | 'review' | 'lattice', setView: (v: 'canvas' | 'review' | 'lattice') => void }) {
   const { now, changeMode } = useApp() as any
   const [tools, setTools] = useState(false)
   const pending = now?.surfaced_pending || 0
@@ -82,6 +83,7 @@ function MobileTopBar({ view, setView }: { view: 'canvas' | 'review', setView: (
           <div className="m-tools-ws">
             <button className={'b ghost' + (view === 'canvas' ? ' on' : '')} onClick={() => setView('canvas')}>▦ canvas workspace</button>
             <button className={'b ghost' + (view === 'review' ? ' on' : '')} onClick={() => setView('review')}>▤ design review</button>
+            <button className={'b ghost' + (view === 'lattice' ? ' on' : '')} onClick={() => setView('lattice')}>◎ lattice</button>
           </div>
           <Toolbar />
         </div>
@@ -172,7 +174,7 @@ function Hud() {
   // (and every region) is literally the same machinery in both. The tldraw board keeps running underneath
   // either way (App() owns <Tldraw>); in 'review' we simply don't render the canvas shell over it and the
   // Review view covers it. Minimal by design — no router, just a mode + a switch chip.
-  const [view, setView] = useState<'canvas' | 'review'>('canvas')
+  const [view, setView] = useState<'canvas' | 'review' | 'lattice'>('canvas')
   // G-57 · PHONE: a CONSEQUENTIAL offer (the B2 interactive proposal — build/panel/extend) lands in the RHM
   // chat, but on phone the chat is a bottom-sheet hidden unless the 'rhm' tab is raised — so a fresh
   // consequential offer could be MISSED. When `ctrl.proposal.interactive` flips true (the registry-truth flag
@@ -221,6 +223,7 @@ function Hud() {
       <div className="view-switch" data-ui-ref="ui://view-switch">
         <button className={view === 'canvas' ? 'on' : ''} onClick={() => setView('canvas')} title="the operating canvas">◧ canvas</button>
         <button className={view === 'review' ? 'on' : ''} onClick={() => setView('review')} title="review the design mockups with the right-hand-man">▦ review</button>
+        <button className={view === 'lattice' ? 'on' : ''} onClick={() => setView('lattice')} title="the universal projection — the stores as points: kind=angle, time=radius from now">◎ lattice</button>
         {/* settings reachable from the REVIEW view too (the canvas toolbar gear is hidden when reviewing) —
            the SAME consolidated Settings surface (model · persona · modes · voice · roles). Tim: change the
            RHM model from where you are, without switching back to the canvas. */}
@@ -236,14 +239,23 @@ function Hud() {
           <Review />
         </PanelErrorBoundary>
       )}
+      {/* THE LATTICE — the universal projection (Tim Geldard's equation): the stores rendered as
+         exactly-the-same-points for free. Covers the canvas when active, same as review. */}
+      {view === 'lattice' && (
+        <PanelErrorBoundary name="lattice">
+          <LatticeView />
+        </PanelErrorBoundary>
+      )}
       {/* The top-level layout shell — one grid container, not absolute-px islands. The `canvas` cell is
          transparent + pointer-events:none so the tldraw board underneath stays interactive.
          F2: data-mtab = the active mobile sheet; data-bp on the breakpoints does the column/row collapse.
          Hidden in 'review' so the canvas chrome doesn't bleed over the review workspace. */}
-      <div className="app-shell" data-mtab={mobileTab} style={view === 'review' ? { display: 'none' } : undefined}>
+      {/* the ONE BAR lives OUTSIDE the shell: it is the phone's escape hatch and must survive
+         EVERY view (lattice/review hide the shell; the bar never hides — the point-mode lesson). */}
+      <MobileTopBar view={view} setView={setView} />
+      <div className="app-shell" data-mtab={mobileTab} style={view !== 'canvas' ? { display: 'none' } : undefined}>
         {/* F2: as-rail/as-panel get .as-sheet so that at <699px they become bottom-sheets the tabbar toggles
            (instead of fixed-px islands that overlap the canvas). Above 699px .as-sheet is inert. */}
-        <MobileTopBar view={view} setView={setView} />
         <div className="as-top"><Toolbar /></div>
         <div className="as-rail as-sheet"><Palette /></div>
         {/* the canvas cell is a passthrough — the tldraw board renders behind the shell; overlays that must
