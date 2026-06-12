@@ -243,7 +243,7 @@ function Hud() {
          exactly-the-same-points for free. Covers the canvas when active, same as review. */}
       {view === 'lattice' && (
         <PanelErrorBoundary name="lattice">
-          <LatticeView />
+          <LatticeView onHandoff={() => { setView('canvas'); setMobileTab('builder') }} />
         </PanelErrorBoundary>
       )}
       {/* The top-level layout shell — one grid container, not absolute-px islands. The `canvas` cell is

@@ -1837,3 +1837,22 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
   .lattice-wrap { z-index: 350; top: 44px; } /* UNDER the m-topbar (360): the one bar stays
                                        reachable — the escape hatch is law on phones */
 }
+
+/* the lattice selection verbs (S5 — the forager seam: sculpt a set → hand to builder) */
+.lattice-card .lc-pick { margin-top: 8px; width: 100%; background: none; cursor: pointer;
+  border: 1px solid var(--line, #30363d); border-radius: 7px; padding: 6px 8px;
+  color: var(--accent, #d4a017); font: 11px ui-monospace, monospace; }
+.lattice-card .lc-pick:hover { border-color: var(--accent, #d4a017); }
+.lattice-set { position: absolute; top: 12px; left: 12px; display: flex; align-items: center;
+  gap: 10px; background: var(--panel, #161b22); border: 1px solid var(--accent, #d4a017);
+  border-radius: 9px; padding: 7px 11px; color: var(--ink, #c9d1d9);
+  font: 12px ui-monospace, monospace; box-shadow: 0 6px 20px rgba(0,0,0,.45); }
+.lattice-set .ls-n { color: var(--accent, #d4a017); font-weight: 600; }
+.lattice-set .ls-go { background: var(--accent, #d4a017); color: #161b22; border: none;
+  border-radius: 6px; padding: 5px 10px; cursor: pointer; font: 600 12px ui-monospace, monospace; }
+.lattice-set .ls-clear { background: none; border: none; color: var(--ink-dim, #8b949e);
+  cursor: pointer; font: 11px ui-monospace, monospace; }
+@media (max-width: 699px) {
+  /* phone: the set bar sits just under the one-bar, the detail card docks bottom (already) */
+  .lattice-set { top: 52px; left: 10px; right: 10px; }
+}

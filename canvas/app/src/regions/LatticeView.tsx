@@ -21,13 +21,15 @@ const token = (name: string, fall: string) =>
     ? getComputedStyle(document.documentElement).getPropertyValue(name).trim()
     : '') || fall
 
-export default function LatticeView() {
+export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   const wrapRef = useRef<HTMLDivElement | null>(null)
   const cvsRef = useRef<HTMLCanvasElement | null>(null)
   const [proj, setProj] = useState<Projection | null>(null)
   const [picked, setPicked] = useState<ProjPoint | null>(null)
+  const [sel, setSel] = useState<ProjPoint[]>([])   // the accumulating working set (forager: sculpt → hand to builder)
   const [zoom, setZoom] = useState(1)        // radial magnification — inner rings (recent) expand
   const [err, setErr] = useState('')
+  const inSel = (p: ProjPoint) => sel.some(s => s.seq === p.seq)
 
   useEffect(() => {
     fetch('/api/projection')
@@ -71,13 +73,19 @@ export default function LatticeView() {
       g.fillText(s.label, cx + Math.sin(mid) * lr, cy - Math.cos(mid) * lr + 4)
     }
     // The points — exactly the same points, drawn where they already are.
+    const selSeqs = new Set(sel.map(s => s.seq))
     for (const p of proj.points) {
       const rr = Math.pow(p.r, 1 / zoom) * R
       const x = cx + Math.sin(p.theta) * rr, y = cy - Math.cos(p.theta) * rr
       const hue = (p.theta * 180) / Math.PI            // color IS angle
+      const chosen = selSeqs.has(p.seq)
       g.globalAlpha = p === picked ? 1 : 0.75
       g.fillStyle = p === picked ? accent : `hsl(${hue}deg 55% 58%)`
       g.beginPath(); g.arc(x, y, p === picked ? 5 : 2.1, 0, Math.PI * 2); g.fill()
+      if (chosen) {  // the working set rings — what will ride into the builder
+        g.globalAlpha = 0.95; g.strokeStyle = accent; g.lineWidth = 1.5
+        g.beginPath(); g.arc(x, y, 6, 0, Math.PI * 2); g.stroke()
+      }
     }
     // NOW — the centre, the one shared point of time.
     g.globalAlpha = 1; g.fillStyle = accent
@@ -85,7 +93,7 @@ export default function LatticeView() {
     g.strokeStyle = accent; g.globalAlpha = 0.4
     g.beginPath(); g.arc(cx, cy, 9, 0, Math.PI * 2); g.stroke()
     g.globalAlpha = 1
-  }, [proj, picked, zoom])
+  }, [proj, picked, zoom, sel])
 
   useEffect(() => { draw() }, [draw])
   useEffect(() => {
@@ -116,6 +124,19 @@ export default function LatticeView() {
     return hrs < 6 ? 'night' : hrs < 12 ? 'morning' : hrs < 18 ? 'afternoon' : 'evening'
   }
 
+  const toggleSel = (p: ProjPoint) =>
+    setSel(s => s.some(q => q.seq === p.seq) ? s.filter(q => q.seq !== p.seq) : [...s, p])
+
+  // hand the working set to the BUILDER (the forager seam — same 'builder-context' contract the
+  // mobile tray uses; replace-semantics; onHandoff makes the panel visible: canvas view + builder tab).
+  const handToBuilder = () => {
+    if (!sel.length) return
+    const block = `[Operator's lattice selection — ${sel.length} point${sel.length === 1 ? '' : 's'} — CURRENT context]\n` +
+      sel.map(p => `- (${p.sector}) ${p.address || p.kind}${p.summary ? ` — ${p.summary}` : ''}`).join('\n')
+    window.dispatchEvent(new CustomEvent('builder-context', { detail: { block } }))
+    onHandoff?.()
+  }
+
   if (err) return <div className="lattice-err">projection unreachable — {err}</div>
   return (
     <div className="lattice-wrap" ref={wrapRef} onPointerDown={pick}>
@@ -141,6 +162,16 @@ export default function LatticeView() {
             {picked.ts?.slice(0, 16).replace('T', ' · ')} · {phaseWord(picked.phases.day)} ·
             depth {picked.depth}
           </div>
+          <button className="lc-pick" onClick={() => toggleSel(picked)}>
+            {inSel(picked) ? '− remove from set' : '＋ add to set'}
+          </button>
+        </div>
+      )}
+      {sel.length > 0 && (
+        <div className="lattice-set" onPointerDown={e => e.stopPropagation()}>
+          <span className="ls-n">⊙ {sel.length} selected</span>
+          <button className="ls-go" onClick={handToBuilder}>⚒ hand to builder</button>
+          <button className="ls-clear" onClick={() => setSel([])}>clear</button>
         </div>
       )}
     </div>
