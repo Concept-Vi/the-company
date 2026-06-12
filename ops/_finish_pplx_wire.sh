@@ -13,7 +13,10 @@ RESULT=/tmp/pplx_wire_result.json
 PYDRIVER=/home/tim/company/ops/wire_substrate_claude_sessions.py
 OVPY=/home/tim/repos/obsidian-overlord/.venv/bin/python
 COMPANY=/home/tim/company/ops/company
-PROBE="${PROBE:-pplx embedder cosine int8 transcript search wiring}"
+# A grounded semantic probe: GPU VRAM budgeting + model eviction is a real
+# recurring topic across the transcripts (company CLI resource-manager, vLLM
+# gpu_util, --evict). Tests semantic retrieval, not just keyword match.
+PROBE="${PROBE:-how does the GPU VRAM budget and model eviction work when loading a model}"
 
 emit() { echo "MARKER:$1" ; }
 
