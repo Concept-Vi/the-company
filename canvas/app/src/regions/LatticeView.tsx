@@ -30,6 +30,8 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   const [zoom, setZoom] = useState(1)        // radial magnification — inner rings (recent) expand
   const [frame, setFrame] = useState<'now' | 'day' | 'week'>('now')  // S4: scale/phase selects the frame
   const [err, setErr] = useState('')
+  const [live, setLive] = useState(true)     // the centre is NOW — and now MOVES (the involuntary axis)
+  const [beat, setBeat] = useState(0)        // ticks each refresh so the live dot pulses
   const inSel = (p: ProjPoint) => sel.some(s => s.seq === p.seq)
 
   // S4 — frame-relativity (Tim: "the axes are variables too — scale and state/phase select the
@@ -39,12 +41,20 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   const radial = (p: ProjPoint) =>
     frame === 'now' ? Math.pow(p.r, 1 / zoom) : frame === 'day' ? p.phases.day : p.phases.week
 
+  // The centre is NOW — so NOW must keep moving. A live re-fetch re-derives every radius from the
+  // advancing present and streams in events that landed since: the projection as an organ, not a
+  // photograph. Pausable (the operator can freeze the frame to study it). Pure read.
   useEffect(() => {
-    fetch('/api/projection')
+    let alive = true
+    const pull = () => fetch('/api/projection')
       .then(r => { if (!r.ok) throw new Error(`projection ${r.status}`); return r.json() })
-      .then(setProj)
-      .catch(e => setErr(String(e?.message || e)))
-  }, [])
+      .then(d => { if (alive) { setProj(d); setBeat(b => b + 1); setErr('') } })
+      .catch(e => { if (alive) setErr(String(e?.message || e)) })
+    pull()
+    if (!live) return () => { alive = false }
+    const id = setInterval(pull, 15000)   // now advances every 15s; the radius shells re-resolve
+    return () => { alive = false; clearInterval(id) }
+  }, [live])
 
   const draw = useCallback(() => {
     const cvs = cvsRef.current, wrap = wrapRef.current
@@ -110,13 +120,18 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
         g.beginPath(); g.arc(x, y, 6, 0, Math.PI * 2); g.stroke()
       }
     }
-    // NOW — the centre, the one shared point of time.
+    // NOW — the centre, the one shared point of time. When live, it pulses: a halo that breathes
+    // each refresh, so the advancing present is visible at the origin.
     g.globalAlpha = 1; g.fillStyle = accent
     g.beginPath(); g.arc(cx, cy, 4, 0, Math.PI * 2); g.fill()
-    g.strokeStyle = accent; g.globalAlpha = 0.4
-    g.beginPath(); g.arc(cx, cy, 9, 0, Math.PI * 2); g.stroke()
+    g.strokeStyle = accent
+    g.globalAlpha = 0.4; g.beginPath(); g.arc(cx, cy, 9, 0, Math.PI * 2); g.stroke()
+    if (live) {  // the breath of now — a fading expanding ring keyed to the refresh beat
+      const ph = (beat % 2) ? 16 : 12
+      g.globalAlpha = 0.22; g.beginPath(); g.arc(cx, cy, ph, 0, Math.PI * 2); g.stroke()
+    }
     g.globalAlpha = 1
-  }, [proj, picked, zoom, sel, frame])
+  }, [proj, picked, zoom, sel, frame, live, beat])
 
   useEffect(() => { draw() }, [draw])
   useEffect(() => {
@@ -165,7 +180,14 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     <div className="lattice-wrap" ref={wrapRef} onPointerDown={pick}>
       <canvas ref={cvsRef} />
       <div className="lattice-foot">
-        <span>{proj ? `${proj.count} points · ${proj.n} sectors · ${frame === 'now' ? 'centre = now' : `cycle: ${frame}`}` : 'projecting…'}</span>
+        <span>
+          <button className={'lf-live' + (live ? ' on' : '')} onClick={() => setLive(l => !l)}
+            onPointerDown={e => e.stopPropagation()}
+            title={live ? 'now is advancing — tap to freeze the frame' : 'frozen — tap to follow now'}>
+            {live ? '● live' : '⏸ frozen'}
+          </button>
+          {' '}{proj ? `${proj.count} points · ${frame === 'now' ? 'centre = now' : `cycle: ${frame}`}` : 'projecting…'}
+        </span>
         <div className="lattice-frames" onPointerDown={e => e.stopPropagation()}>
           {(['now', 'day', 'week'] as const).map(fr => (
             <button key={fr} className={'lf-btn' + (frame === fr ? ' on' : '')}
