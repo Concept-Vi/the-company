@@ -55,7 +55,7 @@ _VERBS = ("auto", "deliver", "wake", "consult")
 # EXPORTED closed op set — the contract corpus's machine inventory for this consolidated tool
 # (CONTRACT-FORMAT §9.2: every consolidated MCP tool module exports OPS; extract_reality.py
 # fails loud on a tool module without one). tests/supervisor_routes_acceptance.py is the teeth.
-OPS = ("list", "inbox", "watch", "describe")
+OPS = ("list", "inbox", "watch", "describe", "search")
 
 
 def _fabric_concurrency() -> int:
@@ -107,10 +107,10 @@ def register(mcp, suite):
     @mcp.tool(annotations=_to_sdk_annotations(
         CompanyToolAnnotations(readonly=True, destructive=False, idempotent=True),
         "Session fabric — read (registry · mailbox · live events)"))
-    def sessions(op: Literal["list", "inbox", "watch", "describe"], session: str = "",
+    def sessions(op: Literal["list", "inbox", "watch", "describe", "search"], session: str = "",
                  q: str = "", state: str = "", cwd: str = "", since: int = -1,
                  thread: str = "", verb: str = "", limit: int = 50,
-                 detail: str = "concise") -> dict:
+                 detail: str = "concise", mode: str = "auto") -> dict:
         """READ the agent-session fabric — every Claude Code session this machine has run (the
         backfilled catalog + live ones), their mailboxes, and the live fabric events. PURE READ
         (CQRS): posting a message is the separate `session_post` tool. Pick `op`:
@@ -139,6 +139,19 @@ def register(mcp, suite):
                            streaming twin is the bridge's SSE). THE WRITE-PROOF DISCIPLINE: after a
                            session_post, completion = the declared consequence events appearing
                            here after your posted seq — never "the response looked ok".
+          op="search"   — CONTENT search over every session's TRANSCRIPT (the claude-sessions
+                           corpus index) — the merged-search twin of op="list"'s q (which only
+                           filters title/name/id). Each result is a LIVE HANDLE: {session_id,
+                           session_address, state (joined LIVE at query time), cwd, title,
+                           point (matched turn/speaker/anchor), snippet, primary_verb (what
+                           verb='auto' would do NOW), commands (the exact session_post forms)}.
+                           `q` (required) = the content query · `mode` = "auto" (default) |
+                           "semantic" (embedding search; needs the embed-pplx service — fails
+                           TEACHING-loud when down) | "lexical" (term search, zero models, always
+                           on; auto picks semantic when available and DECLARES mode_used) ·
+                           `state` pre-filters on live state · `limit` = max sessions. The chain:
+                           search → pick a handle → session_post (the write twin) → verify via
+                           op="watch"/op="inbox". One result per session, best chunk leads.
 
         `detail`: "concise" (default, high-signal fields) | "detailed" (full records). An empty
         result is HONEST (no sessions / no mail / no events — never fabricated). The operator's
@@ -148,9 +161,23 @@ def register(mcp, suite):
             raise ValueError(
                 f"sessions: unknown op={op!r}. Valid: {list(OPS)} — list=the fleet · "
                 f"inbox=a session's mail (needs `session`) · watch=live fabric events · "
-                f"describe=one session in full (needs `session`). To SEND, use session_post (CQRS).")
+                f"describe=one session in full (needs `session`) · search=content search over "
+                f"transcripts, results are live handles (needs `q`). To SEND, use session_post (CQRS).")
         if detail not in ("concise", "detailed"):
             raise ValueError(f"sessions: detail must be 'concise' or 'detailed', got {detail!r}.")
+
+        if op == "search":
+            # R4.2/R4.5 — the search→handle join (runtime/session_search.py): corpus hit ⨝ live
+            # registry row + point + commands. Pure read (the floor — acting is session_post's).
+            _registry_guard(suite, "get_agent_session")
+            if not q.strip():
+                raise ValueError(
+                    "sessions(op='search') needs `q` — the CONTENT query over the transcripts "
+                    "(meaning for mode='semantic', terms for mode='lexical'). To filter the fleet "
+                    "by title/name/id instead, use sessions(op='list', q=…).")
+            from runtime import session_search
+            return {"op": op, **session_search.search_sessions(
+                suite, q=q.strip(), k=limit, mode=mode, state=state or None, detail=detail)}
 
         if op == "list":
             _registry_guard(suite, "list_agent_sessions")
