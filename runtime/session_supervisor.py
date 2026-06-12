@@ -237,6 +237,174 @@ BRIDGE_SESSION_UNAVAILABLE = {
 }
 
 
+# ─────────────────── R1.3 · the SPAWN-FLAG REGISTRY (all start-flags as session config) ───────────
+# Registry-shaped (the R11/heart frame): the complete remaining `claude` launch-flag surface is a
+# DECLARED TABLE, not more hardcoded kwargs — a new flag is a new row. Every row is grounded in the
+# Claude Code Atlas cli-reference (research lane 03-start-flags.md, fetched 2026-06-10) — NEVER
+# invented. Three postures:
+#   safe    — appended for any spawn (plain /spawn body `flags={...}` or bridge-session).
+#   consent — WIDENS the session's surface (tool set / MCP servers / plugins / permission plumbing):
+#             refused-loud on a plain spawn with a teaching error naming the bridge-session path;
+#             allowed when the operator-consent beat rides the call (the R1-prime gate, reused —
+#             consent-not-lockdown, never a denial).
+#   locked  — a TRANSPORT INVARIANT of the held-open loop (input-format stream-json is the injection
+#             contract; -p/--verbose are the mode; resume/fork/model/effort/… have dedicated body
+#             keys): always refused with a teaching error naming the dedicated path.
+# Kinds: bool (token only, when truthy) · value (flag + str) · repeat (flag per list item) ·
+#        csv (flag + comma-join) · swap (replace the value of a flag already in the transport head).
+SPAWN_FLAGS: dict[str, dict] = {
+    # ── safe rows ──
+    "session_id":            {"flag": "--session-id", "kind": "value", "posture": "safe",
+                              "summary": "pre-assign the session UUID (the fabric's correlation handle)"},
+    "name":                  {"flag": "--name", "kind": "value", "posture": "safe",
+                              "summary": "human display name (the /resume picker + registry label)"},
+    "continue":              {"flag": "--continue", "kind": "bool", "posture": "safe",
+                              "summary": "resume the cwd's most recent conversation instead of starting new"},
+    "append_system_prompt":  {"flag": "--append-system-prompt", "kind": "value", "posture": "safe",
+                              "summary": "append to the default system prompt (keeps the coding-assistant identity)"},
+    "append_system_prompt_file": {"flag": "--append-system-prompt-file", "kind": "value", "posture": "safe",
+                              "summary": "append a file's contents to the default system prompt"},
+    "system_prompt":         {"flag": "--system-prompt", "kind": "value", "posture": "safe",
+                              "summary": "REPLACE the entire system prompt (persona sessions; drops default guidance)"},
+    "system_prompt_file":    {"flag": "--system-prompt-file", "kind": "value", "posture": "safe",
+                              "summary": "replace the system prompt from a file"},
+    "max_turns":             {"flag": "--max-turns", "kind": "value", "posture": "safe",
+                              "summary": "agentic-turn ceiling (safety governor; exceeds → error result)"},
+    "max_budget_usd":        {"flag": "--max-budget-usd", "kind": "value", "posture": "safe",
+                              "summary": "dollar ceiling for the session's API spend"},
+    "json_schema":           {"flag": "--json-schema", "kind": "value", "posture": "safe",
+                              "summary": "schema-validated structured output (result.structured_output)"},
+    "agent":                 {"flag": "--agent", "kind": "value", "posture": "safe",
+                              "summary": "run as a named subagent definition (persona)"},
+    "agents":                {"flag": "--agents", "kind": "value", "posture": "safe",
+                              "summary": "inline JSON agent definitions (ephemeral personas, no files)"},
+    "setting_sources":       {"flag": "--setting-sources", "kind": "csv", "posture": "safe",
+                              "summary": "which settings layers load (user/project/local) — isolation control"},
+    "no_session_persistence": {"flag": "--no-session-persistence", "kind": "bool", "posture": "safe",
+                              "summary": "ephemeral session — no transcript on disk, not resumable"},
+    "include_hook_events":   {"flag": "--include-hook-events", "kind": "bool", "posture": "safe",
+                              "summary": "hook lifecycle events on the stream (the R1.2 hook declarations)"},
+    "prompt_suggestions":    {"flag": "--prompt-suggestions", "kind": "bool", "posture": "safe",
+                              "summary": "emit prompt_suggestion after each turn (declared: input-suggestion)"},
+    "replay_user_messages":  {"flag": "--replay-user-messages", "kind": "bool", "posture": "safe",
+                              "summary": "ack injected user turns back on stdout (stream-json both ways)"},
+    "advisor":               {"flag": "--advisor", "kind": "value", "posture": "safe",
+                              "summary": "enable the server-side advisor model for this session"},
+    "betas":                 {"flag": "--betas", "kind": "csv", "posture": "safe",
+                              "summary": "beta API headers (API-key auth only)"},
+    "exclude_dynamic_system_prompt_sections": {"flag": "--exclude-dynamic-system-prompt-sections",
+                              "kind": "bool", "posture": "safe",
+                              "summary": "move per-machine prompt sections into the first user message (cache reuse)"},
+    "teammate_mode":         {"flag": "--teammate-mode", "kind": "value", "posture": "safe",
+                              "summary": "agent-team teammate display mode (auto|in-process|tmux)"},
+    "disable_slash_commands": {"flag": "--disable-slash-commands", "kind": "bool", "posture": "safe",
+                              "summary": "disable all skills/commands for this session"},
+    "debug_file":            {"flag": "--debug-file", "kind": "value", "posture": "safe",
+                              "summary": "write debug logs to a specific path (implies debug mode)"},
+    # ── consent rows (widen the session's surface → the R1-prime consent beat) ──
+    "tools":                 {"flag": "--tools", "kind": "value", "posture": "consent",
+                              "summary": "restrict/widen which BUILT-IN tools exist ('' none · 'default' all · csv)"},
+    "allowed_tools":         {"flag": "--allowedTools", "kind": "swap", "posture": "consent",
+                              "summary": "REPLACE the floor allowlist (mcp__company-only) — the wider-surface decision"},
+    "disallowed_tools":      {"flag": "--disallowedTools", "kind": "value", "posture": "consent",
+                              "summary": "deny rules (bare name removes the tool; scoped rule denies matches)"},
+    "mcp_config":            {"flag": "--mcp-config", "kind": "swap", "posture": "consent",
+                              "summary": "REPLACE the strict company MCP config — different servers, different ground"},
+    "permission_prompt_tool": {"flag": "--permission-prompt-tool", "kind": "value", "posture": "consent",
+                              "summary": "route permission prompts to an MCP tool (approval plumbing)"},
+    "plugin_dir":            {"flag": "--plugin-dir", "kind": "repeat", "posture": "consent",
+                              "summary": "load local plugin(s) for this session"},
+    "plugin_url":            {"flag": "--plugin-url", "kind": "repeat", "posture": "consent",
+                              "summary": "fetch plugin zip(s) by URL for this session"},
+    # ── locked rows (transport invariants / dedicated body keys — teaching refusals) ──
+    "input_format":          {"posture": "locked", "why": "--input-format stream-json IS the held-open "
+                              "injection contract (T2) — the fabric cannot drive a session without it."},
+    "print":                 {"posture": "locked", "why": "-p is the supervised transport's mode; it is "
+                              "always on."},
+    "verbose":               {"posture": "locked", "why": "--verbose is required for the stream-json "
+                              "event surface the reader parses; always on."},
+    "output_format":         {"posture": "locked", "why": "use the dedicated body key `output_format` "
+                              "(defaults to stream-json — the reader's parse contract)."},
+    "include_partial":       {"posture": "locked", "why": "use the dedicated body key `include_partial` "
+                              "(the R5 voice seam's delta stream)."},
+    "resume":                {"posture": "locked", "why": "use the dedicated body key `resume` (wake) — "
+                              "verbs are routing decisions, not raw flags."},
+    "fork_session":          {"posture": "locked", "why": "use the dedicated body keys `resume`+`fork` "
+                              "(consult) — T4's non-destructive copy path."},
+    "model":                 {"posture": "locked", "why": "use the dedicated body key `model`."},
+    "effort":                {"posture": "locked", "why": "use the dedicated body key `effort`."},
+    "fallback_model":        {"posture": "locked", "why": "use the dedicated body key `fallback`."},
+    "permission_mode":       {"posture": "locked", "why": "use the dedicated body key `permission_mode` "
+                              "(the fabric's posture law: default plan, acceptEdits opt-in)."},
+    "settings":              {"posture": "locked", "why": "use the dedicated body key `settings`."},
+    "add_dir":               {"posture": "locked", "why": "use the dedicated body key `add_dir`."},
+    "debug":                 {"posture": "locked", "why": "use the dedicated body key `debug`."},
+    "safe_mode":             {"posture": "locked", "why": "use the dedicated body key `safe_mode`."},
+    "bare":                  {"posture": "locked", "why": "use the dedicated body key `bare`."},
+    "dangerously_skip_permissions": {"posture": "locked", "why": "permission posture rides the dedicated "
+                              "`permission_mode` key (bypassPermissions must be an explicit, visible "
+                              "posture choice — never a side-door flag)."},
+    "strict_mcp_config":     {"posture": "locked", "why": "strictness is the grounding contract; to run "
+                              "different MCP servers swap `mcp_config` (consent) — strict stays on so the "
+                              "session's tool ground is always explicit."},
+}
+
+
+def _apply_spawn_flags(cmd: list, flags: dict | None, *, consent: bool) -> list:
+    """R1.3 — apply registry-declared start-flags onto a built cmd (PURE; unit-testable without a
+    spawn). Validates every key against SPAWN_FLAGS: unknown → TeachingRefusal listing the registry;
+    locked → TeachingRefusal carrying the row's `why`; consent-posture without the operator-consent
+    beat → TeachingRefusal naming the bridge-session path. `swap` rows replace the value of a flag
+    already present in the transport head (--allowedTools / --mcp-config). Returns cmd (mutated in
+    place for swap, appended otherwise). No flags → cmd unchanged (byte-identical guarantee holds)."""
+    if not flags:
+        return cmd
+    if not isinstance(flags, dict):
+        raise TeachingRefusal(f"REFUSED — `flags` must be an object of registry keys, got "
+                              f"{type(flags).__name__}. Declared keys: {sorted(SPAWN_FLAGS)}.")
+    for key, val in flags.items():
+        spec = SPAWN_FLAGS.get(key)
+        if spec is None:
+            raise TeachingRefusal(
+                f"REFUSED — unknown spawn flag {key!r}. The flag surface is REGISTRY-DECLARED "
+                f"(session_supervisor.SPAWN_FLAGS; a new flag is a new row, Atlas-grounded). "
+                f"Declared: {sorted(SPAWN_FLAGS)}.")
+        posture = spec["posture"]
+        if posture == "locked":
+            raise TeachingRefusal(f"REFUSED — spawn flag {key!r} is LOCKED: {spec['why']}")
+        if posture == "consent" and not consent:
+            raise TeachingRefusal(
+                f"REFUSED — spawn flag {key!r} ({spec['summary']}) WIDENS the session's surface and "
+                f"rides the operator-consent beat. Spawn it via POST /bridge-session with "
+                f"operator_consent=true (consent-not-lockdown — available the moment consent rides "
+                f"the call; git revert backstops).")
+        kind = spec["kind"]
+        flag = spec["flag"]
+        if kind == "bool":
+            if val:
+                cmd.append(flag)
+        elif kind == "value":
+            if val is not None and str(val) != "":
+                cmd += [flag, str(val)]
+        elif kind == "csv":
+            s = val if isinstance(val, str) else ",".join(str(x) for x in (val or []))
+            if s:
+                cmd += [flag, s]
+        elif kind == "repeat":
+            items = [val] if isinstance(val, str) else list(val or [])
+            for it in items:
+                if it:
+                    cmd += [flag, str(it)]
+        elif kind == "swap":
+            if val is None or str(val) == "":
+                continue
+            if flag in cmd:
+                cmd[cmd.index(flag) + 1] = str(val)
+            else:
+                cmd += [flag, str(val)]
+    return cmd
+
+
 class Supervised:
     """One owned claude subprocess + its supervisor-side state. The state machine is
     starting → idle ⇄ busy → closed (truthful transitions — F1.2's bar; `closed` is terminal)."""
@@ -548,7 +716,12 @@ class SessionSupervisor:
               settings: str | None = None, add_dir: "list[str] | str | None" = None,
               output_format: str | None = None, include_partial: bool = False,
               debug: "str | bool | None" = None, safe_mode: bool = False,
-              bare: bool = False) -> Supervised:
+              bare: bool = False, flags: dict | None = None) -> Supervised:
+        # R1.3: registry-declared flags VALIDATE BEFORE the session registers (no half-built record);
+        # a plain spawn carries NO consent — consent-posture rows refuse loud here, teaching the
+        # bridge-session path.
+        if flags:
+            _apply_spawn_flags([], flags, consent=False)        # validate-only pass (refuse pre-record)
         # the fork-requires-resume guard stays BEFORE we register the session (no half-built record)
         if fork and not resume:
             raise TeachingRefusal("REFUSED — fork=true requires resume=<session id>: a CONSULT is "
@@ -564,6 +737,7 @@ class SessionSupervisor:
             model=model, effort=effort, fallback=fallback, permission_mode=permission_mode,
             settings=settings, add_dir=add_dir, output_format=output_format,
             include_partial=include_partial, debug=debug, safe_mode=safe_mode, bare=bare)
+        _apply_spawn_flags(cmd, flags, consent=False)   # R1.3 — the registry-declared remainder
         s.proc = subprocess.Popen(cmd, cwd=s.cwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE, text=True, bufsize=1)
         threading.Thread(target=self._reader, args=(s,), daemon=True,
@@ -599,7 +773,8 @@ class SessionSupervisor:
                              fallback: "list[str] | str | None" = None,
                              settings: str | None = None,
                              add_dir: "list[str] | str | None" = None,
-                             prompt: str | None = None) -> Supervised:
+                             prompt: str | None = None,
+                             flags: dict | None = None) -> Supervised:
         """Spawn a session under the R1-prime PROFILE: a supervised `claude -p` with a WIDER
         `--allowedTools` (Bash/git/LSP-family/web + mcp__company) and an in-session write posture
         (acceptEdits by default), cwd defaulting to the repo root — the posture ④'s in-session
@@ -636,6 +811,9 @@ class SessionSupervisor:
             capabilities=capabilities, extra_tools=extra_tools,
             permission_mode=permission_mode, model=model, effort=effort,
             fallback=fallback, settings=settings, add_dir=add_dir)
+        # R1.3: the registry-declared remainder — the consent beat already rode this call, so
+        # consent-posture rows (tools/allowed_tools/mcp_config/plugins/…) are appliable here.
+        _apply_spawn_flags(cmd, flags, consent=True)
         if fork and not resume:
             raise TeachingRefusal("REFUSED — fork=true requires resume=<session id> (a fork is OF an "
                                   "existing session). For a fresh bridge-session, spawn without fork.")
@@ -1185,7 +1363,7 @@ class H(BaseHTTPRequestHandler):
                               include_partial=bool(body.get("include_partial")
                                                    or body.get("include_partial_messages")),
                               debug=body.get("debug"), safe_mode=bool(body.get("safe_mode")),
-                              bare=bool(body.get("bare")))
+                              bare=bool(body.get("bare")), flags=body.get("flags"))
                 if body.get("prompt"):
                     SUP.inject(s, str(body["prompt"]), source=body.get("source") or "http")
                 self._send(200, {"ok": True, "session": s.record()})
@@ -1212,7 +1390,8 @@ class H(BaseHTTPRequestHandler):
                     permission_mode=perm_mode,
                     model=body.get("model"), effort=body.get("effort"),
                     fallback=body.get("fallback"), settings=body.get("settings"),
-                    add_dir=body.get("add_dir"), prompt=body.get("prompt"))
+                    add_dir=body.get("add_dir"), prompt=body.get("prompt"),
+                    flags=body.get("flags"))
                 self._send(200, {"ok": True, "session": s.record(),
                                  "liveness": "stream", "watch": f"/watch?session={s.id}",
                                  "note": "R1-prime results ride back as PROSE on the turn stream — "

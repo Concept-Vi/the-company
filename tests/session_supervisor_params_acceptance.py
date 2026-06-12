@@ -117,6 +117,81 @@ def main():
     check("--input-format stream-json is fixed even with output_format set",
           pair_after(build(output_format="json"), "--input-format") == "stream-json")
 
+    # ── R1.3 — the SPAWN-FLAG REGISTRY (all start-flags as session config, registry-shaped) ──
+    # registry sanity: every row declares a posture; safe/consent rows declare flag+kind
+    for k, spec in ss.SPAWN_FLAGS.items():
+        assert spec.get("posture") in ("safe", "consent", "locked"), f"{k}: bad posture"
+        if spec["posture"] != "locked":
+            assert spec.get("flag", "").startswith("--") and spec.get("kind") in \
+                ("bool", "value", "csv", "repeat", "swap"), f"{k}: bad flag/kind"
+        else:
+            assert spec.get("why"), f"{k}: locked row must teach WHY"
+    check(f"SPAWN_FLAGS registry valid ({len(ss.SPAWN_FLAGS)} rows, every row postured + taught)", True)
+    check("the spec-named R1.3 flags are all registry rows",
+          all(k in ss.SPAWN_FLAGS for k in ("session_id", "continue", "append_system_prompt",
+                                            "allowed_tools", "mcp_config", "tools", "max_turns",
+                                            "max_budget_usd", "name", "agents", "json_schema")))
+
+    def apply(flags, consent=False, base=None):
+        cmd = list(base) if base else build()
+        return ss._apply_spawn_flags(cmd, flags, consent=consent)
+
+    # no flags → byte-identical (the hard invariant extends to the registry path)
+    check("flags=None leaves the cmd byte-identical", apply(None) == build())
+    # safe value/bool/csv/repeat kinds land as argv
+    c = apply({"session_id": "11111111-2222-3333-4444-555555555555", "continue": True,
+               "append_system_prompt": "extra rules", "max_turns": 5,
+               "setting_sources": ["user", "project"]})
+    check("session_id → --session-id <uuid>",
+          pair_after(c, "--session-id") == "11111111-2222-3333-4444-555555555555")
+    check("continue → --continue", "--continue" in c)
+    check("append_system_prompt → --append-system-prompt <text>",
+          pair_after(c, "--append-system-prompt") == "extra rules")
+    check("max_turns → --max-turns 5", pair_after(c, "--max-turns") == "5")
+    check("setting_sources list → --setting-sources csv",
+          pair_after(c, "--setting-sources") == "user,project")
+    # falsy bool / empty value rows append nothing
+    check("falsy bool + empty value append nothing",
+          apply({"continue": False, "session_id": ""}) == build())
+    # unknown key → teaching refusal naming the registry
+    try:
+        apply({"warp_drive": 1})
+        check("unknown flag refused", False)
+    except ss.TeachingRefusal as e:
+        check("unknown flag → TeachingRefusal naming the registry", "SPAWN_FLAGS" in str(e))
+    # locked rows refuse with the dedicated-path teaching
+    for k, needle in (("input_format", "injection contract"), ("model", "dedicated body key"),
+                      ("dangerously_skip_permissions", "permission_mode"),
+                      ("strict_mcp_config", "grounding")):
+        try:
+            apply({k: "x"})
+            check(f"locked {k} refused", False)
+        except ss.TeachingRefusal as e:
+            check(f"locked {k} → teaching refusal ({needle})", needle in str(e))
+    # consent rows refuse WITHOUT consent, teaching the bridge-session path…
+    try:
+        apply({"allowed_tools": "mcp__company,Bash"})
+        check("consent flag without consent refused", False)
+    except ss.TeachingRefusal as e:
+        check("consent flag w/o consent → teaches /bridge-session + operator_consent",
+              "bridge-session" in str(e) and "operator_consent" in str(e))
+    # …and APPLY with consent: swap kind replaces the head's value in place
+    cc = apply({"allowed_tools": "mcp__company,Bash", "mcp_config": "/tmp/other-mcp.json",
+                "tools": "Bash,Edit,Read", "plugin_dir": ["/p1", "/p2"]}, consent=True)
+    check("consented allowed_tools SWAPS the floor value (no duplicate flag)",
+          pair_after(cc, "--allowedTools") == "mcp__company,Bash"
+          and cc.count("--allowedTools") == 1)
+    check("consented mcp_config SWAPS the strict company config value",
+          pair_after(cc, "--mcp-config") == "/tmp/other-mcp.json" and cc.count("--mcp-config") == 1)
+    check("consented tools → --tools <csv>", pair_after(cc, "--tools") == "Bash,Edit,Read")
+    check("plugin_dir repeats per item", cc.count("--plugin-dir") == 2)
+    # spawn() validates flags BEFORE registering (no half-built record): the validate-only pass
+    try:
+        ss._apply_spawn_flags([], {"allowed_tools": "X"}, consent=False)
+        check("validate-only pass refuses pre-record", False)
+    except ss.TeachingRefusal:
+        check("validate-only pass refuses pre-record (consent row, no consent)", True)
+
     # ── FAMILY 1 — _extract_usage captures the result event's cost+usage ──
     full = ss._extract_usage({
         "type": "result", "model": "claude-opus-4-8",
