@@ -275,6 +275,12 @@ def _commands(sid: str, primary_verb: str | None, snippet: str) -> dict:
                    f"“{quote}…” — <your question>', from_session='session://<your-id>')",
         "at_point": "the point rides the message (quote `snippet`; the session has full context). "
                     "Hard launch-at-point = R3.4's timeline adapter, taking `point` as input.",
+        # R4.3 — a found session joins the structure (the R2 organs): grab it into a momentary
+        # gathering, or add it to a standing channel. Posts to closed members QUEUE (never wake).
+        "gather": f"channel_act(action='gather', name='<why-now>', members=['session://{sid}', "
+                  f"'session://<your-id>'])",
+        "add_to_channel": f"channel_act(action='add', channel='channel://<id>', "
+                          f"session='session://{sid}')",
     }
     if primary_verb == "deliver":
         base["deliver"] = (f"session_post(to='session://{sid}', verb='deliver', "
@@ -306,7 +312,9 @@ def _handle(suite, sid: str, best: dict, hit_count: int, mode_used: str, detail:
     out = {
         "session_id": sid,
         "session_address": f"session://{sid}",
+        "name": row.get("name"),
         "title": row.get("title") or (best["frontmatter"].get("title") if best["frontmatter"] else None),
+        "summarizer": bool(row.get("summarizer")),   # CC's internal one-shots (~77% of the catalog)
         "state": state,
         "cwd": row.get("cwd") or best["frontmatter"].get("cwd"),
         "last_activity": row.get("last_activity"),

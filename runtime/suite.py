@@ -953,8 +953,9 @@ class Suite:
 
         Filters: `state` (one of AGENT_SESSION_STATES — an unknown value RAISES the teaching error,
         never silently returns everything), `cwd` (exact match), `q` (case-insensitive substring over
-        title+name+id — the registry half of the merged-search contract entry; content search lives in
-        the claude-sessions substrate vault, NOT here), `since` (exclusive event-seq cursor over the
+        title+name+id — the registry half of the merged search; the CONTENT half is BUILT (R4.2/R4.5):
+        runtime/session_search.py joins transcript-index hits onto this registry's LIVE rows,
+        exposed as sessions(op='search')), `since` (exclusive event-seq cursor over the
         row's last folded seq — rows touched only by records carry seq=None and are excluded by a
         since-filter, which is honest: no event moved them). Returns {sessions, total, fold_errors} —
         fold_errors > 0 means malformed fabric events were tolerated-and-counted (see
