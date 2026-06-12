@@ -3,11 +3,13 @@ type: contract-entry
 resource: surfaces
 summary: The ways a human or program enters Claude Code — the CLI entry points and flags (claude, -p, -c, -r, --fork-session …), the interactive surfaces (terminal TUI, Desktop, Web, VS Code, JetBrains, Chrome), and the keybindings model (keybindings.json contexts + actions); the company drives EXACTLY ONE entry point (headless claude -p, via the supervisor) and the human interactive surfaces are out of fabric scope, so this resource maps the surface inventory and routes the one programmatic entry to F1.
 schemes: []
-status: building
+status: planned
 relates-to: ["[[session]]", "[[headless-control]]", "[[settings]]", "[[diagnostics]]", "[[platform]]"]
 ---
 
 # Resource: surfaces
+
+> **Refocus (Session Fabric R1.4, 2026-06-13):** the company command-wrapper endpoints this entry once cited (the ③④⑤ MCP tools + `/api/config|dev|auto` bridge arms + the R3 config_writer rail) were REMOVED — they duplicated what a real Claude Code session does natively. The capability is reached by DRIVING A REAL SESSION (the supervisor's spawn/inject + R1-prime profile); this entry remains as the NATIVE data-model declaration a UI renders. Ops whose only real endpoint was the wrapper are back to `planned` — honestly.
 
 ## Identity
 **A surface is identified by its KIND (a closed enum of entry points / interactive clients), not a
@@ -121,7 +123,7 @@ PLANNED at the company layer because keybindings govern the interactive TUI the 
 op: surfaces.get-keybindings
 resource: surfaces
 kind: get
-status: building
+status: planned
 direction: outbound
 atlas: [CC-04.1]
 tasks:
@@ -133,7 +135,6 @@ tasks:
   - alias: "customize keybindings"
   - alias: "rebind keys"
 bindings:
-  - { kind: mcp, tool: config_keybindings, op: "op='list'|'get' (read) + op='act' (set-binding) — REOPENED CC-04", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric ③): the MCP face reads/writes ~/.claude/keybindings.json via the R3 config_writer (reopened CC-04; non-executable, reversible). The handler runtime/capability_handlers/config_authoring.py:keybindings backs both faces (DRY). live-verify pending (lead): a REAL .claude write / native claude-CLI round-trip." }
   - { kind: cli, command: "/keybindings   (HOST interactive command — opens ~/.claude/keybindings.json; NOT a company route)", transport: cli-local, exposure: "n/a — Claude Code built-in", status: planned, note: "GAP + scope: keybindings apply to the interactive TUI/Desktop the company does not drive (the supervisor spawns headless -p with no TUI). Documented as a data model for a config UI; there is no company endpoint and one would be inert against a headless session. Requires Claude Code v2.1.18+" }
 liveness: snapshot
 live-twin: "none — keybindings.json hot-reloads on edit; no live stream"

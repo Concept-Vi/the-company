@@ -165,11 +165,11 @@ native behavior (each op fence cites its Claude Code doc URL + runtime line).
 ### auth (credential steer — REOPENED as buildable R3 host-config acts; Tim's sole-operator steer)
 The arch's original ruling treated these as host actions with no company op (absence-of-row =
 boundary). Tim's sole-operator steer OVERRIDES that: the operator is the only user and is trusted, so
-these are ENABLED as consent-gated R3 ops on `auto.auth` op="act" (`building`) — NEVER locked out,
+these are ENABLED for the sole operator (native `claude auth …`) — NEVER locked out,
 NEVER a multi-user auth wall; consent-not-lockdown with re-login / git-revert as the backstop. The
-company face (`mcp_face/tools/automation.py` auth tool + the `auto.auth` handler) builds the argv via
-the `auto.auth:<act>` cli_allowlist row; the config_writer R3 service shells it (the floor — the face
-never shells). Grounded in authentication.md / troubleshoot-install.md:
+company wrapper face that once carried these (`auto.auth` handler + config_writer R3 rail) was REMOVED
+2026-06-13 (Session Fabric R1.4 — it wrapped the native CLI); the acts below are performed by the operator's
+own `claude auth …` commands, or by driving a real session. Grounded in authentication.md / troubleshoot-install.md:
 - `relogin` — on `auth`: re-authenticate / switch the active subscription/Console account via
   `claude auth login` (OAuth; reads the pasted code from stdin on WSL/SSH/containers — the operator's
   path). exec-tier. Takes effect on the NEXT session start, not mid-session.
@@ -177,9 +177,8 @@ never shells). Grounded in authentication.md / troubleshoot-install.md:
   reversed by `relogin` (the git-revert-equivalent backstop for a host credential).
 - `setup-token` — on `auth`: mint a one-year inference-scoped `CLAUDE_CODE_OAUTH_TOKEN` via
   `claude setup-token` (prints the token to stdout, saves nothing; cannot establish Remote Control).
-  exec-tier, `returns_secret`: the config_writer surfaces the printed token to the CONSENTING OPERATOR
-  terminal ONLY; the handler returns NO token field (the redaction floor §5.2 C3 honoured by NOT
-  returning the secret, not by post-hoc stripping).
+  exec-tier, `returns_secret`: the printed token reaches the OPERATOR terminal ONLY — any future fabric
+  surface honours the redaction floor (§5.2 C3) by NOT returning the secret, not by post-hoc stripping.
 
 ### ci (in-CI invocation — direction:inbound; the CI provider drives, no company face participates)
 - `mention` — on `ci`: a `@claude` mention in a GitHub/GitLab issue/PR/MR comment (interactive mode,

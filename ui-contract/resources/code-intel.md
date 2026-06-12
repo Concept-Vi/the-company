@@ -3,11 +3,13 @@ type: contract-entry
 resource: code-intel
 summary: Claude Code's LSP-backed code intelligence — go-to-definition, find-references, hover types, document/workspace symbols, implementations, call hierarchy, and automatic post-edit diagnostics, all from a language server installed via a code-intelligence plugin. A native in-session capability inside the sessions the company spawns; NO company endpoint exposes it — contracted as the native surface with the bridge gap named.
 schemes: []
-status: building
+status: planned
 relates-to: ["[[session]]", "[[headless-control]]", "[[knowledge-corpus]]"]
 ---
 
 # Resource: code-intel
+
+> **Refocus (Session Fabric R1.4, 2026-06-13):** the company command-wrapper endpoints this entry once cited (the ③④⑤ MCP tools + `/api/config|dev|auto` bridge arms + the R3 config_writer rail) were REMOVED — they duplicated what a real Claude Code session does natively. The capability is reached by DRIVING A REAL SESSION (the supervisor's spawn/inject + R1-prime profile); this entry remains as the NATIVE data-model declaration a UI renders. Ops whose only real endpoint was the wrapper are back to `planned` — honestly.
 ## Identity
 **Code intelligence is keyed by the SESSION whose language server it belongs to (`session://<id>`)
 and the workspace that session runs in — there is no `code-intel://` scheme and no standalone
@@ -69,7 +71,7 @@ here so a UI builds toward the real seam (a session-scoped LSP face) rather than
 op: code-intel.act
 resource: code-intel
 kind: act
-status: building
+status: planned
 direction: outbound
 atlas: [CC-16.1, CC-16.2, CC-16.3]
 tasks:
@@ -85,9 +87,7 @@ tasks:
   - alias: "find references"
   - alias: "symbol search"
   - alias: "call hierarchy"
-bindings:
-  - { kind: mcp, tool: dev_code_intel, op-param: "op=act", server: company, exposure: "exposure.json#mcp-company", status: building, note: "L-④-dev: RAIL R1-prime — the handler builds a bridge-session spawn INTENT; the SUPERVISOR (spawn_bridge_session, operator_consent-gated) runs the in-session LSP; result rides back as PROSE on the turn stream — liveness:stream, NO typed return_shape (§1.1). live-verify pending (lead): a REAL prose round-trip is the lead's slice, NEVER green-painted" }
-  - { kind: http, method: POST, path: "/api/dev/code-intel", transport: bridge-http, exposure: "exposure.json#bridge-http", status: building, note: "BUILT (Capability Fabric L-Wire): the literal POST /api/dev/code-intel arm delegates to the SAME dev.code_intel handler the MCP face calls (DRY); it returns an R1-prime bridge-session spawn INTENT + a watch cursor (the supervised mcp__company-only session has no LSP — a wider-allowlist spawn is needed). Result is assistant PROSE on the turn stream — liveness:stream, NO typed return_shape (grounded-chain law). live-verify pending (lead): a REAL R1-prime prose round-trip" }
+bindings: []
 liveness: none
 emits: []
 consequences:

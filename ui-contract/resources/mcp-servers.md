@@ -3,11 +3,13 @@ type: contract-entry
 resource: mcp-servers
 summary: The MCP server connections a Claude Code session loads — add/remove/list/get a stdio/http/sse/ws server, its scope (local/project/user) and config file, its transport+auth (OAuth 2.0, headers, headersHelper), and its live connection status; the company manages its OWN MCP face but exposes no API to manage a session's MCP server set, so this resource contracts the native `claude mcp` surface with the bridge gap named.
 schemes: []
-status: building
+status: planned
 relates-to: ["[[hooks]]", "[[extensions]]", "[[permission]]", "[[session]]"]
 ---
 
 # Resource: mcp-servers
+
+> **Refocus (Session Fabric R1.4, 2026-06-13):** the company command-wrapper endpoints this entry once cited (the ③④⑤ MCP tools + `/api/config|dev|auto` bridge arms + the R3 config_writer rail) were REMOVED — they duplicated what a real Claude Code session does natively. The capability is reached by DRIVING A REAL SESSION (the supervisor's spawn/inject + R1-prime profile); this entry remains as the NATIVE data-model declaration a UI renders. Ops whose only real endpoint was the wrapper are back to `planned` — honestly.
 
 ## Identity
 **An MCP server is identified by its NAME within a scope (local/project/user) — there is no `mcp://` fabric scheme; a server is an entry in a config file (`~/.claude.json` for local+user, `.mcp.json` for project, or a plugin's `.mcp.json`/`plugin.json`), and the company exposes no endpoint to add, remove, or list a session's MCP servers.**
@@ -55,7 +57,7 @@ Claude Code connects to external tools via MCP servers, documented at https://co
 op: mcp-servers.list
 resource: mcp-servers
 kind: list
-status: building
+status: planned
 direction: outbound
 atlas: [CC-11.1, CC-11.5]
 tasks:
@@ -64,7 +66,6 @@ tasks:
   - alias: "show my MCP connections"
   - alias: "check MCP server status"
 bindings:
-  - { kind: mcp, tool: config_mcp_servers, op: "op='list'", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric ③): the MCP face runs `claude mcp list` via the R3 config_writer. The handler runtime/capability_handlers/config_authoring.py:mcp_servers backs both faces (DRY). live-verify pending (lead): a REAL .claude write / native claude-CLI round-trip." }
   - { kind: cli, command: "claude mcp list", transport: claude-cli, exposure: "n/a — claude CLI", status: planned, note: "NATIVE: `claude mcp list` (CLI) + `/mcp` (claude-tui) (interactive panel: tool count, status, auth state). No company endpoint mirrors it. https://code.claude.com/docs/en/mcp#managing-your-servers" }
 liveness: snapshot
 live-twin: "the live connection status changes underneath; /mcp re-reads it. No company stream"
@@ -91,7 +92,7 @@ Adjacent: [[mcp-servers#op: mcp-servers.get]] (one server's detail), [[mcp-serve
 op: mcp-servers.get
 resource: mcp-servers
 kind: get
-status: building
+status: planned
 direction: outbound
 atlas: [CC-11.1]
 tasks:
@@ -99,7 +100,6 @@ tasks:
   - phrase: "is OAuth configured for this MCP server"
   - alias: "inspect an MCP server"
 bindings:
-  - { kind: mcp, tool: config_mcp_servers, op: "op='get'", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric ③): the MCP face runs `claude mcp get` via the R3 config_writer. The handler runtime/capability_handlers/config_authoring.py:mcp_servers backs both faces (DRY). live-verify pending (lead): a REAL .claude write / native claude-CLI round-trip." }
   - { kind: cli, command: "claude mcp get <name>", transport: claude-cli, exposure: "n/a — claude CLI", status: planned, note: "NATIVE: `claude mcp get <name>` — shows pending as ⏸ Pending approval, rejected as ✗ Rejected, and whether OAuth credentials are configured. https://code.claude.com/docs/en/mcp#managing-your-servers" }
 liveness: snapshot
 live-twin: "none — static between config edits + connection state changes"
@@ -115,7 +115,7 @@ Adjacent: [[mcp-servers#op: mcp-servers.list]] (the roster), [[mcp-servers#op: m
 op: mcp-servers.act
 resource: mcp-servers
 kind: act
-status: building
+status: planned
 direction: outbound
 atlas: [CC-11.2, CC-11.3, CC-11.4]
 tasks:
@@ -134,9 +134,7 @@ tasks:
   - alias: "log in to a remote MCP server"
 caller: required
 bindings:
-  - { kind: mcp, tool: config_mcp_servers, op: "op='act' (add/add-json/remove/reset-project-choices)", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric ③): the MCP face runs `claude mcp …` (argv-array, exec-tier consent) via the R3 config_writer. The handler runtime/capability_handlers/config_authoring.py:mcp_servers backs both faces (DRY). live-verify pending (lead): a REAL .claude write / native claude-CLI round-trip." }
   - { kind: cli, command: "claude mcp add [--transport t] [--scope s] [--header H] [--env K=V] <name> <url | -- cmd args>", transport: claude-cli, exposure: "n/a — claude CLI", status: planned, note: "NATIVE writer: claude mcp add / add-json / add-from-claude-desktop / remove / reset-project-choices. Auth via /mcp (interactive). https://code.claude.com/docs/en/mcp#installing-mcp-servers" }
-  - { kind: http, method: POST, path: "/api/config/mcp-servers", transport: bridge-http, exposure: "exposure.json#bridge-http", status: building, note: "BUILT (Capability Fabric L-Wire): the literal POST /api/config/mcp-servers arm delegates to the SAME config.mcp_servers handler the MCP face calls (DRY). GET reads (claude mcp list/get). Rail R3: the native `claude mcp …` argv runs via the config_writer (stdio spec is exec-tier consent-gated). live-verify pending (lead): a REAL `claude mcp add` round-trip proven by `mcp list`." }
 liveness: none
 emits: []
 consequences:

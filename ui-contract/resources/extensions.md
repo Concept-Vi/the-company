@@ -3,11 +3,13 @@ type: contract-entry
 resource: extensions
 summary: The packaged-capability surface — skills (SKILL.md), custom slash commands (now merged into skills), and plugins (a .claude-plugin/plugin.json bundling skills/agents/hooks/MCP-servers/LSP/monitors/output-styles), plus marketplaces, install/enable, and the `/reload-plugins` lifecycle; the company exposes no skill/plugin manager, so this resource contracts the native surface a UI editor+installer renders, with the bridge gap named.
 schemes: []
-status: building
+status: planned
 relates-to: ["[[hooks]]", "[[mcp-servers]]", "[[output-style]]", "[[extensibility-patterns]]", "[[session]]"]
 ---
 
 # Resource: extensions
+
+> **Refocus (Session Fabric R1.4, 2026-06-13):** the company command-wrapper endpoints this entry once cited (the ③④⑤ MCP tools + `/api/config|dev|auto` bridge arms + the R3 config_writer rail) were REMOVED — they duplicated what a real Claude Code session does natively. The capability is reached by DRIVING A REAL SESSION (the supervisor's spawn/inject + R1-prime profile); this entry remains as the NATIVE data-model declaration a UI renders. Ops whose only real endpoint was the wrapper are back to `planned` — honestly.
 
 ## Identity
 **An extension is identified by its INVOCATION NAME and LOCATION — a skill by `/<name>` (plugin skills namespaced `/<plugin>:<name>`) sourced from a `SKILL.md` directory (or a `.claude/commands/*.md` file), a plugin by `<plugin-name>` (+ optional `@<marketplace>`) sourced from a `.claude-plugin/plugin.json` manifest — there is no `skill://` or `plugin://` fabric scheme, and the company exposes no endpoint to author, install, enable, or list them.**
@@ -72,7 +74,7 @@ Claude Code skills (https://code.claude.com/docs/en/skills), custom commands (me
 op: extensions.list
 resource: extensions
 kind: list
-status: building
+status: planned
 direction: outbound
 atlas: [CC-03.1, CC-13.1]
 tasks:
@@ -82,7 +84,6 @@ tasks:
   - alias: "show available commands"
   - alias: "browse my extensions"
 bindings:
-  - { kind: mcp, tool: config_extensions, op: "op='list'", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric ③): the MCP face reads SKILL.md / plugin state via the R3 config_writer. The handler runtime/capability_handlers/config_authoring.py:extensions backs both faces (DRY). live-verify pending (lead): a REAL .claude write / native claude-CLI round-trip." }
   - { kind: tui, command: "claude (interactive) then /help (commands+skills) · /plugin (plugins+marketplaces) · /agents (agents)", transport: claude-tui, exposure: "n/a — interactive", status: planned, note: "NATIVE only. Bundled skills (/code-review /debug /loop /batch /claude-api /run /verify) listed in /help marked Skill. No company endpoint mirrors it. https://code.claude.com/docs/en/skills#bundled-skills" }
 liveness: snapshot
 live-twin: "live-change-detection updates skills within a session; no company stream"
@@ -99,7 +100,7 @@ Adjacent: [[extensions#op: extensions.act]] (author/install/enable), [[hooks]] (
 op: extensions.get
 resource: extensions
 kind: get
-status: building
+status: planned
 direction: outbound
 atlas: [CC-03.1, CC-13.1]
 tasks:
@@ -108,7 +109,6 @@ tasks:
   - alias: "open a skill for editing"
   - alias: "inspect a plugin's components"
 bindings:
-  - { kind: mcp, tool: config_extensions, op: "op='get'", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric ③): the MCP face reads a SKILL.md via the R3 config_writer. The handler runtime/capability_handlers/config_authoring.py:extensions backs both faces (DRY). live-verify pending (lead): a REAL .claude write / native claude-CLI round-trip." }
   - { kind: cli, command: "(read the SKILL.md / plugin.json file directly; or /plugin in claude-tui for the manager view)", transport: claude-cli, exposure: "n/a — claude CLI", status: planned, note: "NATIVE: a skill/plugin is files on disk; the company exposes no structured reader. https://code.claude.com/docs/en/plugins-reference" }
 liveness: snapshot
 live-twin: "none — static between file edits"
@@ -124,7 +124,7 @@ Adjacent: [[extensions#op: extensions.list]] (the inventory), [[extensions#op: e
 op: extensions.act
 resource: extensions
 kind: act
-status: building
+status: planned
 direction: outbound
 atlas: [CC-03.2, CC-03.3, CC-13.2, CC-13.3, CC-13.4, CC-13.5]
 tasks:
@@ -145,9 +145,7 @@ tasks:
   - alias: "enable a plugin"
 caller: required
 bindings:
-  - { kind: mcp, tool: config_extensions, op: "op='act' (create/update-skill + install/update/uninstall/validate-plugin + add-marketplace)", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric ③): the MCP face authors a SKILL.md or runs `claude plugin …` (exec-tier consent for install) via the R3 config_writer; delete-skill is a named building gap. The handler runtime/capability_handlers/config_authoring.py:extensions backs both faces (DRY). live-verify pending (lead): a REAL .claude write / native claude-CLI round-trip." }
   - { kind: cli, command: "author SKILL.md/plugin.json files · `claude plugin init <n>` (scaffold) · `claude plugin validate` · /plugin marketplace add <repo> · /plugin install <name>@<marketplace> · /reload-plugins · --plugin-dir/--plugin-url (test)", transport: claude-cli, exposure: "n/a — claude CLI", status: planned, note: "NATIVE writer surface (claude CLI + /plugin claude-tui). https://code.claude.com/docs/en/skills + https://code.claude.com/docs/en/plugins + https://code.claude.com/docs/en/discover-plugins" }
-  - { kind: http, method: POST, path: "/api/config/plugins", transport: bridge-http, exposure: "exposure.json#bridge-http", status: building, note: "BUILT (Capability Fabric L-Wire): the literal POST /api/config/plugins arm delegates to the SAME config.extensions handler the MCP face calls (DRY). GET reads. Rail R3 via config_writer: create-skill authors SKILL.md; install/update/uninstall-plugin + update-native (CC-34 reopened) run `claude plugin`/`claude update` argv (exec-tier consent-gated). live-verify pending (lead): a REAL skill-write / plugin-install round-trip." }
 liveness: none
 emits: []
 consequences:

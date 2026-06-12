@@ -9,6 +9,8 @@ relates-to: ["[[events]]", "[[session]]", "[[fabric-config]]", "[[knowledge-corp
 
 # Resource: cost-usage
 
+> **Refocus (Session Fabric R1.4, 2026-06-13):** the company command-wrapper endpoints this entry once cited (the ③④⑤ MCP tools + `/api/config|dev|auto` bridge arms + the R3 config_writer rail) were REMOVED — they duplicated what a real Claude Code session does natively. The capability is reached by DRIVING A REAL SESSION (the supervisor's spawn/inject + R1-prime profile); this entry remains as the NATIVE data-model declaration a UI renders. Ops whose only real endpoint was the wrapper are back to `planned` — honestly.
+
 ## Identity
 **Cost/usage has no id of its own — it is telemetry ATTRIBUTED to other resources: per a
 session/turn (the result message), per a model, per a skill/plugin/subagent (the OTel
@@ -139,7 +141,6 @@ tasks:
   - alias: "usage breakdown"
   - alias: "spend so far"
 bindings:
-  - { kind: mcp, tool: cost, op-param: "op=read", server: company, exposure: "exposure.json#mcp-company", status: building, note: "BUILT (2026-06-12; mcp_face/tools/automation.py cost() → capability_handlers/automation.py:cost, direct-read). A FOLD over the agent_sessions.turn `usage` block (session_supervisor._extract_usage — already stamped, §1.5): sums input/output/cache tokens + cost_usd, scopes to one session, honest-zero on an empty fold. costUSD is a CLIENT-SIDE ESTIMATE, not the bill. The dedicated cost noun; the events read above is the raw twin." }
   - { kind: mcp, tool: sessions, op-param: "op=watch (kind=agent_sessions.turn → the per-turn `usage` block)", server: company, exposure: "exposure.json#mcp-company", status: building, note: "BUILT (2026-06-12; runtime/session_supervisor.py _turn_done stamps `usage` onto agent_sessions.turn): per-turn spend is read off the SAME event face as [[events#op: events.list]] — no new endpoint. The `usage` block carries tokens + cost_usd (+ per-model model_usage). costUSD is a client-side ESTIMATE (Errors)" }
   - { kind: http, method: GET, path: "/api/events  (filter kind=agent_sessions.turn, read .usage)", transport: bridge-http, exposure: "exposure.json#bridge-http", status: building, note: "BUILT: the bridge's event snapshot carries the agent_sessions.turn usage block — the HTTP twin of the MCP read above (same data, [[events#op: events.list]] mechanics)" }
   - { kind: cli, command: "claude /usage   (local session totals + plan bars + attribution; /cost shows the session cost breakdown)", transport: cli-local, exposure: "exposure.json#cli-local", status: planned, note: "BUILT-IN slash commands, not a company route; local-only, this-machine estimates — the running-total/historical grain the per-turn event read does not aggregate yet" }

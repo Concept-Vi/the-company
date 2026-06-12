@@ -69,19 +69,24 @@ BUILDING_LIKE = {"building", "live"}
 # the block always matches; this GROUND_TRUTH is what the generator corroborates ITSELF against (exit
 # 0 = match, exit 3 = a NEW real divergence to inspect — never force-matched). Update it deliberately
 # (here) whenever a real status flip is intended, so an UNINTENDED flip still surfaces as exit 3.
+# RE-ARMED 2026-06-13 (Session Fabric R1.4 — the wrapper REMOVAL): the ③④⑤ command-wrapper layer
+# (capability_handlers + config_writer + the 18 wrapper MCP tools + the 18 bridge arms) was DELETED as
+# wrong-approach (it duplicated native session ability — the operational-requirements honest ledger), so
+# every op whose ONLY real endpoint was a wrapper binding flipped building->planned HONESTLY:
+# 31/4/96/27 -> 13/22/45/78. The classes that REMAIN covered are covered by the KEPT fabric
+# (supervisor / registry / mailbox+verbs / wire / exporter). A deliberate flip moves this anchor WITH it;
+# an unintended flip still surfaces as exit 3.
 GROUND_TRUTH = {
-    "covered_classes": 31,
-    "planned_only_classes": 4,
+    "covered_classes": 13,
+    "planned_only_classes": 22,
     "unmapped_classes": 0,
     "total_classes": 35,
     "affordances_defined": 123,
     "affordances_reached": 123,
-    "affordances_building": 96,
-    "affordances_planned_only": 27,
-    "covered_set": {"CC-03","CC-04","CC-05","CC-06","CC-07","CC-08","CC-09","CC-10","CC-11","CC-12",
-                    "CC-13","CC-14","CC-15","CC-16","CC-17","CC-18","CC-19","CC-20","CC-21","CC-22",
-                    "CC-23","CC-24","CC-25","CC-26","CC-27","CC-29","CC-30","CC-32","CC-33","CC-34",
-                    "CC-35"},
+    "affordances_building": 45,
+    "affordances_planned_only": 78,
+    "covered_set": {"CC-05","CC-07","CC-08","CC-09","CC-10","CC-14","CC-15","CC-18","CC-20",
+                    "CC-23","CC-25","CC-33","CC-35"},
 }
 
 

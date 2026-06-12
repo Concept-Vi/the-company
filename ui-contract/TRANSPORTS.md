@@ -55,47 +55,17 @@ machine-diff (V24) is an open obligation, stated loudly per the format's fail-lo
   grep, both directions). The §9.1 structured `(path, method)` upgrade stays an open obligation
   for the OLDER routes; the ③④⑤ fabric routes carry their methods in the table here.
 - **F1 status:** carries the EVENT surface (`GET /api/stream` SSE + `GET /api/events` snapshot)
-  AND — as of the Capability Fabric L-Wire lane — the ③④⑤ CONFIG-AUTHORING / DEV-BRIDGES /
-  AUTOMATION routes. session/session-message bridge bindings remain `planned`.
-- **③④⑤ Capability Fabric routes + methods** (each route is ONE path dispatched by a GET read
-  arm AND a POST write arm, both LITERAL `path ==`/`self.path ==`, both delegating to the SAME
-  `runtime.capability_handlers.HANDLERS[key].fn` the MCP face calls — DRY, drift-tested
-  byte-identical by `tests/capability_handlers_acceptance.py` §4). GET carries the READ ops
-  (`?op=list|get|read|resolve|describe`); POST carries the consequential WRITE `act` (body
-  `{op:"act", act:…, consent?:…}`). The handler declares its RAIL and a sanctioned SERVICE
-  executes — the bridge NEVER shells/spawns (the floor):
+  The ③④⑤ CONFIG-AUTHORING / DEV-BRIDGES / AUTOMATION wrapper routes were REMOVED
+  2026-06-13 (Session Fabric R1.4). session/session-message bridge bindings remain `planned`.
+- **③④⑤ Capability Fabric routes — REMOVED (Session Fabric R1.4, 2026-06-13):** the 18
+  `/api/config|dev|auto/*` wrapper routes (and their `_capability` dispatcher, the
+  `capability_handlers` registry, and the R3 `config_writer` service they shelled through)
+  were deleted: they hand-wrapped what a real Claude Code session already does natively.
+  The capabilities are reached by DRIVING A REAL SESSION over `supervisor-http`
+  (spawn/inject; the R1-prime wider-allowlist `bridge-session` profile for in-session
+  git/LSP/web) or the `wire-job` transport (below) — surface, don't rebuild.
 
-  | route | methods | handler key | rail | CC |
-  |---|---|---|---|---|
-  | `/api/config/hooks` | GET·POST | `config.hooks` | R3 | CC-12 |
-  | `/api/config/mcp-servers` | GET·POST | `config.mcp_servers` | R3 | CC-11 |
-  | `/api/config/output-style` | GET·POST | `config.output_style` | R3 | CC-26 |
-  | `/api/config/commands` | GET·POST | `config.slash_commands` | R3 | CC-03 |
-  | `/api/config/plugins` | GET·POST | `config.extensions` | R3 | CC-13/CC-34 |
-  | `/api/config/patterns` | GET·POST | `config.patterns` | direct-read | CC-27 |
-  | `/api/config/keybindings` | GET·POST | `config.keybindings` | R3 | CC-04 (reopened) |
-  | `/api/config/telemetry` | GET·POST | `config.telemetry` | R3 | CC-32 (reopened) |
-  | `/api/config/provider` | GET·POST | `config.provider` | R3 | CC-29 (reopened) |
-  | `/api/dev/git` | GET·POST | `dev.git` | R3 | CC-06 |
-  | `/api/dev/code-intel` | GET·POST | `dev.code_intel` | R1-prime → `supervisor-http` | CC-16 |
-  | `/api/dev/computer-use` | GET·POST | `dev.computer_use` | R1-prime → `supervisor-http` | CC-17 |
-  | `/api/dev/code-review` | GET·POST | `dev.code_review` | R2 → `wire-job` | CC-19 |
-  | `/api/dev/ci` | GET·POST | `dev.ci` | R3 | CC-30 |
-  | `/api/auto/routines` | GET·POST | `auto.routines` | R3 | CC-21 |
-  | `/api/auto/workflows` | GET·POST | `auto.workflows` | R1 → `supervisor-http` / R2 → `wire-job` (loop) | CC-22 |
-  | `/api/auto/cost` | GET·POST | `auto.cost` | direct-read | CC-20 |
-  | `/api/auto/auth` | GET·POST | `auto.auth` | R3 | CC-24.1 read / CC-24.2·.3·.4 acts (reopened) |
-
-  CALLER IDENTITY for the consequential ③④⑤ writes (R3 / R1-prime / R2): the operator-vantage
-  posture (the `/api/resolve` operator-only precedent, §5.3). A cold MCP agent reaches the READ
-  surface and may build a write intent/job, but the consequential write rides the operator
-  consent beat (sole-operator: consent-not-lockdown — never a multi-user wall, never a denial;
-  an unconsented dangerous act returns a pending-proposal). R3 writes route to the
-  `config_writer` service; R1-prime to `supervisor-http` (a wider-allowlist `bridge-session`
-  spawn); R2 to `wire-job` (below). The async ④⑤ acts return a job/intent receipt + a watch
-  cursor — the consequence rides the event stream, never the response body (§3.3/§8 async proof).
-
-## `wire-job` — the headless `claude -p` wire (R2: the Capability Fabric async executor)
+## `wire-job` — the headless `claude -p` wire (R2: the async executor — KEPT, it runs a real session)
 - **Protocol:** a HEADLESS `claude -p "<instruction>" --output-format json` run-and-capture job,
   NOT an interactive session and NOT the supervisor mailbox (only deliver/wake/consult ride
   `supervisor-http`'s R1). `runtime/implement.py` `launch()` (cmd at `:320`,

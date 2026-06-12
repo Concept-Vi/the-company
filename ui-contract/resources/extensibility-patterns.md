@@ -3,11 +3,13 @@ type: contract-entry
 resource: extensibility-patterns
 summary: The meta-resource for customizing Claude Code — the chooser across the customization mechanisms (skills · custom commands · hooks · MCP servers · output styles · subagents · CLAUDE.md · plugins-as-package · settings precedence), the shared path placeholders (${CLAUDE_PROJECT_DIR}/${CLAUDE_PLUGIN_ROOT}/${CLAUDE_PLUGIN_DATA}), and the scope/precedence laws that govern them all; the company exposes no customization face, so this entry is documentation-as-data a UI uses to route an intent to the right mechanism.
 schemes: []
-status: building
+status: planned
 relates-to: ["[[hooks]]", "[[mcp-servers]]", "[[extensions]]", "[[output-style]]", "[[permission]]", "[[claude-memory]]"]
 ---
 
 # Resource: extensibility-patterns
+
+> **Refocus (Session Fabric R1.4, 2026-06-13):** the company command-wrapper endpoints this entry once cited (the ③④⑤ MCP tools + `/api/config|dev|auto` bridge arms + the R3 config_writer rail) were REMOVED — they duplicated what a real Claude Code session does natively. The capability is reached by DRIVING A REAL SESSION (the supervisor's spawn/inject + R1-prime profile); this entry remains as the NATIVE data-model declaration a UI renders. Ops whose only real endpoint was the wrapper are back to `planned` — honestly.
 
 ## Identity
 **There is no addressable record and no scheme: extensibility-patterns is the CHOOSER resource — the relational map of which Claude Code customization mechanism fits a given intent, the placeholders and precedence laws shared across them, and the cross-references to each mechanism's own entry.** It exists because the named ambiguity "I want to customize Claude Code's behavior" routes to at least eight distinct mechanisms with overlapping reach, and a UI (or an agent) must pick the right one. Sourced to the customization comparison tables across https://code.claude.com/docs/en/output-styles#comparisons-to-related-features, https://code.claude.com/docs/en/skills, https://code.claude.com/docs/en/plugins#when-to-use-plugins-vs-standalone-configuration, and https://code.claude.com/docs/en/hooks. Every op is `planned` against the company: there is no company face for any of these mechanisms (the per-mechanism entries name each bridge gap); this entry adds no new capability — it routes among the ones the others contract.
@@ -74,7 +76,7 @@ The shared SCOPE + PRECEDENCE laws (a UI must surface the effective source, neve
 op: extensibility-patterns.get
 resource: extensibility-patterns
 kind: get
-status: building
+status: planned
 direction: outbound
 atlas: [CC-27.1, CC-27.2]
 tasks:
@@ -86,7 +88,6 @@ tasks:
   - alias: "pick the right extension mechanism"
   - alias: "settings precedence rules"
 bindings:
-  - { kind: mcp, tool: config_patterns, op: "op='resolve'|'describe'", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric ③): the MCP face resolves the chooser PURELY (direct-read — documentation-as-data, no file, no R3). The handler runtime/capability_handlers/config_authoring.py:patterns backs both faces (DRY). live-verify pending (lead): a REAL .claude write / native claude-CLI round-trip." }
   - { kind: cli, command: "(reference — the chooser is documentation across the output-styles/skills/plugins/hooks docs; the company exposes no routing endpoint)", transport: claude-cli, exposure: "n/a — claude CLI", status: planned, note: "no enumerable company registry; canonical source = the customization comparison tables. https://code.claude.com/docs/en/output-styles#comparisons-to-related-features" }
 liveness: snapshot
 live-twin: "none — static reference (grows as Claude Code adds mechanisms)"

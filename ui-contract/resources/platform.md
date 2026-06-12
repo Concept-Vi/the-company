@@ -3,11 +3,13 @@ type: contract-entry
 resource: platform
 summary: The host-and-org layer Claude Code runs within — installation/updates/platform support, enterprise admin (managed policy), cloud-provider routing (Bedrock/Vertex/Foundry), large-codebase setup, data privacy/security, and the glossary; nearly all of this governs the HOST install and the Anthropic ORG, not the fabric, so this resource maps each class to its native model and marks it building/planned/out-of-local-scope WITH a reason — the company drives one installed claude binary and never administers the org.
 schemes: []
-status: building
+status: planned
 relates-to: ["[[auth]]", "[[settings]]", "[[diagnostics]]", "[[surfaces]]", "[[session]]", "[[cost-usage]]", "[[knowledge-corpus]]"]
 ---
 
 # Resource: platform
+
+> **Refocus (Session Fabric R1.4, 2026-06-13):** the company command-wrapper endpoints this entry once cited (the ③④⑤ MCP tools + `/api/config|dev|auto` bridge arms + the R3 config_writer rail) were REMOVED — they duplicated what a real Claude Code session does natively. The capability is reached by DRIVING A REAL SESSION (the supervisor's spawn/inject + R1-prime profile); this entry remains as the NATIVE data-model declaration a UI renders. Ops whose only real endpoint was the wrapper are back to `planned` — honestly.
 
 ## Identity
 **A platform concern is identified by its CLASS (install/update, enterprise admin, cloud provider,
@@ -74,7 +76,7 @@ corpus search over the claude-code-atlas vault.**
 op: platform.glossary
 resource: platform
 kind: search
-status: building
+status: planned
 direction: outbound
 atlas: [CC-35.1]
 tasks:
@@ -119,7 +121,7 @@ and route it honestly to its native path.**
 op: platform.install
 resource: platform
 kind: act
-status: building
+status: planned
 direction: outbound
 atlas: [CC-34.1]
 tasks:
@@ -131,7 +133,6 @@ tasks:
   - alias: "update claude code"
   - alias: "claude version"
 bindings:
-  - { kind: mcp, tool: config_extensions, op: "op='act' act=update-native|install-native (the native Claude Code binary updater dev-bridge)", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric \u2462 reopened CC-34, Tim's steer): `claude update` / `claude install` as a native-updater DEV-BRIDGE — exec-tier (fetches+runs an installer) through the R3 config_writer consent beat; the cli_allowlist rows config.extensions:update-native/install-native (L-\u2463-dev) back it. The handler runtime/capability_handlers/config_authoring.py:extensions backs both faces (DRY). live-verify pending (lead): a REAL `claude update` round-trip (NOT run — it mutates the host binary)." }
   - { kind: cli, command: "claude install [version] / claude update / claude doctor   (HOST commands; NOT company routes)", transport: cli-local, exposure: "n/a — Claude Code built-in", status: planned, note: "SCOPE: the company drives the binary at `_find_claude()` (runtime/session_supervisor.py:259, env-overridable) but never installs/updates it. Native installs auto-update in the background; homebrew/winget/npm need manual upgrade. Listed planned-and-routed so CC-34 is navigable; the actual install/update path is the host operator's" }
 liveness: none
 emits: []
@@ -232,7 +233,7 @@ selects nor switches the provider.**
 op: platform.cloud-provider
 resource: platform
 kind: act
-status: building
+status: planned
 direction: outbound
 atlas: [CC-29.1]
 tasks:
@@ -243,7 +244,6 @@ tasks:
   - alias: "Vertex AI"
   - alias: "Microsoft Foundry"
 bindings:
-  - { kind: mcp, tool: config_provider, op: "op='list'|'get' + op='act' act=set-provider — REOPENED CC-29", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric ③): the MCP face reads/writes the CLAUDE_CODE_USE_* / ANTHROPIC_* provider env in settings.json `env` via the R3 config_writer (reopened CC-29; host-env edit, takes effect next session). The handler runtime/capability_handlers/config_authoring.py:provider backs both faces (DRY). live-verify pending (lead): a REAL .claude write / native claude-CLI round-trip." }
   - { kind: http, method: POST, path: "(none — host env CLAUDE_CODE_USE_BEDROCK/_VERTEX/_FOUNDRY + provider creds)", transport: supervisor-http, exposure: "n/a — host env / external provider", status: planned, note: "SCOPE: provider selection is the HIGHEST auth-precedence method (see [[auth#Identity]]). It is set by the service account's environment + provider credentials (AWS/GCP/Azure), not a company op. The fabric INHERITS it: a provider-configured host means provider-routed sessions, transparently. The provider endpoints themselves are EXTERNAL (Anthropic/AWS/GCP/Azure), inventoried in INVENTORY-EXCLUSIONS.md, never company routes" }
 liveness: none
 emits: []
@@ -339,12 +339,12 @@ surface), [[knowledge-corpus]] (the one built platform read — glossary/docs), 
 records the company does persist).
 
 ## op: platform.data-posture
-**`platform.data-posture` is the REOPENED CC-32 telemetry/data-posture WRITE (Tim's sole-operator steer): set the operator's own data-posture env flags (DISABLE_TELEMETRY / DISABLE_ERROR_REPORTING / DISABLE_NON_ESSENTIAL_MODEL_CALLS / DISABLE_AUTOUPDATER / …) in settings.json `env` via the R3 config_writer — the operator owns this choice (a policy string, reversible, non-executable); the org data-agreement half stays the boundary documented in [[platform#op: platform.privacy]].**
+**`platform.data-posture` is the REOPENED CC-32 telemetry/data-posture WRITE (Tim's sole-operator steer): set the operator's own data-posture env flags (DISABLE_TELEMETRY / DISABLE_ERROR_REPORTING / DISABLE_NON_ESSENTIAL_MODEL_CALLS / DISABLE_AUTOUPDATER / …) in settings.json `env` — post-R1.4 by direct settings edit or driving a real session (the R3 config_writer wrapper rail was removed 2026-06-13). The operator owns this choice (a policy string, reversible, non-executable); the org data-agreement half stays the boundary documented in [[platform#op: platform.privacy]].**
 ```contract:op
 op: platform.data-posture
 resource: platform
 kind: act
-status: building
+status: planned
 direction: outbound
 atlas: [CC-32.1]
 tasks:
@@ -357,19 +357,17 @@ tasks:
   - alias: "data posture"
   - alias: "opt out of telemetry"
 caller: required
-bindings:
-  - { kind: mcp, tool: config_telemetry, op: "op='act' act=set-flag (read via op='list'|'get')", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric \u2462 reopened CC-32): the MCP face writes the data-posture env flags into settings.json `env` via the R3 config_writer; flags validated against the closed data-posture set (fail loud on an unknown key). The handler runtime/capability_handlers/config_authoring.py:telemetry backs both faces (DRY). live-verify pending (lead): a REAL settings.json env write round-trip + a session honouring the flag." }
-  - { kind: http, method: POST, path: "/api/config/telemetry  (Wire-phase-owned, pending — MCP face built)", transport: bridge-http, exposure: "exposure.json#bridge-http", status: planned, note: "the bridge arm is Wire-phase-owned (pending); the MCP face is live now. The write merges an `env` sub-block into the chosen settings scope (same R3 primitive as hooks/provider)." }
+bindings: []
 liveness: none
 emits: []
 consequences:
   - when: "a data-posture flag written into settings.json `env` (e.g. DISABLE_TELEMETRY=1)"
     expect: []
-    bound: "the write returns a re-read-verified receipt synchronously (config_writer re-reads the merged env block before acking)"
+    bound: "PLANNED — the wrapper write path (config_writer re-read receipt) was removed 2026-06-13 (R1.4); a future drive-real-session path defines its own bound"
     evidence: "[[platform#op: platform.data-posture]] op='get' re-reads the settings env block and shows the flag; behaviourally, Claude Code reads the env on its NEXT session start (the flag takes effect then, not mid-session) — there is NO fabric event for a settings change"
 correlate: [session]
 verification:
-  set-flag: {state: unverified, note: "the MCP face + R3 write path is built + unit-proven on a scratch settings tree (config_writer_acceptance + the config_authoring handler check); a REAL ~/.claude/settings.json env write + a session honouring the flag is the lead's live-verify, NOT run here (lead-only law)"}
+  set-flag: {state: unverified, note: "the wrapper write path (MCP face + R3 config_writer) was REMOVED 2026-06-13 (Session Fabric R1.4 — it duplicated native settings editing); the posture flags are set by editing settings env directly or driving a real session — no company endpoint, honestly planned"}
 ```
 ### Description (purpose-free)
 The REOPENED data-posture write (CC-32, Tim's sole-operator steer): the operator sets their OWN data-posture toggles — the `DISABLE_TELEMETRY` / `DISABLE_ERROR_REPORTING` / `DISABLE_NON_ESSENTIAL_MODEL_CALLS` / `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` / `DISABLE_AUTOUPDATER` / `DISABLE_BUG_COMMAND` env flags — written into a settings scope's `env` block through the R3 config_writer (the sole `.claude` writer). The flags are validated against the closed data-posture set (an unknown key fails loud, never a silent write of an env key Claude Code ignores). This is the operator's own choice and is non-executable + reversible (git-revert / the `.bak`), so it rides NO consent beat; the ORG data agreement + the host OTel exporter opt-in remain the documented boundary in [[platform#op: platform.privacy]] (a separate, out-of-local-scope concern). Source: https://code.claude.com/docs/en/settings.md (env), monitoring-usage.md.

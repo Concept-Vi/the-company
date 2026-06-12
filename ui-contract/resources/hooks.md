@@ -3,11 +3,13 @@ type: contract-entry
 resource: hooks
 summary: The lifecycle automation surface — user-defined command/HTTP/MCP-tool/prompt/agent handlers that fire at Claude Code lifecycle points (PreToolUse, SessionStart, Stop, …), gated by matchers and `if` rules, declared in settings JSON / plugin hooks.json / skill+agent frontmatter; the company exposes NO hook editor today, so this resource contracts the native surface a UI editor renders, with the bridge gap named.
 schemes: []
-status: building
+status: planned
 relates-to: ["[[permission]]", "[[extensions]]", "[[mcp-servers]]", "[[output-style]]"]
 ---
 
 # Resource: hooks
+
+> **Refocus (Session Fabric R1.4, 2026-06-13):** the company command-wrapper endpoints this entry once cited (the ③④⑤ MCP tools + `/api/config|dev|auto` bridge arms + the R3 config_writer rail) were REMOVED — they duplicated what a real Claude Code session does natively. The capability is reached by DRIVING A REAL SESSION (the supervisor's spawn/inject + R1-prime profile); this entry remains as the NATIVE data-model declaration a UI renders. Ops whose only real endpoint was the wrapper are back to `planned` — honestly.
 
 ## Identity
 **A hook is identified by the tuple (settings-source, hook-event, matcher-group-index, handler-index) — there is no `hook://` scheme and no addressable hook record; a hook is an entry inside a JSON settings file (or a plugin `hooks.json`, or skill/agent frontmatter), and the company exposes no endpoint that reads or writes it today.**
@@ -80,7 +82,7 @@ When the bridge gap is closed (see Operations), a hook editor would be the opera
 op: hooks.get
 resource: hooks
 kind: get
-status: building
+status: planned
 direction: outbound
 atlas: [CC-12.1, CC-12.5]
 tasks:
@@ -89,7 +91,6 @@ tasks:
   - alias: "list my hooks"
   - alias: "inspect the hooks menu"
 bindings:
-  - { kind: mcp, tool: config_hooks, op: "op='list'|'get'", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric ③): the MCP face reads settings hook blocks via the R3 config_writer. The handler runtime/capability_handlers/config_authoring.py:hooks backs both faces (DRY). live-verify pending (lead): a REAL .claude write / native claude-CLI round-trip." }
   - { kind: tui, command: "claude (interactive) then /hooks", transport: claude-tui, exposure: "n/a — interactive", status: planned, note: "NATIVE only: /hooks opens a read-only browser (event -> matcher -> handler detail + source). No company endpoint reads it. https://code.claude.com/docs/en/hooks#the-hooks-menu" }
 liveness: snapshot
 live-twin: "none — static between settings-file edits (the file watcher reloads on edit)"
@@ -118,7 +119,7 @@ Adjacent: [[hooks#op: hooks.act]] (the planned writer), [[hooks#op: hooks.event-
 op: hooks.act
 resource: hooks
 kind: act
-status: building
+status: planned
 direction: outbound
 atlas: [CC-12.2, CC-12.3, CC-12.4]
 tasks:
@@ -132,9 +133,7 @@ tasks:
   - alias: "remove a hook"
   - alias: "automate an action on a lifecycle event"
 caller: required
-bindings:
-  - { kind: mcp, tool: config_hooks, op: "op='act' (add-hook/update-hook/remove-hook/set-flag)", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric ③): the MCP face routes the hook write to the R3 config_writer (consent-gated — a hook command is exec). The handler runtime/capability_handlers/config_authoring.py:hooks backs both faces (DRY). live-verify pending (lead): a REAL .claude write / native claude-CLI round-trip." }
-  - { kind: http, method: POST, path: "/api/config/hooks", transport: bridge-http, exposure: "exposure.json#bridge-http", status: building, note: "BUILT (Capability Fabric L-Wire): the literal POST /api/config/hooks arm (runtime/bridge.py do_POST) delegates to the SAME runtime.capability_handlers config.hooks handler the MCP face calls (DRY, drift-tested byte-identical). GET /api/config/hooks reads. Rail R3: the consent-gated write routes to the config_writer service. live-verify pending (lead): a REAL .claude hook write round-trip." }
+bindings: []
 liveness: none
 emits: []
 consequences:

@@ -3,11 +3,13 @@ type: contract-entry
 resource: computer-use
 summary: Claude Code's reach beyond the editor — WebFetch (fetch+extract a URL, lossy by design) and WebSearch (native session tools), the Claude-in-Chrome browser-automation integration (open tabs, click, type, read console; beta, not WSL), and the API computer-use tool (screenshot+mouse/keyboard, beta header). Native in-session/in-browser capabilities; the company spawns sessions with mcp__company ONLY, so none are granted by default — contracted as the native surface with the gap named.
 schemes: []
-status: building
+status: planned
 relates-to: ["[[session]]", "[[permission]]", "[[headless-control]]", "[[knowledge-corpus]]"]
 ---
 
 # Resource: computer-use
+
+> **Refocus (Session Fabric R1.4, 2026-06-13):** the company command-wrapper endpoints this entry once cited (the ③④⑤ MCP tools + `/api/config|dev|auto` bridge arms + the R3 config_writer rail) were REMOVED — they duplicated what a real Claude Code session does natively. The capability is reached by DRIVING A REAL SESSION (the supervisor's spawn/inject + R1-prime profile); this entry remains as the NATIVE data-model declaration a UI renders. Ops whose only real endpoint was the wrapper are back to `planned` — honestly.
 ## Identity
 **Computer/web reach is keyed by the SESSION that wields it (`session://<id>`) — there is no
 `computer-use://` scheme.** Atlas class CC-17 spans three distinct native surfaces, kept apart in
@@ -73,7 +75,7 @@ knows the real boundary and the spawn-permission + host (WSL) constraints.**
 op: computer-use.act
 resource: computer-use
 kind: act
-status: building
+status: planned
 direction: outbound
 atlas: [CC-17.1, CC-17.2, CC-17.3]
 tasks:
@@ -89,9 +91,7 @@ tasks:
   - alias: "browser automation"
   - alias: "control the computer"
   - alias: "take a screenshot and click"
-bindings:
-  - { kind: mcp, tool: dev_computer_use, op-param: "op=act", server: company, exposure: "exposure.json#mcp-company", status: building, note: "L-④-dev: RAIL R1-prime — web-fetch/web-search build a bridge-session spawn intent (prose result); browser (beta+not-WSL) and computer (macOS+interactive) REFUSE LOUD on this headless WSL -p rail (§5.4), never green-painted. live-verify pending (lead)" }
-  - { kind: http, method: POST, path: "/api/dev/computer-use", transport: bridge-http, exposure: "exposure.json#bridge-http", status: building, note: "BUILT (Capability Fabric L-Wire): the literal POST /api/dev/computer-use arm delegates to the SAME dev.computer_use handler the MCP face calls (DRY). act=web-fetch/web-search build an R1-prime spawn intent (needs the WebFetch/WebSearch grant in the wider spawn); act=browser/computer REFUSE LOUD (host/rail boundary — Chrome beta+NOT-WSL, computer-use needs OS perms — NEVER green-painted, §5.4). live-verify pending (lead): a REAL R1-prime web-fetch round-trip" }
+bindings: []
 liveness: none
 emits: []
 consequences:

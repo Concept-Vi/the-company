@@ -3,11 +3,13 @@ type: contract-entry
 resource: routines
 summary: Cloud-resident Claude Code automation — a saved prompt + repos + connectors that runs autonomously on Anthropic-managed infrastructure, started by a schedule / bearer-token API call / GitHub event; plus the session-scoped local cron (/loop, CronCreate) that survives only inside an open CLI session. The company exposes NEITHER today — both are native Claude Code surfaces, contracted with the gap named.
 schemes: []
-status: building
+status: planned
 relates-to: ["[[workflows]]", "[[ci]]", "[[session]]", "[[events]]"]
 ---
 
 # Resource: routines
+
+> **Refocus (Session Fabric R1.4, 2026-06-13):** the company command-wrapper endpoints this entry once cited (the ③④⑤ MCP tools + `/api/config|dev|auto` bridge arms + the R3 config_writer rail) were REMOVED — they duplicated what a real Claude Code session does natively. The capability is reached by DRIVING A REAL SESSION (the supervisor's spawn/inject + R1-prime profile); this entry remains as the NATIVE data-model declaration a UI renders. Ops whose only real endpoint was the wrapper are back to `planned` — honestly.
 
 ## Identity
 **A routine is identified by its cloud routine id (`trig_…` for its API trigger, the routine
@@ -81,7 +83,7 @@ claude.ai/code/routines for cloud, `CronList` for session tasks.**
 op: routines.list
 resource: routines
 kind: list
-status: building
+status: planned
 direction: outbound
 atlas: [CC-21.1]
 tasks:
@@ -90,7 +92,6 @@ tasks:
   - alias: "show my automations"
   - alias: "list cron jobs"
 bindings:
-  - { kind: mcp, tool: routines, op-param: "op=list|get", server: company, exposure: "exposure.json#mcp-company", status: building, note: "BUILT (2026-06-12; mcp_face/tools/automation.py routines() → capability_handlers/automation.py:routines, direct-read host_reads CC-21). A THIN read of cloud routines (Anthropic-resident) via the native schedule surface — an empty result is honest, never fabricated. live-verify pending (lead): a REAL `claude schedule list`." }
   - { kind: cli, command: "/schedule list   (NATIVE Claude Code CLI slash command — cloud routines; NOT a `company` command)", transport: tui-interactive, exposure: "n/a — interactive", status: planned, note: "GAP: the company CLI (ops/cli/) has no cron/schedule/routine noun (verified 2026-06-12). /schedule is a claude.ai-login-only CLI command, hidden under API-key/Bedrock/Vertex auth (routines.md troubleshooting)" }
   - { kind: cli, command: "CronList   (NATIVE session tool — session-scoped tasks of the CURRENT open conversation only)", transport: tui-interactive, exposure: "n/a — interactive", status: planned, note: "GAP: session-scoped, in-memory; not company-reachable. Surfaced conversationally ('what scheduled tasks do I have?') per scheduled-tasks.md" }
 liveness: snapshot
@@ -245,7 +246,7 @@ a Company act.**
 op: routines.act
 resource: routines
 kind: act
-status: building
+status: planned
 direction: outbound
 atlas: [CC-21.4]
 tasks:
@@ -261,7 +262,6 @@ tasks:
   - alias: "rotate a routine's api token"
   - alias: "delete a cron job"
 bindings:
-  - { kind: mcp, tool: routines, op-param: "op=act (act=run-now|pause|one-off|cancel-session-task)", server: company, exposure: "exposure.json#mcp-company", status: building, note: "BUILT (2026-06-12; capability_handlers/automation.py:routines, RAIL R3). The handler builds the PROPOSED native argv (run-now/pause/one-off → `claude schedule …`; cancel-session-task → native CronDelete) + the consent path; it NEVER shells (the config_writer service shells it, consent-gated). Receipt+watch (re-read op=list), NOT a pretended result. live-verify pending (lead): a REAL schedule/CronDelete fire." }
   - { kind: cli, command: "/schedule run | /schedule update   (NATIVE — run-now / change a cloud routine)", transport: tui-interactive, exposure: "n/a — interactive", status: planned, note: "GAP: no company face. Run-now / pause (the Repeats toggle) / token Regenerate-Revoke are on the routine detail page at claude.ai/code/routines" }
   - { kind: cli, command: "CronDelete(id)   (NATIVE session tool — cancel a session-scoped task by its 8-char id)", transport: tui-interactive, exposure: "n/a — interactive", status: planned, note: "GAP: session-scoped. `Esc` clears a pending `/loop` wakeup; CronDelete cancels a task scheduled by asking Claude directly. CLAUDE_CODE_DISABLE_CRON=1 disables the whole scheduler" }
 liveness: none

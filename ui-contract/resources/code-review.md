@@ -3,11 +3,13 @@ type: contract-entry
 resource: code-review
 summary: Claude Code's AI code-review surfaces — the local `/code-review` and `/security-review` slash commands run in a session against a diff, the managed GitHub Code Review service (a fleet of agents posting inline PR comments, research preview), and self-hosted CI (GitHub Actions / GitLab via `claude -p`). All native/hosted; the company exposes NO review face — contracted as the native surface with the bridge gap named, and the real CI path (claude -p) noted.
 schemes: []
-status: building
+status: planned
 relates-to: ["[[session]]", "[[headless-control]]", "[[permission]]", "[[knowledge-corpus]]"]
 ---
 
 # Resource: code-review
+
+> **Refocus (Session Fabric R1.4, 2026-06-13):** the company command-wrapper endpoints this entry once cited (the ③④⑤ MCP tools + `/api/config|dev|auto` bridge arms + the R3 config_writer rail) were REMOVED — they duplicated what a real Claude Code session does natively. The capability is reached by DRIVING A REAL SESSION (the supervisor's spawn/inject + R1-prime profile); this entry remains as the NATIVE data-model declaration a UI renders. Ops whose only real endpoint was the wrapper are back to `planned` — honestly.
 ## Identity
 **Code review is keyed by what is reviewed — a local DIFF in a session, or a GitHub PULL REQUEST —
 not by a standalone record; there is no `code-review://` scheme.** Atlas class CC-19 spans three
@@ -82,7 +84,7 @@ managed service.**
 op: code-review.act
 resource: code-review
 kind: act
-status: building
+status: planned
 direction: outbound
 atlas: [CC-19.1, CC-19.2, CC-19.3]
 tasks:
@@ -97,7 +99,6 @@ tasks:
   - alias: "review this PR"
   - alias: "PR comments"
 bindings:
-  - { kind: mcp, tool: dev_code_review, op-param: "op=act", server: company, exposure: "exposure.json#mcp-company", status: building, note: "L-④-dev: RAIL R2 — the handler writes a wire-job intent + returns a job-id + watch cursor; the operator-only /api/resolve seam + the wire-loop (implement.py) dispatch the headless `claude -p` review. Findings ride dispatch events (events.watch). The handler NEVER spawns. live-verify pending (lead): a REAL review round-trip is the lead's slice" }
   - { kind: tui, command: "/code-review   ·   /security-review   (in a session, against the current diff)", transport: tui-interactive, exposure: "n/a — interactive", status: planned, note: "NATIVE local slash commands (code-review.md#review-a-diff-locally, commands.md). Run inside a session; the company spawns headless sessions with NO interactive TUI ([[headless-control#Caller]]) so it cannot drive these slash commands. A fabric equivalent = inject the review PROMPT into a spawned session (planned)" }
   - { kind: http, method: "@claude review (GitHub comment) / PR-open trigger", path: "GitHub-hosted (Anthropic infra)", transport: bridge-http, exposure: "n/a — Anthropic-hosted", status: planned, note: "MANAGED GitHub Code Review (research preview, Team/Enterprise, NOT for ZDR orgs). Anthropic-hosted fleet posts inline comments. The COMPANY does not run or proxy this — verified no code-review face in the company" }
   - { kind: cli, command: "claude -p \"Review this PR for bugs\" --allowedTools \"Read,Glob,Bash(git *)\" --output-format json   (in CI)", transport: cli-local, exposure: "exposure.json#cli-local", status: planned, note: "CI path (github-actions.md, Custom Apps Integration.md). The REAL buildable path: the company HAS a self-hosted runner (pipeliner) + a session fabric that runs claude -p; a review workflow is NOT yet packaged as a company capability — the gap" }

@@ -3,11 +3,13 @@ type: contract-entry
 resource: output-style
 summary: "The terminal presentation surface — the output STYLE (a system-prompt modifier setting Claude's role/tone/format: built-in Default/Proactive/Explanatory/Learning or a custom Markdown file) and the STATUS LINE (a shell script fed JSON session data that renders a persistent bottom bar); the company exposes neither, so this resource contracts the native surface a UI editor renders, with the bridge gap named."
 schemes: []
-status: building
+status: planned
 relates-to: ["[[extensions]]", "[[context-window]]", "[[cost-usage]]", "[[model]]"]
 ---
 
 # Resource: output-style
+
+> **Refocus (Session Fabric R1.4, 2026-06-13):** the company command-wrapper endpoints this entry once cited (the ③④⑤ MCP tools + `/api/config|dev|auto` bridge arms + the R3 config_writer rail) were REMOVED — they duplicated what a real Claude Code session does natively. The capability is reached by DRIVING A REAL SESSION (the supervisor's spawn/inject + R1-prime profile); this entry remains as the NATIVE data-model declaration a UI renders. Ops whose only real endpoint was the wrapper are back to `planned` — honestly.
 
 ## Identity
 **The output style is identified by the `outputStyle` settings field (a name: a built-in or a custom file's name); the status line is identified by the `statusLine` settings object — both are session-presentation attributes read from settings files, not addressable records, and the company exposes no endpoint to read or set either.**
@@ -63,7 +65,7 @@ Claude Code output styles (https://code.claude.com/docs/en/output-styles) change
 op: output-style.get
 resource: output-style
 kind: get
-status: building
+status: planned
 direction: outbound
 atlas: [CC-26.1, CC-26.3]
 tasks:
@@ -72,7 +74,6 @@ tasks:
   - alias: "list output styles"
   - alias: "is the learning style on"
 bindings:
-  - { kind: mcp, tool: config_output_style, op: "op='list'|'get'", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric ③): the MCP face reads the output-style file/pointers via the R3 config_writer. The handler runtime/capability_handlers/config_authoring.py:output_style backs both faces (DRY). live-verify pending (lead): a REAL .claude write / native claude-CLI round-trip." }
   - { kind: tui, command: "claude (interactive) /config -> Output style (picker) · read the statusLine field in settings.json", transport: claude-tui, exposure: "n/a — interactive", status: planned, note: "NATIVE: /config shows + picks the style; statusLine is a settings field. The status line's CURRENT data is also visible on the bar itself. No company endpoint. https://code.claude.com/docs/en/output-styles#change-your-output-style" }
 liveness: snapshot
 live-twin: "the status-line OUTPUT is event-driven-live on the bar; the CONFIG is static between edits"
@@ -89,7 +90,7 @@ Adjacent: [[output-style#op: output-style.act]] (set), [[context-window]] (the c
 op: output-style.act
 resource: output-style
 kind: act
-status: building
+status: planned
 direction: outbound
 atlas: [CC-26.2, CC-26.4]
 tasks:
@@ -105,9 +106,7 @@ tasks:
   - alias: "customize the status bar"
 caller: required
 bindings:
-  - { kind: mcp, tool: config_output_style, op: "op='act' (create-style wired; set-style/statusline/delete = named building gaps)", server: company, exposure: "exposure.json#mcp.company", status: building, note: "BUILT (Capability Fabric ③): the MCP face authors the style file via the R3 config_writer (non-dangerous; the settings-pointer + delete acts are named building gaps in-handler). The handler runtime/capability_handlers/config_authoring.py:output_style backs both faces (DRY). live-verify pending (lead): a REAL .claude write / native claude-CLI round-trip." }
   - { kind: tui, command: "/config (style picker) · edit outputStyle field · /statusline <NL description|delete> · edit statusLine object", transport: claude-tui, exposure: "n/a — interactive", status: planned, note: "NATIVE writer surface. /statusline accepts NL and Claude generates the script + updates settings. https://code.claude.com/docs/en/statusline#use-the-statusline-command" }
-  - { kind: http, method: POST, path: "/api/config/output-style", transport: bridge-http, exposure: "exposure.json#bridge-http", status: building, note: "BUILT (Capability Fabric L-Wire): the literal POST /api/config/output-style arm delegates to the SAME config.output_style handler the MCP face calls (DRY). GET reads. Rail R3 via config_writer: create-style authors the style markdown now; the set-style/set-statusline settings-POINTER write is a named building gap inside the handler (honest, not silent). live-verify pending (lead): a REAL style-file write round-trip." }
 liveness: none
 emits: []
 consequences:
