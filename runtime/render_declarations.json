@@ -1,0 +1,745 @@
+{
+  "registry": "render-declarations",
+  "schema_ver": 1,
+  "purpose": "Session Fabric R1.2 — the render-declaration layer. Every kind of thing a Claude Code session emits is enumerated here with a render-contract: WHERE it sits (placement), WHAT draws it (component), WHICH fields a UI needs (field_map = output field -> dotted path into the raw event). A declaration is TYPED CONTENT against the closed vocabularies below (registry-is-truth; the future heart ingests this as a registry, never ad-hoc JSON). Lookup law (implemented by runtime/render_declaration.py): exact 'type/subtype' -> family 'type/*' -> bare 'type' -> UNDECLARED (loud, recorded, still rendered as UnknownEvent — never silently dropped). assistant/user content blocks sub-dispatch as '<type>.content.<block.type>' (tool_use further refines by tool name); stream_event sub-dispatches on the inner event; attachment sub-dispatches on attachment.type. A family-fallback hit RENDERS but also records a registry-gap drop (gap-pressure law: constrained operation is a sensor for its registry).",
+  "grounding": "Real captured stream-json: /home/tim/xsession-tests/{t1/out.jsonl,t1/out2.jsonl,channel-hello/out.jsonl} (T2 harness, real claude). Real transcript corpus: 2,514 files under ~/.claude/projects/ scanned 2026-06-13 (full type/subtype inventory). Atlas docs mirror: claude-code/headless.md + agent-sdk/typescript.md + streaming-output.md (research lane 02-render-declaration.md). Evidence per entry: observed-stream | observed-transcript | atlas-docs | inferred | family-fallback | supervisor-native.",
+  "vocab": {
+    "surfaces": ["stream", "transcript", "both", "supervisor"],
+    "placements": ["conversation-thread", "tool-card", "session-header", "status-overlay", "sidebar", "toast", "input-suggestion", "meta", "none"],
+    "components": ["SessionHeader", "AssistantMessage", "UserMessage", "ToolCard", "ThinkingDisclosure", "CompactionDivider", "StatusBanner", "TaskPanel", "HookPanel", "QuestionCard", "PermissionPrompt", "ResultCard", "RateLimitBanner", "AuthModal", "CommandOutput", "PromptSuggestion", "ErrorCard", "MomentMarker", "SessionMeta", "AttachmentNote", "WireStatus", "UnknownEvent", "None"],
+    "update_targets": ["tool-by-id", "task-by-id", "hook-by-id", "token-counter", "session-header"],
+    "stream_accumulators": ["text-block", "thinking-block", "tool-input"],
+    "evidence": ["observed-stream", "observed-transcript", "atlas-docs", "inferred", "family-fallback", "supervisor-native"]
+  },
+  "declarations": {
+
+    "system/init": {
+      "surface": "stream", "placement": "session-header", "component": "SessionHeader",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-stream",
+      "field_map": {"session_id": "session_id", "cwd": "cwd", "model": "model", "permission_mode": "permissionMode", "tools": "tools", "mcp_servers": "mcp_servers", "slash_commands": "slash_commands", "skills": "skills", "plugins": "plugins", "claude_code_version": "claude_code_version", "output_style": "output_style"},
+      "summary": "First event of every stream — the session context snapshot. The UI initialises its session state here; session_id is the resume/fork handle."
+    },
+    "system/compact_boundary": {
+      "surface": "both", "placement": "conversation-thread", "component": "CompactionDivider",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"trigger": "compact_metadata.trigger", "pre_tokens": "compact_metadata.pre_tokens", "session_id": "session_id"},
+      "summary": "Context was compacted — visible divider, never hidden (it explains lost earlier context). Also the R3 timeline's anchor point."
+    },
+    "system/status": {
+      "surface": "stream", "placement": "status-overlay", "component": "StatusBanner",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-stream",
+      "field_map": {"status": "status", "permission_mode": "permissionMode"},
+      "summary": "Transient status: 'compacting' shows an overlay, null clears it; permissionMode keeps the header badge current."
+    },
+    "system/api_retry": {
+      "surface": "stream", "placement": "status-overlay", "component": "StatusBanner",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "field_map": {"attempt": "attempt", "max_retries": "max_retries", "retry_delay_ms": "retry_delay_ms", "error": "error", "error_status": "error_status"},
+      "summary": "API retry in progress — banner 'retrying (attempt N/M, waiting Xs)'; clears on next non-retry event."
+    },
+    "system/thinking_tokens": {
+      "surface": "stream", "placement": "none", "component": "None",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-stream",
+      "update_target": "token-counter",
+      "field_map": {"estimated_tokens": "estimated_tokens", "estimated_tokens_delta": "estimated_tokens_delta"},
+      "summary": "Live thinking-token estimate ticks (REAL stream emit, absent from the docs — found in the T2 captures). Feeds the token counter / a thinking-activity pulse; not a thread item."
+    },
+    "system/plugin_install": {
+      "surface": "stream", "placement": "status-overlay", "component": "StatusBanner",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "field_map": {"status": "status", "name": "name", "error": "error"},
+      "summary": "Plugin install progress before init: started -> installed/failed per marketplace -> completed (hide)."
+    },
+    "system/hook_started": {
+      "surface": "stream", "placement": "tool-card", "component": "HookPanel",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-stream",
+      "update_target": "hook-by-id",
+      "field_map": {"hook_id": "hook_id", "hook_name": "hook_name", "hook_event": "hook_event"},
+      "summary": "A hook began — collapsible infrastructure annotation keyed by hook_id."
+    },
+    "system/hook_progress": {
+      "surface": "stream", "placement": "tool-card", "component": "HookPanel",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-stream",
+      "update_target": "hook-by-id",
+      "field_map": {"hook_id": "hook_id", "hook_name": "hook_name", "stdout": "stdout", "stderr": "stderr"},
+      "summary": "Hook stdout/stderr — append into the open hook panel for hook_id."
+    },
+    "system/hook_response": {
+      "surface": "stream", "placement": "tool-card", "component": "HookPanel",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-stream",
+      "update_target": "hook-by-id",
+      "field_map": {"hook_id": "hook_id", "hook_name": "hook_name", "outcome": "outcome", "exit_code": "exit_code", "output": "output", "stderr": "stderr"},
+      "summary": "Hook finished — seal the panel; outcome=error warns on the parent tool card, cancelled = amber timeout."
+    },
+    "system/permission_denied": {
+      "surface": "stream", "placement": "tool-card", "component": "PermissionPrompt",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "update_target": "tool-by-id",
+      "field_map": {"tool_name": "tool_name", "tool_use_id": "tool_use_id", "decision_reason_type": "decision_reason_type", "decision_reason": "decision_reason", "message": "message"},
+      "summary": "A tool call was auto-denied (no prompt) — inline denial on the tool card; the model handles it, no user action."
+    },
+    "system/task_started": {
+      "surface": "stream", "placement": "sidebar", "component": "TaskPanel",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "update_target": "task-by-id",
+      "field_map": {"task_id": "task_id", "tool_use_id": "tool_use_id", "description": "description", "task_type": "task_type"},
+      "summary": "Background task launched (bash/subagent) — open a task panel entry, link from the spawning tool card."
+    },
+    "system/task_progress": {
+      "surface": "stream", "placement": "sidebar", "component": "TaskPanel",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "update_target": "task-by-id",
+      "field_map": {"task_id": "task_id", "usage": "usage", "last_tool_name": "last_tool_name", "summary": "summary"},
+      "summary": "Background task heartbeat — update tokens/tools/elapsed on the task entry."
+    },
+    "system/task_updated": {
+      "surface": "stream", "placement": "sidebar", "component": "TaskPanel",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "update_target": "task-by-id",
+      "field_map": {"task_id": "task_id", "patch": "patch"},
+      "summary": "Background task state patch — merge into tasks[task_id]; completed=tick, failed=error, killed=stopped."
+    },
+    "system/task_notification": {
+      "surface": "stream", "placement": "sidebar", "component": "TaskPanel",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "update_target": "task-by-id",
+      "field_map": {"task_id": "task_id", "status": "status", "summary": "summary", "output_file": "output_file", "usage": "usage"},
+      "summary": "Background task finished — finalize the entry; the next assistant turn reacts to it (link them visually)."
+    },
+    "system/local_command_output": {
+      "surface": "stream", "placement": "conversation-thread", "component": "CommandOutput",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "field_map": {"content": "content"},
+      "summary": "Output of a local slash command (/usage, /status…) — markdown bubble labeled 'Command output', NOT a model response. The R1.1 slash-command proof reads this."
+    },
+    "system/commands_changed": {
+      "surface": "stream", "placement": "none", "component": "None",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "field_map": {"commands": "commands"},
+      "summary": "Available commands changed — replace the cached command palette; nothing drawn in the thread."
+    },
+    "system/files_persisted": {
+      "surface": "stream", "placement": "none", "component": "None",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "field_map": {"files": "files", "failed": "failed", "processed_at": "processed_at"},
+      "summary": "Checkpoint persisted — enables 'rewind to here'; warn if failed non-empty."
+    },
+    "system/session_state_changed": {
+      "surface": "stream", "placement": "session-header", "component": "StatusBanner",
+      "is_terminal": false, "blocks_execution": false, "evidence": "inferred",
+      "update_target": "session-header",
+      "field_map": {"subtype": "subtype"},
+      "summary": "INFERRED (SDK union type, no schema in the Atlas mirror — I have not verified this fires): session state/permission-mode changed mid-session; refresh the header badges."
+    },
+
+    "system/api_error": {
+      "surface": "transcript", "placement": "conversation-thread", "component": "ErrorCard",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"level": "level", "status": "error.status", "retry_in_ms": "retryInMs", "retry_attempt": "retryAttempt", "max_retries": "maxRetries"},
+      "summary": "An API error landed in the transcript (status + retry telemetry) — error card with retry context."
+    },
+    "system/away_summary": {
+      "surface": "transcript", "placement": "conversation-thread", "component": "MomentMarker",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"content": "content", "timestamp": "timestamp"},
+      "summary": "The 'what happened while you looked away' recap — a timeline moment (R8.2 feeds on these)."
+    },
+    "system/bridge_status": {
+      "surface": "transcript", "placement": "toast", "component": "StatusBanner",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"content": "content", "url": "url"},
+      "summary": "Remote-control bridge status (connected / continue-at URL) — toast with the link."
+    },
+    "system/informational": {
+      "surface": "transcript", "placement": "toast", "component": "StatusBanner",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"content": "content", "level": "level"},
+      "summary": "Free-text informational notice (e.g. remote-control disconnects) — toast."
+    },
+    "system/local_command": {
+      "surface": "transcript", "placement": "conversation-thread", "component": "CommandOutput",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"content": "content", "level": "level"},
+      "summary": "A slash command WAS INVOKED (command-name/message/args markup) — render as the command the operator ran."
+    },
+    "system/model_refusal_fallback": {
+      "surface": "transcript", "placement": "conversation-thread", "component": "ErrorCard",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"direction": "direction", "content": "content", "original_model": "originalModel", "fallback_model": "fallbackModel", "trigger": "trigger"},
+      "summary": "A refusal triggered a model fallback/retry — show which model stepped in and why."
+    },
+    "system/scheduled_task_fire": {
+      "surface": "transcript", "placement": "conversation-thread", "component": "MomentMarker",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"content": "content", "timestamp": "timestamp"},
+      "summary": "A scheduled task fired into this session — timeline moment ('Running scheduled task…')."
+    },
+    "system/stop_hook_summary": {
+      "surface": "transcript", "placement": "tool-card", "component": "HookPanel",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"hook_count": "hookCount", "hook_infos": "hookInfos", "hook_errors": "hookErrors", "prevented_continuation": "preventedContinuation", "stop_reason": "stopReason"},
+      "summary": "Stop-hook run summary — collapsed; preventedContinuation=true is the notable state."
+    },
+    "system/turn_duration": {
+      "surface": "transcript", "placement": "none", "component": "None",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "update_target": "token-counter",
+      "field_map": {"duration_ms": "durationMs", "message_count": "messageCount"},
+      "summary": "Turn wall-clock telemetry — feeds glance-state (R7.3), not a thread item."
+    },
+    "system/agents_killed": {
+      "surface": "transcript", "placement": "toast", "component": "StatusBanner",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"timestamp": "timestamp"},
+      "summary": "Subagents were killed — toast notice."
+    },
+    "system/*": {
+      "surface": "both", "placement": "toast", "component": "StatusBanner",
+      "is_terminal": false, "blocks_execution": false, "evidence": "family-fallback",
+      "field_map": {"subtype": "subtype", "content": "content", "session_id": "session_id"},
+      "summary": "FAMILY FALLBACK for an unlisted system subtype: renders loud as a generic notice AND records a registry-gap drop (gap-pressure) — rendered, never silently dropped, never green-painted as exact."
+    },
+
+    "user": {
+      "surface": "both", "placement": "conversation-thread", "component": "UserMessage",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "blocks_from": "message.content",
+      "field_map": {"session_id": "session_id", "parent_tool_use_id": "parent_tool_use_id", "text": "message.content", "is_sidechain": "isSidechain", "synthetic": "isSynthetic"},
+      "summary": "A user turn. String content renders as the user bubble; array content sub-dispatches per block (tool_result/text/image/document). parent_tool_use_id non-null nests it under the spawning Agent tool card."
+    },
+    "user.content.tool_result": {
+      "surface": "both", "placement": "tool-card", "component": "ToolCard",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "update_target": "tool-by-id",
+      "field_map": {"tool_use_id": "tool_use_id", "content": "content", "is_error": "is_error"},
+      "summary": "A tool's result fed back — update the matching open tool card (collapsible output; is_error flags it red)."
+    },
+    "user.content.text": {
+      "surface": "both", "placement": "conversation-thread", "component": "UserMessage",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"text": "text"},
+      "summary": "A text block inside an array-content user turn — markdown in the user bubble."
+    },
+    "user.content.image": {
+      "surface": "both", "placement": "conversation-thread", "component": "UserMessage",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"media_type": "source.media_type"},
+      "summary": "An image the user attached — render the image (source carries base64/url)."
+    },
+    "user.content.document": {
+      "surface": "both", "placement": "conversation-thread", "component": "UserMessage",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"media_type": "source.media_type"},
+      "summary": "A document attachment block — render as a file chip."
+    },
+    "user.content.*": {
+      "surface": "both", "placement": "conversation-thread", "component": "UnknownEvent",
+      "is_terminal": false, "blocks_execution": false, "evidence": "family-fallback",
+      "field_map": {"block_type": "type"},
+      "summary": "FAMILY FALLBACK for an unlisted user content block — rendered loud + drop recorded."
+    },
+
+    "assistant": {
+      "surface": "both", "placement": "conversation-thread", "component": "AssistantMessage",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-stream",
+      "blocks_from": "message.content",
+      "field_map": {"session_id": "session_id", "model": "message.model", "stop_reason": "message.stop_reason", "usage": "message.usage", "parent_tool_use_id": "parent_tool_use_id", "error": "error", "is_sidechain": "isSidechain"},
+      "summary": "An assistant message envelope — content blocks sub-dispatch below; usage accumulates into the token counter; stop_reason=tool_use means more turns incoming; parent_tool_use_id nests subagent replies."
+    },
+    "assistant.content.text": {
+      "surface": "both", "placement": "conversation-thread", "component": "AssistantMessage",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-stream",
+      "field_map": {"text": "text"},
+      "summary": "Assistant prose — markdown in the assistant bubble (stream-appended live when partials are on)."
+    },
+    "assistant.content.thinking": {
+      "surface": "both", "placement": "conversation-thread", "component": "ThinkingDisclosure",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-stream",
+      "field_map": {"thinking": "thinking", "signature": "signature"},
+      "summary": "Thinking block — collapsible disclosure; empty thinking = redacted (placeholder, never hidden)."
+    },
+    "assistant.content.redacted_thinking": {
+      "surface": "both", "placement": "conversation-thread", "component": "ThinkingDisclosure",
+      "is_terminal": false, "blocks_execution": false, "evidence": "inferred",
+      "field_map": {},
+      "summary": "INFERRED (API block type; not yet observed in this corpus): fully-redacted thinking — show the redaction placeholder."
+    },
+    "assistant.content.tool_use": {
+      "surface": "both", "placement": "tool-card", "component": "ToolCard",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"id": "id", "name": "name", "input": "input"},
+      "summary": "A tool call — open a tool card (name + formatted input), pending until the matching user.content.tool_result arrives. MCP tools read as mcp__<server>__<tool>."
+    },
+    "assistant.content.tool_use.AskUserQuestion": {
+      "surface": "both", "placement": "conversation-thread", "component": "QuestionCard",
+      "is_terminal": false, "blocks_execution": true, "evidence": "atlas-docs",
+      "field_map": {"id": "id", "questions": "input.questions"},
+      "summary": "Interactive question — BLOCKS the loop until answered; options render as buttons (multiSelect honored); the answer returns as its tool_result."
+    },
+    "assistant.content.server_tool_use": {
+      "surface": "both", "placement": "tool-card", "component": "ToolCard",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"id": "id", "name": "name", "input": "input"},
+      "summary": "A server-side tool call (e.g. advisor) — 'consulted' indicator with collapsed result."
+    },
+    "assistant.content.advisor_tool_result": {
+      "surface": "both", "placement": "tool-card", "component": "ToolCard",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "update_target": "tool-by-id",
+      "field_map": {"tool_use_id": "tool_use_id", "text": "content.text"},
+      "summary": "The advisor's reply — styled distinctly from regular tool results."
+    },
+    "assistant.content.fallback": {
+      "surface": "transcript", "placement": "conversation-thread", "component": "ErrorCard",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"block": "."},
+      "summary": "A fallback content block (observed 24x in the real corpus, undocumented) — render its raw content loud; shape varies."
+    },
+    "assistant.content.*": {
+      "surface": "both", "placement": "conversation-thread", "component": "UnknownEvent",
+      "is_terminal": false, "blocks_execution": false, "evidence": "family-fallback",
+      "field_map": {"block_type": "type"},
+      "summary": "FAMILY FALLBACK for an unlisted assistant content block — rendered loud + drop recorded."
+    },
+
+    "stream_event/message_start": {
+      "surface": "stream", "placement": "none", "component": "None",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "field_map": {"message_id": "event.message.id", "model": "event.message.model", "ttft_ms": "ttft_ms"},
+      "summary": "Open a new streaming assistant message — reset block accumulators; record ttft."
+    },
+    "stream_event/content_block_start.text": {
+      "surface": "stream", "placement": "conversation-thread", "component": "AssistantMessage",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "stream_accumulator": "text-block",
+      "field_map": {"index": "event.index"},
+      "summary": "Open a text block — begin the streaming cursor at this index."
+    },
+    "stream_event/content_block_start.thinking": {
+      "surface": "stream", "placement": "conversation-thread", "component": "ThinkingDisclosure",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "stream_accumulator": "thinking-block",
+      "field_map": {"index": "event.index"},
+      "summary": "Open a collapsed live 'Thinking…' disclosure at this index."
+    },
+    "stream_event/content_block_start.tool_use": {
+      "surface": "stream", "placement": "tool-card", "component": "ToolCard",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "stream_accumulator": "tool-input",
+      "field_map": {"index": "event.index", "name": "event.content_block.name", "id": "event.content_block.id"},
+      "summary": "Open a tool card early (name known before the input finishes streaming)."
+    },
+    "stream_event/content_block_start.*": {
+      "surface": "stream", "placement": "none", "component": "UnknownEvent",
+      "is_terminal": false, "blocks_execution": false, "evidence": "family-fallback",
+      "field_map": {"index": "event.index", "block_type": "event.content_block.type"},
+      "summary": "FAMILY FALLBACK: an unlisted streamed block type opened — loud + drop recorded."
+    },
+    "stream_event/content_block_delta.text_delta": {
+      "surface": "stream", "placement": "conversation-thread", "component": "AssistantMessage",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "stream_accumulator": "text-block",
+      "field_map": {"index": "event.index", "text": "event.delta.text"},
+      "summary": "Append delta.text to the open text block in real time — THE voice seam taps these (R5.1)."
+    },
+    "stream_event/content_block_delta.thinking_delta": {
+      "surface": "stream", "placement": "conversation-thread", "component": "ThinkingDisclosure",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "stream_accumulator": "thinking-block",
+      "field_map": {"index": "event.index", "thinking": "event.delta.thinking"},
+      "summary": "Append to the live thinking disclosure."
+    },
+    "stream_event/content_block_delta.input_json_delta": {
+      "surface": "stream", "placement": "tool-card", "component": "ToolCard",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "stream_accumulator": "tool-input",
+      "field_map": {"index": "event.index", "partial_json": "event.delta.partial_json"},
+      "summary": "Accumulate the tool input JSON as it streams — live input preview on the tool card."
+    },
+    "stream_event/content_block_delta.*": {
+      "surface": "stream", "placement": "none", "component": "UnknownEvent",
+      "is_terminal": false, "blocks_execution": false, "evidence": "family-fallback",
+      "field_map": {"index": "event.index", "delta_type": "event.delta.type"},
+      "summary": "FAMILY FALLBACK: an unlisted delta type — loud + drop recorded."
+    },
+    "stream_event/content_block_stop": {
+      "surface": "stream", "placement": "none", "component": "None",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "field_map": {"index": "event.index"},
+      "summary": "Seal the block at this index (finalize accumulated text / parse the tool input)."
+    },
+    "stream_event/message_delta": {
+      "surface": "stream", "placement": "none", "component": "None",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "update_target": "token-counter",
+      "field_map": {"stop_reason": "event.delta.stop_reason", "output_tokens": "event.usage.output_tokens"},
+      "summary": "Message-level delta — update stop_reason + output token count."
+    },
+    "stream_event/message_stop": {
+      "surface": "stream", "placement": "none", "component": "None",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "field_map": {},
+      "summary": "Seal the streaming message — remove the cursor; the full assistant event follows."
+    },
+    "stream_event/*": {
+      "surface": "stream", "placement": "none", "component": "UnknownEvent",
+      "is_terminal": false, "blocks_execution": false, "evidence": "family-fallback",
+      "field_map": {"inner_type": "event.type"},
+      "summary": "FAMILY FALLBACK for an unlisted inner stream event — loud + drop recorded."
+    },
+
+    "result/success": {
+      "surface": "stream", "placement": "conversation-thread", "component": "ResultCard",
+      "is_terminal": true, "blocks_execution": false, "evidence": "observed-stream",
+      "field_map": {"result": "result", "session_id": "session_id", "num_turns": "num_turns", "duration_ms": "duration_ms", "total_cost_usd": "total_cost_usd", "usage": "usage", "stop_reason": "stop_reason", "ttft_ms": "ttft_ms", "permission_denials": "permission_denials", "structured_output": "structured_output", "model_usage": "modelUsage"},
+      "summary": "The turn's terminal event — close the working state; cost badge + turns; stop_reason=max_tokens warns truncation; permission_denials surfaces the denial tally. A few trailing events (prompt_suggestion) may still follow."
+    },
+    "result/*": {
+      "surface": "stream", "placement": "conversation-thread", "component": "ErrorCard",
+      "is_terminal": true, "blocks_execution": false, "evidence": "atlas-docs",
+      "field_map": {"subtype": "subtype", "errors": "errors", "session_id": "session_id", "num_turns": "num_turns", "total_cost_usd": "total_cost_usd", "is_error": "is_error", "stop_reason": "stop_reason", "usage": "usage"},
+      "summary": "Terminal ERROR result (error_max_turns / error_during_execution / error_max_budget_usd / error_max_structured_output_retries) — error state labeled by subtype with the errors array. A declared family by design (the error subtypes share one shape), not a gap."
+    },
+
+    "tool_progress": {
+      "surface": "stream", "placement": "tool-card", "component": "ToolCard",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "update_target": "tool-by-id",
+      "field_map": {"tool_use_id": "tool_use_id", "tool_name": "tool_name", "elapsed_time_seconds": "elapsed_time_seconds", "task_id": "task_id"},
+      "summary": "Long-running tool heartbeat — 'Running: 12.4s' on the matching card."
+    },
+    "tool_use_summary": {
+      "surface": "stream", "placement": "conversation-thread", "component": "ToolCard",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "field_map": {"summary": "summary", "preceding_tool_use_ids": "preceding_tool_use_ids"},
+      "summary": "A collapsed batch header over the listed tool cards."
+    },
+    "rate_limit_event": {
+      "surface": "stream", "placement": "toast", "component": "RateLimitBanner",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-stream",
+      "field_map": {"status": "rate_limit_info.status", "utilization": "rate_limit_info.utilization", "resets_at": "rate_limit_info.resetsAt", "rate_limit_type": "rate_limit_info.rateLimitType", "overage_status": "rate_limit_info.overageStatus"},
+      "summary": "Quota signal: allowed=silent, allowed_warning=utilization gauge + reset countdown, rejected=prominent. R11.2 quota-aware scheduling reads the same fields."
+    },
+    "auth_status": {
+      "surface": "stream", "placement": "status-overlay", "component": "AuthModal",
+      "is_terminal": false, "blocks_execution": true, "evidence": "atlas-docs",
+      "field_map": {"is_authenticating": "isAuthenticating", "output": "output", "error": "error"},
+      "summary": "Auth flow in progress — modal streaming output lines; blocks until resolved; error surfaces loud."
+    },
+    "prompt_suggestion": {
+      "surface": "stream", "placement": "input-suggestion", "component": "PromptSuggestion",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "field_map": {"suggestion": "suggestion"},
+      "summary": "Predicted next prompt (after result, with --prompt-suggestions) — ghost text in the composer."
+    },
+
+    "attachment/hook_success": {
+      "surface": "transcript", "placement": "tool-card", "component": "HookPanel",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"hook_name": "attachment.hookName", "hook_event": "attachment.hookEvent", "tool_use_id": "attachment.toolUseID", "stdout": "attachment.stdout", "exit_code": "attachment.exitCode", "duration_ms": "attachment.durationMs"},
+      "summary": "Transcript-layer hook success (the stream's hook_response analogue) — collapsed hook annotation."
+    },
+    "attachment/hook_non_blocking_error": {
+      "surface": "transcript", "placement": "tool-card", "component": "HookPanel",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"hook_name": "attachment.hookName", "stderr": "attachment.stderr", "exit_code": "attachment.exitCode", "command": "attachment.command", "duration_ms": "attachment.durationMs"},
+      "summary": "A hook failed non-fatally — amber annotation with stderr."
+    },
+    "attachment/hook_cancelled": {
+      "surface": "transcript", "placement": "tool-card", "component": "HookPanel",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"hook_name": "attachment.hookName", "command": "attachment.command", "duration_ms": "attachment.durationMs"},
+      "summary": "A hook timed out — amber 'cancelled' annotation."
+    },
+    "attachment/hook_system_message": {
+      "surface": "transcript", "placement": "toast", "component": "StatusBanner",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"content": "attachment.content"},
+      "summary": "A hook surfaced a system message — toast."
+    },
+    "attachment/hook_additional_context": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"hook_name": "attachment.hookName", "content": "attachment.content"},
+      "summary": "A hook injected context into the session — collapsible 'context injected' note."
+    },
+    "attachment/task_reminder": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"item_count": "attachment.itemCount", "content": "attachment.content"},
+      "summary": "The session's current task list snapshot — meta row, collapsed."
+    },
+    "attachment/queued_command": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"prompt": "attachment.prompt", "command_mode": "attachment.commandMode"},
+      "summary": "A queued user command awaiting its turn — meta row."
+    },
+    "attachment/deferred_tools_delta": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"added": "attachment.addedNames", "removed": "attachment.removedNames"},
+      "summary": "Lazy tool loading changed the tool set — meta note (internal scaffolding, visible on demand)."
+    },
+    "attachment/mcp_instructions_delta": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"added": "attachment.addedNames", "removed": "attachment.removedNames"},
+      "summary": "MCP server instructions loaded/unloaded — meta note."
+    },
+    "attachment/skill_listing": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"skill_count": "attachment.skillCount", "names": "attachment.names"},
+      "summary": "Skills available to the session — meta note; feeds the session header's skill count."
+    },
+    "attachment/invoked_skills": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"skills": "attachment.skills"},
+      "summary": "Skills invoked this turn — meta note."
+    },
+    "attachment/command_permissions": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"allowed_tools": "attachment.allowedTools"},
+      "summary": "Per-command tool permissions in effect — meta note."
+    },
+    "attachment/edited_text_file": {
+      "surface": "transcript", "placement": "tool-card", "component": "ToolCard",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"filename": "attachment.filename", "snippet": "attachment.snippet"},
+      "summary": "An external edit to a tracked file — diff-snippet card (the file changed under the session)."
+    },
+    "attachment/file": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"filename": "attachment.filename", "display_path": "attachment.displayPath"},
+      "summary": "A file attached into context — file chip."
+    },
+    "attachment/compact_file_reference": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"filename": "attachment.filename", "display_path": "attachment.displayPath"},
+      "summary": "A file referenced across a compaction — chip linking pre-compact context."
+    },
+    "attachment/auto_mode": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {},
+      "summary": "Auto-mode marker — meta dot."
+    },
+    "attachment/date_change": {
+      "surface": "transcript", "placement": "conversation-thread", "component": "MomentMarker",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"new_date": "attachment.newDate"},
+      "summary": "The date rolled over mid-session — a thin timeline divider."
+    },
+    "attachment/nested_memory": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"path": "attachment.path"},
+      "summary": "Memory content loaded from a nested path — 'memory retrieved' note."
+    },
+    "attachment/task_status": {
+      "surface": "transcript", "placement": "sidebar", "component": "TaskPanel",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"content": "attachment"},
+      "summary": "A task status snapshot — task panel update."
+    },
+    "attachment/plan_mode": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"plan_file_path": "attachment.planFilePath", "plan_exists": "attachment.planExists"},
+      "summary": "Plan-mode reminder state — meta note."
+    },
+    "attachment/plan_mode_exit": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"plan_file_path": "attachment.planFilePath"},
+      "summary": "Plan mode exited — meta note."
+    },
+    "attachment/plan_file_reference": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"plan_file_path": "attachment.planFilePath", "plan_content": "attachment.planContent"},
+      "summary": "The plan file's content referenced — collapsible plan view."
+    },
+    "attachment/async_hook_response": {
+      "surface": "transcript", "placement": "tool-card", "component": "HookPanel",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"hook_name": "attachment.hookName", "hook_event": "attachment.hookEvent", "stdout": "attachment.stdout", "stderr": "attachment.stderr", "exit_code": "attachment.exitCode", "process_id": "attachment.processId"},
+      "summary": "An async hook's late response — hook annotation (found via the family-fallback drop sensor, 2026-06-13)."
+    },
+    "attachment/auto_mode_exit": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {},
+      "summary": "Auto-mode exited — meta dot (drop-sensor find)."
+    },
+    "attachment/ultra_effort_enter": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"reminder_type": "attachment.reminderType"},
+      "summary": "Ultracode/ultra-effort engaged — meta marker (drop-sensor find)."
+    },
+    "attachment/ultra_effort_exit": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {},
+      "summary": "Ultra-effort disengaged — meta marker (drop-sensor find)."
+    },
+    "attachment/goal_status": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"met": "attachment.met", "condition": "attachment.condition", "sentinel": "attachment.sentinel"},
+      "summary": "A goal/sentinel condition status — meta note (drop-sensor find)."
+    },
+    "attachment/workflow_keyword_request": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {},
+      "summary": "A workflow keyword request marker — meta note (drop-sensor find)."
+    },
+    "attachment/*": {
+      "surface": "transcript", "placement": "meta", "component": "AttachmentNote",
+      "is_terminal": false, "blocks_execution": false, "evidence": "family-fallback",
+      "field_map": {"attachment_type": "attachment.type"},
+      "summary": "FAMILY FALLBACK for an unlisted attachment type — rendered as a generic meta note + drop recorded."
+    },
+
+    "summary": {
+      "surface": "transcript", "placement": "meta", "component": "SessionMeta",
+      "is_terminal": false, "blocks_execution": false, "evidence": "atlas-docs",
+      "field_map": {"summary": "summary", "leaf_uuid": "leafUuid"},
+      "summary": "A conversation summary row (transcript sidecar) — feeds the session dossier/title."
+    },
+    "agent-name": {
+      "surface": "transcript", "placement": "meta", "component": "SessionMeta",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"agent_name": "agentName", "session_id": "sessionId"},
+      "summary": "The session's agent name — registry/dossier field, not a thread item."
+    },
+    "agent-setting": {
+      "surface": "transcript", "placement": "meta", "component": "SessionMeta",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"agent_setting": "agentSetting", "session_id": "sessionId"},
+      "summary": "The session's agent setting — registry field."
+    },
+    "ai-title": {
+      "surface": "transcript", "placement": "meta", "component": "SessionMeta",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"title": "aiTitle", "session_id": "sessionId"},
+      "summary": "The auto-generated title — the catalog's display label (R7 renames override with custom-title)."
+    },
+    "custom-title": {
+      "surface": "transcript", "placement": "meta", "component": "SessionMeta",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"title": "customTitle", "session_id": "sessionId"},
+      "summary": "The operator-set title — wins over ai-title everywhere."
+    },
+    "bridge-session": {
+      "surface": "transcript", "placement": "meta", "component": "SessionMeta",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"bridge_session_id": "bridgeSessionId", "session_id": "sessionId", "last_sequence_num": "lastSequenceNum"},
+      "summary": "Remote-control bridge linkage — registry field."
+    },
+    "file-history-snapshot": {
+      "surface": "transcript", "placement": "none", "component": "None",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"message_id": "messageId", "is_update": "isSnapshotUpdate"},
+      "summary": "Checkpoint/rewind bookkeeping — powers 'rewind to here', not drawn."
+    },
+    "last-prompt": {
+      "surface": "transcript", "placement": "none", "component": "None",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"leaf_uuid": "leafUuid", "session_id": "sessionId"},
+      "summary": "Pointer to the conversation leaf — resume bookkeeping, not drawn."
+    },
+    "mode": {
+      "surface": "transcript", "placement": "meta", "component": "SessionMeta",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"mode": "mode", "session_id": "sessionId"},
+      "summary": "The session's mode row — header badge source."
+    },
+    "permission-mode": {
+      "surface": "transcript", "placement": "meta", "component": "SessionMeta",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"permission_mode": "permissionMode", "session_id": "sessionId"},
+      "summary": "Permission mode change row — header badge updates from these."
+    },
+    "pr-link": {
+      "surface": "transcript", "placement": "meta", "component": "SessionMeta",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"pr_number": "prNumber", "pr_url": "prUrl", "pr_repository": "prRepository"},
+      "summary": "The session created/linked a PR — dossier link chip (also --from-pr's join key)."
+    },
+    "queue-operation": {
+      "surface": "transcript", "placement": "none", "component": "None",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"operation": "operation", "timestamp": "timestamp"},
+      "summary": "Prompt queue bookkeeping (enqueue/dequeue) — not drawn."
+    },
+    "worktree-state": {
+      "surface": "transcript", "placement": "meta", "component": "SessionMeta",
+      "is_terminal": false, "blocks_execution": false, "evidence": "observed-transcript",
+      "field_map": {"worktree_path": "worktreeSession.worktreePath", "worktree_branch": "worktreeSession.worktreeBranch", "original_cwd": "worktreeSession.originalCwd"},
+      "summary": "The session runs in a worktree — dossier/registry field (where its work actually lands)."
+    },
+
+    "init": {
+      "surface": "supervisor", "placement": "session-header", "component": "WireStatus",
+      "is_terminal": false, "blocks_execution": false, "evidence": "supervisor-native",
+      "field_map": {"claude_session_id": "claude_session_id", "session": "session", "seq": "seq", "ts": "ts"},
+      "summary": "Supervisor wire: the owned session initialised (claude_session_id captured)."
+    },
+    "text": {
+      "surface": "supervisor", "placement": "conversation-thread", "component": "WireStatus",
+      "is_terminal": false, "blocks_execution": false, "evidence": "supervisor-native",
+      "field_map": {"text": "text", "session": "session", "seq": "seq"},
+      "summary": "Supervisor wire (legacy condensed): assistant text. The declared stream alongside carries the full contract — this stays for existing consumers (schema-additive)."
+    },
+    "tool": {
+      "surface": "supervisor", "placement": "tool-card", "component": "WireStatus",
+      "is_terminal": false, "blocks_execution": false, "evidence": "supervisor-native",
+      "field_map": {"name": "name", "detail": "detail", "session": "session", "seq": "seq"},
+      "summary": "Supervisor wire (legacy condensed): a tool call happened."
+    },
+    "injected": {
+      "surface": "supervisor", "placement": "meta", "component": "WireStatus",
+      "is_terminal": false, "blocks_execution": false, "evidence": "supervisor-native",
+      "field_map": {"source": "source", "chars": "chars", "session": "session", "seq": "seq"},
+      "summary": "Supervisor wire: a turn was injected into the session's stdin."
+    },
+    "interrupt_sent": {
+      "surface": "supervisor", "placement": "meta", "component": "WireStatus",
+      "is_terminal": false, "blocks_execution": false, "evidence": "supervisor-native",
+      "field_map": {"session": "session", "seq": "seq"},
+      "summary": "Supervisor wire: a control_request interrupt was written to the session."
+    },
+    "done": {
+      "surface": "supervisor", "placement": "conversation-thread", "component": "WireStatus",
+      "is_terminal": false, "blocks_execution": false, "evidence": "supervisor-native",
+      "field_map": {"result": "result", "num_turns": "num_turns", "is_error": "is_error", "claude_session_id": "claude_session_id", "session": "session", "seq": "seq"},
+      "summary": "Supervisor wire: the injected turn completed (the condensed result)."
+    },
+    "closed": {
+      "surface": "supervisor", "placement": "toast", "component": "WireStatus",
+      "is_terminal": true, "blocks_execution": false, "evidence": "supervisor-native",
+      "field_map": {"reason": "reason", "session": "session", "seq": "seq"},
+      "summary": "Supervisor wire: the owned session closed (teardown/exit/watchdog) — reason carries the cause."
+    },
+    "keepalive": {
+      "surface": "supervisor", "placement": "none", "component": "None",
+      "is_terminal": false, "blocks_execution": false, "evidence": "supervisor-native",
+      "field_map": {},
+      "summary": "Watch-stream keepalive — connection plumbing, never drawn."
+    },
+    "declared": {
+      "surface": "supervisor", "placement": "none", "component": "None",
+      "is_terminal": false, "blocks_execution": false, "evidence": "supervisor-native",
+      "field_map": {"render_key": "render_key"},
+      "summary": "The declared-event envelope itself (the R1.2 wire shape) — consumers unwrap it; it is not re-rendered."
+    }
+  }
+}

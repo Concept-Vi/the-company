@@ -110,6 +110,11 @@ from runtime import ui_claude_session as _panel   # reuse: _find_claude + _MCP_C
                                                   # of the binary + the strict company-MCP config).
                                                   # This import is service→runtime, NOT the MCP face —
                                                   # the panel module's floor note covers it explicitly.
+from runtime import render_declaration as _rd     # R1.2 — the render-declaration layer: every claude
+                                                  # emit is declared (placement/component/fields) and
+                                                  # fanned as a `declared` event; an undeclared or
+                                                  # family-fallback emit fires the drop hook below
+                                                  # (gap-pressure: the registry's sensor).
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_PORT = 8771                    # next free beside the bridge's 8770 (audit N7 — the ONE number
@@ -680,6 +685,27 @@ class SessionSupervisor:
 
     # ---------- the per-session stdout reader ----------
 
+    def _declare_and_fan(self, s: Supervised, ev: dict) -> None:
+        """R1.2 — fan the DECLARED form of every claude emit alongside the legacy condensed
+        events (schema-additive: existing /watch consumers see exactly what they saw; a UI
+        consumes the `declared` events and renders from the declaration alone). The declarer
+        NEVER raises on unknown content (unknown → loud UnknownEvent + a drop) — a failure
+        here is a registry/code bug, printed loud, and must not kill the reader thread."""
+        try:
+            dec = _rd.declare(ev)
+        except Exception as e:
+            print(f"[session-supervisor] DECLARE FAILED for {s.id} type={ev.get('type')}: {e}",
+                  file=sys.stderr, flush=True)
+            return
+        self._fan(s, {"type": "declared", **dec})
+        if dec.get("undeclared") or dec.get("family_fallback"):
+            # the registry-gap sensor (gap-pressure): a drop is RECORDED, never swallowed.
+            self.emit("agent_sessions.render_drop",
+                      f"{s.name} · {'undeclared' if dec.get('undeclared') else 'family-fallback'} "
+                      f"emit {dec.get('render_key')}",
+                      durable=False, session=s.id, render_key=dec.get("render_key"),
+                      raw_type=ev.get("type"), raw_subtype=ev.get("subtype"))
+
     def _reader(self, s: Supervised) -> None:
         """Parses the claude stream (the run_turn event shapes) for the LIFE of the process —
         not one turn. EOF = the process ended → closed."""
@@ -692,6 +718,7 @@ class SessionSupervisor:
                     ev = json.loads(line)
                 except ValueError:
                     continue                          # non-JSON chatter — the result event is the contract
+                self._declare_and_fan(s, ev)          # R1.2: EVERY emit declared, nothing silently dropped
                 et = ev.get("type")
                 if et == "system" and ev.get("subtype") == "init":
                     first = s.claude_session_id is None
