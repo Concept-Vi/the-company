@@ -1816,8 +1816,11 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
 .lattice-foot { position: absolute; left: 12px; bottom: 10px; right: 12px; display: flex;
   justify-content: space-between; align-items: center; gap: 12px; pointer-events: none;
   color: var(--ink-dim, #8b949e); font: 11px ui-monospace, monospace; }
-.lattice-foot .lattice-zoom { pointer-events: auto; display: flex; align-items: center; gap: 6px; }
-.lattice-foot input[type=range] { width: 130px; accent-color: var(--accent, #d4a017); }
+.lattice-foot .lattice-frames { pointer-events: auto; display: flex; align-items: center; gap: 6px; }
+.lattice-foot .lf-btn { background: none; border: 1px solid var(--line, #30363d); border-radius: 6px;
+  padding: 3px 8px; color: var(--ink-dim, #8b949e); cursor: pointer; font: 11px ui-monospace, monospace; }
+.lattice-foot .lf-btn.on { color: var(--accent, #d4a017); border-color: var(--accent, #d4a017); }
+.lattice-foot input[type=range] { width: 110px; accent-color: var(--accent, #d4a017); }
 .lattice-card { position: absolute; top: 56px; right: 12px; width: min(340px, calc(100vw - 24px));
   background: var(--panel, #161b22); border: 1px solid var(--line, #30363d); border-radius: 10px;
   padding: 10px 12px; color: var(--ink, #c9d1d9); font: 12px ui-monospace, monospace;

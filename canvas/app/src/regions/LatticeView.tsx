@@ -28,8 +28,16 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   const [picked, setPicked] = useState<ProjPoint | null>(null)
   const [sel, setSel] = useState<ProjPoint[]>([])   // the accumulating working set (forager: sculpt → hand to builder)
   const [zoom, setZoom] = useState(1)        // radial magnification — inner rings (recent) expand
+  const [frame, setFrame] = useState<'now' | 'day' | 'week'>('now')  // S4: scale/phase selects the frame
   const [err, setErr] = useState('')
   const inSel = (p: ProjPoint) => sel.some(s => s.seq === p.seq)
+
+  // S4 — frame-relativity (Tim: "the axes are variables too — scale and state/phase select the
+  // frame"). 'now' = radius is age-from-NOW (the default arrow of time). 'day'/'week' = radius is
+  // the timestamp's CYCLE coordinate, so the daily/weekly rhythm becomes visible: everything that
+  // happened "at 9am" lands on one ring regardless of which day — the cycles, made geometry.
+  const radial = (p: ProjPoint) =>
+    frame === 'now' ? Math.pow(p.r, 1 / zoom) : frame === 'day' ? p.phases.day : p.phases.week
 
   useEffect(() => {
     fetch('/api/projection')
@@ -54,10 +62,20 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     const ink = token('--ink', '#c9d1d9'), line = token('--line', '#30363d')
     const accent = token('--accent', '#d4a017')
 
-    // The rings — the inscribed circles (time shells around NOW).
-    g.strokeStyle = line; g.lineWidth = 1; g.globalAlpha = 0.55
+    // The rings — the inscribed circles. In 'now' they are age shells; in a cycle frame they are
+    // the clock divisions (the timestamp's wrap, drawn). Labels declare what each ring means.
+    const ringLabels = frame === 'now'
+      ? ['', '', '', 'older →']
+      : frame === 'day' ? ['00h', '06h', '12h', '18h'] : ['Mon', 'Wed', 'Fri', 'Sun']
+    g.strokeStyle = line; g.lineWidth = 1
     for (let i = 1; i <= proj.rings; i++) {
-      g.beginPath(); g.arc(cx, cy, (R * i) / proj.rings, 0, Math.PI * 2); g.stroke()
+      const rr = (R * i) / proj.rings
+      g.globalAlpha = 0.55; g.beginPath(); g.arc(cx, cy, rr, 0, Math.PI * 2); g.stroke()
+      if (ringLabels[i - 1]) {
+        g.globalAlpha = 0.6; g.fillStyle = line === '#30363d' ? '#6e7681' : line
+        g.font = '9px ui-monospace, monospace'; g.textAlign = 'left'
+        g.fillText(ringLabels[i - 1], cx + 3, cy - rr + 11)
+      }
     }
     // The sector boundaries + labels (the angular type divisions — the registry drawn).
     g.globalAlpha = 0.5
@@ -65,17 +83,22 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       g.beginPath(); g.moveTo(cx, cy)
       g.lineTo(cx + Math.sin(s.from) * R, cy - Math.cos(s.from) * R); g.stroke()
     }
-    g.globalAlpha = 0.9; g.fillStyle = ink
     g.font = '11px ui-monospace, monospace'; g.textAlign = 'center'
     const inside = w < 520            // phone face: labels tuck inside the rim (no edge clipping)
+    const bg = token('--bg', '#0d1117')
     for (const s of proj.sectors) {
       const mid = (s.from + s.to) / 2, lr = inside ? R - 14 : R + 16
-      g.fillText(s.label, cx + Math.sin(mid) * lr, cy - Math.cos(mid) * lr + 4)
+      const lx = cx + Math.sin(mid) * lr, ly = cy - Math.cos(mid) * lr + 4
+      const tw = g.measureText(s.label).width
+      g.globalAlpha = 0.82; g.fillStyle = bg   // backing plate so labels read over dense arcs
+      g.fillRect(lx - tw / 2 - 3, ly - 10, tw + 6, 14)
+      g.globalAlpha = 1; g.fillStyle = ink
+      g.fillText(s.label, lx, ly)
     }
     // The points — exactly the same points, drawn where they already are.
     const selSeqs = new Set(sel.map(s => s.seq))
     for (const p of proj.points) {
-      const rr = Math.pow(p.r, 1 / zoom) * R
+      const rr = radial(p) * R
       const x = cx + Math.sin(p.theta) * rr, y = cy - Math.cos(p.theta) * rr
       const hue = (p.theta * 180) / Math.PI            // color IS angle
       const chosen = selSeqs.has(p.seq)
@@ -93,7 +116,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     g.strokeStyle = accent; g.globalAlpha = 0.4
     g.beginPath(); g.arc(cx, cy, 9, 0, Math.PI * 2); g.stroke()
     g.globalAlpha = 1
-  }, [proj, picked, zoom, sel])
+  }, [proj, picked, zoom, sel, frame])
 
   useEffect(() => { draw() }, [draw])
   useEffect(() => {
@@ -111,7 +134,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     const cx = w / 2, cy = h / 2, R = Math.min(w, h) / 2 - 34
     let best: ProjPoint | null = null, bd = 14 * 14
     for (const p of proj.points) {
-      const rr = Math.pow(p.r, 1 / zoom) * R
+      const rr = radial(p) * R
       const x = cx + Math.sin(p.theta) * rr, y = cy - Math.cos(p.theta) * rr
       const d = (x - px) * (x - px) + (y - py) * (y - py)
       if (d < bd) { bd = d; best = p }
@@ -142,12 +165,21 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     <div className="lattice-wrap" ref={wrapRef} onPointerDown={pick}>
       <canvas ref={cvsRef} />
       <div className="lattice-foot">
-        <span>{proj ? `${proj.count} points · ${proj.n} sectors · centre = now` : 'projecting…'}</span>
-        <label className="lattice-zoom">
-          recent⊙<input type="range" min={0.5} max={3.2} step={0.1} value={zoom}
-            onChange={e => setZoom(Number(e.target.value))}
-            onPointerDown={e => e.stopPropagation()} />
-        </label>
+        <span>{proj ? `${proj.count} points · ${proj.n} sectors · ${frame === 'now' ? 'centre = now' : `cycle: ${frame}`}` : 'projecting…'}</span>
+        <div className="lattice-frames" onPointerDown={e => e.stopPropagation()}>
+          {(['now', 'day', 'week'] as const).map(fr => (
+            <button key={fr} className={'lf-btn' + (frame === fr ? ' on' : '')}
+              onClick={() => setFrame(fr)}
+              title={fr === 'now' ? 'radius = time since now' : `radius = position in the ${fr} cycle`}>
+              {fr === 'now' ? '⊙ now' : fr === 'day' ? '☼ day' : '◷ week'}
+            </button>
+          ))}
+          {frame === 'now' && (
+            <input type="range" min={0.5} max={3.2} step={0.1} value={zoom}
+              onChange={e => setZoom(Number(e.target.value))}
+              onPointerDown={e => e.stopPropagation()} title="zoom the recent inner rings" />
+          )}
+        </div>
       </div>
       {picked && (
         <div className="lattice-card" onPointerDown={e => e.stopPropagation()}>
