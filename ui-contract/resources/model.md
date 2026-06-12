@@ -144,7 +144,7 @@ consequences:
     evidence: "the per-session stream's text/result frames carry the fallback notice; in non-interactive mode a flagged request ENDS the turn with a refusal instead (is_error result) — the corpus contracts that this is expected routing, not a fault"
 correlate: [session]
 verification:
-  model-at-spawn: {state: probe-verified, run: "session_supervisor_params_acceptance (cmd-builder: model→--model, fallback→--fallback-model)", date: 2026-06-12, note: "BUILT: the /spawn body threads model/effort/fallback to the flags; unit-proven on the built cmd. live-verify pending (lead): a REAL spawn must confirm the model took (system/init `model`) — NOT flipped live"}
+  model-at-spawn: {state: live-verified, run: "LEAD PROVE-BATCH 2026-06-12: supervisor /spawn model=sonnet → session 442cc9f2 ran model=claude-sonnet-4-6 (confirmed in that session's own init record). The --model flag threads AND takes.", date: 2026-06-12, note: "PROVEN-BY-USE (lead): a real Sonnet spawn confirmed the model took. fallback/effort still probe-verified-only (separate spawns needed)."}
   effort-at-spawn: {state: probe-verified, run: "session_supervisor_params_acceptance (cmd-builder: effort→--effort)", date: 2026-06-12, note: "BUILT: effort threads to --effort (Atlas-verified flag). live-verify pending (lead): a real spawn must confirm the effort took"}
   set-mid-session: {state: unverified, note: "STILL planned — the mid-session /model control surface is not built; the resumed-session-keeps-model invariant also limits it"}
 ```
