@@ -27,6 +27,36 @@ ruins the system"). **Expand-before-harden:** the brain docs are captured design
 
 ---
 
+## BUILD STATUS — 2026-06-14 consolidation (NOT "build complete" — 3 honest items remain)
+
+The whole INSTRUMENT-FIRST arc is built and verified by use. This is a STATUS, not a completion claim:
+the remaining items are genuinely gated (Tim input / axis-selection) or are data/growth-front conditions
+— green-painting them would be the dishonesty this loop exists to avoid.
+
+- **INSTRUMENT half — ✅ COMPLETE.** Group 1 (the variable-engine floor / acceptance suite), Group 5 (the
+  FORM face on the corpus design system), Group 3 (time-freed/relative centre + scrubber), Group 4
+  (real-time SSE pub-sub), Group 2 (the square/dyadic-grid half). All ✅, both faces, design-critic-passed.
+- **ABILITY half — ✅ except one corrected 🟡 sub-bar.** Group 8 (embedding substrate live), Group 6 (the
+  circle / semantic radius), Group 7 (strain / structure↔meaning gap), Group 11 (the multi-scale SCALE
+  axis) — all ✅, both faces, design-critic-passed. Group 10 (order-from-edges + angle-from-a-registry):
+  FUNCTION ✅; the angle-from-a-registry FORM ✅; the order-from-edges FORM sub-bar 🟡 — CORRECTED premise:
+  no real entity-set is both legible AND edge-determined (graphs are sparse pairwise wires; registries have
+  no inter-row edges yet), so a falsifiable edge-order demo can't be made honestly. The machinery is
+  FUNCTION-✅; the sub-bar awaits edge-determined legible data (the registry-relation model, SEED §95) —
+  a DATA/growth-front condition, not a code gap.
+- **GENUINELY REMAINING (all honestly gated — the loop must NOT churn on these):**
+  · **Group 9** (two-gravity separator) — 🔴, needs Tim's AI-tells description (the AI-corner pole). The
+    mechanism is buildable the instant he describes them; its pollution signal is inert without that seed.
+  · **The small registries + gate surface + 20/80 water-law** — 🔴, gated on Tim's axis-selection (which
+    axes the dial runs on); §12 growth fronts (k, prioritization-at-scale, the promotion gesture) stub-and-refine.
+  · **Group 10's edge-order FORM legibility** — 🟡 growth front (above), awaits richer edged data.
+- **VERIFIED THIS CONSOLIDATION:** 16/16 broad-regression suites green (projection ×4, drift, bridge_routes,
+  conv_index ×3, space_embed, embeddings, durability, events, fs_session_guard, set_ref_atomic, bridge_session);
+  live surface all 5 bindings resolve (5994 pts), scrubber shifts `now`, semantic-pending shows the scale
+  ladder, semantic-active over 162 units (all carry strain), rung=8 resolves 8 sized+labelled themes.
+
+---
+
 ## GROUP 1 · INSTRUMENT — THE FLOOR (the variable engine) ✅ (suite committed 6615e53)
 `runtime/projection.py:project` + `BindingRegistry` + `bindings/` resolve a frame from a swappable
 lens; sectors data-driven; lock x=2π/n re-divides evenly.
@@ -208,11 +238,21 @@ costume) — only REAL persisted directed edges order sectors; registries have n
   wheel (sectors = the projection lenses + an honest '—' remainder), SEPARATE design-critic PASS at BOTH
   viewports (1440×900 + 390×844): 7 labelled wedges, legible/unclipped, meaningful division, clean toggle
   back to the kind-wheel, design tokens. What KEEPS Group 10 at 🟡: the FORM bar's "sectors arranged by their
-  real EDGES" — order_by=edge is verified by use over real graph wires (0 violations, stable) BUT not yet
-  FE-legible (the only real-edge entity-sets are the graphs at 52–118 nodes → an unreadable wheel; the
-  registries have no inter-row edges). A legible edge-ordered FE view awaits a legibly-sized edged
-  entity-set; EDGES-BETWEEN-REGISTRY-ROWS is the SEED §95 growth front ("grow the registry-relation model")
-  — built honestly, never a faked sequence.
+  real EDGES" — order_by=edge is verified by use over real graph wires (0 violations, stable) BUT cannot be
+  made FE-legible-AND-falsifiable on CURRENT data. CORRECTED PREMISE (2026-06-14 — the prior "only big graphs
+  → unreadable" was wrong; the real blocker is edge-DETERMINATION, not size): a dispositive scan of every
+  edged graph (3–14 nodes) found NONE that is both legible AND edge-determined. The data is sparse (~0.5
+  edges/node): the only fully-edge-determined graph is `first-purpose-test` (3 nodes, A→B→C — trivially
+  small), and every other legible graph has a longest directed chain of just 2 (isolated pairwise wires), so
+  its wheel order is dominated by the stable tie-break and would be INDISTINGUISHABLE from alphabetical — a
+  design-critic could not tell edge-order from no-order. A falsifiable demo (order_by=edge visibly DIFFERS
+  from the fallback AND obeys A→B→C→D) therefore can't be made honestly at a meaningful scale on real data.
+  The order-from-edges MACHINERY is FUNCTION-✅ (the bridge wires angle_from=graph + sector_edges → project()'s
+  `_toposort`); what is missing is an entity-set that is both legibly-sized AND has a real edge backbone.
+  EDGES-BETWEEN-REGISTRY-ROWS is the SEED §95 growth front ("grow the registry-relation model") — when the
+  registries carry real declared relations (a handful of rows, densely related), THAT is the legible +
+  edge-determined set this sub-bar needs; built honestly, never a faked sequence. This FORM sub-bar is a
+  DATA/growth-front condition, not a code gap.
 
 ## GROUP 11 · ABILITY — MULTI-SCALE EMBEDDING PYRAMID ✅ (both faces verified; the SCALE axis)
 THE REVERSAL (evidence-forced): the spec's "sentence/turn/session/project" rungs were CONVERSATION-shaped;
