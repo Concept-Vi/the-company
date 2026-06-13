@@ -46,6 +46,11 @@ Add a row = add a FILE + reflect it here (the drift home). Loader: `runtime/flow
   unresolved decisions · phantom corpus sources. Deterministic, report+one-card; adoption is the
   follow-up judgment work.
 
+- **cc_registry_refresh** — Mirror-Registry LANE-REFRESH: compares the live Claude Code binary version
+  against the stored stamp (store/claude-code.version_stamp), re-introspects on mismatch,
+  diffs vs the prior snapshot, and surfaces ONE 'cc_registry_gap' inbox item (F-FIX-4).
+  Stamp write is post-approval only (proposes-only; fail-closed write order).
+
 ## Agent-authored entries (auto-reflected)
 <!-- created live by the create face; one line per entry — keeps the
      drift-home acceptance green; refine the prose by integration. -->

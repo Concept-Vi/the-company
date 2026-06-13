@@ -142,6 +142,31 @@ endpoint) and `sdk` (SDK-native streaming) are the near-term-real gaps.
 `rest="flag/--debug"` → `CapabilityRegistry.get("flag/--debug")` resolves. The discoverers construct
 ids this way from the parse output.
 
+## LANE-REFRESH (built 2026-06-14) — version-triggered refresh + SessionStart warning
+
+`flows/cc_registry_refresh.py` — the REFRESH verb's registered flow:
+1. Reads the stored stamp (`store/<platform_id>.version_stamp` — direct `open()`, not FsStore CAS,
+   per F-FIX-15 / PG-D3).
+2. Probes the live binary version via the PlatformEntry's `VersionSource`.
+3. **Same-version fast path:** returns `{"status":"unchanged"}` immediately — NO surface call, NO
+   false novelty.
+4. **Version-bump path:** calls `engine.refresh(platform, prior, ...)` → diff payload
+   `{added,changed,unclassified,vanished,version_from,version_to}`, then calls `inbox.surface()` ONCE
+   with `action_class="cc_registry_gap"`, `default="reject"` (fail-closed — F-FIX-4 / PG-D4).
+5. **Stamp is NOT written by this flow** (proposes_only discipline). `write_stamp_and_cache()` is
+   exported for the post-curator-approval governance action — fail-closed write order (F-FIX-7).
+
+`ops/hooks/cc_registry_freshness_check.sh` — SessionStart hook (F-FIX-13 / C-REF-1):
+Compares `store/claude-code.version_stamp` to `claude --version`; emits `REGISTRY FRESHNESS: STALE`
+warning if mismatched; **silent** on current; **exits 0 always** (non-blocking). Wired via
+`.claude/settings.json` `hooks.SessionStart`. First file in `ops/hooks/` — a **NEW pattern**, no prior
+template.
+
+Verification (44/44, no live claude): `tests/introspection_acceptance.py` — covers C-REF-1..5 (partial),
+C-GENPROOF-known/novel, FLOW-REGISTRATION, STAMP-LOGIC, SETTINGS-JSON.
+**🟡 LEAD live-verify queued:** C-REF-1 full (live SessionStart hook injection), C-REF-2 full (real
+Inbox.surface() in a live session), stamp+cache persist post-approval.
+
 ## What this module must NEVER do
 
 - **Never** name a platform in `engine.py` / `rules.py` / `adapters/` (the leak invariant — the build

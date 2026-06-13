@@ -1,5 +1,17 @@
 {
   "worktree": {
     "bgIsolation": "none"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash /home/tim/company/ops/hooks/cc_registry_freshness_check.sh"
+          }
+        ]
+      }
+    ]
   }
 }
