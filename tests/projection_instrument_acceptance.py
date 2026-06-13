@@ -269,5 +269,56 @@ check("nesting is containment: a child's MSB quadrant == its parent's cell (pare
       (_grid_cell("ui://a/b"), _grid_cell("ui://a/b/c")))
 
 
+# === 11 · GROUP 10 — the event→row edge + angle-from-a-registry + order-from-edges ===
+print("=== 11 · the event→row edge, angle_from=<registry>, order_by=edge (Group 10) ===")
+from runtime.projection import _singular, _row_of, _toposort
+
+check("_singular depluralizes (the event→row field convention): projections→projection, mark_types→mark_type",
+      _singular("projections") == "projection" and _singular("mark_types") == "mark_type"
+      and _singular("relation_types") == "relation_type" and _singular("roles") == "role")
+check("the event→row edge reads the singular field (op.run→role, corpus.record→projection)",
+      _row_of({"kind": "op.run", "role": "repo_digest"}, "roles") == "repo_digest"
+      and _row_of({"kind": "corpus.record", "projection": "topics"}, "projections") == "topics")
+check("the event→row edge reads a GRAPH's node (connect→from_node), None when no row is named",
+      _row_of({"kind": "connect", "from_node": "c", "to_node": "u"}, "graph") == "c"
+      and _row_of({"kind": "chat"}, "roles") is None)
+
+# angle_from=<registry>: sectors = the rows PRESENT in the data + an honest '—' remainder for unmapped events
+g10_evs = [ev(i, "corpus.record", 10, "x") | {"projection": p}
+           for i, p in enumerate(["topics", "topics", "principles", "worldview"])]
+g10_evs.append(ev(99, "chat", 5))            # no projection → the remainder
+B_reg = {"id": "byp", "label": "by projection", "angle_from": "projections", "radius_from": "time", "order_by": "count"}
+r_reg = project(g10_evs, binding=B_reg, now=NOW, sector_ids=["topics", "principles", "worldview", "repo"], registry=REAL)
+sids = [s["id"] for s in r_reg["sectors"]]
+check("angle_from=<registry>: sectors are the PRESENT rows (count order) + an honest '—' remainder",
+      sids == ["topics", "principles", "worldview", "—"], f"sectors={sids}")
+check("angle_from=<registry>: an event maps to the sector of the row its edge names (a topics event → topics)",
+      next(p for p in r_reg["points"] if p["seq"] == 0)["sector"] == "topics")
+check("angle_from=<registry>: an event naming no row lands in the '—' remainder (never forced)",
+      next(p for p in r_reg["points"] if p["seq"] == 99)["sector"] == "—")
+
+# order_by=edge: topological over REAL directed edges, STABLE, and edge-respecting; cycle-safe; no-edge→count
+ids4, edges4 = ["c", "b", "a", "d"], [("a", "b"), ("b", "c")]   # a→b→c, d free
+topo = _toposort(ids4, edges4, key=lambda r: r)
+check("order_by=edge: _toposort respects every directed edge (a before b before c)",
+      topo.index("a") < topo.index("b") < topo.index("c") and "d" in topo)
+check("order_by=edge: _toposort is STABLE (same inputs → same order)",
+      _toposort(ids4, edges4, key=lambda r: r) == topo)
+check("order_by=edge: a CYCLE is cycle-safe (all rows present, no infinite loop / drop)",
+      sorted(_toposort(["a", "b"], [("a", "b"), ("b", "a")], key=lambda r: r)) == ["a", "b"])
+B_edge = {"id": "bpe", "label": "edge", "angle_from": "projections", "radius_from": "time", "order_by": "edge"}
+r_edge = project(g10_evs, binding=B_edge, now=NOW, sector_ids=["topics", "principles", "worldview"],
+                 sector_edges=[("worldview", "topics"), ("topics", "principles")], registry=REAL)
+esids = [s["id"] for s in r_edge["sectors"] if s["id"] != "—"]
+check("order_by=edge: sectors arranged by the real edges (worldview→topics→principles), alphabetical retired",
+      esids == ["worldview", "topics", "principles"], f"edge-order={esids}")
+r_noedge = project(g10_evs, binding=B_edge, now=NOW, sector_ids=["topics", "principles", "worldview"],
+                   sector_edges=[], registry=REAL)
+check("order_by=edge with NO edges → honest fallback to count (never a fabricated sequence)",
+      [s["id"] for s in r_noedge["sectors"] if s["id"] != "—"] == ["topics", "principles", "worldview"])
+check("Group 10 is ADDITIVE: the data-driven 'kind' default is unchanged (sector_ids ignored when angle_from=kind)",
+      [s["id"] for s in project(events, binding=raw, now=NOW, sector_ids=["x"], registry=REAL)["sectors"]]
+      == [s["id"] for s in res["sectors"]])
+
 print(f"\n{'PASS' if FAIL == 0 else 'FAIL'} — {PASS} passed, {FAIL} failed")
 sys.exit(0 if FAIL == 0 else 1)

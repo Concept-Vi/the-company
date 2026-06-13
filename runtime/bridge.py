@@ -772,8 +772,30 @@ class H(BaseHTTPRequestHandler):
                                                         "hint": "this centre has no vector in the lens's "
                                                                 "space — pick an embedded item as the centre"}))
                 else:
+                    # Group 10 — angle_from=<registry/graph>: resolve the entity-set's rows (+ directed edges)
+                    # HERE (the store/registry I/O), pass to the pure project(). A REGISTRY's rows come from
+                    # the live discovered registry (registry-is-truth) with NO inter-row edges yet (→ order_by
+                    # falls back to count honestly; edges-between-rows is the SEED §95 growth front). A GRAPH's
+                    # nodes + connect wires ARE real directed edges → order_by=edge topological-sorts them.
+                    af = binding.get("angle_from", "kind")
+                    skw = {}
+                    if af not in ("kind", "kind-group"):
+                        _REG = {"projections": SUITE.projection_registry, "roles": SUITE.role_registry,
+                                "mark_types": SUITE.mark_type_registry, "relation_types": SUITE.relation_type_registry,
+                                "generation_policies": SUITE.generation_policy_registry,
+                                "ai_tics": SUITE.ai_tic_registry, "forms": SUITE.form_registry,
+                                "lifters": SUITE.lifter_registry}
+                        if af in _REG:
+                            skw = {"sector_ids": sorted(_REG[af]), "sector_edges": []}
+                        elif af == "graph" or af.startswith("graph:"):
+                            gid = af.split(":", 1)[1] if ":" in af else (q.get("graph") or "")
+                            G = SUITE.store.load_graph(gid) if gid else None
+                            if G:
+                                evs = [e for e in evs if e.get("graph") == gid]   # scope to that graph's events
+                                skw = {"sector_ids": [n.id for n in G.nodes],
+                                       "sector_edges": [(e.from_node, e.to_node) for e in G.edges]}
                     self._send(200, json.dumps(_uproject(
-                        evs, binding=binding, registry=reg, now=now, center=center, limit=lim)))
+                        evs, binding=binding, registry=reg, now=now, center=center, limit=lim, **skw)))
             elif path == "/api/corpus-query":              # S7: the forager's search door (semantic + heads)
                 q = self._qs(urlparse(self.path))
                 text, space = q.get("text"), q.get("space") or None

@@ -130,24 +130,107 @@ def _cosine(a, b) -> float:
     return float(dot / (na * nb))
 
 
-def _resolve_sectors(binding: dict, events: list) -> tuple[list, dict]:
+def _singular(registry_name: str) -> str:
+    """Depluralize a registry NAME → the EVENT FIELD that names its row (the event→row edge convention,
+    ONE rule, not a per-registry table): projections→projection, mark_types→mark_type, relation_types→
+    relation_type, generation_policies→generation_policy, ai_tics→ai_tic, roles→role, forms→form,
+    bindings→binding. (-ies→-y · trailing -s dropped · else unchanged.)"""
+    n = registry_name
+    if n.endswith("ies"):
+        return n[:-3] + "y"
+    if n.endswith("s"):
+        return n[:-1]
+    return n
+
+
+def _row_of(event: dict, angle_from: str):
+    """THE EVENT→ROW EDGE (Group 10), formalized. Which row of the `angle_from` entity-set does this event
+    relate to? Two conventions:
+      · a GRAPH ('graph' or 'graph:<id>') — the NODE the event touches: `node` · else `from_node` (a
+        connect/wire event's SOURCE — the edge itself feeds sector_edges, its source feeds membership).
+      · a REGISTRY (any other name, e.g. 'roles'/'projections') — the SINGULAR-field convention: an op.run
+        carries `role` (the guide's "op.run → the role that fired"), a corpus.record carries `projection`.
+    Returns the row id, or None when the event names no row of that set (→ an honest remainder sector,
+    never a forced/fabricated membership)."""
+    if angle_from == "graph" or angle_from.startswith("graph:"):
+        return event.get("node") or event.get("from_node") or event.get("to_node")
+    return event.get(_singular(angle_from))
+
+
+def _toposort(ids: list, edges: list, key) -> list:
+    """ORDER-FROM-EDGES (Group 10 / SEED §79-82: "A precedes B → A before B around the wheel; the linear
+    order WRAPPED into a circle"). Kahn topological sort over the DIRECTED edges (from→to) restricted to
+    `ids`, with a STABLE deterministic tie-break (`key`) at every ready-step — so the order is reproducible
+    across runs AND respects every real edge. A CYCLE's remaining nodes are appended stably (never dropped,
+    never an infinite loop — render the order the edges DO determine + the rest by the tie-break). Edges
+    touching ids outside the set are ignored (they don't constrain THIS wheel)."""
+    from collections import defaultdict
+    idset = set(ids)
+    indeg = {i: 0 for i in ids}
+    adj = defaultdict(list)
+    for a, b in edges:
+        if a in idset and b in idset and a != b:
+            adj[a].append(b)
+            indeg[b] += 1
+    ready = sorted([i for i in ids if indeg[i] == 0], key=key)
+    out = []
+    seen = set()
+    while ready:
+        n = ready.pop(0)
+        if n in seen:
+            continue
+        out.append(n)
+        seen.add(n)
+        fresh = [m for m in adj[n] if (indeg.__setitem__(m, indeg[m] - 1) or indeg[m] == 0) and m not in seen]
+        if fresh:
+            ready = sorted(ready + fresh, key=key)
+    if len(out) < len(ids):                       # a cycle — append the rest stably (never drop a row)
+        out += sorted([i for i in ids if i not in seen], key=key)
+    return out
+
+
+def _resolve_sectors(binding: dict, events: list, *, sector_ids=None, sector_edges=None) -> tuple[list, dict]:
     """Resolve the angular divisions (sectors) from the binding's angle_from — NOT from a hardcoded
-    list. Returns (ordered_sector_ids, kind→sector map). n = len(sectors); the wheel divides evenly.
+    list. Returns (ordered_sector_ids, kmap). n = len(sectors); the wheel divides evenly.
 
     angle_from:
       · 'kind'       — one sector per DISTINCT kind in the data (fully data-driven; the true default).
-      · 'kind-group' — sectors = binding['groups'] {sector_id: [kind-glob,...]} (a DECLARED lens —
-                       one instance, never the default; grouping is a choice, stated as such).
-    (Resolving sectors from an arbitrary registry's rows, e.g. roles/operator_memory, needs the
-    event→row edge — the relation_types resolution not yet formalized; flagged, not faked. When that
-    edge exists, angle_from = a registry name resolves here with no other change.)"""
+      · 'kind-group' — sectors = binding['groups'] {sector_id: [kind-glob,...]} (a DECLARED lens).
+      · <registry>/'graph:<id>' (Group 10) — sectors = that entity-set's rows (PRESENT in the data),
+        each event mapped to its row via the EVENT→ROW edge (`_row_of`). `sector_ids` (the candidate row
+        ids) + `sector_edges` (directed edges among them) are PASSED IN by the caller (registry-is-truth;
+        project stays pure). order_by='edge' → `_toposort` over the real edges (SEED §79-82); else by count
+        (the honest fallback when an entity-set has NO inter-row edges — SEED §95 growth front). An event
+        naming no row → an honest '—' remainder sector (never forced)."""
     af = binding.get("angle_from", "kind")
     order_by = binding.get("order_by", "count")
     if af == "kind-group":
         groups = binding.get("groups") or {}
         order = list(groups.keys())  # declared order
-        kmap = {}
         return order, {"__groups__": groups, "__order__": order}
+    if af not in ("kind",):
+        # angle_from = a REGISTRY / GRAPH entity-set (Group 10). Sector by the rows PRESENT in the data.
+        cand = set(sector_ids or [])
+        counts: dict = {}
+        unmapped = False
+        for e in events:
+            row = _row_of(e, af)
+            if row is not None and (not cand or row in cand):
+                counts[row] = counts.get(row, 0) + 1
+            elif row is None:
+                # only events that COULD name a row of this set but don't → remainder (a connect/wire event
+                # in graph mode legitimately has no single node membership — it is an edge, not a remainder).
+                if not (af == "graph" or af.startswith("graph:")) or e.get("kind") != "connect":
+                    unmapped = True
+        ids = list(counts.keys())
+        tie = lambda r: (-counts.get(r, 0), str(r))
+        if order_by == "edge" and sector_edges:
+            ordered = _toposort(ids, list(sector_edges), key=tie)
+        else:
+            ordered = sorted(ids, key=tie)            # count (default) — the alphabetical sort is retired
+        if unmapped:
+            ordered = ordered + ["—"]
+        return ordered, {"__by__": af}
     # 'kind' — data-driven
     counts = {}
     for e in events:
@@ -194,7 +277,8 @@ def _grid_cell(address: str, cap: int = 4) -> tuple:
 
 def project(events: list, *, binding: dict | None = None, now: datetime | None = None,
             center: str | None = None, limit: int = 0, registry: BindingRegistry | None = None,
-            vectors: dict | None = None) -> dict:
+            vectors: dict | None = None, sector_ids: list | None = None,
+            sector_edges: list | None = None) -> dict:
     """Events → points, resolved from a BINDING. Pure read; every coordinate read from data the
     event already carries, the divisions resolved from the binding's named source. The CENTRE is a
     variable: default the temporal NOW (radius = age); pass `now=` (the scrubber) to move it into the
@@ -221,7 +305,8 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
     if limit:
         stamped = stamped[-limit:]
 
-    sectors, kmap = _resolve_sectors(binding, [e for e, _ in stamped])
+    sectors, kmap = _resolve_sectors(binding, [e for e, _ in stamped],
+                                     sector_ids=sector_ids, sector_edges=sector_edges)
     n = max(len(sectors), 1)
 
     max_age = max((max((now - t).total_seconds(), 1.0) for _, t in stamped), default=1.0)
@@ -303,7 +388,11 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
     points = []
     for idx, (e, t) in enumerate(stamped):
         kind = e.get("kind") or "?"
-        i = _sector_index(kind, sectors, kmap)
+        # the angular SECTOR key: by KIND (default/kind-group), or by the EVENT→ROW edge for an
+        # angle_from=<registry/graph> binding (Group 10) — an event naming no row → the '—' remainder.
+        by = kmap.get("__by__")
+        skey = ((_row_of(e, by) if _row_of(e, by) is not None else "—") if by else kind)
+        i = _sector_index(skey, sectors, kmap)
         gi, gj, gd = cells[idx]
         ref = str(_addr_of(e) or e.get("summary") or e.get("seq"))
         theta = TAU * (i + 0.08 + 0.84 * _stable_unit(ref)) / n

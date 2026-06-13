@@ -192,12 +192,24 @@ AI deformation), seeded by Tim's description of the AI-tells (his volunteered in
 - **INPUT (not a gate)** — Tim's AI-tells description; the Tim-pole needs no enumeration (it's the
   origin + the existing gradient field).
 
-## GROUP 10 · ABILITY — ORDER-FROM-EDGES + ANGLE-FROM-A-REGISTRY 🔴 (needs the event→row edge)
-relation_types vocabulary exists but is unwired; order_by is only count|declared.
-- **FUNCTION** — the event→registry-row edge formalized; `_resolve_sectors` gains an
-  angle_from=<registry-name> branch and an order_by=typed-edge mode (precedes/depends_on); the
-  alphabetical sort retired. ☐ by use
-- **FORM** — sectors arranged by their real edges read as a meaningful sequence around the wheel. ☐ by rubric
+## GROUP 10 · ABILITY — ORDER-FROM-EDGES + ANGLE-FROM-A-REGISTRY 🟡 (FUNCTION ✅ by use; FORM: registry-angle live, edge-order verified-not-FE-legible)
+The keystone. commits (this beat). The advisor stopped a fake "derived precedence" (order_by=time in a
+costume) — only REAL persisted directed edges order sectors; registries have none yet (growth front).
+- **FUNCTION** ✅ by use — (1) THE EVENT→ROW EDGE formalized: `_row_of(event, angle_from)` — a registry's
+  SINGULAR-field convention (op.run→`role`, corpus.record→`projection`; `_singular` depluralizes, one rule)
+  + a graph's node-ref (connect→`from_node`). (2) `_resolve_sectors` gains the angle_from=<registry/graph>
+  branch (sectors = the entity-set's PRESENT rows via the edge; an event naming no row → an honest '—'
+  remainder). (3) `order_by='edge'` = `_toposort` over the passed REAL directed edges (Kahn, STABLE
+  tie-break, cycle-safe) — the alphabetical default RETIRED (count). Verified by use: `by_lens` (live
+  bridge) divides the wheel by the projection registry (history/repo/principles/topics/worldview/what + '—');
+  order_by=edge topologically orders a real graph (review-1780773666-26: 52 nodes/26 edges, 0 edge
+  violations, stable). `tests/projection_instrument_acceptance.py` +12 invariants (53 total).
+- **FORM** 🟡 — `bindings/by_lens.py` renders the registry-divided wheel (sectors = the lenses, a meaningful
+  division) — the angle-from-a-registry face, LIVE + selectable. order_by=edge is verified by use over real
+  graph wires BUT not yet FE-legible: the only real-edge entity-sets are the graphs (52–118 nodes → an
+  unreadable wheel), and the registries have no inter-row edges. A legible edge-ordered FE view awaits a
+  legibly-sized edged entity-set; EDGES-BETWEEN-REGISTRY-ROWS is the SEED §95 growth front ("grow the
+  registry-relation model") — built honestly, never a faked sequence. (design-critic verifying by_lens.)
 
 ## GROUP 11 · ABILITY — MULTI-SCALE EMBEDDING PYRAMID 🔴
 No sentence/turn chunker; corpus is unit-level only.
