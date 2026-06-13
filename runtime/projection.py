@@ -251,8 +251,14 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
             pv = (vectors or {}).get(_addr_of(_e))
             if pv is not None and len(pv) == len(centre_vec):
                 sem_cos[_i] = _cosine(centre_vec, pv)
-        if sem_cos:
-            sem_cmin, sem_cmax = min(sem_cos.values()), max(sem_cos.values())
+        # the BAND excludes the CENTRE itself: its cosine is 1.0 (an OUTLIER) — including it makes
+        # sem_cmax=1.0, which compresses every real neighbour into the OUTER band and leaves the inner
+        # radius empty (the empty-core failure). Normalize over the NON-centre cosines so the nearest
+        # real neighbour maps near the origin and the field uses the FULL radius.
+        nc = [c for _i, c in sem_cos.items()
+              if (stamped[_i][0].get("source_address") or _addr_of(stamped[_i][0])) != addr_center]
+        if nc:
+            sem_cmin, sem_cmax = min(nc), max(nc)
     sem_norm = sem and (sem_cmax - sem_cmin) > 1e-9
 
     # THE SQUARE / STRUCTURE half (the seed §1): each point's dyadic (i,j) cell from its address path
@@ -276,10 +282,16 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
         r_unknown = False
         if sem:
             c = sem_cos.get(idx)
-            if c is None:
+            is_centre = (e.get("source_address") or _addr_of(e)) == addr_center
+            if is_centre:
+                r = 0.0                                              # the query item IS the origin of the field
+            elif c is None:
                 r, r_unknown = 1.0, True                              # no vector → rim, FLAGGED (not dropped)
             elif sem_norm:
-                r = 1.0 - (c - sem_cmin) / (sem_cmax - sem_cmin)      # nearest cos → r=0, farthest → r=1
+                # non-centre points fill [0.06, 1.0] (a small floor keeps the nearest neighbour just OFF the
+                # origin so it reads distinct from the centre dot): nearest cos → 0.06, farthest → 1.0.
+                r = 0.06 + 0.94 * (1.0 - (c - sem_cmin) / (sem_cmax - sem_cmin))
+                r = min(max(r, 0.0), 1.0)
             else:
                 r = 1.0 - c                                          # single value / no spread → raw 1-cos
         elif addr_center is not None:
@@ -297,6 +309,9 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
             "address": e.get("address") or e.get("source_address") or "",
             "summary": str(e.get("summary") or "")[:140], "ts": e.get("ts"),
             "phases": {k: round(v, 4) for k, v in phases.items()},
+            # the EMBEDDABLE key (the source the per-space vector is keyed by) — present only when the event
+            # carries one, so a meaning-field can re-centre on the ITEM (not its run:// record address).
+            **({"source": e.get("source_address")} if e.get("source_address") else {}),
             # only a SEMANTIC point with no vector carries this (rim + flagged) — additive, absent otherwise
             **({"r_unknown": True} if r_unknown else {}),
         })

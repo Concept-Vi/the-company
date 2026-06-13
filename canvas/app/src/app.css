@@ -1888,4 +1888,14 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
   border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px;
   color: var(--tx-2); font: 11px ui-monospace, monospace; }
 .lattice-card .lc-center:hover { border-color: var(--acc); color: var(--acc); }
+/* THE CIRCLE (Group 6): the meaning-distance note (semantic radius active) + the meaning-field action,
+   accent-tinted to distinguish the semantic centre from the structural one. Tokens only (design-lint=0). */
+.lattice-foot .lf-semnote { color: var(--acc); font: 10px ui-monospace, monospace; padding: 2px 7px;
+  border: 1px solid var(--line-2); border-radius: 6px; white-space: nowrap; }
+.lattice-card .lc-meaning { border-color: var(--acc); color: var(--acc); }
+.lattice-wrap .lattice-hint { position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  max-width: min(92%, 520px); pointer-events: auto; background: var(--panel); color: var(--tx-2);
+  border: 1px solid var(--acc); border-radius: 8px; padding: 6px 11px; text-align: center;
+  font: 11px ui-monospace, monospace; line-height: 1.45; box-shadow: var(--shadow); }
+.lattice-wrap .lattice-hint b { color: var(--acc); font-weight: 600; }
 @media (max-width: 699px) { .lattice-foot input[type=range].lf-scrub { width: 88px; } }

@@ -11,10 +11,14 @@ type ProjPoint = {
   seq: number; kind: string; sector: string; theta: number; r: number; depth: number
   cell: { i: number; j: number; d: number }   // the dyadic structural coordinate (the square half)
   address: string; summary: string; ts: string; phases: { day: number; week: number }
+  source?: string        // the embeddable key (present on corpus items) — the meaning-field re-centres on it
+  r_unknown?: boolean     // a semantic point with no vector → at the rim, flagged (never silent-dropped)
 }
 type Projection = {
   now: string; n: number; rings: number; count: number; grid?: number
-  binding?: { id: string; label: string }
+  // radius_from: 'time' (age) | 'address' (tree-distance) | 'semantic' (Group 6 — meaning-distance).
+  // needs_center: the semantic lens is selected but no centre chosen yet → items laid out by time, awaiting one.
+  binding?: { id: string; label: string; radius_from?: string; radius_normalized?: boolean; space?: string; needs_center?: boolean }
   bindings?: { id: string; label: string }[]
   sectors: { id: string; label: string; from: number; to: number }[]
   points: ProjPoint[]
@@ -45,12 +49,17 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     return h ? `${h}h${m ? ` ${m}m` : ''} ago` : m ? `${m}m ago` : 'moments ago'
   }
 
+  // THE CIRCLE (Group 6): the semantic lens is selected but awaiting a centre → items lie by time, clickable
+  // (pick one → meaning-field). isSemantic is the ACTIVE meaning-field (a real centre) — only then is r
+  // meaning-distance and the temporal frames don't apply, so radius reads straight off p.r (zoomable).
+  const semanticPending = proj?.binding?.needs_center === true
+  const isSemantic = proj?.binding?.radius_from === 'semantic' && !semanticPending
   // S4 — frame-relativity (Tim: "the axes are variables too — scale and state/phase select the
   // frame"). 'now' = radius is age-from-NOW (the default arrow of time). 'day'/'week' = radius is
   // the timestamp's CYCLE coordinate, so the daily/weekly rhythm becomes visible: everything that
   // happened "at 9am" lands on one ring regardless of which day — the cycles, made geometry.
   const radial = (p: ProjPoint) =>
-    frame === 'now' ? Math.pow(p.r, 1 / zoom) : frame === 'day' ? p.phases.day : p.phases.week
+    (isSemantic || frame === 'now') ? Math.pow(p.r, 1 / zoom) : frame === 'day' ? p.phases.day : p.phases.week
 
   // The centre is NOW — so NOW must keep moving. The 15s POLL is retired: the lattice SUBSCRIBES to
   // /api/stream (SSE, the shared events.jsonl tap) and re-projects the instant an event is written, so a
@@ -59,8 +68,8 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   useEffect(() => {
     let alive = true, es: EventSource | null = null, deb = 0, lastSeq = -1
     const params = new URLSearchParams()
-    if (bind) params.set('binding', bind)
-    if (at != null) params.set('at', String(at))       // the scrubbed past (the centre moved back in time)
+    if (bind) params.set('binding', bind)               // semantic-without-a-centre → the bridge returns the
+    if (at != null) params.set('at', String(at))        // space's items by time, flagged needs_center (pick one)
     if (center) params.set('center', center)            // the spatial re-centre (radius = distance-from-address)
     const url = '/api/projection' + (params.toString() ? `?${params.toString()}` : '')
     const apply = (d: Projection, markNew: boolean) => {
@@ -72,7 +81,13 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       lastSeq = d.points.reduce((m, p) => Math.max(m, p.seq || 0), lastSeq)
     }
     const fetchProj = (markNew: boolean) => fetch(url)
-      .then(r => { if (!r.ok) throw new Error(`projection ${r.status}`); return r.json() })
+      .then(async r => {
+        if (!r.ok) {                                    // surface the bridge's legible message (semantic-no-centre etc.)
+          const b = await r.json().catch(() => null)
+          throw new Error(b?.hint || b?.error || `projection ${r.status}`)
+        }
+        return r.json()
+      })
       .then(d => apply(d, markNew))
       .catch(e => { if (alive) setErr(String(e?.message || e)) })
     fetchProj(false).then(() => {
@@ -152,7 +167,9 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     }
     // the radial-axis labels at fixed fractions (independent of the ring COUNT): 'now' marks the rim
     // (older outward); a cycle frame marks its clock quarters.
-    const axisLabels: [number, string][] = frame === 'now'
+    const axisLabels: [number, string][] = isSemantic
+      ? [[1, 'farther in meaning →']]                  // the CIRCLE: radius = meaning-distance from the centre
+      : frame === 'now'
       ? [[1, 'older →']]
       : frame === 'day' ? [[0.25, '06h'], [0.5, '12h'], [0.75, '18h'], [1, '24h']]
       : [[0.25, 'Tue'], [0.5, 'Thu'], [0.75, 'Sat'], [1, 'Sun']]
@@ -207,8 +224,10 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       }
       const hue = (p.theta * 180) / Math.PI            // color IS angle (the deliberate non-token colour)
       const chosen = selSeqs.has(p.seq)
-      g.globalAlpha = (p === picked ? 1 : 0.75) * fade
-      g.fillStyle = p === picked ? accent : `hsl(${hue}deg 55% 58%)`
+      // a semantic point with NO vector sits at the rim, FAINT + warm-grey (meaning-distance unknown —
+      // honestly shown, never silently dropped or faked as 'far').
+      g.globalAlpha = (p === picked ? 1 : p.r_unknown ? 0.3 : 0.75) * fade
+      g.fillStyle = p === picked ? accent : p.r_unknown ? dim : `hsl(${hue}deg 55% 58%)`
       g.beginPath(); g.arc(x, y, p === picked ? 5 : 2.1, 0, Math.PI * 2); g.fill()
       if (chosen) {  // the working set rings — what will ride into the builder
         g.globalAlpha = 0.95 * fade; g.strokeStyle = accent; g.lineWidth = 1.5
@@ -318,6 +337,12 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   return (
     <div className="lattice-wrap" ref={wrapRef} onPointerDown={pick}>
       <canvas ref={cvsRef} />
+      {semanticPending && (
+        <div className="lattice-hint" onPointerDown={e => e.stopPropagation()}>
+          ◎ semantic lens{proj?.binding?.space ? ` · ${proj.binding.space}` : ''} — pick a centre: tap a point,
+          then <b>◎ meaning-field from here</b> to rank everything by meaning-distance
+        </div>
+      )}
       <div className="lattice-foot">
         <span>
           <button className={'lf-live' + ((live && at == null) ? ' on' : '')}
@@ -335,30 +360,40 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
             </select>
           )}
           {center && (
-            <button className="lf-centred" onClick={() => { setCenter(null); setPicked(null) }}
+            <button className="lf-centred" onClick={() => { setCenter(null); setPicked(null); if (isSemantic) setBind('') }}
               onPointerDown={e => e.stopPropagation()} title={`centred on ${center} — tap to release back to NOW`}>
-              ⊙ {centreSeg} ✕
+              {isSemantic ? '◎' : '⊙'} {centreSeg} ✕
             </button>
           )}
           {' '}{proj ? `${proj.count} pts · ${proj.n} sectors · ${timeLabel}` : 'projecting…'}
         </span>
         <div className="lattice-frames" onPointerDown={e => e.stopPropagation()}>
-          <label className="lf-slider" title="scrub the centre back in time — NOW → the past (frozen where you let go)">
-            <span className="lf-ic">⏱</span>
-            <input type="range" className="lf-scrub" min={0} max={Math.round(spanRef.current)}
-              step={Math.max(Math.round(spanRef.current / 240), 1)}
-              value={at != null ? Math.min(Math.round(nowAnchorRef.current - at), Math.round(spanRef.current)) : 0}
-              onChange={e => { const back = Number(e.target.value); setPicked(null); setAt(back <= 0 ? null : Math.round(nowAnchorRef.current - back)) }} />
-          </label>
-          {(['now', 'day', 'week'] as const).map(fr => (
-            <button key={fr} className={'lf-btn' + (frame === fr ? ' on' : '')}
-              onClick={() => setFrame(fr)}
-              title={fr === 'now' ? 'radius = time since now' : `radius = position in the ${fr} cycle`}>
-              {fr === 'now' ? '⊙ now' : fr === 'day' ? '☼ day' : '◷ week'}
-            </button>
-          ))}
-          {frame === 'now' && (
-            <label className="lf-slider" title="zoom the recent inner rings">
+          {isSemantic ? (
+            // THE CIRCLE active: radius is meaning-distance (not time) — the temporal controls don't apply;
+            // a legible note states the reading + its honest normalization. Zoom still expands the near band.
+            <span className="lf-semnote" title="radius = cosine meaning-distance from the centre item, in this lens's space">
+              ◎ meaning-distance{proj?.binding?.radius_normalized ? ' · normalized' : ''}
+            </span>
+          ) : (
+            <>
+              <label className="lf-slider" title="scrub the centre back in time — NOW → the past (frozen where you let go)">
+                <span className="lf-ic">⏱</span>
+                <input type="range" className="lf-scrub" min={0} max={Math.round(spanRef.current)}
+                  step={Math.max(Math.round(spanRef.current / 240), 1)}
+                  value={at != null ? Math.min(Math.round(nowAnchorRef.current - at), Math.round(spanRef.current)) : 0}
+                  onChange={e => { const back = Number(e.target.value); setPicked(null); setAt(back <= 0 ? null : Math.round(nowAnchorRef.current - back)) }} />
+              </label>
+              {(['now', 'day', 'week'] as const).map(fr => (
+                <button key={fr} className={'lf-btn' + (frame === fr ? ' on' : '')}
+                  onClick={() => setFrame(fr)}
+                  title={fr === 'now' ? 'radius = time since now' : `radius = position in the ${fr} cycle`}>
+                  {fr === 'now' ? '⊙ now' : fr === 'day' ? '☼ day' : '◷ week'}
+                </button>
+              ))}
+            </>
+          )}
+          {(isSemantic || frame === 'now') && (
+            <label className="lf-slider" title="zoom the inner band">
               <span className="lf-ic">⌕</span>
               <input type="range" className="lf-zoom" min={0.5} max={3.2} step={0.1} value={zoom}
                 onChange={e => setZoom(Number(e.target.value))} onPointerDown={e => e.stopPropagation()} />
@@ -386,6 +421,15 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
             <button className="lc-center" onClick={() => { setCenter(picked.address); setPicked(null) }}
               title="re-centre the projection on this address — radius becomes distance-from-here">
               ⊙ centre on this
+            </button>
+          )}
+          {picked.source && (
+            // THE CIRCLE (Group 6): only an EMBEDDED item (one with a vector) can be a meaning-centre —
+            // sets the semantic lens + this item's source together, so the field always opens with a centre.
+            <button className="lc-center lc-meaning"
+              onClick={() => { setBind('semantic'); setCenter(picked.source!); setPicked(null) }}
+              title="rank everything by MEANING-distance from this item (the circle / semantic radius)">
+              ◎ meaning-field from here
             </button>
           )}
         </div>

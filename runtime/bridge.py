@@ -733,35 +733,47 @@ class H(BaseHTTPRequestHandler):
                 binding = reg.get(q.get("binding"))
                 evs = SUITE.store.events_since(int(q.get("since") or 0))
                 center = q.get("center")
+                now = _parse_now(q.get("at"))
+                lim = int(q.get("limit") or 0)
                 # ?at= moves the temporal centre into the past (the scrubber); ?center=<address> re-centres
                 # in space. radius_from='time' (age) | 'address' (tree-distance) | 'semantic' (Group 6).
-                kw = {}
                 if binding.get("radius_from") == "semantic":
-                    # THE CIRCLE (Group 6) — resolve the persisted per-space vectors HERE (the store I/O),
-                    # pass them to the PURE project(). Project the corpus.record points in the binding's
-                    # space (each carries a vector); key each vector by the SAME _addr_of the projector uses.
+                    # THE CIRCLE (Group 6) — the meaning-field. Scope to the binding's space's CORPUS points
+                    # (each carries a per-space vector + a `source` to re-centre on). The store I/O lives HERE;
+                    # project() stays pure (vectors ride in keyed by the SAME _addr_of the projector uses).
                     space = binding.get("space")
                     evs = [e for e in evs if e.get("kind") == "corpus.record"
                            and e.get("projection") == space]
-                    vectors = {}
-                    for e in evs:
-                        rec = SUITE.store.get_vector(SUITE.store.space_address(e.get("source_address") or "", space))
-                        if rec and rec.get("vector"):
-                            vectors[_proj_addr(e)] = rec["vector"]
-                    if center:                              # the centre item's OWN per-space vector (the FROM)
-                        crec = SUITE.store.get_vector(SUITE.store.space_address(center, space))
+                    if not center:
+                        # NO centre chosen yet — NOT a silent fallback: lay the space's items out by recency
+                        # (clickable) + flag needs_center so the surface prompts 'pick a centre', never a
+                        # faked meaning-distance and never an empty 400 wheel.
+                        pend = _uproject(evs, binding={**binding, "radius_from": "time"}, registry=reg,
+                                         now=now, limit=lim)
+                        pend["binding"]["radius_from"] = "semantic"   # the lens IS semantic…
+                        pend["binding"]["needs_center"] = True        # …but awaiting its centre (honest)
+                        pend["binding"]["space"] = space
+                        self._send(200, json.dumps(pend))
+                    else:
+                        vectors = {}
+                        for e in evs:
+                            rec = SUITE.store.get_vector(SUITE.store.space_address(e.get("source_address") or "", space))
+                            if rec and rec.get("vector"):
+                                vectors[_proj_addr(e)] = rec["vector"]
+                        crec = SUITE.store.get_vector(SUITE.store.space_address(center, space))   # the FROM item
                         if crec and crec.get("vector"):
                             vectors[center] = crec["vector"]
-                    kw = {"vectors": vectors}
-                try:
+                        try:
+                            self._send(200, json.dumps(_uproject(
+                                evs, binding=binding, registry=reg, now=now, center=center,
+                                limit=lim, vectors=vectors)))
+                        except ValueError as _ve:           # centre given but has no vector → fail loud, legible
+                            self._send(400, json.dumps({"error": str(_ve), "binding": binding.get("id"),
+                                                        "hint": "this centre has no vector in the lens's "
+                                                                "space — pick an embedded item as the centre"}))
+                else:
                     self._send(200, json.dumps(_uproject(
-                        evs, binding=binding, registry=reg,
-                        now=_parse_now(q.get("at")), center=center,
-                        limit=int(q.get("limit") or 0), **kw)))
-                except ValueError as _ve:                   # semantic-with-no-centre-vector → fail loud, legible
-                    self._send(400, json.dumps({"error": str(_ve), "binding": binding.get("id"),
-                                                "hint": "semantic radius needs ?center=<an item with a "
-                                                        "vector in this binding's space>"}))
+                        evs, binding=binding, registry=reg, now=now, center=center, limit=lim)))
             elif path == "/api/corpus-query":              # S7: the forager's search door (semantic + heads)
                 q = self._qs(urlparse(self.path))
                 text, space = q.get("text"), q.get("space") or None
