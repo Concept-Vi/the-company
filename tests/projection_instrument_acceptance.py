@@ -204,5 +204,43 @@ def discovery_ok():
 check("a well-formed binding row discovers cleanly (happy path)", discovery_ok())
 
 
+# === 8 · the TIME SCRUBBER (Group 3): now= moves the centre into the past; only ts≤now is projected ===
+print("\n=== 8 · the time scrubber (now=) projects only the past relative to the centre ===")
+scrub_events = [ev(0, "chat", 50), ev(1, "chat", 200), ev(2, "op.run", 300)]
+# scrub the centre back to NOW-100s → the age-50 event is now in the FUTURE (excluded); 200/300 remain.
+scrubbed = project(scrub_events, binding=raw, now=NOW - timedelta(seconds=100), registry=REAL)
+seqs = {p["seq"] for p in scrubbed["points"]}
+check("scrubbing now back EXCLUDES events stamped after the new centre (the future)",
+      0 not in seqs, f"seqs={sorted(seqs)} (seq 0 @ age 50s should fall after now=NOW-100s)")
+check("events at-or-before the scrubbed centre remain", {1, 2} <= seqs, f"seqs={sorted(seqs)}")
+check("the scrubbed projection still obeys the floor (r∈[0,1])",
+      all(0 - EPS <= p["r"] <= 1 + EPS for p in scrubbed["points"]))
+check("the reported `now` is the scrubbed centre, not wall-clock",
+      scrubbed["now"].startswith((NOW - timedelta(seconds=100)).isoformat()[:19]), scrubbed["now"])
+
+
+# === 9 · the RELATIVE ADDRESS CENTRE (Group 3): center= → radius is structural tree-distance ===
+print("\n=== 9 · the address centre (center=) re-projects radius as tree-distance (structural) ===")
+ac_events = [
+    ev(0, "x", 10, address="ui://a/b"),     # AT the centre → tree-distance 0
+    ev(1, "x", 20, address="ui://a/b/c"),   # child  → 1
+    ev(2, "x", 30, address="ui://a/x"),     # sibling → 2
+    ev(3, "x", 40, address="ui://z"),       # far    → 3
+]
+ac = project(ac_events, binding=raw, now=NOW, center="ui://a/b", registry=REAL)
+by = {p["seq"]: p for p in ac["points"]}
+check("center= is reported AND radius_from flips to 'address'",
+      ac["center"] == "ui://a/b" and ac["binding"]["radius_from"] == "address",
+      f"center={ac['center']} radius_from={ac['binding']['radius_from']}")
+check("the event AT the centre address sits at r==0 (the origin)", abs(by[0]["r"]) < 1e-6, f"r={by[0]['r']}")
+check("radius grows with tree-distance (centre < child < sibling ≤ far)",
+      by[0]["r"] < by[1]["r"] < by[2]["r"] <= by[3]["r"],
+      f"rs={[round(by[s]['r'], 3) for s in (0, 1, 2, 3)]}")
+check("every address-centred r stays in [0,1]", all(0 - EPS <= p["r"] <= 1 + EPS for p in ac["points"]))
+check("center absent → falls back to the temporal centre (radius_from='time', center=='now')",
+      (lambda d: d["binding"]["radius_from"] == "time" and d["center"] == "now")(
+          project(ac_events, binding=raw, now=NOW, registry=REAL)))
+
+
 print(f"\n{'PASS' if FAIL == 0 else 'FAIL'} — {PASS} passed, {FAIL} failed")
 sys.exit(0 if FAIL == 0 else 1)

@@ -727,11 +727,14 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.greeting(since=(q.get("since") or [None])[0])))
             elif path == "/api/projection":                # THE UNIVERSAL PROJECTION: resolved from a binding, no hardcode
                 q = self._qs(urlparse(self.path))
-                from runtime.projection import project as _uproject, BindingRegistry as _BR
+                from runtime.projection import project as _uproject, BindingRegistry as _BR, parse_now as _parse_now
                 reg = _BR().discover()
                 evs = SUITE.store.events_since(int(q.get("since") or 0))
+                # ?at= moves the temporal centre into the past (the scrubber); ?center=<ui:// address>
+                # re-centres in space (radius = tree-distance from it). Both default to NOW. Pure read.
                 self._send(200, json.dumps(_uproject(
                     evs, binding=reg.get(q.get("binding")), registry=reg,
+                    now=_parse_now(q.get("at")), center=q.get("center"),
                     limit=int(q.get("limit") or 0))))
             elif path == "/api/corpus-query":              # S7: the forager's search door (semantic + heads)
                 q = self._qs(urlparse(self.path))

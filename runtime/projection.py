@@ -82,6 +82,41 @@ def _parse_ts(ts: str):
         return None
 
 
+def parse_now(at):
+    """Parse the ?at= scrubber value (epoch seconds OR ISO) → an aware datetime, or None (→ real now).
+    The scrubber moves the temporal centre into the past; the instrument then projects only ts≤now."""
+    if not at:
+        return None
+    try:
+        s = str(at)
+        return datetime.fromtimestamp(int(s), tz=timezone.utc) if s.isdigit() else datetime.fromisoformat(s)
+    except Exception:
+        return None
+
+
+def _addr_of(e: dict) -> str:
+    return e.get("address") or e.get("source_address") or ""
+
+
+def _tree_distance(a: str, b: str) -> int:
+    """ui:// address tree-distance (mirrors suite.address_tree_distance — replicated here so the
+    pure-read floor carries NO dependency on the suite). Strip ui://, split on '/', common-prefix
+    length, then distance = (len(a)-common)+(len(b)-common): exact 0, parent/child 1, sibling 2."""
+    def segs(x: str) -> list:
+        x = x or ""
+        if x.startswith("ui://"):
+            x = x[len("ui://"):]
+        return [s for s in x.split("/") if s != ""]
+    sa, sb = segs(a), segs(b)
+    common = 0
+    for x, y in zip(sa, sb):
+        if x == y:
+            common += 1
+        else:
+            break
+    return (len(sa) - common) + (len(sb) - common)
+
+
 def _resolve_sectors(binding: dict, events: list) -> tuple[list, dict]:
     """Resolve the angular divisions (sectors) from the binding's angle_from — NOT from a hardcoded
     list. Returns (ordered_sector_ids, kind→sector map). n = len(sectors); the wheel divides evenly.
@@ -126,15 +161,20 @@ def _sector_index(kind: str, sectors: list, kmap: dict) -> int:
 
 
 def project(events: list, *, binding: dict | None = None, now: datetime | None = None,
-            limit: int = 0, registry: BindingRegistry | None = None) -> dict:
+            center: str | None = None, limit: int = 0, registry: BindingRegistry | None = None) -> dict:
     """Events → points, resolved from a BINDING. Pure read; every coordinate read from data the
-    event already carries, the divisions resolved from the binding's named source."""
+    event already carries, the divisions resolved from the binding's named source. The CENTRE is a
+    variable: default the temporal NOW (radius = age); pass `now=` (the scrubber) to move it into the
+    past, or `center=<ui:// address>` to re-centre in space (radius = tree-distance from that address)."""
     reg = registry or BindingRegistry().discover()
     binding = binding or reg.get(None)
     now = now or datetime.now(timezone.utc)
 
     stamped = [(e, _parse_ts(e.get("ts") or "")) for e in events]
     stamped = [(e, t) for (e, t) in stamped if t is not None]
+    # the time scrubber: the centre is NOW (possibly moved into the past via ?at=); only what existed
+    # at-or-before that present is projected (events stamped after `now` are the future — not yet real).
+    stamped = [(e, t) for (e, t) in stamped if t <= now]
     if limit:
         stamped = stamped[-limit:]
 
@@ -144,15 +184,26 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
     max_age = max((max((now - t).total_seconds(), 1.0) for _, t in stamped), default=1.0)
     log_max = math.log1p(max_age) or 1.0
     radius_from = binding.get("radius_from", "time")  # 'time' today; semantic radius = the ability phase
+    # the centre freed (Tim: "the axes are variables"): a non-'now' center is an ADDRESS — radius becomes
+    # STRUCTURAL tree-distance from it (near in the tree = near the centre). The cosine/semantic relevance
+    # ring is the embedder-gated ability phase (Group 6) — stubbed here, never faked.
+    addr_center = center if (center and center not in ("now", "")) else None
+    if addr_center is not None:
+        max_dist = max((_tree_distance(addr_center, _addr_of(e)) for e, _ in stamped), default=1) or 1
+    else:
+        max_dist = 1
 
     points = []
     for e, t in stamped:
         kind = e.get("kind") or "?"
         i = _sector_index(kind, sectors, kmap)
-        ref = str(e.get("address") or e.get("source_address") or e.get("summary") or e.get("seq"))
+        ref = str(_addr_of(e) or e.get("summary") or e.get("seq"))
         theta = TAU * (i + 0.08 + 0.84 * _stable_unit(ref)) / n
         age = max((now - t).total_seconds(), 1.0)
-        r = math.log1p(age) / log_max if radius_from == "time" else math.log1p(age) / log_max
+        if addr_center is not None:
+            r = _tree_distance(addr_center, _addr_of(e)) / max_dist   # structural distance-from-address
+        else:
+            r = math.log1p(age) / log_max                              # time-from-now (semantic = Group 6)
         depth = max(len([s for s in (e.get("address") or "").split("/") if s]) - 1, 0)
         phases = {"day": (t.hour * 3600 + t.minute * 60 + t.second) / 86400.0,
                   "week": (t.weekday() + (t.hour / 24.0)) / 7.0}
@@ -166,9 +217,10 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
         })
 
     return {
-        "center": "now", "now": now.isoformat(), "n": n,
+        "center": addr_center or "now", "now": now.isoformat(), "n": n,
         "binding": {"id": binding["id"], "label": binding["label"],
-                    "angle_from": binding.get("angle_from"), "radius_from": radius_from,
+                    "angle_from": binding.get("angle_from"),
+                    "radius_from": "address" if addr_center else radius_from,
                     "order_by": binding.get("order_by", "count")},
         "bindings": [{"id": b["id"], "label": b["label"]} for b in reg.list()] or
                     [{"id": "raw", "label": "Kinds (raw)"}],
