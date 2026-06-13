@@ -99,7 +99,8 @@ surface (the scrubber + re-centre + animation).
   `radius_from`→'address' with the centre event at r=0, all r∈[0,1]. FE driven at both faces: scrub
   (5470→2105 pts, '◷ 125h ago'), live→'◷ past'→return-to-now, re-centre (chip + distance-shells),
   clear, lens, frames, zoom, mobile bottom-sheet 'centre on this'. The cosine/semantic relevance ring
-  is 🔴 embedder-gated (Group 6) — stubbed, not faked.
+  (a SEMANTIC centre-radius) was stubbed here pending Group 6 — now DELIVERED by Group 6 ✅
+  (`radius_from='semantic'`: pick any embedded item → "◎ meaning-field from here"); the old 🔴 is retired.
 - **FORM** — ✅ by rubric: the scrubber (⏱, gold = the privileged time axis) + zoom (⌕, dim) are
   distinct controls; a 'centre on this' affordance + a '⊙ <name> ✕' chip; re-centring/reframe ANIMATES
   (easeOutCubic rAF, identity survives, off the live-refresh path). All on corpus tokens; pointer-events
