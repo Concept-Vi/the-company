@@ -1,23 +1,19 @@
-"""runtime/projection.py — THE UNIVERSAL PROJECTION (Tim Geldard's equation; built 2026-06-13).
+"""runtime/projection.py — THE UNIVERSAL PROJECTION (Tim Geldard's equation).
 
-"Free universal rendering of exactly the same points" — every store event ALREADY carries its full
-screen position; this module only READS it out (no model calls, no layout engine, no learned
-flattening — the floor: pure computation):
+The instrument is a VARIABLE engine: nothing about it is hardcoded — it RESOLVES a frame from a
+declared BINDING against the live registries and store. "There is no static value for this
+instrument; nothing hardcoded or fixed is valid, only what occupies that variable at that point."
+(Tim, 2026-06-13.) So there are no fixed sectors — the angular divisions resolve from whatever
+source a binding names, and the DEFAULT is data-driven (the distinct kinds present in the store),
+never a privileged hand-written configuration.
 
-  · θ (angle)  = KIND → its sector in the file-discovered projection/ registry (types are ANGULAR
-                 divisions; n rows ⇒ sectors of 2π/n each; adding a row REDISTRIBUTES all sectors
-                 evenly — the water law). Within-sector spread by a stable content hash.
-  · r (radius) = TIME → distance from NOW (the centre — "everything you and I do is relative to
-                 the same point of time"). Log-scaled: recent = inner rings; the rings are the
-                 inscribed circles.
-  · depth      = NESTING → address path-segment count (recursive subdivision; descend = the dual
-                 sites legalize).
-  · phases     = the timestamp's nested cycles (hour-of-day, day-of-week — "jampacked with cycles")
-                 — S4's seed, carried per point from day one.
-
-The lock x = 2π/n (the unit-wrap circle, r = 1/(2π)) keeps angular and radial division commensurate
-at every n — congruent cells at every scale. The registry IS the angular geometry: declare a sector
-row and the whole screen re-divides. Registry-is-truth, extended to the renderer."""
+The equation's slots, each filled by the binding (a row, swappable):
+  · centre  = the origin / object of attention  (default: NOW)
+  · angle θ = a categorical/cyclic division     (binding.angle_from → resolves n sectors)
+  · radius r= distance from the centre          (binding.radius_from → default: time-from-now)
+  · k       = recursive depth                    (nesting; default address depth)
+The lock x = 2π/n (unit-wrap) keeps the divisions even: n resolves from the binding's source, and
+the wheel re-divides evenly whenever n changes. Pure read (the floor)."""
 import fnmatch
 import hashlib
 import importlib.util
@@ -25,17 +21,19 @@ import math
 import os
 from datetime import datetime, timezone
 
-ROW_FIELDS = ("id", "label", "gathers", "meaning")
 TAU = 2 * math.pi
+BINDING_FIELDS = ("id", "label", "angle_from", "radius_from")
 
 
-class SectorRegistry:
-    """File-discovered sector rows (projection/<id>.py) — the dial-registry pattern, fail-loud."""
+class BindingRegistry:
+    """File-discovered BINDINGS (bindings/<id>.py) — the lenses. A binding is a declared filling of
+    the equation's slots; it is NOT the sectors themselves (those resolve from angle_from). Adding a
+    lens = adding a row. Same registry pattern as dials/roles/relation_types (fail-loud)."""
 
     def __init__(self):
-        self._rows: list = []
+        self._rows: dict = {}
 
-    def discover(self, dirs=("projection",)) -> "SectorRegistry":
+    def discover(self, dirs=("bindings",)) -> "BindingRegistry":
         rows = {}
         for d in dirs:
             if not os.path.isdir(d):
@@ -44,40 +42,36 @@ class SectorRegistry:
                 if not fn.endswith(".py") or fn.startswith("_"):
                     continue
                 stem = fn[:-3]
-                spec = importlib.util.spec_from_file_location(f"sector_{stem}", os.path.join(d, fn))
+                spec = importlib.util.spec_from_file_location(f"binding_{stem}", os.path.join(d, fn))
                 mod = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(mod)
-                row = getattr(mod, "SECTOR", None)
+                row = getattr(mod, "BINDING", None)
                 if not isinstance(row, dict):
-                    raise ValueError(f"projection row {fn}: no SECTOR dict (fail loud)")
-                missing = [f for f in ROW_FIELDS if f not in row]
+                    raise ValueError(f"binding row {fn}: no BINDING dict (fail loud)")
+                missing = [f for f in BINDING_FIELDS if f not in row]
                 if missing or row["id"] != stem:
-                    raise ValueError(f"projection row {fn}: missing {missing} or id!=stem (fail loud)")
+                    raise ValueError(f"binding {fn}: missing {missing} or id!=stem (fail loud)")
                 rows[stem] = row
-        # Deterministic order: catch-all 'field' LAST (it gathers '*'), the rest sorted by id —
-        # so specific sectors always claim their kinds before the declared remainder does.
-        ordered = sorted([r for r in rows.values() if r["id"] != "field"], key=lambda r: r["id"])
-        if "field" in rows:
-            ordered.append(rows["field"])
-        self._rows = ordered
+        self._rows = rows
         return self
 
-    @property
-    def rows(self) -> list:
-        return list(self._rows)
+    def get(self, binding_id: str | None) -> dict:
+        if binding_id and binding_id in self._rows:
+            return self._rows[binding_id]
+        # NO privileged hardcode: the default is the data-driven raw-kinds binding, synthesized if
+        # no rows are declared at all — the instrument always opens by resolving what's THERE.
+        if "raw" in self._rows:
+            return self._rows["raw"]
+        if self._rows:
+            return sorted(self._rows.values(), key=lambda r: r["id"])[0]
+        return {"id": "raw", "label": "Kinds (raw)", "angle_from": "kind",
+                "radius_from": "time", "order_by": "count"}
 
-    def sector_of(self, kind: str) -> int:
-        """Index of the first sector whose gathers-patterns match this kind (registry order)."""
-        for i, row in enumerate(self._rows):
-            for pat in row["gathers"]:
-                if fnmatch.fnmatch(kind or "?", pat):
-                    return i
-        return len(self._rows) - 1  # the declared remainder (field gathers '*' so normally unreached)
+    def list(self) -> list:
+        return sorted(self._rows.values(), key=lambda r: r["id"])
 
 
 def _stable_unit(s: str) -> float:
-    """Deterministic 0..1 from content — the within-sector angular spread (no randomness: the
-    same point lands at the same angle forever; stability is structural, never engineered)."""
     return int(hashlib.sha256(s.encode("utf-8", "replace")).hexdigest()[:8], 16) / 0xFFFFFFFF
 
 
@@ -88,39 +82,83 @@ def _parse_ts(ts: str):
         return None
 
 
-def project(events: list, *, now: datetime | None = None, registry: SectorRegistry | None = None,
-            limit: int = 0) -> dict:
-    """Events → points. Pure read; every coordinate comes from data the event already carries."""
-    reg = registry or SectorRegistry().discover()
-    rows = reg.rows
-    n = len(rows)
+def _resolve_sectors(binding: dict, events: list) -> tuple[list, dict]:
+    """Resolve the angular divisions (sectors) from the binding's angle_from — NOT from a hardcoded
+    list. Returns (ordered_sector_ids, kind→sector map). n = len(sectors); the wheel divides evenly.
+
+    angle_from:
+      · 'kind'       — one sector per DISTINCT kind in the data (fully data-driven; the true default).
+      · 'kind-group' — sectors = binding['groups'] {sector_id: [kind-glob,...]} (a DECLARED lens —
+                       one instance, never the default; grouping is a choice, stated as such).
+    (Resolving sectors from an arbitrary registry's rows, e.g. roles/operator_memory, needs the
+    event→row edge — the relation_types resolution not yet formalized; flagged, not faked. When that
+    edge exists, angle_from = a registry name resolves here with no other change.)"""
+    af = binding.get("angle_from", "kind")
+    order_by = binding.get("order_by", "count")
+    if af == "kind-group":
+        groups = binding.get("groups") or {}
+        order = list(groups.keys())  # declared order
+        kmap = {}
+        return order, {"__groups__": groups, "__order__": order}
+    # 'kind' — data-driven
+    counts = {}
+    for e in events:
+        k = e.get("kind") or "?"
+        counts[k] = counts.get(k, 0) + 1
+    kinds = list(counts.keys())
+    if order_by == "count":
+        kinds.sort(key=lambda k: (-counts[k], k))
+    else:
+        kinds.sort()
+    return kinds, {k: k for k in kinds}  # each kind is its own sector
+
+
+def _sector_index(kind: str, sectors: list, kmap: dict) -> int:
+    if "__groups__" in kmap:  # kind-group binding
+        groups, order = kmap["__groups__"], kmap["__order__"]
+        for i, sid in enumerate(order):
+            for pat in groups[sid]:
+                if fnmatch.fnmatch(kind or "?", pat):
+                    return i
+        return len(order) - 1  # the declared remainder (a group must gather '*' to be honest)
+    sid = kmap.get(kind, kind)
+    return sectors.index(sid) if sid in sectors else len(sectors) - 1
+
+
+def project(events: list, *, binding: dict | None = None, now: datetime | None = None,
+            limit: int = 0, registry: BindingRegistry | None = None) -> dict:
+    """Events → points, resolved from a BINDING. Pure read; every coordinate read from data the
+    event already carries, the divisions resolved from the binding's named source."""
+    reg = registry or BindingRegistry().discover()
+    binding = binding or reg.get(None)
     now = now or datetime.now(timezone.utc)
 
-    # Radius normalization needs the oldest age (log scale, recent = inner).
     stamped = [(e, _parse_ts(e.get("ts") or "")) for e in events]
     stamped = [(e, t) for (e, t) in stamped if t is not None]
     if limit:
         stamped = stamped[-limit:]
+
+    sectors, kmap = _resolve_sectors(binding, [e for e, _ in stamped])
+    n = max(len(sectors), 1)
+
     max_age = max((max((now - t).total_seconds(), 1.0) for _, t in stamped), default=1.0)
-    log_max = math.log1p(max_age)
+    log_max = math.log1p(max_age) or 1.0
+    radius_from = binding.get("radius_from", "time")  # 'time' today; semantic radius = the ability phase
 
     points = []
     for e, t in stamped:
         kind = e.get("kind") or "?"
-        i = reg.sector_of(kind)
+        i = _sector_index(kind, sectors, kmap)
         ref = str(e.get("address") or e.get("source_address") or e.get("summary") or e.get("seq"))
-        # θ: the sector's wedge [i, i+1)·2π/n, spread inside by stable hash (edges left clear: 8%).
         theta = TAU * (i + 0.08 + 0.84 * _stable_unit(ref)) / n
-        # r: log-scaled age, 0 = the centre (NOW) … 1 = the oldest ring.
         age = max((now - t).total_seconds(), 1.0)
-        r = math.log1p(age) / log_max
-        # depth: nesting from the address path (recursive subdivision).
+        r = math.log1p(age) / log_max if radius_from == "time" else math.log1p(age) / log_max
         depth = max(len([s for s in (e.get("address") or "").split("/") if s]) - 1, 0)
-        # phases: the timestamp's nested cycles (S4 seed — hour-of-day, day-of-week as 0..1 wraps).
         phases = {"day": (t.hour * 3600 + t.minute * 60 + t.second) / 86400.0,
                   "week": (t.weekday() + (t.hour / 24.0)) / 7.0}
+        sid = sectors[i] if i < len(sectors) else "?"
         points.append({
-            "seq": e.get("seq"), "kind": kind, "sector": rows[i]["id"],
+            "seq": e.get("seq"), "kind": kind, "sector": sid,
             "theta": round(theta, 5), "r": round(r, 5), "depth": depth,
             "address": e.get("address") or e.get("source_address") or "",
             "summary": str(e.get("summary") or "")[:140], "ts": e.get("ts"),
@@ -129,10 +167,14 @@ def project(events: list, *, now: datetime | None = None, registry: SectorRegist
 
     return {
         "center": "now", "now": now.isoformat(), "n": n,
-        "sectors": [{"id": r["id"], "label": r["label"], "meaning": r["meaning"],
-                     "from": round(TAU * i / n, 5), "to": round(TAU * (i + 1) / n, 5)}
-                    for i, r in enumerate(rows)],
-        "rings": 4,  # the inscribed circles at the first divisions (the FE may re-divide on zoom)
-        "lock": "x = 2*pi/n (unit-wrap circle r = 1/(2*pi)); sectors redistribute evenly with n",
+        "binding": {"id": binding["id"], "label": binding["label"],
+                    "angle_from": binding.get("angle_from"), "radius_from": radius_from,
+                    "order_by": binding.get("order_by", "count")},
+        "bindings": [{"id": b["id"], "label": b["label"]} for b in reg.list()] or
+                    [{"id": "raw", "label": "Kinds (raw)"}],
+        "sectors": [{"id": s, "label": s, "from": round(TAU * i / n, 5), "to": round(TAU * (i + 1) / n, 5)}
+                    for i, s in enumerate(sectors)],
+        "rings": 4,
+        "lock": "x = 2*pi/n; n resolves from the binding's source — no hardcoded sectors",
         "points": points, "count": len(points),
     }

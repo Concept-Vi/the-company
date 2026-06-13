@@ -1864,3 +1864,9 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
 .lattice-foot .lf-live { background: none; border: 1px solid var(--line, #30363d); border-radius: 6px;
   padding: 2px 7px; cursor: pointer; color: var(--ink-dim, #8b949e); font: 10px ui-monospace, monospace; }
 .lattice-foot .lf-live.on { color: #3fb950; border-color: #3fb950; }
+
+/* the lens switcher (the binding — which registry resolves the angle; nothing hardcoded) */
+.lattice-foot .lf-lens { background: var(--panel, #161b22); border: 1px solid var(--line, #30363d);
+  border-radius: 6px; padding: 2px 6px; color: var(--ink-dim, #8b949e); cursor: pointer;
+  font: 10px ui-monospace, monospace; margin-left: 6px; }
+.lattice-foot .lf-lens:hover { border-color: var(--accent, #d4a017); }

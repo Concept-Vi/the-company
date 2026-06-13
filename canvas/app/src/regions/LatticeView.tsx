@@ -12,7 +12,9 @@ type ProjPoint = {
 }
 type Projection = {
   now: string; n: number; rings: number; count: number
-  sectors: { id: string; label: string; meaning: string; from: number; to: number }[]
+  binding?: { id: string; label: string }
+  bindings?: { id: string; label: string }[]
+  sectors: { id: string; label: string; from: number; to: number }[]
   points: ProjPoint[]
 }
 
@@ -29,6 +31,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   const [sel, setSel] = useState<ProjPoint[]>([])   // the accumulating working set (forager: sculpt → hand to builder)
   const [zoom, setZoom] = useState(1)        // radial magnification — inner rings (recent) expand
   const [frame, setFrame] = useState<'now' | 'day' | 'week'>('now')  // S4: scale/phase selects the frame
+  const [bind, setBind] = useState<string>('')   // the LENS (binding id); '' = the data-driven default
   const [err, setErr] = useState('')
   const [live, setLive] = useState(true)     // the centre is NOW — and now MOVES (the involuntary axis)
   const [beat, setBeat] = useState(0)        // ticks each refresh so the live dot pulses
@@ -46,7 +49,8 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   // photograph. Pausable (the operator can freeze the frame to study it). Pure read.
   useEffect(() => {
     let alive = true
-    const pull = () => fetch('/api/projection')
+    const url = '/api/projection' + (bind ? `?binding=${encodeURIComponent(bind)}` : '')
+    const pull = () => fetch(url)
       .then(r => { if (!r.ok) throw new Error(`projection ${r.status}`); return r.json() })
       .then(d => { if (alive) { setProj(d); setBeat(b => b + 1); setErr('') } })
       .catch(e => { if (alive) setErr(String(e?.message || e)) })
@@ -54,7 +58,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     if (!live) return () => { alive = false }
     const id = setInterval(pull, 15000)   // now advances every 15s; the radius shells re-resolve
     return () => { alive = false; clearInterval(id) }
-  }, [live])
+  }, [live, bind])
 
   const draw = useCallback(() => {
     const cvs = cvsRef.current, wrap = wrapRef.current
@@ -96,7 +100,16 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     g.font = '11px ui-monospace, monospace'; g.textAlign = 'center'
     const inside = w < 520            // phone face: labels tuck inside the rim (no edge clipping)
     const bg = token('--bg', '#0d1117')
+    // Label-thinning: the data-driven default can resolve many sectors (e.g. 50 raw kinds). Painting
+    // every label would betray the default for legibility — so label only the MAJOR sectors (by
+    // point-share), the rest read by colour/position. No privileged binding, just honest density.
+    const perSector = new Map<string, number>()
+    for (const p of proj.points) perSector.set(p.sector, (perSector.get(p.sector) || 0) + 1)
+    const labelled = new Set(
+      [...perSector.entries()].sort((a, b) => b[1] - a[1])
+        .slice(0, proj.sectors.length <= 12 ? proj.sectors.length : 10).map(e => e[0]))
     for (const s of proj.sectors) {
+      if (!labelled.has(s.id)) continue
       const mid = (s.from + s.to) / 2, lr = inside ? R - 14 : R + 16
       const lx = cx + Math.sin(mid) * lr, ly = cy - Math.cos(mid) * lr + 4
       const tw = g.measureText(s.label).width
@@ -186,7 +199,14 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
             title={live ? 'now is advancing — tap to freeze the frame' : 'frozen — tap to follow now'}>
             {live ? '● live' : '⏸ frozen'}
           </button>
-          {' '}{proj ? `${proj.count} points · ${frame === 'now' ? 'centre = now' : `cycle: ${frame}`}` : 'projecting…'}
+          {proj?.bindings && proj.bindings.length > 1 && (
+            <select className="lf-lens" value={bind} title="the lens — which registry resolves the angle (nothing hardcoded)"
+              onChange={e => setBind(e.target.value)} onPointerDown={e => e.stopPropagation()}>
+              <option value="">lens: default</option>
+              {proj.bindings.map(b => <option key={b.id} value={b.id}>lens: {b.label}</option>)}
+            </select>
+          )}
+          {' '}{proj ? `${proj.count} pts · ${proj.n} sectors · ${frame === 'now' ? 'now' : `cycle:${frame}`}` : 'projecting…'}
         </span>
         <div className="lattice-frames" onPointerDown={e => e.stopPropagation()}>
           {(['now', 'day', 'week'] as const).map(fr => (

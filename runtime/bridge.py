@@ -724,11 +724,14 @@ class H(BaseHTTPRequestHandler):
             elif path == "/api/greeting":                  # S2: caught-up-in-one-glance (Tim's arrival face)
                 q = parse_qs(urlparse(self.path).query)
                 self._send(200, json.dumps(SUITE.greeting(since=(q.get("since") or [None])[0])))
-            elif path == "/api/projection":                # THE UNIVERSAL PROJECTION: the stores as points, free
+            elif path == "/api/projection":                # THE UNIVERSAL PROJECTION: resolved from a binding, no hardcode
                 q = self._qs(urlparse(self.path))
-                from runtime.projection import project as _uproject
+                from runtime.projection import project as _uproject, BindingRegistry as _BR
+                reg = _BR().discover()
                 evs = SUITE.store.events_since(int(q.get("since") or 0))
-                self._send(200, json.dumps(_uproject(evs, limit=int(q.get("limit") or 0))))
+                self._send(200, json.dumps(_uproject(
+                    evs, binding=reg.get(q.get("binding")), registry=reg,
+                    limit=int(q.get("limit") or 0))))
             elif path == "/api/corpus-query":              # S7: the forager's search door (semantic + heads)
                 q = self._qs(urlparse(self.path))
                 text, space = q.get("text"), q.get("space") or None
