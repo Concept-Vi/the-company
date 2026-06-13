@@ -1808,31 +1808,30 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
    The stores as points: kind=angle (sector registry), time=radius from NOW (centre), zoom expands
    the recent inner rings. Covers the canvas like review; the same component IS both faces — the
    canvas scales, the card docks bottom on phones. */
-.lattice-wrap { position: fixed; inset: 0; z-index: 600; background: var(--bg, #0d1117);
+.lattice-wrap { position: fixed; inset: 0; z-index: 600; background: var(--bg);
   touch-action: none; }
 .lattice-wrap canvas { display: block; }
 .lattice-err { position: fixed; inset: 0; z-index: 600; display: grid; place-items: center;
-  background: var(--bg, #0d1117); color: var(--ink, #c9d1d9); font: 13px ui-monospace, monospace; }
+  background: var(--bg); color: var(--ink); font: 13px ui-monospace, monospace; }
 .lattice-foot { position: absolute; left: 12px; bottom: 10px; right: 12px; display: flex;
   justify-content: space-between; align-items: center; gap: 12px; pointer-events: none;
-  color: var(--ink-dim, #8b949e); font: 11px ui-monospace, monospace; }
+  color: var(--dim); font: 11px ui-monospace, monospace; }
 .lattice-foot .lattice-frames { pointer-events: auto; display: flex; align-items: center; gap: 6px; }
-.lattice-foot .lf-btn { background: none; border: 1px solid var(--line, #30363d); border-radius: 6px;
-  padding: 3px 8px; color: var(--ink-dim, #8b949e); cursor: pointer; font: 11px ui-monospace, monospace; }
-.lattice-foot .lf-btn.on { color: var(--accent, #d4a017); border-color: var(--accent, #d4a017); }
-.lattice-foot input[type=range] { width: 110px; accent-color: var(--accent, #d4a017); }
+.lattice-foot .lf-btn { background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 3px 8px; color: var(--dim); cursor: pointer; font: 11px ui-monospace, monospace; }
+.lattice-foot .lf-btn.on { color: var(--acc); border-color: var(--acc); }
+.lattice-foot input[type=range] { width: 110px; accent-color: var(--acc); }
 .lattice-card { position: absolute; top: 56px; right: 12px; width: min(340px, calc(100vw - 24px));
-  background: var(--panel, #161b22); border: 1px solid var(--line, #30363d); border-radius: 10px;
-  padding: 10px 12px; color: var(--ink, #c9d1d9); font: 12px ui-monospace, monospace;
-  box-shadow: 0 8px 24px rgba(0,0,0,.45); }
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px 12px; color: var(--ink); font: 12px ui-monospace, monospace;
+  box-shadow: var(--shadow); }
 .lattice-card .lc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.lattice-card .lc-sector { color: var(--accent, #d4a017); font-weight: 600; }
-.lattice-card .lc-kind { color: var(--ink-dim, #8b949e); }
-.lattice-card .lc-x { margin-left: auto; background: none; border: none; color: var(--ink-dim, #8b949e);
+/* the sector + kind are now kit <Badge> pills (one product language); the close button stays bespoke layout. */
+.lattice-card .lc-x { margin-left: auto; background: none; border: none; color: var(--dim);
   cursor: pointer; font-size: 14px; padding: 2px 6px; }
 .lattice-card .lc-sum { margin: 4px 0; line-height: 1.45; }
-.lattice-card .lc-addr { color: var(--ink-dim, #8b949e); word-break: break-all; margin: 4px 0; }
-.lattice-card .lc-meta { color: var(--ink-dim, #8b949e); margin-top: 6px; }
+.lattice-card .lc-addr { color: var(--dim); word-break: break-all; margin: 4px 0; }
+.lattice-card .lc-meta { color: var(--dim); margin-top: 6px; }
 @media (max-width: 699px) {
   /* phone face: the detail card docks as a bottom sheet above the foot; the foot lifts clear */
   .lattice-card { top: auto; bottom: 52px; left: 10px; right: 10px; width: auto; }
@@ -1843,17 +1842,17 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
 
 /* the lattice selection verbs (S5 — the forager seam: sculpt a set → hand to builder) */
 .lattice-card .lc-pick { margin-top: 8px; width: 100%; background: none; cursor: pointer;
-  border: 1px solid var(--line, #30363d); border-radius: 7px; padding: 6px 8px;
-  color: var(--accent, #d4a017); font: 11px ui-monospace, monospace; }
-.lattice-card .lc-pick:hover { border-color: var(--accent, #d4a017); }
+  border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px;
+  color: var(--acc); font: 11px ui-monospace, monospace; }
+.lattice-card .lc-pick:hover { border-color: var(--acc); }
 .lattice-set { position: absolute; top: 12px; left: 12px; display: flex; align-items: center;
-  gap: 10px; background: var(--panel, #161b22); border: 1px solid var(--accent, #d4a017);
-  border-radius: 9px; padding: 7px 11px; color: var(--ink, #c9d1d9);
-  font: 12px ui-monospace, monospace; box-shadow: 0 6px 20px rgba(0,0,0,.45); }
-.lattice-set .ls-n { color: var(--accent, #d4a017); font-weight: 600; }
-.lattice-set .ls-go { background: var(--accent, #d4a017); color: #161b22; border: none;
+  gap: 10px; background: var(--panel); border: 1px solid var(--acc);
+  border-radius: 9px; padding: 7px 11px; color: var(--ink);
+  font: 12px ui-monospace, monospace; box-shadow: var(--shadow); }
+.lattice-set .ls-n { color: var(--acc); font-weight: 600; }
+.lattice-set .ls-go { background: var(--acc); color: var(--ink-accent); border: none;
   border-radius: 6px; padding: 5px 10px; cursor: pointer; font: 600 12px ui-monospace, monospace; }
-.lattice-set .ls-clear { background: none; border: none; color: var(--ink-dim, #8b949e);
+.lattice-set .ls-clear { background: none; border: none; color: var(--dim);
   cursor: pointer; font: 11px ui-monospace, monospace; }
 @media (max-width: 699px) {
   /* phone: the set bar sits just under the one-bar, the detail card docks bottom (already) */
@@ -1861,12 +1860,13 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
 }
 
 /* the live-now toggle (the centre advances — pure-read re-fetch; ● live / ⏸ frozen) */
-.lattice-foot .lf-live { background: none; border: 1px solid var(--line, #30363d); border-radius: 6px;
-  padding: 2px 7px; cursor: pointer; color: var(--ink-dim, #8b949e); font: 10px ui-monospace, monospace; }
-.lattice-foot .lf-live.on { color: #3fb950; border-color: #3fb950; }
+.lattice-foot .lf-live { background: none; border: 1px solid var(--line); border-radius: 6px;
+  padding: 2px 7px; cursor: pointer; color: var(--dim); font: 10px ui-monospace, monospace; }
+/* live = the corpus's single gold signal (the off-palette green retired; gold IS "alive" per WAVE-2) */
+.lattice-foot .lf-live.on { color: var(--acc); border-color: var(--acc); }
 
 /* the lens switcher (the binding — which registry resolves the angle; nothing hardcoded) */
-.lattice-foot .lf-lens { background: var(--panel, #161b22); border: 1px solid var(--line, #30363d);
-  border-radius: 6px; padding: 2px 6px; color: var(--ink-dim, #8b949e); cursor: pointer;
+.lattice-foot .lf-lens { background: var(--panel); border: 1px solid var(--line);
+  border-radius: 6px; padding: 2px 6px; color: var(--dim); cursor: pointer;
   font: 10px ui-monospace, monospace; margin-left: 6px; }
-.lattice-foot .lf-lens:hover { border-color: var(--accent, #d4a017); }
+.lattice-foot .lf-lens:hover { border-color: var(--acc); }

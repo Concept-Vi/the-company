@@ -5,6 +5,7 @@
 // component only draws. Color IS angle (the color wheel is the circle): each sector's hue is its
 // midpoint angle — a new registry row re-colors the screen by geometry, never by hand.
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Badge, EmptyState } from '../components/kit'
 
 type ProjPoint = {
   seq: number; kind: string; sector: string; theta: number; r: number; depth: number
@@ -17,11 +18,6 @@ type Projection = {
   sectors: { id: string; label: string; from: number; to: number }[]
   points: ProjPoint[]
 }
-
-const token = (name: string, fall: string) =>
-  (typeof window !== 'undefined'
-    ? getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-    : '') || fall
 
 export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   const wrapRef = useRef<HTMLDivElement | null>(null)
@@ -73,8 +69,12 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
 
     const cx = w / 2, cy = h / 2
     const R = Math.min(w, h) / 2 - 34
-    const ink = token('--ink', '#c9d1d9'), line = token('--line', '#30363d')
-    const accent = token('--accent', '#d4a017')
+    // Resolve the corpus tokens once per draw (canvas needs string colours, so read the computed
+    // palette from design-system.css — never a hardcoded hex). The per-point hsl() angle-hue below
+    // is the ONE deliberate non-token colour (colour IS geometry) — preserved on purpose.
+    const css = getComputedStyle(document.documentElement)
+    const v = (n: string) => css.getPropertyValue(n).trim()
+    const ink = v('--tx'), line = v('--line'), accent = v('--acc'), dim = v('--tx-3'), bg = v('--bg')
 
     // The rings — the inscribed circles. In 'now' they are age shells; in a cycle frame they are
     // the clock divisions (the timestamp's wrap, drawn). Labels declare what each ring means.
@@ -86,7 +86,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       const rr = (R * i) / proj.rings
       g.globalAlpha = 0.55; g.beginPath(); g.arc(cx, cy, rr, 0, Math.PI * 2); g.stroke()
       if (ringLabels[i - 1]) {
-        g.globalAlpha = 0.6; g.fillStyle = line === '#30363d' ? '#6e7681' : line
+        g.globalAlpha = 0.6; g.fillStyle = dim
         g.font = '9px ui-monospace, monospace'; g.textAlign = 'left'
         g.fillText(ringLabels[i - 1], cx + 3, cy - rr + 11)
       }
@@ -99,7 +99,6 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     }
     g.font = '11px ui-monospace, monospace'; g.textAlign = 'center'
     const inside = w < 520            // phone face: labels tuck inside the rim (no edge clipping)
-    const bg = token('--bg', '#0d1117')
     // Label-thinning: the data-driven default can resolve many sectors (e.g. 50 raw kinds). Painting
     // every label would betray the default for legibility — so label only the MAJOR sectors (by
     // point-share), the rest read by colour/position. No privileged binding, just honest density.
@@ -188,7 +187,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     onHandoff?.()
   }
 
-  if (err) return <div className="lattice-err">projection unreachable — {err}</div>
+  if (err) return <div className="lattice-err"><EmptyState>projection unreachable — {err}</EmptyState></div>
   return (
     <div className="lattice-wrap" ref={wrapRef} onPointerDown={pick}>
       <canvas ref={cvsRef} />
@@ -226,8 +225,8 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       {picked && (
         <div className="lattice-card" onPointerDown={e => e.stopPropagation()}>
           <div className="lc-head">
-            <span className="lc-sector">{picked.sector}</span>
-            <span className="lc-kind">{picked.kind}</span>
+            <Badge tone="sig">{picked.sector}</Badge>
+            <Badge tone="dim">{picked.kind}</Badge>
             <button className="lc-x" onClick={() => setPicked(null)}>✕</button>
           </div>
           {picked.summary && <div className="lc-sum">{picked.summary}</div>}
