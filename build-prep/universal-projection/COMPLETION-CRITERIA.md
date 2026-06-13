@@ -247,7 +247,9 @@ distinctness test below was locked BEFORE the render.)
   non-colliding slot, drop-if-no-slot) and re-verified RESOLVED. design-lint: 0 off-token from this change.
 - GROWTH FRONT (honest): raw-source sentence/turn chunking (the corpus is 1-sentence digests → chunking is a
   no-op here); a richer space (repo=644/history=1464) gets more/larger rungs automatically via default_rungs.
-  The pyramid is RUNTIME data (.data, like every space) — rebuildable via `scale.build_scale_pyramid`.
+  The pyramid is RUNTIME data (.data, like every space) — rebuilt via the DISCOVERABLE route `POST
+  /api/scale/build {space}` (registered in the bridge route table → api_verbs; fail-loud on empty/thin
+  space), not a hidden script; so the ladder can't silently vanish with no recourse if .data is rebuilt.
 
 ## GROUP 12 · MODEL CALLS — DISSOLVED (2026-06-13; Tim confirmed "your logic was actually all correct")
 See SEED-SCALE-PRIMES-SEPARATOR.md §17. The gate is GONE — every "model call" was the lead trying to

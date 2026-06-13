@@ -90,6 +90,10 @@ BRIDGE_ROUTES = (
     # THE UNIVERSAL PROJECTION (Tim Geldard's equation, 2026-06-13) — the stores rendered for free:
     # θ=kind (the sector registry), r=time-from-NOW, depth=nesting, phases=the ts cycles. Pure read.
     "/api/projection",
+    # Group 11 — the SCALE pyramid build trigger (POST): (re)cluster a lens space's unit vectors into the
+    # nested rung centroids the meaning-field's ?rung= resolves over. The discoverable rebuild path (the
+    # pyramid is derived .data — this is how it's regenerated, not a manual script). GET = the built rungs.
+    "/api/scale/build",
     # Proposal lifecycle (RG8/RG9) — dispatched since the register build but MISSING here until the
     # F1.5 contract lane's drift-gate run caught it (the gate working as designed, both directions).
     "/api/registry/proposals",
@@ -1768,6 +1772,23 @@ class H(BaseHTTPRequestHandler):
                 gid = b.get("graph_id", DEMO)
                 SUITE.delete_node(gid, b["node"])
                 self._send(200, json.dumps(SUITE.state(gid)))
+            elif self.path == "/api/scale/build":         # Group 11 — (re)build a lens space's SCALE pyramid
+                # The DISCOVERABLE rebuild path (registry-is-truth / no-silent-failure): the rung centroids the
+                # meaning-field's ?rung= resolves over are derived .data; this regenerates them from the space's
+                # unit vectors. {space (required), rungs?, force?}. Fail loud (empty/thin space → 400, not a
+                # silent empty pyramid). Pure read of the embedder — centroids are means of on-disk vectors.
+                b = self._body()
+                from runtime import scale as _scale
+                space = b.get("space")
+                if not space:
+                    self._send(400, json.dumps({"error": "scale/build needs a `space` (a built lens, e.g. topics)"}))
+                else:
+                    try:
+                        res = _scale.build_scale_pyramid(SUITE.store, space=space,
+                                                         rungs=b.get("rungs"), force=bool(b.get("force")))
+                        self._send(200, json.dumps(res))
+                    except ValueError as _ve:             # empty/thin space → fail loud, legible
+                        self._send(400, json.dumps({"error": str(_ve), "space": space}))
             elif self.path == "/api/chat":                # right-hand-man — grounded conversation
                 b = self._body()
                 gid = b.get("graph_id", DEMO)
