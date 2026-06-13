@@ -727,15 +727,41 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.greeting(since=(q.get("since") or [None])[0])))
             elif path == "/api/projection":                # THE UNIVERSAL PROJECTION: resolved from a binding, no hardcode
                 q = self._qs(urlparse(self.path))
-                from runtime.projection import project as _uproject, BindingRegistry as _BR, parse_now as _parse_now
+                from runtime.projection import (project as _uproject, BindingRegistry as _BR,
+                                                parse_now as _parse_now, _addr_of as _proj_addr)
                 reg = _BR().discover()
+                binding = reg.get(q.get("binding"))
                 evs = SUITE.store.events_since(int(q.get("since") or 0))
-                # ?at= moves the temporal centre into the past (the scrubber); ?center=<ui:// address>
-                # re-centres in space (radius = tree-distance from it). Both default to NOW. Pure read.
-                self._send(200, json.dumps(_uproject(
-                    evs, binding=reg.get(q.get("binding")), registry=reg,
-                    now=_parse_now(q.get("at")), center=q.get("center"),
-                    limit=int(q.get("limit") or 0))))
+                center = q.get("center")
+                # ?at= moves the temporal centre into the past (the scrubber); ?center=<address> re-centres
+                # in space. radius_from='time' (age) | 'address' (tree-distance) | 'semantic' (Group 6).
+                kw = {}
+                if binding.get("radius_from") == "semantic":
+                    # THE CIRCLE (Group 6) — resolve the persisted per-space vectors HERE (the store I/O),
+                    # pass them to the PURE project(). Project the corpus.record points in the binding's
+                    # space (each carries a vector); key each vector by the SAME _addr_of the projector uses.
+                    space = binding.get("space")
+                    evs = [e for e in evs if e.get("kind") == "corpus.record"
+                           and e.get("projection") == space]
+                    vectors = {}
+                    for e in evs:
+                        rec = SUITE.store.get_vector(SUITE.store.space_address(e.get("source_address") or "", space))
+                        if rec and rec.get("vector"):
+                            vectors[_proj_addr(e)] = rec["vector"]
+                    if center:                              # the centre item's OWN per-space vector (the FROM)
+                        crec = SUITE.store.get_vector(SUITE.store.space_address(center, space))
+                        if crec and crec.get("vector"):
+                            vectors[center] = crec["vector"]
+                    kw = {"vectors": vectors}
+                try:
+                    self._send(200, json.dumps(_uproject(
+                        evs, binding=binding, registry=reg,
+                        now=_parse_now(q.get("at")), center=center,
+                        limit=int(q.get("limit") or 0), **kw)))
+                except ValueError as _ve:                   # semantic-with-no-centre-vector → fail loud, legible
+                    self._send(400, json.dumps({"error": str(_ve), "binding": binding.get("id"),
+                                                "hint": "semantic radius needs ?center=<an item with a "
+                                                        "vector in this binding's space>"}))
             elif path == "/api/corpus-query":              # S7: the forager's search door (semantic + heads)
                 q = self._qs(urlparse(self.path))
                 text, space = q.get("text"), q.get("space") or None

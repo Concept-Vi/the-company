@@ -117,6 +117,19 @@ def _tree_distance(a: str, b: str) -> int:
     return (len(sa) - common) + (len(sb) - common)
 
 
+def _cosine(a, b) -> float:
+    """Cosine of two vectors — REPLICATED here (like _tree_distance) so the pure-read floor carries NO
+    dependency on nodes/retrieve. Fail-loud on a dim mismatch (zip would truncate to a wrong-but-plausible
+    cosine; query + corpus may be embedded by different models → different dims) and on a zero vector
+    (ZeroDivisionError — never a fabricated 0). Mirrors nodes/retrieve._cosine byte-for-byte in behaviour."""
+    if len(a) != len(b):
+        raise ValueError(f"vector dim mismatch: {len(a)} vs {len(b)} (cannot cosine different dims)")
+    dot = sum(x * y for x, y in zip(a, b))
+    na = math.sqrt(sum(x * x for x in a))
+    nb = math.sqrt(sum(y * y for y in b))
+    return float(dot / (na * nb))
+
+
 def _resolve_sectors(binding: dict, events: list) -> tuple[list, dict]:
     """Resolve the angular divisions (sectors) from the binding's angle_from — NOT from a hardcoded
     list. Returns (ordered_sector_ids, kind→sector map). n = len(sectors); the wheel divides evenly.
@@ -180,11 +193,22 @@ def _grid_cell(address: str, cap: int = 4) -> tuple:
 
 
 def project(events: list, *, binding: dict | None = None, now: datetime | None = None,
-            center: str | None = None, limit: int = 0, registry: BindingRegistry | None = None) -> dict:
+            center: str | None = None, limit: int = 0, registry: BindingRegistry | None = None,
+            vectors: dict | None = None) -> dict:
     """Events → points, resolved from a BINDING. Pure read; every coordinate read from data the
     event already carries, the divisions resolved from the binding's named source. The CENTRE is a
     variable: default the temporal NOW (radius = age); pass `now=` (the scrubber) to move it into the
-    past, or `center=<ui:// address>` to re-centre in space (radius = tree-distance from that address)."""
+    past, or `center=<ui:// address>` to re-centre in space (radius = tree-distance from that address).
+
+    SEMANTIC radius (Group 6 — the CIRCLE): a binding with `radius_from=='semantic'` sets radius =
+    MEANING-distance from the centre = 1 - cosine(centre, point), read off the PERSISTED per-space
+    vectors the caller passes in via `vectors` ({_addr_of(e) → vector}, incl. the centre's, keyed by
+    `center`). project() stays PURE — vectors ride IN like events; the store I/O (store.get_vector over
+    the binding's space) is the caller's (the bridge's) job. Fail-loud-legible: a semantic binding with
+    no centre vector RAISES (no silent fallback to time). A point with no vector → r=1.0 + r_unknown
+    (rim + flagged, never silent-dropped). The cosines are min-max NORMALIZED across the projected set
+    for legibility (corpus cosines cluster in a narrow band → raw 1-cos is visually unreadable);
+    `radius_normalized` is surfaced so the distortion is never silent."""
     reg = registry or BindingRegistry().discover()
     binding = binding or reg.get(None)
     now = now or datetime.now(timezone.utc)
@@ -202,15 +226,34 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
 
     max_age = max((max((now - t).total_seconds(), 1.0) for _, t in stamped), default=1.0)
     log_max = math.log1p(max_age) or 1.0
-    radius_from = binding.get("radius_from", "time")  # 'time' today; semantic radius = the ability phase
+    radius_from = binding.get("radius_from", "time")  # 'time' | 'semantic' (Group 6) | structural-by-address
     # the centre freed (Tim: "the axes are variables"): a non-'now' center is an ADDRESS — radius becomes
-    # STRUCTURAL tree-distance from it (near in the tree = near the centre). The cosine/semantic relevance
-    # ring is the embedder-gated ability phase (Group 6) — stubbed here, never faked.
+    # STRUCTURAL tree-distance from it (near in the tree = near the centre), UNLESS the binding asks for
+    # 'semantic' (cosine meaning-distance, Group 6 — now built, reading the passed-in per-space vectors).
     addr_center = center if (center and center not in ("now", "")) else None
     if addr_center is not None:
         max_dist = max((_tree_distance(addr_center, _addr_of(e)) for e, _ in stamped), default=1) or 1
     else:
         max_dist = 1
+
+    # SEMANTIC precompute (Group 6): cosine(centre, point) for every point that HAS a vector; then a
+    # min-max normalization band so near=close is VISIBLE (raw 1-cos clusters unreadably).
+    sem = (radius_from == "semantic")
+    sem_cos: dict = {}
+    sem_cmin = sem_cmax = 0.0
+    if sem:
+        centre_vec = (vectors or {}).get(addr_center) if addr_center else None
+        if centre_vec is None:
+            raise ValueError(
+                f"semantic radius needs a CENTRE item carrying a vector (center={center!r} has none in "
+                f"the binding's space) — fail loud, never a silent fallback to time.")
+        for _i, (_e, _t) in enumerate(stamped):
+            pv = (vectors or {}).get(_addr_of(_e))
+            if pv is not None and len(pv) == len(centre_vec):
+                sem_cos[_i] = _cosine(centre_vec, pv)
+        if sem_cos:
+            sem_cmin, sem_cmax = min(sem_cos.values()), max(sem_cos.values())
+    sem_norm = sem and (sem_cmax - sem_cmin) > 1e-9
 
     # THE SQUARE / STRUCTURE half (the seed §1): each point's dyadic (i,j) cell from its address path
     # (recursive quadrant subdivision — a parent cell CONTAINS its children); the grid resolution
@@ -230,10 +273,19 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
         ref = str(_addr_of(e) or e.get("summary") or e.get("seq"))
         theta = TAU * (i + 0.08 + 0.84 * _stable_unit(ref)) / n
         age = max((now - t).total_seconds(), 1.0)
-        if addr_center is not None:
+        r_unknown = False
+        if sem:
+            c = sem_cos.get(idx)
+            if c is None:
+                r, r_unknown = 1.0, True                              # no vector → rim, FLAGGED (not dropped)
+            elif sem_norm:
+                r = 1.0 - (c - sem_cmin) / (sem_cmax - sem_cmin)      # nearest cos → r=0, farthest → r=1
+            else:
+                r = 1.0 - c                                          # single value / no spread → raw 1-cos
+        elif addr_center is not None:
             r = _tree_distance(addr_center, _addr_of(e)) / max_dist   # structural distance-from-address
         else:
-            r = math.log1p(age) / log_max                              # time-from-now (semantic = Group 6)
+            r = math.log1p(age) / log_max                              # time-from-now
         depth = max(len([s for s in (e.get("address") or "").split("/") if s]) - 1, 0)
         phases = {"day": (t.hour * 3600 + t.minute * 60 + t.second) / 86400.0,
                   "week": (t.weekday() + (t.hour / 24.0)) / 7.0}
@@ -245,14 +297,19 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
             "address": e.get("address") or e.get("source_address") or "",
             "summary": str(e.get("summary") or "")[:140], "ts": e.get("ts"),
             "phases": {k: round(v, 4) for k, v in phases.items()},
+            # only a SEMANTIC point with no vector carries this (rim + flagged) — additive, absent otherwise
+            **({"r_unknown": True} if r_unknown else {}),
         })
 
     return {
         "center": addr_center or "now", "now": now.isoformat(), "n": n,
         "binding": {"id": binding["id"], "label": binding["label"],
                     "angle_from": binding.get("angle_from"),
-                    "radius_from": "address" if addr_center else radius_from,
-                    "order_by": binding.get("order_by", "count")},
+                    "radius_from": "semantic" if sem else ("address" if addr_center else radius_from),
+                    "order_by": binding.get("order_by", "count"),
+                    # semantic only: was the meaning-distance min-max normalized for legibility? (honest —
+                    # so 'near=close' is never silently a distorted absolute distance)
+                    **({"radius_normalized": sem_norm, "space": binding.get("space")} if sem else {})},
         "bindings": [{"id": b["id"], "label": b["label"]} for b in reg.list()] or
                     [{"id": "raw", "label": "Kinds (raw)"}],
         "sectors": [{"id": s, "label": s, "from": round(TAU * i / n, 5), "to": round(TAU * (i + 1) / n, 5)}
