@@ -106,8 +106,8 @@ LatticeView.tsx WAS the LONE region still on the dead GitHub-dark palette (undef
   "Group 5 lattice-clean" is NOT "the app.css gate is green". A white token (or a lint allowlist) is a
   design-folder concern (generated CSS, another session), not the app's to hand-edit.
 
-## GROUP 6 · ABILITY — THE CIRCLE / SEMANTIC RADIUS 🟡 (FUNCTION ✅ by use; FORM built+fixed, design-critic re-confirming)
-Built on Group 8's live spaces. commits 078eb6a (FUNCTION) + 53b4baf (FORM + empty-core fix).
+## GROUP 6 · ABILITY — THE CIRCLE / SEMANTIC RADIUS ✅ (2026-06-14; both faces verified by use, design-critic PASS)
+Built on Group 8's live spaces. commits 078eb6a (FUNCTION) + 53b4baf (FORM + empty-core fix) + 7d231a0/this (criteria).
 - **FUNCTION** ✅ by use — `project(..., radius_from=='semantic')` resolves r = MEANING-distance from the
   centre = 1 - cosine, read off the persisted per-space vectors (project stays PURE — vectors ride in via
   `vectors=`, keyed by `_addr_of`; the store I/O is the bridge's: `store.get_vector` over the binding's
@@ -115,13 +115,14 @@ Built on Group 8's live spaces. commits 078eb6a (FUNCTION) + 53b4baf (FORM + emp
   Verified by use (live bridge, center=suite.py over topics): 162 points, centre at r=0, nearest
   neighbours small r, claimed_status.py at the rim; no-centre → legible 400; raw/time bindings unchanged
   (41/41 instrument regression). `tests/projection_semantic_acceptance.py` (15 checks).
-- **FORM** 🟡 — the lattice renders the meaning-field: pick any embedded point → "◎ meaning-field from
-  here" (sets the semantic lens + centre together — no chicken-egg); radius reads off p.r (temporal frames
-  hidden), axis "farther in meaning →", a normalized note + a pick-a-centre banner; r_unknown points faint
-  at the rim. design-lint contribution 0. EMPTY-CORE FIX: the centre's cosine=1.0 was an outlier that
+- **FORM** ✅ by rubric — the lattice renders the meaning-field: pick any embedded point → "◎ meaning-field
+  from here" (sets the semantic lens + centre together — no chicken-egg); radius reads off p.r (temporal
+  frames hidden), axis "farther in meaning →", a normalized note + a pick-a-centre banner; r_unknown points
+  faint at the rim. design-lint contribution 0. EMPTY-CORE FIX: the centre's cosine=1.0 was an outlier that
   compressed neighbours into the outer band (design-critic caught it, nearest at r~0.39); now the centre is
-  EXCLUDED from the normalization band → centre at 0, nearest at 0.06, full radius (inner-core 43/162).
-  Re-confirmation by a separate design-critic at both viewports is IN FLIGHT — flip to ✅ on its PASS.
+  EXCLUDED from the normalization band → centre at 0, nearest at 0.06, full radius. SEPARATE design-critic
+  re-verified at BOTH viewports (1440×900 + 390×844): inner core populated, smooth gradient from near-origin
+  (~4-6% of max) to rim, near-vs-far readable by distance — PASS on both (was a hollow-core FAIL).
 
 ## GROUP 7 · ABILITY — STRAIN / FORBIDDEN ZONES 🔴 (needs Groups 2 + 6)
 Zero code today. The structure↔meaning gap.
