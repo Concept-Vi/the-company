@@ -22,12 +22,12 @@ status: living
 
 **Where new things go.**
 - a new **STT ear** → add a row to `STT_PROVIDERS` (id, kind, url/route or lib/secret). `available_stt()`/`transcribe()` iterate the catalog — a `local_http` ear needs no dispatch edit (a GPU model just adds a `voice/ears/<name>.py` wrapper + its unit). The id IS the catalog key (the old `whisper_local`-vs-`whisper` mismatch is structurally gone). The UI/RHM reads `available_stt()` — never guesses which ears exist.
-- a different **TTS voice/engine** → `COMPANY_TTS_VOICE` (Kokoro voices) or a new engine in `tts_service.py`; voices are a registry (`GET /voices`), not hardcoded in the UI.
+- a new **TTS engine and its port** → add a `tts-<name>` entry with a `port` field to `ops/services.json` (the single source of truth). `loop.py`'s `ENGINE_PORTS` is derived from `services.json` at import time via `_load_engine_ports()` — **no edit to loop.py needed**. Also add the engine row to `ENGINE_EXPRESSION` in `voice/speakable.py` if it supports inline expression tags. A `tts-*` entry in `services.json` without a `port` field FAILS LOUD at import — never silently omitted.
 - **inline expression support for an engine** → add a row to `ENGINE_EXPRESSION` in `voice/speakable.py` (`supports`: the canonical tags it can voice; `render`: how to write a canonical tag in that engine's native syntax). No engine row = no inline expression → all tags stripped (the safe default). A new canonical tag goes in `CANONICAL_TAGS`. Never hardcode an engine's tag syntax outside this map.
 
 **Its seam.** The bridge ([[runtime — constitution]]): `POST /api/stt` (raw audio → `{text}`, routed to the config-selected ear `rhm_config().stt`), `POST /api/tts` (`{text,voice?}` → wav), `GET /api/voice` (status + `stt_registry` from `available_stt()` + `stt_active`). `loop.py` defaults its ear from `/api/rhm-config .stt` — one source for both the browser path and the headless loop. The [[canvas — constitution]] `listening` mode drives the mic→STT→chat→TTS→speaker loop (the push-to-talk circuit is proven headlessly; **lane-G** live mic/speaker capture is the browser half, operator-verified).
 
-**Never.** Hardcode an API key (use `~/company/.secrets`, gitignored). Commit a key or a model file (`.secrets`, `voice/models/` are gitignored). Load STT/TTS onto the GPU without checking VRAM headroom (the LLM stack owns it).
+**Never.** Hardcode an API key (use `~/company/.secrets`, gitignored). Commit a key or a model file (`.secrets`, `voice/models/` are gitignored). Load STT/TTS onto the GPU without checking VRAM headroom (the LLM stack owns it). **Hardcode TTS engine ports in loop.py** — they derive from `ops/services.json` (Mirror-Registry Law; F-FIX-11).
 
 **Boundary (honest).** The endpoints are verifiable headlessly (round-trip TTS→STT, file checks). The live **mic capture + speaker playback** is browser hardware — only the operator can confirm that loop.
 
@@ -42,7 +42,9 @@ The **mouth** is local-only **TTS** (Kokoro, CPU, ~no VRAM),
 which lives in its own `.voice-venv` (Python 3.12, isolated from the 3.14 runtime) and runs
 as a small HTTP service on its own port. Provider-set and voice-set are each a *registry the
 UI reads*, never a hardcoded list — so adding a provider or a voice is a drop-in, not a
-frontend edit. Where this organ sits in the whole body is the picture in [[Company Map]].
+frontend edit. `ENGINE_PORTS` in `loop.py` is **derived from `ops/services.json`** (the single
+source of port truth) at import time — never a hardcoded literal. Where this organ sits in the
+whole body is the picture in [[Company Map]].
 
 ## Relates to
 
@@ -51,6 +53,8 @@ frontend edit. Where this organ sits in the whole body is the picture in [[Compa
   than embed it, so the local TTS process and its venv stay isolated from the runtime.
 - **Provider keys live in `.secrets`** (gitignored) — the cloud STT path reads its key from
   there; nothing voice-related is ever committed (keys, `voice/models/`).
+- **TTS engine ports live in `ops/services.json`** (`tts-<engine>` entries) — `loop.py` reads
+  them at import; `services.json` is the single source (registry-is-truth).
 
 ## Read next
 [[Company Map]] (where this organ sits in the whole) · [[runtime — constitution]] (the bridge that fronts these endpoints) · [[Concepts and Principles]] (the language this constitution speaks).

@@ -33,9 +33,48 @@ from voice import personas as voice_personas                # noqa: E402
 from voice import speakable as voice_speakable              # noqa: E402  (the pre-TTS speakable layer)
 
 BRIDGE_URL = os.environ.get("COMPANY_BRIDGE_URL", "http://127.0.0.1:8770")
-# The engine port map — the SHARED contract the runtime-backend builder relies on. Names → base URLs.
-ENGINE_PORTS = {"kokoro": 4123, "chatterbox": 4124, "orpheus": 4125,
-                "cosyvoice": 4126, "xtts": 4127, "qwen3tts": 4128}
+
+
+def _load_engine_ports() -> dict:
+    """Derive ENGINE_PORTS from ops/services.json (the single source of truth for service ports).
+    Reads the `tts-*` service entries and strips the `tts-` prefix to produce {engine: port}.
+    FAILS LOUD if ops/services.json is missing, malformed, or any tts-* entry lacks a `port`
+    field — never silently produces an empty or partial map (registry-is-truth law)."""
+    services_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                 "ops", "services.json")
+    try:
+        with open(services_path) as f:
+            svc = json.load(f)
+    except FileNotFoundError:
+        raise RuntimeError(
+            f"ENGINE_PORTS: ops/services.json not found at {services_path} — "
+            f"the TTS engine port registry is missing. Fail loud.")
+    except json.JSONDecodeError as e:
+        raise RuntimeError(
+            f"ENGINE_PORTS: ops/services.json is malformed: {e} — "
+            f"the TTS engine port registry cannot be read. Fail loud.")
+    ports = {}
+    for key, entry in svc.get("services", {}).items():
+        if not key.startswith("tts-"):
+            continue
+        engine = key.removeprefix("tts-")
+        if "port" not in entry:
+            raise RuntimeError(
+                f"ENGINE_PORTS: ops/services.json entry {key!r} has no `port` field — "
+                f"add the port or the engine cannot be addressed. Fail loud.")
+        ports[engine] = entry["port"]
+    if not ports:
+        raise RuntimeError(
+            f"ENGINE_PORTS: no `tts-*` services found in ops/services.json — "
+            f"the TTS engine registry is empty. Fail loud.")
+    return ports
+
+
+# The engine port map — derived from ops/services.json (the single source of truth), NOT hardcoded.
+# Mirror-Registry Law: the registry (services.json) is the truth; this is its projection.
+# Adding a TTS engine = add a `tts-<name>` entry with a `port` in ops/services.json; loop.py picks
+# it up automatically. A missing or malformed entry fails loud at import time.
+ENGINE_PORTS = _load_engine_ports()
 
 
 def engine_url(engine: str) -> str:
