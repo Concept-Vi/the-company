@@ -54,6 +54,12 @@ the remaining items are genuinely gated (Tim input / axis-selection) or are data
   conv_index ×3, space_embed, embeddings, durability, events, fs_session_guard, set_ref_atomic, bridge_session);
   live surface all 5 bindings resolve (5994 pts), scrubber shifts `now`, semantic-pending shows the scale
   ladder, semantic-active over 162 units (all carry strain), rung=8 resolves 8 sized+labelled themes.
+- **UNATTENDED CEILING (for the loop, 2026-06-14):** every fully-buildable group is ✅. The 3 remaining
+  items are NOT autonomously buildable without green-paint: Group 9 needs Tim's AI-tells; the small
+  registries/20-80 need Tim's axis-selection; Group 10's edge-order FORM needs denser declared relations
+  than exist (BOTH edge-sources — graphs + cascades — checked, both tie-break-dominated). A further fire
+  should NOT churn: do a liveness check (bridge 200 + `projection_instrument_acceptance` green) and HOLD,
+  or pick up whichever of A/B/C Tim has unblocked. Do not re-derive this ceiling each fire — it is recorded.
 
 ---
 
@@ -252,7 +258,14 @@ costume) — only REAL persisted directed edges order sectors; registries have n
   EDGES-BETWEEN-REGISTRY-ROWS is the SEED §95 growth front ("grow the registry-relation model") — when the
   registries carry real declared relations (a handful of rows, densely related), THAT is the legible +
   edge-determined set this sub-bar needs; built honestly, never a faked sequence. This FORM sub-bar is a
-  DATA/growth-front condition, not a code gap.
+  DATA/growth-front condition, not a code gap. SECOND DATA SOURCE CHECKED (2026-06-14): the registry's OWN
+  existing relations — the 8 cascades' step-edges aggregated into a role→role graph (a REAL declared
+  structure, not invented precedence) — give 12 roles but only 5 edges, longest chain 4, and a topological
+  order that differs from alphabetical by a SINGLE transposition; the one pure pipeline (spec-compiler:
+  decompose→expand→ground→triad) is alphabetical-coincident (not even falsifiable). So BOTH candidate
+  edge-sources (node graphs AND cascade-relations) are tie-break-dominated → the sub-bar needs DENSER
+  declared relations than the system currently holds (≥~6 rows in a real, non-alphabetical dependency DAG).
+  Rendering today's sparse edges would read as alphabetical-with-a-nudge — green-paint, refused.
 
 ## GROUP 11 · ABILITY — MULTI-SCALE EMBEDDING PYRAMID ✅ (both faces verified; the SCALE axis)
 THE REVERSAL (evidence-forced): the spec's "sentence/turn/session/project" rungs were CONVERSATION-shaped;
