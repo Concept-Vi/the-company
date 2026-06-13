@@ -63,11 +63,18 @@ surface (the scrubber + re-centre + animation).
   (LatticeView 0 / lattice app.css 0). A SEPARATE design-critic passed all 6 dimensions at 1440×900
   AND 390×844 (slider-distinctness defect found + fixed + re-confirmed).
 
-## GROUP 4 · INSTRUMENT — REAL-TIME PUB-SUB 🔴 (Tim's explicit ask)
-`/api/stream` (SSE) already exists over the same tap; LatticeView polls every 15s.
-- **FUNCTION** — the lattice subscribes to `/api/stream` and re-projects per new seq; the 15s poll
-  retired; a new event appears the instant it's written; now advances by a smooth client clock. ☐ by use
-- **FORM** — the live arrival reads as motion (a point drifting in), not a flicker/reload. ☐ by rubric
+## GROUP 4 · INSTRUMENT — REAL-TIME PUB-SUB ✅ (528704a; Tim's explicit ask)
+The lattice subscribes to `/api/stream` (SSE over the shared events.jsonl tap); the 15s poll is retired.
+- **FUNCTION** — ✅ by use: an EventSource on `/api/stream?since=<latest seq>` (only future events stream);
+  on a new event, a 220ms-coalesced re-projection (server stays the projection authority — no parallel
+  client math); `setInterval(15000)` removed; `now` advances on a continuous ~22fps client-clock rAF
+  (the centre breathes smoothly, stops when frozen/scrubbed). Proven: network `GET /api/stream?since=`
+  [200]; appended a real event → live count 5493→5494 in <2s with NO reload (and it minted a new
+  kind-sector 50→51 — the data-driven engine, live). Suite 35/35.
+- **FORM** — ✅ by rubric: updates are setProj + canvas REPAINT (the `<canvas>` is never remounted —
+  verified same DOM node across re-projection → not a flicker/reload); new arrivals DRIFT IN (markNew →
+  the easeOutCubic fade-in tween) while placed points hold. A SEPARATE design-critic: PASS, no FORM
+  regression at 1440×900 AND 390×844.
 - **ROBUSTNESS (carry-forward, found in G5 review)** — the error view returns early and renders NO foot
   HUD, so there are no controls; recovery relies on the mounted effect's 15s interval, which only runs
   while `live=true`. A failed pull WHILE FROZEN (e.g. a bind-change pull that 503s) is a stuck dead-end
@@ -164,8 +171,8 @@ freeze a variable Tim deliberately left free (the hardcoding reflex). Resolution
 1. **Group 1** — ✅ DONE (6615e53) — the acceptance suite (regression floor; 26 invariant teeth).
 2. **Group 5** — ✅ DONE (dc3378a) — the FORM rebuild (lattice onto the corpus design system).
 3. **Group 3** — ✅ DONE (backend dabf952 + FE 9be11cc/3f65f70: scrubber + re-centre + animation, both faces, critic-passed).
-4. **Group 4** — ← NEXT — real-time pub-sub (lattice subscribes to /api/stream; retire the 15s poll; events arrive as motion).
-5. **Group 2** — the structural square half (completes the instrument's structure; no embedder needed).
+4. **Group 4** — ✅ DONE (528704a: SSE subscription, poll retired, smooth client clock, critic-passed).
+5. **Group 2** — ← NEXT — the structural square half (i,j grid + m/2 concentric rings from the ui:// address hierarchy; replaces the rings:4 stub; completes the instrument's structure; no embedder needed).
 6. **Group 8** — embedding substrate live (operational; gates all semantic ability).
 7. **Group 6** — semantic radius (the first ability ring).
 8. **Group 7** — strain / forbidden zones (needs 2 + 6).
