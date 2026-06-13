@@ -143,8 +143,13 @@ FROM model_projections()") was never built. So Group 8 was a BUILD, not a bring-
   · index freshness CONFIRMED via `vector_index.index_staleness` (extended with `space=` param):
     topics/principles/worldview fresh=True (162 corpus==162 indexed, 0 missing/changed/extra), repo
     fresh=True (644==644). The 20-check staleness regression still passes (space=None byte-identical).
-  · FOLLOW-ON (this beat): acceptance suite for the new lane + index_staleness(space=); broader-corpus
-    coverage (frontend .tsx / docs) extends via the incremental lane on later fires.
+  · acceptance suite `tests/capture_lenses_acceptance.py` (18 checks) + drift green; commits ea10f24
+    (lane + index_staleness space=) + 30e8356 (suite + STATE reflection).
+  · COVERAGE: backend 162/repo-644 (partial — the substrate IS live; "populates" met). NOT self-driving:
+    `capture_corpus_lenses` extends ONLY when RE-INVOKED with broader roots (frontend .tsx / docs) — the
+    incremental lane is resume-safe, but nothing auto-calls it yet (a routine/later beat must re-invoke).
+  · query_corpus(space='topics') ranks items by cosine, returning the source address as `id` (verified —
+    e.g. "subjects a file covers" → what.py/projections.py nearest); this IS Group 6's semantic-radius input.
 - **FORM** — n/a (substrate). ✅
 
 ## GROUP 9 · ABILITY — TWO-GRAVITY SEPARATOR 🔴 (UN-GATED 2026-06-13; needs Group 8 + the AI-tells)
