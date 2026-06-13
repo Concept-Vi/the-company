@@ -13,6 +13,8 @@ type ProjPoint = {
   address: string; summary: string; ts: string; phases: { day: number; week: number }
   source?: string        // the embeddable key (present on corpus items) — the meaning-field re-centres on it
   r_unknown?: boolean     // a semantic point with no vector → at the rim, flagged (never silent-dropped)
+  r_struct?: number       // STRAIN (Group 7): where it's FILED (structural radius); r is where it MEANS to be
+  strain?: number         // |r_struct - r| — the structure↔meaning divergence (SEED §111); 0 = coherent
 }
 type Projection = {
   now: string; n: number; rings: number; count: number; grid?: number
@@ -32,6 +34,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   const [sel, setSel] = useState<ProjPoint[]>([])   // the accumulating working set (forager: sculpt → hand to builder)
   const [zoom, setZoom] = useState(1)        // radial magnification — inner rings (recent) expand
   const [frame, setFrame] = useState<'now' | 'day' | 'week'>('now')  // S4: scale/phase selects the frame
+  const [showStrain, setShowStrain] = useState(false)  // G7: overlay the structure↔meaning tension lines
   const [bind, setBind] = useState<string>('')   // the LENS (binding id); '' = the data-driven default
   const [err, setErr] = useState('')
   const [live, setLive] = useState(true)     // the centre is NOW — and now MOVES (the involuntary axis)
@@ -207,6 +210,22 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     // The points — exactly the same points, drawn where they already are. On a re-centre / reframe they
     // ANIMATE from their previous positions to the new ones: a point keeps its seq and SLIDES to its new
     // place rather than teleporting — identity survives the transform (the centre freed, made visible).
+    // STRAIN overlay (Group 7, SEED §111): for each point a RADIAL tension segment from where it's FILED
+    // (r_struct) to where it MEANS to be (r), at the point's angle — "the line between where a thing is
+    // filed and where it means to be." alpha ∝ strain, so coherent points (segment≈0) vanish and only real
+    // divergence reads as visible tension. Drawn UNDER the points. Semantic mode + the toggle only.
+    if (isSemantic && showStrain) {
+      g.strokeStyle = accent; g.lineCap = 'round'
+      for (const p of proj.points) {
+        if (p.strain == null || p.r_struct == null || p.strain < 0.02) continue
+        const rm = Math.pow(p.r, 1 / zoom) * R, rs = Math.pow(p.r_struct, 1 / zoom) * R
+        const sn = Math.sin(p.theta), cs = Math.cos(p.theta)
+        g.globalAlpha = 0.12 + 0.6 * Math.min(p.strain, 1)      // faint→strong with the gap
+        g.lineWidth = 0.6 + 1.4 * Math.min(p.strain, 1)
+        g.beginPath(); g.moveTo(cx + sn * rs, cy - cs * rs); g.lineTo(cx + sn * rm, cy - cs * rm); g.stroke()
+      }
+      g.globalAlpha = 1; g.lineWidth = 1
+    }
     const selSeqs = new Set(sel.map(s => s.seq))
     const anim = animRef.current
     const prog = anim ? Math.min((performance.now() - anim.t0) / 480, 1) : 1
@@ -247,7 +266,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       g.beginPath(); g.arc(cx, cy, 11 + 6 * phase, 0, Math.PI * 2); g.stroke()
     }
     g.globalAlpha = 1
-  }, [proj, picked, zoom, sel, frame, live, at])
+  }, [proj, picked, zoom, sel, frame, live, at, showStrain])
 
   useEffect(() => { draw() }, [draw])
   useEffect(() => {
@@ -371,9 +390,16 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
           {isSemantic ? (
             // THE CIRCLE active: radius is meaning-distance (not time) — the temporal controls don't apply;
             // a legible note states the reading + its honest normalization. Zoom still expands the near band.
-            <span className="lf-semnote" title="radius = cosine meaning-distance from the centre item, in this lens's space">
-              ◎ meaning-distance{proj?.binding?.radius_normalized ? ' · normalized' : ''}
-            </span>
+            // ⊿ strain toggles the Group-7 tension overlay (structure↔meaning divergence lines).
+            <>
+              <span className="lf-semnote" title="radius = cosine meaning-distance from the centre item, in this lens's space">
+                ◎ meaning-distance{proj?.binding?.radius_normalized ? ' · normalized' : ''}
+              </span>
+              <button className={'lf-btn' + (showStrain ? ' on' : '')} onClick={() => setShowStrain(s => !s)}
+                title="overlay STRAIN: a radial line from where each item is FILED (structure) to where it MEANS to be (meaning) — the gap is the tension (SEED §111)">
+                ⊿ strain
+              </button>
+            </>
           ) : (
             <>
               <label className="lf-slider" title="scrub the centre back in time — NOW → the past (frozen where you let go)">
@@ -414,6 +440,10 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
             {picked.ts?.slice(0, 16).replace('T', ' · ')} · {phaseWord(picked.phases.day)} ·
             cell {picked.cell.i},{picked.cell.j} · depth {picked.cell.d}
           </div>
+          {picked.strain != null && picked.r_struct != null && (
+            // STRAIN (Group 7): where it's filed (structure) ↔ where it means to be (meaning), and the gap.
+            <div className="lc-meta lc-strain">⊿ strain {picked.strain.toFixed(2)} · filed {picked.r_struct.toFixed(2)} ↔ means {picked.r.toFixed(2)}</div>
+          )}
           <button className="lc-pick" onClick={() => toggleSel(picked)}>
             {inSel(picked) ? '− remove from set' : '＋ add to set'}
           </button>

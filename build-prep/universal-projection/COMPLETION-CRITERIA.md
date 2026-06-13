@@ -124,13 +124,24 @@ Built on Group 8's live spaces. commits 078eb6a (FUNCTION) + 53b4baf (FORM + emp
   re-verified at BOTH viewports (1440×900 + 390×844): inner core populated, smooth gradient from near-origin
   (~4-6% of max) to rim, near-vs-far readable by distance — PASS on both (was a hollow-core FAIL).
 
-## GROUP 7 · ABILITY — STRAIN / FORBIDDEN ZONES 🔴 (needs Groups 2 + 6)
-Zero code today. The structure↔meaning gap.
-- **FUNCTION** — per-point square-position vs circle-position disagreement is computed and surfaced as
-  a strain field OR a 'strain'/'forbidden' mark_type (`mark_types.py` + `append_finding`); render,
-  never auto-correct; operator-overridable. ☐ by use
-- **FORM** — strain reads as visible tension (the gate inbox / drift / axis-growth signal), not a
-  number; on tokens. ☐ by rubric
+## GROUP 7 · ABILITY — STRAIN / FORBIDDEN ZONES 🟡 (FUNCTION ✅ by use; FORM built, design-critic verifying)
+The structure↔meaning gap (SEED §111). Built on Groups 2 (the square) + 6 (the circle).
+- **FUNCTION** ✅ by use — per-point STRAIN = |r_struct − r_semantic|: where it's FILED (structural radius
+  = tree-distance from the centre over the SOURCE address, normalized like r) vs where it MEANS to be (the
+  semantic radius). NOT a 2D cell↔wheel distance (the one-sector angle is hash-jitter → the centre, the
+  MOST coherent point, would read max-strain — the advisor caught this); compared like-for-like as radii at
+  a shared angle, so the centre is 0/0 → strain 0. Computed in `project()` semantic-mode-only (the circle
+  must be MEANING); a vectorless point carries NO strain (no fabricated coherence). `mark_types/strain.py`
+  registered (score · surface — so strain can be MARKED + surfaced; render, never auto-correct). Verified by
+  use (live bridge, center=suite.py): 162 points carry strain, centre strain 0.0, divergences real
+  (flows.py means-like-suite-but-filed-far → 0.80; coherence_calibrate.py filed-near-but-means-differently
+  → 0.73). `tests/projection_semantic_acceptance.py` extended (23 checks incl. the centre≈0 dispositive
+  guard + coherent≈0 + divergence-high + far+far-is-coherent).
+- **FORM** 🟡 — a "⊿ strain" toggle on the meaning-field draws the RADIAL tension segment from r_struct to r
+  at each point's angle (SEED §111's literal "line between where it's filed and where it means to be");
+  alpha+width ∝ strain so coherent points vanish and only divergence reads as tension; the picked card shows
+  "⊿ strain · filed ↔ means". design-lint contribution 0. SEPARATE design-critic verifying both viewports —
+  flip to ✅ on its PASS.
 
 ## GROUP 8 · ABILITY — EMBEDDING SUBSTRATE LIVE ✅ (2026-06-14; verified by use, unblocks 6,7,9,11)
 CORRECTION of the prior "mechanism complete" premise: the mechanism was NOT complete. The single-lens

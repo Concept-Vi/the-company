@@ -41,6 +41,11 @@ non-`MARK_TYPE`/`_`-file is skipped.
   target surfaced for review (COMPOSITION ② drift-radar's `judge_drift` confirm). Value `{with, shared, source}`.
 - **`overlap`** — claim · **surface**. Significant shared responsibility between near units — a softer
   unification candidate than `built_twice` (② drift-radar). Value `{with, shared, source}`.
+- **`strain`** — score · **surface**. Structure↔meaning DIVERGENCE (SEED §111): |where a unit is FILED
+  (repo-tree distance from the centre) - where it MEANS to be (semantic distance)|. 0 = coherent (filed
+  where it means); high = strain/resistance. The instrument computes it live per-point in semantic mode
+  (the radial tension segment r_struct↔r); this row lets it be MARKED + surfaced as a finding. Render,
+  NEVER auto-correct — operator-overridable (Group 7). Value the 0..1 magnitude.
 
 **The floor + render-not-judge:** a mark-type is DECLARED DATA — a vocabulary, not an action. Reading is
 a READ (`subtractive`/`as_records`, never `resolve`). A mark DESCRIBES a disposition; judgement of

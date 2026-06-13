@@ -261,6 +261,35 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
             sem_cmin, sem_cmax = min(nc), max(nc)
     sem_norm = sem and (sem_cmax - sem_cmin) > 1e-9
 
+    # STRAIN precompute (Group 7, SEED §111: "strain is the distance between a point's square-position and
+    # its circle-position"). Compared LIKE-FOR-LIKE as RADII at a shared angle (NOT a 2D cell↔wheel distance:
+    # the one-sector angle is pure jitter, so the 2D form is dominated by hash-noise and the centre — the
+    # MOST coherent point — would read max-strain). r_struct = tree-distance-from-centre over the SOURCE
+    # address (the repo-tree FILING — where it's filed), normalized; strain = |r_struct - r_semantic| (where
+    # it's filed vs where it MEANS to be). Centre → 0/0 → strain 0 (coherent); near-in-tree + far-in-meaning
+    # → high (divergence). Only in semantic mode (the circle must be MEANING). The wheel-angle registration
+    # that would let a true 2D reading work is Group 10's job — not pulled forward.
+    sem_struct: dict = {}
+    if sem:
+        def _is_c(i):
+            return (stamped[i][0].get("source_address") or _addr_of(stamped[i][0])) == addr_center
+        raw = {i: _tree_distance(addr_center, (e.get("source_address") or _addr_of(e)))
+               for i, (e, _t) in enumerate(stamped)}
+        # normalize r_struct with the SAME band shape as r_semantic (min-max over NON-centre, 0.06 floor,
+        # centre→0) so the two radii are DIRECTLY comparable: a point nearest in BOTH → r==r_struct → strain
+        # 0 (coherent); nearest-structural + farthest-semantic → r_struct=0.06 vs r=1.0 → strain ~0.94. Were
+        # the two normalized differently, even a coherent point would carry residual strain (a false signal).
+        nc_d = [d for i, d in raw.items() if not _is_c(i)]
+        dmin, dmax = (min(nc_d), max(nc_d)) if nc_d else (0, 0)
+        spread = dmax - dmin
+        for i, d in raw.items():
+            if _is_c(i):
+                sem_struct[i] = 0.0
+            elif spread > 1e-9:
+                sem_struct[i] = 0.06 + 0.94 * (d - dmin) / spread
+            else:
+                sem_struct[i] = 0.06          # all non-centre equidistant in the tree → one structural ring
+
     # THE SQUARE / STRUCTURE half (the seed §1): each point's dyadic (i,j) cell from its address path
     # (recursive quadrant subdivision — a parent cell CONTAINS its children); the grid resolution
     # m = 2^(deepest path, capped); the concentric circles = m/2 ("m/2 circles for an m×m grid"). This
@@ -301,6 +330,11 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
         depth = max(len([s for s in (e.get("address") or "").split("/") if s]) - 1, 0)
         phases = {"day": (t.hour * 3600 + t.minute * 60 + t.second) / 86400.0,
                   "week": (t.weekday() + (t.hour / 24.0)) / 7.0}
+        # STRAIN (Group 7): the gap between where it's FILED (r_struct, repo-tree distance) and where it
+        # MEANS to be (r, semantic). Only meaningful when the circle is semantic; a vectorless point has no
+        # meaning-position so it carries no strain (NOT a fabricated 0).
+        r_struct = sem_struct.get(idx) if sem else None
+        strain = abs(r - r_struct) if (sem and r_struct is not None and not r_unknown) else None
         sid = sectors[i] if i < len(sectors) else "?"
         points.append({
             "seq": e.get("seq"), "kind": kind, "sector": sid,
@@ -312,6 +346,10 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
             # the EMBEDDABLE key (the source the per-space vector is keyed by) — present only when the event
             # carries one, so a meaning-field can re-centre on the ITEM (not its run:// record address).
             **({"source": e.get("source_address")} if e.get("source_address") else {}),
+            # STRAIN (Group 7) — semantic mode only: where it's FILED (r_struct) vs where it MEANS to be (r),
+            # and their gap. The FE draws the radial tension segment r_struct↔r at this angle (SEED §111).
+            **({"r_struct": round(r_struct, 5), "strain": round(strain, 5)}
+               if strain is not None else {}),
             # only a SEMANTIC point with no vector carries this (rim + flagged) — additive, absent otherwise
             **({"r_unknown": True} if r_unknown else {}),
         })
