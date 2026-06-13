@@ -30,7 +30,6 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   const [bind, setBind] = useState<string>('')   // the LENS (binding id); '' = the data-driven default
   const [err, setErr] = useState('')
   const [live, setLive] = useState(true)     // the centre is NOW — and now MOVES (the involuntary axis)
-  const [beat, setBeat] = useState(0)        // ticks each refresh so the live dot pulses
   const [at, setAt] = useState<number | null>(null)          // S/G3 time scrubber — epoch secs (null = live NOW)
   const [center, setCenter] = useState<string | null>(null)  // S/G3 spatial re-centre — an address (null = temporal NOW)
   const nowAnchorRef = useRef(Date.now() / 1000)             // the live "now" epoch — the scrub-math anchor
@@ -52,26 +51,37 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   const radial = (p: ProjPoint) =>
     frame === 'now' ? Math.pow(p.r, 1 / zoom) : frame === 'day' ? p.phases.day : p.phases.week
 
-  // The centre is NOW — so NOW must keep moving. A live re-fetch re-derives every radius from the
-  // advancing present and streams in events that landed since: the projection as an organ, not a
-  // photograph. Pausable (the operator can freeze the frame to study it). Pure read.
+  // The centre is NOW — so NOW must keep moving. The 15s POLL is retired: the lattice SUBSCRIBES to
+  // /api/stream (SSE, the shared events.jsonl tap) and re-projects the instant an event is written, so a
+  // new point appears in real time, not up-to-15s late — the projection as an organ, not a photograph.
+  // Frozen (live off) OR scrubbed into the past = no live stream (the frame is held). Pure read.
   useEffect(() => {
-    let alive = true
+    let alive = true, es: EventSource | null = null, deb = 0, lastSeq = -1
     const params = new URLSearchParams()
     if (bind) params.set('binding', bind)
     if (at != null) params.set('at', String(at))       // the scrubbed past (the centre moved back in time)
     if (center) params.set('center', center)            // the spatial re-centre (radius = distance-from-address)
     const url = '/api/projection' + (params.toString() ? `?${params.toString()}` : '')
-    const pull = () => fetch(url)
+    const apply = (d: Projection, markNew: boolean) => {
+      if (!alive) return
+      // a re-projection driven by a NEW event: snapshot current positions so the arrivals DRIFT IN (the
+      // existing tween fades in any seq not present before), while everything already placed holds still.
+      if (markNew && posRef.current.size) animRef.current = { from: new Map(posRef.current), t0: performance.now() }
+      setProj(d); setErr('')
+      lastSeq = d.points.reduce((m, p) => Math.max(m, p.seq || 0), lastSeq)
+    }
+    const fetchProj = (markNew: boolean) => fetch(url)
       .then(r => { if (!r.ok) throw new Error(`projection ${r.status}`); return r.json() })
-      .then(d => { if (alive) { setProj(d); setBeat(b => b + 1); setErr('') } })
+      .then(d => apply(d, markNew))
       .catch(e => { if (alive) setErr(String(e?.message || e)) })
-    pull()
-    // live = NOW advances. Only while tracking the present: a centre scrubbed into the PAST must not be
-    // dragged forward by the interval (it is frozen there until released back to now).
-    if (!live || at != null) return () => { alive = false }
-    const id = setInterval(pull, 15000)   // now advances every 15s; the radius shells re-resolve
-    return () => { alive = false; clearInterval(id) }
+    fetchProj(false).then(() => {
+      if (!alive || !live || at != null) return         // frozen / scrubbed: no live subscription
+      // subscribe from the latest seq we have → only FUTURE events stream (no replay of the whole log).
+      es = new EventSource('/api/stream' + (lastSeq >= 0 ? `?since=${lastSeq}` : ''))
+      es.onmessage = () => { clearTimeout(deb); deb = window.setTimeout(() => fetchProj(true), 220) }  // coalesce bursts
+      // EventSource auto-reconnects on error (gapless via Last-Event-ID) — hold the last frame meanwhile.
+    })
+    return () => { alive = false; clearTimeout(deb); if (es) es.close() }
   }, [live, bind, at, center])
 
   // keep the scrub anchor + span fresh while live-at-NOW, so the scrubber spans the real visible age range
@@ -174,18 +184,19 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       }
     }
     posRef.current = nextPos
-    // NOW — the centre, the one shared point of time. When live, it pulses: a halo that breathes
-    // each refresh, so the advancing present is visible at the origin.
+    // NOW — the centre, the one shared point of time. When live-at-now it BREATHES on a smooth client
+    // clock (performance.now(), continuous) — the advancing present visible at the origin, not a 15s step.
     g.globalAlpha = 1; g.fillStyle = accent
     g.beginPath(); g.arc(cx, cy, 4, 0, Math.PI * 2); g.fill()
     g.strokeStyle = accent
     g.globalAlpha = 0.4; g.beginPath(); g.arc(cx, cy, 9, 0, Math.PI * 2); g.stroke()
-    if (live) {  // the breath of now — a fading expanding ring keyed to the refresh beat
-      const ph = (beat % 2) ? 16 : 12
-      g.globalAlpha = 0.22; g.beginPath(); g.arc(cx, cy, ph, 0, Math.PI * 2); g.stroke()
+    if (live && at == null) {  // the breath of NOW — smooth, on the client clock (a slow ~3s expand/fade)
+      const phase = 0.5 + 0.5 * Math.sin(performance.now() / 1000 * 2)   // 0..1
+      g.globalAlpha = 0.1 + 0.18 * phase
+      g.beginPath(); g.arc(cx, cy, 11 + 6 * phase, 0, Math.PI * 2); g.stroke()
     }
     g.globalAlpha = 1
-  }, [proj, picked, zoom, sel, frame, live, beat])
+  }, [proj, picked, zoom, sel, frame, live, at])
 
   useEffect(() => { draw() }, [draw])
   useEffect(() => {
@@ -199,9 +210,29 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   // routine 15s pull doesn't jitter every point — only a deliberate transform animates).
   const drawRef = useRef(draw)
   useEffect(() => { drawRef.current = draw })
+
+  // the LIVE CLOCK — while live-at-now, a continuous (throttled ~22fps) rAF redraws so NOW breathes
+  // smoothly and SSE arrivals drift in. Stops when frozen/scrubbed (the frame goes static). This is the
+  // smooth client clock that advances NOW between event-driven re-projections.
+  useEffect(() => {
+    if (!(live && at == null)) return
+    let raf = 0, stop = false, last = 0
+    const tick = (t: number) => {
+      if (stop) return
+      if (t - last >= 45) { drawRef.current(); last = t }
+      if (animRef.current && performance.now() - animRef.current.t0 >= 480) animRef.current = null
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => { stop = true; cancelAnimationFrame(raf) }
+  }, [live, at])
+
+  // re-centring (spatial `center` change) and reframing (now↔day↔week) ANIMATE — a short easeOutCubic
+  // tween. When the live clock is running it draws the tween; when frozen, kick a one-shot rAF here.
   useEffect(() => {
     if (!posRef.current.size) return
     animRef.current = { from: new Map(posRef.current), t0: performance.now() }
+    if (live && at == null) return       // the live clock is already redrawing → it animates the tween
     let raf = 0
     const tick = () => {
       drawRef.current()
