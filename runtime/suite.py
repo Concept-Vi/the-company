@@ -10592,6 +10592,163 @@ class Suite:
         from runtime import corpus as _corpus
         return _corpus.read_record(self.store, address)
 
+    def capture_corpus_lenses(self, *, lenses: list, roots: list | None = None,
+                              paths: list | None = None, project: str = "company",
+                              session: str = "capture-lenses", round: str = "1",
+                              max_files: int = 40, max_tokens: int = 768,
+                              force: bool = False) -> dict:
+        """THE MULTI-LENS CAPTURE LANE — the capture-schema builder the architecture NAMED but never built
+        (projections.py:5 "a `capture` role's output_schema is built FROM this registry"; suite.py:292 "the
+        capture-role output_schema (model_projections()) … is consumed by the ENGINE lane"). Until now ONLY
+        the single-lens `repo` path existed (ingest_paths → the repo_digest role → the repo space), so the
+        topics/principles/worldview SPACES were DECLARED embeddable lenses with NO producer — empty on disk,
+        and find_relations over them returned nothing. This builds the missing producer.
+
+        ONE dynamic output_schema is built FROM the registry (projection_registry.model_projections() ∩ the
+        requested `lenses`): one field per lens, its SHAPE from the lens `field` ('array'→list[str], else a
+        str) and its render instruction from the lens `desc` (render-NOT-judge, K3). That schema + a prompt
+        assembling each lens's desc become a FIREABLE in-memory Role — NOT a roles/ file: the schema is
+        per-call DATA derived from the registry (the exact reason model_projections() exists; a static file
+        would re-hardcode the lens set this lane must read live). The role is fanned over file units
+        (cognition.run_items — the SAME swarm ingest_paths uses), and each unit's per-lens field is
+        captured+embedded into THAT lens's space via self.capture_corpus (→ embed_corpus_to_spaces →
+        build_index(space=)). REUSE-DON'T-PARALLEL: corpus.walk_files + cognition.run_items +
+        self.capture_corpus — every primitive is the proven one; the multi-lens SIBLING of the single-lens
+        repo path, never a second vector path.
+
+        `lenses` (REQUIRED — no default; fail loud rather than guess a unit-inappropriate set): the lens ids
+        to capture. EACH must be in the registry, produced_by=='model', AND embeds==True (only a declared
+        SPACE may be captured into one) — else RAISE (registry-is-truth; never capture into a non-space).
+        The lens set is UNIT-TYPE-scoped by the CALLER: these file-describing lenses (topics/principles/
+        worldview/repo) take FILE units; the exchange-level `history` lens takes conversation units (a
+        different driver) — passing `history` here would describe a file AS IF it were an exchange, so the
+        caller owns that match (the method captures whatever lenses you ask over whatever units you give).
+
+        INCREMENTAL (resume-safe — ingest_paths' bounded-batches-compose-to-full-coverage discipline): a
+        (file, lens) pair is SKIPPED when its embedded address (store.space_address(code://path, lens)) is
+        already in that space's index AND force is False — a re-run only does the not-yet-captured pairs. A
+        file is MODEL-RUN iff ANY requested lens is not-yet-captured for it (one model call fills all its
+        lenses); only the not-yet-captured lenses are then written. `max_files` bounds one call; `remaining`
+        is reported so the caller knows to call again.
+
+        Returns {walked, skipped_done, model_run, captured_pairs, per_space:{lens:n}, remaining, failed,
+        spaces_now:{lens: indexed_count}} — the populated space counts ARE the by-use verification. THE
+        FLOOR: the model runs only inside the role; this emits no resolve/approve/dispatch, launches no
+        claude -p."""
+        from runtime import cognition as _cog
+        from runtime import corpus as _corp
+        from store.vector_index import content_hash as _chash
+        from runtime.roles import Role
+        from pydantic import Field, create_model
+        from typing import List
+
+        # 1) RESOLVE + VALIDATE the lens set FROM the registry (registry-is-truth, fail loud) ────────────
+        if not lenses:
+            raise ValueError("capture_corpus_lenses: `lenses` is required (no default — the appropriate "
+                             "lens set is unit-type-scoped; fail loud rather than guess).")
+        model_ids = {p.id for p in self.projection_registry.model_projections()}
+        emb_ids = {p.id for p in self.projection_registry.embeddable()}
+        lens_objs = []
+        for lid in lenses:
+            if lid not in self.projection_registry:
+                raise ValueError(f"capture_corpus_lenses: lens {lid!r} is not a discovered projection "
+                                 f"(registry-is-truth — drop a projections/{lid}.py to declare it).")
+            if lid not in model_ids:
+                raise ValueError(f"capture_corpus_lenses: lens {lid!r} is not produced_by=='model' (a "
+                                 f"`code` lens is a lifter's job, not a capture role). Fail loud.")
+            if lid not in emb_ids:
+                raise ValueError(f"capture_corpus_lenses: lens {lid!r} is not embeddable (embeds!=True) — "
+                                 f"only a declared SPACE may be captured into one. Fail loud.")
+            lens_objs.append(self.projection_registry[lid])
+
+        # 2) BUILD the dynamic output_schema + prompt FROM the lens specs ───────────────────────────────
+        field_defs = {}
+        prompt_lines = []
+        for p in lens_objs:
+            if (p.field or "string") == "array":
+                field_defs[p.id] = (List[str], Field(default_factory=list, description=p.desc or p.id))
+                shape_hint = "a JSON array of short strings"
+            else:                                          # text / string / enum → a string field
+                field_defs[p.id] = (str, Field(default="", description=p.desc or p.id))
+                shape_hint = "a string" + (f" (one of: {', '.join(p.enum)})" if p.enum else "")
+            prompt_lines.append(f'  "{p.id}" — {p.desc or p.id} → {shape_hint}.')
+        DynOut = create_model("CaptureLensesOut", **field_defs)
+        prompt = ("Read the supplied file content and DESCRIBE it through each lens below. Return JSON with "
+                  "EXACTLY these fields (DESCRIBE, do NOT judge — render what the file IS / expresses / "
+                  "assumes, never whether it is good or correct):\n"
+                  + "\n".join(prompt_lines)
+                  + "\nIf a lens genuinely does not apply, use an empty array/string — never invent.\n"
+                  "File content:\n{utterance}")
+        role = Role(id="capture_lenses",
+                    spec={"id": "capture_lenses", "label": "Capture lenses (multi-lens corpus capture)",
+                          "op": "generate", "input_addresses": ["utterance"]},
+                    prompt_template=prompt, output_schema=DynOut, op="generate")
+
+        # 3) WALK the units (reuse the ONE walk) + read explicit paths (fail loud on an explicit path) ───
+        files = _corp.walk_files(roots) if roots else []
+        if paths:
+            for pth in paths:
+                try:
+                    t = open(pth, encoding="utf-8").read()
+                except (UnicodeDecodeError, OSError) as e:
+                    raise ValueError(f"capture_corpus_lenses: cannot read {pth!r} ({e.__class__.__name__}) "
+                                     f"— fail loud, never a silent skip of an EXPLICIT path.") from e
+                files.append({"path": os.path.normpath(pth), "text": t[:_corp.WALK_MAX_CHARS]})
+        walked = len(files)
+        for f in files:
+            f["hash"] = _chash(f["text"])
+
+        # 4) INCREMENTAL — which (file, lens) pairs still need capture (the persisted index IS the truth) ─
+        space_have = {p.id: set(self.store.index_addresses(space=p.id)) for p in lens_objs}
+        def _todo(f):
+            if force:
+                return [p.id for p in lens_objs]
+            return [p.id for p in lens_objs
+                    if self.store.space_address(f"code://{f['path']}", p.id) not in space_have[p.id]]
+        pending = [(f, _todo(f)) for f in files]
+        pending = [(f, td) for (f, td) in pending if td]   # a file with NO todo lens is already fully done
+        skipped_done = walked - len(pending)
+        remaining = max(0, len(pending) - max_files)
+        pending = pending[:max_files]
+        spaces_now = lambda: {p.id: len(self.store.index_addresses(space=p.id)) for p in lens_objs}
+        if not pending:
+            return {"walked": walked, "skipped_done": skipped_done, "model_run": 0, "captured_pairs": 0,
+                    "per_space": {}, "remaining": remaining, "failed": [], "spaces_now": spaces_now()}
+
+        # 5) FAN the dynamic role over the pending file units (the swarm — RESIDENT_MODEL @ :8000) ───────
+        units = [f"FILE {f['path']}:\n\n{f['text']}" for (f, _td) in pending]
+        res = _cog.run_items(role, units, self.store, turn_id=f"capture-lenses-{session}",
+                             max_tokens=max_tokens)
+        resolved = res.resolved if isinstance(res.resolved, dict) else {i: v for i, v in enumerate(res.resolved)}
+
+        # 6) FAN each unit's per-lens field into capture_corpus records (one record per (file, lens)) ────
+        records = []
+        for i, (f, td) in enumerate(pending):
+            out = resolved.get(i)
+            if not out:                                    # a failed/empty unit — NAMED in `failed` below
+                continue
+            if not isinstance(out, dict):
+                out = out.model_dump() if hasattr(out, "model_dump") else {}
+            for lid in td:
+                val = out.get(lid)
+                if val in (None, "", [], {}):              # an empty lens output is not embeddable — skip it
+                    continue
+                records.append({"source_address": f"code://{f['path']}", "output": val,
+                                "kind": "capture", "projection": lid, "source_hash": f["hash"]})
+        if records:
+            self.capture_corpus(records, project=project, session=session, round=round)
+
+        # 7) the by-use artifact — per-space capture counts + the failures NAMED (no invisible failed unit) ─
+        per_space: dict = {}
+        for r in records:
+            per_space[r["projection"]] = per_space.get(r["projection"], 0) + 1
+        fail_by_i = {fi: err for (fi, err) in (res.failed or [])}
+        failed_files = [{"path": pending[fi][0]["path"], "error": str(err)[:200]}
+                        for fi, err in fail_by_i.items() if fi < len(pending)]
+        return {"walked": walked, "skipped_done": skipped_done, "model_run": len(pending),
+                "captured_pairs": len(records), "per_space": per_space, "remaining": remaining,
+                "failed": failed_files, "spaces_now": spaces_now()}
+
     def list_corpus(self, *, project: str | None = None) -> list[dict]:
         """D5 — the DISCOVERED corpus records: a READ-TIME PROJECTION over the ONE event log (the
         run-index sibling, filtered to `corpus.record`), dedup-on-read (resume-safe, latest-seq wins),

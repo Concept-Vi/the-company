@@ -121,12 +121,31 @@ Zero code today. The structure↔meaning gap.
 - **FORM** — strain reads as visible tension (the gate inbox / drift / axis-growth signal), not a
   number; on tokens. ☐ by rubric
 
-## GROUP 8 · ABILITY — EMBEDDING SUBSTRATE LIVE 🔴 (gates Groups 6,7,9,11)
-Mechanism complete; NO embedder resident now (ports HTTP 000); only stale default vectors on disk.
-- **FUNCTION** — an embedder up via `company up`; a capture+embed pass populates the named Group-L
-  spaces (topics/principles/worldview/repo); index freshness confirmed
-  (`vector_index.index_staleness`). ☐ by use (coordinate with the retrieval/ops session)
-- **FORM** — n/a (substrate). ☐
+## GROUP 8 · ABILITY — EMBEDDING SUBSTRATE LIVE ✅ (2026-06-14; verified by use, unblocks 6,7,9,11)
+CORRECTION of the prior "mechanism complete" premise: the mechanism was NOT complete. The single-lens
+`repo` path existed (ingest_paths → repo_digest → repo space) and `history` was populated, but the
+embeddable lenses topics/principles/worldview had NO producer — declared spaces, EMPTY on disk (0 each).
+The capture-schema builder the architecture NAMED (projections.py:5 / suite.py:292 "output_schema built
+FROM model_projections()") was never built. So Group 8 was a BUILD, not a bring-up. Built it.
+- **FUNCTION** ✅ by use —
+  · embed-bge UP via `company up embed-bge` (no --evict; co-fits chat-4b on the 16GB card — needs ~4.9G,
+    7.0G free); HEALTHY on :8001 (BGE-M3, verified `/health`→200).
+  · `Suite.capture_corpus_lenses` (runtime/suite.py) — the MULTI-LENS capture lane: builds ONE dynamic
+    output_schema FROM the registry (model_projections ∩ requested lenses), fans it over file units
+    (run_items @ chat-4b :8000), captures+embeds each lens field into its space (capture_corpus →
+    embed_corpus_to_spaces → build_index(space=)). REUSE: walk_files + run_items + capture_corpus, no
+    parallel vector path. Fail-loud: a non-registry / non-model / non-embeddable lens RAISES. Incremental
+    (resume-safe; bounded batches compose to full coverage).
+  · POPULATED: topics/principles/worldview = 162 each (full backend corpus: runtime/store/contracts/ops/
+    roles/projections/fabric/nodes/mcp_face), real BGE-M3 1024-dim vectors, 0 failures; content is
+    meaningful + render-not-judge (verified: topics.py → topics=["content lens","vector space",…]);
+    queryable via `query_corpus(space=…)` (live :8001 cosine). repo=644, history=1464 pre-existing.
+  · index freshness CONFIRMED via `vector_index.index_staleness` (extended with `space=` param):
+    topics/principles/worldview fresh=True (162 corpus==162 indexed, 0 missing/changed/extra), repo
+    fresh=True (644==644). The 20-check staleness regression still passes (space=None byte-identical).
+  · FOLLOW-ON (this beat): acceptance suite for the new lane + index_staleness(space=); broader-corpus
+    coverage (frontend .tsx / docs) extends via the incremental lane on later fires.
+- **FORM** — n/a (substrate). ✅
 
 ## GROUP 9 · ABILITY — TWO-GRAVITY SEPARATOR 🔴 (UN-GATED 2026-06-13; needs Group 8 + the AI-tells)
 Mechanism named; no instruction-lens embedding; transport carries no framing parameter.

@@ -172,7 +172,7 @@ def query_index(store, query_vector, *, k=5, with_note=False, space=None):
     return {"ranked": ranked, "note": f"ranked {len(ranked)} of {len(corpus)} indexed addresses by cosine ({_scope})"}
 
 
-def index_staleness(store, corpus, *, model=None) -> dict:
+def index_staleness(store, corpus, *, model=None, space=None) -> dict:
     """READ-ONLY staleness check: does the persisted vector index still reflect `corpus`, WITHOUT a
     rebuild? A SIBLING of build_index/query_index — but it embeds NOTHING, touches NO network, never
     calls the :8001 embedder. It only compares content_hashes, so the caller (query_index / consult /
@@ -188,6 +188,14 @@ def index_staleness(store, corpus, *, model=None) -> dict:
     path here; the hash lives on the per-address record). `model=` is accepted for signature symmetry
     with build_index/query_index but does NOT enter the comparison — staleness is content_hash-only.
 
+    SPACE (additive — default unchanged): `space=None` (the default) interrogates the DEFAULT/unspaced
+    index, BYTE-IDENTICAL to before (store.space_address(a, None)==a, store.index_addresses(None)=the bare
+    default set). `space="<proj>"` interrogates ONE projection space (Group L: topics/principles/worldview/
+    repo/…): a corpus item's address `a` is mapped to its PERSISTED key store.space_address(a, space) (the
+    `vec://<a>#space=<proj>` form build_index wrote), so a per-space freshness verdict reads the SAME keyed
+    entries the capture pass persisted — never the default corpus (no cross-space leak). `missing` names the
+    bare item addresses (human-readable); `extra` names the verbatim orphaned index keys.
+
     FAIL LOUD (rule 4): a corpus item missing `address` or `text` RAISES (KeyError-shaped ValueError
     naming the offending item) — NEVER a silent skip (build_index's tolerant item.get is the build
     path's choice; an honest staleness verdict cannot quietly drop an item it failed to read).
@@ -196,7 +204,7 @@ def index_staleness(store, corpus, *, model=None) -> dict:
         {"fresh": bool,                      # True iff missing/changed/extra are ALL empty
          "missing": [addr, ...],             # in corpus but NOT in the index (never embedded)
          "changed": [addr, ...],             # in both, but the stored content_hash differs (re-embed due)
-         "extra":   [addr, ...],             # in the index but NO longer in the corpus (orphaned entry)
+         "extra":   [key, ...],              # in the index but NO longer in the corpus (orphaned entry)
          "counts":  {"corpus": N, "indexed": M, "missing": .., "changed": .., "extra": ..}}
     All three lists are sorted (a stable, comparable verdict).
     """
@@ -207,18 +215,20 @@ def index_staleness(store, corpus, *, model=None) -> dict:
             raise ValueError(f"index_staleness: malformed corpus item (needs 'address' and 'text'): {item!r}")
         corpus_hashes[item["address"]] = content_hash(item["text"])
 
-    # 2) the persisted side — read by ADDRESS (the stored content_hash lives on the per-address record)
-    indexed = set(store.index_addresses())
-    corpus_addrs = set(corpus_hashes)
+    # 2) the persisted side — read by the SPACE-KEYED address (space=None → bare, byte-identical to before).
+    #    Each corpus item address maps to the persisted key build_index wrote (store.space_address).
+    indexed = set(store.index_addresses(space=space))
+    keyed = {addr: store.space_address(addr, space) for addr in corpus_hashes}
+    corpus_keys = set(keyed.values())
 
-    missing = sorted(corpus_addrs - indexed)                 # in corpus, never indexed
-    extra = sorted(indexed - corpus_addrs)                   # indexed, no longer in corpus
-    changed = sorted(addr for addr in (corpus_addrs & indexed)
-                     if (store.get_vector(addr) or {}).get("content_hash") != corpus_hashes[addr])
+    missing = sorted(a for a, k in keyed.items() if k not in indexed)        # in corpus, never indexed
+    extra = sorted(indexed - corpus_keys)                                    # indexed, no longer in corpus
+    changed = sorted(a for a, k in keyed.items()
+                     if k in indexed and (store.get_vector(k) or {}).get("content_hash") != corpus_hashes[a])
 
     fresh = not missing and not changed and not extra
     return {"fresh": fresh, "missing": missing, "changed": changed, "extra": extra,
-            "counts": {"corpus": len(corpus_addrs), "indexed": len(indexed),
+            "counts": {"corpus": len(corpus_hashes), "indexed": len(indexed),
                        "missing": len(missing), "changed": len(changed), "extra": len(extra)}}
 
 
