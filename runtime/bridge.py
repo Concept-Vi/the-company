@@ -50,7 +50,8 @@ BRIDGE_ROUTES = (
     "/api/graphs", "/api/object_info", "/api/cognition_info", "/api/types", "/api/models",
     "/api/chat-models", "/api/fit", "/api/surfaced", "/api/events", "/api/now", "/api/chat",
     "/api/conversations", "/api/conversation", "/api/rhm-config", "/api/inbox", "/api/last-change",
-    "/api/self-change-log", "/api/panels", "/api/capabilities", "/api/ui_info", "/api/scope",
+    "/api/self-change-log", "/api/panels", "/api/capabilities", "/api/capabilities/introspection",
+    "/api/ui_info", "/api/scope",
     "/api/address-help", "/api/context", "/api/up-translate", "/api/self-changes-at", "/api/annotations",
     "/api/presentation-pref", "/api/chats", "/api/address-history", "/api/stale-at", "/api/ref-versions",
     "/api/review/current", "/api/review/status", "/api/journey/replay", "/api/journeys", "/api/voice",
@@ -774,6 +775,26 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.list_panels()))
             elif path == "/api/capabilities":
                 self._send(200, json.dumps(SUITE.capabilities()))
+            elif path == "/api/capabilities/introspection":  # Mirror-Registry LANE-PROJECTION: the capability registry projection
+                # Projects the CapabilityRegistry snapshot (counts + postures + entries) — the same
+                # source as the MCP `capability` tool and the cap:// resolver. registry-is-truth:
+                # the snapshot is the engine.project() view of the in-memory CapabilityRegistry.
+                # 🟡 lead-verify-queued: live when Suite.capability_registry is populated by
+                # LANE-CAP-WIRE (Suite.__init__ calls set_capability_registry after discovery).
+                # A missing registry raises a teaching error (fail loud, never silent empty).
+                try:
+                    from introspection.registry import capability_registry as _cap_reg
+                    cap_reg = _cap_reg()
+                    self._send(200, json.dumps({"ok": True, **cap_reg.snapshot()}))
+                except RuntimeError as _e:
+                    self._send(200, json.dumps({
+                        "ok": False,
+                        "error": str(_e),
+                        "note": ("Mirror-Registry LANE-CAP-WIRE not yet active in this Suite — "
+                                 "Suite.__init__ must call set_capability_registry() once after "
+                                 "CapabilityRegistry().discover() returns. This route is built; "
+                                 "the live registry snapshot is queued for the lead to verify.")
+                    }))
             elif path == "/api/ui_info":                   # C1: the UI-component registry (sibling of object_info)
                 self._send(200, json.dumps(SUITE.ui_info()))
             elif path == "/api/registry/proposals":        # RG8: the pending registry-proposal batch (read)

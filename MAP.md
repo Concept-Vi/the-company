@@ -56,7 +56,7 @@ flowchart TD
 | `store/` | addressed store + resolver + events/chat/surfaced/panels | [[store — constitution]] | C1, C4 |
 | `runtime/` | scheduler + memo + compile + the **Suite** (engine + RHM + self-mod) | [[runtime — constitution]] | S1, C5, C6, S7 |
 | `fabric/` | model binding + guards + `list_models` (the model registry) | [[fabric — constitution]] | S6 |
-| `mcp_face/` | agent face (generic verbs) | [[mcp_face — constitution]] | C7 |
+| `mcp_face/` | agent face (generic verbs); `tools/introspection.py` = the `capability(op=list/get/search/describe/snapshot)` tool projecting from the CapabilityRegistry (Mirror-Registry LANE-PROJECTION) | [[mcp_face — constitution]] | C7, Mirror-Registry System |
 | `nodes/` | the node library (incl. `portal`, `rhm_mode`, `model_of_tim`) | [[nodes — constitution]] | C2 |
 | `voice/` | two-way voice — STT provider + local TTS | [[voice — constitution]] | — |
 | `canvas/` | the frontend + the extensions runtime | [[canvas — constitution]] | S5, D3 |
