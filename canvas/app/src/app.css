@@ -1878,7 +1878,7 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
 .lattice-foot button, .lattice-foot select, .lattice-foot input { pointer-events: auto; }
 .lattice-foot .lattice-frames { flex-wrap: wrap; row-gap: 6px; justify-content: flex-end; }
 .lattice-foot .lf-slider { display: inline-flex; align-items: center; gap: 4px; }
-.lattice-foot .lf-slider .lf-ic { color: var(--dim); font-size: 11px; line-height: 1; }
+.lattice-foot .lf-slider .lf-ic { color: var(--dim); font-size: 13px; line-height: 1; }
 /* input[type=range] specificity (0,3,1) so these beat the generic .lattice-foot input[type=range] rule */
 .lattice-foot input[type=range].lf-scrub { width: 112px; accent-color: var(--acc); cursor: pointer; }  /* time = the gold (privileged) axis */
 .lattice-foot input[type=range].lf-zoom { width: 92px; accent-color: var(--dim); cursor: pointer; }     /* zoom = secondary, de-emphasised */
