@@ -27,13 +27,15 @@ ruins the system"). **Expand-before-harden:** the brain docs are captured design
 
 ---
 
-## GROUP 1 · INSTRUMENT — THE FLOOR (the variable engine) 🟡→needs the suite
+## GROUP 1 · INSTRUMENT — THE FLOOR (the variable engine) ✅ (suite committed 6615e53)
 `runtime/projection.py:project` + `BindingRegistry` + `bindings/` resolve a frame from a swappable
 lens; sectors data-driven; lock x=2π/n re-divides evenly.
 - **FUNCTION** — the angle/depth/now/binding floor is a pure read over the store; no hardcoded
   sectors; a COMMITTED acceptance suite proves the invariants (r∈[0,1], θ inside its sector wedge,
-  even re-division at every n, lock holds, kind-group '*' remainder catches everything). ☐ by use
-- **FORM** — n/a (backend). The suite IS the form of "done" here. ☐
+  even re-division at every n, lock holds, kind-group '*' remainder catches everything). ✅ by use —
+  `tests/projection_instrument_acceptance.py`, 26 passed 0 failed; deliberately does NOT pin the
+  stubs (rings:4, time-radius) that G2/G6 replace.
+- **FORM** — n/a (backend). The suite IS the form of "done" here. ✅
 
 ## GROUP 2 · INSTRUMENT — THE SQUARE/STRUCTURE HALF (the grid) 🔴
 Today: a per-point depth scalar + `rings:4` hardcoded. The seed's m/2 concentric circles + i,j grid.
@@ -57,14 +59,19 @@ project() accepts now= but center:'now' is hardcoded; the handler never override
   retired; a new event appears the instant it's written; now advances by a smooth client clock. ☐ by use
 - **FORM** — the live arrival reads as motion (a point drifting in), not a flicker/reload. ☐ by rubric
 
-## GROUP 5 · INSTRUMENT — THE FORM FACE (the lattice on the design system) 🔴 (real debt)
-LatticeView.tsx is the LONE region still on the dead GitHub-dark palette (undefined --accent/--ink-dim
-→ hardcoded fallbacks; ~37 CSS + 8 tsx literals).
+## GROUP 5 · INSTRUMENT — THE FORM FACE (the lattice on the design system) ✅ (committed dc3378a)
+LatticeView.tsx WAS the LONE region still on the dead GitHub-dark palette (undefined --accent/--ink-dim
+→ hardcoded fallbacks; 37 CSS + 6 tsx literals). Repaid.
 - **FUNCTION** — unchanged behaviour through the rebuild (lens switch, frames, forager seam,
-  recentre, live all still work). ☐ by use
-- **FORM** — chrome rebuilt on kit primitives + corpus tokens; token() repointed to the real names
-  (--acc/--tx/--bg); design-lint clean against BOTH app.css AND LatticeView.tsx; the angle-hue
-  PRESERVED; verified by a separate design-critic on the WHOLE screen at desktop AND 390×844. ☐ by rubric
+  live/frozen, zoom, pick→card, select→set-bar→hand-to-builder all still work). ✅ by use — every
+  interaction driven at 1440×900 AND 390×844; builder-context fires; mobile card docks bottom-sheet.
+- **FORM** — chrome rebuilt on kit primitives (Badge pills, EmptyState error) + corpus tokens;
+  the draw() palette resolved from --acc/--tx/--bg/--line/--tx-3 (no hex), live-dot off-palette
+  green → gold, box-shadows → --shadow, ls-go text → --ink-accent; design-lint CLEAN on
+  LatticeView.tsx (0) and the lattice's app.css contribution (37→0); the angle-hue PRESERVED;
+  a SEPARATE design-critic passed the WHOLE screen at desktop AND 390×844 (pixel-verified). ✅ by rubric
+  NOTE (out of scope): 2 pre-existing #fff remain in app.css (.review-frame/.studio-frame) — deliberate
+  white 'paper' for rendering mockup HTML, not the lattice; left intentionally.
 
 ## GROUP 6 · ABILITY — THE CIRCLE / SEMANTIC RADIUS 🔴 (needs a resident embedder)
 projection.py:155 is a no-op stub (both branches = age).
@@ -136,9 +143,9 @@ freeze a variable Tim deliberately left free (the hardcoding reflex). Resolution
 ## PRIORITY ORDER (dependency; instrument-first then ability — the loop walks this)
 
 0. **Model calls DISSOLVED** (§17; Tim confirmed) — no gate; the whole sequence is buildable. Group 9's only input is Tim's AI-tells description.
-1. **Group 1** — the acceptance suite (the regression floor; net-new; first so nothing silently breaks).
-2. **Group 5** — the FORM rebuild (file-disjoint from backend; can run parallel to 1; the real debt).
-3. **Group 3** — time-freed centre (small; reuses metrics; roll-forward planning later reuses it).
+1. **Group 1** — ✅ DONE (6615e53) — the acceptance suite (regression floor; 26 invariant teeth).
+2. **Group 5** — ✅ DONE (dc3378a) — the FORM rebuild (lattice onto the corpus design system).
+3. **Group 3** — ← NEXT — time-freed centre (small; reuses metrics; roll-forward planning later reuses it).
 4. **Group 4** — real-time pub-sub (small; depends on the surface).
 5. **Group 2** — the structural square half (completes the instrument's structure; no embedder needed).
 6. **Group 8** — embedding substrate live (operational; gates all semantic ability).
