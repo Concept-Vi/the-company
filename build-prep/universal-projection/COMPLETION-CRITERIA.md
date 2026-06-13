@@ -204,12 +204,15 @@ costume) — only REAL persisted directed edges order sectors; registries have n
   bridge) divides the wheel by the projection registry (history/repo/principles/topics/worldview/what + '—');
   order_by=edge topologically orders a real graph (review-1780773666-26: 52 nodes/26 edges, 0 edge
   violations, stable). `tests/projection_instrument_acceptance.py` +12 invariants (53 total).
-- **FORM** 🟡 — `bindings/by_lens.py` renders the registry-divided wheel (sectors = the lenses, a meaningful
-  division) — the angle-from-a-registry face, LIVE + selectable. order_by=edge is verified by use over real
-  graph wires BUT not yet FE-legible: the only real-edge entity-sets are the graphs (52–118 nodes → an
-  unreadable wheel), and the registries have no inter-row edges. A legible edge-ordered FE view awaits a
-  legibly-sized edged entity-set; EDGES-BETWEEN-REGISTRY-ROWS is the SEED §95 growth front ("grow the
-  registry-relation model") — built honestly, never a faked sequence. (design-critic verifying by_lens.)
+- **FORM** 🟡 — the ANGLE-FROM-A-REGISTRY face is ✅: `bindings/by_lens.py` renders the registry-divided
+  wheel (sectors = the projection lenses + an honest '—' remainder), SEPARATE design-critic PASS at BOTH
+  viewports (1440×900 + 390×844): 7 labelled wedges, legible/unclipped, meaningful division, clean toggle
+  back to the kind-wheel, design tokens. What KEEPS Group 10 at 🟡: the FORM bar's "sectors arranged by their
+  real EDGES" — order_by=edge is verified by use over real graph wires (0 violations, stable) BUT not yet
+  FE-legible (the only real-edge entity-sets are the graphs at 52–118 nodes → an unreadable wheel; the
+  registries have no inter-row edges). A legible edge-ordered FE view awaits a legibly-sized edged
+  entity-set; EDGES-BETWEEN-REGISTRY-ROWS is the SEED §95 growth front ("grow the registry-relation model")
+  — built honestly, never a faked sequence.
 
 ## GROUP 11 · ABILITY — MULTI-SCALE EMBEDDING PYRAMID 🔴
 No sentence/turn chunker; corpus is unit-level only.
