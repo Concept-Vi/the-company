@@ -1894,6 +1894,19 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
   border: 1px solid var(--line-2); border-radius: 6px; white-space: nowrap; }
 .lattice-card .lc-meaning { border-color: var(--acc); color: var(--acc); }
 .lattice-card .lc-strain { color: var(--acc); opacity: 0.92; }
+/* THE SCALE AXIS (Group 11): the rung ladder — a SEGMENTED control stepping the resolution (units ↔ coarse
+   theme rungs). Visually distinct from the radial ⌕ zoom slider — this changes which RUNG resolves, not the
+   magnification (the advisor's collision avoided). Tokens only (design-lint = 0). */
+.lattice-foot .lf-rungs { display: inline-flex; align-items: center; gap: 0; border: 1px solid var(--line);
+  border-radius: 6px; overflow: hidden; }
+.lattice-foot .lf-rungs .lf-ic { color: var(--dim); font-size: 12px; padding: 0 5px; line-height: 1; }
+.lattice-foot .lf-rung { background: none; border: none; border-left: 1px solid var(--line);
+  padding: 3px 8px; color: var(--dim); cursor: pointer; font: 10px ui-monospace, monospace; }
+.lattice-foot .lf-rung.on { color: var(--acc); background: var(--line-2); }
+/* a THEME's card readout (size/finer/exemplar) + the zoom-into-theme action — accent-tinted like the
+   meaning-field actions (the scale + circle axes share the semantic accent). */
+.lattice-card .lc-theme { color: var(--acc); opacity: 0.92; }
+.lattice-card .lc-zoomin { border-color: var(--acc); color: var(--acc); }
 .lattice-wrap .lattice-hint { position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
   max-width: min(92%, 520px); pointer-events: auto; background: var(--panel); color: var(--tx-2);
   border: 1px solid var(--acc); border-radius: 8px; padding: 6px 11px; text-align: center;

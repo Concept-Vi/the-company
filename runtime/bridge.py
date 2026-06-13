@@ -430,6 +430,137 @@ SUITE = Suite(FsStore(fcfg.STORE_DIR),
               NodeRegistry().discover([os.path.join(ROOT, "nodes")]))
 DEMO = "codebase"
 
+
+def _semantic_projection(q, binding, reg, evs, center, now, lim):
+    """THE CIRCLE (Group 6) + THE SCALE AXIS (Group 11) for the /api/projection semantic binding. Returns
+    (status, body). The store/registry I/O lives HERE; project() stays PURE (vectors ride in keyed by the
+    SAME _addr_of the projector uses).
+
+    SCALE (Group 11): a binding whose `space` has a built pyramid gains a RUNG axis. `?rung=` selects it:
+      · absent / 'unit' → the UNIT meaning-field (Group 6, unchanged) — every embedded item a point.
+      · a coarse k present in the pyramid (e.g. 8, 32) → the THEME meaning-field: the points are the rung's
+        cluster CENTROIDS (scale.rung_points), projected by the SAME instrument (same semantic radius, same
+        angle, same centre) — "zoom changes which rung RESOLVES", not which renderer runs. Each coarse point
+        carries its theme metadata (size / exemplar / member-count / finer children) so the surface can size
+        + label it and zoom INTO it. EVERY response (unit or coarse) carries `scale` (space, current rung,
+        the available rungs, n_units) so the FE can render the zoom ladder; absent when no pyramid is built.
+    Fail-loud: a requested coarse rung with no built pyramid is simply ignored (falls to the unit field — the
+    ladder is absent, never a faked coarse field); a malformed centre at a coarse rung → 400 (same as unit).
+    """
+    from datetime import datetime, timedelta, timezone
+    from runtime.projection import project as _uproject, _addr_of as _proj_addr
+    from runtime import scale as _scale
+
+    space = binding.get("space")
+    rung = (q.get("rung") or "").strip()
+    pyr = _scale.load_pyramid(SUITE.store, space) if space else None
+    rungs = [r["k"] for r in pyr["rungs"]] if pyr else []
+    coarse_k = int(rung) if (rung.isdigit() and int(rung) in rungs) else None
+
+    def attach_scale(body, current):
+        if pyr:
+            body["scale"] = {"space": space, "rung": current, "rungs": rungs,
+                             "n_units": pyr.get("n_units")}
+        return body
+
+    def centre_vector(c):
+        """Resolve a centre's vector PORTABLY across rungs (so stepping the ladder while centred never 400s):
+        a UNIT centre lives in the unit `space`; a THEME centre (`cluster://<space>/k<K>/<label>`) lives in
+        its OWN rung's scale space — fetched from there regardless of which rung is being VIEWED (a k8 theme
+        stays a valid centre at the k32 or unit rung — its centroid ranks the finer points by distance from
+        it). Falls back to the viewing coarse rung's space for a same-rung theme centre. None if truly absent."""
+        if not c:
+            return None
+        r = SUITE.store.get_vector(SUITE.store.space_address(c, space))            # a UNIT centre
+        if r and r.get("vector"):
+            return r["vector"]
+        if c.startswith("cluster://"):                                            # a THEME centre — its NATIVE rung
+            seg = c.split("cluster://", 1)[1].split("/")                          # [space, 'k<K>', label]
+            if len(seg) >= 2 and seg[1].startswith("k"):
+                r = SUITE.store.get_vector(SUITE.store.space_address(c, f"scale:{space}:{seg[1]}"))
+                if r and r.get("vector"):
+                    return r["vector"]
+        if coarse_k is not None:                                                  # same-rung theme centre
+            r = SUITE.store.get_vector(SUITE.store.space_address(c, f"scale:{space}:k{coarse_k}"))
+            if r and r.get("vector"):
+                return r["vector"]
+        return None
+
+    # ── COARSE RUNG: the meaning-field over THEMES (cluster centroids), not units ──────────────────────
+    if coarse_k is not None:
+        pts = _scale.rung_points(SUITE.store, space, coarse_k)          # raises only on a corrupt pyramid
+        meta = {p["source"]: p for p in pts}
+        # EVERY pseudo-event needs a parseable ts ≤ now — project() filters by the time scrubber (t <= now)
+        # before the semantic radius runs, so a ts-less event is silently dropped. Stamp by SIZE rank (bigger
+        # theme = more recent) so the no-centre TIME layout orders by size; the with-centre SEMANTIC radius
+        # ignores ts (only needs it parseable). `base` is concrete (now, or real-now when no ?at= was given).
+        base = now or datetime.now(timezone.utc)
+        size_rank = {p["source"]: i for i, p in enumerate(sorted(pts, key=lambda p: -p["size"]))}
+        # pseudo-events shaped like corpus.record so the semantic projector + _addr_of resolve them; the
+        # cluster address is BOTH address and source_address (so the surface can re-centre / zoom on a theme).
+        cevs = [{"kind": "corpus.record", "projection": space, "seq": i,
+                 "address": p["source"], "source_address": p["source"],
+                 "ts": (base - timedelta(seconds=size_rank[p["source"]])).isoformat(),
+                 "summary": f'{(p["exemplar"] or "").split("/")[-1]}  ·{p["size"]}'}
+                for i, p in enumerate(pts)]
+
+        def enrich(body):
+            for pt in body.get("points", []):
+                m = meta.get(pt.get("source"))
+                if m:
+                    pt["scale_size"] = m["size"]
+                    pt["scale_exemplar"] = m["exemplar"]
+                    pt["scale_members"] = len(m["members"])
+                    if "children_finer" in m:
+                        pt["scale_children"] = m["children_finer"]
+            return body
+
+        if not center:
+            # NO centre — lay the themes out by size (the growth-front proxy via the size-ranked ts above),
+            # flagged needs_center (never a faked meaning-distance), so the surface prompts 'pick a centre'.
+            # Mirrors the unit no-centre case.
+            pend = _uproject(cevs, binding={**binding, "radius_from": "time"}, registry=reg, now=now, limit=lim)
+            pend["binding"]["radius_from"] = "semantic"
+            pend["binding"]["needs_center"] = True
+            pend["binding"]["space"] = space
+            return 200, attach_scale(enrich(pend), coarse_k)
+        # centre given: its vector is a UNIT (unit space) OR a THEME (this rung's centroids) — themes ranked
+        # by meaning-distance from it. The centre need not itself be one of the points (it can be off-stage).
+        vectors = {p["source"]: p["vector"] for p in pts}
+        cv = centre_vector(center)                       # portable across rungs (unit OR a theme's native rung)
+        if cv:
+            vectors[center] = cv
+        try:
+            out = _uproject(cevs, binding=binding, registry=reg, now=now, center=center, limit=lim, vectors=vectors)
+        except ValueError as ve:
+            return 400, {"error": str(ve), "binding": binding.get("id"),
+                         "hint": "this centre has no vector in the lens's space or this rung — pick an "
+                                 "embedded item or a theme as the centre"}
+        return 200, attach_scale(enrich(out), coarse_k)
+
+    # ── UNIT RUNG: the meaning-field over the embedded items (Group 6, unchanged) ─────────────────────
+    uevs = [e for e in evs if e.get("kind") == "corpus.record" and e.get("projection") == space]
+    if not center:
+        pend = _uproject(uevs, binding={**binding, "radius_from": "time"}, registry=reg, now=now, limit=lim)
+        pend["binding"]["radius_from"] = "semantic"
+        pend["binding"]["needs_center"] = True
+        pend["binding"]["space"] = space
+        return 200, attach_scale(pend, "unit")
+    vectors = {}
+    for e in uevs:
+        rec = SUITE.store.get_vector(SUITE.store.space_address(e.get("source_address") or "", space))
+        if rec and rec.get("vector"):
+            vectors[_proj_addr(e)] = rec["vector"]
+    cv = centre_vector(center)                           # unit centre, OR a theme centre (zoom-out-from-a-theme)
+    if cv:
+        vectors[center] = cv
+    try:
+        out = _uproject(uevs, binding=binding, registry=reg, now=now, center=center, limit=lim, vectors=vectors)
+    except ValueError as ve:
+        return 400, {"error": str(ve), "binding": binding.get("id"),
+                     "hint": "this centre has no vector in the lens's space — pick an embedded item as the centre"}
+    return 200, attach_scale(out, "unit")
+
 # ── Group H/I — the always-on activation CALLER (DORMANT by default) ─────────────────────────────
 # ONE long-lived ActivationCaller holds the rollup driver's held cursor (the H3 discipline — a fresh
 # driver per tick would re-consolidate every wave). BOTH the manual POST /api/activation/tick AND the
@@ -738,39 +869,11 @@ class H(BaseHTTPRequestHandler):
                 # ?at= moves the temporal centre into the past (the scrubber); ?center=<address> re-centres
                 # in space. radius_from='time' (age) | 'address' (tree-distance) | 'semantic' (Group 6).
                 if binding.get("radius_from") == "semantic":
-                    # THE CIRCLE (Group 6) — the meaning-field. Scope to the binding's space's CORPUS points
-                    # (each carries a per-space vector + a `source` to re-centre on). The store I/O lives HERE;
-                    # project() stays pure (vectors ride in keyed by the SAME _addr_of the projector uses).
-                    space = binding.get("space")
-                    evs = [e for e in evs if e.get("kind") == "corpus.record"
-                           and e.get("projection") == space]
-                    if not center:
-                        # NO centre chosen yet — NOT a silent fallback: lay the space's items out by recency
-                        # (clickable) + flag needs_center so the surface prompts 'pick a centre', never a
-                        # faked meaning-distance and never an empty 400 wheel.
-                        pend = _uproject(evs, binding={**binding, "radius_from": "time"}, registry=reg,
-                                         now=now, limit=lim)
-                        pend["binding"]["radius_from"] = "semantic"   # the lens IS semantic…
-                        pend["binding"]["needs_center"] = True        # …but awaiting its centre (honest)
-                        pend["binding"]["space"] = space
-                        self._send(200, json.dumps(pend))
-                    else:
-                        vectors = {}
-                        for e in evs:
-                            rec = SUITE.store.get_vector(SUITE.store.space_address(e.get("source_address") or "", space))
-                            if rec and rec.get("vector"):
-                                vectors[_proj_addr(e)] = rec["vector"]
-                        crec = SUITE.store.get_vector(SUITE.store.space_address(center, space))   # the FROM item
-                        if crec and crec.get("vector"):
-                            vectors[center] = crec["vector"]
-                        try:
-                            self._send(200, json.dumps(_uproject(
-                                evs, binding=binding, registry=reg, now=now, center=center,
-                                limit=lim, vectors=vectors)))
-                        except ValueError as _ve:           # centre given but has no vector → fail loud, legible
-                            self._send(400, json.dumps({"error": str(_ve), "binding": binding.get("id"),
-                                                        "hint": "this centre has no vector in the lens's "
-                                                                "space — pick an embedded item as the centre"}))
+                    # THE CIRCLE (Group 6) + THE SCALE AXIS (Group 11) — the meaning-field, at the unit rung
+                    # or a coarse THEME rung (?rung=). All store/registry I/O + the rung resolution live in
+                    # _semantic_projection; project() stays pure. (See the helper for the rung contract.)
+                    _st, _body = _semantic_projection(q, binding, reg, evs, center, now, lim)
+                    self._send(_st, json.dumps(_body))
                 else:
                     # Group 10 — angle_from=<registry/graph>: resolve the entity-set's rows (+ directed edges)
                     # HERE (the store/registry I/O), pass to the pure project(). A REGISTRY's rows come from

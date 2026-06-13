@@ -214,11 +214,40 @@ costume) — only REAL persisted directed edges order sectors; registries have n
   entity-set; EDGES-BETWEEN-REGISTRY-ROWS is the SEED §95 growth front ("grow the registry-relation model")
   — built honestly, never a faked sequence.
 
-## GROUP 11 · ABILITY — MULTI-SCALE EMBEDDING PYRAMID 🔴
-No sentence/turn chunker; corpus is unit-level only.
-- **FUNCTION** — a chunker feeds `build_index(space='scale:<rung>')` per rung (sentence/turn/session/
-  project); a zoom-by-rung query layer; zoom changes which rung resolves. ☐ by use
-- **FORM** — zoom across rungs reads as a continuous scale move, not a mode switch. ☐ by rubric
+## GROUP 11 · ABILITY — MULTI-SCALE EMBEDDING PYRAMID ✅ (both faces verified; the SCALE axis)
+THE REVERSAL (evidence-forced): the spec's "sentence/turn/session/project" rungs were CONVERSATION-shaped;
+the corpus is code-digest-shaped + the per-space probe KILLED lineage as the rung axis — within ONE space
+`session` is CAPTURE-BATCH provenance (ingest-flow/full-repo/g25/smoke-test — which ingest run wrote the unit,
+NOT a semantic nest) and `project` is ONE point per space (company dominates). A centroid over a capture batch
+is noise; a one-point project rung is degenerate. So the honest coarsening is over MEANING (the same circle
+Group 6 built), not provenance: the coarse rung = fewer, larger meaning-regions = CLUSTERS of near points; a
+coarse point = the cluster CENTROID. (Same plausible-but-wrong trap the advisor caught on 6/7/10; the
+distinctness test below was locked BEFORE the render.)
+- **FUNCTION** ✅ by use — `runtime/scale.py`: ONE agglomerative dendrogram (WARD linkage) cut at each rung →
+  the rungs NEST (every fine cluster ⊂ exactly one coarse cluster — independent per-K k-means would NOT;
+  ward not average — average CHAINED 129/162 & 525/644 into one giant, verified on the real topics space;
+  ward gave balanced 9/19/31). Centroids persist via the SAME store.put_vector into `scale:<space>:k<K>` (no
+  parallel index — `query_index` resolves them with the existing cosine); the nesting/membership/exemplar
+  rides a `store.save_scale_pyramid` sidecar. Dependency-free (Lance-Williams, no numpy). `default_rungs`
+  derives a DYADIC ladder from n (SEED §1 m=2^k; topics 162 → [32, 8]). The bridge's `/api/projection?rung=`
+  feeds the rung's centroids to project() as pseudo-events (semantic radius unchanged) — "zoom changes which
+  rung RESOLVES". Centre is PORTABLE across rungs (a theme centre resolves from its native rung; no 400 when
+  stepping). Built LIVE over topics (40 centroids, real exemplars: scheduler/vector_index/README/worldview…);
+  coarse query ≠ fine query proven on real data. `tests/projection_scale_acceptance.py` (29 invariants):
+  nesting, ward-not-chaining, centroid=normed-mean, coarse≠fine over a real store, discriminative, persisted
+  nesting, incremental, fail-loud, derived dyadic rungs.
+- **FORM** ✅ by rubric — a SEGMENTED rung ladder (⊟ units|32|8), distinct from the radial ⌕ zoom (advisor's
+  collision avoided); coarse points render as discs SIZED by member-count + labelled by exemplar (region halos);
+  stepping rungs CROSSFADES (departing rung fades out as the incoming fades in — continuous scale move, not a
+  mode switch); a theme card carries size/finer-count/exemplar + ⊕ zoom-into-theme (steps to the finer rung,
+  centred on the exemplar). SEPARATE design-critic PASS at BOTH viewports (1440×900 + 390×844): scale
+  legibility (8→32→units reads as a genuine grain progression), discs-as-regions, ladder-vs-zoom distinct,
+  token-coherent, responsive. The critic's one FAIL (centre/dense-rung label overprint) was FIXED
+  (collision-aware placement: reserve the centre marker, skip the centred theme's label, biggest-first
+  non-colliding slot, drop-if-no-slot) and re-verified RESOLVED. design-lint: 0 off-token from this change.
+- GROWTH FRONT (honest): raw-source sentence/turn chunking (the corpus is 1-sentence digests → chunking is a
+  no-op here); a richer space (repo=644/history=1464) gets more/larger rungs automatically via default_rungs.
+  The pyramid is RUNTIME data (.data, like every space) — rebuildable via `scale.build_scale_pyramid`.
 
 ## GROUP 12 · MODEL CALLS — DISSOLVED (2026-06-13; Tim confirmed "your logic was actually all correct")
 See SEED-SCALE-PRIMES-SEPARATOR.md §17. The gate is GONE — every "model call" was the lead trying to
@@ -251,5 +280,7 @@ freeze a variable Tim deliberately left free (the hardcoding reflex). Resolution
 8. **Group 7** — strain / forbidden zones (needs 2 + 6).
 9. **Group 10** — the event→row edge + order-from-edges + angle-from-a-registry (the keystone).
 10. **Group 9** — the two-gravity separator (gated on Model Call 2; highest value once unblocked).
-11. **Group 11** — the multi-scale pyramid.
+11. **Group 11** — ✅ DONE (this beat) — the multi-scale pyramid as the SCALE axis: ward-clustered meaning-rung
+    centroids (NOT lineage — evidence-killed), nested rungs, a crossfading rung ladder, design-critic PASS both
+    faces. The ABILITY half's last big beat.
 12. **The small registries + gate surface + 20/80 water-law** — once the axes are chosen.

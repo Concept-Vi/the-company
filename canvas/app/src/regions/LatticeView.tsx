@@ -15,6 +15,10 @@ type ProjPoint = {
   r_unknown?: boolean     // a semantic point with no vector → at the rim, flagged (never silent-dropped)
   r_struct?: number       // STRAIN (Group 7): where it's FILED (structural radius); r is where it MEANS to be
   strain?: number         // |r_struct - r| — the structure↔meaning divergence (SEED §111); 0 = coherent
+  // SCALE (Group 11): a coarse-rung point is a cluster CENTROID (a theme) — it carries how many units it
+  // aggregates (scale_size / scale_members), a real member that NAMES it (scale_exemplar), and the finer
+  // clusters that fold into it (scale_children). Absent on unit-rung points.
+  scale_size?: number; scale_members?: number; scale_exemplar?: string; scale_children?: string[]
 }
 type Projection = {
   now: string; n: number; rings: number; count: number; grid?: number
@@ -24,6 +28,9 @@ type Projection = {
   bindings?: { id: string; label: string }[]
   sectors: { id: string; label: string; from: number; to: number }[]
   points: ProjPoint[]
+  // SCALE LADDER (Group 11): present when the binding's space has a built pyramid. `rung` is the resolved
+  // level ('unit' | a coarse k); `rungs` the available coarse cluster-counts (e.g. [8, 32]); n_units the base.
+  scale?: { space: string; rung: number | string; rungs: number[]; n_units: number }
 }
 
 export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
@@ -33,6 +40,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   const [picked, setPicked] = useState<ProjPoint | null>(null)
   const [sel, setSel] = useState<ProjPoint[]>([])   // the accumulating working set (forager: sculpt → hand to builder)
   const [zoom, setZoom] = useState(1)        // radial magnification — inner rings (recent) expand
+  const [rung, setRung] = useState<number | null>(null)  // G11 SCALE: null/unit = items; a coarse k = themes
   const [frame, setFrame] = useState<'now' | 'day' | 'week'>('now')  // S4: scale/phase selects the frame
   const [showStrain, setShowStrain] = useState(false)  // G7: overlay the structure↔meaning tension lines
   const [bind, setBind] = useState<string>('')   // the LENS (binding id); '' = the data-driven default
@@ -44,6 +52,13 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   const spanRef = useRef(86400)                              // seconds the scrubber spans (the visible age range)
   const posRef = useRef<Map<number, { x: number; y: number }>>(new Map())   // last drawn point positions (identity)
   const animRef = useRef<{ from: Map<number, { x: number; y: number }>; t0: number } | null>(null)
+  // G11 CROSSFADE: a rung change swaps the WHOLE point-set (themes↔units, no shared seqs), so the position
+  // tween can't carry identity across it. To make it read as a CONTINUOUS scale move (not a hard mode-switch),
+  // the OUTGOING rung's points fade OUT (departRef) at their last positions while the incoming fade IN. The
+  // last drawn frame is held so the departure has something to render. (advisor: crossfade the rung boundary.)
+  const lastFrameRef = useRef<{ points: ProjPoint[]; pos: Map<number, { x: number; y: number }> } | null>(null)
+  const departRef = useRef<{ points: ProjPoint[]; pos: Map<number, { x: number; y: number }>; t0: number } | null>(null)
+  const prevRungRef = useRef<number | string | undefined>(undefined)
   const inSel = (p: ProjPoint) => sel.some(s => s.seq === p.seq)
   // relative-time word for the scrubbed centre (NOW → the past), read off the live anchor
   const relTime = (epoch: number) => {
@@ -57,6 +72,15 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   // meaning-distance and the temporal frames don't apply, so radius reads straight off p.r (zoomable).
   const semanticPending = proj?.binding?.needs_center === true
   const isSemantic = proj?.binding?.radius_from === 'semantic' && !semanticPending
+  // SCALE LADDER (Group 11): the rungs fine→coarse = [units, …coarse k descending]. finerRung steps one
+  // level IN (coarse k → finer k → units) — the zoom-INTO-a-theme gesture. Distinct from the radial ⌕ zoom
+  // (magnify the band) — this changes which RUNG resolves (themes vs units), the advisor's collision avoided.
+  const scaleRungs = proj?.scale ? [...proj.scale.rungs].sort((a, b) => b - a) : []   // coarse→fine: [32, 8]→[32,8]
+  const ladderCoarseToFine: (number | null)[] = proj?.scale ? [...[...proj.scale.rungs].sort((a, b) => a - b), null] : [null]
+  const finerRung = (k: number | null) => {
+    const i = ladderCoarseToFine.indexOf(k)
+    return i >= 0 && i < ladderCoarseToFine.length - 1 ? ladderCoarseToFine[i + 1] : null
+  }
   // S4 — frame-relativity (Tim: "the axes are variables too — scale and state/phase select the
   // frame"). 'now' = radius is age-from-NOW (the default arrow of time). 'day'/'week' = radius is
   // the timestamp's CYCLE coordinate, so the daily/weekly rhythm becomes visible: everything that
@@ -74,6 +98,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     if (bind) params.set('binding', bind)               // semantic-without-a-centre → the bridge returns the
     if (at != null) params.set('at', String(at))        // space's items by time, flagged needs_center (pick one)
     if (center) params.set('center', center)            // the spatial re-centre (radius = distance-from-address)
+    if (rung != null) params.set('rung', String(rung))  // G11 SCALE: resolve over the rung's THEMES, not units
     const url = '/api/projection' + (params.toString() ? `?${params.toString()}` : '')
     const apply = (d: Projection, markNew: boolean) => {
       if (!alive) return
@@ -101,7 +126,22 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       // EventSource auto-reconnects on error (gapless via Last-Event-ID) — hold the last frame meanwhile.
     })
     return () => { alive = false; clearTimeout(deb); if (es) es.close() }
-  }, [live, bind, at, center])
+  }, [live, bind, at, center, rung])
+
+  // SCALE (Group 11): if the active projection has no pyramid (a non-semantic lens, or a space with no
+  // built rungs), drop any held rung so the ladder + state stay honest (the bridge ignores a stray rung,
+  // but the UI shouldn't claim a coarse level that isn't rendered).
+  useEffect(() => { if (proj && !proj.scale && rung != null) setRung(null) }, [proj, rung])
+
+  // G11 CROSSFADE: when the resolved RUNG changes (the point-set swaps wholesale), snapshot the just-drawn
+  // frame as the DEPARTING set so draw() can fade it out while the new rung fades in (continuous scale move).
+  useEffect(() => {
+    const rg = proj?.scale?.rung
+    if (proj && prevRungRef.current !== undefined && rg !== prevRungRef.current && lastFrameRef.current) {
+      departRef.current = { points: lastFrameRef.current.points, pos: lastFrameRef.current.pos, t0: performance.now() }
+    }
+    prevRungRef.current = rg
+  }, [proj])
 
   // keep the scrub anchor + span fresh while live-at-NOW, so the scrubber spans the real visible age range
   useEffect(() => {
@@ -231,6 +271,36 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     const prog = anim ? Math.min((performance.now() - anim.t0) / 480, 1) : 1
     const ease = 1 - Math.pow(1 - prog, 3)             // easeOutCubic
     const nextPos = new Map<number, { x: number; y: number }>()
+    // SCALE (Group 11): a coarse rung's points are THEMES (cluster centroids). A theme's dot is SIZED by how
+    // many units it aggregates (area ∝ members → bigger theme reads bigger) so going coarse visibly fuses the
+    // field; the biggest themes get a label (their exemplar — a real unit that names the theme), thinned by
+    // size so a 32-theme rung stays legible. dotR(p): a theme scales with √members; a unit stays the fixed 2.1.
+    const isThemeFrame = proj.points.some(p => p.scale_size != null)
+    const dotR = (p: ProjPoint) => p.scale_size != null ? 3 + Math.sqrt(p.scale_size) * 1.15 : 2.1
+    // G11 CROSSFADE: the OUTGOING rung's points fade out at their last positions (under the incoming set), so
+    // a rung step reads as one continuous scale move rather than a blank-then-snap. Cleared when the fade ends.
+    const dep = departRef.current
+    if (dep) {
+      const dprog = Math.min((performance.now() - dep.t0) / 480, 1)
+      if (dprog >= 1) { departRef.current = null }
+      else {
+        const dease = 1 - Math.pow(1 - dprog, 3)
+        for (const p of dep.points) {
+          const pos = dep.pos.get(p.seq); if (!pos) continue
+          const hue = (p.theta * 180) / Math.PI
+          const drad = p.scale_size != null ? 3 + Math.sqrt(p.scale_size) * 1.15 : 2.1
+          g.globalAlpha = (1 - dease) * 0.5
+          g.fillStyle = p.r_unknown ? dim : `hsl(${hue}deg 55% 58%)`
+          g.beginPath(); g.arc(pos.x, pos.y, drad, 0, Math.PI * 2); g.fill()
+        }
+        g.globalAlpha = 1
+      }
+    }
+    const themeLabelled = isThemeFrame
+      ? new Set([...proj.points].sort((a, b) => (b.scale_size || 0) - (a.scale_size || 0))
+          .slice(0, proj.points.length <= 10 ? proj.points.length : 8).map(p => p.seq))
+      : new Set<number>()
+    const themeLabels: { x: number; y: number; rad: number; t: string; a: number; isCentre: boolean }[] = []
     for (const p of proj.points) {
       const rr = radial(p) * R
       const tx = cx + Math.sin(p.theta) * rr, ty = cy - Math.cos(p.theta) * rr
@@ -243,17 +313,57 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       }
       const hue = (p.theta * 180) / Math.PI            // color IS angle (the deliberate non-token colour)
       const chosen = selSeqs.has(p.seq)
+      const rad = p === picked ? dotR(p) + 2.4 : dotR(p)
       // a semantic point with NO vector sits at the rim, FAINT + warm-grey (meaning-distance unknown —
       // honestly shown, never silently dropped or faked as 'far').
       g.globalAlpha = (p === picked ? 1 : p.r_unknown ? 0.3 : 0.75) * fade
       g.fillStyle = p === picked ? accent : p.r_unknown ? dim : `hsl(${hue}deg 55% 58%)`
-      g.beginPath(); g.arc(x, y, p === picked ? 5 : 2.1, 0, Math.PI * 2); g.fill()
+      g.beginPath(); g.arc(x, y, rad, 0, Math.PI * 2); g.fill()
+      // a theme reads as a soft disc (a region, not a point): a faint halo ring at its scaled radius
+      if (p.scale_size != null && p !== picked) {
+        g.globalAlpha = 0.28 * fade; g.strokeStyle = `hsl(${hue}deg 55% 58%)`; g.lineWidth = 1
+        g.beginPath(); g.arc(x, y, rad + 2.5, 0, Math.PI * 2); g.stroke()
+      }
+      if (themeLabelled.has(p.seq) && p.scale_exemplar) {
+        const t = String(p.scale_exemplar).split('/').filter(Boolean).slice(-1)[0] || ''
+        // carry the disc geometry so the label pass can place collision-free; the CENTRED theme (r=0) sits on
+        // the NOW marker, so its label is skipped (the centre is already marked + named in the card).
+        themeLabels.push({ x, y, rad, t, a: fade, isCentre: p.r === 0 })
+      }
       if (chosen) {  // the working set rings — what will ride into the builder
         g.globalAlpha = 0.95 * fade; g.strokeStyle = accent; g.lineWidth = 1.5
-        g.beginPath(); g.arc(x, y, 6, 0, Math.PI * 2); g.stroke()
+        g.beginPath(); g.arc(x, y, rad + 3.5, 0, Math.PI * 2); g.stroke()
+      }
+    }
+    // theme labels last (over the dots), COLLISION-RESOLVED so none is ever overprinted by a disc, another
+    // label, or the centre marker (the critic's focal-centre defect). Biggest themes get first pick of space;
+    // each tries above→below→right→left of its disc; a label with no clear slot is DROPPED (declutter — fewer
+    // legible labels beat an illegible pile). The NOW centre marker box is reserved up front.
+    if (themeLabels.length) {
+      g.font = '10px ui-monospace, monospace'; g.textAlign = 'center'
+      const placed: { x0: number; y0: number; x1: number; y1: number }[] = [{ x0: cx - 16, y0: cy - 16, x1: cx + 16, y1: cy + 16 }]
+      const hits = (b: { x0: number; y0: number; x1: number; y1: number }) =>
+        placed.some(q => !(b.x1 < q.x0 || b.x0 > q.x1 || b.y1 < q.y0 || b.y0 > q.y1))
+      for (const L of [...themeLabels].sort((a, b) => b.rad - a.rad)) {
+        if (L.isCentre) continue                       // the centred theme is the marked centre — no label pile-up
+        const tw = g.measureText(L.t).width, hw = tw / 2 + 3
+        const cands: [number, number][] = [
+          [L.x, L.y - L.rad - 9], [L.x, L.y + L.rad + 13],     // above / below the disc
+          [L.x + L.rad + hw + 2, L.y + 1], [L.x - L.rad - hw - 2, L.y + 1]]   // right / left
+        let box: { x0: number; y0: number; x1: number; y1: number } | null = null
+        let px = 0, py = 0
+        for (const [qx, qy] of cands) {
+          const b = { x0: qx - hw, y0: qy - 10, x1: qx + hw, y1: qy + 4 }
+          if (!hits(b)) { box = b; px = qx; py = qy; break }
+        }
+        if (!box) continue                             // no clear slot → drop it (declutter, never overprint)
+        placed.push(box)
+        g.globalAlpha = 0.8 * L.a; g.fillStyle = bg; g.fillRect(box.x0, box.y0, box.x1 - box.x0, box.y1 - box.y0)
+        g.globalAlpha = L.a; g.fillStyle = ink; g.fillText(L.t, px, py + 1)
       }
     }
     posRef.current = nextPos
+    lastFrameRef.current = { points: proj.points, pos: nextPos }   // held for the next rung crossfade (departRef)
     // NOW — the centre, the one shared point of time. When live-at-now it BREATHES on a smooth client
     // clock (performance.now(), continuous) — the advancing present visible at the origin, not a 15s step.
     g.globalAlpha = 1; g.fillStyle = accent
@@ -306,12 +416,15 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     let raf = 0
     const tick = () => {
       drawRef.current()
-      if (animRef.current && performance.now() - animRef.current.t0 < 480) raf = requestAnimationFrame(tick)
+      const animLive = !!animRef.current && performance.now() - animRef.current.t0 < 480
+      // keep ticking while EITHER the position tween OR the rung crossfade (departRef, set when the fetch
+      // returns the new rung — later than this effect fires) is still running; departRef self-clears in draw().
+      if (animLive || departRef.current) raf = requestAnimationFrame(tick)
       else { animRef.current = null; drawRef.current() }
     }
     raf = requestAnimationFrame(tick)
     return () => { cancelAnimationFrame(raf); animRef.current = null }
-  }, [frame, center])
+  }, [frame, center, rung])   // G11: a rung change crossfades — the new rung's points fade in (continuous scale move)
 
   const pick = (ev: { clientX: number; clientY: number }) => {
     const wrap = wrapRef.current
@@ -379,7 +492,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
             </select>
           )}
           {center && (
-            <button className="lf-centred" onClick={() => { setCenter(null); setPicked(null); if (isSemantic) setBind('') }}
+            <button className="lf-centred" onClick={() => { setCenter(null); setPicked(null); setRung(null); if (isSemantic) setBind('') }}
               onPointerDown={e => e.stopPropagation()} title={`centred on ${center} — tap to release back to NOW`}>
               {isSemantic ? '◎' : '⊙'} {centreSeg} ✕
             </button>
@@ -387,6 +500,20 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
           {' '}{proj ? `${proj.count} pts · ${proj.n} sectors · ${timeLabel}` : 'projecting…'}
         </span>
         <div className="lattice-frames" onPointerDown={e => e.stopPropagation()}>
+          {proj?.scale && (
+            // THE SCALE AXIS (Group 11): step the resolution — units (the finest, every embedded item) ↔
+            // coarser THEME rungs (cluster centroids). A separate control from the radial ⌕ zoom: ⌕ magnifies
+            // the band, ⊟ changes which RUNG resolves. Fine→coarse, left→right.
+            <span className="lf-rungs" title="SCALE — resolve over individual items (fine) or themes (coarse)">
+              <span className="lf-ic">⊟</span>
+              <button className={'lf-rung' + (rung == null ? ' on' : '')} onClick={() => setRung(null)}
+                title={`the finest rung — every embedded item (${proj.scale.n_units})`}>units</button>
+              {scaleRungs.map(k => (
+                <button key={k} className={'lf-rung' + (rung === k ? ' on' : '')} onClick={() => setRung(k)}
+                  title={`${k} theme centroids — a coarser meaning-field (fewer, larger regions)`}>{k}</button>
+              ))}
+            </span>
+          )}
           {isSemantic ? (
             // THE CIRCLE active: radius is meaning-distance (not time) — the temporal controls don't apply;
             // a legible note states the reading + its honest normalization. Zoom still expands the near band.
@@ -444,23 +571,51 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
             // STRAIN (Group 7): where it's filed (structure) ↔ where it means to be (meaning), and the gap.
             <div className="lc-meta lc-strain">⊿ strain {picked.strain.toFixed(2)} · filed {picked.r_struct.toFixed(2)} ↔ means {picked.r.toFixed(2)}</div>
           )}
+          {picked.scale_size != null && (
+            // SCALE (Group 11): a THEME — a coarse cluster of units. Show how many it aggregates, the finer
+            // clusters that fold in, and the exemplar (a real unit that names it).
+            <div className="lc-meta lc-theme">◇ theme · {picked.scale_size} items{picked.scale_children?.length ? ` · ${picked.scale_children.length} finer` : ''} · ~{String(picked.scale_exemplar || '').split('/').filter(Boolean).slice(-1)[0]}</div>
+          )}
           <button className="lc-pick" onClick={() => toggleSel(picked)}>
             {inSel(picked) ? '− remove from set' : '＋ add to set'}
           </button>
-          {picked.address && (
-            <button className="lc-center" onClick={() => { setCenter(picked.address); setPicked(null) }}
-              title="re-centre the projection on this address — radius becomes distance-from-here">
-              ⊙ centre on this
-            </button>
-          )}
-          {picked.source && (
-            // THE CIRCLE (Group 6): only an EMBEDDED item (one with a vector) can be a meaning-centre —
-            // sets the semantic lens + this item's source together, so the field always opens with a centre.
-            <button className="lc-center lc-meaning"
-              onClick={() => { setBind('semantic'); setCenter(picked.source!); setPicked(null) }}
-              title="rank everything by MEANING-distance from this item (the circle / semantic radius)">
-              ◎ meaning-field from here
-            </button>
+          {picked.scale_size != null ? (
+            // a THEME: ⊕ zoom INTO it (step to the finer rung, centred on its exemplar — a real unit with a
+            // vector, so the centre resolves at every rung); ◎ rank this rung's themes by distance from it.
+            <>
+              {finerRung(rung) !== rung && (
+                <button className="lc-center lc-zoomin"
+                  onClick={() => { if (picked.scale_exemplar) setCenter(picked.scale_exemplar); setRung(finerRung(rung)); setPicked(null) }}
+                  title={`zoom INTO this theme — resolve at the finer rung (${finerRung(rung) == null ? 'units' : finerRung(rung) + ' themes'}), centred here`}>
+                  ⊕ zoom into theme
+                </button>
+              )}
+              {picked.source && (
+                <button className="lc-center lc-meaning"
+                  onClick={() => { setBind('semantic'); setCenter(picked.source!); setPicked(null) }}
+                  title="rank this rung's themes by MEANING-distance from this theme">
+                  ◎ meaning-field from this theme
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              {picked.address && (
+                <button className="lc-center" onClick={() => { setCenter(picked.address); setPicked(null) }}
+                  title="re-centre the projection on this address — radius becomes distance-from-here">
+                  ⊙ centre on this
+                </button>
+              )}
+              {picked.source && (
+                // THE CIRCLE (Group 6): only an EMBEDDED item (one with a vector) can be a meaning-centre —
+                // sets the semantic lens + this item's source together, so the field always opens with a centre.
+                <button className="lc-center lc-meaning"
+                  onClick={() => { setBind('semantic'); setCenter(picked.source!); setPicked(null) }}
+                  title="rank everything by MEANING-distance from this item (the circle / semantic radius)">
+                  ◎ meaning-field from here
+                </button>
+              )}
+            </>
           )}
         </div>
       )}

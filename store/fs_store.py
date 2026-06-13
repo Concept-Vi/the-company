@@ -365,6 +365,27 @@ class FsStore:
         d = self.root / "sessions"
         return sorted(p.stem for p in d.glob("*.json")) if d.exists() else []
 
+    # --- scale-pyramid structure (Group 11): the multi-scale rungs' NESTING/membership sidecar. The coarse
+    # CENTROIDS live in the vector substrate (put_vector, space=scale:<space>:k<K>) so query_index resolves
+    # them; this sidecar holds the STRUCTURE (per-rung clusters, members, exemplar labels, cross-rung parent
+    # links) keyed by the UNIT space it coarsens — one record per space. Clones save_session's atomic dict
+    # write (a derived, rebuildable artefact, not the canonical store) — additive, its own scale/ dir, so no
+    # vector path or graph path is touched. See runtime/scale.py for the build/resolve that reads it. ---
+    def save_scale_pyramid(self, space: str, pyramid: dict) -> None:
+        import json as _j
+        (self.root / "scale").mkdir(parents=True, exist_ok=True)
+        path = self.root / "scale" / (self._safe(space) + ".json")
+        self._fsync_atomic_write(path, _j.dumps(pyramid, indent=2))   # crash-durable atomic (mirrors save_session)
+
+    def load_scale_pyramid(self, space: str) -> dict | None:
+        import json as _j
+        p = self.root / "scale" / (self._safe(space) + ".json")
+        return _j.loads(p.read_text()) if p.exists() else None
+
+    def list_scale_pyramids(self) -> list[str]:
+        d = self.root / "scale"
+        return sorted(p.stem for p in d.glob("*.json")) if d.exists() else []
+
     # --- journey-record state (L9): the REVERSE of the forward resolver — a recorded ordered click-path
     # through ui:// addresses, retrieved-whole-by-id then replayed via the forward resolveUiTarget. This
     # is a DISTINCT object from a review-session (above): a journey records NAVIGATION (an addressed
