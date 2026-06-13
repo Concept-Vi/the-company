@@ -45,13 +45,17 @@ Today: a per-point depth scalar + `rings:4` hardcoded. The seed's m/2 concentric
 - **FORM** — the grid renders as a navigable structural surface (not a number); legible at both
   faces; on tokens. ☐ by the rubric
 
-## GROUP 3 · INSTRUMENT — TIME-FREED / RELATIVE CENTRE 🔴
-project() accepts now= but center:'now' is hardcoded; the handler never overrides.
+## GROUP 3 · INSTRUMENT — TIME-FREED / RELATIVE CENTRE 🟡 (backend done dabf952; FE FORM half pending)
+The centre is freed in the engine (`project(now=, center=)` + bridge `?at=`/`?center=`); the FE control
+is the remaining half.
 - **FUNCTION** — `?at=` parsed in bridge, `project(now=)` filters events ts≤now (the scrubber); AND a
-  non-now ADDRESS centre re-projects radius as relevance-from-that-address (`address_tree_distance` +
-  cosine). Same instrument, centre freed (past + relative). ☐ by use
-- **FORM** — the scrubber is a navigable time control on tokens; re-centring animates (identity
-  survives the transform). ☐ by the rubric
+  non-now ADDRESS centre re-projects radius as STRUCTURAL tree-distance from that address
+  (`_tree_distance`, mirrors `address_tree_distance`, kept in projection.py so the floor has no suite
+  dep). ✅ backend by use — suite 26→35 green; live curl: `?at=-2h` shifts `now` 2h back, `?center=`
+  flips `radius_from`→'address' with the centre event at r=0, all r∈[0,1]. The cosine/semantic
+  relevance ring is 🔴 embedder-gated (Group 6) — stubbed, not faked.
+- **FORM** — 🔴 NEXT: the scrubber as a navigable time control on tokens + a re-centre affordance (click
+  a point → centre on its address) + re-centring animation (identity survives the transform). ☐ by rubric
 
 ## GROUP 4 · INSTRUMENT — REAL-TIME PUB-SUB 🔴 (Tim's explicit ask)
 `/api/stream` (SSE) already exists over the same tap; LatticeView polls every 15s.
@@ -153,7 +157,7 @@ freeze a variable Tim deliberately left free (the hardcoding reflex). Resolution
 0. **Model calls DISSOLVED** (§17; Tim confirmed) — no gate; the whole sequence is buildable. Group 9's only input is Tim's AI-tells description.
 1. **Group 1** — ✅ DONE (6615e53) — the acceptance suite (regression floor; 26 invariant teeth).
 2. **Group 5** — ✅ DONE (dc3378a) — the FORM rebuild (lattice onto the corpus design system).
-3. **Group 3** — ← NEXT — time-freed centre (small; reuses metrics; roll-forward planning later reuses it).
+3. **Group 3** — 🟡 backend DONE (dabf952: scrubber + structural address-centre, suite 26→35); FE scrubber/re-centre + animation ← NEXT.
 4. **Group 4** — real-time pub-sub (small; depends on the surface).
 5. **Group 2** — the structural square half (completes the instrument's structure; no embedder needed).
 6. **Group 8** — embedding substrate live (operational; gates all semantic ability).
