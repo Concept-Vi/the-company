@@ -1,0 +1,137 @@
+# Universal Projection — Completion Criteria
+
+**Originated by Tim Geldard; all derived work attributed to him.** A truth-table for the
+instrument→ability buildout — each item a verifiable statement about the system, not a task. Built on
+RESEARCH-SYNTHESIS.md; HOW lives in IMPLEMENTATION-GUIDE.md.
+
+## Verification rules (the loop follows exactly what's written here)
+
+**FUNCTION bar:** verified BY USE — run it, curl it, drive it in the browser. Never by reading code,
+never by a DOM/JS query alone, never "the code looks right." The instrument's invariants verify
+against the COMMITTED acceptance suite (Group 1) — NOT `tests/projections_acceptance.py`, which tests
+the unrelated LENS registry (the name collision; see synthesis Round 4).
+
+**FORM bar (the design rubric, run on every operator-facing surface by a SEPARATE design-critic, not
+the implementer):** built on the design system's components (`components/kit.tsx`) + corpus tokens
+(`design/design-system.css`), NO hardcoded values, NO bespoke one-offs · no overlaps · responsive at
+desktop AND 390×844 · consistent scale/type/spacing · settings consolidated · a navigable
+visual/spatial surface, not a text-wall · empty/loading/error states · the outcome demonstrable.
+Machine-gated by `design/_system/check.py` (design-lint) against BOTH the .tsx AND app.css. THE ONE
+EXCEPTION: the per-point hue = angle (colour IS geometry) is a deliberate non-token colour — preserve
+it; it is not a lint target.
+
+**Status:** ✅ verified-by-use · 🟡 designed/stubbed (intent, not fact) · 🔴 broken/absent.
+**The floor:** the instrument is a PURE READ over the store — no resolve/approve/dispatch, ever.
+**Registry-is-truth:** lenses/bindings/sectors are declared rows, never hardcoded ("no first binding
+ruins the system"). **Expand-before-harden:** the brain docs are captured design, NOT ratified.
+
+---
+
+## GROUP 1 · INSTRUMENT — THE FLOOR (the variable engine) 🟡→needs the suite
+`runtime/projection.py:project` + `BindingRegistry` + `bindings/` resolve a frame from a swappable
+lens; sectors data-driven; lock x=2π/n re-divides evenly.
+- **FUNCTION** — the angle/depth/now/binding floor is a pure read over the store; no hardcoded
+  sectors; a COMMITTED acceptance suite proves the invariants (r∈[0,1], θ inside its sector wedge,
+  even re-division at every n, lock holds, kind-group '*' remainder catches everything). ☐ by use
+- **FORM** — n/a (backend). The suite IS the form of "done" here. ☐
+
+## GROUP 2 · INSTRUMENT — THE SQUARE/STRUCTURE HALF (the grid) 🔴
+Today: a per-point depth scalar + `rings:4` hardcoded. The seed's m/2 concentric circles + i,j grid.
+- **FUNCTION** — the i,j grid and m/2 concentric rings RESOLVE from the ui:// address hierarchy
+  (`contracts/ui_info.py:parse_ui_address` segments) per the seed §1; the `rings:4` hardcode and the
+  depth-scalar are replaced by the real nested geometry. ☐ by use
+- **FORM** — the grid renders as a navigable structural surface (not a number); legible at both
+  faces; on tokens. ☐ by the rubric
+
+## GROUP 3 · INSTRUMENT — TIME-FREED / RELATIVE CENTRE 🔴
+project() accepts now= but center:'now' is hardcoded; the handler never overrides.
+- **FUNCTION** — `?at=` parsed in bridge, `project(now=)` filters events ts≤now (the scrubber); AND a
+  non-now ADDRESS centre re-projects radius as relevance-from-that-address (`address_tree_distance` +
+  cosine). Same instrument, centre freed (past + relative). ☐ by use
+- **FORM** — the scrubber is a navigable time control on tokens; re-centring animates (identity
+  survives the transform). ☐ by the rubric
+
+## GROUP 4 · INSTRUMENT — REAL-TIME PUB-SUB 🔴 (Tim's explicit ask)
+`/api/stream` (SSE) already exists over the same tap; LatticeView polls every 15s.
+- **FUNCTION** — the lattice subscribes to `/api/stream` and re-projects per new seq; the 15s poll
+  retired; a new event appears the instant it's written; now advances by a smooth client clock. ☐ by use
+- **FORM** — the live arrival reads as motion (a point drifting in), not a flicker/reload. ☐ by rubric
+
+## GROUP 5 · INSTRUMENT — THE FORM FACE (the lattice on the design system) 🔴 (real debt)
+LatticeView.tsx is the LONE region still on the dead GitHub-dark palette (undefined --accent/--ink-dim
+→ hardcoded fallbacks; ~37 CSS + 8 tsx literals).
+- **FUNCTION** — unchanged behaviour through the rebuild (lens switch, frames, forager seam,
+  recentre, live all still work). ☐ by use
+- **FORM** — chrome rebuilt on kit primitives + corpus tokens; token() repointed to the real names
+  (--acc/--tx/--bg); design-lint clean against BOTH app.css AND LatticeView.tsx; the angle-hue
+  PRESERVED; verified by a separate design-critic on the WHOLE screen at desktop AND 390×844. ☐ by rubric
+
+## GROUP 6 · ABILITY — THE CIRCLE / SEMANTIC RADIUS 🔴 (needs a resident embedder)
+projection.py:155 is a no-op stub (both branches = age).
+- **FUNCTION** — a `radius_from=='semantic'` resolver reads cosine-from-centre off the persisted index
+  (`suite.query_corpus`/`store.get_vector` + cosine); a `bindings/semantic.py` row; points ranked by
+  meaning-distance from the centre. ☐ by use
+- **FORM** — meaning-distance reads spatially (near = close); legible at both faces. ☐ by rubric
+
+## GROUP 7 · ABILITY — STRAIN / FORBIDDEN ZONES 🔴 (needs Groups 2 + 6)
+Zero code today. The structure↔meaning gap.
+- **FUNCTION** — per-point square-position vs circle-position disagreement is computed and surfaced as
+  a strain field OR a 'strain'/'forbidden' mark_type (`mark_types.py` + `append_finding`); render,
+  never auto-correct; operator-overridable. ☐ by use
+- **FORM** — strain reads as visible tension (the gate inbox / drift / axis-growth signal), not a
+  number; on tokens. ☐ by rubric
+
+## GROUP 8 · ABILITY — EMBEDDING SUBSTRATE LIVE 🔴 (gates Groups 6,7,9,11)
+Mechanism complete; NO embedder resident now (ports HTTP 000); only stale default vectors on disk.
+- **FUNCTION** — an embedder up via `company up`; a capture+embed pass populates the named Group-L
+  spaces (topics/principles/worldview/repo); index freshness confirmed
+  (`vector_index.index_staleness`). ☐ by use (coordinate with the retrieval/ops session)
+- **FORM** — n/a (substrate). ☐
+
+## GROUP 9 · ABILITY — TWO-GRAVITY SEPARATOR 🔴 (GATED on Model Call 2)
+Mechanism named; no instruction-lens embedding; transport carries no framing parameter; no anchors.
+- **FUNCTION** — a steerable embedder served; an instruction/task parameter threaded through
+  `fabric/transport.py` → `client.complete_embeddings` → `nodes/embed.py` → build_index; two lens
+  spaces built; a per-unit signed gap = pollution signal (a thin sibling of `find_relations`). ☐ by use
+- **FORM** — every point carries its signed pull (toward Tim-pole vs AI-pole), readable on the
+  surface; on tokens. ☐ by rubric
+- **GATE** — requires Tim's anchor-set ratification (Model Call 2). Not computable until then.
+
+## GROUP 10 · ABILITY — ORDER-FROM-EDGES + ANGLE-FROM-A-REGISTRY 🔴 (needs the event→row edge)
+relation_types vocabulary exists but is unwired; order_by is only count|declared.
+- **FUNCTION** — the event→registry-row edge formalized; `_resolve_sectors` gains an
+  angle_from=<registry-name> branch and an order_by=typed-edge mode (precedes/depends_on); the
+  alphabetical sort retired. ☐ by use
+- **FORM** — sectors arranged by their real edges read as a meaningful sequence around the wheel. ☐ by rubric
+
+## GROUP 11 · ABILITY — MULTI-SCALE EMBEDDING PYRAMID 🔴
+No sentence/turn chunker; corpus is unit-level only.
+- **FUNCTION** — a chunker feeds `build_index(space='scale:<rung>')` per rung (sentence/turn/session/
+  project); a zoom-by-rung query layer; zoom changes which rung resolves. ☐ by use
+- **FORM** — zoom across rungs reads as a continuous scale move, not a mode switch. ☐ by rubric
+
+## GROUP 12 · MODEL CALLS — AWAITING TIM (a ratification gate, NOT a build group)
+- Model Call 1: register-of-registries = prime/divisor lattice? (the missing formalism)
+- Model Call 2: the two-gravity anchor poles (gates Group 9)
+- Open: the two axes (the spine); k (the dimension); the spectrum; prioritization-at-scale; the 20/80
+  dial / promotion gesture.
+DONE looks like: Tim's part-by-part reaction received. Until then these stay captured-not-hardened and
+NO build proceeds on them. (Everything else proceeds without them.)
+
+---
+
+## PRIORITY ORDER (dependency; instrument-first then ability — the loop walks this)
+
+0. **Model-call gate** (parallel, blocks only Groups 9 + the lattice formalism) — surface to Tim.
+1. **Group 1** — the acceptance suite (the regression floor; net-new; first so nothing silently breaks).
+2. **Group 5** — the FORM rebuild (file-disjoint from backend; can run parallel to 1; the real debt).
+3. **Group 3** — time-freed centre (small; reuses metrics; roll-forward planning later reuses it).
+4. **Group 4** — real-time pub-sub (small; depends on the surface).
+5. **Group 2** — the structural square half (completes the instrument's structure; no embedder needed).
+6. **Group 8** — embedding substrate live (operational; gates all semantic ability).
+7. **Group 6** — semantic radius (the first ability ring).
+8. **Group 7** — strain / forbidden zones (needs 2 + 6).
+9. **Group 10** — the event→row edge + order-from-edges + angle-from-a-registry (the keystone).
+10. **Group 9** — the two-gravity separator (gated on Model Call 2; highest value once unblocked).
+11. **Group 11** — the multi-scale pyramid.
+12. **The small registries + gate surface + 20/80 water-law** — once the axes are chosen.
