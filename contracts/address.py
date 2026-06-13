@@ -54,11 +54,25 @@ no record shape and no `schema_ver` change. NOT `fabric://` (the model fabric ow
 that name) and NOT a second "session" noun in the store — the registry dir is
 `agent_sessions/`, distinct from the review-session `sessions/` dir (naming ruling,
 Session Fabric criteria audit N2).
+
+Note on `cap://` (Mirror-Registry System LANE-CONTRACTS — capability registry address):
+like `skill://`/`context://`/`session://`, a *label* resolved by
+`runtime/cognition.py:resolve_address`, which dispatches to `CapabilityRegistry` via
+the module-level singleton `capability_registry()` (introspection/registry.py). The
+singleton is a NEW pattern (not a copy of skill/context fresh-discover); it exists
+because binary discovery is EXPENSIVE (spawns a subprocess + a system/init session) —
+fresh-discover-on-each-call would spawn a process on every cap:// resolution. Suite.__init__
+calls set_capability_registry() once. Grammar: `cap://<kind>/<id>` where id = `kind/name`
+with the '--' prefix included for flags: `cap://flag/--debug` (rest = "flag/--debug").
+Adding `"cap"` to SCHEMES is purely additive (same seam as skill/context/session); no
+record shape change, no schema_ver bump. The dispatch branch is added to cognition.py
+after the session:// block by LANE-CAP-WIRE (depends on LANE-REGISTRIES). The gap-surface
+path fires on any unknown cap:// address (registry-is-truth, fail loud, never silent empty).
 """
 from __future__ import annotations
 from pydantic import BaseModel, Field
 
-SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "session")
+SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "session", "cap")
 
 
 class Provenance(BaseModel):
