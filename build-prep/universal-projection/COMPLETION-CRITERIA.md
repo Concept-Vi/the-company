@@ -37,13 +37,21 @@ lens; sectors data-driven; lock x=2π/n re-divides evenly.
   stubs (rings:4, time-radius) that G2/G6 replace.
 - **FORM** — n/a (backend). The suite IS the form of "done" here. ✅
 
-## GROUP 2 · INSTRUMENT — THE SQUARE/STRUCTURE HALF (the grid) 🔴
-Today: a per-point depth scalar + `rings:4` hardcoded. The seed's m/2 concentric circles + i,j grid.
-- **FUNCTION** — the i,j grid and m/2 concentric rings RESOLVE from the ui:// address hierarchy
-  (`contracts/ui_info.py:parse_ui_address` segments) per the seed §1; the `rings:4` hardcode and the
-  depth-scalar are replaced by the real nested geometry. ☐ by use
-- **FORM** — the grid renders as a navigable structural surface (not a number); legible at both
-  faces; on tokens. ☐ by the rubric
+## GROUP 2 · INSTRUMENT — THE SQUARE/STRUCTURE HALF (the grid) ✅ (ebbfb89; critic-passed both faces)
+The seed's m/2 concentric circles + dyadic (i,j) grid — built. Both stubs (rings:4, depth scalar) gone.
+- **FUNCTION** — ✅ by use: `_grid_cell(address)`→(i,j,d) the dyadic quadtree coord (MSB-first → a parent
+  cell contains its children; scheme-agnostic — NOT parse_ui_address, which is ui://-only fail-loud);
+  per-point `cell`; `grid` m = 2^(deepest path, cap 4); `rings` = m/2 (the rings:4 hardcode gone).
+  Proven: live payload rings 8 / grid 16 / per-point cell; suite 35→41 (power-of-2, rings==m/2, cell
+  bounds, depth-tracks-nesting, determinism+scheme-strip, CONTAINMENT).
+- **FORM** — 🟡: the box frames the wheel (the outer circle inscribed, corners past it at the diagonals);
+  the dyadic grid fades by level (coarse anchors, fine recedes); the picked point's CELL lights up gold
+  (its square home — the circle/square duality, seen); the card shows 'cell i,j · depth d'. On tokens
+  (box/grid --tx-3, cell --acc), angle-hue preserved. The first design-critic FAILED it (grid
+  under-contrast, imperceptible at native viewing — measured delta 5–19); contrast RAISED per its
+  prescription (box 0.85, grid by-level 0.50→0.14). ✅ by rubric — the SEPARATE design-critic re-confirmed
+  PASS at 1440×900 AND 390×844 (measured: box frame Δlum ~66-113, coarse grid ~14-43, fine ~5-7 with the
+  level-graded fade intact, subordinate to the wheel; the picked cell reads as a located cell, not floating).
 
 ## GROUP 3 · INSTRUMENT — TIME-FREED / RELATIVE CENTRE ✅ (backend dabf952; FE 9be11cc + 3f65f70)
 The centre is freed — both in the engine (`project(now=, center=)` + bridge `?at=`/`?center=`) and in the
@@ -172,8 +180,8 @@ freeze a variable Tim deliberately left free (the hardcoding reflex). Resolution
 2. **Group 5** — ✅ DONE (dc3378a) — the FORM rebuild (lattice onto the corpus design system).
 3. **Group 3** — ✅ DONE (backend dabf952 + FE 9be11cc/3f65f70: scrubber + re-centre + animation, both faces, critic-passed).
 4. **Group 4** — ✅ DONE (528704a: SSE subscription, poll retired, smooth client clock, critic-passed).
-5. **Group 2** — ← NEXT — the structural square half (i,j grid + m/2 concentric rings from the ui:// address hierarchy; replaces the rings:4 stub; completes the instrument's structure; no embedder needed).
-6. **Group 8** — embedding substrate live (operational; gates all semantic ability).
+5. **Group 2** — ✅ DONE (ebbfb89: dyadic grid + m/2 rings + picked-cell highlight; critic-passed both faces). The INSTRUMENT half is complete.
+6. **Group 8** — ← NEXT (the ability half begins) — embedding substrate live: bring an embedder resident via the `company` CLI + a capture+embed pass; gates all semantic ability.
 7. **Group 6** — semantic radius (the first ability ring).
 8. **Group 7** — strain / forbidden zones (needs 2 + 6).
 9. **Group 10** — the event→row edge + order-from-edges + angle-from-a-registry (the keystone).
