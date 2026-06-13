@@ -124,8 +124,8 @@ Built on Group 8's live spaces. commits 078eb6a (FUNCTION) + 53b4baf (FORM + emp
   re-verified at BOTH viewports (1440×900 + 390×844): inner core populated, smooth gradient from near-origin
   (~4-6% of max) to rim, near-vs-far readable by distance — PASS on both (was a hollow-core FAIL).
 
-## GROUP 7 · ABILITY — STRAIN / FORBIDDEN ZONES 🟡 (FUNCTION ✅ by use; FORM built, design-critic verifying)
-The structure↔meaning gap (SEED §111). Built on Groups 2 (the square) + 6 (the circle).
+## GROUP 7 · ABILITY — STRAIN / FORBIDDEN ZONES ✅ (2026-06-14; both faces verified by use, design-critic PASS)
+The structure↔meaning gap (SEED §111). Built on Groups 2 (the square) + 6 (the circle). commits f00aa25 + this.
 - **FUNCTION** ✅ by use — per-point STRAIN = |r_struct − r_semantic|: where it's FILED (structural radius
   = tree-distance from the centre over the SOURCE address, normalized like r) vs where it MEANS to be (the
   semantic radius). NOT a 2D cell↔wheel distance (the one-sector angle is hash-jitter → the centre, the
@@ -137,11 +137,15 @@ The structure↔meaning gap (SEED §111). Built on Groups 2 (the square) + 6 (th
   (flows.py means-like-suite-but-filed-far → 0.80; coherence_calibrate.py filed-near-but-means-differently
   → 0.73). `tests/projection_semantic_acceptance.py` extended (23 checks incl. the centre≈0 dispositive
   guard + coherent≈0 + divergence-high + far+far-is-coherent).
-- **FORM** 🟡 — a "⊿ strain" toggle on the meaning-field draws the RADIAL tension segment from r_struct to r
-  at each point's angle (SEED §111's literal "line between where it's filed and where it means to be");
-  alpha+width ∝ strain so coherent points vanish and only divergence reads as tension; the picked card shows
-  "⊿ strain · filed ↔ means". design-lint contribution 0. SEPARATE design-critic verifying both viewports —
-  flip to ✅ on its PASS.
+- **FORM** ✅ by rubric — a "⊿ strain" toggle on the meaning-field draws the RADIAL tension segment from
+  r_struct to r at each point's angle (SEED §111's literal "line between where it's filed and where it means
+  to be"); alpha+width ∝ strain so coherent points vanish and only divergence reads as tension; the picked
+  card shows "⊿ strain · filed ↔ means". design-lint contribution 0. SEPARATE design-critic PASS at BOTH
+  viewports (1440×900 + 390×844): lines appear, toggle ON/OFF clean, card math exact (e.g. 0.69 filed ↔ 1.00
+  means → 0.31), geometry proven (distinct radii, not a spoke artifact), gradation self-thins (not a
+  hairball — eye drawn to real divergences), gold-on-warm-dark tokens. Honest caveat: a busy CENTRE (one
+  with many near-in-meaning-but-filed-far neighbours) reads denser near the origin — a centre-choice, not a
+  width artifact; still legible. (forbidden-zone = a high-strain threshold marker — a later refinement.)
 
 ## GROUP 8 · ABILITY — EMBEDDING SUBSTRATE LIVE ✅ (2026-06-14; verified by use, unblocks 6,7,9,11)
 CORRECTION of the prior "mechanism complete" premise: the mechanism was NOT complete. The single-lens
