@@ -31,7 +31,11 @@ EntryKind = Literal[
     "hook_event",     # PreToolUse ... WorktreeRemove
     "sdk_event",      # system/init, result, stream_event, ...
     "enum_value",     # a permissionMode / apiKeySource / status value
-]
+    "mcp_server",     # an MCP server the session declares (init mcp_servers) — distinct from mcp_tool
+    "skill",          # a skill the session declares (init skills)
+    "plugin",         # a plugin the session declares (init plugins)
+    "agent",          # a subagent the session declares (init agents)
+]   # extended 2026-06-13: the live init self-declaration carries kinds the vocabulary lacked (gap-pressure on the kind registry itself — surfaced, not coerced)
 
 
 class CapabilityVerbs(BaseModel):

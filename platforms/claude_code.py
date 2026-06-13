@@ -78,9 +78,20 @@ PLATFORM = {
         {"type": "cli-help", "command": ["{binary}", "--help"], "stderr_merge": True,
          "format": "commander-options-text", "parse_rule": "option-row", "floor_guard": 30},
         {"type": "stream-init",
-         "command": ["{binary}", "-p", "--output-format=stream-json", "--no-session-persistence"],
+         "command": ["{binary}", "-p", ".", "--output-format", "stream-json", "--verbose", "--model", "haiku", "--no-session-persistence"],  # FIX 2026-06-13: -p needs a prompt (".") + --verbose (stream-json requires it) + cheap throwaway model; init fires pre-turn. run_capture pipes no stdin, so a prompt arg is required (was rc=1: no prompt).
          "format": "json-init",
-         "event_filter": {"type": "system", "subtype": "init"}, "timeout_s": 15},
+         "event_filter": {"type": "system", "subtype": "init"}, "timeout_s": 20,
+         # field_kind_map + metadata_fields: how the live init self-declaration maps to capability
+         # kinds (DATA — derived 2026-06-13 from the real init event the binary emitted). Collection
+         # fields → one CapabilityEntry per member; metadata = context scalars (skipped). A NEW init
+         # field not listed here is gap-surfaced (sdk_event/init.unmapped), never silently dropped.
+         "field_kind_map": {"tools": "tool", "slash_commands": "slash_command",
+                            "mcp_servers": "mcp_server", "skills": "skill",
+                            "plugins": "plugin", "agents": "agent"},
+         "metadata_fields": ["type", "subtype", "uuid", "session_id", "cwd", "model",
+                             "permissionMode", "output_style", "apiKeySource", "claude_code_version",
+                             "fast_mode_state", "analytics_disabled", "product_feedback_disabled",
+                             "memory_paths"]},
     ],
 
     # §2.7 version-source (Lane A Group 8) — the PRIMARY & only freshness key (npm package BANNED)

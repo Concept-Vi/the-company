@@ -95,6 +95,11 @@ class DiscoverySource(BaseModel):
     timeout_s: int = 15
     floor_guard: int = 0             # min viable parse output (§2.6); 30 for Claude --help
     fail_loud: bool = True
+    # field_kind_map + metadata_fields: stream-init self-declaration → capability kinds (the adapter
+    # reads these; added 2026-06-13 — the contracts lane had omitted them, the engine lane expected
+    # them). Collection field → kind (one entry per member); metadata = context scalars skipped.
+    field_kind_map: dict[str, str] = {}
+    metadata_fields: list[str] = []
     version: int = 1
 
 
