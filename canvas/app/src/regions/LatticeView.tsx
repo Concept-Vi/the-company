@@ -9,10 +9,11 @@ import { Badge, EmptyState } from '../components/kit'
 
 type ProjPoint = {
   seq: number; kind: string; sector: string; theta: number; r: number; depth: number
+  cell: { i: number; j: number; d: number }   // the dyadic structural coordinate (the square half)
   address: string; summary: string; ts: string; phases: { day: number; week: number }
 }
 type Projection = {
-  now: string; n: number; rings: number; count: number
+  now: string; n: number; rings: number; count: number; grid?: number
   binding?: { id: string; label: string }
   bindings?: { id: string; label: string }[]
   sectors: { id: string; label: string; from: number; to: number }[]
@@ -114,21 +115,52 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     const v = (n: string) => css.getPropertyValue(n).trim()
     const ink = v('--tx'), line = v('--line'), accent = v('--acc'), dim = v('--tx-3'), bg = v('--bg')
 
-    // The rings — the inscribed circles. In 'now' they are age shells; in a cycle frame they are
-    // the clock divisions (the timestamp's wrap, drawn). Labels declare what each ring means.
-    const ringLabels = frame === 'now'
-      ? ['', '', '', 'older →']
-      : frame === 'day' ? ['00h', '06h', '12h', '18h'] : ['Mon', 'Wed', 'Fri', 'Sun']
+    // THE SQUARE / STRUCTURE half (the seed §1): the box frames the wheel (the inscribed circle radius R
+    // touches its edge midpoints); inside it the DYADIC grid — recursive quadrant lines that fade as they
+    // deepen, so the nested structure (an address is a path is a grid coordinate) reads as a scaffold.
+    const m = proj.grid || 1
+    const levels = Math.max(Math.round(Math.log2(m)), 0)
+    // the box frame reads FIRST (the brightest structural line, in the warm grey --tx-3 so it lifts off
+    // the near-black); the dyadic grid inside fades BY LEVEL so the coarse subdivisions anchor "where in
+    // the structure" and the fine ones recede — the self-similar nesting, kept legible but under the wheel.
+    g.strokeStyle = dim
+    g.globalAlpha = 0.85; g.lineWidth = 1.5; g.strokeRect(cx - R, cy - R, 2 * R, 2 * R)
+    g.lineWidth = 1
+    for (let L = 1; L <= levels; L++) {
+      const div = 1 << L, step = (2 * R) / div
+      g.globalAlpha = Math.max(0.5 - 0.12 * (L - 1), 0.12)   // L1 .50, L2 .38, L3 .26, L4 .14 — coarse brightest
+      g.beginPath()
+      for (let k = 1; k < div; k++) {
+        g.moveTo(cx - R + k * step, cy - R); g.lineTo(cx - R + k * step, cy + R)
+        g.moveTo(cx - R, cy - R + k * step); g.lineTo(cx + R, cy - R + k * step)
+      }
+      g.stroke()
+    }
+    // navigable structure: the picked point's dyadic CELL lights up in the grid (its structural home —
+    // the SQUARE coordinate of the same item the circle shows angularly; the circle/square duality, seen).
+    if (picked && picked.cell) {
+      const side = (2 * R) / (1 << picked.cell.d)
+      const x0 = cx - R + picked.cell.i * side, y0 = cy - R + picked.cell.j * side
+      g.globalAlpha = 0.13; g.fillStyle = accent; g.fillRect(x0, y0, side, side)
+      g.globalAlpha = 0.7; g.strokeStyle = accent; g.lineWidth = 1.5; g.strokeRect(x0, y0, side, side)
+    }
+    // The concentric rings — the seed's m/2 inscribed circles (the radial shells); the outermost (R) is
+    // the circle inscribed in the box. Count = proj.rings (= m/2), resolved from the address hierarchy.
     g.strokeStyle = line; g.lineWidth = 1
     for (let i = 1; i <= proj.rings; i++) {
-      const rr = (R * i) / proj.rings
-      g.globalAlpha = 0.55; g.beginPath(); g.arc(cx, cy, rr, 0, Math.PI * 2); g.stroke()
-      if (ringLabels[i - 1]) {
-        g.globalAlpha = 0.6; g.fillStyle = dim
-        g.font = '9px ui-monospace, monospace'; g.textAlign = 'left'
-        g.fillText(ringLabels[i - 1], cx + 3, cy - rr + 11)
-      }
+      g.globalAlpha = 0.5; g.beginPath(); g.arc(cx, cy, (R * i) / proj.rings, 0, Math.PI * 2); g.stroke()
     }
+    // the radial-axis labels at fixed fractions (independent of the ring COUNT): 'now' marks the rim
+    // (older outward); a cycle frame marks its clock quarters.
+    const axisLabels: [number, string][] = frame === 'now'
+      ? [[1, 'older →']]
+      : frame === 'day' ? [[0.25, '06h'], [0.5, '12h'], [0.75, '18h'], [1, '24h']]
+      : [[0.25, 'Tue'], [0.5, 'Thu'], [0.75, 'Sat'], [1, 'Sun']]
+    g.fillStyle = dim; g.font = '9px ui-monospace, monospace'; g.textAlign = 'left'
+    for (const [frac, lab] of axisLabels) {
+      g.globalAlpha = 0.6; g.fillText(lab, cx + 3, cy - R * frac + 11)
+    }
+    g.globalAlpha = 1
     // The sector boundaries + labels (the angular type divisions — the registry drawn).
     g.globalAlpha = 0.5
     for (const s of proj.sectors) {
@@ -345,7 +377,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
           {picked.address && <div className="lc-addr">{picked.address}</div>}
           <div className="lc-meta">
             {picked.ts?.slice(0, 16).replace('T', ' · ')} · {phaseWord(picked.phases.day)} ·
-            depth {picked.depth}
+            cell {picked.cell.i},{picked.cell.j} · depth {picked.cell.d}
           </div>
           <button className="lc-pick" onClick={() => toggleSel(picked)}>
             {inSel(picked) ? '− remove from set' : '＋ add to set'}

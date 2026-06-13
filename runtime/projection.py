@@ -160,6 +160,25 @@ def _sector_index(kind: str, sectors: list, kmap: dict) -> int:
     return sectors.index(sid) if sid in sectors else len(sectors) - 1
 
 
+def _grid_cell(address: str, cap: int = 4) -> tuple:
+    """The dyadic (i,j) grid cell of an address — the seed's recursive quadrant subdivision (THE-SEED §1:
+    "nesting = recursive subdivision; a path IS a grid coordinate"). Each path segment picks one of 4
+    sub-quadrants (stable hash → (bx,by)); d levels → a cell in a 2^d × 2^d grid, built MSB-first so a
+    parent's cell CONTAINS its children's. Scheme-agnostic (events carry ui://, run://, raw) — so NOT
+    parse_ui_address (that is ui://-only + fail-loud); the same scheme-strip the tree-distance uses.
+    Returns (i, j, d) with 0 ≤ i,j < 2^d and d = min(segment-count, cap). Empty address → (0,0,0)."""
+    s = address or ""
+    if "://" in s:
+        s = s.split("://", 1)[1]
+    segs = [p for p in s.split("/") if p != ""][:cap]
+    i = j = 0
+    for seg in segs:
+        q = int(hashlib.sha256(seg.encode("utf-8", "replace")).hexdigest()[:8], 16) & 3  # 0..3 quadrant
+        i = (i << 1) | (q & 1)
+        j = (j << 1) | ((q >> 1) & 1)
+    return i, j, len(segs)
+
+
 def project(events: list, *, binding: dict | None = None, now: datetime | None = None,
             center: str | None = None, limit: int = 0, registry: BindingRegistry | None = None) -> dict:
     """Events → points, resolved from a BINDING. Pure read; every coordinate read from data the
@@ -193,10 +212,21 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
     else:
         max_dist = 1
 
+    # THE SQUARE / STRUCTURE half (the seed §1): each point's dyadic (i,j) cell from its address path
+    # (recursive quadrant subdivision — a parent cell CONTAINS its children); the grid resolution
+    # m = 2^(deepest path, capped); the concentric circles = m/2 ("m/2 circles for an m×m grid"). This
+    # replaces the rings:4 hardcode AND the bare depth scalar with the real nested geometry.
+    GRID_CAP = 4
+    cells = [_grid_cell(_addr_of(e), GRID_CAP) for e, _ in stamped]
+    max_d = max((c[2] for c in cells), default=0)
+    grid_m = (1 << max_d) if max_d > 0 else 1          # 2^max_d (1 if no addressed events)
+    rings = max(grid_m // 2, 1)
+
     points = []
-    for e, t in stamped:
+    for idx, (e, t) in enumerate(stamped):
         kind = e.get("kind") or "?"
         i = _sector_index(kind, sectors, kmap)
+        gi, gj, gd = cells[idx]
         ref = str(_addr_of(e) or e.get("summary") or e.get("seq"))
         theta = TAU * (i + 0.08 + 0.84 * _stable_unit(ref)) / n
         age = max((now - t).total_seconds(), 1.0)
@@ -211,6 +241,7 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
         points.append({
             "seq": e.get("seq"), "kind": kind, "sector": sid,
             "theta": round(theta, 5), "r": round(r, 5), "depth": depth,
+            "cell": {"i": gi, "j": gj, "d": gd},   # the dyadic structural coordinate (the square half)
             "address": e.get("address") or e.get("source_address") or "",
             "summary": str(e.get("summary") or "")[:140], "ts": e.get("ts"),
             "phases": {k: round(v, 4) for k, v in phases.items()},
@@ -226,7 +257,7 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
                     [{"id": "raw", "label": "Kinds (raw)"}],
         "sectors": [{"id": s, "label": s, "from": round(TAU * i / n, 5), "to": round(TAU * (i + 1) / n, 5)}
                     for i, s in enumerate(sectors)],
-        "rings": 4,
+        "rings": rings, "grid": grid_m,   # m/2 concentric circles for the m×m dyadic grid (seed §1)
         "lock": "x = 2*pi/n; n resolves from the binding's source — no hardcoded sectors",
         "points": points, "count": len(points),
     }

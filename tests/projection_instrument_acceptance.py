@@ -242,5 +242,32 @@ check("center absent → falls back to the temporal centre (radius_from='time', 
           project(ac_events, binding=raw, now=NOW, registry=REAL)))
 
 
+# === 10 · the SQUARE / STRUCTURE half (Group 2): dyadic (i,j) cell + m/2 rings from the address hierarchy ===
+print("\n=== 10 · the structural grid: dyadic (i,j) cell per point + rings == grid/2 (seed §1) ===")
+from runtime.projection import _grid_cell
+ge = [ev(i, "x", 10, address=a) for i, a in enumerate(
+    ["ui://a", "ui://a/b", "ui://a/b/c", "ui://a/b/c/d", "run://x/y/z", ""])]
+gp = project(ge, binding=raw, now=NOW, registry=REAL)
+gm = gp["grid"]
+check("the grid resolution m is a power of 2 (the dyadic subdivision), >=1",
+      gm >= 1 and (gm & (gm - 1)) == 0, f"grid={gm}")
+check("rings == m/2 (the seed relationship; the rings:4 stub is GONE)",
+      gp["rings"] == max(gm // 2, 1), f"rings={gp['rings']} grid={gm}")
+check("EVERY point carries a dyadic cell {i,j,d}, bounded 0<=i,j<2^d (a parent cell contains its children)",
+      all(0 <= p["cell"]["i"] < (1 << p["cell"]["d"]) and 0 <= p["cell"]["j"] < (1 << p["cell"]["d"])
+          and p["cell"]["d"] >= 0 for p in gp["points"]),
+      f"cells={[p['cell'] for p in gp['points']]}")
+check("cell depth tracks address nesting, capped at 4 (deeper path → deeper d)",
+      max(p["cell"]["d"] for p in gp["points"]) == 4
+      and {p["cell"]["d"] for p in gp["points"]} >= {0, 1, 2, 3, 4},
+      f"depths={sorted({p['cell']['d'] for p in gp['points']})}")
+check("the cell is deterministic + scheme-agnostic (ui://a/b→d2, run://x/y/z→d3, ''→(0,0,0))",
+      _grid_cell("ui://a/b") == _grid_cell("ui://a/b") and _grid_cell("ui://a/b")[2] == 2
+      and _grid_cell("run://x/y/z")[2] == 3 and _grid_cell("") == (0, 0, 0))
+check("nesting is containment: a child's MSB quadrant == its parent's cell (parent contains child)",
+      (lambda P, C: C[2] == P[2] + 1 and (C[0] >> 1) == P[0] and (C[1] >> 1) == P[1])
+      (_grid_cell("ui://a/b"), _grid_cell("ui://a/b/c")))
+
+
 print(f"\n{'PASS' if FAIL == 0 else 'FAIL'} — {PASS} passed, {FAIL} failed")
 sys.exit(0 if FAIL == 0 else 1)
