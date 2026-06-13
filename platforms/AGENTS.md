@@ -51,8 +51,22 @@ read the row; nothing about Claude Code lives in the engine. **The supervisor re
 from this row's signal_sets via the rules** (`session_supervisor._registry_posture`) — the hand
 `SPAWN_FLAGS` posture dict is deleted; the registry is the sole posture truth (F-FIX-5 steps 5-6).
 
+**Instance #2 — `gh_cli.py` (THE GENERALIZATION-PROOF, 2026-06-14):** the GitHub CLI (`gh`, id
+`gh-cli`) expressed as a PURE-DATA row — imports + the one `PLATFORM` dict, NO def/class — that reuses
+the EXISTING `cli-help` adapter with **ZERO engine/adapter edits**. `gh` is a COBRA-family CLI (a
+different tool family from instance #1's Commander.js), yet its `gh pr create --help` FLAGS section is
+the same option-row SHAPE the generic parser reads. Lead-verified: DISCOVER→CLASSIFY→PROJECT yields 21
+flag rows (19 R5 SAFE + 2 R3 CONSENT) through the unchanged machinery. It is the clean template applied:
+**a 2nd known-kind platform is almost-free.** It is much smaller than `claude_code.py` because `gh` is
+invoked-and-exits (no held-open injected session) — so NO `consumer_reserved_invariants` body-key
+machinery, NO `stream-init` source, NO state machine; it declares its OWN small `signal_sets`
+(transport_invariants/hazard vocab/capability axes) so CLASSIFY produces real postures (no head_builder
+thunk is wired, so its DECLARED `transport_invariants` IS the engine-validated R1 input). Proof:
+`tests/genproof_second_platform_acceptance.py` (11/11 green). The converse (an unbuilt `rest-openapi`
+type → `MissingAdapterError` naming the missing class) is proven in the same suite.
+
 **Where the mechanism lives:** the four-verb engine, the rules, the adapters, the two registries, the
 cached-singleton rationale (F-FIX-1), the derive contract (F-FIX-2), and the leak invariant are all
 documented in **`introspection/AGENTS.md`** — read it before adding a platform. Adding a platform of a
-KNOWN kind = dropping a `platforms/<id>.py` row (almost free); a NOVEL kind = one new adapter in
-`introspection/adapters/`, gap-surfaced, never hand-papered.
+KNOWN kind = dropping a `platforms/<id>.py` row (almost free — see `gh_cli.py`); a NOVEL kind = one new
+adapter in `introspection/adapters/`, gap-surfaced, never hand-papered.

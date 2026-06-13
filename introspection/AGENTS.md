@@ -166,6 +166,22 @@ is adding a row. **REST / GraphQL / MCP / library / grpc / sdk** discoverers + i
 naming the missing class; it is built when platform #2 of that kind registers. `grpc` (Tim's vLLM
 endpoint) and `sdk` (SDK-native streaming) are the near-term-real gaps.
 
+## C-GENPROOF (THE LIFT GATE) — PROVEN BY USE with a REAL 2nd platform (2026-06-14)
+
+The generalization-proof is no longer a stub: **`platforms/gh_cli.py`** registers the GitHub CLI (`gh`,
+a COBRA-family tool — a different tool family from instance #1's Commander.js) as INSTANCE #2, a PURE
+data row reusing the EXISTING `cli-help` adapter with **ZERO edits** to `engine.py`/`rules.py`/
+`discover.py`/`adapters/`. Lead live-verify (`gh` 2.74.1, `gh pr create --help`):
+`CapabilityRegistry().discover(gh_cli)` → **21 flag CapabilityEntry rows** through
+`DISCOVERERS["cli-help"]` unchanged, classified **19 R5 SAFE + 2 R3 CONSENT** (`--repo`→repo-target,
+`--web`→browser on the declared axes); live version probe → `2.74.1`. **The headline: a 2nd known-type
+platform was almost-free — a single data row, no engine code.** Converse PROVEN: a platform declaring
+`discovery_sources[].type="rest-openapi"` (a VALID Literal whose adapter is UNBUILT) passes
+`model_validate`, then `discover()` raises `MissingAdapterError` naming `RestOpenApiDiscoverer` + the
+built set (the §8.3 gap-surface, not a crash). Leak-grep over the 8 Level-1 files = **0 hits** (the
+engine stayed platform-agnostic through a 2nd platform). Proof test:
+`tests/genproof_second_platform_acceptance.py` (11/11 green).
+
 ## CapabilityEntry id construction (F-FIX-14)
 
 `entry.id = f"{kind}/{name}"`. For flags, `name` **INCLUDES the `--` prefix**:
