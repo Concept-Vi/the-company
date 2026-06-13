@@ -56,10 +56,12 @@ the remaining items are genuinely gated (Tim input / axis-selection) or are data
   ladder, semantic-active over 162 units (all carry strain), rung=8 resolves 8 sized+labelled themes.
 - **UNATTENDED CEILING (for the loop, 2026-06-14):** every fully-buildable group is ✅. The 3 remaining
   items are NOT autonomously buildable without green-paint: Group 9 needs Tim's AI-tells; the small
-  registries/20-80 need Tim's axis-selection; Group 10's edge-order FORM needs denser declared relations
-  than exist (BOTH edge-sources — graphs + cascades — checked, both tie-break-dominated). A further fire
-  should NOT churn: do a liveness check (bridge 200 + `projection_instrument_acceptance` green) and HOLD,
-  or pick up whichever of A/B/C Tim has unblocked. Do not re-derive this ceiling each fire — it is recorded.
+  registries/20-80 need Tim's axis-selection; Group 10's edge-order FORM needs a legible ACYCLIC
+  edge-backbone over registry rows — which the system structurally lacks (THREE edge-sources checked:
+  sparse-DAG graphs, sparse-chain cascades, dense-CYCLIC type-flow — all reduce to alphabetical-with-a-nudge;
+  density was never the gap, acyclicity is). A further fire should NOT churn: do a liveness check (bridge
+  200 + `projection_instrument_acceptance` green) and HOLD, or pick up whichever of A/B/C Tim has unblocked.
+  Do not re-derive this ceiling or hunt a 4th edge-source — the convergence across three is the answer.
 
 ---
 
@@ -263,10 +265,20 @@ costume) — only REAL persisted directed edges order sectors; registries have n
   existing relations — the 8 cascades' step-edges aggregated into a role→role graph (a REAL declared
   structure, not invented precedence) — give 12 roles but only 5 edges, longest chain 4, and a topological
   order that differs from alphabetical by a SINGLE transposition; the one pure pipeline (spec-compiler:
-  decompose→expand→ground→triad) is alphabetical-coincident (not even falsifiable). So BOTH candidate
-  edge-sources (node graphs AND cascade-relations) are tie-break-dominated → the sub-bar needs DENSER
-  declared relations than the system currently holds (≥~6 rows in a real, non-alphabetical dependency DAG).
-  Rendering today's sparse edges would read as alphabetical-with-a-nudge — green-paint, refused.
+  decompose→expand→ground→triad) is alphabetical-coincident (not even falsifiable). THIRD DATA SOURCE
+  CHECKED (2026-06-14): the node registry's TYPE-FLOW graph (A→B when A's output type feeds B's input type
+  — the densest real relation in the system: 16 node types, 71 edges) — but it is DENSE+CYCLIC (22
+  bidirectional pairs), and a cyclic graph has NO topological order past its acyclic frontier: Kahn emits
+  the 5 pure sources (then alphabetical) and dumps the 11-node cyclic core to tie-break (alphabetical). So
+  its "edge-order" reduces to sources-before-non-sources, each group alphabetical — a critic reading the
+  wheel cold cannot distinguish it from alphabetical. CORRECTED BLOCKER (the real one, three sources deep):
+  density was never the missing property — an ACYCLIC EDGE-BACKBONE is. The same wall has been hit from
+  three structurally-distinct directions — sparse-DAG (graphs), sparse-chain (cascades), dense-cycle
+  (type-flow) — and that CONVERGENCE is the finding: the system holds NO legible acyclic edge-backbone that
+  would order most rows visibly-by-edges. This sub-bar is a DATA condition (not a code gap): it awaits a
+  registry with a real, legible, ACYCLIC dependency DAG over its rows. Rendering any current source would
+  read as alphabetical-with-a-nudge — green-paint, refused. (A connection-WEB viz — drawing the 71 edges as
+  chords — is a DIFFERENT feature, not order-from-edges; it is a modeling call for Tim, never a blind build.)
 
 ## GROUP 11 · ABILITY — MULTI-SCALE EMBEDDING PYRAMID ✅ (both faces verified; the SCALE axis)
 THE REVERSAL (evidence-forced): the spec's "sentence/turn/session/project" rungs were CONVERSATION-shaped;
