@@ -31,7 +31,19 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   const [err, setErr] = useState('')
   const [live, setLive] = useState(true)     // the centre is NOW — and now MOVES (the involuntary axis)
   const [beat, setBeat] = useState(0)        // ticks each refresh so the live dot pulses
+  const [at, setAt] = useState<number | null>(null)          // S/G3 time scrubber — epoch secs (null = live NOW)
+  const [center, setCenter] = useState<string | null>(null)  // S/G3 spatial re-centre — an address (null = temporal NOW)
+  const nowAnchorRef = useRef(Date.now() / 1000)             // the live "now" epoch — the scrub-math anchor
+  const spanRef = useRef(86400)                              // seconds the scrubber spans (the visible age range)
+  const posRef = useRef<Map<number, { x: number; y: number }>>(new Map())   // last drawn point positions (identity)
+  const animRef = useRef<{ from: Map<number, { x: number; y: number }>; t0: number } | null>(null)
   const inSel = (p: ProjPoint) => sel.some(s => s.seq === p.seq)
+  // relative-time word for the scrubbed centre (NOW → the past), read off the live anchor
+  const relTime = (epoch: number) => {
+    const s = Math.max(Math.round(nowAnchorRef.current - epoch), 0)
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60)
+    return h ? `${h}h${m ? ` ${m}m` : ''} ago` : m ? `${m}m ago` : 'moments ago'
+  }
 
   // S4 — frame-relativity (Tim: "the axes are variables too — scale and state/phase select the
   // frame"). 'now' = radius is age-from-NOW (the default arrow of time). 'day'/'week' = radius is
@@ -45,16 +57,32 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   // photograph. Pausable (the operator can freeze the frame to study it). Pure read.
   useEffect(() => {
     let alive = true
-    const url = '/api/projection' + (bind ? `?binding=${encodeURIComponent(bind)}` : '')
+    const params = new URLSearchParams()
+    if (bind) params.set('binding', bind)
+    if (at != null) params.set('at', String(at))       // the scrubbed past (the centre moved back in time)
+    if (center) params.set('center', center)            // the spatial re-centre (radius = distance-from-address)
+    const url = '/api/projection' + (params.toString() ? `?${params.toString()}` : '')
     const pull = () => fetch(url)
       .then(r => { if (!r.ok) throw new Error(`projection ${r.status}`); return r.json() })
       .then(d => { if (alive) { setProj(d); setBeat(b => b + 1); setErr('') } })
       .catch(e => { if (alive) setErr(String(e?.message || e)) })
     pull()
-    if (!live) return () => { alive = false }
+    // live = NOW advances. Only while tracking the present: a centre scrubbed into the PAST must not be
+    // dragged forward by the interval (it is frozen there until released back to now).
+    if (!live || at != null) return () => { alive = false }
     const id = setInterval(pull, 15000)   // now advances every 15s; the radius shells re-resolve
     return () => { alive = false; clearInterval(id) }
-  }, [live, bind])
+  }, [live, bind, at, center])
+
+  // keep the scrub anchor + span fresh while live-at-NOW, so the scrubber spans the real visible age range
+  useEffect(() => {
+    if (at == null) nowAnchorRef.current = Date.now() / 1000
+    if (at == null && proj && proj.points.length) {
+      const nowE = Date.parse(proj.now) / 1000
+      const oldest = Math.min(...proj.points.map(p => Date.parse(p.ts) / 1000))
+      if (isFinite(oldest) && nowE - oldest > 0) spanRef.current = Math.max(nowE - oldest, 3600)
+    }
+  }, [proj, at])
 
   const draw = useCallback(() => {
     const cvs = cvsRef.current, wrap = wrapRef.current
@@ -117,21 +145,35 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       g.globalAlpha = 1; g.fillStyle = ink
       g.fillText(s.label, lx, ly)
     }
-    // The points — exactly the same points, drawn where they already are.
+    // The points — exactly the same points, drawn where they already are. On a re-centre / reframe they
+    // ANIMATE from their previous positions to the new ones: a point keeps its seq and SLIDES to its new
+    // place rather than teleporting — identity survives the transform (the centre freed, made visible).
     const selSeqs = new Set(sel.map(s => s.seq))
+    const anim = animRef.current
+    const prog = anim ? Math.min((performance.now() - anim.t0) / 480, 1) : 1
+    const ease = 1 - Math.pow(1 - prog, 3)             // easeOutCubic
+    const nextPos = new Map<number, { x: number; y: number }>()
     for (const p of proj.points) {
       const rr = radial(p) * R
-      const x = cx + Math.sin(p.theta) * rr, y = cy - Math.cos(p.theta) * rr
-      const hue = (p.theta * 180) / Math.PI            // color IS angle
+      const tx = cx + Math.sin(p.theta) * rr, ty = cy - Math.cos(p.theta) * rr
+      nextPos.set(p.seq, { x: tx, y: ty })
+      let x = tx, y = ty, fade = 1
+      if (anim) {
+        const from = anim.from.get(p.seq)
+        if (from) { x = from.x + (tx - from.x) * ease; y = from.y + (ty - from.y) * ease }
+        else fade = ease                               // a point not present before fades in at its place
+      }
+      const hue = (p.theta * 180) / Math.PI            // color IS angle (the deliberate non-token colour)
       const chosen = selSeqs.has(p.seq)
-      g.globalAlpha = p === picked ? 1 : 0.75
+      g.globalAlpha = (p === picked ? 1 : 0.75) * fade
       g.fillStyle = p === picked ? accent : `hsl(${hue}deg 55% 58%)`
       g.beginPath(); g.arc(x, y, p === picked ? 5 : 2.1, 0, Math.PI * 2); g.fill()
       if (chosen) {  // the working set rings — what will ride into the builder
-        g.globalAlpha = 0.95; g.strokeStyle = accent; g.lineWidth = 1.5
+        g.globalAlpha = 0.95 * fade; g.strokeStyle = accent; g.lineWidth = 1.5
         g.beginPath(); g.arc(x, y, 6, 0, Math.PI * 2); g.stroke()
       }
     }
+    posRef.current = nextPos
     // NOW — the centre, the one shared point of time. When live, it pulses: a halo that breathes
     // each refresh, so the advancing present is visible at the origin.
     g.globalAlpha = 1; g.fillStyle = accent
@@ -151,6 +193,24 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     if (wrapRef.current) ro.observe(wrapRef.current)
     return () => ro.disconnect()
   }, [draw])
+
+  // re-centring (spatial `center` change) and reframing (now↔day↔week) ANIMATE — kick a short rAF tween
+  // that re-draws while the easeOutCubic runs. drawRef keeps the trigger off the live-refresh path (so a
+  // routine 15s pull doesn't jitter every point — only a deliberate transform animates).
+  const drawRef = useRef(draw)
+  useEffect(() => { drawRef.current = draw })
+  useEffect(() => {
+    if (!posRef.current.size) return
+    animRef.current = { from: new Map(posRef.current), t0: performance.now() }
+    let raf = 0
+    const tick = () => {
+      drawRef.current()
+      if (animRef.current && performance.now() - animRef.current.t0 < 480) raf = requestAnimationFrame(tick)
+      else { animRef.current = null; drawRef.current() }
+    }
+    raf = requestAnimationFrame(tick)
+    return () => { cancelAnimationFrame(raf); animRef.current = null }
+  }, [frame, center])
 
   const pick = (ev: { clientX: number; clientY: number }) => {
     const wrap = wrapRef.current
@@ -187,16 +247,22 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     onHandoff?.()
   }
 
+  // the time/frame label (the temporal centre) for the foot readout; the spatial centre shows as a chip
+  const timeLabel = at != null ? `◷ ${relTime(at)}` : frame === 'now' ? 'now' : `cycle:${frame}`
+  const centreSeg = center ? (center.split('/').filter(Boolean).slice(-1)[0] || center) : ''
+
   if (err) return <div className="lattice-err"><EmptyState>projection unreachable — {err}</EmptyState></div>
   return (
     <div className="lattice-wrap" ref={wrapRef} onPointerDown={pick}>
       <canvas ref={cvsRef} />
       <div className="lattice-foot">
         <span>
-          <button className={'lf-live' + (live ? ' on' : '')} onClick={() => setLive(l => !l)}
+          <button className={'lf-live' + ((live && at == null) ? ' on' : '')}
+            onClick={() => { if (at != null) { setAt(null); setLive(true) } else setLive(l => !l) }}
             onPointerDown={e => e.stopPropagation()}
-            title={live ? 'now is advancing — tap to freeze the frame' : 'frozen — tap to follow now'}>
-            {live ? '● live' : '⏸ frozen'}
+            title={at != null ? 'centre scrubbed into the past — tap to return to NOW'
+              : live ? 'now is advancing — tap to freeze the frame' : 'frozen — tap to follow now'}>
+            {at != null ? '◷ past' : live ? '● live' : '⏸ frozen'}
           </button>
           {proj?.bindings && proj.bindings.length > 1 && (
             <select className="lf-lens" value={bind} title="the lens — which registry resolves the angle (nothing hardcoded)"
@@ -205,9 +271,22 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
               {proj.bindings.map(b => <option key={b.id} value={b.id}>lens: {b.label}</option>)}
             </select>
           )}
-          {' '}{proj ? `${proj.count} pts · ${proj.n} sectors · ${frame === 'now' ? 'now' : `cycle:${frame}`}` : 'projecting…'}
+          {center && (
+            <button className="lf-centred" onClick={() => { setCenter(null); setPicked(null) }}
+              onPointerDown={e => e.stopPropagation()} title={`centred on ${center} — tap to release back to NOW`}>
+              ⊙ {centreSeg} ✕
+            </button>
+          )}
+          {' '}{proj ? `${proj.count} pts · ${proj.n} sectors · ${timeLabel}` : 'projecting…'}
         </span>
         <div className="lattice-frames" onPointerDown={e => e.stopPropagation()}>
+          <label className="lf-slider" title="scrub the centre back in time — NOW → the past (frozen where you let go)">
+            <span className="lf-ic">⏱</span>
+            <input type="range" className="lf-scrub" min={0} max={Math.round(spanRef.current)}
+              step={Math.max(Math.round(spanRef.current / 240), 1)}
+              value={at != null ? Math.min(Math.round(nowAnchorRef.current - at), Math.round(spanRef.current)) : 0}
+              onChange={e => { const back = Number(e.target.value); setPicked(null); setAt(back <= 0 ? null : Math.round(nowAnchorRef.current - back)) }} />
+          </label>
           {(['now', 'day', 'week'] as const).map(fr => (
             <button key={fr} className={'lf-btn' + (frame === fr ? ' on' : '')}
               onClick={() => setFrame(fr)}
@@ -216,9 +295,11 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
             </button>
           ))}
           {frame === 'now' && (
-            <input type="range" min={0.5} max={3.2} step={0.1} value={zoom}
-              onChange={e => setZoom(Number(e.target.value))}
-              onPointerDown={e => e.stopPropagation()} title="zoom the recent inner rings" />
+            <label className="lf-slider" title="zoom the recent inner rings">
+              <span className="lf-ic">⌕</span>
+              <input type="range" className="lf-zoom" min={0.5} max={3.2} step={0.1} value={zoom}
+                onChange={e => setZoom(Number(e.target.value))} onPointerDown={e => e.stopPropagation()} />
+            </label>
           )}
         </div>
       </div>
@@ -238,6 +319,12 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
           <button className="lc-pick" onClick={() => toggleSel(picked)}>
             {inSel(picked) ? '− remove from set' : '＋ add to set'}
           </button>
+          {picked.address && (
+            <button className="lc-center" onClick={() => { setCenter(picked.address); setPicked(null) }}
+              title="re-centre the projection on this address — radius becomes distance-from-here">
+              ⊙ centre on this
+            </button>
+          )}
         </div>
       )}
       {sel.length > 0 && (

@@ -1870,3 +1870,22 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
   border-radius: 6px; padding: 2px 6px; color: var(--dim); cursor: pointer;
   font: 10px ui-monospace, monospace; margin-left: 6px; }
 .lattice-foot .lf-lens:hover { border-color: var(--acc); }
+
+/* G3 — the centre freed: the time scrubber + the spatial re-centre controls. Every foot control is
+   pointer-events:auto so a REAL tap lands (the foot stays none so the canvas shows through the gaps);
+   the foot wraps so the controls never overflow the phone face. Token-only. */
+.lattice-foot { flex-wrap: wrap; row-gap: 6px; }
+.lattice-foot button, .lattice-foot select, .lattice-foot input { pointer-events: auto; }
+.lattice-foot .lattice-frames { flex-wrap: wrap; row-gap: 6px; justify-content: flex-end; }
+.lattice-foot .lf-slider { display: inline-flex; align-items: center; gap: 4px; }
+.lattice-foot .lf-slider .lf-ic { color: var(--dim); font-size: 11px; line-height: 1; }
+/* input[type=range] specificity (0,3,1) so these beat the generic .lattice-foot input[type=range] rule */
+.lattice-foot input[type=range].lf-scrub { width: 112px; accent-color: var(--acc); cursor: pointer; }  /* time = the gold (privileged) axis */
+.lattice-foot input[type=range].lf-zoom { width: 92px; accent-color: var(--dim); cursor: pointer; }     /* zoom = secondary, de-emphasised */
+.lattice-foot .lf-centred { background: none; border: 1px solid var(--acc); border-radius: 6px;
+  padding: 2px 7px; margin-left: 6px; color: var(--acc); cursor: pointer; font: 10px ui-monospace, monospace; }
+.lattice-card .lc-center { margin-top: 6px; width: 100%; background: none; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px;
+  color: var(--tx-2); font: 11px ui-monospace, monospace; }
+.lattice-card .lc-center:hover { border-color: var(--acc); color: var(--acc); }
+@media (max-width: 699px) { .lattice-foot input[type=range].lf-scrub { width: 88px; } }
