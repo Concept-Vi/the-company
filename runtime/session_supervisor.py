@@ -136,7 +136,8 @@ SUPERVISOR_ROUTES = (
 )
 MAIL_LEAF = "agent_sessions"           # naming law: agent_sessions everywhere (never fabric/, never sessions/)
 CURSOR_REF = "agent_sessions/cursor:supervisor"   # per-consumer mailbox cursor (a ref, §2.3 pattern)
-INIT_WAIT_S = float(os.environ.get("COMPANY_FABRIC_INIT_WAIT_S", "15"))  # spawn blocks briefly for init
+INIT_WAIT_S = float(os.environ.get("COMPANY_FABRIC_INIT_WAIT_S", "15"))  # max crash-watch window at spawn
+SPAWN_SETTLE_S = float(os.environ.get("COMPANY_FABRIC_SPAWN_SETTLE_S", "1.0"))  # brief instant-crash settle before a live stream-json process is promoted idle (init is post-first-message; see _spawn wait_init)
 MAIL_POLL_S = 0.5
 WATCHDOG_POLL_S = 0.5
 
@@ -817,9 +818,20 @@ class SessionSupervisor:
                   durable=True, session=s.id, name=s.name, cwd=s.cwd, resume=resume, fork=fork,
                   source=source, pid=s.proc.pid)
         if wait_init:
-            deadline = time.time() + INIT_WAIT_S
+            # ROOT-CAUSE (lead-proven 2026-06-14): a real claude under --input-format stream-json
+            # emits `system/init` only AFTER its first injected message — the SessionStart hooks
+            # fire at spawn, but init waits for stdin input. Blocking for init here deadlocked the
+            # spawn -> wait-for-idle -> inject pattern (the session sat in 'starting' forever; the
+            # R1 live-probe hang). Readiness = "the process didn't instant-crash on bad flags":
+            # after a brief settle a still-alive process IS ready to receive its first turn, so
+            # promote 'starting' -> 'idle'. init then arrives on that first turn and the reader
+            # captures claude_session_id (~L965). A stub that prints init eagerly flips to idle
+            # inside the settle (the reader sets it), so the stub acceptance path is unchanged.
+            deadline = time.time() + min(INIT_WAIT_S, SPAWN_SETTLE_S)
             while time.time() < deadline and s.state == "starting" and s.proc.poll() is None:
                 time.sleep(0.05)
+            if s.state == "starting" and s.proc.poll() is None:
+                s.state = "idle"   # live stream-json process = ready for its first turn
         return s
 
     # ---------- RAIL R1-prime: the consent-gated bridge-session spawn ----------
@@ -904,9 +916,20 @@ class SessionSupervisor:
         if prompt:
             self.inject(s, str(prompt), source=source)
         if wait_init:
-            deadline = time.time() + INIT_WAIT_S
+            # ROOT-CAUSE (lead-proven 2026-06-14): a real claude under --input-format stream-json
+            # emits `system/init` only AFTER its first injected message — the SessionStart hooks
+            # fire at spawn, but init waits for stdin input. Blocking for init here deadlocked the
+            # spawn -> wait-for-idle -> inject pattern (the session sat in 'starting' forever; the
+            # R1 live-probe hang). Readiness = "the process didn't instant-crash on bad flags":
+            # after a brief settle a still-alive process IS ready to receive its first turn, so
+            # promote 'starting' -> 'idle'. init then arrives on that first turn and the reader
+            # captures claude_session_id (~L965). A stub that prints init eagerly flips to idle
+            # inside the settle (the reader sets it), so the stub acceptance path is unchanged.
+            deadline = time.time() + min(INIT_WAIT_S, SPAWN_SETTLE_S)
             while time.time() < deadline and s.state == "starting" and s.proc.poll() is None:
                 time.sleep(0.05)
+            if s.state == "starting" and s.proc.poll() is None:
+                s.state = "idle"   # live stream-json process = ready for its first turn
         return s
 
     # ---------- the per-session stderr drain (the rc=1-on-resume fix) ----------

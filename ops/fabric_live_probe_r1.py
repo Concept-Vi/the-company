@@ -159,19 +159,22 @@ def main() -> int:
     cap = os.path.join(CAPTURE_DIR, f"probe-{stamp}-{sid}.ndjson")
     w = Watcher(base, sid, cap)
     w.start()
+    # A real claude under --input-format stream-json emits system/init only IN RESPONSE TO the
+    # first injected turn (lead-proven 2026-06-14: at spawn the SessionStart hooks fire, but init
+    # waits for stdin input). So wait for the session to be READY (idle = process up, accepting
+    # input), then the FIRST inject both (a) triggers the init that must echo the pre-assigned id
+    # and (b) exercises append_system_prompt (the session states the appended rule).
+    wait_idle(base, sid)
+    m = w.mark()
+    req(base, "POST", "/inject", {"session": sid,
+        "message": "What extra rule were you given? Answer with the rule's exact text only."})
     init = w.wait_for(lambda e: e.get("type") == "declared"
-                      and e.get("render_key") == "system/init", 60, "declared init")
+                      and e.get("render_key") == "system/init", 120, "declared init", since=m)
     got_sid = (init or {}).get("fields", {}).get("session_id")
     proof["R1.3 session_id"] = (
         f"OBSERVED — pre-assigned {want_sid} == init's session_id" if got_sid == want_sid
         else f"NOT-OBSERVED — wanted {want_sid}, init carried {got_sid}")
     print(f"  {proof['R1.3 session_id']}")
-
-    # the appended-system-prompt effect, observed through behaviour
-    wait_idle(base, sid)
-    m = w.mark()
-    req(base, "POST", "/inject", {"session": sid,
-        "message": "What extra rule were you given? Answer with the rule's exact text only."})
     done = w.wait_for(lambda e: e.get("type") == "done", 240, "turn done", since=m)
     txt = (done or {}).get("result", "")
     proof["R1.3 append_system_prompt"] = (
