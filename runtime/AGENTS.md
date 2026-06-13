@@ -375,9 +375,15 @@ re-raises after the barrier, processing routes to `.failed`). Proven by `tests/r
 companion **`resolve_address(store, addr, *, turn_id)` is the scheme-dispatching resolver** (the
 "resolve content from ANY address" seam): materialises `<turn>` templates, then dispatches by `://`
 presence — `run://`→`resolve_run_ref`, `cas://`→`get_content` (both REUSE), a bare name→a `BARE_NAME`
-sentinel (a ctx-key), and **every other scheme (`skill://`/`context://`/blob/vec/ui/code) RAISES
-fail-loud — the extensible seam where those resolvers plug in** (skills/contexts are net-new addressable
-registries landing on this seam, C 3b). The `run_role` input is `ctx`-supplied (default `Utterance:`) OR
+sentinel (a ctx-key), `skill://`/`context://`→the file-discovered registry read, `session://`→the
+agent-session registry record, `cap://`→a `CapabilityEntry` (Mirror-Registry LANE-CAP-WIRE — the live
+binary's self-reported flag/slash/tool/setting leaf, reached via the **cached CapabilityRegistry
+singleton** `introspection.registry.capability_registry()` that `Suite.__init__` set; a lazy import
+inside the branch keeps cognition's module-load free of `introspection` and is cycle-free since
+`introspection` never imports `runtime/`; an unknown capability RAISES exactly as `session://` does —
+registry-is-truth, never fabricate), and **every remaining registered scheme (blob/vec/ui/code) RAISES
+fail-loud — the extensible seam where those resolvers plug in** (skills/contexts/sessions/capabilities
+graduated off this seam: C 3b, then Session Fabric F1.2, then the Mirror-Registry). The `run_role` input is `ctx`-supplied (default `Utterance:`) OR
 resolved from `input_addresses` via the address system (C 1/4 seam — a role's input can be a skill / a
 context / any upstream output, set by address); `op: generate|embed` selects the operation (embed reuses
 `complete_embeddings`, local-resident only). Add a new shape/grain ⇒ add it to

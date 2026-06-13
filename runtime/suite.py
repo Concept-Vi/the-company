@@ -494,6 +494,49 @@ class Suite:
                                 else self._cfg_choice("COMPANY_MODE_AUTODETECT",
                                                       type(self).MODE_AUTODETECT, self.MODE_AUTODETECT_OPTIONS))
 
+        # Mirror-Registry LANE-CAP-WIRE — install the CapabilityRegistry so resolve_address(cap://…) can
+        # reach it (introspection.registry.capability_registry() raises until set). The registry is a
+        # CACHED module-level singleton (F-FIX-1 / PG-D2 — a NEW pattern, NOT the fresh-discover skill/
+        # context sibling), so it is built+set ONCE here. LAZY import: suite.py does not import
+        # introspection at module load (keeps the import graph clean + honours PG-D6 — introspection
+        # never imports runtime/, so runtime→introspection is the only edge, no cycle; the supervisor
+        # head-builder that platforms/claude_code.py registers does NOT import Suite, so loading the
+        # platform here is cycle-free, verified).
+        #
+        # DISCOVERY IS DEFERRED, NOT RUN AT INIT. CapabilityRegistry.discover()'s LIVE path spawns the
+        # `claude` binary (`--help` + a `system/init` scratch session) — a LEAD-only operation; a worker/
+        # CI/unit Suite construction MUST NOT spawn it. So __init__ installs the platform + an
+        # un-discovered registry. cap:// stays fail-loud-correct meanwhile: an un-discovered registry has
+        # zero rows, so cap://<anything> RAISES "unknown capability" — never a fabricated row. A LEAD run
+        # populates it via self.discover_capabilities() (or COMPANY_CAP_DISCOVER_AT_INIT=1 to opt in at
+        # construction). This is the registry-is-truth path: the surface is empty until the live binary
+        # is actually read, and it says so loudly rather than inventing a capability.
+        from introspection.registry import CapabilityRegistry, set_capability_registry
+        from introspection.platforms import platform_registry
+        self._platform_registry = platform_registry()                 # discovers platforms/*.py (no spawn)
+        self.capability_platform = self._platform_registry.get("claude-code")  # PlatformEntry (instance #1)
+        self.capability_registry = CapabilityRegistry()               # empty until discover() runs (LEAD)
+        set_capability_registry(self.capability_registry)             # the cap:// resolver reaches THIS object
+        if self._cfg_choice("COMPANY_CAP_DISCOVER_AT_INIT", "0", ("0", "1")) == "1":
+            self.discover_capabilities()                              # opt-in LEAD path — spawns the binary
+
+    def discover_capabilities(self, *, discover_fn=None, executable: str | None = None,
+                              version: str | None = None):
+        """Populate the installed CapabilityRegistry from the live platform (LANE-CAP-WIRE / Mirror-
+        Registry). The default path spawns the `claude` binary (LEAD-only); a unit/CI caller injects
+        `discover_fn=<stub>` (+ executable/version) to populate fixture rows with NO subprocess. The
+        registry is mutated IN PLACE (the same object set_capability_registry installed at __init__), so
+        every cap:// resolution + the capabilities()['introspection'] key see the rows immediately.
+        Fail-loud on an empty/sub-floor discovery (the engine raises) — never a silent empty registry."""
+        if self.capability_platform is None:
+            raise RuntimeError(
+                "discover_capabilities: no 'claude-code' PlatformEntry in the PlatformRegistry — "
+                "platforms/claude_code.py did not load. Mirror-Registry instance #1 is the registration; "
+                "fail loud, never discover against a missing platform.")
+        self.capability_registry.discover(
+            self.capability_platform, executable=executable, version=version, discover_fn=discover_fn)
+        return self.capability_registry
+
     @staticmethod
     def _cfg_float(env_name: str, default: float) -> float:
         """X17 — resolve a float knob from the env (default = the class constant). FAIL LOUD on a
@@ -1467,6 +1510,35 @@ class Suite:
             # (tests/bridge_routes_acceptance.py) keeps BRIDGE_ROUTES == the dispatcher's own route literals,
             # so this projection is truth, never a relabeled third copy.
             "api_verbs": self._api_verbs(),
+            # introspection — the Mirror-Registry capability surface summary (LANE-CAP-WIRE). The
+            # face-neutral projection of the installed CapabilityRegistry: platform_id, the binary
+            # version the rows came from, and counts by kind + by posture. registry-is-truth: this is
+            # WHAT the live binary self-reports, projected from the ONE registry the cap:// resolver + the
+            # capability(op=…) MCP op also read. An un-discovered registry (no LEAD discovery yet) reports
+            # counts:{} honestly — it does NOT fabricate a surface; the operator sees the registry is
+            # empty rather than a guessed list. Additive key; an older surface ignoring it is unaffected.
+            "introspection": self._introspection_summary(),
+        }
+
+    def _introspection_summary(self) -> dict:
+        """The capabilities()['introspection'] projection — counts by kind/posture + version + platform,
+        from the installed CapabilityRegistry (Mirror-Registry LANE-CAP-WIRE). Reads the registry's own
+        face-neutral snapshot() (engine.project over the held rows). An un-discovered registry yields
+        empty counts (registry-is-truth: empty, never fabricated). Tolerant in a status read: if the
+        registry is somehow unset (a construction that skipped the wiring), report discovered=False with
+        the reason rather than crashing the whole capabilities() fold (rule 4 — a status read never
+        raises; the discovery PATH itself stays fail-loud)."""
+        reg = getattr(self, "capability_registry", None)
+        if reg is None:
+            return {"discovered": False, "reason": "capability_registry not installed at Suite init"}
+        snap = reg.snapshot()    # engine.project keys: counts (by kind) · postures · total · entries · platform_id · version
+        return {
+            "platform_id": snap.get("platform_id", ""),
+            "version": snap.get("version", ""),
+            "discovered": len(reg) > 0,
+            "counts_by_kind": snap.get("counts", {}),
+            "counts_by_posture": snap.get("postures", {}),
+            "total": snap.get("total", len(reg)),
         }
 
     @staticmethod

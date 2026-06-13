@@ -871,10 +871,12 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
          NEVER a silent empty. This RAISE is the extensible seam: when a resolver exists, add a dispatch
          branch here (and that scheme stops raising) — exactly as skill://+context:// just did (C 3b).
 
-    SCOPE (C 3b — the seam's FIRST real extension; session:// its second, Session Fabric F1.2): skills +
-    contexts + agent sessions ARE addressed now — `resolve_address` resolves `run://` (an upstream
-    output) + `cas://` (a content blob) + `skill://` (a reusable instructions unit) + `context://` (a
-    reusable context blob) + `session://` (an agent-session registry record). It remains the ONE place
+    SCOPE (C 3b — the seam's FIRST real extension; session:// its second, Session Fabric F1.2; cap:// its
+    third, Mirror-Registry LANE-CAP-WIRE): skills + contexts + agent sessions + platform capabilities ARE
+    addressed now — `resolve_address` resolves `run://` (an upstream output) + `cas://` (a content blob) +
+    `skill://` (a reusable instructions unit) + `context://` (a reusable context blob) + `session://` (an
+    agent-session registry record) + `cap://` (a CapabilityEntry — the live binary's self-reported flag/
+    slash/tool/setting leaf, via the cached CapabilityRegistry singleton). It remains the ONE place
     the next resolver (a `vec://` k-NN read, a `blob://` binary read) plugs in LATER; until then those
     schemes fail loud here — the seam is declared, not faked. The input-address INTENT (a role's input
     = any skill, any context, or any upstream output, set by address) is now fully realised.
@@ -923,12 +925,32 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
                 f"(ops/agent_sessions_importer.py) backfills the historical catalog. Fail loud, "
                 f"never fabricate a session.")
         return rec
+    if sch == "cap":
+        # Mirror-Registry LANE-CAP-WIRE — cap://<kind>/<id> → the CapabilityEntry registry row (the
+        # leaf the live binary self-reports: cap://flag/--debug, cap://slash/doctor, cap://mcp_tool/Bash).
+        # The registry is reached via the CACHED module-level singleton (introspection.registry —
+        # F-FIX-1 / PG-D2: a NEW pattern, NOT the fresh-discover skill/context sibling, because binary
+        # discovery is expensive). LAZY import inside the branch — cognition.py must NOT import
+        # introspection at module load (the registry imports the engine→adapters→contracts; the lazy
+        # import keeps this dispatcher's import graph clean + handles the PG-D6 circularity decision:
+        # introspection never imports runtime/, so the only edge is runtime→introspection, no cycle).
+        # Registry-is-truth: an unknown capability RAISES — never fabricate a row (mirrors session://).
+        from introspection.registry import capability_registry as _cap_reg   # lazy: avoids module-load coupling
+        rest = addr[len("cap://"):]
+        entry = _cap_reg().get(rest)                                          # capability_registry() RAISES if Suite init never set it
+        if entry is None:
+            raise ValueError(
+                f"resolve_address: unknown capability {rest!r} (address {addr!r}) — no CapabilityEntry "
+                f"row. registry-is-truth: the live binary's self-reported surface is the only source; "
+                f"list it with the capability(op='list') MCP op (ids are '<kind>/<name>', flags keep "
+                f"the '--' prefix, e.g. 'flag/--debug'). Fail loud, never fabricate a capability.")
+        return entry
     if sch is not None:
         # a REGISTERED scheme (blob/vec/ui/code) with no content-resolver wired into this dispatcher yet.
         raise ValueError(
             f"resolve_address: scheme {sch!r} not content-resolvable yet (address {addr!r}) — "
-            f"run:// + cas:// + skill:// + context:// + session:// resolve to content today (extensible: "
-            f"add a {sch}:// resolver branch here). Fail loud, NEVER a silent empty.")
+            f"run:// + cas:// + skill:// + context:// + session:// + cap:// resolve to content today "
+            f"(extensible: add a {sch}:// resolver branch here). Fail loud, NEVER a silent empty.")
     if "://" in addr:
         # an UNREGISTERED scheme (foo://) — not in contracts.address.SCHEMES, no resolver. The seam's
         # future home for a new declared scheme (skill://+context:// graduated from here in C 3b).
@@ -936,7 +958,7 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
         raise ValueError(
             f"resolve_address: scheme {bad!r} not content-resolvable yet (address {addr!r}) — it is not "
             f"a registered scheme (contracts.address.SCHEMES) and has no resolver. run:// + cas:// + "
-            f"skill:// + context:// + session:// resolve now; this is the EXTENSIBLE seam where a {bad}:// "
+            f"skill:// + context:// + session:// + cap:// resolve now; this is the EXTENSIBLE seam where a {bad}:// "
             f"resolver plugs in when the scheme exists. Fail loud, NEVER a silent empty.")
     # a BARE NAME (no "://") — not an address; the caller reads it from the supplied ctx.
     return BARE_NAME

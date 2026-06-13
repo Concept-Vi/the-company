@@ -84,6 +84,26 @@ spawn a process on EVERY `cap://` resolution — forbidden here. `Suite.__init__
 `set_capability_registry()` ONCE. **State the divergence; never "fix" the singleton to match the
 siblings.**
 
+### LANE-CAP-WIRE (built 2026-06-13) — the consumer wiring + DEFERRED discovery (no spawn at init)
+`Suite.__init__` now (runtime/suite.py, after the registry block): resolves the `claude-code`
+`PlatformEntry` from `introspection.platforms.platform_registry()`, constructs an **empty**
+`CapabilityRegistry`, and calls `set_capability_registry()` on it ONCE — so
+`runtime/cognition.py:resolve_address` resolves `cap://<kind>/<id>` via `capability_registry().get(rest)`
+(lazy import inside the branch; PG-D6 cycle-free — `introspection` never imports `runtime/`, and the
+supervisor head-builder `platforms/claude_code.py` registers does NOT import `Suite`). **Discovery is
+DEFERRED, NOT run at init:** the live `CapabilityRegistry.discover()` spawns the binary (LEAD-only), so
+`__init__` installs an un-discovered registry and `cap://` stays fail-loud-correct meanwhile (an empty
+registry RAISES "unknown capability" for any id — registry-is-truth, never a fabricated row). A LEAD run
+populates it via `suite.discover_capabilities()` (the default spawns the binary) or
+`suite.discover_capabilities(discover_fn=<stub>)` (no-spawn unit/CI), or opts in at construction with
+`COMPANY_CAP_DISCOVER_AT_INIT=1`. The registry is mutated IN PLACE, so every `cap://` resolution + the
+`capabilities()['introspection']` summary read the same object the moment discovery lands.
+**Unit-verified** (no live claude / no model load): `tests/cap_wire_acceptance.py` (14 checks — import
+cycle-free, wired-at-init, empty-is-fail-loud, stub-entry resolves end-to-end through the real
+`resolve_address`, unknown fails loud, the `introspection` capabilities key reflects the populated rows).
+**🟡 LEAD live-verify queued:** C-WIRE-1/2/3 — the live-binary `discover()` (≥30 real flags) + a real
+`cap://` resolution from the running server.
+
 ## F-FIX-15 / PG-D3 — store write convention: direct `open()`, NOT FsStore CAS
 
 The discoverer/refresh flow writes `store/introspection_cache.json` and
