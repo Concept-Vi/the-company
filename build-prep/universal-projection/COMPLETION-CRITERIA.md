@@ -88,14 +88,19 @@ Mechanism complete; NO embedder resident now (ports HTTP 000); only stale defaul
   (`vector_index.index_staleness`). ☐ by use (coordinate with the retrieval/ops session)
 - **FORM** — n/a (substrate). ☐
 
-## GROUP 9 · ABILITY — TWO-GRAVITY SEPARATOR 🔴 (GATED on Model Call 2)
-Mechanism named; no instruction-lens embedding; transport carries no framing parameter; no anchors.
+## GROUP 9 · ABILITY — TWO-GRAVITY SEPARATOR 🔴 (UN-GATED 2026-06-13; needs Group 8 + the AI-tells)
+Mechanism named; no instruction-lens embedding; transport carries no framing parameter.
+POLES (resolved, §17): Tim-pole = the CENTRE (origin + the gradient field of Tim's recognitions/
+corrections — NOT corpus samples, since "none of it has all my intention"); AI-pole = the CORNER (the
+AI deformation), seeded by Tim's description of the AI-tells (his volunteered input).
 - **FUNCTION** — a steerable embedder served; an instruction/task parameter threaded through
-  `fabric/transport.py` → `client.complete_embeddings` → `nodes/embed.py` → build_index; two lens
-  spaces built; a per-unit signed gap = pollution signal (a thin sibling of `find_relations`). ☐ by use
-- **FORM** — every point carries its signed pull (toward Tim-pole vs AI-pole), readable on the
+  `fabric/transport.py` → `client.complete_embeddings` → `nodes/embed.py` → build_index; the AI-tells
+  lens built; a per-unit signed gap (cosine pull toward centre vs corner) = pollution signal (a thin
+  sibling of `find_relations`). ☐ by use
+- **FORM** — every point carries its signed pull (toward origin vs AI-corner), readable on the
   surface; on tokens. ☐ by rubric
-- **GATE** — requires Tim's anchor-set ratification (Model Call 2). Not computable until then.
+- **INPUT (not a gate)** — Tim's AI-tells description; the Tim-pole needs no enumeration (it's the
+  origin + the existing gradient field).
 
 ## GROUP 10 · ABILITY — ORDER-FROM-EDGES + ANGLE-FROM-A-REGISTRY 🔴 (needs the event→row edge)
 relation_types vocabulary exists but is unwired; order_by is only count|declared.
@@ -110,19 +115,27 @@ No sentence/turn chunker; corpus is unit-level only.
   project); a zoom-by-rung query layer; zoom changes which rung resolves. ☐ by use
 - **FORM** — zoom across rungs reads as a continuous scale move, not a mode switch. ☐ by rubric
 
-## GROUP 12 · MODEL CALLS — AWAITING TIM (a ratification gate, NOT a build group)
-- Model Call 1: register-of-registries = prime/divisor lattice? (the missing formalism)
-- Model Call 2: the two-gravity anchor poles (gates Group 9)
-- Open: the two axes (the spine); k (the dimension); the spectrum; prioritization-at-scale; the 20/80
-  dial / promotion gesture.
-DONE looks like: Tim's part-by-part reaction received. Until then these stay captured-not-hardened and
-NO build proceeds on them. (Everything else proceeds without them.)
+## GROUP 12 · MODEL CALLS — DISSOLVED (2026-06-13; Tim confirmed "your logic was actually all correct")
+See SEED-SCALE-PRIMES-SEPARATOR.md §17. The gate is GONE — every "model call" was the lead trying to
+freeze a variable Tim deliberately left free (the hardcoding reflex). Resolution:
+- **Call 1 (register = prime/divisor lattice?) — INVALID.** Not a separate formalism; the equation
+  recursing one scale up (corners = primes already). No ratification, no gate.
+- **Call 3 (the two privileged axes) — INVALID.** Axes are variables; it is ONE-and-three — only TIME
+  is privileged (settled); the three of space stay variable. Build the resolver, never fix them.
+- **Call 2 (two-gravity anchors) — ANSWERED structurally.** Poles = the CENTRE (Tim's model/origin +
+  the gradient field of his recognitions) and the CORNER (AI deformation). Nothing in the corpus is
+  purely Tim, so the Tim-pole is the origin+gradient, NOT corpus samples. The ONLY input is Tim
+  describing the AI-tells (volunteered). → Group 9 is UN-GATED.
+- **Call 4 (harmonics) — ANSWERED.** "As one instance" — a lens, not the core; spectrum stays out.
+- Genuinely-open growth fronts (not gates, not blockers): k (the dimension); prioritization-at-scale;
+  the 20/80 dial / promotion gesture — these stub honestly and refine with use.
+**Consequence: NO build item is blocked awaiting a Tim decision. The whole sequence is buildable now.**
 
 ---
 
 ## PRIORITY ORDER (dependency; instrument-first then ability — the loop walks this)
 
-0. **Model-call gate** (parallel, blocks only Groups 9 + the lattice formalism) — surface to Tim.
+0. **Model calls DISSOLVED** (§17; Tim confirmed) — no gate; the whole sequence is buildable. Group 9's only input is Tim's AI-tells description.
 1. **Group 1** — the acceptance suite (the regression floor; net-new; first so nothing silently breaks).
 2. **Group 5** — the FORM rebuild (file-disjoint from backend; can run parallel to 1; the real debt).
 3. **Group 3** — time-freed centre (small; reuses metrics; roll-forward planning later reuses it).

@@ -429,6 +429,59 @@ harden. Tim's next words ("after that we'll talk") set the direction.**
 
 ---
 
+## 17 · THE MODEL-CALL DISSOLUTION (Tim confirmed the lead's reasoning correct, 2026-06-13)
+
+The lead proposed four "model calls awaiting Tim." Tim: "Two of your questions are invalid in a few
+ways… it's all things that I have already said in this session before." The lead then broke all four
+down and Tim confirmed: **"Your logic was actually all correct."** The resolution (now binding):
+
+**THE META-PATTERN (the lead's own recurring error, named):** every "model call" was the lead trying
+to FREEZE A VARIABLE Tim deliberately left free — the hardcoding / "first binding" reflex wearing the
+costume of "a decision only Tim can make." A1: "it is all variables… the axes, what the centre
+represents, what distance is, those are all variables… nothing hardcoded or fixed is valid, only what
+occupies that variable at that point." The job is not to get Tim to nail values down — it is to build
+the engine that resolves whatever occupies them, and to RECOGNIZE what Tim already said rather than
+ask again.
+
+- **CALL 1 (register-of-registries = prime/divisor lattice?) — INVALID.** Not a separate formalism to
+  ratify. A1: the register-of-registries "is all part of the same model that the root equation is… It
+  is the same thing, just a different part of it." A2: "registries just units in the scale above
+  them." A3: "the polygons are the number of primes." → The prime structure is ALREADY in the
+  equation (corners = primes); registries are the SAME instrument one scale up. There was nothing to
+  confirm — the lead was badly re-deriving a thing Tim had already placed. The divisor-lattice
+  framing is fine as ONE description of the equation-recursing, but it is NOT a new object and NOT a
+  gate.
+- **CALL 3 (the two privileged axes) — INVALID, two ways.** (a) Axes are variables (A1) — there is no
+  fixed privileged pair to name. (b) It is not two — it is ONE-AND-THREE: A2 "time is the only single
+  axis that everything is relative meaning… two types, one in time and one in place or space. Four
+  axes, one and three." Only TIME is privileged (constant, involuntary, binds to Tim); the three of
+  space are variable. The lead both invented a fixed pair and collapsed 1-and-3 into 2. Nothing to
+  decide: time is settled, the rest is variable.
+- **CALL 2 (the two-gravity anchors) — ALREADY ANSWERED structurally; half the ask was invalid.** The
+  poles are NOT anchor-sets extracted from Tim — they are the CENTRE and the CORNER (A2 opens "those
+  two points at the corner centre"). Centre = Tim's model / convergence / the origin; corner = the AI
+  deformation / divergence / forbidden zone; a unit clusters by which gravity pulls it ("both of
+  them"). The invalid half: the lead asked Tim to enumerate "unmistakably Tim" units — but A2: "none
+  of it has all my intention." NOTHING in the corpus is purely Tim, so there is no clean Tim-sample
+  to anchor; **the Tim-pole IS the origin (the centre) + Tim's recognitions/corrections (the gradient
+  field the system already holds), not corpus examples.** The ONLY real seed is the AI pole, which Tim
+  already volunteered: "I would be able to identify and describe probable traits of the AI hallmark."
+  → The separator is buildable; its one human input is Tim describing the AI tells (not a Tim-vs-AI
+  pair of example sets).
+- **CALL 4 (harmonics: one instance or load-bearing?) — ALREADY ANSWERED, explicitly.** A3: "music
+  does check out, AS ONE INSTANCE." A4: "leave your spectrum out — that's between types but comes
+  from the self division." → Harmonics = one lens among many, NOT the core structure; spectrum =
+  between-types-from-self-division, kept out of the core. "As one instance" WAS the ruling.
+
+**CONSEQUENCE FOR THE BUILD:** the "model-call ratification gate" (Criteria Group 12) is DISSOLVED,
+not pending. Nothing is blocked awaiting a Tim decision. The two-gravity separator (Group 9) is
+un-gated — its only input is the AI-tells description (Tim-volunteered), and its Tim-pole is the
+origin+gradient-field, never a corpus sample. Time is the one privileged axis (settled); all other
+axes stay variable (build the resolver, never fix them). The prime/divisor framing is one description
+of the equation recursing, not a separate formalism to build against.
+
+---
+
 # APPENDIX A — PRIMARY SOURCE: Tim's full messages, verbatim
 
 *Tim's instruction: "It's worth adding in my full messages fully into it — took me hours." These are
