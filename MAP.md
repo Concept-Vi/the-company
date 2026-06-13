@@ -62,6 +62,7 @@ flowchart TD
 | `canvas/` | the frontend + the extensions runtime | [[canvas — constitution]] | S5, D3 |
 | `panels/` | brain-authored declarative UI panels (JSON) | [[panels — constitution]] | — |
 | `tests/` | acceptance suites (the proofs) | [[tests — constitution]] | — |
+| `introspection/` | the platform-agnostic Mirror-Registry engine (DISCOVER→CLASSIFY→PROJECT→REFRESH over a `PlatformEntry` + the 5 closed rules) + the instance-#1 CLI adapters — Level-1, ZERO platform-name literals (the lift, F-FIX-10) | [[introspection — constitution]] | Mirror-Registry System |
 | `docs/` | meta-docs about the repo-as-knowledge-space | [[docs — constitution]] | — |
 | `ops/` | the service **command center** — see + run the runtime (`company` console + `services.json`); first of more | [[ops — constitution]] | — |
 | `ui-contract/` | the UI Contract corpus (the build's second product): purpose-free resource entries + transports/tasks/atlas a UI-building AI consumes INSTEAD of this repo's code — format frozen in `ui-contract/CONTRACT-FORMAT.md`; F1 slice carried, statuses honest (building/planned, nothing live until the driving harness flips it) | (README.md is its constitution) | F1.5/F9 |
