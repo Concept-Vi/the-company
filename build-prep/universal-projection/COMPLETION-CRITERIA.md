@@ -45,17 +45,23 @@ Today: a per-point depth scalar + `rings:4` hardcoded. The seed's m/2 concentric
 - **FORM** — the grid renders as a navigable structural surface (not a number); legible at both
   faces; on tokens. ☐ by the rubric
 
-## GROUP 3 · INSTRUMENT — TIME-FREED / RELATIVE CENTRE 🟡 (backend done dabf952; FE FORM half pending)
-The centre is freed in the engine (`project(now=, center=)` + bridge `?at=`/`?center=`); the FE control
-is the remaining half.
+## GROUP 3 · INSTRUMENT — TIME-FREED / RELATIVE CENTRE ✅ (backend dabf952; FE 9be11cc + 3f65f70)
+The centre is freed — both in the engine (`project(now=, center=)` + bridge `?at=`/`?center=`) and in the
+surface (the scrubber + re-centre + animation).
 - **FUNCTION** — `?at=` parsed in bridge, `project(now=)` filters events ts≤now (the scrubber); AND a
   non-now ADDRESS centre re-projects radius as STRUCTURAL tree-distance from that address
   (`_tree_distance`, mirrors `address_tree_distance`, kept in projection.py so the floor has no suite
-  dep). ✅ backend by use — suite 26→35 green; live curl: `?at=-2h` shifts `now` 2h back, `?center=`
-  flips `radius_from`→'address' with the centre event at r=0, all r∈[0,1]. The cosine/semantic
-  relevance ring is 🔴 embedder-gated (Group 6) — stubbed, not faked.
-- **FORM** — 🔴 NEXT: the scrubber as a navigable time control on tokens + a re-centre affordance (click
-  a point → centre on its address) + re-centring animation (identity survives the transform). ☐ by rubric
+  dep). ✅ by use — suite 26→35 green; live curl: `?at=-2h` shifts `now` 2h back, `?center=` flips
+  `radius_from`→'address' with the centre event at r=0, all r∈[0,1]. FE driven at both faces: scrub
+  (5470→2105 pts, '◷ 125h ago'), live→'◷ past'→return-to-now, re-centre (chip + distance-shells),
+  clear, lens, frames, zoom, mobile bottom-sheet 'centre on this'. The cosine/semantic relevance ring
+  is 🔴 embedder-gated (Group 6) — stubbed, not faked.
+- **FORM** — ✅ by rubric: the scrubber (⏱, gold = the privileged time axis) + zoom (⌕, dim) are
+  distinct controls; a 'centre on this' affordance + a '⊙ <name> ✕' chip; re-centring/reframe ANIMATES
+  (easeOutCubic rAF, identity survives, off the live-refresh path). All on corpus tokens; pointer-events
+  fixed so foot controls are real-tappable; foot wraps (no phone overflow); design-lint clean
+  (LatticeView 0 / lattice app.css 0). A SEPARATE design-critic passed all 6 dimensions at 1440×900
+  AND 390×844 (slider-distinctness defect found + fixed + re-confirmed).
 
 ## GROUP 4 · INSTRUMENT — REAL-TIME PUB-SUB 🔴 (Tim's explicit ask)
 `/api/stream` (SSE) already exists over the same tap; LatticeView polls every 15s.
@@ -157,8 +163,8 @@ freeze a variable Tim deliberately left free (the hardcoding reflex). Resolution
 0. **Model calls DISSOLVED** (§17; Tim confirmed) — no gate; the whole sequence is buildable. Group 9's only input is Tim's AI-tells description.
 1. **Group 1** — ✅ DONE (6615e53) — the acceptance suite (regression floor; 26 invariant teeth).
 2. **Group 5** — ✅ DONE (dc3378a) — the FORM rebuild (lattice onto the corpus design system).
-3. **Group 3** — 🟡 backend DONE (dabf952: scrubber + structural address-centre, suite 26→35); FE scrubber/re-centre + animation ← NEXT.
-4. **Group 4** — real-time pub-sub (small; depends on the surface).
+3. **Group 3** — ✅ DONE (backend dabf952 + FE 9be11cc/3f65f70: scrubber + re-centre + animation, both faces, critic-passed).
+4. **Group 4** — ← NEXT — real-time pub-sub (lattice subscribes to /api/stream; retire the 15s poll; events arrive as motion).
 5. **Group 2** — the structural square half (completes the instrument's structure; no embedder needed).
 6. **Group 8** — embedding substrate live (operational; gates all semantic ability).
 7. **Group 6** — semantic radius (the first ability ring).
