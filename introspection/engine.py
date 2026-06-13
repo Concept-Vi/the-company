@@ -64,8 +64,9 @@ def derived_transport_invariants(platform: PlatformEntry) -> list[str]:
     if NEITHER is available (an empty R1 input silently demotes locked flags to R5 - forbidden)."""
     thunk = _HEAD_BUILDERS.get(platform.id)
     body_overrides = platform.consumer_reserved_invariants.body_key_overrides
+    capability_axes = platform.signal_sets.capability_axes
     if thunk is not None:
-        return rules.derive_transport_invariants(thunk, body_overrides)
+        return rules.derive_transport_invariants(thunk, body_overrides, capability_axes)
     pre = list(platform.signal_sets.transport_invariants)
     if pre:
         return pre

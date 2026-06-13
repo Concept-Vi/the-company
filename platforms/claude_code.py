@@ -1,22 +1,22 @@
 """platforms/claude_code.py — Claude Code as INSTANCE #1 of the Mirror-Registry System.
 Mirror-Registry System, LANE-REGISTRIES. Spec §7 (the registration rows that prove the lift).
 
-DATA ONLY. This file is ONE `PLATFORM = {...}` dict — the entire Claude Code mechanism expressed as
-a PlatformEntry row (validated by PlatformRegistry via PlatformEntry.model_validate, PG-D5). Every
-Claude-specific value the engine needs (binary name, flag names, stream-json protocol, permission-
-mode strings, MCP config format, hazard vocabulary, capability axes, event shapes, the state machine,
-timeouts, the body-key↔flag-name map) lives HERE — NOWHERE in introspection/engine.py / rules.py /
-adapters/ (the PG2 / F-FIX-10 leak invariant; this is the legitimate Level-2 home for these strings).
+PURE DATA — imports + ONE `PLATFORM = {...}` dict, NO def/class (ROW-PURITY, 2026-06-14). The entire
+Claude Code mechanism is expressed as a PlatformEntry row (validated by PlatformRegistry via
+PlatformEntry.model_validate, PG-D5). Every Claude-specific value the engine needs (binary name, flag
+names, stream-json protocol, permission-mode strings, MCP config format, hazard vocabulary, capability
+axes, event shapes, the state machine, timeouts, the body-key↔flag-name map) lives HERE — NOWHERE in
+introspection/engine.py / rules.py / adapters/ (the PG2 / F-FIX-10 leak invariant; this is the
+legitimate Level-2 home for these strings). This row is the CLEAN TEMPLATE the generalization-proof
+needs: a second platform of a known kind copies this shape — imports + a dict, nothing else.
 
-THE ONE NON-DATA LINE — the head_builder binding (F-FIX-2, sanctioned by introspection/AGENTS.md):
-the engine derives the R1 transport-invariant set by CALLING a zero-arg thunk that returns the
-consumer's unconditional spawn-head argv. A Pydantic model cannot hold a callable, so this Level-2
-module registers the thunk with the engine at import (engine.register_head_builder). The thunk wraps
-the consumer's `SessionSupervisor._build_spawn_cmd` (the function is `_build_spawn_cmd`, NOT
-`_build_cmd` — F-FIX-8) called with MINIMAL args (resume=None, fork=False, no optional body params),
-so the returned argv is exactly the unconditional head. That import of runtime.session_supervisor is
-the consumer's command-builder binding — it belongs in Level-2 platform code (here), never in the
-Level-1 engine. It is a registration, NOT engine logic; the lift holds.
+THE head_builder binding (F-FIX-2) — the engine derives the R1 transport-invariant set by CALLING a
+zero-arg thunk that returns the consumer's unconditional spawn-head argv. A Pydantic model cannot hold
+a callable, so the binding is a registration, not row data. It USED to live here as a
+`_register_head_builder()` def, which made the row non-pure. It now lives in platforms/_wiring.py (the
+`_`-prefixed bootstrap module the registry's file-discovery skips), imported by the consumer that
+needs the live derivation (runtime/suite.py; the crosscheck test). This row keeps only its DECLARED
+(post-R6-correct) `transport_invariants` as the engine-validated fallback when no thunk is wired.
 
 Spec §7 cites every value to Lane A's file:line or the Dynamic Capability Registry spec; the row
 below reproduces those Observed values verbatim.
@@ -106,11 +106,16 @@ PLATFORM = {
     # declares a non-empty R1 input (the engine RAISES on an empty R1 set).
     "signal_sets": {
         "transport_invariants_derived_from": "_build_spawn_cmd + body_key_handlers",
+        # NOTE: this is the DECLARED fallback set (used only if no head_builder thunk is registered);
+        # the registry OVERWRITES it at load with the LIVE derivation (derive_transport_invariants,
+        # which applies R6). It reflects the post-R6 truth: --mcp-config / --allowedTools are NOT here
+        # (R6 swap-head-defaults → R3 consent); --add-dir is NOT here (dirs capability axis → R3
+        # consent). The remaining members are the genuine head locks + body-key-override locks.
         "transport_invariants": [
             "-p", "--input-format", "--output-format", "--verbose", "--permission-mode",
-            "--mcp-config", "--strict-mcp-config", "--allowedTools",   # the unconditional head
+            "--strict-mcp-config",                                     # the unconditional head locks
             "--include-partial-messages", "--resume", "--fork-session", "--model", "--effort",
-            "--fallback-model", "--settings", "--add-dir", "--debug", "--safe-mode", "--bare",
+            "--fallback-model", "--settings", "--debug", "--safe-mode", "--bare",
             "--dangerously-skip-permissions",                          # the body-key-override locks
         ],
         "hazard_name_vocabulary": ["dangerously", "skip", "bypass", "unsafe"],  # binary's OWN naming
@@ -119,7 +124,13 @@ PLATFORM = {
             "tools-builtin": ["--tools", "--allowed-tools", "--allowedTools", "--disallowed-tools",
                               "--disallowedTools"],
             "mcp": ["--mcp-config", "--channels"],
-            "dirs": [],
+            # dirs axis (FIX 2026-06-13): --add-dir WIDENS the session's filesystem reach (an R3
+            # capability axis), so it rides the operator-consent beat — NOT a transport lock. It was
+            # previously mis-classified `locked` because it sat in body_key_overrides (which the
+            # F-FIX-2 derivation unions into the R1 set, and R1 > R3 wins). Resolution: declare it on
+            # the dirs axis HERE and drop it from body_key_overrides below, so R3 CONSENT fires.
+            # (Build Map F10.9 FLAG: "--add-dir posture=locked likely wrong→consent".)
+            "dirs": ["--add-dir"],
             "permission": ["--permission-prompt-tool"],
             "plugins": ["--plugin-dir", "--plugin-url"],
         },
@@ -147,8 +158,11 @@ PLATFORM = {
                                        "posture law: default plan, acceptEdits opt-in)."},
             "settings": {"flag": "--settings", "kind": "value",
                          "why": "use the dedicated body key `settings`."},
-            "add_dir": {"flag": "--add-dir", "kind": "repeat",
-                        "why": "use the dedicated body key `add_dir`."},
+            # NOTE: --add-dir is NOT a body-key lock — it is a `dirs` CAPABILITY-AXIS member (R3
+            # CONSENT). It widens the session's filesystem reach, so it rides the operator-consent
+            # beat (like --allowedTools / --mcp-config), never a hard transport lock. Declared on
+            # signal_sets.capability_axes["dirs"] above; removed from here so the F-FIX-2 derivation
+            # does not union it into the R1 locked set (FIX 2026-06-13; Build Map F10.9).
             "resume": {"flag": "--resume", "kind": "value",
                        "why": "use the dedicated body key `resume` (wake) — verbs are routing "
                               "decisions, not raw flags."},
@@ -261,27 +275,11 @@ PLATFORM = {
                            "supervisor_posture"],
 }
 
-
-# ── The head_builder binding (F-FIX-2 — the ONE Level-2 wiring call, sanctioned by AGENTS.md) ────────
-# Register a zero-arg thunk that returns the consumer's UNCONDITIONAL spawn-head argv. The engine CALLS
-# it at classify time to DERIVE the R1 transport-invariant set (head ∪ body_key_overrides) — so the R1
-# input is the LIVE derivation from the spawn template, never the hand-typed list above. The thunk wraps
-# the consumer's `SessionSupervisor._build_spawn_cmd` (NOT `_build_cmd` — F-FIX-8) with minimal args
-# (resume=None, fork=False, no optional body params) ⇒ exactly the unconditional head. Importing the
-# supervisor + binding its builder is Level-2 platform code (it belongs here, never in the Level-1
-# engine — the leak invariant holds: engine/rules/adapters carry no platform strings). Guarded so a
-# context that cannot import the supervisor (e.g. a contracts-only validation) still loads the row;
-# the registry then keeps the declared transport_invariants (which the engine validates non-empty).
-def _register_head_builder() -> None:
-    try:
-        from introspection.engine import register_head_builder
-        from runtime.session_supervisor import SessionSupervisor
-    except Exception:
-        return  # supervisor/engine not importable in this context — the declared R1 list stands
-    register_head_builder(
-        PLATFORM["id"],
-        lambda: SessionSupervisor._build_spawn_cmd(claude_bin="claude", resume=None, fork=False),
-    )
-
-
-_register_head_builder()
+# ROW-PURITY (2026-06-14, LANE-SUPERVISOR-REFACTOR). This file is PURE DATA — imports + the one
+# `PLATFORM = {...}` dict, NO def/class. The head_builder thunk binding (F-FIX-2 — the consumer's
+# zero-arg spawn-head builder the engine derives the R1 transport-invariant set from) USED to live
+# here as `_register_head_builder()`, which made the instance row non-pure (a def + a runtime import).
+# It moved to platforms/_wiring.py (the bootstrap module, `_`-prefixed so the registry's file-
+# discovery skips it). The consumer that needs the LIVE derivation imports that wiring; this row keeps
+# only its DECLARED (post-R6-correct) transport_invariants as the fallback. The instance row is now
+# the clean template the generalization-proof needs: a second platform copies this shape exactly.

@@ -48,7 +48,15 @@ Level-1 code and the lift is broken. The legitimate home for those strings is `p
   the flag-NAME string ONLY — NEVER description text.** `hazard_scope` MUST be `"flag_name_only"`; the
   rule ASSERTS it (fail loud) so a future row cannot silently widen the scope to descriptions.
 - **R3 CONSENT** — the flag is in a declared `capability_axes` set (widens the session surface).
-  Returns the axis name so the entry records WHICH axis (auditable).
+  Returns the axis name so the entry records WHICH axis (auditable). Includes `--add-dir` on the
+  `dirs` axis (directory widening) and the R6 swap-kind head-defaults (`--allowedTools`/`--mcp-config`).
+- **R6 SWAP-KIND HEAD-DEFAULT** (spec §2.4a) — NOT a classify rule; an EXCLUSION applied INSIDE
+  `derive_transport_invariants()` BEFORE R1 sees the set. A flag in the unconditional spawn head that
+  is ALSO a `capability_axes` member is an operator-supplied head default (the operator can swap its
+  value), NOT a transport lock — so it is REMOVED from the derived R1 set, letting R3 CONSENT fire
+  instead of R1 LOCKED. Computed purely from `capability_axes` DATA (the leak invariant holds — no
+  flag-name literal in `rules.py`). A `body_key_overrides` flag is never R6-excluded (the dedicated
+  body-key UNION re-adds it — owning a mandated body key is a harder lock than head presence).
 - **R5 SAFE** — NOT(R1) AND NOT(R2) AND NOT(R3) — the **EXPOSE-not-gate default** (Tim Ruling 1). Most
   of the surface lands here.
 - **R4 UNMATCHED** — a genuinely **novel** flag (first-seen at a refresh, pending the curator gate) or
@@ -58,16 +66,39 @@ Level-1 code and the lift is broken. The legitimate home for those strings is `p
 
 ## F-FIX-2 / PG-D1 — TRANSPORT_INVARIANTS is DERIVED, never a hand-list (law: registry-is-truth)
 
-`rules.derive_transport_invariants(head_builder, body_key_overrides)` is **REAL CODE**. It returns the
-UNION of (a) the flag tokens the consumer's command builder ALWAYS emits in its transport HEAD —
-obtained by CALLING a zero-arg `head_builder` thunk — and (b) the flag names of the
-`body_key_overrides` locked rows. The thunk is bound by Level-2 platform code (it wraps the consumer's
-`_build_spawn_cmd` — **the function is `_build_spawn_cmd`, NOT `_build_cmd`**; F-FIX-8). The row's
-`signal_sets.transport_invariants` field is **populated by this function at PlatformRegistry load**,
-**never hand-typed**. `engine.classify_entries` re-derives LIVE at classify time so a future
-supervisor flag addition is reflected automatically. **Drift gate (acceptance test):** every flag in
-the `_build_spawn_cmd` unconditional head MUST appear in the derived set — a future head flag not
-reflected fails the test loudly rather than silently mis-classifying R1 → R5.
+`rules.derive_transport_invariants(head_builder, body_key_overrides, capability_axes)` is **REAL
+CODE**. It returns the UNION of (a) the flag tokens the consumer's command builder ALWAYS emits in its
+transport HEAD — obtained by CALLING a zero-arg `head_builder` thunk — MINUS (c) the **R6 swap-kind
+head-defaults** (head flags that are ALSO `capability_axes` members — see R6 above), PLUS (b) the flag
+names of the `body_key_overrides` locked rows. The thunk is bound by Level-2 platform code (it wraps
+the consumer's `_build_spawn_cmd` — **the function is `_build_spawn_cmd`, NOT `_build_cmd`**; F-FIX-8).
+The row's `signal_sets.transport_invariants` field is **populated by this function at PlatformRegistry
+load**, **never hand-typed**. `engine.classify_entries` re-derives LIVE at classify time so a future
+supervisor flag addition is reflected automatically. **Drift gate (acceptance test):** every
+unconditional-head flag that is NOT an R6 swap-default MUST appear in the derived set — a future head
+flag not reflected fails the test loudly rather than silently mis-classifying R1 → R5.
+
+## ROW-PURITY + LANE-SUPERVISOR-REFACTOR (2026-06-14) — registry is the SOLE posture truth
+
+- **The instance row is PURE DATA.** `platforms/claude_code.py` is imports + the `PLATFORM` dict +
+  the `SPAWN_FLAG_BODY_KEY_MAP` data dict — **NO def/class**. The head_builder thunk binding (F-FIX-2)
+  moved OUT of the row into `platforms/_wiring.py` (a `_`-prefixed bootstrap module the registry's
+  file-discovery skips). The consumer that needs the LIVE derivation imports the wiring
+  (`runtime/suite.py`; the crosscheck test); a contracts-only context skips it and the row's DECLARED
+  (post-R6-correct) `transport_invariants` stands. Cycle discipline (PG-D6) holds: `_wiring.py` is in
+  `platforms/` and imports `runtime` (platforms→runtime, ALLOWED); `introspection/` never imports it.
+- **Supervisor posture is DERIVED, not hand-stored.** The hand `session_supervisor.SPAWN_FLAGS` dict
+  (which carried a `posture` column per flag) is **DELETED** (F-FIX-5 steps 5-6). `_apply_spawn_flags`
+  now reads posture from `_registry_posture(flag)` → `rules.classify` over the claude-code signal_sets
+  (swap-aware via R6). The remaining `SPAWN_FLAG_ASSEMBLY` table holds ONLY consumer-emission data
+  (flag-name, assembler kind, teaching text) — no posture. The cross-check fixture
+  (`tests/spawn_flags_crosscheck_acceptance.py`) was the gate on the swap (proved 48/48, zero
+  divergence); post-deletion it is the standing **regression gate** (every flag's derived posture
+  must equal the frozen verified ground-truth + classify to a real posture).
+- **`--add-dir` is CONSENT, not locked.** It widens the session's filesystem reach (an R3 `dirs`
+  capability axis), so it rides the operator-consent beat. It was previously mis-locked because it sat
+  in `body_key_overrides` (which the F-FIX-2 derivation unions into the R1 set, R1 > R3). Resolution:
+  declared on `capability_axes["dirs"]` + removed from `body_key_overrides`.
 
 ## F-FIX-1 / PG-D2 — the CapabilityRegistry singleton is a NEW pattern, NOT a sibling-registry copy
 

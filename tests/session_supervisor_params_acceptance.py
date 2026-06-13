@@ -117,20 +117,29 @@ def main():
     check("--input-format stream-json is fixed even with output_format set",
           pair_after(build(output_format="json"), "--input-format") == "stream-json")
 
-    # ── R1.3 — the SPAWN-FLAG REGISTRY (all start-flags as session config, registry-shaped) ──
-    # registry sanity: every row declares a posture; safe/consent rows declare flag+kind
-    for k, spec in ss.SPAWN_FLAGS.items():
-        assert spec.get("posture") in ("safe", "consent", "locked"), f"{k}: bad posture"
-        if spec["posture"] != "locked":
-            assert spec.get("flag", "").startswith("--") and spec.get("kind") in \
-                ("bool", "value", "csv", "repeat", "swap"), f"{k}: bad flag/kind"
-        else:
-            assert spec.get("why"), f"{k}: locked row must teach WHY"
-    check(f"SPAWN_FLAGS registry valid ({len(ss.SPAWN_FLAGS)} rows, every row postured + taught)", True)
-    check("the spec-named R1.3 flags are all registry rows",
-          all(k in ss.SPAWN_FLAGS for k in ("session_id", "continue", "append_system_prompt",
+    # ── R1.3 — the SPAWN-FLAG ASSEMBLY TABLE (registry-is-truth for POSTURE, F-FIX-5 steps 5-6) ──
+    # The hand SPAWN_FLAGS dict (with its `posture` column) was DELETED; posture is DERIVED from the
+    # Mirror-Registry rules (ss._registry_posture). SPAWN_FLAG_ASSEMBLY now holds ONLY the consumer-
+    # emission data. Registry sanity: every row declares a flag-name (--… or -p) + a valid assembler
+    # kind + teaching text; every row's DERIVED posture is a real posture (never R4 unmatched).
+    for k, spec in ss.SPAWN_FLAG_ASSEMBLY.items():
+        flag = spec.get("flag", "")
+        assert flag.startswith("-") and spec.get("kind") in \
+            ("bool", "value", "csv", "repeat", "swap"), f"{k}: bad flag/kind"
+        assert spec.get("teach"), f"{k}: assembly row must carry teaching text"
+        assert ss._registry_posture(flag) in ("safe", "consent", "locked", "hazard"), (
+            f"{k}: derived posture is not a real posture (R4 unmatched — the supervisor would refuse "
+            f"a flag it declares it can assemble)")
+    check(f"SPAWN_FLAG_ASSEMBLY valid ({len(ss.SPAWN_FLAG_ASSEMBLY)} rows; every row has flag+kind+"
+          f"teach + a real DERIVED posture)", True)
+    check("the spec-named R1.3 flags are all assembly rows",
+          all(k in ss.SPAWN_FLAG_ASSEMBLY for k in ("session_id", "continue", "append_system_prompt",
                                             "allowed_tools", "mcp_config", "tools", "max_turns",
                                             "max_budget_usd", "name", "agents", "json_schema")))
+    check("posture is DERIVED from the registry (the deleted SPAWN_FLAGS hand-dict is gone)",
+          not hasattr(ss, "SPAWN_FLAGS") and ss._registry_posture("--model") == "locked"
+          and ss._registry_posture("--add-dir") == "consent"
+          and ss._registry_posture("--session-id") == "safe")
 
     def apply(flags, consent=False, base=None):
         cmd = list(base) if base else build()
@@ -158,7 +167,7 @@ def main():
         apply({"warp_drive": 1})
         check("unknown flag refused", False)
     except ss.TeachingRefusal as e:
-        check("unknown flag → TeachingRefusal naming the registry", "SPAWN_FLAGS" in str(e))
+        check("unknown flag → TeachingRefusal naming the registry", "SPAWN_FLAG_ASSEMBLY" in str(e))
     # locked rows refuse with the dedicated-path teaching
     for k, needle in (("input_format", "injection contract"), ("model", "dedicated body key"),
                       ("dangerously_skip_permissions", "permission_mode"),

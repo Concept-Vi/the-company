@@ -144,7 +144,8 @@ def _flags_in_cmd(cmd: list[str]) -> list[str]:
 
 
 def derive_transport_invariants(head_builder: Callable[[], list[str]],
-                                body_key_overrides: dict | None = None) -> list[str]:
+                                body_key_overrides: dict | None = None,
+                                capability_axes: dict | None = None) -> list[str]:
     """DERIVE the transport-invariant set (the R1 input) from the consumer's spawn template - REAL
     code, never a hand-list (F-FIX-2 / PG-D1; law: registry-is-truth). It is the UNION of:
 
@@ -153,23 +154,52 @@ def derive_transport_invariants(head_builder: Callable[[], list[str]],
           consumer's builder with MINIMAL arguments (no optional body-key params), so the returned
           list is exactly the unconditional head; we keep the '-'-prefixed tokens; and
       (b) the flag names of the body_key_overrides locked rows (each override owns a dedicated
-          spawn-body key the flags layer must not override).
+          spawn-body key the flags layer must not override),
+
+    MINUS
+
+      (c) R6 - SWAP-KIND HEAD-DEFAULT EXCLUSION (spec §2.4a). A flag that appears in the
+          unconditional head BUT is ALSO a member of a declared CAPABILITY AXIS is a transport
+          DEFAULT the operator can replace (its head value is operator-supplied - it widens a
+          surface the operator controls), NOT a transport LOCK. Such a flag must NOT enter the R1
+          locked set - if it did, R1 (highest priority) would derive `locked` and override the
+          `consent` that R3 (capability-axis membership) correctly assigns, contradicting its
+          swap/consent ground-truth and BLOCKING the SPAWN_FLAGS cross-check (C-SUP-1). R6 removes
+          exactly `head_flags ∩ capability_axis_members` from the locked set so R3 CONSENT fires for
+          them. The exclusion is computed PURELY from the platform's `capability_axes` DATA - this
+          file holds no flag-name literal, so the leak invariant (F-FIX-10 / PG2) is preserved (this
+          is the lift-correct form of the spec's literal exclusion set: the axis membership IS the
+          signal, never a hardcoded list of flag names). A body_key_override flag is NEVER
+          R6-excluded even if it is also a capability-axis member - owning a dedicated mandated body
+          key is a harder lock than head presence (the body-key UNION in (b) re-adds it after the
+          head exclusion).
 
     Because `head_builder` is supplied by the platform binding (the consumer's builder + its keyword
-    arguments live in Level-2 platform code) and `body_key_overrides` is platform DATA, THIS function
-    holds none of those strings as literals - the leak invariant holds. If the consumer's spawn
-    template gains/loses an unconditional flag, re-deriving here reflects it automatically (drift
-    detection: the acceptance test asserts every unconditional-head flag is in the returned set; a
-    future consumer flag addition not reflected fails the test loudly rather than silently
-    mis-classifying R1 -> R5).
+    arguments live in Level-2 platform code) and `body_key_overrides` / `capability_axes` are platform
+    DATA, THIS function holds none of those strings as literals - the leak invariant holds. If the
+    consumer's spawn template gains/loses an unconditional flag, re-deriving here reflects it
+    automatically (drift detection: the acceptance test asserts every unconditional-head flag that is
+    NOT an R6 swap-default is in the returned set; a future consumer flag addition not reflected fails
+    the test loudly rather than silently mis-classifying R1 -> R5).
 
     head_builder: a zero-arg callable returning the consumer's unconditional spawn-head command
         list (the platform row binds it as `lambda: Supervisor._build_spawn_cmd(<bin>, resume=None,
         fork=False)` - that binding is Level-2 code, never here).
     body_key_overrides: the platform row's consumer_reserved_invariants.body_key_overrides
-        ({key: {"flag": "--x", "kind": "value"}, ...}) - each `flag` joins the invariant set."""
+        ({key: {"flag": "--x", "kind": "value"}, ...}) - each `flag` joins the invariant set.
+    capability_axes: the platform row's signal_sets.capability_axes ({axis: [flag, ...]}) - the R6
+        input. A head flag in any axis is a SWAP-KIND HEAD-DEFAULT and is excluded from the lock."""
     head = head_builder()
-    invariants = set(_flags_in_cmd(head))
+    head_flags = set(_flags_in_cmd(head))
+    # R6 - the SWAP-KIND HEAD-DEFAULT exclusion set: head flags that are ALSO capability-axis members
+    # (operator-supplied head defaults). Computed from DATA only (no flag-name literal here).
+    axis_members: set[str] = set()
+    for _axis, members in (capability_axes or {}).items():
+        axis_members |= set(members or [])
+    swap_head_defaults = head_flags & axis_members
+    invariants = head_flags - swap_head_defaults     # R6: head MINUS the swap-defaults
+    # (b) body_key_overrides re-join (a mandated body key is a harder lock than head presence - it is
+    # NOT subject to the R6 head-default exclusion, so add it back unconditionally).
     for _key, spec in (body_key_overrides or {}).items():
         flag = spec.get("flag") if isinstance(spec, dict) else None
         if flag:

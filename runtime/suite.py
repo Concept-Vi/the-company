@@ -513,6 +513,9 @@ class Suite:
         # is actually read, and it says so loudly rather than inventing a capability.
         from introspection.registry import CapabilityRegistry, set_capability_registry
         from introspection.platforms import platform_registry
+        import platforms._wiring  # noqa: F401 — ROW-PURITY: registers the head_builder thunk(s) with
+        # the engine BEFORE platform_registry() derives transport_invariants (F-FIX-2 live derivation +
+        # drift detection). claude_code.py is pure data now; the binding lives in the wiring module.
         self._platform_registry = platform_registry()                 # discovers platforms/*.py (no spawn)
         self.capability_platform = self._platform_registry.get("claude-code")  # PlatformEntry (instance #1)
         self.capability_registry = CapabilityRegistry()               # empty until discover() runs (LEAD)

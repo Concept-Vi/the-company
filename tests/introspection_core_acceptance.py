@@ -89,6 +89,32 @@ ok("C-CORE-4: body_key_overrides flags joined the set",
 ok("C-CORE-4: result is a derivation (sorted set), not the literal input list",
    derived == sorted(set(derived)))
 
+# ── C-CORE-4 / R6 — SWAP-KIND HEAD-DEFAULT EXCLUSION (spec §2.4a) ────────────────────────────────
+# A head flag that is ALSO a capability-axis member is a swap-default the operator can replace — it
+# must NOT enter the R1 locked set (so R3 CONSENT fires, not R1 LOCKED). Computed purely from the
+# capability_axes DATA passed in; the function holds no flag-name literal (leak invariant). We reuse
+# the stub head (which emits --cfg + --allow) and declare those two on capability axes → R6 excludes
+# them; the rest of the head stays locked; a body-key-override that is ALSO an axis member is NOT
+# excluded (the harder lock wins).
+r6_axes = {"server-cfg": ["--cfg"], "tools": ["--allow"], "models": ["--model"]}
+derived_r6 = rules.derive_transport_invariants(stub_head_builder, body_overrides, r6_axes)
+ok("R6: a head flag that is also a capability-axis member is EXCLUDED from the lock (--cfg)",
+   "--cfg" not in derived_r6, detail=str(derived_r6))
+ok("R6: a second head/axis flag is excluded too (--allow)",
+   "--allow" not in derived_r6, detail=str(derived_r6))
+ok("R6: genuine head invariants (not on any axis) STAY locked (-p, --input-format, --verbose)",
+   all(f in derived_r6 for f in ("-p", "--input-format", "--verbose", "--strict-cfg")),
+   detail=str(derived_r6))
+ok("R6: a body_key_override flag is re-added even if it is also an axis member (--model — the "
+   "harder body-key lock wins over R6 head-default exclusion)",
+   "--model" in derived_r6, detail=str(derived_r6))
+# R6 then makes R3 fire for the excluded flags: classify over the R6-derived R1 set → consent.
+ss_r6 = SignalSets(transport_invariants=derived_r6,
+                   hazard_name_vocabulary=["dangerously"], hazard_scope="flag_name_only",
+                   capability_axes=r6_axes)
+ok("R6: an excluded head flag now classifies R3 CONSENT (not R1 LOCKED) — the swap-kind ground truth",
+   rules.classify("--cfg", ss_r6) == ("consent", "R3", "server-cfg"), detail=str(rules.classify("--cfg", ss_r6)))
+
 
 # ── C-CORE-5 — the five rules over a known flag set ─────────────────────────────────────────────
 print("\n[C-CORE-5] the 5 closed rules R1>R2>R3>R5>R4")

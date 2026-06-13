@@ -237,149 +237,211 @@ BRIDGE_SESSION_UNAVAILABLE = {
 }
 
 
-# ─────────────────── R1.3 · the SPAWN-FLAG REGISTRY (all start-flags as session config) ───────────
-# Registry-shaped (the R11/heart frame): the complete remaining `claude` launch-flag surface is a
-# DECLARED TABLE, not more hardcoded kwargs — a new flag is a new row. Every row is grounded in the
-# Claude Code Atlas cli-reference (research lane 03-start-flags.md, fetched 2026-06-10) — NEVER
-# invented. Three postures:
-#   safe    — appended for any spawn (plain /spawn body `flags={...}` or bridge-session).
-#   consent — WIDENS the session's surface (tool set / MCP servers / plugins / permission plumbing):
-#             refused-loud on a plain spawn with a teaching error naming the bridge-session path;
-#             allowed when the operator-consent beat rides the call (the R1-prime gate, reused —
-#             consent-not-lockdown, never a denial).
-#   locked  — a TRANSPORT INVARIANT of the held-open loop (input-format stream-json is the injection
-#             contract; -p/--verbose are the mode; resume/fork/model/effort/… have dedicated body
-#             keys): always refused with a teaching error naming the dedicated path.
-# Kinds: bool (token only, when truthy) · value (flag + str) · repeat (flag per list item) ·
-#        csv (flag + comma-join) · swap (replace the value of a flag already in the transport head).
-SPAWN_FLAGS: dict[str, dict] = {
-    # ── safe rows ──
-    "session_id":            {"flag": "--session-id", "kind": "value", "posture": "safe",
-                              "summary": "pre-assign the session UUID (the fabric's correlation handle)"},
-    "name":                  {"flag": "--name", "kind": "value", "posture": "safe",
-                              "summary": "human display name (the /resume picker + registry label)"},
-    "continue":              {"flag": "--continue", "kind": "bool", "posture": "safe",
-                              "summary": "resume the cwd's most recent conversation instead of starting new"},
-    "append_system_prompt":  {"flag": "--append-system-prompt", "kind": "value", "posture": "safe",
-                              "summary": "append to the default system prompt (keeps the coding-assistant identity)"},
-    "append_system_prompt_file": {"flag": "--append-system-prompt-file", "kind": "value", "posture": "safe",
-                              "summary": "append a file's contents to the default system prompt"},
-    "system_prompt":         {"flag": "--system-prompt", "kind": "value", "posture": "safe",
-                              "summary": "REPLACE the entire system prompt (persona sessions; drops default guidance)"},
-    "system_prompt_file":    {"flag": "--system-prompt-file", "kind": "value", "posture": "safe",
-                              "summary": "replace the system prompt from a file"},
-    "max_turns":             {"flag": "--max-turns", "kind": "value", "posture": "safe",
-                              "summary": "agentic-turn ceiling (safety governor; exceeds → error result)"},
-    "max_budget_usd":        {"flag": "--max-budget-usd", "kind": "value", "posture": "safe",
-                              "summary": "dollar ceiling for the session's API spend"},
-    "json_schema":           {"flag": "--json-schema", "kind": "value", "posture": "safe",
-                              "summary": "schema-validated structured output (result.structured_output)"},
-    "agent":                 {"flag": "--agent", "kind": "value", "posture": "safe",
-                              "summary": "run as a named subagent definition (persona)"},
-    "agents":                {"flag": "--agents", "kind": "value", "posture": "safe",
-                              "summary": "inline JSON agent definitions (ephemeral personas, no files)"},
-    "setting_sources":       {"flag": "--setting-sources", "kind": "csv", "posture": "safe",
-                              "summary": "which settings layers load (user/project/local) — isolation control"},
-    "no_session_persistence": {"flag": "--no-session-persistence", "kind": "bool", "posture": "safe",
-                              "summary": "ephemeral session — no transcript on disk, not resumable"},
-    "include_hook_events":   {"flag": "--include-hook-events", "kind": "bool", "posture": "safe",
-                              "summary": "hook lifecycle events on the stream (the R1.2 hook declarations)"},
-    "prompt_suggestions":    {"flag": "--prompt-suggestions", "kind": "bool", "posture": "safe",
-                              "summary": "emit prompt_suggestion after each turn (declared: input-suggestion)"},
-    "replay_user_messages":  {"flag": "--replay-user-messages", "kind": "bool", "posture": "safe",
-                              "summary": "ack injected user turns back on stdout (stream-json both ways)"},
-    "advisor":               {"flag": "--advisor", "kind": "value", "posture": "safe",
-                              "summary": "enable the server-side advisor model for this session"},
-    "betas":                 {"flag": "--betas", "kind": "csv", "posture": "safe",
-                              "summary": "beta API headers (API-key auth only)"},
+# ─────────────────── R1.3 · the SPAWN-FLAG ASSEMBLY TABLE (registry-is-truth for POSTURE) ──────────
+# LANE-SUPERVISOR-REFACTOR (2026-06-14, F-FIX-5 steps 5-6): the hand-written SPAWN_FLAGS dict that
+# carried a `posture` column PER FLAG has been DELETED. Posture is now DERIVED from the Mirror-Registry
+# rules (introspection.rules.classify over the claude-code PlatformEntry's signal_sets), swap-aware via
+# R6 — the registry is the SOLE source of truth for a flag's posture (locked/consent/safe). This table
+# carries ONLY the CONSUMER-EMISSION data the SpawnFlagAssembler needs and the registry does not hold:
+#   flag    — the real `--flag` name the body-key emits (the FK; also in platforms/claude_code.py's
+#             SPAWN_FLAG_BODY_KEY_MAP, the registry-side single source — kept consistent by the
+#             crosscheck which derives posture by THAT map).
+#   kind    — the assembler kind: bool (token only, when truthy) · value (flag + str) · csv (flag +
+#             comma-join) · repeat (flag per list item) · swap (replace a head flag's value in place).
+#   teach   — the teaching-refusal / summary text emitted on a locked/consent refusal.
+# The body-keys here are the SAME keys the prior SPAWN_FLAGS declared (a new flag is still a new row).
+# Posture is NEVER stored here — _registry_posture(flag) derives it live. The crosscheck fixture
+# (tests/spawn_flags_crosscheck_acceptance.py) is now a SELF-CONSISTENCY gate: every assembly key's
+# derived posture must classify cleanly (no R4 unmatched, no missing flag-name). Every flag is grounded
+# in the Claude Code Atlas cli-reference (research lane 03-start-flags.md) — NEVER invented.
+SPAWN_FLAG_ASSEMBLY: dict[str, dict] = {
+    # ── assemblable rows (registry derives safe / consent; the assembler emits the flag) ──
+    "session_id":            {"flag": "--session-id", "kind": "value",
+                              "teach": "pre-assign the session UUID (the fabric's correlation handle)"},
+    "name":                  {"flag": "--name", "kind": "value",
+                              "teach": "human display name (the /resume picker + registry label)"},
+    "continue":              {"flag": "--continue", "kind": "bool",
+                              "teach": "resume the cwd's most recent conversation instead of starting new"},
+    "append_system_prompt":  {"flag": "--append-system-prompt", "kind": "value",
+                              "teach": "append to the default system prompt (keeps the coding-assistant identity)"},
+    "append_system_prompt_file": {"flag": "--append-system-prompt-file", "kind": "value",
+                              "teach": "append a file's contents to the default system prompt"},
+    "system_prompt":         {"flag": "--system-prompt", "kind": "value",
+                              "teach": "REPLACE the entire system prompt (persona sessions; drops default guidance)"},
+    "system_prompt_file":    {"flag": "--system-prompt-file", "kind": "value",
+                              "teach": "replace the system prompt from a file"},
+    "max_turns":             {"flag": "--max-turns", "kind": "value",
+                              "teach": "agentic-turn ceiling (safety governor; exceeds → error result)"},
+    "max_budget_usd":        {"flag": "--max-budget-usd", "kind": "value",
+                              "teach": "dollar ceiling for the session's API spend"},
+    "json_schema":           {"flag": "--json-schema", "kind": "value",
+                              "teach": "schema-validated structured output (result.structured_output)"},
+    "agent":                 {"flag": "--agent", "kind": "value",
+                              "teach": "run as a named subagent definition (persona)"},
+    "agents":                {"flag": "--agents", "kind": "value",
+                              "teach": "inline JSON agent definitions (ephemeral personas, no files)"},
+    "setting_sources":       {"flag": "--setting-sources", "kind": "csv",
+                              "teach": "which settings layers load (user/project/local) — isolation control"},
+    "no_session_persistence": {"flag": "--no-session-persistence", "kind": "bool",
+                              "teach": "ephemeral session — no transcript on disk, not resumable"},
+    "include_hook_events":   {"flag": "--include-hook-events", "kind": "bool",
+                              "teach": "hook lifecycle events on the stream (the R1.2 hook declarations)"},
+    "prompt_suggestions":    {"flag": "--prompt-suggestions", "kind": "bool",
+                              "teach": "emit prompt_suggestion after each turn (declared: input-suggestion)"},
+    "replay_user_messages":  {"flag": "--replay-user-messages", "kind": "bool",
+                              "teach": "ack injected user turns back on stdout (stream-json both ways)"},
+    "advisor":               {"flag": "--advisor", "kind": "value",
+                              "teach": "enable the server-side advisor model for this session"},
+    "betas":                 {"flag": "--betas", "kind": "csv",
+                              "teach": "beta API headers (API-key auth only)"},
     "exclude_dynamic_system_prompt_sections": {"flag": "--exclude-dynamic-system-prompt-sections",
-                              "kind": "bool", "posture": "safe",
-                              "summary": "move per-machine prompt sections into the first user message (cache reuse)"},
-    "teammate_mode":         {"flag": "--teammate-mode", "kind": "value", "posture": "safe",
-                              "summary": "agent-team teammate display mode (auto|in-process|tmux)"},
-    "disable_slash_commands": {"flag": "--disable-slash-commands", "kind": "bool", "posture": "safe",
-                              "summary": "disable all skills/commands for this session"},
-    "debug_file":            {"flag": "--debug-file", "kind": "value", "posture": "safe",
-                              "summary": "write debug logs to a specific path (implies debug mode)"},
-    # ── consent rows (widen the session's surface → the R1-prime consent beat) ──
-    "tools":                 {"flag": "--tools", "kind": "value", "posture": "consent",
-                              "summary": "restrict/widen which BUILT-IN tools exist ('' none · 'default' all · csv)"},
-    "allowed_tools":         {"flag": "--allowedTools", "kind": "swap", "posture": "consent",
-                              "summary": "REPLACE the floor allowlist (mcp__company-only) — the wider-surface decision"},
-    "disallowed_tools":      {"flag": "--disallowedTools", "kind": "value", "posture": "consent",
-                              "summary": "deny rules (bare name removes the tool; scoped rule denies matches)"},
-    "mcp_config":            {"flag": "--mcp-config", "kind": "swap", "posture": "consent",
-                              "summary": "REPLACE the strict company MCP config — different servers, different ground"},
-    "permission_prompt_tool": {"flag": "--permission-prompt-tool", "kind": "value", "posture": "consent",
-                              "summary": "route permission prompts to an MCP tool (approval plumbing)"},
-    "plugin_dir":            {"flag": "--plugin-dir", "kind": "repeat", "posture": "consent",
-                              "summary": "load local plugin(s) for this session"},
-    "plugin_url":            {"flag": "--plugin-url", "kind": "repeat", "posture": "consent",
-                              "summary": "fetch plugin zip(s) by URL for this session"},
-    # ── locked rows (transport invariants / dedicated body keys — teaching refusals) ──
-    "input_format":          {"posture": "locked", "why": "--input-format stream-json IS the held-open "
-                              "injection contract (T2) — the fabric cannot drive a session without it."},
-    "print":                 {"posture": "locked", "why": "-p is the supervised transport's mode; it is "
-                              "always on."},
-    "verbose":               {"posture": "locked", "why": "--verbose is required for the stream-json "
-                              "event surface the reader parses; always on."},
-    "output_format":         {"posture": "locked", "why": "use the dedicated body key `output_format` "
-                              "(defaults to stream-json — the reader's parse contract)."},
-    "include_partial":       {"posture": "locked", "why": "use the dedicated body key `include_partial` "
-                              "(the R5 voice seam's delta stream)."},
-    "resume":                {"posture": "locked", "why": "use the dedicated body key `resume` (wake) — "
-                              "verbs are routing decisions, not raw flags."},
-    "fork_session":          {"posture": "locked", "why": "use the dedicated body keys `resume`+`fork` "
-                              "(consult) — T4's non-destructive copy path."},
-    "model":                 {"posture": "locked", "why": "use the dedicated body key `model`."},
-    "effort":                {"posture": "locked", "why": "use the dedicated body key `effort`."},
-    "fallback_model":        {"posture": "locked", "why": "use the dedicated body key `fallback`."},
-    "permission_mode":       {"posture": "locked", "why": "use the dedicated body key `permission_mode` "
-                              "(the fabric's posture law: default plan, acceptEdits opt-in)."},
-    "settings":              {"posture": "locked", "why": "use the dedicated body key `settings`."},
-    "add_dir":               {"posture": "locked", "why": "use the dedicated body key `add_dir`."},
-    "debug":                 {"posture": "locked", "why": "use the dedicated body key `debug`."},
-    "safe_mode":             {"posture": "locked", "why": "use the dedicated body key `safe_mode`."},
-    "bare":                  {"posture": "locked", "why": "use the dedicated body key `bare`."},
-    "dangerously_skip_permissions": {"posture": "locked", "why": "permission posture rides the dedicated "
-                              "`permission_mode` key (bypassPermissions must be an explicit, visible "
-                              "posture choice — never a side-door flag)."},
-    "strict_mcp_config":     {"posture": "locked", "why": "strictness is the grounding contract; to run "
-                              "different MCP servers swap `mcp_config` (consent) — strict stays on so the "
-                              "session's tool ground is always explicit."},
+                              "kind": "bool",
+                              "teach": "move per-machine prompt sections into the first user message (cache reuse)"},
+    "teammate_mode":         {"flag": "--teammate-mode", "kind": "value",
+                              "teach": "agent-team teammate display mode (auto|in-process|tmux)"},
+    "disable_slash_commands": {"flag": "--disable-slash-commands", "kind": "bool",
+                              "teach": "disable all skills/commands for this session"},
+    "debug_file":            {"flag": "--debug-file", "kind": "value",
+                              "teach": "write debug logs to a specific path (implies debug mode)"},
+    # ── rows the registry derives CONSENT for (widen the surface → the R1-prime consent beat) ──
+    "tools":                 {"flag": "--tools", "kind": "value",
+                              "teach": "restrict/widen which BUILT-IN tools exist ('' none · 'default' all · csv)"},
+    "allowed_tools":         {"flag": "--allowedTools", "kind": "swap",
+                              "teach": "REPLACE the floor allowlist (mcp__company-only) — the wider-surface decision"},
+    "disallowed_tools":      {"flag": "--disallowedTools", "kind": "value",
+                              "teach": "deny rules (bare name removes the tool; scoped rule denies matches)"},
+    "mcp_config":            {"flag": "--mcp-config", "kind": "swap",
+                              "teach": "REPLACE the strict company MCP config — different servers, different ground"},
+    "permission_prompt_tool": {"flag": "--permission-prompt-tool", "kind": "value",
+                              "teach": "route permission prompts to an MCP tool (approval plumbing)"},
+    "plugin_dir":            {"flag": "--plugin-dir", "kind": "repeat",
+                              "teach": "load local plugin(s) for this session"},
+    "plugin_url":            {"flag": "--plugin-url", "kind": "repeat",
+                              "teach": "fetch plugin zip(s) by URL for this session"},
+    "add_dir":               {"flag": "--add-dir", "kind": "repeat",
+                              "teach": "widen the session's filesystem reach to extra dir(s) — the "
+                              "`dirs` capability axis, rides the operator-consent beat"},
+    # ── rows the registry derives LOCKED for (transport invariants / dedicated body keys) ──
+    # These carry the `why` teaching text the supervisor emits on the locked refusal. Their LOCKED
+    # posture is NOT declared here — it is derived (R1 transport-invariant / body-key-override lock).
+    "input_format":          {"flag": "--input-format", "kind": "value",
+                              "teach": "--input-format stream-json IS the held-open injection contract "
+                              "(T2) — the fabric cannot drive a session without it."},
+    "print":                 {"flag": "-p", "kind": "bool",
+                              "teach": "-p is the supervised transport's mode; it is always on."},
+    "verbose":               {"flag": "--verbose", "kind": "bool",
+                              "teach": "--verbose is required for the stream-json event surface the "
+                              "reader parses; always on."},
+    "output_format":         {"flag": "--output-format", "kind": "value",
+                              "teach": "use the dedicated body key `output_format` (defaults to stream-"
+                              "json — the reader's parse contract)."},
+    "include_partial":       {"flag": "--include-partial-messages", "kind": "bool",
+                              "teach": "use the dedicated body key `include_partial` (the R5 voice "
+                              "seam's delta stream)."},
+    "resume":                {"flag": "--resume", "kind": "value",
+                              "teach": "use the dedicated body key `resume` (wake) — verbs are routing "
+                              "decisions, not raw flags."},
+    "fork_session":          {"flag": "--fork-session", "kind": "bool",
+                              "teach": "use the dedicated body keys `resume`+`fork` (consult) — T4's "
+                              "non-destructive copy path."},
+    "model":                 {"flag": "--model", "kind": "value",
+                              "teach": "use the dedicated body key `model`."},
+    "effort":                {"flag": "--effort", "kind": "value",
+                              "teach": "use the dedicated body key `effort`."},
+    "fallback_model":        {"flag": "--fallback-model", "kind": "csv",
+                              "teach": "use the dedicated body key `fallback`."},
+    "permission_mode":       {"flag": "--permission-mode", "kind": "value",
+                              "teach": "use the dedicated body key `permission_mode` (the fabric's "
+                              "posture law: default plan, acceptEdits opt-in)."},
+    "settings":              {"flag": "--settings", "kind": "value",
+                              "teach": "use the dedicated body key `settings`."},
+    "debug":                 {"flag": "--debug", "kind": "value",
+                              "teach": "use the dedicated body key `debug`."},
+    "safe_mode":             {"flag": "--safe-mode", "kind": "bool",
+                              "teach": "use the dedicated body key `safe_mode`."},
+    "bare":                  {"flag": "--bare", "kind": "bool",
+                              "teach": "use the dedicated body key `bare`."},
+    "dangerously_skip_permissions": {"flag": "--dangerously-skip-permissions", "kind": "bool",
+                              "teach": "permission posture rides the dedicated `permission_mode` key "
+                              "(bypassPermissions must be an explicit, visible posture choice — never "
+                              "a side-door flag)."},
+    "strict_mcp_config":     {"flag": "--strict-mcp-config", "kind": "bool",
+                              "teach": "strictness is the grounding contract; to run different MCP "
+                              "servers swap `mcp_config` (consent) — strict stays on so the session's "
+                              "tool ground is always explicit."},
 }
+
+
+# ── the registry posture source (F-FIX-5 step 5 — the SOLE truth, swap-aware via R6) ────────────────
+_PLATFORM_SIGNAL_SETS = None    # cached PlatformEntry.signal_sets (a file read, NO spawn) — loaded once
+
+
+def _signal_sets():
+    """Resolve the claude-code PlatformEntry's signal_sets ONCE (cached). This is a FILE read +
+    head_builder derivation (the registry load), NOT a binary spawn — the transport_invariants are
+    R6-corrected at load. FAIL LOUD if the platform row is missing (the registry is the sole posture
+    truth now; a missing row is not a silent fall-back to a hand-list — there is no hand-list)."""
+    global _PLATFORM_SIGNAL_SETS
+    if _PLATFORM_SIGNAL_SETS is None:
+        from introspection.platforms import platform_registry
+        reg = platform_registry()
+        entry = reg.get("claude-code")
+        if entry is None:
+            raise RuntimeError(
+                "session_supervisor: no 'claude-code' PlatformEntry in the PlatformRegistry — the "
+                "spawn-flag posture source (Mirror-Registry rules) cannot be resolved. The hand "
+                "SPAWN_FLAGS dict was deleted (F-FIX-5 step 6); the registry is the sole truth. Fail "
+                "loud, never spawn a session with an unclassifiable flag surface.")
+        _PLATFORM_SIGNAL_SETS = entry.signal_sets
+    return _PLATFORM_SIGNAL_SETS
+
+
+def _registry_posture(flag_name: str) -> str:
+    """DERIVE a flag's posture from the Mirror-Registry rules (introspection.rules.classify over the
+    claude-code signal_sets) — the SOLE truth (F-FIX-5 step 5). Returns one of locked|hazard|consent|
+    safe|unmatched. R1 LOCKED (transport invariant / body-key lock, R6-corrected) > R2 HAZARD (self-
+    named danger) > R3 CONSENT (capability-axis widening, incl. --add-dir on `dirs` and the swap-kind
+    head-defaults --allowedTools/--mcp-config) > R5 SAFE (expose default). The crosscheck fixture
+    proves this reproduces every prior hand-posture (48/48, zero divergence)."""
+    from introspection import rules
+    posture, _rule, _axis = rules.classify(flag_name, _signal_sets())
+    return posture
 
 
 def _apply_spawn_flags(cmd: list, flags: dict | None, *, consent: bool) -> list:
     """R1.3 — apply registry-declared start-flags onto a built cmd (PURE; unit-testable without a
-    spawn). Validates every key against SPAWN_FLAGS: unknown → TeachingRefusal listing the registry;
-    locked → TeachingRefusal carrying the row's `why`; consent-posture without the operator-consent
-    beat → TeachingRefusal naming the bridge-session path. `swap` rows replace the value of a flag
-    already present in the transport head (--allowedTools / --mcp-config). Returns cmd (mutated in
-    place for swap, appended otherwise). No flags → cmd unchanged (byte-identical guarantee holds)."""
+    spawn). Validates every key against SPAWN_FLAG_ASSEMBLY: unknown → TeachingRefusal listing the
+    table; the POSTURE is DERIVED from the Mirror-Registry rules (_registry_posture — the sole truth,
+    swap-aware via R6), NOT a hand-stored column: locked → TeachingRefusal carrying the row's `teach`;
+    consent-posture without the operator-consent beat → TeachingRefusal naming the bridge-session
+    path; a hazard posture (R2 self-named danger) is treated as locked (refused). `swap` rows replace
+    the value of a flag already present in the transport head (--allowedTools / --mcp-config). Returns
+    cmd (mutated in place for swap, appended otherwise). No flags → cmd unchanged (byte-identical
+    guarantee holds)."""
     if not flags:
         return cmd
     if not isinstance(flags, dict):
         raise TeachingRefusal(f"REFUSED — `flags` must be an object of registry keys, got "
-                              f"{type(flags).__name__}. Declared keys: {sorted(SPAWN_FLAGS)}.")
+                              f"{type(flags).__name__}. Declared keys: {sorted(SPAWN_FLAG_ASSEMBLY)}.")
     for key, val in flags.items():
-        spec = SPAWN_FLAGS.get(key)
+        spec = SPAWN_FLAG_ASSEMBLY.get(key)
         if spec is None:
             raise TeachingRefusal(
                 f"REFUSED — unknown spawn flag {key!r}. The flag surface is REGISTRY-DECLARED "
-                f"(session_supervisor.SPAWN_FLAGS; a new flag is a new row, Atlas-grounded). "
-                f"Declared: {sorted(SPAWN_FLAGS)}.")
-        posture = spec["posture"]
-        if posture == "locked":
-            raise TeachingRefusal(f"REFUSED — spawn flag {key!r} is LOCKED: {spec['why']}")
+                f"(the Mirror-Registry derives posture; session_supervisor.SPAWN_FLAG_ASSEMBLY holds "
+                f"the consumer-emission data; a new flag is a new row, Atlas-grounded). "
+                f"Declared: {sorted(SPAWN_FLAG_ASSEMBLY)}.")
+        flag = spec["flag"]
+        posture = _registry_posture(flag)          # DERIVED — the registry is the sole truth (F-FIX-5)
+        if posture in ("locked", "hazard"):
+            raise TeachingRefusal(f"REFUSED — spawn flag {key!r} is LOCKED: {spec['teach']}")
         if posture == "consent" and not consent:
             raise TeachingRefusal(
-                f"REFUSED — spawn flag {key!r} ({spec['summary']}) WIDENS the session's surface and "
+                f"REFUSED — spawn flag {key!r} ({spec['teach']}) WIDENS the session's surface and "
                 f"rides the operator-consent beat. Spawn it via POST /bridge-session with "
                 f"operator_consent=true (consent-not-lockdown — available the moment consent rides "
                 f"the call; git revert backstops).")
         kind = spec["kind"]
-        flag = spec["flag"]
         if kind == "bool":
             if val:
                 cmd.append(flag)

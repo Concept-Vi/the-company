@@ -1,36 +1,34 @@
-"""tests/spawn_flags_crosscheck_acceptance.py — the SPAWN_FLAGS cross-check fixture (F-FIX-9).
-Mirror-Registry System, LANE-REGISTRIES.
+"""tests/spawn_flags_crosscheck_acceptance.py — the spawn-flag posture cross-check (F-FIX-9).
+Mirror-Registry System, LANE-SUPERVISOR-REFACTOR.
 
-THE GATE ON THE SUPERVISOR SWAP (F-FIX-5 step 4). Before the hand-written
-`session_supervisor.SPAWN_FLAGS` dict is ever removed (the DEFERRED LANE-SUPERVISOR-REFACTOR, NOT
-this lane), this fixture PROVES the registry rules reproduce the hand-postures: for EVERY SPAWN_FLAGS
-key whose flag-name overlaps the registry, the engine's DERIVED posture (classify over the platform's
-SignalSets, looked up by the body-key↔flag-name map in platforms/claude_code.py) MUST equal the
-SPAWN_FLAGS hand-posture. Any divergence is a LOUD finding to RESOLVE — never silently absorbed
-(F-FIX-9 / no-silent-failures law).
+HISTORY + ROLE CHANGE (2026-06-14). This fixture WAS the gate on the supervisor swap (F-FIX-5 step
+4): before the hand-written `session_supervisor.SPAWN_FLAGS` dict carried a `posture` column, this
+proved the Mirror-Registry rules reproduce every hand-posture (it passed 48/48, zero divergence).
+That gate cleared, so F-FIX-5 steps 5-6 fired: the supervisor now DERIVES posture from the registry
+(`session_supervisor._registry_posture` → `introspection.rules.classify`), and the hand SPAWN_FLAGS
+dict was DELETED — the registry is the SOLE truth for posture. `session_supervisor.SPAWN_FLAG_ASSEMBLY`
+now carries ONLY the consumer-emission data (flag-name, assembler kind, teaching text); it has NO
+posture column.
 
-This is a STATIC-DATA fixture: it spawns NOTHING (no `claude`, no model). It classifies the 48
-SPAWN_FLAGS keys' flag-names directly through `introspection.rules.classify` over the platform's
-LIVE-derived SignalSets (transport_invariants derived at PlatformRegistry load via the registered
-head_builder thunk). The live ≥30-flag discovery is a SEPARATE LEAD-only criterion (C-REG-1); this
-fixture does not need it — it cross-checks the RULES against the hand-dict on the static signal data.
+POST-DELETION ROLE — the standing REGRESSION + SELF-CONSISTENCY gate. With no hand-posture to compare
+against, this fixture now asserts TWO things, still spawning NOTHING (no `claude`, no model — pure
+static data over the platform's R6-corrected SignalSets):
 
-POSTURE MAPPING (the registry posture vocabulary → the SPAWN_FLAGS posture vocabulary):
-  rules.classify returns one of: locked | hazard | consent | safe | unmatched.
-  SPAWN_FLAGS posture is one of:  locked | consent | safe.
-  Equivalence for the cross-check:
-    registry "locked"  ≡ SPAWN_FLAGS "locked"   (R1 transport invariant / body-key lock)
-    registry "hazard"  ≡ SPAWN_FLAGS "locked"   (R2 self-named-danger is a hand-LOCKED row — e.g.
-                                                 dangerously_skip_permissions; the hand-dict has no
-                                                 separate hazard bucket, it locks them)
-    registry "consent" ≡ SPAWN_FLAGS "consent"  (R3 capability-axis widening)
-    registry "safe"    ≡ SPAWN_FLAGS "safe"     (R5 expose-not-gate default)
-    registry "unmatched" has NO SPAWN_FLAGS equivalent (R4 is a refresh-time novelty verdict, never a
-                                                 standing hand-row) → a divergence if it occurs.
+  1. REGRESSION — every spawn-flag's registry-DERIVED posture equals the FROZEN curated ground-truth
+     captured below (`_EXPECTED_POSTURE`, the 48 postures the swap was verified against). A future
+     signal-set / rule edit that drifts ANY flag's posture fails LOUD here (no-silent-failures law).
+     This is the same 48/48 the swap cleared on, frozen so it cannot silently regress.
+  2. SELF-CONSISTENCY — every `SPAWN_FLAG_ASSEMBLY` key has a non-empty flag-name and classifies to a
+     REAL posture (locked|hazard|consent|safe), never R4 `unmatched` (an unmatched spawn flag means
+     the supervisor would refuse a flag it declares it can assemble — a contradiction).
 
-EXPORTS `crosscheck()` → a structured report dict so the deferred LANE-REFRESH acceptance test can
-CALL this same gate (F-FIX-9: "the cross-check in the acceptance test") without duplicating the logic.
-Run directly (`python3 tests/spawn_flags_crosscheck_acceptance.py`) for the standalone gate.
+POSTURE VOCABULARY: rules.classify returns locked|hazard|consent|safe|unmatched. The supervisor
+treats locked+hazard as refuse-locked, consent as the consent-gated widen, safe as apply-freely.
+`_EXPECTED_POSTURE` stores the raw rules vocabulary (so a hazard→locked collapse would still surface
+as a drift, not be hidden by an equivalence map).
+
+EXPORTS `crosscheck()` → a structured report dict (so a LANE-REFRESH acceptance test can CALL this
+same gate without duplicating the logic). Run directly for the standalone gate.
 """
 import os
 import sys
@@ -42,30 +40,53 @@ from introspection import rules
 from introspection.platforms import platform_registry
 
 
-# registry-posture → SPAWN_FLAGS-posture equivalence (the mapping documented in the module docstring)
-_POSTURE_EQUIV = {
-    "locked": "locked",
-    "hazard": "locked",     # a self-named-danger flag is a hand-LOCKED row (no separate hazard bucket)
-    "consent": "consent",
-    "safe": "safe",
-    # "unmatched" deliberately absent — R4 has no standing hand-row; its presence is a divergence.
+# ── the FROZEN curated ground-truth (the 48 postures the supervisor swap was verified against) ──────
+# Captured at the 48/48 zero-divergence pass that gated F-FIX-5 step 4. Stored in the RAW rules
+# vocabulary (locked|hazard|consent|safe). A future rule / signal-set change that moves any of these
+# fails LOUD (regression gate). NOT a re-introduction of the hand-posture column — it is a TEST
+# expectation, the frozen snapshot the registry must keep reproducing.
+_EXPECTED_POSTURE: dict[str, str] = {
+    "add_dir": "consent",          # dirs capability axis (R3) — the 2026-06-14 fix
+    "advisor": "safe", "agent": "safe", "agents": "safe",
+    "allowed_tools": "consent",    # R6 swap-kind head-default → R3 consent (tools-builtin)
+    "append_system_prompt": "safe", "append_system_prompt_file": "safe",
+    "bare": "locked", "betas": "safe", "continue": "safe",
+    "dangerously_skip_permissions": "locked",   # R1 body-key lock fires before R2 hazard
+    "debug": "locked", "debug_file": "safe", "disable_slash_commands": "safe",
+    "disallowed_tools": "consent", "effort": "locked",
+    "exclude_dynamic_system_prompt_sections": "safe",
+    "fallback_model": "locked", "fork_session": "locked", "include_hook_events": "safe",
+    "include_partial": "locked", "input_format": "locked", "json_schema": "safe",
+    "max_budget_usd": "safe", "max_turns": "safe",
+    "mcp_config": "consent",       # R6 swap-kind head-default → R3 consent (mcp)
+    "model": "locked", "name": "safe", "no_session_persistence": "safe",
+    "output_format": "locked", "permission_mode": "locked", "permission_prompt_tool": "consent",
+    "plugin_dir": "consent", "plugin_url": "consent", "print": "locked",
+    "prompt_suggestions": "safe", "replay_user_messages": "safe", "resume": "locked",
+    "safe_mode": "locked", "session_id": "safe", "setting_sources": "safe", "settings": "locked",
+    "strict_mcp_config": "locked", "system_prompt": "safe", "system_prompt_file": "safe",
+    "teammate_mode": "safe", "tools": "consent", "verbose": "locked",
 }
+_REAL_POSTURES = {"locked", "hazard", "consent", "safe"}   # `unmatched` (R4) is a contradiction here
 
 
 def crosscheck(platform_id: str = "claude-code") -> dict:
-    """Run the cross-check. Returns a structured report:
+    """Run the post-deletion regression + self-consistency gate. Returns a structured report:
         {
           "platform_id": ...,
-          "checked": [ {key, flag, hand_posture, registry_posture, registry_posture_mapped,
-                        registry_rule, agree: bool}, ... ],   # one per overlapping SPAWN_FLAGS key
+          "checked": [ {key, flag, expected, registry_posture, registry_rule, agree: bool}, ... ],
           "agreements": int,
-          "divergences": [ {key, flag, hand_posture, registry_posture, registry_rule, reason}, ... ],
-          "ok": bool,        # True iff zero divergences
+          "divergences": [ {key, flag, expected, registry_posture, registry_rule, reason}, ... ],
+          "ok": bool,        # True iff zero divergences AND every key covered AND no unmatched
         }
-    Imports SPAWN_FLAGS + the body-key↔flag map at call time (so a context without the supervisor
-    still imports this module). FAILS LOUD if either is unavailable — the gate cannot run blind."""
-    from runtime.session_supervisor import SPAWN_FLAGS
+    Imports SPAWN_FLAG_ASSEMBLY + the body-key↔flag map at call time (so a context without the
+    supervisor still imports this module). FAILS LOUD if either is unavailable — the gate cannot run
+    blind. Spawns NOTHING — pure static classification over the platform's R6-corrected SignalSets."""
+    from runtime.session_supervisor import SPAWN_FLAG_ASSEMBLY
     from platforms.claude_code import SPAWN_FLAG_BODY_KEY_MAP
+    import platforms._wiring  # noqa: F401 — register the head_builder thunk so the registry derives
+    # transport_invariants LIVE from the spawn template (ROW-PURITY: the binding lives in the wiring
+    # module now, not in the pure-data claude_code.py row).
 
     reg = platform_registry()
     if platform_id not in reg:
@@ -73,117 +94,102 @@ def crosscheck(platform_id: str = "claude-code") -> dict:
             f"crosscheck: platform {platform_id!r} not in the PlatformRegistry (ids: {reg.ids()}) — "
             f"the cross-check cannot run without the platform's SignalSets. Fail loud.")
     platform = reg[platform_id]
-    # the LIVE-derived signal_sets (transport_invariants derived at load via the head_builder thunk)
-    signal_sets = platform.signal_sets
+    signal_sets = platform.signal_sets    # R6-corrected transport_invariants derived at load
 
     checked: list[dict] = []
     divergences: list[dict] = []
     agreements = 0
 
-    for key, spec in SPAWN_FLAGS.items():
-        hand_posture = spec["posture"]
-        flag = SPAWN_FLAG_BODY_KEY_MAP.get(key) or spec.get("flag") or ""
+    # 1 — the assembly table must be fully covered by the frozen expectation (no key drift either way)
+    assembly_keys = set(SPAWN_FLAG_ASSEMBLY)
+    expected_keys = set(_EXPECTED_POSTURE)
+    missing_expectation = sorted(assembly_keys - expected_keys)   # an assembly key with no frozen posture
+    stale_expectation = sorted(expected_keys - assembly_keys)     # a frozen posture for a removed key
+    for k in missing_expectation:
+        divergences.append({
+            "key": k, "flag": SPAWN_FLAG_ASSEMBLY[k].get("flag", ""), "expected": None,
+            "registry_posture": None, "registry_rule": None,
+            "reason": f"SPAWN_FLAG_ASSEMBLY key {k!r} has NO frozen expectation — a new spawn flag was "
+                      f"added without recording its verified posture in _EXPECTED_POSTURE. Add it (with "
+                      f"the posture you verified) so the regression gate covers it. Fail loud.",
+        })
+    for k in stale_expectation:
+        divergences.append({
+            "key": k, "flag": "", "expected": _EXPECTED_POSTURE[k],
+            "registry_posture": None, "registry_rule": None,
+            "reason": f"_EXPECTED_POSTURE has a frozen posture for {k!r} but SPAWN_FLAG_ASSEMBLY no "
+                      f"longer declares it — remove the stale expectation. Fail loud.",
+        })
+
+    # 2 — every assembly key: registry-derived posture == frozen expectation, AND a real posture
+    for key, spec in SPAWN_FLAG_ASSEMBLY.items():
+        flag = spec.get("flag") or SPAWN_FLAG_BODY_KEY_MAP.get(key) or ""
         if not flag:
             divergences.append({
-                "key": key, "flag": "", "hand_posture": hand_posture,
+                "key": key, "flag": "", "expected": _EXPECTED_POSTURE.get(key),
                 "registry_posture": None, "registry_rule": None,
-                "reason": f"no flag-name mapping for SPAWN_FLAGS key {key!r} — the body-key↔flag map "
-                          f"in platforms/claude_code.py must cover every key. Cannot classify without "
-                          f"a flag-name. Fail loud.",
+                "reason": f"no flag-name for assembly key {key!r} (neither the row's `flag` nor the "
+                          f"body-key↔flag map covers it). Cannot classify. Fail loud.",
             })
             continue
         reg_posture, reg_rule, _axis = rules.classify(flag, signal_sets)
-        mapped = _POSTURE_EQUIV.get(reg_posture)
-        agree = (mapped == hand_posture)
-        assembler_kind = spec.get("kind", "")
+        expected = _EXPECTED_POSTURE.get(key)
+        real = reg_posture in _REAL_POSTURES
+        agree = (reg_posture == expected) and real
         row = {
-            "key": key, "flag": flag, "hand_posture": hand_posture,
-            "registry_posture": reg_posture, "registry_posture_mapped": mapped,
-            "registry_rule": reg_rule, "assembler_kind": assembler_kind, "agree": agree,
+            "key": key, "flag": flag, "expected": expected,
+            "registry_posture": reg_posture, "registry_rule": reg_rule, "agree": agree,
         }
         checked.append(row)
         if agree:
             agreements += 1
-        else:
-            # Characterize the divergence. The KNOWN, resolvable class is the SWAP-KIND HEAD DEFAULT:
-            # a flag the consumer EMITS in its transport head (so the F-FIX-2 derivation includes it,
-            # as C-CORE-4 requires) but which is CONSENT-overridable via swap (so the hand posture is
-            # 'consent', not 'locked'). R1's pure membership test cannot see 'swap'; the deferred
-            # LANE-SUPERVISOR-REFACTOR resolves it by reading assembler_kind=='swap' to treat a
-            # head-member as consent rather than a hard lock (F-FIX-5 step 2 adds assembler_kind to
-            # CapabilityEntry exactly for this). It is a characterized, resolvable finding — NOT an
-            # uncharacterized rule error — but it STILL blocks the swap until the refactor handles it.
-            is_swap_head_default = (
-                assembler_kind == "swap" and reg_posture == "locked" and hand_posture == "consent")
-            if is_swap_head_default:
-                klass = "swap-head-default"
-                reason = (
-                    f"registry derives {reg_posture!r} (R1: {flag!r} is in the DERIVED transport-"
-                    f"invariant head, which C-CORE-4 requires) but the hand posture is {hand_posture!r}. "
-                    f"This is the SWAP-KIND HEAD DEFAULT class: {flag!r} is emitted in the head AND is "
-                    f"consent-overridable (assembler_kind='swap'). RESOLUTION (deferred "
-                    f"LANE-SUPERVISOR-REFACTOR, F-FIX-5 step 2): when the supervisor reads posture from "
-                    f"the registry, a derived-locked flag carrying assembler_kind=='swap' is treated as "
-                    f"CONSENT, not hard-locked. This finding BLOCKS the SPAWN_FLAGS removal (F-FIX-5 "
-                    f"step 6) until that swap-aware read is built — exactly the F-FIX-9 gate.")
-            else:
-                klass = "uncharacterized"
-                reason = (
-                    f"registry derives {reg_posture!r} (rule {reg_rule}, maps to {mapped!r}) but the "
-                    f"hand SPAWN_FLAGS posture is {hand_posture!r} — UNCHARACTERIZED divergence; the "
-                    f"rules / signal-sets data must be reconciled before the swap. Fail loud.")
+        elif not real:
             divergences.append({
-                "key": key, "flag": flag, "hand_posture": hand_posture,
-                "registry_posture": reg_posture, "registry_posture_mapped": mapped,
-                "registry_rule": reg_rule, "assembler_kind": assembler_kind,
-                "class": klass, "reason": reason,
+                "key": key, "flag": flag, "expected": expected,
+                "registry_posture": reg_posture, "registry_rule": reg_rule,
+                "reason": f"assembly flag {flag!r} classifies {reg_posture!r} (R4 unmatched / unreal) — "
+                          f"the supervisor declares it assemblable but the rules refuse to classify it. "
+                          f"A spawn flag must derive a real posture. Fail loud.",
+            })
+        else:
+            divergences.append({
+                "key": key, "flag": flag, "expected": expected,
+                "registry_posture": reg_posture, "registry_rule": reg_rule,
+                "reason": f"REGRESSION — {flag!r} now derives {reg_posture!r} (rule {reg_rule}) but the "
+                          f"frozen verified posture is {expected!r}. A signal-set/rule change drifted "
+                          f"this flag's posture. Reconcile (or update _EXPECTED_POSTURE only if the new "
+                          f"posture is deliberately correct). Fail loud.",
             })
 
-    uncharacterized = [d for d in divergences if d.get("class") == "uncharacterized"
-                       or d.get("flag") == ""]
     return {
         "platform_id": platform_id,
         "checked": checked,
         "agreements": agreements,
-        "total_overlapping": len(checked) + sum(1 for d in divergences if d["flag"] == ""),
+        "total_keys": len(SPAWN_FLAG_ASSEMBLY),
         "divergences": divergences,
-        "uncharacterized_divergences": uncharacterized,
-        # ok = zero divergences at all (the gate that blocks SPAWN_FLAGS removal — F-FIX-5 step 6).
         "ok": len(divergences) == 0,
-        # clean_for_rules = no UNCHARACTERIZED divergence: the rules themselves are proven correct;
-        # the only residual is the known swap-head-default class the deferred refactor resolves.
-        "clean_for_rules": len(uncharacterized) == 0,
     }
 
 
 def main() -> int:
     report = crosscheck()
-    print(f"SPAWN_FLAGS cross-check (F-FIX-9) — platform {report['platform_id']!r}")
-    print(f"  keys checked: {len(report['checked'])}  agreements: {report['agreements']}  "
-          f"divergences: {len(report['divergences'])}")
-    # show the agreement breakdown by posture for confidence
+    print(f"spawn-flag posture cross-check (F-FIX-9, post-swap regression gate) — "
+          f"platform {report['platform_id']!r}")
+    print(f"  keys checked: {len(report['checked'])}/{report['total_keys']}  "
+          f"agreements: {report['agreements']}  divergences: {len(report['divergences'])}")
     by_posture: dict[str, int] = {}
     for r in report["checked"]:
         if r["agree"]:
-            by_posture[r["hand_posture"]] = by_posture.get(r["hand_posture"], 0) + 1
+            by_posture[r["registry_posture"]] = by_posture.get(r["registry_posture"], 0) + 1
     print(f"  agreements by posture: {by_posture}")
     if report["divergences"]:
-        print("  DIVERGENCES (LOUD — gate on the SPAWN_FLAGS removal, F-FIX-5 step 6):")
+        print("  DIVERGENCES (LOUD — registry-is-truth regression / self-consistency gate):")
         for d in report["divergences"]:
-            klass = d.get("class", "?")
-            print(f"    - [{klass}] key={d['key']!r} flag={d['flag']!r}: {d['reason']}")
-        if report["clean_for_rules"]:
-            print("  RULES PROVEN: every divergence is the KNOWN, characterized swap-head-default "
-                  "class — the registry rules reproduce all NON-swap hand-postures exactly. The "
-                  "residual is resolved by the deferred LANE-SUPERVISOR-REFACTOR (swap-aware posture "
-                  "read), NOT by a rule change. The gate still BLOCKS the SPAWN_FLAGS removal until "
-                  "that swap-aware read is built (F-FIX-9).")
-        else:
-            print("  UNCHARACTERIZED divergence present — the rules / signal-data must be reconciled.")
-        # The gate FAILS on any divergence (it is the gate on the supervisor swap). It is NOT a build
-        # error in THIS lane (this lane only builds + runs the gate); it BLOCKS the deferred swap.
+            print(f"    - key={d['key']!r} flag={d['flag']!r}: {d['reason']}")
         return 1
-    print("  OK — every overlapping SPAWN_FLAGS key's hand-posture is reproduced by the registry rules.")
+    print("  OK — every spawn-flag's registry-derived posture matches the frozen verified ground-truth "
+          "(48/48), and every assembly key classifies to a real posture. The registry is the sole "
+          "posture truth; the hand SPAWN_FLAGS dict is deleted (F-FIX-5 steps 5-6).")
     return 0
 
 
