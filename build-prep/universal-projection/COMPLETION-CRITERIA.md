@@ -58,6 +58,11 @@ project() accepts now= but center:'now' is hardcoded; the handler never override
 - **FUNCTION** — the lattice subscribes to `/api/stream` and re-projects per new seq; the 15s poll
   retired; a new event appears the instant it's written; now advances by a smooth client clock. ☐ by use
 - **FORM** — the live arrival reads as motion (a point drifting in), not a flicker/reload. ☐ by rubric
+- **ROBUSTNESS (carry-forward, found in G5 review)** — the error view returns early and renders NO foot
+  HUD, so there are no controls; recovery relies on the mounted effect's 15s interval, which only runs
+  while `live=true`. A failed pull WHILE FROZEN (e.g. a bind-change pull that 503s) is a stuck dead-end
+  until reload. Pre-existing (not a G5 regression); fix here — give the error state an in-view retry OR
+  keep the live toggle reachable. ☐ by use
 
 ## GROUP 5 · INSTRUMENT — THE FORM FACE (the lattice on the design system) ✅ (committed dc3378a)
 LatticeView.tsx WAS the LONE region still on the dead GitHub-dark palette (undefined --accent/--ink-dim
@@ -71,7 +76,10 @@ LatticeView.tsx WAS the LONE region still on the dead GitHub-dark palette (undef
   LatticeView.tsx (0) and the lattice's app.css contribution (37→0); the angle-hue PRESERVED;
   a SEPARATE design-critic passed the WHOLE screen at desktop AND 390×844 (pixel-verified). ✅ by rubric
   NOTE (out of scope): 2 pre-existing #fff remain in app.css (.review-frame/.studio-frame) — deliberate
-  white 'paper' for rendering mockup HTML, not the lattice; left intentionally.
+  white 'paper' for rendering mockup HTML, not the lattice; left intentionally. CONSEQUENCE: a
+  FILE-LEVEL gate (`check.py --target canvas/app/src --fail-on`, rule 9) stays RED from those two —
+  "Group 5 lattice-clean" is NOT "the app.css gate is green". A white token (or a lint allowlist) is a
+  design-folder concern (generated CSS, another session), not the app's to hand-edit.
 
 ## GROUP 6 · ABILITY — THE CIRCLE / SEMANTIC RADIUS 🔴 (needs a resident embedder)
 projection.py:155 is a no-op stub (both branches = age).
