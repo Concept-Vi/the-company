@@ -64,14 +64,27 @@ the remaining items are genuinely gated (Tim input / axis-selection) or are data
   conv_index ×3, space_embed, embeddings, durability, events, fs_session_guard, set_ref_atomic, bridge_session);
   live surface all 5 bindings resolve (5994 pts), scrubber shifts `now`, semantic-pending shows the scale
   ladder, semantic-active over 162 units (all carry strain), rung=8 resolves 8 sized+labelled themes.
-- **UNATTENDED CEILING (for the loop, 2026-06-14):** every fully-buildable group is ✅. The 3 remaining
-  items are NOT autonomously buildable without green-paint: Group 9 needs Tim's AI-tells; the small
-  registries/20-80 need Tim's axis-selection; Group 10's edge-order FORM needs a legible ACYCLIC
-  edge-backbone over registry rows — which the system structurally lacks (THREE edge-sources checked:
-  sparse-DAG graphs, sparse-chain cascades, dense-CYCLIC type-flow — all reduce to alphabetical-with-a-nudge;
-  density was never the gap, acyclicity is). A further fire should NOT churn: do a liveness check (bridge
-  200 + `projection_instrument_acceptance` green) and HOLD, or pick up whichever of A/B/C Tim has unblocked.
-  Do not re-derive this ceiling or hunt a 4th edge-source — the convergence across three is the answer.
+- **ACTIVE BUILD — Tim UNBLOCKED both, 2026-06-14 00:35Z (the ceiling was my error, twice):** the prior
+  "ceiling/hold" is RETIRED. Tim's corrections (verbatim intent):
+  · **Separator (Group 9): "You do not need me to tell you the AI tells, and asking me to give it to you
+    assumes a single purpose. There is no single purpose."** → The two-gravity separator is a GENERAL
+    variable-two-pole resolution (poles are variables like centre/axes; registry-true, no hardcoded poles);
+    pollution (origin vs AI-corner) is ONE instance, and for THAT instance the AI SUPPLIES its own AI-pole
+    (I characterize my own deformation — never demand the tells from Tim; see ai-supplies-domain-knowledge).
+  · **Relations (Group 10): "I have already given it to you. The only edges that get typed are the
+    directional ones."** → The relations model is GIVEN, not unformalized: registries↔registries,
+    types↔types, fields↔fields; every typed edge is DIRECTIONAL and carries its EQUAL-OPPOSITE; ONLY
+    directional relations type (symmetric associations don't). And nonsequential IS valid (line 495) — so
+    my "needs an ACYCLIC backbone" was a self-imposed total-order constraint Tim never set. Order the wheel
+    by the directional typed edges where they sequence; render real cycles AS cycles, not flattened.
+- **THE BAR (Tim's completion gate for this build — all four, or it is not done):** (1) VERIFIED LIVE (not
+  code-reading — curl + driven in the browser); (2) connects to ALL the REAL data (every registry / the
+  whole event corpus / the real directional typed edges — never a toy slice); (3) Tim can DRIVE it; (4) it
+  is INTERACTIVE. This bar is half of "done" alongside the FUNCTION+FORM bars.
+- **THE LOOP (this is "my loop", Tim 00:35Z):** one big beat per fire → build toward Group 10 (the
+  directional typed-edge wheel = "the connections in the registries") then Group 9 (the variable two-gravity
+  separator, AI-supplied pole) → verify against THE BAR (live + all real data + drivable + interactive) +
+  the floor → commit → update this status honestly. No green-paint, no forced-acyclicity, registry-true.
 
 ---
 
