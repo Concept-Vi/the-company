@@ -162,12 +162,18 @@ check("36 transport back-compat: a channel member still dispatches over HTTP to 
       and res_bc.get("transport") == "channel")
 
 
-# --- a MOCK SUPERVISOR standing in for session_supervisor (serves /sessions, /inject, /watch) ---
+# --- a FAITHFUL MOCK SUPERVISOR standing in for session_supervisor ---
+# Mirrors the real surface on the axes that matter for the reply-fold:
+#   /sessions : {sessions:[{id, state}]}                       (live_sessions presence probe)
+#   /watch    : REPLAYS s.events on connect (real L1485), THEN streams live events (real fans on close)
+#   /inject   : threads body `source` into an `injected{source}` event (real L1606→L1091) THEN a `done`
+# The replay is what makes the stale-done mis-route path testable: a session a PRIOR path drove carries
+# a stale done in its replay, and the faithful mock replays it on every /watch connect.
 import queue as _queue
 class _MockSupervisor(BaseHTTPRequestHandler):
-    # session_id -> "idle"|"busy"|"closed"   and   session_id -> Queue of watch events to stream
-    states = {}
-    watch_q = {}
+    states = {}           # session_id -> "idle"|"busy"|"closed"
+    history = {}          # session_id -> list[event]   (REPLAYED on /watch connect, like real s.events)
+    watch_q = {}          # session_id -> Queue[event]  (LIVE events streamed after replay)
     injects = []          # every /inject body received (assert the dispatch shape)
     def log_message(self, *a): pass
     def _json(self, code, obj):
@@ -186,6 +192,10 @@ class _MockSupervisor(BaseHTTPRequestHandler):
             self.send_response(200); self.send_header("Content-Type", "application/x-ndjson")
             self.send_header("Connection", "close"); self.end_headers()
             try:
+                # REPLAY history first (mirrors the real supervisor's list(s.events) on connect)
+                for ev in list(_MockSupervisor.history.get(sid, [])):
+                    self.wfile.write((json.dumps(ev) + "\n").encode()); self.wfile.flush()
+                # then live events
                 while True:
                     ev = q.get(timeout=10)
                     self.wfile.write((json.dumps(ev) + "\n").encode()); self.wfile.flush()
@@ -203,8 +213,10 @@ class _MockSupervisor(BaseHTTPRequestHandler):
         if u == "/inject":
             _MockSupervisor.injects.append(body)
             sid = body.get("session")
-            # the mock turn: stream a done event carrying the member's reply (the watcher folds it)
             q = _MockSupervisor.watch_q.setdefault(sid, _queue.Queue())
+            # the real turn order: fan `injected{source}` (L1091), then the turn's `done` (L1039)
+            q.put({"type": "injected", "source": body.get("source") or "http",
+                   "chars": len(body.get("message") or "")})
             q.put({"type": "done", "result": f"SUPERVISED REPLY to: {body.get('message')}",
                    "is_error": False})
             self._json(200, {"ok": True}); return
@@ -250,6 +262,33 @@ check("40 the supervised reply was folded into the mail log (route_reply)",
 check("41 the supervised reply was PUSHED BACK into the asker's live session (no polling)",
       any("SUPERVISED REPLY to: hello supervised" in (r.get("content") or "") for r in _Rx.received))
 
+# --- STALE-REPLAY mis-route guard (the faithful-mock path): a session a PRIOR path drove carries a
+#     stale `done` in its /watch replay. A fresh watcher must DISCARD it (only fold a done preceded by
+#     OUR injected{source:channel-fabric} marker), never mis-route the stale result to a pending thread.
+# Register a NEW supervised member whose supervisor history already holds a stale (foreign) turn.
+_MockSupervisor.states["sv-stale"] = "idle"
+_MockSupervisor.history["sv-stale"] = [
+    {"type": "injected", "source": "http", "chars": 3},                 # a PRIOR path's inject (msg_clone)
+    {"type": "done", "result": "STALE FOREIGN REPLY", "is_error": False},  # its stale done, replayed
+]
+sup_reg("ch-stale", "sv-stale", desc="supervised w/ stale replay history")
+_Rx.received.clear()
+_MockSupervisor.injects.clear()
+# dispatch via the channel layer: watcher connects → REPLAYS the stale done first, then our turn runs.
+res_stale = cc.send("ch-stale", "fresh question", frm="ch-live", topic="t-stale")
+for _ in range(60):
+    if _MockSupervisor.injects and any("fresh question" in (r.get("content") or "") for r in _Rx.received):
+        break
+    time.sleep(0.1)
+mailed_stale = cc.mail(thread=res_stale["thread"])
+check("42 stale replayed done is DISCARDED — never folded to the pending thread (no mis-route)",
+      not any("STALE FOREIGN REPLY" in m.get("text", "") for m in mailed_stale)
+      and not any("STALE FOREIGN REPLY" in (r.get("content") or "") for r in _Rx.received))
+check("43 the FRESH supervised reply still folds correctly past the stale replay",
+      any(m["kind"] == "reply" and "SUPERVISED REPLY to: fresh question" in m.get("text", "")
+          for m in mailed_stale)
+      and any("SUPERVISED REPLY to: fresh question" in (r.get("content") or "") for r in _Rx.received))
+
 # --- mixed-member broadcast: one broadcast fans across a channel member AND a supervised member ---
 _Rx.received.clear()
 _MockSupervisor.injects.clear()
@@ -260,29 +299,29 @@ gthread = f"g-mix-{int(_t2.time())}"
 for tgt in ("ch-live", "ch-sup"):
     bres.append(cc.send(tgt, "mixed fanout", frm="fabric", thread=gthread))
 time.sleep(0.4)
-check("42 mixed broadcast: channel member got the HTTP push",
+check("44 mixed broadcast: channel member got the HTTP push",
       any("mixed fanout" in (r.get("content") or "") for r in _Rx.received))
-check("43 mixed broadcast: supervised member got a /inject under the same thread",
+check("45 mixed broadcast: supervised member got a /inject under the same thread",
       any(i["message"] == "mixed fanout" for i in _MockSupervisor.injects))
 
 # --- supervised PRUNE: supervisor reports the session closed → the reg is pruned ---
 _MockSupervisor.states["sv-1"] = "closed"
 live3 = cc.live_sessions()
-check("44 live_sessions PRUNES a supervised member the supervisor reports CLOSED",
+check("46 live_sessions PRUNES a supervised member the supervisor reports CLOSED",
       not any(r["handle"] == "ch-sup" for r in live3))
-check("45 the closed supervised registration file was removed",
+check("47 the closed supervised registration file was removed",
       not os.path.exists(os.path.join(tmp, "ch-sup.json")))
 
 # --- supervised TRANSIENT outage: an UNREACHABLE supervisor must NOT delete the fork-owned reg ---
 sup_reg("ch-sup2", "sv-2", base="http://127.0.0.1:9")    # port 9 = discard, unreachable
 live4 = cc.live_sessions()
-check("46 unreachable supervisor: the supervised reg is KEPT (transient), never deleted",
+check("48 unreachable supervisor: the supervised reg is KEPT (transient), never deleted",
       os.path.exists(os.path.join(tmp, "ch-sup2.json")))
-check("47 a supervised member under an unreachable supervisor still LISTS (presence held, not destroyed)",
+check("49 a supervised member under an unreachable supervisor still LISTS (presence held, not destroyed)",
       any(r["handle"] == "ch-sup2" for r in cc.live_sessions()))
 
 # --- supervisor_base fallback: a supervised reg missing the field uses COMPANY_SUPERVISOR_BASE ---
-check("48 supervisor_base falls back to the process default when the reg omits it",
+check("50 supervisor_base falls back to the process default when the reg omits it",
       cc.supervisor_base({"handle": "z", "supervisor_session": "s"}) == cc.DEFAULT_SUPERVISOR_BASE.rstrip("/"))
 
 msup.shutdown()

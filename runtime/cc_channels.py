@@ -203,7 +203,16 @@ def push(handle_or_reg, content: str, *, meta: "dict | None" = None, base_timeou
 # synthesising the reply the member would otherwise have sent. The supervisor SERIALISES turns
 # (idle⇄busy; /inject refused while busy), so per member a single pending-thread slot is exact: each
 # done corresponds 1:1 to the most recent dispatch.
-_watchers: dict = {}                      # handle -> {"thread", "supervisor_session", "base", ...}
+# The source tag the supervised /inject carries (the supervisor threads body `source` into inject(),
+# which fans an `injected` event carrying it — session_supervisor do_POST /inject L1606 → inject L1091).
+# The watcher uses this marker to ARM a fold ONLY for a turn THIS layer dispatched: a `done` is folded
+# only when preceded, IN THE LIVE STREAM, by an `injected{source: CHANNEL_FABRIC_SOURCE}`. This makes
+# the replayed-history case safe: /watch replays s.events on connect (session_supervisor L1485), so a
+# supervised session a prior path (e.g. cc_clone.msg_clone) already drove carries a stale `done` in its
+# replay — but that stale done is preceded only by a replayed injected with a DIFFERENT source (or
+# none), never our marker, so it is correctly DISCARDED (never mis-routed to a pending thread).
+CHANNEL_FABRIC_SOURCE = "channel-fabric"
+_watchers: dict = {}                      # handle -> {"supervisor_session", "base"}
 _pending_thread: dict = {}                # handle -> the channel thread the in-flight turn answers
 _watch_lock = threading.Lock()
 
@@ -225,7 +234,7 @@ def _push_supervised(reg: dict, content: str, *, meta: dict, base_timeout: float
     with _watch_lock:
         _pending_thread[handle] = thread          # which channel thread THIS turn's reply routes to
     body = json.dumps({"session": session, "message": content,
-                       "source": "channel-fabric"}).encode()
+                       "source": CHANNEL_FABRIC_SOURCE}).encode()
     req = urllib.request.Request(base + "/inject", data=body, method="POST",
                                  headers={"Content-Type": "application/json"})
     try:
@@ -266,6 +275,9 @@ def _supervised_watch_loop(handle: str, base: str, session: str) -> None:
         with _watch_lock:
             _watchers.pop(handle, None)
         return
+    armed = False          # a fold is ARMED only by an `injected` marked with OUR source (this turn is
+                           # ours). A `done` not preceded by our marker (a replayed-history done, or a
+                           # turn another path drove) is DISCARDED — never folded to a pending thread.
     try:
         for raw in resp:
             try:
@@ -273,7 +285,12 @@ def _supervised_watch_loop(handle: str, base: str, session: str) -> None:
             except ValueError:
                 continue
             etype = ev.get("type")
-            if etype == "done":
+            if etype == "injected" and ev.get("source") == CHANNEL_FABRIC_SOURCE:
+                armed = True            # THIS layer's dispatch — the next done is ours to fold
+            elif etype == "done":
+                if not armed:
+                    continue            # a replayed/foreign done — discard (never mis-route)
+                armed = False
                 with _watch_lock:
                     thread = _pending_thread.pop(handle, None)
                 result = ev.get("result", "") or ""
