@@ -53,6 +53,39 @@ A line with only a FUNCTION face is **not allowed**. A feature that works but re
 
 ---
 
+## SLICE-1 VERIFICATION LOG — 2026-06-14 (honest: states HOW each was verified)
+
+The first interactive slice is **built, driven, design-critic-PASSED, and committed** (`d077478` + `7a0b901`).
+Verified BY USE in headless Chrome at all three form factors. Honesty note (advisor): interaction proof used
+JS-dispatched events + DOM/rAF sampling (not a human finger); motion was sampled, not eye-watched.
+
+- **S0.1 app alongside** ✅ — surface/app boots (fell back to **:5175**; :5174 held by another session's canvas; the
+  live PWA on **:5173 still boots**, confirmed 200). Proxy `/api`→:8770 serves real data.
+- **S0.2 paper tokens** ✅ — token-only components; design-critic confirmed coherent warm-paper system.
+- **S0.3 motion system** ✅ — Framer installed; **rAF-sampled a selected dot's r animating 2.4→5.56 over 30
+  frames (28 distinct values, spring overshoot) — proven tween, NOT teleport.** Console clean (no warnings).
+- **S1.1 wheel on real data** ✅ — 600 pts / 7 sectors / rings=8 / grid=16 from `/api/projection?binding=raw`.
+- **S1.2 lens switch registry-true + animated** ✅ — 8 bindings from `bindings[]`; switch raw→semantic re-projected
+  to 162 pts. NOTE: raw↔semantic are largely DISJOINT sets → the transition is a **crossfade** (exit/enter), not a
+  position-morph; shared elements within a lens tween. Crossfade is a valid no-teleport transition (honest scope).
+- **S1.3 point discloses** ✅ — peek→open card with real `summary`/`kind`/address; word-boundary excerpt + "…".
+- **S2.1/2.2/2.3 three form factors** ✅ — design-critic PASS at 1440×900 / 390×844 / 844×390; each native.
+- **S3.1 addressed + layoutId** ✅ — **615 `data-ui-ref` nodes** (600 points minting `ui://canvas/seq-*` + chrome);
+  every animated dot carries `layoutId`.
+- **S3.2 indicate→resolve→context** ✅ — capture listener + single `resolveUiTarget` sink; disclosure calls
+  `/api/context` and renders the **real R2 bundle** (ancestor walk `ui://canvas/seq-X`→`ui://canvas` HOWTO resolved).
+- **S4.1/4.2/4.3 taste toggles** ✅ — typeface/pigment/motion behind a gear; flip live. (Awaiting Tim's pick — S5.4.)
+- **mobile hit targets** ✅ — invisible r=15 hit layer per point (the 2.4px dot was untappable; advisor fix); a
+  dispatched tap on the hit layer opens the disclosure.
+- **all 3 disclosure hosts** ✅ — desktop panel, portrait bottom-sheet (slide-up + handle), landscape rail
+  (hint→card swap) each exercised with a real selection.
+
+**Design-critic verdict: PASS** (round 2). Non-blocking polish logged for a later pass: disclosure HOWTO is a
+run-on block (compose into label:value lines); no leader/tether from selected dot to card; landscape left gutter
+tight; desktop resting-hint floats a touch orphaned; portrait top air. **S5.4 (surface to Tim) is the open item.**
+
+---
+
 ## S0 — FOUNDATION (the fresh app, alongside; the substrate everything else needs)
 
 **S0.1 · Fresh app stands up alongside the working PWA**
