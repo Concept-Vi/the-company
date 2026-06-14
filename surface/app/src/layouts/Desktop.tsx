@@ -2,6 +2,7 @@ import type { SurfaceState } from '../App'
 import { LensChip } from '../toggles/LensChip'
 import { Settings } from '../toggles/Settings'
 import { ViewToggle } from '../toggles/ViewToggle'
+import { CentreChip } from '../toggles/CentreChip'
 import { Notice } from '../toggles/Notice'
 import { Disclosure } from '../wheel/Disclosure'
 import { WheelOrState, SelectHint } from './shared'
@@ -16,6 +17,7 @@ export function Desktop({ s }: { s: SurfaceState }) {
 
       <header className="bar bar--top" {...stamp('ui://chrome/topbar')}>
         {s.proj && <LensChip proj={s.proj} current={s.binding} onPick={s.setBinding} />}
+        <CentreChip centre={s.centre} onReset={() => s.setCentre(null)} />
         <div className="bar-right">
           <ViewToggle view={s.view} setView={s.setView} />
           <Settings feel={s.feel} setFeel={s.setFeel} />
@@ -31,7 +33,7 @@ export function Desktop({ s }: { s: SurfaceState }) {
 
         <aside className="strata strata--right" {...stamp('ui://strata/right')}>
           {s.selected ? (
-            <Disclosure point={s.selected} feel={s.feel} variant="panel" onDismiss={() => s.setSelected(null)} />
+            <Disclosure point={s.selected} feel={s.feel} variant="panel" onDismiss={() => s.setSelected(null)} onFocus={s.focusCentre} />
           ) : (
             <SelectHint />
           )}

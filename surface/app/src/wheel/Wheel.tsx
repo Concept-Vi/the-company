@@ -39,18 +39,21 @@ export function Wheel({
               fill="none" stroke="var(--hairline)" strokeWidth={1} />
           ))}
 
-          {/* sector wedges — soft angle-hue fill + hairline edges (colour IS geometry) */}
-          {proj.sectors.map((s, i) => (
-            <path
-              key={`sec-${s.id}-${i}`}
-              {...stamp(`ui://instrument/sector/${encodeURIComponent(s.id)}`)}
-              d={wedgePath(s.from, s.to, cx, cy, R)}
-              fill={sectorHue(i, n)}
-              fillOpacity={0.13}
-              stroke="var(--hairline)"
-              strokeWidth={1}
-            />
-          ))}
+          {/* sector wedges — soft angle-hue fill + hairline edges (colour IS geometry). A single sector
+             (n≤1, e.g. one semantic space) has NO meaningful angular division — skip the degenerate
+             full-circle wedge and show clean rings + points instead. */}
+          {n > 1 &&
+            proj.sectors.map((s, i) => (
+              <path
+                key={`sec-${s.id}-${i}`}
+                {...stamp(`ui://instrument/sector/${encodeURIComponent(s.id)}`)}
+                d={wedgePath(s.from, s.to, cx, cy, R)}
+                fill={sectorHue(i, n)}
+                fillOpacity={0.13}
+                stroke="var(--hairline)"
+                strokeWidth={1}
+              />
+            ))}
 
           {/* THE CONNECTIONS (Group 10) — the REAL directional typed edges as directed chords. Registry-true
              (the engine supplies edges as sector indices). Source dot at `from`, arrowhead at `to`; a bidir

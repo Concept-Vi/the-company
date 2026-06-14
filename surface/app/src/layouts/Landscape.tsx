@@ -2,6 +2,7 @@ import type { SurfaceState } from '../App'
 import { LensChip } from '../toggles/LensChip'
 import { Settings } from '../toggles/Settings'
 import { ViewToggle } from '../toggles/ViewToggle'
+import { CentreChip } from '../toggles/CentreChip'
 import { Notice } from '../toggles/Notice'
 import { Disclosure } from '../wheel/Disclosure'
 import { WheelOrState, SelectHint } from './shared'
@@ -27,9 +28,10 @@ export function Landscape({ s }: { s: SurfaceState }) {
             <Settings feel={s.feel} setFeel={s.setFeel} />
           </div>
         </div>
+        <CentreChip centre={s.centre} onReset={() => s.setCentre(null)} />
         <div className="rail-detail">
           {s.selected ? (
-            <Disclosure point={s.selected} feel={s.feel} variant="rail" onDismiss={() => s.setSelected(null)} />
+            <Disclosure point={s.selected} feel={s.feel} variant="rail" onDismiss={() => s.setSelected(null)} onFocus={s.focusCentre} />
           ) : (
             <SelectHint />
           )}

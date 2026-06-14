@@ -24,11 +24,13 @@ export function Disclosure({
   feel,
   variant,
   onDismiss,
+  onFocus,
 }: {
   point: ProjPoint | null
   feel: MotionFeel
   variant: Variant
   onDismiss: () => void
+  onFocus?: (p: ProjPoint) => void
 }) {
   const [bundle, setBundle] = useState<ContextBundle | null>(null)
   const [ctxError, setCtxError] = useState<string | null>(null)
@@ -102,6 +104,11 @@ export function Disclosure({
           </div>
 
           <footer className="disc-foot">
+            {onFocus && (
+              <button className="disc-focus" onClick={() => onFocus(point)} title="re-centre the space on this">
+                ⊙ centre here
+              </button>
+            )}
             <code className="disc-addr">{addr}</code>
           </footer>
         </motion.aside>

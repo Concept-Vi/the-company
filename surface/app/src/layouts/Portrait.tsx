@@ -2,6 +2,7 @@ import type { SurfaceState } from '../App'
 import { LensChip } from '../toggles/LensChip'
 import { Settings } from '../toggles/Settings'
 import { ViewToggle } from '../toggles/ViewToggle'
+import { CentreChip } from '../toggles/CentreChip'
 import { Notice } from '../toggles/Notice'
 import { Disclosure } from '../wheel/Disclosure'
 import { WheelOrState } from './shared'
@@ -17,6 +18,7 @@ export function Portrait({ s }: { s: SurfaceState }) {
       <header className="bar bar--top portrait-top" {...stamp('ui://chrome/topbar')}>
         {s.proj && <LensChip proj={s.proj} current={s.binding} onPick={s.setBinding} />}
         <div className="bar-right">
+          <CentreChip centre={s.centre} onReset={() => s.setCentre(null)} />
           <ViewToggle view={s.view} setView={s.setView} />
           <Settings feel={s.feel} setFeel={s.setFeel} />
         </div>
@@ -27,7 +29,7 @@ export function Portrait({ s }: { s: SurfaceState }) {
       </section>
 
       {/* detail as a bottom sheet (nonmodal, draggable handle) — nothing permanent at rest */}
-      <Disclosure point={s.selected} feel={s.feel} variant="sheet" onDismiss={() => s.setSelected(null)} />
+      <Disclosure point={s.selected} feel={s.feel} variant="sheet" onDismiss={() => s.setSelected(null)} onFocus={s.focusCentre} />
     </div>
   )
 }

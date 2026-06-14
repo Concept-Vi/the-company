@@ -47,9 +47,17 @@ export type SurfaceState = {
   setView: (v: ViewMode) => void
   nuc: NucParams
   setNuc: (patch: Partial<NucParams>) => void
+  centre: Centre | null
+  setCentre: (c: Centre | null) => void
+  focusCentre: (p: ProjPoint) => void
   notice: string | null
   dismissNotice: () => void
 }
+
+// THE RELATIVE CENTRE (the seed §8): attention IS origin-selection. Look at a node → it becomes the centre →
+// the whole space re-projects relative to it (radii/relevance recomputed around it; in the circle, this is the
+// meaning-distance from it + the strain it reveals). null = the root origin (now / the default whole-frame).
+export type Centre = { ref: string; label: string }
 
 // Drivable type-gravity (nucleation) params — which item store is typed against which registry-of-types, at
 // which rung. Default to a POPULATING same-space combo so points visibly cluster INSIDE their types (Tim's
@@ -67,6 +75,14 @@ export function App() {
   const [view, setView] = useState<ViewMode>('circle')
   const [nuc, setNucState] = useState<NucParams>({ types_space: 'topics', space: 'topics', rung: 8 })
   const setNuc = useCallback((patch: Partial<NucParams>) => setNucState((p) => ({ ...p, ...patch })), [])
+  const [centre, setCentre] = useState<Centre | null>(null)
+  const focusCentre = useCallback((p: ProjPoint) => {
+    // re-centre on the item: its embeddable source (so meaning re-forms around the ITEM, not its run:// record),
+    // else its address. label = the last path segment (text-minimal).
+    const ref = p.source || p.address || `ui://canvas/seq-${p.seq}`
+    const label = ref.replace(/\/+$/, '').split('/').pop() || 'centre'
+    setCentre({ ref, label })
+  }, [])
   const [notice, setNotice] = useState<string | null>(null)
 
   useEffect(() => {
@@ -82,10 +98,12 @@ export function App() {
     setError(null)
     // the type-gravity lens is driven by the nuc params (which store, which type-registry, which rung);
     // other lenses take the plain window. registry-true — the surface never invents, only drives.
-    const params =
+    const params: Record<string, string | number | undefined> =
       binding === 'by_nucleation'
         ? { binding, limit: 400, types_space: nuc.types_space, space: nuc.space, rung: nuc.rung }
         : { binding, limit: 600 }
+    // the relative centre re-projects every lens around the attended node (radius = distance FROM it)
+    if (centre) params.center = centre.ref
     fetchProjection(params)
       .then((p) => {
         if (!live) return
@@ -100,7 +118,7 @@ export function App() {
     return () => {
       live = false
     }
-  }, [binding, nuc])
+  }, [binding, nuc, centre])
 
   const dismissNotice = useCallback(() => {
     clearNotice()
@@ -121,6 +139,9 @@ export function App() {
     setView,
     nuc,
     setNuc,
+    centre,
+    setCentre,
+    focusCentre,
     notice,
     dismissNotice,
   }
