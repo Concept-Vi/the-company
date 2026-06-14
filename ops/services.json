@@ -24,9 +24,10 @@
    "services": [
     "embed-pplx",
     "tts-qwen3tts",
-    "stt-whisper"
+    "stt-whisper",
+    "rerank-jina"
    ],
-   "note": "The cross-session CHANNEL fabric loadout (Tim gave the GPU 2026-06-14): pplx-embed-context-4b (~8.2G) for semantic session-find/transcript-search + Qwen3-TTS VoiceDesign (~4.4G, no clip \u2014 the voice for spoken cross-session conversation) + whisper.cpp STT (CPU, 0 VRAM, the ear). ~12.6G GPU co-resident, fits the 16G card with headroom. The embedder+voice pairing Tim authorized to start (swap voice engine later via the registry)."
+   "note": "The cross-session CHANNEL fabric loadout (Tim gave the GPU 2026-06-14): pplx-embed-context-4b (~8.2G) for semantic session-find/transcript-search + Qwen3-TTS VoiceDesign (~4.4G, no clip \u2014 the voice for spoken cross-session conversation) + whisper.cpp STT (CPU, 0 VRAM, the ear). ~12.6G GPU co-resident, fits the 16G card with headroom. The embedder+voice pairing Tim authorized to start (swap voice engine later via the registry). + rerank-jina (CPU /8008, 0 VRAM) \u2014 the rerank stage for cross-session recall."
   }
  },
  "groups": {
@@ -600,6 +601,14 @@
     "unit": "company-claude-sessions-reindex.timer"
    },
    "note": "INTERIM transcript-search (throwaway; Tim is building the real memory system elsewhere). The SECOND beat of the circuit: Claude jsonl \u2192 [agent-sessions-exporter] \u2192 corpus markdown \u2192 [this] \u2192 searchable index. Managed unit = the TIMER (WantedBy=company.target; fires *:05/20, ~5 min after the exporter's *:00/20). The oneshot .service runs ops/claude_sessions_reindex.py in the substrate venv (obsidian-overlord/.venv). CHEAP-BY-DESIGN: compares the corpus' newest .md mtime + file count against ~/corpora/claude-sessions/.reindex_marker.json and EXITS doing nothing (no model load, no GPU) when nothing changed \u2014 the common case. When transcripts changed it runs a substrate DELTA scan (sha256 skips unchanged files) of the `claude-sessions` vault embedded by the `embed-pplx` service into an ISOLATED state dir (~/.cache/company/substrate-claude-sessions, separate from the bge-m3 substrate). FAIL LOUD: if files changed but embed-pplx is DOWN it exits non-zero and leaves the marker stale so the next fire retries (`company up embed-pplx` first, or it can self-ensure with --ensure-embedder). Search face: ops/wire_substrate_claude_sessions.py search / ops/transcript_search.py (numpy fallback)."
+  },
+  "rerank-jina": {
+   "group": "models",
+   "title": "jina-reranker-v3 listwise reranker (CPU endpoint)",
+   "port": 8008,
+   "serve": "~/company/ops/serve_rerank.sh",
+   "vram_mb": 0,
+   "note": "CPU endpoint (CUDA_VISIBLE_DEVICES=\"\" \u2014 0 VRAM, no GPU contention with the loadout). Surfaces ops/rerank.py:Reranker(jina-v3) as POST /rerank {query, candidates|texts:[str|dict], top_n?} -> {ranking:[{item,text,rerank_score,orig_rank,rank},...]} sorted desc; GET /health. Runs from ~/vllm-env (torch 2.11+transformers 5.9 already present \u2014 NO new install; checked per Tim 2026-06-14 'install after checking'). The rerank stage for cross-session semantic recall (runtime/session_recall.py) \u2014 bridge-free, served like embed-pplx :8007. Loads in ~5s; weights jinaai/jina-reranker-v3 in HF cache."
   }
  }
 }
