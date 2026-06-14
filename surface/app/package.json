@@ -1,0 +1,24 @@
+{
+  "name": "instrument-surface",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "The fresh paper-aesthetic instrument surface for the Company (built alongside canvas/app, never on top).",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5174",
+    "build": "vite build",
+    "preview": "vite preview --port 5174"
+  },
+  "dependencies": {
+    "framer-motion": "^12.4.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.7"
+  }
+}

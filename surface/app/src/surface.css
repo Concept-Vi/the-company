@@ -1,0 +1,149 @@
+/* ============================================================================
+   SURFACE CHROME + THE THREE AUTHORED LAYOUTS (MANDATE L5/L7/L8 · SYNTHESIS §G)
+   Token-only (var()): no literal hex/px colours; spacing/radii from paper.css.
+   ============================================================================ */
+
+.layout { width: 100%; height: 100%; display: flex; flex-direction: column;
+  padding: var(--safe-t) var(--safe-r) var(--safe-b) var(--safe-l); }
+
+/* ---- bars ---------------------------------------------------------------- */
+.bar { display: flex; align-items: center; gap: var(--s-3); flex: 0 0 auto; }
+.bar--top { justify-content: space-between; padding: var(--s-3) var(--s-5); }
+.bar--bottom { justify-content: center; padding: var(--s-2) var(--s-5); }
+
+/* ---- the one-glance title (the only resting words) ----------------------- */
+.glance { display: flex; align-items: baseline; gap: var(--s-2); }
+.glance-lens { font-size: var(--t-md); color: var(--ink-primary); letter-spacing: 0.01em; }
+.glance-count { font-size: var(--t-sm); color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+
+/* ---- stage / center / strata (desktop) ----------------------------------- */
+.stage { flex: 1 1 auto; display: grid; grid-template-columns: 264px 1fr 320px;
+  min-height: 0; gap: var(--s-3); padding: 0 var(--s-4) var(--s-3); }
+.center { min-height: 0; min-width: 0; display: flex; align-items: center; justify-content: center; }
+.center--full { flex: 1 1 auto; padding: var(--s-2); }
+.center--left { flex: 1 1 auto; min-width: 0; }
+.strata { min-height: 0; border-radius: var(--r-card); }
+.strata--left { background: transparent; }
+.strata--right { position: relative; }
+
+/* ---- the wheel region ---------------------------------------------------- */
+.wheel-region { position: relative; width: 100%; height: 100%; min-height: 0; }
+.wheel-svg { width: 100%; height: 100%; display: block; }
+.wheel-state { display: flex; align-items: center; justify-content: center; }
+.state-card { background: var(--ground-accent); box-shadow: var(--elev-2);
+  border-radius: var(--r-card); padding: var(--s-4) var(--s-5); max-width: 80%;
+  display: flex; flex-direction: column; gap: var(--s-2); }
+.state-title { font-size: var(--t-md); color: var(--ink-primary); }
+.state-detail { font-size: var(--t-xs); color: var(--ink-dim); word-break: break-word; }
+.breathing { width: 56px; height: 56px; border-radius: 50%;
+  background: var(--ground-tertiary); animation: breathe 2.4s ease-in-out infinite; }
+@keyframes breathe { 0%,100% { transform: scale(0.82); opacity: 0.5; } 50% { transform: scale(1); opacity: 0.85; } }
+
+/* ---- disclosure (one component, three hosts) ----------------------------- */
+.disclosure { background: var(--ground-accent); box-shadow: var(--elev-3);
+  border-radius: var(--r-card); padding: var(--s-3) var(--s-4); display: flex;
+  flex-direction: column; gap: var(--s-2); }
+.disclosure--panel { position: absolute; top: 0; right: 0; width: 100%; max-height: 100%; overflow: auto; }
+.disclosure--sheet { position: fixed; left: 0; right: 0; bottom: 0; border-radius: var(--r-card) var(--r-card) 0 0;
+  box-shadow: var(--elev-4); padding-bottom: calc(var(--s-4) + var(--safe-b)); max-height: 64%; overflow: auto; z-index: 30; }
+.disclosure--rail { width: 100%; max-height: 100%; overflow: auto; }
+.sheet-handle { width: 40px; height: 4px; border-radius: var(--r-pill); background: var(--ink-faint);
+  margin: 0 auto var(--s-2); opacity: 0.6; }
+.disc-head { display: flex; align-items: center; justify-content: space-between; }
+.disc-kind { font-size: var(--t-md); color: var(--ink-primary); text-transform: lowercase; }
+.disc-close { border: none; background: transparent; color: var(--ink-faint); font-size: var(--t-md);
+  cursor: pointer; line-height: 1; padding: var(--s-1); min-width: 44px; min-height: 44px; }
+.disc-summary { margin: 0; font-size: var(--t-sm); color: var(--ink-dim); line-height: var(--lh-body); }
+.disc-chips { display: flex; flex-wrap: wrap; gap: var(--s-1); }
+.chip { font-size: var(--t-xs); color: var(--ink-dim); background: var(--ground-secondary);
+  border-radius: var(--r-pill); padding: 2px var(--s-2); }
+.chip--born { color: var(--pig-born); background: color-mix(in srgb, var(--pig-born) 12%, var(--ground-accent)); }
+.chip--strain { color: var(--pig-strain); background: color-mix(in srgb, var(--pig-strain) 12%, var(--ground-accent)); }
+.disc-context { display: flex; flex-direction: column; gap: var(--s-2); margin-top: var(--s-1); }
+.ctx-item { display: flex; flex-direction: column; gap: 2px; padding-bottom: var(--s-2);
+  border-bottom: 1px solid var(--hairline); }
+.ctx-kind { font-size: var(--t-xs); color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.06em; }
+.ctx-text { font-size: var(--t-sm); color: var(--ink-dim); }
+.disc-empty { font-size: var(--t-xs); color: var(--ink-faint); margin: 0; font-style: italic; }
+.notice-inline { font-size: var(--t-xs); color: var(--pig-strain); margin: 0; }
+.disc-foot { margin-top: var(--s-1); }
+.disc-addr { font-size: var(--t-xs); color: var(--ink-faint); word-break: break-all; }
+
+/* ---- controls: lens + taste pills ---------------------------------------- */
+.lens, .taste { display: flex; gap: var(--s-2); align-items: center; }
+.lens { flex-wrap: wrap; }
+.taste { flex-direction: column; gap: var(--s-1); }
+.toggle-row { display: flex; align-items: center; gap: var(--s-2); }
+.toggle-glyph { font-size: var(--t-sm); color: var(--ink-faint); width: 16px; text-align: center; }
+.toggle-pills { display: flex; gap: var(--s-1); }
+.pill { font-size: var(--t-sm); font-family: var(--font-sans); color: var(--ink-dim);
+  background: var(--ground-secondary); border: 1px solid transparent; border-radius: var(--r-pill);
+  padding: var(--s-1) var(--s-3); cursor: pointer; min-height: 32px;
+  transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); }
+.pill:hover { background: var(--ground-tertiary); }
+.pill--on { background: var(--ink-primary); color: var(--ground-accent); }
+
+/* ---- lens chip (merged glance + lens, progressive disclosure) ------------ */
+.lenschip { position: relative; display: inline-block; }
+.lenschip-btn { display: inline-flex; align-items: baseline; gap: var(--s-2);
+  background: transparent; border: none; cursor: pointer; padding: var(--s-1) var(--s-2);
+  border-radius: var(--r-chrome); min-height: 36px;
+  transition: background 150ms cubic-bezier(0.4,0,0.2,1); }
+.lenschip-btn:hover { background: var(--ground-secondary); }
+.lenschip-label { font-size: var(--t-md); color: var(--ink-primary); letter-spacing: 0.01em; }
+.lenschip-count { font-size: var(--t-sm); color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+.lenschip-caret { font-size: var(--t-xs); color: var(--ink-faint); }
+.lenschip-scrim { position: fixed; inset: 0; z-index: 40; }
+.lenschip-menu { position: absolute; top: calc(100% + var(--s-1)); left: 0; z-index: 41;
+  list-style: none; margin: 0; padding: var(--s-1); min-width: 240px; max-width: 86vw;
+  background: var(--ground-accent); box-shadow: var(--elev-3); border-radius: var(--r-card); }
+.lenschip-menu li { margin: 0; }
+.lenschip-item { display: block; width: 100%; text-align: left; border: none; background: transparent;
+  font-family: var(--font-sans); font-size: var(--t-sm); color: var(--ink-dim); cursor: pointer;
+  padding: var(--s-2) var(--s-3); border-radius: var(--r-chrome); min-height: 40px;
+  transition: background 150ms cubic-bezier(0.4,0,0.2,1); }
+.lenschip-item:hover { background: var(--ground-secondary); }
+.lenschip-item--on { background: var(--ink-primary); color: var(--ground-accent); }
+/* in the landscape rail the menu opens within a narrow column — let it spill right */
+.rail .lenschip-menu { min-width: 200px; }
+
+/* ---- notice (fail-loud, calm) -------------------------------------------- */
+.notice { position: fixed; top: calc(var(--safe-t) + var(--s-2)); left: 50%; transform: translateX(-50%);
+  z-index: 50; display: flex; align-items: center; gap: var(--s-3); max-width: 90%;
+  background: var(--ground-accent); box-shadow: var(--elev-3); border-radius: var(--r-card);
+  border-left: 3px solid var(--pig-strain); padding: var(--s-2) var(--s-3); font-size: var(--t-sm); color: var(--ink-primary); }
+.notice-x { border: none; background: transparent; color: var(--ink-faint); cursor: pointer;
+  font-size: var(--t-md); line-height: 1; min-width: 32px; }
+
+/* ---- settings (a single gear holding the taste scaffold on demand) ------- */
+.settings { position: relative; }
+.settings-gear { border: none; background: transparent; color: var(--ink-faint); cursor: pointer;
+  font-size: var(--t-md); line-height: 1; min-width: 40px; min-height: 40px; border-radius: var(--r-chrome);
+  transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); }
+.settings-gear:hover { background: var(--ground-secondary); color: var(--ink-dim); }
+.settings-panel { position: absolute; top: calc(100% + var(--s-1)); right: 0; z-index: 41;
+  background: var(--ground-accent); box-shadow: var(--elev-3); border-radius: var(--r-card);
+  padding: var(--s-3); display: flex; flex-direction: column; gap: var(--s-2); min-width: 220px; }
+.settings-title { font-size: var(--t-xs); color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* ---- select hint (calm empty-state for a detail surface) ----------------- */
+.select-hint { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: var(--s-2); opacity: 0.7; }
+.select-hint-glyph { width: 48px; height: 48px; }
+.select-hint-text { font-size: var(--t-xs); color: var(--ink-faint); font-style: italic; }
+
+/* ---- portrait ------------------------------------------------------------ */
+.layout--portrait .portrait-top { padding: var(--s-3) var(--s-4); justify-content: space-between; align-items: center; }
+
+/* ---- landscape ----------------------------------------------------------- */
+.layout--landscape { flex-direction: row; }
+.layout--landscape .rail { flex: 0 0 30%; min-width: 220px; max-width: 300px; display: flex;
+  flex-direction: column; gap: var(--s-3); padding: var(--s-3) var(--s-3) calc(var(--s-3) + var(--safe-b));
+  background: var(--ground-secondary); border-radius: var(--r-card) 0 0 var(--r-card); min-height: 0; }
+.rail-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--s-2); }
+.rail-detail { flex: 1 1 auto; min-height: 0; position: relative; overflow: auto; }
+
+/* desktop wide: cap the disclosure panel height so it floats as a card, not a full column */
+@media (min-width: 1024px) {
+  .disclosure--panel { max-width: 320px; }
+}

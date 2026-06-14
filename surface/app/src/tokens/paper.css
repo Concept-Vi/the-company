@@ -1,0 +1,98 @@
+/* ============================================================================
+   THE FRESH PAPER DESIGN LANGUAGE  (MANDATE L7 · RESEARCH-SYNTHESIS §E)
+   Warm paper, soft diffuse elevation, restrained pigment, hairline-edged polygons.
+   The OPPOSITE of neon-on-black sci-fi. Replaces the old harness palette wholesale.
+   Every component reads these vars — zero hardcoded hex/px in components.
+   Taste toggles flip [data-type] and [data-pigment] on :root (S4).
+   ============================================================================ */
+
+:root {
+  /* GROUND — warm paper neutrals (2026 moves off stark #FFFFFF) ------------- */
+  --ground-primary:   #F9F7F3;   /* the page */
+  --ground-secondary: #F0EDEA;   /* recessed strata */
+  --ground-tertiary:  #E8E4DF;   /* deepest recess / grids */
+  --ground-accent:    #FEFDFB;   /* lifted cards (lightest) */
+
+  /* INK — warm near-black, used sparingly (softness is in shadow/shape) ----- */
+  --ink-primary: #1A1612;        /* 11.2:1 on ground-primary — WCAG AAA */
+  --ink-dim:     #5C534A;        /* secondary text / accents */
+  --ink-faint:   #9A9087;        /* hairlines, hints, information-scent */
+  --hairline:    rgba(26, 22, 18, 0.10);  /* polygon edges */
+
+  /* PIGMENT — muted, colour MEANS (default 22% saturation; toggle swaps) ---- */
+  --pig-born:   hsl(145 24% 46%);   /* arise / born — a calm green */
+  --pig-pile:   hsl( 28 30% 52%);   /* forming / pile — warm ochre */
+  --pig-strain: hsl(  4 32% 54%);   /* strain — muted terracotta */
+  --pig-leanA:  hsl(212 26% 50%);   /* lean-A — slate blue */
+  --pig-leanB:  hsl( 32 34% 54%);   /* lean-B — amber */
+  --pig-accent: hsl(265 18% 52%);   /* generic accent — muted plum */
+  --pig-sat: 22%;                   /* angle-hue saturation (toggle: 18/22/26%) */
+  --pig-lit: 58%;                   /* angle-hue lightness */
+
+  /* ELEVATION — Fluent key+ambient "paper lift" (diffuse, NOT drop-box/glow)  */
+  --elev-1: 0 1px 2px rgba(26,22,18,0.04), 0 2px 6px rgba(26,22,18,0.05);
+  --elev-2: 0 2px 4px rgba(26,22,18,0.05), 0 4px 12px rgba(26,22,18,0.07);
+  --elev-3: 0 4px 8px rgba(26,22,18,0.06), 0 8px 24px rgba(26,22,18,0.09);
+  --elev-4: 0 6px 12px rgba(26,22,18,0.07), 0 16px 40px rgba(26,22,18,0.12);
+
+  /* TYPE — 1.25 modular scale (Major Third); words are accents (L2) --------- */
+  --t-xs:  0.64rem;  /*  ~10.2px */
+  --t-sm:  0.80rem;  /*  ~12.8px */
+  --t-base:1.00rem;  /*    16px */
+  --t-md:  1.25rem;  /*    20px */
+  --t-lg:  1.5625rem;/*    25px */
+  --t-xl:  1.9531rem;/*  ~31.3px */
+  --t-2xl: 2.4414rem;/*  ~39.1px */
+  --lh-body: 1.55;
+  --lh-display: 1.3;
+  --font-sans:  'Inter', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Source Serif 4', Charter, Georgia, serif;
+
+  /* SPACING — dyadic (ties the layout to the seed's m=2^k, §D) -------------- */
+  --s-1: 4px; --s-2: 8px; --s-3: 16px; --s-4: 24px;
+  --s-5: 32px; --s-6: 48px; --s-7: 64px; --s-8: 96px;
+
+  /* RADII — soft polygons + hairline edges --------------------------------- */
+  --r-card: 6px; --r-chrome: 3px; --r-grid: 0px; --r-pill: 999px;
+
+  /* SAFE AREAS (iOS PWA) */
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+}
+
+/* ---- TASTE TOGGLE: typeface pairing (S4.1) ------------------------------- */
+:root[data-type="source"] { --font-serif: 'Source Serif 4', serif; --font-sans: 'Inter', sans-serif; }
+:root[data-type="crimson"]{ --font-serif: 'Crimson Pro', serif;   --font-sans: 'Outfit', sans-serif; }
+:root[data-type="lora"]   { --font-serif: 'Lora', serif;          --font-sans: 'Inter', sans-serif; }
+
+/* ---- TASTE TOGGLE: pigment saturation (S4.2) ----------------------------- */
+:root[data-pigment="muted"]  { --pig-sat: 18%; }
+:root[data-pigment="soft"]   { --pig-sat: 22%; }
+:root[data-pigment="present"]{ --pig-sat: 26%; }
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0; height: 100%; width: 100%;
+  background: var(--ground-primary);
+  color: var(--ink-primary);
+  font-family: var(--font-sans);
+  font-size: 16px; line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;  /* the instrument owns the frame; strata scroll internally */
+}
+
+/* serif for the few display words (a name, a count) */
+.display { font-family: var(--font-serif); line-height: var(--lh-display); }
+
+/* the soft paper highlight for an indicated/spotlit address (animated by Motion) */
+.ui-indicated { outline: 1.5px solid var(--pig-accent); outline-offset: 2px; }
+.ui-spotlight { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pig-accent) 35%, transparent); }
+
+/* respect reduced motion at the platform level too */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
