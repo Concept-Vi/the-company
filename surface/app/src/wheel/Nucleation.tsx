@@ -104,9 +104,9 @@ export function Nucleation({
               const inside = !!p.inside
               return (
                 <motion.circle
-                  key={addr}
+                  key={`pt-${p.seq}`}
                   {...stamp(addr)}
-                  layoutId={addr}
+                  layoutId={`pt-${p.seq}`}
                   className="wheel-dot"
                   fill={inside ? sectorHue(i, n) : 'var(--pig-strain)'}
                   fillOpacity={inside ? 0.6 : 0.46}
@@ -163,7 +163,7 @@ export function Nucleation({
             const pos = placePolar(p.theta, p.r, cx, cy, R)
             const addr = pointAddress(p)
             return (
-              <circle key={`hit-${addr}`} {...stamp(addr)} className="wheel-hit" cx={pos.x} cy={pos.y} r={15}
+              <circle key={`hit-${p.seq}`} {...stamp(addr)} className="wheel-hit" cx={pos.x} cy={pos.y} r={15}
                 fill="transparent" style={{ pointerEvents: 'all', cursor: 'pointer' }}
                 onClick={(e) => { e.stopPropagation(); onPick(p) }} />
             )

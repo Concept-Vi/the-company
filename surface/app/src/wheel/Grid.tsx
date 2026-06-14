@@ -112,9 +112,9 @@ export function Grid({
               const addr = pointAddress(p)
               return (
                 <motion.circle
-                  key={addr}
+                  key={`pt-${p.seq}`}
                   {...stamp(addr)}
-                  layoutId={addr}
+                  layoutId={`pt-${p.seq}`}
                   className="wheel-dot"
                   fill={sectorHue(i, n)}
                   fillOpacity={0.52}
@@ -136,7 +136,7 @@ export function Grid({
             const addr = pointAddress(p)
             return (
               <circle
-                key={`hit-${addr}`}
+                key={`hit-${p.seq}`}
                 {...stamp(addr)}
                 className="wheel-hit"
                 cx={pos.x}

@@ -194,9 +194,9 @@ export function Wheel({
               const baseR = p.r > 1 ? 2.0 : 2.4 // piled-out points slightly smaller
               return (
                 <motion.circle
-                  key={addr}
+                  key={`pt-${p.seq}`}
                   {...stamp(addr)}
-                  layoutId={addr}
+                  layoutId={`pt-${p.seq}`}
                   className="wheel-dot"
                   fill={sectorHue(i, n)}
                   fillOpacity={p.r_unknown ? 0.32 : 0.58}
@@ -219,7 +219,7 @@ export function Wheel({
             const addr = pointAddress(p)
             return (
               <circle
-                key={`hit-${addr}`}
+                key={`hit-${p.seq}`}
                 {...stamp(addr)}
                 className="wheel-hit"
                 cx={pos.x}

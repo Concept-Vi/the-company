@@ -82,9 +82,9 @@ export function Separator({
               const hue = p.pole === 'b' ? 'var(--pig-leanB)' : 'var(--pig-leanA)'
               return (
                 <motion.circle
-                  key={addr}
+                  key={`pt-${p.seq}`}
                   {...stamp(addr)}
-                  layoutId={addr}
+                  layoutId={`pt-${p.seq}`}
                   className="wheel-dot"
                   fill={hue}
                   fillOpacity={0.6}
@@ -106,7 +106,7 @@ export function Separator({
             const addr = pointAddress(p)
             return (
               <circle
-                key={`hit-${addr}`}
+                key={`hit-${p.seq}`}
                 {...stamp(addr)}
                 className="wheel-hit"
                 cx={x}
