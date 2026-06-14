@@ -190,8 +190,10 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     if (poleA) params.set('pole_a', poleA)              // G9 SEPARATOR: drive the two gravities (null = the
     if (poleB) params.set('pole_b', poleB)              // binding's declared default poles)
     if (typesSpace) params.set('types_space', typesSpace)  // NUCLEATION: drive the registry of types …
-    if (itemSpace) params.set('space', itemSpace)          // … and the content store typed against it …
-    if (dial != null) params.set('dial', String(dial))     // … and the 20/80 BIRTH dial (null = defaults)
+    if (itemSpace) params.set('space', itemSpace)          // … and the content store typed against it.
+    // the 20/80 BIRTH dial is NOT sent — it only gates born (= distinct AND size ≥ birth_mass) and the server
+    // already returns size/distinct/pile_clustered, so born is recomputed CLIENT-SIDE → the dial is INSTANT
+    // (no compute-heavy refetch per tick; the critic's ~5s dial lag fix). Registry/store/rung still refetch.
     const url = '/api/projection' + (params.toString() ? `?${params.toString()}` : '')
     const apply = (d: Projection, markNew: boolean) => {
       if (!alive) return
@@ -219,7 +221,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       // EventSource auto-reconnects on error (gapless via Last-Event-ID) — hold the last frame meanwhile.
     })
     return () => { alive = false; clearTimeout(deb); if (es) es.close() }
-  }, [live, bind, at, center, rung, poleA, poleB, typesSpace, itemSpace, dial, retry])
+  }, [live, bind, at, center, rung, poleA, poleB, typesSpace, itemSpace, retry])  // dial omitted — client-side, instant
 
   // SCALE (Group 11): if the active projection has no pyramid (a non-semantic lens, or a space with no
   // built rungs), drop any held rung so the ladder + state stay honest (the bridge ignores a stray rung,
@@ -284,6 +286,11 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       const nTypes = nu.type_labels.length
       type NucZone = (typeof nu.zones)[number]
       const zoneById = new Map<string, NucZone>(nu.zones.map(z => [z.id, z]))
+      // CLIENT-SIDE born (the dial is instant — no refetch): a zone is BORN when distinct AND its mass passes
+      // the 20/80 birth threshold = dial × the examined pile. Recolours the blooms the moment the dial moves.
+      const dialV = dial ?? nu.dial
+      const birthMass = Math.max(3, Math.round(dialV * Math.max(nu.pile_clustered, 1)))
+      const born = (z: NucZone) => z.distinct && z.size >= birthMass
       // 1) THE REGISTRY BOX (the square) — the container of the registered types; the inscribed circle marks the
       //    membership boundary (inside = within a type's reach). The brightest structural line (warm grey --tx-3).
       g.strokeStyle = dim; g.globalAlpha = 0.85; g.lineWidth = 1.5; g.strokeRect(cx - Rb, cy - Rb, 2 * Rb, 2 * Rb)
@@ -322,7 +329,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
         else if (p.inside) { col = `hsl(${(p.theta * 180) / Math.PI}deg 55% 58%)`; alpha = 0.82; rad = 2.0 }
         else if (p.pile_cluster != null) {
           const z = zoneById.get(p.sector)
-          if (z?.born) { col = accent; alpha = 0.92; rad = 2.6 }
+          if (z && born(z)) { col = accent; alpha = 0.92; rad = 2.6 }
           else if (z?.distinct) { col = ink; alpha = 0.72; rad = 2.2 }
           else { col = dim; alpha = 0.5; rad = 2.0 }
         }                                                    // else: tail (un-clustered pile) — dim, hugging box
@@ -341,17 +348,25 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       for (const z of nu.zones) {
         const si = sectors.findIndex(s => s.id === z.id); if (si < 0) continue
         const s = sectors[si], mid = (s.from + s.to) / 2
-        const col = z.born ? accent : z.distinct ? ink : dim
-        g.globalAlpha = z.born ? 0.55 : z.distinct ? 0.3 : 0.16; g.strokeStyle = col; g.lineWidth = z.born ? 2.2 : 1
+        const zborn = born(z)
+        const col = zborn ? accent : z.distinct ? ink : dim
+        g.globalAlpha = zborn ? 0.55 : z.distinct ? 0.3 : 0.16; g.strokeStyle = col; g.lineWidth = zborn ? 2.2 : 1
         g.beginPath(); g.arc(cx, cy, R * 0.95, s.from - Math.PI / 2, s.to - Math.PI / 2); g.stroke()  // the bloom's arc, at the rim (clear of the pile band)
         const lr = R * 0.99, lx = cx + Math.sin(mid) * lr, ly = cy - Math.cos(mid) * lr + 3
-        const t = shortName(z.exemplar), tag = z.born ? `✦ ${t}` : t
-        g.textAlign = Math.sin(mid) >= -0.05 ? 'left' : 'right'
+        const cap = (str: string) => str.length > 15 ? str.slice(0, 14) + '…' : str
+        const tag = (zborn ? '✦ ' : '') + cap(shortName(z.exemplar))
+        const align: CanvasTextAlign = Math.sin(mid) >= -0.05 ? 'left' : 'right'
+        g.textAlign = align
         const tw = g.measureText(tag).width
-        const px = lx + (g.textAlign === 'left' ? 0 : 0)
+        // EDGE-AWARE CLAMP (critic fix): keep the whole label box within [pad, w-pad] so a left-rim candidate
+        // name never runs off a narrow viewport (the mobile 390px clip — the born type's name must stay readable).
+        const pad = 5
+        let px = lx, left = align === 'left' ? px : px - tw
+        if (left < pad) { px += pad - left; left = pad }
+        if (left + tw > w - pad) { px -= (left + tw) - (w - pad); left = w - pad - tw }
         g.globalAlpha = 0.8; g.fillStyle = bg
-        g.fillRect((g.textAlign === 'left' ? px : px - tw) - 3, ly - 9, tw + 6, 13)
-        g.globalAlpha = z.born ? 1 : z.distinct ? 0.8 : 0.5; g.fillStyle = col; g.fillText(tag, px, ly)
+        g.fillRect(left - 3, ly - 9, tw + 6, 13)
+        g.globalAlpha = zborn ? 1 : z.distinct ? 0.8 : 0.5; g.fillStyle = col; g.fillText(tag, px, ly)
       }
       // 5) the centre — a neutral registry origin (NOT the breathing NOW; nucleation has no temporal centre) +
       //    a quiet radial legend so the reading is unambiguous (in = fits, out = piles into a new type).
@@ -673,7 +688,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     }
     }
     g.globalAlpha = 1
-  }, [proj, picked, pickedSector, zoom, sel, frame, live, at, showStrain])
+  }, [proj, picked, pickedSector, zoom, sel, frame, live, at, showStrain, dial])
 
   useEffect(() => { draw() }, [draw])
   useEffect(() => {
@@ -795,9 +810,15 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   // (born vs forming vs absorbed, with margin-strength + the null verdict), dissolution candidates, and the
   // dial (the 20/80 birth threshold). The candidates are ordered born → forming → absorbed, biggest first.
   const nu = isNucleation ? proj?.nucleation : null
-  const nuCands = nu ? [...nu.candidates].sort((a, b) =>
-    (Number(b.born) - Number(a.born)) || (Number(b.distinct) - Number(a.distinct)) || (b.size - a.size)) : []
   const nuDial = nu ? (dial ?? nu.dial) : 0.2
+  // CLIENT-SIDE born (the dial is instant): born = distinct AND mass past the 20/80 birth threshold = dial ×
+  // the examined pile (pile_clustered). Recomputed here + in draw() so a dial tick re-renders with no refetch.
+  const nuBirthMass = nu ? Math.max(3, Math.round(nuDial * Math.max(nu.pile_clustered, 1))) : 0
+  const nuBorn = (size: number, distinct: boolean) => !!distinct && size >= nuBirthMass
+  const nuBornCount = nu ? nu.candidates.filter(c => nuBorn(c.size, c.distinct)).length : 0
+  const nuCands = nu ? [...nu.candidates].sort((a, b) =>
+    (Number(nuBorn(b.size, b.distinct)) - Number(nuBorn(a.size, a.distinct)))
+    || (Number(b.distinct) - Number(a.distinct)) || (b.size - a.size)) : []
   const nuAvail = nu?.available
 
   // ROBUSTNESS (G4 carry-forward): the error view must NOT be a dead-end. The poll was retired for SSE (which
@@ -878,17 +899,19 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
           {/* the candidate new types — born (past the 20/80 + distinct) vs forming (distinct, not yet massed) */}
           <div className="lc-nuc-cands">
             {nuCands.length === 0 && <span className="lc-nuc-none">— no candidate new types in the pile</span>}
-            {nuCands.slice(0, 5).map((c, i) => (
-              <div key={i} className={'lc-nuc-cand' + (c.born ? ' born' : c.distinct ? ' forming' : ' absorbed')}
+            {nuCands.slice(0, 5).map((c, i) => {
+              const born = nuBorn(c.size, c.distinct)
+              return (
+              <div key={i} className={'lc-nuc-cand' + (born ? ' born' : c.distinct ? ' forming' : ' absorbed')}
                 title={`margin ${c.margin} vs null ${c.null_p95} — ${c.distinct ? 'beats the permutation null (distinct)' : 'within noise (absorbed)'}`}>
-                <span className="lc-nuc-state">{c.born ? '✦ new' : c.distinct ? '◦ forming' : '· pile'}</span>
+                <span className="lc-nuc-state">{born ? '✦ new' : c.distinct ? '◦ forming' : '· pile'}</span>
                 <span className="lc-nuc-ex">{shortName(c.exemplar)}</span>
                 <span className="lc-nuc-num">{c.size} · m{c.margin.toFixed(2)}</span>
               </div>
-            ))}
+            )})}
           </div>
           <div className="lc-nuc-verdict">
-            <b>{nu.born_count}</b> born · {nu.distinct_count} distinct · birth ≥ {nu.birth_mass} (dial {Math.round(nuDial * 100)}%)
+            <b>{nuBornCount}</b> born · {nu.distinct_count} distinct · birth ≥ {nuBirthMass} (dial {Math.round(nuDial * 100)}%)
           </div>
           {nu.dissolution_candidates.length > 0 && (
             <div className="lc-nuc-diss" title="registered types whose membership thinned — a dissolution CANDIDATE, context-dependent (a sparse type may be rare, not wrong); never auto-applied">

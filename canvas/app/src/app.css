@@ -1979,6 +1979,16 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
 .lattice-foot .lf-nuc-sel:hover { border-color: var(--acc); color: var(--acc); }
 .lattice-foot .lf-nuc-dial { gap: 4px; }
 .lattice-foot .lf-nuc-dialv { color: var(--acc); font: 10px ui-monospace, monospace; min-width: 26px; }
+/* mobile: the nuc drive controls are the primary interaction — bump them toward a real touch target (the
+   critic measured 16–19px; lift to ~34px min-height with breathing room) so they're reliably tappable. */
+@media (max-width: 699px) {
+  .lattice-foot .lf-nuc { gap: 9px; row-gap: 7px; }
+  .lattice-foot .lf-nuc-sel { min-height: 34px; padding: 6px 9px; font-size: 12px; }
+  .lattice-foot .lf-nuc .lf-rung { min-height: 34px; padding: 7px 12px; }
+  .lattice-foot .lf-nuc .lf-ic { font-size: 15px; }
+  .lattice-foot .lf-nuc-dial input[type=range] { height: 34px; }
+  .lattice-foot .lf-nuc-dialv { font-size: 12px; min-width: 30px; }
+}
 .lattice-wrap .lattice-hint { position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
   max-width: min(92%, 520px); pointer-events: auto; background: var(--panel); color: var(--tx-2);
   border: 1px solid var(--acc); border-radius: 8px; padding: 6px 11px; text-align: center;
