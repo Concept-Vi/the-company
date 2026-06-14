@@ -128,12 +128,36 @@ def _split(text: str, size: int = SUB_CHUNK_CHARS, overlap: int = SUB_CHUNK_OVER
     return [c for c in merged if c]
 
 
+SECTION_CHARS = int(os.environ.get("RECALL_SECTION_CHARS", "2200"))     # coarse "section" scale budget
+TURN_MAX = int(os.environ.get("RECALL_TURN_MAX", "6000"))               # embed a whole turn as one chunk up to this
+MULTI_SCALE = os.environ.get("RECALL_MULTI_SCALE", "1") != "0"          # the agreed scale taxonomy (wire B)
+
+
+def _section_split(text: str, size: int = SECTION_CHARS) -> list[str]:
+    """COARSE 'section' scale: split only on the STRONG boundaries (markdown headers, blank-line
+    paragraphs), grouping up to `size`. A section = a header/paragraph-delimited group within a turn —
+    one rung coarser than a dimension. Lets recall match the broader context, not just the fine line."""
+    text = text.strip()
+    if len(text) <= size:
+        return [text]
+    paras = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
+    out, cur = [], ""
+    for p in paras:
+        if cur and len(cur) + len(p) > size:
+            out.append(cur); cur = p
+        else:
+            cur = (cur + "\n\n" + p) if cur else p
+    if cur:
+        out.append(cur)
+    return out
+
+
 def session_chunks(jsonl_path: str) -> list[dict]:
-    """Genuine content turns as recall chunks, each with its structural handle. Reuses the scanner so
-    chunking and the structural scan agree on attribution/boundaries. Skips inject/tool/empty events —
-    we recall over what was SAID (human + assistant + compaction summaries), not tool plumbing. Long
-    turns are split into overlapping SUB-chunks (sharing the turn's line handle) so multi-topic turns
-    stay retrievable."""
+    """Genuine content turns as MULTI-SCALE recall chunks (the agreed scale taxonomy, wire B:
+    dimension ⊂ section ⊂ turn). Each chunk carries `scale` + `parent` (the turn's line) so recall can
+    target or blend scales. Reuses the scanner (attribution/boundaries agree). Skips inject/tool/empty —
+    we recall over what was SAID. DEDUP: a coarser scale is emitted ONLY when it groups >1 of the finer
+    (a short turn = 1 dimension = no extra section/turn chunk), so multi-scale never just duplicates."""
     rows = scan_session(jsonl_path)["rows"]
     meta = [{"line": r["line"], "ts": r["ts"], "attr": r["attr"], "model": r.get("model"),
              "point": r.get("boundary_point"), "is_boundary": r.get("is_boundary")}
@@ -144,9 +168,17 @@ def session_chunks(jsonl_path: str) -> list[dict]:
         t = (texts.get(m["line"]) or "").strip()
         if not t:
             continue
-        parts = _split(t)
-        for si, part in enumerate(parts):
-            out.append({**m, "sub": si, "n_sub": len(parts), "text": part})
+        dims = _split(t)                                  # finest: dimension scale
+        for si, part in enumerate(dims):
+            out.append({**m, "scale": "dimension", "parent": m["line"], "sub": si, "n_sub": len(dims), "text": part})
+        if not MULTI_SCALE:
+            continue
+        secs = _section_split(t)
+        if len(secs) > 1:                                 # only if section genuinely groups >1 dimension
+            for si, part in enumerate(secs):
+                out.append({**m, "scale": "section", "parent": m["line"], "sub": si, "n_sub": len(secs), "text": part})
+        if len(secs) > 1 and len(t) <= TURN_MAX:          # turn scale only when it spans >1 section AND fits one embed
+            out.append({**m, "scale": "turn", "parent": m["line"], "sub": 0, "n_sub": 1, "text": t})
     return out
 
 
@@ -279,10 +311,11 @@ def build_recall_index(jsonl_path: str, out_dir: str | None = None) -> dict:
                           f"index/embedding mismatch; refusing to build a misaligned index.")
     out_dir, vpath, mpath = _index_paths(jsonl_path, out_dir)
     os.makedirs(out_dir, exist_ok=True)
+    _keys = ("line", "ts", "attr", "model", "point", "is_boundary", "scale", "parent", "text")
     with open(vpath, "w", encoding="utf-8") as f:
         for c, v in zip(chunks, vecs):
-            f.write(json.dumps({**{k: c[k] for k in ("line", "ts", "attr", "model", "point", "is_boundary", "text")},
-                                "vec": v}, ensure_ascii=False, separators=(",", ":")) + "\n")
+            f.write(json.dumps({**{k: c.get(k) for k in _keys}, "vec": v},
+                               ensure_ascii=False, separators=(",", ":")) + "\n")
     meta = {**stamp, "n_chunks": len(chunks), "dim": len(vecs[0]) if vecs else 0,
             "embed_model": EMBED_MODEL, "chunk_mode": CHUNK_MODE,
             "source_path": os.path.abspath(jsonl_path)}
@@ -337,7 +370,7 @@ def recall(jsonl_path: str, query: str, k: int = 8, *, rerank: bool = True,
     else:
         ranked, rerank_note = scored[:k], "cosine only"
     hits = [{"line": s["line"], "ts": s["ts"], "attr": s["attr"], "model": s.get("model"),
-             "point": s.get("point"),
+             "point": s.get("point"), "scale": s.get("scale"), "parent": s.get("parent"),
              "cosine": round(s["score"], 4), "rerank_score": round(s["rerank_score"], 4) if "rerank_score" in s else None,
              "text": " ".join(s["text"].split())[:300]} for s in ranked[:k]]
     out = {"query": query, "n_indexed": len(items), "rerank": rerank_note, "hits": hits}
