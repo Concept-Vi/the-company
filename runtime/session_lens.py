@@ -192,8 +192,35 @@ def directives(jsonl_path: str, k: int = 100) -> dict:
     return {"lens": "directives", "n": len(items), "items": items[:k]}
 
 
+def spin_up_points(jsonl_path: str, k: int = 12) -> dict:
+    """Rank candidate FORK points by the VALUE of the context-state they hold (vision §1.5 / Criteria 3.8),
+    so Tim picks from an evidenced surface, not a hand-picked list. Each substantial Tim directive opens a
+    context-state; we score the segment it opens by decision-density + hot-open-threads + work-activity.
+    A high score = a moment where a distinct, valuable context crystallized = a strong place to fork a clone."""
+    turns = _turns(jsonl_path)
+    seeds = [(i, t) for i, t in enumerate(turns) if t["attr"] == "user" and len(t["text"]) > 300]
+    ranked = []
+    for n, (idx, seed) in enumerate(seeds):
+        nxt_idx = seeds[n + 1][0] if n + 1 < len(seeds) else len(turns)
+        seg = turns[idx:nxt_idx]
+        asst = [t for t in seg if t["attr"] == "assistant"]
+        decisions_n = sum(1 for t in asst if DECISION_CUES.search(t["text"]))
+        open_threads = sum(1 for t in seg if t["attr"] == "assistant" and BLOCKER_CUES.search(t["text"]))
+        activity = sum(len(t["text"]) for t in asst)
+        score = decisions_n * 3 + open_threads * 2 + activity / 5000.0
+        ranked.append({"line": seed["line"], "ts": seed["ts"],
+                       "decisions": decisions_n, "open_threads": open_threads,
+                       "asst_turns": len(asst), "seg_kb": round(activity / 1000, 1),
+                       "score": round(score, 1), "seed": _clip(seed["text"], 160)})
+    ranked.sort(key=lambda x: -x["score"])
+    return {"lens": "spin_up_points", "n_candidates": len(seeds),
+            "scoring": "decisions*3 + open_threads*2 + activity_kb/5 — context-state value, not recency",
+            "ranked": ranked[:k]}
+
+
 LENSES = {"find": find, "decisions": decisions, "open_loops": open_loops,
-          "catch_up": catch_up, "timeline": timeline, "directives": directives}
+          "catch_up": catch_up, "timeline": timeline, "directives": directives,
+          "spin_up_points": spin_up_points}
 
 
 if __name__ == "__main__":
