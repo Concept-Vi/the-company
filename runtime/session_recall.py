@@ -80,14 +80,20 @@ def _window_split(text: str, size: int, overlap: int) -> list[str]:
     return [c for c in out if c]
 
 
+CHUNK_MODE = os.environ.get("RECALL_CHUNK_MODE", "dimension")   # dimension | window (window = the old A/B baseline)
+
+
 def _split(text: str, size: int = SUB_CHUNK_CHARS, overlap: int = SUB_CHUNK_OVERLAP) -> list[str]:
     """DIMENSION-AWARE split (Criteria 1.1; Tim: "my messages are very long and very dense and
     multidimensional" + CLAUDE.md "each line a dimension"). Split on the message's OWN STRUCTURE first —
     markdown headers, paragraphs (blank lines), bullet/numbered/lettered list items — so each dimension
     embeds as its OWN vector instead of averaging into a blur (the failure that sank the 5-decision turn
     L4335 to rank #51). Only within an over-large structural unit do we fall back to size-windowing.
-    Tiny adjacent units are merged up to MIN so we don't over-fragment into one-word chunks."""
+    Tiny adjacent units are merged up to MIN so we don't over-fragment into one-word chunks.
+    RECALL_CHUNK_MODE=window restores the pure size-window baseline (for A/B)."""
     text = text.strip()
+    if CHUNK_MODE == "window":
+        return _window_split(text, size, overlap)
     if len(text) <= size:
         return [text] if text else []
     # 1) cut at strong structural boundaries: blank-line paragraphs, then header/list markers
