@@ -233,24 +233,62 @@ def _cosine(a: list[float], b: list[float]) -> float:
     return dot / (na * nb) if na and nb else 0.0
 
 
+def _index_paths(jsonl_path: str, out_dir: str | None):
+    out_dir = out_dir or os.path.dirname(os.path.abspath(jsonl_path))
+    stem = os.path.splitext(os.path.basename(jsonl_path))[0]
+    return out_dir, os.path.join(out_dir, f"{stem}.recall.jsonl"), os.path.join(out_dir, f"{stem}.recall.meta.json")
+
+
+def _source_stamp(jsonl_path: str) -> dict:
+    st = os.stat(jsonl_path)
+    return {"source_bytes": st.st_size, "source_mtime_ns": st.st_mtime_ns}
+
+
+def index_freshness(jsonl_path: str, out_dir: str | None = None) -> dict:
+    """Is the index current vs the (possibly LIVE/growing) source? Compares the source's size+mtime
+    against the stamp recorded at build. A LIVE session's .jsonl grows → a build-once index goes stale
+    silently (the advisor's flag); this surfaces it so recall can rebuild or declare — never serve stale
+    silently ([[no-silent-failures]])."""
+    _, vpath, mpath = _index_paths(jsonl_path, out_dir)
+    if not os.path.exists(vpath) or not os.path.exists(mpath):
+        return {"exists": False, "fresh": False, "why": "no index yet"}
+    try:
+        meta = json.load(open(mpath, encoding="utf-8"))
+    except Exception:
+        return {"exists": True, "fresh": False, "why": "meta unreadable — treat as stale"}
+    cur = _source_stamp(jsonl_path)
+    fresh = (meta.get("source_bytes") == cur["source_bytes"]
+             and meta.get("source_mtime_ns") == cur["source_mtime_ns"])
+    return {"exists": True, "fresh": fresh, "indexed_bytes": meta.get("source_bytes"),
+            "current_bytes": cur["source_bytes"], "chunk_mode": meta.get("chunk_mode"),
+            "embed_model": meta.get("embed_model"), "built_at": meta.get("built_at"),
+            "why": "current" if fresh else
+                   f"STALE — source grew {meta.get('source_bytes')}→{cur['source_bytes']} bytes since index build"}
+
+
 def build_recall_index(jsonl_path: str, out_dir: str | None = None) -> dict:
-    """Chunk + embed a session; persist vectors + chunk metadata so re-recall is fast (build once, query many)."""
+    """Chunk + embed a session; persist vectors + a freshness meta sidecar so re-recall is fast AND
+    staleness is detectable (build once, query many; rebuild on source change)."""
     chunks = session_chunks(jsonl_path)
     if not chunks:
         raise RecallError(f"recall: no content turns to index in {jsonl_path} (only plumbing/empty events).")
+    stamp = _source_stamp(jsonl_path)          # stamp BEFORE embedding (a concurrent live write → next-recall stale, not a torn index)
     vecs = _embed_chunks([c["text"] for c in chunks])
     if len(vecs) != len(chunks):
         raise RecallError(f"recall: embedder returned {len(vecs)} vectors for {len(chunks)} chunks — "
                           f"index/embedding mismatch; refusing to build a misaligned index.")
-    out_dir = out_dir or os.path.dirname(os.path.abspath(jsonl_path))
+    out_dir, vpath, mpath = _index_paths(jsonl_path, out_dir)
     os.makedirs(out_dir, exist_ok=True)
-    stem = os.path.splitext(os.path.basename(jsonl_path))[0]
-    vpath = os.path.join(out_dir, f"{stem}.recall.jsonl")
     with open(vpath, "w", encoding="utf-8") as f:
         for c, v in zip(chunks, vecs):
             f.write(json.dumps({**{k: c[k] for k in ("line", "ts", "attr", "model", "point", "is_boundary", "text")},
                                 "vec": v}, ensure_ascii=False, separators=(",", ":")) + "\n")
-    return {"index": vpath, "n_chunks": len(chunks), "dim": len(vecs[0]) if vecs else 0}
+    meta = {**stamp, "n_chunks": len(chunks), "dim": len(vecs[0]) if vecs else 0,
+            "embed_model": EMBED_MODEL, "chunk_mode": CHUNK_MODE,
+            "source_path": os.path.abspath(jsonl_path)}
+    with open(mpath, "w", encoding="utf-8") as f:
+        json.dump(meta, f, indent=2)
+    return {"index": vpath, "meta": mpath, "n_chunks": len(chunks), "dim": meta["dim"]}
 
 
 def _load_index(index_path: str) -> list[dict]:
@@ -264,13 +302,21 @@ def _load_index(index_path: str) -> list[dict]:
 
 
 def recall(jsonl_path: str, query: str, k: int = 8, *, rerank: bool = True,
-           index_dir: str | None = None, fetch: int = 40) -> dict:
-    """Semantic recall: embed query in the index's space → cosine top-`fetch` → rerank → top-`k` handles."""
-    out_dir = index_dir or os.path.dirname(os.path.abspath(jsonl_path))
-    stem = os.path.splitext(os.path.basename(jsonl_path))[0]
-    index_path = os.path.join(out_dir, f"{stem}.recall.jsonl")
-    if not os.path.exists(index_path):
+           index_dir: str | None = None, fetch: int = 40, auto_rebuild: bool = True) -> dict:
+    """Semantic recall: embed query in the index's space → cosine top-`fetch` → rerank → top-`k` handles.
+    FRESHNESS (Criteria 2.4): if the source grew since the index was built (a LIVE session), rebuild
+    (auto_rebuild) — or, if rebuild is off, DECLARE the staleness in the envelope. Never serve stale silently."""
+    out_dir, index_path, _ = _index_paths(jsonl_path, index_dir)
+    fresh = index_freshness(jsonl_path, index_dir)
+    stale_note = None
+    if not fresh["exists"]:
         build_recall_index(jsonl_path, out_dir)
+    elif not fresh["fresh"]:
+        if auto_rebuild:
+            build_recall_index(jsonl_path, out_dir)               # rebuild to current state
+            stale_note = f"index was stale ({fresh['why']}) — REBUILT to current source"
+        else:
+            stale_note = f"WARNING: serving a STALE index ({fresh['why']}); pass auto_rebuild=True to refresh"
     items = _load_index(index_path)
     qv = _embed_one(query)
     scored = sorted(({**it, "score": _cosine(qv, it["vec"])} for it in items),
@@ -294,7 +340,10 @@ def recall(jsonl_path: str, query: str, k: int = 8, *, rerank: bool = True,
              "point": s.get("point"),
              "cosine": round(s["score"], 4), "rerank_score": round(s["rerank_score"], 4) if "rerank_score" in s else None,
              "text": " ".join(s["text"].split())[:300]} for s in ranked[:k]]
-    return {"query": query, "n_indexed": len(items), "rerank": rerank_note, "hits": hits}
+    out = {"query": query, "n_indexed": len(items), "rerank": rerank_note, "hits": hits}
+    if stale_note:
+        out["freshness"] = stale_note          # declared in the envelope — never silent (Criteria 2.4)
+    return out
 
 
 if __name__ == "__main__":
