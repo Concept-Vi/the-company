@@ -25,6 +25,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import re
 import sys
 import urllib.request
 
@@ -52,18 +53,23 @@ SUB_CHUNK_CHARS = int(os.environ.get("RECALL_SUBCHUNK_CHARS", "700"))
 SUB_CHUNK_OVERLAP = int(os.environ.get("RECALL_SUBCHUNK_OVERLAP", "150"))
 
 
-def _split(text: str, size: int = SUB_CHUNK_CHARS, overlap: int = SUB_CHUNK_OVERLAP) -> list[str]:
-    """Split a long turn into overlapping sub-chunks so a multi-TOPIC turn doesn't dilute into one blurred
-    vector. A turn covering 5 decisions (e.g. the embedding pick buried as point #3 of 5) would otherwise
-    embed as an average and sink; sub-chunking lets the decision SENTENCE surface on its own. Prefer
-    paragraph/sentence boundaries within the window."""
-    text = text.strip()
+MIN_CHUNK_CHARS = int(os.environ.get("RECALL_MIN_CHUNK_CHARS", "120"))
+_DIM_BOUNDARY = re.compile(
+    r"(?m)^(?:\s*#{1,6}\s+"          # markdown header
+    r"|\s*[-*•]\s+"                  # bullet item
+    r"|\s*\d+[.)]\s+"               # numbered item (1.  1))
+    r"|\s*[A-Z][.)]\s+)"            # lettered item (A.  A)) — Tim's onboarding-question style
+)
+
+
+def _window_split(text: str, size: int, overlap: int) -> list[str]:
+    """Size-window fallback (sentence/newline-boundary preferred) — used only WITHIN an over-large unit."""
     if len(text) <= size:
-        return [text]
+        return [text] if text else []
     out, i = [], 0
     while i < len(text):
         end = min(i + size, len(text))
-        if end < len(text):                       # try to cut on a sentence/para boundary near the window end
+        if end < len(text):
             cut = max(text.rfind(". ", i + size - overlap, end), text.rfind("\n", i + size - overlap, end))
             if cut > i:
                 end = cut + 1
@@ -72,6 +78,48 @@ def _split(text: str, size: int = SUB_CHUNK_CHARS, overlap: int = SUB_CHUNK_OVER
             break
         i = max(end - overlap, i + 1)
     return [c for c in out if c]
+
+
+def _split(text: str, size: int = SUB_CHUNK_CHARS, overlap: int = SUB_CHUNK_OVERLAP) -> list[str]:
+    """DIMENSION-AWARE split (Criteria 1.1; Tim: "my messages are very long and very dense and
+    multidimensional" + CLAUDE.md "each line a dimension"). Split on the message's OWN STRUCTURE first —
+    markdown headers, paragraphs (blank lines), bullet/numbered/lettered list items — so each dimension
+    embeds as its OWN vector instead of averaging into a blur (the failure that sank the 5-decision turn
+    L4335 to rank #51). Only within an over-large structural unit do we fall back to size-windowing.
+    Tiny adjacent units are merged up to MIN so we don't over-fragment into one-word chunks."""
+    text = text.strip()
+    if len(text) <= size:
+        return [text] if text else []
+    # 1) cut at strong structural boundaries: blank-line paragraphs, then header/list markers
+    units: list[str] = []
+    for para in re.split(r"\n\s*\n", text):           # paragraphs first (double newline = strongest)
+        para = para.strip()
+        if not para:
+            continue
+        # within a paragraph, start a new unit at each header/list-item line (a dimension shift)
+        cur, last = [], 0
+        for mt in _DIM_BOUNDARY.finditer(para):
+            if mt.start() > last:
+                seg = para[last:mt.start()].strip()
+                if seg:
+                    cur.append(seg)
+            last = mt.start()
+        tail = para[last:].strip()
+        if tail:
+            cur.append(tail)
+        units.extend(cur or [para])
+    # 2) over-large unit → window-split it; keep others whole
+    sized: list[str] = []
+    for u in units:
+        sized.extend(_window_split(u, size, overlap) if len(u) > size else [u])
+    # 3) merge tiny adjacent units up to MIN (avoid one-line fragments while keeping dimensions distinct)
+    merged: list[str] = []
+    for s in sized:
+        if merged and len(merged[-1]) < MIN_CHUNK_CHARS:
+            merged[-1] = (merged[-1] + "\n" + s).strip()
+        else:
+            merged.append(s)
+    return [c for c in merged if c]
 
 
 def session_chunks(jsonl_path: str) -> list[dict]:
