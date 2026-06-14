@@ -58,6 +58,10 @@ export type SurfaceState = {
   clearPoles: () => void
   live: boolean
   setLive: (v: boolean) => void
+  at: string | null
+  setAt: (t: string | null) => void
+  corpusStart: string | null
+  now: string | null
   notice: string | null
   dismissNotice: () => void
 }
@@ -96,6 +100,9 @@ export function App() {
   const [live, setLive] = useState(true)
   const [pulse, setPulse] = useState(0) // a live-stream tick → re-fetch (the present moves)
   const lastSeqRef = useRef(0)
+  // G3 — the time scrubber: at = a past instant the temporal centre is moved to (null = the live now).
+  const [at, setAt] = useState<string | null>(null)
+  const [corpusStart, setCorpusStart] = useState<string | null>(null) // earliest event ts (the scrubber floor)
   const focusCentre = useCallback((p: ProjPoint) => {
     // re-centre on the item: its embeddable source (so meaning re-forms around the ITEM, not its run:// record),
     // else its address. label = the last path segment (text-minimal).
@@ -129,6 +136,8 @@ export function App() {
       params.pole_a = poles.a.ref
       params.pole_b = poles.b.ref
     }
+    // the time scrubber (G3): move the temporal centre into the past (project only ts≤at)
+    if (at) params.at = at
     fetchProjection(params)
       .then((p) => {
         if (!alive) return
@@ -145,13 +154,13 @@ export function App() {
     return () => {
       alive = false
     }
-  }, [binding, nuc, centre, poles, pulse])
+  }, [binding, nuc, centre, poles, at, pulse])
 
   // THE LIVE SPINE (the seed §4 / mandate L9 — live, not a viewer): tail /api/stream from the newest seq we
   // know; when NEW events arrive, pulse a (throttled) re-fetch so the present visibly moves — new points bloom
   // in (no teleport). Freeze pauses the stream. EventSource auto-reconnects gaplessly (Last-Event-ID).
   useEffect(() => {
-    if (!live) return
+    if (!live || at) return // scrubbing into the past pauses the live present (don't yank back to now)
     let es: EventSource | null = null
     let pending = 0
     let timer: number | null = null
@@ -184,7 +193,27 @@ export function App() {
       es?.close()
       if (timer != null) clearTimeout(timer)
     }
-  }, [live])
+  }, [live, at])
+
+  // the scrubber floor: read the earliest event's ts once (a one-shot stream from seq 0, closed immediately)
+  useEffect(() => {
+    let es: EventSource | null = null
+    try {
+      es = new EventSource('/api/stream?since=-1')
+    } catch {
+      return
+    }
+    es.onmessage = (e) => {
+      try {
+        const ts = JSON.parse(e.data).ts
+        if (ts) setCorpusStart(ts)
+      } catch {
+        /* ignore */
+      }
+      es?.close()
+    }
+    return () => es?.close()
+  }, [])
 
   const dismissNotice = useCallback(() => {
     clearNotice()
@@ -213,6 +242,10 @@ export function App() {
     clearPoles,
     live,
     setLive,
+    at,
+    setAt,
+    corpusStart,
+    now: proj?.now ?? null,
     notice,
     dismissNotice,
   }

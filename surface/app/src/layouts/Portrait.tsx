@@ -5,6 +5,7 @@ import { ViewToggle } from '../toggles/ViewToggle'
 import { LiveDot } from '../toggles/LiveDot'
 import { CentreChip } from '../toggles/CentreChip'
 import { Legend } from '../toggles/Legend'
+import { Scrubber } from '../toggles/Scrubber'
 import { Notice } from '../toggles/Notice'
 import { Disclosure } from '../wheel/Disclosure'
 import { WheelOrState } from './shared'
@@ -32,6 +33,8 @@ export function Portrait({ s }: { s: SurfaceState }) {
       <section className="center center--full">
         <WheelOrState s={s} />
       </section>
+
+      <Scrubber at={s.at} setAt={s.setAt} corpusStart={s.corpusStart} now={s.now} />
 
       {/* detail as a bottom sheet (nonmodal, draggable handle) — nothing permanent at rest */}
       <Disclosure point={s.selected} feel={s.feel} variant="sheet" onDismiss={() => s.setSelected(null)} onFocus={s.focusCentre} onSetPole={s.setPole} binding={s.proj?.binding} centreLabel={s.centre?.label} />

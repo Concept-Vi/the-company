@@ -5,6 +5,7 @@ import { ViewToggle } from '../toggles/ViewToggle'
 import { LiveDot } from '../toggles/LiveDot'
 import { CentreChip } from '../toggles/CentreChip'
 import { Legend } from '../toggles/Legend'
+import { Scrubber } from '../toggles/Scrubber'
 import { Notice } from '../toggles/Notice'
 import { Disclosure } from '../wheel/Disclosure'
 import { WheelOrState, SelectHint } from './shared'
@@ -44,6 +45,7 @@ export function Desktop({ s }: { s: SurfaceState }) {
           )}
         </aside>
       </main>
+      <Scrubber at={s.at} setAt={s.setAt} corpusStart={s.corpusStart} now={s.now} />
     </div>
   )
 }
