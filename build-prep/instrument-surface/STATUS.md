@@ -112,7 +112,7 @@ and "the types/divisions of the circle [should be built in] so the data points c
 - **GROUP 3 TIME SCRUBBER — BUILT** (`79f56ac`). A slim bottom bar slides the temporal centre into the past
   (?at=); the instrument re-projects only ts≤then (count/sectors shrink); far-right = the live present; past
   pauses the live forward-pull; "now" returns to live. Verified both viewports (Jun 3 → 48 pts/4 sectors;
-  Jun 5 → 339; now → 600). The complement to the live spine. Pure read.
+  Jun 5 → 339; now → 600). The complement to the live spine. Pure read. Design-critic PASS ('the media-scrubber idiom makes drive-time intuitive; time joins centre and poles as a driven variable'); #1 fixed — past-state now reads pre-attentively (accent border+wash+glyph).
 - **FIX (`bdefb7a`):** points were keyed by address, but addresses recur (many events at one ui:// address,
   e.g. chat turns at ui://chrome/chat) → 784 duplicate-key React warnings once such events entered the
   projection. Now every point layer keys + layoutId by p.seq (unique/stable); data-ui-ref stays the address.
