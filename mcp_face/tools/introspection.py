@@ -153,6 +153,26 @@ def register(mcp, suite):
         # Reach the registry — RAISES teaching-loud if not yet wired (never silent)
         reg = _cap_registry(suite)
 
+        # LAZY POPULATE — the "available THROUGH the system" wire. Suite.__init__ installs an EMPTY
+        # registry on purpose (the live discovery spawns `claude`, a LEAD-only op deferred so
+        # workers/CI/units never spawn). But the company MCP face IS the lead-interactive context:
+        # when an agent actually CALLS this tool and the registry is still empty, discover the live
+        # binary ONCE here (first call ~14s: --help + a scratch system/init; cached process-wide
+        # after). This makes the WHOLE Claude Code surface dynamically available through the system
+        # (never a hand-written list) without paying the spawn on sessions that never read it.
+        try:
+            if (reg.snapshot().get("total", 0) == 0 and suite is not None
+                    and getattr(suite, "capability_platform", None) is not None
+                    and hasattr(suite, "discover_capabilities")):
+                suite.discover_capabilities()          # mutates the installed singleton IN PLACE
+                reg = _cap_registry(suite)
+        except Exception as e:
+            return {"op": op, "ok": False,
+                    "error": (f"capability registry is empty and live discovery failed: {e}. The "
+                              f"`claude` binary may be unreachable (set COMPANY_CLAUDE_BIN) — the "
+                              f"registry is binary-discovered, never hand-authored, so it stays empty "
+                              f"and fail-loud rather than inventing rows.")}
+
         # ── op="describe" — the registry health view (no entry listing needed) ────────────────
         if op == "describe":
             snap = reg.snapshot()
