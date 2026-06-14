@@ -474,6 +474,12 @@ data-born registry of types) + the fifth-gate honesty discipline (Group 9).
   here are the types it wants"). design-lint: LatticeView contribution 0 off-token literals; app.css 0 added
   (the 2 #fff are the pre-existing white-paper). Verified by driving in chrome-devtools at 1440×900 AND 390×844
   (the card is a top banner, never the lc-sep full-height bug; pile clearly outside the box after a geometry fix).
+  A SEPARATE design-critic (independent agent) drove both viewports and returned FAIL with 3 mobile/interaction
+  defects (desktop strong) — ALL FIXED + re-verified (commit 3ef5f2b): (1) mobile candidate rim labels overflowed
+  the screen edge (the born ✦ name unreadable) → edge-aware clamp + 15-char cap; (2) the 20/80 dial refetched the
+  compute-heavy projection (~5s lag) → the dial is now CLIENT-SIDE (born recomputed in card + canvas, no refetch
+  — instant); (3) mobile tap targets 16–19px → bumped to 34px. Re-driven: labels on-screen, born updates <150ms,
+  controls 34px.
 - **HONEST BOUNDARY** — this is SEMANTIC nucleation over the EMBEDDED data stores; the symbolic pile-outside for
   a code-declared type-registry (events naming no registered row) is Group 10's '—' remainder; distinct-type
   CLUSTERING is scoped to where vectors exist (a growth front for purely-symbolic registries). Unifying the
