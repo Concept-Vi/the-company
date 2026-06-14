@@ -23,6 +23,14 @@ claude --mcp-config /home/tim/company/channels/channel.mcp.json \
 `to` resolves a handle, an exact cwd, or a unique substring of cwd/description (fail-loud on
 ambiguous). A **closed** session is not reachable by channel — use `session_post` wake/consult.
 
+## The MCP tool: `mcp__company__cc_voice` (give text a voice)
+| op | args | does |
+|---|---|---|
+| `engines` | — | which TTS engines exist + which is UP (bring one up: `company up @xsession`) |
+| `speak` | `text`, [`voice`] | render text to a WAV via the running engine; returns the file path (play device-side) |
+Surfaces the resident `tts-*` service (qwen3tts in `@xsession`); does not reinvent TTS. The building
+block for voiced cross-session conversation (the streaming text_delta tap is the next increment).
+
 ## Per-session channel tools (inside a channel-enabled session)
 - `mcp__company-channel__announce {description}` — set this session's one-line description (identity).
 - `mcp__company-channel__reply {text, thread}` — reply to an inbound `<channel>` message; pass the

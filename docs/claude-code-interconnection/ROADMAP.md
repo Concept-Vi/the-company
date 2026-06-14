@@ -30,10 +30,12 @@
   keep the per-launch flag.
 - **Wire group → the real fabric `channels`/`channel_act`** (named persistent groups + gatherings),
   so broadcast targets a named channel, not an ad-hoc handle list.
-- **Voice into the channel** — a spoken cross-session conversation: tap the session's streaming
-  output → the sentence-streamed voice circuit → tts-qwen3tts (in `@xsession` now), distinct voice
-  per session. The supervisor already passes `--include-partial-messages` but discards the deltas;
-  the one seam is a `text_delta` tap (see `build-prep/Voiced Conversation — Path Investigation.md`).
+- **Voice (partially built):** ✅ the engine rides in `@xsession` (tts-qwen3tts) and ✅ `cc_voice`
+  (op=engines|speak) wires the fabric to it — any text → a WAV via the resident engine (verified).
+  NEXT: the streaming `text_delta` tap on the supervisor `_reader` so a session's reply *speaks as it
+  generates* (low-latency), routed to the sentence-streamed voice circuit, distinct voice per session
+  (supervisor already passes `--include-partial-messages` but discards the deltas — that's the seam;
+  see `build-prep/Voiced Conversation — Path Investigation.md`). Playback is device-side.
 - **Reply aggregation surfaced in the UI / RHM** — the fleet view, the room-of-voices.
 - **Sender gating** (allowlist) before any non-local sender path.
 - **Semantic session-find** — use embed-pplx over the transcript index so "who knows about X / find
