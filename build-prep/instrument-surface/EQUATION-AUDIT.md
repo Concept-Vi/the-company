@@ -95,9 +95,15 @@ ratified lattice. = the registry-promotion keystone (a born type → operator pr
 ---
 
 ## Carry-over polish (fold in while touching each lens)
-- selection tether (a line point→detail card) on all lenses
-- make strain SIGNED (which way structure↔meaning pulls)
+- ✅ strain is now SIGNED (warm = meaning farther than filed · cool = nearer) — `615b66a` + legibility `440fc7d`
+- selection tether (a line point→detail card) on all lenses — NEXT buildable, grounded (selection state)
 - de-knot the densest strain/chord zones
+- **strain PORTRAIT core density** — the 162-spoke field mats at the hub on a phone (design-critic FAIL driver,
+  pre-existing; a prior critic PASSed it "density earns its meaning" — two-critic split). Non-distorting relief
+  for a future pass: an inner-radius offset (preserves strain length+order), or a top-N-by-strain on small
+  screens with an explicit "showing N of M" note (no silent cap). The signed read is improved (neutral dots).
+- **desktop wheel floats in a large empty canvas** (all lenses, pre-existing) — centre/enlarge the instrument
+  in the usable area (left edge → detail panel).
 - nucleation portrait: give the top readout its own clear strip (candidate-marker orbit + residue-trail head
   currently pass through its band — legible, but cosmetically tight; re-critic PASS flagged it non-blocking)
 
@@ -105,3 +111,6 @@ ratified lattice. = the registry-promotion keystone (a born type → operator pr
 - gap #1 coincidence spine — design-critic PASS (lens-neutral wording fix, cross-lens density pass).
 - gap #2 corner reading — design-critic FAIL→fixed→**PASS** (residue to corners, no clip, no control occlusion,
   legend consistent; both viewports). Residue contrast lifted a hair for bright displays (`348490d`).
+- strain-signed — design-critic resolved the central worry (cool slate stays muted paper, does NOT tip cold);
+  FAIL driven by legend/dot gaps (#2/#3/#4 — FIXED `440fc7d`) + the pre-existing portrait core density (carry-
+  over above). The signed FEATURE is built + legible both viewports; the density is a separate densification beat.

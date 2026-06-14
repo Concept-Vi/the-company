@@ -143,17 +143,25 @@ live surface) lives in **EQUATION-AUDIT.md** — the gap-list that drives the ne
   so the most central claim was invisible. Now ink diamonds (rotated square on the circle = structure∧meaning)
   mark each ring∧axis crossing in Both view; legend names it. Both viewports, console clean.
 
-- **NEXT BEATS (sequenced — from EQUATION-AUDIT.md; Tim 2026-06-15 said "all of them"):**
-  1. ✅ done — equation-descriptions audit (EQUATION-AUDIT.md) + gap #1 the coincidence spine (`ce04fcf`).
-  2. ✅ done — gap #2 the CORNER reading: residue → grow the box in the nucleation lens (`ec1ba61`); design-critic
-     FAIL→fixed (residue to corners, portrait clip, picker/scrubber occlusion); both viewports, design-lint clean.
-  3. **Axes as variables** (audit #3, NEXT) — make the lens=axis-assignment legible AS "you are choosing the axes" (§8).
-  4. **Edges as canonical moves** (audit #4) — render typed edges with the geometric character translate/rotate/scale.
-  5. **Resonance law** (audit #5, subtle) — surface 2π/n=(1/n)^k binding #types↔depth, only if it can be made REAL.
-  6. **Registry-promotion keystone (L15)** — BLOCKED on L14 (embed registry defs) = a model-load data-build.
-     `consult-before-model-loads` → surface as the one explicit ASK to Tim; build the unblocked read-path/UI scaffold meanwhile.
-  7. Forbidden all-3-kinds (§10) + project system (L13) — data-thin until an orphan source / 2nd project exists.
-  8. Carry-over polish: selection tether (point→card) on all lenses; make strain SIGNED; de-knot dense zones.
+- **NEXT BEATS (re-sequenced by GROUNDEDNESS — the gate work below proved several audit gaps are blocked):**
+  1. ✅ done — audit + gap #1 coincidence spine (`ce04fcf`).
+  2. ✅ done — gap #2 CORNER reading: residue → grow the box (`ec1ba61`); design-critic FAIL→fixed→**PASS**.
+  3. ✅ done — strain is now SIGNED (warm = meaning farther · cool = nearer; seed §3) (`615b66a`, `440fc7d`);
+     critic resolved the cool-tips-cold worry (NO); residual = pre-existing portrait core density (carry-over).
+  4. **NEXT (grounded, buildable): selection tether** — a line from the selected point to its detail card, on
+     ALL lenses (grounded in selection state; the broadest legibility gain, critic-noted).
+  5. **BLOCKED → surface to Tim (engine work, not counterfeit):**
+     · audit #3 *axes as variables* — the cosmetic relabel is green-paint (the legend already names the axes;
+       the lens menu already switches them). The SUBSTANTIVE form = COMPOSABLE axes (fill angle vs radius vs
+       centre vs n independently) needs engine support the bindings lack (they're fixed pairings). An engine beat.
+     · audit #4 *edges as canonical moves* — the projection's edges are bare from→to, ALL one kind ("feeds");
+       the typed relations (`relation_types`: depends_on/precedes/contradicts/…) are declared but NOT instantiated
+       (`runtime/relation_types.py`: "the SUITE lane wires find_relations to label edges … that is the next pass").
+       No move-type data to render → building it now = inventing the mapping. Needs the find_relations↔relation_types
+       wiring first (an engine beat; also the cron's own "cascade precedes / relation_types" edge sources).
+  6. **Registry-promotion keystone (L15)** — BLOCKED on L14 (embed registry defs) = a model-load → explicit Tim ASK.
+  7. Resonance law (#5, subtle/green-paint-risk), forbidden all-3-kinds (§10), project system (L13) — data-thin.
+  8. Other carry-over polish: strain portrait-density densification; desktop wheel floats in empty canvas; de-knot.
 - Note: a test annotation ("live-spine verification ping") was written to `ui://instrument/wheel` during live
   verification — benign, append-only; harmless real comment.
 
