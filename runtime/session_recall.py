@@ -33,6 +33,9 @@ from runtime.session_scan import scan_session
 EMBED_URL = os.environ.get("PPLX_EMBED_URL", "http://127.0.0.1:8007/v1/embeddings")
 EMBED_MODEL = os.environ.get("PPLX_EMBED_MODEL", "perplexity-ai/pplx-embed-context-v1-4b")
 EMBED_DIM = 2560
+RERANK_URL = os.environ.get("RERANK_URL", "http://127.0.0.1:8008/rerank")   # the lead's served jina-v3 (CPU, bridge-free)
+RERANK_POOL = int(os.environ.get("RECALL_RERANK_POOL", "12"))               # CPU listwise: cap candidates sent to rerank
+RERANK_TIMEOUT = int(os.environ.get("RECALL_RERANK_TIMEOUT", "180"))
 # group turns into documents that stay within the embedder's context (late-chunking happens WITHIN a group);
 # conservative char budget per group so a group never overflows the 32K-token window.
 GROUP_CHAR_BUDGET = int(os.environ.get("RECALL_GROUP_CHARS", "16000"))
@@ -137,6 +140,15 @@ def _embed_one(q: str) -> list[float]:
     return _embed_documents([[q]])[0][0]
 
 
+def _rerank_endpoint(query: str, texts: list[str], top_n: int) -> list[dict]:
+    """POST the lead's served jina-v3 reranker (:8008, CPU). Returns ranking[{orig_rank, rerank_score,…}].
+    Served, not in-process: no torch dep, no overlord bridge (Tim's direction)."""
+    body = json.dumps({"query": query, "candidates": texts, "top_n": top_n}).encode()
+    req = urllib.request.Request(RERANK_URL, data=body, headers={"Content-Type": "application/json"})
+    r = json.loads(urllib.request.urlopen(req, timeout=RERANK_TIMEOUT).read())
+    return r.get("ranking") or []
+
+
 # ───────────────────────────── similarity + index ─────────────────────────────
 
 def _cosine(a: list[float], b: list[float]) -> float:
@@ -189,14 +201,17 @@ def recall(jsonl_path: str, query: str, k: int = 8, *, rerank: bool = True,
                     key=lambda x: -x["score"])[:max(fetch, k)]
     if rerank and scored:
         try:
-            from ops.rerank import Reranker
-            rr = Reranker(backend="jina-v3", device="cpu")
-            out = rr.rerank(query, scored, top_n=k, text_of=lambda c: c["text"])
-            ranked = [{**o["item"], "rerank_score": o["rerank_score"]} for o in out]
-            rerank_note = "jina-v3 listwise (CPU)"
+            # CPU listwise rerank: cap candidates + truncate text (the decisive signal is in the first ~600 chars).
+            pool = scored[:RERANK_POOL]
+            order = _rerank_endpoint(query, [s["text"][:600] for s in pool], top_n=k)
+            # the endpoint returns ranking with orig_rank (1-based index into what we sent) → map back
+            ranked = [{**pool[o["orig_rank"] - 1], "rerank_score": o["rerank_score"]} for o in order]
+            rerank_note = f"jina-v3 (served :8008, CPU, pool={len(pool)})"
+        except RecallError:
+            raise
         except Exception as e:
             ranked = scored[:k]
-            rerank_note = f"rerank skipped ({type(e).__name__}: {e}) — cosine order used"
+            rerank_note = f"rerank UNAVAILABLE ({type(e).__name__}: {e}) — cosine order used (declared, not silent)"
     else:
         ranked, rerank_note = scored[:k], "cosine only"
     hits = [{"line": s["line"], "ts": s["ts"], "attr": s["attr"], "model": s.get("model"),
