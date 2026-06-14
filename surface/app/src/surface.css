@@ -220,6 +220,10 @@
    renders as a hard rectangle, off the soft-paper language (design-critic). Suppress it on sectors. */
 .wheel-sector.ui-indicated, .wheel-sector.ui-spotlight { outline: none !important; box-shadow: none !important; }
 
+/* the COINCIDENCE SPINE (seed §3) — ink diamonds where ring∧axis meet = where structure & meaning agree
+   (ratified/real). Ink (the discrete/exact), quiet but more present than the hairlines. */
+.coincidence { fill: var(--ink-primary); fill-opacity: 0.5; }
+
 /* a THEME name sits under its cluster blob at the headline rung (G11) — says WHAT the system chose.
    Quiet ink so the names read without shouting; SVG text uses fill, not color. */
 .theme-label { font-family: var(--font-sans); font-size: var(--t-xs); fill: var(--ink-dim); letter-spacing: 0.01em; }

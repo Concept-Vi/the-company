@@ -82,11 +82,14 @@ function describe(proj: Projection, view: 'circle' | 'square', centred: string |
 export function Legend({ s }: { s: SurfaceState }) {
   if (!s.proj) return null
   const { title, lines } = describe(s.proj, s.view, s.centre?.label ?? null)
+  // In Both, the circle and square are over one space — name the coincidence spine (seed §3): the diamonds on
+  // the axes are where structure and meaning AGREE (the ratified / addressable points). Only meaningful in Both.
+  const all = s.view === 'both' ? [...lines, '◆ on the axes · where structure & meaning agree'] : lines
   return (
     <div className="legend" {...stamp('ui://instrument/legend')}>
       <div className="legend-title display">{title}</div>
       <ul className="legend-lines">
-        {lines.map((l, i) => (
+        {all.map((l, i) => (
           <li key={i}>{l}</li>
         ))}
       </ul>

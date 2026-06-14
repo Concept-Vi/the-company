@@ -96,6 +96,27 @@ export function Wheel({
               fill="none" stroke="var(--hairline)" strokeWidth={1} />
           ))}
 
+          {/* THE COINCIDENCE SPINE (seed §1/§2/§3) — where a ring crosses an axis is exactly where the CIRCLE
+             (meaning) and the SQUARE (structure) AGREE: the ratified / addressable / real, the shared spine.
+             A small ink diamond (a rotated square sitting on the circle = structure ∧ meaning) marks each. They
+             land ONLY on the two axes — off-axis the systems never coincide (the forbidden translation-loss).
+             The engine emits rings = grid/2, so these fall exactly on the axial grid points. Both view only. */}
+          {showGrid &&
+            ringRadii(proj.rings, R).map((rad, k) => {
+              const s = 3.2
+              const pts = [
+                { x: cx, y: cy - rad }, { x: cx, y: cy + rad },
+                { x: cx - rad, y: cy }, { x: cx + rad, y: cy },
+              ]
+              return pts.map((p, q) => (
+                <path
+                  key={`coin-${k}-${q}`}
+                  className="coincidence"
+                  d={`M ${p.x} ${p.y - s} L ${p.x + s} ${p.y} L ${p.x} ${p.y + s} L ${p.x - s} ${p.y} Z`}
+                />
+              ))
+            })}
+
           {/* sector wedges — soft angle-hue fill + hairline edges (colour IS geometry). A single sector
              (n≤1, e.g. one semantic space) has NO meaningful angular division — skip the degenerate
              full-circle wedge and show clean rings + points instead. */}
