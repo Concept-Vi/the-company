@@ -632,6 +632,123 @@ def _separator_projection(q, binding, reg, evs, center, now, lim):
     return 200, out
 
 
+def _nucleation_projection(q, binding, reg, evs, center, now, lim):
+    """TYPE-NUCLEATION — the 20/80 water-law (Tim Geldard's growth law) — for /api/projection. Returns
+    (status, body). Types the items of one data store against a REGISTRY OF TYPES (the scale-pyramid centroids
+    of a `types_space` at a `rung`) and reads where the registry under-covers its content: what FITS sits inside
+    the square, what does NOT piles up OUTSIDE, and a DISTINCT coherent pile past the birth threshold is a
+    CANDIDATE NEW TYPE. All store I/O lives HERE; project()+nucleation_report stay pure (the resolved report
+    rides in). Every axis is a VARIABLE, registry-true AND drivable, so the law works on ANY registry/store —
+    as the Company grows new types/stores they appear with NO code edit (the universal law, not a fixed wiring):
+      ?types_space= (which registry of types)   ?rung= (how fine that registry)   ?space= (which content store)
+      ?dial= (the 20/80 BIRTH threshold — moves the born/forming line, NOT the membership split).
+    The default is a CROSS-INSTANCE pair (types from one store, items from ANOTHER) so the misfit is genuine and
+    non-circular, and >1 data store is visibly exercised. Cosines are within ONE BGE-M3 1024-dim lens — a dim
+    mismatch fails loud in _cosine (never a wrong-but-plausible fit). HONEST BOUNDARY: this is SEMANTIC
+    nucleation over the EMBEDDED data stores; the symbolic pile-outside for a code-declared type-registry
+    (events naming no registered row) is Group 10's '—' remainder — distinct-type CLUSTERING is scoped to where
+    vectors exist (a growth front otherwise)."""
+    from runtime.projection import (project as _uproject, nucleation_report as _nuc)
+    from runtime import scale
+    import math as _math
+    types_space = q.get("types_space") or binding.get("types_space")
+    item_space = q.get("space") or binding.get("space")
+    rung = int(q.get("rung") or binding.get("rung") or 8)
+    try:
+        dial = float(q.get("dial") or binding.get("dial") or 0.2)
+    except (TypeError, ValueError):
+        dial = 0.2
+    if not types_space or not item_space:
+        return 400, {"error": "nucleation needs a `types_space` (the registry of types) AND a `space` (the "
+                              "content store typed against it) — fail loud", "binding": binding.get("id")}
+    try:
+        tpts = scale.rung_points(SUITE.store, types_space, rung)
+    except Exception as ex:
+        return 400, {"error": f"no scale pyramid / rung {rung} for types_space {types_space!r}: {ex} — build a "
+                              f"pyramid first (POST /api/scale/build {{space: {types_space!r}}})",
+                     "binding": binding.get("id")}
+    if not tpts:
+        return 400, {"error": f"types_space {types_space!r} rung {rung} resolved NO type centroids — a registry "
+                              f"of nothing cannot be under-covered", "binding": binding.get("id")}
+    type_vecs = [t["vector"] for t in tpts]
+    type_sizes = [t.get("size") or len(t.get("members") or []) for t in tpts]
+    # readable, UNIQUE type labels from the cluster exemplars (the sector keys the placement maps to)
+    type_labels, _seen = [], {}
+    for i, t in enumerate(tpts):
+        base = str(t.get("exemplar") or f"type{i}")
+        lbl = base if base not in _seen else f"{base}#{i}"
+        _seen[base] = 1
+        type_labels.append(lbl)
+
+    def _cos(a, b):
+        d = sum(x * y for x, y in zip(a, b))
+        na = _math.sqrt(sum(x * x for x in a)); nb = _math.sqrt(sum(x * x for x in b))
+        return d / (na * nb) if na and nb else 0.0
+    # admission radii = each type's OWN empirical extent (10th-pct member cosine to its centroid) — truthful
+    # membership, not a tuned global floor (cross-store → mostly outside; same-store → populated + outliers).
+    type_radii = []
+    for t in tpts:
+        mc = []
+        for m in (t.get("members") or []):
+            rec = SUITE.store.get_vector(SUITE.store.space_address(m, types_space))
+            if rec and rec.get("vector"):
+                mc.append(_cos(rec["vector"], t["vector"]))
+        mc.sort()
+        type_radii.append(mc[max(0, len(mc) // 10)] if mc else 0.0)
+
+    # resolve the ITEM vectors of the content store (keyed by source_address — what project() looks up per item)
+    uevs = [e for e in evs if e.get("kind") == "corpus.record" and e.get("projection") == item_space]
+    item_vecs, item_refs = [], []
+    dim = len(type_vecs[0])
+    for e in uevs:
+        sa = e.get("source_address") or ""
+        rec = SUITE.store.get_vector(SUITE.store.space_address(sa, item_space))
+        if rec and rec.get("vector") and len(rec["vector"]) == dim:
+            item_vecs.append(rec["vector"]); item_refs.append(sa)
+    if not item_vecs:
+        return 400, {"error": f"no embedded items in space {item_space!r} at dim {dim} (the lens the types live "
+                              f"in) — capture+embed that store first, or pick an embedded space",
+                     "binding": binding.get("id")}
+    try:
+        rep = _nuc(item_vecs, item_refs, type_vecs, type_labels, type_radii, type_sizes, dial=dial)
+    except ValueError as ve:
+        return 400, {"error": str(ve), "binding": binding.get("id")}
+    rep["types_space"] = types_space
+    typed = set(item_refs)
+    pevs = [e for e in uevs if (e.get("source_address") or "") in typed]
+    try:
+        out = _uproject(pevs, binding=binding, registry=reg, now=now, center=center, limit=lim, nucleation=rep)
+    except ValueError as ve:
+        return 400, {"error": str(ve), "binding": binding.get("id")}
+    out["binding"]["types_space"] = types_space
+    out["binding"]["space"] = item_space
+    out["binding"]["rung"] = rung
+    out["binding"]["dial"] = dial
+    # registry-true PICKERS for the FORM (no FE hardcode — as the Company embeds new stores / builds new
+    # pyramids they appear here automatically): item_spaces = every embedded store (>2 units); types_spaces =
+    # those that ALSO have a scale pyramid (so they can be a registry of types); rungs = the chosen registry's.
+    from collections import Counter as _Counter
+    _counts = _Counter(e.get("projection") for e in evs
+                       if e.get("kind") == "corpus.record" and e.get("projection"))
+    _embedded = sorted(sp for sp, c in _counts.items() if sp and c > 2)
+    _typ = []
+    for sp in _embedded:
+        try:
+            if scale.load_pyramid(SUITE.store, sp):
+                _typ.append(sp)
+        except Exception:
+            pass
+    _rungs = []
+    try:
+        _pyr = scale.load_pyramid(SUITE.store, types_space)
+        _rungs = sorted([(r.get("k") if isinstance(r, dict) else r) for r in (_pyr or {}).get("rungs", [])])
+    except Exception:
+        pass
+    if "nucleation" in out:
+        out["nucleation"]["available"] = {"item_spaces": _embedded, "types_spaces": _typ, "rungs": _rungs}
+    return 200, out
+
+
 # ── Group H/I — the always-on activation CALLER (DORMANT by default) ─────────────────────────────
 # ONE long-lived ActivationCaller holds the rollup driver's held cursor (the H3 discipline — a fresh
 # driver per tick would re-consolidate every wave). BOTH the manual POST /api/activation/tick AND the
@@ -949,6 +1066,12 @@ class H(BaseHTTPRequestHandler):
                     # THE TWO-GRAVITY SEPARATOR (Group 9) — the store I/O (resolve the two pole vectors + the
                     # item vectors) lives in the helper; project() stays pure. Poles are drivable (?pole_a=&pole_b=).
                     _st, _body = _separator_projection(q, binding, reg, evs, center, now, lim)
+                    self._send(_st, json.dumps(_body))
+                elif binding.get("radius_from") == "nucleation":
+                    # TYPE-NUCLEATION (the 20/80 water-law) — the store I/O (resolve the registry-of-types'
+                    # centroids + admission radii, and the content store's item vectors) lives in the helper;
+                    # project()+nucleation_report stay pure. Drivable: ?types_space=&rung=&space=&dial=.
+                    _st, _body = _nucleation_projection(q, binding, reg, evs, center, now, lim)
                     self._send(_st, json.dumps(_body))
                 else:
                     # Group 10 — angle_from=<registry/graph>: resolve the entity-set's rows (+ directed edges)

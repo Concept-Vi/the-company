@@ -228,6 +228,188 @@ def separation_report(pulls_a: list, pulls_b: list, pole_a: list, pole_b: list, 
     }
 
 
+def _normv(v: list) -> list:
+    mag = math.sqrt(sum(x * x for x in v)) or 1.0
+    return [x / mag for x in v]
+
+
+def _centroid(vs: list) -> list:
+    """Unit-normalized mean of a set of vectors (the group's centre direction)."""
+    n = len(vs[0])
+    c = [0.0] * n
+    for v in vs:
+        for i in range(n):
+            c[i] += v[i]
+    return _normv(c)
+
+
+def nucleation_report(item_vecs: list, item_refs: list, type_vecs: list, type_labels: list,
+                      type_radii: list, type_sizes: list, *, dial: float = 0.2, cap: int = 120,
+                      ncut: int = 4, perms: int = 80, seed: int = 1729) -> dict:
+    """TYPE-NUCLEATION — the 20/80 water-law (Tim Geldard's growth law; all derived work attributed to him).
+    Content is typed against a registry of TYPES; what FITS sits INSIDE the square (within a type's own
+    empirical extent), what does NOT fit piles up OUTSIDE; where a DISTINCT, coherent pile accumulates past a
+    threshold, a NEW TYPE is born. The inverse — a registered type whose membership thins — is a
+    (context-dependent) dissolution candidate. No objective, no purpose: a pure read of where the registry
+    under-covers its content, and the laws underneath (accumulate→birth, thin→candidacy) are the invariant
+    while the specific thresholds bend to the situation (Tim: "it isn't a hard rule that applies in all
+    situations but the laws underneath, those are the constant").
+
+    The honesty discipline (mirrors the fifth gate — a normalized gradient over noise is green-paint):
+      · MEMBERSHIP (inside vs outside) = the type's OWN admission extent (`type_radii`, e.g. a low percentile of
+        each type's member cosines). An item is 'inside' ONLY if it is actually within some type's empirical
+        reach. Cross-registry content → mostly/all OUTSIDE (honest: it does not fit) → an empty square + a pile;
+        same-registry content → a populated square + the natural outliers. This is NOT a tuned global cosine
+        floor and NOT a fit-percentile — either would manufacture a false 'inside' (placing an item in a type
+        it does not belong to). Truthful position over a clean ratio.
+      · DISTINCTNESS = an apples-to-apples silhouette MARGIN per pile-cluster = mean(member→own-centroid cos)
+        − mean(member→nearest-existing-type cos): the members bind to EACH OTHER more than to any existing type
+        (→ their own thing, not a sub-region of an existing type). Surfaced as STRENGTH (Tim: "not a hard
+        rule"); the binary distinct-vs-noise uses a PILE-PERMUTATION NULL — the margin must beat random
+        same-size groupings OF THE PILE (parameter-free, registry-derived; dissolves the margin≈0 knife-edge
+        that a bare `margin>0` would flap on).
+      · BIRTH (the 20/80 dial) = a DISTINCT candidate is BORN a new type once its mass passes the threshold
+        (`dial` × median existing-type size); below it a distinct cluster is still FORMING. The dial is Tim's
+        surfaced 20/80 — it moves the BIRTH line, it does NOT decide membership ("a type is born when a region
+        fills past ~20/80").
+      · DISSOLUTION = registered types whose mass sits in the low tail (< half the median type size) → surfaced
+        as candidates, FLAGGED context-dependent (a sparse type may be rare-not-wrong) — never auto-applied.
+
+    Bounded (agglomerate is O(n³) — never cluster a whole corpus blindly): clusters at most `cap` worst-fitting
+    pile items; the un-clustered tail is SURFACED (`pile_tail`), never silently dropped. Deterministic (fixed
+    `seed` for the null). Returns the report + `per_item` placement (sector + radius) the projection reads."""
+    from runtime import scale  # lazy — the pure floor pulls the (dependency-free) clusterer only on demand
+    import random as _random
+    T = len(type_vecs)
+    if T == 0:
+        raise ValueError("nucleation needs a registry of TYPES (type_vecs is empty) — fail loud, never a "
+                         "one-type or zero-type field; a registry of nothing cannot be under-covered.")
+    N = len(item_vecs)
+    med_type_size = sorted(type_sizes)[len(type_sizes) // 2] if type_sizes else 1
+    dissolve_floor = med_type_size / 2.0                     # the low-tail dissolution band (context-dependent)
+    # birth_mass (the 20/80 BIRTH threshold) is set below once the examined pile size is known — Tim's "a region
+    # fills past ~20/80": a candidate is born once it holds a `dial`-fraction of the pile being examined, so the
+    # dial genuinely MOVES the born/forming line (a fixed multiple of a type size barely bit — distinctness
+    # dominated and the dial was inert).
+
+    # FIT every item to its nearest registered type; MEMBERSHIP by that type's own admission extent (truthful).
+    best_fit = [0.0] * N
+    assigned = [0] * N
+    inside = [False] * N
+    for i, v in enumerate(item_vecs):
+        bi, bf = 0, -2.0
+        for k in range(T):
+            c = _cosine(v, type_vecs[k])
+            if c > bf:
+                bf, bi = c, k
+        best_fit[i], assigned[i] = bf, bi
+        inside[i] = bf >= type_radii[bi]
+    inside_idx = [i for i in range(N) if inside[i]]
+    pile_idx = [i for i in range(N) if not inside[i]]
+
+    # BOUND the clustered pile to the `cap` WORST-fitting (agglomerate is O(n³)); surface the tail.
+    pile_sorted = sorted(pile_idx, key=lambda i: best_fit[i])
+    clustered = pile_sorted[:cap]
+    pile_tail = pile_sorted[cap:]                            # surfaced, never silently dropped
+    # the 20/80 BIRTH threshold, as a FILL fraction of the examined pile (Tim: "fills past ~20/80") — the dial
+    # moves the born/forming line (a distinct cluster below it is FORMING, above it is BORN a new type).
+    birth_mass = max(3, round(dial * max(len(clustered), 1)))
+
+    candidates = []
+    if len(clustered) >= 6:
+        pv = [item_vecs[i] for i in clustered]
+        nv, cuts = scale.agglomerate(pv, linkage="ward")
+        part = scale.cut(cuts, min(ncut, len(clustered)))
+        groups = scale.clusters_of(part)
+        rng = _random.Random(seed)
+
+        def _margin(local_idxs: list) -> float:
+            vs = [pv[j] for j in local_idxs]
+            cen = _centroid(vs)
+            internal = sum(_cosine(v, cen) for v in vs) / len(vs)
+            external = sum(max(_cosine(v, tv) for tv in type_vecs) for v in vs) / len(vs)
+            return internal - external
+
+        for cid, local in sorted(groups.items(), key=lambda kv: -len(kv[1])):
+            if len(local) < 3:
+                continue
+            s = len(local)
+            m = _margin(local)
+            # PILE-PERMUTATION NULL: random same-size groupings of the WHOLE clustered pile (not a constant).
+            null = sorted(_margin(rng.sample(range(len(pv)), s)) for _ in range(perms))
+            p95 = null[min(int(perms * 0.95), perms - 1)]
+            distinct = m > p95                               # beats the null → a real distinct region, not noise
+            born = bool(distinct and s >= birth_mass)        # distinct AND past the 20/80 mass → a NEW TYPE
+            global_members = [clustered[j] for j in local]
+            ex = item_refs[global_members[0]]
+            candidates.append({
+                "size": s, "margin": round(m, 4), "null_p95": round(p95, 4),
+                "distinct": distinct, "born": born, "birth_mass": birth_mass,
+                "exemplar": ex, "members": [item_refs[g] for g in global_members],
+                "member_idx": global_members,
+            })
+
+    # DISSOLUTION candidates — registered types in the low mass tail (context-dependent, never auto-applied).
+    dissolution = [{"type": type_labels[k], "size": type_sizes[k],
+                    "note": "below the low-tail floor — a dissolution CANDIDATE, context-dependent "
+                            "(a sparse type may be rare, not wrong); never auto-applied"}
+                   for k in range(T) if type_sizes[k] < dissolve_floor]
+
+    # PER-ITEM placement (sector + radius) the projection reads. Inside → the assigned type's sector, radius =
+    # fit DEPTH (strong fit deep, marginal near the box edge). Pile → OUTSIDE the box (r>1): a clustered
+    # candidate member sits in that candidate's own outer ZONE (the forming new type, further out); an
+    # un-clustered tail item hovers JUST outside the type it almost-fit (tried here, did not make it in).
+    cand_zone = {}                                            # global item idx → candidate ordinal (its zone)
+    for ci, c in enumerate(candidates):
+        for gi in c["member_idx"]:
+            cand_zone[gi] = ci
+    # inside radius band: normalize best_fit over the inside set so the strongest fit is deep, the marginal at
+    # the box edge (a small floor keeps the strongest just off the origin).
+    in_fits = [best_fit[i] for i in inside_idx]
+    fmin, fmax = (min(in_fits), max(in_fits)) if in_fits else (0.0, 1.0)
+    fspread = (fmax - fmin) or 1.0
+    # pile-tail radius band: more-unfit → farther out, in a thin ring just past the box edge.
+    tail_fits = [best_fit[i] for i in pile_idx if i not in cand_zone]
+    tmin, tmax = (min(tail_fits), max(tail_fits)) if tail_fits else (0.0, 1.0)
+    tspread = (tmax - tmin) or 1.0
+
+    per_item = {}
+    for i in range(N):
+        ref = item_refs[i]
+        if inside[i]:
+            r = 0.08 + 0.86 * (1.0 - (best_fit[i] - fmin) / fspread)   # strong→0.08 (deep), marginal→0.94
+            per_item[ref] = {"sector": type_labels[assigned[i]], "r": round(min(max(r, 0.0), 0.96), 5),
+                             "inside": True, "fit": round(best_fit[i], 4),
+                             "assigned": type_labels[assigned[i]], "born": False}
+        elif i in cand_zone:
+            ci = cand_zone[i]
+            per_item[ref] = {"sector": f"✦{ci}", "r": 1.18,        # the candidate's outer zone (forming type)
+                             "inside": False, "fit": round(best_fit[i], 4),
+                             "assigned": type_labels[assigned[i]], "pile_cluster": ci,
+                             "born": candidates[ci]["born"]}
+        else:
+            r = 1.04 + 0.10 * (1.0 - (best_fit[i] - tmin) / tspread)    # the thin almost-fit ring just outside
+            per_item[ref] = {"sector": type_labels[assigned[i]], "r": round(r, 5),
+                             "inside": False, "fit": round(best_fit[i], 4),
+                             "assigned": type_labels[assigned[i]], "tail": True, "born": False}
+
+    return {
+        "n_items": N, "n_types": T,
+        "membership": {"inside": len(inside_idx), "pile": len(pile_idx)},
+        "pile_total": len(pile_idx), "pile_clustered": len(clustered), "pile_tail": len(pile_tail),
+        "dial": dial, "birth_mass": birth_mass, "median_type_size": med_type_size,
+        "candidates": [{k: v for k, v in c.items() if k != "member_idx"} for c in candidates],
+        "born_count": sum(1 for c in candidates if c["born"]),
+        "distinct_count": sum(1 for c in candidates if c["distinct"]),
+        "dissolution_candidates": dissolution,
+        "type_labels": list(type_labels), "type_sizes": list(type_sizes),
+        "per_item": per_item,
+        # the candidate ZONE labels the projection appends as extra sectors (the pile forms OUTSIDE the box)
+        "zones": [{"id": f"✦{ci}", "exemplar": c["exemplar"], "born": c["born"],
+                   "distinct": c["distinct"], "size": c["size"]} for ci, c in enumerate(candidates)],
+    }
+
+
 def _singular(registry_name: str) -> str:
     """Depluralize a registry NAME → the EVENT FIELD that names its row (the event→row edge convention,
     ONE rule, not a per-registry table): projections→projection, mark_types→mark_type, relation_types→
@@ -384,7 +566,8 @@ def _grid_cell(address: str, cap: int = 4) -> tuple:
 def project(events: list, *, binding: dict | None = None, now: datetime | None = None,
             center: str | None = None, limit: int = 0, registry: BindingRegistry | None = None,
             vectors: dict | None = None, sector_ids: list | None = None,
-            sector_edges: list | None = None, poles: dict | None = None) -> dict:
+            sector_edges: list | None = None, poles: dict | None = None,
+            nucleation: dict | None = None) -> dict:
     """Events → points, resolved from a BINDING. Pure read; every coordinate read from data the
     event already carries, the divisions resolved from the binding's named source. The CENTRE is a
     variable: default the temporal NOW (radius = age); pass `now=` (the scrubber) to move it into the
@@ -498,6 +681,28 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
             sep_lmin, sep_lmax = min(_leans), max(_leans)
     sep_norm = sep and (sep_lmax - sep_lmin) > 1e-9
 
+    # NUCLEATION precompute (the 20/80 water-law — TYPE-BIRTH). A binding with radius_from=='nucleation' types
+    # the items against a REGISTRY OF TYPES and reads where the registry under-covers its content: what fits
+    # sits inside the square, what does not piles up OUTSIDE, and a distinct coherent pile past the birth
+    # threshold is a CANDIDATE NEW TYPE. The heavy compute (fit → truthful membership → cluster the pile →
+    # silhouette margin + permutation-null verdict → birth/dissolution) lives in `nucleation_report` (run by
+    # the bridge, which resolves the type centroids + admission radii + item vectors from the store); project()
+    # stays the GEOMETRY: it reads the resolved per-item placement and lays the points down. The SECTORS become
+    # the registry's types PLUS one outer ZONE per candidate cluster (the pile forms OUTSIDE the box). Fail-loud:
+    # nucleation mode with no resolved report RAISES (never a silent fallback to time).
+    nuc = (radius_from == "nucleation")
+    nuc_report = nucleation if nuc else None
+    nuc_items: dict = {}
+    if nuc:
+        if not nuc_report or not nuc_report.get("per_item"):
+            raise ValueError("nucleation radius needs a resolved report (nucleation={... per_item ...}) — fail "
+                             "loud, never a silent fallback to time; type-birth has no meaning without a "
+                             "registry of types to be under-covered.")
+        nuc_items = nuc_report["per_item"]
+        sectors = list(nuc_report.get("type_labels") or []) + [z["id"] for z in nuc_report.get("zones", [])]
+        n = max(len(sectors), 1)
+        kmap = {"__nuc__": True}
+
     # STRAIN precompute (Group 7, SEED §111: "strain is the distance between a point's square-position and
     # its circle-position"). Compared LIKE-FOR-LIKE as RADII at a shared angle (NOT a 2D cell↔wheel distance:
     # the one-sector angle is pure jitter, so the 2D form is dominated by hash-noise and the centre — the
@@ -542,8 +747,17 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
         kind = e.get("kind") or "?"
         # the angular SECTOR key: by KIND (default/kind-group), or by the EVENT→ROW edge for an
         # angle_from=<registry/graph> binding (Group 10) — an event naming no row → the '—' remainder.
-        by = kmap.get("__by__")
-        if by:                                    # registry/graph mode: place by the EVENT→ROW edge
+        info = None
+        if nuc:                                   # NUCLEATION: sector = the resolved per-item placement (the
+            # type it fits, or the candidate ZONE it piles into). An item not typed (no vector) is not a point.
+            info = nuc_items.get(e.get("source_address") or "") or nuc_items.get(_addr_of(e))
+            if info is None:
+                continue
+            skey = info["sector"]
+            if skey not in sectors:
+                continue
+            i = sectors.index(skey)
+        elif (by := kmap.get("__by__")):          # registry/graph mode: place by the EVENT→ROW edge
             row = _row_of(e, by)
             skey = row if row is not None else "—"
             if skey not in sectors:
@@ -560,7 +774,9 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
         theta = TAU * (i + 0.08 + 0.84 * _stable_unit(ref)) / n
         age = max((now - t).total_seconds(), 1.0)
         r_unknown = False
-        if sem:
+        if nuc:
+            r = info["r"]                                            # resolved placement: <1 inside, >1 piled out
+        elif sem:
             c = sem_cos.get(idx)
             is_centre = (e.get("source_address") or _addr_of(e)) == addr_center
             if is_centre:
@@ -620,6 +836,14 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
                 "lean": round(sep_lean[idx], 4),
                 "pole": ("b" if sep_lean[idx] > 0 else "a" if sep_lean[idx] < 0 else "—")}
                if (sep and idx in sep_lean) else {}),
+            # NUCLEATION (the 20/80 water-law) — the typed-fit carried so the FORM shows WHERE each item landed:
+            # inside (fits a type) vs piled out, its best fit + assigned type, the candidate ZONE it nucleates
+            # into, and whether that candidate is BORN (a new type) vs still forming. r<1 inside, r>1 piled out.
+            **({"fit": info["fit"], "assigned": info["assigned"], "inside": info["inside"],
+                **({"pile_cluster": info["pile_cluster"]} if "pile_cluster" in info else {}),
+                **({"tail": True} if info.get("tail") else {}),
+                **({"born": True} if info.get("born") else {})}
+               if (nuc and info is not None) else {}),
             # only a SEMANTIC point with no vector carries this (rim + flagged) — additive, absent otherwise
             **({"r_unknown": True} if r_unknown else {}),
         })
@@ -639,7 +863,7 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
         "center": addr_center or "now", "now": now.isoformat(), "n": n,
         "binding": {"id": binding["id"], "label": binding["label"],
                     "angle_from": binding.get("angle_from"),
-                    "radius_from": ("separator" if sep else "semantic" if sem
+                    "radius_from": ("nucleation" if nuc else "separator" if sep else "semantic" if sem
                                     else ("address" if addr_center else radius_from)),
                     "order_by": binding.get("order_by", "count"),
                     # semantic only: was the meaning-distance min-max normalized for legibility? (honest —
@@ -647,7 +871,10 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
                     **({"radius_normalized": sem_norm, "space": binding.get("space")} if sem else {}),
                     # separator only: the two poles (label/ref) + whether the lean was min-max normalized
                     **({"poles": {"a": pole_a_meta, "b": pole_b_meta},
-                        "radius_normalized": sep_norm, "space": binding.get("space")} if sep else {})},
+                        "radius_normalized": sep_norm, "space": binding.get("space")} if sep else {}),
+                    # nucleation only: which registry-of-types + which item store the fit was read against
+                    **({"types_space": (nuc_report or {}).get("types_space"),
+                        "space": binding.get("space")} if nuc else {})},
         "bindings": [{"id": b["id"], "label": b["label"]} for b in reg.list()] or
                     [{"id": "raw", "label": "Kinds (raw)"}],
         "sectors": [{"id": s, "label": s, "from": round(TAU * i / n, 5), "to": round(TAU * (i + 1) / n, 5)}
@@ -656,6 +883,10 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
         # THE FIFTH GATE (Group 9): the separation report — the witness that the two-gravity field actually
         # SEPARATES (computed on raw cosines, not the cosmetic radius). Present only in separator mode.
         **({"separation": separation} if sep else {}),
+        # NUCLEATION (the 20/80 water-law): the type-birth report — membership, the candidate new types (with
+        # margin-strength + the permutation-null verdict + born/forming), dissolution candidates, the bounded
+        # pile + surfaced tail. The witness for type-birth (per_item is omitted here — it rides on the points).
+        **({"nucleation": {k: v for k, v in nuc_report.items() if k != "per_item"}} if nuc else {}),
         "rings": rings, "grid": grid_m,   # m/2 concentric circles for the m×m dyadic grid (seed §1)
         "lock": "x = 2*pi/n; n resolves from the binding's source — no hardcoded sectors",
         "points": points, "count": len(points),

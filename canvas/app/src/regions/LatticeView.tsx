@@ -22,6 +22,11 @@ type ProjPoint = {
   // aggregates (scale_size / scale_members), a real member that NAMES it (scale_exemplar), and the finer
   // clusters that fold into it (scale_children). Absent on unit-rung points.
   scale_size?: number; scale_members?: number; scale_exemplar?: string; scale_children?: string[]
+  // NUCLEATION (the 20/80 water-law): the typed-fit of this item against the registry of types. `inside` =
+  // it fits a registered type (sits in the square); else it piled OUTSIDE. `fit` = its best cosine; `assigned`
+  // = the nearest type; `pile_cluster` = the candidate ZONE it nucleates into; `born` = that candidate is a
+  // new type; `tail` = an un-clustered pile item (hovers just outside the type it almost-fit).
+  inside?: boolean; fit?: number; assigned?: string; pile_cluster?: number; born?: boolean; tail?: boolean
 }
 type Projection = {
   now: string; n: number; rings: number; count: number; grid?: number
@@ -47,6 +52,23 @@ type Projection = {
   // SCALE LADDER (Group 11): present when the binding's space has a built pyramid. `rung` is the resolved
   // level ('unit' | a coarse k); `rungs` the available coarse cluster-counts (e.g. [8, 32]); n_units the base.
   scale?: { space: string; rung: number | string; rungs: number[]; n_units: number }
+  // NUCLEATION (the 20/80 water-law): the type-birth report. membership (inside vs piled), the candidate new
+  // types (margin-strength + the permutation-null verdict + born/forming), dissolution candidates, the bounded
+  // pile + surfaced tail, and the dial (the 20/80 birth threshold). Present only in nucleation mode.
+  nucleation?: {
+    n_items: number; n_types: number; membership: { inside: number; pile: number }
+    pile_total: number; pile_clustered: number; pile_tail: number
+    dial: number; birth_mass: number; median_type_size: number
+    born_count: number; distinct_count: number
+    candidates: { size: number; margin: number; null_p95: number; distinct: boolean; born: boolean
+      birth_mass: number; exemplar: string; members: string[] }[]
+    dissolution_candidates: { type: string; size: number; note: string }[]
+    type_labels: string[]; type_sizes: number[]
+    zones: { id: string; exemplar: string; born: boolean; distinct: boolean; size: number }[]
+    types_space?: string
+    // registry-true picker options resolved by the bridge (no FE hardcode — new stores/pyramids appear here)
+    available?: { item_spaces: string[]; types_spaces: string[]; rungs: number[] }
+  }
 }
 
 export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
@@ -72,6 +94,13 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   // a pole re-drives the field; the OTHER pole is always kept (the bridge fails loud on a one-pole field).
   const [poleA, setPoleA] = useState<string | null>(null)
   const [poleB, setPoleB] = useState<string | null>(null)
+  // NUCLEATION (the 20/80 water-law): the two VARIABLE axes the operator drives — the registry of types
+  // (typesSpace) and the content store typed against it (itemSpace) — plus the 20/80 BIRTH dial (null = the
+  // binding's defaults). Driving any of them re-reads where new types want to be born; the law is universal,
+  // so every embedded store can be a registry OR the content (cross-instance keeps the misfit non-circular).
+  const [typesSpace, setTypesSpace] = useState<string | null>(null)
+  const [itemSpace, setItemSpace] = useState<string | null>(null)
+  const [dial, setDial] = useState<number | null>(null)
   const nowAnchorRef = useRef(Date.now() / 1000)             // the live "now" epoch — the scrub-math anchor
   const spanRef = useRef(86400)                              // seconds the scrubber spans (the visible age range)
   const posRef = useRef<Map<number, { x: number; y: number }>>(new Map())   // last drawn point positions (identity)
@@ -101,6 +130,10 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   // spatial basins, not two colours (sign must be load-bearing geometry, not decoration). Within each basin the
   // kind-angle spreads the items so they don't stack. The two gravity hues reinforce the split.
   const isSeparator = proj?.binding?.radius_from === 'separator'
+  // NUCLEATION (the 20/80 water-law — type-birth): the registry's types are sectors INSIDE the box (what
+  // fits); what does NOT fit piles up OUTSIDE the box, and a distinct coherent pile is a CANDIDATE NEW TYPE
+  // forming in its own outer zone. radius p.r < 1 = inside the square, p.r > 1 = piled outside it.
+  const isNucleation = proj?.binding?.radius_from === 'nucleation'
   const SEP_HUE_A = 212, SEP_HUE_B = 28                       // cool A (left) / warm B (right) — colour IS pole
   const sepColA = `hsl(${SEP_HUE_A}deg 55% 60%)`, sepColB = `hsl(${SEP_HUE_B}deg 62% 56%)`
   const SEP_SPREAD = Math.PI * 0.6                             // each basin fans ~108° around its pole axis
@@ -114,6 +147,19 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   // a pole's display name: a friendly binding label is kept; an address (a driven pole) shows its tail segments
   // so the readout never paints a full vec://… address (or, worse, a stale default label for a driven pole).
   const poleLabel = (s?: string) => !s ? 'pole' : !s.includes('://') ? s : s.split('/').filter(Boolean).slice(-2).join('/')
+  // NUCLEATION geometry (used IDENTICALLY by draw() and pick() — else clicks land wrong): the registry box is
+  // inscribed at R_BOX_FRAC·R; an item that FITS sits inside it (r<1 → r·R_BOX); a piled item sits OUTSIDE it
+  // (r>1 → pushed past the box, amplified so the candidate blooms read clear of the box edge). Returns a FRACTION
+  // of R (the caller multiplies by R). A short tail segment of an address for the candidate-zone labels.
+  // the box is inscribed at R_BOX_FRAC·R (corner at ×1.41 → 0.71·R); a FIT sits inside it (r·R_BOX), a PILE
+  // sits CLEARLY OUTSIDE it — beyond the box corner — so "piles up outside the square" is literally true (not
+  // in the corner triangles, which would read as inside). Pile band [0.74, 0.90]·R; the candidate blooms/labels
+  // live further out at the rim (drawn in draw()). Returns a FRACTION of R.
+  const R_BOX_FRAC = 0.5
+  const nucRadius = (p: ProjPoint) => p.inside
+    ? p.r * R_BOX_FRAC
+    : Math.min(0.74 + Math.max(p.r - 1, 0) * 0.9, 0.90)
+  const shortName = (s?: string) => !s ? '' : (s.split('/').filter(Boolean).slice(-1)[0] || s).replace(/\.(py|tsx?|md|json)$/, '')
   // SCALE LADDER (Group 11): the rungs fine→coarse = [units, …coarse k descending]. finerRung steps one
   // level IN (coarse k → finer k → units) — the zoom-INTO-a-theme gesture. Distinct from the radial ⌕ zoom
   // (magnify the band) — this changes which RUNG resolves (themes vs units), the advisor's collision avoided.
@@ -128,7 +174,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   // the timestamp's CYCLE coordinate, so the daily/weekly rhythm becomes visible: everything that
   // happened "at 9am" lands on one ring regardless of which day — the cycles, made geometry.
   const radial = (p: ProjPoint) =>
-    (isSemantic || isSeparator || frame === 'now') ? Math.pow(p.r, 1 / zoom) : frame === 'day' ? p.phases.day : p.phases.week
+    (isSemantic || isSeparator || isNucleation || frame === 'now') ? Math.pow(p.r, 1 / zoom) : frame === 'day' ? p.phases.day : p.phases.week
 
   // The centre is NOW — so NOW must keep moving. The 15s POLL is retired: the lattice SUBSCRIBES to
   // /api/stream (SSE, the shared events.jsonl tap) and re-projects the instant an event is written, so a
@@ -143,6 +189,9 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     if (rung != null) params.set('rung', String(rung))  // G11 SCALE: resolve over the rung's THEMES, not units
     if (poleA) params.set('pole_a', poleA)              // G9 SEPARATOR: drive the two gravities (null = the
     if (poleB) params.set('pole_b', poleB)              // binding's declared default poles)
+    if (typesSpace) params.set('types_space', typesSpace)  // NUCLEATION: drive the registry of types …
+    if (itemSpace) params.set('space', itemSpace)          // … and the content store typed against it …
+    if (dial != null) params.set('dial', String(dial))     // … and the 20/80 BIRTH dial (null = defaults)
     const url = '/api/projection' + (params.toString() ? `?${params.toString()}` : '')
     const apply = (d: Projection, markNew: boolean) => {
       if (!alive) return
@@ -170,7 +219,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       // EventSource auto-reconnects on error (gapless via Last-Event-ID) — hold the last frame meanwhile.
     })
     return () => { alive = false; clearTimeout(deb); if (es) es.close() }
-  }, [live, bind, at, center, rung, poleA, poleB, retry])
+  }, [live, bind, at, center, rung, poleA, poleB, typesSpace, itemSpace, dial, retry])
 
   // SCALE (Group 11): if the active projection has no pyramid (a non-semantic lens, or a space with no
   // built rungs), drop any held rung so the ladder + state stay honest (the bridge ignores a stray rung,
@@ -181,6 +230,8 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   // G9 separator: drop the driven poles when the active lens is NOT a separator (so they don't leak into another
   // lens — the next time the separator lens opens it starts from its declared default poles).
   useEffect(() => { if (proj && !isSeparator && (poleA || poleB)) { setPoleA(null); setPoleB(null) } }, [proj, isSeparator, poleA, poleB])
+  // leaving the nucleation lens clears its driven axes (so a stale types_space/dial can't ride into another lens)
+  useEffect(() => { if (proj && !isNucleation && (typesSpace || itemSpace || dial != null)) { setTypesSpace(null); setItemSpace(null); setDial(null) } }, [proj, isNucleation, typesSpace, itemSpace, dial])
 
   // G11 CROSSFADE: when the resolved RUNG changes (the point-set swaps wholesale), snapshot the just-drawn
   // frame as the DEPARTING set so draw() can fade it out while the new rung fades in (continuous scale move).
@@ -221,6 +272,95 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     const css = getComputedStyle(document.documentElement)
     const v = (n: string) => css.getPropertyValue(n).trim()
     const ink = v('--tx'), line = v('--line'), accent = v('--acc'), dim = v('--tx-3'), bg = v('--bg')
+
+    // NUCLEATION (the 20/80 water-law) — a self-contained face: the registry of types is the SQUARE; what fits
+    // sits INSIDE it, what does not piles up OUTSIDE, and a distinct coherent pile blooms into a CANDIDATE NEW
+    // TYPE in its own outer zone (geometrically faithful to Tim: "won't fit inside the square → pile up
+    // outside"). Drawn instead of the time/semantic/separator wheel — the radius crosses the box boundary here.
+    if (isNucleation && proj.nucleation) {
+      const nu = proj.nucleation
+      const Rb = R * R_BOX_FRAC
+      const sectors = proj.sectors
+      const nTypes = nu.type_labels.length
+      type NucZone = (typeof nu.zones)[number]
+      const zoneById = new Map<string, NucZone>(nu.zones.map(z => [z.id, z]))
+      // 1) THE REGISTRY BOX (the square) — the container of the registered types; the inscribed circle marks the
+      //    membership boundary (inside = within a type's reach). The brightest structural line (warm grey --tx-3).
+      g.strokeStyle = dim; g.globalAlpha = 0.85; g.lineWidth = 1.5; g.strokeRect(cx - Rb, cy - Rb, 2 * Rb, 2 * Rb)
+      g.strokeStyle = line; g.globalAlpha = 0.4; g.lineWidth = 1
+      g.beginPath(); g.arc(cx, cy, Rb, 0, Math.PI * 2); g.stroke()
+      // 2) TYPE SECTORS inside the box — faint spokes + labels at the box edge (the registered types, thinned by
+      //    member-share if many). The ✦ candidate zones are drawn as blooms OUTSIDE the box (step 4).
+      g.font = '10px ui-monospace, monospace'; g.textAlign = 'center'
+      const typeShare = new Map<string, number>()
+      for (const p of proj.points) if (p.inside) typeShare.set(p.sector, (typeShare.get(p.sector) || 0) + 1)
+      const labelledTypes = new Set([...typeShare.entries()].sort((a, b) => b[1] - a[1])
+        .slice(0, nTypes <= 10 ? nTypes : 8).map(e => e[0]))
+      for (let i = 0; i < nTypes && i < sectors.length; i++) {
+        const s = sectors[i], mid = (s.from + s.to) / 2
+        g.strokeStyle = line; g.globalAlpha = 0.22
+        g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.sin(s.from) * Rb, cy - Math.cos(s.from) * Rb); g.stroke()
+        if (labelledTypes.has(s.id)) {
+          const lr = Rb - 12, lx = cx + Math.sin(mid) * lr, ly = cy - Math.cos(mid) * lr + 3
+          const t = shortName(s.label), tw = g.measureText(t).width
+          g.globalAlpha = 0.78; g.fillStyle = bg; g.fillRect(lx - tw / 2 - 2, ly - 9, tw + 4, 12)
+          g.globalAlpha = 0.85; g.fillStyle = dim; g.fillText(t, lx, ly)
+        }
+      }
+      // 3) THE POINTS — inside (fits) within the box, coloured by the angle-hue (the deliberate colour-IS-geometry
+      //    exception, consistent with every other lens); piled OUTSIDE — the tail hugs the box (dim), candidate
+      //    members bloom further out coloured by STATE (born = accent gold, forming = ink, absorbed = dim). The
+      //    picked point reads gold + larger. Identity stored in posRef so pick() finds the same point.
+      const selSeqsN = new Set(sel.map(s => s.seq))
+      const posN = new Map<number, { x: number; y: number }>()
+      for (const p of proj.points) {
+        const rr = nucRadius(p) * R
+        const x = cx + Math.sin(p.theta) * rr, y = cy - Math.cos(p.theta) * rr
+        posN.set(p.seq, { x, y })
+        let col = dim, alpha = 0.32, rad = 1.8
+        if (p === picked) { col = accent; alpha = 1; rad = 4 }
+        else if (p.inside) { col = `hsl(${(p.theta * 180) / Math.PI}deg 55% 58%)`; alpha = 0.82; rad = 2.0 }
+        else if (p.pile_cluster != null) {
+          const z = zoneById.get(p.sector)
+          if (z?.born) { col = accent; alpha = 0.92; rad = 2.6 }
+          else if (z?.distinct) { col = ink; alpha = 0.72; rad = 2.2 }
+          else { col = dim; alpha = 0.5; rad = 2.0 }
+        }                                                    // else: tail (un-clustered pile) — dim, hugging box
+        g.globalAlpha = alpha; g.fillStyle = col
+        g.beginPath(); g.arc(x, y, rad, 0, Math.PI * 2); g.fill()
+        if (selSeqsN.has(p.seq)) {
+          g.globalAlpha = 0.95; g.strokeStyle = accent; g.lineWidth = 1.5
+          g.beginPath(); g.arc(x, y, rad + 3, 0, Math.PI * 2); g.stroke()
+        }
+      }
+      posRef.current = posN
+      // 4) CANDIDATE ZONES (the new types forming outside) — a ✦ marker + exemplar at each zone's outer angle, an
+      //    arc bracket marking its angular region beyond the box; BORN reads bright "✦", forming reads ink,
+      //    absorbed reads faint. The 20/80 made visible: a region that filled past the dial is a NEW TYPE.
+      g.font = '10px ui-monospace, monospace'
+      for (const z of nu.zones) {
+        const si = sectors.findIndex(s => s.id === z.id); if (si < 0) continue
+        const s = sectors[si], mid = (s.from + s.to) / 2
+        const col = z.born ? accent : z.distinct ? ink : dim
+        g.globalAlpha = z.born ? 0.55 : z.distinct ? 0.3 : 0.16; g.strokeStyle = col; g.lineWidth = z.born ? 2.2 : 1
+        g.beginPath(); g.arc(cx, cy, R * 0.95, s.from - Math.PI / 2, s.to - Math.PI / 2); g.stroke()  // the bloom's arc, at the rim (clear of the pile band)
+        const lr = R * 0.99, lx = cx + Math.sin(mid) * lr, ly = cy - Math.cos(mid) * lr + 3
+        const t = shortName(z.exemplar), tag = z.born ? `✦ ${t}` : t
+        g.textAlign = Math.sin(mid) >= -0.05 ? 'left' : 'right'
+        const tw = g.measureText(tag).width
+        const px = lx + (g.textAlign === 'left' ? 0 : 0)
+        g.globalAlpha = 0.8; g.fillStyle = bg
+        g.fillRect((g.textAlign === 'left' ? px : px - tw) - 3, ly - 9, tw + 6, 13)
+        g.globalAlpha = z.born ? 1 : z.distinct ? 0.8 : 0.5; g.fillStyle = col; g.fillText(tag, px, ly)
+      }
+      // 5) the centre — a neutral registry origin (NOT the breathing NOW; nucleation has no temporal centre) +
+      //    a quiet radial legend so the reading is unambiguous (in = fits, out = piles into a new type).
+      g.globalAlpha = 0.5; g.fillStyle = dim; g.beginPath(); g.arc(cx, cy, 3, 0, Math.PI * 2); g.fill()
+      g.globalAlpha = 0.55; g.fillStyle = dim; g.font = '9px ui-monospace, monospace'; g.textAlign = 'left'
+      g.fillText('inside = fits a type · outside = piles → new type', cx - Rb, cy - R + 12)
+      g.globalAlpha = 1
+      return
+    }
 
     // THE SQUARE / STRUCTURE half (the seed §1): the box frames the wheel (the inscribed circle radius R
     // touches its edge midpoints); inside it the DYADIC grid — recursive quadrant lines that fade as they
@@ -602,7 +742,8 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     }
     let best: ProjPoint | null = null, bd = 14 * 14
     for (const p of proj.points) {
-      const rr = radial(p) * R
+      // NUCLEATION uses its own radius (box-fraction; piled items push outside the box) — MUST match draw().
+      const rr = (isNucleation ? nucRadius(p) : radial(p)) * R
       const pth = isSeparator ? sepTheta(p) : p.theta   // MUST match draw()'s basin angle or clicks land wrong
       const x = cx + Math.sin(pth) * rr, y = cy - Math.cos(pth) * rr
       const d = (x - px) * (x - px) + (y - py) * (y - py)
@@ -649,6 +790,15 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   const sepPoles = proj?.binding?.poles
   const balTot = sep ? Math.max(sep.balance.lean_a + sep.balance.lean_b, 1) : 1
   const balAPct = sep ? Math.round((sep.balance.lean_a / balTot) * 100) : 0
+
+  // NUCLEATION readout — the type-birth report made visible: membership (fits/pile), the candidate new types
+  // (born vs forming vs absorbed, with margin-strength + the null verdict), dissolution candidates, and the
+  // dial (the 20/80 birth threshold). The candidates are ordered born → forming → absorbed, biggest first.
+  const nu = isNucleation ? proj?.nucleation : null
+  const nuCands = nu ? [...nu.candidates].sort((a, b) =>
+    (Number(b.born) - Number(a.born)) || (Number(b.distinct) - Number(a.distinct)) || (b.size - a.size)) : []
+  const nuDial = nu ? (dial ?? nu.dial) : 0.2
+  const nuAvail = nu?.available
 
   // ROBUSTNESS (G4 carry-forward): the error view must NOT be a dead-end. The poll was retired for SSE (which
   // only subscribes after a successful fetch), so a failed pull has no auto-recovery — give it an in-view ↻ retry
@@ -712,6 +862,41 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
           </div>
         </div>
       )}
+      {nu && (
+        <div className="lattice-card lc-nuc" onPointerDown={e => e.stopPropagation()}>
+          <div className="lc-nuc-head">
+            <span className="lc-nuc-title">✦ type-nucleation</span>
+            <span className="lc-nuc-route" title="the registry of types ← typed against → the content store">
+              {shortName(nu.types_space)} ◷ {shortName(proj?.binding?.space)}
+            </span>
+          </div>
+          {/* membership: the fits/pile split — the empty-square (0 fit) cross-store case reads honestly here */}
+          <div className="lc-nuc-mem" title="items that FIT a registered type (inside the square) vs those that pile OUTSIDE">
+            <b>{nu.membership.inside}</b> fit · <b>{nu.pile_total}</b> piled outside
+            {nu.pile_tail > 0 && <span className="lc-nuc-tail"> ({nu.pile_clustered} clustered, {nu.pile_tail} tail)</span>}
+          </div>
+          {/* the candidate new types — born (past the 20/80 + distinct) vs forming (distinct, not yet massed) */}
+          <div className="lc-nuc-cands">
+            {nuCands.length === 0 && <span className="lc-nuc-none">— no candidate new types in the pile</span>}
+            {nuCands.slice(0, 5).map((c, i) => (
+              <div key={i} className={'lc-nuc-cand' + (c.born ? ' born' : c.distinct ? ' forming' : ' absorbed')}
+                title={`margin ${c.margin} vs null ${c.null_p95} — ${c.distinct ? 'beats the permutation null (distinct)' : 'within noise (absorbed)'}`}>
+                <span className="lc-nuc-state">{c.born ? '✦ new' : c.distinct ? '◦ forming' : '· pile'}</span>
+                <span className="lc-nuc-ex">{shortName(c.exemplar)}</span>
+                <span className="lc-nuc-num">{c.size} · m{c.margin.toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
+          <div className="lc-nuc-verdict">
+            <b>{nu.born_count}</b> born · {nu.distinct_count} distinct · birth ≥ {nu.birth_mass} (dial {Math.round(nuDial * 100)}%)
+          </div>
+          {nu.dissolution_candidates.length > 0 && (
+            <div className="lc-nuc-diss" title="registered types whose membership thinned — a dissolution CANDIDATE, context-dependent (a sparse type may be rare, not wrong); never auto-applied">
+              ⓥ thinning: {nu.dissolution_candidates.map(d => `${shortName(d.type)} (${d.size})`).join(', ')}
+            </div>
+          )}
+        </div>
+      )}
       {pickedRow && (
         <div className="lattice-card lc-conn" onPointerDown={e => e.stopPropagation()}>
           <div className="lc-head">
@@ -764,7 +949,44 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
               ))}
             </span>
           )}
-          {isSeparator ? (
+          {isNucleation ? (
+            // NUCLEATION active: drive the two VARIABLE axes — the registry of types + the content store typed
+            // against it — and the 20/80 BIRTH dial. registry-true pickers (the bridge lists what's embedded /
+            // has a pyramid); the radial controls don't apply (radius = fit/pile, fixed). The universal law.
+            <span className="lf-nuc" title="type-nucleation: type the store against the registry; misfits pile out → new types">
+              {nuAvail && nuAvail.types_spaces.length > 0 && (
+                <select className="lf-nuc-sel" title="the REGISTRY of types (a store with a built pyramid)"
+                  value={proj?.binding?.types_space || ''} onChange={e => { setPicked(null); setTypesSpace(e.target.value) }}>
+                  {nuAvail.types_spaces.map(s => <option key={s} value={s}>types: {shortName(s)}</option>)}
+                </select>
+              )}
+              {nuAvail && nuAvail.item_spaces.length > 0 && (
+                <select className="lf-nuc-sel" title="the CONTENT store typed against the registry"
+                  value={proj?.binding?.space || ''} onChange={e => { setPicked(null); setItemSpace(e.target.value) }}>
+                  {nuAvail.item_spaces.map(s => <option key={s} value={s}>items: {shortName(s)}</option>)}
+                </select>
+              )}
+              {nuAvail && nuAvail.rungs.length > 0 && (
+                <span className="lf-rungs" title="the registry's granularity — how many types (a coarser/finer registry)">
+                  <span className="lf-ic">⊟</span>
+                  {nuAvail.rungs.map(k => (
+                    <button key={k} className={'lf-rung' + ((proj?.binding?.rung ?? 8) === k ? ' on' : '')}
+                      onClick={() => { setPicked(null); setRung(k) }} title={`${k} registered types`}>{k}</button>
+                  ))}
+                </span>
+              )}
+              <label className="lf-slider lf-nuc-dial" title="the 20/80 BIRTH threshold — how much a pile must fill to be born a new type (Tim's water-law dial)">
+                <span className="lf-ic">✦</span>
+                <input type="range" className="lf-zoom" min={0.05} max={0.6} step={0.05} value={nuDial}
+                  onChange={e => { setPicked(null); setDial(Number(e.target.value)) }} onPointerDown={e => e.stopPropagation()} />
+                <span className="lf-nuc-dialv">{Math.round(nuDial * 100)}%</span>
+              </label>
+              {(typesSpace || itemSpace || dial != null) && (
+                <button className="lc-sep-reset" onClick={() => { setTypesSpace(null); setItemSpace(null); setDial(null); setRung(null) }}
+                  title="return to this lens's default registry / store / dial">↺ default</button>
+              )}
+            </span>
+          ) : isSeparator ? (
             // SEPARATOR active: radius is |lean| (not time), angle is the sign-basin — the temporal controls
             // don't apply. A legible note states the reading; zoom still expands the near (low-lean) band.
             <span className="lf-semnote" title="radius = how strongly each item leans; left basin = pole A, right basin = pole B">

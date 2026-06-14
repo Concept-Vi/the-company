@@ -1945,6 +1945,40 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
 .lattice-card.lc-sep .lc-sep-reset { background: none; border: 1px solid var(--line); color: var(--tx-2);
   border-radius: 6px; padding: 2px 8px; font: 11px ui-monospace, monospace; cursor: pointer; white-space: nowrap; }
 .lattice-card.lc-sep .lc-sep-reset:hover { border-color: var(--acc); color: var(--acc); }
+/* NUCLEATION (the 20/80 water-law) readout — a TOP-LEFT banner (top at both widths, so it never collides with
+   the bottom-docked picked card on mobile — the same full-height trap lc-sep hit). All tokens; the only colour
+   that varies is the candidate STATE (born = --acc, forming = --tx-2, absorbed = --dim), carried by token vars. */
+.lattice-card.lc-nuc { top: 10px; bottom: auto; left: 12px; right: auto; transform: none;
+  width: min(330px, calc(100vw - 24px)); }
+.lattice-card.lc-nuc .lc-nuc-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.lattice-card.lc-nuc .lc-nuc-title { color: var(--acc); font-weight: 600; }
+.lattice-card.lc-nuc .lc-nuc-route { color: var(--dim); font: 10px ui-monospace, monospace; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; }
+.lattice-card.lc-nuc .lc-nuc-mem { margin: 5px 0; color: var(--tx-2); }
+.lattice-card.lc-nuc .lc-nuc-mem b { color: var(--tx); }
+.lattice-card.lc-nuc .lc-nuc-tail { color: var(--dim); }
+.lattice-card.lc-nuc .lc-nuc-cands { display: flex; flex-direction: column; gap: 2px; margin: 5px 0; }
+.lattice-card.lc-nuc .lc-nuc-none { color: var(--dim); }
+.lattice-card.lc-nuc .lc-nuc-cand { display: flex; align-items: baseline; gap: 7px;
+  font: 11px ui-monospace, monospace; line-height: 1.4; }
+.lattice-card.lc-nuc .lc-nuc-state { flex: 0 0 auto; color: var(--dim); }
+.lattice-card.lc-nuc .lc-nuc-cand.born .lc-nuc-state { color: var(--acc); font-weight: 600; }
+.lattice-card.lc-nuc .lc-nuc-cand.forming .lc-nuc-state { color: var(--tx-2); }
+.lattice-card.lc-nuc .lc-nuc-ex { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lattice-card.lc-nuc .lc-nuc-cand.born .lc-nuc-ex { color: var(--tx); }
+.lattice-card.lc-nuc .lc-nuc-cand.absorbed { opacity: 0.6; }
+.lattice-card.lc-nuc .lc-nuc-num { flex: 0 0 auto; color: var(--dim); }
+.lattice-card.lc-nuc .lc-nuc-verdict { color: var(--tx-2); margin-top: 4px; }
+.lattice-card.lc-nuc .lc-nuc-verdict b { color: var(--acc); }
+.lattice-card.lc-nuc .lc-nuc-diss { color: var(--dim); margin-top: 5px; border-top: 1px solid var(--line);
+  padding-top: 5px; line-height: 1.4; }
+/* the nucleation foot controls — registry/store selects, the rung buttons, the 20/80 dial */
+.lattice-foot .lf-nuc { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.lattice-foot .lf-nuc-sel { background: none; border: 1px solid var(--line); color: var(--tx-2);
+  border-radius: 6px; padding: 2px 5px; font: 10px ui-monospace, monospace; cursor: pointer; }
+.lattice-foot .lf-nuc-sel:hover { border-color: var(--acc); color: var(--acc); }
+.lattice-foot .lf-nuc-dial { gap: 4px; }
+.lattice-foot .lf-nuc-dialv { color: var(--acc); font: 10px ui-monospace, monospace; min-width: 26px; }
 .lattice-wrap .lattice-hint { position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
   max-width: min(92%, 520px); pointer-events: auto; background: var(--panel); color: var(--tx-2);
   border: 1px solid var(--acc); border-radius: 8px; padding: 6px 11px; text-align: center;

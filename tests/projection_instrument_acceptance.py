@@ -27,7 +27,7 @@ from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from runtime.projection import BindingRegistry, project, separation_report, TAU
+from runtime.projection import BindingRegistry, project, separation_report, nucleation_report, TAU
 
 PASS = 0
 FAIL = 0
@@ -498,6 +498,138 @@ _one = separation_report([0.5, 0.6, 0.7, 0.8], [0.25, 0.10, 0.20, 0.15],   # eve
 check("separation_report: a ONE-SIDED field (a pole attracting nobody, minority==0) is REFUSED (separates False)",
       _one["separates"] is False and _one["balance"]["minority_frac"] == 0.0,
       f"one-sided={_one['separates']}, balance={_one['balance']}")
+
+# ============================================================================================
+# §14 — TYPE-NUCLEATION (the 20/80 water-law — Tim Geldard's growth law). Content is typed against a registry
+# of types; misfits pile up OUTSIDE the square; a DISTINCT coherent pile past a threshold is born a NEW TYPE.
+# The dispositive proof is NON-CIRCULAR by construction (synthetic, ground-truth-known): an injected genuinely
+# DISTINCT region MUST nucleate; pure NOISE must NOT; the verdict rests on the silhouette margin + a permutation
+# NULL (never a tuned cosine floor); the dial moves the BIRTH line; membership is the type's own extent.
+# ============================================================================================
+print("\n§14 — the 20/80 water-law: type-nucleation (distinct→born, noise→refused)")
+
+import random as _rnd
+
+
+def _n(v):
+    m = math.sqrt(sum(x * x for x in v)) or 1.0
+    return [x / m for x in v]
+
+
+def _build_nuc_fixture(seed=7, dim=24, n_types=3, per_type=12, blob=10, noise=8, blob_jit=0.10):
+    """Synthetic registry + content with KNOWN ground truth: `n_types` well-separated type seeds (each with
+    `per_type` near members → the registry's centroids + admission radii), plus an INJECTED distinct coherent
+    blob (a 4th region, no type — MUST nucleate) and scattered NOISE (MUST NOT). Returns the nucleation_report
+    args + the ref-sets so the test can assert WHICH items nucleated (non-circular: the blob is not a type)."""
+    rng = _rnd.Random(seed)
+    seeds = [_n([rng.gauss(0, 1) for _ in range(dim)]) for _ in range(n_types)]
+    type_vecs, type_radii, type_sizes, type_labels = [], [], [], []
+    items, refs, blob_refs, noise_refs = [], [], [], []
+    for ti, s in enumerate(seeds):
+        mem = [_n([b + 0.12 * rng.gauss(0, 1) for b in s]) for _ in range(per_type)]
+        cen = _n([sum(v[i] for v in mem) for i in range(dim)])
+        type_vecs.append(cen)
+
+        def _c(a, b):
+            return sum(x * y for x, y in zip(a, b))
+        mc = sorted(_c(m, cen) for m in mem)
+        type_radii.append(mc[max(0, len(mc) // 10)])
+        type_sizes.append(per_type)
+        type_labels.append(f"type{ti}")
+        for j, m in enumerate(mem):
+            items.append(m); refs.append(f"code://type{ti}/m{j}.py")
+    bseed = _n([rng.gauss(0, 1) for _ in range(dim)])
+    for j in range(blob):
+        items.append(_n([b + blob_jit * rng.gauss(0, 1) for b in bseed]))
+        refs.append(f"code://NEWTYPE/b{j}.py"); blob_refs.append(f"code://NEWTYPE/b{j}.py")
+    for j in range(noise):
+        items.append(_n([rng.gauss(0, 1) for _ in range(dim)]))
+        refs.append(f"code://noise/z{j}.py"); noise_refs.append(f"code://noise/z{j}.py")
+    return dict(item_vecs=items, item_refs=refs, type_vecs=type_vecs, type_labels=type_labels,
+                type_radii=type_radii, type_sizes=type_sizes), set(blob_refs), set(noise_refs)
+
+
+_fx, _blob, _noise = _build_nuc_fixture()
+_rep = nucleation_report(**_fx, dial=0.2, perms=160)
+
+# POSITIVE CONTROL (dispositive, non-circular): the injected distinct blob nucleates AND is born a new type.
+_born = [c for c in _rep["candidates"] if c["born"]]
+_blob_cand = [c for c in _rep["candidates"]
+              if sum(1 for m in c["members"] if m in _blob) >= max(3, len(_blob) // 2)]
+check("§14 nucleation: an injected DISTINCT region is BORN a new type (non-circular positive control)",
+      len(_blob_cand) >= 1 and _blob_cand[0]["born"] and _blob_cand[0]["distinct"],
+      f"born={[ (c['size'],c['margin'],c['born']) for c in _rep['candidates']]}")
+check("§14 nucleation: the born candidate's margin BEATS the permutation null (structural, not a tuned floor)",
+      len(_blob_cand) >= 1 and _blob_cand[0]["margin"] > _blob_cand[0]["null_p95"])
+check("§14 nucleation: born_count ≥ 1 and the report names the distinct region's members",
+      _rep["born_count"] >= 1 and any(m in _blob for c in _rep["candidates"] if c["born"] for m in c["members"]))
+
+# NEGATIVE CONTROL: no candidate that is purely NOISE is declared born (noise must not nucleate a type).
+_noise_born = [c for c in _rep["candidates"]
+               if c["born"] and sum(1 for m in c["members"] if m in _noise) > len(c["members"]) * 0.6]
+check("§14 nucleation: a pure-NOISE pile is NOT born a type (the null refuses it)", len(_noise_born) == 0,
+      f"noise-born={[ (c['size'],c['margin'],c['null_p95']) for c in _noise_born]}")
+
+# TRUTHFUL MEMBERSHIP: the type members sit INSIDE (within their type's extent); the blob+noise pile OUTSIDE.
+check("§14 nucleation: most type members are INSIDE (membership = the type's own extent, not a global floor)",
+      _rep["membership"]["inside"] >= int(0.7 * (3 * 12)),
+      f"inside={_rep['membership']['inside']} of {3*12} members")
+check("§14 nucleation: the injected blob + noise pile OUTSIDE (pile ≥ blob+noise)",
+      _rep["pile_total"] >= 10 + 8 - 2)
+
+# THE DIAL (Tim's 20/80) MOVES the born/forming line — distinctness is independent of it; mass is not.
+_lo = nucleation_report(**_fx, dial=0.05, perms=120)
+_hi = nucleation_report(**_fx, dial=0.95, perms=120)
+check("§14 nucleation: a LOW dial births at least as many types as a HIGH dial (the 20/80 birth threshold)",
+      _lo["born_count"] >= _hi["born_count"] and _lo["birth_mass"] <= _hi["birth_mass"],
+      f"lo born={_lo['born_count']}@mass{_lo['birth_mass']}  hi born={_hi['born_count']}@mass{_hi['birth_mass']}")
+check("§14 nucleation: the distinct_count does NOT depend on the dial (structural gate is dial-independent)",
+      _lo["distinct_count"] == _hi["distinct_count"])
+
+# DISSOLUTION (context-dependent, surfaced not auto): a tiny registered type is flagged a candidate.
+_fx2 = dict(_fx)
+_fx2 = {**_fx, "type_sizes": [12, 12, 2]}                 # type2 thinned to 2 → below the low-tail floor
+_repd = nucleation_report(**_fx2, dial=0.2, perms=60)
+check("§14 nucleation: a THINNED registered type is surfaced as a dissolution CANDIDATE (context-dependent)",
+      any(x["type"] == "type2" for x in _repd["dissolution_candidates"])
+      and "context-dependent" in (_repd["dissolution_candidates"][0]["note"] if _repd["dissolution_candidates"] else ""))
+
+# BOUNDED PILE: the un-clustered tail is SURFACED, never silently dropped (no silent cap).
+_repcap = nucleation_report(**_fx, dial=0.2, cap=8, perms=40)
+check("§14 nucleation: a bounded clustered pile SURFACES the un-clustered tail (no silent cap)",
+      _repcap["pile_clustered"] <= 8 and _repcap["pile_tail"] == _repcap["pile_total"] - _repcap["pile_clustered"]
+      and _repcap["pile_tail"] > 0)
+
+# FAIL-LOUD: nucleation with no registry of types RAISES (a registry of nothing cannot be under-covered).
+try:
+    nucleation_report(_fx["item_vecs"], _fx["item_refs"], [], [], [], [])
+    check("§14 nucleation: empty type registry RAISES (fail loud)", False, "did not raise")
+except ValueError:
+    check("§14 nucleation: empty type registry RAISES (fail loud)", True)
+
+# project() GEOMETRY: inside points sit r<1 (in the square), piled points r>1 (OUTSIDE), sectors = types+zones.
+_evs = [{"seq": i, "kind": "corpus.record", "projection": "synth", "ts": NOW.isoformat(),
+         "source_address": _fx["item_refs"][i], "address": f"run://r{i}"} for i in range(len(_fx["item_refs"]))]
+_binding = {"id": "by_nucleation", "label": "Type-nucleation", "angle_from": "nucleation",
+            "radius_from": "nucleation", "space": "synth"}
+_out = project(_evs, binding=_binding, now=NOW, nucleation=_rep)
+_in_pts = [p for p in _out["points"] if p.get("inside")]
+_pile_pts = [p for p in _out["points"] if p.get("inside") is False]
+check("§14 projection: inside points fall INSIDE the square (r<1) and piled points OUTSIDE it (r>1)",
+      len(_in_pts) > 0 and all(p["r"] < 1.0 for p in _in_pts)
+      and len(_pile_pts) > 0 and all(p["r"] > 1.0 for p in _pile_pts))
+check("§14 projection: sectors = the registry types PLUS one outer ZONE per candidate (pile forms outside)",
+      _out["n"] == len(_rep["type_labels"]) + len(_rep["zones"])
+      and any(s["id"].startswith("✦") for s in _out["sectors"]))
+check("§14 projection: the nucleation report rides on the result (per_item omitted — it is on the points)",
+      "nucleation" in _out and "per_item" not in _out["nucleation"] and "candidates" in _out["nucleation"])
+
+# FAIL-LOUD: project() in nucleation mode with NO resolved report RAISES (never a silent fallback to time).
+try:
+    project(_evs, binding=_binding, now=NOW, nucleation=None)
+    check("§14 projection: nucleation mode with no report RAISES (fail loud)", False, "did not raise")
+except ValueError:
+    check("§14 projection: nucleation mode with no report RAISES (fail loud)", True)
 
 print(f"\n{'PASS' if FAIL == 0 else 'FAIL'} — {PASS} passed, {FAIL} failed")
 sys.exit(0 if FAIL == 0 else 1)

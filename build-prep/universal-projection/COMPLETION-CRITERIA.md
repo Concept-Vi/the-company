@@ -27,11 +27,16 @@ ruins the system"). **Expand-before-harden:** the brain docs are captured design
 
 ---
 
-## BUILD STATUS — 2026-06-14 (NOT "build complete" — ONE honest item remains, genuinely Tim-gated)
+## BUILD STATUS — 2026-06-14 · BUILD COMPLETE — verified live, all real data, drivable, interactive
 
-Groups 1–11 are all ✅, both faces, design-critic-passed. Both loop TARGETs (Group 10 then Group 9) are
-✅ to THE BAR. The ONLY remaining item (#12) is genuinely gated on a Tim fit-test — green-painting it
-would be the dishonesty this loop exists to avoid. This is a STATUS, not a completion claim.
+Groups 1–12 are all ✅, both faces, to THE BAR. The last item (#12 — the 20/80 water-law / TYPE-NUCLEATION)
+is now BUILT, not gated: Tim unblocked it 2026-06-14 by giving the operational law directly ("scan content →
+typed units → fall into the registry's types; what doesn't fit piles up OUTSIDE the square; past a threshold a
+DISTINCT pile becomes a new type; the inverse — a type thinning below — is context-dependent, not a hard rule;
+the laws underneath are the invariant; nothing is for a specific purpose — choosing one is automatic failure").
+The old "Tim-gated on the forbidden-definition / the second axis" framing was MY inversion of his delegation,
+now corrected. Built as a PURE READ, registry-true, NO tuned cosine floor, with the structural honesty the
+fifth gate established. This IS a completion claim — see the TYPE-NUCLEATION entry under GENUINELY REMAINING.
 
 - **INSTRUMENT half — ✅ COMPLETE.** Group 1 (the variable-engine floor / acceptance suite), Group 5 (the
   FORM face on the corpus design system), Group 3 (time-freed/relative centre + scrubber), Group 4
@@ -44,11 +49,14 @@ would be the dishonesty this loop exists to avoid. This is a STATUS, not a compl
   two-gravity separator) — ✅ 2026-06-14 (Tim unblocked; general variable-two-pole read, AI supplies its own
   pole): the fifth gate + the two-basin drivable FORM (balance bar, pole-picker, reset), verified to THE BAR,
   critic PASS both viewports. Both faces each.
-- **THE ONE REMAINING (#12 — small registries + gate surface + 20/80 water-law) — 🔴 genuinely Tim-gated.**
-  Re-examined this fire: NOT gated on relations (Tim gave those → Group 10 shipped). The real open gates are
-  Tim's to set, by his own SEED: the operational definition of "forbidden" (§10 "Tim: you tell me"; §7
-  "deliberately unresolved"; the deep-holes growth law "awaiting Tim's fit-test") and which two AXES are the
-  spine (§7 "the other is open"). Deferred to a fit-test, not parked out of caution; not a loop target.
+- **#12 — small registries + gate surface + 20/80 water-law (TYPE-NUCLEATION) — ✅ DONE (2026-06-14, both faces, to THE BAR).**
+  Tim gave the law directly (it was never really Tim-gated — I'd inverted his delegation). Built as a PURE-READ
+  nucleation reading: type the items of a content store against a REGISTRY OF TYPES (scale-pyramid centroids);
+  membership = each type's OWN admission extent (truthful — cross-store → empty square, same-store → populated +
+  outliers; NOT a tuned floor); the misfits pile up OUTSIDE the box; a pile-cluster is a CANDIDATE NEW TYPE when
+  its silhouette margin (members bind to each other more than to any existing type) BEATS a permutation-null (no
+  magic constant); the 20/80 DIAL is the BIRTH threshold (mass to be born), surfaced + drivable; a thinning type
+  is a context-dependent dissolution candidate. See the TYPE-NUCLEATION entry under GENUINELY REMAINING.
 - **GENUINELY REMAINING (all honestly gated — the loop must NOT churn on these):**
   · **Group 9** (two-gravity separator) — ✅ DONE (2026-06-14, both faces, to THE BAR). SUPERSEDED the AI-tells
     gate: Tim "there is no single purpose" → general variable-two-pole read, AI supplies its own pole. FUNCTION:
@@ -63,24 +71,34 @@ would be the dishonesty this loop exists to avoid. This is a STATUS, not a compl
     explore) shipped; design-critic RESOLVED both viewports. The prior "needs an acyclic backbone, three data
     sources fail" was my self-imposed total-order constraint — retired by Tim's "nonsequential IS valid / only
     directional edges type." (The relation_types vocabulary has no instances yet — a growth front, not a gap.)
-  · **The small registries + gate surface + 20/80 water-law** — 🔴, GENUINELY Tim-gated (re-examined 2026-06-14,
-    this fire — and the gate is REAL, not my caution). The 20/80 water-law is TYPE-NUCLEATION: a type/axis is
-    BORN where the FORBIDDEN-ZONE density (gap-pressure) fills past threshold (SEED: "forbidden-zone density =
-    gap-pressure = the instruction to GROW A NEW AXIS"; "new types are born at the deep holes"). The strain
-    quantity exists (Group 7 computes per-point structure↔meaning incommensurability). BUT the gate is NOT the
-    relations model (Tim GAVE that — Group 10 shipped on it); the stale "gated on relations" claim is CORRECTED.
-    The real, still-open gates are two things Tim's own SEED reserves to him:
-      (1) **the operational definition of "forbidden"** — SEED §10 header is literally "THE FORBIDDEN,
-          operationally (Tim: 'you tell me')", and §7 lists it under "Open tensions (expand-before-harden —
-          DELIBERATELY unresolved)" with two candidate readings ("likely both"). The new-types-at-deep-holes
-          growth law is flagged in CONVERGENCE-OBJECT 65/75 as "the most mine … explicitly awaiting Tim's
-          fit-test … if right it is the system's growth law."
-      (2) **which two AXES are the spine** — SEED §7: "Time is the obvious candidate for one. The other is
-          open … choosing them is choosing the system's spine."
-    Building a strain-density read and calling it the water-law/type-nucleation would harden a definition Tim
-    deliberately left open — green-paint of his core science (the loudest place for "half-working damages
-    credibility"). So this is correctly DEFERRED to a Tim fit-test, not parked out of caution. It is also NOT
-    a loop TARGET (the loop targets were Group 10 + Group 9, both ✅).
+  · **The small registries + gate surface + 20/80 water-law (TYPE-NUCLEATION)** — ✅ DONE (2026-06-14, both faces,
+    to THE BAR). Tim UNBLOCKED it by giving the law directly (verbatim intent): "scan content → typed units →
+    fall into the registry's types; what doesn't fit the registered types won't fit inside the square, so they
+    pile up OUTSIDE; past a THRESHOLD a DISTINCT pile becomes a new type (a heap of leftovers is NOT enough — it
+    must be a distinct type); the inverse — a registered type that falls below — is context-dependent, not a hard
+    rule; the laws underneath are the invariant; NOTHING is for a specific purpose — choosing one is automatic
+    failure." So my prior "Tim-gated on the forbidden-definition / the second axis" was an INVERSION of his
+    delegation (now corrected below). Built (commit this beat):
+      · FUNCTION — `projection.nucleation_report()` + `radius_from='nucleation'`: fit each item to the nearest
+        registered type; MEMBERSHIP = the type's OWN admission extent (truthful, NOT a tuned global floor — the
+        all-pile/all-fit degeneracy the data forced me away from); cluster the bounded pile; a candidate is
+        DISTINCT when its silhouette margin (mean member→own-centroid cos − mean member→nearest-type cos) BEATS a
+        PERMUTATION-NULL over the pile (parameter-free, the no-magic-constant discipline the fifth gate set); BORN
+        when distinct AND its mass passes the 20/80 dial; thinning types → context-dependent dissolution
+        candidates. `bridge._nucleation_projection` resolves the registry centroids + item vectors (cross-instance:
+        types from one store, items from another → non-circular); `bindings/by_nucleation.py`; project() stays pure.
+      · FORM — the registry is the SQUARE; fits sit inside, misfits pile in a RING OUTSIDE the box, distinct piles
+        bloom as CANDIDATE NEW TYPES at the rim (✦ born / ◦ forming / · pile), a readout card (membership · the
+        candidates with margin-strength · dissolution), and DRIVE controls: the registry picker, the store picker,
+        the rung, and the 20/80 dial (visibly moves the born line). design-critic + design-lint (0 lattice literals).
+      · VERIFIED TO THE BAR — live (curl), all real data (3 type-registries × 5 stores, the WHOLE event corpus, no
+        toy slice), drivable (the pickers + dial re-read live), interactive. Acceptance §14 (15 checks): a
+        genuinely-distinct injected region MUST nucleate + beat the null; noise must NOT; truthful membership; the
+        dial moves birth; dissolution surfaced; bounded-tail surfaced; fail-loud both layers. 91/91 suite green.
+      · HONEST BOUNDARY (stated, not implied-away): this is SEMANTIC nucleation over the EMBEDDED data stores; the
+        symbolic pile-outside for a code-declared type-registry (events naming no registered row) is Group 10's
+        '—' remainder; distinct-type CLUSTERING is scoped to where vectors exist (a growth front otherwise). The
+        "second axis / which two axes are the spine" remains a genuinely open SEED question (Tim's, not a blocker).
 - **VERIFIED THIS CONSOLIDATION:** 16/16 broad-regression suites green (projection ×4, drift, bridge_routes,
   conv_index ×3, space_embed, embeddings, durability, events, fs_session_guard, set_ref_atomic, bridge_session);
   live surface all 5 bindings resolve (5994 pts), scrubber shifts `now`, semantic-pending shows the scale
@@ -414,7 +432,54 @@ distinctness test below was locked BEFORE the render.)
   /api/scale/build {space}` (registered in the bridge route table → api_verbs; fail-loud on empty/thin
   space), not a hidden script; so the ladder can't silently vanish with no recourse if .data is rebuilt.
 
-## GROUP 12 · MODEL CALLS — DISSOLVED (2026-06-13; Tim confirmed "your logic was actually all correct")
+## GROUP 12 · ABILITY — TYPE-NUCLEATION (the 20/80 water-law) ✅ (2026-06-14; both faces, to THE BAR)
+Tim Geldard's growth law, given directly (his words): content is processed into typed UNITS; dropped into the
+instrument they fall into the REGISTRY's types; what does NOT fit the registered types won't fit inside the
+square, so they pile up OUTSIDE; when a DISTINCT pile accumulates past a threshold it becomes a NEW TYPE (a heap
+of leftovers is not enough — it must be a distinct type); the inverse (a registered type that thins below) is
+context-dependent, NOT a hard rule; the laws underneath are the invariant; NOTHING is for a specific purpose —
+choosing one is automatic failure. A PURE READ — registry-true, every axis a variable.
+commits: this beat. Built on Group 8 (the embedded spaces) + Group 11 (the scale-pyramid centroids = the
+data-born registry of types) + the fifth-gate honesty discipline (Group 9).
+- **FUNCTION** ✅ by use — `runtime/projection.py`:
+  · `nucleation_report(item_vecs, refs, type_vecs, type_labels, type_radii, type_sizes, dial)` — the type-birth
+    witness. MEMBERSHIP = each type's OWN admission extent (a low percentile of its members' cosines), so "fits"
+    means actually within a type's empirical reach — NOT a tuned global cosine floor (the empirical data forced
+    this: a global floor made every cross-store field 100% pile = the all-pile degeneracy; the per-type extent is
+    truthful — cross-store → an honest empty square, same-store → populated + the natural outliers). DISTINCTNESS
+    = the per-pile-cluster silhouette MARGIN (mean member→own-centroid cos − mean member→nearest-existing-type
+    cos: members bind to each other more than to any existing type) — surfaced as STRENGTH; the binary
+    distinct-vs-noise BEATS a PERMUTATION-NULL over the pile (parameter-free; dissolves the margin≈0 knife-edge a
+    bare margin>0 would flap on). BIRTH = the 20/80 DIAL = a distinct cluster is BORN once its mass passes
+    dial×(clustered pile) ("fills past ~20/80"); below it, FORMING. DISSOLUTION = low-tail types surfaced as
+    context-dependent candidates, never auto-applied. Bounded (agglomerate is O(n³)) → clusters the worst-fitting
+    `cap`; the tail is SURFACED, never silently dropped. `radius_from='nucleation'` lays the geometry (inside the
+    box for fits, OUTSIDE for the pile, candidate ZONES for the blooms). `runtime/bridge.py:_nucleation_projection`
+    resolves the registry centroids (scale.rung_points) + admission radii (from members) + the item vectors
+    (CROSS-INSTANCE default: types from one store, items from another → non-circular) and rides them into the
+    pure project(); drivable `?types_space=&space=&rung=&dial=`. `bindings/by_nucleation.py` (default topics-types
+    × repo-items). Verified live: cross-store topics×repo → 0 fit / 657 pile → 2 born (wire_trigger m0.23,
+    qwen3tts m0.25); same-store topics×topics → 149 fit / 13 pile (honest near-null); 3 type-registries
+    (topics/principles/worldview) × 5 stores all resolve; the dial visibly moves born (0.1→2, 0.2→1, 0.3→0).
+    `tests/projection_instrument_acceptance.py` §14 (15 checks, 91 total): a genuinely-distinct injected region
+    MUST nucleate + beat the null; noise must NOT; truthful membership; the dial moves birth; dissolution
+    surfaced; bounded-tail surfaced; fail-loud both layers; the geometry (inside r<1, pile r>1, sectors=types+zones).
+- **FORM** ✅ by rubric — the registry is the SQUARE; fits sit inside it; misfits pile in a RING clearly OUTSIDE
+  the box (beyond the corners — geometrically faithful to "piles up outside"); DISTINCT piles bloom as CANDIDATE
+  NEW TYPES at the rim (✦ born = gold / ◦ forming = ink / · pile = dim, with an arc bracket + exemplar label). A
+  readout card (membership: N fit / N piled + tail; the candidates with margin-strength + born/forming; the
+  verdict; dissolution candidates). DRIVE-TO-EXPLORE: a registry picker, a store picker, the rung, and the 20/80
+  DIAL (all registry-true — the bridge lists what's embedded / has a pyramid; new stores appear with no code
+  edit); pick a point → its card. The empty-square cross-store case reads as intentional ("none of this fits —
+  here are the types it wants"). design-lint: LatticeView contribution 0 off-token literals; app.css 0 added
+  (the 2 #fff are the pre-existing white-paper). Verified by driving in chrome-devtools at 1440×900 AND 390×844
+  (the card is a top banner, never the lc-sep full-height bug; pile clearly outside the box after a geometry fix).
+- **HONEST BOUNDARY** — this is SEMANTIC nucleation over the EMBEDDED data stores; the symbolic pile-outside for
+  a code-declared type-registry (events naming no registered row) is Group 10's '—' remainder; distinct-type
+  CLUSTERING is scoped to where vectors exist (a growth front for purely-symbolic registries). Unifying the
+  symbolic remainder + the semantic pile as one "pressure" is Tim's "it's not either/or, it depends on context."
+
+## MODEL CALLS — DISSOLVED (2026-06-13; Tim confirmed "your logic was actually all correct")
 See SEED-SCALE-PRIMES-SEPARATOR.md §17. The gate is GONE — every "model call" was the lead trying to
 freeze a variable Tim deliberately left free (the hardcoding reflex). Resolution:
 - **Call 1 (register = prime/divisor lattice?) — INVALID.** Not a separate formalism; the equation
@@ -426,12 +491,12 @@ freeze a variable Tim deliberately left free (the hardcoding reflex). Resolution
   purely Tim, so the Tim-pole is the origin+gradient, NOT corpus samples. The ONLY input is Tim
   describing the AI-tells (volunteered). → Group 9 is UN-GATED.
 - **Call 4 (harmonics) — ANSWERED.** "As one instance" — a lens, not the core; spectrum stays out.
-- Genuinely-open growth fronts (not gates, not blockers): k (the dimension); prioritization-at-scale;
-  the 20/80 dial / promotion gesture — these stub honestly and refine with use. CAVEAT (2026-06-14): "stub
-  honestly" does NOT license a stand-in that misrepresents the concept. The 20/80 is TYPE-NUCLEATION (a type
-  is born when a region fills past ~20/80 — brain doc 303/327-333/503), NOT a visual prioritization/emphasis
-  dial; and its substrate (registry-row relations / typed edges) is the part Tim states he has NOT formalized
-  (line 495). So it is gated on Tim's formalization, not a free stub — building a density dial here = green-paint.
+- Genuinely-open growth fronts (not gates, not blockers): k (the dimension); prioritization-at-scale.
+  RESOLVED (2026-06-14): the 20/80 / TYPE-NUCLEATION is now BUILT (Tim gave the law directly — see GROUP 12 and
+  the TYPE-NUCLEATION entry). It is NOT a visual prioritization dial and NOT a green-paint density stub: it types
+  content against a registry of types, piles the misfits OUTSIDE the square, and a DISTINCT pile (silhouette
+  margin beats a permutation-null — no tuned floor) past the 20/80 birth-mass becomes a candidate new type. The
+  earlier "gated on Tim's formalization" caveat is superseded by his direct statement of the law.
 **Consequence: NO build item is blocked awaiting a Tim decision. The whole sequence is buildable now.**
 
 ---
@@ -454,9 +519,12 @@ freeze a variable Tim deliberately left free (the hardcoding reflex). Resolution
     + the fifth gate + the two-basin drivable FORM). Tim retired the old "Model Call 2 / AI-tells" gate.
 11. **Group 11** — ✅ DONE — the multi-scale pyramid as the SCALE axis: ward-clustered meaning-rung centroids
     (NOT lineage — evidence-killed), nested rungs, a crossfading rung ladder, design-critic PASS both faces.
-12. **The small registries + gate surface + 20/80 water-law** — 🔴 GENUINELY Tim-gated (re-examined this fire).
-    NOT gated on relations (Tim GAVE relations → Group 10 shipped; that stale claim is corrected). The REAL
-    open gates, reserved to Tim by his own SEED: (1) the operational definition of "forbidden" (§10 "Tim: you
-    tell me"; §7 "deliberately unresolved"; new-types-at-deep-holes "awaiting Tim's fit-test"), and (2) WHICH
-    TWO AXES are the spine (§7 "the other is open"). Building it now = green-painting his core science. NOT a
-    loop TARGET (the targets were Group 10 + Group 9).
+12. **The small registries + gate surface + 20/80 water-law (TYPE-NUCLEATION)** — ✅ DONE (2026-06-14, both faces,
+    to THE BAR). Tim gave the law directly (the "Tim-gated on forbidden-definition / second axis" framing was MY
+    inversion of his delegation, now corrected). Built as a PURE READ: type a content store against a registry of
+    types; misfits pile OUTSIDE the square; a DISTINCT pile (silhouette margin beats a permutation-null — no tuned
+    floor) past the 20/80 birth-mass becomes a candidate new type; thinning types → context-dependent dissolution.
+    `nucleation_report` + `radius_from='nucleation'` + `_nucleation_projection` + `bindings/by_nucleation.py` +
+    the FORM (square / pile-outside / candidate blooms / drive controls + dial) + §14 acceptance (15 checks).
+    Verified live across 3 type-registries × 5 stores, both viewports. (The "second axis" stays a genuinely open
+    SEED question — Tim's, not a blocker.)
