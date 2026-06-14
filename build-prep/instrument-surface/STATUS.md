@@ -71,6 +71,9 @@ and "the types/divisions of the circle [should be built in] so the data points c
 - **STRAIN (G7) — BUILT** (`de468f8`). In the semantic+centred state each point draws a radial segment from its
   FILED radius (r_struct, an open tick) to its MEANS radius (r, the dot); length+opacity = structure↔meaning
   divergence (the forbidden tension); coherent points have ~no segment. The central tension, visible. Both viewports.
+  Design-critic PASS ("most conceptually loaded view in the set… an elegant tension field, the density earns its
+  meaning"); its #1 (longest segments reading as axes near the hub) softened (`cap`). Remaining polish: make strain
+  SIGNED (which way it pulls), de-knot the densest zone, selection tether.
 - **NEXT BEATS (per the equation, sequenced):** the FORBIDDEN operationalized (§10 — circle-without-square =
   gate-inbox; square-without-circle = drift; the corner = grow-the-box); the live SSE spine (the present moves);
   the project system (pointable at anything, company = starter).
