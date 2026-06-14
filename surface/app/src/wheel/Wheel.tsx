@@ -82,6 +82,40 @@ export function Wheel({
               )
             })}
 
+          {/* STRAIN (Group 7, the seed §3) — the radial tension between where a point is FILED (its
+             structural/repo-tree radius r_struct) and where it MEANS to be (its semantic radius r), drawn at
+             the point's angle. Present only in the semantic lens WITH a centre. Longer + stronger = more
+             divergence between structure and meaning = the forbidden tension. The open tick marks the filed
+             position; the dot (below) sits at the meaning position. Animates with the re-projection (no teleport). */}
+          {proj.points.map((p) => {
+            if (p.strain == null || p.r_struct == null) return null
+            const a = placePolar(p.theta, p.r_struct, cx, cy, R) // filed
+            const b = placePolar(p.theta, p.r, cx, cy, R) // means
+            const op = Math.min(0.16 + p.strain * 0.9, 0.7)
+            return (
+              <g key={`strain-${p.seq}`} {...stamp(pointAddress(p))}>
+                <motion.line
+                  initial={{ x1: a.x, y1: a.y, x2: b.x, y2: b.y, opacity: 0 }}
+                  animate={{ x1: a.x, y1: a.y, x2: b.x, y2: b.y, opacity: 1 }}
+                  transition={transition('move', feel)}
+                  stroke="var(--pig-strain)"
+                  strokeOpacity={op}
+                  strokeWidth={1}
+                />
+                <motion.circle
+                  initial={{ cx: a.x, cy: a.y }}
+                  animate={{ cx: a.x, cy: a.y }}
+                  transition={transition('move', feel)}
+                  r={1.6}
+                  fill="none"
+                  stroke="var(--pig-strain)"
+                  strokeOpacity={op * 0.8}
+                  strokeWidth={1}
+                />
+              </g>
+            )
+          })}
+
           {/* the centre — a small soft mark (the origin / "now") */}
           <circle cx={cx} cy={cy} r={3.5} fill="var(--ink-faint)" />
 
