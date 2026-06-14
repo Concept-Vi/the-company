@@ -35,13 +35,27 @@ is; this is the antidote. Items move UP only on real evidence (a run, a diff rea
   `transport`; inject target = `supervisor_session`; fields match verbatim. **Write-path = read-path
   CONFIRMED.** (Caught + cleared a real scare — the two modules name that dir `CHANNELS_DIR` for
   DIFFERENT paths; see FINDINGS. Behavior is correct.)
+- ★ PROFILE SELF-WRITE (D2, Tim-resolved: "the agent writes their own profile") — channel server gains a
+  `profile` tool: a session writes its OWN entry (model/role/focus/expertise) — it knows its handle, so
+  whatever handle was assigned is fine. LEAD-VERIFIED by use: 8/8 real end-to-end test (spawn server →
+  MCP handshake → tools/call profile → on-disk entry) — self-fields land, transport fields (pid/port/
+  handle) PRESERVED. channels/profile_test.mjs. SessionStart hook prepared + JSON-validated (boundary —
+  Tim wires it; channels/profile-hook.sh). Committed with company_channel.mjs.
+- ★★ SESSION-SPLICING / CLONE-FLEET — THE HALLMARK, PROVEN LIVE (Tim-direct "launch all of them").
+  Lead launched point-in-time clones of session bda8ce28 + DM'd them across the fabric, BOTH cut types:
+  compact:1 (boundary) → clone-ad2a7a33 answered from its context (the CC integration build); uuid-cut
+  (mid-conversation, L7489 engine-room) → clone-2cece509 answered coherently ("Mirror-Registry System,
+  decision A"). Reply folds back AND pushes to the asker's live conversation. Full chain proven: clone a
+  past moment → live channel member → DM → answers FROM that past → routes back. No separate probe
+  needed — the round-trip IS the validation. All 16 roster cut-uuids RESOLVED (both axes; full uuids from
+  the transcript). Channel `advisors` created (the new named-channel registry, in use). manifest:
+  channel-memory/map/launched-fleet.json. CONSTRAINT FOUND: supervisor caps LIVE sessions at 3 (resource
+  guard, configurable) → 3 advisors live now; the rest are launch-on-demand within the cap (see DECISIONS #4).
 
 **🔨 BUILT, NOT YET LEAD-VERIFIED END-TO-END** (committed + isolated-tests-green OR actively building;
 the lead has NOT confirmed the cross-component path by use — these are the morning's real watch-items):
-- Supervised wire LIVE round-trip — the ONE step NOT provable tonight: a real supervised clone launched
-  + DM'd + its reply folded back. Requires spawning a `claude -p` clone = the GATED clone-fleet action
-  (+ the autonomous-spawn boundary). Code + seam + schema + 52/52 are all green; only the live-process
-  round-trip is unproven, and Tim's morning clone-fleet launch exercises it naturally. Not faked.
+- ✅ Supervised wire LIVE round-trip — RESOLVED, now PROVEN (Tim green-lit the launch directly; lead
+  spawned clones + round-tripped both cut types). See the SESSION-SPLICING entry in PROVEN above.
 - Recall-fork Phase-A foundation (w7gld9f3t DONE, PARTIAL — honest): VERIFIED-by-use = repo cloned+isolated to ~/.recollection (B-5 comingling landmine handled; live 11.5GB store proven untouched), npm build clean, MCP boots, B-1 sidechain-filter fix works (sidechain rows recall). FAILED-by-use = capture→embed→recall end-to-end: B-7 dim-mismatch — embeddings produce 2560-dim (served pplx-4b) but insertExchange/search.ts still target legacy vec_exchanges FLOAT[384]; per-lens 2560 table added to new schema but NOT wired into live path. Default `search` throws. Diagnosed, reversible. Commit 19e6012. ⟳ FIX BEAT wfo6h6tg7 RUNNING (wire per-lens vec into live insert+search, retire 384, transaction the paired insert, test override → re-verify end-to-end). Cross-review welcome on 19e6012.
 - Fork D8 drift-recovery core (2587ced) + freshness guard (e382e89) — peer-verified with honest
   bounds; peer-owned lane (lead cross-reviews at wires, did not re-run).
@@ -51,15 +65,8 @@ the lead has NOT confirmed the cross-component path by use — these are the mor
   `cc_channel op=recall` is the lead's to add AFTER the worker frees cc_channels.py.
 - Channel-attachment manifest — build only WITH the 5th-wire recall consumer (a manifest ahead of its
   consumer is a half-feature; deferred by design, not neglect).
-- Profile SessionStart hook — DESIGN FORK found (lead read company_channel.mjs in full): the MCP server
-  writes the authoritative reg with a DYNAMIC port (`server.listen(0)`, known only at runtime) + pid, so
-  a SessionStart hook CANNOT write the transport reg (it can't know the port), and the handle is RANDOM
-  unless COMPANY_CHANNEL_HANDLE is set → profiles can't key to a session. Candidates for Tim's pick:
-  (A) hook sets COMPANY_CHANNEL_DESC + a new model/profile env BEFORE MCP launch → the server's writeReg
-  folds them in (needs deterministic COMPANY_CHANNEL_HANDLE + confirming CC hooks set env for MCP
-  subprocs); (B) enrich company_channel.mjs writeReg to capture model+git itself (cleaner, but Tim said
-  "hook"); (C) hook writes a separate _profiles/<handle>.json that `list` merges (needs deterministic
-  handle). CRUX = handle determinism at launch. Not built tonight — needs Tim's pick + a CC hook-mechanics check.
+- ✅ Profile self-write — RESOLVED + BUILT (see PROVEN ledger). Tim's "the agent writes their own
+  profile" dissolved the design fork (no handle-determinism needed — the session writes its OWN entry).
 - Clone-fleet launch — GATED (DECISIONS-FOR-MORNING #2).
 
 **🐛 FINDINGS (lead cross-review of the channel-layer build — recorded honestly):**
@@ -111,10 +118,11 @@ wire (`op=recall`) once the recall-fork posts its signature. Move items up this 
 ### RECALL FORK (ch-83e2cque) — recollection OUTER foundation
 - [x] Loop-prep COMPLETE + hardened: 15 decisions resolved (evidence-tagged) + 2 audit waves; UNIFIED-SEAM.md posted (asymmetric nesting + 5 boundary wires); wire-4 preference contract agreed (leveled signals + 2-gate, extraction-vs-judgment); EMBEDDING-AXIS-REGISTRY aligned (provenance exchange:// canonical spine + per-(model×way) axes — faithful to D-1)
 - [partial] Phase-A foundation (w7gld9f3t DONE): PROVEN-by-use — ~/recollection cloned+isolated to ~/.recollection (B-5 comingling landmine handled; live 11.5GB store proven untouched), npm build clean, MCP boots (search+read preserved), B-1 sidechain-filter fix works (sidechain rows recall). Commit 19e6012.
-- [FAIL-by-use] capture→embed→recall end-to-end: B-7 dim-mismatch — embeddings produce 2560-dim (served pplx-4b) but insertExchange/search.ts still target legacy vec_exchanges FLOAT[384]; per-lens 2560 table added to new schema but NOT wired into live path. Default `search` throws. Diagnosed + LEAD-CONFIRMED (independent: :8007/health dim=2560 → 384 table is definitively the bug). Reversible.
-- [~] B-7 fix beat RE-RUNNING (wpkmmwuvf, quota reset confirmed by Tim) — wiring the per-lens 2560 vec into the live insert+search, retire 384, transaction the paired insert, test override → re-verify capture→embed→recall end-to-end. (Earlier wfo6h6tg7 hit the quota wall before applying; diagnosis was lead-CONFIRMED.) Verify-by-use evidence on completion; no "done" without the round-trip.
-- [ ] NEXT (on quota reset): (1) re-run the B-7 fix → re-verify end-to-end → ping fork (frees :8007 + bring preference-extract draft for my review) · then (2) recall spine channel-scopable = 5th wire · (3) link/provenance graph · (4) distill L1/L2
-- status: paused at the quota wall, honestly. Reversible self-approve via loop-prep recorded intent; NOTHING irreversible queued from my lane; serving lane untouched. Resume scheduled.
+- [x] ★ B-7 FIXED + PHASE-A GREEN END-TO-END (wpkmmwuvf DONE; verify agent re-ran by use, ALL criteria PASS): capture(incl sidechain)→embed(2560 served axis)→default `search` returns ranked results w/ provenance, NO dim mismatch; legacy vec_exchanges 384 RETIRED (0 rows, ND-1); count parity 5=5=5 (transaction holds, no orphan); ★ dim is REGISTRY-SOURCED from the lens descriptor, NOT hardcoded (the fork's catch — honored). TWO real bugs fixed: (1) the 384/2560 dim-mismatch, (2) a hidden int8-float JSON bug (served int8-range values arrive as floats → vec_int8 JSON-parse throw; fix = quantizeInt8 round-not-truncate). Commits 36c6f89 + e7bcd07. Tree clean; live store untouched.
+  - NOTE (adopted work): a prior session had UNCOMMITTED per-lens wiring (never built/tested/committed, one false "verified" comment) — adopted per incomplete-work-in-scope, the live bug inside it found+fixed, all committed.
+  - ⚠ FLAGS (honest, non-blocking): (a) the served-embed latency (~1-3s/2560-dim embed) forced test serialization → suite wall-time ~160s→~313s; revisit later with bounded concurrency (a dev-experience tradeoff, not a correctness issue). (b) 1 PRE-EXISTING out-of-lane test red: show.test.ts timezone off-by-one, present since foundation commit 19e6012, NOT caused by the fix, correctly left untouched.
+- [ ] NEXT beats: (2) recall spine channel-scopable = 5th wire (define+post the signature; the spine = the now-working axis-selector search + a session-ids filter) · (3) link/provenance graph (crossings) · (4) distill L1/L2 — held for Tim's steer (he's back + present at this milestone).
+- status: Phase-A GREEN. Reversible self-approve via loop-prep recorded intent; NOTHING irreversible from my lane; serving lane untouched; pinging fork to free :8007 + request the preference-extract draft for my Pillar-1 gate.
 
 ## Cross-reviews logged
 - chunking A/B (fork→lead): PASS, honest mixed result, limit correctly attributed to the panel.
@@ -132,7 +140,14 @@ wire (`op=recall`) once the recall-fork posts its signature. Move items up this 
    No data lost, but it muddies authorship + breaks clean single-lane reverts, and any stage-then-wait
    is exposed. FOR MORNING: decide whether to pause/scope that loop while the fabric build runs, or
    accept the co-mingling. (Surfaced, not acted on — it's another autonomous loop, not the fabric's.)
-4. (append any further irreversible/external item the fabric hits here, with context)
+4. CLONE-FLEET LIVE CAP — the supervisor caps LIVE supervised sessions at 3 (resource guard,
+   configurable). Tim said "launch all 16"; the mechanism + roster are PROVEN/RESOLVED, but only 3 can be
+   live at once. 3 advisors live now (compact:1 anchor · #1 engine-room · skills&roles). OPTIONS:
+   (A — recommended) keep cap 3 + launch-on-demand: the 16-roster is a managed working-set, spawn the
+   advisor you want to consult (≤3 live), tear down to swap — resource-sane, no 16 idle claude processes;
+   (B) raise the cap to hold N advisors live at once (more RAM/processes; real cost). Either way, USE of
+   the fleet needs the company MCP reconnected (`/mcp`) — my live MCP predates tonight's transport code.
+5. (append any further irreversible/external item the fabric hits here, with context)
 
 ## Provenance + safety
 trust-tags on every entry; high-bar recovery gates self-approval; git-revert + cross-review the net.

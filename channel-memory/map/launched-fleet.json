@@ -1,0 +1,98 @@
+[
+  {
+    "handle": "clone-ad2a7a33",
+    "cut": "compact:1",
+    "label": "shared-past anchor",
+    "status": "ok+roundtrip"
+  },
+  {
+    "handle": "clone-2cece509",
+    "cut": "96e4f2b1",
+    "label": "#1 engine-room",
+    "status": "ok+roundtrip"
+  },
+  {
+    "handle": "clone-28aeac7f",
+    "cut": "97f16379",
+    "label": "skills & roles",
+    "status": "ok"
+  },
+  {
+    "handle": null,
+    "cut": "c4052dd6",
+    "label": "decisions exchange \u2014 embedding/voice/channel chosen",
+    "status": "ERR:CloneError:supervisor /spawn (resume=ac5845df) failed: {'error': 'REFUSED \u2014 this would put 4 sessions"
+  },
+  {
+    "handle": null,
+    "cut": "c6a7179e",
+    "label": "context-top L13084",
+    "status": "ERR:CloneError:supervisor /spawn (resume=babe1fa7) failed: {'error': 'REFUSED \u2014 this would put 4 sessions"
+  },
+  {
+    "handle": null,
+    "cut": "e9731613",
+    "label": "memory-files investigation",
+    "status": "ERR:CloneError:supervisor /spawn (resume=d487aed8) failed: {'error': 'REFUSED \u2014 this would put 4 sessions"
+  },
+  {
+    "handle": null,
+    "cut": "3985ace0",
+    "label": "embedding-recall frustration",
+    "status": "ERR:CloneError:supervisor /spawn (resume=4ba86a08) failed: {'error': 'REFUSED \u2014 this would put 4 sessions"
+  },
+  {
+    "handle": null,
+    "cut": "5e310736",
+    "label": "loop-prep/dynamic-workflows + top UI density",
+    "status": "ERR:CloneError:supervisor /spawn (resume=041fcbed) failed: {'error': 'REFUSED \u2014 this would put 4 sessions"
+  },
+  {
+    "handle": null,
+    "cut": "505f5635",
+    "label": "embedding-model audit + Atlas origin",
+    "status": "ERR:CloneError:supervisor /spawn (resume=bdc0b30c) failed: {'error': 'REFUSED \u2014 this would put 4 sessions"
+  },
+  {
+    "handle": null,
+    "cut": "c613863d",
+    "label": "candidates/learnings capture",
+    "status": "ERR:CloneError:supervisor /spawn (resume=b62e4f50) failed: {'error': 'REFUSED \u2014 this would put 4 sessions"
+  },
+  {
+    "handle": null,
+    "cut": "f7187860",
+    "label": "registry/Heart frame + high UI density",
+    "status": "ERR:CloneError:supervisor /spawn (resume=0a03788e) failed: {'error': 'REFUSED \u2014 this would put 4 sessions"
+  },
+  {
+    "handle": null,
+    "cut": "a0a54147",
+    "label": "cross-session-messaging BIRTH \u2014 the WHY",
+    "status": "ERR:CloneError:supervisor /spawn (resume=6e4a0000) failed: {'error': 'REFUSED \u2014 this would put 4 sessions"
+  },
+  {
+    "handle": null,
+    "cut": "ee79ccce",
+    "label": "skill-making exchange",
+    "status": "ERR:CloneError:supervisor /spawn (resume=bd03c201) failed: {'error': 'REFUSED \u2014 this would put 4 sessions"
+  },
+  {
+    "handle": null,
+    "cut": "e62970d7",
+    "label": "registry note \u2014 channels/projects to UI projection",
+    "status": "ERR:CloneError:supervisor /spawn (resume=637d04ff) failed: {'error': 'REFUSED \u2014 this would put 4 sessions"
+  },
+  {
+    "handle": null,
+    "cut": "f0db8090",
+    "label": "voice + the Face/UI",
+    "status": "ERR:CloneError:supervisor /spawn (resume=5f04182a) failed: {'error': 'REFUSED \u2014 this would put 4 sessions"
+  },
+  {
+    "handle": null,
+    "cut": "a76776d0",
+    "label": "the Face direction \u2014 not like the CLI",
+    "status": "ERR:CloneError:supervisor /spawn (resume=0534e125) failed: {'error': 'REFUSED \u2014 this would put 4 sessions"
+  }
+]
