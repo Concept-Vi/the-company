@@ -81,6 +81,11 @@ and "the types/divisions of the circle [should be built in] so the data points c
   outer square + dyadic grid framing the inscribed wheel + rings + forbidden corner-circle), so the grid is
   present from the start; Circle isolates meaning, Square isolates structure. Geometry corrected: square is the
   OUTER frame (half-side R), circle touches its edge midpoints. Both viewports, console clean.
+- **"WHAT IT CHOSE" — BUILT** (`65a3b58`). Closes the second half of Tim's 12:44 note. The legend says what the
+  lens IS; now selecting a point narrates WHY it's there — a per-lens placement readout in the disclosure
+  (`in · <division>` + radius-meaning: semantic→meaning+tension, separator→leans pole/strength, nucleation→fits
+  inside (val) / misfit→piled→new type, time→age), derived from the binding. Verified: raw → "in corpus.record ·
+  age long ago (1.00)"; nucleation → "in worldview.py · fits inside (0.90)".
 - **NEXT BEATS (per the equation, sequenced):** the FORBIDDEN operationalized (§10 — circle-without-square =
   gate-inbox; square-without-circle = drift; the corner = grow-the-box); the live SSE spine (the present moves);
   the project system (pointable at anything, company = starter).
