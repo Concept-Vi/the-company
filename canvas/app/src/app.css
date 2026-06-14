@@ -1907,6 +1907,13 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
    meaning-field actions (the scale + circle axes share the semantic accent). */
 .lattice-card .lc-theme { color: var(--acc); opacity: 0.92; }
 .lattice-card .lc-zoomin { border-color: var(--acc); color: var(--acc); }
+/* THE CONNECTIONS (Group 10) — the driven row's directional edges readout (feeds → / ← fed-by). Tokens only:
+   the OUT (feeds) key reads gold like its chords, the IN (fed-by) key reads ink, absences are dim. */
+.lattice-card.lc-conn .lc-conn-row { margin-top: 6px; line-height: 1.5; word-break: break-word; }
+.lattice-card.lc-conn .lc-conn-k { display: inline-block; min-width: 64px; color: var(--tx-2);
+  font: 11px ui-monospace, monospace; margin-right: 6px; }
+.lattice-card.lc-conn .lc-conn-k.lc-conn-out { color: var(--acc); }
+.lattice-card.lc-conn .lc-conn-none { color: var(--dim); }
 .lattice-wrap .lattice-hint { position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
   max-width: min(92%, 520px); pointer-events: auto; background: var(--panel); color: var(--tx-2);
   border: 1px solid var(--acc); border-radius: 8px; padding: 6px 11px; text-align: center;

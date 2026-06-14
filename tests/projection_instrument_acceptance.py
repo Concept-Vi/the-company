@@ -350,6 +350,15 @@ r_self = project(g10_evs, binding=B_conn, now=NOW, sector_ids=["topics", "princi
                  sector_edges=[("topics", "topics"), ("topics", "missing")], registry=REAL)
 check("edges drop self-loops and edges to absent rows (only real connections between present sectors)",
       r_self["edges"] == [])
+# whole_set point-drop: an event mapping to NO rendered row is DROPPED (not piled into the last sector — the
+# connections view is the registry's rows + edges, never a dump of unmappable events).
+g10_plus = g10_evs + [{"seq": 9001, "ts": NOW.isoformat(), "kind": "op.run", "op": "x"}]  # an event with no projection → no row
+r_drop = project(g10_plus, binding=B_whole, now=NOW,
+                 sector_ids=["topics", "principles", "worldview"], registry=REAL)
+check("whole_set: an event mapping to NO row is DROPPED (not piled into the last sector)",
+      all(p["sector"] in ("topics", "principles", "worldview") for p in r_drop["points"])
+      and len(r_drop["points"]) == len([e for e in g10_evs if e.get("projection") in ("topics", "principles", "worldview")]),
+      f"points={len(r_drop['points'])}")
 
 print(f"\n{'PASS' if FAIL == 0 else 'FAIL'} — {PASS} passed, {FAIL} failed")
 sys.exit(0 if FAIL == 0 else 1)

@@ -28,6 +28,10 @@ type Projection = {
   bindings?: { id: string; label: string }[]
   sectors: { id: string; label: string; from: number; to: number }[]
   points: ProjPoint[]
+  // THE CONNECTIONS (Group 10): the directional typed edges between sectors, as directed sector-index pairs
+  // (from→to). `bidir` = a real mutual pair (a cycle, rendered as a cycle, not flattened). Drawn as directed
+  // chords; absent on bindings with no edges.
+  edges?: { from: number; to: number; bidir?: boolean }[]
   // SCALE LADDER (Group 11): present when the binding's space has a built pyramid. `rung` is the resolved
   // level ('unit' | a coarse k); `rungs` the available coarse cluster-counts (e.g. [8, 32]); n_units the base.
   scale?: { space: string; rung: number | string; rungs: number[]; n_units: number }
@@ -38,6 +42,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   const cvsRef = useRef<HTMLCanvasElement | null>(null)
   const [proj, setProj] = useState<Projection | null>(null)
   const [picked, setPicked] = useState<ProjPoint | null>(null)
+  const [pickedSector, setPickedSector] = useState<number | null>(null)  // G10 connections: the driven row (its in/out edges light up)
   const [sel, setSel] = useState<ProjPoint[]>([])   // the accumulating working set (forager: sculpt → hand to builder)
   const [zoom, setZoom] = useState(1)        // radial magnification — inner rings (recent) expand
   const [rung, setRung] = useState<number | null>(null)  // G11 SCALE: null/unit = items; a coarse k = themes
@@ -132,6 +137,8 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   // built rungs), drop any held rung so the ladder + state stay honest (the bridge ignores a stray rung,
   // but the UI shouldn't claim a coarse level that isn't rendered).
   useEffect(() => { if (proj && !proj.scale && rung != null) setRung(null) }, [proj, rung])
+  // G10 connections: clear the driven row when the active projection has no edges (left the connections view)
+  useEffect(() => { if (proj && !(proj.edges && proj.edges.length) && pickedSector != null) setPickedSector(null) }, [proj, pickedSector])
 
   // G11 CROSSFADE: when the resolved RUNG changes (the point-set swaps wholesale), snapshot the just-drawn
   // frame as the DEPARTING set so draw() can fade it out while the new rung fades in (continuous scale move).
@@ -210,7 +217,9 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     }
     // the radial-axis labels at fixed fractions (independent of the ring COUNT): 'now' marks the rim
     // (older outward); a cycle frame marks its clock quarters.
-    const axisLabels: [number, string][] = isSemantic
+    const axisLabels: [number, string][] = (proj.edges && proj.edges.length)
+      ? []                                             // CONNECTIONS: radius is a placeholder — no radial axis label (it would mislead + collide with the rim labels)
+      : isSemantic
       ? [[1, 'farther in meaning →']]                  // the CIRCLE: radius = meaning-distance from the centre
       : frame === 'now'
       ? [[1, 'older →']]
@@ -221,6 +230,54 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       g.globalAlpha = 0.6; g.fillText(lab, cx + 3, cy - R * frac + 11)
     }
     g.globalAlpha = 1
+    // THE CONNECTIONS (Group 10 — "the connections in the registries"): the directional typed edges drawn as
+    // directed CHORDS between sectors. Each chord bows toward the centre (a chord-diagram arc, readable — not
+    // a straight overlap) with an arrowhead at its TARGET (direction); a bidir edge (a real mutual cycle) gets
+    // a head at BOTH ends (rendered AS a cycle, never flattened). DRIVE-TO-EXPLORE: pick a sector → its OUT
+    // edges light gold, its IN edges light ink, the rest fade — you walk the registry by its real relations.
+    const conn = proj.edges || []
+    if (conn.length) {
+      const secMid = (i: number) => { const s = proj.sectors[i]; return (s.from + s.to) / 2 }
+      const ptAt = (ang: number, rho: number) => ({ x: cx + Math.sin(ang) * rho, y: cy - Math.cos(ang) * rho })
+      const rim = R * 0.9
+      const head = (tipx: number, tipy: number, fromx: number, fromy: number, sz: number) => {
+        const a = Math.atan2(tipy - fromy, tipx - fromx)
+        g.beginPath(); g.moveTo(tipx, tipy)
+        g.lineTo(tipx - sz * Math.cos(a - 0.42), tipy - sz * Math.sin(a - 0.42))
+        g.lineTo(tipx - sz * Math.cos(a + 0.42), tipy - sz * Math.sin(a + 0.42))
+        g.closePath(); g.fill()
+      }
+      g.lineCap = 'round'
+      for (const e of conn) {
+        if (e.from >= proj.sectors.length || e.to >= proj.sectors.length) continue
+        const a = ptAt(secMid(e.from), rim), b = ptAt(secMid(e.to), rim)
+        const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2
+        const ctrl = { x: cx + (mx - cx) * 0.26, y: cy + (my - cy) * 0.26 }   // bow toward centre
+        const incident = pickedSector != null && (e.from === pickedSector || e.to === pickedSector)
+        const isOut = pickedSector != null && e.from === pickedSector
+        let alpha: number, lw: number, col: string
+        if (pickedSector == null) { alpha = 0.15; lw = 1; col = dim }
+        else if (incident) { alpha = 0.92; lw = 1.7; col = isOut ? accent : ink }
+        else { alpha = 0.05; lw = 1; col = dim }
+        g.globalAlpha = alpha; g.strokeStyle = col; g.lineWidth = lw
+        g.beginPath(); g.moveTo(a.x, a.y); g.quadraticCurveTo(ctrl.x, ctrl.y, b.x, b.y); g.stroke()
+        if (pickedSector == null || incident) {
+          const sz = incident ? 7 : 4.5
+          g.fillStyle = col; g.globalAlpha = Math.min(alpha + 0.1, 1)
+          head(b.x, b.y, ctrl.x, ctrl.y, sz)               // arrowhead at the target (direction)
+          if (e.bidir) head(a.x, a.y, ctrl.x, ctrl.y, sz)  // a real cycle → a head at the source too
+        }
+      }
+      g.globalAlpha = 1; g.lineWidth = 1
+      // the PICKED sector's wedge, lit faintly so the driven row reads (the connections fan from here)
+      if (pickedSector != null && pickedSector < proj.sectors.length) {
+        const s = proj.sectors[pickedSector]
+        g.globalAlpha = 0.1; g.fillStyle = accent
+        g.beginPath(); g.moveTo(cx, cy)
+        g.arc(cx, cy, R, s.from - Math.PI / 2, s.to - Math.PI / 2); g.closePath(); g.fill()
+        g.globalAlpha = 1
+      }
+    }
     // The sector boundaries + labels (the angular type divisions — the registry drawn).
     g.globalAlpha = 0.5
     for (const s of proj.sectors) {
@@ -231,20 +288,30 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     const inside = w < 520            // phone face: labels tuck inside the rim (no edge clipping)
     // Label-thinning: the data-driven default can resolve many sectors (e.g. 50 raw kinds). Painting
     // every label would betray the default for legibility — so label only the MAJOR sectors (by
-    // point-share), the rest read by colour/position. No privileged binding, just honest density.
+    // point-share), the rest read by colour/position. In CONNECTIONS mode every row is named (you must
+    // read which node connects to which), so the whole registry is labelled.
     const perSector = new Map<string, number>()
     for (const p of proj.points) perSector.set(p.sector, (perSector.get(p.sector) || 0) + 1)
-    const labelled = new Set(
-      [...perSector.entries()].sort((a, b) => b[1] - a[1])
-        .slice(0, proj.sectors.length <= 12 ? proj.sectors.length : 10).map(e => e[0]))
-    for (const s of proj.sectors) {
+    const labelled = conn.length
+      ? new Set(proj.sectors.map(s => s.id))
+      : new Set([...perSector.entries()].sort((a, b) => b[1] - a[1])
+          .slice(0, proj.sectors.length <= 12 ? proj.sectors.length : 10).map(e => e[0]))
+    for (let si = 0; si < proj.sectors.length; si++) {
+      const s = proj.sectors[si]
       if (!labelled.has(s.id)) continue
-      const mid = (s.from + s.to) / 2, lr = inside ? R - 14 : R + 16
+      const mid = (s.from + s.to) / 2
+      // CONNECTIONS labels EVERY row, so near-vertical neighbours collide on a narrow face — stagger adjacent
+      // labels by radius (parity) so they never share a baseline (the wordcount/codebase overprint fix).
+      const stagger = conn.length ? (si % 2 === 0 ? 0 : (inside ? -13 : 15)) : 0
+      const lr = (inside ? R - 14 : R + 16) + stagger
       const lx = cx + Math.sin(mid) * lr, ly = cy - Math.cos(mid) * lr + 4
       const tw = g.measureText(s.label).width
       g.globalAlpha = 0.82; g.fillStyle = bg   // backing plate so labels read over dense arcs
       g.fillRect(lx - tw / 2 - 3, ly - 10, tw + 6, 14)
-      g.globalAlpha = 1; g.fillStyle = ink
+      // the picked row's label reads gold; its direct connections stay ink; the rest dim in connections mode
+      g.globalAlpha = 1
+      g.fillStyle = (conn.length && pickedSector === si) ? accent
+        : (conn.length && pickedSector != null) ? dim : ink
       g.fillText(s.label, lx, ly)
     }
     // The points — exactly the same points, drawn where they already are. On a re-centre / reframe they
@@ -376,7 +443,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       g.beginPath(); g.arc(cx, cy, 11 + 6 * phase, 0, Math.PI * 2); g.stroke()
     }
     g.globalAlpha = 1
-  }, [proj, picked, zoom, sel, frame, live, at, showStrain])
+  }, [proj, picked, pickedSector, zoom, sel, frame, live, at, showStrain])
 
   useEffect(() => { draw() }, [draw])
   useEffect(() => {
@@ -433,6 +500,16 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     const px = ev.clientX - rect.left, py = ev.clientY - rect.top
     const w = rect.width, h = rect.height
     const cx = w / 2, cy = h / 2, R = Math.min(w, h) / 2 - 34
+    // CONNECTIONS MODE (Group 10): pick a SECTOR (a registry row) by the click's angle → drive its in/out
+    // edges. A click near the centre clears the selection (back to the whole web). Points are sparse here;
+    // the rows + their connections are what you drive.
+    if (proj.edges && proj.edges.length) {
+      if (Math.hypot(px - cx, py - cy) < R * 0.12) { setPickedSector(null); return }
+      let th = Math.atan2(px - cx, cy - py); if (th < 0) th += Math.PI * 2
+      const si = proj.sectors.findIndex(s => s.from <= th && th < s.to)
+      setPickedSector(si >= 0 ? si : null)
+      return
+    }
     let best: ProjPoint | null = null, bd = 14 * 14
     for (const p of proj.points) {
       const rr = radial(p) * R
@@ -465,6 +542,16 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   const timeLabel = at != null ? `◷ ${relTime(at)}` : frame === 'now' ? 'now' : `cycle:${frame}`
   const centreSeg = center ? (center.split('/').filter(Boolean).slice(-1)[0] || center) : ''
 
+  // G10 CONNECTIONS — drive-to-explore: the picked row + its OUT (feeds →) / IN (← fed-by) rows, read off
+  // the real directional typed edges. connMode = a binding that surfaced edges (e.g. the node registry).
+  const connMode = !!(proj?.edges && proj.edges.length)
+  const sName = (i: number) => proj?.sectors[i]?.label || `#${i}`
+  const pickedRow = (connMode && pickedSector != null && proj) ? {
+    name: sName(pickedSector),
+    out: proj.edges!.filter(e => e.from === pickedSector).map(e => sName(e.to)),
+    inn: proj.edges!.filter(e => e.to === pickedSector).map(e => sName(e.from)),
+  } : null
+
   if (err) return <div className="lattice-err"><EmptyState>projection unreachable — {err}</EmptyState></div>
   return (
     <div className="lattice-wrap" ref={wrapRef} onPointerDown={pick}>
@@ -473,6 +560,25 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
         <div className="lattice-hint" onPointerDown={e => e.stopPropagation()}>
           ◎ semantic lens{proj?.binding?.space ? ` · ${proj.binding.space}` : ''} — pick a centre: tap a point,
           then <b>◎ meaning-field from here</b> to rank everything by meaning-distance
+        </div>
+      )}
+      {connMode && pickedSector == null && (
+        <div className="lattice-hint" onPointerDown={e => e.stopPropagation()}>
+          ◈ the connections in the registry — each chord is a <b>directional typed edge</b> (arrow = direction).
+          Tap a node to light its edges (<b>gold = feeds →</b>, <b>ink = ← fed-by</b>); tap the centre to clear.
+        </div>
+      )}
+      {pickedRow && (
+        <div className="lattice-card lc-conn" onPointerDown={e => e.stopPropagation()}>
+          <div className="lc-head">
+            <Badge tone="sig">{pickedRow.name}</Badge>
+            <button className="lc-x" onClick={() => setPickedSector(null)}>✕</button>
+          </div>
+          <div className="lc-conn-row"><span className="lc-conn-k lc-conn-out">feeds →</span>
+            {pickedRow.out.length ? pickedRow.out.join(', ') : <span className="lc-conn-none">— nothing</span>}</div>
+          <div className="lc-conn-row"><span className="lc-conn-k">← fed-by</span>
+            {pickedRow.inn.length ? pickedRow.inn.join(', ') : <span className="lc-conn-none">— nothing</span>}</div>
+          <div className="lc-meta">{pickedRow.out.length} out · {pickedRow.inn.length} in — directional typed edges</div>
         </div>
       )}
       <div className="lattice-foot">

@@ -399,8 +399,18 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
         # the angular SECTOR key: by KIND (default/kind-group), or by the EVENT→ROW edge for an
         # angle_from=<registry/graph> binding (Group 10) — an event naming no row → the '—' remainder.
         by = kmap.get("__by__")
-        skey = ((_row_of(e, by) if _row_of(e, by) is not None else "—") if by else kind)
-        i = _sector_index(skey, sectors, kmap)
+        if by:                                    # registry/graph mode: place by the EVENT→ROW edge
+            row = _row_of(e, by)
+            skey = row if row is not None else "—"
+            if skey not in sectors:
+                # the event maps to NO rendered row — drop it (don't pile it into the last sector). This is
+                # the whole_set/connections case: there is no '—' remainder, so an unmapped event is simply
+                # not a point of this view (the view is the registry's rows + their real edges, not a dump).
+                continue
+            i = sectors.index(skey)
+        else:                                     # kind / kind-group: fnmatch/identity via _sector_index
+            skey = kind
+            i = _sector_index(skey, sectors, kmap)
         gi, gj, gd = cells[idx]
         ref = str(_addr_of(e) or e.get("summary") or e.get("seq"))
         theta = TAU * (i + 0.08 + 0.84 * _stable_unit(ref)) / n
