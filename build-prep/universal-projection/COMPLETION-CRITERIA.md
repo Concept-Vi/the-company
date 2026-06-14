@@ -260,10 +260,12 @@ FROM model_projections()") was never built. So Group 8 was a BUILD, not a bring-
 >   equals, no centre-pile); BOTH raw pulls + the lean carried per point (no signal thrown away). Vectorless
 >   point → rim + r_unknown (flagged, never dropped). Missing poles → fail loud.
 > · **THE FIFTH GATE** — `separation_report()` (raw cosines, the witness the field actually SEPARATES, since a
->   normalized radius gradients over noise): three facts ALL required → pole_distinctness ≥ floor · spread_a AND
->   spread_b ≥ floor (kills a dead/constant pole) · Spearman(pulls_a,pulls_b) NOT ≈ +1 (kills a redundant pole;
->   opposed poles ρ→−1 PASS — the false-negative the earlier gap-rank draft would have had is gone). Plus the
->   BALANCE (lean_a/lean_b/minority_frac) — surfaced NOT gated, makes a one-sided field legible.
+>   normalized radius gradients over noise): FOUR degeneracies ALL refused → pole_distinctness ≥ floor · spread_a
+>   AND spread_b ≥ floor (kills a dead/constant pole) · Spearman(pulls_a,pulls_b) NOT ≈ +1 (kills a redundant
+>   pole; opposed poles ρ→−1 PASS — the false-negative the earlier gap-rank draft would have had is gone) · AND
+>   min(lean_a,lean_b) ≥ 1 (kills a ONE-SIDED field — a pole attracting NOBODY collapses to a one-pole distance;
+>   a hard count-of-zero, not a tuned threshold). The BALANCE (lean_a/lean_b/minority_frac) is also surfaced for
+>   the DEGREE of skew among fields that do separate.
 > · `runtime/bridge.py` `_separator_projection` — resolves the two pole vectors (unit item / cluster centroid /
 >   planted anchor) + the item vectors from the store; project() stays pure; poles drivable via ?pole_a=&pole_b=.
 > · `bindings/by_separator.py` — the general lens (default poles = the two MOST-distinct topics clusters).
@@ -272,20 +274,23 @@ FROM model_projections()") was never built. So Group 8 was a BUILD, not a bring-
 > · `tests/…acceptance.py §13` — 75 pass: hermetic two-blob SEPARATES (flat=bug), identical-poles REFUSED,
 >   dead-pole REFUSED, pole-agnostic 2nd config, balance, opposed-poles PASS, vectorless→rim, missing-poles fail-loud.
 >
-> **VERIFIED LIVE — the real-data ✅ gate (the honest one):** the separator, driven over ALL 162 real topics
-> items through the bridge, on a REAL semantically-distinct pole pair (cluster c6 worldview/conceptual vs c4
-> sessions/runtime): `separates:True`, distinctness 0.19, **Spearman −0.18** (opposed gravities), balance 47/115
-> (a genuinely two-sided field), and the leaders SPOT-CHECK clean — toward worldview: what.py, worldview.py,
-> principles.py, topics.py, lineage.py; toward sessions: introspection.py, sessions.py, rule.py, channels.py,
-> server.py. The general two-gravity separator is demonstrated on real data.
+> **VERIFIED LIVE — the real-data ✅ gate (the honest, non-circular one):** the separator, driven over ALL 162
+> real topics items through the bridge. The PRIMARY evidence is a NON-CENTROID pair (two real corpus ITEMS from
+> different regions, NOT means of the corpus, so non-circular): pole_a=code://projections/worldview.py vs
+> pole_b=code://mcp_face/tools/sessions.py → `separates:True`, distinctness 0.40, **Spearman −0.41** (strongly
+> opposed gravities), balance **57/105 (minority 0.35 — a genuinely two-sided field)**, and the leaders (DIFFERENT
+> items than the poles) spot-check region-clean: toward worldview ← topics.py, what.py, lineage.py, principles.py;
+> toward sessions ← introspection.py, channels.py, ui_claude_session.py, rule.py. The default centroid pair (c6
+> vs c4) corroborates (separates, balance 47/115) but is partly circular (centroids are means of the items), so
+> the NON-centroid pair carries the claim. The general two-gravity separator is demonstrated on real data.
 >
-> **HONEST — the pollution instance is the NAMED DEFERRED application, NOT a verified oracle:** probed origin
+> **HONEST — the pollution instance is the NAMED DEFERRED application, correctly REFUSED today:** probed origin
 > (worldview centroid, a §17 corpus sample standing in for the deferred true Tim-pole) vs anchor://ai-corner →
-> balance **162/0** (every code-topic item leans to the code centroid, the free-text AI-corner wins for nobody).
-> This is the lens-mismatch the design anticipated: a free-text prose pole vs a code-topic corpus. The fifth gate
-> says separates:True (non-degenerate, distinct), but the BALANCE exposes it as one-sided — the field is the
-> code-vs-prose axis, not grounded-vs-AI. DEFERRED: the true Tim-pole (§17, not a corpus sample) + a text-lens
-> where the AI-corner is comparable. The ✅ rests on the balanced real pair, never on this probe.
+> balance **162/0** (every code-topic item leans to the code centroid; the free-text AI-corner attracts nobody).
+> This is the lens-mismatch the design anticipated (a free-text prose pole vs a code-topic corpus). The hardened
+> fifth gate now reports **separates:False** for it (the one-sided degeneracy) — so the pollution probe is not
+> faked-green; it is honestly refused. DEFERRED: the true Tim-pole (§17, not a corpus sample) + a text-lens where
+> the AI-corner is comparable. The ✅ rests on the balanced non-centroid real pair, never on this probe.
 - **FUNCTION** — the general two-pole read + the fifth gate, verified live on a real balanced pair. ✅ by use
 - **FORM** — ☐ NEXT BEAT: render the signed lean on the lattice (sign as the second channel, both poles as
   equals), a pole-PICKER so Tim drives which two gravities, at both 1440×900 and 390×844; design-critic + lint.

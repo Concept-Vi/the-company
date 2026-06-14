@@ -193,18 +193,22 @@ def separation_report(pulls_a: list, pulls_b: list, pole_a: list, pole_b: list, 
 
     sa, sb = _std(pulls_a), _std(pulls_b)
     rho = _spearman(pulls_a, pulls_b)
-    separates = bool(distinct >= distinctness_floor and sa >= spread_floor
-                     and sb >= spread_floor and rho <= 0.9)
     gaps = [pulls_b[i] - pulls_a[i] for i in range(n)]                  # signed lean: >0 toward B, <0 toward A
     order = sorted(range(n), key=lambda i: gaps[i])
-    # the BALANCE — how the corpus distributes between the two gravities. A NON-degenerate field can still be
-    # one-sided (every item leans the SAME way → one pole 'wins' everywhere), which `separates` will NOT catch
-    # (it is a real, distinct, non-redundant field — just lopsided). Surfacing the balance makes that legible
-    # WITHOUT tuning a magic threshold against the narrow corpus band: a lopsided field reads as lopsided, an
-    # even field reads as even, and the operator/FORM judges. (This is what caught the lens-mismatched pollution
-    # pole — every code-topic item leaning toward the code centroid, away from the free-text AI-corner anchor.)
     lean_a = sum(1 for g in gaps if g < 0)
     lean_b = sum(1 for g in gaps if g > 0)
+    # FOURTH degeneracy (alongside distinctness / dead-pole / redundancy): a pole that attracts NOBODY. If every
+    # item leans the same way (min(lean_a, lean_b) == 0) the field collapses to a ONE-pole distance — the other
+    # pole is not a competing gravity in THIS corpus, so it is not a two-gravity SEPARATION. This is a HARD
+    # degeneracy (a count of zero), NOT a tuned threshold against the narrow band — same family as the dead pole.
+    # It is what makes the lens-mismatched pair (every code item leaning to the code centroid, balance 162/0)
+    # correctly report separates=False, closing the hole where a FORM gating on `separates` green-lights it.
+    separates = bool(distinct >= distinctness_floor and sa >= spread_floor and sb >= spread_floor
+                     and rho <= 0.9 and min(lean_a, lean_b) >= 1)
+    # the BALANCE — how the corpus distributes between the two gravities. The HARD one-sided case (a pole
+    # attracting NOBODY) is now a degeneracy folded into `separates` above; the balance still surfaces the
+    # DEGREE of skew for the cases that DO separate (a 57/105 real field vs a 6/6 even one) WITHOUT tuning a
+    # magic threshold — the operator/FORM reads minority_frac (0.5 = perfectly even, →0 = lopsided) and judges.
 
     def _pick(idxs: list) -> list:
         return [{"ref": (refs[i] if refs else i), "lean": round(gaps[i], 4),

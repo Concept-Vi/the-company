@@ -490,6 +490,14 @@ except ValueError:
 check("separation_report: redundant (ρ≈+1) ordering is REFUSED even with distinct poles",
       separation_report([0.1, 0.2, 0.3, 0.4], [0.15, 0.25, 0.35, 0.45],
                         _unit([1, 0, 0]), _unit([0.9, 0.4, 0]))["separates"] is False)
+# ONE-SIDED degeneracy — a pole that attracts NOBODY (every item leans the same way) is REFUSED even when the
+# poles are distinct, both spreads real, and the ordering is NOT redundant. This is the hole the FORM would
+# otherwise gate through (a 162/0 lens-mismatched field min-max-normalizes to look exactly like a healthy one).
+_one = separation_report([0.5, 0.6, 0.7, 0.8], [0.25, 0.10, 0.20, 0.15],   # every gap<0 → pole B attracts nobody
+                         _unit([1, 0, 0]), _unit([0, 1, 0]))
+check("separation_report: a ONE-SIDED field (a pole attracting nobody, minority==0) is REFUSED (separates False)",
+      _one["separates"] is False and _one["balance"]["minority_frac"] == 0.0,
+      f"one-sided={_one['separates']}, balance={_one['balance']}")
 
 print(f"\n{'PASS' if FAIL == 0 else 'FAIL'} — {PASS} passed, {FAIL} failed")
 sys.exit(0 if FAIL == 0 else 1)
