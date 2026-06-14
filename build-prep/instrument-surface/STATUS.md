@@ -134,18 +134,26 @@ and "the types/divisions of the circle [should be built in] so the data points c
   G5 form · G6 semantic circle · G7 strain · G8 substrate implicit · G9 two-gravity poles · G10 directional edges ·
   G11 scale pyramid · G12 type-nucleation). The seed's FORMS are all expressed; what remains is DEPTH of the
   equation's descriptions (audit below) + the keystone + data-thin lenses.
-- **NEXT BEATS (sequenced):**
-  1. **EQUATION-DESCRIPTIONS AUDIT (next, unblocked)** — Tim's actual bar is "return to the equation … for ALL of
-     its descriptions," NOT an internal "12 lenses re-homed" checklist. Re-read THE-SEED doc against the LIVE
-     surface and find which described properties are not yet visible/legible: the resonance law (2π/n=(1/n)^k),
-     coincidence-on-the-axes, §8 attention-as-origin-selection beyond "centre here", and the unfinished misfit-
-     outside-the-box nucleation detail Tim flagged. Produce a gap list; each gap becomes a beat. (advisor 2026-06-15.)
-  2. **Registry-promotion keystone (L15)** — BLOCKED on L14 (embed registry defs so a symbolic registry is
-     nucleable) = a model-load data-build. Standing memory `consult-before-model-loads` (names embedding models)
-     means surface this to Tim as the one explicit ASK rather than autonomously loading a model overnight; build
-     the unblocked read-path/UI scaffold around it meanwhile.
-  3. Project system (L13) + forbidden (§10) — data-thin until a 2nd project / an unembedded-orphan source exists.
-  4. Carry-over polish: selection tether (point→card) on all lenses; make strain SIGNED.
+## RETURNING TO THE EQUATION — the descriptions audit (Tim 2026-06-14: "for ALL of its descriptions")
+The 12 lens FORMS are all present; the frontier is the equation's DESCRIPTIONS. Full audit (seed §-by-§ vs the
+live surface) lives in **EQUATION-AUDIT.md** — the gap-list that drives the next fires. First gap built:
+- **COINCIDENCE SPINE — BUILT** (`ce04fcf`). The seed's central tension (§3): rings pass through the axial grid
+  points, and those coincidence points = the ratified/addressable spine; off-axis the systems never agree (the
+  forbidden translation-loss). Geometry was already right (engine emits rings=grid/2, verified) but UNMARKED —
+  so the most central claim was invisible. Now ink diamonds (rotated square on the circle = structure∧meaning)
+  mark each ring∧axis crossing in Both view; legend names it. Both viewports, console clean.
+
+- **NEXT BEATS (sequenced — from EQUATION-AUDIT.md; Tim 2026-06-15 said "all of them"):**
+  1. ✅ done — equation-descriptions audit (EQUATION-AUDIT.md) + gap #1 the coincidence spine (`ce04fcf`).
+  2. **The misfit OUTSIDE THE BOX + corner = grow-the-box** (audit #2) — Tim's explicitly-unfinished idea; the
+     nucleation lens piles misfits outside the type-ring, but "outside the BOX" + corner-as-new-axis is missing.
+  3. **Axes as variables** (audit #3) — make the lens=axis-assignment legible AS "you are choosing the axes" (§8).
+  4. **Edges as canonical moves** (audit #4) — render typed edges with the geometric character translate/rotate/scale.
+  5. **Resonance law** (audit #5, subtle) — surface 2π/n=(1/n)^k binding #types↔depth, only if it can be made REAL.
+  6. **Registry-promotion keystone (L15)** — BLOCKED on L14 (embed registry defs) = a model-load data-build.
+     `consult-before-model-loads` → surface as the one explicit ASK to Tim; build the unblocked read-path/UI scaffold meanwhile.
+  7. Forbidden all-3-kinds (§10) + project system (L13) — data-thin until an orphan source / 2nd project exists.
+  8. Carry-over polish: selection tether (point→card) on all lenses; make strain SIGNED; de-knot dense zones.
 - Note: a test annotation ("live-spine verification ping") was written to `ui://instrument/wheel` during live
   verification — benign, append-only; harmless real comment.
 
