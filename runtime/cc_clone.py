@@ -29,12 +29,40 @@ from runtime.session_pointintime import materialize_at_point, resume_cwd_for, bu
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CLONES_DIR = os.path.join(REPO, ".data", "clones")
+CHANNELS_DIR = os.path.join(REPO, ".data", "channels")   # the channel-member registry (shared w/ cc_channels)
 SUPERVISOR = os.environ.get("COMPANY_SUPERVISOR_BASE", "http://127.0.0.1:8771")
 CHANNEL_MCP_CONFIG = os.path.join(REPO, "channels", "channel.mcp.json")
 
 
 class CloneError(RuntimeError):
     """A clone op could not run — raised TEACHING-loud (never a silent no-op)."""
+
+
+def register_supervised_member(handle: str, session_id: str, supervisor_session: str,
+                               cwd: str, description: str) -> str:
+    """WRITE side of the cross-session wire (overnight lane, with lead ch-al7jdfdr): register a SUPERVISED
+    session into the channel-member registry so the channel layer's dispatch reaches it by push. Schema is
+    EXACTLY the lead's CHANNEL-LAYER contract (the dispatch side reads these fields verbatim):
+      {handle, session_id, transport:"supervised", supervisor_session, supervisor_base, cwd, description}
+    A supervised member has NO pid/port (it is reached via supervisor /inject, not an HTTP channel port) —
+    `transport:"supervised"` is the discriminator the dispatch keys on (absent/`channel` ⇒ HTTP-to-port)."""
+    os.makedirs(CHANNELS_DIR, exist_ok=True)
+    entry = {"handle": handle, "session_id": session_id, "transport": "supervised",
+             "supervisor_session": supervisor_session, "supervisor_base": SUPERVISOR,
+             "cwd": cwd, "description": description}
+    path = os.path.join(CHANNELS_DIR, handle + ".json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(entry, f, indent=2)
+    return path
+
+
+def _deregister_member(handle: str) -> bool:
+    """Remove a member's channel-registry entry (teardown) — keeps the registry honest (presence=truth)."""
+    path = os.path.join(CHANNELS_DIR, handle + ".json")
+    try:
+        os.unlink(path); return True
+    except OSError:
+        return False
 
 
 def _sup(path: str, body=None, method: str = "POST", timeout: float = 30):
@@ -112,9 +140,13 @@ def clone_at(source_jsonl: str, at: str, *, description: str = "", cwd: str | No
     os.makedirs(CLONES_DIR, exist_ok=True)
     with open(os.path.join(CLONES_DIR, handle + ".json"), "w", encoding="utf-8") as f:
         json.dump(rec, f, indent=2)
-    return {**rec, "source_untouched": True,
-            "operator_launch_cmd": operator_launch_cmd(new_sid, resume_cwd, handle, description
-                                                        or f"clone of {rep['source_sid'][:8]} @{at}")}
+    # WRITE side of the channel wire: register the supervised clone as a first-class channel MEMBER so the
+    # channel layer's dispatch reaches it by push (supervisor /inject). Matches the lead's CHANNEL-LAYER schema.
+    member_desc = description or f"clone of {rep['source_sid'][:8]} @{at}"
+    register_supervised_member(handle, new_sid, sup_sess, resume_cwd, member_desc)
+    return {**rec, "source_untouched": True, "transport": "supervised",
+            "channel_member": True,
+            "operator_launch_cmd": operator_launch_cmd(new_sid, resume_cwd, handle, member_desc)}
 
 
 def _find_clone(handle_or_session: str) -> dict:
@@ -208,8 +240,9 @@ def end_clone(handle_or_session: str, *, delete_materialized: bool = True) -> di
     regp = os.path.join(CLONES_DIR, rec["handle"] + ".json")
     try: os.unlink(regp)
     except OSError: pass
+    dereg = _deregister_member(rec["handle"])      # drop the channel-member entry too (presence=truth)
     return {"ended": rec["handle"], "supervisor_session": rec["supervisor_session"],
-            "materialized_deleted": removed_mat}
+            "materialized_deleted": removed_mat, "channel_member_removed": dereg}
 
 
 def prepare_at(source_jsonl: str, at: str, *, description: str = "", cwd: str | None = None) -> dict:
