@@ -187,6 +187,11 @@ export function Wheel({
             if (p.strain == null || p.r_struct == null || p.scale_size) return null // no strain on theme centroids
             const a = placePolar(p.theta, p.r_struct, cx, cy, R) // filed
             const b = placePolar(p.theta, p.r, cx, cy, R) // means
+            // SIGNED strain (seed §3): the tension has a DIRECTION, not just a magnitude. OUT = meaning sits
+            // FARTHER than structure filed it (r>r_struct → escaping outward) = warm strain; IN = meaning sits
+            // NEARER (pulled toward the centre) = cool slate. Magnitude stays in length + opacity.
+            const out = p.r > p.r_struct
+            const hue = out ? 'var(--pig-strain)' : 'var(--pig-leanA)'
             // cap softer so the longest (highest-strain) segments don't read as axis spokes near the hub
             const op = Math.min(0.14 + p.strain * 0.7, 0.52)
             return (
@@ -195,7 +200,7 @@ export function Wheel({
                   initial={{ x1: a.x, y1: a.y, x2: b.x, y2: b.y, opacity: 0 }}
                   animate={{ x1: a.x, y1: a.y, x2: b.x, y2: b.y, opacity: 1 }}
                   transition={transition('move', feel)}
-                  stroke="var(--pig-strain)"
+                  stroke={hue}
                   strokeOpacity={op}
                   strokeWidth={1}
                 />
@@ -205,7 +210,7 @@ export function Wheel({
                   transition={transition('move', feel)}
                   r={1.6}
                   fill="none"
-                  stroke="var(--pig-strain)"
+                  stroke={hue}
                   strokeOpacity={op * 0.8}
                   strokeWidth={1}
                 />

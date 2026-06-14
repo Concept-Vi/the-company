@@ -59,7 +59,7 @@ function describe(proj: Projection, view: 'circle' | 'square', centred: string |
       title: b.label,
       lines: [
         centred ? `radius · meaning-distance from ${centred}` : 'radius · meaning-distance from the centre',
-        centred ? 'lines · the strain (filed vs meant)' : 'pick a point → ⊙ centre here to begin',
+        centred ? 'lines · strain — warm: meaning sits farther than filed · cool: nearer' : 'pick a point → ⊙ centre here to begin',
       ],
     }
   }

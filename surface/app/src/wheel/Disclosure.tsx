@@ -30,8 +30,13 @@ function placement(p: ProjPoint, binding: Projection['binding'] | undefined, cen
     const d = p.r ?? 1
     const w = p.r_unknown ? 'no meaning vector — at the rim' : d < 0.34 ? 'close in meaning' : d < 0.67 ? 'mid-distance' : 'far in meaning'
     out.push({ k: 'meaning', v: centre ? `${w} from ${centre}` : w, num: num(p.r) })
-    if (typeof p.strain === 'number')
-      out.push({ k: 'tension', v: 'filed vs meant', num: num(p.strain), tone: 'strain' })
+    if (typeof p.strain === 'number' && typeof p.r_struct === 'number')
+      out.push({
+        k: 'tension',
+        v: p.r > p.r_struct ? 'meaning farther than filed (out)' : 'meaning nearer than filed (in)',
+        num: num(p.strain),
+        tone: 'strain',
+      })
   } else if (rf === 'separator') {
     const pole = p.pole === 'b' ? 'pole B' : p.pole === 'a' ? 'pole A' : 'balanced'
     out.push({ k: 'leans', v: pole, num: num(Math.abs(p.lean ?? 0)) })
