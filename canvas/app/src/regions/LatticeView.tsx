@@ -681,7 +681,15 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
             {' '}· {sep.balance.lean_a}/{sep.balance.lean_b} · distinct {sep.pole_distinctness.toFixed(2)} · ρ {sep.rank_corr.toFixed(2)}
             {!sep.separates && sep.balance.minority_frac === 0 && <span className="lc-sep-why"> — one pole attracts nobody</span>}
           </div>
-          <div className="lc-meta">tap a point → set it as a pole (drive the two gravities)</div>
+          <div className="lc-meta lc-sep-foot">
+            <span>tap a point → set it as a pole (drive the two gravities)</span>
+            {(poleA || poleB) && (
+              // a driven field → offer the way BACK to the binding's default poles (the reset path the drive
+              // loop was missing; clearing the overrides re-fetches with the binding's declared poles).
+              <button className="lc-sep-reset" onClick={() => { setPoleA(null); setPoleB(null) }}
+                title="return to this lens's default two poles">↺ default poles</button>
+            )}
+          </div>
         </div>
       )}
       {pickedRow && (

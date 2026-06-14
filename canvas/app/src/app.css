@@ -1934,6 +1934,10 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
 .lattice-card.lc-sep .lc-sep-why { color: var(--tx-2); }
 .lattice-card .lc-pole-pick { display: flex; gap: 8px; margin-top: 6px; }
 .lattice-card .lc-pole-pick .lc-center { margin-top: 0; flex: 1; }
+.lattice-card.lc-sep .lc-sep-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.lattice-card.lc-sep .lc-sep-reset { background: none; border: 1px solid var(--line); color: var(--tx-2);
+  border-radius: 6px; padding: 2px 8px; font: 11px ui-monospace, monospace; cursor: pointer; white-space: nowrap; }
+.lattice-card.lc-sep .lc-sep-reset:hover { border-color: var(--acc); color: var(--acc); }
 .lattice-wrap .lattice-hint { position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
   max-width: min(92%, 520px); pointer-events: auto; background: var(--panel); color: var(--tx-2);
   border: 1px solid var(--acc); border-radius: 8px; padding: 6px 11px; text-align: center;

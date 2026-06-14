@@ -27,23 +27,28 @@ ruins the system"). **Expand-before-harden:** the brain docs are captured design
 
 ---
 
-## BUILD STATUS — 2026-06-14 consolidation (NOT "build complete" — 3 honest items remain)
+## BUILD STATUS — 2026-06-14 (NOT "build complete" — ONE honest item remains, genuinely Tim-gated)
 
-The whole INSTRUMENT-FIRST arc is built and verified by use. This is a STATUS, not a completion claim:
-the remaining items are genuinely gated (Tim input / axis-selection) or are data/growth-front conditions
-— green-painting them would be the dishonesty this loop exists to avoid.
+Groups 1–11 are all ✅, both faces, design-critic-passed. Both loop TARGETs (Group 10 then Group 9) are
+✅ to THE BAR. The ONLY remaining item (#12) is genuinely gated on a Tim fit-test — green-painting it
+would be the dishonesty this loop exists to avoid. This is a STATUS, not a completion claim.
 
 - **INSTRUMENT half — ✅ COMPLETE.** Group 1 (the variable-engine floor / acceptance suite), Group 5 (the
   FORM face on the corpus design system), Group 3 (time-freed/relative centre + scrubber), Group 4
   (real-time SSE pub-sub), Group 2 (the square/dyadic-grid half). All ✅, both faces, design-critic-passed.
-- **ABILITY half — ✅ except one corrected 🟡 sub-bar.** Group 8 (embedding substrate live), Group 6 (the
-  circle / semantic radius), Group 7 (strain / structure↔meaning gap), Group 11 (the multi-scale SCALE
-  axis) — all ✅, both faces, design-critic-passed. Group 10 (order-from-edges + angle-from-a-registry + THE
-  CONNECTIONS) — ✅ 2026-06-14 (Tim unblocked it; my prior "needs an acyclic backbone" was a self-imposed
-  constraint — nonsequential IS valid). The directional typed edges now render as an INTERACTIVE directed-
-  chord view (drive-to-explore: tap a row → its OUT edges gold / IN ink / rest fade), verified to THE BAR
-  (live · the real node registry · drivable · interactive), design-critic RESOLVED both viewports. See Group
-  10 below.
+- **ABILITY half — ✅ COMPLETE.** Group 8 (embedding substrate live), Group 6 (the circle / semantic radius),
+  Group 7 (strain / structure↔meaning gap), Group 11 (the multi-scale SCALE axis) — all ✅. Group 10 (the
+  connections in the registries) — ✅ 2026-06-14 (Tim unblocked; my prior "needs an acyclic backbone" was a
+  self-imposed constraint — nonsequential IS valid): the directional typed edges render as an INTERACTIVE
+  directed-chord web (drive-to-explore), verified to THE BAR, critic RESOLVED both viewports. Group 9 (the
+  two-gravity separator) — ✅ 2026-06-14 (Tim unblocked; general variable-two-pole read, AI supplies its own
+  pole): the fifth gate + the two-basin drivable FORM (balance bar, pole-picker, reset), verified to THE BAR,
+  critic PASS both viewports. Both faces each.
+- **THE ONE REMAINING (#12 — small registries + gate surface + 20/80 water-law) — 🔴 genuinely Tim-gated.**
+  Re-examined this fire: NOT gated on relations (Tim gave those → Group 10 shipped). The real open gates are
+  Tim's to set, by his own SEED: the operational definition of "forbidden" (§10 "Tim: you tell me"; §7
+  "deliberately unresolved"; the deep-holes growth law "awaiting Tim's fit-test") and which two AXES are the
+  spine (§7 "the other is open"). Deferred to a fit-test, not parked out of caution; not a loop target.
 - **GENUINELY REMAINING (all honestly gated — the loop must NOT churn on these):**
   · **Group 9** (two-gravity separator) — ✅ DONE (2026-06-14, both faces, to THE BAR). SUPERSEDED the AI-tells
     gate: Tim "there is no single purpose" → general variable-two-pole read, AI supplies its own pole. FUNCTION:
@@ -53,19 +58,29 @@ the remaining items are genuinely gated (Tim input / axis-selection) or are data
     FORM: the two gravities as two spatial BASINS (left/right), radius=|lean|, a diverging BALANCE bar so the
     skew is seen, a pole-PICKER (drive the two gravities live); design-critic PASS at 1440×900 AND 390×844.
     Pollution instance = named DEFERRED application (lens-mismatch 162/0 → correctly refused, honest).
-  · **The small registries + gate surface + 20/80 water-law** — 🔴. CORRECTED (2026-06-14, from the SEED +
-    Tim's foundational message, brain doc lines 303/327-333/495/503): the 20/80 water-law is NOT a visual
-    prioritization dial — it is TYPE-NUCLEATION: a type (an n-gon / a registry row) is BORN when the points
-    accumulating in a region fill past the ~20/80 threshold ("a polygon is crystallizing here" — types
-    discovered by the wave filling). Building a density/emphasis dial and calling it the water-law would be
-    green-paint of Tim's core science. It gates on Tim FORMALIZING the relations part of his equation (his
-    own words: "there are parts to my equations that I haven't quite formalise yet … the registries having
-    relations … typed edges and their criteria … I just haven't got a formal equation") — a DEEPER gate than
-    "choose axes."
-  · **Group 10's edge-order FORM legibility** — 🟡 (above). SAME ROOT GATE: a legible acyclic edge-backbone
-    over registry rows = the registry-RELATIONS model — which is exactly the unformalized piece above. So
-    Group 10's last 🟡 AND the 20/80 water-law CONVERGE on ONE thing only Tim can do: formalize the
-    registry/type-relations part of the root equation. Until then both are honestly blocked.
+  · **Group 10** (the connections in the registries) — ✅ DONE (2026-06-14, both faces, to THE BAR). The
+    directional-typed-edge wheel + the connection web (directed chords, cycles rendered AS cycles, drive-to-
+    explore) shipped; design-critic RESOLVED both viewports. The prior "needs an acyclic backbone, three data
+    sources fail" was my self-imposed total-order constraint — retired by Tim's "nonsequential IS valid / only
+    directional edges type." (The relation_types vocabulary has no instances yet — a growth front, not a gap.)
+  · **The small registries + gate surface + 20/80 water-law** — 🔴, GENUINELY Tim-gated (re-examined 2026-06-14,
+    this fire — and the gate is REAL, not my caution). The 20/80 water-law is TYPE-NUCLEATION: a type/axis is
+    BORN where the FORBIDDEN-ZONE density (gap-pressure) fills past threshold (SEED: "forbidden-zone density =
+    gap-pressure = the instruction to GROW A NEW AXIS"; "new types are born at the deep holes"). The strain
+    quantity exists (Group 7 computes per-point structure↔meaning incommensurability). BUT the gate is NOT the
+    relations model (Tim GAVE that — Group 10 shipped on it); the stale "gated on relations" claim is CORRECTED.
+    The real, still-open gates are two things Tim's own SEED reserves to him:
+      (1) **the operational definition of "forbidden"** — SEED §10 header is literally "THE FORBIDDEN,
+          operationally (Tim: 'you tell me')", and §7 lists it under "Open tensions (expand-before-harden —
+          DELIBERATELY unresolved)" with two candidate readings ("likely both"). The new-types-at-deep-holes
+          growth law is flagged in CONVERGENCE-OBJECT 65/75 as "the most mine … explicitly awaiting Tim's
+          fit-test … if right it is the system's growth law."
+      (2) **which two AXES are the spine** — SEED §7: "Time is the obvious candidate for one. The other is
+          open … choosing them is choosing the system's spine."
+    Building a strain-density read and calling it the water-law/type-nucleation would harden a definition Tim
+    deliberately left open — green-paint of his core science (the loudest place for "half-working damages
+    credibility"). So this is correctly DEFERRED to a Tim fit-test, not parked out of caution. It is also NOT
+    a loop TARGET (the loop targets were Group 10 + Group 9, both ✅).
 - **VERIFIED THIS CONSOLIDATION:** 16/16 broad-regression suites green (projection ×4, drift, bridge_routes,
   conv_index ×3, space_embed, embeddings, durability, events, fs_session_guard, set_ref_atomic, bridge_session);
   live surface all 5 bindings resolve (5994 pts), scrubber shifts `now`, semantic-pending shows the scale
@@ -111,7 +126,8 @@ The seed's m/2 concentric circles + dyadic (i,j) grid — built. Both stubs (rin
   per-point `cell`; `grid` m = 2^(deepest path, cap 4); `rings` = m/2 (the rings:4 hardcode gone).
   Proven: live payload rings 8 / grid 16 / per-point cell; suite 35→41 (power-of-2, rings==m/2, cell
   bounds, depth-tracks-nesting, determinism+scheme-strip, CONTAINMENT).
-- **FORM** — 🟡: the box frames the wheel (the outer circle inscribed, corners past it at the diagonals);
+- **FORM** — ✅ (design-critic PASS both viewports): the box frames the wheel (the outer circle inscribed,
+  corners past it at the diagonals);
   the dyadic grid fades by level (coarse anchors, fine recedes); the picked point's CELL lights up gold
   (its square home — the circle/square duality, seen); the card shows 'cell i,j · depth d'. On tokens
   (box/grid --tx-3, cell --acc), angle-hue preserved. The first design-critic FAILED it (grid
@@ -301,7 +317,8 @@ FROM model_projections()") was never built. So Group 8 was a BUILD, not a bring-
   BALANCE bar (the advisor's mandate: separates:True can still be lopsided → Tim must SEE the 47/115 skew), and
   the verdict (separates · distinct · ρ). DRIVE-TO-EXPLORE: tap a point → its pulls + lean; ◀ set pole A / set
   pole B ▶ re-drives the field keeping the other pole (proven live — driving channels.py as pole A re-drove to
-  2/160). Time controls suppressed (radius is lean, not time), like the semantic lens.
+  2/160), and ↺ default poles resets to the binding's declared pair (added 2026-06-14, verified live: drive →
+  reset → back to 47/115). Time controls suppressed (radius is lean, not time), like the semantic lens.
   > BUILT (commit pending): canvas/app/src/regions/LatticeView.tsx (the basin layout sepTheta used identically by
   > draw + pick; pole hues; readout + balance bar; pole picker; the controls/centre-dot separator branches) +
   > app.css (lc-sep, token-only; pole hues via inline computed hsl, the colour-IS-pole exception). VERIFIED:
@@ -342,42 +359,21 @@ costume) — only REAL persisted directed edges order sectors; registries have n
   bridge) divides the wheel by the projection registry (history/repo/principles/topics/worldview/what + '—');
   order_by=edge topologically orders a real graph (review-1780773666-26: 52 nodes/26 edges, 0 edge
   violations, stable). `tests/projection_instrument_acceptance.py` +12 invariants (53 total).
-- **FORM** 🟡 — the ANGLE-FROM-A-REGISTRY face is ✅: `bindings/by_lens.py` renders the registry-divided
-  wheel (sectors = the projection lenses + an honest '—' remainder), SEPARATE design-critic PASS at BOTH
-  viewports (1440×900 + 390×844): 7 labelled wedges, legible/unclipped, meaningful division, clean toggle
-  back to the kind-wheel, design tokens. What KEEPS Group 10 at 🟡: the FORM bar's "sectors arranged by their
-  real EDGES" — order_by=edge is verified by use over real graph wires (0 violations, stable) BUT cannot be
-  made FE-legible-AND-falsifiable on CURRENT data. CORRECTED PREMISE (2026-06-14 — the prior "only big graphs
-  → unreadable" was wrong; the real blocker is edge-DETERMINATION, not size): a dispositive scan of every
-  edged graph (3–14 nodes) found NONE that is both legible AND edge-determined. The data is sparse (~0.5
-  edges/node): the only fully-edge-determined graph is `first-purpose-test` (3 nodes, A→B→C — trivially
-  small), and every other legible graph has a longest directed chain of just 2 (isolated pairwise wires), so
-  its wheel order is dominated by the stable tie-break and would be INDISTINGUISHABLE from alphabetical — a
-  design-critic could not tell edge-order from no-order. A falsifiable demo (order_by=edge visibly DIFFERS
-  from the fallback AND obeys A→B→C→D) therefore can't be made honestly at a meaningful scale on real data.
-  The order-from-edges MACHINERY is FUNCTION-✅ (the bridge wires angle_from=graph + sector_edges → project()'s
-  `_toposort`); what is missing is an entity-set that is both legibly-sized AND has a real edge backbone.
-  EDGES-BETWEEN-REGISTRY-ROWS is the SEED §95 growth front ("grow the registry-relation model") — when the
-  registries carry real declared relations (a handful of rows, densely related), THAT is the legible +
-  edge-determined set this sub-bar needs; built honestly, never a faked sequence. This FORM sub-bar is a
-  DATA/growth-front condition, not a code gap. SECOND DATA SOURCE CHECKED (2026-06-14): the registry's OWN
-  existing relations — the 8 cascades' step-edges aggregated into a role→role graph (a REAL declared
-  structure, not invented precedence) — give 12 roles but only 5 edges, longest chain 4, and a topological
-  order that differs from alphabetical by a SINGLE transposition; the one pure pipeline (spec-compiler:
-  decompose→expand→ground→triad) is alphabetical-coincident (not even falsifiable). THIRD DATA SOURCE
-  CHECKED (2026-06-14): the node registry's TYPE-FLOW graph (A→B when A's output type feeds B's input type
-  — the densest real relation in the system: 16 node types, 71 edges) — but it is DENSE+CYCLIC (22
-  bidirectional pairs), and a cyclic graph has NO topological order past its acyclic frontier: Kahn emits
-  the 5 pure sources (then alphabetical) and dumps the 11-node cyclic core to tie-break (alphabetical). So
-  its "edge-order" reduces to sources-before-non-sources, each group alphabetical — a critic reading the
-  wheel cold cannot distinguish it from alphabetical. CORRECTED BLOCKER (the real one, three sources deep):
-  density was never the missing property — an ACYCLIC EDGE-BACKBONE is. The same wall has been hit from
-  three structurally-distinct directions — sparse-DAG (graphs), sparse-chain (cascades), dense-cycle
-  (type-flow) — and that CONVERGENCE is the finding: the system holds NO legible acyclic edge-backbone that
-  would order most rows visibly-by-edges. This sub-bar is a DATA condition (not a code gap): it awaits a
-  registry with a real, legible, ACYCLIC dependency DAG over its rows. Rendering any current source would
-  read as alphabetical-with-a-nudge — green-paint, refused. (A connection-WEB viz — drawing the 71 edges as
-  chords — is a DIFFERENT feature, not order-from-edges; it is a modeling call for Tim, never a blind build.)
+- **FORM** ✅ (2026-06-14, both viewports, design-critic RESOLVED — Tim-unblocked). Two faces, both shipped:
+  · ANGLE-FROM-A-REGISTRY: `bindings/by_lens.py` renders the registry-divided wheel (sectors = the projection
+    lenses + an honest '—' remainder), design-critic PASS at both viewports.
+  · THE CONNECTIONS (the directional typed edges, drawn): the node registry's type-flow renders as directed
+    CHORDS (bow toward centre, arrowhead at the target; a bidir pair = a real mutual cycle, rendered AS a
+    cycle — never flattened); whole_set renders the registry's WHOLE structure; DRIVE-TO-EXPLORE — tap a row
+    → its OUT edges blaze gold, IN ink, the rest fade, a readout lists feeds-to / fed-by. design-critic
+    RESOLVED both 1440×900 + 390×844 (drive lights the wheel — 26,392-px change vs a prior 177-px FAIL).
+  > SUPERSEDED — the prior long "needs an ACYCLIC edge-backbone / three data sources all fail / a connection-
+  > web is a different feature for Tim" finding was retired by Tim 2026-06-14: "the only edges that get typed
+  > are the directional ones" + "nonsequential IS valid." That made the directional-typed-edge connection web
+  > the CORRECT face (cycles rendered as cycles, no acyclic order imposed), and it shipped (commits 85df987 +
+  > b136d17). My "acyclic backbone" was a self-imposed total-order constraint Tim never set.
+  > NOTE: the relation_types VOCABULARY (precedes/depends_on/…) has no INSTANCES yet; as real typed relations
+  > are instantiated between items they render in this same view (registry-true) — not a gap, a growth front.
 
 ## GROUP 11 · ABILITY — MULTI-SCALE EMBEDDING PYRAMID ✅ (both faces verified; the SCALE axis)
 THE REVERSAL (evidence-forced): the spec's "sentence/turn/session/project" rungs were CONVERSATION-shaped;
@@ -440,20 +436,25 @@ freeze a variable Tim deliberately left free (the hardcoding reflex). Resolution
 
 ## PRIORITY ORDER (dependency; instrument-first then ability — the loop walks this)
 
-0. **Model calls DISSOLVED** (§17; Tim confirmed) — no gate; the whole sequence is buildable. Group 9's only input is Tim's AI-tells description.
+0. **Model calls DISSOLVED** (§17; Tim confirmed) — no gate; the whole sequence is buildable. (Group 9's old
+   "AI-tells input" is also retired — Tim: "there is no single purpose"; the AI supplies its own AI-pole.)
 1. **Group 1** — ✅ DONE (6615e53) — the acceptance suite (regression floor; 26 invariant teeth).
 2. **Group 5** — ✅ DONE (dc3378a) — the FORM rebuild (lattice onto the corpus design system).
 3. **Group 3** — ✅ DONE (backend dabf952 + FE 9be11cc/3f65f70: scrubber + re-centre + animation, both faces, critic-passed).
 4. **Group 4** — ✅ DONE (528704a: SSE subscription, poll retired, smooth client clock, critic-passed).
 5. **Group 2** — ✅ DONE (ebbfb89: dyadic grid + m/2 rings + picked-cell highlight; critic-passed both faces). The INSTRUMENT half is complete.
-6. **Group 8** — ← NEXT (the ability half begins) — embedding substrate live: bring an embedder resident via the `company` CLI + a capture+embed pass; gates all semantic ability.
-7. **Group 6** — semantic radius (the first ability ring).
-8. **Group 7** — strain / forbidden zones (needs 2 + 6).
-9. **Group 10** — the event→row edge + order-from-edges + angle-from-a-registry (the keystone).
-10. **Group 9** — the two-gravity separator (gated on Model Call 2; highest value once unblocked).
-11. **Group 11** — ✅ DONE (this beat) — the multi-scale pyramid as the SCALE axis: ward-clustered meaning-rung
-    centroids (NOT lineage — evidence-killed), nested rungs, a crossfading rung ladder, design-critic PASS both
-    faces. The ABILITY half's last big beat.
-12. **The small registries + gate surface + 20/80 water-law** — gated on Tim formalizing the registry/type-
-    RELATIONS part of the equation (his stated-unformalized piece, line 495); the 20/80 is TYPE-NUCLEATION,
-    not a dial (see BUILD STATUS). Same root gate as Group 10's edge-FORM 🟡.
+6. **Group 8** — ✅ DONE — embedding substrate live (embedder resident via the `company` CLI + capture+embed).
+7. **Group 6** — ✅ DONE — semantic radius (the meaning-field, the first ability ring).
+8. **Group 7** — ✅ DONE — strain / forbidden zones (per-point structure↔meaning incommensurability).
+9. **Group 10** — ✅ DONE (2026-06-14, both faces) — the event→row edge + angle-from-a-registry + THE
+   CONNECTIONS (the directional typed-edge web, cycles AS cycles, drive-to-explore). The keystone.
+10. **Group 9** — ✅ DONE (2026-06-14, both faces) — the two-gravity separator (general variable-two-pole read
+    + the fifth gate + the two-basin drivable FORM). Tim retired the old "Model Call 2 / AI-tells" gate.
+11. **Group 11** — ✅ DONE — the multi-scale pyramid as the SCALE axis: ward-clustered meaning-rung centroids
+    (NOT lineage — evidence-killed), nested rungs, a crossfading rung ladder, design-critic PASS both faces.
+12. **The small registries + gate surface + 20/80 water-law** — 🔴 GENUINELY Tim-gated (re-examined this fire).
+    NOT gated on relations (Tim GAVE relations → Group 10 shipped; that stale claim is corrected). The REAL
+    open gates, reserved to Tim by his own SEED: (1) the operational definition of "forbidden" (§10 "Tim: you
+    tell me"; §7 "deliberately unresolved"; new-types-at-deep-holes "awaiting Tim's fit-test"), and (2) WHICH
+    TWO AXES are the spine (§7 "the other is open"). Building it now = green-painting his core science. NOT a
+    loop TARGET (the targets were Group 10 + Group 9).
