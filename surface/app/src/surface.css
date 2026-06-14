@@ -54,6 +54,15 @@
 .disc-close { border: none; background: transparent; color: var(--ink-faint); font-size: var(--t-md);
   cursor: pointer; line-height: 1; padding: var(--s-1); min-width: 44px; min-height: 44px; }
 .disc-summary { margin: 0; font-size: var(--t-sm); color: var(--ink-dim); line-height: var(--lh-body); }
+/* the "why it's here" placement readout (what it chose) */
+.disc-place { margin: 0; display: flex; flex-direction: column; gap: 3px; }
+.place-row { display: grid; grid-template-columns: 64px 1fr; gap: var(--s-2); align-items: baseline; }
+.place-k { font-size: var(--t-xs); color: var(--ink-faint); text-transform: lowercase; letter-spacing: 0.04em; }
+.place-v { font-size: var(--t-sm); color: var(--ink-dim); margin: 0; }
+.place-row--strain .place-v { color: var(--pig-strain); }
+.place-row--born .place-v { color: var(--pig-born); }
+.place-row--pile .place-v { color: var(--ink-faint); }
+
 .disc-chips { display: flex; flex-wrap: wrap; gap: var(--s-1); }
 .chip { font-size: var(--t-xs); color: var(--ink-dim); background: var(--ground-secondary);
   border-radius: var(--r-pill); padding: 2px var(--s-2); }

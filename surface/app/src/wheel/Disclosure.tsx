@@ -1,12 +1,42 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { ProjPoint, ContextBundle } from '../lib/api'
+import type { ProjPoint, ContextBundle, Projection } from '../lib/api'
 import type { MotionFeel } from '../tokens/motion'
 import { transition } from '../tokens/motion'
 import { contextAt } from '../lib/address'
 import { pointAddress } from './Wheel'
 
 type Variant = 'panel' | 'sheet' | 'rail'
+
+// WHAT IT CHOSE (Tim 2026-06-14: "I don't know what it is or what it chose"). The legend says what the lens is;
+// this narrates, for the SELECTED point, WHY it landed where it did — its division (angle) and what its radius
+// means in the active lens — in plain words + the real value. Derived from the binding (registry-true).
+type Place = { k: string; v: string; tone?: 'born' | 'strain' | 'pile' }
+function placement(p: ProjPoint, binding: Projection['binding'] | undefined, centre: string | null): Place[] {
+  const out: Place[] = [{ k: 'in', v: p.sector }] // the division (its kind/type) it sits in
+  const rf = binding?.radius_from
+  const num = (x: number | undefined) => (typeof x === 'number' ? x.toFixed(2) : '—')
+  if (rf === 'semantic') {
+    const d = p.r ?? 1
+    const w = p.r_unknown ? 'no meaning vector — at the rim' : d < 0.34 ? 'close in meaning' : d < 0.67 ? 'mid-distance' : 'far in meaning'
+    out.push({ k: 'meaning', v: centre ? `${w} from ${centre} (${num(p.r)})` : `${w} (${num(p.r)})` })
+    if (typeof p.strain === 'number')
+      out.push({ k: 'tension', v: `filed vs meant · ${num(p.strain)}`, tone: 'strain' })
+  } else if (rf === 'separator') {
+    const pole = p.pole === 'b' ? 'pole B' : p.pole === 'a' ? 'pole A' : 'balanced'
+    out.push({ k: 'leans', v: `${pole} · strength ${num(Math.abs(p.lean ?? 0))}` })
+  } else if (rf === 'nucleation') {
+    if (p.inside) out.push({ k: 'fits', v: `${p.assigned ?? p.sector} · inside (${num(p.fit)})` })
+    else out.push({ k: 'misfit', v: p.born ? 'piled out → a new type ✦' : 'fits no type · piled out', tone: p.born ? 'born' : 'pile' })
+  } else if (rf === 'address') {
+    out.push({ k: 'distance', v: `structural · ${num(p.r)} from ${centre ?? 'centre'}` })
+  } else {
+    const d = p.r ?? 0
+    const w = d < 0.34 ? 'recent' : d < 0.67 ? 'a while ago' : 'long ago'
+    out.push({ k: 'age', v: centre ? `${num(p.r)} from ${centre}` : `${w} (${num(p.r)})` })
+  }
+  return out
+}
 
 // Clean excerpt: never cut mid-word; end on a word boundary with an ellipsis (design-critic fix #1).
 function excerpt(s: string, max = 150): string {
@@ -25,12 +55,16 @@ export function Disclosure({
   variant,
   onDismiss,
   onFocus,
+  binding,
+  centreLabel,
 }: {
   point: ProjPoint | null
   feel: MotionFeel
   variant: Variant
   onDismiss: () => void
   onFocus?: (p: ProjPoint) => void
+  binding?: Projection['binding']
+  centreLabel?: string | null
 }) {
   const [bundle, setBundle] = useState<ContextBundle | null>(null)
   const [ctxError, setCtxError] = useState<string | null>(null)
@@ -79,15 +113,15 @@ export function Disclosure({
 
           {point.summary && <p className="disc-summary">{excerpt(point.summary, 160)}</p>}
 
-          {/* a few visual facts, not a text wall: which sector, fit/lean/strain when present */}
-          <div className="disc-chips">
-            <span className="chip">{point.sector}</span>
-            {point.born && <span className="chip chip--born">born</span>}
-            {typeof point.lean === 'number' && (
-              <span className="chip">{point.pole === 'b' ? 'lean B' : point.pole === 'a' ? 'lean A' : 'balanced'}</span>
-            )}
-            {typeof point.strain === 'number' && <span className="chip chip--strain">strain</span>}
-          </div>
+          {/* WHY IT'S HERE — its division + what its radius means in this lens (plain words + real value) */}
+          <dl className="disc-place">
+            {placement(point, binding, centreLabel ?? null).map((pl, i) => (
+              <div className={`place-row ${pl.tone ? `place-row--${pl.tone}` : ''}`} key={i}>
+                <dt className="place-k">{pl.k}</dt>
+                <dd className="place-v">{pl.v}</dd>
+              </div>
+            ))}
+          </dl>
 
           <div className="disc-context">
             {ctxError && <p className="notice-inline">context unavailable: {ctxError}</p>}
