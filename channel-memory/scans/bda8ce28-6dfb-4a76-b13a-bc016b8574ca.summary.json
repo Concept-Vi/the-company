@@ -1,56 +1,57 @@
 {
   "scan_ver": "scan-1",
   "source_path": "/home/tim/.claude/projects/-home-tim/bda8ce28-6dfb-4a76-b13a-bc016b8574ca.jsonl",
-  "source_bytes": 20691896,
-  "scanned_at": "2026-06-14T08:55:19.368682+00:00",
-  "events_total": 12725,
+  "source_bytes": 20708944,
+  "scanned_at": "2026-06-14T09:19:02.919952+00:00",
+  "events_total": 12733,
   "first_ts": "2026-06-10T05:10:17.536Z",
-  "last_ts": "2026-06-14T08:54:54.566Z",
-  "duration_sec": 359077.0299999714,
+  "last_ts": "2026-06-14T09:00:47.099Z",
+  "duration_sec": 359429.56299996376,
   "by_type": {
-    "attachment": 4145,
-    "assistant": 2840,
-    "user": 1405,
-    "system": 500,
+    "attachment": 4146,
+    "assistant": 2842,
+    "user": 1406,
+    "system": 502,
     "agent-setting": 465,
     "mode": 465,
     "permission-mode": 465,
     "last-prompt": 458,
     "ai-title": 457,
     "agent-name": 457,
-    "queue-operation": 372,
+    "queue-operation": 374,
     "worktree-state": 357,
     "file-history-snapshot": 206,
     "bridge-session": 133
   },
   "by_attribution": {
-    "attachment": 4145,
-    "assistant": 2819,
+    "attachment": 4146,
+    "assistant": 2821,
     "tool": 1108,
-    "system": 500,
+    "system": 502,
     "agent-setting": 465,
     "mode": 465,
     "permission-mode": 465,
     "last-prompt": 458,
     "ai-title": 457,
     "agent-name": 457,
-    "queue-operation": 372,
+    "queue-operation": 374,
     "worktree-state": 357,
-    "user": 288,
     "file-history-snapshot": 206,
+    "user": 144,
+    "inject": 144,
     "bridge-session": 133,
     "synthetic": 21,
-    "channel": 8,
+    "channel": 9,
     "compaction": 1
   },
   "by_model": {
-    "claude-opus-4-8": 2026,
+    "claude-opus-4-8": 2028,
     "claude-fable-5": 793,
     "<synthetic>": 21
   },
   "system_subtypes": {
-    "turn_duration": 185,
-    "stop_hook_summary": 164,
+    "turn_duration": 186,
+    "stop_hook_summary": 165,
     "local_command": 54,
     "away_summary": 52,
     "scheduled_task_fire": 24,
@@ -59,10 +60,10 @@
     "compact_boundary": 1
   },
   "tokens_total": {
-    "in": 554597,
-    "out": 5652586,
-    "cache_read": 1470402420,
-    "cache_creation": 55720567
+    "in": 554601,
+    "out": 5657402,
+    "cache_read": 1471859566,
+    "cache_creation": 55723929
   },
   "tokens_by_model": {
     "claude-fable-5": {
@@ -74,8 +75,8 @@
       "out": 0
     },
     "claude-opus-4-8": {
-      "in": 353601,
-      "out": 4213589
+      "in": 353605,
+      "out": 4218405
     }
   },
   "boundaries": [
@@ -107,74 +108,74 @@
     {
       "n": 1,
       "from_line": 8401,
-      "user_msgs": 435,
-      "assistant_msgs": 1039,
+      "user_msgs": 436,
+      "assistant_msgs": 1041,
       "first_ts": "2026-06-13T14:21:07.199Z",
-      "last_ts": "2026-06-14T08:54:54.566Z",
-      "to_line": 12725
+      "last_ts": "2026-06-14T09:00:47.099Z",
+      "to_line": 12733
     }
   ],
   "fork_provenance": {
     "inherited_events": 0,
-    "own_events": 4245,
+    "own_events": 4248,
     "parents": {},
     "is_fork": false,
     "is_root": true
   },
   "dense_profile": {
-    "human_turns": 288,
-    "human_bytes_total": 323900,
-    "human_bytes_mean": 1124.7,
+    "human_turns": 144,
+    "human_bytes_total": 60329,
+    "human_bytes_mean": 419.0,
     "biggest_human_msgs": [
       {
-        "bytes": 25648,
-        "line": 2118,
-        "ts": "2026-06-11T07:03:10.394Z"
+        "bytes": 5055,
+        "line": 3793,
+        "ts": "2026-06-11T20:41:05.811Z"
       },
       {
-        "bytes": 22195,
-        "line": 11180,
-        "ts": "2026-06-14T05:21:39.252Z"
+        "bytes": 3682,
+        "line": 2209,
+        "ts": "2026-06-11T08:56:48.761Z"
       },
       {
-        "bytes": 8964,
-        "line": 11086,
-        "ts": "2026-06-14T04:34:57.017Z"
+        "bytes": 3149,
+        "line": 5980,
+        "ts": "2026-06-12T09:43:20.958Z"
       },
       {
-        "bytes": 8842,
-        "line": 7517,
-        "ts": "2026-06-13T10:33:15.560Z"
+        "bytes": 3049,
+        "line": 5961,
+        "ts": "2026-06-12T09:11:32.864Z"
       },
       {
-        "bytes": 7726,
-        "line": 11133,
-        "ts": "2026-06-14T04:51:24.029Z"
+        "bytes": 2906,
+        "line": 5417,
+        "ts": "2026-06-12T09:06:45.836Z"
       },
       {
-        "bytes": 7688,
-        "line": 2069,
-        "ts": "2026-06-11T06:40:48.383Z"
+        "bytes": 2811,
+        "line": 5131,
+        "ts": "2026-06-12T06:38:02.042Z"
       },
       {
-        "bytes": 7029,
-        "line": 4414,
-        "ts": "2026-06-12T03:45:36.426Z"
+        "bytes": 1953,
+        "line": 11974,
+        "ts": "2026-06-14T07:18:15.261Z"
       },
       {
-        "bytes": 6966,
-        "line": 7322,
-        "ts": "2026-06-13T06:10:14.618Z"
+        "bytes": 1945,
+        "line": 20,
+        "ts": "2026-06-10T05:26:19.543Z"
       },
       {
-        "bytes": 6220,
-        "line": 7448,
-        "ts": "2026-06-13T10:12:36.990Z"
+        "bytes": 1539,
+        "line": 1792,
+        "ts": "2026-06-11T05:55:24.327Z"
       },
       {
-        "bytes": 6200,
-        "line": 4014,
-        "ts": "2026-06-11T22:53:56.361Z"
+        "bytes": 1539,
+        "line": 1787,
+        "ts": "2026-06-11T05:53:03.520Z"
       }
     ],
     "biggest_assistant_msgs": [
@@ -229,7 +230,7 @@
         "ts": "2026-06-12T08:20:40.819Z"
       }
     ],
-    "assistant_bytes_mean": 1098.2
+    "assistant_bytes_mean": 1099.1
   },
   "largest_gaps_sec": [
     {

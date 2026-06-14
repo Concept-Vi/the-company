@@ -72,9 +72,17 @@ def _attribution(ev: dict) -> str:
             return "tool"
         c = msg.get("content")
         head = c if isinstance(c, str) else (c[0].get("text", "") if isinstance(c, list) and c and isinstance(c[0], dict) else "")
-        if isinstance(head, str) and head.lstrip().startswith("<channel "):
+        head = head.lstrip() if isinstance(head, str) else ""
+        if head.startswith("<channel "):
             return "channel"
-        return "user"
+        # injected user-events (NOT human turns): skill activations, slash-commands, background
+        # task-notifications, and any isMeta meta-injection. STRUCTURAL filter — content text lies
+        # (these are type:user with no toolUseResult), so we discriminate on isMeta + known prefixes.
+        if ev.get("isMeta") is True or head.startswith((
+                "<task-notification", "<command", "<local-command",
+                "Base directory for this skill", "<persisted-output", "<user-prompt-submit")):
+            return "inject"
+        return "user"                    # a genuine human-typed turn (Tim)
     if et == "system":
         return "system"
     return et or "unknown"

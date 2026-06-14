@@ -1,62 +1,63 @@
 {
   "scan_ver": "scan-1",
   "source_path": "/home/tim/.claude/projects/-home-tim/11e7d395-8bb9-463f-bcb3-06616da49ebb.jsonl",
-  "source_bytes": 7314677,
-  "scanned_at": "2026-06-14T08:55:19.529307+00:00",
-  "events_total": 2492,
+  "source_bytes": 7614314,
+  "scanned_at": "2026-06-14T09:19:03.091812+00:00",
+  "events_total": 2610,
   "first_ts": "2026-06-13T14:21:07.199Z",
-  "last_ts": "2026-06-14T08:54:57.000Z",
-  "duration_sec": 66829.80100011826,
+  "last_ts": "2026-06-14T09:18:25.877Z",
+  "duration_sec": 68238.67800021172,
   "by_type": {
-    "assistant": 1064,
-    "attachment": 705,
-    "user": 443,
-    "system": 78,
-    "custom-title": 43,
-    "agent-name": 43,
-    "mode": 42,
-    "last-prompt": 41,
-    "queue-operation": 26,
-    "file-history-snapshot": 7
+    "assistant": 1095,
+    "attachment": 747,
+    "user": 455,
+    "system": 80,
+    "custom-title": 49,
+    "agent-name": 49,
+    "mode": 48,
+    "last-prompt": 47,
+    "queue-operation": 30,
+    "file-history-snapshot": 10
   },
   "by_attribution": {
-    "assistant": 1061,
-    "attachment": 705,
-    "tool": 382,
-    "system": 78,
-    "user": 55,
-    "custom-title": 43,
-    "agent-name": 43,
-    "mode": 42,
-    "last-prompt": 41,
-    "queue-operation": 26,
-    "file-history-snapshot": 7,
+    "assistant": 1092,
+    "attachment": 747,
+    "tool": 393,
+    "system": 80,
+    "custom-title": 49,
+    "agent-name": 49,
+    "mode": 48,
+    "last-prompt": 47,
+    "queue-operation": 30,
+    "inject": 28,
+    "user": 28,
+    "file-history-snapshot": 10,
     "compaction": 3,
     "synthetic": 3,
     "channel": 3
   },
   "by_model": {
-    "claude-opus-4-8": 1061,
+    "claude-opus-4-8": 1092,
     "<synthetic>": 3
   },
   "system_subtypes": {
-    "turn_duration": 33,
-    "stop_hook_summary": 32,
+    "turn_duration": 34,
+    "stop_hook_summary": 33,
     "local_command": 6,
     "compact_boundary": 3,
     "away_summary": 3,
     "scheduled_task_fire": 1
   },
   "tokens_total": {
-    "in": 411228,
-    "out": 2502797,
-    "cache_read": 430403575,
-    "cache_creation": 12441028
+    "in": 414764,
+    "out": 2620684,
+    "cache_read": 436259509,
+    "cache_creation": 13146844
   },
   "tokens_by_model": {
     "claude-opus-4-8": {
-      "in": 411228,
-      "out": 2502797
+      "in": 414764,
+      "out": 2620684
     },
     "<synthetic>": {
       "in": 0,
@@ -138,16 +139,16 @@
     {
       "n": 3,
       "from_line": 2136,
-      "user_msgs": 38,
-      "assistant_msgs": 99,
+      "user_msgs": 50,
+      "assistant_msgs": 130,
       "first_ts": "2026-06-14T08:29:36.435Z",
-      "last_ts": "2026-06-14T08:54:57.000Z",
-      "to_line": 2492
+      "last_ts": "2026-06-14T09:18:25.877Z",
+      "to_line": 2610
     }
   ],
   "fork_provenance": {
     "inherited_events": 1718,
-    "own_events": 293,
+    "own_events": 336,
     "parents": {
       "bda8ce28-6dfb-4a76-b13a-bc016b8574ca": 1718
     },
@@ -155,39 +156,14 @@
     "is_root": false
   },
   "dense_profile": {
-    "human_turns": 55,
-    "human_bytes_total": 61110,
-    "human_bytes_mean": 1111.1,
+    "human_turns": 28,
+    "human_bytes_total": 9898,
+    "human_bytes_mean": 353.5,
     "biggest_human_msgs": [
-      {
-        "bytes": 22195,
-        "line": 1329,
-        "ts": "2026-06-14T05:21:39.252Z"
-      },
-      {
-        "bytes": 8964,
-        "line": 1285,
-        "ts": "2026-06-14T04:34:57.017Z"
-      },
-      {
-        "bytes": 7726,
-        "line": 1304,
-        "ts": "2026-06-14T04:51:24.029Z"
-      },
-      {
-        "bytes": 5406,
-        "line": 1370,
-        "ts": "2026-06-14T05:41:47.805Z"
-      },
       {
         "bytes": 3191,
         "line": 2089,
         "ts": "2026-06-14T08:19:31.199Z"
-      },
-      {
-        "bytes": 2341,
-        "line": 200,
-        "ts": "2026-06-13T14:32:54.088Z"
       },
       {
         "bytes": 1359,
@@ -208,6 +184,31 @@
         "bytes": 496,
         "line": 1121,
         "ts": "2026-06-14T03:48:27.618Z"
+      },
+      {
+        "bytes": 424,
+        "line": 1187,
+        "ts": "2026-06-14T03:57:16.045Z"
+      },
+      {
+        "bytes": 396,
+        "line": 1565,
+        "ts": "2026-06-14T06:20:40.377Z"
+      },
+      {
+        "bytes": 360,
+        "line": 1292,
+        "ts": "2026-06-14T04:38:22.277Z"
+      },
+      {
+        "bytes": 341,
+        "line": 1571,
+        "ts": "2026-06-14T06:24:00.631Z"
+      },
+      {
+        "bytes": 268,
+        "line": 2568,
+        "ts": "2026-06-14T09:14:25.127Z"
       }
     ],
     "biggest_assistant_msgs": [
@@ -237,6 +238,11 @@
         "ts": "2026-06-14T07:45:51.769Z"
       },
       {
+        "bytes": 9642,
+        "line": 2502,
+        "ts": "2026-06-14T08:57:23.334Z"
+      },
+      {
         "bytes": 9514,
         "line": 1574,
         "ts": "2026-06-14T06:26:48.112Z"
@@ -255,14 +261,9 @@
         "bytes": 7717,
         "line": 1062,
         "ts": "2026-06-14T01:13:53.826Z"
-      },
-      {
-        "bytes": 7604,
-        "line": 579,
-        "ts": "2026-06-13T15:15:04.488Z"
       }
     ],
-    "assistant_bytes_mean": 964.2
+    "assistant_bytes_mean": 991.2
   },
   "largest_gaps_sec": [
     {
@@ -296,6 +297,11 @@
       "ts": "2026-06-14T07:06:00.793Z"
     },
     {
+      "gap_sec": 803.2,
+      "line": 2561,
+      "ts": "2026-06-14T09:14:25.056Z"
+    },
+    {
       "gap_sec": 744.2,
       "line": 1271,
       "ts": "2026-06-14T04:25:02.678Z"
@@ -319,11 +325,6 @@
       "gap_sec": 301.4,
       "line": 1723,
       "ts": "2026-06-14T07:13:58.808Z"
-    },
-    {
-      "gap_sec": 269.6,
-      "line": 1623,
-      "ts": "2026-06-14T06:46:04.080Z"
     }
   ]
 }
