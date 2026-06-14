@@ -109,9 +109,18 @@ and "the types/divisions of the circle [should be built in] so the data points c
 - **Project-scoping checked (L13):** /api/projection does NOT scope by project, and only "company" has
   substantive data (3037 records; "cognition-engine" has 1). The project system is thus data-thin + needs an
   engine scoping pass — deferred until a real second project's data exists (Tim's MCP make-data, or it accrues).
-- **NEXT BEATS (sequenced):** the registry-promotion keystone (L15 — born type → operator proposal via the
-  proposal seam → the wheel re-divides; the close-the-loop Tim emphasized; data EXISTS — born candidates in the
-  nucleation lens); then the project system + the forbidden when their data exists; carry-over polish (tether).
+- **GROUP 3 TIME SCRUBBER — BUILT** (`79f56ac`). A slim bottom bar slides the temporal centre into the past
+  (?at=); the instrument re-projects only ts≤then (count/sectors shrink); far-right = the live present; past
+  pauses the live forward-pull; "now" returns to live. Verified both viewports (Jun 3 → 48 pts/4 sectors;
+  Jun 5 → 339; now → 600). The complement to the live spine. Pure read.
+- **FIX (`bdefb7a`):** points were keyed by address, but addresses recur (many events at one ui:// address,
+  e.g. chat turns at ui://chrome/chat) → 784 duplicate-key React warnings once such events entered the
+  projection. Now every point layer keys + layoutId by p.seq (unique/stable); data-ui-ref stays the address.
+- **LENS RE-HOMING ~complete:** of the 12 groups, all are now in the surface EXCEPT G11 (the multi-scale
+  pyramid / theme↔unit rung-zoom) — the next clean lens beat. (G8 substrate is implicit.)
+- **NEXT BEATS (sequenced):** G11 scale-pyramid zoom (clean, real data — the 3 pyramids + rung ladder); the
+  registry-promotion keystone (L15 — blocked on L14: embed registry defs so a symbolic registry is nucleable,
+  a model-load data-build); the project system + forbidden when their data exists; carry-over polish (tether).
 - Note: a test annotation ("live-spine verification ping") was written to `ui://instrument/wheel` during live
   verification — benign, append-only; harmless real comment.
 
