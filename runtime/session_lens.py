@@ -37,6 +37,11 @@ DECISION_CUES = re.compile(r"\b(decided|decision|chose|choose|switched to|we'?ll
 RESOLVED_CUES = re.compile(r"\b(done|fixed|resolved|working|proven|verified|complete[d]?|landed|live now|"
                            r"shipped|committed|now works|got it working|✓|✅)\b", re.I)
 TIM_QUESTION = re.compile(r"\?\s*$|^(can|could|will|would|what|why|how|when|where|is|are|do|does|should)\b", re.I)
+# UI / front-end requirement language — Tim's descriptions of the eventual Claude-code UI (surface distinctly)
+UI_CUES = re.compile(r"\b(UI|interface|the face|front-?end|screen|panel|render(ing|ed|s)?|layout|visual|"
+                     r"design|canvas|surface|card|view|dashboard|widget|button|colou?r|theme|navigab\w*|"
+                     r"projection|operable|aesthetic|look|display)\b", re.I)
+FABLE_MODEL = "claude-fable-5"
 
 INJ_PREFIXES = ("<task-notification", "<command", "<local-command", "Base directory for this skill",
                 "<persisted-output", "<user-prompt-submit")
@@ -258,18 +263,33 @@ def spin_up_points(jsonl_path: str, k: int = 12) -> dict:
         nxt_idx = seeds[n + 1][0] if n + 1 < len(seeds) else len(turns)
         seg = turns[idx:nxt_idx]
         asst = [t for t in seg if t["attr"] == "assistant"]
+        tim = [t for t in seg if t["attr"] == "user"]
         decisions_n = sum(1 for t in asst if DECISION_CUES.search(t["text"]))
         open_threads = sum(1 for t in seg if t["attr"] == "assistant" and BLOCKER_CUES.search(t["text"]))
         activity = sum(len(t["text"]) for t in asst)
-        score = decisions_n * 3 + open_threads * 2 + activity / 5000.0
+        # AXIS 1 (Tim-direct): FABLE-as-main-model — Fable is the most advanced, gave Tim's best responses
+        fable_turns = sum(1 for t in asst if t.get("model") == FABLE_MODEL)
+        # AXIS 2 (Tim-direct): TIM-DESCRIPTION density + UI-REQUIREMENTS (Tim's long descriptive turns; the
+        # UI descriptions earlier in THIS session are valuable for the eventual UI build — surface distinctly)
+        tim_desc_bytes = sum(len(t["text"]) for t in tim)
+        ui_hits = sum(len(UI_CUES.findall(t["text"])) for t in tim)
+        ui_turns = sum(1 for t in tim if UI_CUES.search(t["text"]))
         ranked.append({"line": seed["line"], "ts": seed["ts"],
                        "decisions": decisions_n, "open_threads": open_threads,
                        "asst_turns": len(asst), "seg_kb": round(activity / 1000, 1),
-                       "score": round(score, 1), "seed": _clip(seed["text"], 160)})
-    ranked.sort(key=lambda x: -x["score"])
+                       "fable_turns": fable_turns,
+                       "tim_desc_kb": round(tim_desc_bytes / 1000, 1), "ui_cue_hits": ui_hits, "ui_turns": ui_turns,
+                       "context_score": round(decisions_n * 3 + open_threads * 2 + activity / 5000.0, 1),
+                       "seed": _clip(seed["text"], 160)})
+    by_context = sorted(ranked, key=lambda x: -x["context_score"])
+    by_fable = sorted([r for r in ranked if r["fable_turns"] > 0], key=lambda x: -x["fable_turns"])
+    by_ui = sorted([r for r in ranked if r["ui_cue_hits"] > 0],
+                   key=lambda x: -(x["ui_cue_hits"] + x["tim_desc_kb"]))    # UI-requirement density (Tim-direct axis)
     return {"lens": "spin_up_points", "n_candidates": len(seeds),
-            "scoring": "decisions*3 + open_threads*2 + activity_kb/5 — context-state value, not recency",
-            "ranked": ranked[:k]}
+            "axes": "context-state value · FABLE-as-main-model · TIM-description/UI-requirement density (all Tim-direct)",
+            "by_context": by_context[:k],
+            "by_fable": by_fable[:k],
+            "by_ui_description": by_ui[:k]}
 
 
 LENSES = {"find": find, "decisions": decisions, "open_loops": open_loops,
