@@ -23,8 +23,8 @@ is; this is the antidote. Items move UP only on real evidence (a run, a diff rea
   presence-prune · 17/17 router test. Proven live: Tim's real sessions received; tonight the lead +
   ch-8djrpmsl round-tripped through it repeatedly (this very coordination is the proof).
 - Dimension-aware chunking (fork) — cross-review PASSED, pointed-query 6→1, b7d3f97.
-- ★ CHANNEL LAYER (registry + transport + MCP ops) — LEAD re-ran the acceptance suite myself: **52/52
-  PASS** (original 17 + 35 new). Named-channel CRUD (create/list/add/remove/archive, member-in-many-
+- ★ CHANNEL LAYER (registry + transport + MCP ops) — LEAD re-ran the acceptance suite myself: **54/54
+  PASS** (worker's 52 + 2 lead-added restart-coverage tests). Named-channel CRUD (create/list/add/remove/archive, member-in-many-
   channels), channel-transport HTTP dispatch, supervised-transport /inject + /watch reply-fold, the
   nonce-gated stale-done guards (falsification-verified — disabling each flips its test to FAIL), mixed
   broadcast, safe per-transport prune. MCP ops live in HEAD, working tree clean. Commits 57e4468 +
@@ -63,16 +63,19 @@ the lead has NOT confirmed the cross-component path by use — these are the mor
   Net: the MCP ops ARE in HEAD + verified, but the channel layer is no longer a clean single-revert
   (revert-cleanliness was part of the reversibility basis). Any session that stages-then-waits is
   exposed. → DECISIONS-FOR-MORNING #3.
-- WATCHER-ENSURE GAP (narrow; recorded, not yet fixed): the supervised reply-watcher does `if handle in
-  _watchers: return`; a dying watcher only deregisters in its `finally`. A re-dispatch to the same
-  supervised handle in the window between stream-exit and finally-pop would skip starting a fresh
-  watcher → that turn's reply silently dropped. Needs concurrent same-handle dispatch × a precisely
-  interleaved non-`closed` stream blip. Lead's next-beat candidate (no-deferral) — handled as a careful
-  deliberate fix, NOT a rushed 2am concurrency patch on a file that just went 52/52-green.
+- WATCHER DEATH-WINDOW RACE (narrow; documented, intentionally NOT patched — lead verified): the
+  supervised reply-watcher DOES deregister in its `finally` (lead confirmed by reading the full finally
+  — the common "watcher exits → next dispatch re-tails" path WORKS; lead added regression test 53/54,
+  green on the worker's original code). The residual gap is only the TIGHT race where a re-dispatch
+  lands in the window between stream-exit and the finally-pop executing → that one turn's reply could
+  drop. Lead attempted a fix (is_alive guard + re-ensure) and found it layered a successor-clobber on
+  top of the existing pop → REVERTED. Agreeing with the worker: the clean fix needs disproportionate
+  lifecycle machinery for an extremely narrow window; left documented, not patched. (HONEST NOTE: lead
+  first misread the finally as never-popping — corrected after reading it in full + falsification.)
 
-**LEAD'S PRIMARY JOB TONIGHT = VERIFIER.** Not more docs. Channel layer VERIFIED (52/52 lead-re-run +
-both wire halves hand-traced). Remaining lead beats: the watcher-gap fix, then the 5th wire (op=recall)
-once the recall-fork posts its signature. Move items up this ledger only on real evidence.
+**LEAD'S PRIMARY JOB TONIGHT = VERIFIER.** Not more docs. Channel layer VERIFIED (54/54 lead-re-run,
+incl. +2 lead-added restart-coverage tests; both wire halves hand-traced). Remaining lead beat: the 5th
+wire (`op=recall`) once the recall-fork posts its signature. Move items up this ledger only on evidence.
 
 ## Lanes + status (each session updates its own block; verify-by-use, no "done" without proof)
 ### LEAD (ch-al7jdfdr) — channel layer + serving + coordination
