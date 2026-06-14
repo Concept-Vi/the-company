@@ -42,6 +42,10 @@ ROUTINE_FIELDS = frozenset({
                        #   Descriptive here; the schedule arm (systemd timer) reads it. Absent ⇒
                        #   fire-only (manual / mcp op=fire), no schedule.
     "repeats",         # bool: a goal-loop routine re-fires (the runner/evaluator decides); default False
+    "goal",            # OPTIONAL goal-loop (CC-22) description (operator-facing; what "done" means)
+    "done_when",       # OPTIONAL goal-loop success predicate over the result text: a plain substring
+                       #   the result must contain, OR "/<regex>/" matched against the result. Present
+                       #   ⇒ run_goal_loop has a default evaluator (no model judge needed).
     "max_turns",       # int >= 1: turns to run per fire (default 1 — one prompt, one result)
     "trigger",         # optional free-text description of what should fire it (descriptive)
 })
@@ -77,6 +81,14 @@ class Routine:
         return self.spec.get("cadence")
 
     @property
+    def goal(self):
+        return self.spec.get("goal")
+
+    @property
+    def done_when(self):
+        return self.spec.get("done_when")
+
+    @property
     def repeats(self) -> bool:
         return bool(self.spec.get("repeats"))
 
@@ -91,7 +103,7 @@ class Routine:
             "description": self.spec.get("description"), "prompt": self.prompt,
             "cwd": self.cwd, "model": self.model, "permission_mode": self.permission_mode,
             "cadence": self.cadence, "repeats": self.repeats, "max_turns": self.max_turns,
-            "trigger": self.spec.get("trigger"),
+            "goal": self.goal, "done_when": self.done_when, "trigger": self.spec.get("trigger"),
         }
 
 

@@ -34,13 +34,13 @@ class RoutineFireError(RuntimeError):
     """A routine could not be fired — raised TEACHING-loud (never a silent no-op)."""
 
 
-def build_spawn_body(routine: Routine, *, source: str = "routine") -> dict:
+def build_spawn_body(routine: Routine, *, source: str = "routine", prompt_override=None) -> dict:
     """The /spawn request body for a routine fire (pure — unit-testable WITHOUT a real spawn).
     Omits None fields so the supervisor reproduces its defaults; the prompt rides in the body so
     the /spawn route auto-injects it as the first turn."""
     body: dict = {
         "cwd": routine.cwd,
-        "prompt": routine.prompt,
+        "prompt": prompt_override or routine.prompt,
         "permission_mode": routine.permission_mode,
         "name": f"routine:{routine.id}",
         "source": source,
@@ -92,7 +92,7 @@ def _capture_done(base: str, session: str, timeout: float):
 
 
 def fire(routine_or_id, *, base: str = DEFAULT_SUPERVISOR, keep: bool = False,
-         turn_timeout: float = 300.0, source: str = "routine") -> dict:
+         turn_timeout: float = 300.0, source: str = "routine", prompt_override=None) -> dict:
     """Fire a routine: spawn → inject (via the /spawn prompt body) → capture the result → teardown.
     Returns the run record. Raises RoutineFireError (teaching) if the supervisor is unreachable or
     the spawn is refused. `keep=True` leaves the session alive (e.g. a repeats/goal-loop routine)."""
@@ -106,7 +106,7 @@ def fire(routine_or_id, *, base: str = DEFAULT_SUPERVISOR, keep: bool = False,
             f"routine {routine.id!r}: session-supervisor unreachable at {base} ({e}). "
             f"Start it first: `company up session-supervisor`. A routine cannot fire without it.")
 
-    code, r = _req(base, "POST", "/spawn", build_spawn_body(routine, source=source))
+    code, r = _req(base, "POST", "/spawn", build_spawn_body(routine, source=source, prompt_override=prompt_override))
     if code != 200:
         raise RoutineFireError(f"routine {routine.id!r}: spawn refused ({code}): {r}")
     session = r["session"]["id"]
@@ -128,6 +128,51 @@ def fire(routine_or_id, *, base: str = DEFAULT_SUPERVISOR, keep: bool = False,
         "observed_done": done is not None,
         "source": source,
     }
+
+
+def _done_when_evaluator(routine: Routine):
+    """Default goal-loop evaluator from a routine's `done_when`: a plain substring the result must
+    contain, OR "/<regex>/" matched against the result. None if no done_when (then run_goal_loop
+    REQUIRES an explicit evaluator — never an unbounded loop with no stop test)."""
+    dw = routine.done_when
+    if not dw:
+        return None
+    if len(dw) >= 2 and dw.startswith("/") and dw.endswith("/"):
+        import re
+        pat = re.compile(dw[1:-1])
+        return lambda result: bool(pat.search(result or ""))
+    return lambda result: dw in (result or "")
+
+
+def run_goal_loop(routine_or_id, *, evaluator=None, max_rounds: int = 3,
+                  base: str = DEFAULT_SUPERVISOR, turn_timeout: float = 300.0) -> dict:
+    """BOUNDED goal-loop (CC-22): fire, evaluate, re-fire (feeding the prior result as context)
+    until the goal is met OR max_rounds (a HARD ceiling — an unbounded self-firing claude loop is
+    forbidden, lead-only-spawn). evaluator(result)->bool; if None, derived from `done_when`.
+    Returns {met, rounds, runs[...], reason}."""
+    routine = routine_or_id if isinstance(routine_or_id, Routine) else routine_registry()[routine_or_id]
+    if not isinstance(max_rounds, int) or max_rounds < 1:
+        raise RoutineFireError(f"run_goal_loop: max_rounds must be an int >= 1 (hard ceiling), got {max_rounds!r}.")
+    ev = evaluator or _done_when_evaluator(routine)
+    if ev is None:
+        raise RoutineFireError(
+            f"routine {routine.id!r}: a goal-loop needs a stop test — pass `evaluator` or declare "
+            f"`done_when`. A loop with no stop test is forbidden (never unbounded).")
+    runs, prior = [], None
+    for n in range(1, max_rounds + 1):
+        if prior is None:
+            prompt = routine.prompt
+        else:
+            goal_suffix = (" toward the goal: " + routine.goal) if routine.goal else "."
+            prompt = (routine.prompt + "  [goal-loop round " + str(n) + "; the previous round's "
+                      "result was: " + str(prior)[:1500] + "; continue" + goal_suffix + "]")
+        run = fire(routine, base=base, turn_timeout=turn_timeout, prompt_override=prompt, source="goal-loop")
+        runs.append(run)
+        prior = run.get("result", "")
+        if not run.get("is_error") and ev(prior):
+            return {"routine_id": routine.id, "met": True, "rounds": n, "runs": runs}
+    return {"routine_id": routine.id, "met": False, "rounds": len(runs), "runs": runs,
+            "reason": f"goal not met within max_rounds={max_rounds}"}
 
 
 if __name__ == "__main__":
