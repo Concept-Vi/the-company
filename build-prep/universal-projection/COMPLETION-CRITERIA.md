@@ -167,11 +167,13 @@ The lattice subscribes to `/api/stream` (SSE over the shared events.jsonl tap); 
   verified same DOM node across re-projection → not a flicker/reload); new arrivals DRIFT IN (markNew →
   the easeOutCubic fade-in tween) while placed points hold. A SEPARATE design-critic: PASS, no FORM
   regression at 1440×900 AND 390×844.
-- **ROBUSTNESS (carry-forward, found in G5 review)** — the error view returns early and renders NO foot
-  HUD, so there are no controls; recovery relies on the mounted effect's 15s interval, which only runs
-  while `live=true`. A failed pull WHILE FROZEN (e.g. a bind-change pull that 503s) is a stuck dead-end
-  until reload. Pre-existing (not a G5 regression); fix here — give the error state an in-view retry OR
-  keep the live toggle reachable. ☐ by use
+- **ROBUSTNESS (carry-forward, found in G5 review)** — ✅ FIXED (2026-06-14, verified by use). The error
+  view used to return early with NO controls → a failed pull was a dead-end until reload (worse than the
+  note said: the 15s poll was retired for SSE, which only subscribes after a SUCCESSFUL fetch, so there was
+  no auto-recovery at all). FIX: a `retry` nonce in the fetch deps + the error view now renders ↻ retry
+  (re-fires the same params) AND ← default lens (escape a bad binding/pole, clearing bind/center/poles/at).
+  VERIFIED LIVE: monkeypatched /api/projection → 503 → error view shows both buttons (no dead-end) → restore
+  + ↻ retry → recovered (lattice + HUD back). Token-only; the error view re-centred as a tight column. ✅ by use
 
 ## GROUP 5 · INSTRUMENT — THE FORM FACE (the lattice on the design system) ✅ (committed dc3378a)
 LatticeView.tsx WAS the LONE region still on the dead GitHub-dark palette (undefined --accent/--ink-dim

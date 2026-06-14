@@ -62,6 +62,9 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   const [showStrain, setShowStrain] = useState(false)  // G7: overlay the structure↔meaning tension lines
   const [bind, setBind] = useState<string>('')   // the LENS (binding id); '' = the data-driven default
   const [err, setErr] = useState('')
+  const [retry, setRetry] = useState(0)          // a retry NONCE — bump it to re-fire the fetch effect with the
+                                                  // SAME params (the error view's ↻ retry; recovers a transient
+                                                  // failure without a page reload — the G4 robustness dead-end fix)
   const [live, setLive] = useState(true)     // the centre is NOW — and now MOVES (the involuntary axis)
   const [at, setAt] = useState<number | null>(null)          // S/G3 time scrubber — epoch secs (null = live NOW)
   const [center, setCenter] = useState<string | null>(null)  // S/G3 spatial re-centre — an address (null = temporal NOW)
@@ -167,7 +170,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       // EventSource auto-reconnects on error (gapless via Last-Event-ID) — hold the last frame meanwhile.
     })
     return () => { alive = false; clearTimeout(deb); if (es) es.close() }
-  }, [live, bind, at, center, rung, poleA, poleB])
+  }, [live, bind, at, center, rung, poleA, poleB, retry])
 
   // SCALE (Group 11): if the active projection has no pyramid (a non-semantic lens, or a space with no
   // built rungs), drop any held rung so the ladder + state stay honest (the bridge ignores a stray rung,
@@ -647,7 +650,24 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   const balTot = sep ? Math.max(sep.balance.lean_a + sep.balance.lean_b, 1) : 1
   const balAPct = sep ? Math.round((sep.balance.lean_a / balTot) * 100) : 0
 
-  if (err) return <div className="lattice-err"><EmptyState>projection unreachable — {err}</EmptyState></div>
+  // ROBUSTNESS (G4 carry-forward): the error view must NOT be a dead-end. The poll was retired for SSE (which
+  // only subscribes after a successful fetch), so a failed pull has no auto-recovery — give it an in-view ↻ retry
+  // (re-fires the SAME params via the retry nonce) AND an escape to the default lens (when a bad binding/pole is
+  // the cause), so the operator never has to reload the whole app to recover.
+  if (err) return (
+    <div className="lattice-err">
+      <EmptyState>projection unreachable — {err}</EmptyState>
+      <div className="lattice-err-actions">
+        <button className="le-retry" onClick={() => setRetry(n => n + 1)}>↻ retry</button>
+        {(bind || center || poleA || poleB || at != null) && (
+          <button className="le-reset"
+            onClick={() => { setBind(''); setCenter(null); setPoleA(null); setPoleB(null); setAt(null); setLive(true); setRetry(n => n + 1) }}>
+            ← default lens
+          </button>
+        )}
+      </div>
+    </div>
+  )
   return (
     <div className="lattice-wrap" ref={wrapRef} onPointerDown={pick}>
       <canvas ref={cvsRef} />
