@@ -29,6 +29,11 @@
 /* ---- the wheel region ---------------------------------------------------- */
 .wheel-region { position: relative; width: 100%; height: 100%; min-height: 0; }
 .wheel-svg { width: 100%; height: 100%; display: block; }
+/* PORTRAIT: the wheel is WIDTH-bound (the forbidden corner-circle r·√2 must fit the width), so in a tall frame
+   a full-height region leaves a lopsided dead band above the centred circle. Constrain it to a square and let
+   the parent centre it — the rung pill then sits right above the circle and the slack becomes even top/bottom
+   framing (paper margin), not a gap. (design-critic: "empty band above a cramped plot".) */
+.layout--portrait .wheel-region { height: auto; aspect-ratio: 1 / 1; max-height: 100%; }
 .wheel-state { display: flex; align-items: center; justify-content: center; }
 .state-card { background: var(--ground-accent); box-shadow: var(--elev-2);
   border-radius: var(--r-card); padding: var(--s-4) var(--s-5); max-width: 80%;
@@ -163,14 +168,17 @@
   z-index: 20; display: flex; align-items: center; gap: var(--s-2); max-width: 90%;
   background: color-mix(in srgb, var(--ground-accent) 85%, transparent); box-shadow: var(--elev-1);
   border-radius: var(--r-pill); padding: var(--s-1) var(--s-3); }
-/* past-state reads pre-attentively: a clear accent border + a faint accent wash, not just the readout colour */
-.scrubber--past { box-shadow: var(--elev-2); border: 1.5px solid color-mix(in srgb, var(--pig-accent) 55%, transparent);
-  background: color-mix(in srgb, var(--pig-accent) 9%, var(--ground-accent)); }
+/* The scrubber is a CONTROL — it joins the ink control family (rung pill, mode toggle, "now"), NOT a saturated
+   UI accent. Default track is monochrome ink; the PAST state warms to ochre (sepia = aged = the past), reading
+   pre-attentively via a warm border + faint wash. No cool plum (it was the one hue foreign to the paper). */
+.scrubber--past { box-shadow: var(--elev-2); border: 1.5px solid color-mix(in srgb, var(--pig-pile) 55%, transparent);
+  background: color-mix(in srgb, var(--pig-pile) 9%, var(--ground-accent)); }
 .scrubber-glyph { color: var(--ink-dim); font-size: var(--t-md); }
-.scrubber--past .scrubber-glyph { color: var(--pig-accent); }
-.scrubber-range { width: 220px; max-width: 50vw; accent-color: var(--pig-accent); }
+.scrubber--past .scrubber-glyph { color: var(--pig-pile); }
+.scrubber-range { width: 220px; max-width: 50vw; accent-color: var(--ink-dim); }
+.scrubber--past .scrubber-range { accent-color: var(--pig-pile); }
 .scrubber-label { font-size: var(--t-xs); color: var(--ink-dim); font-variant-numeric: tabular-nums; min-width: 86px; }
-.scrubber--past .scrubber-label { color: var(--pig-accent); }
+.scrubber--past .scrubber-label { color: var(--pig-pile); }
 .scrubber-now { border: none; background: var(--ink-primary); color: var(--ground-accent); font-size: var(--t-xs);
   border-radius: var(--r-pill); padding: 2px var(--s-2); cursor: pointer; min-height: 28px; }
 .layout--landscape .scrubber { left: 35%; }
