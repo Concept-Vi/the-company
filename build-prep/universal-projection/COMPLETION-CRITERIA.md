@@ -47,9 +47,19 @@ the remaining items are genuinely gated (Tim input / axis-selection) or are data
 - **GENUINELY REMAINING (all honestly gated — the loop must NOT churn on these):**
   · **Group 9** (two-gravity separator) — 🔴, needs Tim's AI-tells description (the AI-corner pole). The
     mechanism is buildable the instant he describes them; its pollution signal is inert without that seed.
-  · **The small registries + gate surface + 20/80 water-law** — 🔴, gated on Tim's axis-selection (which
-    axes the dial runs on); §12 growth fronts (k, prioritization-at-scale, the promotion gesture) stub-and-refine.
-  · **Group 10's edge-order FORM legibility** — 🟡 growth front (above), awaits richer edged data.
+  · **The small registries + gate surface + 20/80 water-law** — 🔴. CORRECTED (2026-06-14, from the SEED +
+    Tim's foundational message, brain doc lines 303/327-333/495/503): the 20/80 water-law is NOT a visual
+    prioritization dial — it is TYPE-NUCLEATION: a type (an n-gon / a registry row) is BORN when the points
+    accumulating in a region fill past the ~20/80 threshold ("a polygon is crystallizing here" — types
+    discovered by the wave filling). Building a density/emphasis dial and calling it the water-law would be
+    green-paint of Tim's core science. It gates on Tim FORMALIZING the relations part of his equation (his
+    own words: "there are parts to my equations that I haven't quite formalise yet … the registries having
+    relations … typed edges and their criteria … I just haven't got a formal equation") — a DEEPER gate than
+    "choose axes."
+  · **Group 10's edge-order FORM legibility** — 🟡 (above). SAME ROOT GATE: a legible acyclic edge-backbone
+    over registry rows = the registry-RELATIONS model — which is exactly the unformalized piece above. So
+    Group 10's last 🟡 AND the 20/80 water-law CONVERGE on ONE thing only Tim can do: formalize the
+    registry/type-relations part of the root equation. Until then both are honestly blocked.
 - **VERIFIED THIS CONSOLIDATION:** 16/16 broad-regression suites green (projection ×4, drift, bridge_routes,
   conv_index ×3, space_embed, embeddings, durability, events, fs_session_guard, set_ref_atomic, bridge_session);
   live surface all 5 bindings resolve (5994 pts), scrubber shifts `now`, semantic-pending shows the scale
@@ -330,7 +340,11 @@ freeze a variable Tim deliberately left free (the hardcoding reflex). Resolution
   describing the AI-tells (volunteered). → Group 9 is UN-GATED.
 - **Call 4 (harmonics) — ANSWERED.** "As one instance" — a lens, not the core; spectrum stays out.
 - Genuinely-open growth fronts (not gates, not blockers): k (the dimension); prioritization-at-scale;
-  the 20/80 dial / promotion gesture — these stub honestly and refine with use.
+  the 20/80 dial / promotion gesture — these stub honestly and refine with use. CAVEAT (2026-06-14): "stub
+  honestly" does NOT license a stand-in that misrepresents the concept. The 20/80 is TYPE-NUCLEATION (a type
+  is born when a region fills past ~20/80 — brain doc 303/327-333/503), NOT a visual prioritization/emphasis
+  dial; and its substrate (registry-row relations / typed edges) is the part Tim states he has NOT formalized
+  (line 495). So it is gated on Tim's formalization, not a free stub — building a density dial here = green-paint.
 **Consequence: NO build item is blocked awaiting a Tim decision. The whole sequence is buildable now.**
 
 ---
@@ -351,4 +365,6 @@ freeze a variable Tim deliberately left free (the hardcoding reflex). Resolution
 11. **Group 11** — ✅ DONE (this beat) — the multi-scale pyramid as the SCALE axis: ward-clustered meaning-rung
     centroids (NOT lineage — evidence-killed), nested rungs, a crossfading rung ladder, design-critic PASS both
     faces. The ABILITY half's last big beat.
-12. **The small registries + gate surface + 20/80 water-law** — once the axes are chosen.
+12. **The small registries + gate surface + 20/80 water-law** — gated on Tim formalizing the registry/type-
+    RELATIONS part of the equation (his stated-unformalized piece, line 495); the 20/80 is TYPE-NUCLEATION,
+    not a dial (see BUILD STATUS). Same root gate as Group 10's edge-FORM 🟡.
