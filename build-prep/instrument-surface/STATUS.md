@@ -91,10 +91,18 @@ and "the types/divisions of the circle [should be built in] so the data points c
   teleport). A pulsing LiveDot (top-right) shows live; tap to freeze/resume; gapless reconnect (Last-Event-ID).
   Verified BY USE: emitting one real event (an annotation) triggered live re-fetches with no UI interaction (4
   projection requests, 1 open stream). (A static design-critic can't see live motion — verification is by use.)
-- **NEXT BEATS (per the equation, sequenced):** the FORBIDDEN operationalized (§10 — circle-without-square =
-  gate-inbox; square-without-circle = drift; the corner = grow-the-box; needs careful data-mapping — some kinds
-  aren't in the projection); the project system (pointable at anything, company = starter, on lineage.project);
-  the registry-promotion gesture (born type → proposal → the wheel re-divides; reuse /api/registry/proposals).
+- **GROUP 10 DRIVE-TO-EXPLORE — BUILT** (`a8fe9b8`). The connection web is now INTERACTIVE (the cron's #1, was
+  static): tap a sector → its OUT edges (it feeds) glow gold w/ arrowheads, IN edges ink, the rest fade; a
+  readout names the sector + degree (N out · M in). Tap again / lens-switch clears. Registry-true, pure read,
+  no forced order. Verified both viewports (codebase → 6 out · 0 in), console clean.
+- **FORBIDDEN (§10) — SKIPPED this fire (data-thin, honest):** of the 3 kinds, only the CORNER (max strain, 23
+  pts) has data; DRIFT (square-without-circle = r_unknown) = 0 in the embedded spaces; GATE-INBOX (circle-
+  without-square = un-addressed orphans) isn't in the projection (needs the residue source). Building it now
+  would be 1-of-3 + a re-display of strain = half-done. Revisit when an unembedded/orphan data source is wired.
+- **NEXT BEATS (sequenced):** the project system (L13 — pointable at anything, company = starter, on
+  lineage.project; needs the projection's project-scoping checked); the registry-promotion keystone (L15 — born
+  type → operator proposal via the proposal seam → the wheel re-divides; the close-the-loop Tim emphasized);
+  then the forbidden when its data source exists. Plus carry-over polish (selection tether).
 - Note: a test annotation ("live-spine verification ping") was written to `ui://instrument/wheel` during live
   verification — benign, append-only; harmless real comment.
 
