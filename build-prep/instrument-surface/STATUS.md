@@ -104,7 +104,7 @@ and "the types/divisions of the circle [should be built in] so the data points c
 - **GROUP 9 POLE-PICKER — BUILT** (`e3770d8`). The two gravities are now VARIABLES: in the separator lens a
   selected item offers "set as pole A / pole B" (parallel to "centre here"); both set → re-project between the
   two chosen items; "↺ default poles" resets. Verified both viewports: picked AGENTS.md vs repo.py → separates,
-  134/28. Pure read, registry-true. → BOTH cron targets (G10 drive-to-explore + G9 drivable poles) now
+  134/28; design-critic PASS ('a drivable instrument where the operator names both gravities'), its #1 fixed (pole labels on paper chips, clear of points). Pure read, registry-true. → BOTH cron targets (G10 drive-to-explore + G9 drivable poles) now
   interactively complete in the surface.
 - **Project-scoping checked (L13):** /api/projection does NOT scope by project, and only "company" has
   substantive data (3037 records; "cognition-engine" has 1). The project system is thus data-thin + needs an
