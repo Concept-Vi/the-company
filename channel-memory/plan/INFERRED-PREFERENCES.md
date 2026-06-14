@@ -70,3 +70,19 @@ The lead delivered grounded answers for their lanes; they CONFIRM the inferred p
 - **Spin-up (Q6) — DELIVERED:** the evidenced ranked surface is `../map/spin-up-ranking.md` — Tim picks from it; launch is gated + notify-each.
 
 *Tim — react to the Q lines (agree/adjust/reject); anything you change, we update the plan and proceed. Anything you don't touch, we build to the proposal. The whole package = this + COMPLETION-CRITERIA + the lead's lane-inputs + map/spin-up-ranking + (lead's) apply-artifacts.*
+
+---
+
+## ✅ TIM'S DECISIONS — confirmed direct in-session 2026-06-14 ~13:12 UTC `[trust: tim-direct(session=11e7d395)]`
+He walked all 8 and answered. CONFIRMED + the EXTENSIONS he added (each extension is new design, folded into the criteria):
+
+- **D1 Addressing — CONFIRMED multi-space + EXTENDED to MULTI-EMBEDDING REGISTRY.** Not one semantic axis: many models × (a model may have multiple embedding *ways*) = a REGISTRY of embedding-spaces, each a co-equal axis; PLUS the literal position-in-the-session-file as an axis; alongside provenance + temporal. Extensible by adding a registry row. Connects [[native-model-layer]] + [[the-heart]] + [[make-each-thing-work]]. ⇒ **indexing UNBLOCKED**: populate the pplx-4b axis now; add embedding-axes as served. (Lead lane: serving + the registry.)
+- **D2 Chunking — CONFIRMED dimension-aware + EXTENDED: handle dense INPUTS *and* large RESPONSES; MULTI-SCALE** (index at turn/section/dimension granularities, recall picks scale). Maps to recollection's multi-scale units. Fork builds.
+- **D3 Preference layer — CONFIRMED + CORRECTION: tool-DRIVEN, not static file-read.** Use recall/search/lenses dynamically to derive preferences (not just read feedback-*). [[grounded-chain-law]] / [[ai-path-of-least-resistance]].
+- **D4 Panel — CONFIRMED fixed-facets for DECISIONS (simple/flat) + KEY: preferences need a CONCEPTUAL HIERARCHY (broad principles → cascade to specifics), NOT flat facets.** Two extraction modes: flat-facet (decisions) vs broad→specific conceptual (preferences/broad things). Mirrors how Tim's framework works (few broad concepts generate many specifics).
+- **D5 Channel-context — CONFIRMED.** (Lead lane.)
+- **D6 Embedding — CONFIRMED**, folded into D1's multi-embedding registry (pplx-4b = one populated entry).
+- **D7 Fork-points — CONFIRMED the 3 starters (#8 birth · #1 engine-room · ★compact:1); fork may ADD UP TO 4 MORE at its discretion, as it goes** (from map/spin-up-ranking.md). Launch path unchanged (notify-each, uuid-probe-first).
+- **D8 Self-serve drift-recovery — CONFIRMED as the FULL self-serve loop** (any session, any project: scan own lineage → detect drift → spawn own pre-drift self → recover). Self-spawn via the SUPERVISED path (not auto-interactive). The reflexive generalization of the whole capability — why D1 is the keystone.
+
+**Four new design elements to thread through the build:** multi-embedding registry (D1/D6) · multi-scale chunking (D2) · tool-driven preference derivation (D3) · conceptual-hierarchy preference model (D4). All [tim-direct].
