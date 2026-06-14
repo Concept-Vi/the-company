@@ -94,7 +94,9 @@ and "the types/divisions of the circle [should be built in] so the data points c
 - **GROUP 10 DRIVE-TO-EXPLORE — BUILT** (`a8fe9b8`). The connection web is now INTERACTIVE (the cron's #1, was
   static): tap a sector → its OUT edges (it feeds) glow gold w/ arrowheads, IN edges ink, the rest fade; a
   readout names the sector + degree (N out · M in). Tap again / lens-switch clears. Registry-true, pure read,
-  no forced order. Verified both viewports (codebase → 6 out · 0 in), console clean.
+  no forced order. Verified both viewports (codebase → 6 out · 0 in), console clean. Design-critic PASS ("the
+  single best interactive move in the set"); fixes applied — soft tint selection (no hard box), stronger
+  arrowheads (direction seen), and 0-in/0-out told as a finding ("pure source" / "pure sink") (`ae675dc`).
 - **FORBIDDEN (§10) — SKIPPED this fire (data-thin, honest):** of the 3 kinds, only the CORNER (max strain, 23
   pts) has data; DRIFT (square-without-circle = r_unknown) = 0 in the embedded spaces; GATE-INBOX (circle-
   without-square = un-addressed orphans) isn't in the projection (needs the residue source). Building it now
