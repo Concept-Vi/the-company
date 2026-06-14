@@ -21,6 +21,9 @@ NOTE: `surface/app` is UNMANAGED like `canvas/app` — a future ops/services.jso
 - Single motion system (`src/tokens/motion.ts`) — springs + eased; **rAF-proven tween (2.4→5.56), no teleport**.
 - The wheel (`src/wheel/Wheel.tsx`) — seed geometry (m/2 rings, x=2π/n sectors), 600 real pts, angle-hue,
   decorative animated layer + invisible r=15 **touch hit layer**.
+- **G10 connections re-homed** — `proj.edges` rendered as **directed chords** (source dot + arrowhead; bidir =
+  arrowheads both ends = a real cycle). Verified on the `by_node_type` lens: 49 real directional edges + 16
+  registry sectors render at 1440×900 AND 390×844. Registry-true, token-only. (`34fd496`)
 - Address spine (`src/lib/address.ts`) — **615 `data-ui-ref` nodes**, capture listener, single `resolveUiTarget`
   sink, `/api/context` R2 resolution (ancestor walk works).
 - Three authored layouts (`src/layouts/`) — desktop / portrait (bottom-sheet) / landscape (rail); design-critic PASS.
