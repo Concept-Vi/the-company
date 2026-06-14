@@ -24,6 +24,10 @@ NOTE: `surface/app` is UNMANAGED like `canvas/app` — a future ops/services.jso
 - **G10 connections re-homed** — `proj.edges` rendered as **directed chords** (source dot + arrowhead; bidir =
   arrowheads both ends = a real cycle). Verified on the `by_node_type` lens: 49 real directional edges + 16
   registry sectors render at 1440×900 AND 390×844. Registry-true, token-only. (`34fd496`)
+- **G9 two-gravity separator re-homed** — `src/wheel/Separator.tsx`, chosen by `radius_from==='separator'`. Two
+  basins (pole A left / pole B right, distance = |lean|), the fifth-gate verdict + diverging balance bar
+  (47/115) + real pole labels; point-select shows the point's lean. Verified at both viewports, console clean.
+  (`e128f9b`)
 - Address spine (`src/lib/address.ts`) — **615 `data-ui-ref` nodes**, capture listener, single `resolveUiTarget`
   sink, `/api/context` R2 resolution (ancestor walk works).
 - Three authored layouts (`src/layouts/`) — desktop / portrait (bottom-sheet) / landscape (rail); design-critic PASS.
