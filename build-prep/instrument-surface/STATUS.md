@@ -116,11 +116,36 @@ and "the types/divisions of the circle [should be built in] so the data points c
 - **FIX (`bdefb7a`):** points were keyed by address, but addresses recur (many events at one ui:// address,
   e.g. chat turns at ui://chrome/chat) → 784 duplicate-key React warnings once such events entered the
   projection. Now every point layer keys + layoutId by p.seq (unique/stable); data-ui-ref stays the address.
-- **LENS RE-HOMING ~complete:** of the 12 groups, all are now in the surface EXCEPT G11 (the multi-scale
-  pyramid / theme↔unit rung-zoom) — the next clean lens beat. (G8 substrate is implicit.)
-- **NEXT BEATS (sequenced):** G11 scale-pyramid zoom (clean, real data — the 3 pyramids + rung ladder); the
-  registry-promotion keystone (L15 — blocked on L14: embed registry defs so a symbolic registry is nucleable,
-  a model-load data-build); the project system + forbidden when their data exists; carry-over polish (tether).
+- **GROUP 11 MULTI-SCALE PYRAMID — BUILT** (`b19ef8f`, `343ffa3`, `4043cb0`, `9f5f6c3`, `797825e`). The semantic
+  lens now has a **rung ladder** (units · 32 · 8): step the meaning-field between every unit (162) and coarser
+  WARD theme-centroids (?rung=, pure read). Blob size = cluster membership; radius = meaning-distance. KEY FIX
+  (the heart of Tim's "I don't know what it CHOSE"): at the coarse rung each theme **names itself** at a glance —
+  its exemplar's leaf (scheduler.py, README.md, recall.py, registry.py, …) sits under the blob, capped to a
+  legible count (denser rungs stay name-on-click via the disclosure, which also narrates 'cluster of N · e.g.
+  <exemplar>'). So the most-summary view in the instrument says WHAT it chose, not only that there are 8.
+  Design-critic: cold pass FAILed 3 mechanical points (portrait top-bar clip, centre occluded, rung unnamed) —
+  all fixed (`343ffa3`); then a 2nd cold pass FAILed 2 Product-Face points and the re-judge PASSed after fixes:
+  (1) the time-scrubber filled its track with the lone COOL hue (plum --pig-accent) → now ink (--ink-dim, joins
+  the control family; PAST state warms to ochre) — verified warm RGB(92,83,74) both viewports; (2) portrait
+  dead-band (pill orphaned above a low circle) → wheel region is a centred square + the {legend+wheel} plate
+  centres evenly in the visible region (measured 104/113px ≈ 0.92:1, was 2.27:1). Circle is at its geometric max
+  (width-bound: the forbidden corner-circle r·√2 must fit the width). Verified both viewports, console clean.
+- **LENS RE-HOMING COMPLETE:** all 12 seed groups are now in the surface (G2 grid · G3 scrubber · G4 live SSE ·
+  G5 form · G6 semantic circle · G7 strain · G8 substrate implicit · G9 two-gravity poles · G10 directional edges ·
+  G11 scale pyramid · G12 type-nucleation). The seed's FORMS are all expressed; what remains is DEPTH of the
+  equation's descriptions (audit below) + the keystone + data-thin lenses.
+- **NEXT BEATS (sequenced):**
+  1. **EQUATION-DESCRIPTIONS AUDIT (next, unblocked)** — Tim's actual bar is "return to the equation … for ALL of
+     its descriptions," NOT an internal "12 lenses re-homed" checklist. Re-read THE-SEED doc against the LIVE
+     surface and find which described properties are not yet visible/legible: the resonance law (2π/n=(1/n)^k),
+     coincidence-on-the-axes, §8 attention-as-origin-selection beyond "centre here", and the unfinished misfit-
+     outside-the-box nucleation detail Tim flagged. Produce a gap list; each gap becomes a beat. (advisor 2026-06-15.)
+  2. **Registry-promotion keystone (L15)** — BLOCKED on L14 (embed registry defs so a symbolic registry is
+     nucleable) = a model-load data-build. Standing memory `consult-before-model-loads` (names embedding models)
+     means surface this to Tim as the one explicit ASK rather than autonomously loading a model overnight; build
+     the unblocked read-path/UI scaffold around it meanwhile.
+  3. Project system (L13) + forbidden (§10) — data-thin until a 2nd project / an unembedded-orphan source exists.
+  4. Carry-over polish: selection tether (point→card) on all lenses; make strain SIGNED.
 - Note: a test annotation ("live-spine verification ping") was written to `ui://instrument/wheel` during live
   verification — benign, append-only; harmless real comment.
 
