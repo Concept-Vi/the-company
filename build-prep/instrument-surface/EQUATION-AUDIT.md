@@ -98,3 +98,10 @@ ratified lattice. = the registry-promotion keystone (a born type → operator pr
 - selection tether (a line point→detail card) on all lenses
 - make strain SIGNED (which way structure↔meaning pulls)
 - de-knot the densest strain/chord zones
+- nucleation portrait: give the top readout its own clear strip (candidate-marker orbit + residue-trail head
+  currently pass through its band — legible, but cosmetically tight; re-critic PASS flagged it non-blocking)
+
+## Re-critic verdicts (gap builds)
+- gap #1 coincidence spine — design-critic PASS (lens-neutral wording fix, cross-lens density pass).
+- gap #2 corner reading — design-critic FAIL→fixed→**PASS** (residue to corners, no clip, no control occlusion,
+  legend consistent; both viewports). Residue contrast lifted a hair for bright displays (`348490d`).
