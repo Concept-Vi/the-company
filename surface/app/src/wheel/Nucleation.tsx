@@ -58,6 +58,23 @@ export function Nucleation({
   const zones = report.zones || []
   const avail = report.available || {}
 
+  // place each candidate bloom at its pile's TRUE angle (mean θ of the cluster's outside members), so a born
+  // type appears where its pile actually is — not an arbitrary even spread. Fallback: even spread.
+  const clusterTheta = new Map<number, { sum: number; k: number }>()
+  for (const p of proj.points) {
+    if (typeof p.pile_cluster === 'number') {
+      const e = clusterTheta.get(p.pile_cluster) || { sum: 0, k: 0 }
+      e.sum += p.theta ?? 0
+      e.k += 1
+      clusterTheta.set(p.pile_cluster, e)
+    }
+  }
+  const zoneAngle = (k: number): number => {
+    const e = clusterTheta.get(k)
+    if (e && e.k > 0) return e.sum / e.k - Math.PI / 2
+    return -Math.PI / 2 + (TAU_LOCAL * (k + 0.5)) / Math.max(zones.length, 1)
+  }
+
   return (
     <div ref={ref} className="wheel-region" {...stamp('ui://instrument/nucleation')}>
       {ready && (
@@ -65,14 +82,14 @@ export function Nucleation({
           {/* the type DIVISIONS (registry types as angular sectors, angle-hue) */}
           {typeSectors.map((s, i) => (
             <path key={`t-${s.id}-${i}`} {...stamp(`ui://instrument/type/${encodeURIComponent(s.id)}`)}
-              d={wedgePath(s.from, s.to, cx, cy, R)} fill={sectorHue(i, n)} fillOpacity={0.1}
+              d={wedgePath(s.from, s.to, cx, cy, R)} fill={sectorHue(i, n)} fillOpacity={0.14}
               stroke="var(--hairline)" strokeWidth={1} />
           ))}
 
           {/* the MEMBERSHIP boundary (inside = fits a type / close around it; outside = the misfit pile) */}
-          <circle cx={cx} cy={cy} r={R} fill="none" stroke="var(--ink-faint)" strokeOpacity={0.5} strokeWidth={1.2} />
+          <circle cx={cx} cy={cy} r={R} fill="none" stroke="var(--ink-dim)" strokeOpacity={0.55} strokeWidth={1.4} />
           {/* the pile horizon (where the forbidden pile rides) */}
-          <circle cx={cx} cy={cy} r={R * 1.18} fill="none" stroke="var(--pig-strain)" strokeOpacity={0.28}
+          <circle cx={cx} cy={cy} r={R * 1.18} fill="none" stroke="var(--pig-strain)" strokeOpacity={0.4}
             strokeWidth={1} strokeDasharray="3 5" />
 
           <circle cx={cx} cy={cy} r={3} fill="var(--ink-faint)" />
@@ -92,7 +109,7 @@ export function Nucleation({
                   layoutId={addr}
                   className="wheel-dot"
                   fill={inside ? sectorHue(i, n) : 'var(--pig-strain)'}
-                  fillOpacity={inside ? 0.6 : 0.34}
+                  fillOpacity={inside ? 0.6 : 0.46}
                   stroke={isSel ? 'var(--ink-primary)' : 'transparent'}
                   strokeWidth={isSel ? 1.5 : 0}
                   style={{ pointerEvents: 'none' }}
@@ -105,27 +122,38 @@ export function Nucleation({
             })}
           </AnimatePresence>
 
-          {/* candidate new-type BLOOMS at the rim — born (filled, passed the dial) vs forming (outline) */}
+          {/* candidate new-type BLOOMS at the rim — the climactic event made VISIBLE: a forming pile is a
+             dashed ochre ring; a BORN type is a filled green disc with a soft halo + a ✦ spark. Placed at the
+             pile's true angle. */}
           {zones.map((z, k) => {
             const born = !!z.distinct && (z.size ?? 0) >= birthMass
-            const ang = (-Math.PI / 2) + (TAU_LOCAL * (k + 0.5)) / Math.max(zones.length, 1)
-            const bx = cx + R * 1.18 * Math.cos(ang)
-            const by = cy + R * 1.18 * Math.sin(ang)
-            const rad = 4 + Math.min((z.size ?? 0) / 8, 9)
+            const ang = zoneAngle(k)
+            const bx = cx + R * 1.2 * Math.cos(ang)
+            const by = cy + R * 1.2 * Math.sin(ang)
+            const rad = 6 + Math.min((z.size ?? 0) / 6, 12)
             return (
               <g key={`zone-${z.id}-${k}`} {...stamp(`ui://instrument/candidate/${k}`)}>
+                {born && (
+                  // soft halo (paper-glow, not neon)
+                  <circle cx={bx} cy={by} r={rad + 5} fill="var(--pig-born)" fillOpacity={0.12} />
+                )}
                 <motion.circle
                   cx={bx} cy={by}
                   initial={{ r: 0, opacity: 0 }}
                   animate={{ r: rad, opacity: 1 }}
                   transition={transition('enter', feel)}
                   fill={born ? 'var(--pig-born)' : 'none'}
-                  fillOpacity={born ? 0.5 : 0}
-                  stroke="var(--pig-born)"
-                  strokeOpacity={born ? 0.8 : 0.45}
-                  strokeWidth={1.4}
-                  strokeDasharray={born ? undefined : '2 3'}
+                  fillOpacity={born ? 0.55 : 0}
+                  stroke={born ? 'var(--pig-born)' : 'var(--pig-pile)'}
+                  strokeOpacity={born ? 0.9 : 0.7}
+                  strokeWidth={1.6}
+                  strokeDasharray={born ? undefined : '3 3'}
                 />
+                {born && (
+                  // the ✦ spark marks a NEW TYPE (distinct from any dial handle)
+                  <text x={bx} y={by + 3.5} textAnchor="middle" fontSize={rad}
+                    fill="var(--ground-accent)" style={{ pointerEvents: 'none' }}>✦</text>
+                )}
               </g>
             )
           })}
