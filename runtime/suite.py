@@ -930,7 +930,18 @@ class Suite:
             self._agent_session_fold_errors += 1
             st = None
         if st is not None:
-            row["state"] = st
+            # R2.5 FIX (2026-06-14): a `registered` self-announce must NOT DOWNGRADE a row the
+            # supervisor already owns. A fresh supervisor spawn folds spawned->supervised-live under
+            # its handle, then carries the canonical claude_session_id on its first-init `registered`
+            # emit (session_supervisor.py ~L999); that migration must PRESERVE supervisor ownership.
+            # `registered`'s unsupervised-live transition is only for a session with NO prior
+            # supervised row (a self-announcing own-launcher), never a step DOWN from supervised-live.
+            # Without this, a supervisor-owned live session reads `unsupervised-live` and
+            # session_post(verb=deliver) degrades a real push to next-turn pickup (R2.5 blocker).
+            if not (e.get("kind") == "agent_sessions.registered"
+                    and st == "unsupervised-live"
+                    and row.get("state") == "supervised-live"):
+                row["state"] = st
         if e.get("ts"):
             row["last_activity"] = e.get("ts")
         row["seq"] = e.get("seq")                            # the last folded event seq (a `since` cursor)

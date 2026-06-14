@@ -250,6 +250,29 @@ with tempfile.TemporaryDirectory() as tmp:
     check("5.4 the first uuid-carrying event MIGRATES the handle row onto the uuid (no handle ghost)",
           "as-bbb" not in rows and rows["uuid-2"]["name"] == "fresh"
           and rows["uuid-2"]["state"] == "supervised-live")
+    # 5.4b R2.5 REGRESSION (2026-06-14): the REAL supervisor carries the first uuid on a
+    # `registered` first-init emit (session_supervisor.py ~L999), NOT a turn. That migration must
+    # PRESERVE supervised-live ownership — else session_post(verb=deliver) degrades a push to
+    # next-turn pickup. (Old 5.4 modelled the carrier as `turn`, transition None, so it was blind
+    # to the downgrade.)
+    store_r25 = FsStore(os.path.join(tmp, "store-r25"))
+    suite_r25 = _suite(os.path.join(tmp, "store-r25"))
+    store_r25.append_event({"kind": "agent_sessions.spawned", "session": "as-r25", "fork": False,
+                            "summary": "new", "name": "owned", "cwd": "/r"})
+    store_r25.append_event({"kind": "agent_sessions.registered", "session": "as-r25",
+                            "claude_session_id": "uuid-r25", "summary": "init", "name": "owned",
+                            "cwd": "/r"})
+    rows_r25 = {r["id"]: r for r in suite_r25.list_agent_sessions()["sessions"]}
+    check("5.4b a supervisor-owned spawn stays supervised-live through its first-init `registered` "
+          "(R2.5: registered must not downgrade)",
+          "as-r25" not in rows_r25
+          and rows_r25.get("uuid-r25", {}).get("state") == "supervised-live")
+    store_r25.append_event({"kind": "agent_sessions.registered", "session": "uuid-solo",
+                            "claude_session_id": "uuid-solo", "summary": "self", "name": "solo"})
+    rows_r25 = {r["id"]: r for r in suite_r25.list_agent_sessions()["sessions"]}
+    check("5.4c a `registered` self-announce with NO prior supervised row IS unsupervised-live "
+          "(test 3.7 behaviour preserved by the guard)",
+          rows_r25.get("uuid-solo", {}).get("state") == "unsupervised-live")
     # a CONSULT fork: resume names the ORIGINAL — the fold must NOT alias the fork onto it (T4:
     # the original is never touched).
     store5.append_event({"kind": "agent_sessions.spawned", "session": "as-ccc", "resume": "uuid-1",
