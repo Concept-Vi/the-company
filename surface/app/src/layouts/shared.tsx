@@ -1,6 +1,7 @@
 import type { SurfaceState } from '../App'
 import { Wheel } from '../wheel/Wheel'
 import { Separator } from '../wheel/Separator'
+import { Grid } from '../wheel/Grid'
 
 // The wheel region with its three honest states: loading (calm), error (fail-loud), data.
 // Never a faked/placeholder resting view — real data or an explicit state (no-silent-failures).
@@ -22,8 +23,15 @@ export function WheelOrState({ s }: { s: SurfaceState }) {
       </div>
     )
   }
-  // The lens chooses its FORM (registry-true): the two-gravity separator is a two-basin view, everything
-  // else is the polar wheel. Both share the address spine, the disclosure (onPick), motion, and hit layer.
+  // The VIEW chooses the coordinate system (the seed's two systems over one space): square = the dyadic
+  // STRUCTURE grid; circle = MEANING (the polar wheel / its lenses). Both share the address spine + disclosure.
+  if (s.view === 'square') {
+    return (
+      <Grid proj={s.proj} feel={s.feel} selectedSeq={s.selected?.seq} onPick={(p) => s.setSelected(p)} />
+    )
+  }
+  // Within the circle, the lens chooses its FORM (registry-true): the two-gravity separator is a two-basin
+  // view, everything else is the polar wheel.
   if (s.proj.binding.radius_from === 'separator') {
     return (
       <Separator

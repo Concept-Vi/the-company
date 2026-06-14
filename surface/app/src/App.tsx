@@ -7,6 +7,7 @@ import { Portrait } from './layouts/Portrait'
 import { Landscape } from './layouts/Landscape'
 
 export type FormFactor = 'desktop' | 'portrait' | 'landscape'
+export type ViewMode = 'circle' | 'square' // the seed's two coordinate systems over one space
 
 // Discrete layout switch (L5) — NOT arithmetic scaling of one layout.
 function classify(w: number, h: number): FormFactor {
@@ -42,6 +43,8 @@ export type SurfaceState = {
   setSelected: (p: ProjPoint | null) => void
   feel: MotionFeel
   setFeel: (f: MotionFeel) => void
+  view: ViewMode
+  setView: (v: ViewMode) => void
   notice: string | null
   dismissNotice: () => void
 }
@@ -54,6 +57,7 @@ export function App() {
   const [binding, setBinding] = useState('raw')
   const [selected, setSelected] = useState<ProjPoint | null>(null)
   const [feel, setFeel] = useState<MotionFeel>('spring')
+  const [view, setView] = useState<ViewMode>('circle')
   const [notice, setNotice] = useState<string | null>(null)
 
   useEffect(() => {
@@ -98,6 +102,8 @@ export function App() {
     setSelected,
     feel,
     setFeel,
+    view,
+    setView,
     notice,
     dismissNotice,
   }

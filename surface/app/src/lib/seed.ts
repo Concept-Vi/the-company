@@ -82,6 +82,38 @@ export function arrowHead(tip: Vec2, tail: Vec2, size = 5): string {
   return `M ${tip.x} ${tip.y} L ${p1.x} ${p1.y} L ${p2.x} ${p2.y} Z`
 }
 
+// ── THE SQUARE / STRUCTURE HALF (seed §1–3) ──────────────────────────────────────────────────────
+// The box is the inscribed-circle square: half-side = R (so the inscribed circle touches the edge
+// midpoints, exactly the seed construction). A point's dyadic cell (i,j) in an m×m grid sits at the
+// cell centre; multiple points per cell get a stable sub-cell offset (deterministic — no Math.random).
+function hash01(n: number): number {
+  const x = Math.sin(n * 12.9898 + 1.7) * 43758.5453
+  return x - Math.floor(x)
+}
+
+export function gridCellCenter(
+  i: number, j: number, m: number, cx: number, cy: number, R: number, jitterSeed = 0,
+): Vec2 {
+  const cell = (2 * R) / Math.max(m, 1)
+  const jx = (hash01(jitterSeed) - 0.5) * cell * 0.6
+  const jy = (hash01(jitterSeed * 2 + 11) - 0.5) * cell * 0.6
+  return { x: cx - R + (i + 0.5) * cell + jx, y: cy - R + (j + 0.5) * cell + jy }
+}
+
+// The dyadic nesting divisions to draw, coarsest→finest, with an opacity weight (coarser = stronger):
+// for m = 2^d, draw at 2, 4, …, m divisions. A parent boundary CONTAINS its children (MSB-first).
+export function dyadicLevels(m: number): { divisions: number; weight: number }[] {
+  const out: { divisions: number; weight: number }[] = []
+  let div = 2
+  const levels: number[] = []
+  while (div <= m) { levels.push(div); div *= 2 }
+  levels.forEach((d, k) => {
+    // coarsest (k=0) strongest; fade toward the finest
+    out.push({ divisions: d, weight: 0.16 - k * (0.12 / Math.max(levels.length - 1, 1)) })
+  })
+  return out
+}
+
 // SVG arc path for a sector wedge from inner radius 0 to R, spanning [from,to] radians.
 export function wedgePath(from: number, to: number, cx: number, cy: number, R: number): string {
   const a0 = from - Math.PI / 2

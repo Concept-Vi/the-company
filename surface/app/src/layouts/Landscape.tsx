@@ -1,6 +1,7 @@
 import type { SurfaceState } from '../App'
 import { LensChip } from '../toggles/LensChip'
 import { Settings } from '../toggles/Settings'
+import { ViewToggle } from '../toggles/ViewToggle'
 import { Notice } from '../toggles/Notice'
 import { Disclosure } from '../wheel/Disclosure'
 import { WheelOrState, SelectHint } from './shared'
@@ -21,7 +22,10 @@ export function Landscape({ s }: { s: SurfaceState }) {
       <aside className="rail" {...stamp('ui://strata/rail')}>
         <div className="rail-head">
           {s.proj && <LensChip proj={s.proj} current={s.binding} onPick={s.setBinding} />}
-          <Settings feel={s.feel} setFeel={s.setFeel} />
+          <div className="bar-right">
+            <ViewToggle view={s.view} setView={s.setView} />
+            <Settings feel={s.feel} setFeel={s.setFeel} />
+          </div>
         </div>
         <div className="rail-detail">
           {s.selected ? (
