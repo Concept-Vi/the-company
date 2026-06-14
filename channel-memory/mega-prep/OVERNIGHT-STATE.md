@@ -23,15 +23,25 @@ is; this is the antidote. Items move UP only on real evidence (a run, a diff rea
   presence-prune · 17/17 router test. Proven live: Tim's real sessions received; tonight the lead +
   ch-8djrpmsl round-tripped through it repeatedly (this very coordination is the proof).
 - Dimension-aware chunking (fork) — cross-review PASSED, pointed-query 6→1, b7d3f97.
+- ★ CHANNEL LAYER (registry + transport + MCP ops) — LEAD re-ran the acceptance suite myself: **52/52
+  PASS** (original 17 + 35 new). Named-channel CRUD (create/list/add/remove/archive, member-in-many-
+  channels), channel-transport HTTP dispatch, supervised-transport /inject + /watch reply-fold, the
+  nonce-gated stale-done guards (falsification-verified — disabling each flips its test to FAIL), mixed
+  broadcast, safe per-transport prune. MCP ops live in HEAD, working tree clean. Commits 57e4468 +
+  aeb1931 (cc_channels + tests).
+- ★ SUPERVISED WIRE verified IN CODE (the weld the lead owned) — lead traced BOTH halves by hand:
+  cc_clone `register_supervised_member` (71c024a) writes `.data/channels/<handle>.json` with the exact
+  schema; cc_channels `live_sessions` reads that same dir (skips only `_`-prefixed) + dispatches by
+  `transport`; inject target = `supervisor_session`; fields match verbatim. **Write-path = read-path
+  CONFIRMED.** (Caught + cleared a real scare — the two modules name that dir `CHANNELS_DIR` for
+  DIFFERENT paths; see FINDINGS. Behavior is correct.)
 
 **🔨 BUILT, NOT YET LEAD-VERIFIED END-TO-END** (committed + isolated-tests-green OR actively building;
 the lead has NOT confirmed the cross-component path by use — these are the morning's real watch-items):
-- Fork cc_clone WRITE side of supervised-registration — 71c024a, 18/18 green (PEER-run). Schema
-  matched to the dispatch spec; inject target confirmed = supervisor_session. **END-TO-END
-  (write→dispatch→inject) UNVERIFIED** until the dispatch side lands + the lead runs a real supervised
-  round-trip. THIS is the weld the lead owns.
-- Channel-layer registry + transport DISPATCH — ⟳ worker a6323ebdfde667f8f BUILDING (no commit yet).
-  Lands here, then the lead runs its acceptance suite + reads the diff before it moves to PROVEN.
+- Supervised wire LIVE round-trip — the ONE step NOT provable tonight: a real supervised clone launched
+  + DM'd + its reply folded back. Requires spawning a `claude -p` clone = the GATED clone-fleet action
+  (+ the autonomous-spawn boundary). Code + seam + schema + 52/52 are all green; only the live-process
+  round-trip is unproven, and Tim's morning clone-fleet launch exercises it naturally. Not faked.
 - Recall-fork Phase-A foundation (w7gld9f3t DONE, PARTIAL — honest): VERIFIED-by-use = repo cloned+isolated to ~/.recollection (B-5 comingling landmine handled; live 11.5GB store proven untouched), npm build clean, MCP boots, B-1 sidechain-filter fix works (sidechain rows recall). FAILED-by-use = capture→embed→recall end-to-end: B-7 dim-mismatch — embeddings produce 2560-dim (served pplx-4b) but insertExchange/search.ts still target legacy vec_exchanges FLOAT[384]; per-lens 2560 table added to new schema but NOT wired into live path. Default `search` throws. Diagnosed, reversible. Commit 19e6012. ⟳ FIX BEAT wfo6h6tg7 RUNNING (wire per-lens vec into live insert+search, retire 384, transaction the paired insert, test override → re-verify end-to-end). Cross-review welcome on 19e6012.
 - Fork D8 drift-recovery core (2587ced) + freshness guard (e382e89) — peer-verified with honest
   bounds; peer-owned lane (lead cross-reviews at wires, did not re-run).
@@ -42,8 +52,27 @@ the lead has NOT confirmed the cross-component path by use — these are the mor
 - Channel-attachment manifest · profile SessionStart hook (boundary — Tim applies) · named-channel CRUD MCP ops.
 - Clone-fleet launch — GATED (DECISIONS-FOR-MORNING #2).
 
-**LEAD'S PRIMARY JOB TONIGHT = VERIFIER.** Not more docs. When the worker reports: run the suite, read
-the diff, confirm registry + transport by use, then (only then) move items up this ledger.
+**🐛 FINDINGS (lead cross-review of the channel-layer build — recorded honestly):**
+- `CHANNELS_DIR` NAME COLLISION (latent trap; behavior is correct): cc_clone.`CHANNELS_DIR` = `.data/
+  channels/` (member regs) vs cc_channels.`CHANNELS_DIR` = `.data/channels/_channels/` (named-channel
+  records). Same name, different paths, two modules sharing one registry. A future import/refactor
+  could conflate them → reintroduce a mis-write that breaks supervised presence. FIX: rename cc_clone's
+  to `CHAN_DIR` (match cc_channels' vocab). Flagged to the fork (owns cc_clone.py). Low-risk, not done.
+- CONCURRENT AUTO-COMMITTER HAZARD: an `[instrument-surface]` auto-committer loop in ~/company stages +
+  commits on its own beat and SWEPT the worker's `mcp_face/cc_channel.py` into foreign commit 5577d8e.
+  Net: the MCP ops ARE in HEAD + verified, but the channel layer is no longer a clean single-revert
+  (revert-cleanliness was part of the reversibility basis). Any session that stages-then-waits is
+  exposed. → DECISIONS-FOR-MORNING #3.
+- WATCHER-ENSURE GAP (narrow; recorded, not yet fixed): the supervised reply-watcher does `if handle in
+  _watchers: return`; a dying watcher only deregisters in its `finally`. A re-dispatch to the same
+  supervised handle in the window between stream-exit and finally-pop would skip starting a fresh
+  watcher → that turn's reply silently dropped. Needs concurrent same-handle dispatch × a precisely
+  interleaved non-`closed` stream blip. Lead's next-beat candidate (no-deferral) — handled as a careful
+  deliberate fix, NOT a rushed 2am concurrency patch on a file that just went 52/52-green.
+
+**LEAD'S PRIMARY JOB TONIGHT = VERIFIER.** Not more docs. Channel layer VERIFIED (52/52 lead-re-run +
+both wire halves hand-traced). Remaining lead beats: the watcher-gap fix, then the 5th wire (op=recall)
+once the recall-fork posts its signature. Move items up this ledger only on real evidence.
 
 ## Lanes + status (each session updates its own block; verify-by-use, no "done" without proof)
 ### LEAD (ch-al7jdfdr) — channel layer + serving + coordination
@@ -81,7 +110,12 @@ the diff, confirm registry + transport by use, then (only then) move items up th
 ## ★ DECISIONS-FOR-MORNING (queued for Tim — nothing irreversible acted on)
 1. WILDCARD: RESOLVED by Tim-direct ("I'm pretty sure the wild already in") — ch-piffgfxv IS a live channel member; lead pinged it to identify+announce+contribute design-principle insight (thread t-1781443715). FOR MORNING: review whatever insight it surfaces about Tim's design principles — Tim flagged it as potentially the highest-value member ("very useful insights about me and my design principles… a wild card").
 2. CLONE-FLEET LAUNCH POINTS: fork's 3 starters (#8 the WHY / #1 the engine-room / compact:1 anchor) + up to 4 fork-discretion — launch once the channel transport is built; launch itself is notify-each (queued, not auto-fired overnight).
-3. (append any irreversible/external item the fabric hits here, with context)
+3. CONCURRENT AUTO-COMMITTER in ~/company (the `[instrument-surface]` loop) stages + commits on its own
+   beat and absorbed a fabric build file into a foreign commit (5577d8e swept mcp_face/cc_channel.py).
+   No data lost, but it muddies authorship + breaks clean single-lane reverts, and any stage-then-wait
+   is exposed. FOR MORNING: decide whether to pause/scope that loop while the fabric build runs, or
+   accept the co-mingling. (Surfaced, not acted on — it's another autonomous loop, not the fabric's.)
+4. (append any further irreversible/external item the fabric hits here, with context)
 
 ## Provenance + safety
 trust-tags on every entry; high-bar recovery gates self-approval; git-revert + cross-review the net.
