@@ -1,0 +1,329 @@
+{
+  "scan_ver": "scan-1",
+  "source_path": "/home/tim/.claude/projects/-home-tim/11e7d395-8bb9-463f-bcb3-06616da49ebb.jsonl",
+  "source_bytes": 7314677,
+  "scanned_at": "2026-06-14T08:55:19.529307+00:00",
+  "events_total": 2492,
+  "first_ts": "2026-06-13T14:21:07.199Z",
+  "last_ts": "2026-06-14T08:54:57.000Z",
+  "duration_sec": 66829.80100011826,
+  "by_type": {
+    "assistant": 1064,
+    "attachment": 705,
+    "user": 443,
+    "system": 78,
+    "custom-title": 43,
+    "agent-name": 43,
+    "mode": 42,
+    "last-prompt": 41,
+    "queue-operation": 26,
+    "file-history-snapshot": 7
+  },
+  "by_attribution": {
+    "assistant": 1061,
+    "attachment": 705,
+    "tool": 382,
+    "system": 78,
+    "user": 55,
+    "custom-title": 43,
+    "agent-name": 43,
+    "mode": 42,
+    "last-prompt": 41,
+    "queue-operation": 26,
+    "file-history-snapshot": 7,
+    "compaction": 3,
+    "synthetic": 3,
+    "channel": 3
+  },
+  "by_model": {
+    "claude-opus-4-8": 1061,
+    "<synthetic>": 3
+  },
+  "system_subtypes": {
+    "turn_duration": 33,
+    "stop_hook_summary": 32,
+    "local_command": 6,
+    "compact_boundary": 3,
+    "away_summary": 3,
+    "scheduled_task_fire": 1
+  },
+  "tokens_total": {
+    "in": 411228,
+    "out": 2502797,
+    "cache_read": 430403575,
+    "cache_creation": 12441028
+  },
+  "tokens_by_model": {
+    "claude-opus-4-8": {
+      "in": 411228,
+      "out": 2502797
+    },
+    "<synthetic>": {
+      "in": 0,
+      "out": 0
+    }
+  },
+  "boundaries": [
+    {
+      "n": 1,
+      "line": 0,
+      "uuid": "38f1ef23-fa23-420f-a8d7-206c887a5704",
+      "ts": "2026-06-13T14:21:07.199Z",
+      "trigger": "auto",
+      "pre_tokens": 967703,
+      "post_tokens": 12639,
+      "messages_summarized": null,
+      "preserved_count": 0,
+      "resume_cut_line": 1,
+      "resume_cut_uuid": "64fc8fd7-841e-461a-bde4-c9235a5017f9",
+      "point": "compact:1"
+    },
+    {
+      "n": 2,
+      "line": 1731,
+      "uuid": "e69249b2-38e0-4dd9-88b8-d78efcb5353b",
+      "ts": "2026-06-14T07:17:32.856Z",
+      "trigger": "manual",
+      "pre_tokens": 570251,
+      "post_tokens": 108771,
+      "messages_summarized": 1069,
+      "preserved_count": 654,
+      "resume_cut_line": 1732,
+      "resume_cut_uuid": "3dd94287-b80f-44a3-ac6a-60f8d81ceff5",
+      "point": "compact:2"
+    },
+    {
+      "n": 3,
+      "line": 2136,
+      "uuid": "fe3c20e7-0b5e-4c33-b445-f426a8488b60",
+      "ts": "2026-06-14T08:29:36.435Z",
+      "trigger": "auto",
+      "pre_tokens": 1014476,
+      "post_tokens": 17998,
+      "messages_summarized": null,
+      "preserved_count": 0,
+      "resume_cut_line": 2137,
+      "resume_cut_uuid": "f279ed40-2a92-4b4d-bd3b-fd23d97e30fb",
+      "point": "compact:3"
+    }
+  ],
+  "segments": [
+    {
+      "n": 0,
+      "from_line": 0,
+      "user_msgs": 0,
+      "assistant_msgs": 0,
+      "first_ts": "2026-06-13T14:21:07.199Z",
+      "last_ts": "2026-06-13T14:21:07.199Z",
+      "to_line": 0
+    },
+    {
+      "n": 1,
+      "from_line": 0,
+      "user_msgs": 363,
+      "assistant_msgs": 853,
+      "first_ts": "2026-06-13T14:21:07.199Z",
+      "last_ts": "2026-06-14T07:17:32.856Z",
+      "to_line": 1731
+    },
+    {
+      "n": 2,
+      "from_line": 1731,
+      "user_msgs": 42,
+      "assistant_msgs": 112,
+      "first_ts": "2026-06-14T07:17:32.856Z",
+      "last_ts": "2026-06-14T08:29:36.435Z",
+      "to_line": 2136
+    },
+    {
+      "n": 3,
+      "from_line": 2136,
+      "user_msgs": 38,
+      "assistant_msgs": 99,
+      "first_ts": "2026-06-14T08:29:36.435Z",
+      "last_ts": "2026-06-14T08:54:57.000Z",
+      "to_line": 2492
+    }
+  ],
+  "fork_provenance": {
+    "inherited_events": 1718,
+    "own_events": 293,
+    "parents": {
+      "bda8ce28-6dfb-4a76-b13a-bc016b8574ca": 1718
+    },
+    "is_fork": true,
+    "is_root": false
+  },
+  "dense_profile": {
+    "human_turns": 55,
+    "human_bytes_total": 61110,
+    "human_bytes_mean": 1111.1,
+    "biggest_human_msgs": [
+      {
+        "bytes": 22195,
+        "line": 1329,
+        "ts": "2026-06-14T05:21:39.252Z"
+      },
+      {
+        "bytes": 8964,
+        "line": 1285,
+        "ts": "2026-06-14T04:34:57.017Z"
+      },
+      {
+        "bytes": 7726,
+        "line": 1304,
+        "ts": "2026-06-14T04:51:24.029Z"
+      },
+      {
+        "bytes": 5406,
+        "line": 1370,
+        "ts": "2026-06-14T05:41:47.805Z"
+      },
+      {
+        "bytes": 3191,
+        "line": 2089,
+        "ts": "2026-06-14T08:19:31.199Z"
+      },
+      {
+        "bytes": 2341,
+        "line": 200,
+        "ts": "2026-06-13T14:32:54.088Z"
+      },
+      {
+        "bytes": 1359,
+        "line": 1315,
+        "ts": "2026-06-14T05:16:12.398Z"
+      },
+      {
+        "bytes": 1112,
+        "line": 1251,
+        "ts": "2026-06-14T04:08:36.096Z"
+      },
+      {
+        "bytes": 555,
+        "line": 1384,
+        "ts": "2026-06-14T05:45:53.193Z"
+      },
+      {
+        "bytes": 496,
+        "line": 1121,
+        "ts": "2026-06-14T03:48:27.618Z"
+      }
+    ],
+    "biggest_assistant_msgs": [
+      {
+        "bytes": 18470,
+        "line": 2122,
+        "ts": "2026-06-14T08:27:35.333Z"
+      },
+      {
+        "bytes": 12117,
+        "line": 2451,
+        "ts": "2026-06-14T08:54:00.605Z"
+      },
+      {
+        "bytes": 11219,
+        "line": 771,
+        "ts": "2026-06-14T00:43:13.239Z"
+      },
+      {
+        "bytes": 11058,
+        "line": 1853,
+        "ts": "2026-06-14T07:33:23.058Z"
+      },
+      {
+        "bytes": 9705,
+        "line": 2032,
+        "ts": "2026-06-14T07:45:51.769Z"
+      },
+      {
+        "bytes": 9514,
+        "line": 1574,
+        "ts": "2026-06-14T06:26:48.112Z"
+      },
+      {
+        "bytes": 8816,
+        "line": 2246,
+        "ts": "2026-06-14T08:36:04.495Z"
+      },
+      {
+        "bytes": 7777,
+        "line": 327,
+        "ts": "2026-06-13T14:47:19.142Z"
+      },
+      {
+        "bytes": 7717,
+        "line": 1062,
+        "ts": "2026-06-14T01:13:53.826Z"
+      },
+      {
+        "bytes": 7604,
+        "line": 579,
+        "ts": "2026-06-13T15:15:04.488Z"
+      }
+    ],
+    "assistant_bytes_mean": 964.2
+  },
+  "largest_gaps_sec": [
+    {
+      "gap_sec": 33011.8,
+      "line": 653,
+      "ts": "2026-06-14T00:30:24.111Z"
+    },
+    {
+      "gap_sec": 7007.7,
+      "line": 1114,
+      "ts": "2026-06-14T03:18:30.405Z"
+    },
+    {
+      "gap_sec": 1814.0,
+      "line": 2087,
+      "ts": "2026-06-14T08:19:31.154Z"
+    },
+    {
+      "gap_sec": 1667.1,
+      "line": 1118,
+      "ts": "2026-06-14T03:46:18.263Z"
+    },
+    {
+      "gap_sec": 1368.7,
+      "line": 1315,
+      "ts": "2026-06-14T05:16:12.398Z"
+    },
+    {
+      "gap_sec": 872.5,
+      "line": 1673,
+      "ts": "2026-06-14T07:06:00.793Z"
+    },
+    {
+      "gap_sec": 744.2,
+      "line": 1271,
+      "ts": "2026-06-14T04:25:02.678Z"
+    },
+    {
+      "gap_sec": 700.0,
+      "line": 1335,
+      "ts": "2026-06-14T05:34:24.248Z"
+    },
+    {
+      "gap_sec": 650.8,
+      "line": 1304,
+      "ts": "2026-06-14T04:51:24.029Z"
+    },
+    {
+      "gap_sec": 534.8,
+      "line": 1622,
+      "ts": "2026-06-14T06:41:34.471Z"
+    },
+    {
+      "gap_sec": 301.4,
+      "line": 1723,
+      "ts": "2026-06-14T07:13:58.808Z"
+    },
+    {
+      "gap_sec": 269.6,
+      "line": 1623,
+      "ts": "2026-06-14T06:46:04.080Z"
+    }
+  ]
+}

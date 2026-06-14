@@ -1,0 +1,139 @@
+{
+  "lineage_ver": "lineage-1",
+  "built_at": "2026-06-14T08:57:33.748179+00:00",
+  "nodes": {
+    "bda8ce28-6dfb-4a76-b13a-bc016b8574ca": {
+      "sid": "bda8ce28-6dfb-4a76-b13a-bc016b8574ca",
+      "path": "/home/tim/.claude/projects/-home-tim/bda8ce28-6dfb-4a76-b13a-bc016b8574ca.jsonl",
+      "first_ts": "2026-06-10T05:10:17.536Z",
+      "last_ts": "2026-06-14T08:54:54.566Z",
+      "duration_sec": 359077.0299999714,
+      "events": 12725,
+      "boundaries": [
+        "compact:1"
+      ],
+      "n_boundaries": 1,
+      "human_turns": 288,
+      "assistant_turns": 2819,
+      "out_tokens": 5652586,
+      "in_tokens": 554597,
+      "models": {
+        "claude-opus-4-8": 2026,
+        "claude-fable-5": 793,
+        "<synthetic>": 21
+      },
+      "is_root": true,
+      "branch": null,
+      "segments": [
+        {
+          "n": 0,
+          "from_line": 0,
+          "user_msgs": 970,
+          "assistant_msgs": 1801,
+          "first_ts": "2026-06-10T05:10:17.536Z",
+          "last_ts": "2026-06-13T14:21:07.199Z",
+          "to_line": 8401
+        },
+        {
+          "n": 1,
+          "from_line": 8401,
+          "user_msgs": 435,
+          "assistant_msgs": 1039,
+          "first_ts": "2026-06-13T14:21:07.199Z",
+          "last_ts": "2026-06-14T08:54:54.566Z",
+          "to_line": 12725
+        }
+      ]
+    },
+    "11e7d395-8bb9-463f-bcb3-06616da49ebb": {
+      "sid": "11e7d395-8bb9-463f-bcb3-06616da49ebb",
+      "path": "/home/tim/.claude/projects/-home-tim/11e7d395-8bb9-463f-bcb3-06616da49ebb.jsonl",
+      "first_ts": "2026-06-13T14:21:07.199Z",
+      "last_ts": "2026-06-14T08:57:23.456Z",
+      "duration_sec": 66976.2570002079,
+      "events": 2513,
+      "boundaries": [
+        "compact:1",
+        "compact:2",
+        "compact:3"
+      ],
+      "n_boundaries": 3,
+      "human_turns": 55,
+      "assistant_turns": 1067,
+      "out_tokens": 2535491,
+      "in_tokens": 413940,
+      "models": {
+        "claude-opus-4-8": 1067,
+        "<synthetic>": 3
+      },
+      "is_root": false,
+      "branch": {
+        "parent_sid": "bda8ce28-6dfb-4a76-b13a-bc016b8574ca",
+        "branch_uuid": "c36682cd-abb4-4d02-b3fd-c1d48c026481",
+        "inherited": 1718,
+        "own": 301
+      },
+      "segments": [
+        {
+          "n": 0,
+          "from_line": 0,
+          "user_msgs": 0,
+          "assistant_msgs": 0,
+          "first_ts": "2026-06-13T14:21:07.199Z",
+          "last_ts": "2026-06-13T14:21:07.199Z",
+          "to_line": 0
+        },
+        {
+          "n": 1,
+          "from_line": 0,
+          "user_msgs": 363,
+          "assistant_msgs": 853,
+          "first_ts": "2026-06-13T14:21:07.199Z",
+          "last_ts": "2026-06-14T07:17:32.856Z",
+          "to_line": 1731
+        },
+        {
+          "n": 2,
+          "from_line": 1731,
+          "user_msgs": 42,
+          "assistant_msgs": 112,
+          "first_ts": "2026-06-14T07:17:32.856Z",
+          "last_ts": "2026-06-14T08:29:36.435Z",
+          "to_line": 2136
+        },
+        {
+          "n": 3,
+          "from_line": 2136,
+          "user_msgs": 40,
+          "assistant_msgs": 105,
+          "first_ts": "2026-06-14T08:29:36.435Z",
+          "last_ts": "2026-06-14T08:57:23.456Z",
+          "to_line": 2513
+        }
+      ]
+    }
+  },
+  "edges": [
+    {
+      "child": "11e7d395-8bb9-463f-bcb3-06616da49ebb",
+      "parent": "bda8ce28-6dfb-4a76-b13a-bc016b8574ca",
+      "branch_uuid": "c36682cd-abb4-4d02-b3fd-c1d48c026481"
+    }
+  ],
+  "distances": {
+    "bda8ce28-6dfb-4a76-b13a-bc016b8574ca->11e7d395-8bb9-463f-bcb3-06616da49ebb": {
+      "child": "11e7d395-8bb9-463f-bcb3-06616da49ebb",
+      "parent": "bda8ce28-6dfb-4a76-b13a-bc016b8574ca",
+      "branch_ts": "2026-06-13T14:21:07.199Z",
+      "trunk_sec": 292249.7,
+      "trunk_days": 3.38,
+      "parent_divergence_msgs": 1474,
+      "parent_tip_ts": "2026-06-14T08:54:54.566Z",
+      "parent_divergence_sec": 66827.4,
+      "child_divergence_sec": 66976.3,
+      "child_own_msgs": 301,
+      "child_own_out_tokens": 2535491,
+      "child_compactions_since_branch": 3
+    }
+  }
+}

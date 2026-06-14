@@ -100,19 +100,25 @@ The scan must emit **DATA rows, not prose**, so the Company UI projects them for
 This row IS the registry shape for §1.6 (session store as a SOURCE) → the projection keys off it directly.
 
 ## 7. Status & open items (this lane)
-**DONE / verified (serves the VERIFIED outward spine — build hard):**
+> **Scope correction (2026-06-14, both advisors):** read-only/reversible analytics (scan, map, the scanner tool) are NOT gated — they're advisor-cleared by reversibility + are the fork's verified tim-direct + locked lane. Only AUTHORITY, the source-REGISTRY commitment, the clone-fleet LAUNCH + perms, config edits, and the materialize-fidelity fix stay [TIM-GATED]. (An earlier draft over-gated the scan; corrected.)
+
+**DONE / verified (reversible, built):**
 - [V] Compaction-boundary grammar reconciled (§3) — `compact_boundary` (deduped) counts; `isCompactSummary` marks the head; 1 real boundary in the lead, `trigger=auto`, 1M-window root cause.
-- [V] **Spine cut-path is STRUCTURAL for N>1** — `resolve_cut`→`build_timeline` returns the Nth `compact_boundary`'s `resume_cut` (session_pointintime.py L246/248/258); NO text-match anywhere; hardened against a 41-boundary session. ⇒ `cc_clone(at="compact:N")` cuts at real boundaries, never a "continued from…" false positive. (Resolves the lead's N>1 concern.)
-- [V] `forkedFrom` provenance mechanism (§4, corrected) + the `materialize_at_point` fidelity gap (§4b) — flagged to the lead.
+- [V] **Spine cut-path is STRUCTURAL for N>1 — verified by EXECUTION:** `build_timeline` run on the fork (11e7d395) returns **3** boundaries (`compact:1/2/3`); `resolve_cut`→`build_timeline` returns the Nth `compact_boundary`'s `resume_cut` (session_pointintime.py L246/248/258); NO text-match anywhere. ⇒ `cc_clone(at="compact:N")` cuts at real boundaries for any N, never a "continued from…" false positive. (The fork doubled as the multi-boundary test case I couldn't find elsewhere — see the no-multi-boundary-in-store note below.)
+- [V] `forkedFrom` provenance mechanism (§4, corrected) + the `materialize_at_point` fidelity gap (§4b — documented, HELD per scope).
+- [V] **Programmatic SCANNER built + run** — `runtime/session_scan.py` → `channel-memory/scans/<sid>.{summary.json,rows.ndjson}` for both sessions (§6 rows; attribution splits human/tool/channel/compaction; real per-turn tokens; system-subtype taxonomy incl. `turn_duration`/`away_summary`/`model_refusal_fallback`; dense-message profile; largest time-gaps = away signal).
+- [V] **Lineage/DISTANCE map built + run** — `runtime/session_lineage.py` → `channel-memory/map/lineage.{json,md}`: root start, the branch, shared-trunk vs parallel-divergence distances, oriented (§1.4).
 
 **Open, this lane (autonomous):**
-- [ ] Verify the §4 fork-detection partition on a 2nd fork (generalisation-proof before coding it as law).
-- [ ] Determine the 793 `claude-fable-5` inline assistant turns (sub-agent inlining vs a fable mode).
+- [ ] Verify the §4 fork-detection partition on a SECOND fork (only one fork exists in-store; generalisation-proof pending a 2nd).
+- [ ] Determine the **793 `claude-fable-5`** lead turns vs the fork's **0** (sub-agent inlining vs a fable mode) — quantified, cause open.
+- [ ] **No multi-boundary session exists elsewhere in `~/.claude/projects`** (swept: none with >1 `compact_boundary` except the fork) — the docstring's "41-boundary" session isn't present; the fork (N=3) is the live N>1 witness.
 - [ ] Confirm `compactMetadata` semantics on a **manual `/compact`** session (vs `auto`).
 
-**Open, but [TIM-GATED PROPOSAL] (the INWARD meta-program — surfaced to Tim directly, NOT built until he confirms; per the scope split + [[COMMIT-GRAMMAR]] §5):**
-- [~] Build the programmatic scanner emitting §6 rows (vision program #2) — the full self-scan is meta; the §6 row SHAPE is designed, execution waits for Tim.
-- [~] Register the session store as a SOURCE in the source registry (vision §1.6) — coordinate shape with the lead; gated.
+**[TIM-GATED] (await his direct word; PLANs may be committed, execution waits — [[COMMIT-GRAMMAR]] §5):**
+- Register the session store as a SOURCE in the source registry (vision §1.6) — the projection-feeding commitment; coordinate shape with the lead.
+- Align `materialize_at_point`'s `forkedFrom` to native fidelity (§4b) — registry-grade, ahead of need.
+- Mass clone-fleet launch + perms; program authority.
 
 ---
 *Foundational schema entry of the common channel-memory vault. Cross-link: [[2026-06-14-session-splicing-and-channel-memory]]. Format provisional pending [[COMMIT-GRAMMAR]].*
