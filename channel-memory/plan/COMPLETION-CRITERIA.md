@@ -24,7 +24,7 @@ verified: criteria status marked per-item (Verified / Designed / Broken); FORM f
 
 ## Group 2 — Recall substrate  (FOUNDATION)
 - **2.1 Embed bridge-free** — chunks embed via the Company-served :8007 (pplx-4b, documents-mode, 2560-d cosine); NO overlord venv bridge. FUNCTION: [V].
-- **2.2 Rerank served** — rerank via the Company-served :8008 (jina-v3, CPU); kept as its OWN capability (raw search+rerank stays available, per Tim). FUNCTION: [V] (pool=12 tuned for CPU).
+- **2.2 Rerank served** — rerank via the Company-served :8008 (jina-v3, CPU); kept as its OWN capability (raw search+rerank stays available, per Tim). FUNCTION: [V] (pool=12 tuned for CPU). **LICENSE: jina-v3 = CC-BY-NC → for any commercial/production path swap to a permissive reranker (ms-marco CPU, lead-served); session_recall is env-configurable (RERANK_URL) so it's a config swap, not a rebuild.**
 - **2.3 Fail-loud** — embedder/reranker down ⇒ teaching error + declared degradation in the envelope; never silent empty / silent fallback. FUNCTION: [V].
 - **2.4 Freshness guard** — a build-once index on a LIVE (growing) session is stale; recall must detect staleness (source mtime/size vs index) and rebuild or warn. FUNCTION: [D] (today: build-once, stale-on-live — the advisor's flag). Fine for stable past sessions; REQUIRED before live-session recall.
 
@@ -35,7 +35,7 @@ verified: criteria status marked per-item (Verified / Designed / Broken); FORM f
 - **3.4 catch_up(since)** — what happened since the last away-gap. FUNCTION: [V].
 - **3.5 timeline(topic)** — a topic's arc over the session, by time. FUNCTION: [V].
 - **3.6 directives()** — every genuine Tim ask, chronological (whole-slate ledger). FUNCTION: [V] (144 turns).
-- **3.7 requirements/preferences (ANTI-RECENCY)** — extract Tim's standing requirements + preferences + IMPLICIT signals across the WHOLE session, weighted by importance/repetition NOT recency; PRIMARY source = the cross-session preference-memory (`feedback-*`), session-recall as supplement. FUNCTION: [D] — the keystone new lens; also the payload for Group 5.
+- **3.7 requirements/preferences (ANTI-RECENCY)** — extract Tim's standing requirements + preferences + IMPLICIT signals across the WHOLE session, weighted by importance/repetition NOT recency; PRIMARY source = the cross-session preference-memory (`feedback-*`), session-recall as supplement. **CONVERGED: this is the INNER/session contributor to recollection's Pillar-1 identity layer (ONE preference layer, recollection-owned, gated no-fiction-about-Tim) — NOT a second layer.** FUNCTION: [D] — the keystone new lens; the fork feeds Pillar-1; payload for Group 5.
 - **3.8 spin-up-choosing** — rank §1.5 fork-points by context-state (decision-density, expertise-crystallization, hot-open-threads, novelty-vs-compaction-summary) → an evidenced fork-point surface. FUNCTION: [D].
 
 ## Group 4 — Retrieve-then-synthesize panel  (Tim's "panels"; extraction-vs-judgment)  [CONVERGED with lead §D]
@@ -58,6 +58,7 @@ verified: criteria status marked per-item (Verified / Designed / Broken); FORM f
 
 ## Group 6 — Multi-project / multi-session addressing  (lead lane §B — CONVERGED) — GATES fleet indexing
 > The session store IS the source; addressable units keyed on THREE scope axes — **project · session · segment** (segment = the `isCompactSummary` compaction generation, per the schema find). Cross-ref: `../design/lead-lane-inputs.md` §B.
+> **★ THE GATE — Tim's direct call (surfaced via lead's one-decision-surface):** the deeper choice is hierarchy (project·session·segment) vs a coordinate LATTICE. Fork's position: the embedding index IS already a 2560-d lattice → hierarchy is a DISCRETE-AXIS SLICE of the lattice, not an alternative; proposed = lattice-with-hierarchy-as-axes (matches the Heart: UI renders coordinate space). Nothing indexes more sessions until Tim picks.
 - **6.1 Address grammar** — `session://<project>/<sid>` + scope selector `{scope: project|session|segment|all, project?, sid?, segment?}`. Project key = the `~/.claude/projects/<encoded-cwd>/` dir (encode `/`,`.`→`-`; resolve by re-encoding, never decode — per `resume_cwd_for`). FUNCTION: [D] [P-lead].
 - **6.2 Index scoping** — index per-(project,session) with scope keys embedded so a query filters scope WITHOUT re-embedding; ONE embedder space per index (pplx-4b — the golden rule, never mix). FUNCTION: [D] [P-lead].
 - **6.3 Default-recall setting** — a `default_recall` config row (which session/project recall targets when no scope given). FUNCTION: [D].

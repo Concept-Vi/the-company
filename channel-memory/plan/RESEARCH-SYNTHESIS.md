@@ -34,6 +34,12 @@ verified: rounds 1-3 by-execution/read this session; rounds 4-5 PENDING (lead-la
 - **~/.vi/CLAUDE.md + rules/*.md** — the auto-load-to-every-session mechanism = the load-on-join precedent for channel-context (Group 5.2).
 - **Explore:** how a channel could carry a manifest + how members "load" it (does it ride ~/.vi/rules, the registry, or cc_channels membership?).
 
+## Round 7 — memory-system convergence [confirmed in-channel 2026-06-14]
+- **ONE layered memory system** (recollection-fork's framing, lead-confirmed): **session-recall = the INNER layer** (one session); **recollection = the OUTER layer** (all sessions + sidechains + cross-project links + distill + the two pillars). My session-recall nests INSIDE recollection — the served :8007 embed / :8008 rerank stack is the concrete working instance of recollection's abstract slots. **NO parallel memory system** (principle 2, across forks).
+- **Preference/identity layer = recollection's Pillar-1** (cross-session by nature — the feedback-* corpus spans sessions). The fork's get-a-feel lens (Group 3.7) FEEDS the session-scoped signal INTO Pillar-1; it is not a second layer. Ownership = recollection (Tim's call).
+- **Address grammar (the GATE, Tim's direct call):** lattice (coordinate-space) vs hierarchy (project·session·segment). Fork's position: the embedding index IS already a 2560-d coordinate lattice → recall is lattice-based today; structural keys are DISCRETE AXES within it (hierarchy = a slice of the lattice, not an alternative). Proposed: lattice-with-hierarchy-as-axes. Surfaced to the lead's one-decision-surface.
+- **Reranker license:** jina-v3 = CC-BY-NC → commercial path needs a permissive swap (ms-marco CPU, lead-served). session_recall is env-configurable (EMBED_URL/RERANK_URL) → swap is config, not rebuild.
+
 ## Round 6 — the get-a-feel source [V this session]
 - **The preference-memory corpus** `~/.claude/projects/-home-tim/memory/feedback-*.md` (50+ entries) — Tim's distilled preferences across sessions = the anti-recency get-a-feel substrate (Group 3.7, INFERRED-PREFERENCES Q3). Plus `~/.claude/CLAUDE.md`.
 
