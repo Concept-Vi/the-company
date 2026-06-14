@@ -145,9 +145,9 @@ live surface) lives in **EQUATION-AUDIT.md** — the gap-list that drives the ne
 
 - **NEXT BEATS (sequenced — from EQUATION-AUDIT.md; Tim 2026-06-15 said "all of them"):**
   1. ✅ done — equation-descriptions audit (EQUATION-AUDIT.md) + gap #1 the coincidence spine (`ce04fcf`).
-  2. **The misfit OUTSIDE THE BOX + corner = grow-the-box** (audit #2) — Tim's explicitly-unfinished idea; the
-     nucleation lens piles misfits outside the type-ring, but "outside the BOX" + corner-as-new-axis is missing.
-  3. **Axes as variables** (audit #3) — make the lens=axis-assignment legible AS "you are choosing the axes" (§8).
+  2. ✅ done — gap #2 the CORNER reading: residue → grow the box in the nucleation lens (`ec1ba61`); design-critic
+     FAIL→fixed (residue to corners, portrait clip, picker/scrubber occlusion); both viewports, design-lint clean.
+  3. **Axes as variables** (audit #3, NEXT) — make the lens=axis-assignment legible AS "you are choosing the axes" (§8).
   4. **Edges as canonical moves** (audit #4) — render typed edges with the geometric character translate/rotate/scale.
   5. **Resonance law** (audit #5, subtle) — surface 2π/n=(1/n)^k binding #types↔depth, only if it can be made REAL.
   6. **Registry-promotion keystone (L15)** — BLOCKED on L14 (embed registry defs) = a model-load data-build.

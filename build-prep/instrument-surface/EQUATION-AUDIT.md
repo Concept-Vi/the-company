@@ -24,7 +24,14 @@ the common memory." The corner/diagonal points never coincide = the forbidden tr
   ratified spine; let the eye SEE that agreement happens only on the axes and nowhere else.
 - Unblocked, surgical, central. → **first beat.**
 
-### 2. THE MISFIT OUTSIDE THE BOX + the corner = grow-the-box  🟡 (Tim flagged unfinished)
+### 2. THE MISFIT OUTSIDE THE BOX + the corner = grow-the-box  ✅ BUILT (`ec1ba61`)
+**Done:** the nucleation lens now renders all THREE seed-§10 readings from real engine fields — `inside` (fits a
+type), `pile_cluster`/`born` (candidate NEW TYPE → ✦, a new division still in the box), and `tail` (`pile_tail` —
+the residue: fits no type AND coheres into no new type → the CORNER). The tail collects in the box corners
+(snapped to the forbidden diagonals, clear of the candidate rim), the readout names it ("N residue → new axis",
+shown only when residue exists — honest), the legend + disclosure narrate it. Drivable (the items/types pickers
+recompute residue live: topics:topics → ~0 residue; worldview:topics → 42). Both viewports, design-lint clean.
+Design-critic FAIL→fixed (residue-on-rim→corners, portrait born-disc clip, picker/scrubber occlusion). Original:
 Tim (2026-06-14): "what did not fit into types would be outside of the box… we didn't finish all the details."
 Seed §10: the CORNER = maximal incommensurability, reachable only by a circle LEAVING the box → forces a NEW
 axis/dimension (architecture-growth), not just a filled slot.

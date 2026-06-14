@@ -38,6 +38,14 @@ The old "Tim-gated on the forbidden-definition / the second axis" framing was MY
 now corrected. Built as a PURE READ, registry-true, NO tuned cosine floor, with the structural honesty the
 fifth gate established. This IS a completion claim — see the TYPE-NUCLEATION entry under GENUINELY REMAINING.
 
+- **THE LIVE FRONTIER (2026-06-15) — the front-end surface + the EQUATION-DESCRIPTIONS AUDIT.** The engine
+  (Groups 1–12, incl. the cron's G10/G9 targets) is ✅ COMPLETE — re-verified this fire: acceptance suite
+  91/91 PASS (pure read, no regression) + the ✅ markers below. Per Tim's direct 2026-06-14 corrections the
+  work moved to the fresh React surface (`surface/app`, port 5174/5175) and then to expressing the SEED
+  equation's full DESCRIPTIONS. That frontier is tracked in **build-prep/instrument-surface/STATUS.md** and
+  **EQUATION-AUDIT.md** (the §-by-§ gap list). Done so far: all 12 lenses re-homed; gap #1 the coincidence
+  spine (`ce04fcf`); gap #2 the corner reading (residue → grow the box, `ec1ba61`). Next: axes-as-variables,
+  edges-as-canonical-moves; then the registry-promotion keystone (blocked on a model-load — an explicit ask to Tim).
 - **INSTRUMENT half — ✅ COMPLETE.** Group 1 (the variable-engine floor / acceptance suite), Group 5 (the
   FORM face on the corpus design system), Group 3 (time-freed/relative centre + scrubber), Group 4
   (real-time SSE pub-sub), Group 2 (the square/dyadic-grid half). All ✅, both faces, design-critic-passed.
