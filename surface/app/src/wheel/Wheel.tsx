@@ -155,7 +155,7 @@ export function Wheel({
              divergence between structure and meaning = the forbidden tension. The open tick marks the filed
              position; the dot (below) sits at the meaning position. Animates with the re-projection (no teleport). */}
           {proj.points.map((p) => {
-            if (p.strain == null || p.r_struct == null) return null
+            if (p.strain == null || p.r_struct == null || p.scale_size) return null // no strain on theme centroids
             const a = placePolar(p.theta, p.r_struct, cx, cy, R) // filed
             const b = placePolar(p.theta, p.r, cx, cy, R) // means
             // cap softer so the longest (highest-strain) segments don't read as axis spokes near the hub
@@ -240,6 +240,14 @@ export function Wheel({
               />
             )
           })}
+
+          {/* the centre / origin — drawn LAST so a theme blob can never occlude it (it is what radius is FROM) */}
+          {proj.center && proj.center !== 'now' && (
+            <g style={{ pointerEvents: 'none' }}>
+              <circle cx={cx} cy={cy} r={6} fill="none" stroke="var(--ink-primary)" strokeWidth={1.4} />
+              <circle cx={cx} cy={cy} r={2.4} fill="var(--ink-primary)" />
+            </g>
+          )}
         </svg>
       )}
 

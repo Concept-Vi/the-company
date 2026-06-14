@@ -42,6 +42,18 @@ function describe(proj: Projection, view: 'circle' | 'square', centred: string |
     }
   }
   if (b.radius_from === 'semantic') {
+    const sc = proj.scale
+    if (sc && sc.rung !== 'unit') {
+      // G11 coarse rung — the points are theme centroids (clusters), not units
+      return {
+        title: b.label,
+        lines: [
+          `${proj.count} themes · clusters at rung ${sc.rung}`,
+          'bigger blob · more items in the theme',
+          centred ? `radius · meaning-distance from ${centred}` : 'pick a point → ⊙ centre here',
+        ],
+      }
+    }
     return {
       title: b.label,
       lines: [

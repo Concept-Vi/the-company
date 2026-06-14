@@ -149,7 +149,7 @@
   font-size: var(--t-md); line-height: 1; min-width: 32px; }
 
 /* ---- view-mode toggle (○ circle / ◻ square — the seed's two coordinate systems) ---------------- */
-.bar-right { display: flex; align-items: center; gap: var(--s-2); }
+.bar-right { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; justify-content: flex-end; }
 .viewtoggle { display: inline-flex; gap: 2px; background: var(--ground-secondary); border-radius: var(--r-pill);
   padding: 2px; }
 .viewtoggle-btn { border: none; background: transparent; color: var(--ink-faint); cursor: pointer;
@@ -291,7 +291,9 @@
 .select-hint-text { font-size: var(--t-xs); color: var(--ink-faint); font-style: italic; }
 
 /* ---- portrait ------------------------------------------------------------ */
-.layout--portrait .portrait-top { padding: var(--s-3) var(--s-4); justify-content: space-between; align-items: center; }
+.layout--portrait .portrait-top { padding: var(--s-3) var(--s-4); justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: var(--s-2) var(--s-3); column-gap: var(--s-3); }
+.layout--portrait .viewtoggle-btn { min-width: 30px; }
 
 /* ---- landscape ----------------------------------------------------------- */
 .layout--landscape { flex-direction: row; }
