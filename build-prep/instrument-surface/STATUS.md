@@ -86,9 +86,17 @@ and "the types/divisions of the circle [should be built in] so the data points c
   (`in · <division>` + radius-meaning: semantic→meaning+tension, separator→leans pole/strength, nucleation→fits
   inside (val) / misfit→piled→new type, time→age), derived from the binding. Verified: raw → "in corpus.record ·
   age long ago (1.00)"; nucleation → "in worldview.py · fits inside (0.90)".
+- **THE LIVE SPINE — BUILT** (`bae90c3`). The surface is no longer static snapshots: it tails `/api/stream`
+  (SSE) from the newest seq; new events throttle-pulse a re-fetch so the present moves (new points bloom in, no
+  teleport). A pulsing LiveDot (top-right) shows live; tap to freeze/resume; gapless reconnect (Last-Event-ID).
+  Verified BY USE: emitting one real event (an annotation) triggered live re-fetches with no UI interaction (4
+  projection requests, 1 open stream). (A static design-critic can't see live motion — verification is by use.)
 - **NEXT BEATS (per the equation, sequenced):** the FORBIDDEN operationalized (§10 — circle-without-square =
-  gate-inbox; square-without-circle = drift; the corner = grow-the-box); the live SSE spine (the present moves);
-  the project system (pointable at anything, company = starter).
+  gate-inbox; square-without-circle = drift; the corner = grow-the-box; needs careful data-mapping — some kinds
+  aren't in the projection); the project system (pointable at anything, company = starter, on lineage.project);
+  the registry-promotion gesture (born type → proposal → the wheel re-divides; reuse /api/registry/proposals).
+- Note: a test annotation ("live-spine verification ping") was written to `ui://instrument/wheel` during live
+  verification — benign, append-only; harmless real comment.
 
 ## DESIGN-CRITIC — both new lenses PASS (2026-06-14)
 "Connections" (G10) = beautiful string-art-on-paper; "Two gravities" (G9) = the most instantly-legible data
