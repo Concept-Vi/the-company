@@ -27,7 +27,7 @@ from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from runtime.projection import BindingRegistry, project, TAU
+from runtime.projection import BindingRegistry, project, separation_report, TAU
 
 PASS = 0
 FAIL = 0
@@ -359,6 +359,137 @@ check("whole_set: an event mapping to NO row is DROPPED (not piled into the last
       all(p["sector"] in ("topics", "principles", "worldview") for p in r_drop["points"])
       and len(r_drop["points"]) == len([e for e in g10_evs if e.get("projection") in ("topics", "principles", "worldview")]),
       f"points={len(r_drop['points'])}")
+
+# ============================================================================================
+# §13 — GROUP 9: the TWO-GRAVITY SEPARATOR (a general variable-two-pole resolution).
+# The four bars (live/real-data/drivable/interactive) do NOT test whether the field SEPARATES — a
+# normalized radius gradients over pure noise. So the teeth here lock the FIFTH GATE: the mechanism
+# produces REAL separation on a guaranteed-spread fixture (flat = bug), AND the discriminator correctly
+# REFUSES the degenerate cases (identical poles, a dead/constant pole). Math proven here on synthetic
+# fixtures; the ✅ gate (one real semantically-distinct pole-pair that separates) is the bridge/real-data
+# probe, not this hermetic test — a fixture-only pass is NOT "connects to all real data".
+print("\n§13 — Group 9: the two-gravity separator (the fifth gate)")
+
+
+def _unit(v):
+    n = math.sqrt(sum(x * x for x in v)) or 1.0
+    return [x / n for x in v]
+
+
+# Hermetic TWO-BLOB fixture (dim 8): pole A points along dim 0, pole B along dim 4 (orthogonal → distinct).
+# Blob-A items cluster near A, blob-B items near B, plus ONE deliberately NEUTRAL item (equal to both) that
+# MUST land near the centre (proving radius=|lean|, neutral→centre, both poles→rim).
+POLE_A = _unit([1, 0, 0, 0, 0, 0, 0, 0])
+POLE_B = _unit([0, 0, 0, 0, 1, 0, 0, 0])
+sep_evs, sep_vecs = [], {}
+for k in range(6):                              # 6 items leaning A, 6 leaning B
+    a_addr, b_addr = f"item://a{k}", f"item://b{k}"
+    sep_evs.append({"seq": 700 + k, "ts": NOW.isoformat(), "kind": "x", "source_address": a_addr})
+    sep_evs.append({"seq": 720 + k, "ts": NOW.isoformat(), "kind": "x", "source_address": b_addr})
+    sep_vecs[a_addr] = _unit([1.0, 0, 0, 0, 0.15 + 0.04 * k, 0, 0, 0.05 * k])   # near A, small varied jitter
+    sep_vecs[b_addr] = _unit([0.15 + 0.04 * k, 0, 0, 0, 1.0, 0, 0, 0.05 * k])   # near B, small varied jitter
+neutral_addr = "item://neutral"
+sep_evs.append({"seq": 799, "ts": NOW.isoformat(), "kind": "x", "source_address": neutral_addr})
+sep_vecs[neutral_addr] = _unit([1, 0, 0, 0, 1, 0, 0, 0])                        # equal cos to A and B → neutral
+
+B_SEP = {"id": "bsep", "label": "two-gravity", "angle_from": "kind", "radius_from": "separator",
+         "order_by": "count", "space": "topics"}
+r_sep = project(sep_evs, binding=B_SEP, now=NOW, vectors=sep_vecs,
+                poles={"a": {"vector": POLE_A, "label": "Pole A"}, "b": {"vector": POLE_B, "label": "Pole B"}})
+by_addr = {p["address"]: p for p in r_sep["points"]}
+
+check("separator: blob-A items all lean toward pole A (lean<0 / pole=='a')",
+      all(by_addr[f"item://a{k}"]["pole"] == "a" for k in range(6)),
+      f"poles={[by_addr[f'item://a{k}']['pole'] for k in range(6)]}")
+check("separator: blob-B items all lean toward pole B (lean>0 / pole=='b')",
+      all(by_addr[f"item://b{k}"]["pole"] == "b" for k in range(6)),
+      f"poles={[by_addr[f'item://b{k}']['pole'] for k in range(6)]}")
+check("separator: every point carries BOTH raw pulls + the signed lean (no signal thrown away)",
+      all("pull_a" in by_addr[f"item://a{k}"] and "pull_b" in by_addr[f"item://a{k}"]
+          and "lean" in by_addr[f"item://a{k}"] for k in range(6)))
+check("separator: radius = |lean| → the NEUTRAL item sits near the CENTRE (both poles → rim, equals)",
+      by_addr[neutral_addr]["r"] < 0.2
+      and all(by_addr[f"item://a{k}"]["r"] > by_addr[neutral_addr]["r"] for k in range(6)),
+      f"neutral_r={by_addr[neutral_addr]['r']}, a0_r={by_addr['item://a0']['r']}")
+check("separator: the FIFTH GATE confirms this guaranteed-spread fixture SEPARATES (flat would be a bug)",
+      r_sep["separation"]["separates"] is True, f"sep={r_sep['separation']}")
+check("separator: report surfaces leaders toward BOTH poles (the spot-check material)",
+      len(r_sep["separation"]["leaders_a"]) > 0 and len(r_sep["separation"]["leaders_b"]) > 0)
+check("separator: report surfaces the BALANCE (the two-blob fixture is even — 6 toward A, 6 toward B)",
+      r_sep["separation"]["balance"]["lean_a"] == 6 and r_sep["separation"]["balance"]["lean_b"] == 6
+      and r_sep["separation"]["balance"]["minority_frac"] > 0.4,
+      f"balance={r_sep['separation']['balance']}")
+check("separator: binding surfaces radius_from=='separator' + the two pole labels (honest provenance)",
+      r_sep["binding"]["radius_from"] == "separator"
+      and r_sep["binding"]["poles"]["a"]["label"] == "Pole A"
+      and r_sep["binding"]["poles"]["b"]["label"] == "Pole B")
+
+# DEGENERATE 1 — IDENTICAL POLES: the discriminator MUST refuse (no two gravities → no field). This is the
+# green-paint guard: a normalized radius would still paint a gradient, but `separates` must be False.
+r_ident = project(sep_evs, binding=B_SEP, now=NOW, vectors=sep_vecs,
+                  poles={"a": {"vector": POLE_A}, "b": {"vector": POLE_A}})
+check("separator: IDENTICAL poles → the fifth gate REFUSES (separates False; pole_distinctness ~0)",
+      r_ident["separation"]["separates"] is False and r_ident["separation"]["pole_distinctness"] < 0.02,
+      f"sep={r_ident['separation']}")
+
+# DEGENERATE 2 — DEAD POLE: pole B lies on a dimension every item shares EQUALLY → cos(item,B) is ~constant
+# (zero spread). A min-max radius hides this; the discriminator's spread floor must catch it (separates False).
+dead_vecs = {}
+for k in range(6):                               # every item lives in span{dim0, dim4} only — NO dim7 part
+    dead_vecs[f"d{k}"] = _unit([1.0 + 0.1 * k, 0, 0, 0, 0.2, 0, 0, 0])    # varies along dim0 (pull_a varies)
+    dead_vecs[f"e{k}"] = _unit([0.1 * k, 0, 0, 0, 1.0, 0, 0, 0])
+dead_evs = [{"seq": 800 + i, "ts": NOW.isoformat(), "kind": "x", "source_address": f"item://{a}"}
+            for i, a in enumerate(list(dead_vecs.keys()))]
+dead_vmap = {f"item://{a}": v for a, v in dead_vecs.items()}
+POLE_DEAD = _unit([0, 0, 0, 0, 0, 0, 0, 1])      # dim 7 — ORTHOGONAL to the item subspace → cos==0 for ALL
+r_dead = project(dead_evs, binding=B_SEP, now=NOW, vectors=dead_vmap,
+                 poles={"a": {"vector": _unit([1, 0, 0, 0, 0, 0, 0, 0])}, "b": {"vector": POLE_DEAD}})
+check("separator: a DEAD pole (cos ~constant across items) → fifth gate REFUSES (spread_b under floor)",
+      r_dead["separation"]["separates"] is False
+      and r_dead["separation"]["spread_b"] < r_dead["separation"]["spread_floor"],
+      f"spread_b={r_dead['separation']['spread_b']}, sep={r_dead['separation']['separates']}")
+
+# POLE-AGNOSTIC / generality — a SECOND, totally different pole config (dims 2 vs 6) over the SAME mechanism
+# must also separate. Proves the separator is not wired to any one pair (registry-true, no hardcoded poles).
+POLE_C = _unit([0, 0, 1, 0, 0, 0, 0, 0])
+POLE_D = _unit([0, 0, 0, 0, 0, 0, 1, 0])
+gen_evs, gen_vecs = [], {}
+for k in range(5):
+    ca, da = f"item://c{k}", f"item://d{k}"
+    gen_evs += [{"seq": 850 + k, "ts": NOW.isoformat(), "kind": "x", "source_address": ca},
+                {"seq": 870 + k, "ts": NOW.isoformat(), "kind": "x", "source_address": da}]
+    gen_vecs[ca] = _unit([0, 0, 1.0, 0, 0, 0, 0.1 + 0.05 * k, 0])
+    gen_vecs[da] = _unit([0, 0, 0.1 + 0.05 * k, 0, 0, 0, 1.0, 0])
+r_gen = project(gen_evs, binding=B_SEP, now=NOW, vectors=gen_vecs,
+                poles={"a": {"vector": POLE_C}, "b": {"vector": POLE_D}})
+check("separator is POLE-AGNOSTIC: a totally different pole pair separates over the SAME mechanism",
+      r_gen["separation"]["separates"] is True, f"sep={r_gen['separation']}")
+
+# Spearman sign — the load-bearing ordering signal: opposed poles (the BEST case) must NOT be rejected.
+# A perfectly opposed pair makes the per-item pulls anti-correlated (ρ→−1), which the gate must PASS.
+check("separator: opposed poles give anti-correlated pulls (ρ<0) and PASS — not the false-negative trap",
+      r_sep["separation"]["rank_corr"] < 0.9 and r_sep["separation"]["separates"] is True,
+      f"rank_corr={r_sep['separation']['rank_corr']}")
+
+# A separator point with NO vector → rim + r_unknown (flagged, never silent-dropped) — same honesty as semantic.
+r_miss = project(sep_evs + [{"seq": 900, "ts": NOW.isoformat(), "kind": "x", "source_address": "item://novec"}],
+                 binding=B_SEP, now=NOW, vectors=sep_vecs,
+                 poles={"a": {"vector": POLE_A}, "b": {"vector": POLE_B}})
+_novec = [p for p in r_miss["points"] if p["address"] == "item://novec"]
+check("separator: a vectorless point → rim (r==1.0) + r_unknown flagged (never silent-dropped)",
+      len(_novec) == 1 and _novec[0]["r"] == 1.0 and _novec[0].get("r_unknown") is True)
+
+# separator mode with NO poles → fail LOUD (never a silent fallback to time).
+try:
+    project(sep_evs, binding=B_SEP, now=NOW, vectors=sep_vecs)
+    check("separator: missing poles fails LOUD (never a silent fallback to time)", False, "no raise")
+except ValueError:
+    check("separator: missing poles fails LOUD (never a silent fallback to time)", True)
+
+# separation_report unit — the discriminator triple in isolation (raw cosines, the witness of real separation).
+check("separation_report: redundant (ρ≈+1) ordering is REFUSED even with distinct poles",
+      separation_report([0.1, 0.2, 0.3, 0.4], [0.15, 0.25, 0.35, 0.45],
+                        _unit([1, 0, 0]), _unit([0.9, 0.4, 0]))["separates"] is False)
 
 print(f"\n{'PASS' if FAIL == 0 else 'FAIL'} — {PASS} passed, {FAIL} failed")
 sys.exit(0 if FAIL == 0 else 1)

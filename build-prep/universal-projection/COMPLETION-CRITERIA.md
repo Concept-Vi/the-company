@@ -45,8 +45,13 @@ the remaining items are genuinely gated (Tim input / axis-selection) or are data
   (live · the real node registry · drivable · interactive), design-critic RESOLVED both viewports. See Group
   10 below.
 - **GENUINELY REMAINING (all honestly gated — the loop must NOT churn on these):**
-  · **Group 9** (two-gravity separator) — 🔴, needs Tim's AI-tells description (the AI-corner pole). The
-    mechanism is buildable the instant he describes them; its pollution signal is inert without that seed.
+  · **Group 9** (two-gravity separator) — 🟡 FUNCTION DONE (2026-06-14). SUPERSEDED the AI-tells gate: Tim
+    "there is no single purpose" → general variable-two-pole read, AI supplies its own pole. Built as a PURE
+    two-pole read over the persisted vectors (no embed-lens) + the fifth gate (separation_report) + the AI plants
+    its own AI-corner anchor. VERIFIED LIVE on a real balanced pole pair (topics c6 worldview vs c4 sessions:
+    separates, Spearman −0.18, balance 47/115, clean leaders). Pollution instance = named DEFERRED application
+    (lens-mismatch 162/0, honest). REMAINING: the FORM beat — render the signed lean drivably/interactively on
+    the lattice at both viewports. NOT churn — a real next beat.
   · **The small registries + gate surface + 20/80 water-law** — 🔴. CORRECTED (2026-06-14, from the SEED +
     Tim's foundational message, brain doc lines 303/327-333/495/503): the 20/80 water-law is NOT a visual
     prioritization dial — it is TYPE-NUCLEATION: a type (an n-gon / a registry row) is BORN when the points
@@ -240,19 +245,50 @@ FROM model_projections()") was never built. So Group 8 was a BUILD, not a bring-
     e.g. "subjects a file covers" → what.py/projections.py nearest); this IS Group 6's semantic-radius input.
 - **FORM** — n/a (substrate). ✅
 
-## GROUP 9 · ABILITY — TWO-GRAVITY SEPARATOR 🔴 (UN-GATED 2026-06-13; needs Group 8 + the AI-tells)
-Mechanism named; no instruction-lens embedding; transport carries no framing parameter.
-POLES (resolved, §17): Tim-pole = the CENTRE (origin + the gradient field of Tim's recognitions/
-corrections — NOT corpus samples, since "none of it has all my intention"); AI-pole = the CORNER (the
-AI deformation), seeded by Tim's description of the AI-tells (his volunteered input).
-- **FUNCTION** — a steerable embedder served; an instruction/task parameter threaded through
-  `fabric/transport.py` → `client.complete_embeddings` → `nodes/embed.py` → build_index; the AI-tells
-  lens built; a per-unit signed gap (cosine pull toward centre vs corner) = pollution signal (a thin
-  sibling of `find_relations`). ☐ by use
-- **FORM** — every point carries its signed pull (toward origin vs AI-corner), readable on the
-  surface; on tokens. ☐ by rubric
-- **INPUT (not a gate)** — Tim's AI-tells description; the Tim-pole needs no enumeration (it's the
-  origin + the existing gradient field).
+## GROUP 9 · ABILITY — TWO-GRAVITY SEPARATOR 🟡 FUNCTION done (2026-06-14, real-data separation verified live); FORM next beat
+> SUPERSEDES the old plan (a "steerable embedder" threaded through transport→client→embed→build_index +
+> Tim's AI-tells). Tim 2026-06-14: "There is no single purpose" → the separator is a GENERAL variable-two-pole
+> resolution; the AI supplies its OWN AI-pole (never demand the tells from Tim). And the PURE-READ law: the
+> instrument never re-embeds — it READS the per-space vectors that already exist. So the built mechanism is a
+> pure two-pole read over the persisted vectors, NOT an embed-lens. Poles are VARIABLES (any address with a
+> vector in the lens — a corpus item, a cluster:// theme centroid, or a planted anchur://), registry-true
+> (declared in a binding ROW, overridable per request) — no hardcoded poles.
+>
+> **BUILT this beat (FUNCTION, commit pending):**
+> · `runtime/projection.py` — `radius_from='separator'`: per item pull_a=cos(item,A), pull_b=cos(item,B),
+>   signed lean=pull_b−pull_a; radius=|lean| min-max (NEUTRAL→centre, BOTH poles→rim — the two gravities as
+>   equals, no centre-pile); BOTH raw pulls + the lean carried per point (no signal thrown away). Vectorless
+>   point → rim + r_unknown (flagged, never dropped). Missing poles → fail loud.
+> · **THE FIFTH GATE** — `separation_report()` (raw cosines, the witness the field actually SEPARATES, since a
+>   normalized radius gradients over noise): three facts ALL required → pole_distinctness ≥ floor · spread_a AND
+>   spread_b ≥ floor (kills a dead/constant pole) · Spearman(pulls_a,pulls_b) NOT ≈ +1 (kills a redundant pole;
+>   opposed poles ρ→−1 PASS — the false-negative the earlier gap-rank draft would have had is gone). Plus the
+>   BALANCE (lean_a/lean_b/minority_frac) — surfaced NOT gated, makes a one-sided field legible.
+> · `runtime/bridge.py` `_separator_projection` — resolves the two pole vectors (unit item / cluster centroid /
+>   planted anchor) + the item vectors from the store; project() stays pure; poles drivable via ?pole_a=&pole_b=.
+> · `bindings/by_separator.py` — the general lens (default poles = the two MOST-distinct topics clusters).
+> · `runtime/anchors.py` — the AI plants its OWN AI-corner pole: characterizes AI-deformation, embeds it through
+>   the SAME BGE-M3 lens, persists anchor://ai-corner. The named pollution-instance mechanism.
+> · `tests/…acceptance.py §13` — 75 pass: hermetic two-blob SEPARATES (flat=bug), identical-poles REFUSED,
+>   dead-pole REFUSED, pole-agnostic 2nd config, balance, opposed-poles PASS, vectorless→rim, missing-poles fail-loud.
+>
+> **VERIFIED LIVE — the real-data ✅ gate (the honest one):** the separator, driven over ALL 162 real topics
+> items through the bridge, on a REAL semantically-distinct pole pair (cluster c6 worldview/conceptual vs c4
+> sessions/runtime): `separates:True`, distinctness 0.19, **Spearman −0.18** (opposed gravities), balance 47/115
+> (a genuinely two-sided field), and the leaders SPOT-CHECK clean — toward worldview: what.py, worldview.py,
+> principles.py, topics.py, lineage.py; toward sessions: introspection.py, sessions.py, rule.py, channels.py,
+> server.py. The general two-gravity separator is demonstrated on real data.
+>
+> **HONEST — the pollution instance is the NAMED DEFERRED application, NOT a verified oracle:** probed origin
+> (worldview centroid, a §17 corpus sample standing in for the deferred true Tim-pole) vs anchor://ai-corner →
+> balance **162/0** (every code-topic item leans to the code centroid, the free-text AI-corner wins for nobody).
+> This is the lens-mismatch the design anticipated: a free-text prose pole vs a code-topic corpus. The fifth gate
+> says separates:True (non-degenerate, distinct), but the BALANCE exposes it as one-sided — the field is the
+> code-vs-prose axis, not grounded-vs-AI. DEFERRED: the true Tim-pole (§17, not a corpus sample) + a text-lens
+> where the AI-corner is comparable. The ✅ rests on the balanced real pair, never on this probe.
+- **FUNCTION** — the general two-pole read + the fifth gate, verified live on a real balanced pair. ✅ by use
+- **FORM** — ☐ NEXT BEAT: render the signed lean on the lattice (sign as the second channel, both poles as
+  equals), a pole-PICKER so Tim drives which two gravities, at both 1440×900 and 390×844; design-critic + lint.
 
 ## GROUP 10 · ABILITY — ORDER-FROM-EDGES + ANGLE-FROM-A-REGISTRY + THE CONNECTIONS ✅ (2026-06-14; Tim-unblocked, both faces, design-critic RESOLVED, to THE BAR)
 > DONE 2026-06-14 (Tim unblocked — see ACTIVE BUILD up top): the old "edge-order needs an ACYCLIC backbone /

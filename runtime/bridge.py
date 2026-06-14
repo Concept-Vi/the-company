@@ -565,6 +565,69 @@ def _semantic_projection(q, binding, reg, evs, center, now, lim):
                      "hint": "this centre has no vector in the lens's space — pick an embedded item as the centre"}
     return 200, attach_scale(out, "unit")
 
+
+def _separator_projection(q, binding, reg, evs, center, now, lim):
+    """THE TWO-GRAVITY SEPARATOR (Group 9) for /api/projection. Returns (status, body). A GENERAL
+    variable-two-pole field: every embedded item's radius = its signed lean toward pole A vs pole B (both
+    pulls + the raw lean carried per point). The store I/O lives HERE; project() stays PURE (poles + vectors
+    ride in). The poles are VARIABLES, registry-true: declared by the binding (pole_a/pole_b) AND overridable
+    per request (?pole_a=&pole_b=) so the operator DRIVES which two gravities (interactive — a separator with
+    poles welded into the engine would be the very hardcode Tim deleted). A pole ref is any address carrying a
+    vector in the binding's lens: a corpus ITEM, a THEME centroid (cluster://<space>/k<K>/<label> — a real,
+    clustering-separated corpus region), or an anchor:// the AI itself planted (the pollution instance sets
+    pole_b=anchor://ai-corner). The FIFTH GATE (separation_report) rides in the response — the witness that
+    the field actually SEPARATES, so a normalized-gradient-over-noise can never read as done."""
+    from runtime.projection import project as _uproject, _addr_of as _proj_addr
+    space = binding.get("space")
+    if not space:
+        return 400, {"error": "separator binding needs a `space` (the lens the items + poles live in)",
+                     "binding": binding.get("id")}
+
+    def _pole_vector(ref):
+        """Resolve a pole's vector from the store: a UNIT item / anchor in the lens's space, OR a THEME
+        centroid (cluster://) from its own rung's scale space. None if truly absent (→ fail loud above)."""
+        if not ref:
+            return None
+        r = SUITE.store.get_vector(SUITE.store.space_address(ref, space))     # unit item / planted anchor
+        if r and r.get("vector"):
+            return r["vector"]
+        if ref.startswith("cluster://"):                                     # a theme centroid (real region)
+            seg = ref.split("cluster://", 1)[1].split("/")                   # [space, 'k<K>', label]
+            if len(seg) >= 2 and seg[1].startswith("k"):
+                r = SUITE.store.get_vector(SUITE.store.space_address(ref, f"scale:{seg[0]}:{seg[1]}"))
+                if r and r.get("vector"):
+                    return r["vector"]
+        return None
+
+    pole_a_ref = q.get("pole_a") or binding.get("pole_a")
+    pole_b_ref = q.get("pole_b") or binding.get("pole_b")
+    if not pole_a_ref or not pole_b_ref:
+        return 400, {"error": "separator needs TWO poles (?pole_a=&pole_b= or the binding's pole_a/pole_b) — "
+                              "fail loud, never a one-gravity field", "binding": binding.get("id")}
+    va, vb = _pole_vector(pole_a_ref), _pole_vector(pole_b_ref)
+    missing = [ref for ref, v in ((pole_a_ref, va), (pole_b_ref, vb)) if v is None]
+    if missing:
+        return 400, {"error": f"pole(s) with no vector in lens {space!r}: {missing} — pick poles embedded in "
+                              f"this lens (a corpus item, a cluster:// theme, or a planted anchor). Fail loud, "
+                              f"never a silent fallback.", "binding": binding.get("id")}
+
+    uevs = [e for e in evs if e.get("kind") == "corpus.record" and e.get("projection") == space]
+    vectors = {}
+    for e in uevs:
+        rec = SUITE.store.get_vector(SUITE.store.space_address(e.get("source_address") or "", space))
+        if rec and rec.get("vector"):
+            vectors[_proj_addr(e)] = rec["vector"]
+    poles = {"a": {"vector": va, "label": binding.get("pole_a_label") or pole_a_ref, "ref": pole_a_ref},
+             "b": {"vector": vb, "label": binding.get("pole_b_label") or pole_b_ref, "ref": pole_b_ref}}
+    try:
+        out = _uproject(uevs, binding=binding, registry=reg, now=now, center=center, limit=lim,
+                        vectors=vectors, poles=poles)
+    except ValueError as ve:
+        return 400, {"error": str(ve), "binding": binding.get("id")}
+    out["binding"]["space"] = space
+    return 200, out
+
+
 # ── Group H/I — the always-on activation CALLER (DORMANT by default) ─────────────────────────────
 # ONE long-lived ActivationCaller holds the rollup driver's held cursor (the H3 discipline — a fresh
 # driver per tick would re-consolidate every wave). BOTH the manual POST /api/activation/tick AND the
@@ -877,6 +940,11 @@ class H(BaseHTTPRequestHandler):
                     # or a coarse THEME rung (?rung=). All store/registry I/O + the rung resolution live in
                     # _semantic_projection; project() stays pure. (See the helper for the rung contract.)
                     _st, _body = _semantic_projection(q, binding, reg, evs, center, now, lim)
+                    self._send(_st, json.dumps(_body))
+                elif binding.get("radius_from") == "separator":
+                    # THE TWO-GRAVITY SEPARATOR (Group 9) — the store I/O (resolve the two pole vectors + the
+                    # item vectors) lives in the helper; project() stays pure. Poles are drivable (?pole_a=&pole_b=).
+                    _st, _body = _separator_projection(q, binding, reg, evs, center, now, lim)
                     self._send(_st, json.dumps(_body))
                 else:
                     # Group 10 — angle_from=<registry/graph>: resolve the entity-set's rows (+ directed edges)

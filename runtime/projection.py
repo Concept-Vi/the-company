@@ -130,6 +130,100 @@ def _cosine(a, b) -> float:
     return float(dot / (na * nb))
 
 
+def _spearman(xs: list, ys: list) -> float:
+    """Spearman rank correlation — dependency-free (rank both lists with average-rank ties, then Pearson on
+    the ranks). The two-gravity separator's ordering-divergence test reads this. Returns 0.0 for <2 points or
+    a zero-variance list (no orderable signal — never a fabricated correlation)."""
+    n = len(xs)
+    if n < 2 or len(ys) != n:
+        return 0.0
+
+    def ranks(vs: list) -> list:
+        order = sorted(range(n), key=lambda i: vs[i])
+        r = [0.0] * n
+        i = 0
+        while i < n:                                   # average-rank ties: equal values share their mean rank
+            j = i
+            while j + 1 < n and vs[order[j + 1]] == vs[order[i]]:
+                j += 1
+            avg = (i + j) / 2.0 + 1.0                   # 1-based average rank over the tie block [i..j]
+            for k in range(i, j + 1):
+                r[order[k]] = avg
+            i = j + 1
+        return r
+
+    rx, ry = ranks(xs), ranks(ys)
+    mx, my = sum(rx) / n, sum(ry) / n
+    cov = sum((a - mx) * (b - my) for a, b in zip(rx, ry))
+    vx = math.sqrt(sum((a - mx) ** 2 for a in rx))
+    vy = math.sqrt(sum((b - my) ** 2 for b in ry))
+    if vx == 0 or vy == 0:
+        return 0.0
+    return float(cov / (vx * vy))
+
+
+def separation_report(pulls_a: list, pulls_b: list, pole_a: list, pole_b: list, *, refs: list | None = None,
+                      distinctness_floor: float = 0.02, spread_floor: float = 0.004) -> dict:
+    """THE FIFTH GATE (Group 9 — the two-gravity separator). The four bars (live / all-real-data / drivable /
+    interactive) do NOT test whether the field actually SEPARATES: a min-max-normalized radius paints a clean
+    gradient over PURE NOISE, so 'it renders and I can drive it' can be true and meaningless at once. This is
+    the discriminator that decides ✅, computed on the RAW per-item cosines (BEFORE any normalization —
+    normalization always manufactures spread, so it can never be the witness of real separation). Three raw
+    facts, ALL required for `separates`:
+      1. pole_distinctness = 1 - cos(poleA, poleB) ≥ floor — the two poles must point different ways AT ALL
+         (identical poles → no field).
+      2. spread_a AND spread_b both ≥ floor — each pole's per-item pull must VARY across the corpus. A pole
+         whose cosine is ~constant everywhere is a DEAD pole (noise / uninformative); this catches it. A FLOOR
+         to kill the degenerate, NOT a calibrated strength threshold (corpus cosines cluster in a narrow band —
+         there is no honest magic 'strong-enough' number to tune against that band).
+      3. ordering divergence: Spearman(pulls_a, pulls_b) NOT ≈ +1. Redundant poles rank every item the SAME
+         (ρ→+1 → one gravity wearing two hats → FAILS); opposed poles rank inversely (ρ→−1 → two real
+         gravities → PASSES); independent poles ρ≈0 → passes. This carries the real two-gravity signal. (An
+         earlier draft gated on gap-ranking vs single-pole ranking — that has a false NEGATIVE: maximally
+         opposed poles make gap≈−2·cosA, so gap-rank≈cosA-rank, wrongly flagging the BEST case as redundant.)
+    Returns the raw facts + `separates` + the leaders toward each pole (spot-check material for the honest gate)."""
+    n = len(pulls_a)
+    distinct = 1.0 - _cosine(pole_a, pole_b)
+
+    def _std(vs: list) -> float:
+        if len(vs) < 2:
+            return 0.0
+        m = sum(vs) / len(vs)
+        return math.sqrt(sum((v - m) ** 2 for v in vs) / len(vs))      # population std of the raw cosines
+
+    sa, sb = _std(pulls_a), _std(pulls_b)
+    rho = _spearman(pulls_a, pulls_b)
+    separates = bool(distinct >= distinctness_floor and sa >= spread_floor
+                     and sb >= spread_floor and rho <= 0.9)
+    gaps = [pulls_b[i] - pulls_a[i] for i in range(n)]                  # signed lean: >0 toward B, <0 toward A
+    order = sorted(range(n), key=lambda i: gaps[i])
+    # the BALANCE — how the corpus distributes between the two gravities. A NON-degenerate field can still be
+    # one-sided (every item leans the SAME way → one pole 'wins' everywhere), which `separates` will NOT catch
+    # (it is a real, distinct, non-redundant field — just lopsided). Surfacing the balance makes that legible
+    # WITHOUT tuning a magic threshold against the narrow corpus band: a lopsided field reads as lopsided, an
+    # even field reads as even, and the operator/FORM judges. (This is what caught the lens-mismatched pollution
+    # pole — every code-topic item leaning toward the code centroid, away from the free-text AI-corner anchor.)
+    lean_a = sum(1 for g in gaps if g < 0)
+    lean_b = sum(1 for g in gaps if g > 0)
+
+    def _pick(idxs: list) -> list:
+        return [{"ref": (refs[i] if refs else i), "lean": round(gaps[i], 4),
+                 "pull_a": round(pulls_a[i], 4), "pull_b": round(pulls_b[i], 4)} for i in idxs]
+
+    return {
+        "separates": separates, "n": n,
+        "pole_distinctness": round(distinct, 4), "distinctness_floor": distinctness_floor,
+        "spread_a": round(sa, 5), "spread_b": round(sb, 5), "spread_floor": spread_floor,
+        "rank_corr": round(rho, 4),                                    # Spearman(pulls_a, pulls_b)
+        # the balance: items leaning to A / to B / neutral, and the minority fraction (0.5 = perfectly even,
+        # ~0 = one pole wins everywhere). Surfaced, NOT gated — honest legibility of a lopsided field.
+        "balance": {"lean_a": lean_a, "lean_b": lean_b, "neutral": n - lean_a - lean_b,
+                    "minority_frac": round(min(lean_a, lean_b) / n, 4) if n else 0.0},
+        "leaders_a": _pick(order[:5]),                                 # most negative lean (toward pole A)
+        "leaders_b": _pick(list(reversed(order[-5:]))),                # most positive lean (toward pole B)
+    }
+
+
 def _singular(registry_name: str) -> str:
     """Depluralize a registry NAME → the EVENT FIELD that names its row (the event→row edge convention,
     ONE rule, not a per-registry table): projections→projection, mark_types→mark_type, relation_types→
@@ -286,7 +380,7 @@ def _grid_cell(address: str, cap: int = 4) -> tuple:
 def project(events: list, *, binding: dict | None = None, now: datetime | None = None,
             center: str | None = None, limit: int = 0, registry: BindingRegistry | None = None,
             vectors: dict | None = None, sector_ids: list | None = None,
-            sector_edges: list | None = None) -> dict:
+            sector_edges: list | None = None, poles: dict | None = None) -> dict:
     """Events → points, resolved from a BINDING. Pure read; every coordinate read from data the
     event already carries, the divisions resolved from the binding's named source. The CENTRE is a
     variable: default the temporal NOW (radius = age); pass `now=` (the scrubber) to move it into the
@@ -353,6 +447,52 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
         if nc:
             sem_cmin, sem_cmax = min(nc), max(nc)
     sem_norm = sem and (sem_cmax - sem_cmin) > 1e-9
+
+    # SEPARATOR precompute (Group 9 — the TWO-GRAVITY field). A GENERAL variable-two-pole resolution: a binding
+    # with radius_from=='separator' plants TWO poles (any two vectors — pole-agnostic, registry-true, NOT a
+    # hardcoded pollution oracle), and every item's radius reads its signed lean toward one pole vs the other.
+    # The caller (bridge) resolves the two pole vectors and passes them in via `poles` ({'a':vecA,'b':vecB} or
+    # {'a':{'vector':..,'label':..},'b':..}) — project() stays PURE, the poles ride IN like events/vectors.
+    # For each point with a vector: pull_a = cos(item,A), pull_b = cos(item,B), lean = pull_b - pull_a (signed:
+    # >0 → toward B, <0 → toward A, ~0 → neutral). BOTH pulls + the raw signed lean are carried on the point so
+    # NO signal is thrown away (1D is lossy; the FORM picks its geometry from the raw fields). The fifth gate
+    # (separation_report) runs HERE on the raw cosines and is surfaced — it is the witness that the field really
+    # separates (a normalized radius alone is green-paint: it gradients over noise). Fail-loud: separator mode
+    # with no poles RAISES (never a silent fallback to time). A vectorless point → r=1.0 + r_unknown (rim +
+    # flagged, never silent-dropped), same honesty as the semantic mode.
+    sep = (radius_from == "separator")
+    sep_pa: dict = {}
+    sep_pb: dict = {}
+    sep_lean: dict = {}
+    sep_lmin = sep_lmax = 0.0
+    separation = None
+    pole_a_meta = pole_b_meta = None
+    if sep:
+        _pa, _pb = (poles or {}).get("a"), (poles or {}).get("b")
+        va = _pa.get("vector") if isinstance(_pa, dict) else _pa
+        vb = _pb.get("vector") if isinstance(_pb, dict) else _pb
+        if not va or not vb:
+            raise ValueError(
+                "separator radius needs TWO pole vectors (poles={'a':...,'b':...}) — fail loud, never a "
+                "silent fallback to time. A two-gravity field with one (or no) gravity is not a field.")
+        pole_a_meta = {"label": (_pa.get("label") if isinstance(_pa, dict) else None),
+                       "ref": (_pa.get("ref") if isinstance(_pa, dict) else None)}
+        pole_b_meta = {"label": (_pb.get("label") if isinstance(_pb, dict) else None),
+                       "ref": (_pb.get("ref") if isinstance(_pb, dict) else None)}
+        for _i, (_e, _t) in enumerate(stamped):
+            pv = (vectors or {}).get(_addr_of(_e)) or (vectors or {}).get(_e.get("source_address") or "")
+            if pv is not None and len(pv) == len(va) == len(vb):
+                ca, cb = _cosine(va, pv), _cosine(vb, pv)
+                sep_pa[_i], sep_pb[_i], sep_lean[_i] = ca, cb, cb - ca
+        if sep_lean:
+            _idxs = sorted(sep_lean.keys())
+            _refs = [(stamped[i][0].get("source_address") or _addr_of(stamped[i][0])
+                      or str(stamped[i][0].get("summary") or stamped[i][0].get("seq"))) for i in _idxs]
+            separation = separation_report([sep_pa[i] for i in _idxs], [sep_pb[i] for i in _idxs],
+                                           va, vb, refs=_refs)
+            _leans = [abs(g) for g in sep_lean.values()]
+            sep_lmin, sep_lmax = min(_leans), max(_leans)
+    sep_norm = sep and (sep_lmax - sep_lmin) > 1e-9
 
     # STRAIN precompute (Group 7, SEED §111: "strain is the distance between a point's square-position and
     # its circle-position"). Compared LIKE-FOR-LIKE as RADII at a shared angle (NOT a 2D cell↔wheel distance:
@@ -430,6 +570,19 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
                 r = min(max(r, 0.0), 1.0)
             else:
                 r = 1.0 - c                                          # single value / no spread → raw 1-cos
+        elif sep:
+            g = sep_lean.get(idx)
+            if g is None:
+                r, r_unknown = 1.0, True                              # no vector → rim, FLAGGED (not dropped)
+            elif sep_norm:
+                # radius = |lean| normalized: NEUTRAL (no preference) → centre, BOTH poles → rim (the two
+                # gravities render as EQUALS, not poleA→centre which would pile every strong-A item at the
+                # degenerate origin — the same centre-pile failure as semantic/Group-10). The SIGN (which pole)
+                # is the second channel, carried as the `lean`/`pole` fields for the FORM to render.
+                r = 0.06 + 0.94 * (abs(g) - sep_lmin) / (sep_lmax - sep_lmin)
+                r = min(max(r, 0.0), 1.0)
+            else:
+                r = abs(g)                                           # single value / no spread → raw |lean|
         elif addr_center is not None:
             r = _tree_distance(addr_center, _addr_of(e)) / max_dist   # structural distance-from-address
         else:
@@ -457,6 +610,12 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
             # and their gap. The FE draws the radial tension segment r_struct↔r at this angle (SEED §111).
             **({"r_struct": round(r_struct, 5), "strain": round(strain, 5)}
                if strain is not None else {}),
+            # SEPARATOR (Group 9) — both raw pulls + the signed lean carried so the FORM renders the two
+            # gravities as equals (sign = which pole; |lean| = how strongly). 1D radius is lossy; these are not.
+            **({"pull_a": round(sep_pa[idx], 4), "pull_b": round(sep_pb[idx], 4),
+                "lean": round(sep_lean[idx], 4),
+                "pole": ("b" if sep_lean[idx] > 0 else "a" if sep_lean[idx] < 0 else "—")}
+               if (sep and idx in sep_lean) else {}),
             # only a SEMANTIC point with no vector carries this (rim + flagged) — additive, absent otherwise
             **({"r_unknown": True} if r_unknown else {}),
         })
@@ -476,16 +635,23 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
         "center": addr_center or "now", "now": now.isoformat(), "n": n,
         "binding": {"id": binding["id"], "label": binding["label"],
                     "angle_from": binding.get("angle_from"),
-                    "radius_from": "semantic" if sem else ("address" if addr_center else radius_from),
+                    "radius_from": ("separator" if sep else "semantic" if sem
+                                    else ("address" if addr_center else radius_from)),
                     "order_by": binding.get("order_by", "count"),
                     # semantic only: was the meaning-distance min-max normalized for legibility? (honest —
                     # so 'near=close' is never silently a distorted absolute distance)
-                    **({"radius_normalized": sem_norm, "space": binding.get("space")} if sem else {})},
+                    **({"radius_normalized": sem_norm, "space": binding.get("space")} if sem else {}),
+                    # separator only: the two poles (label/ref) + whether the lean was min-max normalized
+                    **({"poles": {"a": pole_a_meta, "b": pole_b_meta},
+                        "radius_normalized": sep_norm, "space": binding.get("space")} if sep else {})},
         "bindings": [{"id": b["id"], "label": b["label"]} for b in reg.list()] or
                     [{"id": "raw", "label": "Kinds (raw)"}],
         "sectors": [{"id": s, "label": s, "from": round(TAU * i / n, 5), "to": round(TAU * (i + 1) / n, 5)}
                     for i, s in enumerate(sectors)],
         "edges": edges,   # the directional typed edges between sectors (directed chords; bidir = a real cycle)
+        # THE FIFTH GATE (Group 9): the separation report — the witness that the two-gravity field actually
+        # SEPARATES (computed on raw cosines, not the cosmetic radius). Present only in separator mode.
+        **({"separation": separation} if sep else {}),
         "rings": rings, "grid": grid_m,   # m/2 concentric circles for the m×m dyadic grid (seed §1)
         "lock": "x = 2*pi/n; n resolves from the binding's source — no hardcoded sectors",
         "points": points, "count": len(points),
