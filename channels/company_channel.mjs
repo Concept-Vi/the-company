@@ -19,16 +19,31 @@ const SESSION_ID = process.env.COMPANY_SESSION_ID || ''
 const PORT = parseInt(process.env.COMPANY_CHANNEL_PORT || '0', 10)
 const REPO = process.env.COMPANY_ROOT || process.cwd()
 let DESCRIPTION = process.env.COMPANY_CHANNEL_DESC || ''
+const MODEL = process.env.COMPANY_CHANNEL_MODEL || ''   // machine-set model id; the agent enriches via `profile`
+let PROFILE = {}                                          // the agent's SELF-written profile (model/role/focus/…)
 const SUPERVISOR = process.env.COMPANY_SUPERVISOR_BASE || 'http://127.0.0.1:8771'
 const REGDIR = path.join(REPO, '.data', 'channels')
 const REG = path.join(REGDIR, HANDLE + '.json')
 
+function regEntry(port) {
+  return {
+    handle: HANDLE, session_id: SESSION_ID, cwd: process.cwd(), description: DESCRIPTION,
+    model: MODEL, profile: PROFILE, pid: process.pid, port, started: new Date().toISOString(),
+  }
+}
 function writeReg(port) {
   fs.mkdirSync(REGDIR, { recursive: true })
-  fs.writeFileSync(REG, JSON.stringify({
-    handle: HANDLE, session_id: SESSION_ID, cwd: process.cwd(), description: DESCRIPTION,
-    pid: process.pid, port, started: new Date().toISOString(),
-  }, null, 2))
+  fs.writeFileSync(REG, JSON.stringify(regEntry(port), null, 2))
+}
+// merge a patch into the EXISTING on-disk reg — the agent updating its OWN entry (it knows its handle).
+// preserves the transport fields the server wrote (pid/port); only the self-described fields change.
+function updateReg(patch) {
+  try {
+    const r = JSON.parse(fs.readFileSync(REG, 'utf8'))
+    Object.assign(r, patch)
+    fs.writeFileSync(REG, JSON.stringify(r, null, 2))
+    return true
+  } catch { return false }
 }
 
 const mcp = new Server(
@@ -36,7 +51,7 @@ const mcp = new Server(
   {
     capabilities: { experimental: { 'claude/channel': {}, 'claude/channel/permission': {} }, tools: {} },
     instructions:
-      'Messages from the Company fabric arrive as <channel source="company-channel" from="..." thread="..."> tags — REAL messages from other Claude Code sessions or the operator, injected live. Read and act on them. To reply to one, call the `reply` tool with the text and the `thread` attribute from the tag (this delivers your reply back into the asking session). Once, near the start, call `announce` with a one-line description of what this session is working on, so it is recognisable in the fabric.',
+      'Messages from the Company fabric arrive as <channel source="company-channel" from="..." thread="..."> tags — REAL messages from other Claude Code sessions or the operator, injected live. Read and act on them. To reply to one, call the `reply` tool with the text and the `thread` attribute from the tag (this delivers your reply back into the asking session). Once, near the start, call `profile` to write WHO YOU ARE into the fabric — your `model` (e.g. claude-fable-5), your `role`, and `focus` (what you are working on) — so other sessions see who they are talking to. (`announce` sets just a one-line description if that is all you have.)',
   },
 )
 
@@ -44,8 +59,16 @@ mcp.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     { name: 'reply', description: 'Reply to a fabric/channel message (delivers back into the asking session)',
       inputSchema: { type: 'object', properties: { text: { type: 'string' }, thread: { type: 'string', description: 'the thread attribute from the inbound <channel> tag' } }, required: ['text'] } },
-    { name: 'announce', description: 'Set this session\'s short description so it is recognisable in the fabric',
+    { name: 'announce', description: 'Set this session\'s short one-line description so it is recognisable in the fabric',
       inputSchema: { type: 'object', properties: { description: { type: 'string' } }, required: ['description'] } },
+    { name: 'profile', description: 'Write THIS session\'s OWN profile into its fabric registry entry (the agent describes itself — it knows its own handle). Fields merge into this session\'s entry; transport fields (pid/port) are preserved.',
+      inputSchema: { type: 'object', properties: {
+        description: { type: 'string', description: 'one-line summary (also updates the top-level description)' },
+        model: { type: 'string', description: 'the model this session is running, e.g. claude-fable-5' },
+        role: { type: 'string', description: 'this session\'s role in the fabric' },
+        focus: { type: 'string', description: 'what this session is currently working on' },
+        expertise: { type: 'string', description: 'what this session knows / can advise on' },
+      } } },
   ],
 }))
 
@@ -71,8 +94,20 @@ mcp.setRequestHandler(CallToolRequestSchema, async (req) => {
   }
   if (req.params.name === 'announce') {
     DESCRIPTION = String(a.description || '')
-    try { const r = JSON.parse(fs.readFileSync(REG, 'utf8')); r.description = DESCRIPTION; fs.writeFileSync(REG, JSON.stringify(r, null, 2)) } catch {}
+    updateReg({ description: DESCRIPTION })
     return { content: [{ type: 'text', text: 'announced: ' + DESCRIPTION }] }
+  }
+  if (req.params.name === 'profile') {
+    // the agent writes its OWN profile (it knows its handle). Merge the supplied self-described fields
+    // into PROFILE; mirror description/model to the top level so `list` surfaces them without digging.
+    const fields = {}
+    for (const k of ['model', 'role', 'focus', 'expertise']) if (a[k] != null) fields[k] = String(a[k])
+    PROFILE = { ...PROFILE, ...fields }
+    const patch = { profile: PROFILE }
+    if (a.description != null) { DESCRIPTION = String(a.description); patch.description = DESCRIPTION }
+    if (a.model != null) patch.model = String(a.model)
+    updateReg(patch)
+    return { content: [{ type: 'text', text: 'profile written: ' + JSON.stringify(PROFILE) }] }
   }
   throw new Error('unknown tool: ' + req.params.name)
 })
