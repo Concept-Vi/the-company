@@ -320,5 +320,36 @@ check("Group 10 is ADDITIVE: the data-driven 'kind' default is unchanged (sector
       [s["id"] for s in project(events, binding=raw, now=NOW, sector_ids=["x"], registry=REAL)["sectors"]]
       == [s["id"] for s in res["sectors"]])
 
+print("=== 12 · the CONNECTIONS — edges surfaced for drawing + whole_set + bidir (Group 10 / Tim 2026-06-14) ===")
+# THE CONNECTIONS IN THE REGISTRIES: the directional typed edges are SURFACED in the output (directed
+# sector-index pairs) so the surface can DRAW them as chords, not merely order by them.
+B_conn = {"id": "bconn", "label": "conn", "angle_from": "projections", "radius_from": "time", "order_by": "edge"}
+r_conn = project(g10_evs, binding=B_conn, now=NOW, sector_ids=["topics", "principles", "worldview"],
+                 sector_edges=[("worldview", "topics"), ("topics", "principles")], registry=REAL)
+_sidx = {s["id"]: i for i, s in enumerate(r_conn["sectors"])}
+check("edges are surfaced as DIRECTED sector-index pairs (the connections, for drawing the chords)",
+      {(_sidx.get("worldview"), _sidx.get("topics")), (_sidx.get("topics"), _sidx.get("principles"))}
+      == {(e["from"], e["to"]) for e in r_conn["edges"]}, f"edges={r_conn['edges']}")
+check("a non-edge binding surfaces NO edges (additive: `edges` defaults empty)",
+      project(events, binding=raw, now=NOW, registry=REAL)["edges"] == [])
+# whole_set — render the WHOLE registry's rows (its STRUCTURE), not only the rows present in event data
+B_whole = {"id": "bwhole", "label": "whole", "angle_from": "projections", "radius_from": "time",
+           "order_by": "count", "whole_set": True}
+w_ids = [s["id"] for s in project(g10_evs, binding=B_whole, now=NOW,
+         sector_ids=["topics", "principles", "worldview", "ghost"], registry=REAL)["sectors"]]
+check("whole_set: ALL candidate rows render — even a row NO event touched (the registry structure)",
+      "ghost" in w_ids and all(x in w_ids for x in ("topics", "principles", "worldview")), f"ids={w_ids}")
+check("whole_set: NO '—' remainder (the set IS the whole registry; nothing is outside it)", "—" not in w_ids)
+# bidir — a REAL mutual edge (A→B AND B→A) is flagged, rendered AS a cycle (nonsequential is valid), not dropped
+r_bidir = project(g10_evs, binding=B_conn, now=NOW, sector_ids=["topics", "principles"],
+                  sector_edges=[("topics", "principles"), ("principles", "topics")], registry=REAL)
+check("a mutual edge (A→B and B→A) is flagged `bidir` (a cycle rendered as a cycle, not flattened/dropped)",
+      len(r_bidir["edges"]) == 2 and all(e.get("bidir") for e in r_bidir["edges"]))
+# edges only between PRESENT sectors; a self-loop is dropped (a chord to itself is not a connection)
+r_self = project(g10_evs, binding=B_conn, now=NOW, sector_ids=["topics", "principles"],
+                 sector_edges=[("topics", "topics"), ("topics", "missing")], registry=REAL)
+check("edges drop self-loops and edges to absent rows (only real connections between present sectors)",
+      r_self["edges"] == [])
+
 print(f"\n{'PASS' if FAIL == 0 else 'FAIL'} — {PASS} passed, {FAIL} failed")
 sys.exit(0 if FAIL == 0 else 1)

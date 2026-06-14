@@ -222,7 +222,15 @@ def _resolve_sectors(binding: dict, events: list, *, sector_ids=None, sector_edg
                 # in graph mode legitimately has no single node membership — it is an edge, not a remainder).
                 if not (af == "graph" or af.startswith("graph:")) or e.get("kind") != "connect":
                     unmapped = True
-        ids = list(counts.keys())
+        # WHOLE-SET (the connections view, Group 10): a binding may ask to render the ENTIRE registry's rows
+        # (the structure + its connections), not only the rows present in the event data — so "the connections
+        # in the registries" shows every row + every directional typed edge, even rows no event has touched.
+        # Default stays data-driven (present-only, e.g. by_lens). whole_set requires the caller's sector_ids.
+        if binding.get("whole_set") and cand:
+            ids = sorted(cand)
+            unmapped = False                          # the set is the whole registry; nothing is "outside" it
+        else:
+            ids = list(counts.keys())
         tie = lambda r: (-counts.get(r, 0), str(r))
         if order_by == "edge" and sector_edges:
             ordered = _toposort(ids, list(sector_edges), key=tie)
@@ -443,6 +451,17 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
             **({"r_unknown": True} if r_unknown else {}),
         })
 
+    # THE CONNECTIONS (Group 10 — "the connections in the registries"): surface the REAL directional typed
+    # edges between sectors so the surface can DRAW them (directed chords), not just order by them. Tim's model:
+    # every typed edge is DIRECTIONAL with an equal-opposite, and ONLY directional relations type — so each
+    # edge is emitted ONCE in its declared direction [from→to] (the equal-opposite is the reverse reading, not
+    # a second edge). Mapped to sector INDICES (the FE draws between wedge angles); only edges whose BOTH
+    # endpoints are present sectors; self-loops dropped; deduped. `bidir` flags a genuine A→B AND B→A pair (a
+    # real 2-cycle / mutual relation — rendered as a cycle, NOT flattened: nonsequential is valid, Tim 495).
+    _sidx = {s: i for i, s in enumerate(sectors)}
+    _eset = {(a, b) for (a, b) in (sector_edges or []) if a in _sidx and b in _sidx and a != b}
+    edges = [{"from": _sidx[a], "to": _sidx[b], **({"bidir": True} if (b, a) in _eset else {})}
+             for (a, b) in sorted(_eset)]
     return {
         "center": addr_center or "now", "now": now.isoformat(), "n": n,
         "binding": {"id": binding["id"], "label": binding["label"],
@@ -456,6 +475,7 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
                     [{"id": "raw", "label": "Kinds (raw)"}],
         "sectors": [{"id": s, "label": s, "from": round(TAU * i / n, 5), "to": round(TAU * (i + 1) / n, 5)}
                     for i, s in enumerate(sectors)],
+        "edges": edges,   # the directional typed edges between sectors (directed chords; bidir = a real cycle)
         "rings": rings, "grid": grid_m,   # m/2 concentric circles for the m×m dyadic grid (seed §1)
         "lock": "x = 2*pi/n; n resolves from the binding's source — no hardcoded sectors",
         "points": points, "count": len(points),

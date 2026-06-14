@@ -892,7 +892,22 @@ class H(BaseHTTPRequestHandler):
                                 "generation_policies": SUITE.generation_policy_registry,
                                 "ai_tics": SUITE.ai_tic_registry, "forms": SUITE.form_registry,
                                 "lifters": SUITE.lifter_registry}
-                        if af in _REG:
+                        if af in ("node-types", "node_types"):
+                            # THE CONNECTIONS in the node registry (Group 10): rows = node types; edges = the
+                            # DIRECTIONAL typed type-flow — A's output type feeds B's input type, ASYMMETRIC
+                            # only (Tim: "the only edges that get typed are the directional ones"; the
+                            # both-ways/symmetric pairs are NOT typed → excluded). Cycles among the directional
+                            # edges are KEPT and rendered as cycles (nonsequential is valid). Registry-true:
+                            # reads the LIVE node registry (drop a node type → it appears, no code edit).
+                            _nt = NodeRegistry().discover([os.path.join(ROOT, "nodes")]).types
+                            _names = sorted(_nt)
+                            _outs = {n: set(_nt[n].ports.outputs.values()) for n in _names}
+                            _ins = {n: set(_nt[n].ports.inputs.values()) for n in _names}
+                            _feeds = lambda a, b: bool(_outs[a] & _ins[b])
+                            _dir = [(a, b) for a in _names for b in _names
+                                    if a != b and _feeds(a, b) and not _feeds(b, a)]
+                            skw = {"sector_ids": _names, "sector_edges": _dir}
+                        elif af in _REG:
                             skw = {"sector_ids": sorted(_REG[af]), "sector_edges": []}
                         elif af == "graph" or af.startswith("graph:"):
                             gid = af.split(":", 1)[1] if ":" in af else (q.get("graph") or "")
