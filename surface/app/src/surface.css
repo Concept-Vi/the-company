@@ -163,8 +163,11 @@
   z-index: 20; display: flex; align-items: center; gap: var(--s-2); max-width: 90%;
   background: color-mix(in srgb, var(--ground-accent) 85%, transparent); box-shadow: var(--elev-1);
   border-radius: var(--r-pill); padding: var(--s-1) var(--s-3); }
-.scrubber--past { box-shadow: var(--elev-2); border: 1px solid color-mix(in srgb, var(--pig-accent) 30%, transparent); }
-.scrubber-glyph { color: var(--ink-faint); font-size: var(--t-sm); }
+/* past-state reads pre-attentively: a clear accent border + a faint accent wash, not just the readout colour */
+.scrubber--past { box-shadow: var(--elev-2); border: 1.5px solid color-mix(in srgb, var(--pig-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--pig-accent) 9%, var(--ground-accent)); }
+.scrubber-glyph { color: var(--ink-dim); font-size: var(--t-md); }
+.scrubber--past .scrubber-glyph { color: var(--pig-accent); }
 .scrubber-range { width: 220px; max-width: 50vw; accent-color: var(--pig-accent); }
 .scrubber-label { font-size: var(--t-xs); color: var(--ink-dim); font-variant-numeric: tabular-nums; min-width: 86px; }
 .scrubber--past .scrubber-label { color: var(--pig-accent); }
