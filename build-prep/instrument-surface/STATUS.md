@@ -46,3 +46,10 @@ panels/settings/self-change-log) · the **project system** on `lineage.project` 
 registry definitions via the company MCP (nucleable symbolic registries) · the **registry-promotion gesture**
 (candidate→proposal via `/api/registry/proposals` + MCP `propose_role`; instrument stays pure-read).
 Plus the critic's non-blocking polish (compose the HOWTO block, selection tether, gutters).
+
+## DESIGN-CRITIC — both new lenses PASS (2026-06-14)
+"Connections" (G10) = beautiful string-art-on-paper; "Two gravities" (G9) = the most instantly-legible data
+claim in the set. Neither reads as prototype. Fix #1 (G9 card↔pole-label overlap) DONE (`d24181f`).
+Remaining non-blocking polish, sequenced (not parked): G10 de-muddy the central chord knot (inner-radius gap /
+lower opacity at hub); G9 tighten the central basin gutter; selection tethers (point→card) on all lenses; G9
+portrait balance the pole-label wrapping; G10 unify the ~9 o'clock sector marker; G10 a subtle "0 by design" cue.
