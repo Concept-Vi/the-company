@@ -38,13 +38,26 @@ export function Grid({
   const levels = dyadicLevels(m)
   const ringR = (k: number) => (k / rings) * R
 
+  // a point's screen position from its dyadic cell, CLAMPED inside the box: data lives inside the
+  // addressable structure; the margin/corners stay empty = the forbidden zone (legible per the equation).
+  const place = (p: ProjPoint) => {
+    const md = 1 << (p.cell?.d || 0)
+    const pos = gridCellCenter(p.cell?.i ?? 0, p.cell?.j ?? 0, md, cx, cy, R, p.seq)
+    const pad = 4
+    return {
+      x: Math.max(cx - R + pad, Math.min(cx + R - pad, pos.x)),
+      y: Math.max(cy - R + pad, Math.min(cy + R - pad, pos.y)),
+    }
+  }
+
   return (
     <div ref={ref} className="wheel-region" {...stamp('ui://instrument/grid')}>
       {ready && (
         <svg viewBox={`0 0 ${width} ${height}`} className="wheel-svg" role="img" aria-label="structure grid">
-          {/* the FORBIDDEN corner-circle (circumscribed, through the corners, bulging outside the box) */}
+          {/* the FORBIDDEN corner-circle (circumscribed, through the corners, bulging outside the box) —
+             load-bearing geometry, so it reads as a deliberate boundary, not background noise */}
           <circle cx={cx} cy={cy} r={R * SQRT2} fill="none" stroke="var(--pig-strain)"
-            strokeOpacity={0.22} strokeWidth={1} strokeDasharray="3 4" />
+            strokeOpacity={0.42} strokeWidth={1.2} strokeDasharray="4 5" />
 
           {/* the dyadic nested grid lines (coarsest strongest → finest faintest; parent contains children) */}
           {levels.map(({ divisions, weight }) =>
@@ -93,8 +106,7 @@ export function Grid({
           {/* points at their dyadic cells — decorative animated layer (pointer-events off) */}
           <AnimatePresence>
             {proj.points.map((p) => {
-              const md = 1 << (p.cell?.d || 0)
-              const pos = gridCellCenter(p.cell?.i ?? 0, p.cell?.j ?? 0, md, cx, cy, R, p.seq)
+              const pos = place(p)
               const i = sectorIndex.get(p.sector) ?? 0
               const isSel = p.seq === selectedSeq
               const addr = pointAddress(p)
@@ -105,7 +117,7 @@ export function Grid({
                   layoutId={addr}
                   className="wheel-dot"
                   fill={sectorHue(i, n)}
-                  fillOpacity={0.62}
+                  fillOpacity={0.52}
                   stroke={isSel ? 'var(--ink-primary)' : 'transparent'}
                   strokeWidth={isSel ? 1.5 : 0}
                   style={{ pointerEvents: 'none' }}
@@ -120,8 +132,7 @@ export function Grid({
 
           {/* HIT layer — touch-friendly */}
           {proj.points.map((p) => {
-            const md = 1 << (p.cell?.d || 0)
-            const pos = gridCellCenter(p.cell?.i ?? 0, p.cell?.j ?? 0, md, cx, cy, R, p.seq)
+            const pos = place(p)
             const addr = pointAddress(p)
             return (
               <circle
