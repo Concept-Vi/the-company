@@ -14,6 +14,14 @@ export function pointAddress(p: ProjPoint): string {
   return p.address && p.address.startsWith('ui://') ? p.address : `ui://canvas/seq-${p.seq}`
 }
 
+// The readable name of a COARSE theme (a cluster centroid): its exemplar's leaf
+// (code://runtime/scheduler.py → scheduler.py), else the summary minus the trailing ·count.
+// This is WHAT the system chose as that theme — shown at the headline rung so the summary view names itself.
+export function themeName(p: ProjPoint): string {
+  if (p.scale_exemplar) return p.scale_exemplar.replace(/[/]+$/, '').split('/').pop() || p.scale_exemplar
+  return (p.summary || '').split(/\s+·/)[0].trim()
+}
+
 export function Wheel({
   proj,
   feel,
@@ -217,6 +225,29 @@ export function Wheel({
               )
             })}
           </AnimatePresence>
+
+          {/* GROUP 11 — theme NAMES at the headline (coarse) rung. Each blob is a cluster; name it by its
+             exemplar so the most summary view in the whole instrument says WHAT it chose, not only that there
+             are N (Tim 2026-06-14: "I don't know what it chose"). Capped to a legible count — denser rungs
+             stay name-on-click (the disclosure), which keeps the paper aesthetic (text-minimal). */}
+          {proj.points.some((p) => p.scale_size) && proj.count <= 12 &&
+            proj.points.map((p) => {
+              if (!p.scale_size) return null
+              const pos = placePolar(p.theta, p.r, cx, cy, R)
+              const baseR = Math.min(4 + Math.sqrt(p.scale_size) * 1.4, 16)
+              return (
+                <text
+                  key={`lbl-${p.seq}`}
+                  className="theme-label"
+                  x={pos.x}
+                  y={pos.y + baseR + 12}
+                  textAnchor="middle"
+                  style={{ pointerEvents: 'none' }}
+                >
+                  {themeName(p)}
+                </text>
+              )
+            })}
 
           {/* HIT layer — invisible, touch-friendly (r=15 ≈ generous tap target vs the 2.4px dot). Carries the
              address so the capture listener indicates the right point; sits on top so it owns the click. */}

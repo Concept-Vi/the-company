@@ -204,6 +204,10 @@
    renders as a hard rectangle, off the soft-paper language (design-critic). Suppress it on sectors. */
 .wheel-sector.ui-indicated, .wheel-sector.ui-spotlight { outline: none !important; box-shadow: none !important; }
 
+/* a THEME name sits under its cluster blob at the headline rung (G11) — says WHAT the system chose.
+   Quiet ink so the names read without shouting; SVG text uses fill, not color. */
+.theme-label { font-family: var(--font-sans); font-size: var(--t-xs); fill: var(--ink-dim); letter-spacing: 0.01em; }
+
 /* ---- the scale rung ladder (G11) — units ↔ themes ------------------------ */
 .rungladder { position: absolute; top: var(--s-3); left: 50%; transform: translateX(-50%); z-index: 15;
   display: inline-flex; align-items: center; gap: var(--s-1); background: color-mix(in srgb, var(--ground-accent) 82%, transparent);

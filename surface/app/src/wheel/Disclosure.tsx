@@ -21,6 +21,11 @@ function placement(p: ProjPoint, binding: Projection['binding'] | undefined, cen
   const out: Place[] = [{ k: 'in', v: leaf(p.sector) }] // the division (its kind/type) it sits in
   const rf = binding?.radius_from
   const num = (x: number | undefined) => (typeof x === 'number' ? x.toFixed(2) : '—')
+  // a COARSE theme (cluster centroid) — say WHAT it is: a cluster of N, named by its exemplar (G11)
+  if (p.scale_size) {
+    out.push({ k: 'theme', v: `cluster of ${p.scale_members ?? p.scale_size}`, num: String(p.scale_size) })
+    if (p.scale_exemplar) out.push({ k: 'e.g.', v: leaf(p.scale_exemplar) })
+  }
   if (rf === 'semantic') {
     const d = p.r ?? 1
     const w = p.r_unknown ? 'no meaning vector — at the rim' : d < 0.34 ? 'close in meaning' : d < 0.67 ? 'mid-distance' : 'far in meaning'
