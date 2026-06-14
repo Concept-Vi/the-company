@@ -29,6 +29,45 @@ from runtime.session_pointintime import build_timeline, _iter_jsonl   # reuse �
 
 SCAN_VER = "scan-1"
 
+PROJECTS_DIR = os.path.join(os.path.expanduser("~"), ".claude", "projects")
+
+
+def _encode_cwd(cwd: str) -> str:
+    """Encode a cwd to its project-dir name: '/' and '.' → '-' (verified against the live store)."""
+    return cwd.replace("/", "-").replace(".", "-")
+
+
+def resolve_own_session(cwd: str | None = None, session_id: str | None = None) -> dict:
+    """Let ANY session find ITS OWN transcript (the enabler for self-serve drift-recovery, D8 — Tim:
+    "other sessions can scan their own sessions and spawn previous versions"). Resolution order:
+      1. explicit session_id (most reliable)
+      2. env COMPANY_SESSION_ID (set for channel sessions)
+      3. the NEWEST .jsonl in the cwd's project dir — the live session is the one being written NOW.
+    Returns {path, session_id, project_dir, cwd, how, ambiguous} — fail-loud teaching error if none."""
+    cwd = cwd or os.getcwd()
+    proj = os.path.join(PROJECTS_DIR, _encode_cwd(os.path.abspath(cwd)))
+    sid = session_id or os.environ.get("COMPANY_SESSION_ID")
+    if sid:
+        path = os.path.join(proj, f"{sid}.jsonl")
+        if not os.path.exists(path):
+            raise FileNotFoundError(
+                f"resolve_own_session: session_id {sid!r} given but no transcript at {path} — wrong cwd "
+                f"(this session's project dir encodes from its cwd) or wrong sid.")
+        return {"path": path, "session_id": sid, "project_dir": proj, "cwd": cwd,
+                "how": "explicit" if session_id else "env COMPANY_SESSION_ID", "ambiguous": False}
+    if not os.path.isdir(proj):
+        raise FileNotFoundError(
+            f"resolve_own_session: no project dir {proj} for cwd {cwd} — a session's transcript lives "
+            f"under ~/.claude/projects/<encoded-cwd>/. Pass session_id, or check the cwd.")
+    jsonls = [f for f in os.listdir(proj) if f.endswith(".jsonl")]
+    if not jsonls:
+        raise FileNotFoundError(f"resolve_own_session: no .jsonl transcripts in {proj}.")
+    ranked = sorted(jsonls, key=lambda f: os.stat(os.path.join(proj, f)).st_mtime_ns, reverse=True)
+    newest = ranked[0]
+    return {"path": os.path.join(proj, newest), "session_id": os.path.splitext(newest)[0],
+            "project_dir": proj, "cwd": cwd, "how": "newest-mtime (live session)",
+            "ambiguous": len(jsonls) > 1}      # >1 transcript ⇒ caller should confirm it's the right one
+
 
 # ───────────────────────── helpers (all structural) ─────────────────────────
 

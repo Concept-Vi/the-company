@@ -192,6 +192,60 @@ def directives(jsonl_path: str, k: int = 100) -> dict:
     return {"lens": "directives", "n": len(items), "items": items[:k]}
 
 
+def drift(jsonl_path: str, index_dir: str | None = None, k: int = 15, present_threshold: float = 0.55) -> dict:
+    """Detect DRIFT (D8 core, Tim's keystone): decisions + Tim-directives from BEFORE the last compaction
+    that the current (post-compaction) self may have LOST — the embedding-decision failure mode,
+    generalized. Compaction is a lossy redraw: the post-compaction self holds the summary, not the lived
+    detail. For each pre-boundary decision/directive chunk, we measure its best SEMANTIC PRESENCE in the
+    post-boundary portion (max cosine vs post chunks, using the already-built index — no re-embed). Low
+    presence = the topic wasn't carried across the compaction = a DRIFT candidate, with the recovery
+    pointer (the pre-boundary line where it still lives → spawn that pre-drift self to recover it).
+    Pure-structural + semantic; the recovery target is a real launchable point."""
+    import numpy as np
+    from runtime.session_pointintime import build_timeline
+    from runtime import session_recall as sr
+    tl = build_timeline(jsonl_path)
+    bounds = tl["boundaries"]
+    if not bounds:
+        return {"lens": "drift", "n_boundaries": 0, "candidates": [],
+                "note": "no compaction yet — no cross-compaction drift (drift is what compaction drops; none here)"}
+    cut = bounds[-1]["line"]                        # the LAST compaction = where current-self's drift-from-past is largest
+    out_dir, index_path, _ = sr._index_paths(jsonl_path, index_dir)
+    if not os.path.exists(index_path):
+        sr.build_recall_index(jsonl_path, out_dir)
+    items = sr._load_index(index_path)
+    pre = [it for it in items if it["line"] < cut]
+    post = [it for it in items if it["line"] >= cut]
+    if not pre or not post:
+        return {"lens": "drift", "n_boundaries": len(bounds), "candidates": [],
+                "note": f"boundary at line {cut} has no pre/post chunks to compare"}
+    # candidates = pre-boundary DECISIONS only (assistant turns with a decision cue). A transient one-off
+    # user query ("give me times in AEST") legitimately doesn't recur post-compaction — that's COMPLETION,
+    # not drift; including all user turns floods false positives (verified). Standing-PREFERENCE drift is a
+    # separate detector that needs the D4 conceptual-hierarchy model (gated on recollection) — not here.
+    cand = [it for it in pre if it["attr"] == "assistant" and DECISION_CUES.search(it["text"])]
+    if not cand:
+        return {"lens": "drift", "n_boundaries": len(bounds), "candidates": [], "note": "no pre-boundary decision turns found"}
+    post_mat = np.array([it["vec"] for it in post], dtype=np.float32)
+    post_mat /= (np.linalg.norm(post_mat, axis=1, keepdims=True) + 1e-9)
+    scored = []
+    for c in cand:
+        v = np.array(c["vec"], dtype=np.float32)
+        v /= (np.linalg.norm(v) + 1e-9)
+        presence = float(post_mat @ v).max() if False else float((post_mat @ v).max())
+        scored.append({"line": c["line"], "ts": c["ts"], "attr": c["attr"],
+                       "presence_in_current_self": round(presence, 3),
+                       "drifted": presence < present_threshold,
+                       "recover_at": f"uuid-or-line {c['line']} (pre-compaction; spawn this pre-drift self to recover)",
+                       "text": _clip(c["text"], 160)})
+    drifted = sorted([s for s in scored if s["drifted"]], key=lambda s: s["presence_in_current_self"])
+    return {"lens": "drift", "n_boundaries": len(bounds), "last_compaction_line": cut,
+            "candidates_checked": len(cand), "drifted_count": len(drifted),
+            "scoring": f"max-cosine of a pre-compaction decision/directive vs the post-compaction self; <{present_threshold} = dropped",
+            "note": "DRIFT candidates: decided/asked BEFORE the last compaction, weakly present AFTER it. Verify before acting; recover by spawning the pre-drift self.",
+            "drifted": drifted[:k]}
+
+
 def spin_up_points(jsonl_path: str, k: int = 12) -> dict:
     """Rank candidate FORK points by the VALUE of the context-state they hold (vision §1.5 / Criteria 3.8),
     so Tim picks from an evidenced surface, not a hand-picked list. Each substantial Tim directive opens a
@@ -220,7 +274,7 @@ def spin_up_points(jsonl_path: str, k: int = 12) -> dict:
 
 LENSES = {"find": find, "decisions": decisions, "open_loops": open_loops,
           "catch_up": catch_up, "timeline": timeline, "directives": directives,
-          "spin_up_points": spin_up_points}
+          "spin_up_points": spin_up_points, "drift": drift}
 
 
 if __name__ == "__main__":
