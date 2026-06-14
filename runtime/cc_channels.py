@@ -23,6 +23,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+import uuid
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CHAN_DIR = os.path.join(REPO, ".data", "channels")
@@ -205,22 +206,34 @@ def push(handle_or_reg, content: str, *, meta: "dict | None" = None, base_timeou
 # done corresponds 1:1 to the most recent dispatch.
 # The source tag the supervised /inject carries (the supervisor threads body `source` into inject(),
 # which fans an `injected` event carrying it — session_supervisor do_POST /inject L1606 → inject L1091).
-# The watcher uses this marker to ARM a fold ONLY for a turn THIS layer dispatched: a `done` is folded
-# only when preceded, IN THE LIVE STREAM, by an `injected{source: CHANNEL_FABRIC_SOURCE}`. This makes
-# the replayed-history case safe: /watch replays s.events on connect (session_supervisor L1485), so a
-# supervised session a prior path (e.g. cc_clone.msg_clone) already drove carries a stale `done` in its
-# replay — but that stale done is preceded only by a replayed injected with a DIFFERENT source (or
-# none), never our marker, so it is correctly DISCARDED (never mis-routed to a pending thread).
-CHANNEL_FABRIC_SOURCE = "channel-fabric"
+# The watcher arms a fold ONLY for the turn THIS dispatch started: each dispatch mints a fresh NONCE,
+# tags `source = channel-fabric:<nonce>`, and stores {thread, nonce} as the member's pending fold. A
+# `done` is folded only when preceded, IN THE LIVE STREAM, by an `injected` whose source nonce matches
+# the CURRENT pending nonce. Why the nonce (not a bare constant source):
+#   /watch REPLAYS s.events on connect (session_supervisor L1485). Two stale-done hazards exist —
+#     (a) a FOREIGN turn (e.g. cc_clone.msg_clone, source "http"): its replayed injected has a non-
+#         channel-fabric source → never arms → discarded.
+#     (b) a PRIOR OWN turn of ours sitting in the replay (a watcher RECONNECT after a non-`closed`
+#         stream blip): its replayed injected carries an OLD nonce ≠ the current pending nonce → never
+#         arms → discarded; so the CURRENT turn's real reply is never dropped by a stale own-done.
+# Both stale-done classes are correctly DISCARDED — no mis-route, no silent dropped reply.
+CHANNEL_FABRIC_SOURCE = "channel-fabric"   # the source PREFIX (the nonce is appended per dispatch)
+
+
+def _fabric_source(nonce: str) -> str:
+    return f"{CHANNEL_FABRIC_SOURCE}:{nonce}"
+
+
 _watchers: dict = {}                      # handle -> {"supervisor_session", "base"}
-_pending_thread: dict = {}                # handle -> the channel thread the in-flight turn answers
+_pending_fold: dict = {}                  # handle -> {"thread", "nonce"} the in-flight turn answers
 _watch_lock = threading.Lock()
 
 
 def _push_supervised(reg: dict, content: str, *, meta: dict, base_timeout: float = 10) -> dict:
-    """Dispatch to a supervised member: ensure its reply-watcher is running (lazily, BEFORE injecting,
-    so no prior replayed done is mis-routed), record which thread this turn answers, then POST
-    /inject. The watcher pushes the member's reply back into the asker's session via route_reply."""
+    """Dispatch to a supervised member: ensure its reply-watcher is running, mint this turn's fold
+    nonce + record {thread, nonce} as the member's pending fold, then POST /inject tagged with the
+    nonced source. The watcher folds back ONLY the done whose preceding injected carries THIS nonce —
+    so neither a foreign turn nor a replayed prior-own turn can mis-route or drop a reply."""
     handle = reg.get("handle")
     base = supervisor_base(reg)
     session = reg.get("supervisor_session")
@@ -228,13 +241,15 @@ def _push_supervised(reg: dict, content: str, *, meta: dict, base_timeout: float
         raise ChannelError(f"supervised member {handle!r} has no supervisor_session — cannot /inject "
                            f"(the fork's clone-registration must carry it; see the seam schema).")
     thread = (meta or {}).get("thread")
-    # ensure the reply watcher FIRST (a lazy ensure on first dispatch: no prior done exists yet, so
-    # the replay of s.events can't mis-route a stale done; serialisation gives 1:1 done↔pending after)
+    nonce = uuid.uuid4().hex                       # this dispatch's fold nonce (distinguishes THIS turn
+                                                  # from a prior own turn sitting in the /watch replay)
+    # ensure the reply watcher FIRST (a lazy ensure: a watcher connecting now replays s.events, but the
+    # nonce gate discards every replayed injected/done — only THIS dispatch's nonce arms the fold)
     _ensure_supervised_watcher(handle, base, session)
     with _watch_lock:
-        _pending_thread[handle] = thread          # which channel thread THIS turn's reply routes to
+        _pending_fold[handle] = {"thread": thread, "nonce": nonce}   # THIS turn's reply routing
     body = json.dumps({"session": session, "message": content,
-                       "source": CHANNEL_FABRIC_SOURCE}).encode()
+                       "source": _fabric_source(nonce)}).encode()
     req = urllib.request.Request(base + "/inject", data=body, method="POST",
                                  headers={"Content-Type": "application/json"})
     try:
@@ -242,7 +257,9 @@ def _push_supervised(reg: dict, content: str, *, meta: dict, base_timeout: float
             ok = resp.status == 200
     except (urllib.error.URLError, OSError) as e:
         with _watch_lock:
-            _pending_thread.pop(handle, None)
+            cur = _pending_fold.get(handle)
+            if cur and cur.get("nonce") == nonce:   # only clear OUR pending (not a racing later dispatch)
+                _pending_fold.pop(handle, None)
         raise ChannelError(f"supervised inject to {handle!r} (session {session} @ {base}) failed: {e}. "
                            f"The supervisor may be down or the session closed — live_sessions() "
                            f"reflects current presence.")
@@ -275,9 +292,10 @@ def _supervised_watch_loop(handle: str, base: str, session: str) -> None:
         with _watch_lock:
             _watchers.pop(handle, None)
         return
-    armed = False          # a fold is ARMED only by an `injected` marked with OUR source (this turn is
-                           # ours). A `done` not preceded by our marker (a replayed-history done, or a
-                           # turn another path drove) is DISCARDED — never folded to a pending thread.
+    armed_nonce = None     # set to a fold nonce by an `injected` whose source nonce matches the member's
+                           # CURRENT pending nonce — only THEN is the next done ours to fold. A `done`
+                           # not preceded by a matching-nonce injected (foreign turn, OR a replayed
+                           # own turn carrying an old nonce) is DISCARDED — no mis-route, no dropped reply.
     try:
         for raw in resp:
             try:
@@ -285,14 +303,27 @@ def _supervised_watch_loop(handle: str, base: str, session: str) -> None:
             except ValueError:
                 continue
             etype = ev.get("type")
-            if etype == "injected" and ev.get("source") == CHANNEL_FABRIC_SOURCE:
-                armed = True            # THIS layer's dispatch — the next done is ours to fold
-            elif etype == "done":
-                if not armed:
-                    continue            # a replayed/foreign done — discard (never mis-route)
-                armed = False
+            if etype == "injected":
+                src = ev.get("source") or ""
+                if not src.startswith(CHANNEL_FABRIC_SOURCE + ":"):
+                    continue            # foreign inject (non-fabric source) — ignore
+                ev_nonce = src.split(":", 1)[1]
                 with _watch_lock:
-                    thread = _pending_thread.pop(handle, None)
+                    cur = _pending_fold.get(handle)
+                # arm ONLY if this injected's nonce is the member's current pending nonce (a replayed
+                # OLD own-turn injected carries a stale nonce ≠ current → never arms)
+                armed_nonce = ev_nonce if (cur and cur.get("nonce") == ev_nonce) else None
+            elif etype == "done":
+                if armed_nonce is None:
+                    continue            # a replayed/foreign/stale done — discard (never mis-route)
+                with _watch_lock:
+                    cur = _pending_fold.get(handle)
+                    if cur and cur.get("nonce") == armed_nonce:
+                        _pending_fold.pop(handle, None)
+                        thread = cur.get("thread")
+                    else:
+                        thread = None   # pending changed out from under us — don't route a stale done
+                armed_nonce = None
                 result = ev.get("result", "") or ""
                 if thread and result:
                     try:
@@ -308,7 +339,11 @@ def _supervised_watch_loop(handle: str, base: str, session: str) -> None:
         except Exception: pass
         with _watch_lock:
             _watchers.pop(handle, None)
-            _pending_thread.pop(handle, None)
+            # NOTE: do NOT clear _pending_fold here. A re-dispatch after a stream blip overwrites the
+            # single per-handle slot with a fresh nonce (correct single-slot semantics); clearing it
+            # in this finally could delete a live pending a concurrent re-dispatch just set. An orphan
+            # pending (watcher died, no re-dispatch) is harmless — nothing arms it without a live
+            # matching-nonce injected.
 
 
 # ---- the durable record + thread routing (the mailbox layer) ----

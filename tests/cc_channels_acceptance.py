@@ -289,6 +289,32 @@ check("43 the FRESH supervised reply still folds correctly past the stale replay
           for m in mailed_stale)
       and any("SUPERVISED REPLY to: fresh question" in (r.get("content") or "") for r in _Rx.received))
 
+# --- STALE-OWN-NONCE reconnect guard (the watcher-reconnect path): a member's history holds a PRIOR
+#     OWN fabric turn (injected{source: channel-fabric:OLDNONCE} + its done). On a watcher reconnect a
+#     fresh dispatch mints a NEW nonce; the replayed old-nonce injected must NOT arm (nonce mismatch),
+#     so the prior-own done is DISCARDED and the CURRENT turn's real reply is never dropped/mis-routed.
+_MockSupervisor.states["sv-own"] = "idle"
+_MockSupervisor.history["sv-own"] = [
+    {"type": "injected", "source": cc.CHANNEL_FABRIC_SOURCE + ":OLDNONCEdeadbeef", "chars": 5},
+    {"type": "done", "result": "STALE OWN REPLY (old nonce)", "is_error": False},
+]
+sup_reg("ch-own", "sv-own", desc="supervised w/ a prior OWN fabric turn in replay")
+_Rx.received.clear()
+_MockSupervisor.injects.clear()
+res_own = cc.send("ch-own", "current question", frm="ch-live", topic="t-own")
+for _ in range(60):
+    if _MockSupervisor.injects and any("current question" in (r.get("content") or "") for r in _Rx.received):
+        break
+    time.sleep(0.1)
+mailed_own = cc.mail(thread=res_own["thread"])
+check("44 a replayed PRIOR-OWN done (old nonce) is DISCARDED — current turn's reply not dropped/mis-routed",
+      not any("STALE OWN REPLY" in m.get("text", "") for m in mailed_own)
+      and not any("STALE OWN REPLY" in (r.get("content") or "") for r in _Rx.received))
+check("45 the CURRENT supervised reply folds correctly past the prior-own replay",
+      any(m["kind"] == "reply" and "SUPERVISED REPLY to: current question" in m.get("text", "")
+          for m in mailed_own)
+      and any("SUPERVISED REPLY to: current question" in (r.get("content") or "") for r in _Rx.received))
+
 # --- mixed-member broadcast: one broadcast fans across a channel member AND a supervised member ---
 _Rx.received.clear()
 _MockSupervisor.injects.clear()
@@ -299,29 +325,29 @@ gthread = f"g-mix-{int(_t2.time())}"
 for tgt in ("ch-live", "ch-sup"):
     bres.append(cc.send(tgt, "mixed fanout", frm="fabric", thread=gthread))
 time.sleep(0.4)
-check("44 mixed broadcast: channel member got the HTTP push",
+check("46 mixed broadcast: channel member got the HTTP push",
       any("mixed fanout" in (r.get("content") or "") for r in _Rx.received))
-check("45 mixed broadcast: supervised member got a /inject under the same thread",
+check("47 mixed broadcast: supervised member got a /inject under the same thread",
       any(i["message"] == "mixed fanout" for i in _MockSupervisor.injects))
 
 # --- supervised PRUNE: supervisor reports the session closed → the reg is pruned ---
 _MockSupervisor.states["sv-1"] = "closed"
 live3 = cc.live_sessions()
-check("46 live_sessions PRUNES a supervised member the supervisor reports CLOSED",
+check("48 live_sessions PRUNES a supervised member the supervisor reports CLOSED",
       not any(r["handle"] == "ch-sup" for r in live3))
-check("47 the closed supervised registration file was removed",
+check("49 the closed supervised registration file was removed",
       not os.path.exists(os.path.join(tmp, "ch-sup.json")))
 
 # --- supervised TRANSIENT outage: an UNREACHABLE supervisor must NOT delete the fork-owned reg ---
 sup_reg("ch-sup2", "sv-2", base="http://127.0.0.1:9")    # port 9 = discard, unreachable
 live4 = cc.live_sessions()
-check("48 unreachable supervisor: the supervised reg is KEPT (transient), never deleted",
+check("50 unreachable supervisor: the supervised reg is KEPT (transient), never deleted",
       os.path.exists(os.path.join(tmp, "ch-sup2.json")))
-check("49 a supervised member under an unreachable supervisor still LISTS (presence held, not destroyed)",
+check("51 a supervised member under an unreachable supervisor still LISTS (presence held, not destroyed)",
       any(r["handle"] == "ch-sup2" for r in cc.live_sessions()))
 
 # --- supervisor_base fallback: a supervised reg missing the field uses COMPANY_SUPERVISOR_BASE ---
-check("50 supervisor_base falls back to the process default when the reg omits it",
+check("52 supervisor_base falls back to the process default when the reg omits it",
       cc.supervisor_base({"handle": "z", "supervisor_session": "s"}) == cc.DEFAULT_SUPERVISOR_BASE.rstrip("/"))
 
 msup.shutdown()
