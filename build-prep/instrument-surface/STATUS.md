@@ -143,6 +143,16 @@ live surface) lives in **EQUATION-AUDIT.md** — the gap-list that drives the ne
   so the most central claim was invisible. Now ink diamonds (rotated square on the circle = structure∧meaning)
   mark each ring∧axis crossing in Both view; legend names it. Both viewports, console clean.
 
+## TIM'S DIRECTION (2026-06-15) — "all three": keystone + engine beats + surface polish
+Asked where the loop should go now the grounded surface-only frontier is narrowing, Tim chose THREE of four
+(NOT "call it done"): **(1) DO THE KEYSTONE — the model-load is GREENLIT** (his explicit consent satisfies
+`consult-before-model-loads`; embedder default = pplx-embed-context-4b per the embedding-model decision; load via
+the `company` CLI, fail loud); **(2) GREENLIGHT THE ENGINE BEATS** — extend the engine (still pure-read instrument)
+for composable axes (#3) + wire find_relations→typed edges (#4, the relation_types "next pass"); **(3) KEEP
+POLISHING THE SURFACE** (tether, densification, wheel framing). So nothing is parked — all three lanes are live.
+Suggested order by dependency: L14 (embed registry defs — the model-load data-build) unblocks the L15 keystone;
+the engine beats + surface polish are independent. Each is one big beat per fire.
+
 - **NEXT BEATS (re-sequenced by GROUNDEDNESS — the gate work below proved several audit gaps are blocked):**
   1. ✅ done — audit + gap #1 coincidence spine (`ce04fcf`).
   2. ✅ done — gap #2 CORNER reading: residue → grow the box (`ec1ba61`); design-critic FAIL→fixed→**PASS**.
