@@ -47,6 +47,22 @@ registry definitions via the company MCP (nucleable symbolic registries) · the 
 (candidate→proposal via `/api/registry/proposals` + MCP `propose_role`; instrument stays pure-read).
 Plus the critic's non-blocking polish (compose the HOWTO block, selection tether, gutters).
 
+## RETURNING TO THE EQUATION (Tim, 2026-06-14 11:05) — the dual, and types-as-gravity
+Tim: the surface had only the CIRCLE (meaning); "the grid hasn't been built — that's half of the equation,"
+and "the types/divisions of the circle [should be built in] so the data points close around the types."
+- **THE GRID (square/structure half) — BUILT** (`b9ec38d`). A ○/◻ ViewToggle switches the seed's two coordinate
+  systems over one space (§2): ○ circle = meaning (wheel/lenses), ◻ square = structure (the dyadic nested grid +
+  axes + concentric circles + coincidence spine + forbidden corner-circle; points at their real address cells).
+  `src/wheel/Grid.tsx`. The dual the equation demands is now both-visible.
+- **NEXT BEAT — types-as-gravity (Ask 1, mechanism proposed, awaiting Tim's nod since he flagged uncertainty):**
+  generalize the two-pole separator to the WHOLE type registry as the divisions of the circle. Each registry
+  type = an angular division (a sector) AND a gravity; every item is typed (cosine to each type centroid) → placed
+  in its best-fit type's sector and PULLED toward that type (radius = membership strength: strong members cluster
+  tight around their type's band, weak/ambiguous looser); items that fit NO type pile to the forbidden rim (the
+  G12 water-law pile). So points "close around their types," misfits are the forbidden zone, and as types are
+  added/born the divisions re-divide (the lock x=2π/n). Reuses the nucleation typing already in the engine; a new
+  binding `by_type` (angle_from=type-membership, radius_from=type-closeness) keeps the instrument a pure read.
+
 ## DESIGN-CRITIC — both new lenses PASS (2026-06-14)
 "Connections" (G10) = beautiful string-art-on-paper; "Two gravities" (G9) = the most instantly-legible data
 claim in the set. Neither reads as prototype. Fix #1 (G9 card↔pole-label overlap) DONE (`d24181f`).
