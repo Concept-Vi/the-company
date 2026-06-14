@@ -6,6 +6,7 @@ import { transition } from '../tokens/motion'
 import { wheelGeom, placePolar, ringRadii, sectorHue, wedgePath, chordPath, arrowHead, sectorMidAngle, dyadicLevels } from '../lib/seed'
 import { stamp } from '../lib/address'
 import { useSize } from './useSize'
+import { RungLadder } from '../toggles/RungLadder'
 
 // The canonical address for a point: its real address, else a minted dynamic canvas address (never fabricated
 // as a real ui:// region — ui://canvas/<id> is the sanctioned mint-on-read scheme, RESEARCH-SYNTHESIS §A).
@@ -19,12 +20,16 @@ export function Wheel({
   selectedSeq,
   onPick,
   showGrid = false,
+  rung = null,
+  setRung,
 }: {
   proj: Projection
   feel: MotionFeel
   selectedSeq?: number
   onPick: (p: ProjPoint) => void
   showGrid?: boolean
+  rung?: number | null
+  setRung?: (r: number | null) => void
 }) {
   const { ref, width, height } = useSize<HTMLDivElement>()
   const ready = width > 8 && height > 8
@@ -191,7 +196,8 @@ export function Wheel({
               const i = sectorIndex.get(p.sector) ?? 0
               const isSel = p.seq === selectedSeq
               const addr = pointAddress(p)
-              const baseR = p.r > 1 ? 2.0 : 2.4 // piled-out points slightly smaller
+              // a THEME (coarse rung) is a cluster — sized by its membership; a unit is a small dot
+              const baseR = p.scale_size ? Math.min(4 + Math.sqrt(p.scale_size) * 1.4, 16) : p.r > 1 ? 2.0 : 2.4
               return (
                 <motion.circle
                   key={`pt-${p.seq}`}
@@ -236,6 +242,11 @@ export function Wheel({
           })}
         </svg>
       )}
+
+      {/* GROUP 11 — the scale rung ladder (units ↔ themes), shown where a pyramid exists (the semantic lens) */}
+      {setRung && proj.scale?.rungs?.length ? (
+        <RungLadder rungs={proj.scale.rungs} rung={rung} setRung={setRung} />
+      ) : null}
 
       {/* GROUP 10 readout — name the tapped sector + its directional degree; 0-in/0-out is a FINDING
          (a pure source feeds but is unfed; a pure sink is fed but feeds nothing), not an empty state */}

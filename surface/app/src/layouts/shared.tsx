@@ -64,6 +64,8 @@ export function WheelOrState({ s }: { s: SurfaceState }) {
       selectedSeq={s.selected?.seq}
       onPick={(p) => s.setSelected(p)}
       showGrid={s.view === 'both'}
+      rung={s.rung}
+      setRung={s.setRung}
     />
   )
 }

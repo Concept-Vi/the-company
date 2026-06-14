@@ -28,6 +28,10 @@ export type ProjPoint = {
   tail?: boolean
   born?: boolean
   r_unknown?: boolean
+  // G11 scale pyramid — present only at a COARSE rung (the point is a theme/cluster centroid, not a unit)
+  scale_size?: number
+  scale_members?: number
+  scale_exemplar?: string
 }
 
 export type Sector = { id: string; label: string; from: number; to: number }
@@ -54,6 +58,7 @@ export type Projection = {
   edges: Edge[]
   separation?: unknown
   nucleation?: unknown
+  scale?: { space?: string; rung: number | string; rungs?: number[]; n_units?: number }
   rings: number
   grid: number
   lock: string

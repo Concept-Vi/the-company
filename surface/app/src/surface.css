@@ -204,6 +204,16 @@
    renders as a hard rectangle, off the soft-paper language (design-critic). Suppress it on sectors. */
 .wheel-sector.ui-indicated, .wheel-sector.ui-spotlight { outline: none !important; box-shadow: none !important; }
 
+/* ---- the scale rung ladder (G11) — units ↔ themes ------------------------ */
+.rungladder { position: absolute; top: var(--s-3); left: 50%; transform: translateX(-50%); z-index: 15;
+  display: inline-flex; align-items: center; gap: var(--s-1); background: color-mix(in srgb, var(--ground-accent) 82%, transparent);
+  border-radius: var(--r-pill); padding: 2px var(--s-2); }
+.rung-glyph { color: var(--ink-faint); font-size: var(--t-sm); margin-right: 2px; }
+.rung-step { border: none; background: transparent; color: var(--ink-dim); font-family: var(--font-sans);
+  font-size: var(--t-xs); border-radius: var(--r-pill); padding: var(--s-1) var(--s-2); cursor: pointer;
+  min-height: 30px; font-variant-numeric: tabular-nums; }
+.rung-step--on { background: var(--ink-primary); color: var(--ground-accent); }
+
 /* ---- connections (G10) drive-to-explore readout -------------------------- */
 .conn-readout { position: absolute; top: var(--s-3); left: 50%; transform: translateX(-50%);
   display: flex; align-items: baseline; gap: var(--s-3); font-size: var(--t-xs); color: var(--ink-dim);

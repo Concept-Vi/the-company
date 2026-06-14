@@ -62,6 +62,8 @@ export type SurfaceState = {
   setAt: (t: string | null) => void
   corpusStart: string | null
   now: string | null
+  rung: number | null
+  setRung: (r: number | null) => void
   notice: string | null
   dismissNotice: () => void
 }
@@ -103,6 +105,8 @@ export function App() {
   // G3 — the time scrubber: at = a past instant the temporal centre is moved to (null = the live now).
   const [at, setAt] = useState<string | null>(null)
   const [corpusStart, setCorpusStart] = useState<string | null>(null) // earliest event ts (the scrubber floor)
+  // G11 — the scale-pyramid rung for the semantic lens: null = units, else a coarse rung (themes)
+  const [rung, setRung] = useState<number | null>(null)
   const focusCentre = useCallback((p: ProjPoint) => {
     // re-centre on the item: its embeddable source (so meaning re-forms around the ITEM, not its run:// record),
     // else its address. label = the last path segment (text-minimal).
@@ -138,6 +142,8 @@ export function App() {
     }
     // the time scrubber (G3): move the temporal centre into the past (project only ts≤at)
     if (at) params.at = at
+    // the scale rung (G11): the semantic lens shows theme centroids at a coarse rung (else units)
+    if (binding === 'semantic' && rung) params.rung = rung
     fetchProjection(params)
       .then((p) => {
         if (!alive) return
@@ -154,7 +160,7 @@ export function App() {
     return () => {
       alive = false
     }
-  }, [binding, nuc, centre, poles, at, pulse])
+  }, [binding, nuc, centre, poles, at, rung, pulse])
 
   // THE LIVE SPINE (the seed §4 / mandate L9 — live, not a viewer): tail /api/stream from the newest seq we
   // know; when NEW events arrive, pulse a (throttled) re-fetch so the present visibly moves — new points bloom
@@ -246,6 +252,8 @@ export function App() {
     setAt,
     corpusStart,
     now: proj?.now ?? null,
+    rung,
+    setRung,
     notice,
     dismissNotice,
   }
