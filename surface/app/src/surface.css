@@ -174,6 +174,10 @@
   padding: var(--s-3); display: flex; flex-direction: column; gap: var(--s-2); min-width: 220px; }
 .settings-title { font-size: var(--t-xs); color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; }
 
+/* a tapped SECTOR shows selection via its fill tint, NOT a bounding box — box-shadow/outline on an SVG path
+   renders as a hard rectangle, off the soft-paper language (design-critic). Suppress it on sectors. */
+.wheel-sector.ui-indicated, .wheel-sector.ui-spotlight { outline: none !important; box-shadow: none !important; }
+
 /* ---- connections (G10) drive-to-explore readout -------------------------- */
 .conn-readout { position: absolute; top: var(--s-3); left: 50%; transform: translateX(-50%);
   display: flex; align-items: baseline; gap: var(--s-3); font-size: var(--t-xs); color: var(--ink-dim);
@@ -182,6 +186,7 @@
 .conn-name { color: var(--ink-primary); }
 .conn-out { color: var(--pig-leanB); }
 .conn-in { color: var(--ink-primary); }
+.conn-finding { color: var(--ink-faint); font-style: italic; }
 
 /* ---- the lens legend (orientation: what this is + what angle/radius mean) - */
 .legend { padding: var(--s-3); max-width: 248px; }

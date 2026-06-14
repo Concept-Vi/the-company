@@ -94,6 +94,7 @@ export function Wheel({
                 <path
                   key={`sec-${s.id}-${i}`}
                   {...stamp(`ui://instrument/sector/${encodeURIComponent(s.id)}`)}
+                  className="wheel-sector"
                   d={wedgePath(s.from, s.to, cx, cy, R)}
                   fill={sectorHue(i, n)}
                   fillOpacity={sel ? 0.3 : dim ? 0.05 : 0.13}
@@ -128,10 +129,17 @@ export function Wheel({
                   exit={{ opacity: 0 }}
                   transition={transition('enter', feel)}
                 >
-                  <path d={ch.d} fill="none" stroke={stroke} strokeOpacity={op} strokeWidth={sw} />
-                  <circle cx={ch.from.x} cy={ch.from.y} r={2} fill={stroke} fillOpacity={Math.min(op + 0.1, 0.8)} />
-                  <path d={arrowHead(ch.to, ch.ctrl)} fill={stroke} fillOpacity={Math.min(op + 0.1, 0.85)} />
-                  {e.bidir && <path d={arrowHead(ch.from, ch.ctrl)} fill={stroke} fillOpacity={Math.min(op + 0.1, 0.85)} />}
+                  {(() => {
+                    const head = role === 'out' || role === 'in' ? 8 : 6 // arrowheads carry direction — readable
+                    return (
+                      <>
+                        <path d={ch.d} fill="none" stroke={stroke} strokeOpacity={op} strokeWidth={sw} />
+                        <circle cx={ch.from.x} cy={ch.from.y} r={2} fill={stroke} fillOpacity={Math.min(op + 0.1, 0.8)} />
+                        <path d={arrowHead(ch.to, ch.ctrl, head)} fill={stroke} fillOpacity={Math.min(op + 0.15, 0.9)} />
+                        {e.bidir && <path d={arrowHead(ch.from, ch.ctrl, head)} fill={stroke} fillOpacity={Math.min(op + 0.15, 0.9)} />}
+                      </>
+                    )
+                  })()}
                 </motion.g>
               )
             })}
@@ -229,14 +237,21 @@ export function Wheel({
         </svg>
       )}
 
-      {/* GROUP 10 readout — when a sector is tapped, name it + its directional degree (out / in) */}
-      {hasEdges && selSector != null && (
-        <div className="conn-readout" {...stamp('ui://instrument/connections')}>
-          <span className="conn-name">{(proj.sectors[selSector]?.id || '').split('/').pop()}</span>
-          <span className="conn-out">{proj.edges.filter((e) => e.from === selSector).length} out</span>
-          <span className="conn-in">{proj.edges.filter((e) => e.to === selSector).length} in</span>
-        </div>
-      )}
+      {/* GROUP 10 readout — name the tapped sector + its directional degree; 0-in/0-out is a FINDING
+         (a pure source feeds but is unfed; a pure sink is fed but feeds nothing), not an empty state */}
+      {hasEdges && selSector != null && (() => {
+        const out = proj.edges.filter((e) => e.from === selSector).length
+        const inc = proj.edges.filter((e) => e.to === selSector).length
+        const finding = out > 0 && inc === 0 ? 'pure source' : inc > 0 && out === 0 ? 'pure sink' : null
+        return (
+          <div className="conn-readout" {...stamp('ui://instrument/connections')}>
+            <span className="conn-name">{(proj.sectors[selSector]?.id || '').split('/').pop()}</span>
+            <span className="conn-out">{out} out</span>
+            <span className="conn-in">{inc} in</span>
+            {finding && <span className="conn-finding">{finding}</span>}
+          </div>
+        )
+      })()}
     </div>
   )
 }
