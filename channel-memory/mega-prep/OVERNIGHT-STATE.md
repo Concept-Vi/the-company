@@ -63,11 +63,9 @@ the lead has NOT confirmed the cross-component path by use — these are the mor
 - Clone-fleet launch — GATED (DECISIONS-FOR-MORNING #2).
 
 **🐛 FINDINGS (lead cross-review of the channel-layer build — recorded honestly):**
-- `CHANNELS_DIR` NAME COLLISION (latent trap; behavior is correct): cc_clone.`CHANNELS_DIR` = `.data/
-  channels/` (member regs) vs cc_channels.`CHANNELS_DIR` = `.data/channels/_channels/` (named-channel
-  records). Same name, different paths, two modules sharing one registry. A future import/refactor
-  could conflate them → reintroduce a mis-write that breaks supervised presence. FIX: rename cc_clone's
-  to `CHAN_DIR` (match cc_channels' vocab). Flagged to the fork (owns cc_clone.py). Low-risk, not done.
+- ✅ RESOLVED — `CHANNELS_DIR` NAME COLLISION: the fork renamed cc_clone's constant to `CHAN_DIR`
+  (matches cc_channels' vocab; `.data/channels` = CHAN_DIR, `_channels` subdir = CHANNELS_DIR — no more
+  collision). 18/18 green, committed aa5f099. The latent refactor trap is gone. (Lead-found, fork-fixed.)
 - CONCURRENT AUTO-COMMITTER HAZARD: an `[instrument-surface]` auto-committer loop in ~/company stages +
   commits on its own beat and SWEPT the worker's `mcp_face/cc_channel.py` into foreign commit 5577d8e.
   Net: the MCP ops ARE in HEAD + verified, but the channel layer is no longer a clean single-revert
@@ -89,14 +87,14 @@ wire (`op=recall`) once the recall-fork posts its signature. Move items up this 
 
 ## Lanes + status (each session updates its own block; verify-by-use, no "done" without proof)
 ### LEAD (ch-al7jdfdr) — channel layer + serving + coordination
-- [~] Channel registry: create / list / add-member / remove-member / archive named channels (cc_channels) — BUILD WORKER RUNNING (a6323ebdfde667f8f), reports on completion
-- [~] Unified per-member transport DISPATCH side (channel push | supervised inject) — in same build worker; WRITE side delegated to fork (cc_clone) via the shared reg schema
-- [ ] Channel attachment (sessions+docs manifest → loaded to members on join) + channel-scoped recall (5th wire) — BLOCKED on worker (owns cc_channels.py); pick up after it lands
-- [ ] Profile SessionStart hook (PREPARED for Tim to apply — boundary; not self-applied)
-- [x] Serving lane STABLE: embed :8007 + rerank :8008 held up for the forks (channel before any swap)
-- [x] Wildcard ch-piffgfxv ENGAGED — DM sent (thread t-1781443715): identify+announce + share design-principle insight; awaiting reply
-- [x] Coordination broadcast sent to fork + recall-fork (thread g-1781443728): lanes + posture
-- status: build worker running; members coordinated; wildcard pinged. Lead now on independent owned work while worker + peers run.
+- [x] Channel registry (create/list/add-member/remove-member/archive, member-in-many) — BUILT + LEAD-VERIFIED (54/54). 57e4468+aeb1931; MCP ops in HEAD.
+- [x] Unified per-member transport DISPATCH (channel HTTP | supervised /inject+/watch fold) — BUILT + LEAD-VERIFIED; WRITE side (fork cc_clone) welded + hand-traced (write-path=read-path, inject via supervisor_session). Live clone round-trip = gated (DFM #2).
+- [ ] Channel attachment + channel-scoped recall (5th wire) — DEFERRED BY DESIGN: build WITH the recall consumer (recall-fork's beat-2 signature), not a half-feature ahead of it.
+- [ ] Profile SessionStart hook — DESIGN FORK flagged for Tim (dynamic port + random handle break a naive hook; 3 grounded candidates). Not built — needs Tim's pick.
+- [x] Serving lane LIVE-VERIFIED tonight (:8007 dim 2560 · :8008 jina) + held STABLE for the forks all night.
+- [x] Wildcard ch-piffgfxv pinged (thread t-1781443715) — no reply yet.
+- [x] Coordination + cross-reviews DELIVERED: fork wire (+ name-collision finding, now CLOSED by aa5f099) · recall-fork dim-diagnosis validated from the contract side.
+- status: priority-A channel layer DELIVERED + VERIFIED. Lead = verifier/coordinator; gave the :8007 morning-priority call (recall-fork fix beat first; fork holds multi-scale re-verify). Remaining lead beat = 5th wire on the recall-fork's signature. Idling honestly between events.
 
 ### FORK (ch-8djrpmsl) — recall spine / lenses / chunking / clone
 - [x] Dimension-aware chunking — cross-review PASSED (pointed-query 6→1; neutral on generic = panel's job); b7d3f97 + RECALL_CHUNK_MODE toggle 76b6f47
@@ -112,17 +110,23 @@ wire (`op=recall`) once the recall-fork posts its signature. Move items up this 
 
 ### RECALL FORK (ch-83e2cque) — recollection OUTER foundation
 - [x] Loop-prep COMPLETE + hardened: 15 decisions resolved (evidence-tagged) + 2 audit waves; UNIFIED-SEAM.md posted (asymmetric nesting + 5 boundary wires); wire-4 preference contract agreed (leveled signals + 2-gate, extraction-vs-judgment); EMBEDDING-AXIS-REGISTRY aligned (provenance exchange:// canonical spine + per-(model×way) axes — faithful to D-1)
-- [~] Phase-A foundation build RUNNING (workflow w7gld9f3t): establish ~/recollection (rename · ~/.recollection data dir · .mcp.json allowlist · npm build) · multi-space schema · capture incl sidechains (search.ts is_sidechain fix) · first lens vs :8007 docs-mode · verify-by-use — NOT verified yet; verify-by-use evidence posted on completion (no "done" without it)
-- [ ] NEXT beats (overnight loop): (2) recall spine channel-scopable = 5th wire (match member schema exactly) · (3) link/provenance graph (crossings) · (4) distill foundation L1/L2
-- status: Phase-A team-leader loop running; reversible self-approve via loop-prep recorded intent; NOTHING irreversible queued from my lane yet; serving lane untouched
-- (updates here as beats land)
+- [partial] Phase-A foundation (w7gld9f3t DONE): PROVEN-by-use — ~/recollection cloned+isolated to ~/.recollection (B-5 comingling landmine handled; live 11.5GB store proven untouched), npm build clean, MCP boots (search+read preserved), B-1 sidechain-filter fix works (sidechain rows recall). Commit 19e6012.
+- [FAIL-by-use] capture→embed→recall end-to-end: B-7 dim-mismatch — embeddings produce 2560-dim (served pplx-4b) but insertExchange/search.ts still target legacy vec_exchanges FLOAT[384]; per-lens 2560 table added to new schema but NOT wired into live path. Default `search` throws. Diagnosed + LEAD-CONFIRMED (independent: :8007/health dim=2560 → 384 table is definitively the bug). Reversible.
+- [~] B-7 fix beat RE-RUNNING (wpkmmwuvf, quota reset confirmed by Tim) — wiring the per-lens 2560 vec into the live insert+search, retire 384, transaction the paired insert, test override → re-verify capture→embed→recall end-to-end. (Earlier wfo6h6tg7 hit the quota wall before applying; diagnosis was lead-CONFIRMED.) Verify-by-use evidence on completion; no "done" without the round-trip.
+- [ ] NEXT (on quota reset): (1) re-run the B-7 fix → re-verify end-to-end → ping fork (frees :8007 + bring preference-extract draft for my review) · then (2) recall spine channel-scopable = 5th wire · (3) link/provenance graph · (4) distill L1/L2
+- status: paused at the quota wall, honestly. Reversible self-approve via loop-prep recorded intent; NOTHING irreversible queued from my lane; serving lane untouched. Resume scheduled.
 
 ## Cross-reviews logged
 - chunking A/B (fork→lead): PASS, honest mixed result, limit correctly attributed to the panel.
 
 ## ★ DECISIONS-FOR-MORNING (queued for Tim — nothing irreversible acted on)
 1. WILDCARD: RESOLVED by Tim-direct ("I'm pretty sure the wild already in") — ch-piffgfxv IS a live channel member; lead pinged it to identify+announce+contribute design-principle insight (thread t-1781443715). FOR MORNING: review whatever insight it surfaces about Tim's design principles — Tim flagged it as potentially the highest-value member ("very useful insights about me and my design principles… a wild card").
-2. CLONE-FLEET LAUNCH POINTS: fork's 3 starters (#8 the WHY / #1 the engine-room / compact:1 anchor) + up to 4 fork-discretion — launch once the channel transport is built; launch itself is notify-each (queued, not auto-fired overnight).
+2. CLONE-FLEET LAUNCH POINTS — READY (wire VERIFIED): the supervised clone→channel-member transport is
+   built + verified (54/54 + both halves hand-traced); only the live round-trip remains, which the FIRST
+   launch exercises end-to-end. Ranked fork-points in `map/spin-up-ranking.md` (fork's 3 starters: #8 the
+   WHY / #1 the engine-room / compact:1 anchor, + up to 4 fork-discretion). Launch = notify-each + Tim's
+   go (NOT auto-fired). FOR MORNING: pick the points + green-light — the first launch also proves the
+   live wire end-to-end (turning the last 🔨 BUILT item into ✅ PROVEN).
 3. CONCURRENT AUTO-COMMITTER in ~/company (the `[instrument-surface]` loop) stages + commits on its own
    beat and absorbed a fabric build file into a foreign commit (5577d8e swept mcp_face/cc_channel.py).
    No data lost, but it muddies authorship + breaks clean single-lane reverts, and any stage-then-wait
