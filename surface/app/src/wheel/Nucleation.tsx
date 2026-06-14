@@ -18,6 +18,7 @@ import { pointAddress } from './Wheel'
 
 type NucReport = {
   pile_clustered?: number
+  pile_tail?: number
   born_count?: number
   distinct_count?: number
   pile_total?: number
@@ -45,7 +46,7 @@ export function Nucleation({
   const ready = width > 8 && height > 8
   const cx = (width || 1) / 2
   const cy = (height || 1) / 2
-  const R = Math.min(width || 1, height || 1) * 0.4 // r=1 boundary; pile rides to ~1.2·R outside it
+  const R = Math.min(width || 1, height || 1) * 0.35 // r=1 boundary; piles ride ~1.2R, residue to the corners ~1.5R (all must fit the frame, esp. portrait)
   const report = (proj.nucleation || {}) as NucReport
   const typeSectors = proj.sectors.filter((s) => !s.id.startsWith('✦'))
   const n = Math.max(proj.n, 1)
@@ -88,33 +89,51 @@ export function Nucleation({
 
           {/* the MEMBERSHIP boundary (inside = fits a type / close around it; outside = the misfit pile) */}
           <circle cx={cx} cy={cy} r={R} fill="none" stroke="var(--ink-dim)" strokeOpacity={0.55} strokeWidth={1.4} />
-          {/* the pile horizon (where the forbidden pile rides) */}
+          {/* the pile horizon (where the candidate-type piles ride — a new DIVISION, still inside the box) */}
           <circle cx={cx} cy={cy} r={R * 1.18} fill="none" stroke="var(--pig-strain)" strokeOpacity={0.4}
             strokeWidth={1} strokeDasharray="3 5" />
 
+          {/* the forbidden DIAGONALS → the box CORNERS (seed §1/§10). The residue (the TAIL — fits no type AND
+             forms no new type) rides these to where placement needs a NEW AXIS (grow the box). Faint, because
+             these are the un-typeable directions; everything real lands on a sector, not a diagonal. */}
+          {[1, 3, 5, 7].map((q) => {
+            const ang = (q * Math.PI) / 4 - Math.PI / 2
+            const x0 = cx + R * Math.cos(ang), y0 = cy + R * Math.sin(ang)
+            const x1 = cx + 1.55 * R * Math.cos(ang), y1 = cy + 1.55 * R * Math.sin(ang)
+            return (
+              <line key={`diag-${q}`} x1={x0} y1={y0} x2={x1} y2={y1} stroke="var(--ink-faint)"
+                strokeOpacity={0.32} strokeWidth={1} strokeDasharray="2 4" />
+            )
+          })}
+
           <circle cx={cx} cy={cy} r={3} fill="var(--ink-faint)" />
 
-          {/* points — inside (clustered around their type) vs piled out (forbidden), animated */}
+          {/* points — THREE seed-§10 readings, all from real fields:
+             · inside  → fits an existing type (clustered around it, angle-hue)
+             · pile (pile_cluster/born) → a candidate NEW TYPE (a new division, still in the box) — strain pigment
+             · tail    → the CORNER: fits no type AND forms no new type → rides a forbidden diagonal out toward
+                         the box corner (deeper the worse it fits) = the GROW-THE-BOX / new-axis residue (ghosted) */}
           <AnimatePresence>
             {proj.points.map((p) => {
-              const pos = placePolar(p.theta, p.r, cx, cy, R)
               const i = sectorIndex.get(p.sector) ?? 0
               const isSel = p.seq === selectedSeq
               const addr = pointAddress(p)
               const inside = !!p.inside
+              const isTail = !!p.tail && !inside
+              const pos = isTail ? cornerPlace(p.theta, p.fit, cx, cy, R, p.seq) : placePolar(p.theta, p.r, cx, cy, R)
               return (
                 <motion.circle
                   key={`pt-${p.seq}`}
                   {...stamp(addr)}
                   layoutId={`pt-${p.seq}`}
                   className="wheel-dot"
-                  fill={inside ? sectorHue(i, n) : 'var(--pig-strain)'}
-                  fillOpacity={inside ? 0.6 : 0.46}
+                  fill={inside ? sectorHue(i, n) : isTail ? 'var(--ink-faint)' : 'var(--pig-strain)'}
+                  fillOpacity={inside ? 0.6 : isTail ? 0.4 : 0.46}
                   stroke={isSel ? 'var(--ink-primary)' : 'transparent'}
                   strokeWidth={isSel ? 1.5 : 0}
                   style={{ pointerEvents: 'none' }}
                   initial={{ cx: pos.x, cy: pos.y, r: 0, opacity: 0 }}
-                  animate={{ cx: pos.x, cy: pos.y, r: isSel ? 5.5 : inside ? 2.6 : 1.9, opacity: 1 }}
+                  animate={{ cx: pos.x, cy: pos.y, r: isSel ? 5.5 : inside ? 2.6 : isTail ? 1.5 : 1.9, opacity: 1 }}
                   exit={{ r: 0, opacity: 0 }}
                   transition={transition('move', feel)}
                 />
@@ -130,7 +149,7 @@ export function Nucleation({
             const ang = zoneAngle(k)
             const bx = cx + R * 1.2 * Math.cos(ang)
             const by = cy + R * 1.2 * Math.sin(ang)
-            const rad = 6 + Math.min((z.size ?? 0) / 6, 12)
+            const rad = 5 + Math.min((z.size ?? 0) / 8, 7) // capped so the born disc + halo never clip the frame
             return (
               <g key={`zone-${z.id}-${k}`} {...stamp(`ui://instrument/candidate/${k}`)}>
                 {born && (
@@ -158,9 +177,9 @@ export function Nucleation({
             )
           })}
 
-          {/* hit layer */}
+          {/* hit layer (matches the tail's corner placement so residue stays tappable) */}
           {proj.points.map((p) => {
-            const pos = placePolar(p.theta, p.r, cx, cy, R)
+            const pos = !!p.tail && !p.inside ? cornerPlace(p.theta, p.fit, cx, cy, R, p.seq) : placePolar(p.theta, p.r, cx, cy, R)
             const addr = pointAddress(p)
             return (
               <circle key={`hit-${p.seq}`} {...stamp(addr)} className="wheel-hit" cx={pos.x} cy={pos.y} r={15}
@@ -171,13 +190,18 @@ export function Nucleation({
         </svg>
       )}
 
-      {/* the report (born / forming / pile) — calm, text-minimal */}
+      {/* the report — the three readings: born NEW TYPES · forming candidates · the RESIDUE (the corner:
+         fits nothing → grow the box). Calm, text-minimal; the residue line only when there IS residue. */}
       <div className="nuc-report">
         <span className="nuc-born">{zones.filter((z) => z.distinct && (z.size ?? 0) >= birthMass).length} born</span>
         <span className="nuc-sep">·</span>
         <span className="nuc-form">{zones.length} candidates</span>
-        <span className="nuc-sep">·</span>
-        <span className="nuc-pile">{report.pile_total ?? 0} piled</span>
+        {(report.pile_tail ?? 0) > 0 && (
+          <>
+            <span className="nuc-sep">·</span>
+            <span className="nuc-tail" {...stamp('ui://instrument/residue')}>{report.pile_tail} residue → new axis</span>
+          </>
+        )}
       </div>
 
       {/* the drive controls in ONE bottom stack (dial row, then the pickers row) so they never collide
@@ -203,6 +227,24 @@ export function Nucleation({
 }
 
 const TAU_LOCAL = Math.PI * 2
+
+// deterministic 0..1 (no Math.random — keeps placement stable across renders)
+function jitter01(n: number): number {
+  const x = Math.sin(n * 12.9898 + 4.1) * 43758.5453
+  return x - Math.floor(x)
+}
+// place a TAIL point (the residue — fits no type AND forms no new type = the seed's CORNER, §10): it COLLECTS in
+// the nearest forbidden CORNER (snapped to the box diagonal), well CLEAR of the candidate-pile rim so the third
+// reading is separable from the second. Worse fit sits deeper; a small deterministic spread makes a clump read
+// as a mass, not a line. fit is real (engine); seed = p.seq so it never jumps.
+function cornerPlace(theta: number, fit: number | undefined, cx: number, cy: number, R: number, seed = 0): { x: number; y: number } {
+  const a = theta - Math.PI / 2
+  const diag = Math.round((a - Math.PI / 4) / (Math.PI / 2)) * (Math.PI / 2) + Math.PI / 4
+  const f = Math.max(0, Math.min(1, fit ?? 0.5))
+  const rr = 1.34 + 0.16 * (1 - f) + (jitter01(seed) - 0.5) * 0.16 // ~[1.26 … 1.58], a clump around the corner
+  const ang = diag + (jitter01(seed * 2 + 7) - 0.5) * 0.34 // small angular spread around the diagonal
+  return { x: cx + rr * R * Math.cos(ang), y: cy + rr * R * Math.sin(ang) }
+}
 
 function Picker({
   name, label, value, options, onPick,

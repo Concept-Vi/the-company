@@ -295,8 +295,11 @@
   display: flex; align-items: center; gap: var(--s-2); font-size: var(--t-xs); color: var(--ink-dim); }
 .nuc-born { color: var(--pig-born); }
 .nuc-pile { color: var(--pig-strain); }
+.nuc-tail { color: var(--ink-faint); font-variant-numeric: tabular-nums; } /* the residue → grow-the-box (the corner) */
 .nuc-sep { color: var(--ink-faint); }
-.nuc-controls { position: absolute; bottom: calc(var(--s-2) + var(--safe-b)); left: 50%;
+/* lifted clear of the global time-scrubber (which is absolute at the very bottom) so the pickers are never
+   occluded by it (design-critic: picker row rendered behind the scrubber pill). */
+.nuc-controls { position: absolute; bottom: calc(var(--s-7) + var(--safe-b)); left: 50%;
   transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: var(--s-2);
   max-width: 92%; }
 .nuc-dial { display: flex; align-items: center; gap: var(--s-2); font-size: var(--t-xs); color: var(--ink-dim); }

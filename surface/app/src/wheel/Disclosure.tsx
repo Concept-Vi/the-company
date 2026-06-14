@@ -37,6 +37,7 @@ function placement(p: ProjPoint, binding: Projection['binding'] | undefined, cen
     out.push({ k: 'leans', v: pole, num: num(Math.abs(p.lean ?? 0)) })
   } else if (rf === 'nucleation') {
     if (p.inside) out.push({ k: 'fits', v: 'inside', num: num(p.fit) })
+    else if (p.tail) out.push({ k: 'corner', v: 'fits no type, forms no new type → needs a new axis', num: num(p.fit), tone: 'pile' })
     else out.push({ k: 'misfit', v: p.born ? 'piled → a new type ✦' : 'fits no type · piled', tone: p.born ? 'born' : 'pile' })
   } else if (rf === 'address') {
     out.push({ k: 'distance', v: `structural from ${centre ?? 'centre'}`, num: num(p.r) })

@@ -32,6 +32,7 @@ function describe(proj: Projection, view: 'circle' | 'square', centred: string |
         `${n} sectors · one per type`,
         'inside the ring · fits that type',
         'outside · the misfit pile → new types (✦)',
+        'corners · the residue → grow the box (a new axis)',
       ],
     }
   }
@@ -84,9 +85,14 @@ export function Legend({ s }: { s: SurfaceState }) {
   const { title, lines } = describe(s.proj, s.view, s.centre?.label ?? null)
   // In Both, the circle and square are over one space — name the coincidence spine (seed §3): the diamonds on
   // the axes are where the SQUARE (grid) and the CIRCLE (rings) meet — the ratified / addressable spine. Lens-
-  // NEUTRAL wording (it's a geometric substrate fact, true whatever the radius encodes — never says "meaning"
-  // on a lens whose radius is age/etc.). Only shown in Both, where both systems are visible.
-  const all = s.view === 'both' ? [...lines, '◆ on the axes · where grid & circle meet — the ratified spine'] : lines
+  // NEUTRAL wording (a geometric substrate fact, true whatever the radius encodes — never says "meaning" on a
+  // lens whose radius is age/etc.). Only the WHEEL draws the spine (the separator/nucleation lenses have their
+  // own forms), so only name it for those — never promise diamonds a lens doesn't render.
+  const rf = s.proj.binding.radius_from
+  const wheelLens = rf !== 'separator' && rf !== 'nucleation'
+  const all = s.view === 'both' && wheelLens
+    ? [...lines, '◆ on the axes · where grid & circle meet — the ratified spine']
+    : lines
   return (
     <div className="legend" {...stamp('ui://instrument/legend')}>
       <div className="legend-title display">{title}</div>
