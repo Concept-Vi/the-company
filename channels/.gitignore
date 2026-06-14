@@ -1,0 +1,7 @@
+node_modules/
+*.replies.jsonl
+_mail.jsonl
+_threads.json
+*.json
+!channel.mcp.json
+!package.json

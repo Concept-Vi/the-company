@@ -1576,6 +1576,23 @@ class H(BaseHTTPRequestHandler):
                                  "note": "R1-prime results ride back as PROSE on the turn stream — "
                                          "watch the session; there is no typed return_shape."})
                 return
+            if u.path == "/channel-reply":
+                # A Claude Code CHANNEL session's `reply` tool calls back here: record the reply in the
+                # channel mail log AND push it back into the asking session (the thread's originator) —
+                # the no-polling delivery loop (Tim's design 2026-06-14). Routes via runtime.cc_channels.
+                from runtime import cc_channels as _cc
+                res = _cc.route_reply(str(body.get("from") or ""), str(body.get("thread") or ""),
+                                      str(body.get("text") or ""))
+                self._send(200, {"ok": True, **res})
+                return
+            if u.path == "/channel-send":
+                # HTTP twin of cc_channels.send — message INTO a live channel session (record + push).
+                from runtime import cc_channels as _cc
+                res = _cc.send(str(body.get("to") or ""), str(body.get("message") or ""),
+                               frm=str(body.get("from") or "fabric"), thread=str(body.get("thread") or ""),
+                               topic=str(body.get("topic") or ""))
+                self._send(200, {"ok": True, **res})
+                return
             if u.path in ("/inject", "/interrupt", "/teardown"):
                 s = SUP.find(str(body.get("session") or ""))
                 if s is None:

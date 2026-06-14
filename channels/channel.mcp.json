@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "company-channel": {
+      "command": "node",
+      "args": ["/home/tim/company/channels/company_channel.mjs"],
+      "env": { "COMPANY_ROOT": "/home/tim/company" }
+    }
+  }
+}
