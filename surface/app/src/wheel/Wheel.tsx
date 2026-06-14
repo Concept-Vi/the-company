@@ -72,7 +72,9 @@ export function Wheel({
           {/* the centre — a small soft mark (the origin / "now") */}
           <circle cx={cx} cy={cy} r={3.5} fill="var(--ink-faint)" />
 
-          {/* the point cloud — real data placed by (theta, r); each addressed + animated (no teleport) */}
+          {/* the point cloud — DECORATIVE layer: real data placed by (theta, r); each addressed + animated.
+             Entrance r:0->baseR, lens-change tweens cx/cy/r, exit r->0 (no teleport). pointer-events off —
+             the hit layer below owns clicks (so tiny dots are still tappable on touch). */}
           <AnimatePresence>
             {proj.points.map((p) => {
               const pos = placePolar(p.theta, p.r, cx, cy, R)
@@ -85,23 +87,43 @@ export function Wheel({
                   key={addr}
                   {...stamp(addr)}
                   layoutId={addr}
+                  className="wheel-dot"
                   fill={sectorHue(i, n)}
                   fillOpacity={p.r_unknown ? 0.32 : 0.58}
                   stroke={isSel ? 'var(--ink-primary)' : 'transparent'}
                   strokeWidth={isSel ? 1.5 : 0}
-                  style={{ cursor: 'pointer' }}
+                  style={{ pointerEvents: 'none' }}
                   initial={{ cx: pos.x, cy: pos.y, r: 0, opacity: 0 }}
                   animate={{ cx: pos.x, cy: pos.y, r: isSel ? 5.5 : baseR, opacity: 1 }}
                   exit={{ r: 0, opacity: 0 }}
                   transition={transition('move', feel)}
-                  onClick={(e) => {
-                    e.stopPropagation() // the capture listener already indicated; we own the disclosure
-                    onPick(p)
-                  }}
                 />
               )
             })}
           </AnimatePresence>
+
+          {/* HIT layer — invisible, touch-friendly (r=15 ≈ generous tap target vs the 2.4px dot). Carries the
+             address so the capture listener indicates the right point; sits on top so it owns the click. */}
+          {proj.points.map((p) => {
+            const pos = placePolar(p.theta, p.r, cx, cy, R)
+            const addr = pointAddress(p)
+            return (
+              <circle
+                key={`hit-${addr}`}
+                {...stamp(addr)}
+                className="wheel-hit"
+                cx={pos.x}
+                cy={pos.y}
+                r={15}
+                fill="transparent"
+                style={{ pointerEvents: 'all', cursor: 'pointer' }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onPick(p)
+                }}
+              />
+            )
+          })}
         </svg>
       )}
     </div>
