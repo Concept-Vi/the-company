@@ -174,6 +174,15 @@
   padding: var(--s-3); display: flex; flex-direction: column; gap: var(--s-2); min-width: 220px; }
 .settings-title { font-size: var(--t-xs); color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; }
 
+/* ---- connections (G10) drive-to-explore readout -------------------------- */
+.conn-readout { position: absolute; top: var(--s-3); left: 50%; transform: translateX(-50%);
+  display: flex; align-items: baseline; gap: var(--s-3); font-size: var(--t-xs); color: var(--ink-dim);
+  background: color-mix(in srgb, var(--ground-accent) 80%, transparent); padding: 2px var(--s-3);
+  border-radius: var(--r-pill); white-space: nowrap; }
+.conn-name { color: var(--ink-primary); }
+.conn-out { color: var(--pig-leanB); }
+.conn-in { color: var(--ink-primary); }
+
 /* ---- the lens legend (orientation: what this is + what angle/radius mean) - */
 .legend { padding: var(--s-3); max-width: 248px; }
 .legend-title { font-size: var(--t-base); color: var(--ink-primary); margin-bottom: var(--s-2); line-height: 1.25; }
