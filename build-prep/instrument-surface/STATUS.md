@@ -101,10 +101,17 @@ and "the types/divisions of the circle [should be built in] so the data points c
   pts) has data; DRIFT (square-without-circle = r_unknown) = 0 in the embedded spaces; GATE-INBOX (circle-
   without-square = un-addressed orphans) isn't in the projection (needs the residue source). Building it now
   would be 1-of-3 + a re-display of strain = half-done. Revisit when an unembedded/orphan data source is wired.
-- **NEXT BEATS (sequenced):** the project system (L13 — pointable at anything, company = starter, on
-  lineage.project; needs the projection's project-scoping checked); the registry-promotion keystone (L15 — born
-  type → operator proposal via the proposal seam → the wheel re-divides; the close-the-loop Tim emphasized);
-  then the forbidden when its data source exists. Plus carry-over polish (selection tether).
+- **GROUP 9 POLE-PICKER — BUILT** (`e3770d8`). The two gravities are now VARIABLES: in the separator lens a
+  selected item offers "set as pole A / pole B" (parallel to "centre here"); both set → re-project between the
+  two chosen items; "↺ default poles" resets. Verified both viewports: picked AGENTS.md vs repo.py → separates,
+  134/28. Pure read, registry-true. → BOTH cron targets (G10 drive-to-explore + G9 drivable poles) now
+  interactively complete in the surface.
+- **Project-scoping checked (L13):** /api/projection does NOT scope by project, and only "company" has
+  substantive data (3037 records; "cognition-engine" has 1). The project system is thus data-thin + needs an
+  engine scoping pass — deferred until a real second project's data exists (Tim's MCP make-data, or it accrues).
+- **NEXT BEATS (sequenced):** the registry-promotion keystone (L15 — born type → operator proposal via the
+  proposal seam → the wheel re-divides; the close-the-loop Tim emphasized; data EXISTS — born candidates in the
+  nucleation lens); then the project system + the forbidden when their data exists; carry-over polish (tether).
 - Note: a test annotation ("live-spine verification ping") was written to `ui://instrument/wheel` during live
   verification — benign, append-only; harmless real comment.
 
