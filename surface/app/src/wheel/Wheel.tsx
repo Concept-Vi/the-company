@@ -91,7 +91,8 @@ export function Wheel({
             if (p.strain == null || p.r_struct == null) return null
             const a = placePolar(p.theta, p.r_struct, cx, cy, R) // filed
             const b = placePolar(p.theta, p.r, cx, cy, R) // means
-            const op = Math.min(0.16 + p.strain * 0.9, 0.7)
+            // cap softer so the longest (highest-strain) segments don't read as axis spokes near the hub
+            const op = Math.min(0.14 + p.strain * 0.7, 0.52)
             return (
               <g key={`strain-${p.seq}`} {...stamp(pointAddress(p))}>
                 <motion.line
