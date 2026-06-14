@@ -74,6 +74,13 @@ and "the types/divisions of the circle [should be built in] so the data points c
   Design-critic PASS ("most conceptually loaded view in the set… an elegant tension field, the density earns its
   meaning"); its #1 (longest segments reading as axes near the hub) softened (`cap`). Remaining polish: make strain
   SIGNED (which way it pulls), de-knot the densest zone, selection tether.
+- **LEGEND + THREE-WAY VIEW — BUILT** (`3c0dac7`, answering Tim 2026-06-14 12:44 + 12:51). (a) A per-lens LEGEND
+  (`Legend.tsx`) now orients every lens — name + "N sectors · angle = …" + "radius · …" + centre, derived from
+  the binding (the fix for "I don't know what it is or what it chose"). (b) The view is a THREE-WAY toggle —
+  **Both | Circle | Square** — default **Both = the circle INSCRIBED in the square** (the heart of the equation:
+  outer square + dyadic grid framing the inscribed wheel + rings + forbidden corner-circle), so the grid is
+  present from the start; Circle isolates meaning, Square isolates structure. Geometry corrected: square is the
+  OUTER frame (half-side R), circle touches its edge midpoints. Both viewports, console clean.
 - **NEXT BEATS (per the equation, sequenced):** the FORBIDDEN operationalized (§10 — circle-without-square =
   gate-inbox; square-without-circle = drift; the corner = grow-the-box); the live SSE spine (the present moves);
   the project system (pointable at anything, company = starter).
