@@ -88,7 +88,207 @@ check("16 a reply whose originator is the fabric is recorded, not pushed (agent 
 reg("ch-deadport", "/home/tim/c", os.getpid(), 6, "dead port")
 check("17 push to an unreachable port FAILS LOUD", raises(lambda: cc.send("ch-deadport", "x"), "failed"))
 
+
+# ════════════════════════════════════════════════════════════════════════════════════════════════
+# NAMED-CHANNEL REGISTRY (channels as named managed groups — create/list/add/remove/archive)
+# ════════════════════════════════════════════════════════════════════════════════════════════════
+cc.CHANNELS_DIR = os.path.join(tmp, "_channels")        # point the registry at the throwaway tmp dir
+
+c1 = cc.create_channel("Build Coordination", purpose="overnight build", coordinator="ch-live")
+check("18 create_channel returns a record with id+name+empty roster",
+      c1["id"] == "build-coordination" and c1["name"] == "Build Coordination" and c1["members"] == []
+      and c1["status"] == "active")
+check("19 create_channel persisted the record to _channels/<id>.json",
+      os.path.exists(os.path.join(cc.CHANNELS_DIR, "build-coordination.json")))
+check("20 create_channel DUP-name FAILS LOUD (no silent overwrite)",
+      raises(lambda: cc.create_channel("Build Coordination"), "already exists"))
+
+cc.create_channel("Memory Lane", purpose="recall work")
+chans = cc.list_channels()
+check("21 list_channels returns both active channels",
+      {c["id"] for c in chans} == {"build-coordination", "memory-lane"})
+
+cc.add_member("Build Coordination", "ch-live")
+cc.add_member("build-coordination", "ch-other")          # add by id too (slug-stable)
+check("22 add_member roster reflects both members",
+      cc.channel_members("Build Coordination") == ["ch-live", "ch-other"])
+check("23 add_member DUPLICATE member FAILS LOUD (no silent no-op)",
+      raises(lambda: cc.add_member("Build Coordination", "ch-live"), "already a member"))
+check("24 add_member to a MISSING channel FAILS LOUD",
+      raises(lambda: cc.add_member("no-such-channel", "ch-live"), "no channel"))
+
+# member-in-multiple-channels: ch-live joins a second channel
+cc.add_member("Memory Lane", "ch-live")
+check("25 a member can be in SEVERAL channels at once",
+      "ch-live" in cc.channel_members("Build Coordination") and "ch-live" in cc.channel_members("Memory Lane"))
+
+cc.remove_member("Build Coordination", "ch-other")
+check("26 remove_member drops the member from the roster",
+      cc.channel_members("Build Coordination") == ["ch-live"])
+check("27 remove_member of a NON-member FAILS LOUD",
+      raises(lambda: cc.remove_member("Build Coordination", "ch-other"), "not a member"))
+
+cc.archive_channel("Memory Lane")
+check("28 archive_channel flips status (NOT a delete — record survives)",
+      cc.list_channels(include_archived=True)[0].get("status") == "archived" or
+      any(c["id"] == "memory-lane" and c["status"] == "archived"
+          for c in cc.list_channels(include_archived=True)))
+check("29 archived channels are EXCLUDED from list_channels by default",
+      "memory-lane" not in {c["id"] for c in cc.list_channels()})
+check("30 archived channels are INCLUDED with include_archived=True",
+      "memory-lane" in {c["id"] for c in cc.list_channels(include_archived=True)})
+check("31 add_member to an ARCHIVED channel FAILS LOUD",
+      raises(lambda: cc.add_member("Memory Lane", "ch-x"), "archived"))
+check("32 channel_members on a MISSING channel FAILS LOUD",
+      raises(lambda: cc.channel_members("ghost"), "no channel"))
+
+
+# ════════════════════════════════════════════════════════════════════════════════════════════════
+# UNIFIED PER-MEMBER TRANSPORT DISPATCH (transport: channel | supervised)
+# ════════════════════════════════════════════════════════════════════════════════════════════════
+
+# --- back-compat: a portful / no-transport registration is a "channel" member ---
+check("33 a portful no-transport reg defaults to transport 'channel'",
+      cc._transport_of({"handle": "x", "port": 5}) == "channel")
+check("34 an explicit transport='channel' reg is a channel member",
+      cc._transport_of({"handle": "x", "transport": "channel"}) == "channel")
+check("35 an explicit transport='supervised' reg is a supervised member",
+      cc._transport_of({"handle": "x", "transport": "supervised"}) == "supervised")
+_Rx.received.clear()
+res_bc = cc.send("ch-live", "back-compat channel dispatch", frm="tester")
+time.sleep(0.2)
+check("36 transport back-compat: a channel member still dispatches over HTTP to its port",
+      len(_Rx.received) == 1 and "back-compat channel dispatch" in _Rx.received[0]["content"]
+      and res_bc.get("transport") == "channel")
+
+
+# --- a MOCK SUPERVISOR standing in for session_supervisor (serves /sessions, /inject, /watch) ---
+import queue as _queue
+class _MockSupervisor(BaseHTTPRequestHandler):
+    # session_id -> "idle"|"busy"|"closed"   and   session_id -> Queue of watch events to stream
+    states = {}
+    watch_q = {}
+    injects = []          # every /inject body received (assert the dispatch shape)
+    def log_message(self, *a): pass
+    def _json(self, code, obj):
+        b = json.dumps(obj).encode()
+        self.send_response(code); self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
+    def do_GET(self):
+        from urllib.parse import urlparse as _up, parse_qs as _pq
+        u = _up(self.path)
+        if u.path == "/sessions":
+            recs = [{"id": sid, "state": st} for sid, st in _MockSupervisor.states.items()]
+            self._json(200, {"sessions": recs}); return
+        if u.path == "/watch":
+            sid = (_pq(u.query).get("session") or [""])[0]
+            q = _MockSupervisor.watch_q.setdefault(sid, _queue.Queue())
+            self.send_response(200); self.send_header("Content-Type", "application/x-ndjson")
+            self.send_header("Connection", "close"); self.end_headers()
+            try:
+                while True:
+                    ev = q.get(timeout=10)
+                    self.wfile.write((json.dumps(ev) + "\n").encode()); self.wfile.flush()
+                    if ev.get("type") == "closed":
+                        break
+            except (_queue.Empty, BrokenPipeError, ConnectionResetError):
+                pass
+            return
+        self._json(404, {"error": "unknown"})
+    def do_POST(self):
+        n = int(self.headers.get("Content-Length") or 0)
+        try: body = json.loads(self.rfile.read(n) or b"{}")
+        except ValueError: body = {}
+        u = self.path.split("?")[0]
+        if u == "/inject":
+            _MockSupervisor.injects.append(body)
+            sid = body.get("session")
+            # the mock turn: stream a done event carrying the member's reply (the watcher folds it)
+            q = _MockSupervisor.watch_q.setdefault(sid, _queue.Queue())
+            q.put({"type": "done", "result": f"SUPERVISED REPLY to: {body.get('message')}",
+                   "is_error": False})
+            self._json(200, {"ok": True}); return
+        self._json(404, {"error": "unknown"})
+
+msup = ThreadingHTTPServer(("127.0.0.1", 0), _MockSupervisor)
+SUP_PORT = msup.server_address[1]
+SUP_BASE = f"http://127.0.0.1:{SUP_PORT}"
+threading.Thread(target=msup.serve_forever, daemon=True).start()
+
+def sup_reg(handle, supervisor_session, cwd="/home/tim/sup", desc="", base=SUP_BASE):
+    json.dump({"handle": handle, "session_id": "s-" + handle, "transport": "supervised",
+               "supervisor_session": supervisor_session, "supervisor_base": base,
+               "cwd": cwd, "description": desc, "started": "2026-06-14T00:00:00"},
+              open(os.path.join(tmp, handle + ".json"), "w"))
+
+# register a live supervised member (the supervisor reports its session idle)
+_MockSupervisor.states["sv-1"] = "idle"
+sup_reg("ch-sup", "sv-1", desc="the supervised clone")
+
+# --- live_sessions is transport-aware: supervised members appear when the supervisor says non-closed ---
+live2 = cc.live_sessions()
+check("37 live_sessions includes a supervised member the supervisor reports live",
+      any(r["handle"] == "ch-sup" for r in live2))
+
+# --- supervised dispatch: send to the supervised member → POST /inject + reply folded back ---
+# The ASKER is a live channel member (ch-live on our _Rx PORT) so the folded reply can push back to it.
+_Rx.received.clear()
+_MockSupervisor.injects.clear()
+res_sup = cc.send("ch-sup", "hello supervised", frm="ch-live", topic="t-sup")
+# wait for: the /inject to land AND the watcher to fold the done back to ch-live's port
+for _ in range(60):
+    if _MockSupervisor.injects and _Rx.received:
+        break
+    time.sleep(0.1)
+check("38 supervised dispatch POSTed to the supervisor /inject (correct session + message)",
+      len(_MockSupervisor.injects) == 1 and _MockSupervisor.injects[0]["session"] == "sv-1"
+      and _MockSupervisor.injects[0]["message"] == "hello supervised")
+check("39 supervised send reported transport='supervised'", res_sup.get("transport") == "supervised")
+check("40 the supervised reply was folded into the mail log (route_reply)",
+      any(m["kind"] == "reply" and "SUPERVISED REPLY" in m.get("text", "")
+          for m in cc.mail(thread=res_sup["thread"])))
+check("41 the supervised reply was PUSHED BACK into the asker's live session (no polling)",
+      any("SUPERVISED REPLY to: hello supervised" in (r.get("content") or "") for r in _Rx.received))
+
+# --- mixed-member broadcast: one broadcast fans across a channel member AND a supervised member ---
+_Rx.received.clear()
+_MockSupervisor.injects.clear()
+res_mix = cc.send("ch-live", "X", frm="fabric")          # warm; then broadcast
+bres = []
+import time as _t2
+gthread = f"g-mix-{int(_t2.time())}"
+for tgt in ("ch-live", "ch-sup"):
+    bres.append(cc.send(tgt, "mixed fanout", frm="fabric", thread=gthread))
+time.sleep(0.4)
+check("42 mixed broadcast: channel member got the HTTP push",
+      any("mixed fanout" in (r.get("content") or "") for r in _Rx.received))
+check("43 mixed broadcast: supervised member got a /inject under the same thread",
+      any(i["message"] == "mixed fanout" for i in _MockSupervisor.injects))
+
+# --- supervised PRUNE: supervisor reports the session closed → the reg is pruned ---
+_MockSupervisor.states["sv-1"] = "closed"
+live3 = cc.live_sessions()
+check("44 live_sessions PRUNES a supervised member the supervisor reports CLOSED",
+      not any(r["handle"] == "ch-sup" for r in live3))
+check("45 the closed supervised registration file was removed",
+      not os.path.exists(os.path.join(tmp, "ch-sup.json")))
+
+# --- supervised TRANSIENT outage: an UNREACHABLE supervisor must NOT delete the fork-owned reg ---
+sup_reg("ch-sup2", "sv-2", base="http://127.0.0.1:9")    # port 9 = discard, unreachable
+live4 = cc.live_sessions()
+check("46 unreachable supervisor: the supervised reg is KEPT (transient), never deleted",
+      os.path.exists(os.path.join(tmp, "ch-sup2.json")))
+check("47 a supervised member under an unreachable supervisor still LISTS (presence held, not destroyed)",
+      any(r["handle"] == "ch-sup2" for r in cc.live_sessions()))
+
+# --- supervisor_base fallback: a supervised reg missing the field uses COMPANY_SUPERVISOR_BASE ---
+check("48 supervisor_base falls back to the process default when the reg omits it",
+      cc.supervisor_base({"handle": "z", "supervisor_session": "s"}) == cc.DEFAULT_SUPERVISOR_BASE.rstrip("/"))
+
+msup.shutdown()
 srv.shutdown()
 print(f"\n{'='*56}\nRESULT: {len(PASS)} passed, {len(FAIL)} failed")
 if FAIL: print("FAILED:", ", ".join(FAIL)); sys.exit(1)
-print("ALL GREEN — cc_channels router: presence-prune, find/fail-loud, thread+mail, reply push-back.")
+print("ALL GREEN — cc_channels: presence-prune, find/fail-loud, thread+mail, reply push-back, "
+      "named-channel registry (CRUD + multi-channel membership), unified transport "
+      "(channel↔HTTP · supervised↔supervisor /inject+/watch reply-fold · safe prune).")

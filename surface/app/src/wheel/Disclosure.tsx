@@ -11,29 +11,34 @@ type Variant = 'panel' | 'sheet' | 'rail'
 // WHAT IT CHOSE (Tim 2026-06-14: "I don't know what it is or what it chose"). The legend says what the lens is;
 // this narrates, for the SELECTED point, WHY it landed where it did — its division (angle) and what its radius
 // means in the active lens — in plain words + the real value. Derived from the binding (registry-true).
-type Place = { k: string; v: string; tone?: 'born' | 'strain' | 'pile' }
+type Place = { k: string; v: string; num?: string; tone?: 'born' | 'strain' | 'pile' }
+// the readable leaf of a path-like id (code://projections/worldview.py → worldview.py) — no machine-dump
+function leaf(s: string): string {
+  const t = (s || '').replace(/[/]+$/, '')
+  return t.split('/').pop() || t
+}
 function placement(p: ProjPoint, binding: Projection['binding'] | undefined, centre: string | null): Place[] {
-  const out: Place[] = [{ k: 'in', v: p.sector }] // the division (its kind/type) it sits in
+  const out: Place[] = [{ k: 'in', v: leaf(p.sector) }] // the division (its kind/type) it sits in
   const rf = binding?.radius_from
   const num = (x: number | undefined) => (typeof x === 'number' ? x.toFixed(2) : '—')
   if (rf === 'semantic') {
     const d = p.r ?? 1
     const w = p.r_unknown ? 'no meaning vector — at the rim' : d < 0.34 ? 'close in meaning' : d < 0.67 ? 'mid-distance' : 'far in meaning'
-    out.push({ k: 'meaning', v: centre ? `${w} from ${centre} (${num(p.r)})` : `${w} (${num(p.r)})` })
+    out.push({ k: 'meaning', v: centre ? `${w} from ${centre}` : w, num: num(p.r) })
     if (typeof p.strain === 'number')
-      out.push({ k: 'tension', v: `filed vs meant · ${num(p.strain)}`, tone: 'strain' })
+      out.push({ k: 'tension', v: 'filed vs meant', num: num(p.strain), tone: 'strain' })
   } else if (rf === 'separator') {
     const pole = p.pole === 'b' ? 'pole B' : p.pole === 'a' ? 'pole A' : 'balanced'
-    out.push({ k: 'leans', v: `${pole} · strength ${num(Math.abs(p.lean ?? 0))}` })
+    out.push({ k: 'leans', v: pole, num: num(Math.abs(p.lean ?? 0)) })
   } else if (rf === 'nucleation') {
-    if (p.inside) out.push({ k: 'fits', v: `${p.assigned ?? p.sector} · inside (${num(p.fit)})` })
-    else out.push({ k: 'misfit', v: p.born ? 'piled out → a new type ✦' : 'fits no type · piled out', tone: p.born ? 'born' : 'pile' })
+    if (p.inside) out.push({ k: 'fits', v: 'inside', num: num(p.fit) })
+    else out.push({ k: 'misfit', v: p.born ? 'piled → a new type ✦' : 'fits no type · piled', tone: p.born ? 'born' : 'pile' })
   } else if (rf === 'address') {
-    out.push({ k: 'distance', v: `structural · ${num(p.r)} from ${centre ?? 'centre'}` })
+    out.push({ k: 'distance', v: `structural from ${centre ?? 'centre'}`, num: num(p.r) })
   } else {
     const d = p.r ?? 0
     const w = d < 0.34 ? 'recent' : d < 0.67 ? 'a while ago' : 'long ago'
-    out.push({ k: 'age', v: centre ? `${num(p.r)} from ${centre}` : `${w} (${num(p.r)})` })
+    out.push({ k: 'age', v: centre ? `from ${centre}` : w, num: num(p.r) })
   }
   return out
 }
@@ -118,7 +123,10 @@ export function Disclosure({
             {placement(point, binding, centreLabel ?? null).map((pl, i) => (
               <div className={`place-row ${pl.tone ? `place-row--${pl.tone}` : ''}`} key={i}>
                 <dt className="place-k">{pl.k}</dt>
-                <dd className="place-v">{pl.v}</dd>
+                <dd className="place-v">
+                  {pl.v}
+                  {pl.num && <span className="place-num">{pl.num}</span>}
+                </dd>
               </div>
             ))}
           </dl>
