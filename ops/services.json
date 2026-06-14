@@ -19,6 +19,14 @@
     "tts-kokoro"
    ],
    "note": "the after-restart wake ritual (Tim, 2026-06-11): the surface's API + the resident brain/embedder pair + the default ear/voice \u2014 everything the phone PWA needs. ~12GB co-resident, verified together 2026-06-11. NOTE: the canvas (vite) is unmanaged \u2014 start it separately (cd canvas/app && npm run dev); making it a managed unit is a named future row."
+  },
+  "xsession": {
+   "services": [
+    "embed-pplx",
+    "tts-qwen3tts",
+    "stt-whisper"
+   ],
+   "note": "The cross-session CHANNEL fabric loadout (Tim gave the GPU 2026-06-14): pplx-embed-context-4b (~8.2G) for semantic session-find/transcript-search + Qwen3-TTS VoiceDesign (~4.4G, no clip \u2014 the voice for spoken cross-session conversation) + whisper.cpp STT (CPU, 0 VRAM, the ear). ~12.6G GPU co-resident, fits the 16G card with headroom. The embedder+voice pairing Tim authorized to start (swap voice engine later via the registry)."
   }
  },
  "groups": {
