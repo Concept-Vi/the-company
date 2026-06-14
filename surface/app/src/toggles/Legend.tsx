@@ -83,8 +83,10 @@ export function Legend({ s }: { s: SurfaceState }) {
   if (!s.proj) return null
   const { title, lines } = describe(s.proj, s.view, s.centre?.label ?? null)
   // In Both, the circle and square are over one space — name the coincidence spine (seed §3): the diamonds on
-  // the axes are where structure and meaning AGREE (the ratified / addressable points). Only meaningful in Both.
-  const all = s.view === 'both' ? [...lines, '◆ on the axes · where structure & meaning agree'] : lines
+  // the axes are where the SQUARE (grid) and the CIRCLE (rings) meet — the ratified / addressable spine. Lens-
+  // NEUTRAL wording (it's a geometric substrate fact, true whatever the radius encodes — never says "meaning"
+  // on a lens whose radius is age/etc.). Only shown in Both, where both systems are visible.
+  const all = s.view === 'both' ? [...lines, '◆ on the axes · where grid & circle meet — the ratified spine'] : lines
   return (
     <div className="legend" {...stamp('ui://instrument/legend')}>
       <div className="legend-title display">{title}</div>
