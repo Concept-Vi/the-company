@@ -150,6 +150,19 @@
   transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); }
 .viewtoggle-btn--on { background: var(--ink-primary); color: var(--ground-accent); }
 
+/* ---- live indicator / freeze toggle -------------------------------------- */
+.livedot { border: none; background: transparent; cursor: pointer; display: inline-flex; align-items: center;
+  justify-content: center; min-width: 34px; min-height: 32px; border-radius: var(--r-pill); }
+.livedot:hover { background: var(--ground-secondary); }
+.livedot-dot { width: 9px; height: 9px; border-radius: 50%; }
+.livedot--on .livedot-dot { background: var(--pig-born); animation: live-pulse 2s ease-in-out infinite; }
+.livedot--off .livedot-dot { background: transparent; border: 1.5px solid var(--ink-faint); }
+@keyframes live-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--pig-born) 45%, transparent); opacity: 1; }
+  50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--pig-born) 0%, transparent); opacity: 0.6; }
+}
+@media (prefers-reduced-motion: reduce) { .livedot--on .livedot-dot { animation: none; } }
+
 /* ---- settings (a single gear holding the taste scaffold on demand) ------- */
 .settings { position: relative; }
 .settings-gear { border: none; background: transparent; color: var(--ink-faint); cursor: pointer;

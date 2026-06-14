@@ -2,6 +2,7 @@ import type { SurfaceState } from '../App'
 import { LensChip } from '../toggles/LensChip'
 import { Settings } from '../toggles/Settings'
 import { ViewToggle } from '../toggles/ViewToggle'
+import { LiveDot } from '../toggles/LiveDot'
 import { CentreChip } from '../toggles/CentreChip'
 import { Legend } from '../toggles/Legend'
 import { Notice } from '../toggles/Notice'
@@ -20,6 +21,7 @@ export function Desktop({ s }: { s: SurfaceState }) {
         {s.proj && <LensChip proj={s.proj} current={s.binding} onPick={s.setBinding} />}
         <CentreChip centre={s.centre} onReset={() => s.setCentre(null)} />
         <div className="bar-right">
+          <LiveDot live={s.live} setLive={s.setLive} />
           <ViewToggle view={s.view} setView={s.setView} />
           <Settings feel={s.feel} setFeel={s.setFeel} />
         </div>

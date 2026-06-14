@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { fetchProjection, type Projection, type ProjPoint, ApiError } from './lib/api'
 import { installAddressCapture, subscribeLocus, getLocus, clearNotice } from './lib/address'
 import type { MotionFeel } from './tokens/motion'
@@ -53,6 +53,8 @@ export type SurfaceState = {
   centre: Centre | null
   setCentre: (c: Centre | null) => void
   focusCentre: (p: ProjPoint) => void
+  live: boolean
+  setLive: (v: boolean) => void
   notice: string | null
   dismissNotice: () => void
 }
@@ -79,6 +81,9 @@ export function App() {
   const [nuc, setNucState] = useState<NucParams>({ types_space: 'topics', space: 'topics', rung: 8 })
   const setNuc = useCallback((patch: Partial<NucParams>) => setNucState((p) => ({ ...p, ...patch })), [])
   const [centre, setCentre] = useState<Centre | null>(null)
+  const [live, setLive] = useState(true)
+  const [pulse, setPulse] = useState(0) // a live-stream tick → re-fetch (the present moves)
+  const lastSeqRef = useRef(0)
   const focusCentre = useCallback((p: ProjPoint) => {
     // re-centre on the item: its embeddable source (so meaning re-forms around the ITEM, not its run:// record),
     // else its address. label = the last path segment (text-minimal).
@@ -96,7 +101,7 @@ export function App() {
   }, [])
 
   useEffect(() => {
-    let live = true
+    let alive = true
     setLoading(true)
     setError(null)
     // the type-gravity lens is driven by the nuc params (which store, which type-registry, which rung);
@@ -109,19 +114,60 @@ export function App() {
     if (centre) params.center = centre.ref
     fetchProjection(params)
       .then((p) => {
-        if (!live) return
+        if (!alive) return
         setProj(p)
+        // track the newest event seq so the live stream tails from here (only NEW events pulse a refresh)
+        for (const pt of p.points) if (typeof pt.seq === 'number' && pt.seq > lastSeqRef.current) lastSeqRef.current = pt.seq
         setLoading(false)
       })
       .catch((e: unknown) => {
-        if (!live) return
+        if (!alive) return
         setError(e instanceof ApiError ? e.message : String(e))
         setLoading(false)
       })
     return () => {
-      live = false
+      alive = false
     }
-  }, [binding, nuc, centre])
+  }, [binding, nuc, centre, pulse])
+
+  // THE LIVE SPINE (the seed §4 / mandate L9 — live, not a viewer): tail /api/stream from the newest seq we
+  // know; when NEW events arrive, pulse a (throttled) re-fetch so the present visibly moves — new points bloom
+  // in (no teleport). Freeze pauses the stream. EventSource auto-reconnects gaplessly (Last-Event-ID).
+  useEffect(() => {
+    if (!live) return
+    let es: EventSource | null = null
+    let pending = 0
+    let timer: number | null = null
+    try {
+      es = new EventSource(`/api/stream?since=${lastSeqRef.current}`)
+    } catch {
+      return
+    }
+    es.onmessage = (e) => {
+      let seq = -1
+      try {
+        seq = JSON.parse(e.data).seq
+      } catch {
+        return
+      }
+      if (typeof seq !== 'number' || seq <= lastSeqRef.current) return
+      pending++
+      if (timer == null) {
+        timer = window.setTimeout(() => {
+          timer = null
+          if (pending > 0) {
+            pending = 0
+            setPulse((p) => p + 1) // throttled → re-fetch the projection
+          }
+        }, 2500)
+      }
+    }
+    es.onerror = () => {} // browser auto-reconnects with Last-Event-ID (gapless)
+    return () => {
+      es?.close()
+      if (timer != null) clearTimeout(timer)
+    }
+  }, [live])
 
   const dismissNotice = useCallback(() => {
     clearNotice()
@@ -145,6 +191,8 @@ export function App() {
     centre,
     setCentre,
     focusCentre,
+    live,
+    setLive,
     notice,
     dismissNotice,
   }
