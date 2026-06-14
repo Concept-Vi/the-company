@@ -350,6 +350,35 @@ check("51 a supervised member under an unreachable supervisor still LISTS (prese
 check("52 supervisor_base falls back to the process default when the reg omits it",
       cc.supervisor_base({"handle": "z", "supervisor_session": "s"}) == cc.DEFAULT_SUPERVISOR_BASE.rstrip("/"))
 
+# --- WATCHER RESTART after exit (regression for the silent-drop bug found in lead cross-review) ---
+# A supervised member's reply-watcher exits (a /watch stream blip / supervisor recycle — the SESSION
+# stays live). A LATER dispatch to the SAME handle MUST start a FRESH watcher and fold the new reply.
+# The pre-fix code left the handle in _watchers after the first exit (the finally never popped it) →
+# _ensure_supervised_watcher returned without re-tailing → every later reply for that handle was
+# SILENTLY DROPPED. This case FAILS against that bug and PASSES with the lifecycle fix.
+_MockSupervisor.states["sv-restart"] = "idle"
+sup_reg("ch-restart", "sv-restart", desc="watcher exits, then a redispatch must re-tail")
+_Rx.received.clear(); _MockSupervisor.injects.clear()
+cc.send("ch-restart", "first turn", frm="ch-live", topic="t-r1")     # dispatch 1 → watcher 1 folds reply 1
+for _ in range(60):
+    if any("SUPERVISED REPLY to: first turn" in (r.get("content") or "") for r in _Rx.received): break
+    time.sleep(0.1)
+check("53 supervised reply folded on the FIRST dispatch (watcher 1 ran)",
+      any("SUPERVISED REPLY to: first turn" in (r.get("content") or "") for r in _Rx.received))
+# end watcher 1: a `closed` watch event ends its stream (states stays idle = a stream blip, NOT a close)
+_MockSupervisor.watch_q.setdefault("sv-restart", _queue.Queue()).put({"type": "closed"})
+for _ in range(60):                                   # wait for watcher 1 to reap itself out of _watchers
+    w = cc._watchers.get("ch-restart")
+    if not (w and w.get("thread") and w["thread"].is_alive()): break
+    time.sleep(0.1)
+_Rx.received.clear(); _MockSupervisor.injects.clear()
+cc.send("ch-restart", "second turn", frm="ch-live", topic="t-r2")    # dispatch 2 → the bug drops this
+for _ in range(60):
+    if any("SUPERVISED REPLY to: second turn" in (r.get("content") or "") for r in _Rx.received): break
+    time.sleep(0.1)
+check("54 a FRESH watcher started on the SECOND dispatch + folded its reply (no silent drop after exit)",
+      any("SUPERVISED REPLY to: second turn" in (r.get("content") or "") for r in _Rx.received))
+
 msup.shutdown()
 srv.shutdown()
 print(f"\n{'='*56}\nRESULT: {len(PASS)} passed, {len(FAIL)} failed")
