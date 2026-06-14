@@ -53,6 +53,35 @@ function cssVar(name: string, fallback: string): string {
   return v || fallback
 }
 
+// THE CONNECTIONS (Group 10): a directed chord between two sector mid-angles, arced through the interior.
+// Direction is read by a source dot (at `from`) + an arrowhead (at `to`); a bidir edge (a real cycle) gets
+// arrowheads at BOTH ends — cycles rendered AS cycles, never flattened. Registry-true (the engine supplies
+// the edges as sector INDICES); nothing here invents an edge.
+export function sectorMidAngle(from: number, to: number): number {
+  return (from + to) / 2
+}
+
+export function chordPath(
+  aMid: number, bMid: number, cx: number, cy: number, rEndPx: number, pull = 0.5,
+): { d: string; from: Vec2; to: Vec2; ctrl: Vec2 } {
+  const a0 = aMid - Math.PI / 2
+  const a1 = bMid - Math.PI / 2
+  const from = { x: cx + rEndPx * Math.cos(a0), y: cy + rEndPx * Math.sin(a0) }
+  const to = { x: cx + rEndPx * Math.cos(a1), y: cy + rEndPx * Math.sin(a1) }
+  const mx = (from.x + to.x) / 2, my = (from.y + to.y) / 2
+  const ctrl = { x: mx + (cx - mx) * pull, y: my + (cy - my) * pull } // pulled toward centre = a calm arc
+  return { d: `M ${from.x} ${from.y} Q ${ctrl.x} ${ctrl.y} ${to.x} ${to.y}`, from, to, ctrl }
+}
+
+// A small arrowhead triangle at `tip`, oriented along the direction coming FROM `tail`.
+export function arrowHead(tip: Vec2, tail: Vec2, size = 5): string {
+  const ang = Math.atan2(tip.y - tail.y, tip.x - tail.x)
+  const a1 = ang + Math.PI - 0.45, a2 = ang + Math.PI + 0.45
+  const p1 = { x: tip.x + size * Math.cos(a1), y: tip.y + size * Math.sin(a1) }
+  const p2 = { x: tip.x + size * Math.cos(a2), y: tip.y + size * Math.sin(a2) }
+  return `M ${tip.x} ${tip.y} L ${p1.x} ${p1.y} L ${p2.x} ${p2.y} Z`
+}
+
 // SVG arc path for a sector wedge from inner radius 0 to R, spanning [from,to] radians.
 export function wedgePath(from: number, to: number, cx: number, cy: number, R: number): string {
   const a0 = from - Math.PI / 2

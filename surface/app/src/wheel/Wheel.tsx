@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import type { Projection, ProjPoint } from '../lib/api'
 import type { MotionFeel } from '../tokens/motion'
 import { transition } from '../tokens/motion'
-import { wheelGeom, placePolar, ringRadii, sectorHue, wedgePath } from '../lib/seed'
+import { wheelGeom, placePolar, ringRadii, sectorHue, wedgePath, chordPath, arrowHead, sectorMidAngle } from '../lib/seed'
 import { stamp } from '../lib/address'
 
 // The canonical address for a point: its real address, else a minted dynamic canvas address (never fabricated
@@ -68,6 +68,33 @@ export function Wheel({
               strokeWidth={1}
             />
           ))}
+
+          {/* THE CONNECTIONS (Group 10) — the REAL directional typed edges as directed chords. Registry-true
+             (the engine supplies edges as sector indices). Source dot at `from`, arrowhead at `to`; a bidir
+             edge (a genuine cycle) gets arrowheads at BOTH ends — cycles rendered AS cycles. Calm/paper opacity. */}
+          {proj.edges.length > 0 &&
+            proj.edges.map((e) => {
+              const sf = proj.sectors[e.from]
+              const st = proj.sectors[e.to]
+              if (!sf || !st) return null
+              const ch = chordPath(sectorMidAngle(sf.from, sf.to), sectorMidAngle(st.from, st.to), cx, cy, R * 0.84)
+              return (
+                <motion.g
+                  key={`edge-${e.from}-${e.to}`}
+                  {...stamp(`ui://instrument/edge/${e.from}-${e.to}`)}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={transition('enter', feel)}
+                >
+                  <path d={ch.d} fill="none" stroke="var(--ink-dim)"
+                    strokeOpacity={e.bidir ? 0.32 : 0.2} strokeWidth={e.bidir ? 1.4 : 1} />
+                  <circle cx={ch.from.x} cy={ch.from.y} r={2} fill="var(--ink-dim)" fillOpacity={0.5} />
+                  <path d={arrowHead(ch.to, ch.ctrl)} fill="var(--ink-dim)" fillOpacity={0.55} />
+                  {e.bidir && <path d={arrowHead(ch.from, ch.ctrl)} fill="var(--ink-dim)" fillOpacity={0.55} />}
+                </motion.g>
+              )
+            })}
 
           {/* the centre — a small soft mark (the origin / "now") */}
           <circle cx={cx} cy={cy} r={3.5} fill="var(--ink-faint)" />
