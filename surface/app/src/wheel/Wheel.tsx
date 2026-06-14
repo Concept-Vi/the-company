@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import type { Projection, ProjPoint } from '../lib/api'
 import type { MotionFeel } from '../tokens/motion'
 import { transition } from '../tokens/motion'
-import { wheelGeom, placePolar, ringRadii, sectorHue, wedgePath, chordPath, arrowHead, sectorMidAngle } from '../lib/seed'
+import { wheelGeom, placePolar, ringRadii, sectorHue, wedgePath, chordPath, arrowHead, sectorMidAngle, dyadicLevels } from '../lib/seed'
 import { stamp } from '../lib/address'
 import { useSize } from './useSize'
 
@@ -17,11 +17,13 @@ export function Wheel({
   feel,
   selectedSeq,
   onPick,
+  showGrid = false,
 }: {
   proj: Projection
   feel: MotionFeel
   selectedSeq?: number
   onPick: (p: ProjPoint) => void
+  showGrid?: boolean
 }) {
   const { ref, width, height } = useSize<HTMLDivElement>()
   const ready = width > 8 && height > 8
@@ -33,6 +35,39 @@ export function Wheel({
     <div ref={ref} className="wheel-region" {...stamp('ui://instrument/wheel')}>
       {ready && (
         <svg viewBox={`0 0 ${width} ${height}`} className="wheel-svg" role="img" aria-label="instrument">
+          {/* THE SQUARE / STRUCTURE half, present together with the circle (the seed §1/§5: the circle is
+             INSCRIBED IN the square — square is the outer frame, half-side R, the circle touches its edge
+             midpoints; the corners (r·√2) are the forbidden zone). Shown in BOTH view; hidden when the circle
+             is isolated. Faint dyadic nested grid + box + the two axes (the coincidence spine), under the circle. */}
+          {showGrid && (() => {
+            const box = R // outer square: half-side = inscribed-circle radius
+            const SQRT2 = Math.SQRT2
+            return (
+              <g className="wheel-grid">
+                {/* the forbidden corner-circle (through the square's corners, bulging past the inscribed circle) */}
+                <circle cx={cx} cy={cy} r={R * SQRT2} fill="none" stroke="var(--pig-strain)" strokeOpacity={0.18}
+                  strokeWidth={1} strokeDasharray="4 5" />
+                <rect x={cx - box} y={cy - box} width={2 * box} height={2 * box} fill="none"
+                  stroke="var(--hairline)" strokeWidth={1} strokeOpacity={0.7} />
+                {dyadicLevels(proj.grid || 8).map(({ divisions, weight }) =>
+                  Array.from({ length: divisions - 1 }, (_, k) => {
+                    const t = (k + 1) / divisions
+                    const gx = cx - box + t * 2 * box
+                    const gy = cy - box + t * 2 * box
+                    return (
+                      <g key={`g-${divisions}-${k}`}>
+                        <line x1={gx} y1={cy - box} x2={gx} y2={cy + box} stroke="var(--ink-faint)" strokeOpacity={weight * 0.5} strokeWidth={1} />
+                        <line x1={cx - box} y1={gy} x2={cx + box} y2={gy} stroke="var(--ink-faint)" strokeOpacity={weight * 0.5} strokeWidth={1} />
+                      </g>
+                    )
+                  }),
+                )}
+                <line x1={cx} y1={cy - box} x2={cx} y2={cy + box} stroke="var(--ink-faint)" strokeOpacity={0.32} strokeWidth={1} />
+                <line x1={cx - box} y1={cy} x2={cx + box} y2={cy} stroke="var(--ink-faint)" strokeOpacity={0.32} strokeWidth={1} />
+              </g>
+            )
+          })()}
+
           {/* concentric rings — the m/2 rings (seed §1), hairline */}
           {ringRadii(proj.rings, R).map((rad, k) => (
             <circle key={`ring-${k}`} cx={cx} cy={cy} r={rad}

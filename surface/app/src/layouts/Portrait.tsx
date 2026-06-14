@@ -3,6 +3,7 @@ import { LensChip } from '../toggles/LensChip'
 import { Settings } from '../toggles/Settings'
 import { ViewToggle } from '../toggles/ViewToggle'
 import { CentreChip } from '../toggles/CentreChip'
+import { Legend } from '../toggles/Legend'
 import { Notice } from '../toggles/Notice'
 import { Disclosure } from '../wheel/Disclosure'
 import { WheelOrState } from './shared'
@@ -23,6 +24,8 @@ export function Portrait({ s }: { s: SurfaceState }) {
           <Settings feel={s.feel} setFeel={s.setFeel} />
         </div>
       </header>
+
+      <Legend s={s} />
 
       <section className="center center--full">
         <WheelOrState s={s} />

@@ -134,6 +134,7 @@
 .viewtoggle { display: inline-flex; gap: 2px; background: var(--ground-secondary); border-radius: var(--r-pill);
   padding: 2px; }
 .viewtoggle-btn { border: none; background: transparent; color: var(--ink-faint); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
   font-size: var(--t-sm); line-height: 1; min-width: 34px; min-height: 32px; border-radius: var(--r-pill);
   transition: background 150ms cubic-bezier(0.4,0,0.2,1), color 150ms cubic-bezier(0.4,0,0.2,1); }
 .viewtoggle-btn--on { background: var(--ink-primary); color: var(--ground-accent); }
@@ -148,6 +149,18 @@
   background: var(--ground-accent); box-shadow: var(--elev-3); border-radius: var(--r-card);
   padding: var(--s-3); display: flex; flex-direction: column; gap: var(--s-2); min-width: 220px; }
 .settings-title { font-size: var(--t-xs); color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* ---- the lens legend (orientation: what this is + what angle/radius mean) - */
+.legend { padding: var(--s-3); max-width: 248px; }
+.legend-title { font-size: var(--t-base); color: var(--ink-primary); margin-bottom: var(--s-2); line-height: 1.25; }
+.legend-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.legend-lines li { font-size: var(--t-xs); color: var(--ink-dim); line-height: 1.45; position: relative; padding-left: var(--s-3); }
+.legend-lines li::before { content: '·'; position: absolute; left: 4px; color: var(--ink-faint); }
+.layout--portrait .legend { max-width: 86%; margin: 0 auto; text-align: center; padding: var(--s-2) var(--s-4); }
+.layout--portrait .legend-lines { align-items: center; }
+.layout--portrait .legend-lines li { padding-left: 0; }
+.layout--portrait .legend-lines li::before { content: ''; }
+.rail .legend { padding: var(--s-2) 0 0; max-width: none; flex: 0 0 auto; }
 
 /* ---- the two-gravity separator overlays (G9) ----------------------------- */
 /* pole labels sit at each basin's anchor (mid-height, outer edge) — at the gravity, and clear of the

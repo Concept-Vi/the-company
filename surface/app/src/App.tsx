@@ -7,7 +7,10 @@ import { Portrait } from './layouts/Portrait'
 import { Landscape } from './layouts/Landscape'
 
 export type FormFactor = 'desktop' | 'portrait' | 'landscape'
-export type ViewMode = 'circle' | 'square' // the seed's two coordinate systems over one space
+// The seed's two coordinate systems over one space, three ways: BOTH = the circle inscribed in the square
+// (the heart of the equation — present together from the start); CIRCLE = isolate meaning; SQUARE = isolate
+// structure. (Tim 2026-06-14: "the circle is inscribed in the square… but I like being able to isolate them.")
+export type ViewMode = 'both' | 'circle' | 'square'
 
 // Discrete layout switch (L5) — NOT arithmetic scaling of one layout.
 function classify(w: number, h: number): FormFactor {
@@ -72,7 +75,7 @@ export function App() {
   const [binding, setBinding] = useState('raw')
   const [selected, setSelected] = useState<ProjPoint | null>(null)
   const [feel, setFeel] = useState<MotionFeel>('spring')
-  const [view, setView] = useState<ViewMode>('circle')
+  const [view, setView] = useState<ViewMode>('both')
   const [nuc, setNucState] = useState<NucParams>({ types_space: 'topics', space: 'topics', rung: 8 })
   const setNuc = useCallback((patch: Partial<NucParams>) => setNucState((p) => ({ ...p, ...patch })), [])
   const [centre, setCentre] = useState<Centre | null>(null)

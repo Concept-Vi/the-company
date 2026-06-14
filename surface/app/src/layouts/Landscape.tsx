@@ -3,6 +3,7 @@ import { LensChip } from '../toggles/LensChip'
 import { Settings } from '../toggles/Settings'
 import { ViewToggle } from '../toggles/ViewToggle'
 import { CentreChip } from '../toggles/CentreChip'
+import { Legend } from '../toggles/Legend'
 import { Notice } from '../toggles/Notice'
 import { Disclosure } from '../wheel/Disclosure'
 import { WheelOrState, SelectHint } from './shared'
@@ -36,6 +37,7 @@ export function Landscape({ s }: { s: SurfaceState }) {
             <SelectHint />
           )}
         </div>
+        <Legend s={s} />
       </aside>
     </div>
   )

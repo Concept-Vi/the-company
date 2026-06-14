@@ -3,6 +3,7 @@ import { LensChip } from '../toggles/LensChip'
 import { Settings } from '../toggles/Settings'
 import { ViewToggle } from '../toggles/ViewToggle'
 import { CentreChip } from '../toggles/CentreChip'
+import { Legend } from '../toggles/Legend'
 import { Notice } from '../toggles/Notice'
 import { Disclosure } from '../wheel/Disclosure'
 import { WheelOrState, SelectHint } from './shared'
@@ -25,7 +26,9 @@ export function Desktop({ s }: { s: SurfaceState }) {
       </header>
 
       <main className="stage">
-        <aside className="strata strata--left" {...stamp('ui://strata/left')} />
+        <aside className="strata strata--left" {...stamp('ui://strata/left')}>
+          <Legend s={s} />
+        </aside>
 
         <section className="center">
           <WheelOrState s={s} />

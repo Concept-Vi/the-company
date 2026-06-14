@@ -14,14 +14,14 @@ export const WHEEL_FRAC = 0.46
 
 export type Vec2 = { x: number; y: number }
 
-// Centre + radius of the wheel given a region box. In a TALL frame (mobile portrait) the wheel is
-// width-constrained — bias it to own more of the width so it dominates the frame (design-critic fix #5),
-// instead of floating small with generous side margins. Wide/square frames keep the balanced fraction.
+// Centre + radius of the wheel. R is the INSCRIBED-circle radius; the SQUARE that frames it (the heart of the
+// equation — circle inscribed in square, square §1) has half-side R, so its corners sit at R·√2. R is sized so
+// that square (corners included) fits the region — R·√2 ≤ min/2 → R ≤ 0.354·min. Consistent across view modes
+// so toggling Both/Circle/Square never resizes the circle.
 export function wheelGeom(width: number, height: number): { cx: number; cy: number; R: number } {
   const cx = width / 2
   const cy = height / 2
-  const tall = height > width * 1.25
-  const R = tall ? Math.min(width * 0.48, height * 0.4) : Math.min(width, height) * WHEEL_FRAC
+  const R = Math.min(width, height) * 0.35
   return { cx, cy, R }
 }
 
