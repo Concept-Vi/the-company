@@ -38,10 +38,18 @@ cold questions. PROPOSED — Tim's to confirm/correct.
 ## B. Multi-project / multi-session addressing (gates indexing more sessions — Tim flagged to me)
 **Tim-direct:** "heaps of different sessions … heaps of different projects … all in one source … search
 across a project, across one session, across a segment … set a session to be the default recall."
-**Proposed model:**
-- The session store IS the source (the CLI-discovery precedent / Mirror-Registry Law): a registered
-  SOURCE whose addressable units are keyed on **three scope axes — project · session · segment** (a
-  segment = a compaction generation, the structural `isCompactSummary` boundary, per the schema find).
+**Model — UPDATED to Tim-direct D-1 (multi-space, supersedes the earlier hierarchy-keying wording):**
+- **Multi-space coordinate addressing** (canonical decision #1, tim-direct): a unit has a REAL address
+  in EVERY relevant space at once — provenance/structural, semantic (per-lens embedding position),
+  temporal, physical (filesystem), relational (links) — as **co-equal coordinate spaces**. **Provenance
+  (`exchange://<sid>/<i>`) is the re-embed-stable CANONICAL IDENTITY** (semantic coords move on an
+  embedder swap; provenance doesn't), and the embedding lattice is **ONE co-equal space, not the
+  master container**. "Having an address in many spaces is the value — find via one, cross to the
+  others." The UI renders the space (the Heart). [[both-plus-others]] — not lattice-vs-provenance, both.
+- The session store IS the source (the CLI-discovery precedent / Mirror-Registry Law); within the
+  PROVENANCE space its discrete axes are **project · session · segment** (a segment = a compaction
+  generation, the structural `isCompactSummary` boundary, per the schema find) — these are the
+  structural sub-space of the multi-space address, NOT a competing hierarchy model.
 - Address grammar: `session://<project>/<sid>` and a recall scope selector `{scope: project|session|
   segment|all, project?, sid?, segment?}`. The project key = the `~/.claude/projects/<encoded-cwd>/`
   dir (encoding verified: `/`→`-`, `.`→`-`; resolve by re-encoding, never trust a decode — from
