@@ -158,6 +158,24 @@
 .sep-verdict--yes { color: var(--pig-born); background: color-mix(in srgb, var(--pig-born) 12%, var(--ground-accent)); }
 .sep-verdict--no { color: var(--pig-strain); background: color-mix(in srgb, var(--pig-strain) 12%, var(--ground-accent)); }
 
+/* ---- type-nucleation overlays (the type-gravity lens) -------------------- */
+.nuc-report { position: absolute; top: var(--s-3); left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: var(--s-2); font-size: var(--t-xs); color: var(--ink-dim); }
+.nuc-born { color: var(--pig-born); }
+.nuc-pile { color: var(--pig-strain); }
+.nuc-sep { color: var(--ink-faint); }
+.nuc-controls { position: absolute; bottom: calc(var(--s-2) + var(--safe-b)); left: 50%;
+  transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: var(--s-2);
+  max-width: 92%; }
+.nuc-dial { display: flex; align-items: center; gap: var(--s-2); font-size: var(--t-xs); color: var(--ink-dim); }
+.nuc-dial-range { width: 120px; accent-color: var(--pig-born); }
+.nuc-dial-val { font-variant-numeric: tabular-nums; color: var(--ink-faint); min-width: 30px; }
+.nuc-pickers { display: flex; gap: var(--s-3); flex-wrap: wrap; justify-content: center; }
+.nuc-picker { display: inline-flex; align-items: center; gap: 4px; font-size: var(--t-xs); color: var(--ink-faint); }
+.nuc-picker-sel { font-family: var(--font-sans); font-size: var(--t-xs); color: var(--ink-dim);
+  background: var(--ground-secondary); border: none; border-radius: var(--r-chrome); padding: 3px var(--s-1);
+  min-height: 30px; cursor: pointer; }
+
 /* ---- select hint (calm empty-state for a detail surface) ----------------- */
 .select-hint { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: var(--s-2); opacity: 0.7; }

@@ -45,9 +45,16 @@ export type SurfaceState = {
   setFeel: (f: MotionFeel) => void
   view: ViewMode
   setView: (v: ViewMode) => void
+  nuc: NucParams
+  setNuc: (patch: Partial<NucParams>) => void
   notice: string | null
   dismissNotice: () => void
 }
+
+// Drivable type-gravity (nucleation) params — which item store is typed against which registry-of-types, at
+// which rung. Default to a POPULATING same-space combo so points visibly cluster INSIDE their types (Tim's
+// "points close around the types"); the pickers expose the cross-instance combo (the non-circular proof) too.
+export type NucParams = { types_space: string; space: string; rung: number }
 
 export function App() {
   const ff = useFormFactor()
@@ -58,6 +65,8 @@ export function App() {
   const [selected, setSelected] = useState<ProjPoint | null>(null)
   const [feel, setFeel] = useState<MotionFeel>('spring')
   const [view, setView] = useState<ViewMode>('circle')
+  const [nuc, setNucState] = useState<NucParams>({ types_space: 'topics', space: 'topics', rung: 8 })
+  const setNuc = useCallback((patch: Partial<NucParams>) => setNucState((p) => ({ ...p, ...patch })), [])
   const [notice, setNotice] = useState<string | null>(null)
 
   useEffect(() => {
@@ -71,7 +80,13 @@ export function App() {
     let live = true
     setLoading(true)
     setError(null)
-    fetchProjection({ binding, limit: 600 })
+    // the type-gravity lens is driven by the nuc params (which store, which type-registry, which rung);
+    // other lenses take the plain window. registry-true — the surface never invents, only drives.
+    const params =
+      binding === 'by_nucleation'
+        ? { binding, limit: 400, types_space: nuc.types_space, space: nuc.space, rung: nuc.rung }
+        : { binding, limit: 600 }
+    fetchProjection(params)
       .then((p) => {
         if (!live) return
         setProj(p)
@@ -85,7 +100,7 @@ export function App() {
     return () => {
       live = false
     }
-  }, [binding])
+  }, [binding, nuc])
 
   const dismissNotice = useCallback(() => {
     clearNotice()
@@ -104,6 +119,8 @@ export function App() {
     setFeel,
     view,
     setView,
+    nuc,
+    setNuc,
     notice,
     dismissNotice,
   }
