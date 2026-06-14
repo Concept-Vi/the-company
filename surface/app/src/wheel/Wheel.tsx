@@ -232,13 +232,17 @@ export function Wheel({
               const addr = pointAddress(p)
               // a THEME (coarse rung) is a cluster — sized by its membership; a unit is a small dot
               const baseR = p.scale_size ? Math.min(4 + Math.sqrt(p.scale_size) * 1.4, 16) : p.r > 1 ? 2.0 : 2.4
+              // a strain-spoke dot (centred semantic unit) is the MEANT end of a sign-coloured line — keep it
+              // neutral ink so the line's warm/cool sign reads cleanly (the n=1 semantic sectorHue is a flat red
+              // that otherwise fights every cool spoke; design-critic).
+              const strainDot = p.strain != null && p.r_struct != null && !p.scale_size
               return (
                 <motion.circle
                   key={`pt-${p.seq}`}
                   {...stamp(addr)}
                   layoutId={`pt-${p.seq}`}
                   className="wheel-dot"
-                  fill={sectorHue(i, n)}
+                  fill={strainDot ? 'var(--ink-dim)' : sectorHue(i, n)}
                   fillOpacity={p.r_unknown ? 0.32 : 0.58}
                   stroke={isSel ? 'var(--ink-primary)' : 'transparent'}
                   strokeWidth={isSel ? 1.5 : 0}

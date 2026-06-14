@@ -55,11 +55,27 @@ function describe(proj: Projection, view: 'circle' | 'square', centred: string |
         ],
       }
     }
+    if (!centred) {
+      return {
+        title: b.label,
+        lines: ['radius · meaning-distance from the centre', 'pick a point → ⊙ centre here to begin'],
+      }
+    }
+    // centred → the SIGNED strain field shows. Decode BOTH the endpoint glyphs (filed vs meant) and the
+    // direction, and cue the two populations so "two directions of tension" is immediate, not inferred.
+    let out = 0
+    let inn = 0
+    for (const p of proj.points) {
+      if (p.strain == null || p.r_struct == null || p.scale_size) continue
+      if (p.r > p.r_struct) out++
+      else inn++
+    }
     return {
       title: b.label,
       lines: [
-        centred ? `radius · meaning-distance from ${centred}` : 'radius · meaning-distance from the centre',
-        centred ? 'lines · strain — warm: meaning sits farther than filed · cool: nearer' : 'pick a point → ⊙ centre here to begin',
+        `radius · meaning-distance from ${centred}`,
+        'lines · strain (open tick = filed · dot = meant)',
+        `warm = meaning farther (out ${out}) · cool = nearer (in ${inn})`,
       ],
     }
   }
