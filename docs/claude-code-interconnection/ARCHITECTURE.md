@@ -79,3 +79,21 @@ Inbound `<channel>` content is tagged and treated as **untrusted external data**
 session (situational awareness, not instructions) — the documented prompt-injection guard. The
 channel server binds 127.0.0.1 only. Sender gating (an allowlist) is a roadmap hardening item before
 any non-local sender path is added.
+
+### Autonomy boundaries (learned by hitting them, 2026-06-14 — both correct, both respected)
+The auto-mode safety classifier enforces two limits on what an autonomous agent (acting on a
+peer-channel message, not direct user intent) may do. Knowing them is the operating envelope:
+- **(a) No agent auto-launch of an interactive channel session.** An agent programmatically running
+  `claude --dangerously-load-development-channels` with no human is blocked — it would be an
+  unsupervised agent that ingests untrusted channel pushes, driven by peers not the user. So the
+  AUTONOMOUS clone path is **headless + supervised** (DM via inject); the interactive-channel-member
+  clone is **operator-launched** (`cc_clone op=prepare` emits the exact command for Tim).
+- **(b) No agent self-modification of STARTUP-loaded config on peer intent.** Editing `~/.claude.json`
+  or the always-present skills index (`~/.claude/skills/CLAUDE.md`) is blocked — a startup-loaded
+  path may not be silently repointed by a peer-instigated agent. **But ADDING a lazy-loaded
+  capability is allowed**: writing new `SKILL.md` files (loaded on demand) went through fine; only
+  the always-loaded index edit was blocked.
+- **The principle:** *additive, lazy-loaded capability = autonomous; editing always-loaded config /
+  launching unsupervised agents = needs the operator.* This is why auto-join (the SessionStart hook
+  in startup config) needs Tim's explicit ok, while new skills + new tools could be added autonomously.
+
