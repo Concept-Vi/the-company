@@ -64,9 +64,13 @@ and "the types/divisions of the circle [should be built in] so the data points c
   on the plate, placed at the pile's true angle (`89a190e`).
   · NOTE for Tim: this reuses the nucleation engine (G12) — it IS "types as divisions, points close around them."
     If you pictured something other than the inside-cluster/outside-pile reading, this is the place to redirect.
-- **NEXT BEATS (per the equation, sequenced):** STRAIN (render the gap between a point's square-position and its
-  circle-position — the central tension); the RELATIVE CENTRE (look at a node → it becomes the origin → the
-  space re-projects); the forbidden operationalized (gate-inbox / drift / grow-the-box); the live SSE spine.
+- **RELATIVE CENTRE (seed §8) — BUILT** (`8b74e86`). "Centre here" (⊙) in the disclosure re-centres the space on
+  the attended item; every lens refetches with center=<ref> and re-projects (no teleport); a CentreChip shows
+  the centre + returns to root. Makes the semantic lens meaningful (was all-rim) and — key — the engine now
+  returns r_struct + strain per point, unlocking strain. Fixed the n=1 degenerate wedge. Verified both viewports.
+- **NEXT BEATS (per the equation, sequenced):** STRAIN (now measurable — render the gap between a point's
+  structural radius r_struct and its meaning radius r, the radial tension at its angle; the central tension);
+  the forbidden operationalized (gate-inbox / drift / grow-the-box); the live SSE spine; the project system.
 
 ## DESIGN-CRITIC — both new lenses PASS (2026-06-14)
 "Connections" (G10) = beautiful string-art-on-paper; "Two gravities" (G9) = the most instantly-legible data
