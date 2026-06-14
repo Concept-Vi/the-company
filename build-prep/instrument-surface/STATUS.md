@@ -54,14 +54,17 @@ and "the types/divisions of the circle [should be built in] so the data points c
   systems over one space (§2): ○ circle = meaning (wheel/lenses), ◻ square = structure (the dyadic nested grid +
   axes + concentric circles + coincidence spine + forbidden corner-circle; points at their real address cells).
   `src/wheel/Grid.tsx`. The dual the equation demands is now both-visible.
-- **NEXT BEAT — types-as-gravity (Ask 1, mechanism proposed, awaiting Tim's nod since he flagged uncertainty):**
-  generalize the two-pole separator to the WHOLE type registry as the divisions of the circle. Each registry
-  type = an angular division (a sector) AND a gravity; every item is typed (cosine to each type centroid) → placed
-  in its best-fit type's sector and PULLED toward that type (radius = membership strength: strong members cluster
-  tight around their type's band, weak/ambiguous looser); items that fit NO type pile to the forbidden rim (the
-  G12 water-law pile). So points "close around their types," misfits are the forbidden zone, and as types are
-  added/born the divisions re-divide (the lock x=2π/n). Reuses the nucleation typing already in the engine; a new
-  binding `by_type` (angle_from=type-membership, radius_from=type-closeness) keeps the instrument a pure read.
+- **TYPE-GRAVITY (Ask 1) — BUILT** (`9909d55`). `src/wheel/Nucleation.tsx`, chosen by radius_from==='nucleation'.
+  Each registry TYPE is an angular division (sector); items cluster INSIDE their best-fit type (the membership
+  boundary circle) — "close around their types"; misfits pile OUTSIDE in the forbidden ring; a distinct pile
+  blooms as a candidate new type (✦), BORN past the 20/80 dial (live, client-side). Defaults to a populating
+  same-space drive (topics:topics → 149/162 inside); items/types/rung pickers drive the engine (registry-true);
+  cross-instance proof one pick away. Verified both viewports, console clean.
+  · NOTE for Tim: this reuses the nucleation engine (G12) — it IS "types as divisions, points close around them."
+    If you pictured something other than the inside-cluster/outside-pile reading, this is the place to redirect.
+- **NEXT BEATS (per the equation, sequenced):** STRAIN (render the gap between a point's square-position and its
+  circle-position — the central tension); the RELATIVE CENTRE (look at a node → it becomes the origin → the
+  space re-projects); the forbidden operationalized (gate-inbox / drift / grow-the-box); the live SSE spine.
 
 ## DESIGN-CRITIC — both new lenses PASS (2026-06-14)
 "Connections" (G10) = beautiful string-art-on-paper; "Two gravities" (G9) = the most instantly-legible data
