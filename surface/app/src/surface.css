@@ -126,6 +126,27 @@
   padding: var(--s-3); display: flex; flex-direction: column; gap: var(--s-2); min-width: 220px; }
 .settings-title { font-size: var(--t-xs); color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.08em; }
 
+/* ---- the two-gravity separator overlays (G9) ----------------------------- */
+.sep-pole { position: absolute; top: var(--s-3); max-width: 38%; font-size: var(--t-xs); color: var(--ink-dim);
+  line-height: 1.3; }
+.sep-pole--a { left: var(--s-3); text-align: left; }
+.sep-pole--b { right: var(--s-3); text-align: right; }
+.sep-pole--a::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--pig-leanA); margin-right: 6px; vertical-align: middle; }
+.sep-pole--b::after { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--pig-leanB); margin-left: 6px; vertical-align: middle; }
+.sep-counts { position: absolute; bottom: 30px; left: 0; right: 0; display: flex; justify-content: center;
+  gap: var(--s-5); font-size: var(--t-xs); font-variant-numeric: tabular-nums; }
+.sep-count--a { color: var(--pig-leanA); }
+.sep-count--b { color: var(--pig-leanB); }
+/* verdict sits with the balance evidence (above the bar), not in the crowded top row — so on a narrow
+   portrait frame it never collides with the two pole labels. */
+.sep-verdict { position: absolute; bottom: 52px; left: 50%; transform: translateX(-50%);
+  font-size: var(--t-xs); text-transform: lowercase; letter-spacing: 0.04em; padding: 2px var(--s-3);
+  border-radius: var(--r-pill); white-space: nowrap; }
+.sep-verdict--yes { color: var(--pig-born); background: color-mix(in srgb, var(--pig-born) 12%, var(--ground-accent)); }
+.sep-verdict--no { color: var(--pig-strain); background: color-mix(in srgb, var(--pig-strain) 12%, var(--ground-accent)); }
+
 /* ---- select hint (calm empty-state for a detail surface) ----------------- */
 .select-hint { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: var(--s-2); opacity: 0.7; }

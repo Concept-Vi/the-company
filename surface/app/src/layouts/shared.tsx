@@ -1,5 +1,6 @@
 import type { SurfaceState } from '../App'
 import { Wheel } from '../wheel/Wheel'
+import { Separator } from '../wheel/Separator'
 
 // The wheel region with its three honest states: loading (calm), error (fail-loud), data.
 // Never a faked/placeholder resting view — real data or an explicit state (no-silent-failures).
@@ -19,6 +20,18 @@ export function WheelOrState({ s }: { s: SurfaceState }) {
       <div className="wheel-region wheel-state">
         <div className="breathing" aria-label="loading" />
       </div>
+    )
+  }
+  // The lens chooses its FORM (registry-true): the two-gravity separator is a two-basin view, everything
+  // else is the polar wheel. Both share the address spine, the disclosure (onPick), motion, and hit layer.
+  if (s.proj.binding.radius_from === 'separator') {
+    return (
+      <Separator
+        proj={s.proj}
+        feel={s.feel}
+        selectedSeq={s.selected?.seq}
+        onPick={(p) => s.setSelected(p)}
+      />
     )
   }
   return (

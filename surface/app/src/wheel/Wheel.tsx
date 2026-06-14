@@ -1,32 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { Projection, ProjPoint } from '../lib/api'
 import type { MotionFeel } from '../tokens/motion'
 import { transition } from '../tokens/motion'
 import { wheelGeom, placePolar, ringRadii, sectorHue, wedgePath, chordPath, arrowHead, sectorMidAngle } from '../lib/seed'
 import { stamp } from '../lib/address'
+import { useSize } from './useSize'
 
 // The canonical address for a point: its real address, else a minted dynamic canvas address (never fabricated
 // as a real ui:// region — ui://canvas/<id> is the sanctioned mint-on-read scheme, RESEARCH-SYNTHESIS §A).
 export function pointAddress(p: ProjPoint): string {
   return p.address && p.address.startsWith('ui://') ? p.address : `ui://canvas/seq-${p.seq}`
-}
-
-function useSize<T extends HTMLElement>() {
-  const ref = useRef<T | null>(null)
-  const [size, setSize] = useState({ width: 0, height: 0 })
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const ro = new ResizeObserver((entries) => {
-      const r = entries[0].contentRect
-      setSize({ width: r.width, height: r.height })
-    })
-    ro.observe(el)
-    setSize({ width: el.clientWidth, height: el.clientHeight })
-    return () => ro.disconnect()
-  }, [])
-  return { ref, ...size }
 }
 
 export function Wheel({
