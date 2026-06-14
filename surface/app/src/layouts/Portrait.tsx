@@ -28,11 +28,14 @@ export function Portrait({ s }: { s: SurfaceState }) {
         </div>
       </header>
 
-      <Legend s={s} />
-
-      <section className="center center--full">
-        <WheelOrState s={s} />
-      </section>
+      {/* legend + wheel CENTRE as one group in the full vertical region (not just the post-legend slice), so the
+         plate sits optically centred — no top-heavy band. (design-critic: portrait circle pushed low.) */}
+      <div className="portrait-stage">
+        <Legend s={s} />
+        <section className="center center--full">
+          <WheelOrState s={s} />
+        </section>
+      </div>
 
       <Scrubber at={s.at} setAt={s.setAt} corpusStart={s.corpusStart} now={s.now} />
 

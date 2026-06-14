@@ -34,6 +34,14 @@
    the parent centre it — the rung pill then sits right above the circle and the slack becomes even top/bottom
    framing (paper margin), not a gap. (design-critic: "empty band above a cramped plot".) */
 .layout--portrait .wheel-region { height: auto; aspect-ratio: 1 / 1; max-height: 100%; }
+/* the {legend + wheel} group fills the region between top bar and scrubber and centres as one unit, so the
+   plate is optically centred rather than pushed below the legend. */
+.portrait-stage { flex: 1 1 auto; min-height: 0; width: 100%; display: flex; flex-direction: column;
+  justify-content: center; align-items: center; gap: var(--s-2);
+  /* reserve the floating scrubber's footprint so the group centres in the VISIBLE region (above the scrubber),
+     not the full height — gives even top/bottom framing (design-critic: plate ~9% low). */
+  padding-bottom: calc(var(--s-6) + var(--safe-b)); }
+.layout--portrait .center--full { flex: 0 1 auto; width: 100%; }
 .wheel-state { display: flex; align-items: center; justify-content: center; }
 .state-card { background: var(--ground-accent); box-shadow: var(--elev-2);
   border-radius: var(--r-card); padding: var(--s-4) var(--s-5); max-width: 80%;
