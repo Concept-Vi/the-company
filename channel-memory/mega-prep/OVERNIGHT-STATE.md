@@ -49,7 +49,17 @@ the lead has NOT confirmed the cross-component path by use — these are the mor
 **📋 DOCUMENTED-OR-PLANNED** (spec/intent only — NOT built; do not read as progress):
 - 5th wire (channel-scoped recall) — recall-fork's beat-2; signature builder-defined, lead matches.
   `cc_channel op=recall` is the lead's to add AFTER the worker frees cc_channels.py.
-- Channel-attachment manifest · profile SessionStart hook (boundary — Tim applies) · named-channel CRUD MCP ops.
+- Channel-attachment manifest — build only WITH the 5th-wire recall consumer (a manifest ahead of its
+  consumer is a half-feature; deferred by design, not neglect).
+- Profile SessionStart hook — DESIGN FORK found (lead read company_channel.mjs in full): the MCP server
+  writes the authoritative reg with a DYNAMIC port (`server.listen(0)`, known only at runtime) + pid, so
+  a SessionStart hook CANNOT write the transport reg (it can't know the port), and the handle is RANDOM
+  unless COMPANY_CHANNEL_HANDLE is set → profiles can't key to a session. Candidates for Tim's pick:
+  (A) hook sets COMPANY_CHANNEL_DESC + a new model/profile env BEFORE MCP launch → the server's writeReg
+  folds them in (needs deterministic COMPANY_CHANNEL_HANDLE + confirming CC hooks set env for MCP
+  subprocs); (B) enrich company_channel.mjs writeReg to capture model+git itself (cleaner, but Tim said
+  "hook"); (C) hook writes a separate _profiles/<handle>.json that `list` merges (needs deterministic
+  handle). CRUX = handle determinism at launch. Not built tonight — needs Tim's pick + a CC hook-mechanics check.
 - Clone-fleet launch — GATED (DECISIONS-FOR-MORNING #2).
 
 **🐛 FINDINGS (lead cross-review of the channel-layer build — recorded honestly):**
