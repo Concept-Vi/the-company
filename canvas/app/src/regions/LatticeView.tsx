@@ -13,6 +13,9 @@ type ProjPoint = {
   address: string; summary: string; ts: string; phases: { day: number; week: number }
   source?: string        // the embeddable key (present on corpus items) — the meaning-field re-centres on it
   r_unknown?: boolean     // a semantic point with no vector → at the rim, flagged (never silent-dropped)
+  // SEPARATOR (Group 9): the two raw pulls + the signed lean toward pole B vs pole A (sign = which gravity,
+  // |lean| = how strongly). `pole` is 'a' | 'b' | '—' (neutral). The FORM renders sign as the LEFT/RIGHT basin.
+  pull_a?: number; pull_b?: number; lean?: number; pole?: 'a' | 'b' | '—'
   r_struct?: number       // STRAIN (Group 7): where it's FILED (structural radius); r is where it MEANS to be
   strain?: number         // |r_struct - r| — the structure↔meaning divergence (SEED §111); 0 = coherent
   // SCALE (Group 11): a coarse-rung point is a cluster CENTROID (a theme) — it carries how many units it
@@ -24,10 +27,19 @@ type Projection = {
   now: string; n: number; rings: number; count: number; grid?: number
   // radius_from: 'time' (age) | 'address' (tree-distance) | 'semantic' (Group 6 — meaning-distance).
   // needs_center: the semantic lens is selected but no centre chosen yet → items laid out by time, awaiting one.
-  binding?: { id: string; label: string; radius_from?: string; radius_normalized?: boolean; space?: string; needs_center?: boolean }
+  binding?: { id: string; label: string; radius_from?: string; radius_normalized?: boolean; space?: string; needs_center?: boolean
+    // SEPARATOR (Group 9): the two poles resolved for this field (label + ref), echoed back so the FORM names them.
+    poles?: { a: { label?: string; ref?: string }; b: { label?: string; ref?: string } } }
   bindings?: { id: string; label: string }[]
   sectors: { id: string; label: string; from: number; to: number }[]
   points: ProjPoint[]
+  // SEPARATOR (Group 9) — THE FIFTH GATE rides in: whether the two-gravity field actually SEPARATES (on raw
+  // cosines) + the BALANCE (how the corpus distributes between the poles). Present only in separator mode.
+  separation?: {
+    separates: boolean; n: number; pole_distinctness: number; distinctness_floor: number
+    spread_a: number; spread_b: number; spread_floor: number; rank_corr: number
+    balance: { lean_a: number; lean_b: number; neutral: number; minority_frac: number }
+  }
   // THE CONNECTIONS (Group 10): the directional typed edges between sectors, as directed sector-index pairs
   // (from→to). `bidir` = a real mutual pair (a cycle, rendered as a cycle, not flattened). Drawn as directed
   // chords; absent on bindings with no edges.
@@ -53,6 +65,10 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   const [live, setLive] = useState(true)     // the centre is NOW — and now MOVES (the involuntary axis)
   const [at, setAt] = useState<number | null>(null)          // S/G3 time scrubber — epoch secs (null = live NOW)
   const [center, setCenter] = useState<string | null>(null)  // S/G3 spatial re-centre — an address (null = temporal NOW)
+  // SEPARATOR (Group 9): the two driven poles (null = the binding's declared default poles). Picking a point as
+  // a pole re-drives the field; the OTHER pole is always kept (the bridge fails loud on a one-pole field).
+  const [poleA, setPoleA] = useState<string | null>(null)
+  const [poleB, setPoleB] = useState<string | null>(null)
   const nowAnchorRef = useRef(Date.now() / 1000)             // the live "now" epoch — the scrub-math anchor
   const spanRef = useRef(86400)                              // seconds the scrubber spans (the visible age range)
   const posRef = useRef<Map<number, { x: number; y: number }>>(new Map())   // last drawn point positions (identity)
@@ -77,6 +93,24 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   // meaning-distance and the temporal frames don't apply, so radius reads straight off p.r (zoomable).
   const semanticPending = proj?.binding?.needs_center === true
   const isSemantic = proj?.binding?.radius_from === 'semantic' && !semanticPending
+  // SEPARATOR (Group 9 — the two-gravity field): radius = |lean| (neutral at centre, strong lean at the rim),
+  // and the SIGN is the LEFT/RIGHT BASIN (pole A fans left, pole B fans right) — the two gravities as two
+  // spatial basins, not two colours (sign must be load-bearing geometry, not decoration). Within each basin the
+  // kind-angle spreads the items so they don't stack. The two gravity hues reinforce the split.
+  const isSeparator = proj?.binding?.radius_from === 'separator'
+  const SEP_HUE_A = 212, SEP_HUE_B = 28                       // cool A (left) / warm B (right) — colour IS pole
+  const sepColA = `hsl(${SEP_HUE_A}deg 55% 60%)`, sepColB = `hsl(${SEP_HUE_B}deg 62% 56%)`
+  const SEP_SPREAD = Math.PI * 0.6                             // each basin fans ~108° around its pole axis
+  // basin angle: pole B → right (axis +π/2), pole A → left (axis 3π/2), neutral → top (0). within-basin angle
+  // from the kind-theta so items fan out. MUST be used identically by draw() AND pick() (else clicks miss).
+  const sepTheta = (p: ProjPoint) => {
+    const base = p.pole === 'b' ? Math.PI / 2 : p.pole === 'a' ? (3 * Math.PI) / 2 : 0
+    if (p.pole !== 'a' && p.pole !== 'b') return base          // neutral sits on the top axis, near the centre
+    return base + ((p.theta / (Math.PI * 2)) - 0.5) * SEP_SPREAD
+  }
+  // a pole's display name: a friendly binding label is kept; an address (a driven pole) shows its tail segments
+  // so the readout never paints a full vec://… address (or, worse, a stale default label for a driven pole).
+  const poleLabel = (s?: string) => !s ? 'pole' : !s.includes('://') ? s : s.split('/').filter(Boolean).slice(-2).join('/')
   // SCALE LADDER (Group 11): the rungs fine→coarse = [units, …coarse k descending]. finerRung steps one
   // level IN (coarse k → finer k → units) — the zoom-INTO-a-theme gesture. Distinct from the radial ⌕ zoom
   // (magnify the band) — this changes which RUNG resolves (themes vs units), the advisor's collision avoided.
@@ -91,7 +125,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   // the timestamp's CYCLE coordinate, so the daily/weekly rhythm becomes visible: everything that
   // happened "at 9am" lands on one ring regardless of which day — the cycles, made geometry.
   const radial = (p: ProjPoint) =>
-    (isSemantic || frame === 'now') ? Math.pow(p.r, 1 / zoom) : frame === 'day' ? p.phases.day : p.phases.week
+    (isSemantic || isSeparator || frame === 'now') ? Math.pow(p.r, 1 / zoom) : frame === 'day' ? p.phases.day : p.phases.week
 
   // The centre is NOW — so NOW must keep moving. The 15s POLL is retired: the lattice SUBSCRIBES to
   // /api/stream (SSE, the shared events.jsonl tap) and re-projects the instant an event is written, so a
@@ -104,6 +138,8 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     if (at != null) params.set('at', String(at))        // space's items by time, flagged needs_center (pick one)
     if (center) params.set('center', center)            // the spatial re-centre (radius = distance-from-address)
     if (rung != null) params.set('rung', String(rung))  // G11 SCALE: resolve over the rung's THEMES, not units
+    if (poleA) params.set('pole_a', poleA)              // G9 SEPARATOR: drive the two gravities (null = the
+    if (poleB) params.set('pole_b', poleB)              // binding's declared default poles)
     const url = '/api/projection' + (params.toString() ? `?${params.toString()}` : '')
     const apply = (d: Projection, markNew: boolean) => {
       if (!alive) return
@@ -131,7 +167,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       // EventSource auto-reconnects on error (gapless via Last-Event-ID) — hold the last frame meanwhile.
     })
     return () => { alive = false; clearTimeout(deb); if (es) es.close() }
-  }, [live, bind, at, center, rung])
+  }, [live, bind, at, center, rung, poleA, poleB])
 
   // SCALE (Group 11): if the active projection has no pyramid (a non-semantic lens, or a space with no
   // built rungs), drop any held rung so the ladder + state stay honest (the bridge ignores a stray rung,
@@ -139,6 +175,9 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
   useEffect(() => { if (proj && !proj.scale && rung != null) setRung(null) }, [proj, rung])
   // G10 connections: clear the driven row when the active projection has no edges (left the connections view)
   useEffect(() => { if (proj && !(proj.edges && proj.edges.length) && pickedSector != null) setPickedSector(null) }, [proj, pickedSector])
+  // G9 separator: drop the driven poles when the active lens is NOT a separator (so they don't leak into another
+  // lens — the next time the separator lens opens it starts from its declared default poles).
+  useEffect(() => { if (proj && !isSeparator && (poleA || poleB)) { setPoleA(null); setPoleB(null) } }, [proj, isSeparator, poleA, poleB])
 
   // G11 CROSSFADE: when the resolved RUNG changes (the point-set swaps wholesale), snapshot the just-drawn
   // frame as the DEPARTING set so draw() can fade it out while the new rung fades in (continuous scale move).
@@ -219,6 +258,8 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     // (older outward); a cycle frame marks its clock quarters.
     const axisLabels: [number, string][] = (proj.edges && proj.edges.length)
       ? []                                             // CONNECTIONS: radius is a placeholder — no radial axis label (it would mislead + collide with the rim labels)
+      : isSeparator
+      ? [[1, 'stronger lean →']]                       // SEPARATOR: radius = |lean| (centre = neutral, rim = strong)
       : isSemantic
       ? [[1, 'farther in meaning →']]                  // the CIRCLE: radius = meaning-distance from the centre
       : frame === 'now'
@@ -278,7 +319,38 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
         g.globalAlpha = 1
       }
     }
-    // The sector boundaries + labels (the angular type divisions — the registry drawn).
+    // SEPARATOR (Group 9): the two GRAVITY BASINS — a faint vertical NEUTRAL DIVIDE through the centre, and the
+    // two poles marked + NAMED at the left rim (A) and right rim (B). The basins fan the points left vs right, so
+    // the SEPARATION is spatial (two regions you can SEE), not two interleaved colours. Drawn instead of the
+    // kind-wedges (the angle here is the sign-basin, not the kind-sector, so kind boundaries would mislead).
+    if (isSeparator) {
+      const pls = proj.binding?.poles
+      g.strokeStyle = dim; g.globalAlpha = 0.32; g.lineWidth = 1; g.setLineDash([4, 5])
+      g.beginPath(); g.moveTo(cx, cy - R); g.lineTo(cx, cy + R); g.stroke(); g.setLineDash([])
+      g.font = '11px ui-monospace, monospace'
+      // a SHORT rim tag (first segment, capped) — the FULL pole name lives in the card. ANCHORED at the rim
+      // (left tag left-aligned just inside the left rim, right tag right-aligned just inside the right rim) so a
+      // long name can never be pulled toward the centre and collide over the cluster (the 390px critic FAIL).
+      const rimTag = (s: string) => { const seg = (s.split(/\s*\/\s*/)[0] || s).trim(); return seg.length > 14 ? seg.slice(0, 13) + '…' : seg }
+      const poleMark = (col: string, side: -1 | 1, label: string) => {
+        const mx = cx + side * R
+        g.fillStyle = col; g.strokeStyle = col
+        g.globalAlpha = 0.9; g.beginPath(); g.arc(mx, cy, 5, 0, Math.PI * 2); g.fill()
+        g.globalAlpha = 0.3; g.lineWidth = 1; g.beginPath(); g.arc(mx, cy, 10, 0, Math.PI * 2); g.stroke()
+        g.textAlign = side < 0 ? 'left' : 'right'
+        const words = rimTag(label), tw = g.measureText(words).width
+        const tx = mx - side * 12, ty = cy - 16                       // 12px inside the rim, reading inward
+        const px0 = (side < 0 ? tx : tx - tw) - 3
+        g.globalAlpha = 0.82; g.fillStyle = bg; g.fillRect(px0, ty - 10, tw + 6, 14)
+        g.globalAlpha = 1; g.fillStyle = col; g.fillText(words, tx, ty)
+      }
+      poleMark(sepColA, -1, poleLabel(pls?.a?.label) || 'pole A')
+      poleMark(sepColB, 1, poleLabel(pls?.b?.label) || 'pole B')
+      g.globalAlpha = 1
+    }
+    // The sector boundaries + labels (the angular type divisions — the registry drawn). Skipped in separator
+    // mode (the angle is the sign-basin there, not the kind-wedge).
+    if (!isSeparator) {
     g.globalAlpha = 0.5
     for (const s of proj.sectors) {
       g.beginPath(); g.moveTo(cx, cy)
@@ -314,6 +386,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
         : (conn.length && pickedSector != null) ? dim : ink
       g.fillText(s.label, lx, ly)
     }
+    }   // end !isSeparator (sector boundaries + labels)
     // The points — exactly the same points, drawn where they already are. On a re-centre / reframe they
     // ANIMATE from their previous positions to the new ones: a point keeps its seq and SLIDES to its new
     // place rather than teleporting — identity survives the transform (the centre freed, made visible).
@@ -370,7 +443,8 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     const themeLabels: { x: number; y: number; rad: number; t: string; a: number; isCentre: boolean }[] = []
     for (const p of proj.points) {
       const rr = radial(p) * R
-      const tx = cx + Math.sin(p.theta) * rr, ty = cy - Math.cos(p.theta) * rr
+      const pth = isSeparator ? sepTheta(p) : p.theta   // SEPARATOR: angle is the sign-basin (MUST match pick())
+      const tx = cx + Math.sin(pth) * rr, ty = cy - Math.cos(pth) * rr
       nextPos.set(p.seq, { x: tx, y: ty })
       let x = tx, y = ty, fade = 1
       if (anim) {
@@ -378,13 +452,17 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
         if (from) { x = from.x + (tx - from.x) * ease; y = from.y + (ty - from.y) * ease }
         else fade = ease                               // a point not present before fades in at its place
       }
-      const hue = (p.theta * 180) / Math.PI            // color IS angle (the deliberate non-token colour)
+      // colour IS the angle-hue (the deliberate non-token colour) — EXCEPT in separator mode, where colour IS
+      // the POLE (the two gravity hues), reinforcing the left/right basin so the sign reads doubly.
+      const sepCol = p.pole === 'b' ? sepColB : p.pole === 'a' ? sepColA : dim
+      const hue = (p.theta * 180) / Math.PI
+      const baseCol = isSeparator ? sepCol : `hsl(${hue}deg 55% 58%)`
       const chosen = selSeqs.has(p.seq)
       const rad = p === picked ? dotR(p) + 2.4 : dotR(p)
       // a semantic point with NO vector sits at the rim, FAINT + warm-grey (meaning-distance unknown —
       // honestly shown, never silently dropped or faked as 'far').
       g.globalAlpha = (p === picked ? 1 : p.r_unknown ? 0.3 : 0.75) * fade
-      g.fillStyle = p === picked ? accent : p.r_unknown ? dim : `hsl(${hue}deg 55% 58%)`
+      g.fillStyle = p === picked ? accent : p.r_unknown ? dim : baseCol
       g.beginPath(); g.arc(x, y, rad, 0, Math.PI * 2); g.fill()
       // a theme reads as a soft disc (a region, not a point): a faint halo ring at its scaled radius
       if (p.scale_size != null && p !== picked) {
@@ -431,6 +509,14 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     }
     posRef.current = nextPos
     lastFrameRef.current = { points: proj.points, pos: nextPos }   // held for the next rung crossfade (departRef)
+    if (isSeparator) {
+      // SEPARATOR: the centre is NEUTRAL (least-leaning), NOT the advancing present — so it must NOT breathe like
+      // NOW (that would lie). A quiet dim ring marks the zero-lean origin between the two gravities.
+      g.globalAlpha = 0.5; g.fillStyle = dim
+      g.beginPath(); g.arc(cx, cy, 3, 0, Math.PI * 2); g.fill()
+      g.strokeStyle = dim; g.globalAlpha = 0.3; g.lineWidth = 1
+      g.beginPath(); g.arc(cx, cy, 8, 0, Math.PI * 2); g.stroke()
+    } else {
     // NOW — the centre, the one shared point of time. When live-at-now it BREATHES on a smooth client
     // clock (performance.now(), continuous) — the advancing present visible at the origin, not a 15s step.
     g.globalAlpha = 1; g.fillStyle = accent
@@ -441,6 +527,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
       const phase = 0.5 + 0.5 * Math.sin(performance.now() / 1000 * 2)   // 0..1
       g.globalAlpha = 0.1 + 0.18 * phase
       g.beginPath(); g.arc(cx, cy, 11 + 6 * phase, 0, Math.PI * 2); g.stroke()
+    }
     }
     g.globalAlpha = 1
   }, [proj, picked, pickedSector, zoom, sel, frame, live, at, showStrain])
@@ -513,7 +600,8 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     let best: ProjPoint | null = null, bd = 14 * 14
     for (const p of proj.points) {
       const rr = radial(p) * R
-      const x = cx + Math.sin(p.theta) * rr, y = cy - Math.cos(p.theta) * rr
+      const pth = isSeparator ? sepTheta(p) : p.theta   // MUST match draw()'s basin angle or clicks land wrong
+      const x = cx + Math.sin(pth) * rr, y = cy - Math.cos(pth) * rr
       const d = (x - px) * (x - px) + (y - py) * (y - py)
       if (d < bd) { bd = d; best = p }
     }
@@ -552,6 +640,13 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
     inn: proj.edges!.filter(e => e.to === pickedSector).map(e => sName(e.from)),
   } : null
 
+  // G9 SEPARATOR readout — the fifth gate + the BALANCE, made visible (the advisor's mandate: separates:True
+  // can still be lopsided, so Tim must SEE the skew). The diverging bar widths are the share leaning each way.
+  const sep = isSeparator ? proj?.separation : null
+  const sepPoles = proj?.binding?.poles
+  const balTot = sep ? Math.max(sep.balance.lean_a + sep.balance.lean_b, 1) : 1
+  const balAPct = sep ? Math.round((sep.balance.lean_a / balTot) * 100) : 0
+
   if (err) return <div className="lattice-err"><EmptyState>projection unreachable — {err}</EmptyState></div>
   return (
     <div className="lattice-wrap" ref={wrapRef} onPointerDown={pick}>
@@ -566,6 +661,27 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
         <div className="lattice-hint" onPointerDown={e => e.stopPropagation()}>
           ◈ the connections in the registry — each chord is a <b>directional typed edge</b> (arrow = direction).
           Tap a node to light its edges (<b>gold = feeds →</b>, <b>ink = ← fed-by</b>); tap the centre to clear.
+        </div>
+      )}
+      {sep && (
+        <div className="lattice-card lc-sep" onPointerDown={e => e.stopPropagation()}>
+          <div className="lc-sep-poles">
+            <span className="lc-pole lc-pole-a" style={{ color: sepColA }}>◀ {poleLabel(sepPoles?.a?.label) || 'pole A'}</span>
+            <span className="lc-pole lc-pole-b" style={{ color: sepColB }}>{poleLabel(sepPoles?.b?.label) || 'pole B'} ▶</span>
+          </div>
+          {/* the BALANCE — a diverging bar, so a lopsided field SHOUTS even when separates:True */}
+          <div className="lc-balance" title={`${sep.balance.lean_a} lean A · ${sep.balance.lean_b} lean B · ${sep.balance.neutral} neutral`}>
+            <span className="lc-bal-seg" style={{ width: `${balAPct}%`, background: sepColA }} />
+            <span className="lc-bal-seg" style={{ width: `${100 - balAPct}%`, background: sepColB }} />
+          </div>
+          <div className="lc-sep-meta">
+            <span className={'lc-sep-verdict' + (sep.separates ? ' on' : '')}>
+              {sep.separates ? '⚖ separates' : '⚠ does not separate'}
+            </span>
+            {' '}· {sep.balance.lean_a}/{sep.balance.lean_b} · distinct {sep.pole_distinctness.toFixed(2)} · ρ {sep.rank_corr.toFixed(2)}
+            {!sep.separates && sep.balance.minority_frac === 0 && <span className="lc-sep-why"> — one pole attracts nobody</span>}
+          </div>
+          <div className="lc-meta">tap a point → set it as a pole (drive the two gravities)</div>
         </div>
       )}
       {pickedRow && (
@@ -620,7 +736,13 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
               ))}
             </span>
           )}
-          {isSemantic ? (
+          {isSeparator ? (
+            // SEPARATOR active: radius is |lean| (not time), angle is the sign-basin — the temporal controls
+            // don't apply. A legible note states the reading; zoom still expands the near (low-lean) band.
+            <span className="lf-semnote" title="radius = how strongly each item leans; left basin = pole A, right basin = pole B">
+              ⚖ lean between two poles{proj?.binding?.radius_normalized ? ' · normalized' : ''}
+            </span>
+          ) : isSemantic ? (
             // THE CIRCLE active: radius is meaning-distance (not time) — the temporal controls don't apply;
             // a legible note states the reading + its honest normalization. Zoom still expands the near band.
             // ⊿ strain toggles the Group-7 tension overlay (structure↔meaning divergence lines).
@@ -651,7 +773,7 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
               ))}
             </>
           )}
-          {(isSemantic || frame === 'now') && (
+          {(isSemantic || isSeparator || frame === 'now') && (
             <label className="lf-slider" title="zoom the inner band">
               <span className="lf-ic">⌕</span>
               <input type="range" className="lf-zoom" min={0.5} max={3.2} step={0.1} value={zoom}
@@ -677,6 +799,12 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
             // STRAIN (Group 7): where it's filed (structure) ↔ where it means to be (meaning), and the gap.
             <div className="lc-meta lc-strain">⊿ strain {picked.strain.toFixed(2)} · filed {picked.r_struct.toFixed(2)} ↔ means {picked.r.toFixed(2)}</div>
           )}
+          {isSeparator && picked.lean != null && (
+            // SEPARATOR (Group 9): this item's two raw pulls + its signed lean — which gravity, how strongly.
+            <div className="lc-meta lc-strain">
+              ⚖ leans {picked.pole === 'b' ? '▶ B' : picked.pole === 'a' ? 'A ◀' : 'neutral'} · pull A {picked.pull_a?.toFixed(3)} · pull B {picked.pull_b?.toFixed(3)} · lean {picked.lean.toFixed(3)}
+            </div>
+          )}
           {picked.scale_size != null && (
             // SCALE (Group 11): a THEME — a coarse cluster of units. Show how many it aggregates, the finer
             // clusters that fold in, and the exemplar (a real unit that names it).
@@ -685,7 +813,22 @@ export default function LatticeView({ onHandoff }: { onHandoff?: () => void }) {
           <button className="lc-pick" onClick={() => toggleSel(picked)}>
             {inSel(picked) ? '− remove from set' : '＋ add to set'}
           </button>
-          {picked.scale_size != null ? (
+          {isSeparator && picked.source ? (
+            // THE POLE PICKER (Group 9): make this item a gravity. Each button REPLACES one pole and KEEPS the
+            // other (the field always has two poles — the bridge fails loud on one), so tapping drives the field.
+            <div className="lc-pole-pick">
+              <button className="lc-center lc-pole-set-a" style={{ borderColor: sepColA, color: sepColA }}
+                onClick={() => { setPoleA(picked.source!); setPicked(null) }}
+                title="make this item the LEFT gravity (pole A) — re-drives the field, keeps pole B">
+                ◀ set pole A
+              </button>
+              <button className="lc-center lc-pole-set-b" style={{ borderColor: sepColB, color: sepColB }}
+                onClick={() => { setPoleB(picked.source!); setPicked(null) }}
+                title="make this item the RIGHT gravity (pole B) — re-drives the field, keeps pole A">
+                set pole B ▶
+              </button>
+            </div>
+          ) : picked.scale_size != null ? (
             // a THEME: ⊕ zoom INTO it (step to the finer rung, centred on its exemplar — a real unit with a
             // vector, so the centre resolves at every rung); ◎ rank this rung's themes by distance from it.
             <>

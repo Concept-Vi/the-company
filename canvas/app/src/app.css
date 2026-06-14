@@ -1914,6 +1914,26 @@ body[data-view="review"] [class*="tl-watermark"]{display:none !important}
   font: 11px ui-monospace, monospace; margin-right: 6px; }
 .lattice-card.lc-conn .lc-conn-k.lc-conn-out { color: var(--acc); }
 .lattice-card.lc-conn .lc-conn-none { color: var(--dim); }
+/* THE TWO-GRAVITY SEPARATOR (Group 9) readout — the verdict + the BALANCE bar. Tokens only; the two pole
+   hues arrive via inline style (the deliberate colour-IS-pole exception, the same hues the basins use). */
+/* lc-sep is a TOP banner at both widths — reset the mobile base rule's `bottom:52px` (else top+bottom both set
+   stretches the opaque card to full height and it COVERS the whole wheel; caught driving at 390×844). */
+.lattice-card.lc-sep { top: 10px; bottom: auto; left: 50%; right: auto; transform: translateX(-50%); width: min(360px, 92vw); }
+/* the two pole NAMES — stacked, each on its own full-width line so they read in FULL (never ellipsis-
+   truncated; the poles are the whole premise). A stays left-aligned, B right-aligned (the diverging feel). */
+.lattice-card.lc-sep .lc-sep-poles { display: flex; flex-direction: column; gap: 1px;
+  font: 11px ui-monospace, monospace; font-weight: 600; margin-bottom: 6px; line-height: 1.4; }
+.lattice-card.lc-sep .lc-pole { white-space: normal; word-break: break-word; }
+.lattice-card.lc-sep .lc-pole-b { text-align: right; }
+.lattice-card.lc-sep .lc-balance { display: flex; height: 8px; border-radius: 4px; overflow: hidden;
+  background: var(--line); margin: 2px 0 7px; }
+.lattice-card.lc-sep .lc-bal-seg { height: 100%; }
+.lattice-card.lc-sep .lc-sep-meta { color: var(--dim); font: 11px ui-monospace, monospace; }
+.lattice-card.lc-sep .lc-sep-verdict { color: var(--dim); }
+.lattice-card.lc-sep .lc-sep-verdict.on { color: var(--acc); font-weight: 600; }
+.lattice-card.lc-sep .lc-sep-why { color: var(--tx-2); }
+.lattice-card .lc-pole-pick { display: flex; gap: 8px; margin-top: 6px; }
+.lattice-card .lc-pole-pick .lc-center { margin-top: 0; flex: 1; }
 .lattice-wrap .lattice-hint { position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
   max-width: min(92%, 520px); pointer-events: auto; background: var(--panel); color: var(--tx-2);
   border: 1px solid var(--acc); border-radius: 8px; padding: 6px 11px; text-align: center;

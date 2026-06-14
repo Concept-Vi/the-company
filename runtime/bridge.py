@@ -601,6 +601,10 @@ def _separator_projection(q, binding, reg, evs, center, now, lim):
 
     pole_a_ref = q.get("pole_a") or binding.get("pole_a")
     pole_b_ref = q.get("pole_b") or binding.get("pole_b")
+    # the binding's friendly label names its OWN default pole; an operator-OVERRIDDEN pole (?pole_a=) is named
+    # by its ref (so the readout never shows the stale default label for a pole the operator just drove to).
+    pole_a_label = None if q.get("pole_a") else binding.get("pole_a_label")
+    pole_b_label = None if q.get("pole_b") else binding.get("pole_b_label")
     if not pole_a_ref or not pole_b_ref:
         return 400, {"error": "separator needs TWO poles (?pole_a=&pole_b= or the binding's pole_a/pole_b) — "
                               "fail loud, never a one-gravity field", "binding": binding.get("id")}
@@ -617,8 +621,8 @@ def _separator_projection(q, binding, reg, evs, center, now, lim):
         rec = SUITE.store.get_vector(SUITE.store.space_address(e.get("source_address") or "", space))
         if rec and rec.get("vector"):
             vectors[_proj_addr(e)] = rec["vector"]
-    poles = {"a": {"vector": va, "label": binding.get("pole_a_label") or pole_a_ref, "ref": pole_a_ref},
-             "b": {"vector": vb, "label": binding.get("pole_b_label") or pole_b_ref, "ref": pole_b_ref}}
+    poles = {"a": {"vector": va, "label": pole_a_label or pole_a_ref, "ref": pole_a_ref},
+             "b": {"vector": vb, "label": pole_b_label or pole_b_ref, "ref": pole_b_ref}}
     try:
         out = _uproject(uevs, binding=binding, registry=reg, now=now, center=center, limit=lim,
                         vectors=vectors, poles=poles)

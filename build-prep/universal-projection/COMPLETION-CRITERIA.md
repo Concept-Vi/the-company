@@ -45,13 +45,14 @@ the remaining items are genuinely gated (Tim input / axis-selection) or are data
   (live · the real node registry · drivable · interactive), design-critic RESOLVED both viewports. See Group
   10 below.
 - **GENUINELY REMAINING (all honestly gated — the loop must NOT churn on these):**
-  · **Group 9** (two-gravity separator) — 🟡 FUNCTION DONE (2026-06-14). SUPERSEDED the AI-tells gate: Tim
-    "there is no single purpose" → general variable-two-pole read, AI supplies its own pole. Built as a PURE
-    two-pole read over the persisted vectors (no embed-lens) + the fifth gate (separation_report) + the AI plants
-    its own AI-corner anchor. VERIFIED LIVE on a real balanced pole pair (topics c6 worldview vs c4 sessions:
-    separates, Spearman −0.18, balance 47/115, clean leaders). Pollution instance = named DEFERRED application
-    (lens-mismatch 162/0, honest). REMAINING: the FORM beat — render the signed lean drivably/interactively on
-    the lattice at both viewports. NOT churn — a real next beat.
+  · **Group 9** (two-gravity separator) — ✅ DONE (2026-06-14, both faces, to THE BAR). SUPERSEDED the AI-tells
+    gate: Tim "there is no single purpose" → general variable-two-pole read, AI supplies its own pole. FUNCTION:
+    a PURE two-pole read over the persisted vectors (no embed-lens) + the fifth gate (separation_report:
+    distinctness · both spreads · ρ≠+1 · a pole must attract somebody) + the AI plants its own AI-corner anchor;
+    proven live on a real NON-centroid balanced pair (worldview.py vs sessions.py: separates, ρ −0.41, 57/105).
+    FORM: the two gravities as two spatial BASINS (left/right), radius=|lean|, a diverging BALANCE bar so the
+    skew is seen, a pole-PICKER (drive the two gravities live); design-critic PASS at 1440×900 AND 390×844.
+    Pollution instance = named DEFERRED application (lens-mismatch 162/0 → correctly refused, honest).
   · **The small registries + gate surface + 20/80 water-law** — 🔴. CORRECTED (2026-06-14, from the SEED +
     Tim's foundational message, brain doc lines 303/327-333/495/503): the 20/80 water-law is NOT a visual
     prioritization dial — it is TYPE-NUCLEATION: a type (an n-gon / a registry row) is BORN when the points
@@ -245,7 +246,7 @@ FROM model_projections()") was never built. So Group 8 was a BUILD, not a bring-
     e.g. "subjects a file covers" → what.py/projections.py nearest); this IS Group 6's semantic-radius input.
 - **FORM** — n/a (substrate). ✅
 
-## GROUP 9 · ABILITY — TWO-GRAVITY SEPARATOR 🟡 FUNCTION done (2026-06-14, real-data separation verified live); FORM next beat
+## GROUP 9 · ABILITY — TWO-GRAVITY SEPARATOR ✅ (2026-06-14; both faces, design-critic PASS both viewports, to THE BAR)
 > SUPERSEDES the old plan (a "steerable embedder" threaded through transport→client→embed→build_index +
 > Tim's AI-tells). Tim 2026-06-14: "There is no single purpose" → the separator is a GENERAL variable-two-pole
 > resolution; the AI supplies its OWN AI-pole (never demand the tells from Tim). And the PURE-READ law: the
@@ -292,8 +293,24 @@ FROM model_projections()") was never built. So Group 8 was a BUILD, not a bring-
 > faked-green; it is honestly refused. DEFERRED: the true Tim-pole (§17, not a corpus sample) + a text-lens where
 > the AI-corner is comparable. The ✅ rests on the balanced non-centroid real pair, never on this probe.
 - **FUNCTION** — the general two-pole read + the fifth gate, verified live on a real balanced pair. ✅ by use
-- **FORM** — ☐ NEXT BEAT: render the signed lean on the lattice (sign as the second channel, both poles as
-  equals), a pole-PICKER so Tim drives which two gravities, at both 1440×900 and 390×844; design-critic + lint.
+- **FORM** — ✅ (2026-06-14, both viewports, design-critic PASS). The two gravities render as two spatial BASINS
+  (advisor's (b), chosen over recolouring): pole A fans LEFT / pole B fans RIGHT, radius = |lean| (neutral at the
+  centre, strong lean at the rim), colour reinforces the side (cool A / warm B); the two poles are marked + named
+  at the rims; a NEUTRAL divide bisects; the centre is a quiet neutral marker (NOT the breathing-NOW dot, which
+  would lie). The readout card carries the FIFTH GATE made visible — both pole names (full, stacked), a diverging
+  BALANCE bar (the advisor's mandate: separates:True can still be lopsided → Tim must SEE the 47/115 skew), and
+  the verdict (separates · distinct · ρ). DRIVE-TO-EXPLORE: tap a point → its pulls + lean; ◀ set pole A / set
+  pole B ▶ re-drives the field keeping the other pole (proven live — driving channels.py as pole A re-drove to
+  2/160). Time controls suppressed (radius is lean, not time), like the semantic lens.
+  > BUILT (commit pending): canvas/app/src/regions/LatticeView.tsx (the basin layout sepTheta used identically by
+  > draw + pick; pole hues; readout + balance bar; pole picker; the controls/centre-dot separator branches) +
+  > app.css (lc-sep, token-only; pole hues via inline computed hsl, the colour-IS-pole exception). VERIFIED:
+  > driven LIVE in chrome-devtools at 1440×900 AND 390×844 on the real 162-item field; the pole-picker re-drives;
+  > a SEPARATE design-critic PASSED all 4 criteria on BOTH viewports (caught + I fixed: a full-height card burying
+  > the mobile wheel, rim labels colliding at centre, ellipsis-truncated names; and a bridge label bug — an
+  > overridden pole kept the stale default label). design-lint: LatticeView 0 off-token literals (the 2 #fff in
+  > app.css are the pre-existing white-paper, out of scope; the separator CSS added zero literals). 76 acceptance
+  > checks still green.
 
 ## GROUP 10 · ABILITY — ORDER-FROM-EDGES + ANGLE-FROM-A-REGISTRY + THE CONNECTIONS ✅ (2026-06-14; Tim-unblocked, both faces, design-critic RESOLVED, to THE BAR)
 > DONE 2026-06-14 (Tim unblocked — see ACTIVE BUILD up top): the old "edge-order needs an ACYCLIC backbone /
