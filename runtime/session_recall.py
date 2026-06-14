@@ -48,29 +48,51 @@ class RecallError(RuntimeError):
 
 # ───────────────────────────── chunking (from the scan) ─────────────────────────────
 
+SUB_CHUNK_CHARS = int(os.environ.get("RECALL_SUBCHUNK_CHARS", "700"))
+SUB_CHUNK_OVERLAP = int(os.environ.get("RECALL_SUBCHUNK_OVERLAP", "150"))
+
+
+def _split(text: str, size: int = SUB_CHUNK_CHARS, overlap: int = SUB_CHUNK_OVERLAP) -> list[str]:
+    """Split a long turn into overlapping sub-chunks so a multi-TOPIC turn doesn't dilute into one blurred
+    vector. A turn covering 5 decisions (e.g. the embedding pick buried as point #3 of 5) would otherwise
+    embed as an average and sink; sub-chunking lets the decision SENTENCE surface on its own. Prefer
+    paragraph/sentence boundaries within the window."""
+    text = text.strip()
+    if len(text) <= size:
+        return [text]
+    out, i = [], 0
+    while i < len(text):
+        end = min(i + size, len(text))
+        if end < len(text):                       # try to cut on a sentence/para boundary near the window end
+            cut = max(text.rfind(". ", i + size - overlap, end), text.rfind("\n", i + size - overlap, end))
+            if cut > i:
+                end = cut + 1
+        out.append(text[i:end].strip())
+        if end >= len(text):
+            break
+        i = max(end - overlap, i + 1)
+    return [c for c in out if c]
+
+
 def session_chunks(jsonl_path: str) -> list[dict]:
     """Genuine content turns as recall chunks, each with its structural handle. Reuses the scanner so
     chunking and the structural scan agree on attribution/boundaries. Skips inject/tool/empty events —
-    we recall over what was SAID (human + assistant + compaction summaries), not tool plumbing."""
+    we recall over what was SAID (human + assistant + compaction summaries), not tool plumbing. Long
+    turns are split into overlapping SUB-chunks (sharing the turn's line handle) so multi-topic turns
+    stay retrievable."""
     rows = scan_session(jsonl_path)["rows"]
-    chunks = []
-    for r in rows:
-        if r["attr"] not in ("user", "assistant", "compaction", "channel"):
-            continue
-        text = _row_text(jsonl_path, r["line"]) if False else None  # text pulled in bulk below
-        chunks.append({"line": r["line"], "ts": r["ts"], "attr": r["attr"],
-                       "model": r.get("model"), "point": r.get("boundary_point"),
-                       "is_boundary": r.get("is_boundary")})
-    # pull the actual text for those lines in one pass (avoids re-reading per row)
-    wanted = {c["line"] for c in chunks}
-    texts = _texts_for_lines(jsonl_path, wanted)
+    meta = [{"line": r["line"], "ts": r["ts"], "attr": r["attr"], "model": r.get("model"),
+             "point": r.get("boundary_point"), "is_boundary": r.get("is_boundary")}
+            for r in rows if r["attr"] in ("user", "assistant", "compaction", "channel")]
+    texts = _texts_for_lines(jsonl_path, {m["line"] for m in meta})
     out = []
-    for c in chunks:
-        t = (texts.get(c["line"]) or "").strip()
+    for m in meta:
+        t = (texts.get(m["line"]) or "").strip()
         if not t:
             continue
-        c["text"] = t
-        out.append(c)
+        parts = _split(t)
+        for si, part in enumerate(parts):
+            out.append({**m, "sub": si, "n_sub": len(parts), "text": part})
     return out
 
 

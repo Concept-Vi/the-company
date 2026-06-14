@@ -76,14 +76,33 @@ def find(jsonl_path: str, query: str, k: int = 8, index_dir: str | None = None) 
 def decisions(jsonl_path: str, topic: str, k: int = 6, index_dir: str | None = None) -> dict:
     """Recall biased toward decision language: semantic recall, then re-rank-boost chunks whose text
     carries a decision cue (chose/switched/locked/…). Surfaces the DECISION turn, not just discussion."""
-    base = sr.recall(jsonl_path, f"the decision about {topic}: what was chosen and why",
-                     k=max(k * 4, 24), index_dir=index_dir)
-    # exclude fabric meta: channel chatter + compaction summaries are ABOUT the session, not its live decisions
-    cands = [h for h in base["hits"] if h["attr"] not in ("channel", "compaction")]
+    # QUERY EXPANSION — a generic topic ("embedding model") pulls broad discussion; the SOURCE decision
+    # turn surfaces only for decision-pointed phrasings. So embed several phrasings and merge each chunk
+    # by its MAX cosine across them (verified: this lifts the canonical pplx-4b turn into the top for the
+    # generic topic). rerank is deliberately OFF (it favours later recall-chatter over the source turn).
+    queries = [
+        f"which {topic} did we choose, and why — the decision and the reasoning",
+        f"we decided to use / switched to / picked {topic} because",
+        f"the comparison of {topic} options and the final pick over the alternatives",
+    ]
+    merged: dict[int, dict] = {}
+    for q in queries:
+        for h in sr.recall(jsonl_path, q, k=30, rerank=False, index_dir=index_dir)["hits"]:
+            if h["attr"] in ("channel", "compaction"):   # fabric meta, not the live decision
+                continue
+            cos = h.get("cosine") or 0
+            cur = merged.get(h["line"])
+            if cur is None or cos > cur["cosine"]:
+                merged[h["line"]] = {**h, "cosine": cos}
+    cands = list(merged.values())
     for h in cands:
         h["decision_cue"] = bool(DECISION_CUES.search(h["text"]))
-    ranked = sorted(cands, key=lambda h: (h["decision_cue"], h.get("cosine") or 0), reverse=True)
-    return {"lens": "decisions", "topic": topic, "rerank": base["rerank"],
+        # cue is an ADDITIVE tiebreaker, NOT a gate — a high-cosine decision turn that happens not to use
+        # the literal word "chose/switched" must NOT be sunk below a low-cosine turn that does.
+        h["score"] = round(h["cosine"] + (0.04 if h["decision_cue"] else 0), 4)
+    ranked = sorted(cands, key=lambda h: -h["score"])
+    return {"lens": "decisions", "topic": topic,
+            "ranking": "max-cosine over expanded decision phrasings + decision-cue bonus; rerank off",
             "hits": ranked[:k]}
 
 
