@@ -34,7 +34,7 @@ export function Landscape({ s }: { s: SurfaceState }) {
         <CentreChip centre={s.centre} onReset={() => s.setCentre(null)} />
         <div className="rail-detail">
           {s.selected ? (
-            <Disclosure point={s.selected} feel={s.feel} variant="rail" onDismiss={() => s.setSelected(null)} onFocus={s.focusCentre} binding={s.proj?.binding} centreLabel={s.centre?.label} />
+            <Disclosure point={s.selected} feel={s.feel} variant="rail" onDismiss={() => s.setSelected(null)} onFocus={s.focusCentre} onSetPole={s.setPole} binding={s.proj?.binding} centreLabel={s.centre?.label} />
           ) : (
             <SelectHint />
           )}

@@ -15,16 +15,25 @@ import { pointAddress } from './Wheel'
 type Balance = { lean_a: number; lean_b: number; neutral: number; minority_frac: number }
 type Separation = { separates?: boolean; balance?: Balance; pole_distinctness?: number }
 
+function leaf(s: string | undefined): string {
+  const t = (s || '').replace(/\/+$/, '')
+  return t.split('/').pop() || t
+}
+
 export function Separator({
   proj,
   feel,
   selectedSeq,
   onPick,
+  polesDriven,
+  onClearPoles,
 }: {
   proj: Projection
   feel: MotionFeel
   selectedSeq?: number
   onPick: (p: ProjPoint) => void
+  polesDriven?: boolean
+  onClearPoles?: () => void
 }) {
   const { ref, width, height } = useSize<HTMLDivElement>()
   const ready = width > 8 && height > 8
@@ -123,9 +132,13 @@ export function Separator({
         </svg>
       )}
 
-      {/* pole labels (real, small) + the fifth-gate verdict — text-minimal overlays */}
-      <div className="sep-pole sep-pole--a">{poleA?.label}</div>
-      <div className="sep-pole sep-pole--b">{poleB?.label}</div>
+      {/* pole labels (real, small) + the fifth-gate verdict — text-minimal overlays. Operator-driven poles
+         show as leaves; a reset returns to the binding's default gravities. */}
+      <div className="sep-pole sep-pole--a">{polesDriven ? leaf(poleA?.label) : poleA?.label}</div>
+      <div className="sep-pole sep-pole--b">{polesDriven ? leaf(poleB?.label) : poleB?.label}</div>
+      {polesDriven && onClearPoles && (
+        <button className="sep-reset" onClick={onClearPoles} title="back to the default two gravities">↺ default poles</button>
+      )}
       {bal && (
         <div className="sep-counts">
           <span className="sep-count sep-count--a">{la}</span>

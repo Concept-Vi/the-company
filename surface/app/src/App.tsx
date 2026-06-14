@@ -53,6 +53,9 @@ export type SurfaceState = {
   centre: Centre | null
   setCentre: (c: Centre | null) => void
   focusCentre: (p: ProjPoint) => void
+  poles: { a: Centre | null; b: Centre | null }
+  setPole: (which: 'a' | 'b', p: ProjPoint) => void
+  clearPoles: () => void
   live: boolean
   setLive: (v: boolean) => void
   notice: string | null
@@ -81,6 +84,15 @@ export function App() {
   const [nuc, setNucState] = useState<NucParams>({ types_space: 'topics', space: 'topics', rung: 8 })
   const setNuc = useCallback((patch: Partial<NucParams>) => setNucState((p) => ({ ...p, ...patch })), [])
   const [centre, setCentre] = useState<Centre | null>(null)
+  // THE TWO GRAVITIES are VARIABLES (G9): the operator picks ANY two items as the poles; the separator
+  // re-projects everything between them. ref = the item's embeddable source; label = its leaf.
+  const [poles, setPoles] = useState<{ a: Centre | null; b: Centre | null }>({ a: null, b: null })
+  const setPole = useCallback((which: 'a' | 'b', p: ProjPoint) => {
+    const ref = p.source || p.address || `ui://canvas/seq-${p.seq}`
+    const label = ref.replace(/\/+$/, '').split('/').pop() || 'pole'
+    setPoles((prev) => ({ ...prev, [which]: { ref, label } }))
+  }, [])
+  const clearPoles = useCallback(() => setPoles({ a: null, b: null }), [])
   const [live, setLive] = useState(true)
   const [pulse, setPulse] = useState(0) // a live-stream tick → re-fetch (the present moves)
   const lastSeqRef = useRef(0)
@@ -112,6 +124,11 @@ export function App() {
         : { binding, limit: 600 }
     // the relative centre re-projects every lens around the attended node (radius = distance FROM it)
     if (centre) params.center = centre.ref
+    // the two gravities (G9): operator-picked poles drive the separator (else the binding's default poles)
+    if (binding === 'by_separator' && poles.a && poles.b) {
+      params.pole_a = poles.a.ref
+      params.pole_b = poles.b.ref
+    }
     fetchProjection(params)
       .then((p) => {
         if (!alive) return
@@ -128,7 +145,7 @@ export function App() {
     return () => {
       alive = false
     }
-  }, [binding, nuc, centre, pulse])
+  }, [binding, nuc, centre, poles, pulse])
 
   // THE LIVE SPINE (the seed §4 / mandate L9 — live, not a viewer): tail /api/stream from the newest seq we
   // know; when NEW events arrive, pulse a (throttled) re-fetch so the present visibly moves — new points bloom
@@ -191,6 +208,9 @@ export function App() {
     centre,
     setCentre,
     focusCentre,
+    poles,
+    setPole,
+    clearPoles,
     live,
     setLive,
     notice,

@@ -34,7 +34,7 @@ export function Portrait({ s }: { s: SurfaceState }) {
       </section>
 
       {/* detail as a bottom sheet (nonmodal, draggable handle) — nothing permanent at rest */}
-      <Disclosure point={s.selected} feel={s.feel} variant="sheet" onDismiss={() => s.setSelected(null)} onFocus={s.focusCentre} binding={s.proj?.binding} centreLabel={s.centre?.label} />
+      <Disclosure point={s.selected} feel={s.feel} variant="sheet" onDismiss={() => s.setSelected(null)} onFocus={s.focusCentre} onSetPole={s.setPole} binding={s.proj?.binding} centreLabel={s.centre?.label} />
     </div>
   )
 }

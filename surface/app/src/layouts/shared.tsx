@@ -40,6 +40,8 @@ export function WheelOrState({ s }: { s: SurfaceState }) {
         feel={s.feel}
         selectedSeq={s.selected?.seq}
         onPick={(p) => s.setSelected(p)}
+        polesDriven={!!(s.poles.a && s.poles.b)}
+        onClearPoles={s.clearPoles}
       />
     )
   }

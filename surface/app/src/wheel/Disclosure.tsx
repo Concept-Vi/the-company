@@ -60,6 +60,7 @@ export function Disclosure({
   variant,
   onDismiss,
   onFocus,
+  onSetPole,
   binding,
   centreLabel,
 }: {
@@ -68,6 +69,7 @@ export function Disclosure({
   variant: Variant
   onDismiss: () => void
   onFocus?: (p: ProjPoint) => void
+  onSetPole?: (which: 'a' | 'b', p: ProjPoint) => void
   binding?: Projection['binding']
   centreLabel?: string | null
 }) {
@@ -146,6 +148,13 @@ export function Disclosure({
           </div>
 
           <footer className="disc-foot">
+            {/* in the separator lens, any item can become one of the two gravities (G9 — poles are variables) */}
+            {onSetPole && binding?.radius_from === 'separator' && (
+              <div className="disc-poles">
+                <button className="disc-pole" onClick={() => onSetPole('a', point)} title="make this the left gravity">⟸ pole A</button>
+                <button className="disc-pole" onClick={() => onSetPole('b', point)} title="make this the right gravity">pole B ⟹</button>
+              </div>
+            )}
             {onFocus && (
               <button className="disc-focus" onClick={() => onFocus(point)} title="re-centre the space on this">
                 ⊙ centre here
