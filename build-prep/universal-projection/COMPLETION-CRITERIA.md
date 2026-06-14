@@ -254,7 +254,16 @@ AI deformation), seeded by Tim's description of the AI-tells (his volunteered in
 - **INPUT (not a gate)** — Tim's AI-tells description; the Tim-pole needs no enumeration (it's the
   origin + the existing gradient field).
 
-## GROUP 10 · ABILITY — ORDER-FROM-EDGES + ANGLE-FROM-A-REGISTRY 🟡 (FUNCTION ✅ by use; FORM: registry-angle live, edge-order verified-not-FE-legible)
+## GROUP 10 · ABILITY — ORDER-FROM-EDGES + ANGLE-FROM-A-REGISTRY 🟡 (FUNCTION ✅; FORM: registry-angle live; THE CONNECTIONS now building per Tim's unblock)
+> PROGRESS 2026-06-14 (Tim unblocked — see ACTIVE BUILD up top): the old "edge-order needs an ACYCLIC
+> backbone / three sources all fail" finding is SUPERSEDED — Tim: "the only edges that get typed are the
+> directional ones" + nonsequential IS valid (no acyclic requirement I'd invented). BEAT 1 DONE + verified
+> (commit 85df987): project() SURFACES the directional typed edges (`edges`: directed sector-index pairs,
+> `bidir`=a real mutual cycle rendered as a cycle); `whole_set` renders a registry's WHOLE structure; the
+> bridge resolves `node-types` → all 16 rows + 49 DIRECTIONAL-only type-flow edges; `bindings/by_node_type.py`
+> is live (curl-verified); floor 53→59. BEAT 2 (active, the loop): the INTERACTIVE directed-chord FORM —
+> draw the connections + drive-to-explore (pick a row → its in/out edges), to THE BAR (live · all real data ·
+> drivable · interactive), design-critic both viewports. THEN Group 9 (variable two-gravity separator).
 The keystone. commits (this beat). The advisor stopped a fake "derived precedence" (order_by=time in a
 costume) — only REAL persisted directed edges order sectors; registries have none yet (growth front).
 - **FUNCTION** ✅ by use — (1) THE EVENT→ROW EDGE formalized: `_row_of(event, angle_from)` — a registry's
