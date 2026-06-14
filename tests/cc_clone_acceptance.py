@@ -104,7 +104,7 @@ def _spy_sup(path, body=None, method="POST", timeout=30):
 
 cc_clone._sup = _spy_sup
 cc_clone._wait_idle = lambda s, timeout=120: {"id": s, "state": "idle"}
-cc_clone.CHANNELS_DIR = os.path.join(tmp, "channels")     # don't pollute the live channel registry
+cc_clone.CHAN_DIR = os.path.join(tmp, "channels")     # don't pollute the live channel registry
 c = cc_clone.clone_at(src, "compact:1", description="d")
 ok("clone_at DOES spawn a supervised clone (the autonomous path)",
    spawned["called"] and c["supervisor_session"] == "as-new" and c["source_untouched"])
@@ -114,7 +114,7 @@ ok("clone_at returns the operator command alongside the supervised clone",
 # the channel WIRE (overnight lane w/ lead): clone_at registers the supervised clone as a channel member
 # with EXACTLY the lead's CHANNEL-LAYER schema (the dispatch side reads these fields verbatim).
 import json as _json
-_memp = os.path.join(cc_clone.CHANNELS_DIR, c["handle"] + ".json")
+_memp = os.path.join(cc_clone.CHAN_DIR, c["handle"] + ".json")
 _mem = _json.load(open(_memp)) if os.path.exists(_memp) else {}
 ok("clone_at registers a supervised channel-member with the exact lead schema",
    set(_mem.keys()) == {"handle", "session_id", "transport", "supervisor_session",

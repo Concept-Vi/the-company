@@ -29,7 +29,7 @@ from runtime.session_pointintime import materialize_at_point, resume_cwd_for, bu
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CLONES_DIR = os.path.join(REPO, ".data", "clones")
-CHANNELS_DIR = os.path.join(REPO, ".data", "channels")   # the channel-member registry (shared w/ cc_channels)
+CHAN_DIR = os.path.join(REPO, ".data", "channels")   # the channel-member registry (shared w/ cc_channels)
 SUPERVISOR = os.environ.get("COMPANY_SUPERVISOR_BASE", "http://127.0.0.1:8771")
 CHANNEL_MCP_CONFIG = os.path.join(REPO, "channels", "channel.mcp.json")
 
@@ -46,11 +46,11 @@ def register_supervised_member(handle: str, session_id: str, supervisor_session:
       {handle, session_id, transport:"supervised", supervisor_session, supervisor_base, cwd, description}
     A supervised member has NO pid/port (it is reached via supervisor /inject, not an HTTP channel port) —
     `transport:"supervised"` is the discriminator the dispatch keys on (absent/`channel` ⇒ HTTP-to-port)."""
-    os.makedirs(CHANNELS_DIR, exist_ok=True)
+    os.makedirs(CHAN_DIR, exist_ok=True)
     entry = {"handle": handle, "session_id": session_id, "transport": "supervised",
              "supervisor_session": supervisor_session, "supervisor_base": SUPERVISOR,
              "cwd": cwd, "description": description}
-    path = os.path.join(CHANNELS_DIR, handle + ".json")
+    path = os.path.join(CHAN_DIR, handle + ".json")
     with open(path, "w", encoding="utf-8") as f:
         json.dump(entry, f, indent=2)
     return path
@@ -58,7 +58,7 @@ def register_supervised_member(handle: str, session_id: str, supervisor_session:
 
 def _deregister_member(handle: str) -> bool:
     """Remove a member's channel-registry entry (teardown) — keeps the registry honest (presence=truth)."""
-    path = os.path.join(CHANNELS_DIR, handle + ".json")
+    path = os.path.join(CHAN_DIR, handle + ".json")
     try:
         os.unlink(path); return True
     except OSError:
