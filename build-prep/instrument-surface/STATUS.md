@@ -59,7 +59,9 @@ and "the types/divisions of the circle [should be built in] so the data points c
   boundary circle) — "close around their types"; misfits pile OUTSIDE in the forbidden ring; a distinct pile
   blooms as a candidate new type (✦), BORN past the 20/80 dial (live, client-side). Defaults to a populating
   same-space drive (topics:topics → 149/162 inside); items/types/rung pickers drive the engine (registry-true);
-  cross-instance proof one pick away. Verified both viewports, console clean.
+  cross-instance proof one pick away. Verified both viewports, console clean. Design-critic PASS ("most
+  conceptually expressive lens in the set"); its #1 fix done — the BIRTH (born ✦ green bloom) is now visible
+  on the plate, placed at the pile's true angle (`89a190e`).
   · NOTE for Tim: this reuses the nucleation engine (G12) — it IS "types as divisions, points close around them."
     If you pictured something other than the inside-cluster/outside-pile reading, this is the place to redirect.
 - **NEXT BEATS (per the equation, sequenced):** STRAIN (render the gap between a point's square-position and its
