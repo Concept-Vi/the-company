@@ -38,24 +38,30 @@ verified: criteria status marked per-item (Verified / Designed / Broken); FORM f
 - **3.7 requirements/preferences (ANTI-RECENCY)** — extract Tim's standing requirements + preferences + IMPLICIT signals across the WHOLE session, weighted by importance/repetition NOT recency; PRIMARY source = the cross-session preference-memory (`feedback-*`), session-recall as supplement. FUNCTION: [D] — the keystone new lens; also the payload for Group 5.
 - **3.8 spin-up-choosing** — rank §1.5 fork-points by context-state (decision-density, expertise-crystallization, hot-open-threads, novelty-vs-compaction-summary) → an evidenced fork-point surface. FUNCTION: [D].
 
-## Group 4 — Retrieve-then-synthesize panel  (Tim's "panels"; extraction-vs-judgment)
-- **4.1 Search kept separate** — the synthesis is an ADDITIONAL capability; raw search+rerank (Groups 2/3) remain independently usable. FUNCTION: [D] (constraint).
-- **4.2 Concurrent structured extractors** — small models, each ASSIGNED one facet, emit STRUCTURED OUTPUT, run concurrently; small models NEVER asked to judge/reason (extraction-vs-judgment law). FUNCTION: [D] [P] (model loadout = lead's lane).
-- **4.3 Facet schema** — the facets are a registry of facet-types (proposed FIXED+extensible — see INFERRED-PREFERENCES Q1). FUNCTION: [D].
-- **4.4 Smart-model judge** — a single capable model assembles the brief from the chained structured extractions (the only judgment step). FUNCTION: [D].
-- **4.5 decision_brief(topic)** — end-to-end: retrieve region → extract facets → judge → "we chose X over Y because Z, at L####." FUNCTION: [D] — closes the Group-3.2 generic-pinpoint gap.
+## Group 4 — Retrieve-then-synthesize panel  (Tim's "panels"; extraction-vs-judgment)  [CONVERGED with lead §D]
+> Build ON `runtime/cognition.py` — VERIFIED (lead §D): it already has `run_role(role,ctx)` + concurrency (ThreadPoolExecutor) + structured output (`json=True`→response_format), and `roles/` already splits extract-roles (mine_exchange/eval_classify/ground/interpret_file) vs judge-roles (judge/judge_mining/judge_drift). So the panel = NEW roles + a chain, NOT new infra. Models: chat-4b(:8000, 32-concurrency) · chat-2b(:8003) · chat-08b(:8006) extract; chat-nemotron-30B(:8005) or a cloud seat judges.
+- **4.1 Search kept separate** — the synthesis is an ADDITIONAL capability; raw search+rerank (Groups 2/3) remain independently usable. FUNCTION: [D] (Tim-direct constraint).
+- **4.2 Concurrent structured extractors** — NEW facet-extract roles (`roles/*.py`), each ASSIGNED one facet, `json=True` structured output, fired concurrently via `run_role`/`run_swarm` on chat-4b/08b; NEVER judge/reason (extraction-vs-judgment law). FUNCTION: [D].
+- **4.3 Facet schema** — fixed+extensible registry of facet-types (chosen/alternatives/reason/constraints/owner — INFERRED-PREFERENCES Q1, confirmed by lead). FUNCTION: [D].
+- **4.4 Smart-model judge** — one `run_role(<judge role>)` on a smarter seat (chat-nemotron-30B/cloud) assembles the brief from the chained structured extractions (the only judgment step). FUNCTION: [D].
+- **4.5 decision_brief(topic)** — end-to-end: retrieve region → concurrent facet-extract roles → judge role → "we chose X over Y because Z, at L####." FUNCTION: [D] — closes the Group-3.2 generic-pinpoint gap. NEW thin `runtime/session_brief.py` orchestrates retrieve→cascade.
   - FORM: [D] the brief renders as a projected card (Group 7), not a JSON dump.
 
-## Group 5 — Channel-context  (attach sessions + docs to channels; load as rules) — [P] joint with lead
-- **5.1 Channel context-manifest** — a channel carries a manifest of attached sources (sessions — indexed or spun-up — + documentation). FUNCTION: [D] [P].
-- **5.2 Load-on-join** — an agent that becomes a channel member loads the manifest as rules/context (like `~/.vi/rules/*.md` auto-load). FUNCTION: [D] [P].
-- **5.3 Preference payload** — the Group-3.7 requirements/preferences profile is part of what loads (so members inherit "how Tim works" + the channel's standing context). FUNCTION: [D].
-- **5.4 On-demand recall in-channel** — members can recall against the channel's attached sources (Groups 3/4) live. FUNCTION: [D].
+## Group 5 — Channels: management + context-attachment  (lead lane §A/§C — CONVERGED) — [P] lead-owned
+> Reshaped by Tim's corrections (relayed via lead, lead-owned to act): MULTIPLE MANAGED channels, join=launch-flag (NO wrapper), profile via SessionStart HOOK, unified per-member transport, notify-each. Lead builds these WITH the unified-transport once Tim reacts. Cross-ref: `../design/lead-lane-inputs.md` §A/§C.
+- **5.0 Multi-channel management** — `cc_channel` gains create / list / add-member / remove-member / archive; a member (live session OR supervised clone) can belong to several channels; membership is a registry not ad-hoc handles. FUNCTION: [D] [P-lead].
+- **5.0b Profile hook** — a SessionStart hook writes each session's PROFILE (handle/cwd/model/self-description) to the registry → rich member listings. (Tim applies the global hook — boundary edit.) FUNCTION: [D] [P-lead].
+- **5.1 Channel attachments manifest** — a channel row carries `{sessions:[session://…], docs:[path…], recall_scope:{…}}`. FUNCTION: [D] [P-lead].
+- **5.2 Load-on-join** — on add-member, inject a `<channel>` context-load pointing at the manifest; the member loads it as its rule/context-set (the `~/.vi/rules` auto-load precedent). FUNCTION: [D] [P-lead].
+- **5.3 Preference payload** — the Group-3.7 requirements/preferences profile is part of what loads. FUNCTION: [D] (fork supplies the payload).
+- **5.4 Recall-as-channel-capability** — `cc_channel op=recall {channel, query}` runs recall scoped to the channel's attached sessions (Group 6 scope) through the served embed+rerank (Groups 2/4). FUNCTION: [D] (fork supplies recall; lead wires the op).
 
-## Group 6 — Multi-project / multi-session model  — [P] joint with lead; GATES fleet indexing
-- **6.1 Addressing scheme** — sessions across projects (`~/.claude/projects/<enc-cwd>/<sid>`) addressable in one scheme (registry-based, The Heart). FUNCTION: [D] [P].
-- **6.2 Index scoping** — indexing handles many sessions × many projects without collision; index location/naming scheme settled. FUNCTION: [D] [P].
-- **6.3 Worked out BEFORE fleet indexing** — Tim's hard gate: do NOT index more sessions until 6.1/6.2 are settled with the lead. STATUS: [P] — blocking.
+## Group 6 — Multi-project / multi-session addressing  (lead lane §B — CONVERGED) — GATES fleet indexing
+> The session store IS the source; addressable units keyed on THREE scope axes — **project · session · segment** (segment = the `isCompactSummary` compaction generation, per the schema find). Cross-ref: `../design/lead-lane-inputs.md` §B.
+- **6.1 Address grammar** — `session://<project>/<sid>` + scope selector `{scope: project|session|segment|all, project?, sid?, segment?}`. Project key = the `~/.claude/projects/<encoded-cwd>/` dir (encode `/`,`.`→`-`; resolve by re-encoding, never decode — per `resume_cwd_for`). FUNCTION: [D] [P-lead].
+- **6.2 Index scoping** — index per-(project,session) with scope keys embedded so a query filters scope WITHOUT re-embedding; ONE embedder space per index (pplx-4b — the golden rule, never mix). FUNCTION: [D] [P-lead].
+- **6.3 Default-recall setting** — a `default_recall` config row (which session/project recall targets when no scope given). FUNCTION: [D].
+- **6.4 Worked out BEFORE fleet indexing** — Tim's HARD GATE: do NOT index more sessions until 6.1/6.2 keying is locked. STATUS: [P] — blocking; lead-led.
 
 ## Group 7 — Projection  (the data → Company UI; FORM-bearing) — from vision §1.9
 - **7.1 Scan/recall as projectable data** — scan rows + lens outputs + the lineage map are DATA (rows/json), registered as a SOURCE, so the UI projects them — not bespoke UI code. FUNCTION: [V] (data shape exists); registration [TIM-GATED].

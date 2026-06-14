@@ -60,4 +60,13 @@ Distilled from the `feedback-*` memory corpus + this session. The standing const
 - **Coordinate the multi-project model with the lead BEFORE indexing more sessions.** (Your words.)
 - Bridge-free: Company-served endpoints, **no overlord venv bridge**. (Your earlier direction.)
 
-*Tim — react to the Q lines (agree/adjust/reject); anything you change, we update the plan and proceed. Anything you don't touch, we build to the proposal.*
+---
+
+## Convergence with the lead's lanes (A–D) — `../design/lead-lane-inputs.md`
+The lead delivered grounded answers for their lanes; they CONFIRM the inferred proposals + add detail. React to these too (or leave to build):
+- **Q1 panel — CONFIRMED + grounded:** build on `runtime/cognition.py` (run_role + concurrency + structured-output roles already exist); facet-extract roles on chat-4b/08b → judge role on chat-nemotron-30B. New roles, not new infra.
+- **Q4 channel-attachment — grounded:** a channel carries `{sessions, docs, recall_scope}`; on join, injected as context; `cc_channel op=recall` scoped to the channel. PLUS Tim's corrections (relayed via lead): **multiple managed channels** (create/add/remove members across channels), **join = launch-flag, no wrapper**, **profile via a SessionStart hook**, **notify-each** when a clone is pulled into a group. (Lead-owned to build.)
+- **Q5 multi-project — grounded:** keyed **project·session·segment**; `session://<project>/<sid>` + scope selector; default-recall config row; one embedder space; HARD GATE before indexing more.
+- **Spin-up (Q6) — DELIVERED:** the evidenced ranked surface is `../map/spin-up-ranking.md` — Tim picks from it; launch is gated + notify-each.
+
+*Tim — react to the Q lines (agree/adjust/reject); anything you change, we update the plan and proceed. Anything you don't touch, we build to the proposal. The whole package = this + COMPLETION-CRITERIA + the lead's lane-inputs + map/spin-up-ranking + (lead's) apply-artifacts.*
