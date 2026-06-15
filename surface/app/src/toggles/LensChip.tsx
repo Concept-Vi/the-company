@@ -1,8 +1,8 @@
-import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { Projection } from '../lib/api'
 import { transition } from '../tokens/motion'
 import { stamp } from '../lib/address'
+import { useChipMenu } from './useChipMenu'
 
 // The lens + glance, MERGED into ONE chip (text-minimal, L2/L6). Resting = a short name (derived from the
 // registry label, never hardcoded) + the live count. The full lens labels live in the menu, on demand.
@@ -21,13 +21,13 @@ export function LensChip({
   current: string
   onPick: (id: string) => void
 }) {
-  const [open, setOpen] = useState(false)
+  const { open, toggle, close, wrapRef, menuClass } = useChipMenu()
   return (
-    <div className="lenschip" {...stamp('ui://controls/lens')}>
+    <div className="lenschip" ref={wrapRef} {...stamp('ui://controls/lens')}>
       <button
         className="lenschip-btn"
         {...stamp('ui://controls/lens/current')}
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggle}
         aria-expanded={open}
       >
         <span className="lenschip-label display">{shortLabel(proj.binding.label)}</span>
@@ -37,9 +37,9 @@ export function LensChip({
       <AnimatePresence>
         {open && (
           <>
-            <div className="lenschip-scrim" onClick={() => setOpen(false)} />
+            <div className="lenschip-scrim" onClick={close} />
             <motion.ul
-              className="lenschip-menu"
+              className={`lenschip-menu ${menuClass}`}
               initial={{ opacity: 0, y: -6, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -6, scale: 0.98 }}
@@ -52,7 +52,7 @@ export function LensChip({
                     className={`lenschip-item ${current === b.id ? 'lenschip-item--on' : ''}`}
                     onClick={() => {
                       onPick(b.id)
-                      setOpen(false)
+                      close()
                     }}
                   >
                     {b.label}

@@ -119,13 +119,17 @@
 .disc-focus:hover { background: var(--pig-accent); color: var(--ground-accent); }
 
 /* the active relative-centre indicator */
-.centrechip { display: inline-flex; align-items: center; gap: var(--s-1); cursor: pointer;
-  background: color-mix(in srgb, var(--pig-accent) 14%, var(--ground-accent)); color: var(--ink-dim);
-  border: none; border-radius: var(--r-pill); padding: var(--s-1) var(--s-2); min-height: 32px;
-  font-size: var(--t-xs); }
-.centrechip-glyph { color: var(--pig-accent); }
-.centrechip-label { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.centrechip-x { color: var(--ink-faint); }
+/* the CENTRE chip is a SIBLING of the optics chips (lens · layer · resolution): same transparent serif
+   treatment + 36px height so the cluster reads as one family, not 3+1 (design-critic S2). Its distinct
+   affordance is the ⊙ active-centre glyph + the × remove — kept, but in the family's visual language. */
+.centrechip { display: inline-flex; align-items: baseline; gap: var(--s-2); cursor: pointer;
+  background: transparent; border: none; border-radius: var(--r-chrome); padding: var(--s-1) var(--s-2);
+  min-height: 36px; white-space: nowrap; transition: background 150ms cubic-bezier(0.4,0,0.2,1); }
+.centrechip:hover { background: var(--ground-secondary); }
+.centrechip-glyph { color: var(--pig-accent); font-size: var(--t-xs); }
+.centrechip-label { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: var(--t-md); color: var(--ink-primary); letter-spacing: 0.01em; }
+.centrechip-x { color: var(--ink-faint); font-size: var(--t-xs); }
 
 /* ---- controls: lens + taste pills ---------------------------------------- */
 .lens, .taste { display: flex; gap: var(--s-2); align-items: center; }
@@ -154,6 +158,8 @@
 .lenschip-scrim { position: fixed; inset: 0; z-index: 40; }
 .lenschip-menu { position: absolute; top: calc(100% + var(--s-1)); left: 0; z-index: 41;
   list-style: none; margin: 0; padding: var(--s-1); min-width: 240px; max-width: 86vw;
+  /* never run off the bottom of a short viewport (design-critic S4, landscape): cap + scroll */
+  max-height: calc(100vh - 5rem); overflow-y: auto;
   background: var(--ground-accent); box-shadow: var(--elev-3); border-radius: var(--r-card); }
 .lenschip-menu li { margin: 0; }
 .lenschip-item { display: block; width: 100%; text-align: left; border: none; background: transparent;
@@ -164,6 +170,9 @@
 .lenschip-item--on { background: var(--ink-primary); color: var(--ground-accent); }
 /* in the landscape rail the menu opens within a narrow column — let it spill right */
 .rail .lenschip-menu { min-width: 200px; }
+/* popover collision (design-critic S4): a chip near the right edge anchors its menu to its OWN right edge,
+   so the menu opens leftward into view instead of clipping off-screen (useChipMenu measures + sets this). */
+.lenschip-menu--right { left: auto; right: 0; }
 
 /* ---- notice (fail-loud, calm) -------------------------------------------- */
 .notice { position: fixed; top: calc(var(--safe-t) + var(--s-2)); left: 50%; transform: translateX(-50%);
@@ -177,7 +186,15 @@
 .bar-right { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; justify-content: flex-end; }
 /* the OPTICS cluster (how you look: lens · layer · centre) — held together at the left so space-between
    only separates optics from the right-hand controls; the layer never floats into the title position. */
+/* the OPTICS cluster wraps as ONE unit (its chips stay together; never interleaves with the right-hand
+   live/mode/gear group — design-critic S3). nowrap labels so a 2-word chip never breaks internally (S1). */
 .bar-left { display: flex; align-items: center; gap: var(--s-3); min-width: 0; flex-wrap: wrap; }
+.bar-left .lenschip-label, .bar-left .centrechip-label { white-space: nowrap; }
+/* in the NARROW landscape rail the cluster is a clean VERTICAL stack (left-aligned, uniform height), not a
+   row that wraps every chip onto its own ragged line with stranded carets (design-critic S1). */
+.layout--landscape .rail-head { flex-direction: column; align-items: stretch; gap: var(--s-1); }
+.layout--landscape .rail-head .bar-left { flex-direction: column; align-items: flex-start; gap: var(--s-1); width: 100%; }
+.layout--landscape .rail-head .bar-right { justify-content: flex-start; gap: var(--s-2); }
 .viewtoggle { display: inline-flex; gap: 2px; background: var(--ground-secondary); border-radius: var(--r-pill);
   padding: 2px; }
 .viewtoggle-btn { border: none; background: transparent; color: var(--ink-faint); cursor: pointer;

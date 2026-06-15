@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { fetchLayers } from '../lib/api'
 import { transition } from '../tokens/motion'
 import { stamp } from '../lib/address'
+import { useChipMenu } from './useChipMenu'
 
 // THE EMBEDDER-LAYER picker (Tim's multi-layer model, 2026-06-15: "multiple embeddings over the same data").
 // Every lens is layer-aware; this chooses WHICH embedding you look through. REGISTRY-TRUE: it reads
@@ -14,7 +15,7 @@ import { stamp } from '../lib/address'
 const DEFAULT = 'default'
 
 export function LayerChip({ emb, setEmb }: { emb: string | null; setEmb: (e: string | null) => void }) {
-  const [open, setOpen] = useState(false)
+  const { open, toggle, close, wrapRef, menuClass } = useChipMenu()
   const [layers, setLayers] = useState<string[]>([])
   useEffect(() => {
     let alive = true
@@ -33,11 +34,11 @@ export function LayerChip({ emb, setEmb }: { emb: string | null; setEmb: (e: str
   if (layers.length <= 1) return null // no layer choice to make — stay invisible (text-minimal)
   const current = emb || DEFAULT
   return (
-    <div className="lenschip layerchip" {...stamp('ui://controls/layer')}>
+    <div className="lenschip layerchip" ref={wrapRef} {...stamp('ui://controls/layer')}>
       <button
         className="lenschip-btn"
         {...stamp('ui://controls/layer/current')}
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggle}
         aria-expanded={open}
         title="the embedder layer — which embedding you look through"
       >
@@ -47,9 +48,9 @@ export function LayerChip({ emb, setEmb }: { emb: string | null; setEmb: (e: str
       <AnimatePresence>
         {open && (
           <>
-            <div className="lenschip-scrim" onClick={() => setOpen(false)} />
+            <div className="lenschip-scrim" onClick={close} />
             <motion.ul
-              className="lenschip-menu"
+              className={`lenschip-menu ${menuClass}`}
               initial={{ opacity: 0, y: -6, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -6, scale: 0.98 }}
@@ -62,7 +63,7 @@ export function LayerChip({ emb, setEmb }: { emb: string | null; setEmb: (e: str
                     className={`lenschip-item ${current === l ? 'lenschip-item--on' : ''}`}
                     onClick={() => {
                       setEmb(l === DEFAULT ? null : l)
-                      setOpen(false)
+                      close()
                     }}
                   >
                     {l}

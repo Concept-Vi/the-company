@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { fetchLayerDims, type Projection } from '../lib/api'
 import { transition } from '../tokens/motion'
 import { stamp } from '../lib/address'
+import { useChipMenu } from './useChipMenu'
 
 // THE RESOLUTION picker — the MRL meaning-zoom (Tim's "uses the maths, parametric, nothing static"). ?dim=<N>
 // truncates every read vector to its first N dims before the cosine: a continuous coarse↔fine MEANING zoom,
@@ -15,7 +16,7 @@ const FULL = 'full'
 
 export function ResChip({ proj, dim, setDim, emb }:
   { proj: Projection | null; dim: number | null; setDim: (d: number | null) => void; emb: string | null }) {
-  const [open, setOpen] = useState(false)
+  const { open, toggle, close, wrapRef, menuClass } = useChipMenu()
   const [dims, setDims] = useState<Record<string, Record<string, number>>>({})
   useEffect(() => {
     let alive = true
@@ -33,11 +34,11 @@ export function ResChip({ proj, dim, setDim, emb }:
   if (!full || options.length <= 1) return null // no vector lens / no finer step → stay invisible
   const current = dim ? String(dim) : FULL
   return (
-    <div className="lenschip reschip" {...stamp('ui://controls/resolution')}>
+    <div className="lenschip reschip" ref={wrapRef} {...stamp('ui://controls/resolution')}>
       <button
         className="lenschip-btn"
         {...stamp('ui://controls/resolution/current')}
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggle}
         aria-expanded={open}
         title="the resolution — how many vector dims the meaning is read at (the MRL zoom)"
       >
@@ -47,9 +48,9 @@ export function ResChip({ proj, dim, setDim, emb }:
       <AnimatePresence>
         {open && (
           <>
-            <div className="lenschip-scrim" onClick={() => setOpen(false)} />
+            <div className="lenschip-scrim" onClick={close} />
             <motion.ul
-              className="lenschip-menu"
+              className={`lenschip-menu ${menuClass}`}
               initial={{ opacity: 0, y: -6, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -6, scale: 0.98 }}
@@ -62,7 +63,7 @@ export function ResChip({ proj, dim, setDim, emb }:
                     className={`lenschip-item ${current === o ? 'lenschip-item--on' : ''}`}
                     onClick={() => {
                       setDim(o === FULL ? null : Number(o))
-                      setOpen(false)
+                      close()
                     }}
                   >
                     {o === FULL ? `full · ${full}d` : `${o}d`}
