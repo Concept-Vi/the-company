@@ -45,7 +45,7 @@ from typing import Any, Callable, Iterator
 
 from pydantic import BaseModel, Field
 
-from contracts.address import scheme as _scheme
+from contracts.address import scheme as _scheme, parse_session_address as _parse_session
 from fabric import client, transport
 from fabric.vram import VramGate
 
@@ -916,19 +916,23 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
         # session supervisor). Registry-is-truth: an unknown id RAISES — never fabricate a session.
         # The record (a dict) is the resolved content; live state/last_activity refinement is the
         # Suite's list_agent_sessions fold, which joins this record with the agent_sessions.* log.
-        rest = addr[len("session://"):]
-        if "/step/" in rest:
+        # The ONE shared session grammar (contracts.address.parse_session_address) — replaces the inline
+        # `"/step/" in rest` split that diverged from cc_gate's STEP_ADDR_RE (f1ade750's two-parsers flag).
+        # Fail-loud on a malformed sub-address (e.g. session://<sid>/bogus/x) is now structural, here.
+        parsed = _parse_session(addr)
+        sid, step_id = parsed["sid"], parsed["step"]
+        rec = store.load_agent_session(sid)
+        if rec is None:
+            raise ValueError(
+                f"resolve_address: unknown session {sid!r} (address {addr!r}) — no agent_sessions/ "
+                f"registry record. Suite.list_agent_sessions() shows what exists; the importer "
+                f"(ops/agent_sessions_importer.py) backfills the historical catalog. Fail loud, "
+                f"never fabricate a session.")
+        if step_id is not None:
             # Heart (step-as-node, the R15 gate target) — a tool-call STEP is a first-class addressable
             # node: session://<sid>/step/<tool_use_id> resolves the step from the session's transcript,
-            # reusing session_pointintime._iter_jsonl (NO new parser; scouted). Transcript-is-truth: an
-            # unknown session OR an unknown step RAISES (never a silent empty). This makes a running
-            # process's steps targetable in the ONE addressed grammar — cc_gate addresses steps here.
-            sid, step_id = rest.split("/step/", 1)
-            rec = store.load_agent_session(sid)
-            if rec is None:
-                raise ValueError(
-                    f"resolve_address: unknown session {sid!r} (address {addr!r}) — no agent_sessions/ "
-                    f"record; cannot resolve step {step_id!r}. Fail loud, never fabricate.")
+            # reusing session_pointintime._iter_jsonl (NO new parser; the address grammar is shared).
+            # Transcript-is-truth: an unknown step RAISES (never a silent empty). cc_gate addresses steps here.
             import os as _os
             jsonl = rec.get("jsonl_path")
             if not jsonl or not _os.path.exists(jsonl):
@@ -948,14 +952,6 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
             raise ValueError(
                 f"resolve_address: unknown step {step_id!r} in session {sid!r} (address {addr!r}) — no "
                 f"tool_use with that id in the transcript. Fail loud, never a silent empty.")
-        sid = rest
-        rec = store.load_agent_session(sid)
-        if rec is None:
-            raise ValueError(
-                f"resolve_address: unknown session {sid!r} (address {addr!r}) — no agent_sessions/ "
-                f"registry record. Suite.list_agent_sessions() shows what exists; the importer "
-                f"(ops/agent_sessions_importer.py) backfills the historical catalog. Fail loud, "
-                f"never fabricate a session.")
         return rec
     if sch == "cap":
         # Mirror-Registry LANE-CAP-WIRE — cap://<kind>/<id> → the CapabilityEntry registry row (the

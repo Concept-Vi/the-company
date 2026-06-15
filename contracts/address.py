@@ -129,3 +129,48 @@ def scheme(addr: str) -> str | None:
 
 def is_cas(addr: str) -> bool:
     return addr.startswith("cas://")
+
+
+# ── session:// sub-address grammar — declared ONCE (the shared parser/validator) ──────────────────────
+# session://<sid>                       → the whole agent-session record
+# session://<sid>/step/<tool_use_id>    → a tool-call STEP (the step-as-node / R15 gate target)
+# Declared HERE (the grammar home, beside scheme()/is_cas() — same pattern as contracts/ui_info.py:
+# parse_ui_address for ui://) so the resolver (runtime/cognition.py:resolve_address) and the gate
+# (runtime/cc_gate.py:_validate_step_address) share ONE definition. Before this, cognition.py used an
+# inline `"/step/" in rest` split (permissive: sid could contain '/') and cc_gate used STEP_ADDR_RE
+# (strict: `[^/]+`) — two parsers for one shape that already disagreed on `session://a/b/step/c`
+# (f1ade750's two-parsers-one-shape flag). This is the canonical parse both call; new sub-structured
+# schemes (clone://·member://·mind://) add their own `parse_<x>_address` here as DECLARED grammar, never
+# a second inline substring-split. <sid> carries no '/' (real ids are uuids); <tool_use_id> may.
+SESSION_STEP_INFIX = "/step/"
+
+
+def parse_session_address(addr: str) -> dict:
+    """session://<sid> → {"sid": <sid>, "step": None}; session://<sid>/step/<tuid> → {"sid", "step"}.
+    FAIL-LOUD (ValueError) on anything else under session:// — an unknown sub-path is MALFORMED, never a
+    silent-pass / guessed-nearest. The ONE canonical session-address parse (resolver + gate both call it)."""
+    if not isinstance(addr, str) or not addr.startswith("session://"):
+        raise ValueError(f"parse_session_address: not a session:// address ({addr!r}). Fail loud.")
+    rest = addr[len("session://"):]
+    if not rest:
+        raise ValueError(f"parse_session_address: empty session id (address {addr!r}). Fail loud.")
+    if "/" not in rest:
+        return {"sid": rest, "step": None}                       # session://<sid> — whole session
+    sid, _, tail = rest.partition("/")                           # rest = "<sid>/step/<tuid>"
+    kind, infix, step = tail.partition("/")                      # tail = "step/<tuid>"
+    if not sid or kind != "step" or not infix or not step:
+        raise ValueError(
+            f"parse_session_address: malformed session sub-address {addr!r} — the only legal sub-path is "
+            f"'session://<sid>/step/<tool_use_id>' (sid has no '/'; got sub-path {tail!r}). Fail loud, "
+            f"never a silent-pass.")
+    return {"sid": sid, "step": step}
+
+
+def is_step_address(addr: str) -> bool:
+    """True iff addr is the step-as-node form session://<sid>/step/<tool_use_id> — the ONE shape-check the
+    resolver and cc_gate's gate share (no second regex). cc_gate keeps raising its own GateError on a
+    False result, so its fail-loud is preserved verbatim (the behavior-preserving import-swap)."""
+    try:
+        return parse_session_address(addr)["step"] is not None
+    except ValueError:
+        return False
