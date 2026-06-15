@@ -222,8 +222,9 @@ law, SURFACED + SKIPPED; fell back to the grounded embedder-free beat (the selec
   2. ✅ done — gap #2 CORNER reading: residue → grow the box (`ec1ba61`); design-critic FAIL→fixed→**PASS**.
   3. ✅ done — strain is now SIGNED (warm = meaning farther · cool = nearer; seed §3) (`615b66a`, `440fc7d`);
      critic resolved the cool-tips-cold worry (NO); residual = pre-existing portrait core density (carry-over).
-  4. **NEXT (grounded, buildable): selection tether** — a line from the selected point to its detail card, on
-     ALL lenses (grounded in selection state; the broadest legibility gain, critic-noted).
+  4. ✅ done — **selection tether** (`817a2f1`): a dotted ink leader from the selected dot to its detail card on
+     ALL lenses (renderer-agnostic anchors; fixed overlay). Verified by use both viewports; design-critic
+     FAIL→fixed (desktop slash→arc-bowed-outward-from-hub + dotted, so it never reads as a radial spoke).
   5. **BLOCKED → surface to Tim (engine work, not counterfeit):**
      · audit #3 *axes as variables* — the cosmetic relabel is green-paint (the legend already names the axes;
        the lens menu already switches them). The SUBSTANTIVE form = COMPOSABLE axes (fill angle vs radius vs
