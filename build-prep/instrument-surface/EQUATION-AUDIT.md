@@ -75,7 +75,24 @@ Seed §10: circle-without-square (gate inbox / orphans), square-without-circle (
   the projection (needs the residue source). Building now = 1-of-3 = half-done.
 - 🔒 Revisit when an unembedded/orphan data source is wired. (Overlaps beat 2's corner reading.)
 
-### 7. THE GATE / PROMOTION — sample → ratified discrete  ✅ PROVEN feasible (2026-06-15); ship pending one-model persist
+### 7. THE GATE / PROMOTION — sample → ratified discrete  ✅ LIVE through the engine on the pplx LAYER (2026-06-15)
+**SHIPPED (backend, curl-verified live):** the keystone nucleation runs end-to-end through the bridge on the pplx
+embedder layer. `GET /api/projection?binding=by_nucleation&types_space=operators&space=repo&emb=pplx` → typing
+644 real `repo` content units against the 29-operator registry yields **2 BORN candidate-operators** —
+`fabric_retry_acceptance.py` (size 36, the acceptance-test-verifier cluster), `vram.py` (infra), a voice-deps
+cluster — + 536 residue (the corner). Matches the earlier in-process proof, now LIVE via the layer model.
+- **The layer model is real** (Tim's reframe — multiple embeddings over the same data): `repo` holds BOTH a BGE
+  layer (emb=None) AND a pplx layer (emb=pplx), 644 each, side by side. BGE default nucleation (emb=None)
+  verified UNCHANGED (non-destructive). Built: store write path (`909c122`) + nucleation read path (`dc6a542`);
+  operators is a pplx-native types-space (pilot) + pyramid; repo@pplx written additively (644, dim 2560).
+- **NOT yet drivable in the browser (THE BAR gap):** the `?emb=` layer is curl-driven only; the FE layer-picker
+  (so Tim picks the embedder layer by sight) lives in the SURFACE zone (the other session's Noticeboard work) —
+  to COORDINATE, not touch unannounced. So: verified-live + all-real-data + interactive-via-API, FE-drivable pending.
+- **L15 promotion gesture** rides on top (a born candidate → `propose_role` via `/api/registry/proposals`); the
+  instrument stays read-for-projection, the gesture delegates to the engine's write API (the instrument AUTHORS —
+  [[feedback-instrument-authors-not-readonly]]).
+
+### 7-historical. (earlier) PROVEN feasible (2026-06-15); ship pending one-model persist
 Seed §11: the discrete is sampled from the continuous at n; the GATE permanently promotes a sample to the
 ratified lattice. = the registry-promotion keystone (a born type → operator proposal → the wheel re-divides).
 - **L14 PROVEN MEANINGFUL** (in-process, resident pplx, no eviction): typing 644 real `repo` content units against
