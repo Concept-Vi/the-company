@@ -79,8 +79,13 @@ whether the Connections lens (node-type type-flow) is only a slice of the realiz
   is BUILT with real data: reads `SUITE.list_cascades`, each cascade's ordered steps → DIRECTIONAL precedence
   edges (step i → step i+1; node = role else op-verb), registry-true, cycles-as-cycles, reusing the
   by_node_type sector+chord seam. Verified live both viewports (14 sectors + 9 edges) + acceptance (multilayer
-  22, +4 guarded). relation_types edges STILL data-gated (0 marks stamped — `relation_type` events still 0/6291);
-  they light up the same way when marks get stamped. G10 now connects to node-type-flow + graph + cascade-precedence.
+  22, +4 guarded). G10 now connects to node-type-flow + graph + cascade-precedence.
+- **relation_types — still un-buildable both ways (evidence 2026-06-15, sharpened):** (a) as realized MARKS:
+  0 stamped (`relation_type` events 0/6291); (b) as DECLARED structure: too sparse — only 1/6 directed relations
+  has both near+far (`contradicts: principles→principles`, a lone self-loop), the rest `far=None`; the 3 declared
+  inverses (unlocks/has_fragment/follows) aren't registered relation_types (dangling). Either rendering = a
+  degenerate ~empty wheel = green-paint (fails THE BAR's "real data, never a toy slice"). GATED on EITHER marks
+  being stamped OR the rows gaining near+far+registered-inverses — then it lights up like cascade did. Not a G10 gap.
 
 ## RE-VERIFICATION — 2026-06-15 · BUILD COMPLETE confirmed (post-refactor, full pass)
 
