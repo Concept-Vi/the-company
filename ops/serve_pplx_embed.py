@@ -98,8 +98,23 @@ def load_model():
         dtype=dt,
     ).to(DEVICE)
     model.eval()
+    # MEMORY ENVELOPE BOUND (2026-06-15, lead) — ROOT CAUSE of the 8→15.5G balloon:
+    # the model's encode() tokenizes with truncation=True but NO max_length (modeling.py:228-231),
+    # so it truncates only at tokenizer.model_max_length, which defaults to 131072. A long transcript
+    # = a ~30K-token sequence in one padded batch → the bidirectional (non-causal) forward's
+    # MLP-intermediate activation (batch × seq × intermediate × 2B) spikes multi-GB → the CUDA
+    # caching allocator reserves that peak as high-water (nvidia-smi 15.5G) and fragments → next
+    # alloc stalls. Capping model_max_length makes truncation=True cut every input at EMBED_MAX_TOKENS,
+    # hard-bounding the sequence (and thus the peak) for EVERY client — a server-side safety net under
+    # any caller's own input cap. 8192 ≥ the backfill's ~6K-token input cap, so it only bites runaway inputs.
+    max_tok = int(os.environ.get("PPLX_EMBED_MAX_TOKENS", "8192"))
+    try:
+        model.tokenizer.model_max_length = max_tok
+    except Exception as e:  # fail loud — a silent un-cap is the balloon
+        print(f"[pplx-embed] WARNING could not set model_max_length: {e}", flush=True)
     _state["model"] = model
-    print(f"[pplx-embed] loaded in {time.time()-t0:.1f}s", flush=True)
+    _state["max_tok"] = max_tok
+    print(f"[pplx-embed] loaded in {time.time()-t0:.1f}s  model_max_length={getattr(model.tokenizer,'model_max_length',None)}", flush=True)
 
 
 @app.get("/v1/models")
@@ -134,12 +149,21 @@ async def embed(req: EmbeddingRequest):
     model = _state["model"]
     async with _state["lock"]:  # serialize GPU access
         # model.encode handles tokenization, late chunking, pooling, quantization.
+        # batch_size bounds how many docs share one padded forward → bounds the activation peak
+        # deterministically regardless of how many inputs a client sends (embeddings are identical
+        # to any batch size — batching is purely a memory/throughput knob). Pairs with the
+        # model_max_length cap to keep the forward's peak small enough for chat-4b co-residence.
         per_doc = model.encode(
             docs,
+            batch_size=int(os.environ.get("PPLX_EMBED_BATCH", "8")),
             quantization=req.quantization,
             normalize_embeddings=req.normalize,
             convert_to_numpy=True,
         )  # list[np.ndarray], each (n_chunks, dim)
+        # Return the spike's cached blocks to the driver so the reserved high-water drops back
+        # between requests (with expandable_segments this lets embed give VRAM back to chat-4b).
+        if DEVICE == "cuda":
+            torch.cuda.empty_cache()
 
     # Flatten (document, chunk) → rows in input order.
     data = []

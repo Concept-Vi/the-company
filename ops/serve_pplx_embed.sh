@@ -20,8 +20,17 @@ export PATH="$CUDA_HOME/bin:$PATH"
 export PPLX_EMBED_MODEL="${PPLX_EMBED_MODEL:-perplexity-ai/pplx-embed-context-v1-4b}"
 export PPLX_EMBED_PORT="${PPLX_EMBED_PORT:-8007}"
 export PPLX_EMBED_DTYPE="${PPLX_EMBED_DTYPE:-bfloat16}"
+# Memory-envelope bound (2026-06-15, lead) — pairs with the model_max_length + batch caps in
+# serve_pplx_embed.py so this 4B embedder co-resides with chat-4b on the 16G card.
+# expandable_segments lets the CUDA caching allocator GIVE BACK reserved segments after a spike
+# (so a long-input forward's high-water doesn't permanently pin VRAM) and cuts the fragmentation
+# that was turning the spike into a hard 15.5G reservation. MAX_TOKENS hard-caps each input's
+# token length (the truncation target); BATCH bounds docs-per-forward.
+export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
+export PPLX_EMBED_MAX_TOKENS="${PPLX_EMBED_MAX_TOKENS:-8192}"
+export PPLX_EMBED_BATCH="${PPLX_EMBED_BATCH:-8}"
 
-echo "[serve_pplx_embed] PID=$$ model=$PPLX_EMBED_MODEL port=$PPLX_EMBED_PORT dtype=$PPLX_EMBED_DTYPE"
+echo "[serve_pplx_embed] PID=$$ model=$PPLX_EMBED_MODEL port=$PPLX_EMBED_PORT dtype=$PPLX_EMBED_DTYPE alloc=$PYTORCH_CUDA_ALLOC_CONF max_tok=$PPLX_EMBED_MAX_TOKENS batch=$PPLX_EMBED_BATCH"
 exec python "$OPS/serve_pplx_embed.py"
 
 # PPLX_REMOTE_PATCH (2026-06-12, lead): the model's remote modeling.py targets an OLDER transformers —
