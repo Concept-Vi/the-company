@@ -1,5 +1,6 @@
 import type { SurfaceState } from '../App'
 import { LensChip } from '../toggles/LensChip'
+import { LayerChip } from '../toggles/LayerChip'
 import { Settings } from '../toggles/Settings'
 import { ViewToggle } from '../toggles/ViewToggle'
 import { LiveDot } from '../toggles/LiveDot'
@@ -26,7 +27,10 @@ export function Landscape({ s }: { s: SurfaceState }) {
 
       <aside className="rail" {...stamp('ui://strata/rail')}>
         <div className="rail-head">
-          {s.proj && <LensChip proj={s.proj} current={s.binding} onPick={s.setBinding} />}
+          <div className="bar-left">
+            {s.proj && <LensChip proj={s.proj} current={s.binding} onPick={s.setBinding} />}
+            <LayerChip emb={s.emb} setEmb={s.setEmb} />
+          </div>
           <div className="bar-right">
             <LiveDot live={s.live} setLive={s.setLive} />
             <ViewToggle view={s.view} setView={s.setView} />

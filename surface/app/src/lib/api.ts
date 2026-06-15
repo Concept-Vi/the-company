@@ -52,6 +52,8 @@ export type Projection = {
     space?: string
     poles?: { a: unknown; b: unknown }
     types_space?: string
+    emb?: string | null   // the active embedder LAYER (null = default/BGE) — the multi-layer model
+    res?: number | null   // the active MRL resolution (null = full dim)
   }
   bindings: BindingRef[]
   sectors: Sector[]
@@ -105,4 +107,10 @@ export function fetchProjection(params: Record<string, string | number | undefin
 
 export function fetchContext(address: string): Promise<ContextBundle> {
   return getJSON<ContextBundle>(`/api/context?address=${encodeURIComponent(address)}`)
+}
+
+// The multi-layer model's self-description: {space: [embedder-layer, …]} — registry-true (the engine scans the
+// store, the surface never hardcodes the layer set). The layer picker reads this to offer the available embedders.
+export function fetchLayers(): Promise<Record<string, string[]>> {
+  return getJSON<Record<string, string[]>>(`/api/layers`)
 }

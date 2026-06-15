@@ -42,6 +42,8 @@ export type SurfaceState = {
   loading: boolean
   binding: string
   setBinding: (id: string) => void
+  emb: string | null
+  setEmb: (e: string | null) => void
   selected: ProjPoint | null
   setSelected: (p: ProjPoint | null) => void
   feel: MotionFeel
@@ -84,6 +86,9 @@ export function App() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [binding, setBinding] = useState('raw')
+  // THE EMBEDDER LAYER (the multi-layer model): null = the default (BGE) layer; a named layer (e.g. 'pplx')
+  // reads that embedder's vectors — every lens is layer-aware (registry-true, driven by /api/layers).
+  const [emb, setEmb] = useState<string | null>(null)
   const [selected, setSelected] = useState<ProjPoint | null>(null)
   const [feel, setFeel] = useState<MotionFeel>('spring')
   const [view, setView] = useState<ViewMode>('both')
@@ -144,6 +149,8 @@ export function App() {
     if (at) params.at = at
     // the scale rung (G11): the semantic lens shows theme centroids at a coarse rung (else units)
     if (binding === 'semantic' && rung) params.rung = rung
+    // the embedder LAYER (the multi-layer model): read every lens through the chosen embedding (null = default/BGE)
+    if (emb) params.emb = emb
     fetchProjection(params)
       .then((p) => {
         if (!alive) return
@@ -160,7 +167,7 @@ export function App() {
     return () => {
       alive = false
     }
-  }, [binding, nuc, centre, poles, at, rung, pulse])
+  }, [binding, nuc, centre, poles, at, rung, emb, pulse])
 
   // THE LIVE SPINE (the seed §4 / mandate L9 — live, not a viewer): tail /api/stream from the newest seq we
   // know; when NEW events arrive, pulse a (throttled) re-fetch so the present visibly moves — new points bloom
@@ -232,6 +239,8 @@ export function App() {
     loading,
     binding,
     setBinding,
+    emb,
+    setEmb,
     selected,
     setSelected,
     feel,

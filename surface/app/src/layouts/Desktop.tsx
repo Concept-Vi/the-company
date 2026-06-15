@@ -1,5 +1,6 @@
 import type { SurfaceState } from '../App'
 import { LensChip } from '../toggles/LensChip'
+import { LayerChip } from '../toggles/LayerChip'
 import { Settings } from '../toggles/Settings'
 import { ViewToggle } from '../toggles/ViewToggle'
 import { LiveDot } from '../toggles/LiveDot'
@@ -20,8 +21,11 @@ export function Desktop({ s }: { s: SurfaceState }) {
       <Notice message={s.notice} onDismiss={s.dismissNotice} />
 
       <header className="bar bar--top" {...stamp('ui://chrome/topbar')}>
-        {s.proj && <LensChip proj={s.proj} current={s.binding} onPick={s.setBinding} />}
-        <CentreChip centre={s.centre} onReset={() => s.setCentre(null)} />
+        <div className="bar-left">
+          {s.proj && <LensChip proj={s.proj} current={s.binding} onPick={s.setBinding} />}
+          <LayerChip emb={s.emb} setEmb={s.setEmb} />
+          <CentreChip centre={s.centre} onReset={() => s.setCentre(null)} />
+        </div>
         <div className="bar-right">
           <LiveDot live={s.live} setLive={s.setLive} />
           <ViewToggle view={s.view} setView={s.setView} />

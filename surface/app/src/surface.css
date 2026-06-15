@@ -175,6 +175,9 @@
 
 /* ---- view-mode toggle (○ circle / ◻ square — the seed's two coordinate systems) ---------------- */
 .bar-right { display: flex; align-items: center; gap: var(--s-2); flex-wrap: wrap; justify-content: flex-end; }
+/* the OPTICS cluster (how you look: lens · layer · centre) — held together at the left so space-between
+   only separates optics from the right-hand controls; the layer never floats into the title position. */
+.bar-left { display: flex; align-items: center; gap: var(--s-3); min-width: 0; flex-wrap: wrap; }
 .viewtoggle { display: inline-flex; gap: 2px; background: var(--ground-secondary); border-radius: var(--r-pill);
   padding: 2px; }
 .viewtoggle-btn { border: none; background: transparent; color: var(--ink-faint); cursor: pointer;

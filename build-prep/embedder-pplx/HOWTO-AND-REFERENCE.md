@@ -102,11 +102,15 @@ GET /api/projection?binding=semantic&space=repo&emb=pplx&center=<addr>
   semantic, separator, nucleation, AND find_relations (the inversion-finder, `?emb=` — verified on pplx + BGE).
   Whole corpus dual-layered + pyramids; keystone + content-as-types live; self-describing (`/api/layers`).
   91/91 throughout, BGE byte-identical (non-destructive).
-- 🟡 THE ONLY REMAINING piece is the UI: the FE layer/embedder PICKER (so Tim drives `?emb=` by sight) — it lives
-  in `surface/app` (the other session's Noticeboard zone), so it's COORDINATE-don't-touch. Until then the layer
-  is API-drivable + agent-drivable (the dual interface's tool face works now).
-- 🟡 UI (coordinate — the other session's surface zone): a layer/embedder PICKER so Tim drives `?emb=` by sight.
-  Until then the layer is API-drivable only.
+- ✅ UI LAYER PICKER **BUILT + VERIFIED LIVE** (the `LayerChip`, `surface/app/src/toggles/LayerChip.tsx`): a
+  registry-true embedder picker that reads `GET /api/layers` (never a hardcoded layer set — a new embedder layer
+  becomes a menu row with ZERO surface edit), mirrors the `LensChip` (paper design system, collapsed at rest,
+  hidden when ≤1 layer). Mounted in all three layouts (Desktop/Portrait/Landscape) inside a new `.bar-left`
+  OPTICS cluster (lens · layer · centre held together, so the layer never floats into the title slot).
+  Verified live at **1440×900 AND 390×844 AND 844×390**: the chip drives `?emb=` on every lens (network-traced
+  `binding=semantic…&emb=pplx`), and switching default↔pplx on the keystone (nucleation, topics/topics rung 8)
+  VISIBLY re-projects — different born/candidate counts + sectors (pplx 2 candidates/10 sectors vs BGE 3/11).
+  The dual interface's HUMAN face now works; the MCP-door (tool face) for projection/layers is the next parity beat.
 
 ## 9. Capabilities roadmap (the leverage not yet wired)
 See MODEL-CAPABILITIES-AS-AFFORDANCES.md. Highest-leverage, all riding on this layer substrate:
