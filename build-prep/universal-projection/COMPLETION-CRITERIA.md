@@ -35,6 +35,27 @@ ruins the system"). **Expand-before-harden:** the brain docs are captured design
 
 ---
 
+## RE-VERIFICATION — 2026-06-15 · BUILD COMPLETE confirmed (post-refactor, full pass)
+
+The 2026-06-15 deepening (this session) extracted `bridge.build_projection` as the ONE engine under BOTH faces
+— which sits beneath G10 + G9. Ran the FULL verification pass this fire to prove the refactor preserved THE BAR
+(not "code looks right"):
+- **Acceptance battery GREEN — 198 checks / 6 suites:** projection_instrument 91 · semantic 23 · scale 29 ·
+  projections 34 · bridge_routes 8 · projection_multilayer 13 (the new live-store teeth, incl. the cwd-regression guard).
+- **G10 (Connections — directional typed edges) — ✅ RE-VERIFIED LIVE both viewports** (1440×900 + 390): 16
+  node-type sectors, real directional type-flow chords (output-type feeds input-type), cycles rendered as cycles.
+- **G9 (Two gravities — separator) — ✅ RE-VERIFIED LIVE both viewports:** variable poles (worldview/conceptual
+  ← → sessions/runtime), signed lean, the `separates` fifth-gate balance bar (47/115).
+- **Deepening — ✅** multi-layer · MRL-on-all-lenses · LayerChip · ResChip · optics-cluster FORM (design-critic
+  PASS, all 4 findings) · MCP `layers` door (live ✓).
+- **THE BAR — MET:** (1) verified live both viewports ✓ (2) all real data — 16 node-types + real edges, 162
+  items + real pole regions, the whole 5994-pt event corpus, every registry ✓ (3) Tim can DRIVE (lens/layer/
+  resolution/pole/scrubber/centre pickers) ✓ (4) interactive ✓.
+- **The ONLY open item — 🟡 MCP `project` live-verify, pending ONE reconnect** (a Tim INPUT, not a code gap):
+  re-tested this fire — still returns raw (the MCP process holds the pre-`3b57981` module). Proven by execution
+  (all 8 bindings resolve from a wrong cwd). SKIP-not-stall. No code change made this fire (completion clause:
+  don't churn once THE BAR is met).
+
 ## BUILD STATUS — 2026-06-14 · BUILD COMPLETE — verified live, all real data, drivable, interactive
 
 Groups 1–12 are all ✅, both faces, to THE BAR. The last item (#12 — the 20/80 water-law / TYPE-NUCLEATION)
