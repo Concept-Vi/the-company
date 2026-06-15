@@ -321,6 +321,7 @@ class Suite:
         from runtime.relation_types import RelationTypeRegistry
         from runtime.ai_tics import AiTicRegistry
         from runtime.forms import FormRegistry
+        from runtime.minds import MindRegistry        # R13 composable-mind registry (first-class, #59)
         _base = os.path.dirname(self.nodes_dir)
         self.lifters_dir = os.path.join(_base, "lifters")
         self.mark_types_dir = os.path.join(_base, "mark_types")
@@ -334,6 +335,13 @@ class Suite:
         self.relation_type_registry = RelationTypeRegistry().discover([self.relation_types_dir])
         self.ai_tic_registry = AiTicRegistry().discover([self.ai_tics_dir])
         self.form_registry = FormRegistry().discover([self.forms_dir])
+        # minds/ — the R13 composable-mind registry, first-class like the others (#59 / board://item-ffa884e5).
+        # A mind ROW is pure DATA (id/kind/role/cap/members/order/mode/mind/source_as/desc — no callable), so it
+        # IS declarative-direct create_*-authorable (unlike lifter/form). NOTE the run-path (resolve_address
+        # mind:// + binding_for_mode) reads minds.py's MODULE singleton; create_mind resets it (see the hook in
+        # _write_registry_file) so a created mind goes live on BOTH this Suite registry AND the run-path.
+        self.minds_dir = os.path.join(_base, "minds")
+        self.mind_registry = MindRegistry().discover([self.minds_dir])
         # The single-source create_*-authorable table: (kind, dir-attr, registry-attr, RegistryClass,
         # module-const-name). The create_* methods derive from this — never a per-registry literal. A bad
         # spec is REFUSED via the registry's OWN discover() gate (mirrors create_projection).
@@ -357,6 +365,9 @@ class Suite:
             # projection: LIFTED from the inline mcp_face/server.py body (the flagged BAR2 seam) into the
             # shared helper — the inline create_projection becomes the consolidated create(kind='projection').
             "projection":        ("projections_dir",         "projection_registry",        ProjectionRegistry,       "PROJECTION"),
+            # mind: R13 composable-mind. Pure-DATA row (no callable) → declarative-direct authorable here.
+            # create_mind ALSO resets minds.py's module singleton (the run-path's source) — see the hook below.
+            "mind":              ("minds_dir",               "mind_registry",              MindRegistry,             "MIND"),
         }
         self.role_registry = role_registry or RoleRegistry().discover([self.roles_dir])
         self.ROLE_REGISTRY = {rid: self.role_registry[rid].spec for rid in self.role_registry}
@@ -9908,6 +9919,12 @@ class Suite:
                                        extra_paths=[_refl[0]] if _refl else None,
                                        restore={_refl[0]: _refl[1]} if _refl else None)
         setattr(self, reg_attr, RegClass().discover([base]))   # rediscover → live in this process
+        if kind == "mind":
+            # minds uniquely have a RUN-PATH module singleton (minds.py mind_registry(), read by
+            # resolve_address mind:// + binding_for_mode). Reset it so a just-created mind is live THERE too,
+            # not only on this Suite registry — else the new mind would be uncreatable-by-mind:// until restart.
+            from runtime import minds as _minds
+            _minds.reset_registry()
         self._emit("apply", f"created {kind} '{rid}' DIRECTLY — now a live {kind} · {sha[:8]}",
                    node_name=rid, commit=sha)
         self.refresh_map()
@@ -9941,6 +9958,14 @@ class Suite:
         """#58 DIRECT — create an AI_TIC (the fingerprint marker vocabulary: framework_imposition/
         versioning/false_finality/…) LIVE, no approval. See runtime/ai_tics.py."""
         return self._write_registry_file("ai_tic", spec)
+
+    def create_mind(self, spec: dict) -> dict:
+        """#59 DIRECT — create a MIND (R13 composable-mind: kind=role binds a roles/ role · kind=model binds
+        a cap:// provider · kind=composition wires members via order-edges · kind=binding maps a mode→mind)
+        LIVE, no approval — a mind ROW is pure data. Authoring is via the SAME shared gate as the other
+        registries; create_mind additionally resets minds.py's run-path singleton so the new mind is
+        mind://-resolvable + cast-bindable immediately. See runtime/minds.py + minds/AGENTS.md."""
+        return self._write_registry_file("mind", spec)
 
     # === MARKS — the suite-side API over STORE-2's append_mark/marks_for/marks_by_type ================
     # A MARK targets a CLAIM or SPAN (the `target` string), carries a REGISTERED mark_type (from the
