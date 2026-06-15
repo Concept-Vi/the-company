@@ -90,6 +90,7 @@ export function Separator({
                   fillOpacity={0.6}
                   stroke={isSel ? 'var(--ink-primary)' : 'transparent'}
                   strokeWidth={isSel ? 1.5 : 0}
+                  data-tether-point={isSel || undefined}
                   style={{ pointerEvents: 'none' }}
                   initial={{ cx: x, cy: y, r: 0, opacity: 0 }}
                   animate={{ cx: x, cy: y, r: isSel ? 5.5 : 2.6, opacity: 1 }}

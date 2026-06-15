@@ -131,6 +131,7 @@ export function Nucleation({
                   fillOpacity={inside ? 0.6 : isTail ? 0.55 : 0.46}
                   stroke={isSel ? 'var(--ink-primary)' : 'transparent'}
                   strokeWidth={isSel ? 1.5 : 0}
+                  data-tether-point={isSel || undefined}
                   style={{ pointerEvents: 'none' }}
                   initial={{ cx: pos.x, cy: pos.y, r: 0, opacity: 0 }}
                   animate={{ cx: pos.x, cy: pos.y, r: isSel ? 5.5 : inside ? 2.6 : isTail ? 1.8 : 1.9, opacity: 1 }}

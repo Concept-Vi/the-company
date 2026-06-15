@@ -120,6 +120,7 @@ export function Disclosure({
         <motion.aside
           className={`disclosure disclosure--${variant}`}
           data-ui-ref={addr}
+          data-tether-card=""
           {...enter}
           transition={transition('enter', feel)}
         >

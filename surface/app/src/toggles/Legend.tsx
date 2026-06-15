@@ -1,4 +1,4 @@
-import type { SurfaceState } from '../App'
+import type { SurfaceState, ViewMode } from '../App'
 import type { Projection } from '../lib/api'
 import { stamp } from '../lib/address'
 
@@ -12,7 +12,7 @@ function angleMeaning(af: string): string {
   return `${af.replace(/_/g, ' ')} (one sector each)`
 }
 
-function describe(proj: Projection, view: 'circle' | 'square', centred: string | null): { title: string; lines: string[] } {
+function describe(proj: Projection, view: ViewMode, centred: string | null): { title: string; lines: string[] } {
   const b = proj.binding
   const n = proj.n
   if (view === 'square') {

@@ -75,12 +75,20 @@ Seed §10: circle-without-square (gate inbox / orphans), square-without-circle (
   the projection (needs the residue source). Building now = 1-of-3 = half-done.
 - 🔒 Revisit when an unembedded/orphan data source is wired. (Overlaps beat 2's corner reading.)
 
-### 7. THE GATE / PROMOTION — sample → ratified discrete  🔒 (keystone L15, model-load blocked)
+### 7. THE GATE / PROMOTION — sample → ratified discrete  ✅ PROVEN feasible (2026-06-15); ship pending one-model persist
 Seed §11: the discrete is sampled from the continuous at n; the GATE permanently promotes a sample to the
 ratified lattice. = the registry-promotion keystone (a born type → operator proposal → the wheel re-divides).
-- 🔒 Blocked on L14 (embed registry definitions = a model-load data-build). Standing rule
-  `consult-before-model-loads` → surface as an explicit ASK to Tim; build the unblocked read-path/UI scaffold
-  meanwhile (`/api/registry/proposals` read + the propose gesture; instrument stays pure-read).
+- **L14 PROVEN MEANINGFUL** (in-process, resident pplx, no eviction): typing 644 real `repo` content units against
+  the 29 OPERATORS (roles) → a BORN ✦ candidate = "acceptance-test verifier" (a real `propose_role` payload), a
+  forming voice/TTS cluster, and the mixed pile correctly REJECTED as noise by the permutation null. So the keystone
+  is real — content the operator registry under-covers piles into a defensible candidate new operator. (Evidence +
+  script in STATUS.md.) The advisor's "valid ≠ meaningful" → MEANINGFUL.
+- **Not Tim-blocked** (Tim 2026-06-15: "No blocks on Tim" — the embedder/loadout is mine). The integrated lens SHIP
+  needs operators + an items space in ONE embedding model, persisted with pyramids: **pplx-forward** (Tim's chosen
+  embedder — persist `operators`+a pplx items-space+pyramids+a `by_operator_nucleation` binding+bridge-restart; the
+  first spaces of the pplx migration, NOT a parallel system) — recommended; OR BGE-restore (bring up :8001, a
+  GPU eviction of the unused pplx — harness-guarded). L15 promotion gesture (`/api/registry/proposals` read +
+  `propose_role`) rides on top; the instrument stays PURE READ (the gesture delegates to the engine's write API).
 
 ### Already ✅ (described & legible)
 - Centre = origin, attention = origin-selection (§2/§8) — "centre here" + CentreChip.

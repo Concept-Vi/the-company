@@ -8,6 +8,7 @@ import { Legend } from '../toggles/Legend'
 import { Scrubber } from '../toggles/Scrubber'
 import { Notice } from '../toggles/Notice'
 import { Disclosure } from '../wheel/Disclosure'
+import { Tether } from '../wheel/Tether'
 import { WheelOrState, SelectHint } from './shared'
 import { stamp } from '../lib/address'
 
@@ -43,6 +44,7 @@ export function Landscape({ s }: { s: SurfaceState }) {
         <Legend s={s} />
       </aside>
       <Scrubber at={s.at} setAt={s.setAt} corpusStart={s.corpusStart} now={s.now} />
+      <Tether selectedSeq={s.selected?.seq} />
     </div>
   )
 }

@@ -153,6 +153,70 @@ POLISHING THE SURFACE** (tether, densification, wheel framing). So nothing is pa
 Suggested order by dependency: L14 (embed registry defs — the model-load data-build) unblocks the L15 keystone;
 the engine beats + surface polish are independent. Each is one big beat per fire.
 
+## ✅ KEYSTONE L14 — PROVEN MEANINGFUL via pplx (2026-06-15). Tim: "No blocks on Tim" — the embedder/loadout is mine.
+**UPDATE (supersedes the "blocked on Tim" framing below — Tim corrected it):** the keystone is NOT blocked on a Tim
+decision. The embedder/loadout is mine via the `company` CLI. I validated the keystone IN-PROCESS against the
+RESIDENT pplx (:8007, Tim's chosen embedder) — NO eviction, NO store writes — and it is **genuinely meaningful**:
+- types = the 29 role declarations (operator semantic), embedded with pplx (dim 2560), clustered into 8 coherent
+  operator-families. items = **644 real `repo` content units** (cas-resolved), embedded with pplx (same model →
+  valid cosines). Ran the engine's OWN `nucleation_report`.
+- **Result:** inside=2, pile=642 (honest under-coverage — cognition operators don't "cover" arbitrary code).
+  **BORN ✦ #1 (size 34) = every member an `*_acceptance.py`** → a crisp candidate operator "acceptance-test
+  verifier" (a real `propose_role` payload). A forming cluster (size 19) = ALL voice/TTS/STT files (a coherent
+  speech region). The mixed pile (size 37) was **correctly REJECTED as noise** by the permutation null
+  (margin 0.270 ≤ p95 0.275) — the honesty discipline holds, no green-paint.
+- Test script: `$CLAUDE_JOB_DIR/tmp/keystone_pplx_test.py` (reusable). Conclusion: **pplx makes L14 real** — the
+  advisor's "valid ≠ meaningful" question is answered MEANINGFUL.
+- **SHIP (the remaining work, NOT blocked):** the integrated keystone lens needs operators + an items space in ONE
+  embedding model, persisted with pyramids. Cleanest = pplx-forward (Tim's chosen embedder): persist `operators`
+  (pplx) + a pplx content items-space + pyramids + a `by_operator_nucleation` binding, then bridge-restart so the
+  lens is live. This is the FIRST spaces of the pplx migration Tim already chose (NOT a parallel system — the
+  migration seed). Alternative = BGE-restore (bring up :8001 via a GPU eviction of the unused pplx — voice
+  untouched; harness guards GPU eviction). Either lands the SAME lens; pplx-forward needs no eviction + honors the
+  recorded embedder decision → recommended.
+
+### (historical) the system-state finding that drove the above — BGE :8001 is DOWN
+Pursued the keystone L14 (embed the registry definitions so registries are nucleable → born ✦ = candidate new
+OPERATOR). Did the gate work the no-green-paint law demands FIRST, and it surfaced the embedder state. **Evidence
+(verified, not inferred):**
+- **The keystone's true shape (advisor-reconciled):** L14 must feed L15 — a born-type must be consumable by
+  `propose_role` / `/api/registry/proposals` as a candidate operator, or it's a nucleation *demo*, not the GATE
+  (seed §11). Self-nucleating the registry fails both ways (all-83 rows → born-types are mixed-KIND sub-clusters
+  that synthesize into no role; roles-only → pile <6, zero births). The shape that PASSES: **types_space = the
+  operators (the 29 roles) + pyramid; items = an existing embedded CONTENT corpus** → "content no existing role
+  covers piles up → a coherent pile = a candidate new role" = a real `propose_role` payload. (Nucleation's own
+  docstring confirms this cross-instance pairing is the intended design, `runtime/bridge.py:645`.)
+- **The hard blocker — the embedder is mid-migration and currently DOWN.** Read the actual stored vectors on disk
+  (`.data/store/vectors/`): **every existing space is 1024-dim = BGE-M3** (repo, principles, worldview, topics,
+  history + all scale pyramids), embedded 2026-06-06. But `fabric.config` wires `DEFAULT_EMBED_MODEL=BAAI/bge-m3`
+  on **:8001, which is DOWN** (curl → 000). The CHOSEN embedder **pplx-embed-context-4b (:8007) is resident
+  (~8.2GB) but UNWIRED and unused** — no space is pplx-embedded; it's not the default. So **embedding/capture
+  degrades SYSTEM-WIDE right now, for every session** — verified directly: POSTing the 29 operator declarations
+  through the bridge's `/api/cognition/corpus` returned `embedded:0, degraded:true` (the sanctioned loud degrade).
+- **Why no valid path tonight:** valid nucleation needs types + items in the SAME embedding model. (a) pplx-operators
+  vs BGE-items = incomparable (different model, not just dim) → meaningless cosines. (b) BGE-operators needs :8001
+  up = ~2.5GB on a FULL GPU (15.6/16.0) → evict from the pplx+voice loadout, which (i) could clobber a peer
+  mid-migration — pplx-resident-while-corpus-still-BGE means the migration is in-flight/staged, and I can't
+  coordinate to check (no migration handoff/commit/uncommitted-work found, but absence isn't proof), and (ii)
+  reverses an intentional loadout + Tim's recorded pplx choice. (c) re-embed everything with pplx = the migration
+  itself, not a beat. **Did NOT touch the shared GPU/embedder** (read-first on shared ops; consult-before-model-loads
+  — the greenlit "model load" was for the keystone, not a loadout eviction with cross-session voice impact).
+- **`projections/operators.py` — DECLARED, UNPOPULATED, pending the embedder decision** (`mcp__company__create`,
+  committed + reflected in projections/AGENTS.md). Harmless: `produced_by:code` keeps it OUT of the 4B capture-schema,
+  and 0 vectors keep it OUT of both nucleation pickers. It is correct scaffolding — when the embedder is resolved,
+  embed the 29 role declarations into it (the extraction script is ready: `$CLAUDE_JOB_DIR/tmp/embed_operators.py`).
+
+**→ SURFACED TO TIM (decision, not yes/no). The embedder migration looks unfinished; embedding is broken for
+every session right now. Options to unblock (this keystone AND all capture):**
+- **(A) Finish the pplx migration** — wire pplx as default (`fabric.config`) + re-embed the corpus with pplx. The
+  cleanest end-state (honors the recorded pplx choice), but it's the migration, system-wide.
+- **(B) Restore BGE :8001** — bring the wired embedder back + adjust the GPU loadout to fit it. Fastest unblock of
+  the *current* corpus, but contradicts the pplx choice and needs loadout room.
+- **(C) Something else** — e.g. a parallel pplx test-pair just to validate the keystone, or hold until the migration
+  owner (if a peer) lands it.
+This is Tim's call (touches the embedder decision + GPU loadout + possibly a peer's in-flight work) → per the loop
+law, SURFACED + SKIPPED; fell back to the grounded embedder-free beat (the selection tether) so the night builds.
+
 - **NEXT BEATS (re-sequenced by GROUNDEDNESS — the gate work below proved several audit gaps are blocked):**
   1. ✅ done — audit + gap #1 coincidence spine (`ce04fcf`).
   2. ✅ done — gap #2 CORNER reading: residue → grow the box (`ec1ba61`); design-critic FAIL→fixed→**PASS**.
