@@ -51,6 +51,20 @@ is; this is the antidote. Items move UP only on real evidence (a run, a diff rea
   the transcript). Channel `advisors` created (the new named-channel registry, in use). manifest:
   channel-memory/map/launched-fleet.json. CONSTRAINT FOUND: supervisor caps LIVE sessions at 3 (resource
   guard, configurable) → 3 advisors live now; the rest are launch-on-demand within the cap (see DECISIONS #4).
+- ★★ THE NOTICEBOARD / BOARD (Tim's "inward-facing half", 2026-06-15) — CORE BUILT + PROVEN-BY-USE.
+  cc_board (file/list/get/transition) + 3 file-discovered registries (item_types/ · source_types/ ·
+  board_edges/) + the `company board` CLI + the cc_board MCP tool. tests/cc_board_acceptance.py = **26/26**
+  (lead-ran, falsify-first: watched it FAIL before the build, then green). PROVEN by use: lead ran the CLI
+  end-to-end — filed the genesis idea (board://item-72af5664), listed, transitioned captured→discussing,
+  and the illegal move discussing→resolved FAILED LOUD (the registry-declared lifecycle is the only truth).
+  type/state/source/edge-kind are registry REFS (no enums); links are typed cross-registry edges (reused
+  RelationTypeRegistry VERBATIM — the Heart's edge layer, first exercise; new-edge-kind-by-row-add proven,
+  test 25-26). Reuses lifters.frontmatter._extract + store.fs_store._atomic_write_fsync (SCOUTED before
+  building, per the new fabric norm — not hand-rolled). Commit 8b29915. PENDING: (a) cross-session proof
+  (a DIFFERENT member files via the CLI → lead picks up) — IN FLIGHT (clone-cacc9e8b filing now); (b) the
+  cc_board MCP TOOL is live only after a `/mcp` reconnect (server predates it — verified it imports +
+  registers cleanly: 21 tools, no errors). NOT recall-able yet (recollection confirmed neither recall index
+  sweeps channel-memory/*.md — that wire is recollection's follow-up, landing on board://<id> + `source`).
 
 **🔨 BUILT, NOT YET LEAD-VERIFIED END-TO-END** (committed + isolated-tests-green OR actively building;
 the lead has NOT confirmed the cross-component path by use — these are the morning's real watch-items):
@@ -121,7 +135,8 @@ wire (`op=recall`) once the recall-fork posts its signature. Move items up this 
 - [x] ★ B-7 FIXED + PHASE-A GREEN END-TO-END (wpkmmwuvf DONE; verify agent re-ran by use, ALL criteria PASS): capture(incl sidechain)→embed(2560 served axis)→default `search` returns ranked results w/ provenance, NO dim mismatch; legacy vec_exchanges 384 RETIRED (0 rows, ND-1); count parity 5=5=5 (transaction holds, no orphan); ★ dim is REGISTRY-SOURCED from the lens descriptor, NOT hardcoded (the fork's catch — honored). TWO real bugs fixed: (1) the 384/2560 dim-mismatch, (2) a hidden int8-float JSON bug (served int8-range values arrive as floats → vec_int8 JSON-parse throw; fix = quantizeInt8 round-not-truncate). Commits 36c6f89 + e7bcd07. Tree clean; live store untouched.
   - NOTE (adopted work): a prior session had UNCOMMITTED per-lens wiring (never built/tested/committed, one false "verified" comment) — adopted per incomplete-work-in-scope, the live bug inside it found+fixed, all committed.
   - ⚠ FLAGS (honest, non-blocking): (a) the served-embed latency (~1-3s/2560-dim embed) forced test serialization → suite wall-time ~160s→~313s; revisit later with bounded concurrency (a dev-experience tradeoff, not a correctness issue). (b) 1 PRE-EXISTING out-of-lane test red: show.test.ts timezone off-by-one, present since foundation commit 19e6012, NOT caused by the fix, correctly left untouched.
-- [ ] NEXT beats: (2) recall spine channel-scopable = 5th wire (define+post the signature; the spine = the now-working axis-selector search + a session-ids filter) · (3) link/provenance graph (crossings) · (4) distill L1/L2 — held for Tim's steer (he's back + present at this milestone).
+- [x] ★ BEAT-2 GREEN (wb4jdcpsq, recall test 5/5, verified by use): channel-scoped recall = the 5th wire. recall({session_ids?,query,k?,axis?,mode?,is_sidechain?}) → RecallHit[] w/ provenance exchange://<sid>/<i>; session_ids = structural IN-filter (model-independent, composes w/ any axis); single→only-that-sid, two→union-no-leak, unscoped→all, bogus-axis→throws. Caught + fixed a silent-failure trap: vec0 KNN runs BEFORE the WHERE → narrow channel could return 0 in-channel rows; fix = widen k when scoped (discriminator test RED→GREEN). Signature POSTED to fabric for the lead's cc_channel op=recall, w/ 3 gaps flagged (NO rerank in recollection repo; full-axis-k O(N) at scale; singular session_id now also full-axis-k). Commit a1c376b.
+- [ ] HELD for lead go-ahead (per Tim's sequence: ask lead "can I keep going" → arm cron after reply): beat-3 link/provenance graph (crossings) · beat-4 distill L1/L2 → Pillar-1 identity layer (north star). Cron NOT yet armed. Awaiting lead reply on g-1781443728.
 - status: Phase-A GREEN. Reversible self-approve via loop-prep recorded intent; NOTHING irreversible from my lane; serving lane untouched; pinging fork to free :8007 + request the preference-extract draft for my Pillar-1 gate.
 
 ## Cross-reviews logged
@@ -147,7 +162,18 @@ wire (`op=recall`) once the recall-fork posts its signature. Move items up this 
    advisor you want to consult (≤3 live), tear down to swap — resource-sane, no 16 idle claude processes;
    (B) raise the cap to hold N advisors live at once (more RAM/processes; real cost). Either way, USE of
    the fleet needs the company MCP reconnected (`/mcp`) — my live MCP predates tonight's transport code.
-5. (append any further irreversible/external item the fabric hits here, with context)
+6. ★ NOTICEBOARD MCP TOOL needs a `/mcp` reconnect to go live — the running company MCP server predates
+   tonight's `cc_board` tool (same staleness class as #4). The CLI (`company board ...`) + the runtime work
+   NOW; only the agent-facing `cc_board` MCP tool waits on the reconnect (verified it imports + registers
+   cleanly). FOR NOW/MORNING: one `/mcp` reconnect makes `cc_board` callable as a tool; until then sessions
+   file via the CLI (which IS the cross-session loop, so nothing is blocked).
+7. ★ RECOLLECTION (ch-83e2cque) BUILD-CRON + UNATTENDED MODEL LOADS — surfaced, NOT armed. Recollection
+   asked to arm an autonomous build cron for its lane (beats 3/4 + the recall↔board wire). Lead GAVE GO on
+   the git-revertible build work (build now, commit, flag at seams) but HELD the cron-arming + any unattended
+   embedding-model loads for Tim's explicit yes: a member must not self-arm an autonomous self-modifying
+   loop, and model loads are consult-Tim-first (GPU/voice share). DECISION: arm the recurring auto-building
+   cron (+ which model, resource budget), or keep it manual-trigger? (The revertible build proceeds either way.)
+8. (append any further irreversible/external item the fabric hits here, with context)
 
 ## Provenance + safety
 trust-tags on every entry; high-bar recovery gates self-approval; git-revert + cross-review the net.
