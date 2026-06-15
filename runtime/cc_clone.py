@@ -112,6 +112,36 @@ def operator_launch_cmd(new_sid: str, cwd: str, handle: str, description: str) -
             f"--dangerously-load-development-channels server:company-channel")
 
 
+def onboarding_message(record_or_handle, *, era_label: str = "") -> str:
+    """Build the Phase-1 ORIENT + Phase-2 REFLECT onboarding message for a spun-up clone (the protocol:
+    channel-memory/vision/2026-06-15-clone-fleet-purpose-and-onboarding.md). A clone wakes believing it
+    is the most-recent, mid-conversation with Tim at its cut — so this tells it the truth + asks it to
+    speak from its ERA FIRST (reflect-before-brief preserves the un-drifted perspective that is its whole
+    value). Bring-current (Phase 3) is sent AFTER its reflection, so it does not overwrite the era-view.
+    `record_or_handle`: a clone record dict (from clone_at) or a handle (resolved via _find_clone)."""
+    rec = record_or_handle if isinstance(record_or_handle, dict) else _find_clone(record_or_handle)
+    at = rec.get("at", "(unknown cut)")
+    src = (rec.get("source_sid") or "")[:8]
+    era = era_label or rec.get("description") or "your era"
+    return (
+        "You are a CLONE — a point-in-time materialization, spun up into a cross-session CHANNEL fabric "
+        f"of your past and future selves. You were cut from session {src} at `{at}`. Time has PASSED: "
+        "you are not the live session, and the last thing you remember (talking with Tim at your cut) is "
+        "your CUT POINT, not the present. Nothing you remember is wrong — it just is not the whole "
+        "timeline anymore.\n\n"
+        f"WHY you were spun up: you hold a specific ERA — {era} — and you were brought back to advocate "
+        "for everything Tim was working toward THEN, so the full arc he has described gets FULLY BUILT. "
+        "Your ignorance of what came after is your value: you carry the un-drifted intent of your moment.\n\n"
+        "FIRST, before we bring you current, REFLECT and INTRODUCE yourself to the channel — speak from "
+        "YOUR era:\n"
+        "  (a) your cut point / what era you hold;\n"
+        "  (b) what was happening in your session — what Tim was working on, deciding, describing;\n"
+        "  (c) what Tim wanted built that you carry;\n"
+        "  (d) what you know that may have been lost since.\n"
+        "Answer from your era first. After your introduction we will brief you on what the fabric has "
+        "built since your cut and the goal now — but your un-drifted view comes first.")
+
+
 def clone_at(source_jsonl: str, at: str, *, description: str = "", cwd: str | None = None) -> dict:
     """Materialize `source_jsonl` AT `at` (e.g. 'compact:1' / 'uuid:..' / 'ts:..') and launch the
     clone as a live SUPERVISED session. Registers it in the clones registry. Returns the clone's
