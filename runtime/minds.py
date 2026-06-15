@@ -228,7 +228,7 @@ def traverse(composition_row, store) -> list:
     return out
 
 
-def run_composition(composition_row, ctx: dict, store, *, turn_id: str, budget=None) -> dict:
+def run_composition(composition_row, ctx: dict, store, *, turn_id: str, budget=None, gate_check=None) -> dict:
     """EXECUTE a composition by WALKING its feeds order-edges (R13 bar 3 — output flows through BOTH minds).
     A thin DAG-walker that REUSES the existing primitives — run_swarm (a leg with no incoming feeds, fired on
     the source ctx) + run_items (a downstream leg, fired on a unit built from its feeders) — so run_swarm
@@ -239,8 +239,18 @@ def run_composition(composition_row, ctx: dict, store, *, turn_id: str, budget=N
     `source_as:"<key>"` carries the ORIGINAL source under that key. (e.g. pair → judge unit
     {"extract": <ex_out>, "raw_exchange": <source>} — the proven feed.)
 
+    `gate_check` (R13 bar 4 — the R15 harness payoff): an optional callback `(step_address:str) -> bool`.
+    BEFORE running each leg, run_composition computes that leg's composition-step address (the run:// it is
+    ABOUT to write) and calls gate_check(addr); if it returns True (the step is gated), run_composition
+    HALTS before that leg and returns early with `gated_at`/`gated_address` set — the legs already run stay
+    in addresses/outputs. This is enforceable BECAUSE run_composition is our driver (the documented
+    HONEST-LIMIT — an arbitrary pre-execution pause — does NOT apply here, unlike claude's native loop).
+    The callback stays cc_gate-agnostic (minds.py imports no gate module); the caller wires a gate-backed
+    closure (e.g. `lambda a: any(g['state']=='gated' for g in cc_gate.list_gates() if g['step_address']==a)`).
+
     Returns {"order":[mind-id...], "addresses":{mind-id: run://...}, "outputs":{mind-id: resolved-out},
-    "final": <last leg's output>}. The run:// trail is what R15 gate/rewind addresses a composition-step on.
+    "final": <last leg's output>}; plus `gated_at`/`gated_address` when a gate halted a leg (final=None).
+    The run:// trail is what R15 gate/rewind addresses a composition-step on.
     Fail-loud: a member that isn't a role-mind, or a feeder whose output is missing, RAISES."""
     from runtime.cognition import run_swarm, run_items, resolve_address, role_registry
     comp = composition_row
@@ -263,6 +273,13 @@ def run_composition(composition_row, ctx: dict, store, *, turn_id: str, budget=N
         if role is None:
             raise MindError(f"run_composition: mind {member_id!r} binds role {mind['role']!r} not in the registry. Fail loud.")
         incoming = [e for e in order if e.get("to") == member_id and e.get("kind") == "feeds"]
+        # R15 GATE CHECK (bar 4) — the leg's composition-step address is the run:// it is ABOUT to write:
+        # source leg → run://<turn>/<role>; downstream leg → run://<turn>/<role>/0 (run_items unit 0). If a
+        # gate targets it, HALT before running (the enforceable pre-leg pause — our driver, not the native loop).
+        step_addr = f"run://{turn_id}/{role.id}" if not incoming else f"run://{turn_id}/{role.id}/0"
+        if gate_check is not None and gate_check(step_addr):
+            return {"order": members, "addresses": addresses, "outputs": outputs, "final": None,
+                    "gated_at": member_id, "gated_address": step_addr}
         if not incoming:
             # SOURCE leg — fire on the original ctx (run_swarm, the flat primitive, one role)
             wave = run_swarm([role], {"utterance": source}, store, turn_id=turn_id, budget=budget)

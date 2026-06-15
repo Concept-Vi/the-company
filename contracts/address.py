@@ -188,6 +188,46 @@ def is_step_address(addr: str) -> bool:
         return False
 
 
+# ── run:// composition-step grammar — a composition LEG as a gate target (R13 bar 4 / R15) ─────────────
+# run://<turn>/<member>            → a SOURCE leg's output    (run_swarm address: run://<turn>/<role>)
+# run://<turn>/<member>/<index>    → a DOWNSTREAM leg's output (run_items address: run://<turn>/<role>/<i>)
+# This is the address run_composition (runtime/minds.py) emits per leg (its `addresses[member]`). R15's
+# gate (cc_gate) gates a COMPOSITION leg on it — not only a native session tool-step. The harness payoff:
+# run_composition is OUR driver, so a pre-leg pause IS enforceable here (unlike claude's native loop, the
+# documented HONEST-LIMIT for session-steps). run:// is already the canonical resolver scheme
+# (resolve_run_ref) — this only declares the gate-target SHAPE. ONE parser home (beside is_step_address);
+# cc_gate accepts EITHER step form, never a second inline split.
+def parse_composition_step_address(addr: str) -> dict:
+    """run://<turn>/<member>[/<index>] → {"turn", "member", "index": int|None}. The two legal shapes are a
+    SOURCE leg (run://<turn>/<member>, index=None) and a DOWNSTREAM leg (run://<turn>/<member>/<int>).
+    FAIL-LOUD (ValueError) on anything else under run:// — never a silent-pass / guessed-nearest."""
+    if not isinstance(addr, str) or not addr.startswith("run://"):
+        raise ValueError(f"parse_composition_step_address: not a run:// address ({addr!r}). Fail loud.")
+    rest = addr[len("run://"):]
+    parts = rest.split("/")
+    if len(parts) == 2 and all(parts):
+        return {"turn": parts[0], "member": parts[1], "index": None}
+    if len(parts) == 3 and all(parts[:2]) and parts[2] != "":
+        try:
+            return {"turn": parts[0], "member": parts[1], "index": int(parts[2])}
+        except ValueError:
+            raise ValueError(
+                f"parse_composition_step_address: index {parts[2]!r} in {addr!r} is not an int. Fail loud.")
+    raise ValueError(
+        f"parse_composition_step_address: malformed composition-step {addr!r} — expected "
+        f"'run://<turn>/<member>' or 'run://<turn>/<member>/<index>'. Fail loud, never a silent-pass.")
+
+
+def is_composition_step_address(addr: str) -> bool:
+    """True iff addr is a run_composition leg address run://<turn>/<member>[/<index>] — a gate-able
+    composition-step (R13 bar 4). Sibling of is_step_address (session-step); cc_gate accepts EITHER."""
+    try:
+        parse_composition_step_address(addr)
+        return True
+    except ValueError:
+        return False
+
+
 # ── clone:// sub-address grammar — declared ONCE (the fleet/provenance axis joins the one state) ───────
 # clone://<source-sid>/<cut>  → a clone (a forked session at a point in time). cut = the clone record's
 # `at` field VERBATIM (compact:N | uuid:<uuid> | ts:<iso> — a path-segment colon is address-safe). The

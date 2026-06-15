@@ -34,7 +34,7 @@ from pathlib import Path
 
 from store.fs_store import _atomic_write_fsync
 from lifters.frontmatter import _extract as _fm_extract
-from contracts.address import is_step_address      # the SHARED address grammar (one parser, lead's 4b87aee)
+from contracts.address import is_step_address, is_composition_step_address  # SHARED grammar (one parser, lead's 4b87aee/bar4)
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GATES_DIR = os.path.join(REPO, ".data", "gates")
@@ -74,12 +74,17 @@ def _now() -> str:
 
 def _validate_step_address(step_address: str) -> None:
     """FAIL-LOUD on a malformed step address (bar 3: never a silent no-op / guessed-nearest). We check the
-    FORMAT only (opaque — the lead's resolver gives it meaning + the resolve/round-trip verification)."""
-    if not is_step_address(step_address):
+    FORMAT only (opaque — the lead's resolver gives it meaning + the resolve/round-trip verification).
+    TWO legal step forms (R13 bar 4): a native session tool-step (session://<sid>/step/<tool_use_id>) OR a
+    composition-step — a run_composition leg's run:// address (run://<turn>/<member>[/<index>]). The gate
+    treats both opaquely; a composition-step is the harness payoff (run_composition is OUR driver → a
+    pre-leg pause is enforceable, unlike the native-loop HONEST-LIMIT for session-steps)."""
+    if not (is_step_address(step_address) or is_composition_step_address(step_address)):
         raise GateError(
-            f"invalid step address {step_address!r} — expected the opaque form "
-            f"'session://<sid>/step/<tool_use_id>'. Fail loud (never gate a guessed-nearest / silent address). "
-            f"(format-validated here; the cognition.py resolver gives it meaning + the H1.1/H1.2 round-trip.)")
+            f"invalid step address {step_address!r} — expected either a session tool-step "
+            f"'session://<sid>/step/<tool_use_id>' or a composition-step 'run://<turn>/<member>[/<index>]'. "
+            f"Fail loud (never gate a guessed-nearest / silent address). (format-validated here; the "
+            f"cognition.py resolver gives it meaning + the H1.1/H1.2 round-trip.)")
 
 
 def _path(gates_dir: str | None, gid: str) -> str:
