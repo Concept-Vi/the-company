@@ -185,6 +185,13 @@ def main():
         import board as _board
         _board.run(args[1:])
         return
+    if cmd == "clone":
+        # The clone-FLEET read surface (distributed-memory addressed rows) — a stable + PORTABLE read of a
+        # clone:// record + its persisted reflection (mirrors `company board get`), so an external process
+        # (recollection's fleet-recall ingest) reads without coupling to .data/clones/. cc_clone owns it.
+        import clone as _clone
+        _clone.run(args[1:])
+        return
     if cmd == "combos":
         cs = registry.combos(reg)
         if not cs:
