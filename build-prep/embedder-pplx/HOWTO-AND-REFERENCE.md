@@ -95,9 +95,13 @@ GET /api/projection?binding=semantic&space=repo&emb=pplx&center=<addr>
   (rung 8) + repo (64/16/4) + principles/worldview/topics (32/8). The THEME rung + **content-as-types** now work
   at a layer (verified: topics@pplx types × repo@pplx items → born). The whole instrument (units+themes+types) is
   layer-switchable via ?emb=.
-- 🟡 PENDING (next backend beats): `find_relations`/`query_index` emb-aware (a backend query, not a wheel lens);
-  `history` pplx layer (1464 — embedding in background) + its pplx pyramid; the `available` picker should also
-  list which embedder LAYERS each space has (the data the FE picker reads).
+- ✅ WHOLE corpus dual-layered: every space (history/repo/principles/worldview/topics/operators) carries BOTH a
+  default(BGE) and a pplx layer, each WITH a scale pyramid (history@pplx pyramid 64/16/4 over 1464). Self-describing
+  at **`GET /api/layers`** → `{space: [default, pplx]}` (the data a layer-picker / agent reads). `store.layers_by_space()`.
+- 🟢 BACKEND LAYER MODEL COMPLETE up to the UI: write + read (units/themes/types) all layer-aware; whole corpus
+  dual-layered + pyramids; keystone + content-as-types live; self-describing. 91/91 throughout, BGE byte-identical.
+- 🟡 REMAINING: the FE layer/embedder PICKER (surface zone — coordinate, not touched); `find_relations`/`query_index`
+  emb-aware (a backend inversion query, not a wheel lens — minor enhancement).
 - 🟡 UI (coordinate — the other session's surface zone): a layer/embedder PICKER so Tim drives `?emb=` by sight.
   Until then the layer is API-drivable only.
 
