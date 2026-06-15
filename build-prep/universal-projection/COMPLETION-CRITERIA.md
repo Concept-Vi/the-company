@@ -35,6 +35,22 @@ ruins the system"). **Expand-before-harden:** the brain docs are captured design
 
 ---
 
+## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
+
+Tim's 4-item program (1 BQ · 2 Postgres · 3 cron · 4 reconnect): #4 closed (above); #1 BUILT this fire; #2
+Postgres he flagged "later" (high blast-radius, not yet); #3 his timer to retarget. BQ = the third representation
+axis beside `?emb=` (◫ layer) and `?dim=` (◎ resolution): `?quant=binary` signs each read dim to ±1 → the SAME
+cosine becomes a faithful Hamming similarity (`cos(sign a, sign b) = 1 − 2·Hamming/d`), folded into the `_mrl`
+seam so it composes with `?dim=`. Compute-on-read (pure-read; no stored variant — a LAW-forced call). Fidelity
+proven BEFORE building (not green-paint): NN@10 binary-vs-full 0.81 (pplx 2560d) / 0.70 (BGE 1024d).
+- **FUNCTION ✅** — `quant` threaded through all 3 vector handlers + echoed (`binding.quant`); verified live:
+  nucleation full→1born/3cand/11sec vs binary→1born/2cand/10sec; composes with dim (binary+dim512). The
+  `QuantChip ▦` (full·float / binary·Hamming) drives `?quant=binary` (network-traced), shows only on vector
+  lenses. Acceptance projection_multilayer 18 (+5 BQ), instrument 91, bridge_routes 8.
+- **FORM ✅** (design-critic re-running on the 4-chip cluster) — QuantChip mirrors LayerChip/ResChip + the
+  useChipMenu collision seam; 0 off-token literals; 4-chip cluster wraps cleanly both viewports (the FORM-polish holds).
+- MCP `project`/`layers` gain `quant` automatically on the next reconnect (same engine — no separate door).
+
 ## G10 EDGE-COVERAGE AUDIT — 2026-06-15 (falsification: is G10 a "toy slice"? → NO, ✅ is honest)
 
 The cron names `relation_types` + `cascade precedes` as directional-edge sources G10 must connect to. Audited
