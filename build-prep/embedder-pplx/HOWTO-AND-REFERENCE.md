@@ -87,8 +87,8 @@ GET /api/projection?binding=semantic&space=repo&emb=pplx&center=<addr>
 ## 8. CURRENT STATE (honest — 2026-06-15)
 - ✅ Store write path layer-aware (`909c122`); nucleation/semantic/separator read at `?emb=` (`dc6a542`,`5938b62`);
   acceptance suite 91/91 at every step (emb=None = byte-identical).
-- ✅ Layers live: `operators` (pplx types + pyramid); `repo@emb=pplx` (644); `principles/worldview@emb=pplx` (162
-  each); `topics@emb=pplx` (in progress). BGE layers all intact.
+- ✅ Layers live: `operators` (pplx types + pyramid); `repo@emb=pplx` (644); `principles/worldview/topics@emb=pplx`
+  (162 each); `history@emb=pplx` (1464 — embedding in background, additive/resumable). BGE layers all intact.
 - ✅ Keystone LIVE on the pplx layer (curl-verified): operators × repo@pplx → born candidate-operators.
 - 🟡 PENDING (next backend beats): scale/theme pyramids per layer (the THEME rung + content-space types at a
   layer need `scale.build/rung_points` to be emb-aware); `find_relations`/`query_index` emb-aware; `history`
