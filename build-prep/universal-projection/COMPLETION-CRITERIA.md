@@ -71,13 +71,16 @@ whether the Connections lens (node-type type-flow) is only a slice of the realiz
   field; no relation/mark event kinds exist. relation_types realize as unit→unit marks ("A contradicts B"),
   none stamped yet.
 - **cascades: NONE exist** (no cascade store).
-- → The ONLY realized directional edges are **node-type type-flow** (output-type feeds input-type — the
-  Connections lens ✅) and **graph connect wires** (the graph lens ✅). G10 connects to ALL the directional
-  edges that EXIST. Surfacing relation_types/cascade edges NOW would draw an EMPTY wheel = green-paint over
-  absent data, un-verifiable-by-use (violates THE BAR). HONEST: data-gated GROWTH FRONT — when relation-marks
-  get stamped / cascades get saved, a unit-edge overlay on the Connections lens lights up (no hardcode; the
-  edges read from the realized marks). NOT built now (no data to verify against); NOT a gap in G10's ✅.
-- No code change this fire (completion clause + no-green-paint). The audit is the deliverable.
+- → At audit time the ONLY realized directional edges were **node-type type-flow** (Connections lens ✅) and
+  **graph connect wires** (graph lens ✅). relation_types (0 realized) + cascades (0 saved) were a data-gated
+  GROWTH FRONT — surfacing them then would have been green-paint over empty data.
+- **UPDATE 2026-06-15 — the cascade half of the gate OPENED (✅ BUILT, `79ba937`):** the live fleet has now
+  saved **6 cascades** (was 0). So `by_cascade` — "cascade precedes", the directional source the cron named —
+  is BUILT with real data: reads `SUITE.list_cascades`, each cascade's ordered steps → DIRECTIONAL precedence
+  edges (step i → step i+1; node = role else op-verb), registry-true, cycles-as-cycles, reusing the
+  by_node_type sector+chord seam. Verified live both viewports (14 sectors + 9 edges) + acceptance (multilayer
+  22, +4 guarded). relation_types edges STILL data-gated (0 marks stamped — `relation_type` events still 0/6291);
+  they light up the same way when marks get stamped. G10 now connects to node-type-flow + graph + cascade-precedence.
 
 ## RE-VERIFICATION — 2026-06-15 · BUILD COMPLETE confirmed (post-refactor, full pass)
 
