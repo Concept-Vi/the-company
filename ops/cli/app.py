@@ -177,6 +177,14 @@ def main():
         import sessions as _sessions
         _sessions.run(args[1:])
         return
+    if cmd == "board":
+        # The Company NOTICEBOARD (inward-facing half) — file/list/pick-up/transition typed items
+        # (request/issue/tip/guide/idea) about the Company itself. Thin: all logic in board.py;
+        # runtime/cc_board.py owns it (pure file I/O — no service). A different session running
+        # `company board file ...` + the lead `company board list/transition ...` IS the request loop.
+        import board as _board
+        _board.run(args[1:])
+        return
     if cmd == "combos":
         cs = registry.combos(reg)
         if not cs:
