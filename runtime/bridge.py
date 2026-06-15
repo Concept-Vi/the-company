@@ -456,6 +456,7 @@ def _semantic_projection(q, binding, reg, evs, center, now, lim):
     from runtime import scale as _scale
 
     space = binding.get("space")
+    emb = q.get("emb") or binding.get("emb") or None   # embedder LAYER (None=BGE default); applies to UNIT reads
     rung = (q.get("rung") or "").strip()
     pyr = _scale.load_pyramid(SUITE.store, space) if space else None
     rungs = [r["k"] for r in pyr["rungs"]] if pyr else []
@@ -475,7 +476,7 @@ def _semantic_projection(q, binding, reg, evs, center, now, lim):
         it). Falls back to the viewing coarse rung's space for a same-rung theme centre. None if truly absent."""
         if not c:
             return None
-        r = SUITE.store.get_vector(SUITE.store.space_address(c, space))            # a UNIT centre
+        r = SUITE.store.get_vector(SUITE.store.space_address(c, space, emb))       # a UNIT centre (at the layer)
         if r and r.get("vector"):
             return r["vector"]
         if c.startswith("cluster://"):                                            # a THEME centre — its NATIVE rung
@@ -552,7 +553,7 @@ def _semantic_projection(q, binding, reg, evs, center, now, lim):
         return 200, attach_scale(pend, "unit")
     vectors = {}
     for e in uevs:
-        rec = SUITE.store.get_vector(SUITE.store.space_address(e.get("source_address") or "", space))
+        rec = SUITE.store.get_vector(SUITE.store.space_address(e.get("source_address") or "", space, emb))
         if rec and rec.get("vector"):
             vectors[_proj_addr(e)] = rec["vector"]
     cv = centre_vector(center)                           # unit centre, OR a theme centre (zoom-out-from-a-theme)
@@ -579,6 +580,7 @@ def _separator_projection(q, binding, reg, evs, center, now, lim):
     the field actually SEPARATES, so a normalized-gradient-over-noise can never read as done."""
     from runtime.projection import project as _uproject, _addr_of as _proj_addr
     space = binding.get("space")
+    emb = q.get("emb") or binding.get("emb") or None   # embedder LAYER (None=BGE default); applies to UNIT reads
     if not space:
         return 400, {"error": "separator binding needs a `space` (the lens the items + poles live in)",
                      "binding": binding.get("id")}
@@ -588,7 +590,7 @@ def _separator_projection(q, binding, reg, evs, center, now, lim):
         centroid (cluster://) from its own rung's scale space. None if truly absent (→ fail loud above)."""
         if not ref:
             return None
-        r = SUITE.store.get_vector(SUITE.store.space_address(ref, space))     # unit item / planted anchor
+        r = SUITE.store.get_vector(SUITE.store.space_address(ref, space, emb))  # unit item / planted anchor (layer)
         if r and r.get("vector"):
             return r["vector"]
         if ref.startswith("cluster://"):                                     # a theme centroid (real region)
@@ -618,7 +620,7 @@ def _separator_projection(q, binding, reg, evs, center, now, lim):
     uevs = [e for e in evs if e.get("kind") == "corpus.record" and e.get("projection") == space]
     vectors = {}
     for e in uevs:
-        rec = SUITE.store.get_vector(SUITE.store.space_address(e.get("source_address") or "", space))
+        rec = SUITE.store.get_vector(SUITE.store.space_address(e.get("source_address") or "", space, emb))
         if rec and rec.get("vector"):
             vectors[_proj_addr(e)] = rec["vector"]
     poles = {"a": {"vector": va, "label": pole_a_label or pole_a_ref, "ref": pole_a_ref},
