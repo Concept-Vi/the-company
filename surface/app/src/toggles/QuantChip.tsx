@@ -6,10 +6,14 @@ import { useChipMenu } from './useChipMenu'
 
 // THE REPRESENTATION picker — binary quantization (Tim's "the maths, parametric, no single use"). 'binary' maps
 // each read dim to its sign (±1); fed through the SAME cosine that becomes a Hamming similarity
-// (cos(sign a, sign b) = 1 − 2·Hamming/d) — a coarse, 32×-compact view of meaning, orthogonal to the layer
-// (◫ emb) and resolution (◎ dim) axes and composable with both. Compute-on-read (pure; no stored variant),
-// registry-true. Only meaningful on the vector lenses (a `space` in the binding) — hidden on structural ones.
-// Verified faithful: NN@10 binary-vs-full 0.81 (pplx 2560d) / 0.70 (BGE 1024d). 'full' = the float cosine.
+// (cos(sign a, sign b) = 1 − 2·Hamming/d) — a coarse, DIFFERENT-GEOMETRY view of meaning, orthogonal to the
+// layer (◫ emb) and resolution (◎ dim) axes and composable with both. Compute-on-read (pure; no stored
+// variant), registry-true. Only meaningful on the vector lenses (a `space` in the binding) — hidden on
+// structural ones. Verified faithful: NN@10 binary-vs-full 0.81 (pplx 2560d) / 0.70 (BGE 1024d). 'full' = float.
+// HONEST PERF NOTE (measured 2026-06-16): this impl delivers the binary GEOMETRY, NOT a speed/size win — it
+// still runs ±1 floats through the float cosine (binary nucleation ≈ full, ~21s). The actual SPEED lever is
+// the resolution picker (◎ dim=128 → ~1.5s). The true "32×-compact / whole-corpus-at-once" needs bit-packed
+// vectors + popcount-Hamming (a separate metric path) — a future optimization, not claimed here.
 const OPTS = [
   { id: 'full', label: 'full · float' },
   { id: 'binary', label: 'binary · Hamming' },
@@ -27,7 +31,7 @@ export function QuantChip({ proj, quant, setQuant }:
         {...stamp('ui://controls/representation/current')}
         onClick={toggle}
         aria-expanded={open}
-        title="the representation — full float (cosine) or binary sign-bits (Hamming, a coarse 32×-compact view)"
+        title="the representation — full float (cosine) or binary sign-bits (a coarse Hamming-geometry view of meaning; for SPEED use the resolution picker)"
       >
         <span className="lenschip-label display">▦ {current}</span>
         <span className="lenschip-caret" aria-hidden>{open ? '▾' : '▸'}</span>

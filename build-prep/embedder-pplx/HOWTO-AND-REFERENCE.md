@@ -141,7 +141,15 @@ See MODEL-CAPABILITIES-AS-AFFORDANCES.md. Highest-leverage, all riding on this l
   fully drivable by sight + by `?dim=` on every vector lens. NB "axis" here = a DRIVABLE axis (rung, dim) —
   Tim's broader FOUR ROOT AXES are a separate sense; these are likely sub-types under them. See the glossary:
   `../universal-projection/GLOSSARY.md` · memory [[the-four-root-axes]].
-- **Binary quantization** — 32× smaller, Hamming similarity → show the WHOLE corpus at once; detail-on-zoom.
+- **Binary quantization** — TWO parts, and only ONE is built (honest, measured 2026-06-16):
+  · ✅ the binary GEOMETRY (`?quant=binary`, the QuantChip ▦): sign(±1) each read dim → the float cosine
+    becomes a Hamming similarity (`cos(sign a,sign b)=1−2·Hamming/d`) — a coarse, different-similarity view;
+    verified faithful (NN@10 0.81 pplx / 0.70 BGE) + re-projects membership. Composes with emb + dim.
+  · 🟡 the PERF/SIZE win (32× smaller, whole-corpus-at-once) is NOT delivered — the impl runs ±1 FLOATS
+    through the existing cosine, so binary nucleation ≈ full (~21s, measured). The real speed needs bit-PACKED
+    vectors + popcount-Hamming (`(a^b).bit_count()`, ~10-30×) — a separate metric path through project()/_cos,
+    a future optimization. **Today's actual speed lever is the resolution picker** (`?dim=128` → ~1.5s vs 21s
+    full; dim=512 → ~4.6s) — that's what makes the heavy pplx nucleation INTERACTIVE.
 - **Context-aware (late-chunking)** — the `:8007` `documents` mode embeds an item in its parent's context;
   proven SELECTIVE (it homogenizes a heterogeneous registry — helps retrieval, hurts differentiation; see §2a of
   LEVERAGE-AND-TOOL-REQUESTS.md). A per-cohesive-parent tool, never blanket.

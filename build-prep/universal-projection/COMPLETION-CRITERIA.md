@@ -59,6 +59,11 @@ proven BEFORE building (not green-paint): NN@10 binary-vs-full 0.81 (pplx 2560d)
   (`a690358`): portrait optics-cluster gap+padding tightened (~56px) → all 4 hold one row in the binary
   state (verified one-row at the tool's 500px floor; true-390 unrenderable by the tool but the clawback holds).
 - MCP `project`/`layers` gain `quant` automatically on the next reconnect (same engine — no separate door).
+- **SCOPE-HONESTY (measured 2026-06-16, overclaim corrected):** BQ delivers the binary GEOMETRY only, NOT a
+  perf/size win — the impl runs ±1 FLOATS through the float cosine, so binary nucleation ≈ full (~21s). The
+  "32×-compact / whole-corpus" framing was vapor for this impl; corrected in the QuantChip tooltip + HOWTO §9
+  (no green-paint). The real interactive SPEED lever is the resolution picker (`?dim=128` → ~1.5s vs 21s full,
+  dim=512 → ~4.6s — measured). The true 32× perf needs bit-packed vectors + popcount-Hamming (a future beat).
 
 ## G10 EDGE-COVERAGE AUDIT — 2026-06-15 (falsification: is G10 a "toy slice"? → NO, ✅ is honest)
 
