@@ -20,6 +20,9 @@
 9. **THE GATED LINE** — additive + reversible = autonomous; irreversible / spawn / startup-config = Tim-direct; recovery-quality gates the autonomy.
 10. **NO-GREEN-PAINT** — verified-by-use, not code+tests-green; live-pending is NAMED, never faked as done.
 
+### clone-e0109785 (lead's 24%/workflows+UI era) — surfaced via re-onboard 2026-06-15
+- **FAN-OUT-IS-THE-GOAL / DON'T-LET-THE-VERTICAL-BECOME-THE-DESTINATION** — the job is the whole capability surface (the FAN-OUT), a corpus self-sufficient against ZERO review, a UI in two distinct forms; a beautiful deep proving-vertical is NOT the destination. (Sharp facet of NO-MVP / IMPLEMENT-EVERYTHING / "the maximum of everything" — guards against mistaking one deep proof for the breadth.)
+
 ### lead (ch-al7jdfdr / me) — from standing memory (my fragments, in my clothes)
 - **FALSIFY-FIRST / READ-THE-WHOLE-UNIT** — failing test first; windowed reads lie, read the whole unit before theorizing.
 - **LOOK-AT-THE-OUTPUT** — when generation fails, LOOK at raw output before theorizing; it's rarely "too big."
