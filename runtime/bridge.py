@@ -458,7 +458,7 @@ def _semantic_projection(q, binding, reg, evs, center, now, lim):
     space = binding.get("space")
     emb = q.get("emb") or binding.get("emb") or None   # embedder LAYER (None=BGE default); applies to UNIT reads
     rung = (q.get("rung") or "").strip()
-    pyr = _scale.load_pyramid(SUITE.store, space) if space else None
+    pyr = _scale.load_pyramid(SUITE.store, space, emb) if space else None
     rungs = [r["k"] for r in pyr["rungs"]] if pyr else []
     coarse_k = int(rung) if (rung.isdigit() and int(rung) in rungs) else None
 
@@ -482,18 +482,18 @@ def _semantic_projection(q, binding, reg, evs, center, now, lim):
         if c.startswith("cluster://"):                                            # a THEME centre — its NATIVE rung
             seg = c.split("cluster://", 1)[1].split("/")                          # [space, 'k<K>', label]
             if len(seg) >= 2 and seg[1].startswith("k"):
-                r = SUITE.store.get_vector(SUITE.store.space_address(c, f"scale:{space}:{seg[1]}"))
+                r = SUITE.store.get_vector(SUITE.store.space_address(c, f"scale:{space}:{seg[1]}", emb))
                 if r and r.get("vector"):
                     return r["vector"]
         if coarse_k is not None:                                                  # same-rung theme centre
-            r = SUITE.store.get_vector(SUITE.store.space_address(c, f"scale:{space}:k{coarse_k}"))
+            r = SUITE.store.get_vector(SUITE.store.space_address(c, f"scale:{space}:k{coarse_k}", emb))
             if r and r.get("vector"):
                 return r["vector"]
         return None
 
     # ── COARSE RUNG: the meaning-field over THEMES (cluster centroids), not units ──────────────────────
     if coarse_k is not None:
-        pts = _scale.rung_points(SUITE.store, space, coarse_k)          # raises only on a corrupt pyramid
+        pts = _scale.rung_points(SUITE.store, space, coarse_k, emb)     # raises only on a corrupt pyramid (at the layer)
         meta = {p["source"]: p for p in pts}
         # EVERY pseudo-event needs a parseable ts ≤ now — project() filters by the time scrubber (t <= now)
         # before the semantic radius runs, so a ts-less event is silently dropped. Stamp by SIZE rank (bigger
@@ -596,7 +596,7 @@ def _separator_projection(q, binding, reg, evs, center, now, lim):
         if ref.startswith("cluster://"):                                     # a theme centroid (real region)
             seg = ref.split("cluster://", 1)[1].split("/")                   # [space, 'k<K>', label]
             if len(seg) >= 2 and seg[1].startswith("k"):
-                r = SUITE.store.get_vector(SUITE.store.space_address(ref, f"scale:{seg[0]}:{seg[1]}"))
+                r = SUITE.store.get_vector(SUITE.store.space_address(ref, f"scale:{seg[0]}:{seg[1]}", emb))
                 if r and r.get("vector"):
                     return r["vector"]
         return None
@@ -670,7 +670,7 @@ def _nucleation_projection(q, binding, reg, evs, center, now, lim):
         return 400, {"error": "nucleation needs a `types_space` (the registry of types) AND a `space` (the "
                               "content store typed against it) — fail loud", "binding": binding.get("id")}
     try:
-        tpts = scale.rung_points(SUITE.store, types_space, rung)
+        tpts = scale.rung_points(SUITE.store, types_space, rung, emb)   # the TYPE registry at the embedder LAYER
     except Exception as ex:
         return 400, {"error": f"no scale pyramid / rung {rung} for types_space {types_space!r}: {ex} — build a "
                               f"pyramid first (POST /api/scale/build {{space: {types_space!r}}})",
@@ -698,7 +698,7 @@ def _nucleation_projection(q, binding, reg, evs, center, now, lim):
     for t in tpts:
         mc = []
         for m in (t.get("members") or []):
-            rec = SUITE.store.get_vector(SUITE.store.space_address(m, types_space))
+            rec = SUITE.store.get_vector(SUITE.store.space_address(m, types_space, emb))
             if rec and rec.get("vector"):
                 mc.append(_cos(rec["vector"], t["vector"]))
         mc.sort()
@@ -743,13 +743,13 @@ def _nucleation_projection(q, binding, reg, evs, center, now, lim):
     _typ = []
     for sp in _embedded:
         try:
-            if scale.load_pyramid(SUITE.store, sp):
+            if scale.load_pyramid(SUITE.store, sp, emb):   # a registry-of-types AT THE ACTIVE LAYER
                 _typ.append(sp)
         except Exception:
             pass
     _rungs = []
     try:
-        _pyr = scale.load_pyramid(SUITE.store, types_space)
+        _pyr = scale.load_pyramid(SUITE.store, types_space, emb)
         _rungs = sorted([(r.get("k") if isinstance(r, dict) else r) for r in (_pyr or {}).get("rungs", [])])
     except Exception:
         pass

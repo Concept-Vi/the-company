@@ -371,15 +371,19 @@ class FsStore:
     # links) keyed by the UNIT space it coarsens — one record per space. Clones save_session's atomic dict
     # write (a derived, rebuildable artefact, not the canonical store) — additive, its own scale/ dir, so no
     # vector path or graph path is touched. See runtime/scale.py for the build/resolve that reads it. ---
-    def save_scale_pyramid(self, space: str, pyramid: dict) -> None:
+    def save_scale_pyramid(self, space: str, pyramid: dict, emb: str | None = None) -> None:
         import json as _j
         (self.root / "scale").mkdir(parents=True, exist_ok=True)
-        path = self.root / "scale" / (self._safe(space) + ".json")
+        # emb=None → the default-layer pyramid (path unchanged: scale/<space>.json); a named emb keys a
+        # SEPARATE per-embedder pyramid (scale/<space>#emb=<emb>.json) so a pplx pyramid never overwrites BGE's.
+        key = space if emb is None else f"{space}#emb={emb}"
+        path = self.root / "scale" / (self._safe(key) + ".json")
         self._fsync_atomic_write(path, _j.dumps(pyramid, indent=2))   # crash-durable atomic (mirrors save_session)
 
-    def load_scale_pyramid(self, space: str) -> dict | None:
+    def load_scale_pyramid(self, space: str, emb: str | None = None) -> dict | None:
         import json as _j
-        p = self.root / "scale" / (self._safe(space) + ".json")
+        key = space if emb is None else f"{space}#emb={emb}"
+        p = self.root / "scale" / (self._safe(key) + ".json")
         return _j.loads(p.read_text()) if p.exists() else None
 
     def list_scale_pyramids(self) -> list[str]:
@@ -1009,7 +1013,7 @@ class FsStore:
                 out.append(rec["address"])
         return sorted(out)
 
-    def index_corpus(self, space=None) -> list[dict]:
+    def index_corpus(self, space=None, emb=None) -> list[dict]:
         """The index as a corpus list `[{id: <item>, vector: [...]}]` — the EXACT shape nodes/retrieve.run
         consumes (id + vector), so the QUERY path feeds it straight in with NO reshaping and NO reimplemented
         cosine. Empty index → [] (query then returns empty + an honest note).
@@ -1033,10 +1037,12 @@ class FsStore:
                 continue
             if space is self.ALL_SPACES:
                 out.append({"id": rec["address"], "vector": rec["vector"]})
-            elif rec.get("space") == space:
+            elif rec.get("space") == space and rec.get("emb") == emb:
                 # within a NAMED space, rank/return by the SOURCE item (not the internal vec://#space= key)
                 # so the caller gets the item back; the default space (space is None) returns the bare address
                 # (== source for an unspaced entry) — identical to the pre-space shape.
+                # emb=None (default) matches the BGE default layer (existing entries: no emb field → None) —
+                # byte-identical to pre-layer behaviour; emb='<tag>' selects that embedder layer (multi-layer model).
                 _id = rec.get("source") if space is not None else rec["address"]
                 out.append({"id": _id if _id is not None else rec["address"], "vector": rec["vector"]})
         return out

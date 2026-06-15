@@ -223,7 +223,7 @@ def _member_hash(store, source_addresses: list) -> str:
 
 
 def build_scale_pyramid(store, *, space: str, rungs: list | None = None, linkage: str = "ward",
-                        force: bool = False) -> dict:
+                        force: bool = False, emb: str | None = None) -> dict:
     """BUILD the multi-scale pyramid over the UNIT vectors persisted in `space` (Group 8's topics/repo/…).
 
     For each rung K: cut the ONE dendrogram at K, compute each cluster's centroid (normalised mean of its
@@ -241,7 +241,7 @@ def build_scale_pyramid(store, *, space: str, rungs: list | None = None, linkage
     """
     from store import vector_index as vx
 
-    corpus = store.index_corpus(space=space)     # [{id: <unit source address>, vector}]
+    corpus = store.index_corpus(space=space, emb=emb)   # [{id: <unit source address>, vector}] at the embedder LAYER
     n = len(corpus)
     if n == 0:
         raise ValueError(
@@ -259,7 +259,7 @@ def build_scale_pyramid(store, *, space: str, rungs: list | None = None, linkage
     vecs = [c["vector"] for c in corpus]
     dim = len(vecs[0])
     # the embed model the units were built under (a centroid inherits it — it is a mean of those vectors)
-    model = (store.get_vector(store.space_address(ids[0], space)) or {}).get("model")
+    model = (store.get_vector(store.space_address(ids[0], space, emb)) or {}).get("model")
 
     nv, cuts = agglomerate(vecs, linkage=linkage)
 
@@ -280,12 +280,12 @@ def build_scale_pyramid(store, *, space: str, rungs: list | None = None, linkage
             exemplar = max(idxs, key=lambda i: _cos(nv[i], cvec))
             member_srcs = [ids[i] for i in idxs]
             cluster_addr = f"cluster://{space}/k{k}/{label}"
-            store_key = store.space_address(cluster_addr, f"scale:{space}:k{k}")
+            store_key = store.space_address(cluster_addr, f"scale:{space}:k{k}", emb)
             h = _member_hash(store, member_srcs)
             prior = store.get_vector(store_key)
             if force or prior is None or prior.get("content_hash") != h:
                 store.put_vector(store_key, cvec, h, dim=dim, model=model,
-                                 space=f"scale:{space}:k{k}", source=cluster_addr)
+                                 space=f"scale:{space}:k{k}", source=cluster_addr, emb=emb)
                 built += 1
             else:
                 skipped += 1
@@ -304,24 +304,24 @@ def build_scale_pyramid(store, *, space: str, rungs: list | None = None, linkage
     pyramid = {"space": space, "linkage": linkage, "n_units": n, "dim": dim,
                # present COARSEST-FIRST (ascending K) — the order zoom walks out→in (theme → unit)
                "rungs": sorted(rung_records, key=lambda r: r["k"]), "unit_space": space}
-    store.save_scale_pyramid(space, pyramid)
+    store.save_scale_pyramid(space, pyramid, emb)
     return {"space": space, "rungs": rungs, "n_units": n, "built": built, "skipped": skipped,
             "pyramid_rungs": [{"k": r["k"], "clusters": len(r["clusters"])} for r in rung_records]}
 
 
-def load_pyramid(store, space: str) -> dict | None:
-    """The persisted pyramid structure for `space`, or None if never built (an HONEST None — never a
-    fabricated pyramid). Thin reuse of store.load_scale_pyramid."""
-    return store.load_scale_pyramid(space)
+def load_pyramid(store, space: str, emb: str | None = None) -> dict | None:
+    """The persisted pyramid structure for `space` (at the embedder LAYER `emb`; emb=None = default/BGE), or
+    None if never built (an HONEST None — never a fabricated pyramid). Thin reuse of store.load_scale_pyramid."""
+    return store.load_scale_pyramid(space, emb)
 
 
-def rung_points(store, space: str, k: int) -> list:
+def rung_points(store, space: str, k: int, emb: str | None = None) -> list:
     """The coarse POINTS at rung K — one per cluster: {source (cluster address), vector (centroid), size,
     exemplar, members}. The bridge feeds these to project() as pseudo-events so the SAME instrument
     (semantic radius, angle, centre) draws a coarse rung exactly as it draws units — zoom changes which rung
     RESOLVES, not which renderer runs. Reads the persisted centroids (no recompute). Fail-loud if the rung
     was never built (so a caller cannot silently render an empty coarse rung)."""
-    pyr = load_pyramid(store, space)
+    pyr = load_pyramid(store, space, emb)
     if not pyr:
         raise ValueError(f"scale.rung_points: no pyramid built for space {space!r} (build_scale_pyramid first)")
     rec = next((r for r in pyr["rungs"] if r["k"] == k), None)
@@ -330,7 +330,7 @@ def rung_points(store, space: str, k: int) -> list:
                          f"(rungs: {[r['k'] for r in pyr['rungs']]})")
     out = []
     for c in rec["clusters"]:
-        v = store.get_vector(store.space_address(c["source"], rec["space"]))
+        v = store.get_vector(store.space_address(c["source"], rec["space"], emb))
         if v is None:
             raise ValueError(f"scale.rung_points: centroid vector missing for {c['source']!r} — pyramid "
                              f"structure and vector substrate disagree (rebuild build_scale_pyramid)")
