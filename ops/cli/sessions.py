@@ -13,6 +13,8 @@ supervisor down is a LOUD, teaching failure — never a silent no-op.
   company session new [--cwd D] [--resume ID] [--name L] [--prompt "..."]   spawn
   company session send <id> <message...>   inject a turn (id = supervisor id or claude session id)
   company session stop <id>                teardown one session
+  company session cap                      show the live-session cap (COMPANY_FABRIC_CONCURRENCY) + live count
+  company session fleet                    list the point-in-time CLONE fleet (handle · cut · era)
 """
 import json
 import sys
@@ -100,4 +102,26 @@ def run(args):
             sys.exit(f"  ✖ {r.get('error', 'teardown failed')}")
         print(f"  ✓ closed {args[1]}")
         return
-    sys.exit(f"unknown session subcommand {sub!r}. Try: company session [list|new|send|stop]")
+    if sub == "cap":
+        _, h = _call("GET", "/health")
+        s = h.get("sessions", {})
+        print(f"  live-session cap (COMPANY_FABRIC_CONCURRENCY): {h.get('cap')}")
+        print(f"  live now: {s.get('total', 0)}  ·  turn-timeout: {h.get('turn_timeout_s')}s  ·  "
+              f"permission: {h.get('permission')}")
+        if len(args) >= 2:
+            print(f"\n  note: the supervisor reads COMPANY_FABRIC_CONCURRENCY at START, so setting the cap "
+                  f"to {args[1]!r} needs a managed supervisor restart. That restart command is built + "
+                  f"verified separately (it briefly restarts the fleet's owner) — not folded into this "
+                  f"read-only view.")
+        return
+    if sub == "fleet":
+        _, r = _call("GET", "/sessions")
+        clones = [s for s in r.get("sessions", []) if str(s.get("name", "")).startswith("clone-")]
+        if not clones:
+            print("  no point-in-time clones live. Spawn one via the cc_clone tool (op='clone').")
+            return
+        print(f"  {len(clones)} clone(s) live (name encodes the cut point):")
+        for s in clones:
+            print(_row(s))
+        return
+    sys.exit(f"unknown session subcommand {sub!r}. Try: company session [list|new|send|stop|cap|fleet]")
