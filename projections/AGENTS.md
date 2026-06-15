@@ -92,6 +92,7 @@ let a capture lens JUDGE (render-not-judge — K3) · ship a lens without reflec
 (the skill registry — same shape) · `build-prep/cognition-engine/COMPLETION-CRITERIA.md` (GROUP K/P).
 
 ## Agent-authored entries (auto-reflected)
+- **`operators`** — agent-authored projection (created via the declarative-direct face). what each registered OPERATOR (role) does — the verb/role registry embedded as a vector SPACE so content no operator covers piles up → a can
 <!-- created live by the create face; one line per entry — keeps the
      drift-home acceptance green; refine the prose by integration. -->
 - **`history`** — agent-authored projection (created via the declarative-direct face). the session-history lens (③/⑨ — G23): one mined exchange-extract per unit — decisions, corrections, failures, patterns from the conversation
