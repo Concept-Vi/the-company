@@ -10,6 +10,8 @@ Grammar:
   skill://<id>                                         a declared reusable unit of instructions (SkillRegistry)
   context://<id>                                       a declared reusable unit of context (ContextRegistry)
   session://<id>                                       a Claude Code agent session (the agent-session registry)
+  board://<id>                                          a Company Noticeboard item (the cc_board registry)
+  exchange://<sid>/<i>                                  a captured conversation exchange (recollection's canonical provenance address)
 Schema-additive: add optional fields + bump schema_ver; never break an existing one.
 
 Note on `ui://`: this scheme is a *label* in the address grammar only. Unlike
@@ -68,11 +70,27 @@ Adding `"cap"` to SCHEMES is purely additive (same seam as skill/context/session
 record shape change, no schema_ver bump. The dispatch branch is added to cognition.py
 after the session:// block by LANE-CAP-WIRE (depends on LANE-REGISTRIES). The gap-surface
 path fires on any unknown cap:// address (registry-is-truth, fail loud, never silent empty).
+
+Note on `board://` (the Company NOTICEBOARD — runtime/cc_board.py): like `ui://`/`session://`, a
+*label* in the address grammar. `board://<id>` identifies a board item (request/issue/tip/guide/idea);
+the canonical id is flat + opaque (`item-`+hex) so a type-change (idea→request promotion) never
+re-addresses it — identity holds nothing mutable. RESOLVER DEFERRED (register-as-label, the `ui://`
+precedent — a scheme registered but not resolved): the board's consumers resolve directly via
+`runtime/cc_board.py:get_item` (strip the scheme → get_item(id)); a `resolve_address` branch is wired
+only when a resolver consumer appears. Adding `"board"` to SCHEMES is purely additive (widens the legal
+scheme set; mirrors `ui://`), no record-shape or schema_ver change.
+
+Note on `exchange://` (recollection's canonical provenance address — `exchange://<sid>/<i>`): the
+re-embed-stable identity of a captured conversation exchange (one user→assistant turn), the join key the
+recall/memory system addresses units by. Registered here as a *label* so it is grammar-legal across the
+ONE Company address space (Tim's "one addressed state"); its RESOLVER is recollection's lane (the
+recall/capture + recall↔board wires own it) — register-but-defer, mirroring `ui://`. Purely additive;
+no record-shape or schema_ver change.
 """
 from __future__ import annotations
 from pydantic import BaseModel, Field
 
-SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "session", "cap")
+SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "session", "cap", "board", "exchange")
 
 
 class Provenance(BaseModel):
