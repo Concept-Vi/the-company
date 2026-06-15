@@ -2,6 +2,7 @@ import type { SurfaceState } from '../App'
 import { LensChip } from '../toggles/LensChip'
 import { LayerChip } from '../toggles/LayerChip'
 import { ResChip } from '../toggles/ResChip'
+import { QuantChip } from '../toggles/QuantChip'
 import { Settings } from '../toggles/Settings'
 import { ViewToggle } from '../toggles/ViewToggle'
 import { LiveDot } from '../toggles/LiveDot'
@@ -32,6 +33,7 @@ export function Landscape({ s }: { s: SurfaceState }) {
             {s.proj && <LensChip proj={s.proj} current={s.binding} onPick={s.setBinding} />}
             <LayerChip emb={s.emb} setEmb={s.setEmb} />
             <ResChip proj={s.proj} dim={s.dim} setDim={s.setDim} emb={s.emb} />
+            <QuantChip proj={s.proj} quant={s.quant} setQuant={s.setQuant} />
           </div>
           <div className="bar-right">
             <LiveDot live={s.live} setLive={s.setLive} />

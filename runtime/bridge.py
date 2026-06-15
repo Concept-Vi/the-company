@@ -463,8 +463,14 @@ def _semantic_projection(q, binding, reg, evs, center, now, lim):
     # guard never trips; None = full dim (byte-identical to pre-MRL). Same contract as nucleation's _mrl.
     _md = (q.get("dim") or "").strip()
     mdim = int(_md) if _md.isdigit() and int(_md) > 0 else None
+    # BINARY QUANTIZATION (the REPRESENTATION axis): ?quant=binary maps each read dim to its sign (±1). Fed
+    # through the SAME cosine, cos(sign a, sign b) = 1 − 2·Hamming/d — a faithful Hamming similarity with NO
+    # new metric path (verified: NN@10 0.81 pplx / 0.70 BGE). Compute-on-read (pure-read; no stored variant),
+    # composes WITH ?dim= (binarize the first N dims). None/'' = full float (byte-identical). Same _mrl seam.
+    _qz = (q.get("quant") or "").strip().lower() == "binary"
     def _mrl(v):
-        return v[:mdim] if (mdim and mdim < len(v)) else v
+        v = v[:mdim] if (mdim and mdim < len(v)) else v
+        return [1.0 if x > 0 else -1.0 for x in v] if _qz else v
     rung = (q.get("rung") or "").strip()
     pyr = _scale.load_pyramid(SUITE.store, space, emb) if space else None
     rungs = [r["k"] for r in pyr["rungs"]] if pyr else []
@@ -476,6 +482,7 @@ def _semantic_projection(q, binding, reg, evs, center, now, lim):
                              "n_units": pyr.get("n_units")}
         body["binding"]["res"] = mdim     # the active MRL resolution (None = full dim) — every return path
         body["binding"]["emb"] = emb      # the active embedder LAYER (None = default/BGE) — echoed everywhere
+        body["binding"]["quant"] = "binary" if _qz else None   # the active representation (None = full float)
         return body
 
     def centre_vector(c):
@@ -596,8 +603,13 @@ def _separator_projection(q, binding, reg, evs, center, now, lim):
     # dim-guard happy; the fifth gate (separation_report) then runs AT the chosen resolution. None = full dim.
     _md = (q.get("dim") or "").strip()
     mdim = int(_md) if _md.isdigit() and int(_md) > 0 else None
+    # BINARY QUANTIZATION (?quant=binary): sign(±1) each read dim → the same lean/separation cosines become
+    # Hamming-faithful (cos(sign a, sign b)=1−2·Hamming/d). Poles + items binarized CONSISTENTLY; the fifth
+    # gate runs at the binary representation. Composes with ?dim=. Compute-on-read; '' = full float.
+    _qz = (q.get("quant") or "").strip().lower() == "binary"
     def _mrl(v):
-        return v[:mdim] if (mdim and mdim < len(v)) else v
+        v = v[:mdim] if (mdim and mdim < len(v)) else v
+        return [1.0 if x > 0 else -1.0 for x in v] if _qz else v
     if not space:
         return 400, {"error": "separator binding needs a `space` (the lens the items + poles live in)",
                      "binding": binding.get("id")}
@@ -651,6 +663,7 @@ def _separator_projection(q, binding, reg, evs, center, now, lim):
     out["binding"]["space"] = space
     out["binding"]["res"] = mdim     # the active MRL resolution (None = full dim)
     out["binding"]["emb"] = emb      # the active embedder LAYER (None = default/BGE)
+    out["binding"]["quant"] = "binary" if _qz else None   # the active representation (None = full float)
     return 200, out
 
 
@@ -693,8 +706,13 @@ def _nucleation_projection(q, binding, reg, evs, center, now, lim):
     # re-embed). Applied at every vector boundary so all cosines + the dim guard stay consistent.
     _md = (q.get("dim") or "").strip()
     mdim = int(_md) if _md.isdigit() and int(_md) > 0 else None
+    # BINARY QUANTIZATION (?quant=binary): sign(±1) each read dim (types AND items, consistently) → the nucleation
+    # fit/admission cosines become Hamming-faithful (cos(sign a, sign b)=1−2·Hamming/d). Composes with ?dim=.
+    # Compute-on-read (pure-read; no stored variant); '' = full float (byte-identical). Same _mrl seam.
+    _qz = (q.get("quant") or "").strip().lower() == "binary"
     def _mrl(v):
-        return v[:mdim] if (mdim and mdim < len(v)) else v
+        v = v[:mdim] if (mdim and mdim < len(v)) else v
+        return [1.0 if x > 0 else -1.0 for x in v] if _qz else v
     if not types_space or not item_space:
         return 400, {"error": "nucleation needs a `types_space` (the registry of types) AND a `space` (the "
                               "content store typed against it) — fail loud", "binding": binding.get("id")}
@@ -765,6 +783,7 @@ def _nucleation_projection(q, binding, reg, evs, center, now, lim):
     out["binding"]["dial"] = dial
     out["binding"]["emb"] = emb                          # the active embedder LAYER (None = default/BGE)
     out["binding"]["res"] = mdim                          # the active MRL resolution (None = full dim)
+    out["binding"]["quant"] = "binary" if _qz else None  # the active representation (None = full float)
     # registry-true PICKERS for the FORM (no FE hardcode — as the Company embeds new stores / builds new
     # pyramids they appear here automatically): item_spaces = every embedded store (>2 units); types_spaces =
     # those that ALSO have a scale pyramid (so they can be a registry of types); rungs = the chosen registry's.

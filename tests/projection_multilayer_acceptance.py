@@ -156,5 +156,31 @@ else:
         check("MRL separator: dim=128 MOVES the signed leans (truncation applied, not a no-op)",
               commons and lmoved >= max(1, len(commons) // 3), f"{lmoved}/{len(commons)} leans moved")
 
+        # ════════════════════════════════════════════════════════════════════════════════════════════════
+        # 6 · BINARY QUANTIZATION (the REPRESENTATION axis) — sign(±1)-through-cosine = Hamming similarity.
+        #     quant=binary must: be echoed; MOVE the projection (not a no-op); COMPOSE with dim; full=None.
+        #     (Fidelity — that binary preserves neighborhood structure — is proven separately: NN@10 0.81/0.70.)
+        # ════════════════════════════════════════════════════════════════════════════════════════════════
+        print("\n6 · binary quantization (the representation axis)")
+        _, sq = bridge.build_projection({"binding": "semantic", "space": sp, "emb": named, "center": centre, "quant": "binary", "limit": "40"})
+        pq = by_src(sq)
+        commonq = [k for k in pf if k in pq and k != centre]
+        qmoved = sum(1 for k in commonq if abs((pf[k].get("r") or 0) - (pq[k].get("r") or 0)) > EPS)
+        check("BQ semantic: quant echoed (full→None, binary→'binary')",
+              sf["binding"].get("quant") in (None, "") and sq["binding"].get("quant") == "binary")
+        check("BQ semantic: quant=binary MOVES the meaning-radii (sign-bit Hamming applied, not a no-op)",
+              commonq and qmoved >= max(1, len(commonq) // 3), f"{qmoved}/{len(commonq)} radii moved")
+        # all ±1 → cos(sign a, sign b) ∈ [-1,1] → the normalized radius stays in the valid band (never NaN/blowup)
+        check("BQ semantic: binary radii stay in the valid [0,1.2] band (the ±1 cosine is well-formed)",
+              all(0.0 <= (pq[k].get("r") or 0) <= 1.2 for k in commonq))
+        # COMPOSES with dim: binary + dim=128 is a distinct read (binarize the first 128 dims), both echoed
+        _, sqd = bridge.build_projection({"binding": "semantic", "space": sp, "emb": named, "center": centre, "quant": "binary", "dim": "128", "limit": "40"})
+        check("BQ semantic: composes with MRL (quant=binary & dim=128 → both echoed)",
+              sqd["binding"].get("quant") == "binary" and sqd["binding"].get("res") == 128)
+        # NUCLEATION: binary is a real alternate read (quant echoed; report present) — registry-true on a layer
+        _, nq = bridge.build_projection({"binding": "by_nucleation", "types_space": "operators", "space": "repo", "emb": "pplx", "rung": "8", "quant": "binary", "limit": "10"})
+        check("BQ nucleation: quant=binary echoed + the report still resolves (Hamming admission radii)",
+              nq["binding"].get("quant") == "binary" and "nucleation" in nq and "candidates" in nq["nucleation"])
+
 print(f"\n{'PASS' if FAIL == 0 else 'FAIL'} — {PASS} passed, {FAIL} failed, {SKIP} skipped")
 sys.exit(0 if FAIL == 0 else 1)

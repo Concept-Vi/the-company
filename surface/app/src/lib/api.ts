@@ -54,6 +54,7 @@ export type Projection = {
     types_space?: string
     emb?: string | null   // the active embedder LAYER (null = default/BGE) — the multi-layer model
     res?: number | null   // the active MRL resolution (null = full dim)
+    quant?: string | null // the active representation: 'binary' = sign-bit/Hamming, null = full float
   }
   bindings: BindingRef[]
   sectors: Sector[]
