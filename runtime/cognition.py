@@ -945,11 +945,24 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
                 f"list it with the capability(op='list') MCP op (ids are '<kind>/<name>', flags keep "
                 f"the '--' prefix, e.g. 'flag/--debug'). Fail loud, never fabricate a capability.")
         return entry
+    if sch == "board":
+        # Heart H1.1 — the Company NOTICEBOARD joins the ONE addressed graph. board://<id> → the board
+        # item record (the cc_board file-discovered registry — item_types/source_types + the board_edges
+        # relation vocabulary). Mirrors session://: a registry-record read, fail-loud on a missing id
+        # (never the blob/vec silent-empty). LAZY import — cognition.py must NOT import cc_board at module
+        # load (cc_board imports relation_types/lifters/store; the lazy import keeps this dispatcher's
+        # import graph clean + avoids any cycle). board://·session://·cap:// now all resolve through HERE.
+        from runtime import cc_board as _cb
+        try:
+            return _cb.get_item(addr[len("board://"):])
+        except _cb.BoardError as e:
+            raise ValueError(f"resolve_address: {e}") from e
     if sch is not None:
-        # a REGISTERED scheme (blob/vec/ui/code) with no content-resolver wired into this dispatcher yet.
+        # a REGISTERED scheme (blob/vec/ui/code/exchange) with no content-resolver wired into this
+        # dispatcher yet (exchange:// is register-but-defer — recollection's capture/recall lane owns it).
         raise ValueError(
             f"resolve_address: scheme {sch!r} not content-resolvable yet (address {addr!r}) — "
-            f"run:// + cas:// + skill:// + context:// + session:// + cap:// resolve to content today "
+            f"run:// + cas:// + skill:// + context:// + session:// + cap:// + board:// resolve to content today "
             f"(extensible: add a {sch}:// resolver branch here). Fail loud, NEVER a silent empty.")
     if "://" in addr:
         # an UNREGISTERED scheme (foo://) — not in contracts.address.SCHEMES, no resolver. The seam's

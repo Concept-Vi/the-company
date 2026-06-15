@@ -286,6 +286,35 @@ def list_items(*, type: str | None = None, state: str | None = None, source: str
     return out
 
 
+def traverse(item_id: str, kind: str | None = None, *, store=None, board_dir: str | None = None) -> list[dict]:
+    """Heart H1.1 — FOLLOW a board item's typed edges ACROSS registries, through the ONE resolver.
+
+    Reads the item's typed links (optionally filtered to `kind`, validated fail-loud against the edge
+    registry), resolves each edge's `target` THROUGH cognition.resolve_address — so a board:// target
+    lands in the board registry, session:// in the agent-session registry, skill:// in the skill
+    registry: one addressed graph, one resolver. Returns one hop per edge: {kind, target, resolved}.
+
+    COMPOSES the resolver + the edge registry — NOT a parallel query engine (this is the seed the H1.2
+    query traversal + find_relations generalize). `store` is passed through to resolve_address (needed
+    for session://run:// targets; board:///skill:// targets ignore it). Fail-loud both ends: a missing
+    source item RAISES (get_item); an unregistered `kind` RAISES naming the valid kinds; an unresolvable
+    target propagates resolve_address's loud raise (never a silent empty)."""
+    rec = get_item(item_id, board_dir=board_dir)          # raises if the source item is missing
+    if kind is not None and kind not in _edges_reg():
+        raise BoardError(
+            f"unknown edge kind {kind!r} — valid edge kinds: {edge_kinds()}. "
+            f"(traverse filters by a registry edge-kind; add a board_edges/<kind>.py to extend.)")
+    from runtime.cognition import resolve_address          # lazy: avoid module-load coupling / any cycle
+    hops = []
+    for ln in (rec.get("links") or []):
+        if kind is not None and ln.get("kind") != kind:
+            continue
+        target = ln.get("target")
+        hops.append({"kind": ln.get("kind"), "target": target,
+                     "resolved": resolve_address(store, target)})
+    return hops
+
+
 def transition(item_id: str, to_state: str, *, by: str = "", note: str = "",
                board_dir: str | None = None) -> dict:
     """MOVE an item along its type's registry-declared lifecycle. Fail-loud if the move is not a declared
