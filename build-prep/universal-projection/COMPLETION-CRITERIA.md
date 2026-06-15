@@ -70,10 +70,14 @@ The 2026-06-15 deepening (this session) extracted `bridge.build_projection` as t
 - **THE BAR — MET:** (1) verified live both viewports ✓ (2) all real data — 16 node-types + real edges, 162
   items + real pole regions, the whole 5994-pt event corpus, every registry ✓ (3) Tim can DRIVE (lens/layer/
   resolution/pole/scrubber/centre pickers) ✓ (4) interactive ✓.
-- **The ONLY open item — 🟡 MCP `project` live-verify, pending ONE reconnect** (a Tim INPUT, not a code gap):
-  re-tested this fire — still returns raw (the MCP process holds the pre-`3b57981` module). Proven by execution
-  (all 8 bindings resolve from a wrong cwd). SKIP-not-stall. No code change made this fire (completion clause:
-  don't churn once THE BAR is met).
+- **MCP `project` live-verify — ✅ CLOSED 2026-06-15** (Tim reconnected the company MCP; the stdio server
+  re-spawned with the fix). LIVE-verified through the tool face: `mcp__company__layers` returns `{space:{emb:dim}}`
+  (the dims door); `mcp__company__project(by_nucleation, operators, repo, pplx, rung=8)` returns the TRUE keystone
+  — `binding.id=by_nucleation`, all 8 bindings discovered, `emb=pplx` echoed, and the full nucleation report:
+  657 items × 8 operator roles → 2 BORN candidate-operators (✦0 the `*_acceptance.py` test-cluster size 36
+  margin 0.354 distinct+born = "test-verifier"; ✦2 `fabric/vram.py` infra size 30 born) + dissolution candidate.
+  THE DUAL INTERFACE IS PROVEN: the agent (MCP) sees byte-identically what the operator (UI) sees. No open
+  items remain reconnect-gated.
 
 ## BUILD STATUS — 2026-06-14 · BUILD COMPLETE — verified live, all real data, drivable, interactive
 
