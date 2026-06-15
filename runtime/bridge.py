@@ -845,7 +845,10 @@ def build_projection(q):
     Suite over the shared store — byte-identical data either way)."""
     from runtime.projection import (project as _uproject, BindingRegistry as _BR,
                                     parse_now as _parse_now, _addr_of as _proj_addr)
-    reg = _BR().discover()
+    # ABSOLUTE bindings path (ROOT-based, like NodeRegistry below) — NOT the cwd-relative default: this engine
+    # is called from BOTH faces, and the MCP server's cwd is not the repo root, so a relative "bindings" there
+    # discovers ZERO lenses → every binding silently falls back to raw. Absolute = cwd-independent, both faces.
+    reg = _BR().discover([os.path.join(ROOT, "bindings")])
     binding = reg.get(q.get("binding"))
     evs = SUITE.store.events_since(int(q.get("since") or 0))
     center = q.get("center")
