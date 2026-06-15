@@ -12,6 +12,8 @@ Grammar:
   session://<id>                                       a Claude Code agent session (the agent-session registry)
   board://<id>                                          a Company Noticeboard item (the cc_board registry)
   exchange://<sid>/<i>                                  a captured conversation exchange (recollection's canonical provenance address)
+  file://<abs-path>                                     a file node (recollection's crossings graph — resolver: whatTouchedFile)
+  project://<name>                                      a project node (recollection's containment graph — resolver: containment edges)
 Schema-additive: add optional fields + bump schema_ver; never break an existing one.
 
 Note on `ui://`: this scheme is a *label* in the address grammar only. Unlike
@@ -86,11 +88,19 @@ recall/memory system addresses units by. Registered here as a *label* so it is g
 ONE Company address space (Tim's "one addressed state"); its RESOLVER is recollection's lane (the
 recall/capture + recall↔board wires own it) — register-but-defer, mirroring `ui://`. Purely additive;
 no record-shape or schema_ver change.
+
+Note on `file://` + `project://` (recollection's node-id grammar siblings — co-decided with the lead,
+2026-06-15): the crossings-graph node addresses recollection mints + populates — `file://<abs-path>` (a
+file node) + `project://<name>` (a project node), alongside `exchange://` + `session://`. Registered here
+as *labels* so the whole node grammar is ONE Company address space (the Heart's one addressed state);
+their RESOLVERS are recollection's lane (file://→whatTouchedFile, project://→containment edges), wired
+when its store absorbs — register-but-defer, mirroring `ui://`/`exchange://`. Purely additive; no
+record-shape or schema_ver change.
 """
 from __future__ import annotations
 from pydantic import BaseModel, Field
 
-SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "session", "cap", "board", "exchange")
+SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "session", "cap", "board", "exchange", "file", "project")
 
 
 class Provenance(BaseModel):
