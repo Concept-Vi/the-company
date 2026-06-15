@@ -138,7 +138,24 @@ cases only. The serve endpoint already supports it (`:8007` `documents` field �
 
 ---
 
-## 4. THE MIGRATION (BGE → pplx, system-wide — careful, atomic/staged)
+## 4. NOT A MIGRATION — LAYERING (Tim's reframe, 2026-06-15)
+**The "migrate/overwrite BGE→pplx" framing was WRONG** (which is why the in-place overwrite felt wrong + the
+harness blocked it). Tim: *"is there a point keeping [BGE] in? It might still be used, and part of this requires
+multiple different embeddings over the same data, right?"* — **KEEP BGE, ADD pplx as another LAYER over the same
+data.** Multiple embeddings per item IS the multi-layer model (the-seed: one object, many coordinate systems).
+"Both, plus others": BGE + pplx + future embedders, each a layer; BGE stays useful (hybrid dense+sparse+ColBERT;
++ BGE-vs-pplx disagreement = a signal). **Non-destructive, so no overwrite + no harness block.**
+- **BUILT (commit 909c122, WRITE path):** the store holds per-embedder LAYERS via the C1 `#emb=<embedder>`
+  fragment — `space_address(source, space, emb=None)` + `build_index`/`embed_corpus_to_spaces` take an `emb=`
+  selector; `put_vector` records the `emb` tag. `emb=None` = the BGE default layer (every existing key
+  byte-identical; acceptance 91/91). A pplx layer writes at `emb='pplx'` — a NEW key beside BGE, never over it.
+- **NEXT (READ path):** thread `?emb=`/`layer=` through the bridge projection helpers (`_semantic_/_separator_/
+  _nucleation_projection`), the scale/pyramid reads, and `find_relations` (all `emb=None` default → BGE) — see
+  the scout's seam map. Then the instrument can READ a chosen layer (embedder-as-a-lens).
+- **THEN:** write the pplx content layers (`emb='pplx'`) + the operators types-space (already pplx) → ship the
+  keystone on the pplx layer. The clean long-term home for layers = the Postgres `layers` table (§DATA-SUBSTRATE).
+
+### (historical) the earlier "system-wide overwrite migration" plan — SUPERSEDED by layering above
 1. Ensure `embed-pplx` resident + healthy (`:8007`); register the loadout (§5).
 2. Build the contextual serve endpoint (§3.1) so the migration can embed context-aware where it helps.
 3. **Re-embed every existing space** with pplx (2560): repo, principles, worldview, topics, history — via the
