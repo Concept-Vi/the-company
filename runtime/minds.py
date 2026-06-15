@@ -32,7 +32,7 @@ import os
 from dataclasses import dataclass, field
 
 MINDS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "minds")
-MIND_FIELDS = ("id", "kind", "role", "cap", "members", "order", "mode", "mind", "desc")
+MIND_FIELDS = ("id", "kind", "role", "cap", "members", "order", "mode", "mind", "source_as", "desc")
 MIND_KINDS = ("role", "model", "composition", "binding")
 
 
@@ -226,6 +226,66 @@ def traverse(composition_row, store) -> list:
         else:
             out.append(member)                                        # model/other mind — its resolved row (model-leg)
     return out
+
+
+def run_composition(composition_row, ctx: dict, store, *, turn_id: str, budget=None) -> dict:
+    """EXECUTE a composition by WALKING its feeds order-edges (R13 bar 3 — output flows through BOTH minds).
+    A thin DAG-walker that REUSES the existing primitives — run_swarm (a leg with no incoming feeds, fired on
+    the source ctx) + run_items (a downstream leg, fired on a unit built from its feeders) — so run_swarm
+    stays BYTE-IDENTICAL (bar 5); this module owns only the order-edge SEMANTICS.
+
+    The feeds-edge schema (declared DATA, recompose-by-row): an order edge {from,to,kind:"feeds",as:"<key>"}
+    places the upstream's output under <key> in the downstream's unit; the composition's optional
+    `source_as:"<key>"` carries the ORIGINAL source under that key. (e.g. pair → judge unit
+    {"extract": <ex_out>, "raw_exchange": <source>} — the proven feed.)
+
+    Returns {"order":[mind-id...], "addresses":{mind-id: run://...}, "outputs":{mind-id: resolved-out},
+    "final": <last leg's output>}. The run:// trail is what R15 gate/rewind addresses a composition-step on.
+    Fail-loud: a member that isn't a role-mind, or a feeder whose output is missing, RAISES."""
+    from runtime.cognition import run_swarm, run_items, resolve_address, role_registry
+    comp = composition_row
+    if isinstance(comp, str):
+        comp = resolve_address(store, comp if comp.startswith("mind://") else "mind://" + comp)
+    if getattr(comp, "kind", None) != "composition":
+        raise MindError(f"run_composition needs a composition mind, got {getattr(comp,'kind',comp)!r}. Fail loud.")
+    roles = role_registry()
+    order = comp.order
+    source = ctx.get("utterance")
+    source_as = comp.get("source_as")
+    members = _ordered_members(comp)
+    addresses, outputs = {}, {}
+    for member_id in members:
+        mind = resolve_address(store, "mind://" + member_id)
+        mkind = getattr(mind, "kind", None) or (mind.get("kind") if hasattr(mind, "get") else None)
+        if mkind != "role":
+            raise MindError(f"run_composition: member {member_id!r} kind={mkind!r} — only role-minds are runnable legs this unit. Fail loud.")
+        role = roles.get(mind["role"])
+        if role is None:
+            raise MindError(f"run_composition: mind {member_id!r} binds role {mind['role']!r} not in the registry. Fail loud.")
+        incoming = [e for e in order if e.get("to") == member_id and e.get("kind") == "feeds"]
+        if not incoming:
+            # SOURCE leg — fire on the original ctx (run_swarm, the flat primitive, one role)
+            wave = run_swarm([role], {"utterance": source}, store, turn_id=turn_id, budget=budget)
+            addresses[member_id] = wave.addresses[role.id]
+            outputs[member_id] = wave.resolved[role.id]
+        else:
+            # DOWNSTREAM leg — build the unit from feeders' outputs (by `as`) + the original source (source_as)
+            unit = {}
+            for e in incoming:
+                frm = e.get("from")
+                if frm not in outputs:
+                    raise MindError(f"run_composition: feeds edge {frm}->{member_id} but {frm} produced no output (order bug). Fail loud.")
+                key = e.get("as")
+                if not key:
+                    raise MindError(f"run_composition: feeds edge {frm}->{member_id} lacks `as` (where to place the upstream output). Fail loud.")
+                unit[key] = outputs[frm]
+            if source_as:
+                unit[source_as] = source
+            items = run_items(role, [unit], store, turn_id=turn_id, budget=budget)
+            addresses[member_id] = list(items.addresses.values())[0]
+            outputs[member_id] = items.resolved[0]
+    return {"order": members, "addresses": addresses, "outputs": outputs,
+            "final": outputs[members[-1]] if members else None}
 
 
 def binding_for_mode(mode: str):
