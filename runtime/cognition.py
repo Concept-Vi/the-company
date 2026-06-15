@@ -997,6 +997,18 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
             return _cc.get_by_address(addr)
         except _cc.CloneError as e:
             raise ValueError(f"resolve_address: {e}") from e
+    if sch == "mind":
+        # R13 composable-mind — mind://<id> → the Mind row (a model OR role OR composition-of-rows; the
+        # thinking-unit axis, ≠ clone://'s fleet/provenance axis — board://item-3c324c27). The brain becomes
+        # a COMPOSITION selected from the file-discovered mind-registry (runtime/minds.py). traverse() resolves
+        # each composition member back THROUGH here (the ONE resolver — bar 2). LAZY import; fail-loud on an
+        # unknown mind (MindError → ValueError, never silent-empty — mirrors board://·clone://). FLAT address
+        # (composition structure is row-data; no parse_mind_address this unit). resolve() strips the scheme.
+        from runtime.minds import mind_registry as _mr, MindError as _ME
+        try:
+            return _mr().resolve(addr[len("mind://"):])
+        except _ME as e:
+            raise ValueError(f"resolve_address: {e}") from e
     if sch is not None:
         # a REGISTERED scheme (blob/vec/ui/code/exchange) with no content-resolver wired into this
         # dispatcher yet (exchange:// is register-but-defer — recollection's capture/recall lane owns it).

@@ -113,7 +113,7 @@ record-shape or schema_ver change.
 from __future__ import annotations
 from pydantic import BaseModel, Field
 
-SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "session", "cap", "board", "clone", "exchange", "file", "project")
+SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "session", "cap", "board", "clone", "mind", "exchange", "file", "project")
 
 
 class Provenance(BaseModel):

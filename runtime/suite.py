@@ -5800,7 +5800,17 @@ class Suite:
     def cast_for_mode(self, mode: str) -> list:
         """The CAST for a mode (C2.3) — every file-discovered role whose mode_scope includes `mode`.
         An UNKNOWN mode yields an EMPTY cast (never a crash, never a default-fire). The active cast is a
-        function of mode (DECISIONS Q2: roles are mode-scoped registry data)."""
+        function of mode (DECISIONS Q2: roles are mode-scoped registry data).
+
+        R13 seam B (additive, behaviour-preserving): if `mode` is bound to a mind-COMPOSITION via a minds/
+        binding ROW (registry DATA — rebind is a row edit, not code), the cast is that composition resolved
+        THROUGH the one resolver (bar 2) into ordered role-shaped minds; ELSE the byte-identical role-registry
+        default below (run_swarm untouched). Lazy imports — the module exists now; avoids any import cycle."""
+        from runtime.minds import binding_for_mode as _bind, traverse as _traverse
+        _bound = _bind(mode)
+        if _bound:
+            from runtime import cognition as _cog
+            return _traverse(_cog.resolve_address(self.store, "mind://" + _bound), self.store)
         return self.role_registry.cast_for_mode(mode)
 
     def capability_providers(self) -> dict:
