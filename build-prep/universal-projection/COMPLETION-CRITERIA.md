@@ -37,8 +37,14 @@ ruins the system"). **Expand-before-harden:** the brain docs are captured design
 
 ## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
 
-Tim's 4-item program (1 BQ · 2 Postgres · 3 cron · 4 reconnect): #4 closed (above); #1 BUILT this fire; #2
-Postgres he flagged "later" (high blast-radius, not yet); #3 his timer to retarget. BQ = the third representation
+Tim's 4-item program (1 BQ · 2 Postgres · 3 cron · 4 reconnect): #4 ✅ closed; #1 ✅ BUILT + FORM-passed; #3
+his timer; **#2 Postgres — 🟡 BLOCKED on infra + Tim's "how" (evidence 2026-06-15):** NO Postgres server
+running (only the `psql` client), NO pgvector / Python pg-driver / Supabase creds present, and 30 live
+sessions are reading+writing the `FsStore` right now — a store-backend swap would endanger the running fleet,
+and the cloud(Supabase)-vs-local fork is the "how" Tim reserved. Not autonomously buildable-to-THE-BAR
+(needs infra provisioning + Tim's go); SKIP-not-stall. When unblocked: additive `PgStore` behind the SAME
+`FsStore` interface (the one `FsStore(STORE_DIR)` injection point), one-time import, flag-flip cutover on a
+quiescent fleet — the projection engine is untouched (one engine, new store). BQ = the third representation
 axis beside `?emb=` (◫ layer) and `?dim=` (◎ resolution): `?quant=binary` signs each read dim to ±1 → the SAME
 cosine becomes a faithful Hamming similarity (`cos(sign a, sign b) = 1 − 2·Hamming/d`), folded into the `_mrl`
 seam so it composes with `?dim=`. Compute-on-read (pure-read; no stored variant — a LAW-forced call). Fidelity
