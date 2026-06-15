@@ -62,26 +62,46 @@ therefore *informed by every sibling in the group* = "this thing, as it sits amo
 
 **Constraint:** a parent's children must fit in 32K tokens *concatenated*. Registries (29 roles, 8 projections,
 …) fit trivially. Large spaces (644-unit repo) need batching by parent-subgroup or a representative-context
-window — a knob in the capture path (§3.2). **This is the highest-leverage upgrade in this doc.**
+window — a knob in the capture path (§3.2).
+
+### 2a. EMPIRICAL FINDING (2026-06-15) — context is NOT a free win; the GROUPING is decisive
+Proved it before migrating (the existing `:8007` `documents` endpoint, no server change). Embedded the 29 OPERATORS
+two ways: PLAIN (each alone) vs CONTEXT (all 29 as one parent-group). Script: `$CLAUDE_JOB_DIR/tmp/context_proof.py`.
+- **Context genuinely moves the vectors** — mean cos(plain, context) = 0.847 (repo_digest → 0.751). Late-chunking
+  is real and generalizes to non-document things. ✓ (Tim's mechanism confirmed.)
+- **BUT embedding a whole registry as one group HOMOGENIZES it** — operator-family separability *fell*: intra−inter
+  cosine margin went 0.169 (plain) → **0.097 (context)**, Δ **−0.072**; only **5/29** roles tightened toward their
+  family. Both intra (0.485→0.607) and inter (0.316→0.510) rose, but inter rose MORE → the shared "we're all
+  operators" parent-context pulled everyone *together*, washing out the distinctions.
+- **Why:** pplx-context is built for RETRIEVAL DISAMBIGUATION (a chunk found via its document's context — it is
+  ConTEB SOTA at that). Our **nucleation/strain are DIFFERENTIATION readings** (how a thing differs *within* its
+  type). Context that disambiguates-for-retrieval can *homogenize-for-differentiation*. Opposite goals.
+- **Decision (refined):** the migration's safe, universal win is **PLAIN pplx** (2560-dim, already beats BGE-M3
+  on quality — that's the real upgrade). **Context-aware embedding is SELECTIVE, not blanket:** only for a
+  genuinely COHESIVE parent whose shared context *disambiguates* its members (e.g. a real document's lens-extracts,
+  a thread's turns) AND only proven per-case. Do NOT context-embed a heterogeneous registry for nucleation —
+  it degrades the very separability the lens needs. This saved the instrument from a plausible-but-wrong upgrade.
 
 ---
 
 ## 3. TOOL REQUESTS (detailed — to be added into the tools)
 
-### 3.1 `ops/serve_pplx_embed.py` — ADD the contextual endpoint  ⟵ unblocks §2 (highest leverage)
-The local server only pools single texts. Add a route that exposes late-chunking:
-- **`POST /v1/contextualizedembeddings`** — body `{"model", "input": [[c1, c2, …], [c1, …]]}` (a list of GROUPS,
-  each a list of child texts). For each group: SEP-join (`tokenizer.sep_token`), tokenize (pad/truncate to 32K),
-  run the model, then `extract_chunks_from_concatenated` (per the HF card: split token-embeddings at SEP
-  positions, mean-pool each span). Return `{"data": [[vec_2560, …], …]}` aligned to the input groups/children.
-- Keep `/v1/embeddings` (plain dense) as the fallback path.
-- Reuse the model already loaded in the server (no second load). Return F32 2560-dim (cosine).
-- Acceptance: a 2-group request returns per-child 2560-vectors; a child embedded WITH context differs from the
-  same child embedded alone (prove the context actually moves the vector).
+### 3.1 contextual endpoint — ✅ ALREADY EXISTS + VERIFIED (no build needed)
+`ops/serve_pplx_embed.py` already exposes late-chunking: `POST /v1/embeddings` with an optional **`documents`**
+field `[[c1, c2, …], …]` (a list of parent-groups, each a list of child texts) → calls the model's native
+`.encode()` and returns one row per (document, chunk), tagged in `meta:{document,chunk}`. Plain `input` mode
+(each string = a single-chunk doc) is the default. Verified 2026-06-15: a 29-child group returns 29×2560
+context-aware vectors, and the context vectors differ from the plain ones (mean cos 0.847 — §2a). So the
+mechanism is fully servable today. The OPEN question was never "can we serve it" but "does it HELP" — answered
+in §2a (helps retrieval; homogenizes registry-differentiation). No serve-script change required.
 
 ### 3.2 capture / embed seam — context-aware embedding (`runtime/cognition.py`, `runtime/corpus.py`)
+**SELECTIVE, not blanket** (see §2a — context homogenizes a registry and hurts nucleation/strain separability;
+it helps only for a cohesive parent whose shared context disambiguates members, e.g. a real document's
+lens-extracts). The migration default is PLAIN pplx. This context path is an OPT-IN for proven cohesive-parent
+cases only. The serve endpoint already supports it (`:8007` `documents` field — §3.1 is DONE). When opting in:
 `embed_corpus_to_spaces` / `capture_corpus` / `vector_index.build_index` currently embed each record's text
-*independently* (one `complete_embeddings` call per text, plain `/v1/embeddings`). ADD a context-aware path:
+*independently* (plain `/v1/embeddings`). The context path would:
 - A record may carry a **`context_parent`** key (an address / group id — e.g. the unit's parent address, its
   projection, or its registry). Records sharing a `context_parent` are **batched per-parent** and embedded via
   the contextual endpoint (§3.1) so each child's vector is context-informed.
@@ -144,9 +164,12 @@ extend with voice/stt if the surface needs the right-hand-man co-resident.)
 ---
 
 ## 6. SEQUENCING (each a verifiable beat)
-1. ✅ register the `instrument` loadout (this fire) + write this spec (this fire).
-2. Build the contextual serve endpoint (§3.1) → **prototype context-vs-plain on a registry** (prove Tim's §2
-   upgrade the way the keystone was proven: a row embedded WITH parent context should nucleate more meaningfully).
-3. Context-aware capture (§3.2) + the migration (§4) → flip default → re-embed → rebuild pyramids.
-4. Ship the keystone lens + the L15 promote gesture on the pplx corpus.
+1. ✅ register the `instrument` loadout + write this spec (2026-06-15).
+2. ✅ contextual endpoint already exists + context-vs-plain PROVEN (§2a): context homogenizes a registry →
+   migration default is PLAIN pplx; context is selective-only. (2026-06-15)
+3. **The migration (§4) — PLAIN pplx** (the real, safe quality win over BGE): point the embed path at pplx,
+   re-embed every space (2560), rebuild pyramids, flip the default — staged, atomic per space, verify each.
+   This is the next big beat; it's a shared-corpus operation → do it deliberately with per-step verification.
+4. Ship the keystone lens + the L15 promote gesture on the pplx corpus (the keystone was PROVEN on plain pplx).
 5. Leverage knobs (§3.5): 32K, MRL, quantized storage — as the corpus grows.
+6. Context-aware capture (§3.2) — LATER + SELECTIVE: only for proven cohesive-parent retrieval cases, never blanket.
