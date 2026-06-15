@@ -353,6 +353,13 @@
 .layout--portrait .portrait-top { padding: var(--s-3) var(--s-4); justify-content: space-between; align-items: center;
   flex-wrap: wrap; gap: var(--s-2) var(--s-3); column-gap: var(--s-3); }
 .layout--portrait .viewtoggle-btn { min-width: 30px; }
+/* portrait is width-tight: with FOUR optics chips the cluster must hold ONE row even in the widest state
+   (▦ binary). Tighten the cluster's inter-chip gap + chip horizontal padding here only — claws back enough
+   that all four fit at 390px without the 4th orphaning (design-critic: binary-state portrait wrap). 'binary'
+   is the longest value this 2-state chip can show, so sizing for it is permanently sufficient. */
+.layout--portrait .bar-left { gap: var(--s-2); }
+.layout--portrait .bar-left .lenschip-btn,
+.layout--portrait .bar-left .centrechip { padding-left: var(--s-1); padding-right: var(--s-1); }
 
 /* ---- landscape ----------------------------------------------------------- */
 .layout--landscape { flex-direction: row; }
