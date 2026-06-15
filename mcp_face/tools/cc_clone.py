@@ -27,15 +27,15 @@ from __future__ import annotations
 
 from typing import Literal
 
-OPS = ("clone", "msg", "onboard", "list", "end", "prepare")
+OPS = ("clone", "msg", "onboard", "list", "end", "prepare", "resolve")
 
 
 def register(mcp, suite):
     @mcp.tool()
-    def cc_clone(op: Literal["clone", "msg", "onboard", "list", "end", "prepare"],
+    def cc_clone(op: Literal["clone", "msg", "onboard", "list", "end", "prepare", "resolve"],
                  source: str = "", at: str = "", clone: str = "", message: str = "",
                  description: str = "", cwd: str = "", model: str = "", fallback_model: str = "",
-                 fleet: bool = False, phase: str = "full", timeout: float = 180) -> dict:
+                 fleet: bool = False, phase: str = "full", address: str = "", timeout: float = 180) -> dict:
         """Clone a Claude Code session AS IT WAS at a past moment and talk to / onboard that past context.
 
           op="clone"   — `source` (.jsonl) + `at` ('compact:N'|'uuid:..'|'ts:..') -> live supervised clone.
@@ -49,6 +49,8 @@ def register(mcp, suite):
           op="end"     — `clone` -> teardown + delete materialized prefix (source untouched).
           op="prepare" — `source` + `at` -> the OPERATOR command to launch it as an interactive
                          channel member (agents cannot auto-launch interactive channel agents).
+          op="resolve" — `address` (clone://<source_sid>/<at>) -> the clone record + its persisted
+                         reflection (the fleet-addressing point-lookup consumer). Fail-loud on unknown.
         """
         from runtime import cc_clone as cc
         try:
@@ -79,6 +81,10 @@ def register(mcp, suite):
                 if not source or not at:
                     raise ValueError("cc_clone(op='prepare') needs `source` (.jsonl path) and `at`.")
                 return {"op": "prepare", **cc.prepare_at(source, at, description=description, cwd=cwd or None)}
+            if op == "resolve":
+                if not address:
+                    raise ValueError("cc_clone(op='resolve') needs `address` (clone://<source_sid>/<at>).")
+                return {"op": "resolve", **cc.get_by_address(address)}
         except cc.CloneError as e:
             return {"op": op, "ok": False, "error": str(e)}
         raise ValueError(f"cc_clone: unknown op {op!r} — one of {OPS}.")

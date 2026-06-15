@@ -247,6 +247,55 @@ def msg_clone(handle_or_session: str, message: str, *, timeout: float = 180) -> 
             "source_sid": rec["source_sid"], "reply": reply}
 
 
+def clone_address(rec: dict) -> str:
+    """The PROVENANCE-stable clone:// address of a clone record: clone://<source_sid>/<at> (the cut grammar
+    compact:N|uuid:<uuid>|ts:<iso> is address-safe verbatim). Provenance, NOT the ephemeral handle/new-sid —
+    a re-spawn of the same era resolves the SAME address (the re-embed-stable property, the board:// principle).
+    clone:// = fleet/provenance axis (≠ mind://). Fail-loud if the record lacks the provenance fields."""
+    sid, at = rec.get("source_sid"), rec.get("at")
+    if not sid or not at:
+        raise CloneError(f"clone_address: record {rec.get('handle')!r} lacks source_sid/at — cannot address. Fail loud.")
+    return f"clone://{sid}/{at}"
+
+
+def _update_clone_record(handle: str, patch: dict) -> dict:
+    """Read-modify-write a clone record (.data/clones/<handle>.json) with `patch`. The durable source-of-truth
+    for the addressed clone row (where the reflection + clone:// address are persisted)."""
+    p = os.path.join(CLONES_DIR, handle + ".json")
+    if not os.path.exists(p):
+        raise CloneError(f"_update_clone_record: no clone record {handle!r} at {p}. Fail loud.")
+    with open(p, encoding="utf-8") as f:
+        rec = json.load(f)
+    rec.update(patch)
+    with open(p, "w", encoding="utf-8") as f:
+        json.dump(rec, f, indent=2)
+    return rec
+
+
+def get_by_address(address: str) -> dict:
+    """Resolve a clone:// address to its clone record (+ persisted reflection) — the point-lookup CONSUMER
+    that pairs with clone:// (consumer-rule). Matches by computing clone_address(rec) over the registry (the
+    JOIN over the handle-files; reuses clone_address, no parallel parser — the canonical parse_clone_address
+    lives in contracts.address). Fail-loud on an unknown address (never a silent empty / guessed-nearest)."""
+    if not isinstance(address, str) or not address.startswith("clone://"):
+        raise CloneError(f"get_by_address: {address!r} is not a clone:// address. Fail loud.")
+    if os.path.isdir(CLONES_DIR):
+        for fn in sorted(os.listdir(CLONES_DIR)):
+            if not fn.endswith(".json"):
+                continue
+            try:
+                with open(os.path.join(CLONES_DIR, fn), encoding="utf-8") as f:
+                    rec = json.load(f)
+            except (OSError, ValueError):
+                continue
+            try:
+                if clone_address(rec) == address:
+                    return rec
+            except CloneError:
+                continue
+    raise CloneError(f"get_by_address: no clone resolves to {address!r} — unknown clone address. Fail loud.")
+
+
 def onboard_clone(handle_or_session: str, *, bring_current: str = "", timeout: float = 240,
                   phase: str = "full") -> dict:
     """Run the reflect-BEFORE-brief onboarding protocol on ONE spun-up clone (the protocol:
@@ -265,6 +314,11 @@ def onboard_clone(handle_or_session: str, *, bring_current: str = "", timeout: f
     if phase in ("full", "reflect"):
         reflect = msg_clone(rec["handle"], onboarding_message(rec, era_label=rec.get("description", "")), timeout=timeout)
         out["reflection"] = reflect["reply"]
+        # PERSIST the reflection + the clone:// address onto the durable clone record (the bug-fix): the
+        # reflection IS the distributed-memory payload — it must be addressable, not lost to the mail log.
+        _update_clone_record(rec["handle"], {"reflection": reflect["reply"],
+                                             "reflected_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                                             "address": clone_address(rec)})
     if phase == "reflect":
         return out
     if phase == "bring_current" and not bring_current:
