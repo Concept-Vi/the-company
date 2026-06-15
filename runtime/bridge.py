@@ -1026,6 +1026,8 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.cognition_info()))
             elif path == "/api/types":
                 self._send(200, json.dumps(sorted(SUITE.list_types())))
+            elif path == "/api/layers":                    # the multi-layer model's self-description: {space:[embedder layer,…]}
+                self._send(200, json.dumps(SUITE.store.layers_by_space()))
             elif path == "/api/models":                    # B: per-kind/per-endpoint live model list
                 self._send(200, json.dumps(SUITE.models_at(
                     kind=q.get("kind", "chat"), base_url=q.get("base_url"))))

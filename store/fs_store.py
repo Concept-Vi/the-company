@@ -1047,6 +1047,33 @@ class FsStore:
                 out.append({"id": _id if _id is not None else rec["address"], "vector": rec["vector"]})
         return out
 
+    def layers_by_space(self) -> dict:
+        """Which embedder LAYERS each content/registry space carries: {space: [emb_tag, ...]} (the default/BGE
+        layer shown as 'default'; a named embedder, e.g. 'pplx', as itself). The self-description of the
+        multi-layer model — a picker (the FE) OR an agent (the dual interface) reads this to choose which layer
+        to view. On-demand scan of the vectors dir (regex over the raw record text — avoids parsing the big
+        vector array; NOT in any per-request hot path). Internal `scale:*` pyramid spaces + the default/unspaced
+        space are excluded (only the lens/registry spaces a layer is chosen FOR)."""
+        import re
+        d = self.root / "vectors"
+        if not d.exists():
+            return {}
+        sp_re = re.compile(r'"space":\s*(?:"([^"]*)"|null)')
+        emb_re = re.compile(r'"emb":\s*(?:"([^"]*)"|null)')
+        out: dict[str, set] = {}
+        for p in d.glob("*.json"):
+            try:
+                txt = p.read_text()
+            except Exception:
+                continue
+            sm = sp_re.search(txt)
+            space = sm.group(1) if sm else None
+            if not space or space.startswith("scale:"):    # skip default/unspaced + internal pyramid spaces
+                continue
+            em = emb_re.search(txt)
+            out.setdefault(space, set()).add((em.group(1) if (em and em.group(1)) else "default"))
+        return {sp: sorted(layers) for sp, layers in sorted(out.items())}
+
     # --- surfaced-decision inbox (S7/D4): non-blocking gates, shared across faces ---
     def surfaced_lock(self):
         """T1-RACE — the store-level lock a CALLER holds around a surfaced read-modify-write
