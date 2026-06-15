@@ -666,6 +666,15 @@ def _nucleation_projection(q, binding, reg, evs, center, now, lim):
     # (e.g. types_space=operators which is pplx-native × space=repo@pplx). The dim guard below (len==dim) keeps
     # it honest: a layer-mismatched pair (e.g. pplx 2560 types × BGE 1024 items) yields no items → fails loud.
     emb = q.get("emb") or binding.get("emb") or None
+    # MRL SEMANTIC-ZOOM (Tim's capability §C; verified graceful 2026-06-15): the pplx 2560-d vector is
+    # Matryoshka-trained, so its first-N dims are a valid COARSER embedding. ?dim=<N> truncates the read vectors
+    # (types AND items, consistently) to N before the cosine → a continuous semantic-RESOLUTION zoom, orthogonal
+    # to the rung pyramid (the 2-D scale: rung × dim). dim=None = full resolution (byte-identical). FREE (no
+    # re-embed). Applied at every vector boundary so all cosines + the dim guard stay consistent.
+    _md = (q.get("dim") or "").strip()
+    mdim = int(_md) if _md.isdigit() and int(_md) > 0 else None
+    def _mrl(v):
+        return v[:mdim] if (mdim and mdim < len(v)) else v
     if not types_space or not item_space:
         return 400, {"error": "nucleation needs a `types_space` (the registry of types) AND a `space` (the "
                               "content store typed against it) — fail loud", "binding": binding.get("id")}
@@ -678,7 +687,7 @@ def _nucleation_projection(q, binding, reg, evs, center, now, lim):
     if not tpts:
         return 400, {"error": f"types_space {types_space!r} rung {rung} resolved NO type centroids — a registry "
                               f"of nothing cannot be under-covered", "binding": binding.get("id")}
-    type_vecs = [t["vector"] for t in tpts]
+    type_vecs = [_mrl(t["vector"]) for t in tpts]   # MRL: truncate the type centroids to the chosen resolution
     type_sizes = [t.get("size") or len(t.get("members") or []) for t in tpts]
     # readable, UNIQUE type labels from the cluster exemplars (the sector keys the placement maps to)
     type_labels, _seen = [], {}
@@ -700,7 +709,7 @@ def _nucleation_projection(q, binding, reg, evs, center, now, lim):
         for m in (t.get("members") or []):
             rec = SUITE.store.get_vector(SUITE.store.space_address(m, types_space, emb))
             if rec and rec.get("vector"):
-                mc.append(_cos(rec["vector"], t["vector"]))
+                mc.append(_cos(_mrl(rec["vector"]), _mrl(t["vector"])))   # MRL: radii at the chosen resolution
         mc.sort()
         type_radii.append(mc[max(0, len(mc) // 10)] if mc else 0.0)
 
@@ -711,8 +720,10 @@ def _nucleation_projection(q, binding, reg, evs, center, now, lim):
     for e in uevs:
         sa = e.get("source_address") or ""
         rec = SUITE.store.get_vector(SUITE.store.space_address(sa, item_space, emb))
-        if rec and rec.get("vector") and len(rec["vector"]) == dim:
-            item_vecs.append(rec["vector"]); item_refs.append(sa)
+        if rec and rec.get("vector"):
+            v = _mrl(rec["vector"])                      # MRL: items at the chosen resolution
+            if len(v) == dim:                            # dim = len(type_vecs[0]) = the (possibly truncated) resolution
+                item_vecs.append(v); item_refs.append(sa)
     if not item_vecs:
         return 400, {"error": f"no embedded items in space {item_space!r} at dim {dim} (the lens the types live "
                               f"in) — capture+embed that store first, or pick an embedded space",
@@ -733,6 +744,7 @@ def _nucleation_projection(q, binding, reg, evs, center, now, lim):
     out["binding"]["rung"] = rung
     out["binding"]["dial"] = dial
     out["binding"]["emb"] = emb                          # the active embedder LAYER (None = default/BGE)
+    out["binding"]["res"] = mdim                          # the active MRL resolution (None = full dim)
     # registry-true PICKERS for the FORM (no FE hardcode — as the Company embeds new stores / builds new
     # pyramids they appear here automatically): item_spaces = every embedded store (>2 units); types_spaces =
     # those that ALSO have a scale pyramid (so they can be a registry of types); rungs = the chosen registry's.
