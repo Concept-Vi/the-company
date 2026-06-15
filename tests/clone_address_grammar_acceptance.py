@@ -91,6 +91,25 @@ if recs:
 check("9 resolve_address(clone://bogus/x) RAISES (fail-loud, never silent-empty)",
       raises(lambda: resolve_address(store, "clone://bogus-sid-zzz/compact:0"), ValueError))
 
+# ── ★ the A+B UNIFY end-to-end BY USE: a board item edges to a clone://, traverse() follows it ACROSS ─
+# Not inferred (traverse uses resolve_address; clone:// resolves → therefore...) but PROVEN: file a real
+# board item whose typed edge points at a real clone, and traverse() lands the resolved CLONE record. The
+# inward-facing board (the Company's own request loop) and the clone-fleet are ONE addressed graph.
+import tempfile  # noqa: E402
+from runtime import cc_board as cb  # noqa: E402
+if recs:
+    tmp = tempfile.mkdtemp(prefix="company-clone-unify-")
+    item = cb.file_item("idea", "clone:// unify fixture",
+                        "a board item sourced_from a real clone — the board + the clone-fleet, one graph.",
+                        author_session="ch-al7jdfdr",
+                        links=[{"kind": "sourced_from", "target": clone_address(recs[0])}],
+                        board_dir=tmp)
+    hops = cb.traverse(item["id"], store=store, board_dir=tmp)
+    check("10 ★ traverse a board item's edge ACROSS to the resolved CLONE record (A+B = one graph, by use)",
+          any(h["kind"] == "sourced_from" and isinstance(h["resolved"], dict)
+              and h["resolved"].get("source_sid") == recs[0]["source_sid"] for h in hops),
+          f"hops={[{k: h.get(k) for k in ('kind',)} for h in hops]}")
+
 print(f"\n{'=' * 60}\nRESULT: {len(PASS)} passed, {len(FAIL)} failed")
 if FAIL:
     print("FAILED:", ", ".join(FAIL))
