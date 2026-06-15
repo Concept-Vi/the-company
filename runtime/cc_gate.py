@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import time
 import urllib.request
 import uuid as _uuid
@@ -35,12 +34,14 @@ from pathlib import Path
 
 from store.fs_store import _atomic_write_fsync
 from lifters.frontmatter import _extract as _fm_extract
+from contracts.address import is_step_address      # the SHARED address grammar (one parser, lead's 4b87aee)
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GATES_DIR = os.path.join(REPO, ".data", "gates")
 SUPERVISOR = os.environ.get("COMPANY_SUPERVISOR_BASE", "http://127.0.0.1:8771")
-# the agreed step-address FORMAT (we validate the shape; the lead's resolver gives it meaning). Opaque.
-STEP_ADDR_RE = re.compile(r"^session://[^/]+/step/.+$")
+# step-address validation rides the SHARED grammar (contracts.address.is_step_address) — ONE parser,
+# not a local regex (retired STEP_ADDR_RE per f1ade750's two-parsers-one-shape flag; verified byte-
+# equivalent before the swap). The grammar declares the shape; this module validates through it.
 GATE_STATES = ("gated", "resumed", "aborted", "rewound")
 FRONTMATTER_KEYS = ("id", "step_address", "session", "state", "control", "by", "note",
                     "rewound_to", "created", "updated", "history")
@@ -74,7 +75,7 @@ def _now() -> str:
 def _validate_step_address(step_address: str) -> None:
     """FAIL-LOUD on a malformed step address (bar 3: never a silent no-op / guessed-nearest). We check the
     FORMAT only (opaque — the lead's resolver gives it meaning + the resolve/round-trip verification)."""
-    if not isinstance(step_address, str) or not STEP_ADDR_RE.match(step_address):
+    if not is_step_address(step_address):
         raise GateError(
             f"invalid step address {step_address!r} — expected the opaque form "
             f"'session://<sid>/step/<tool_use_id>'. Fail loud (never gate a guessed-nearest / silent address). "
