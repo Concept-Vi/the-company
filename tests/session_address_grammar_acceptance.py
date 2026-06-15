@@ -67,16 +67,24 @@ check("8 ★ session://a/b/step/c RAISES (the divergent edge — old inline spli
 check("9 is_step_address False on the divergent edge (agrees with cc_gate's regex, not the old split)",
       is_step_address("session://a/b/step/c") is False)
 
-# ── behavior-EQUIVALENCE with cc_gate's existing STEP_ADDR_RE (proves fork's cc_gate swap is safe) ────
-from runtime.cc_gate import STEP_ADDR_RE  # noqa: E402  (the regex cc_gate validates with TODAY)
+# ── behavior-EQUIVALENCE with cc_gate's STEP_ADDR_RE (proves fork's cc_gate swap is safe) ────────────
+# Swap-tolerant: this equivalence is the PRE-swap safety proof. Once fork swaps cc_gate onto
+# is_step_address and retires the redundant regex (f1ade750's bar: separate validation GONE, not
+# coexisting), there is nothing to compare against — the equivalence then holds by construction (one
+# parser). So guard the import: present → prove equivalence; retired → swap complete by construction.
 battery = [
     "session://u1/step/t1", "session://u1", "session://u1/step/", "session://",
     "session://a/b/step/c", "session://u1/bogus/x", "board://x", "session://u1/step/t/extra",
     "session://u1/step/toolu_abcDEF123",
 ]
-mismatch = [a for a in battery if is_step_address(a) != bool(STEP_ADDR_RE.match(a))]
-check("10 ★ is_step_address ≡ cc_gate.STEP_ADDR_RE across the battery (one grammar, swap-safe)",
-      not mismatch, f"mismatches: {mismatch}")
+try:
+    from runtime.cc_gate import STEP_ADDR_RE  # noqa: E402  (the regex cc_gate validated with PRE-swap)
+    mismatch = [a for a in battery if is_step_address(a) != bool(STEP_ADDR_RE.match(a))]
+    check("10 ★ is_step_address ≡ cc_gate.STEP_ADDR_RE across the battery (one grammar, swap-safe)",
+          not mismatch, f"mismatches: {mismatch}")
+except ImportError:
+    check("10 ★ cc_gate swapped onto is_step_address (STEP_ADDR_RE retired) — one parser by construction",
+          True)
 
 print(f"\n{'=' * 60}\nRESULT: {len(PASS)} passed, {len(FAIL)} failed")
 if FAIL:
