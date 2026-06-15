@@ -89,10 +89,15 @@ GET /api/projection?binding=semantic&space=repo&emb=pplx&center=<addr>
   acceptance suite 91/91 at every step (emb=None = byte-identical).
 - ✅ Layers live: `operators` (pplx types + pyramid); `repo@emb=pplx` (644); `principles/worldview/topics@emb=pplx`
   (162 each); `history@emb=pplx` (1464 — embedding in background, additive/resumable). BGE layers all intact.
-- ✅ Keystone LIVE on the pplx layer (curl-verified): operators × repo@pplx → born candidate-operators.
-- 🟡 PENDING (next backend beats): scale/theme pyramids per layer (the THEME rung + content-space types at a
-  layer need `scale.build/rung_points` to be emb-aware); `find_relations`/`query_index` emb-aware; `history`
-  pplx layer (1464 units — the big one). The `available` picker should also list which layers each space has.
+- ✅ Keystone LIVE + FULLY-CONSISTENT on the pplx layer (curl-verified): operators@pplx types × repo@pplx items
+  (both emb=pplx) → born candidate-operators; BGE default unchanged.
+- ✅ SCALE layer-aware (`b5fd53d`): pyramids built + read per embedder layer. pplx pyramids built for operators
+  (rung 8) + repo (64/16/4) + principles/worldview/topics (32/8). The THEME rung + **content-as-types** now work
+  at a layer (verified: topics@pplx types × repo@pplx items → born). The whole instrument (units+themes+types) is
+  layer-switchable via ?emb=.
+- 🟡 PENDING (next backend beats): `find_relations`/`query_index` emb-aware (a backend query, not a wheel lens);
+  `history` pplx layer (1464 — embedding in background) + its pplx pyramid; the `available` picker should also
+  list which embedder LAYERS each space has (the data the FE picker reads).
 - 🟡 UI (coordinate — the other session's surface zone): a layer/embedder PICKER so Tim drives `?emb=` by sight.
   Until then the layer is API-drivable only.
 
