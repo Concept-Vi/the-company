@@ -35,6 +35,25 @@ ruins the system"). **Expand-before-harden:** the brain docs are captured design
 
 ---
 
+## G10 EDGE-COVERAGE AUDIT — 2026-06-15 (falsification: is G10 a "toy slice"? → NO, ✅ is honest)
+
+The cron names `relation_types` + `cascade precedes` as directional-edge sources G10 must connect to. Audited
+whether the Connections lens (node-type type-flow) is only a slice of the realized directional edges. Evidence
+(over the LIVE store, not assumption):
+- **relation_types: 5 declared directed (contradicts·depends_on·fragment_of·precedes·principle_beneath; +
+  `sibling` symmetric, correctly excludable per "only directional relations type"), each with near→far + an
+  `inverse` (Tim's equal-opposite) — but ZERO realized instances**: 0 of 6287 events carry a relation_type
+  field; no relation/mark event kinds exist. relation_types realize as unit→unit marks ("A contradicts B"),
+  none stamped yet.
+- **cascades: NONE exist** (no cascade store).
+- → The ONLY realized directional edges are **node-type type-flow** (output-type feeds input-type — the
+  Connections lens ✅) and **graph connect wires** (the graph lens ✅). G10 connects to ALL the directional
+  edges that EXIST. Surfacing relation_types/cascade edges NOW would draw an EMPTY wheel = green-paint over
+  absent data, un-verifiable-by-use (violates THE BAR). HONEST: data-gated GROWTH FRONT — when relation-marks
+  get stamped / cascades get saved, a unit-edge overlay on the Connections lens lights up (no hardcode; the
+  edges read from the realized marks). NOT built now (no data to verify against); NOT a gap in G10's ✅.
+- No code change this fire (completion clause + no-green-paint). The audit is the deliverable.
+
 ## RE-VERIFICATION — 2026-06-15 · BUILD COMPLETE confirmed (post-refactor, full pass)
 
 The 2026-06-15 deepening (this session) extracted `bridge.build_projection` as the ONE engine under BOTH faces
