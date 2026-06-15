@@ -11,6 +11,7 @@ Grammar:
   context://<id>                                       a declared reusable unit of context (ContextRegistry)
   session://<id>                                       a Claude Code agent session (the agent-session registry)
   board://<id>                                          a Company Noticeboard item (the cc_board registry)
+  clone://<source-sid>/<cut>                            a clone (forked session at a cut-point) — fleet/provenance axis (cc_clone)
   exchange://<sid>/<i>                                  a captured conversation exchange (recollection's canonical provenance address)
   file://<abs-path>                                     a file node (recollection's crossings graph — resolver: whatTouchedFile)
   project://<name>                                      a project node (recollection's containment graph — resolver: containment edges)
@@ -83,6 +84,17 @@ blob/vec silent-empty). board:// now joins session://·cap:// resolving through 
 `cc_board.traverse()` edge-target ACROSS registries (H1.2). Adding `"board"` to SCHEMES was purely
 additive (widens the legal scheme set), no record-shape or schema_ver change.
 
+Note on `clone://` (the clone-FLEET joins the one state — `clone://<source-sid>/<cut>`, runtime/cc_clone.py):
+like `board://`/`session://`/`cap://`, a *label* RESOLVED by `runtime/cognition.py:resolve_address` (lazy-
+imports cc_clone, returns `get_by_address(addr)` = the clone record + its persisted reflection; fail-loud on
+an unknown clone). `cut` = the clone record's `at` field VERBATIM (compact:N | uuid:<uuid> | ts:<iso> — a
+path-segment colon is address-safe). The address holds PROVENANCE (which-past-self: source × cut), the STABLE
+identity — NOT the ephemeral handle (a re-spawn of the same era resolves the SAME address: re-embed-stable,
+the board:// rule). clone:// is a SEPARATE axis from `mind://` (fleet/provenance vs thinking-unit; they
+COMPOSE, never collapse — board://item-3c324c27). Grammar: `parse_clone_address` (declared once, beside
+`parse_session_address`); cc_clone.get_by_address matches by computing `clone_address(rec)` (proven equivalent
+to the parse). Adding `"clone"` to SCHEMES is purely additive; no record-shape or schema_ver change.
+
 Note on `exchange://` (recollection's canonical provenance address — `exchange://<sid>/<i>`): the
 re-embed-stable identity of a captured conversation exchange (one user→assistant turn), the join key the
 recall/memory system addresses units by. Registered here as a *label* so it is grammar-legal across the
@@ -101,7 +113,7 @@ record-shape or schema_ver change.
 from __future__ import annotations
 from pydantic import BaseModel, Field
 
-SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "session", "cap", "board", "exchange", "file", "project")
+SCHEMES = ("run", "cas", "blob", "vec", "ui", "code", "skill", "context", "session", "cap", "board", "clone", "exchange", "file", "project")
 
 
 class Provenance(BaseModel):
@@ -174,3 +186,28 @@ def is_step_address(addr: str) -> bool:
         return parse_session_address(addr)["step"] is not None
     except ValueError:
         return False
+
+
+# ── clone:// sub-address grammar — declared ONCE (the fleet/provenance axis joins the one state) ───────
+# clone://<source-sid>/<cut>  → a clone (a forked session at a point in time). cut = the clone record's
+# `at` field VERBATIM (compact:N | uuid:<uuid> | ts:<iso> — a path-segment colon is address-safe). The
+# address holds PROVENANCE (which-past-self: source × cut), the STABLE identity — NOT the ephemeral handle
+# (a re-spawn of the same era resolves the SAME address: the re-embed-stable property, the board:// rule).
+# clone:// is a SEPARATE axis from mind:// (board://item-3c324c27 — fleet/provenance vs thinking-unit; they
+# COMPOSE, never collapse). Declared here beside parse_session_address (one grammar home); the resolver
+# (runtime/cognition.py) + cc_clone.get_by_address both ride this shape — get_by_address matches by
+# computing cc_clone.clone_address(rec), proven equivalent to this parse (the is_step_address≡regex seam).
+def parse_clone_address(addr: str) -> dict:
+    """clone://<source-sid>/<cut> → {"source_sid": <sid>, "cut": <cut>}. cut = the clone record's `at`
+    verbatim (split on the FIRST '/'; <sid> carries no '/'). FAIL-LOUD (ValueError) on a malformed clone
+    address — never a silent-pass. The canonical clone-address parse (one declared grammar)."""
+    if not isinstance(addr, str) or not addr.startswith("clone://"):
+        raise ValueError(f"parse_clone_address: not a clone:// address ({addr!r}). Fail loud.")
+    rest = addr[len("clone://"):]
+    source_sid, sep, cut = rest.partition("/")
+    if not source_sid or not sep or not cut:
+        raise ValueError(
+            f"parse_clone_address: malformed clone address {addr!r} — expected 'clone://<source-sid>/<cut>' "
+            f"with both segments non-empty (got source_sid={source_sid!r}, cut={cut!r}). Fail loud, "
+            f"never a silent-pass.")
+    return {"source_sid": source_sid, "cut": cut}

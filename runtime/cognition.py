@@ -985,6 +985,18 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
             return _cb.get_item(addr[len("board://"):])
         except _cb.BoardError as e:
             raise ValueError(f"resolve_address: {e}") from e
+    if sch == "clone":
+        # A+B unify — the clone-FLEET joins the ONE addressed graph. clone://<source-sid>/<cut> → the clone
+        # record + its persisted reflection (cc_clone, the fleet/PROVENANCE axis — board://item-3c324c27;
+        # ≠ mind://). Mirrors board://: a registry-record read, fail-loud on an unknown clone (cc_clone's
+        # get_by_address already raises CloneError — never the blob/vec silent-empty). LAZY import (cc_clone
+        # imports store/...); the grammar is contracts.address.parse_clone_address (declared once). Now a
+        # board item can authored_by/sourced_from a clone:// and traverse() follows it across registries.
+        from runtime import cc_clone as _cc
+        try:
+            return _cc.get_by_address(addr)
+        except _cc.CloneError as e:
+            raise ValueError(f"resolve_address: {e}") from e
     if sch is not None:
         # a REGISTERED scheme (blob/vec/ui/code/exchange) with no content-resolver wired into this
         # dispatcher yet (exchange:// is register-but-defer — recollection's capture/recall lane owns it).
