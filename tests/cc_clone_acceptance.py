@@ -124,6 +124,19 @@ ok("clone_at registers a supervised channel-member with the exact lead schema",
 ok("end_clone deregisters the channel-member (presence=truth)",
    (lambda r: not os.path.exists(_memp))(cc_clone.end_clone(c["handle"], delete_materialized=False)))
 
+# MODEL OVERRIDE (the Fable-era resume fix): model/fallback_model flow into the /spawn body verbatim.
+spawn_body = {}
+def _spy_body(path, body=None, method="POST", timeout=30):
+    if path == "/spawn":
+        spawn_body.update(body or {})
+        return 200, {"session": {"id": "as-m"}}
+    return 200, {"sessions": [{"id": "as-m", "state": "idle"}]}
+cc_clone._sup = _spy_body
+cm = cc_clone.clone_at(src, "compact:1", description="Fable era", model="opus", fallback_model=["sonnet", "haiku"])
+ok("clone_at passes model + fallback into the /spawn body (Fable-era resume fix)",
+   spawn_body.get("model") == "opus" and spawn_body.get("fallback") == ["sonnet", "haiku"]
+   and cm.get("model") == "opus")
+
 import shutil
 shutil.rmtree(tmp, ignore_errors=True)
 

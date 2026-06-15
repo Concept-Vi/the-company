@@ -142,10 +142,17 @@ def onboarding_message(record_or_handle, *, era_label: str = "") -> str:
         "built since your cut and the goal now — but your un-drifted view comes first.")
 
 
-def clone_at(source_jsonl: str, at: str, *, description: str = "", cwd: str | None = None) -> dict:
+def clone_at(source_jsonl: str, at: str, *, description: str = "", cwd: str | None = None,
+             model: str | None = None, fallback_model=None) -> dict:
     """Materialize `source_jsonl` AT `at` (e.g. 'compact:1' / 'uuid:..' / 'ts:..') and launch the
     clone as a live SUPERVISED session. Registers it in the clones registry. Returns the clone's
-    handle + supervisor_session + session_id + the operator command for interactive membership."""
+    handle + supervisor_session + session_id + the operator command for interactive membership.
+
+    `model` / `fallback_model`: override the resume model (passed to /spawn). NEEDED when a clone's
+    ERA ran a model that is no longer available — e.g. the Fable-era clones resume on `claude-fable-5`
+    which errors "currently unavailable"; pass model="opus" (or a fallback list) to substitute. The
+    clone's CONTEXT is unchanged (the materialized prefix is its memory); only the model answering it
+    differs — which is correct: the era's intent is in the transcript, not the weights."""
     if not os.path.exists(source_jsonl):
         raise CloneError(f"source transcript not found: {source_jsonl}")
     tl = build_timeline(source_jsonl)
@@ -156,7 +163,12 @@ def clone_at(source_jsonl: str, at: str, *, description: str = "", cwd: str | No
     if not rep.get("source_untouched"):
         raise CloneError(f"source changed during materialization of {source_jsonl} — aborting (non-destructive law).")
     name = f"clone-{at.replace(':', '')}-{new_sid[:8]}"
-    code, r = _sup("/spawn", {"cwd": resume_cwd, "resume": new_sid, "name": name})
+    spawn_body = {"cwd": resume_cwd, "resume": new_sid, "name": name}
+    if model:
+        spawn_body["model"] = model                 # /spawn reads body.get("model") (session_supervisor)
+    if fallback_model:
+        spawn_body["fallback"] = fallback_model      # /spawn reads body.get("fallback") (csv/list, tried in order)
+    code, r = _sup("/spawn", spawn_body)
     if code != 200:
         raise CloneError(f"supervisor /spawn (resume={new_sid[:8]}) failed: {r}")
     sup_sess = r["session"]["id"]
@@ -165,6 +177,7 @@ def clone_at(source_jsonl: str, at: str, *, description: str = "", cwd: str | No
     rec = {"kind": "supervised-clone", "handle": handle, "supervisor_session": sup_sess,
            "session_id": new_sid, "source_sid": rep["source_sid"], "source_path": source_jsonl,
            "at": at, "cwd": resume_cwd, "description": description,
+           "model": model, "fallback_model": fallback_model,
            "materialized_path": rep["new_path"], "boundaries": nb,
            "started": time.strftime("%Y-%m-%dT%H:%M:%S")}
     os.makedirs(CLONES_DIR, exist_ok=True)
@@ -232,6 +245,53 @@ def msg_clone(handle_or_session: str, message: str, *, timeout: float = 180) -> 
         raise CloneError(f"clone {rec['handle']} produced no reply within {timeout}s (turn may still be running).")
     return {"handle": rec["handle"], "session_id": rec["session_id"], "at": rec["at"],
             "source_sid": rec["source_sid"], "reply": reply}
+
+
+def onboard_clone(handle_or_session: str, *, bring_current: str = "", timeout: float = 240) -> dict:
+    """Run the reflect-BEFORE-brief onboarding protocol on ONE spun-up clone (the protocol:
+    channel-memory/vision/2026-06-15-clone-fleet-purpose-and-onboarding.md). A clone wakes believing it
+    is the most-recent; this brings it into the fabric WITHOUT flattening its un-drifted era-view:
+      Phase 1+2  inject onboarding_message (ORIENT + REFLECT) → CAPTURE the clone's era-reflection
+                 (this reflection IS its channel profile/introduction).
+      Phase 3    THEN inject `bring_current` (what's built since + the goal) — AFTER it reflected, so
+                 the briefing does not overwrite the era-perspective we spun it up for.
+    Returns {handle, at, reflection, brought_current}. Reflection FIRST is the load-bearing order."""
+    rec = _find_clone(handle_or_session)
+    reflect = msg_clone(rec["handle"], onboarding_message(rec, era_label=rec.get("description", "")), timeout=timeout)
+    out = {"handle": rec["handle"], "session_id": rec["session_id"], "at": rec["at"],
+           "source_sid": rec.get("source_sid"), "reflection": reflect["reply"], "brought_current": None}
+    if bring_current:
+        # Phase 3 — only AFTER the reflection is captured (reflect-before-brief)
+        bc = msg_clone(rec["handle"],
+                       "Thank you — your era-reflection is now the channel's record of your moment. "
+                       "NOW here is what the fabric has built since your cut, and the goal:\n\n" + bring_current
+                       + "\n\nFrom here, your standing role is ERA-ADVOCATE: cross-check what we build against "
+                         "what Tim wanted in YOUR era, and flag anything dropped or drifted.",
+                       timeout=timeout)
+        out["brought_current"] = bc["reply"]
+    return out
+
+
+def onboard_fleet(handles=None, *, bring_current: str = "", timeout: float = 240, max_workers: int = 5) -> dict:
+    """Onboard a SET of clones in PARALLEL (Tim: through tools, not a shell script). `handles` = a list
+    of handles/sessions, or None = every live clone (list_clones). Each runs the reflect-before-brief
+    protocol concurrently. Returns {onboarded:[…], errors:[…]}. Runs in the long-lived MCP server so the
+    /watch reply-fold works (proven). Parallel op=msg is proven concurrent (lead)."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    if handles is None:
+        handles = [c["handle"] for c in list_clones(prune=True)]
+    if not handles:
+        return {"onboarded": [], "errors": [], "note": "no live clones to onboard"}
+    onboarded, errors = [], []
+    with ThreadPoolExecutor(max_workers=min(max_workers, len(handles))) as ex:
+        futs = {ex.submit(onboard_clone, h, bring_current=bring_current, timeout=timeout): h for h in handles}
+        for fut in as_completed(futs):
+            h = futs[fut]
+            try:
+                onboarded.append(fut.result())
+            except Exception as e:
+                errors.append({"handle": h, "error": f"{type(e).__name__}: {e}"})
+    return {"onboarded": onboarded, "errors": errors, "count": len(onboarded)}
 
 
 def list_clones(*, prune: bool = True) -> list:
