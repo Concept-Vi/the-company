@@ -150,6 +150,28 @@ fifth gate established. This IS a completion claim — see the TYPE-NUCLEATION e
   separator, AI-supplied pole) → verify against THE BAR (live + all real data + drivable + interactive) +
   the floor → commit → update this status honestly. No green-paint, no forced-acyclicity, registry-true.
 
+- **DEEPENING (2026-06-15, Tim's live redirect — the embedder / multi-layer / dual-interface build):** beyond
+  Groups 1–12, Tim redirected to "build all of this, full polish… everything UI must be done through the MCP
+  doors… nothing is static, it uses the maths, everything parametric." Built + verified this fire (full detail +
+  how-to in `build-prep/embedder-pplx/HOWTO-AND-REFERENCE.md`; permanent teeth in
+  `tests/projection_multilayer_acceptance.py` 13/13):
+  · **MULTI-LAYER embedding model — ✅** one item carries MANY embeddings keyed by C1 `#emb=`; the whole store
+    write+read path layer-aware; whole corpus dual-layered (BGE + pplx) + pyramids; self-describing
+    (`/api/layers`, `/api/layer-dims`). Non-destructive (emb=None byte-identical).
+  · **LayerChip `◫` (the UI layer picker) — ✅ VERIFIED LIVE** (1440×900 + 390×844 + 844×390): registry-true
+    (reads `/api/layers`), switching default↔pplx visibly re-projects the keystone.
+  · **MRL resolution axis (`?dim=`) on ALL vector lenses — ✅** nucleation + semantic + separator (consistent
+    truncation; `binding.res` echoed); the **ResChip `◎`** (UI resolution picker) ✅ VERIFIED LIVE — ladder
+    DERIVED from the active layer's full dim (never hardcoded). The 2-D scale (rung × dim) is now drivable.
+  · **ONE ENGINE, TWO FACES — ✅** `bridge.build_projection` extracted; the bridge HTTP face AND the MCP door
+    (`mcp_face/tools/instrument.py`: `project` + `layers`, via `Suite.project`/`Suite.layer_dims`) call the
+    SAME resolver (reuse-don't-parallel). `layers` (live ✓) returns `{space:{emb:dim}}` — the MCP twin of both
+    UI pickers. Fix `3b57981`: bindings discovered by ABSOLUTE path (the cwd-relative default silently fell
+    back to raw for every binding in the MCP process — the permanent regression guard is check #1 of the suite).
+  · 🟡 **MCP `project` live-verify — pending ONE MCP reconnect** (a Tim INPUT; SKIP-not-stall per the loop): the
+    fix is proven by execution (all 8 bindings resolve from a wrong cwd) but the running MCP process holds the
+    pre-fix module; `mcp__company__project` returns raw until the next reconnect, then returns the true keystone.
+
 ---
 
 ## GROUP 1 · INSTRUMENT — THE FLOOR (the variable engine) ✅ (suite committed 6615e53)
