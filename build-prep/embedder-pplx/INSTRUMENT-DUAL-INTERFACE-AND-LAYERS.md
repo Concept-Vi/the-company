@@ -83,23 +83,39 @@ a kept frame is a layer; a lens is how a framed reading is drawn. This is the cl
 Every capability below (MODEL-CAPABILITIES-AS-AFFORDANCES.md) slots into "choose a frame." Every storage
 concern (DATA-SUBSTRATE-POSTGRES-SUPABASE.md) is "persist the framed readings as layers."
 
-## 5. The tension to name: pure-read engine vs authoring instrument
+## 5. The instrument AUTHORS — RESOLVED (Tim, direct, 2026-06-15)
 
-The standing law: *"the instrument is a PURE READ — no resolve/approve/dispatch."* Tim now describes the
-instrument **loading data, re-embedding, overriding, storing layers, reconfiguring** — those are WRITES.
+Tim, verbatim: *"it is not a read-only instrument… everything in it is variables, like there is nothing that is
+static in it, it absolutely definitely needs to author… this fixation with consent didn't come from me. The
+data is loadable as well, you can load in and filter different kinds of data."*
 
-The resolution (not a contradiction — a layering):
-- **The PROJECTION engine stays pure-read.** Drawing a lens never mutates data. Reading a frame computes; it
-  does not commit. This protects the "instrument never lies / never acts behind your back" property.
-- **The instrument GAINS explicit, operator-driven authoring** — embed a layer, override, store, load data,
-  configure a space. These are *deliberate verbs the operator (Tim or an agent) invokes*, never side-effects of
-  viewing. They are safe by the Company's existing model: simple-consent + git-revert + the GATE (provisional
-  layers are revertible; promotion is the ratifying act).
-- So the law sharpens to: **reading is pure; writing is explicit and gated.** The wheel you look at is a pure
-  projection; the wheel you *play* writes layers when you tell it to.
+The earlier "pure read" framing was a **MISENCODING of Tim's "everything is a variable."** Everything being a
+variable means everything is *changeable / authorable* — the OPPOSITE of static — NOT "no writes." Dissolved:
+- **The instrument AUTHORS** — load data, embed / re-embed, override, store layers, set frames, reconfigure,
+  filter — all first-class operator verbs, on BOTH faces (Tim's and the agents'). Nothing in it is static.
+- **Safety = git-revert, NOT consent.** A wrong write is reverted, not gate-prevented. Drop the consent-fixation
+  (it was mine, not Tim's). Author freely; do not hold authoring behind "ask Tim first."
+- **The ONE honesty property to keep** (and it is NOT "read-only"): *reading never silently mutates* — looking at
+  a lens doesn't change data; authoring is an explicit verb, never a side-effect of viewing. "No surprise
+  writes," not "no writes."
+- **The only hard limit is unrelated to data-authoring:** the instrument never fires autonomous self-modifying
+  BUILDS (`claude -p` / arm acceptEdits) — the autonomous-spawn-lead-only law. That governs build-dispatch, not
+  authoring data/layers/config. Keep that; everything else authors.
 
-This is the single most important decision in Tim's message to get right, because it changes what the
-instrument is allowed to be. Recommend confirming this framing with Tim before building authoring verbs.
+This was the defining fork; it is now settled — build the authoring verbs.
+
+### 5.1 Loading + filtering data IN (a first-class authoring operation)
+Tim: *"the data is loadable as well, you can load in and filter different kinds of data."* The instrument doesn't
+only read what's already there — **the operator loads data into it** and **filters what's in view**:
+- **Load** — bring a new KIND of data in (a corpus, a repo, a session export, a registry, an external set) →
+  capture/ingest it into a space, then read it through the lenses. Dual-face: Tim loads via a UI affordance;
+  agents via the MCP `capture`/`ingest` seam (the one that already exists — reuse, don't parallel).
+- **Filter** — choose which slice is in view (by kind / projection / lineage / time / registry / any field) —
+  a frame-choice that *subsets* rather than *re-embeds*. The time scrubber + lens picker are early filters; the
+  general form is "show me only the data matching ___."
+- Loading produces layers (§3) on the loaded items; filtering chooses which layers/items the lens draws. So
+  "load different data into different things and reconfigure" (Tim's phrase) = load → frame → read → keep, the
+  same loop as everything else. Filtering is read-only (subset of view); loading authors (new data in).
 
 ## 6. The FORM standard holds for all of it
 
@@ -113,8 +129,8 @@ rows — it must be a *spatial, legible stratigraphy* the eye reads. The interfa
 exposed as developer-UI is NOT done.
 
 ## 7. Open questions for Tim (the forks I can't decide alone)
-- **The pure-read→authoring evolution (§5)** — confirm the instrument may write (gated) layers, or keep it
-  strictly read with authoring living elsewhere?
+- ✅ **RESOLVED (Tim 2026-06-15): the instrument AUTHORS** (§5) — not a fork anymore; build the authoring verbs,
+  git-revert is the safety (not consent). [[feedback-instrument-authors-not-readonly]]
 - **Layer identity / slots** — is "override" per (item × embedder × frame) slot, or a free stack with a
   "current" pointer? (Affects the schema — DATA-SUBSTRATE doc.)
 - **How visible are layers by default** — show the "current" reading only, with layers on demand (text-minimal),

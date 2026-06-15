@@ -42,8 +42,9 @@ geometry of one framed reading; the layers are the seed's "one object, many coor
 - **The keystone / GATE** — layer lifecycle (provisional→ratified) IS sample→ratified-discrete.
 
 ## Consolidated open questions for Tim (the forks I shouldn't decide alone)
-1. **Pure-read → authoring** — may the instrument WRITE (gated, revertible) layers, or stay strictly read with
-   authoring elsewhere? (The defining decision — DUAL-INTERFACE §5.)
+1. ✅ **RESOLVED (Tim 2026-06-15): the instrument AUTHORS.** Not read-only — "everything is a variable" = everything
+   authorable; the data is loadable + filterable; drop the consent-fixation, git-revert is the safety. (DUAL-INTERFACE
+   §5/§5.1, [[feedback-instrument-authors-not-readonly]].) The remaining forks below are real but lower-stakes.
 2. **Layer slot identity** — override/store keyed on `(address, space, embedder, reading_mode, context_frame)`?
    (Drives the schema — SUBSTRATE §4/§7.)
 3. **Substrate timing** — stand up Supabase-local + PgStore now, or fold it into the embedder migration (embed

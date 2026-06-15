@@ -21,7 +21,15 @@ EXCEPTION: the per-point hue = angle (colour IS geometry) is a deliberate non-to
 it; it is not a lint target.
 
 **Status:** ✅ verified-by-use · 🟡 designed/stubbed (intent, not fact) · 🔴 broken/absent.
-**The floor:** the instrument is a PURE READ over the store — no resolve/approve/dispatch, ever.
+**The floor (CORRECTED by Tim 2026-06-15):** the instrument **AUTHORS** — it is NOT read-only. Tim: *"everything
+in it is variables, nothing static, it absolutely definitely needs to author… the data is loadable + filterable…
+the consent fixation didn't come from me."* The old "PURE READ" line was a misencoding of "everything is a
+VARIABLE" (= everything authorable, the opposite of static). The real floor: (a) *reading never silently mutates*
+(authoring is an explicit verb, never a side-effect of viewing — "no surprise writes", NOT "no writes"); (b) the
+instrument never fires autonomous self-modifying BUILDS (`claude -p`/acceptEdits — the autonomous-spawn law,
+about build-dispatch, not data-authoring); safety for writes = git-revert, not consent-gating. The lens/projection
+*computations below* remain pure functions; the instrument *around* them loads/embeds/overrides/stores/filters.
+See [[feedback-instrument-authors-not-readonly]] + build-prep/embedder-pplx/INSTRUMENT-DUAL-INTERFACE-AND-LAYERS.md §5.
 **Registry-is-truth:** lenses/bindings/sectors are declared rows, never hardcoded ("no first binding
 ruins the system"). **Expand-before-harden:** the brain docs are captured design, NOT ratified.
 
