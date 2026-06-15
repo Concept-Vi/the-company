@@ -114,10 +114,13 @@ GET /api/projection?binding=semantic&space=repo&emb=pplx&center=<addr>
 - ✅ MCP DOOR (the TOOL face — parity) **BUILT** (`mcp_face/tools/instrument.py`: `project` + `layers`): the
   SAME engine the surface uses (`Suite.project` → `bridge.build_projection`, ONE resolver extracted so neither
   face reimplements it — reuse-don't-parallel). `project` drives every axis the UI does (binding · space · emb ·
-  dim · rung · center · at · pole_a/pole_b); `layers` returns the store self-scan. Verified through the
-  `Suite.project` path in-process (raw/nucleation/semantic, layer- + MRL-aware, emb/res echoed) + the bridge
-  HTTP face re-verified live in-browser after the extraction (raw + keystone render unchanged). Loads into the
-  MCP server on its next reconnect (Tim's action) — then verifiable via `mcp__company__project` / `__layers`.
+  dim · rung · center · at · pole_a/pole_b); `layers` returns `{space:{emb:dim}}` — the MCP twin of BOTH the
+  layer picker (/api/layers) AND the resolution picker's dim source (/api/layer-dims) in one door (so an agent
+  can discover layers AND the dim bound for `dim=`). Verified through the `Suite.project` path in-process
+  (raw/nucleation/semantic, layer- + MRL-aware, emb/res echoed) + the bridge HTTP face re-verified live
+  in-browser. FIX (3b57981): bindings were discovered by a cwd-relative path → every binding fell back to raw
+  in the MCP process (cwd ≠ repo root); now absolute, proven across all 8 bindings from a wrong cwd. `layers`
+  + the bindings fix load on the next MCP reconnect — then `mcp__company__project` returns the true keystone.
 
 ## 9. Capabilities roadmap (the leverage not yet wired)
 See MODEL-CAPABILITIES-AS-AFFORDANCES.md. Highest-leverage, all riding on this layer substrate:
@@ -125,9 +128,11 @@ See MODEL-CAPABILITIES-AS-AFFORDANCES.md. Highest-leverage, all riding on this l
   vector to its first N dims before the cosine — a free, continuous coarse↔fine meaning zoom; the 2-D scale:
   rung × dim). Nucleation (`5dd6a14`) + NOW semantic + separator (this beat): the truncation is applied
   CONSISTENTLY to centre/poles + all items so `_cosine`'s dim-mismatch guard never trips; the separator's fifth
-  gate then runs AT the chosen resolution; `binding.res` echoes the active dim on every path. Verification
-  (repo@pplx): dim1024 cos-corr 0.98/NN 86% · 512 0.96/79% · 256 0.92/72% · 128 0.86/61%. `dim=None`=full
-  (byte-identical). ✅ The FE resolution PICKER is BUILT (`surface/app/src/toggles/ResChip.tsx`, `◎ full ▸`):
+  gate then runs AT the chosen resolution; `binding.res` echoes the active dim on every path. VERIFIED applied
+  on EACH vector lens (not pattern-matched, through build_projection full↔128d): nucleation visibly
+  (1 born/3 cand/11 sectors → 0/2/10); semantic — 11/12 radii move + NN-order changes; separator — 12/12 leans
+  move. MRL gracefulness (repo@pplx): dim1024 cos-corr 0.98/NN 86% · 512 0.96/79% · 256 0.92/72% · 128 0.86/61%.
+  `dim=None`=full (byte-identical). ✅ The FE resolution PICKER is BUILT (`surface/app/src/toggles/ResChip.tsx`, `◎ full ▸`):
   registry-true — its ladder is DERIVED from the active layer's full dim (`/api/layer-dims` →
   `store.layer_dims()` → `{space:{emb:dim}}`), powers of two below it, never hardcoded; appears ONLY on the
   vector lenses (a `space` in the binding), hidden on structural ones. Verified live (desktop+portrait): on

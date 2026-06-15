@@ -68,9 +68,13 @@ def register(mcp, suite):
 
     @mcp.tool()
     def layers() -> dict:
-        """THE MULTI-LAYER MODEL'S SELF-DESCRIPTION — which embedder LAYERS each space carries:
-        {space: [embedder-layer, …]} (e.g. {'repo': ['default','pplx'], 'operators': ['default','pplx'], …}).
-        The SAME data the UI's layer picker reads (/api/layers). Use it to choose `emb` for the `project` tool.
+        """THE MULTI-LAYER MODEL'S SELF-DESCRIPTION — which embedder LAYERS each space carries AND their full
+        vector dimensions: {space: {embedder-layer: full_dim}} (e.g.
+        {'repo': {'default': 1024, 'pplx': 2560}, 'operators': {'default': 2560, 'pplx': 2560}, …}). This is
+        the MCP twin of BOTH UI affordances — the layer picker (/api/layers) AND the resolution picker's dim
+        source (/api/layer-dims) — in one door (Tim's law: every UI affordance has an MCP door). Use it to
+        choose `emb` for `project` (the inner KEYS are the available layers) and to bound `dim` (the MRL
+        resolution must be ≤ the layer's full_dim — pick a power of two below it for a coarser meaning-zoom).
         'default' = the base BGE layer; a named layer (e.g. 'pplx') is an additive embedding over the same
         items. Registry-true: the store scans itself — a newly-embedded layer appears here with no code edit."""
-        return suite.layers()
+        return suite.layer_dims()
