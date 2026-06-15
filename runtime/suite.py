@@ -10796,7 +10796,7 @@ class Suite:
         return {"query": text, "space": space, **result}
 
     def find_relations(self, item: str, *, near_space: str, far_space: str, k: int = 10,
-                       min_score: float = 0.5) -> dict:
+                       min_score: float = 0.5, emb: str | None = None) -> dict:
         """GROUP L2 — THE INVERSION-FINDER: the cross-space relation query "same principle, different
         subject." Over the SPACE-KEYED persisted vector index (store/vector_index.query_index with the
         `space=` filter), it returns the items NEAR `item` in `near_space` but NOT near it in `far_space`
@@ -10831,8 +10831,8 @@ class Suite:
         inversion result (source ids); near/far carry the THRESHOLDED neighbour rows (id+score) for the
         surface to render the WHY. Read-only; no model call; not on the MCP face / not in RHM_VERBS."""
         from store import vector_index as _vx
-        near_key = self.store.space_address(item, near_space)
-        far_key = self.store.space_address(item, far_space)
+        near_key = self.store.space_address(item, near_space, emb)
+        far_key = self.store.space_address(item, far_space, emb)
         near_rec = self.store.get_vector(near_key)
         far_rec = self.store.get_vector(far_key)
         if near_rec is None or near_rec.get("vector") is None:
@@ -10847,9 +10847,9 @@ class Suite:
                 f"(address {far_key!r}) — both anchors are required for a near∩¬far inversion. Fail loud.")
         # k-NN within each space (reuse query_index — never a reimplemented cosine), then THRESHOLD to a
         # true neighbour set (score ≥ min_score) so a score≈0 item is NOT counted as 'near' (see WHY above).
-        near = [r for r in _vx.query_index(self.store, near_rec["vector"], k=k, space=near_space)
+        near = [r for r in _vx.query_index(self.store, near_rec["vector"], k=k, space=near_space, emb=emb)
                 if r.get("score", 0.0) >= min_score]
-        far = [r for r in _vx.query_index(self.store, far_rec["vector"], k=k, space=far_space)
+        far = [r for r in _vx.query_index(self.store, far_rec["vector"], k=k, space=far_space, emb=emb)
                if r.get("score", 0.0) >= min_score]
         far_ids = {r["id"] for r in far}
         relations = [r["id"] for r in near if r["id"] not in far_ids and r["id"] != item]

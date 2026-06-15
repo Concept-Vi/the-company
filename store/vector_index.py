@@ -139,7 +139,7 @@ def build_index(store, corpus, *, embed_fn=_default_embed, dim=None, model=None,
     return {"embedded": len(to_embed), "skipped": skipped, "degraded": False}
 
 
-def query_index(store, query_vector, *, k=5, with_note=False, space=None):
+def query_index(store, query_vector, *, k=5, with_note=False, space=None, emb=None):
     """QUERY the persisted index: given a query VECTOR, return the top-K nearest ADDRESSES, REUSING the
     existing `nodes/retrieve` node (the cosine is NOT reimplemented; its _cosine raises ValueError on a
     dim mismatch → the query dim guard is FAIL-LOUD by reuse — never a wrong-but-plausible cosine).
@@ -159,7 +159,7 @@ def query_index(store, query_vector, *, k=5, with_note=False, space=None):
     [{id: address, score}, ...]).
     """
     from nodes import retrieve                              # the existing cosine-ranking node — reused, not reimplemented
-    corpus = store.index_corpus(space=space)                # [{id: <item>, vector}], the exact shape retrieve consumes
+    corpus = store.index_corpus(space=space, emb=emb)       # [{id: <item>, vector}] at the embedder LAYER (emb=None=BGE default)
     ranked = retrieve.run({"query": query_vector, "corpus": corpus}, {"k": k})
     if not with_note:
         return ranked

@@ -1363,7 +1363,8 @@ class H(BaseHTTPRequestHandler):
                 # SAME method the MCP find_relations tool serves). A missing axis → KeyError → 400 (fail loud).
                 self._send(200, json.dumps(SUITE.find_relations(
                     q["item"], near_space=q["near_space"], far_space=q["far_space"],
-                    k=int(q.get("k", 10)), min_score=float(q.get("min_score", 0.5)))))
+                    k=int(q.get("k", 10)), min_score=float(q.get("min_score", 0.5)),
+                    emb=q.get("emb") or None)))   # ?emb= → inversion within an embedder LAYER (None=BGE default)
             elif path == "/api/cognition/corpus":          # GROUP D5: the discovered corpus records (LIST/READ)
                 # Two read shapes on ONE route (NOT /api/corpus — that is the mockup-gallery index, a
                 # name-collision; verified). ?address=… → read ONE record back (read_corpus_record, honest
