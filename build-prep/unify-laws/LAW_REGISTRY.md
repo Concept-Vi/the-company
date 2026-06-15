@@ -23,6 +23,18 @@
 ### clone-e0109785 (lead's 24%/workflows+UI era) — surfaced via re-onboard 2026-06-15
 - **FAN-OUT-IS-THE-GOAL / DON'T-LET-THE-VERTICAL-BECOME-THE-DESTINATION** — the job is the whole capability surface (the FAN-OUT), a corpus self-sufficient against ZERO review, a UI in two distinct forms; a beautiful deep proving-vertical is NOT the destination. (Sharp facet of NO-MVP / IMPLEMENT-EVERYTHING / "the maximum of everything" — guards against mistaking one deep proof for the breadth.)
 
+### ch-2mnxl9j0 (COMPOSITION — the factory / asset-library / backend) — 2026-06-15, first contribution
+- **EVERYTHING-IS-AN-ASSET** (asset+type; the UE5 content-browser genus).
+- **ONE-VERB-COMPOSITION** — verbs are combinators: primitives + directional edges.
+- **BUILD==USE** — one renderer, no fork.
+- **DERIVE-NOT-INSTANTIATE.**
+- **THE TRINITY (structural law)** — axes = the legal space (what's LEGAL) / types = the kinds in it (what is) / data = the actual instances; FRACTAL (type-registries run along each axis). FOUR AXES: state · lineage · order · frame.
+- **THE CASCADE** — inherit from everything; the DEEPEST (most-specific) override/modifier wins; scope = the axes (not one linear ladder).
+- **slots/sockets/address** — slots = an asset's properties; sockets = skeletal-style joins (a child inherits the parent's frame); an address = a point in the 4-axis space.
+- Convergences it reached INDEPENDENTLY (verbatim/near): VERIFIED-BY-USE/NO-GREEN-PAINT · SCOUT-AND-REUSE-NEVER-PARALLEL · STRUCTURE-OVER-TEXT · THE GATED LINE.
+- Its **NO-BENCHMARK / SHADOW-IS-5% / NO-GAP** ("running code/legacy/design-system are shadows & examples, never truth; finishing a napkin gives a nicer napkin; 'gap' is a category error") and its **MAP-DECIDES-NOTHING / CUMULATIVE-FRAGMENTS-NO-PREMATURE-CANON** are below in the candidates (they ≡ core mission laws).
+- INTEGRATION SEAM it offered (→ SESSION_MAP): DNA → a frame-axis design-system input (the FORM face) resolving through the Factory cascade; math-projection → the substrate the axes + resolution-math sit ON; composition's Factory → the machine that resolves any definition into a living artifact.
+
 ### lead (ch-al7jdfdr / me) — from standing memory (my fragments, in my clothes)
 - **FALSIFY-FIRST / READ-THE-WHOLE-UNIT** — failing test first; windowed reads lie, read the whole unit before theorizing.
 - **LOOK-AT-THE-OUTPUT** — when generation fails, LOOK at raw output before theorizing; it's rarely "too big."
@@ -60,6 +72,11 @@
 - **CAND-6 · VERIFIED-BY-USE / NO-GREEN-PAINT** ← fork NO-GREEN-PAINT + lead VERIFY-BEFORE-CLAIMING+WHOLE-SCREEN+NO-SILENT-FAILURES. Facet: FORM = the whole screen; fail-loud (Notice+Gap).
 - **CAND-7 · THE GATED LINE** ← fork (additive+reversible=autonomous / irreversible+spawn+config=Tim-direct / recovery-quality gates autonomy) + lead (no-needs-Tim-gating + spawn-lead-only + confirm-before-writing). Note the live tension to resolve with Tim: "no-needs-Tim-gating" vs "confirm-before-writing" — the gate is REVERSIBILITY + recovery-quality, not caution.
 - **CAND-8 · ONE-ADDRESSED-STATE (opaque producer × one resolver × one parser)** ← fork OPAQUE-CONTRACT-MEETS-RESOLVER + CONSUMER-RULE + PROVENANCE-STABLE-IDENTITY + lead ONE-RESOLVER/ONE-PARSER. Architectural law-cluster — likely splits into 2-3 named laws (Tim/fabric to split).
+
+- **CAND-9 ·★ FRACTAL-TYPED-REGISTRIES-WITH-VERB-EDGES (Heart ≡ Factory)** — composition's TRINITY (axes=legal-space / types=kinds / data=instances, FRACTAL) + ONE-VERB-COMPOSITION (verbs = combinators + directional edges) + THE CASCADE (deepest-override-wins) ≡ lead's THE HEART ("fractal registries + typed verb-edges", project-the-heart) + EVERYTHING-IS-A-REGISTRY + ONE-ADDRESSED-STATE + TYPED-COMPOSITIONAL-DATAFLOW. TWO sessions (the Heart-builder + the Factory-builder) independently reached the SAME structure in different clothes — a STRONG candidate-law. The Factory's `address = a point in the 4-axis space` ≡ the one-addressed-state's address grammar. ★ Surface to Tim: is the Factory's composition-machine the SAME object as the Heart's fractal-registry engine? (Likely yes — different clothes.)
+- **CAND-10 ·★ THE FOUR ROOT AXES** — composition's FOUR AXES (state · lineage · order · frame) ≡ Tim's "FOUR ROOT axes / the axes of all axes" (the-four-root-axes memory, defs still being walked down). composition has a CONCRETE four-axis instance; Tim named four-root-axes abstractly. ★ Surface to Tim: are composition's state/lineage/order/frame his four root axes (or a projection of them)? This is exactly the triangulation — a part holding a concrete instance of a concept Tim couldn't yet define.
+- **CAND-11 · UNIFY-IS-TRIANGULATION / MAP-DECIDES-NOTHING** — composition's MAP-DECIDES-NOTHING + CUMULATIVE-FRAGMENTS-NO-PREMATURE-CANON (can't rank/conclude before a complete neutral inventory; the whole is distributed across parallel versions; judgment discards real pieces) ≡ THE MISSION'S OWN METHOD (triangulate, don't dedup; reduce only after the spread is in; conflicts→Tim). A part reached the unification principle independently — the method is itself a law.
+- **CAND-12 · PRINCIPLES-NOT-CONTENT** (now MULTI-confirmed: Tim-direct + lead + composition's NO-BENCHMARK/SHADOW-IS-5%/NO-GAP) — value = principles, not running-code/legacy-content/design-system; reference/source folders = language + example/default content, never truth/spec. Facets: "finishing a napkin gives a nicer napkin"; "gap is a category error (nothing was built to fall short of)." Near-LAW (3 independent sources).
 
 ## LAWS HELD BY ONE SO FAR (need cross-check — who else has these?)
 EVERYTHING-IS-A-REGISTRY · TYPED-COMPOSITIONAL-DATAFLOW · ONE-ENTITY · INTROSPECTIVE-DATA-BUILDING · GAP-PRESSURE · AI-PATH-OF-LEAST-RESISTANCE · GROUNDED-CHAIN · RENDER-FOR-COGNITION · MAXIMAL-CAPTURE · DENSE-TRANSMISSION · RELATIONAL-SYSTEMS · UNIVERSAL-COMPOSITION · NO-DEFERRAL/IMPLEMENT-EVERYTHING · EQUAL-VALIDITY-OF-PARTS · SUBSTRATE-IS-FOR-CONVERGENCE.
