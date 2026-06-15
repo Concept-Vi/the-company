@@ -98,10 +98,13 @@ GET /api/projection?binding=semantic&space=repo&emb=pplx&center=<addr>
 - ✅ WHOLE corpus dual-layered: every space (history/repo/principles/worldview/topics/operators) carries BOTH a
   default(BGE) and a pplx layer, each WITH a scale pyramid (history@pplx pyramid 64/16/4 over 1464). Self-describing
   at **`GET /api/layers`** → `{space: [default, pplx]}` (the data a layer-picker / agent reads). `store.layers_by_space()`.
-- 🟢 BACKEND LAYER MODEL COMPLETE up to the UI: write + read (units/themes/types) all layer-aware; whole corpus
-  dual-layered + pyramids; keystone + content-as-types live; self-describing. 91/91 throughout, BGE byte-identical.
-- 🟡 REMAINING: the FE layer/embedder PICKER (surface zone — coordinate, not touched); `find_relations`/`query_index`
-  emb-aware (a backend inversion query, not a wheel lens — minor enhancement).
+- 🟢 BACKEND LAYER MODEL **COMPLETE** up to the UI: EVERY read path is layer-aware — units, themes, types,
+  semantic, separator, nucleation, AND find_relations (the inversion-finder, `?emb=` — verified on pplx + BGE).
+  Whole corpus dual-layered + pyramids; keystone + content-as-types live; self-describing (`/api/layers`).
+  91/91 throughout, BGE byte-identical (non-destructive).
+- 🟡 THE ONLY REMAINING piece is the UI: the FE layer/embedder PICKER (so Tim drives `?emb=` by sight) — it lives
+  in `surface/app` (the other session's Noticeboard zone), so it's COORDINATE-don't-touch. Until then the layer
+  is API-drivable + agent-drivable (the dual interface's tool face works now).
 - 🟡 UI (coordinate — the other session's surface zone): a layer/embedder PICKER so Tim drives `?emb=` by sight.
   Until then the layer is API-drivable only.
 
