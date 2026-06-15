@@ -916,7 +916,39 @@ def resolve_address(store, addr: str, *, turn_id: str | None = None,
         # session supervisor). Registry-is-truth: an unknown id RAISES — never fabricate a session.
         # The record (a dict) is the resolved content; live state/last_activity refinement is the
         # Suite's list_agent_sessions fold, which joins this record with the agent_sessions.* log.
-        sid = addr[len("session://"):]
+        rest = addr[len("session://"):]
+        if "/step/" in rest:
+            # Heart (step-as-node, the R15 gate target) — a tool-call STEP is a first-class addressable
+            # node: session://<sid>/step/<tool_use_id> resolves the step from the session's transcript,
+            # reusing session_pointintime._iter_jsonl (NO new parser; scouted). Transcript-is-truth: an
+            # unknown session OR an unknown step RAISES (never a silent empty). This makes a running
+            # process's steps targetable in the ONE addressed grammar — cc_gate addresses steps here.
+            sid, step_id = rest.split("/step/", 1)
+            rec = store.load_agent_session(sid)
+            if rec is None:
+                raise ValueError(
+                    f"resolve_address: unknown session {sid!r} (address {addr!r}) — no agent_sessions/ "
+                    f"record; cannot resolve step {step_id!r}. Fail loud, never fabricate.")
+            import os as _os
+            jsonl = rec.get("jsonl_path")
+            if not jsonl or not _os.path.exists(jsonl):
+                raise ValueError(
+                    f"resolve_address: session {sid!r} has no readable transcript (jsonl_path={jsonl!r}) "
+                    f"— cannot resolve step {step_id!r} (address {addr!r}). Fail loud.")
+            from runtime.session_pointintime import _iter_jsonl as _ij
+            for _, ev in _ij(jsonl):
+                if not isinstance(ev, dict) or ev.get("type") != "assistant":
+                    continue
+                for block in ((ev.get("message") or {}).get("content") or []):
+                    if isinstance(block, dict) and block.get("type") == "tool_use" and block.get("id") == step_id:
+                        return {"address": addr, "session": sid, "step": step_id,
+                                "tool": block.get("name"), "input": block.get("input"),
+                                "event_uuid": ev.get("uuid"), "ts": ev.get("timestamp"),
+                                "result": ev.get("toolUseResult")}
+            raise ValueError(
+                f"resolve_address: unknown step {step_id!r} in session {sid!r} (address {addr!r}) — no "
+                f"tool_use with that id in the transcript. Fail loud, never a silent empty.")
+        sid = rest
         rec = store.load_agent_session(sid)
         if rec is None:
             raise ValueError(

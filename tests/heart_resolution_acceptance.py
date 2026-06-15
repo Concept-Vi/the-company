@@ -116,6 +116,43 @@ check("9 traverse(kind=authored_by) follows ONLY that edge → the resolved sess
 check("10 traverse over an UNREGISTERED edge-kind RAISES, naming valid kinds",
       raises(lambda: cb.traverse(src["id"], "blocks", store=store, board_dir=tmp), cb.BoardError, "kind"))
 
+# ── STEP-as-node: session://<sid>/step/<tool_use_id> resolves the tool-call STEP (the R15 gate target) ──
+from runtime.session_pointintime import _iter_jsonl as _ij  # noqa: E402
+step_sid = step_tuid = step_tool = None
+for p in sorted(glob.glob(os.path.join(REPO, ".data", "store", "agent_sessions", "*.json")))[:150]:
+    _sid = os.path.basename(p)[:-5]
+    _rec = store.load_agent_session(_sid)
+    if not _rec:
+        continue
+    _jp = _rec.get("jsonl_path")
+    if not _jp or not os.path.exists(_jp):
+        continue
+    for _, _ev in _ij(_jp):
+        if isinstance(_ev, dict) and _ev.get("type") == "assistant":
+            for _b in ((_ev.get("message") or {}).get("content") or []):
+                if isinstance(_b, dict) and _b.get("type") == "tool_use" and _b.get("id"):
+                    step_sid, step_tuid, step_tool = _sid, _b["id"], _b.get("name")
+                    break
+        if step_tuid:
+            break
+    if step_tuid:
+        break
+
+check("11 a real step fixture exists (a session whose transcript carries a tool_use)",
+      bool(step_sid and step_tuid), f"sid={step_sid} step={step_tuid}")
+if step_sid and step_tuid:
+    st_rec = resolve_address(store, f"session://{step_sid}/step/{step_tuid}")
+    check("12 ★ session://<sid>/step/<tool_use_id> RESOLVES to the STEP record — a step is a first-class addressed node",
+          isinstance(st_rec, dict) and st_rec.get("step") == step_tuid and st_rec.get("tool") == step_tool,
+          f"got {({k: st_rec.get(k) for k in ('step', 'tool')} if isinstance(st_rec, dict) else st_rec)}")
+    whole = resolve_address(store, f"session://{step_sid}")
+    check("13 session://<sid> (no /step) STILL resolves the WHOLE agent-session record (H1.1 regression)",
+          isinstance(whole, dict) and whole.get("id") == step_sid and "step" not in whole)
+    check("14 session://<sid>/step/<unknown> RAISES (fail-loud on an unknown step address — bar 3)",
+          raises(lambda: resolve_address(store, f"session://{step_sid}/step/toolu_nonexistent_zzz"), ValueError, "step"))
+check("15 session://<unknown>/step/<x> RAISES (unknown session, fail-loud)",
+      raises(lambda: resolve_address(store, "session://nonexistent-sid-zzz/step/toolu_x"), ValueError))
+
 print(f"\n{'='*60}\nRESULT: {len(PASS)} passed, {len(FAIL)} failed")
 if FAIL:
     print("FAILED:", ", ".join(FAIL))
