@@ -110,8 +110,11 @@ GET /api/projection?binding=semantic&space=repo&emb=pplx&center=<addr>
 
 ## 9. Capabilities roadmap (the leverage not yet wired)
 See MODEL-CAPABILITIES-AS-AFFORDANCES.md. Highest-leverage, all riding on this layer substrate:
-- **MRL semantic-zoom** — truncate the 2560-d vector (1024/512/256) for a continuous coarse↔fine meaning zoom
-  (a 2nd scale axis, orthogonal to the rung pyramid). Free off one embed.
+- **MRL semantic-zoom** — ✅ VERIFIED graceful + ✅ BUILT (nucleation, `5dd6a14`): `?dim=<N>` truncates the read
+  vectors to N before the cosine — a free, continuous coarse↔fine meaning zoom (the 2-D scale: rung × dim).
+  Verification (repo@pplx): dim1024 cos-corr 0.98/NN 86% · 512 0.96/79% · 256 0.92/72% · 128 0.86/61%. Live on
+  the keystone (`&dim=512`/`128` → broader membership). `dim=None`=full (byte-identical). Other lenses = the
+  same-pattern extension (truncate after each get_vector, like `?emb=`).
 - **Binary quantization** — 32× smaller, Hamming similarity → show the WHOLE corpus at once; detail-on-zoom.
 - **Context-aware (late-chunking)** — the `:8007` `documents` mode embeds an item in its parent's context;
   proven SELECTIVE (it homogenizes a heterogeneous registry — helps retrieval, hurts differentiation; see §2a of
