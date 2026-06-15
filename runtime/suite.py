@@ -1564,6 +1564,22 @@ class Suite:
         from runtime import bridge as _bridge
         return sorted(r for r in _bridge.BRIDGE_ROUTES if r.startswith("/api/"))
 
+    def project(self, q: dict) -> tuple:
+        """THE INSTRUMENT'S PROJECTION — the radial universal-projection body for a binding query dict, the
+        SAME resolver the bridge's /api/projection serves (build_projection). Both faces call THIS: the visual
+        surface via /api/projection, the agent via the MCP `project` door — ONE engine, two faces (Tim's law:
+        every UI affordance has an MCP door). Lazy-imports build_projection at call time (the idiom _api_verbs
+        uses — suite.py can't import bridge.py at module load). `q` is a flat {param: str} dict (binding, space,
+        emb, dim, rung, center, at, types_space, pole_a, pole_b, limit, …). Returns (status, body)."""
+        from runtime import bridge as _bridge
+        return _bridge.build_projection(q)
+
+    def layers(self) -> dict:
+        """The multi-layer model's self-description: {space: [embedder-layer, …]} (e.g. {'repo':['default','pplx']})
+        — the SAME data /api/layers serves. The UI's layer picker AND the MCP `layers` door both read this to
+        offer the available embedder layers; registry-true (the store scans itself, never a hardcoded set)."""
+        return self.store.layers_by_space()
+
     def _authoring_preamble(self) -> str:
         """Put the registry on the brain's easy path so the correct values are effortless and nothing
         is invented — and make ASKING the easy path when something needed isn't registered."""

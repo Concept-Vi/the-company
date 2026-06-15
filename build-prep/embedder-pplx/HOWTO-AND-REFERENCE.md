@@ -110,15 +110,24 @@ GET /api/projection?binding=semantic&space=repo&emb=pplx&center=<addr>
   Verified live at **1440×900 AND 390×844 AND 844×390**: the chip drives `?emb=` on every lens (network-traced
   `binding=semantic…&emb=pplx`), and switching default↔pplx on the keystone (nucleation, topics/topics rung 8)
   VISIBLY re-projects — different born/candidate counts + sectors (pplx 2 candidates/10 sectors vs BGE 3/11).
-  The dual interface's HUMAN face now works; the MCP-door (tool face) for projection/layers is the next parity beat.
+  The dual interface's HUMAN face now works.
+- ✅ MCP DOOR (the TOOL face — parity) **BUILT** (`mcp_face/tools/instrument.py`: `project` + `layers`): the
+  SAME engine the surface uses (`Suite.project` → `bridge.build_projection`, ONE resolver extracted so neither
+  face reimplements it — reuse-don't-parallel). `project` drives every axis the UI does (binding · space · emb ·
+  dim · rung · center · at · pole_a/pole_b); `layers` returns the store self-scan. Verified through the
+  `Suite.project` path in-process (raw/nucleation/semantic, layer- + MRL-aware, emb/res echoed) + the bridge
+  HTTP face re-verified live in-browser after the extraction (raw + keystone render unchanged). Loads into the
+  MCP server on its next reconnect (Tim's action) — then verifiable via `mcp__company__project` / `__layers`.
 
 ## 9. Capabilities roadmap (the leverage not yet wired)
 See MODEL-CAPABILITIES-AS-AFFORDANCES.md. Highest-leverage, all riding on this layer substrate:
-- **MRL semantic-zoom** — ✅ VERIFIED graceful + ✅ BUILT (nucleation, `5dd6a14`): `?dim=<N>` truncates the read
-  vectors to N before the cosine — a free, continuous coarse↔fine meaning zoom (the 2-D scale: rung × dim).
-  Verification (repo@pplx): dim1024 cos-corr 0.98/NN 86% · 512 0.96/79% · 256 0.92/72% · 128 0.86/61%. Live on
-  the keystone (`&dim=512`/`128` → broader membership). `dim=None`=full (byte-identical). Other lenses = the
-  same-pattern extension (truncate after each get_vector, like `?emb=`).
+- **MRL semantic-zoom** — ✅ VERIFIED graceful + ✅ BUILT on ALL vector lenses (`?dim=<N>` truncates every read
+  vector to its first N dims before the cosine — a free, continuous coarse↔fine meaning zoom; the 2-D scale:
+  rung × dim). Nucleation (`5dd6a14`) + NOW semantic + separator (this beat): the truncation is applied
+  CONSISTENTLY to centre/poles + all items so `_cosine`'s dim-mismatch guard never trips; the separator's fifth
+  gate then runs AT the chosen resolution; `binding.res` echoes the active dim on every path. Verification
+  (repo@pplx): dim1024 cos-corr 0.98/NN 86% · 512 0.96/79% · 256 0.92/72% · 128 0.86/61%. `dim=None`=full
+  (byte-identical). The FE resolution PICKER (the UI twin of `?dim=`) is the remaining UI beat.
 - **Binary quantization** — 32× smaller, Hamming similarity → show the WHOLE corpus at once; detail-on-zoom.
 - **Context-aware (late-chunking)** — the `:8007` `documents` mode embeds an item in its parent's context;
   proven SELECTIVE (it homogenizes a heterogeneous registry — helps retrieval, hurts differentiation; see §2a of

@@ -120,7 +120,11 @@ check("model_projections() = the model lenses (the capture-schema set)",
       {"what", "topics", "principles", "worldview", "claimed_status"} <= model_ids)
 check("model_projections() EXCLUDES the code lens 'lineage' (the produced_by split)",
       "lineage" not in model_ids)
-check("code_projections() = the code lenses", {p.id for p in reg.code_projections()} == {"lineage"})
+check("code_projections() ⊇ the code lenses (registry-is-truth: a NEW produced_by:code lens like 'operators' "
+      "— the operator-registry SPACE for the nucleation keystone — EXTENDS the code set, not breaks it; the "
+      "produced_by==code guard keeps it honest, never admits a mis-tagged lens)",
+      {"lineage"} <= {p.id for p in reg.code_projections()}
+      and all(p.produced_by == "code" for p in reg.code_projections()))
 embed_ids = {p.id for p in reg.embeddable()}
 check("embeddable() = the embeds:true lenses (the Group-L spaces) — the discovery seeds are present "
       "(registry-is-truth: a NEW embeds:true lens like 'repo' for ① extends the space set, not breaks it)",

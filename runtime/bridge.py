@@ -47,7 +47,7 @@ BRIDGE_ROUTES = (
     "/studio", "/design-system.css", "/mockups/",
     # --- GET routes ---
     "/api/stream", "/api/mockup-feedback", "/api/mockup-feedback/status", "/api/corpus", "/api/graph",
-    "/api/graphs", "/api/object_info", "/api/cognition_info", "/api/types", "/api/models",
+    "/api/graphs", "/api/object_info", "/api/cognition_info", "/api/types", "/api/layers", "/api/models",
     "/api/chat-models", "/api/fit", "/api/surfaced", "/api/events", "/api/now", "/api/chat",
     "/api/conversations", "/api/conversation", "/api/rhm-config", "/api/inbox", "/api/last-change",
     "/api/self-change-log", "/api/panels", "/api/capabilities", "/api/capabilities/introspection",
@@ -457,6 +457,14 @@ def _semantic_projection(q, binding, reg, evs, center, now, lim):
 
     space = binding.get("space")
     emb = q.get("emb") or binding.get("emb") or None   # embedder LAYER (None=BGE default); applies to UNIT reads
+    # MRL semantic-zoom (the RESOLUTION axis): ?dim=N truncates every read vector to its first N dims before
+    # the cosine — a Matryoshka coarse↔fine MEANING zoom, orthogonal to the rung pyramid (the 2-D scale:
+    # rung × dim). ALL vectors (centre + items/themes) are truncated CONSISTENTLY so _cosine's dim-mismatch
+    # guard never trips; None = full dim (byte-identical to pre-MRL). Same contract as nucleation's _mrl.
+    _md = (q.get("dim") or "").strip()
+    mdim = int(_md) if _md.isdigit() and int(_md) > 0 else None
+    def _mrl(v):
+        return v[:mdim] if (mdim and mdim < len(v)) else v
     rung = (q.get("rung") or "").strip()
     pyr = _scale.load_pyramid(SUITE.store, space, emb) if space else None
     rungs = [r["k"] for r in pyr["rungs"]] if pyr else []
@@ -466,6 +474,8 @@ def _semantic_projection(q, binding, reg, evs, center, now, lim):
         if pyr:
             body["scale"] = {"space": space, "rung": current, "rungs": rungs,
                              "n_units": pyr.get("n_units")}
+        body["binding"]["res"] = mdim     # the active MRL resolution (None = full dim) — every return path
+        body["binding"]["emb"] = emb      # the active embedder LAYER (None = default/BGE) — echoed everywhere
         return body
 
     def centre_vector(c):
@@ -531,10 +541,10 @@ def _semantic_projection(q, binding, reg, evs, center, now, lim):
             return 200, attach_scale(enrich(pend), coarse_k)
         # centre given: its vector is a UNIT (unit space) OR a THEME (this rung's centroids) — themes ranked
         # by meaning-distance from it. The centre need not itself be one of the points (it can be off-stage).
-        vectors = {p["source"]: p["vector"] for p in pts}
+        vectors = {p["source"]: _mrl(p["vector"]) for p in pts}   # MRL: theme centroids at the chosen resolution
         cv = centre_vector(center)                       # portable across rungs (unit OR a theme's native rung)
         if cv:
-            vectors[center] = cv
+            vectors[center] = _mrl(cv)
         try:
             out = _uproject(cevs, binding=binding, registry=reg, now=now, center=center, limit=lim, vectors=vectors)
         except ValueError as ve:
@@ -555,10 +565,10 @@ def _semantic_projection(q, binding, reg, evs, center, now, lim):
     for e in uevs:
         rec = SUITE.store.get_vector(SUITE.store.space_address(e.get("source_address") or "", space, emb))
         if rec and rec.get("vector"):
-            vectors[_proj_addr(e)] = rec["vector"]
+            vectors[_proj_addr(e)] = _mrl(rec["vector"])    # MRL: items at the chosen resolution
     cv = centre_vector(center)                           # unit centre, OR a theme centre (zoom-out-from-a-theme)
     if cv:
-        vectors[center] = cv
+        vectors[center] = _mrl(cv)
     try:
         out = _uproject(uevs, binding=binding, registry=reg, now=now, center=center, limit=lim, vectors=vectors)
     except ValueError as ve:
@@ -581,6 +591,13 @@ def _separator_projection(q, binding, reg, evs, center, now, lim):
     from runtime.projection import project as _uproject, _addr_of as _proj_addr
     space = binding.get("space")
     emb = q.get("emb") or binding.get("emb") or None   # embedder LAYER (None=BGE default); applies to UNIT reads
+    # MRL resolution axis (?dim=N): truncate every read vector — BOTH poles + all items — to its first N dims
+    # before the lean/separation cosines. Consistent truncation (poles + items together) keeps _cosine's
+    # dim-guard happy; the fifth gate (separation_report) then runs AT the chosen resolution. None = full dim.
+    _md = (q.get("dim") or "").strip()
+    mdim = int(_md) if _md.isdigit() and int(_md) > 0 else None
+    def _mrl(v):
+        return v[:mdim] if (mdim and mdim < len(v)) else v
     if not space:
         return 400, {"error": "separator binding needs a `space` (the lens the items + poles live in)",
                      "binding": binding.get("id")}
@@ -616,13 +633,14 @@ def _separator_projection(q, binding, reg, evs, center, now, lim):
         return 400, {"error": f"pole(s) with no vector in lens {space!r}: {missing} — pick poles embedded in "
                               f"this lens (a corpus item, a cluster:// theme, or a planted anchor). Fail loud, "
                               f"never a silent fallback.", "binding": binding.get("id")}
+    va, vb = _mrl(va), _mrl(vb)   # MRL: poles at the chosen resolution (consistent with the items below)
 
     uevs = [e for e in evs if e.get("kind") == "corpus.record" and e.get("projection") == space]
     vectors = {}
     for e in uevs:
         rec = SUITE.store.get_vector(SUITE.store.space_address(e.get("source_address") or "", space, emb))
         if rec and rec.get("vector"):
-            vectors[_proj_addr(e)] = rec["vector"]
+            vectors[_proj_addr(e)] = _mrl(rec["vector"])    # MRL: items at the chosen resolution
     poles = {"a": {"vector": va, "label": pole_a_label or pole_a_ref, "ref": pole_a_ref},
              "b": {"vector": vb, "label": pole_b_label or pole_b_ref, "ref": pole_b_ref}}
     try:
@@ -631,6 +649,8 @@ def _separator_projection(q, binding, reg, evs, center, now, lim):
     except ValueError as ve:
         return 400, {"error": str(ve), "binding": binding.get("id")}
     out["binding"]["space"] = space
+    out["binding"]["res"] = mdim     # the active MRL resolution (None = full dim)
+    out["binding"]["emb"] = emb      # the active embedder LAYER (None = default/BGE)
     return 200, out
 
 
@@ -811,6 +831,73 @@ _COG_REDUCE_RULES = {
     "concat": lambda values: {"concat": [v for v in values]},
     "first":  lambda values: {"first": (values[0] if values else None)},
 }
+
+
+def build_projection(q):
+    """THE UNIVERSAL PROJECTION ENGINE — the ONE resolver behind BOTH faces: the bridge HTTP
+    /api/projection AND the MCP `project` door (via Suite.project, which lazy-imports this — the same
+    call-time-import idiom capabilities() uses for BRIDGE_ROUTES, since bridge can't be imported at the
+    suite/mcp module load). Takes the parsed query dict, resolves the binding, dispatches by `radius_from` to
+    the lens helpers (semantic/separator/nucleation — all store I/O there) or the pure project() for the
+    Group-10 angle-by-registry/graph case. Returns (status, body). ONE implementation, reused — never a
+    parallel projector per face (Tim: one entity, reuse-don't-parallel). Provisional home: it sits beside the
+    helpers it dispatches; a future neutral module can thread the Suite in (today it reads via the bridge's
+    Suite over the shared store — byte-identical data either way)."""
+    from runtime.projection import (project as _uproject, BindingRegistry as _BR,
+                                    parse_now as _parse_now, _addr_of as _proj_addr)
+    reg = _BR().discover()
+    binding = reg.get(q.get("binding"))
+    evs = SUITE.store.events_since(int(q.get("since") or 0))
+    center = q.get("center")
+    now = _parse_now(q.get("at"))          # ?at= moves the temporal centre into the past (the scrubber)
+    lim = int(q.get("limit") or 0)
+    rf = binding.get("radius_from")        # radius_from='time'(age) | 'address'(tree) | 'semantic' | 'separator' | 'nucleation'
+    if rf == "semantic":
+        # THE CIRCLE (Group 6) + THE SCALE AXIS (Group 11) — the meaning-field, at the unit or a coarse THEME
+        # rung (?rung=). All store/registry I/O + the rung resolution live in the helper; project() stays pure.
+        return _semantic_projection(q, binding, reg, evs, center, now, lim)
+    if rf == "separator":
+        # THE TWO-GRAVITY SEPARATOR (Group 9) — the store I/O (the two pole vectors + the item vectors) lives
+        # in the helper; project() stays pure. Poles are drivable (?pole_a=&pole_b=).
+        return _separator_projection(q, binding, reg, evs, center, now, lim)
+    if rf == "nucleation":
+        # TYPE-NUCLEATION (the 20/80 water-law) — the store I/O (the registry-of-types' centroids + admission
+        # radii, and the content store's item vectors) lives in the helper. Drivable: ?types_space=&rung=&space=&dial=.
+        return _nucleation_projection(q, binding, reg, evs, center, now, lim)
+    # Group 10 — angle_from=<registry/graph>: resolve the entity-set's rows (+ directed edges) HERE (the
+    # store/registry I/O), pass to the pure project(). A REGISTRY's rows come from the live discovered registry
+    # (registry-is-truth) with NO inter-row edges yet (→ order_by falls back to count honestly). A GRAPH's
+    # nodes + connect wires ARE real directed edges → order_by=edge topological-sorts them.
+    af = binding.get("angle_from", "kind")
+    skw = {}
+    if af not in ("kind", "kind-group"):
+        _REG = {"projections": SUITE.projection_registry, "roles": SUITE.role_registry,
+                "mark_types": SUITE.mark_type_registry, "relation_types": SUITE.relation_type_registry,
+                "generation_policies": SUITE.generation_policy_registry,
+                "ai_tics": SUITE.ai_tic_registry, "forms": SUITE.form_registry,
+                "lifters": SUITE.lifter_registry}
+        if af in ("node-types", "node_types"):
+            # THE CONNECTIONS in the node registry (Group 10): rows = node types; edges = the DIRECTIONAL typed
+            # type-flow — A's output type feeds B's input type, ASYMMETRIC only (the both-ways pairs are NOT
+            # typed → excluded). Cycles among the directional edges are KEPT. Registry-true: the LIVE node registry.
+            _nt = NodeRegistry().discover([os.path.join(ROOT, "nodes")]).types
+            _names = sorted(_nt)
+            _outs = {n: set(_nt[n].ports.outputs.values()) for n in _names}
+            _ins = {n: set(_nt[n].ports.inputs.values()) for n in _names}
+            _feeds = lambda a, b: bool(_outs[a] & _ins[b])
+            _dir = [(a, b) for a in _names for b in _names
+                    if a != b and _feeds(a, b) and not _feeds(b, a)]
+            skw = {"sector_ids": _names, "sector_edges": _dir}
+        elif af in _REG:
+            skw = {"sector_ids": sorted(_REG[af]), "sector_edges": []}
+        elif af == "graph" or af.startswith("graph:"):
+            gid = af.split(":", 1)[1] if ":" in af else (q.get("graph") or "")
+            G = SUITE.store.load_graph(gid) if gid else None
+            if G:
+                evs = [e for e in evs if e.get("graph") == gid]   # scope to that graph's events
+                skw = {"sector_ids": [n.id for n in G.nodes],
+                       "sector_edges": [(e.from_node, e.to_node) for e in G.edges]}
+    return 200, _uproject(evs, binding=binding, registry=reg, now=now, center=center, limit=lim, **skw)
 
 
 def _cog_emit(kind, payload):
@@ -1069,73 +1156,11 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(SUITE.greeting(since=(q.get("since") or [None])[0])))
             elif path == "/api/projection":                # THE UNIVERSAL PROJECTION: resolved from a binding, no hardcode
                 q = self._qs(urlparse(self.path))
-                from runtime.projection import (project as _uproject, BindingRegistry as _BR,
-                                                parse_now as _parse_now, _addr_of as _proj_addr)
-                reg = _BR().discover()
-                binding = reg.get(q.get("binding"))
-                evs = SUITE.store.events_since(int(q.get("since") or 0))
-                center = q.get("center")
-                now = _parse_now(q.get("at"))
-                lim = int(q.get("limit") or 0)
-                # ?at= moves the temporal centre into the past (the scrubber); ?center=<address> re-centres
-                # in space. radius_from='time' (age) | 'address' (tree-distance) | 'semantic' (Group 6).
-                if binding.get("radius_from") == "semantic":
-                    # THE CIRCLE (Group 6) + THE SCALE AXIS (Group 11) — the meaning-field, at the unit rung
-                    # or a coarse THEME rung (?rung=). All store/registry I/O + the rung resolution live in
-                    # _semantic_projection; project() stays pure. (See the helper for the rung contract.)
-                    _st, _body = _semantic_projection(q, binding, reg, evs, center, now, lim)
-                    self._send(_st, json.dumps(_body))
-                elif binding.get("radius_from") == "separator":
-                    # THE TWO-GRAVITY SEPARATOR (Group 9) — the store I/O (resolve the two pole vectors + the
-                    # item vectors) lives in the helper; project() stays pure. Poles are drivable (?pole_a=&pole_b=).
-                    _st, _body = _separator_projection(q, binding, reg, evs, center, now, lim)
-                    self._send(_st, json.dumps(_body))
-                elif binding.get("radius_from") == "nucleation":
-                    # TYPE-NUCLEATION (the 20/80 water-law) — the store I/O (resolve the registry-of-types'
-                    # centroids + admission radii, and the content store's item vectors) lives in the helper;
-                    # project()+nucleation_report stay pure. Drivable: ?types_space=&rung=&space=&dial=.
-                    _st, _body = _nucleation_projection(q, binding, reg, evs, center, now, lim)
-                    self._send(_st, json.dumps(_body))
-                else:
-                    # Group 10 — angle_from=<registry/graph>: resolve the entity-set's rows (+ directed edges)
-                    # HERE (the store/registry I/O), pass to the pure project(). A REGISTRY's rows come from
-                    # the live discovered registry (registry-is-truth) with NO inter-row edges yet (→ order_by
-                    # falls back to count honestly; edges-between-rows is the SEED §95 growth front). A GRAPH's
-                    # nodes + connect wires ARE real directed edges → order_by=edge topological-sorts them.
-                    af = binding.get("angle_from", "kind")
-                    skw = {}
-                    if af not in ("kind", "kind-group"):
-                        _REG = {"projections": SUITE.projection_registry, "roles": SUITE.role_registry,
-                                "mark_types": SUITE.mark_type_registry, "relation_types": SUITE.relation_type_registry,
-                                "generation_policies": SUITE.generation_policy_registry,
-                                "ai_tics": SUITE.ai_tic_registry, "forms": SUITE.form_registry,
-                                "lifters": SUITE.lifter_registry}
-                        if af in ("node-types", "node_types"):
-                            # THE CONNECTIONS in the node registry (Group 10): rows = node types; edges = the
-                            # DIRECTIONAL typed type-flow — A's output type feeds B's input type, ASYMMETRIC
-                            # only (Tim: "the only edges that get typed are the directional ones"; the
-                            # both-ways/symmetric pairs are NOT typed → excluded). Cycles among the directional
-                            # edges are KEPT and rendered as cycles (nonsequential is valid). Registry-true:
-                            # reads the LIVE node registry (drop a node type → it appears, no code edit).
-                            _nt = NodeRegistry().discover([os.path.join(ROOT, "nodes")]).types
-                            _names = sorted(_nt)
-                            _outs = {n: set(_nt[n].ports.outputs.values()) for n in _names}
-                            _ins = {n: set(_nt[n].ports.inputs.values()) for n in _names}
-                            _feeds = lambda a, b: bool(_outs[a] & _ins[b])
-                            _dir = [(a, b) for a in _names for b in _names
-                                    if a != b and _feeds(a, b) and not _feeds(b, a)]
-                            skw = {"sector_ids": _names, "sector_edges": _dir}
-                        elif af in _REG:
-                            skw = {"sector_ids": sorted(_REG[af]), "sector_edges": []}
-                        elif af == "graph" or af.startswith("graph:"):
-                            gid = af.split(":", 1)[1] if ":" in af else (q.get("graph") or "")
-                            G = SUITE.store.load_graph(gid) if gid else None
-                            if G:
-                                evs = [e for e in evs if e.get("graph") == gid]   # scope to that graph's events
-                                skw = {"sector_ids": [n.id for n in G.nodes],
-                                       "sector_edges": [(e.from_node, e.to_node) for e in G.edges]}
-                    self._send(200, json.dumps(_uproject(
-                        evs, binding=binding, registry=reg, now=now, center=center, limit=lim, **skw)))
+                # ONE engine — the SAME resolver the MCP `project` door calls via Suite.project (the dual
+                # interface: every UI affordance behind an MCP door). All the lens dispatch + store I/O lives
+                # in build_projection (a sibling of the lens helpers); this face just serializes the result.
+                _st, _body = build_projection(q)
+                self._send(_st, json.dumps(_body))
             elif path == "/api/corpus-query":              # S7: the forager's search door (semantic + heads)
                 q = self._qs(urlparse(self.path))
                 text, space = q.get("text"), q.get("space") or None
