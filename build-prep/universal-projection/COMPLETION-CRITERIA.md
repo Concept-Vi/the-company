@@ -44,8 +44,17 @@ fifth gate established. This IS a completion claim — see the TYPE-NUCLEATION e
   work moved to the fresh React surface (`surface/app`, port 5174/5175) and then to expressing the SEED
   equation's full DESCRIPTIONS. That frontier is tracked in **build-prep/instrument-surface/STATUS.md** and
   **EQUATION-AUDIT.md** (the §-by-§ gap list). Done so far: all 12 lenses re-homed; gap #1 the coincidence
-  spine (`ce04fcf`); gap #2 the corner reading (residue → grow the box, `ec1ba61`). Next: axes-as-variables,
-  edges-as-canonical-moves; then the registry-promotion keystone (blocked on a model-load — an explicit ask to Tim).
+  spine (`ce04fcf`); gap #2 the corner reading (residue → grow the box, `ec1ba61`); signed strain (`615b66a`);
+  the **selection tether** (point→detail-card on all lenses, `817a2f1`, both viewports + critic). **The
+  registry-promotion KEYSTONE (§7) is PROVEN** (2026-06-15): typing real content against the 29 OPERATORS
+  (roles) nucleates a defensible candidate new operator (a born `*_acceptance.py` cluster = "test-verifier"),
+  validated in-process against the resident pplx embedder (no eviction); the noise pile is correctly rejected
+  by the permutation null. NOT Tim-blocked (Tim: "no blocks on Tim" — the embedder/loadout is mine). The
+  integrated SHIP needs operators + an items space in ONE embedding model persisted with pyramids — a real
+  fork: pplx-forward (Tim's chosen embedder; the migration seed) vs BGE-restore (the corpus's current embedder
+  on :8001, currently DOWN → a GPU eviction the harness guards). That fork is a dedicated migration, not a
+  piecemeal loop beat. Next unblocked surface beats: axes-as-variables, edges-as-canonical-moves (engine),
+  desktop framing / de-knot (polish). See STATUS.md "✅ KEYSTONE L14 — PROVEN".
 - **INSTRUMENT half — ✅ COMPLETE.** Group 1 (the variable-engine floor / acceptance suite), Group 5 (the
   FORM face on the corpus design system), Group 3 (time-freed/relative centre + scrubber), Group 4
   (real-time SSE pub-sub), Group 2 (the square/dyadic-grid half). All ✅, both faces, design-critic-passed.
