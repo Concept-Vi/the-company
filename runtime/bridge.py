@@ -910,6 +910,26 @@ def build_projection(q):
             _dir = [(a, b) for a in _names for b in _names
                     if a != b and _feeds(a, b) and not _feeds(b, a)]
             skw = {"sector_ids": _names, "sector_edges": _dir}
+        elif af in ("cascade", "cascade-flow"):
+            # THE CONNECTIONS via CASCADE PRECEDENCE (Group 10 — "cascade precedes", Tim's named directional
+            # source). Each saved cascade is an ORDERED step-list; consecutive steps form a DIRECTIONAL edge
+            # (step i → step i+1 — precedence has a direction, so it types; never symmetric). A step's node is
+            # its ROLE (an operator-registry row) if it has one, else its OP verb (generate/retrieve/reduce —
+            # the cast). Registry-true: reads the LIVE cascade registry (save a cascade → it appears, no edit).
+            # Cycles across cascades (A→B in one, B→A in another) render AS cycles (no forced acyclicity).
+            _casc = SUITE.list_cascades()
+            _nodes, _seen, _edges, _eset = [], set(), [], set()
+            for _c in _casc:
+                _a = _c.get("action") or _c
+                _steps = _a.get("steps") or _c.get("steps") or []
+                _ids = [(_st.get("role") or (f"op:{_st.get('op')}" if _st.get("op") else "op:?")) for _st in _steps]
+                for _nid in _ids:
+                    if _nid not in _seen:
+                        _seen.add(_nid); _nodes.append(_nid)
+                for _x, _y in zip(_ids, _ids[1:]):
+                    if _x != _y and (_x, _y) not in _eset:
+                        _eset.add((_x, _y)); _edges.append((_x, _y))
+            skw = {"sector_ids": sorted(_nodes), "sector_edges": _edges}
         elif af in _REG:
             skw = {"sector_ids": sorted(_REG[af]), "sector_edges": []}
         elif af == "graph" or af.startswith("graph:"):

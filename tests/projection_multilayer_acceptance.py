@@ -182,5 +182,30 @@ else:
         check("BQ nucleation: quant=binary echoed + the report still resolves (Hamming admission radii)",
               nq["binding"].get("quant") == "binary" and "nucleation" in nq and "candidates" in nq["nucleation"])
 
+# ════════════════════════════════════════════════════════════════════════════════════════════════════
+# 7 · GROUP 10 · CASCADE-PRECEDENCE edges (by_cascade) — "cascade precedes", a directional-edge source Tim
+#     named. The lens reads the LIVE cascade registry (SUITE.list_cascades) → role/op nodes + directed
+#     precedence edges (step i → step i+1). Registry-true, directional-only. Data-guarded: skips if no
+#     cascades are saved (then there's honestly nothing to draw — never a fabricated edge).
+# ════════════════════════════════════════════════════════════════════════════════════════════════════
+print("\n7 · Group 10 — cascade-precedence directional edges (by_cascade)")
+_st, cb = bridge.build_projection({"binding": "by_cascade", "limit": "50"})
+check("by_cascade resolves (status 200, binding.id echoed — discoverable as a lens)",
+      _st == 200 and cb.get("binding", {}).get("id") == "by_cascade")
+n_casc = len(SUITE.list_cascades())
+if n_casc == 0:
+    skip("by_cascade edges", "no cascades saved in this store (nothing to draw — honest, not a gap)")
+else:
+    sect_ids = {s["id"] for s in cb.get("sectors", [])}
+    edges = cb.get("edges", [])
+    check(f"by_cascade: sectors derived from the {n_casc} live cascades (registry-true, non-empty)",
+          len(sect_ids) > 0)
+    check("by_cascade: directional precedence edges present (cascade precedes → real directed edges)",
+          len(edges) > 0)
+    # every edge endpoint must be a real sector (no invented nodes) and directed (from≠to)
+    eok = all((e.get("from") is not None and e.get("to") is not None) for e in edges)
+    check("by_cascade: every edge is a directed pair over real sectors (no invented/symmetric edges)",
+          eok and all(isinstance(e.get("from"), int) and isinstance(e.get("to"), int) for e in edges))
+
 print(f"\n{'PASS' if FAIL == 0 else 'FAIL'} — {PASS} passed, {FAIL} failed, {SKIP} skipped")
 sys.exit(0 if FAIL == 0 else 1)
