@@ -1580,6 +1580,12 @@ class Suite:
         offer the available embedder layers; registry-true (the store scans itself, never a hardcoded set)."""
         return self.store.layers_by_space()
 
+    def layer_dims(self) -> dict:
+        """The full vector DIMENSION of every (space, embedder-layer): {space: {emb: dim}} (e.g.
+        {'repo': {'default':1024,'pplx':2560}}) — what /api/layer-dims serves. The RESOLUTION picker reads this
+        to derive the MRL zoom ladder per layer (registry-true, never a hardcoded dim)."""
+        return self.store.layer_dims()
+
     def _authoring_preamble(self) -> str:
         """Put the registry on the brain's easy path so the correct values are effortless and nothing
         is invented — and make ASKING the easy path when something needed isn't registered."""

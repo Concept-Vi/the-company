@@ -127,7 +127,13 @@ See MODEL-CAPABILITIES-AS-AFFORDANCES.md. Highest-leverage, all riding on this l
   CONSISTENTLY to centre/poles + all items so `_cosine`'s dim-mismatch guard never trips; the separator's fifth
   gate then runs AT the chosen resolution; `binding.res` echoes the active dim on every path. Verification
   (repo@pplx): dim1024 cos-corr 0.98/NN 86% · 512 0.96/79% · 256 0.92/72% · 128 0.86/61%. `dim=None`=full
-  (byte-identical). The FE resolution PICKER (the UI twin of `?dim=`) is the remaining UI beat.
+  (byte-identical). ✅ The FE resolution PICKER is BUILT (`surface/app/src/toggles/ResChip.tsx`, `◎ full ▸`):
+  registry-true — its ladder is DERIVED from the active layer's full dim (`/api/layer-dims` →
+  `store.layer_dims()` → `{space:{emb:dim}}`), powers of two below it, never hardcoded; appears ONLY on the
+  vector lenses (a `space` in the binding), hidden on structural ones. Verified live (desktop+portrait): on
+  topics@default(BGE 1024) it offers full·1024d·512·256·128·64; picking 128d VISIBLY re-projects the keystone
+  (1 born/3 cand/11 sectors → 0/2/10 — coarser dim = broader membership). The 2-D scale (rung × dim) is now
+  fully drivable by sight + by `?dim=` on every vector lens.
 - **Binary quantization** — 32× smaller, Hamming similarity → show the WHOLE corpus at once; detail-on-zoom.
 - **Context-aware (late-chunking)** — the `:8007` `documents` mode embeds an item in its parent's context;
   proven SELECTIVE (it homogenizes a heterogeneous registry — helps retrieval, hurts differentiation; see §2a of

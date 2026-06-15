@@ -47,7 +47,7 @@ BRIDGE_ROUTES = (
     "/studio", "/design-system.css", "/mockups/",
     # --- GET routes ---
     "/api/stream", "/api/mockup-feedback", "/api/mockup-feedback/status", "/api/corpus", "/api/graph",
-    "/api/graphs", "/api/object_info", "/api/cognition_info", "/api/types", "/api/layers", "/api/models",
+    "/api/graphs", "/api/object_info", "/api/cognition_info", "/api/types", "/api/layers", "/api/layer-dims", "/api/models",
     "/api/chat-models", "/api/fit", "/api/surfaced", "/api/events", "/api/now", "/api/chat",
     "/api/conversations", "/api/conversation", "/api/rhm-config", "/api/inbox", "/api/last-change",
     "/api/self-change-log", "/api/panels", "/api/capabilities", "/api/capabilities/introspection",
@@ -1130,6 +1130,8 @@ class H(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(sorted(SUITE.list_types())))
             elif path == "/api/layers":                    # the multi-layer model's self-description: {space:[embedder layer,…]}
                 self._send(200, json.dumps(SUITE.store.layers_by_space()))
+            elif path == "/api/layer-dims":                # the per-layer full vector dim {space:{emb:dim}} — the MRL ladder source
+                self._send(200, json.dumps(SUITE.store.layer_dims()))
             elif path == "/api/models":                    # B: per-kind/per-endpoint live model list
                 self._send(200, json.dumps(SUITE.models_at(
                     kind=q.get("kind", "chat"), base_url=q.get("base_url"))))

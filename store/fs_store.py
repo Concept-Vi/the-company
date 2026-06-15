@@ -1074,6 +1074,42 @@ class FsStore:
             out.setdefault(space, set()).add((em.group(1) if (em and em.group(1)) else "default"))
         return {sp: sorted(layers) for sp, layers in sorted(out.items())}
 
+    def layer_dims(self) -> dict:
+        """The vector DIMENSION of every (space, embedder-layer): {space: {emb_tag: full_dim}} (e.g.
+        {'repo': {'default': 1024, 'pplx': 2560}}). The RESOLUTION picker reads this to derive the MRL zoom
+        ladder PER layer (powers of two ≤ the full dim) — registry-true, never a hardcoded dim. All vectors in
+        a layer share a dim (the embedder fixes it), so ONE vector per (space, emb) settles it: one pass over
+        the vectors dir, regex to group, JSON-parse only the FIRST vector of each group (bounded by the #groups,
+        not the #vectors). Same on-demand cost as layers_by_space — NOT a per-request hot path; the FE fetches
+        it once. Internal scale:* pyramid spaces + the default/unspaced space are excluded."""
+        import re, json as _json
+        d = self.root / "vectors"
+        if not d.exists():
+            return {}
+        sp_re = re.compile(r'"space":\s*(?:"([^"]*)"|null)')
+        emb_re = re.compile(r'"emb":\s*(?:"([^"]*)"|null)')
+        out: dict[str, dict] = {}
+        for p in d.glob("*.json"):
+            try:
+                txt = p.read_text()
+            except Exception:
+                continue
+            sm = sp_re.search(txt)
+            space = sm.group(1) if sm else None
+            if not space or space.startswith("scale:"):     # skip default/unspaced + internal pyramid spaces
+                continue
+            em = emb_re.search(txt)
+            emb = em.group(1) if (em and em.group(1)) else "default"
+            if out.get(space, {}).get(emb):                 # already settled this group's dim — skip the parse
+                continue
+            try:
+                v = _json.loads(txt).get("vector")
+                if isinstance(v, list) and v:
+                    out.setdefault(space, {})[emb] = len(v)
+            except Exception:
+                continue
+        return {sp: out[sp] for sp in sorted(out)}
+
     # --- surfaced-decision inbox (S7/D4): non-blocking gates, shared across faces ---
     def surfaced_lock(self):
         """T1-RACE — the store-level lock a CALLER holds around a surfaced read-modify-write

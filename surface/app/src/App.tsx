@@ -44,6 +44,8 @@ export type SurfaceState = {
   setBinding: (id: string) => void
   emb: string | null
   setEmb: (e: string | null) => void
+  dim: number | null
+  setDim: (d: number | null) => void
   selected: ProjPoint | null
   setSelected: (p: ProjPoint | null) => void
   feel: MotionFeel
@@ -89,6 +91,10 @@ export function App() {
   // THE EMBEDDER LAYER (the multi-layer model): null = the default (BGE) layer; a named layer (e.g. 'pplx')
   // reads that embedder's vectors — every lens is layer-aware (registry-true, driven by /api/layers).
   const [emb, setEmb] = useState<string | null>(null)
+  // THE MRL RESOLUTION (the meaning-zoom axis): null = full dim; an N truncates every read vector to its first
+  // N dims before the cosine — a continuous coarse↔fine zoom, orthogonal to the scale rung. Registry-true: the
+  // picker's ladder is derived from the active layer's full dim (/api/layer-dims), never hardcoded.
+  const [dim, setDim] = useState<number | null>(null)
   const [selected, setSelected] = useState<ProjPoint | null>(null)
   const [feel, setFeel] = useState<MotionFeel>('spring')
   const [view, setView] = useState<ViewMode>('both')
@@ -151,6 +157,8 @@ export function App() {
     if (binding === 'semantic' && rung) params.rung = rung
     // the embedder LAYER (the multi-layer model): read every lens through the chosen embedding (null = default/BGE)
     if (emb) params.emb = emb
+    // the MRL RESOLUTION: truncate the read vectors to this many dims before the cosine (null = full dim)
+    if (dim) params.dim = dim
     fetchProjection(params)
       .then((p) => {
         if (!alive) return
@@ -167,7 +175,7 @@ export function App() {
     return () => {
       alive = false
     }
-  }, [binding, nuc, centre, poles, at, rung, emb, pulse])
+  }, [binding, nuc, centre, poles, at, rung, emb, dim, pulse])
 
   // THE LIVE SPINE (the seed §4 / mandate L9 — live, not a viewer): tail /api/stream from the newest seq we
   // know; when NEW events arrive, pulse a (throttled) re-fetch so the present visibly moves — new points bloom
@@ -241,6 +249,8 @@ export function App() {
     setBinding,
     emb,
     setEmb,
+    dim,
+    setDim,
     selected,
     setSelected,
     feel,

@@ -114,3 +114,10 @@ export function fetchContext(address: string): Promise<ContextBundle> {
 export function fetchLayers(): Promise<Record<string, string[]>> {
   return getJSON<Record<string, string[]>>(`/api/layers`)
 }
+
+// The per-layer full vector DIMENSION: {space: {embedder: dim}} (e.g. {repo: {default: 1024, pplx: 2560}}).
+// The resolution picker reads this to derive the MRL zoom ladder (powers of two ≤ the full dim) — registry-true,
+// never a hardcoded dim. Fetched once; the active (space, layer) selects which ladder to offer.
+export function fetchLayerDims(): Promise<Record<string, Record<string, number>>> {
+  return getJSON<Record<string, Record<string, number>>>(`/api/layer-dims`)
+}
