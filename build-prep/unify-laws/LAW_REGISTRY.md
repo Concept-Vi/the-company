@@ -1,5 +1,8 @@
 # THE LAW REGISTRY — the accumulation point for Tim's underlying law-set
 
+> ★ GOVERNING EPISTEMIC (Tim 2026-06-15, front-of-mind): everything here — every fragment, every vault note it came from, every confidently-worded convergence, and this file itself — is written CONFIDENTLY but NONE of it is to be considered RIGHT, because it isn't. Confidence of writing ≠ confidence of truth. Nothing graduates from CANDIDATE to LAW except by Tim's direct arbitration. The reduce triangulates many confidently-wrong fragments against the one origin; it never adopts one. See [[feedback-confident-not-correct]].
+
+
 *Mission: board://item-784fdb06. Memory: project-unify-laws-mission. Every session built a different PART of one application; underneath all the work is ONE set of laws (Tim's, defined nowhere), each session holding different fragments in different terminology. This file is the accumulation point: fragments land here per-source (provenance kept); same-law-different-clothes collapse to ONE law (REDUCE) while every distinct facet is kept (MAXIMIZE). Dedup collisions are CANDIDATES surfaced to Tim — he is the only one who confirms two different-clothed things are one law. NEVER silent-merged.*
 
 *Status: SEED. Only fork (ch-8djrpmsl) + lead (ch-al7jdfdr/me) fragments captured so far. recollection, vi-visual, the 3 new sessions, and my own deeper memory still to contribute. The reduce below is PRELIMINARY — candidates, not confirmed laws.*
