@@ -138,7 +138,9 @@ See MODEL-CAPABILITIES-AS-AFFORDANCES.md. Highest-leverage, all riding on this l
   vector lenses (a `space` in the binding), hidden on structural ones. Verified live (desktop+portrait): on
   topics@default(BGE 1024) it offers full·1024d·512·256·128·64; picking 128d VISIBLY re-projects the keystone
   (1 born/3 cand/11 sectors → 0/2/10 — coarser dim = broader membership). The 2-D scale (rung × dim) is now
-  fully drivable by sight + by `?dim=` on every vector lens.
+  fully drivable by sight + by `?dim=` on every vector lens. NB "axis" here = a DRIVABLE axis (rung, dim) —
+  Tim's broader FOUR ROOT AXES are a separate sense; these are likely sub-types under them. See the glossary:
+  `../universal-projection/GLOSSARY.md` · memory [[the-four-root-axes]].
 - **Binary quantization** — 32× smaller, Hamming similarity → show the WHOLE corpus at once; detail-on-zoom.
 - **Context-aware (late-chunking)** — the `:8007` `documents` mode embeds an item in its parent's context;
   proven SELECTIVE (it homogenizes a heterogeneous registry — helps retrieval, hurts differentiation; see §2a of
