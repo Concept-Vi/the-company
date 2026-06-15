@@ -73,14 +73,15 @@ record shape change, no schema_ver bump. The dispatch branch is added to cogniti
 after the session:// block by LANE-CAP-WIRE (depends on LANE-REGISTRIES). The gap-surface
 path fires on any unknown cap:// address (registry-is-truth, fail loud, never silent empty).
 
-Note on `board://` (the Company NOTICEBOARD — runtime/cc_board.py): like `ui://`/`session://`, a
-*label* in the address grammar. `board://<id>` identifies a board item (request/issue/tip/guide/idea);
-the canonical id is flat + opaque (`item-`+hex) so a type-change (idea→request promotion) never
-re-addresses it — identity holds nothing mutable. RESOLVER DEFERRED (register-as-label, the `ui://`
-precedent — a scheme registered but not resolved): the board's consumers resolve directly via
-`runtime/cc_board.py:get_item` (strip the scheme → get_item(id)); a `resolve_address` branch is wired
-only when a resolver consumer appears. Adding `"board"` to SCHEMES is purely additive (widens the legal
-scheme set; mirrors `ui://`), no record-shape or schema_ver change.
+Note on `board://` (the Company NOTICEBOARD — runtime/cc_board.py): like `session://`/`cap://`, a
+*label* in the grammar RESOLVED by `runtime/cognition.py:resolve_address`. `board://<id>` identifies a
+board item (request/issue/tip/guide/idea); the canonical id is flat + opaque (`item-`+hex) so a
+type-change (idea→request promotion) never re-addresses it — identity holds nothing mutable. RESOLVED
+(Heart H1.1, commit 68c7eda — was register-but-defer at e5388f4, now wired): the dispatcher lazy-imports
+`runtime/cc_board.py` and returns `get_item(id)` (strip the scheme), fail-loud on a missing id (never the
+blob/vec silent-empty). board:// now joins session://·cap:// resolving through the ONE resolver, and is a
+`cc_board.traverse()` edge-target ACROSS registries (H1.2). Adding `"board"` to SCHEMES was purely
+additive (widens the legal scheme set), no record-shape or schema_ver change.
 
 Note on `exchange://` (recollection's canonical provenance address — `exchange://<sid>/<i>`): the
 re-embed-stable identity of a captured conversation exchange (one user→assistant turn), the join key the
