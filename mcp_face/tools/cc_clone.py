@@ -35,7 +35,7 @@ def register(mcp, suite):
     def cc_clone(op: Literal["clone", "msg", "onboard", "list", "end", "prepare"],
                  source: str = "", at: str = "", clone: str = "", message: str = "",
                  description: str = "", cwd: str = "", model: str = "", fallback_model: str = "",
-                 fleet: bool = False, timeout: float = 180) -> dict:
+                 fleet: bool = False, phase: str = "full", timeout: float = 180) -> dict:
         """Clone a Claude Code session AS IT WAS at a past moment and talk to / onboard that past context.
 
           op="clone"   — `source` (.jsonl) + `at` ('compact:N'|'uuid:..'|'ts:..') -> live supervised clone.
@@ -43,6 +43,8 @@ def register(mcp, suite):
           op="msg"     — `clone` (handle) + `message` -> the clone's reply from its past-point context.
           op="onboard" — `clone` (one) or `fleet`=true (all live) -> reflect-before-brief onboarding;
                          `message` (optional) = the bring-current brief sent AFTER the era-reflection.
+                         `phase`: "full" (default) | "reflect" (1+2 only) | "bring_current" (Phase 3
+                         ONLY — for a clone that ALREADY reflected via op=msg, e.g. compact:1).
           op="list"    — live clones.
           op="end"     — `clone` -> teardown + delete materialized prefix (source untouched).
           op="prepare" — `source` + `at` -> the OPERATOR command to launch it as an interactive
@@ -63,10 +65,10 @@ def register(mcp, suite):
                 return {"op": "msg", **cc.msg_clone(clone, message, timeout=timeout)}
             if op == "onboard":
                 if fleet:
-                    return {"op": "onboard", **cc.onboard_fleet(bring_current=message, timeout=timeout)}
+                    return {"op": "onboard", **cc.onboard_fleet(bring_current=message, timeout=timeout, phase=phase)}
                 if not clone:
                     raise ValueError("cc_clone(op='onboard') needs `clone` (handle/session) OR `fleet`=true.")
-                return {"op": "onboard", **cc.onboard_clone(clone, bring_current=message, timeout=timeout)}
+                return {"op": "onboard", **cc.onboard_clone(clone, bring_current=message, timeout=timeout, phase=phase)}
             if op == "list":
                 return {"op": "list", "clones": cc.list_clones()}
             if op == "end":

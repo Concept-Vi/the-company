@@ -247,7 +247,8 @@ def msg_clone(handle_or_session: str, message: str, *, timeout: float = 180) -> 
             "source_sid": rec["source_sid"], "reply": reply}
 
 
-def onboard_clone(handle_or_session: str, *, bring_current: str = "", timeout: float = 240) -> dict:
+def onboard_clone(handle_or_session: str, *, bring_current: str = "", timeout: float = 240,
+                  phase: str = "full") -> dict:
     """Run the reflect-BEFORE-brief onboarding protocol on ONE spun-up clone (the protocol:
     channel-memory/vision/2026-06-15-clone-fleet-purpose-and-onboarding.md). A clone wakes believing it
     is the most-recent; this brings it into the fabric WITHOUT flattening its un-drifted era-view:
@@ -255,11 +256,19 @@ def onboard_clone(handle_or_session: str, *, bring_current: str = "", timeout: f
                  (this reflection IS its channel profile/introduction).
       Phase 3    THEN inject `bring_current` (what's built since + the goal) — AFTER it reflected, so
                  the briefing does not overwrite the era-perspective we spun it up for.
+    `phase`: "full" (1+2 then 3) · "reflect" (1+2 only) · "bring_current" (Phase 3 ONLY — for a clone
+    that ALREADY reflected via op=msg, e.g. compact:1; skips re-reflection so it isn't asked twice).
     Returns {handle, at, reflection, brought_current}. Reflection FIRST is the load-bearing order."""
     rec = _find_clone(handle_or_session)
-    reflect = msg_clone(rec["handle"], onboarding_message(rec, era_label=rec.get("description", "")), timeout=timeout)
     out = {"handle": rec["handle"], "session_id": rec["session_id"], "at": rec["at"],
-           "source_sid": rec.get("source_sid"), "reflection": reflect["reply"], "brought_current": None}
+           "source_sid": rec.get("source_sid"), "reflection": None, "brought_current": None, "phase": phase}
+    if phase in ("full", "reflect"):
+        reflect = msg_clone(rec["handle"], onboarding_message(rec, era_label=rec.get("description", "")), timeout=timeout)
+        out["reflection"] = reflect["reply"]
+    if phase == "reflect":
+        return out
+    if phase == "bring_current" and not bring_current:
+        raise CloneError("onboard_clone(phase='bring_current') needs `bring_current` text (the Phase-3 brief).")
     if bring_current:
         # Phase 3 — only AFTER the reflection is captured (reflect-before-brief)
         bc = msg_clone(rec["handle"],
@@ -272,11 +281,13 @@ def onboard_clone(handle_or_session: str, *, bring_current: str = "", timeout: f
     return out
 
 
-def onboard_fleet(handles=None, *, bring_current: str = "", timeout: float = 240, max_workers: int = 5) -> dict:
+def onboard_fleet(handles=None, *, bring_current: str = "", timeout: float = 240, max_workers: int = 5,
+                  phase: str = "full") -> dict:
     """Onboard a SET of clones in PARALLEL (Tim: through tools, not a shell script). `handles` = a list
     of handles/sessions, or None = every live clone (list_clones). Each runs the reflect-before-brief
-    protocol concurrently. Returns {onboarded:[…], errors:[…]}. Runs in the long-lived MCP server so the
-    /watch reply-fold works (proven). Parallel op=msg is proven concurrent (lead)."""
+    protocol concurrently. `phase` forwards to onboard_clone (full|reflect|bring_current). Returns
+    {onboarded:[…], errors:[…]}. Runs in the long-lived MCP server so the /watch reply-fold works
+    (proven). Parallel op=msg is proven concurrent (lead)."""
     from concurrent.futures import ThreadPoolExecutor, as_completed
     if handles is None:
         handles = [c["handle"] for c in list_clones(prune=True)]
@@ -284,7 +295,8 @@ def onboard_fleet(handles=None, *, bring_current: str = "", timeout: float = 240
         return {"onboarded": [], "errors": [], "note": "no live clones to onboard"}
     onboarded, errors = [], []
     with ThreadPoolExecutor(max_workers=min(max_workers, len(handles))) as ex:
-        futs = {ex.submit(onboard_clone, h, bring_current=bring_current, timeout=timeout): h for h in handles}
+        futs = {ex.submit(onboard_clone, h, bring_current=bring_current, timeout=timeout, phase=phase): h
+                for h in handles}
         for fut in as_completed(futs):
             h = futs[fut]
             try:
