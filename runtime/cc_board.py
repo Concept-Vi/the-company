@@ -315,6 +315,101 @@ def traverse(item_id: str, kind: str | None = None, *, store=None, board_dir: st
     return hops
 
 
+def reverse_traverse(target_addr: str, kind: str | None = None, *, hydrate: bool = False,
+                     store=None, board_dir: str | None = None) -> list[dict]:
+    """Heart H1.2 — the INVERSE of traverse: every board item that LINKS TO `target_addr`.
+
+    Where traverse() follows a source item's edges OUT, this finds the edges IN: scan the board, return
+    each item carrying a link {kind, target == target_addr} (optionally filtered to `kind`). The match is
+    on the OPAQUE target STRING — no resolution needed to MATCH (a projection over the rows, exactly like
+    manifest()/list_items — addresses are compared as identities, not dereferenced). e.g.
+    reverse_traverse("session://ch-8djrpmsl", "authored_by") → the items that session authored;
+    reverse_traverse("board://item-e523b30d", "promoted_from") → the items promoted from it.
+
+    Returns one entry per matching edge: {source, kind, target, item} where `source` = the linking item's
+    board:// address and `item` = its full record. `hydrate=True` ALSO resolves each `source` THROUGH
+    cognition.resolve_address (string-match → resolved record) — proving the matched ids flow back through
+    the ONE resolver (the round-trip H1.1 established). Fail-loud on an unregistered `kind` (mirrors
+    traverse). COMPOSES list_items + the edge registry (+ resolve_address when hydrating) — NOT a parallel
+    query engine; this is the find_relations 'edges-into' generalization."""
+    if kind is not None and kind not in _edges_reg():
+        raise BoardError(
+            f"unknown edge kind {kind!r} — valid edge kinds: {edge_kinds()}. "
+            f"(reverse_traverse filters by a registry edge-kind; add a board_edges/<kind>.py to extend.)")
+    matches = []
+    resolve = None
+    if hydrate:
+        from runtime.cognition import resolve_address          # lazy: avoid module-load coupling / any cycle
+        resolve = resolve_address
+    for rec in list_items(board_dir=board_dir):
+        for ln in (rec.get("links") or []):
+            if ln.get("target") != target_addr:
+                continue
+            if kind is not None and ln.get("kind") != kind:
+                continue
+            entry = {"source": rec.get("address"), "kind": ln.get("kind"), "target": target_addr,
+                     "item": rec}
+            if resolve is not None:
+                entry["resolved"] = resolve(store, rec.get("address"))
+            matches.append(entry)
+    return matches
+
+
+def _edges_out(item_id: str, kind: str | None, *, hydrate: bool, store, board_dir: str | None) -> list[dict]:
+    """STRUCTURAL read of a board item's outgoing edges (its links, optionally filtered to `kind`) —
+    the structural sibling of traverse(). Unlike traverse (H1.1) which ALWAYS resolves every target
+    through the resolver (needs a live store), this matches/returns the edges WITHOUT resolving, and
+    resolves only when `hydrate=True` — so the query surface works on the pure structural graph (no live
+    store required). Same edge-registry fail-loud. (traverse stays the eager resolve-through forward.)"""
+    rec = get_item(item_id, board_dir=board_dir)              # raises if the source item is missing
+    resolve = None
+    if hydrate:
+        from runtime.cognition import resolve_address
+        resolve = resolve_address
+    edges = []
+    for ln in (rec.get("links") or []):
+        if kind is not None and ln.get("kind") != kind:
+            continue
+        e = {"kind": ln.get("kind"), "target": ln.get("target")}
+        if resolve is not None:
+            e["resolved"] = resolve(store, ln.get("target"))
+        edges.append(e)
+    return edges
+
+
+def relations(addr: str, *, direction: str = "both", kind: str | None = None, hydrate: bool = False,
+              store=None, board_dir: str | None = None) -> dict:
+    """Heart H1.2 — ONE query surface over the typed-edge graph: edges-OUT of a source + edges-IN to a
+    target, by address. The unification the seed find_relations generalizes into (the lattice's relation
+    axis): give it any address + a direction. STRUCTURAL by default (matches on the opaque address — no
+    live store needed); `hydrate=True` resolves results through the ONE resolver (the H1.1 round-trip).
+
+      direction="out"  — edges FROM `addr` (only a board://<id> source CARRIES links; structural read).
+      direction="in"   — edges INTO `addr` (any address; reverse_traverse).
+      direction="both" — both (default).
+
+    `out` on a non-board addr is empty + STATED (sessions/skills don't author board edges) — never a
+    silent guess. Fail-loud on an unregistered `kind`. COMPOSES reverse_traverse + the structural edge
+    read — NOT a new engine, and NOT coupled to a live store (that's traverse's job when you want it)."""
+    if direction not in ("in", "out", "both"):
+        raise BoardError(f"unknown direction {direction!r} — one of 'in' | 'out' | 'both'. Fail loud.")
+    if kind is not None and kind not in _edges_reg():
+        raise BoardError(
+            f"unknown edge kind {kind!r} — valid edge kinds: {edge_kinds()}. "
+            f"(relations filters by a registry edge-kind; add a board_edges/<kind>.py to extend.)")
+    out: dict = {"addr": addr, "direction": direction}
+    if direction in ("in", "both"):
+        out["edges_in"] = reverse_traverse(addr, kind, hydrate=hydrate, store=store, board_dir=board_dir)
+    if direction in ("out", "both"):
+        if isinstance(addr, str) and addr.startswith("board://"):
+            out["edges_out"] = _edges_out(addr[len("board://"):], kind, hydrate=hydrate,
+                                          store=store, board_dir=board_dir)
+        else:
+            out["edges_out"] = []          # only board items carry outgoing board edges (stated, not silent)
+            out["edges_out_note"] = f"{addr!r} is not a board:// address — only board items carry outgoing edges"
+    return out
+
+
 def transition(item_id: str, to_state: str, *, by: str = "", note: str = "",
                board_dir: str | None = None) -> dict:
     """MOVE an item along its type's registry-declared lifecycle. Fail-loud if the move is not a declared
