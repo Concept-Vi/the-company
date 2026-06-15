@@ -913,19 +913,27 @@ class FsStore:
     # backend must parse out. Field and address AGREE by construction (the address is composed FROM source
     # + space). An entry with NO `space` field (every pre-cognition-engine entry) IS the default/None space.
     @staticmethod
-    def space_address(source: str, space: str | None) -> str:
-        """Compose the per-(item,space) KEY through the C1 grammar. space=None → the BARE source address
-        (the default space — byte-identical to the pre-space key, so old single-space vectors are
-        untouched). A named space → `vec://<source>#space=<proj>` (the existing vec:// `#`-fragment shape;
-        contracts/address.py already declares vec:// + free-form fragments, so this needs NO grammar edit —
-        if C1's grammar DOC should name the `#space=` fragment that is a separate rule-7 contract touch,
-        surfaced not done here)."""
-        if space is None:
+    def space_address(source: str, space: str | None, emb: str | None = None) -> str:
+        """Compose the per-(item,space[,EMBEDDER-LAYER]) KEY through the C1 grammar. space=None+emb=None → the
+        BARE source address (the default space/layer — byte-identical to the pre-space key, so old single-space
+        vectors are untouched). A named space → `vec://<source>#space=<proj>` (the existing vec:// `#`-fragment
+        shape). A named `emb=<tag>` adds the `#emb=<embedder>` fragment (contracts/address.py ALREADY declares
+        `vec://<source>#emb=<model>` for exactly this) so the SAME (item, space) can hold MULTIPLE embeddings —
+        e.g. a BGE-M3 layer (emb=None, the default) AND a pplx layer (emb='pplx') side by side at DISTINCT keys.
+        This is Tim's multi-layer model (2026-06-15: 'multiple different embeddings over the same data') — NON-
+        destructive: emb=None preserves every existing key byte-for-byte; a named emb adds a new key, never
+        overwrites the default layer."""
+        if space is None and emb is None:
             return source
-        return f"vec://{source}#space={space}"
+        addr = f"vec://{source}"
+        if space is not None:
+            addr += f"#space={space}"
+        if emb is not None:
+            addr += f"#emb={emb}"
+        return addr
 
     def put_vector(self, address: str, vector: list, content_hash: str, *, dim: int, model: str,
-                   space: str | None = None, source: str | None = None) -> dict:
+                   space: str | None = None, source: str | None = None, emb: str | None = None) -> dict:
         """Persist one {address: vector} entry into the vectors/ namespace, ATOMICALLY (crash-durable
         tmp+fsync+os.replace — the SAME guarantee save_surfaced/save_graph give, so a reader sees the whole
         old entry or the whole new one, never a torn one). Keyed by _safe(address). Schema-additive open
@@ -953,7 +961,7 @@ class FsStore:
                 f"embeds) — defaulting source to the composed key {address!r} would record a wrong round-trip.")
         (self.root / "vectors").mkdir(parents=True, exist_ok=True)   # defensive (mirrors save_session) — never assume __init__ ran
         rec = {"address": address, "vector": list(vector), "content_hash": content_hash,
-               "dim": int(dim), "model": model, "space": space,
+               "dim": int(dim), "model": model, "space": space, "emb": emb,
                # `source` defaults to the bare address for an unspaced entry (it IS its own source) so the
                # field is always present + truthful — a spaced entry carries the bare item address it embeds.
                "source": source if source is not None else address,

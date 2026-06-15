@@ -62,7 +62,7 @@ def _default_embed(transport, inputs, model, dim=None):
 
 
 def build_index(store, corpus, *, embed_fn=_default_embed, dim=None, model=None, base_url=None,
-                space=None) -> dict:
+                space=None, emb=None) -> dict:
     """BUILD/REFRESH the persisted vector index over `corpus` = `[{address, text}, ...]`.
 
     INCREMENTAL: an address is (re-)embedded ONLY when NEW or its content_hash CHANGED — unchanged items
@@ -99,7 +99,7 @@ def build_index(store, corpus, *, embed_fn=_default_embed, dim=None, model=None,
     to_embed, skipped = [], 0
     for item in corpus:
         source = item["address"]
-        key = store.space_address(source, space)           # bare addr (default) | vec://<item>#space=<proj>
+        key = store.space_address(source, space, emb)      # bare addr (default) | vec://<item>#space=<proj>[#emb=<layer>]
         h = content_hash(item.get("text", ""))
         prior = store.get_vector(key)
         if prior is not None and prior.get("content_hash") == h:
@@ -135,7 +135,7 @@ def build_index(store, corpus, *, embed_fn=_default_embed, dim=None, model=None,
     #    source ride as explicit fields (the portable per-space filter key — see fs_store.put_vector). dim
     #    already enforced by the fabric. For the default space, key == source == the bare address (back-compat).
     for (source, key, _txt, h), vec in zip(to_embed, vectors):
-        store.put_vector(key, vec, h, dim=dim, model=model, space=space, source=source)
+        store.put_vector(key, vec, h, dim=dim, model=model, space=space, source=source, emb=emb)
     return {"embedded": len(to_embed), "skipped": skipped, "degraded": False}
 
 
