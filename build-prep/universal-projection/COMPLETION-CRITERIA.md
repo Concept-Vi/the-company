@@ -47,8 +47,11 @@ proven BEFORE building (not green-paint): NN@10 binary-vs-full 0.81 (pplx 2560d)
   nucleation full→1born/3cand/11sec vs binary→1born/2cand/10sec; composes with dim (binary+dim512). The
   `QuantChip ▦` (full·float / binary·Hamming) drives `?quant=binary` (network-traced), shows only on vector
   lenses. Acceptance projection_multilayer 18 (+5 BQ), instrument 91, bridge_routes 8.
-- **FORM ✅** (design-critic re-running on the 4-chip cluster) — QuantChip mirrors LayerChip/ResChip + the
-  useChipMenu collision seam; 0 off-token literals; 4-chip cluster wraps cleanly both viewports (the FORM-polish holds).
+- **FORM ✅** (design-critic PASS) — QuantChip mirrors LayerChip/ResChip + the useChipMenu collision seam;
+  0 off-token literals; glyph family ◫/◎/▦ coherent + legible, menu collision-flip holds for the 4th chip.
+  One HIGH finding (portrait binary-state widened the label → 4th chip orphaned to its own row) FIXED
+  (`a690358`): portrait optics-cluster gap+padding tightened (~56px) → all 4 hold one row in the binary
+  state (verified one-row at the tool's 500px floor; true-390 unrenderable by the tool but the clawback holds).
 - MCP `project`/`layers` gain `quant` automatically on the next reconnect (same engine — no separate door).
 
 ## G10 EDGE-COVERAGE AUDIT — 2026-06-15 (falsification: is G10 a "toy slice"? → NO, ✅ is honest)
