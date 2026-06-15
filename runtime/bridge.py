@@ -658,6 +658,12 @@ def _nucleation_projection(q, binding, reg, evs, center, now, lim):
         dial = float(q.get("dial") or binding.get("dial") or 0.2)
     except (TypeError, ValueError):
         dial = 0.2
+    # EMBEDDER LAYER (Tim's multi-layer model, 2026-06-15): read the content ITEMS at a chosen embedder layer
+    # (the C1 `#emb=` key) so the SAME items can be typed against an embedder-matched registry. emb=None = the
+    # default (BGE) layer — every existing nucleation call is byte-identical. emb='pplx' reads the pplx layer
+    # (e.g. types_space=operators which is pplx-native × space=repo@pplx). The dim guard below (len==dim) keeps
+    # it honest: a layer-mismatched pair (e.g. pplx 2560 types × BGE 1024 items) yields no items → fails loud.
+    emb = q.get("emb") or binding.get("emb") or None
     if not types_space or not item_space:
         return 400, {"error": "nucleation needs a `types_space` (the registry of types) AND a `space` (the "
                               "content store typed against it) — fail loud", "binding": binding.get("id")}
@@ -702,7 +708,7 @@ def _nucleation_projection(q, binding, reg, evs, center, now, lim):
     dim = len(type_vecs[0])
     for e in uevs:
         sa = e.get("source_address") or ""
-        rec = SUITE.store.get_vector(SUITE.store.space_address(sa, item_space))
+        rec = SUITE.store.get_vector(SUITE.store.space_address(sa, item_space, emb))
         if rec and rec.get("vector") and len(rec["vector"]) == dim:
             item_vecs.append(rec["vector"]); item_refs.append(sa)
     if not item_vecs:
@@ -724,6 +730,7 @@ def _nucleation_projection(q, binding, reg, evs, center, now, lim):
     out["binding"]["space"] = item_space
     out["binding"]["rung"] = rung
     out["binding"]["dial"] = dial
+    out["binding"]["emb"] = emb                          # the active embedder LAYER (None = default/BGE)
     # registry-true PICKERS for the FORM (no FE hardcode — as the Company embeds new stores / builds new
     # pyramids they appear here automatically): item_spaces = every embedded store (>2 units); types_spaces =
     # those that ALSO have a scale pyramid (so they can be a registry of types); rungs = the chosen registry's.
