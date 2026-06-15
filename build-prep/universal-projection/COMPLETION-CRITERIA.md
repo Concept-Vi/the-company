@@ -160,6 +160,11 @@ fifth gate established. This IS a completion claim — see the TYPE-NUCLEATION e
     (`/api/layers`, `/api/layer-dims`). Non-destructive (emb=None byte-identical).
   · **LayerChip `◫` (the UI layer picker) — ✅ VERIFIED LIVE** (1440×900 + 390×844 + 844×390): registry-true
     (reads `/api/layers`), switching default↔pplx visibly re-projects the keystone.
+  · **OPTICS CLUSTER FORM — ✅ design-critic PASS** (all four findings resolved + re-verified live across
+    desktop/portrait/landscape): the cluster (lens · layer · resolution · centre) reads as one coherent
+    family — landscape vertical stack (was a shattered rail), centre chip in the family treatment, atomic
+    wrap in portrait, and popover-collision (`useChipMenu`) so menus never clip a mobile edge. 0 off-token
+    literals. See commit `8a93b3f`.
   · **MRL resolution axis (`?dim=`) on ALL vector lenses — ✅** nucleation + semantic + separator (consistent
     truncation; `binding.res` echoed); the **ResChip `◎`** (UI resolution picker) ✅ VERIFIED LIVE — ladder
     DERIVED from the active layer's full dim (never hardcoded). The 2-D scale (rung × dim) is now drivable.
