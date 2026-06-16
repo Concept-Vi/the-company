@@ -64,9 +64,10 @@ def register(mcp, suite):
         Embeds via :8007, reranks via :8008.
         """
         from runtime import session_lens as L
+        from runtime.session_scan import AmbiguousSelfError
         try:
             jsonl = _resolve(session)
-        except FileNotFoundError as e:
+        except (FileNotFoundError, AmbiguousSelfError) as e:
             return {"op": op, "ok": False, "error": str(e)}
         try:
             if op == "find":

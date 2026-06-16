@@ -32,18 +32,31 @@ SCAN_VER = "scan-1"
 PROJECTS_DIR = os.path.join(os.path.expanduser("~"), ".claude", "projects")
 
 
+class AmbiguousSelfError(RuntimeError):
+    """resolve_own_session cannot safely identify SELF (ambiguous + no COMPANY_SESSION_ID) — raised
+    TEACHING-loud rather than silently mis-identify self (the self-serve-memory safety keystone)."""
+
+
 def _encode_cwd(cwd: str) -> str:
     """Encode a cwd to its project-dir name: '/' and '.' → '-' (verified against the live store)."""
     return cwd.replace("/", "-").replace(".", "-")
 
 
-def resolve_own_session(cwd: str | None = None, session_id: str | None = None) -> dict:
-    """Let ANY session find ITS OWN transcript (the enabler for self-serve drift-recovery, D8 — Tim:
+def resolve_own_session(cwd: str | None = None, session_id: str | None = None,
+                        *, allow_ambiguous: bool = False) -> dict:
+    """Let ANY session find ITS OWN transcript UNAMBIGUOUSLY (the self-serve-memory keystone — Tim:
     "other sessions can scan their own sessions and spawn previous versions"). Resolution order:
       1. explicit session_id (most reliable)
-      2. env COMPANY_SESSION_ID (set for channel sessions)
-      3. the NEWEST .jsonl in the cwd's project dir — the live session is the one being written NOW.
-    Returns {path, session_id, project_dir, cwd, how, ambiguous} — fail-loud teaching error if none."""
+      2. env COMPANY_SESSION_ID — THE unambiguous self-id (a launcher/SessionStart-hook injects it; the
+         injection is the launch-infra seam, the resolver is the safe consumer)
+      3. the NEWEST .jsonl in the cwd's project dir — ONLY when there is exactly one (truly unambiguous).
+
+    ★ FAIL-LOUD ON AMBIGUITY (the safety keystone): if there's no explicit/env sid AND the project dir
+    holds MULTIPLE .jsonl, this RAISES rather than silently returning a newest-mtime GUESS — because for
+    self-serve memory, mis-identifying "self" means recalling/cloning the WRONG session as yourself
+    (corrupting). The teaching error names COMPANY_SESSION_ID as the fix. `allow_ambiguous=True` opts back
+    into the best-guess (newest-mtime) for callers who genuinely accept the risk — never the default.
+    Returns {path, session_id, project_dir, cwd, how, ambiguous}; raises on no-dir/no-jsonl/ambiguous."""
     cwd = cwd or os.getcwd()
     proj = os.path.join(PROJECTS_DIR, _encode_cwd(os.path.abspath(cwd)))
     sid = session_id or os.environ.get("COMPANY_SESSION_ID")
@@ -64,9 +77,19 @@ def resolve_own_session(cwd: str | None = None, session_id: str | None = None) -
         raise FileNotFoundError(f"resolve_own_session: no .jsonl transcripts in {proj}.")
     ranked = sorted(jsonls, key=lambda f: os.stat(os.path.join(proj, f)).st_mtime_ns, reverse=True)
     newest = ranked[0]
+    if len(jsonls) > 1 and not allow_ambiguous:
+        # ★ AMBIGUOUS + no unambiguous self-id → FAIL LOUD (no silent self-misidentification)
+        raise AmbiguousSelfError(
+            f"resolve_own_session: {len(jsonls)} transcripts in {proj} and no COMPANY_SESSION_ID/explicit "
+            f"sid — cannot safely identify SELF (newest-mtime would GUESS {os.path.splitext(newest)[0]!r}, "
+            f"which could be another live session → recalling/cloning the WRONG self). FIX: inject "
+            f"COMPANY_SESSION_ID=<this session's id> at launch (the unambiguous self-id), or pass "
+            f"session_id=, or allow_ambiguous=True to accept the newest-mtime guess. Fail loud, never "
+            f"silently mis-identify self.")
     return {"path": os.path.join(proj, newest), "session_id": os.path.splitext(newest)[0],
-            "project_dir": proj, "cwd": cwd, "how": "newest-mtime (live session)",
-            "ambiguous": len(jsonls) > 1}      # >1 transcript ⇒ caller should confirm it's the right one
+            "project_dir": proj, "cwd": cwd,
+            "how": "newest-mtime (sole transcript)" if len(jsonls) == 1 else "newest-mtime (AMBIGUOUS guess — allow_ambiguous)",
+            "ambiguous": len(jsonls) > 1}
 
 
 # ───────────────────────── helpers (all structural) ─────────────────────────
