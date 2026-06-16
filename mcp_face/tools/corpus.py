@@ -15,7 +15,7 @@ def register(mcp, suite):
     @mcp.tool()
     def corpus(op: Literal["query", "list", "find", "read"], project: str = "", kind: str = "", projection: str = "",
                source_address: str = "", address: str = "", text: str = "", space: str = "",
-               k: int = 8, detail: str = "concise", limit: int = 50) -> dict:
+               k: int = 8, rerank: bool = False, top_n: int = 0, detail: str = "concise", limit: int = 50) -> dict:
         """Read the corpus — the engine's durable, embedded, addressed records (the repo-exocortex's
         'ask the codebase', + every capture pass's output). Pick `op`:
 
@@ -26,6 +26,13 @@ def register(mcp, suite):
                         detail="detailed" → each hit carries its record's CONTENT inline (the answer in
                         ONE call); the default stays ids+scores. Every hit id is directly
                         op='read'-able (the round-trip).
+                        `rerank` (default OFF, opt-in) → a jina-v3 cross-encoder PRECISION pass over the
+                        cosine top-k (ops/rerank.py @ :8008, CPU/0-VRAM): re-orders by deeper
+                        (query, digest) relevance, annotating rerank_score + orig_rank (+ the original
+                        cosine). FAIL-LOUD if a hit's CAS digest text is unresolvable (never a blank-text
+                        rerank). `top_n` caps the reranked count (0 = all k). Single-layer-pplx + rerank
+                        is the projection-endorsed proven base (MULTI-LAYER-CONSULT.md) before any
+                        cross-layer fusion.
           op="list"   — list records, newest-first; narrow with `project`.
           op="find"   — filter records by `project` / `kind` / `projection` / `source_address`.
           op="read"   — fetch ONE record by its `address` (a run:// from list/find, or a code:// source id).
@@ -52,6 +59,22 @@ def register(mcp, suite):
                 return {"error": "corpus(op='query') needs `text` (the question). Optional: `space` "
                         "(an embeddable space, e.g. 'repo' — cognition_info().spaces), `k`."}
             out = {"op": op, **suite.query_corpus(text, space=(space or None), k=k)}
+            # OPT-IN RERANK precision stage (runtime/corpus_rerank.py): cosine top-k → jina-v3
+            # cross-encoder reorder (:8008, CPU/0-VRAM). Default OFF (additive, reusable). FAIL-LOUD: a
+            # hit with no resolvable CAS digest text RAISES inside rerank_hits → surfaced here as a
+            # teaching error, never a silent blank-text rerank. Reordered hits keep id+score
+            # (id=address, score=rerank_score) so the detailed-enrich + round-trip note below still work;
+            # the original cosine rides along.
+            if rerank:
+                from runtime import corpus_rerank as _cr
+                try:
+                    rr = _cr.rerank_hits(suite.store, text, out.get("ranked", []), top_n=(top_n or None))
+                except ValueError as e:
+                    return {"op": op, "stage": "rerank-failed", "error": str(e)}
+                out["ranked"] = [{"id": r["address"], "score": r["rerank_score"], "cosine": r["cosine"],
+                                  "orig_rank": r["orig_rank"], "rank": r["rank"]} for r in rr["reranked"]]
+                out["stage"] = "rerank"
+                out["rerank_backend"] = rr["backend"]
             # P5 — answers, not just pointers (the re-eval: ask→read cost 1+k calls): detailed inlines
             # each hit's record content; a hit whose source was never captured states that honestly.
             if detail == "detailed":
