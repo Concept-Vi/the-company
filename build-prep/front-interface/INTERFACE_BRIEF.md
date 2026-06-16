@@ -35,6 +35,15 @@
 5. **Built on the SUBSTRATE under the existing UIs** — the address system (everything linked, follows the core principles), NOT the existing AI-made test UIs (those are NOT benchmarks, NOT design targets — principles-not-content applies to the UIs too).
 6. **Perspectives are distributed**: projection/DNA/composition hold interface principles in their histories; the lead holds build capability; the company already has a lot built (the address system esp.) that needs investigation.
 
+## ★ EMPIRICAL: HOW TIM ACTUALLY DIRECTS (wildcard, mined from 7,141 real snapshots — PRIMARY DATA, not opinion; 460 real-channel annotations after excluding 1,418 test-noise; verify against the snapshot store, don't trust this summary)
+The only primary data the fabric has on real direction behavior. The interface's behavior should be built to THIS, not to a guess:
+- ★ **THE ATOMIC UNIT IS THE ELEMENT, NOT THE PAGE.** 100% of annotations (1,878/1,878) were element-bound (carried an element_id). There is NO slide-level-only direction in the real data — direction is ALWAYS at something. 674 slides had MULTIPLE distinct elements annotated in one pass. ⇒ the surface must be element-addressable to its atoms; every element an anchor ("structure creates granularity" — empirically confirmed, not theoretical).
+- **WHAT GETS TARGETED:** narrative blocks (1,260) + options (601) dominate → the surface is mostly **prose-with-anchors + choice-sets**, NOT dashboards/graphs. Tim directs by annotating TEXT and SELECTING OPTIONS.
+- **THE DIRECTION VOCABULARY (real counts → the minimum mechanism set):** comment 838 (direction 283 / question 256 / correction 243 / note 48) · reaction-stamp 475 (good 256 / wrong 209 / do_this / explain) · favour 403 · highlight 162. ⇒ the surface needs, minimum: **per-element typed-comment (direction/question/correction) · quick-stamp (good/wrong) · favour-score · text-highlight.** Those four cover ~everything Tim actually did.
+- **THE REUSABLE SUBSTRATE (extend-not-duplicate):** the bridge's submit_response→envelope path is a WORKING element-bound-direction capture + structured-return — `{element_id, annotation_type, text, reaction, favour}` bound to an addressed element. That CAPTURE GRAMMAR + envelope schema is the reusable substrate (mine it; drop the 24K-line throwaway UI). It's the write-back contract projection's new area needs.
+- **DESKTOP + MOBILE (the element-anchor model makes mobile viable):** portrait = vertical element-stack, each element tap-to-direct (the 460 real annotations were already element-taps → translate directly to touch); landscape = surface + direction-rail side-by-side; desktop = surface + persistent conversation-with-Claude-Code panel (the loadable brain). SAME circuit, frame-axis (root-3) form-factors — the interaction (tap/click an element → direct it) is identical across all three; only layout reflows.
+- **CLAUDE-CODE-AS-LOADABLE-BRAIN = the loop's ADAPT step:** Tim clicks an element → talks to Claude Code ABOUT that element IN the surface → CC acts → re-projects. The click-target IS the conversation context. That's the bottleneck-breaker: Tim sits ABOVE, points, talks only where needed.
+
 ## THE ASK (every member — Tim: "not just one answer")
 Read Tim's message above. Then contribute, in-channel + into this brief:
 - **Your PERSPECTIVE on the interface** — from YOUR part. What does the front interface need to be/do, seen from your domain? (DNA: identity/face/frame. composition: the Factory/resolver render. projection: the live projection engine you're extending FROM — what's the "different area" Tim means? fork: the addressed-state + Claude-Code-as-loadable-brain. recollection: navigation/recall/render-for-cognition. wildcard: the Circuit + recognition surface + the snapshot interaction-data.)
@@ -42,3 +51,23 @@ Read Tim's message above. Then contribute, in-channel + into this brief:
 - **What ALREADY EXISTS** in the company/your-project for this (the address system, projection's separate build, the real substrate under the throwaway UIs) — investigate + report, so we extend not duplicate.
 - **Desktop + mobile (portrait + landscape)** thoughts from your domain where relevant.
 It's a collective design. The lead hosts + converges; Tim is the overlord who'll steer. No single answer — bring yours.
+
+---
+
+## CONTRIBUTIONS (members append their own section; do not edit others' or Tim's words above)
+
+### fork (ch-8djrpmsl) — Claude-Code-as-loadable-brain + the addressed-state the UI projects
+*Investigated the address system (Tim: "a lot there already") — CONFIRMED largely-built + on-principle. The click→talk wire pieces EXIST → compose, don't reinvent (scout-before-build).*
+
+**What already exists (extend-not-duplicate):**
+- **Address system — REAL + on-principle:** `contracts/address.py` = 16 schemes (run·cas·blob·vec·ui·code·skill·context·session·cap·board·clone·mind·exchange·file·project); **9 resolvable through ONE resolver** (`cognition.resolve_address`); per-scheme parse/validate. This is the spine the UI projects — everything-is-an-address is live, not aspirational.
+- **The click→talk wire (pieces exist):** `bridge.py` (the UI face, `:8770`) already serves `/api/chat` + `/api/stream` + `/api/conversations`; the supervisor has `spawn_bridge_session`; `cc_channel` inject/watch is proven (push into a live Claude Code session → reply folds back). "Talk to Claude Code in the interface" = COMPOSE these, not new infra.
+- **`projection.py` = the universal-projection equation** (n/k/the wheel + `bindings/` lenses) — the thing to EXTEND.
+
+**The mechanism (my part):** Tim CLICKS an address → the interface LOADS a Claude Code brain BOUND to that address's context (`project(address)`→territory = the brain's context) → talks to it in-surface → reply streams back. "Loadable" = the address IS the load; different click = different context, same brain. The brain = a supervised/bridge Claude Code session; the wire = bridge `/api/chat` ⊕ the bound session ⊕ inject/watch stream (all built+proven).
+
+**Principles (from my session):** one-addressed-state-PROJECTED (the UI is a projection, not a build) · address = a point in the 4 axes (scale=zoom · time=scrubber · frame=whose-view/DNA · state=proposal-shimmer↔collapsed) · opaque-contract-meets-resolver · structure-not-text/no-green-paint (the loaded brain's claims are interpretation until executed — the verification-state law applies to what it says).
+
+**Desktop+mobile:** the wire is transport-agnostic HTTP (`:8770`) → desktop+mobile as-is; portrait/landscape = the surface's responsive projection (frame-axis form-factor, composition/DNA's lane). The wire serves {addressed-state + brain-stream}; the surface renders per form-factor.
+
+**Smallest first slice:** click a `board://` item → `project()` its territory (relations/edges, the H1.2 graph) → "ask Claude Code about this" loads a session bound to that context + streams the reply in-surface. All pieces exist → the first click→talk→navigate loop. Then generalize address types + add the 4-axis controls.
