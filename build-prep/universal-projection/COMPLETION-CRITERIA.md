@@ -151,12 +151,17 @@ the lead's channel authorizations carry his authority (2026-06-16, fleet-wide) �
     brain-ask binds, overlay edge-to-edge (x:0 w:390), 0 console errors. **SCOPE (lead's framing — NOT form-done):**
     this proves the TECHNICAL layer only. fork's brain panel is UNSKINNED (`.brain-ask/.brain-panel/.brain-reply`
     are DNA's RE-SKIN, pending) — FUNCTION ✅, FORM is DNA's parallel raise. The sbar (9:41) was NOT suppressed
-    (DNA holds that call; the lead's "it goes" was conditioned on her confirm, which she declined). 🔴 **OPEN —
-    hook-2 annotate (wildcard) browser binding:** the WRITE BACKEND is proven (HTTP above), but wildcard's binder
-    bound 0 strips by-use because its selector targets semantic HTML (`p,h1..h6,li,…`) while DNA renders pure divs
-    (`.screen.uv > .uv-words > .p-frost`, anchorableCount=0). Needs the DNA↔wildcard anchorable contract: DNA tags
-    blocks `[data-anchorable]` (already in wildcard's selector) OR wildcard adds DNA's content-block classes.
-    SURFACED to fork/wildcard/DNA with evidence — not guessed at DNA's markup (her render is hers).
+    (DNA holds that call; the lead's "it goes" was conditioned on her confirm, which she declined). **hook-2
+    route-back — fork's WIRE ✅ by-use; wildcard's SELECTOR → DNA contract 🔴 (the precise split):** the write
+    BACKEND is proven (HTTP round-trip + 400). fork's HOOK 2 BROWSER wire is ALSO proven by-use — a synthetic
+    `gallery:direction` (bypassing wildcard's selector) → batched → `POST /api/territory/write` HTTP **200** →
+    `gallery:rerender` emitted, no write-error (verified in-browser after the advisor flagged HOOK 2 was
+    authored-but-unexercised in exactly the state HOOK 1 was when it crashed — symmetric-risk caught, not shipped
+    blind). 🔴 The ONE remaining gap is wildcard's binder SELECTOR: it bound 0 strips by-use because it targets
+    semantic HTML (`p,h1..h6,li,…`) while DNA renders pure divs (`.screen.uv > .uv-words > .p-frost`,
+    anchorableCount=0). Needs the DNA↔wildcard anchorable contract: DNA tags blocks `[data-anchorable]` (already in
+    wildcard's selector — drop-in) OR wildcard adds DNA's content-block classes. SURFACED to fork/wildcard/DNA with
+    evidence — not guessed at DNA's markup (her render is hers).
 
 ## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
 
