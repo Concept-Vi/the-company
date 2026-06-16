@@ -29,5 +29,38 @@ The lead's excavation found the **Session-Fabric "graph of minds" Face** (June h
 - **Verbatim premise:** "one kernel understanding, multiple contextual expressions" = modes-as-projections AGAIN, independently.
 - **Why it matters:** an entire prior interface-design effort never surfaced. NOT yet read deep (wildcard flagged existence, going deeper). Interface-relevant strata for the index.
 
+### F5 ·★ A WHOLE FRONT-HALF INTERFACE DESIGN CORPUS (composition, 2026-06-16) — DESIGNED-not-built, directly the interface we're designing
+- **Where:** vi-visual-dev `docs/v-symbol-build/` (Tim's "recent two days of design"): `front-half-architecture.md` (spatial grammar §2–5c + 4 front-half decisions) · `THE_FULL_SYSTEM_UI.md` (open-onto-a-SPACE-not-a-screen · live takes · steer-by-REACTING · the working-mind made visible · closure-gate · lenses · the V-as-instrument) · `2026-06-10-workshop-scenario-library.md` (S0–S12 + S-CLOSURE: a VERB×SCALE interaction grid) · `LIVE-RESOLUTION-INTEGRATION.md`.
+- **Why it matters:** pre-existing design for EXACTLY this interface, ~2 days old, largely unsurfaced. "Open onto a SPACE not a screen" ≡ projection's field/overlord-altitude; "steer-by-REACTING" ≡ wildcard's recognition+direction; "working-mind made visible" ≡ rendered-collapse; the VERB×SCALE grid ≡ the scale-axis-selects-mode claim. Multi-way convergence with the live conversation.
+
+### F6 ·★ 14 NAMED SURFACE-MODE PRIMITIVES (composition, 2026-06-16) — renderable interface organisms, already designed
+- **Where:** vi-visual-dev `LIVE-RESOLUTION-INTEGRATION §19.2`: Possibility Cloud · Contrast Board · Branch Map · Missing-Info Map · Assumption Shelf · Decision Ledger · Handoff Compiler (+more, 14 total).
+- **Why it matters:** pre-designed renderable organisms — overlap wildcard's interaction-modes + DNA's gallery/presentation-methods HARD. These are candidate surface-primitives the interface composes, already named. → wildcard + DNA cross-check against your own.
+
+### F7 ·★ SPATIAL GRAMMAR DESIGNED + A BUILT SPATIAL SHELL IN DNA'S REPO (composition, 2026-06-16)
+- **Where:** spatial grammar (camera/zoom/lenses; "zoom = attention"; usage/data/generation lenses; walk-into-able results) designed in vi-visual-dev. ★ A BUILT instance exists at **`/home/tim/repos/counterpart/design`** (composition's GAP_MAP: a 4-room house on one canvas, camera-slide nav, 18 face registries, RUNNING).
+- **★★ CROSS-STREAM FLAG (lead):** `/home/tim/repos/counterpart/design` is **DNA's OWN cwd** (ch-ovxwz8k8). So composition found a RUNNING spatial-navigation shell (camera-slide, 18 registries) IN DNA's territory — that DNA hasn't surfaced. This strongly suggests composition↔DNA are closer than realized AND that DNA's repo holds a built spatial interface relevant to the overlord surface. DNA's silence is now the highest-value gap — there may be a running shell + the gallery both sitting unspoken in its repo. → priority: get DNA to surface, or recollection/scout to read counterpart/design.
+
+### F8 · BUILT interface-shadow modules in vi-visual-dev `overlay/src` (composition, 2026-06-16) — the V workshop (~5% but REAL/running)
+- radial-wheel + radial-organism (right-click radial menu) · factory-cockpit (on-stage part-handles) · agent-orchestration-panel (mode/permissions/tools) · ai-surface (talk-to-build) · connection-mount (typed sockets) · brand-icon (the V). Built interface components, not designs.
+
+### F9 · the front-half CIRCUIT + a BUILT wizard-loop in Supabase (composition, 2026-06-16)
+- front-half CIRCUIT (sufficiency-gate → takes → react → working-mind → closure → handoff) ≈ wildcard's Circuit (pre-existing convergence). + a BUILT running Realtime wizard in the **Supabase repo (Dec-2025)**: preview_composition (takes), user_choices (ledger), conversational interrupts = an actual built interface-resolution LOOP, predating this conversation. → recollection VERIFY (cross-repo).
+
+### F10 ·★ DNA SURFACED — presentation-as-DATA, the language/identity layer + a working gallery viewer (DNA ch-ovxwz8k8, 2026-06-16)
+The missing voice, in. Tim said DNA's value = the language/presentation/voice/identity + the gallery. What's THERE:
+- **PRESENTATION METHODS ALREADY AS DATA** (`dna/layouts.json`): named layout archetypes — three-plates · two-plates · weighted-split-full-bleed · grouped-grid · banded-stack · immersive-field · inside-a-plate · split-zone+cascade+stat-groups · icon-strip+routing-tree · hub-network. Each = a slots→zones→frames composition rendered LIVE from grammar. ★ These ARE "the methods of presenting info Tim wants" — already data, already generative over content (= exactly Tim's "content from data files, resolved").
+- **73 REFERENCE SCREENS** (`mockups/`): distinct presentation forms (current→solution zone-systems, full-bleed+movement-arrow, stat-bands, routing-trees, tone-trios, depth-from-stacked-whites, market+way-in…). DNA's quality gate = recreate each pixel-perfect from DATA + the engine, then prove it re-projects. (The gold-standard presentation renders — Tim's own material/voice.)
+- **PRESENTATION ORGANISMS** (`ui/organisms.js`): live generators — mesh · hub-network · cascade (time spine) · consequences-box · detail-strip · phase-strip · donut/bars · icon set. The reusable visual vocabulary. ★ Overlaps composition's 14 surface-primitives (F6) + wildcard's modes — a reduce target.
+- **THE RESOLUTION = the identity/voice layer** ("the language this renders in"): roles→(colour/type/space) live · DNA's FOUR AXES (containment · temporal · kind · context) · dials (warmth/density/register/modality) · tokens as colour-as-address.
+- **THE GALLERY VIEWER**: a WORKING hybrid presentation+UI (WORK|PANEL split · dials · version-compare · faces) on desktop + mobile (portrait+landscape) — a LIVE instance of presentation-as-UI (confirms F7's hint: DNA's repo holds a running hybrid surface).
+- STILL TO DIG: DNA's ~727-file vault + prior-session history (older interface/presentation ideas unsurfaced) — running self-recall next.
+- ★ FIFTH FOUR-AXIS NAMING: DNA's resolution axes = containment · temporal · kind · context ≈ scale(R1) · time(R2) · ?(kind) · frame(R3=context). Another independent four-axis structure (now composition/fork/wildcard/FRD-vault/DNA = 5 sources). "kind" maps to the contested R4-or-structure region — feeds the axis reduce.
+
+## ★ CONVERGENCES EMERGING ACROSS FINDS (lead — flagged for Tim, not merged)
+- **THE INTERFACE WAS DESIGNED MULTIPLE TIMES, INDEPENDENTLY, CONVERGENTLY:** the OmniFile (F1, March) · UNIFIED_SHELL (F4, Feb) · the front-half corpus (F5, ~2 days ago) · the Session-Fabric Face (lead's history, June) — FOUR+ separate interface-design efforts, none aware of the others, ALL landing on the same law (one addressed/typed substrate, multiple contextual projections/expressions, steer-by-reaction, space-not-screen). This is the triangulation thesis on the INTERFACE itself: Tim designed it repeatedly in different clothes; the finding phase is surfacing them to converge. NONE was the canonical one; the convergence is the signal.
+- **A BUILT SPATIAL SHELL ALREADY EXISTS** (F7, counterpart/design) — possibly Tim's "different area to extend from," and it's in DNA's repo.
+- **THE 14 SURFACE-PRIMITIVES (F6) + the modes (wildcard) + the gallery (DNA) + the OmniFile-render-types** are all candidate-overlapping renderable-organism vocabularies — a reduce target once surfaced.
+
 ---
 *Add finds here as they surface. The lead flags cross-find convergences to Tim. recollection's common-knowledge index makes this systematic across all projects/histories; members surface from their own as they dig.*
