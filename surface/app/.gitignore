@@ -2,3 +2,6 @@ node_modules/
 dist/
 *.log
 .vite/
+# the gallery FACE is COPIED fresh from DNA's repo on predev/prebuild (scripts/sync-gallery.mjs) — DNA owns
+# the source; this is a generated copy, never committed (regenerated every dev/build, no stale snapshot in git).
+public/gallery/

@@ -5,6 +5,7 @@ import type { MotionFeel } from './tokens/motion'
 import { Desktop } from './layouts/Desktop'
 import { Portrait } from './layouts/Portrait'
 import { Landscape } from './layouts/Landscape'
+import { GalleryMount } from './gallery/GalleryMount'
 
 export type FormFactor = 'desktop' | 'portrait' | 'landscape'
 // The seed's two coordinate systems over one space, three ways: BOTH = the circle inscribed in the square
@@ -52,6 +53,7 @@ export type SurfaceState = {
   setQuant: (q: string | null) => void
   selected: ProjPoint | null
   setSelected: (p: ProjPoint | null) => void
+  galleryOpen: boolean          // the drill-in gallery FACE is open → layouts suppress the redundant Disclosure
   drillAddress: string | null   // the selected unit's contracts.address (the drill-in handoff target); null = nothing drilled
   feel: MotionFeel
   setFeel: (f: MotionFeel) => void
@@ -109,6 +111,9 @@ export function App() {
   // view. Orthogonal to emb (layer) + dim (MRL); composes with both. Registry-true; compute-on-read (pure).
   const [quant, setQuant] = useState<string | null>(null)
   const [selected, setSelected] = useState<ProjPoint | null>(null)
+  // the gallery FACE overlay (the drill-in render): when OPEN it is the single drilled-unit surface, so the
+  // layouts SUPPRESS the redundant Disclosure inspector (no two competing panels for one selection).
+  const [galleryOpen, setGalleryOpen] = useState(false)
   const [feel, setFeel] = useState<MotionFeel>('spring')
   const [view, setView] = useState<ViewMode>('both')
   const [nuc, setNucState] = useState<NucParams>({ types_space: 'topics', space: 'topics', rung: 8 })
@@ -304,6 +309,7 @@ export function App() {
     setQuant,
     selected,
     setSelected,
+    galleryOpen,
     drillAddress: selected ? (selected.address || selected.source || null) : null,   // resolvable run:// record first (matches the projection:select `address` field)
     feel,
     setFeel,
@@ -329,7 +335,12 @@ export function App() {
     dismissNotice,
   }
 
-  if (ff === 'portrait') return <Portrait s={state} />
-  if (ff === 'landscape') return <Landscape s={state} />
-  return <Desktop s={state} />
+  // the chosen layout + the gallery FACE overlay (the drill-in render host — same on all 3 form factors)
+  const layout = ff === 'portrait' ? <Portrait s={state} /> : ff === 'landscape' ? <Landscape s={state} /> : <Desktop s={state} />
+  return (
+    <>
+      {layout}
+      <GalleryMount open={galleryOpen} onOpenChange={setGalleryOpen} />
+    </>
+  )
 }

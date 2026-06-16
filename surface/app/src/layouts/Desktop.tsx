@@ -49,7 +49,7 @@ export function Desktop({ s }: { s: SurfaceState }) {
         </section>
 
         <aside className="strata strata--right" {...stamp('ui://strata/right')}>
-          {s.selected ? (
+          {s.selected && !s.galleryOpen ? (
             <Disclosure point={s.selected} feel={s.feel} variant="panel" onDismiss={() => s.setSelected(null)} onFocus={s.focusCentre} onSetPole={s.setPole} binding={s.proj?.binding} centreLabel={s.centre?.label} />
           ) : (
             <SelectHint />

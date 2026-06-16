@@ -5,7 +5,10 @@
   "type": "module",
   "description": "The fresh paper-aesthetic instrument surface for the Company (built alongside canvas/app, never on top).",
   "scripts": {
+    "sync-gallery": "node scripts/sync-gallery.mjs",
+    "predev": "node scripts/sync-gallery.mjs",
     "dev": "vite --host 127.0.0.1 --port 5174",
+    "prebuild": "node scripts/sync-gallery.mjs",
     "build": "vite build",
     "preview": "vite preview --port 5174"
   },

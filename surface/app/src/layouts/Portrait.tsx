@@ -51,7 +51,7 @@ export function Portrait({ s }: { s: SurfaceState }) {
       <Scrubber at={s.at} setAt={s.setAt} corpusStart={s.corpusStart} now={s.now} />
 
       {/* detail as a bottom sheet (nonmodal, draggable handle) — nothing permanent at rest */}
-      <Disclosure point={s.selected} feel={s.feel} variant="sheet" onDismiss={() => s.setSelected(null)} onFocus={s.focusCentre} onSetPole={s.setPole} binding={s.proj?.binding} centreLabel={s.centre?.label} />
+      {!s.galleryOpen && <Disclosure point={s.selected} feel={s.feel} variant="sheet" onDismiss={() => s.setSelected(null)} onFocus={s.focusCentre} onSetPole={s.setPole} binding={s.proj?.binding} centreLabel={s.centre?.label} />}
       <Tether selectedSeq={s.selected?.seq} />
     </div>
   )
