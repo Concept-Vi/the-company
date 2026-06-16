@@ -13,9 +13,10 @@ from typing import Literal
 
 def register(mcp, suite):
     @mcp.tool()
-    def corpus(op: Literal["query", "list", "find", "read"], project: str = "", kind: str = "", projection: str = "",
+    def corpus(op: Literal["query", "list", "find", "read", "neighbours"], project: str = "", kind: str = "", projection: str = "",
                source_address: str = "", address: str = "", text: str = "", space: str = "",
-               k: int = 8, rerank: bool = False, top_n: int = 0, detail: str = "concise", limit: int = 50) -> dict:
+               k: int = 8, rerank: bool = False, top_n: int = 0, emb: str = "pplx", min_score: float = 0.0,
+               detail: str = "concise", limit: int = 50) -> dict:
         """Read the corpus — the engine's durable, embedded, addressed records (the repo-exocortex's
         'ask the codebase', + every capture pass's output). Pick `op`:
 
@@ -39,13 +40,22 @@ def register(mcp, suite):
                         HONESTY: for an INGESTED FILE the record is a capture DIGEST (a model's one-paragraph
                         summary + metadata), NOT the file's raw text — the corpus stores digests of sources.
                         The source itself lives at the code:// path on disk (outside this face).
+          op="neighbours" — the NEIGHBOUR NODE-FIELD: given a unit's `address` (a code:// source id, e.g.
+                        a projection:select detail.source), the units AROUND it in `space`, ranked by
+                        meaning. Returns {unit, space, emb, neighbours: [{source, score}, ...]}. Each
+                        neighbour `source` is itself a code:// address — directly drillable (the relational
+                        constellation a unit sits in). `k` = how many to rank (self dropped), `emb`
+                        (default 'pplx' — named explicitly), `min_score` thresholds ghosts, `rerank`+`text`
+                        runs the jina-v3 precision pass (text=the rerank anchor). FAIL-LOUD honest-empty if
+                        the unit has no vector at (address, space, emb) — never a fabricated nearest.
 
         `detail`: "concise" (default) returns high-signal fields only {source_address, projection, seq,
         address}; "detailed" returns the full records. `limit` (default 50) caps list/find. Read-only."""
-        OPS = ("query", "list", "find", "read")
+        OPS = ("query", "list", "find", "read", "neighbours")
         if op not in OPS:
             return {"error": f"corpus: unknown op {op!r}. Valid: {list(OPS)} — "
-                    "query=ask (text+space) · list=all (project) · find=filter · read=one (address)."}
+                    "query=ask (text+space) · list=all (project) · find=filter · read=one (address) · "
+                    "neighbours=the node-field around a unit (address+space)."}
 
         def _shape(rows):
             rows = list(rows)[:limit]
@@ -88,6 +98,14 @@ def register(mcp, suite):
                 out["ranked"] = enriched
             out["note"] = (out.get("note") or "") + " · every hit id is corpus(op='read', address=<id>)-able"
             return out
+        if op == "neighbours":
+            if not address:
+                return {"error": "corpus(op='neighbours') needs `address` — a unit's code:// source id "
+                        "(e.g. a projection:select detail.source). Optional: `space` (default "
+                        "'common_knowledge'), `k`, `emb` (default 'pplx'), `min_score`, `rerank`+`text`."}
+            from runtime import corpus_neighbours as _nb
+            return {"op": op, **_nb.neighbours(suite.store, address, space=(space or "common_knowledge"),
+                    k=k, emb=(emb or "pplx"), min_score=min_score, query=(text or None), rerank=rerank)}
         if op == "list":
             rows = suite.list_corpus(project=(project or None))
             return {"op": op, "project": project or None, "total": len(rows), "detail": detail,
