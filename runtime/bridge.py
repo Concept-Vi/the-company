@@ -455,7 +455,11 @@ def _semantic_projection(q, binding, reg, evs, center, now, lim):
     from runtime.projection import project as _uproject, _addr_of as _proj_addr
     from runtime import scale as _scale
 
-    space = binding.get("space")
+    # the SPACE is a VARIABLE (drivable like nucleation's): ?space= ranges the meaning-field over ANY embedded
+    # store, not just the binding's declared default — "nothing static, everything parametric". Absent → the
+    # binding's space (byte-identical to before). This also lets the recall→project() seam render an address in
+    # a CHOSEN space, not only topics.
+    space = q.get("space") or binding.get("space")
     emb = q.get("emb") or binding.get("emb") or None   # embedder LAYER (None=BGE default); applies to UNIT reads
     # MRL semantic-zoom (the RESOLUTION axis): ?dim=N truncates every read vector to its first N dims before
     # the cosine — a Matryoshka coarse↔fine MEANING zoom, orthogonal to the rung pyramid (the 2-D scale:
@@ -483,6 +487,7 @@ def _semantic_projection(q, binding, reg, evs, center, now, lim):
         body["binding"]["res"] = mdim     # the active MRL resolution (None = full dim) — every return path
         body["binding"]["emb"] = emb      # the active embedder LAYER (None = default/BGE) — echoed everywhere
         body["binding"]["quant"] = "binary" if _qz else None   # the active representation (None = full float)
+        body["binding"]["space"] = space  # the ACTIVE space (the ?space= drive, not the binding's stale default)
         return body
 
     def centre_vector(c):
@@ -596,7 +601,10 @@ def _separator_projection(q, binding, reg, evs, center, now, lim):
     pole_b=anchor://ai-corner). The FIFTH GATE (separation_report) rides in the response — the witness that
     the field actually SEPARATES, so a normalized-gradient-over-noise can never read as done."""
     from runtime.projection import project as _uproject, _addr_of as _proj_addr
-    space = binding.get("space")
+    # the SPACE is a VARIABLE (drivable like nucleation's): ?space= ranges the two-gravity field over ANY
+    # embedded store, not just the binding's default — "nothing static, everything parametric". Absent → the
+    # binding's space (byte-identical to before).
+    space = q.get("space") or binding.get("space")
     emb = q.get("emb") or binding.get("emb") or None   # embedder LAYER (None=BGE default); applies to UNIT reads
     # MRL resolution axis (?dim=N): truncate every read vector — BOTH poles + all items — to its first N dims
     # before the lean/separation cosines. Consistent truncation (poles + items together) keeps _cosine's

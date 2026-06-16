@@ -207,5 +207,29 @@ else:
     check("by_cascade: every edge is a directed pair over real sectors (no invented/symmetric edges)",
           eok and all(isinstance(e.get("from"), int) and isinstance(e.get("to"), int) for e in edges))
 
+# ════════════════════════════════════════════════════════════════════════════════════════════════════
+# 8 · SPACE IS A VARIABLE — semantic + separator honor ?space= (not just nucleation). "nothing static,
+#     everything parametric": the meaning-field / two-gravity field ranges over ANY embedded store, not only
+#     the binding's declared default. Absent → the binding's space (byte-identical). Lets the recall→project()
+#     seam render an address in a CHOSEN space.
+# ════════════════════════════════════════════════════════════════════════════════════════════════════
+print("\n8 · the space is a variable (semantic/separator honor ?space=)")
+spaces = [sp for sp in layers if sp != "operators"]  # any two distinct embedded item-spaces
+if len(spaces) >= 2:
+    a, b = spaces[0], spaces[1]
+    _, da = bridge.build_projection({"binding": "semantic", "space": a, "limit": "3"})
+    _, db = bridge.build_projection({"binding": "semantic", "space": b, "limit": "3"})
+    check(f"semantic honors ?space= — echoes the DRIVEN space ({a} vs {b}, not the binding default)",
+          da["binding"].get("space") == a and db["binding"].get("space") == b)
+    _, dsep = bridge.build_projection({"binding": "by_separator", "space": a, "limit": "3"})
+    # separator may 400 without poles, but the space it reports/errs on must be the driven one
+    check("separator honors ?space= (reads the driven space, not the binding default)",
+          (dsep.get("binding", {}).get("space") == a) or (a in str(dsep)))
+    _, ddef = bridge.build_projection({"binding": "semantic", "limit": "2"})
+    check("semantic with NO ?space= still falls back to the binding's declared space (byte-identical)",
+          bool(ddef["binding"].get("space")))
+else:
+    skip("space-as-variable", f"need ≥2 embedded spaces; got {len(spaces)}")
+
 print(f"\n{'PASS' if FAIL == 0 else 'FAIL'} — {PASS} passed, {FAIL} failed, {SKIP} skipped")
 sys.exit(0 if FAIL == 0 else 1)
