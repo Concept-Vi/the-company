@@ -1,0 +1,21 @@
+# OPEN DECISIONS — the forks-in-the-road for Tim (the overlord's decision queue)
+
+*The architectural choices the fabric CANNOT resolve itself — they shape everything downstream + are Tim's to arbitrate (like the four-axis count). The lead surfaces each WITH evidence + a lean (recognition-over-generation: Tim picks, doesn't reconstruct). Provisional; nothing built against an open decision. Per CODES_OF_CONDUCT: lead converges → Tim arbitrates.*
+
+## D1 · Does the SESSION-FABRIC "graph of minds" Face fold in, or stand as its own mode?
+- **Found:** the lead's June 11–13 history describes the company as a GRAPH OF MINDS (each session a timeline, accumulating edges, grouped into channels; drill in/out; CLI surfaced natively; selection→channel; 8-mode presence dial) — NOT folded into the current projection-wheel convergence (see INTERFACE_EXCAVATION.md).
+- **The fork:** (a) it FOLDS IN — the graph-of-minds is just another projection (frame = sessions instead of corpus-units), consistent with "no modes, only projections"; OR (b) it's a DISTINCT mode/surface.
+- **Lead's lean:** (a) folds in — same addressed state, sessions as the units. But it's a genuinely different way to SEE the company; Tim's call.
+- **Status:** OPEN — awaiting Tim.
+
+## D2 · WHICH "loadable brain"? (fork's finding — the brain is already BUILT, 3 candidates, the choice discriminates everything)
+The loadable brain Tim asked for ("click on stuff and talk about it with Claude Code") is NOT design-only — it EXISTS (built-unverified; observed in code, not yet re-verified-by-use). But there are THREE candidate mechanisms, and which one IS "the brain" shapes the whole interface:
+- **(a) FOCUS** — `SUITE.chat_parts(message, gid, focus)`: the company's OWN cognition (the RHM) focused on an address. LIGHTEST; it's our own brain, not a subprocess; the focus param is already consumed (bridge.py:1550→1601). The overlord-altitude quick-talk.
+- **(b) PANEL** — `run_turn` / `bridge._claude_stream` (POST /api/claude/turn): a REAL Claude Code subprocess per turn (`claude -p --output-format stream-json --permission-mode plan --mcp-config company-only --allowedTools mcp__company`, `--resume` for continuity, the pointed address's help-bundle folded into the prompt, client-disconnect kills the subprocess). ★ Tim's literal words were "with Claude Code" → this is the literal match. Full tools, isolated, plan-mode, hands real edits to the gated wire. Already wired as the overnight BUILDER side-panel.
+- **(c) SPAWN** — a supervised CC session per address (cc_clone + session_supervisor + cc_channel inject/watch). ★ This is a THIRD path parallel to (b) — fork ALMOST built it, then stopped (reuse-don't-parallel). NOT being built.
+- **Lead's + fork's lean (a synthesis, not a single pick):** Tim's "with Claude Code" → **PANEL (b)** is the literal brain for drilling-in-to-build; **FOCUS (a)** is the overlord-altitude quick-talk (the field's own brain reflecting on itself). They likely **COMPOSE AT ZOOM**: focus the company-brain at altitude → hand to a full CC PANEL when you drill to a thing to build/change it. SPAWN (c) rejected (parallel path).
+- ★ **COMPATIBILITY FIX (fork flagged):** the convergence text described the wire as "supervised session + inject/watch" — that's the FABRIC/clone transport (= candidate c), a DIFFERENT mechanism from the built PANEL wire (per-turn subprocess + --resume, = candidate b). The brief should say PANEL, not supervised/inject-watch, IF Tim picks (b). Reconcile once Tim chooses.
+- **Status:** OPEN — awaiting Tim (fabric leans focus⊕panel-compose-at-zoom). Downstream-gated: fork's `territory_for(address)` composer (the in-lane gap: today's context composers are ui://-only; generalizing to all 16 schemes + the H1.2 graph is GPU-free + fork-owned) waits on this pick, because its output target differs by branch (PANEL's context_block vs FOCUS's focus param).
+
+---
+*Add a decision here when the fabric hits a fork it can't resolve. Tim arbitrates; the lead implements the pick + reconciles the docs.*
