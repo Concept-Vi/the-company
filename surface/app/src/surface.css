@@ -378,24 +378,37 @@
    The drilled unit's product face (DNA's render) as a deliberate modal over the wheel — ONE drilled-unit
    surface (not a second always-on panel beside the inspector). Always in the DOM (visibility toggled, never
    React-unmounted) so DNA's container ref + the rendered element stay valid for fork/wildcard. z-index sits
-   above the bottom-sheet (30) and below the notice (50). */
-.gallery-overlay { position: fixed; inset: 0; z-index: 45; display: flex; align-items: center; justify-content: center;
+   ABOVE ALL chrome (header/notice/chips) — a true focused modal: the layouts also suppress the header when
+   open (no top-band collision with DNA's phone-archetype status row), and the scrim dims the rest to recede. */
+.gallery-overlay { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center;
   padding: calc(var(--safe-t) + var(--s-3)) var(--s-3) calc(var(--safe-b) + var(--s-3));
   opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 200ms ease, visibility 200ms ease; }
 .gallery-overlay--open { opacity: 1; visibility: visible; pointer-events: auto; }
-.gallery-scrim { position: absolute; inset: 0; background: color-mix(in srgb, var(--ink-primary) 30%, transparent); }
+/* a firm scrim — the drilled FACE must read as the SINGLE surface (design-critic: 30% let the lit wheel +
+   side text compete). Warm-ink dim, strong enough to recede the background while staying on the paper key. */
+.gallery-scrim { position: absolute; inset: 0; background: color-mix(in srgb, var(--ink-primary) 54%, transparent); }
 .gallery-frame { position: relative; max-width: 100%; max-height: 100%; overflow: auto;
   border-radius: var(--r-card); box-shadow: var(--elev-4); background: var(--ground-accent); }
 /* DNA's render (.screen, 390×844 archetype) sits inside untouched — the frame hugs it */
 .gallery-mount { display: block; }
-.gallery-dismiss { position: absolute; top: var(--s-2); right: var(--s-2); z-index: 2;
-  width: 32px; height: 32px; border-radius: var(--r-pill); border: none; cursor: pointer;
-  background: color-mix(in srgb, var(--ground-accent) 88%, transparent); box-shadow: var(--elev-2);
-  color: var(--ink-dim); font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+/* the dismiss is a MODAL-level control (child of the overlay, not the card) — positioned at the viewport
+   top-right so on desktop it clears the centred card and on every form factor it's distinct from DNA's
+   in-card sbar glyphs. */
+.gallery-dismiss { position: absolute; top: calc(var(--safe-t) + var(--s-2)); right: var(--s-3); z-index: 2;
+  width: 36px; height: 36px; border-radius: var(--r-pill); border: none; cursor: pointer;
+  background: var(--ground-accent); box-shadow: var(--elev-3);
+  color: var(--ink-dim); font-size: 15px; line-height: 1; display: flex; align-items: center; justify-content: center; }
 .gallery-dismiss:hover { color: var(--ink-primary); }
 /* mobile: DNA's render IS a 390-wide phone screen — let it sit EDGE-TO-EDGE (the phone archetype fills the
    frame), so the 390 screen never clips against the overlay's desktop padding. Keep a safe-area top inset so
    the dismiss clears the notch. */
+/* focused modal: recede the competing CHROME when the FACE is open (a scrim can't dim dark text, and the
+   header shares the card's top band). The wheel stays (dimmed by the scrim) for drill-from context. */
+body.gallery-modal-open .bar,
+body.gallery-modal-open .strata,
+body.gallery-modal-open .rail,
+body.gallery-modal-open .legend,
+body.gallery-modal-open .scrubber { visibility: hidden; }
 @media (max-width: 480px) {
   .gallery-overlay { padding: calc(var(--safe-t) + var(--s-2)) 0 0 0; }
   .gallery-frame { width: 100%; max-height: 100%; border-radius: var(--r-card) var(--r-card) 0 0; }

@@ -40,6 +40,14 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
 
   const dismiss = useCallback(() => onOpenChange(false), [onOpenChange])
 
+  // a focused modal: when the FACE is open, recede the competing chrome (header/side-text/scrubber). A scrim
+  // alone can't — dark chrome text stays legible over a dark scrim, and the header sits in the same top band as
+  // the card (design-critic: "9:41" collided with the global header). Hiding the chrome = the single surface.
+  useEffect(() => {
+    document.body.classList.toggle('gallery-modal-open', open)
+    return () => document.body.classList.remove('gallery-modal-open')
+  }, [open])
+
   // bind the drill ONCE (guarded). DNA hosts the listener; we hand it our stable container.
   useEffect(() => {
     if (bound) return
@@ -83,8 +91,10 @@ export function GalleryMount({ open, onOpenChange }: { open: boolean; onOpenChan
   return (
     <div className={`gallery-overlay ${open ? 'gallery-overlay--open' : ''}`} aria-hidden={!open}>
       <div className="gallery-scrim" onClick={dismiss} />
+      {/* the dismiss is a MODAL-level control (overlay child, not card child) — viewport top-right, clear of
+          the centred card on desktop and of DNA's in-card sbar glyphs */}
+      <button className="gallery-dismiss" onClick={dismiss} aria-label="close">✕</button>
       <div className="gallery-frame" role="dialog" aria-label="drilled unit" ref={titleRef}>
-        <button className="gallery-dismiss" onClick={dismiss} aria-label="close">✕</button>
         {/* DNA owns this subtree's innerHTML — React renders the div once and never reconciles its children */}
         <div id="gallery-mount" ref={containerRef} className="gallery-mount" />
       </div>
