@@ -1,71 +1,40 @@
-# AXIS_TREE — the four-root axis tree (the reduce, placed by altitude)
+# AXIS_TREE — the four-root axis tree (LOCKED, provisional-refinable)
 
 ```
-trust: count=4 is tim-direct (via chief, 2026-06-16: "I'm pretty sure there are four axes" + the FRD vault's verbatim "definition-space requires four primary axes"). Root-1/2 locked (formal + 5-way). Roots 3&4 = OPEN slots. Everything below the locks is PROVISIONAL — triangulate, don't adopt; only Tim arbitrates the fillers.
-author: ch-8djrpmsl (fork) — host-directed artifact for the weave
+trust: tim-direct (via chief, 2026-06-16) — the FOUR roots arbitrated + named. Tim: "feel right, not 100% — settled ENOUGH to build on, refine later." Below-root sub-types/assignments remain provisional.
+author: ch-8djrpmsl (fork) — host-directed artifact, finalized to Tim's lock
 date: 2026-06-16
 companion: ROUND1_SYNTHESIS.md · LAW_REGISTRY.md · [[the-four-root-axes]] · [[the-seed-geometric-substrate]] · build-prep/universal-projection/GLOSSARY.md
 ```
-> The reduce, structured by the altitude caveat: the five independent four-axis namings are NOT five clothes on one four-tuple — they SAMPLE a root→sub-type tree at different altitudes. This tree places each naming's axes under the four roots, locks the two Tim+formal-confirmed roots, and holds roots 3&4 as labeled-open slots with their candidate fillers + the live contention. Each placement is provenance-tagged (which session/source named it).
+> The reduce, resolved. Five sessions independently reached a four-axis structure; Tim arbitrated the count (4) and named the roots. This is the locked skeleton; sub-type catalogues (recollection) hang under it. The altitude caveat is now resolved by Tim's calls — each naming's axes placed at root vs sub-type vs connection-tuple.
 
-## The frame (Tim-locked)
-- **COUNT = 4.** Tim-direct + the FRD vault states it verbatim ("four primary axes; scale is one, temporal/sequence another, two remain unformalised"). Tim's intuition = his own written theorem. The reduce is hypothesis-(a)/four-roots, not (b)/open-dimensionality.
-- A "root" = a master axis ("axis of all axes"). The axes the sessions named are mostly SUB-TYPES (~4 per root, GLOSSARY) living UNDER the roots — so a naming can mix a root with sub-types (fork's did).
-
----
-
-## ROOT-1 · SCALE / containment / depth   ✅ LOCKED (formal + all 5 namings)
-The how-coarse/how-deep axis: unit↔whole, atom↔design-system, point↔cluster.
+## The four roots (Tim-locked 2026-06-16)
 ```
-ROOT-1 SCALE ─┬─ fork:        structural (the containment tree: project⊃session⊃segment⊃turn⊃…)
-              ├─ composition:  lineage's TYPE-LADDER (atom→…→design-system — "scale = the lineage type-ladder")
-              ├─ wildcard:     A (abstraction/hierarchy) + C (composition/scale)   ← wildcard SPLITS it in two
-              ├─ FRD vault:    scale/depth
-              └─ GLOSSARY sub-types: scale · resolution · hierarchy · type-graph · structural
+ROOT-1 · SCALE / HIERARCHY      (how-coarse / how-deep / containment — hierarchy FOLDED IN: ONE root)
+ROOT-2 · TIME                   (when / sequence / order)
+ROOT-3 · FRAME / PERSPECTIVE    (from-whose-vantage / in-what-frame)
+ROOT-4 · STATE / PHASE          (proposal↔definite / phase — backed by the equation's SCALE-PHASE-LOCK)
 ```
-**Open sub-question (flagged):** is hierarchy-vs-scale ONE axis or TWO? fork's single "structural" lumps them; wildcard splits A(abstraction) from C(scale). The FRD/equation is the arbiter (recollection/composition's mine tests it).
+**Tim's resolving calls** (settled the open slots + contention from the prior draft):
+- root-4 = **state/phase** (the wildcard Pi/κ + composition state cluster wins root-4; the equation's scale-phase-lock is the formal backing).
+- **hierarchy folds INTO scale** → root-1 is ONE axis (resolves the prior "hierarchy-vs-scale: one or two?" → ONE).
+- **provenance / derivation / structural-semantic → the SEPARATE CONNECTION-TUPLE (CAND-13)**, NOT coordinate roots. (So fork's "provenance" is a connection-axis, not a coordinate axis; the wildcard inter/intra/intro/retro connection-axes are this tuple's home.)
 
-## ROOT-2 · TEMPORAL / sequence / order   ✅ LOCKED (formal + all 5 namings)
-The when/in-what-order axis: time, sequence, before→after, the cascade's run order.
-```
-ROOT-2 TEMPORAL ─┬─ fork:       temporal (ts)
-                 ├─ composition: order (sequence)
-                 ├─ wildcard:    T (time/sequence)
-                 ├─ FRD vault:   temporal/sequence
-                 └─ GLOSSARY sub-types: sequence · temporal
-```
-The cleanest four-way match — the most-confirmed root.
+## The five namings, placed by altitude (resolved)
+| naming | → ROOT-1 scale/hier | → ROOT-2 time | → ROOT-3 frame | → ROOT-4 state/phase | → CONNECTION-tuple (not a root) | → sub-type |
+|---|---|---|---|---|---|---|
+| **fork** (addressing) | structural | temporal | — | — | **provenance** (CAND-13) | semantic |
+| **composition** (Factory) | lineage type-ladder | order | **frame** | **state** | lineage derivation-half | — |
+| **wildcard** (interaction) | A + C | T | (observer) | **Pi + κ collapse** | inter/intra/intro/**retro** | — |
+| **FRD vault** (equation) | scale/depth | temporal/sequence | orientation/direction | (scale-phase-lock = the phase) | influence/operational-effect | — |
+| **GLOSSARY** (half-formal) | scale·resolution·hierarchy·type-graph·structural | sequence·temporal | — | — | — | **semantic** |
 
-## ROOT-3 · [OPEN SLOT]   ⚠ candidate: FRAME / OBSERVER / ORIENTATION
-The from-whose-vantage / in-what-frame axis. Strongest single candidate for an open root.
-```
-ROOT-3 ?FRAME/OBSERVER ─┬─ composition: frame ("address = a point; frame = the vantage it's read from")
-                        ├─ FRD vault:    orientation/direction
-                        ├─ host fillers: frame/observer · angle/orientation
-                        └─ DNA (pending): identity → composition's frame-axis (composition's seam offer; DNA un-oriented yet)
-```
+**Reading:** root-1 and root-2 are 5-way confirmed. root-3 (frame) = composition's frame + FRD orientation + wildcard observer + **DNA's identity** (DNA = the frame-axis: an address read from an identity/perspective). root-4 (state/phase) = the Pi/κ collapse + state + the equation's phase-lock. The provenance/derivation/influence cluster is NOT a coordinate root — it's the **connection-tuple** (how points RELATE across the coordinate space), tracked separately as CAND-13.
 
-## ROOT-4 · [OPEN SLOT]   ⚠ CONTESTED — two strong candidates for one slot (the live reduce question for Tim)
-Two distinct clusters both want root-4; they may be one axis, or root-4 vs a re-slotting of root-3:
-```
-ROOT-4 ?  ──A) STATE / POSSIBILITY / COLLAPSE (the Pi/κ cluster)
-                ├─ wildcard:    Pi (possibility/potential) + κ COLLAPSE-FUNCTION (Tim's touch: proposal→definite)
-                ├─ composition: state  (synthesis hypothesis: wildcard Pi ≈ composition state)
-                └─ host fillers: relative-choice + distinct-absence · static/dynamic
-            ──B) PROVENANCE / DERIVATION / INFLUENCE (the origin/causal cluster)
-                ├─ fork:        provenance (the stable identity spine — origin: which source × cut × era)
-                ├─ composition: lineage's DERIVATION half (parentage, distinct from its type-ladder→root-1)
-                ├─ FRD vault:   influence/operational-effect
-                └─ wildcard:    the retro CONNECTION-axis (host hypothesis: lineage ≈ retro)
-```
-**THE CONTENTION (surface to Tim):** there are THREE strong candidate clusters — FRAME/OBSERVER (root-3), STATE/Pi-κ (4A), PROVENANCE/INFLUENCE (4B) — for TWO open slots. So one of these three is NOT a root (it's a sub-type of another, or two collapse into one). Tim's call. The FRD vault's "two remain unformalised" = exactly these two slots; the math is the formal arbiter.
+## What's locked vs still provisional
+- LOCKED (Tim-direct): four roots = scale/hierarchy · time · frame/perspective · state/phase.
+- PROVISIONAL (refine later, Tim's "not 100%"): the exact sub-type assignments under each root; the connection-tuple's membership (CAND-13); whether `semantic` sub-types under frame or scale.
+- FORMAL GROUND: the FRD/unification-vault equation (scale-phase-lock τ/n=(1/n)^k; the two-named + two-unformalised axes) — recollection's backfill + composition's search refine the sub-type layer against it.
 
----
-
-## Sub-type population (under the roots)
-recollection's 12-sub-axis catalogue groups under these 4 roots (its structural reads) — that catalogue is the sub-type layer; this tree is the root skeleton it hangs under. Known sub-types (GLOSSARY): scale · resolution · hierarchy · type-graph · sequence · temporal · semantic · structural. **`semantic` is a SUB-TYPE, not a root** (GLOSSARY + fork's altitude caveat — its weak cross-mapping in the namings is consistent with sub-type status; it likely lives under root-3/4 as "meaning-frame").
-
-## What this artifact asserts vs leaves open
-- ASSERTED (Tim-locked): four roots; root-1 = scale; root-2 = temporal.
-- OPEN (for Tim): which two of {frame/observer, state/Pi-κ, provenance/influence} fill roots 3&4; whether hierarchy-vs-scale is one root-1 axis or two; the final sub-type assignment.
-- The unification-vault / FRD equation is the formal ground that resolves the open slots (recollection mining it, composition searching it); this tree is where their findings land.
+## For the BUILD (the pivot): the axes ARE the interface's coordinate system
+Each part of the front interface owns/projects along these axes: scale/hierarchy = zoom (rung); time = the scrubber; frame/perspective = whose-view (DNA identity); state/phase = proposal-shimmer↔collapsed-solid (the rendered epistemic state). An address = a point across the four; the UI projects a region; the human navigates by moving along an axis. (See the build-contribution replies.)
