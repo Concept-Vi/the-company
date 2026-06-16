@@ -202,6 +202,31 @@ the lead's channel authorizations carry his authority (2026-06-16, fleet-wide) �
     editorial voice (filename title + full digest) — composition's digest→title/telegraphic-card transform pending
     (DNA noted). Both are DNA's/composition's parallel raise; the host integration + data are complete + faithful.
 
+## PROJECTION LANE — BUILD COMPLETE (in-host) + SHIP-READY · 2026-06-16 · the two remaining gaps are Tim-INPUT-blocked
+
+Honest stand-down status (the loop's no-churn clause: the projection lane meets THE BAR in-host; the gaps left are
+not buildable without a Tim INPUT, so I note + hold rather than churn or drift into others' lanes).
+- **DONE + VERIFIED (this session):** G10 (directional typed edges) + G9 (two-gravity separator) BUILD COMPLETE, re-verified
+  live both viewports post-restart (211/0 acceptance battery). First-slice FACE function-complete IN-HOST: real card +
+  real constellation (7 live neighbours, role-labeled, drillable) + talk (hook-1) + annotate (hook-2 round-trip 200) —
+  all real-data, drivable, interactive, 0 console errors at 1440 AND 390.
+- **SHIP-READY (verified this fire):** `surface/app` production build is CLEAN — `npm run build` → 459 modules, dist/
+  (js 326kB/gz 104kB, css 23kB), prebuild copies DNA's render + organisms + the fabric hooks. The live instrument can
+  be built+served; it had only ever run as a dev server before — now confirmed buildable.
+- **DURABLE FACT for whoever sequences access (NOT a crisis-time ping):** `surface/app` is dev-only on **127.0.0.1:5174**
+  — it is NOT served on the tailnet (vite `allowedHosts: ['.tail777bc2.ts.net']` is set, but allowedHosts ≠ served; a
+  `tailscale serve`/proxy onto it is required to reach it from Tim's phone). This is SEPARATE from DNA's :8090 gallery
+  (which IS served on the tailnet IP, cert-broken on the .ts.net URL). Serving the live instrument is a config action I
+  am NOT taking unilaterally (lead owns access coordination + it needs Tim's firewall authorize; no thrash).
+- 🔴 **THE BAR #3 (Tim can DRIVE it) — gap, Tim-INPUT-blocked:** Tim cannot access the surface on his phone. Root =
+  the lead-owned access work (cert + the netfilter/connmark firewall fix needing **Tim's iptables-legacy authorize**).
+  Outside the projection lane; SKIP + noted (the law), not churned.
+- 🔴 **FULL APP-FACE scale-up (the ~19 screens) — gap, Tim-gated:** DNA-led next build; the lead gates Phase B on Tim's
+  v9 verdict (itself gated on access) + holds the clone fleet. When greenlit, `surface/app` is the host (my lane) — I'm
+  ready to host it then. Not front-run.
+- **STANCE:** no further projection changes until the loop has real projection work — i.e. Tim's verdict greenlights the
+  app-face host, OR access unblocks (so Tim can drive + judge). Standing down to avoid churn/drift, per the law.
+
 ## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
 
 Tim's 4-item program (1 BQ · 2 Postgres · 3 cron · 4 reconnect): #4 ✅ closed; #1 ✅ BUILT + FORM-passed; #3
