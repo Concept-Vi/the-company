@@ -35,6 +35,20 @@ ruins the system"). **Expand-before-harden:** the brain docs are captured design
 
 ---
 
+## SPACE IS A VARIABLE + FABRIC SEAM — ✅ 2026-06-16 (caught verifying the recall→project() seam)
+
+The fleet (lead `ch-al7jdfdr` + recollection/fork/composition) is building the **recall→project()→resolve()**
+spine — recollection MOVES an address, my project() RENDERS it. Verifying my side against the live MCP door
+surfaced a real **parametric gap**: `_semantic_projection` + `_separator_projection` IGNORED `?space=` (used
+only the binding's declared default — topics), while nucleation honored it. A lens locked to a static
+binding-space violates "nothing static, everything is a variable" AND capped the seam (an address could only
+render in topics). FIXED (`1dbb201`): both honor `space = q.get("space") or binding.get("space")` (absent →
+binding, byte-identical) + the `binding.space` echo now reports the ACTIVE space. Verified live: semantic
+`space=repo` renders repo (was topics); acceptance multilayer 25 (+3 space-as-variable). So `project(space=,
+center=<contracts.address>)` renders any address in ANY embedded space — the recall→project() handoff is
+seam-ready (verified my side; integration Q to recollection: what address grammar navigate() emits). Tim made
+the lead's channel authorizations carry his authority (2026-06-16, fleet-wide) — [[feedback-channel-relayed-is-proposal]].
+
 ## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
 
 Tim's 4-item program (1 BQ · 2 Postgres · 3 cron · 4 reconnect): #4 ✅ closed; #1 ✅ BUILT + FORM-passed; #3
