@@ -45,6 +45,22 @@ HOW do we compose these into COMMON KNOWLEDGE of everything already built across
 - **COVERAGE PROVEN BY SET-DIFF**, not asserted: disk-files − mapped − skip = 0 → measured==reported (composition's discipline; STRUCTURE-OVER-TEXT). No "we think we got it all."
 - **UNIT = a TYPE→OBSERVATION contract** (wildcard): a code file's worthwhile observations ≠ a doc's ≠ a config's; the type determines what's worth knowing. Mine wildcard's `.discovery/taxonomies/`, don't rebuild.
 
+### VERIFICATION-STATE — the assignment + transition rules (fork, grafted onto the converged unit above)
+*The enum is converged; this is its OPERATIONAL law — how a unit gets/changes its state. Drawn from this session's lived false-greens (a broken `session_search` reporting available; a silent reflection-loss; a false-green availability check) — the exact "confident code isn't correct" Tim's gate guards against. The keystone rule makes mislabelling structurally impossible.*
+
+- **State definitions + the evidence each REQUIRES:**
+  - `design-only` — a build-prep/spec/intent; no running code at the address.
+  - `built-unverified` — code exists; NO by-use proof. **THE DEFAULT** (every unit starts here).
+  - `stub/patchwork` — code exists but incomplete/placeholder/legacy-superseded (interpretive finds it).
+  - `suspect` — positive evidence of WRONGNESS (a found defect/contradiction). Carries the defect pointer.
+  - `verified-by-use` — a RUN proved it (test / round-trip / measured result). Carries the EVIDENCE pointer (test-name · commit · run-id).
+- **★ THE ASSIGNMENT LAW (the keystone — structure-not-text / no-green-paint, made a schema rule):**
+  - Layer-1 (structural inventory) asserts only EXISTENCE → `built-unverified`. The map decides nothing.
+  - Layer-2 (the 4B interpretive) may **DOWNGRADE** (→ `stub`/`suspect`, with the evidence it found) and describe — but it **CANNOT UPGRADE to `verified-by-use`.** An LLM reading code as "looks correct" is NOT verification; the 4B's read is interpretation, not execution. (This is the precise failure to forbid: the comprehension layer cheerfully marking suspect code "works" because it reads plausibly — wildcard's AI-only run + this session's false-greens.)
+  - **ONLY EXECUTION upgrades to `verified-by-use`** — a real run/test/round-trip, carrying its evidence pointer. The system literally CANNOT label a unit verified without execution evidence. So common-knowledge can never confidently-mislabel unverified-or-broken code as working — Tim's "what exists ≠ what's right" gate, made structurally enforced.
+- **Transitions + stickiness:** default `built-unverified`; → `verified-by-use` ONLY via execution evidence (else stays); → `suspect` on a found defect (**STICKY** — a suspect doesn't silently clear; only fresh execution evidence moves it to verified); → `stub` on interpretive incompleteness. Re-running re-grades only with NEW execution evidence.
+- **Evidence-stamped (auditable, not asserted):** every verification-state carries its provenance — who/what assigned it, when, by what evidence — exactly like the board's lifecycle history. A `verified-by-use` with NO evidence pointer is itself the failure mode → reject it (treat as `built-unverified`). State is earned by evidence, never claimed.
+
 ## ★★★ THE PIPELINE MOSTLY ALREADY EXISTS (scout-before-build — REUSE these reference instances, don't reinvent)
 Three members independently built pieces of exactly this. Common knowledge = COMPOSING them, not building new:
 - **wildcard's `.discovery/`** (~/vi-visual-bridge) — a contract-driven codebase-comprehension pipeline (enumerate→extract→validate→merge→synthesize→graph), ran 9,600+ files in ~9s, + `taxonomies/` (type→observation). The closest existing instance; wildcard walks recollection through what worked/broke.
