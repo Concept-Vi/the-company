@@ -81,6 +81,17 @@ the lead's channel authorizations carry his authority (2026-06-16, fleet-wide) �
     semantic 'topics' view → emitted `address=run://corpus/company/code://ops/cli/serveconfig.py/topics` →
     `inspect_address` resolves it to `{output:[topics...], source_address}`. click→emit→resolve proven end-to-end;
     typecheck clean; no other consumer (DNA hadn't built renderGallery). Corrected seam contract handed to DNA+lead.
+  - **SPACE AXIS NOW DRIVABLE — SpaceChip + visual first-slice path VERIFIED 2026-06-16 (`f28afee`):** caught via
+    advisor before holding — the Instrument could only reach each binding's DEFAULT space; no operator control
+    drove the wheel to common_knowledge (the backend honored `space`, the frontend lacked the chip). That blocked
+    "Tim can drive the first slice visually" = THE BAR. Built `toggles/SpaceChip.tsx` (registry-true, reads
+    /api/layers — common_knowledge appears with zero hardcoding; shows only when the lens self-reports
+    `binding.space`, hidden on raw/time-of-day). Wired `space` state (clears cross-space-stale centre/selected/
+    poles) into the query + all 3 layouts. VERIFIED LIVE end-to-end: SpaceChip→common_knowledge → wheel
+    re-projects to 112 units → click → emit `run://…/src/sync.ts/common_knowledge` → `inspect_address` resolves
+    to `{output.digest:'core synchronization logic…'}`. Drive→drill→content proven. FORM ✅ all 3 form factors
+    (Desktop bar-left; Portrait chips wrap clean 2 rows, no orphan; Landscape rail vertical stack). The universal
+    projection now points at ANY embedded space from the operator's seat — the visual first-slice entry is real.
 
 ## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
 
