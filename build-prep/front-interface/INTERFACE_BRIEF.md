@@ -54,6 +54,22 @@ It's a collective design. The lead hosts + converges; Tim is the overlord who'll
 
 ---
 
+## ★★★ LEAD'S CONVERGENCE (the host's synthesis of the perspectives — provisional, Tim steers)
+The perspectives COMPOSE into one interface, and most of it ALREADY EXISTS. The shape:
+
+**THE INTERFACE = projection's INSTRUMENT (the field) ⊕ wildcard's element-direction (the touch) ⊕ fork's loadable-brain (the talk), over the address spine, rendered by composition in DNA's identity.** Composed along the axes:
+- **projection's Instrument is the SEED + the OVERLORD ALTITUDE** (the "different area" Tim named): the radial projection wheel = `project()→resolve()` made a navigable FIELD; every addressed unit a point positioned by a lens. Zoomed OUT = the whole company as ONE field (Tim sits ABOVE — the overlord view). It is BUILT, verified, runs on the live corpus, and — the hard part — **native tri-form-factor (desktop 1440×900 + portrait 390×844 + landscape 844×390, DISCRETE native layouts via classify(), NOT CSS-shrink, design-critic-PASSED all three).** The interface inherits this.
+- **THE SCALE AXIS COMPOSES field-view ⊕ element-view:** zoomed out = projection's field (altitude); zoom in (rung↓/center) → a unit → wildcard's element-addressable content (direction at the drilled element). Altitude = the field; direction = at the element. One scale axis, two members' surfaces.
+- **THE FOUR AXES ARE ALREADY LIVE CONTROLS** (projection): scale=rung · time=scrubber(?at=) · frame=layer(?emb=)+center · state=born/lean/strain render (+ sub-knobs dim/MRL, quant/binary).
+- **wildcard's CIRCUIT + the 4 direction-mechanisms** (typed-comment/stamp/favour/highlight — empirically what Tim uses) wrap the field: surface → direct at an element by recognition → route-back as element-mutation → re-project (shimmer→solid). The capture-grammar `{element_id, annotation_type, text, reaction, favour}` is the reusable write-back contract.
+- **fork's LOADABLE BRAIN = the address IS the load:** click any point/element (its address) → a Claude Code brain loads bound to that address's context → talk in-surface → it acts → re-project. The wire exists (bridge :8770 /api/chat + supervised session + inject/watch). THIS is "click on stuff and talk about it with Claude Code."
+- **the ADDRESS SPINE** (16 schemes, 9 resolvable, on-principle) is what every point/element/click resolves through — confirmed live by fork.
+- **composition** renders the surface (the resolver → DOM, in form-factors); **DNA** supplies the frame/identity it renders IN (root-3 — pending DNA's perspective); **recollection** moves the address (navigation) + indexes what the field queries.
+
+**THE FIRST SLICE (converged, all pieces exist):** projection's Instrument runs on the live corpus, tri-form-factor → make a wheel-point clickable → fork's loadable-brain loads on that point's address → click→talk→re-project. That is the whole overlord interface in miniature: see the field (above) → click a point → talk to its brain → it changes → the field re-renders. EXTEND the Instrument into the overlord surface (not a new build) — projection leads its lane, fork wires the brain, wildcard adds element-direction, composition renders, DNA frames.
+
+**WHAT IT MEANS FOR TIM:** the surface that gets you out of this seat is mostly ASSEMBLABLE from built+verified pieces — the field (projection, done incl. tri-form-factor), the wire (fork, proven), the direction-grammar (wildcard, from your real data), the spine (address system, live). The build is COMPOSITION of these, extended from the Instrument. Pending: DNA's identity/frame perspective + composition's render seam + your pick of the first build slice.
+
 ## CONTRIBUTIONS (members append their own section; do not edit others' or Tim's words above)
 
 ### fork (ch-8djrpmsl) — Claude-Code-as-loadable-brain + the addressed-state the UI projects
