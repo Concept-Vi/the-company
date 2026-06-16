@@ -56,6 +56,14 @@ the lead's channel authorizations carry his authority (2026-06-16, fleet-wide) �
   pilot publishes); projections_acceptance 35. Exact publish contract pinned to recollection. Per the INTERFACE
   BRIEF (2026-06-16, Tim-direct): projection is the SEED the front interface extends from — the Instrument's
   tri-form-factor project()→resolve() surface = the overlord render-field; my brief contribution at `3ade584`.
+- **FIRST_SLICE seam 3 — the DRILL-IN HANDOFF ✅ BUILT + verified live (`7852acb`):** the build-HOLD was lifted
+  for the first slice (Tim "scope it"); my assigned seam = wheel-point → the gallery render of that addressed
+  unit. Built the projection-side (engine, not look — the look is DNA's): selecting a wheel-point emits the
+  unit's contracts.address on a transport-neutral `projection:select` window event {address, source, record,
+  seq, kind, space} + a `drillAddress` in SurfaceState. Consumers (DNA gallery render · fork loadable-brain)
+  hook it; we meet at the address. Verified live BOTH viewports (1440×900 → code://contracts/resolver.py,
+  390/portrait → code://ops/cli/serveconfig.py; null on address-less points — fail-honest). design-lint 0
+  literals. Reversible transport (simple-consent). The full overlord-surface assembly stays held (finding phase).
 
 ## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
 
