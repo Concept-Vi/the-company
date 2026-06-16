@@ -677,33 +677,34 @@ class SessionSupervisor:
             cmd += ["--fork-session"]
         return cmd
 
-    # Company-model backend injection (research a28d4be / Tim 2026-06-16: "run CC on company/ollama models,
-    # not just Anthropic"). The company's LiteLLM proxy (:4100) exposes the Anthropic Messages API and
-    # translates to ollama-cloud + local-vLLM — VERIFIED end-to-end (`claude -p` against :4100 on a cloud
-    # model → exit 0). _build_spawn_cmd already emits `--model <alias>`; this returns the ANTHROPIC_* env to
-    # inject BESIDE it so the child resolves that alias AT THE PROXY (a company model) instead of the host
-    # Anthropic account. Build-ONTO-the-existing: the proxy + the --model param already exist; this is the
-    # one missing env seam. Values env-overridable (registry-not-hardcode); defaults = the verified proxy.
+    # Company-model backend injection (Tim 2026-06-16, CORRECTED): run CC on company/ollama models via
+    # OLLAMA-NATIVE (:11434), NOT the stale litellm proxy. Ollama 0.30.4 launches Claude Code directly
+    # (`ollama launch claude --model <tag>`); the env-var form below is EXACTLY what that launcher sets
+    # under the hood (docs.ollama.com/integrations/claude-code): point ANTHROPIC_BASE_URL at ollama's own
+    # :11434 + AUTH_TOKEN=ollama + API_KEY="". This injects that env beside the already-emitted `--model
+    # <tag>` so a spawned/cloned CC child resolves the tag at OLLAMA (cloud or local model). Build-ONTO the
+    # real, current thing (ollama), NOT the months-out-of-date litellm (to be removed). Values env-overridable.
+    # ★ kimi-k2.7-code:cloud (Tim's preferred) works DIRECT via ollama — it was only broken THROUGH litellm.
     _COMPANY_BACKEND = {
-        "base_url": os.environ.get("COMPANY_LLM_BASE_URL", "http://localhost:4100"),
-        "auth_token": os.environ.get("COMPANY_LLM_AUTH_TOKEN", "sk-company-local"),
-        # CC fires a background small/fast model; must be a VALID proxy alias (deepseek-v4-flash = cheap,
-        # verified working). kimi-k2.7-code is BROKEN through the current proxy (empty-content translation
-        # bug + no route) — do NOT default to it until fabric/litellm.config.yaml is fixed. [gap flagged to Tim]
-        "small_fast": os.environ.get("COMPANY_LLM_SMALL_FAST", "deepseek-v4-flash"),
+        "base_url": os.environ.get("COMPANY_LLM_BASE_URL", "http://localhost:11434"),  # ollama native
+        "auth_token": os.environ.get("COMPANY_LLM_AUTH_TOKEN", "ollama"),
+        # CC fires a background small/fast model; must be a VALID ollama model tag. deepseek-v4-flash:cloud
+        # = cheap cloud (no local GPU load). Override via COMPANY_LLM_SMALL_FAST (e.g. a local tag).
+        "small_fast": os.environ.get("COMPANY_LLM_SMALL_FAST", "deepseek-v4-flash:cloud"),
     }
 
     @staticmethod
     def _provider_env(provider: "str | None") -> dict:
-        """The env that points a child CC session at a COMPANY-MODEL backend (the LiteLLM :4100 proxy).
-        `provider` truthy + not 'anthropic' (e.g. 'company'/'litellm'/'ollama') → the ANTHROPIC_* proxy env;
-        None/''/'anthropic' → {} (BYTE-IDENTICAL: the child uses the host Anthropic account, today's behaviour).
-        All company/ollama/local routes go through the one Anthropic-compat proxy — never a second path."""
+        """The env that points a child CC session at OLLAMA (:11434) so its `--model <tag>` runs on a
+        company/ollama model (cloud or local) — exactly what `ollama launch claude` sets. `provider` truthy
+        + not 'anthropic' (e.g. 'ollama'/'company') → the ollama-native ANTHROPIC_* env; None/''/'anthropic'
+        → {} (BYTE-IDENTICAL: the child uses the host Anthropic account, today's behaviour). NOT litellm."""
         if not provider or provider == "anthropic":
             return {}
         b = SessionSupervisor._COMPANY_BACKEND
         return {"ANTHROPIC_BASE_URL": b["base_url"],
                 "ANTHROPIC_AUTH_TOKEN": b["auth_token"],
+                "ANTHROPIC_API_KEY": "",   # docs: unset/empty so the host Anthropic key can't override ollama
                 "ANTHROPIC_SMALL_FAST_MODEL": b["small_fast"]}
 
     @staticmethod
