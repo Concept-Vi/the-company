@@ -143,16 +143,24 @@ export function App() {
 
   // THE DRILL-IN HANDOFF (front-interface FIRST_SLICE, seam 3): selecting a wheel-point IS "drill into this
   // addressed unit." The points are canvas-drawn (not ui:// DOM elements), so the ui:// locus doesn't carry
-  // them — instead we EMIT the selected unit's contracts.address (source = the unit, e.g. code://·board://;
-  // address = its run:// record) on a transport-neutral window event. The drill-in consumers — DNA's gallery
-  // render of that unit + fork's loadable-brain bound to that address — hook `projection:select`; same-page
-  // can also read `drillAddress` off the state. We meet at the address (the FIRST_SLICE contract); the look is
-  // DNA's, the brain is fork's — projection only hands off WHICH addressed unit was pointed at. null on deselect.
+  // them — instead we EMIT the selected unit's address on a transport-neutral window event. TWO addresses ride
+  // it, with DISTINCT jobs (verified against runtime.cognition.resolve_address, 2026-06-16):
+  //   • `address` = the CONTENT-RESOLVABLE address DNA's renderGallery(address) resolves THROUGH resolve_address
+  //     to get the unit's content. That is the run:// RECORD (e.g. run://corpus/recollection/…/common_knowledge
+  //     → {output.digest, projection, source_address}). It MUST be a scheme resolve_address reads today
+  //     (run://·cas://·skill://·context://·session://·cap://·board://) — so we put selected.address (the run://
+  //     record) FIRST. NB: the unit's `source` (code://·vi-vision://) is NOT content-resolvable yet → it would
+  //     fail loud in renderGallery; that is why source-first was a seam bug (the resolvable addr was misfiled).
+  //   • `source` = the unit's CANONICAL source address (code://·board://) — fork's loadable-brain target +
+  //     wildcard's route-back = mutation-AT-address write (territory_for). Kept separate, never the render addr.
+  // Consumers hook `projection:select`; same-page can read `drillAddress` off the state. We meet at the address
+  // (the FIRST_SLICE contract); the look is DNA's, the brain is fork's — projection hands off WHICH addressed
+  // unit was pointed at + which field resolves vs which field is the write-back target. null on deselect.
   useEffect(() => {
-    const addr = selected ? (selected.source || selected.address || null) : null
+    const resolveAddr = selected ? (selected.address || selected.source || null) : null  // run:// record first → resolve_address-readable
     window.dispatchEvent(new CustomEvent('projection:select', {
-      detail: addr ? { address: addr, source: selected?.source ?? null, record: selected?.address ?? null,
-                       seq: selected?.seq, kind: selected?.kind, space: proj?.binding?.space ?? null } : null,
+      detail: resolveAddr ? { address: resolveAddr, source: selected?.source ?? null, record: selected?.address ?? null,
+                              seq: selected?.seq, kind: selected?.kind, space: proj?.binding?.space ?? null } : null,
     }))
   }, [selected, proj])
 
@@ -279,7 +287,7 @@ export function App() {
     setQuant,
     selected,
     setSelected,
-    drillAddress: selected ? (selected.source || selected.address || null) : null,
+    drillAddress: selected ? (selected.address || selected.source || null) : null,   // resolvable run:// record first (matches the projection:select `address` field)
     feel,
     setFeel,
     view,
