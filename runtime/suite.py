@@ -10853,7 +10853,7 @@ class Suite:
         return {"query": text, "space": space, **result}
 
     def find_relations(self, item: str, *, near_space: str, far_space: str, k: int = 10,
-                       min_score: float = 0.5, emb: str | None = None) -> dict:
+                       min_score: float = 0.5, emb: str = "__default__") -> dict:
         """GROUP L2 — THE INVERSION-FINDER: the cross-space relation query "same principle, different
         subject." Over the SPACE-KEYED persisted vector index (store/vector_index.query_index with the
         `space=` filter), it returns the items NEAR `item` in `near_space` but NOT near it in `far_space`
@@ -10888,6 +10888,8 @@ class Suite:
         inversion result (source ids); near/far carry the THRESHOLDED neighbour rows (id+score) for the
         surface to render the WHY. Read-only; no model call; not on the MCP face / not in RHM_VERBS."""
         from store import vector_index as _vx
+        from fabric import config as _fcfg
+        emb = _fcfg.resolve_emb_layer(emb)   # __default__ -> pplx; resolved value then threads to space_address + query_index (idempotent)
         near_key = self.store.space_address(item, near_space, emb)
         far_key = self.store.space_address(item, far_space, emb)
         near_rec = self.store.get_vector(near_key)

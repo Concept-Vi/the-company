@@ -62,7 +62,7 @@ def _default_embed(transport, inputs, model, dim=None):
 
 
 def build_index(store, corpus, *, embed_fn=_default_embed, dim=None, model=None, base_url=None,
-                space=None, emb=None) -> dict:
+                space=None, emb="__default__") -> dict:
     """BUILD/REFRESH the persisted vector index over `corpus` = `[{address, text}, ...]`.
 
     INCREMENTAL: an address is (re-)embedded ONLY when NEW or its content_hash CHANGED — unchanged items
@@ -90,6 +90,7 @@ def build_index(store, corpus, *, embed_fn=_default_embed, dim=None, model=None,
     model = model or fcfg.DEFAULT_EMBED_MODEL
     base_url = base_url or fcfg.DEFAULT_EMBED_URL
     dim = fcfg.DEFAULT_EMBED_DIM if dim is None else dim
+    emb = fcfg.resolve_emb_layer(emb)   # __default__ -> DEFAULT_EMB_LAYER (pplx); None/'bge' -> bare layer. Write layer.
 
     # 1) content-hash diff — which addresses are NEW or CHANGED (re-embed) vs UNCHANGED (skip).
     #    The KEY is the SPACE-composed address (store.space_address): for the default space this is the bare
@@ -139,7 +140,7 @@ def build_index(store, corpus, *, embed_fn=_default_embed, dim=None, model=None,
     return {"embedded": len(to_embed), "skipped": skipped, "degraded": False}
 
 
-def query_index(store, query_vector, *, k=5, with_note=False, space=None, emb=None):
+def query_index(store, query_vector, *, k=5, with_note=False, space=None, emb="__default__"):
     """QUERY the persisted index: given a query VECTOR, return the top-K nearest ADDRESSES, REUSING the
     existing `nodes/retrieve` node (the cosine is NOT reimplemented; its _cosine raises ValueError on a
     dim mismatch → the query dim guard is FAIL-LOUD by reuse — never a wrong-but-plausible cosine).
@@ -158,8 +159,10 @@ def query_index(store, query_vector, *, k=5, with_note=False, space=None, emb=No
     'populated, no match'. with_note=False returns the bare ranked list (the nodes/retrieve shape:
     [{id: address, score}, ...]).
     """
+    from fabric import config as fcfg
+    emb = fcfg.resolve_emb_layer(emb)                      # omit-emb callers (query_corpus/consult) -> pplx; explicit None -> bge. Read layer == write layer.
     from nodes import retrieve                              # the existing cosine-ranking node — reused, not reimplemented
-    corpus = store.index_corpus(space=space, emb=emb)       # [{id: <item>, vector}] at the embedder LAYER (emb=None=BGE default)
+    corpus = store.index_corpus(space=space, emb=emb)       # [{id: <item>, vector}] at the embedder LAYER (emb=None=BGE/bare default)
     ranked = retrieve.run({"query": query_vector, "corpus": corpus}, {"k": k})
     if not with_note:
         return ranked

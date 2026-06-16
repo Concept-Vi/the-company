@@ -247,7 +247,11 @@ def find_corpus(store, *, project: str | None = None, kind: str | None = None,
 # junk-skipping file walk producing the unit list the digest fan consumes. Lives HERE because the corpus
 # module owns the record/ingest contract (reuse-don't-parallel: ONE walk, not one per caller).
 WALK_SKIP_DIRS = {"__pycache__", ".git", "node_modules", ".venv", ".data", "dist", "build"}
-WALK_EXTS = (".py", ".md")
+# WALK_EXTS broadened 2026-06-16 (Tim/recollection: repo_ingest was .py/.md-only → couldn't comprehend a TS
+# codebase, e.g. recollection's 140 .ts; blocked the ingest pilot + the "process entire directories" capability).
+# Now the common code+doc set so any project dir is comprehensible. Callers can still pass a narrower `exts=`.
+# (skip_dirs still excludes node_modules/.venv/dist/build/.data, so this doesn't pull in deps/artifacts.)
+WALK_EXTS = (".py", ".md", ".ts", ".tsx", ".js", ".jsx", ".mjs")
 WALK_MAX_CHARS = 6000   # the per-file slice fed to the digest role (a digest needs the head, not the whole)
 
 

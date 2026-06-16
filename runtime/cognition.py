@@ -384,7 +384,7 @@ def run_role(role: Role, ctx: dict, *, base_url: str = RESIDENT_BASE_URL,
 # is up. (The HARD-raise fail-loud lives at the single-embed seam — run_role(op=embed)/complete_embeddings
 # — for a deliberate one-shot embed; the capture pass uses the batch path's degrade.)
 def embed_corpus_to_spaces(store, records, projections, *, embed_fn=None, dim=None,
-                           model=None, base_url=None, emb=None) -> dict:
+                           model=None, base_url=None, emb="__default__") -> dict:
     """Embed corpus RECORDS into their PROJECTION SPACES so find_relations / query_index(space=) read them
     end-to-end. THE thin engine path the corpus capture uses (L1/D2) — a pure delegate to STORE's existing
     space-keyed `vector_index.build_index(space=)`, NOT a second vector path.
