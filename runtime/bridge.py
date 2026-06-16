@@ -57,7 +57,8 @@ BRIDGE_ROUTES = (
     "/api/review/current", "/api/review/status", "/api/journey/replay", "/api/journeys", "/api/voice",
     "/api/personas", "/api/trial/sessions", "/api/trial/transcript", "/api/cognition/models_for_role",
     "/api/cognition/inputs", "/api/cognition/field_types", "/api/cognition/list_runs",
-    "/api/cognition/find_runs", "/api/cognition/find_relations", "/api/cognition/corpus", "/api/roles",
+    "/api/cognition/find_runs", "/api/cognition/find_relations", "/api/cognition/corpus",
+    "/api/cognition/neighbours", "/api/roles",
     "/api/run-stats", "/api/knobs", "/api/voice/engine-knobs", "/api/voice/paths",
     # --- POST routes ---
     "/api/stt", "/api/voice/stt-partial", "/api/tts", "/api/voice/finished-thought", "/api/voice/switch",
@@ -1469,6 +1470,16 @@ class H(BaseHTTPRequestHandler):
                         projection=q.get("projection"), source_address=q.get("source_address"))}))
                 else:
                     self._send(200, json.dumps({"records": SUITE.list_corpus(project=q.get("project"))}))
+            elif path == "/api/cognition/neighbours":      # the NEIGHBOUR NODE-FIELD (recall-under-a-unit; DNA's constellation data)
+                # HTTP twin of corpus(op='neighbours') — DNA's FACE host fetches over HTTP, not the stdio MCP.
+                # Reuses runtime/corpus_neighbours.py (proven: distill/harness.ts -> its distill-module constellation).
+                if not q.get("address"):
+                    self._send(400, json.dumps({"error": "/api/cognition/neighbours needs ?address= (a code:// unit id, fail loud)"}))
+                else:
+                    from runtime import corpus_neighbours as _nb
+                    self._send(200, json.dumps(_nb.neighbours(
+                        SUITE.store, q.get("address"), space=(q.get("space") or "common_knowledge"),
+                        k=int(q.get("k") or 8), emb=(q.get("emb") or "pplx"))))
             elif path == "/api/roles":                     # G4.2: the model-ROLE registry (judge + future) the config lab binds
                 self._send(200, json.dumps(SUITE.roles()))
             elif path == "/api/run-stats":                 # G7 rollup: op.run run-records → distributions (learning by use)
