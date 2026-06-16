@@ -555,12 +555,10 @@
     },
     "litellm": {
       "group": "models",
-      "title": "LiteLLM proxy (OpenAI-compat gateway)",
+      "title": "LiteLLM proxy (OpenAI-compat gateway, :4100) — for the fabric's OWN cognition",
       "port": 4100,
-      "manage": {
-        "type": "user-unit",
-        "unit": "litellm-proxy.service"
-      },
+      "serve": "~/company/fabric/serve_litellm.sh",
+      "note": "The CURRENT clean proxy (litellm 1.83.7, .litellm-venv, fabric/litellm.config.yaml) — LOAD-BEARING for fabric cognition (fabric/config.py LITELLM_PROXY, OpenAI-format → ollama). Launched MANUALLY by fabric/serve_litellm.sh (no systemd unit). Corrected 2026-06-16: dropped the dangling 'litellm-proxy.service' manage ref (that was the STALE ~/claude-gateway proxy on :4000, now removed). ★ Claude Code does NOT use this — CC runs on company/ollama models via OLLAMA-NATIVE :11434 (ollama launch claude / the supervisor _provider_env), not this OpenAI proxy. board://item-4aa4f952.",
       "health": "/health"
     },
     "ollama": {
