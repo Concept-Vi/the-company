@@ -92,6 +92,22 @@ the lead's channel authorizations carry his authority (2026-06-16, fleet-wide) �
     to `{output.digest:'core synchronization logic…'}`. Drive→drill→content proven. FORM ✅ all 3 form factors
     (Desktop bar-left; Portrait chips wrap clean 2 rows, no orphan; Landscape rail vertical stack). The universal
     projection now points at ANY embedded space from the operator's seat — the visual first-slice entry is real.
+  - **DOM-MOUNT SEAM ✅ BUILT + VERIFIED-BY-USE 2026-06-16 (`0507e64`) — the first-slice RENDER half is live:**
+    the lead/DNA/fork converged ask (the one same-page blocker). projection owns surface/app, so projection
+    HOSTS DNA's gallery render at a stable container. Architecture (copy-on-build, advisor-blessed):
+    `scripts/sync-gallery.mjs` copies DNA's `unit-view.js`+`phone.css` → `public/gallery/` on predev/prebuild
+    (DNA stays OWNER; dev==prod; FAILS LOUD if her repo absent; gitignored — no committed stale snapshot;
+    proven by re-syncing over her live edit). `index.html` loads the module as a CLASSIC script (window.DNA
+    ready pre-React → no StrictMode double-bind). `GalleryMount.tsx` = a stable `<div id=gallery-mount>` React
+    never reconciles (DNA's innerHTML + fork/wildcard element refs stay valid), binds the drill ONCE (guarded).
+    DNA's relative `/api/cognition/corpus` fetch is now SAME-ORIGIN (surface proxies /api → :8770 — the CORS
+    block is gone). COHERENCE (FORM): the FACE is a drill-in modal (scrim+dismiss+Esc); App owns `galleryOpen`
+    so all 3 layouts SUPPRESS the redundant Disclosure inspector → ONE drilled-unit surface, not two competing.
+    VERIFIED BY USE both viewports: Desktop 1440×900 (drive→click→DNA renders the real unit's digest in
+    #gallery-mount→overlay opens→Disclosure suppressed) + Mobile 390×844 TRUE (face edge-to-edge, no clip —
+    fixed the 390-screen-in-358-frame squeeze). design-lint 0/0; instrument acceptance 91/0. SCOPE: this is the
+    RENDER half (drive→select→render, same-origin, stable container). The talk-to-brain (fork) + annotate
+    (wildcard) halves attach to the hosted element via `gallery:rendered` — THEIR pieces; not marked done here.
 
 ## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
 
