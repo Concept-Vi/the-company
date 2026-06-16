@@ -801,8 +801,18 @@ class SessionSupervisor:
             settings=settings, add_dir=add_dir, output_format=output_format,
             include_partial=include_partial, debug=debug, safe_mode=safe_mode, bare=bare)
         _apply_spawn_flags(cmd, flags, consent=False)   # R1.3 — the registry-declared remainder
+        # SELF-ID INJECTION (fork's patch 21bcd77, pairs with resolve_own_session safe-consumer c66f392):
+        # a RESUME (non-fork) spawn continues under the resumed sid, so that sid IS the child's own session
+        # id → inject COMPANY_SESSION_ID so the child's resolve_own_session("self") resolves UNAMBIGUOUSLY
+        # instead of failing-loud on a multi-transcript project dir. fork/fresh spawns mint a NEW id unknown
+        # here (claude-assigned at launch) → left to the SessionStart hook; NEVER inject a wrong id (a
+        # confident wrong-self is worse than a loud no-self). dict(os.environ) is byte-identical to inherit
+        # for every non-resume-non-fork spawn — only a resume-clone gains the one var. [self-serve memory]
+        child_env = dict(os.environ)
+        if resume and not fork:
+            child_env["COMPANY_SESSION_ID"] = resume
         s.proc = subprocess.Popen(cmd, cwd=s.cwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE, text=True, bufsize=1)
+                                  stderr=subprocess.PIPE, text=True, bufsize=1, env=child_env)
         threading.Thread(target=self._reader, args=(s,), daemon=True,
                          name=f"reader-{s.id}").start()
         # DRAIN stderr for the LIFE of the process. The OS pipe buffer (~64KB) MUST be emptied or a
