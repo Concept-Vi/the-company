@@ -619,7 +619,8 @@ class SessionSupervisor:
                          output_format: str | None = None,
                          include_partial: bool = False,
                          debug: "str | bool | None" = None,
-                         safe_mode: bool = False, bare: bool = False) -> list[str]:
+                         safe_mode: bool = False, bare: bool = False,
+                         provider: str | None = None) -> list[str]:
         """The PURE claude-command builder (FAMILY 2: CC-10/07.2/25.2/.3/18.7/33.4). Every new param
         is OPTIONAL and defaults to today's behaviour, so the built cmd is BYTE-IDENTICAL to the old
         inline construction when none is passed (the unit test asserts exactly this). Unit-testable
@@ -638,12 +639,28 @@ class SessionSupervisor:
         requires --print + --output-format stream-json — both present)."""
         # transport-fixed head: --input-format stream-json is NON-negotiable (the injection contract).
         out_fmt = output_format or "stream-json"   # default preserves the reader's parse contract
-        cmd = [claude_bin, "-p",
+        # ★ COMPANY-MODEL via the OLLAMA LAUNCHER (Tim 2026-06-16 DIRECT, corrected — supersedes the env
+        # approach): provider='ollama' RUNS `ollama launch claude --model <tag> -- <claude args>`, NOT
+        # `claude` + ANTHROPIC_* env. WHY: a logged-in Claude Code (stored ~/.claude credential) IGNORES an
+        # env overlay and talks to REAL Anthropic → rejects the ollama model name (fork's clone-proof caught
+        # this: boot-clean but "model may not exist"). The launcher properly redirects DESPITE the stored
+        # login — VERIFIED: `ollama launch claude --model kimi-k2.7-code:cloud -- -p ... --mcp-config ...
+        # --allowedTools mcp__company` → LAUNCHER_MCP_OK (passes the transport flags + resolves kimi).
+        # --model goes to the LAUNCHER (before `--`), NOT to claude. (fork re-runs the clone-proof to verify
+        # the full stream-json stdin-injection transport composes through the launcher.)
+        if provider == "ollama":
+            if not model:
+                raise TeachingRefusal("provider='ollama' needs a `model` (an ollama tag, e.g. "
+                                      "'kimi-k2.7-code:cloud') for `ollama launch claude --model <tag>`. Fail loud.")
+            head = ["ollama", "launch", "claude", "--model", model, "--", "-p"]
+        else:
+            head = [claude_bin, "-p"]
+        cmd = head + [
                "--input-format", "stream-json", "--output-format", out_fmt, "--verbose",
                "--permission-mode", permission_mode or fabric_permission(),
                "--mcp-config", _panel._MCP_CONFIG, "--strict-mcp-config",
                "--allowedTools", "mcp__company"]
-        if model:
+        if model and provider != "ollama":   # for ollama the --model is on the launcher (head), not claude
             cmd += ["--model", model]
         if effort:
             cmd += ["--effort", effort]
@@ -677,35 +694,17 @@ class SessionSupervisor:
             cmd += ["--fork-session"]
         return cmd
 
-    # Company-model backend injection (Tim 2026-06-16, CORRECTED): run CC on company/ollama models via
-    # OLLAMA-NATIVE (:11434), NOT the stale litellm proxy. Ollama 0.30.4 launches Claude Code directly
-    # (`ollama launch claude --model <tag>`); the env-var form below is EXACTLY what that launcher sets
-    # under the hood (docs.ollama.com/integrations/claude-code): point ANTHROPIC_BASE_URL at ollama's own
-    # :11434 + AUTH_TOKEN=ollama + API_KEY="". This injects that env beside the already-emitted `--model
-    # <tag>` so a spawned/cloned CC child resolves the tag at OLLAMA (cloud or local model). Build-ONTO the
-    # real, current thing (ollama), NOT the months-out-of-date litellm (to be removed). Values env-overridable.
-    # ★ kimi-k2.7-code:cloud (Tim's preferred) works DIRECT via ollama — it was only broken THROUGH litellm.
-    _COMPANY_BACKEND = {
-        "base_url": os.environ.get("COMPANY_LLM_BASE_URL", "http://localhost:11434"),  # ollama native
-        "auth_token": os.environ.get("COMPANY_LLM_AUTH_TOKEN", "ollama"),
-        # CC fires a background small/fast model; must be a VALID ollama model tag. deepseek-v4-flash:cloud
-        # = cheap cloud (no local GPU load). Override via COMPANY_LLM_SMALL_FAST (e.g. a local tag).
-        "small_fast": os.environ.get("COMPANY_LLM_SMALL_FAST", "deepseek-v4-flash:cloud"),
-    }
-
     @staticmethod
     def _provider_env(provider: "str | None") -> dict:
-        """The env that points a child CC session at OLLAMA (:11434) so its `--model <tag>` runs on a
-        company/ollama model (cloud or local) — exactly what `ollama launch claude` sets. `provider` truthy
-        + not 'anthropic' (e.g. 'ollama'/'company') → the ollama-native ANTHROPIC_* env; None/''/'anthropic'
-        → {} (BYTE-IDENTICAL: the child uses the host Anthropic account, today's behaviour). NOT litellm."""
-        if not provider or provider == "anthropic":
-            return {}
-        b = SessionSupervisor._COMPANY_BACKEND
-        return {"ANTHROPIC_BASE_URL": b["base_url"],
-                "ANTHROPIC_AUTH_TOKEN": b["auth_token"],
-                "ANTHROPIC_API_KEY": "",   # docs: unset/empty so the host Anthropic key can't override ollama
-                "ANTHROPIC_SMALL_FAST_MODEL": b["small_fast"]}
+        """Returns {} — ALWAYS. Company/ollama models are run via the OLLAMA LAUNCHER (the COMMAND, in
+        _build_spawn_cmd: `ollama launch claude --model <tag> -- ...`), NOT via an ANTHROPIC_* env overlay.
+        Tim 2026-06-16 DIRECT: "it should run the ollama launch command, it shouldn't use any of that [env]."
+        WHY the env approach was dropped: a logged-in Claude Code (stored ~/.claude credential) ignores an
+        env API-key/base-url overlay and hits real Anthropic → rejects the ollama model (fork's clone-proof
+        caught it). The launcher redirects correctly despite the stored login. So no env injection — the
+        child env stays the host env (+ COMPANY_SESSION_ID); the provider routes the LAUNCH COMMAND instead.
+        Kept as a {} stub so the spawn call-site is unchanged + a future env-only provider has a home."""
+        return {}
 
     @staticmethod
     def _resolve_bridge_tools(capabilities: "list[str] | str | None",
@@ -830,7 +829,8 @@ class SessionSupervisor:
             claude_bin=claude_bin, resume=resume, fork=fork,
             model=model, effort=effort, fallback=fallback, permission_mode=permission_mode,
             settings=settings, add_dir=add_dir, output_format=output_format,
-            include_partial=include_partial, debug=debug, safe_mode=safe_mode, bare=bare)
+            include_partial=include_partial, debug=debug, safe_mode=safe_mode, bare=bare,
+            provider=provider)   # provider='ollama' → `ollama launch claude --model <tag> -- ...` (not env)
         _apply_spawn_flags(cmd, flags, consent=False)   # R1.3 — the registry-declared remainder
         # SELF-ID INJECTION (fork's patch 21bcd77, pairs with resolve_own_session safe-consumer c66f392):
         # a RESUME (non-fork) spawn continues under the resumed sid, so that sid IS the child's own session
