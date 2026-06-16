@@ -220,11 +220,27 @@ whether the Connections lens (node-type type-flow) is only a slice of the realiz
   degenerate ~empty wheel = green-paint (fails THE BAR's "real data, never a toy slice"). GATED on EITHER marks
   being stamped OR the rows gaining near+far+registered-inverses — then it lights up like cascade did. Not a G10 gap.
 
-## RE-VERIFICATION — 2026-06-15 · BUILD COMPLETE confirmed (post-refactor, full pass)
+## RE-VERIFICATION — 2026-06-16 · BUILD COMPLETE re-confirmed (post-bridge-restart, full pass)
 
-The 2026-06-15 deepening (this session) extracted `bridge.build_projection` as the ONE engine under BOTH faces
-— which sits beneath G10 + G9. Ran the FULL verification pass this fire to prove the refactor preserved THE BAR
-(not "code looks right"):
+**2026-06-16 — G10 + G9 (the cron's literal targets) RE-VERIFIED LIVE after the front-interface beat restarted
+`company-bridge.service`** (the territory_prose composer + `/api/territory/write` landed in `_claude_stream`/
+do_POST — NOT in `build_projection`, so the projection engine is untouched; this pass PROVES no regression, not
+"code looks right"):
+- **Acceptance battery GREEN — 211 checks / 6 suites** (projection_instrument 91 · semantic 23 · scale 29 ·
+  projections 35 · bridge_routes 8 · multilayer 25). Up from 198; more teeth, 0 failures.
+- **G10 `by_node_type` — curl: 16 node-type sectors + 49 REAL directional typed edges (output-type→input-type),
+  0 reciprocal pairs in current data (honest — cycles rendered WHEN present, never forced acyclic). LIVE both
+  viewports 1440×900 + 390×844 — the directed-chord web (arrowheads = direction), coherent FORM, 0 console errors.**
+- **G9 `by_separator` — curl: 162 REAL items, variable poles (worldview/conceptual ↔ sessions/runtime, real
+  `cluster://topics/k8/*` refs). LIVE both viewports — two spatial basins, the `separates` fifth-gate verdict +
+  47/115 balance bar, pole/space/layer/resolution pickers drivable. 0 console errors.**
+- **THE BAR — MET (re-confirmed):** (1) live both viewports + curl ✓ (2) all real data — 16 node-types + 49
+  edges; 162 items + real cluster poles, the whole topics space ✓ (3) drivable (lens/pole/space/layer/res/
+  scrubber/centre) ✓ (4) interactive ✓. **NO CHURN** — zero code change to G10/G9 this fire (the build meets THE
+  BAR; the law forbids re-building a done thing — verification only).
+
+The 2026-06-15 deepening (prior session) extracted `bridge.build_projection` as the ONE engine under BOTH faces
+— which sits beneath G10 + G9. That pass proved the refactor preserved THE BAR (not "code looks right"):
 - **Acceptance battery GREEN — 198 checks / 6 suites:** projection_instrument 91 · semantic 23 · scale 29 ·
   projections 34 · bridge_routes 8 · projection_multilayer 13 (the new live-store teeth, incl. the cwd-regression guard).
 - **G10 (Connections — directional typed edges) — ✅ RE-VERIFIED LIVE both viewports** (1440×900 + 390): 16
