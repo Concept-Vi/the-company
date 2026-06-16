@@ -1,5 +1,6 @@
 import type { SurfaceState } from '../App'
 import { LensChip } from '../toggles/LensChip'
+import { SpaceChip } from '../toggles/SpaceChip'
 import { LayerChip } from '../toggles/LayerChip'
 import { ResChip } from '../toggles/ResChip'
 import { QuantChip } from '../toggles/QuantChip'
@@ -25,6 +26,7 @@ export function Portrait({ s }: { s: SurfaceState }) {
       <header className="bar bar--top portrait-top" {...stamp('ui://chrome/topbar')}>
         <div className="bar-left">
           {s.proj && <LensChip proj={s.proj} current={s.binding} onPick={s.setBinding} />}
+          <SpaceChip proj={s.proj} space={s.space} setSpace={s.setSpace} />
           <LayerChip emb={s.emb} setEmb={s.setEmb} />
           <ResChip proj={s.proj} dim={s.dim} setDim={s.setDim} emb={s.emb} />
           <QuantChip proj={s.proj} quant={s.quant} setQuant={s.setQuant} />

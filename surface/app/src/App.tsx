@@ -44,6 +44,8 @@ export type SurfaceState = {
   setBinding: (id: string) => void
   emb: string | null
   setEmb: (e: string | null) => void
+  space: string | null
+  setSpace: (s: string | null) => void
   dim: number | null
   setDim: (d: number | null) => void
   quant: string | null
@@ -94,6 +96,10 @@ export function App() {
   // THE EMBEDDER LAYER (the multi-layer model): null = the default (BGE) layer; a named layer (e.g. 'pplx')
   // reads that embedder's vectors — every lens is layer-aware (registry-true, driven by /api/layers).
   const [emb, setEmb] = useState<string | null>(null)
+  // THE SPACE (which embedded item-store the lens ranges over): null = follow the binding's default space; an
+  // explicit space (e.g. 'common_knowledge', 'repo') OVERRIDES it. The Instrument is the universal projection —
+  // it points at ANY space, not just each binding's default. Driven by the SpaceChip (registry-true, /api/layers).
+  const [space, setSpaceState] = useState<string | null>(null)
   // THE MRL RESOLUTION (the meaning-zoom axis): null = full dim; an N truncates every read vector to its first
   // N dims before the cosine — a continuous coarse↔fine zoom, orthogonal to the scale rung. Registry-true: the
   // picker's ladder is derived from the active layer's full dim (/api/layer-dims), never hardcoded.
@@ -117,6 +123,15 @@ export function App() {
     setPoles((prev) => ({ ...prev, [which]: { ref, label } }))
   }, [])
   const clearPoles = useCallback(() => setPoles({ a: null, b: null }), [])
+  // changing the SPACE re-frames the whole instrument: the centre/selection/poles were addresses in the OLD
+  // space (their vectors don't exist in the new one → a semantic centre would fail loud). Clear them so the
+  // operator re-anchors cleanly in the new space (fail-honest + no stale cross-space references).
+  const setSpace = useCallback((sp: string | null) => {
+    setSpaceState(sp)
+    setCentre(null)
+    setSelected(null)
+    setPoles({ a: null, b: null })
+  }, [])
   const [live, setLive] = useState(true)
   const [pulse, setPulse] = useState(0) // a live-stream tick → re-fetch (the present moves)
   const lastSeqRef = useRef(0)
@@ -173,7 +188,7 @@ export function App() {
     const params: Record<string, string | number | undefined> =
       binding === 'by_nucleation'
         ? { binding, limit: 400, types_space: nuc.types_space, space: nuc.space, rung: nuc.rung }
-        : { binding, limit: 600 }
+        : { binding, limit: 600, ...(space ? { space } : {}) }   // SpaceChip override (null = the binding's default space)
     // the relative centre re-projects every lens around the attended node (radius = distance FROM it)
     if (centre) params.center = centre.ref
     // the two gravities (G9): operator-picked poles drive the separator (else the binding's default poles)
@@ -207,7 +222,7 @@ export function App() {
     return () => {
       alive = false
     }
-  }, [binding, nuc, centre, poles, at, rung, emb, dim, quant, pulse])
+  }, [binding, nuc, centre, poles, at, rung, emb, dim, quant, space, pulse])
 
   // THE LIVE SPINE (the seed §4 / mandate L9 — live, not a viewer): tail /api/stream from the newest seq we
   // know; when NEW events arrive, pulse a (throttled) re-fetch so the present visibly moves — new points bloom
@@ -281,6 +296,8 @@ export function App() {
     setBinding,
     emb,
     setEmb,
+    space,
+    setSpace,
     dim,
     setDim,
     quant,
