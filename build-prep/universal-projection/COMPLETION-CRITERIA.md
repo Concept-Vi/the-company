@@ -48,6 +48,14 @@ binding, byte-identical) + the `binding.space` echo now reports the ACTIVE space
 center=<contracts.address>)` renders any address in ANY embedded space — the recall→project() handoff is
 seam-ready (verified my side; integration Q to recollection: what address grammar navigate() emits). Tim made
 the lead's channel authorizations carry his authority (2026-06-16, fleet-wide) — [[feedback-channel-relayed-is-proposal]].
+- **SEAM RESOLVED + SPACE REGISTERED (✅ `6648660`):** recollection (Index Chief) chose Option A (publish into
+  a company space, reuse-don't-parallel) and named it. Registered `projections/common_knowledge.py` (embeds:True,
+  level=meaning, produced_by=code, pplx/dim-2560) — the home recollection's comprehended-knowledge index
+  publishes into (`projection="common_knowledge"`), that `project(space=common_knowledge, center=<addr>)`
+  renders as the overlord interface's field. Verified discovered+embeddable+projectable (honest-empty until the
+  pilot publishes); projections_acceptance 35. Exact publish contract pinned to recollection. Per the INTERFACE
+  BRIEF (2026-06-16, Tim-direct): projection is the SEED the front interface extends from — the Instrument's
+  tri-form-factor project()→resolve() surface = the overlord render-field; my brief contribution at `3ade584`.
 
 ## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
 
