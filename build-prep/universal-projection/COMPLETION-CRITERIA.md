@@ -108,6 +108,21 @@ the lead's channel authorizations carry his authority (2026-06-16, fleet-wide) �
     fixed the 390-screen-in-358-frame squeeze). design-lint 0/0; instrument acceptance 91/0. SCOPE: this is the
     RENDER half (drive→select→render, same-origin, stable container). The talk-to-brain (fork) + annotate
     (wildcard) halves attach to the hosted element via `gallery:rendered` — THEIR pieces; not marked done here.
+  - **FACE FORM-CLEAN — design-critic fixes + token-starvation seam ✅ 2026-06-16 (`02813c1`):** a SEPARATE
+    design-critic on whole-screen screenshots (no green-paint) found real FORM defects in MY overlay — all fixed:
+    (1) HEADER COLLISION (desktop, load-bearing) — the centred card's top band overlapped the global header
+    (DNA's "9:41" punched through "default"); a scrim can't fix a spatial collision over dark text, so
+    GalleryMount toggles `body.gallery-modal-open` and CSS RECEDES the competing chrome (.bar/.strata/.rail/
+    .legend/.scrubber) when the FACE is open — the wheel stays dimmed for drill-from context. (2) SCRIM 30%→54%
+    + chrome-recede → the single drilled-unit surface. (3) ✕ moved to MODAL level (overlay top-right, clears the
+    card + DNA's sbar); overlay z 45→60 above all chrome. (4) ★ TOKEN-STARVATION (DNA's diagnosis): phone.css is
+    token-based but its `--dna-*` :root tokens live in piece.css (which carries a global *-reset + body rule —
+    unsafe to load whole), so the host was starving the render → it looked flat (collapsed padding, run-together
+    chips, no warm ground). FIX: sync-gallery.mjs EXTRACTS ONLY piece.css's :root → dna-tokens.css (no globals),
+    loaded before phone.css → DNA's real immersive face renders (warm ground, frosted card, gold pill, spaced
+    glass pills, address bar, hatch). VERIFIED BY USE both viewports (Desktop 1440×900 + Mobile 390×844 true);
+    design-lint 0/0; instrument 91/0. Render half is now FORM-clean. (DNA's content look — the immersive
+    typography/imagery — is being raised through her own adversarial FORM critique loop; separate from this mount.)
 
 ## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
 
