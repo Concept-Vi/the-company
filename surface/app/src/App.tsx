@@ -50,6 +50,7 @@ export type SurfaceState = {
   setQuant: (q: string | null) => void
   selected: ProjPoint | null
   setSelected: (p: ProjPoint | null) => void
+  drillAddress: string | null   // the selected unit's contracts.address (the drill-in handoff target); null = nothing drilled
   feel: MotionFeel
   setFeel: (f: MotionFeel) => void
   view: ViewMode
@@ -139,6 +140,21 @@ export function App() {
     setNotice(getLocus().notice)
     return unsub
   }, [])
+
+  // THE DRILL-IN HANDOFF (front-interface FIRST_SLICE, seam 3): selecting a wheel-point IS "drill into this
+  // addressed unit." The points are canvas-drawn (not ui:// DOM elements), so the ui:// locus doesn't carry
+  // them — instead we EMIT the selected unit's contracts.address (source = the unit, e.g. code://·board://;
+  // address = its run:// record) on a transport-neutral window event. The drill-in consumers — DNA's gallery
+  // render of that unit + fork's loadable-brain bound to that address — hook `projection:select`; same-page
+  // can also read `drillAddress` off the state. We meet at the address (the FIRST_SLICE contract); the look is
+  // DNA's, the brain is fork's — projection only hands off WHICH addressed unit was pointed at. null on deselect.
+  useEffect(() => {
+    const addr = selected ? (selected.source || selected.address || null) : null
+    window.dispatchEvent(new CustomEvent('projection:select', {
+      detail: addr ? { address: addr, source: selected?.source ?? null, record: selected?.address ?? null,
+                       seq: selected?.seq, kind: selected?.kind, space: proj?.binding?.space ?? null } : null,
+    }))
+  }, [selected, proj])
 
   useEffect(() => {
     let alive = true
@@ -263,6 +279,7 @@ export function App() {
     setQuant,
     selected,
     setSelected,
+    drillAddress: selected ? (selected.source || selected.address || null) : null,
     feel,
     setFeel,
     view,
