@@ -340,12 +340,18 @@ def rung_points(store, space: str, k: int, emb: str | None = None) -> list:
     return out
 
 
-def resolve_at_rung(store, query_vector: list, *, space: str, k: int | None = None, n: int = 5) -> dict:
+def resolve_at_rung(store, query_vector: list, *, space: str, k: int | None = None, n: int = 5,
+                    emb: str | None = None) -> dict:
     """RESOLVE a query at a rung — the zoom-by-rung query layer. k=None (or k>=n_units) → the UNIT rung
     (query_index over `space`: returns individual units). A coarse k → query_index over `scale:<space>:k<K>`:
     returns the nearest THEME(S) (cluster centroids, by their cluster `source`). SAME cosine, SAME
-    query_index — only the space (the rung) changes. Returns {rung, ranked:[{id, score}], note}."""
+    query_index — only the space (the rung) changes. Returns {rung, ranked:[{id, score}], note}.
+
+    `emb` = the embedder LAYER, threaded EXPLICITLY to query_index so the rung is queried at the SAME layer
+    its pyramid was BUILT at (build_scale_pyramid's `emb`; default None = the bare layer). This must be passed
+    — relying on query_index's default is a layer-consistency bug: query_index's omit-default is the system's
+    DEFAULT_EMB_LAYER (pplx), which would query a different layer than a bare-built pyramid → empty ranked."""
     from store import vector_index as vx
     rung_space = space if (k is None) else f"scale:{space}:k{k}"
-    res = vx.query_index(store, query_vector, k=n, space=rung_space, with_note=True)
+    res = vx.query_index(store, query_vector, k=n, space=rung_space, with_note=True, emb=emb)
     return {"rung": ("unit" if k is None else f"k{k}"), "space": rung_space, **res}
