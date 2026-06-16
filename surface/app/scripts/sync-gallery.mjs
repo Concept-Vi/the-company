@@ -68,4 +68,28 @@ const tokensCss =
 writeFileSync(join(PUBLIC_GALLERY, 'dna-tokens.css'), tokensCss)
 console.log(`[sync-gallery] dna-tokens.css  (${rootBlocks.length} :root block(s), ${tokensCss.length}B)  ← extracted from piece.css`)
 
-console.log(`[sync-gallery] hosted DNA's gallery face at public/gallery/ (DNA owns the source; this is a fresh copy).`)
+// THE FABRIC HOOKS (fork's loadable-brain wire + wildcard's interaction binder). Same copy-on-build
+// discipline as DNA's module, but the registry-of-truth is the COMPANY repo (build-prep/front-interface/),
+// NOT DNA's repo — fork (ch-8djrpmsl) + wildcard (ch-piffgfxv) own them. They are self-wiring classic-script
+// IIFEs: loaded as <script> in index.html, they register their gallery:rendered / gallery:direction listeners
+// before any user drill. Copied fresh each dev/build (so an owner's edit is picked up); FAIL LOUD if absent.
+const HOOKS_DIR = process.env.FRONT_INTERFACE_DIR ||
+  join(HERE, '..', '..', '..', 'build-prep', 'front-interface')
+const HOOK_FILES = ['wildcard-gallery-binder.js', 'fork-gallery-brain-hooks.js']
+const missingHooks = HOOK_FILES.filter((f) => !existsSync(join(HOOKS_DIR, f)))
+if (missingHooks.length) {
+  console.error(
+    `\n[sync-gallery] FAIL LOUD — fabric gallery hooks missing at ${HOOKS_DIR}:\n` +
+      missingHooks.map((f) => `  - ${f}`).join('\n') +
+      `\nThese are the loadable-brain (fork) + interaction (wildcard) wires the gallery face needs.\n` +
+      `Fix: ensure build-prep/front-interface/ is present, or set FRONT_INTERFACE_DIR to its path.\n`,
+  )
+  process.exit(1)
+}
+for (const f of HOOK_FILES) {
+  const src = join(HOOKS_DIR, f)
+  copyFileSync(src, join(PUBLIC_GALLERY, f))
+  console.log(`[sync-gallery] ${f}  (${statSync(src).size}B)  ← ${src}`)
+}
+
+console.log(`[sync-gallery] hosted DNA's gallery face + fabric hooks at public/gallery/ (owners hold the sources; these are fresh copies).`)

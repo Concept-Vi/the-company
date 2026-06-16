@@ -65,7 +65,7 @@ BRIDGE_ROUTES = (
     "/api/conversation/new", "/api/model/load", "/api/model/config", "/api/mode", "/api/coa",
     "/api/surface-output", "/api/surface-review", "/api/capture-idea", "/api/defer-offer",
     "/api/revive-offer", "/api/build-intent", "/api/cognition/create_role", "/api/cognition/create_skill",
-    "/api/cognition/create_context", "/api/act", "/api/annotate", "/api/apply",
+    "/api/cognition/create_context", "/api/act", "/api/annotate", "/api/apply", "/api/territory/write",
     "/api/propose", "/api/decision", "/api/resolve", "/api/revert", "/api/checkpoint", "/api/pin",
     "/api/react", "/api/attach-chat", "/api/approve-reach", "/api/intent-at",
     "/api/review/start", "/api/review/next", "/api/guide/start", "/api/walkthrough/start",
@@ -1669,16 +1669,13 @@ class H(BaseHTTPRequestHandler):
                 raise ValueError("/api/claude/turn needs {prompt} (fail loud)")
             ctx = None
             if address:
-                try:                                          # the pointed-at element's bundle — degrade-clean
-                    h = SUITE.address_help(address)
-                    bits = [f"Address: {address}"]
-                    for leg in ("what_this_is", "how_to_use"):
-                        v = (h.get(leg) or {}) if isinstance(h.get(leg), dict) else h.get(leg)
-                        if v:
-                            bits.append(f"{leg}: {json.dumps(v, default=str)[:600]}")
-                    ctx = "\n".join(bits)
-                except Exception as e:
-                    ctx = f"Address: {address} (help bundle unavailable: {type(e).__name__})"
+                # SCHEME-AGNOSTIC territory (fork's territory_for): handles run://·board://·code://·ui://·
+                # session://·clone://·mind://… — the projection:select drill targets are mostly run:///code://
+                # corpus points the old ui://-only address_help composer could NOT resolve. territory_prose
+                # NEVER raises (preserves the degrade-clean contract this block already held) and supersets
+                # the ui:// case (address_help is territory_for's ui:// identity leg). See runtime/territory.py.
+                from runtime.territory import territory_prose
+                ctx = territory_prose(address, suite=SUITE)
             # FORAGER D1 (additive) — compose the selection-set block WITH the pointed-address bundle
             # when both ride the turn (the locus first, then the sculpted set). FAIL-SAFE: a non-string
             # degrades through json (never raises out), a hard 8KB cap bounds a misbehaving client, and
@@ -2533,6 +2530,15 @@ class H(BaseHTTPRequestHandler):
                 # annotation rec (unchanged response shape — retrieve the comment via GET /api/annotations).
                 self._send(200, json.dumps(SUITE.ingest_comment(
                     str(addr).strip(), b.get("text", ""), source=b.get("source", "operator"))))
+            elif self.path == "/api/territory/write":    # route-back: persist gallery:direction at sub-addresses
+                # fork's territory_write → suite.mark (scheme-agnostic; the element_id sub-addresses are code://
+                # corpus units, which the ui://-gated annotate would reject). Fail-loud on a bad item → 400.
+                from runtime.territory import territory_write
+                b = self._body()
+                element_id = b.get("element_id")
+                items = b.get("items") or ([b.get("item")] if b.get("item") else [])
+                recs = [territory_write(element_id or it.get("element_id"), it, suite=SUITE) for it in items]
+                self._send(200, json.dumps({"ok": True, "written": len(recs), "marks": recs}))
             elif self.path == "/api/presentation-pref":  # F1 LEARNING LOOP: record "how Tim wants <this>
                 # presented" at a ui:// ADDRESS — the CAPTURE seam. It IS the annotate-branch of the
                 # addressed-feedback channel (a comment at an address WITH a presentation intent), so it

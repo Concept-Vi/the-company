@@ -123,6 +123,40 @@ the lead's channel authorizations carry his authority (2026-06-16, fleet-wide) �
     glass pills, address bar, hatch). VERIFIED BY USE both viewports (Desktop 1440×900 + Mobile 390×844 true);
     design-lint 0/0; instrument 91/0. Render half is now FORM-clean. (DNA's content look — the immersive
     typography/imagery — is being raised through her own adversarial FORM critique loop; separate from this mount.)
+  - **LANE-B TALK ROUND-TRIP ✅ FUNCTION VERIFIED-BY-USE BOTH VIEWPORTS 2026-06-16 — the loadable-brain (fork)**
+    **half attaches; the annotate (wildcard) half is mounted-but-blocked on a DNA contract (honest split):** the
+    two fork-authored bridge diffs + the hook mount the prior entry deferred to "THEIR pieces" are now landed and
+    DRIVEN. (a) `runtime/bridge.py` `_claude_stream` context composer: ui://-only `SUITE.address_help` →
+    scheme-agnostic `territory_prose`. PROVEN DETERMINISTICALLY (run_turn-independent, both vs the old composer on
+    4 real addresses): a run:// drill target went `"help bundle unavailable: ValueError"` (151ch, useless) →
+    **1309ch of real content** (kind + run.record + digest); code:// likewise; ui:// is a strict SUPERSET (693→
+    1445ch); a bad address NEVER raises (degrade-clean preserved). (b) NEW `POST /api/territory/write` →
+    `territory_write`→`suite.mark`: PROVEN by HTTP round-trip (`{ok,written:2,marks:[…]}` — comment/reaction/favour
+    persist + read back via `marks_for`) AND fail-loud (a typeless item → **HTTP 400**, not a silent swallow).
+    py_compile + bridge_routes_acceptance (the drift teeth) both green; the bridge restart was announced on the
+    fabric first (~10s :8770 blip); /api/projection + /api/territory/write + /api/claude/turn all health-checked
+    post-restart (lazy imports surface at request-time — hit, not assumed). (c) THE HOOK MOUNT: `sync-gallery.mjs`
+    now copies fork-gallery-brain-hooks.js + wildcard-gallery-binder.js into public/gallery/ (same copy-on-build
+    discipline; owners hold the build-prep/ source) + index.html loads them as classic IIFEs — they were AUTHORED
+    BUT UNMOUNTED (nothing loaded them; the silent no-op the advisor flagged). (d) BY-USE caught a REAL fork bug
+    (no green-paint): the brain button didn't appear → console `TypeError: …reading 'brainBound'` → fork's
+    gallery:rendered listener read `d.root || document` but DNA's CONFIRMED emit is `{element,…}` (wildcard already
+    adapted; fork hadn't), so it bound to `document` (no `.dataset`) and crashed. FIXED: bind at `d.element || d.root`,
+    element-guard, never `document`. (e) **hook-1 (loadable brain / talk leg) VERIFIED BY USE:** Desktop 1440×900 —
+    drove Meaning→common_knowledge→clicked a wheel-point → DNA rendered the CHANGELOG.md unit → "Ask Claude Code
+    about this" bound to the unit root → clicked → typed → `POST /api/claude/turn` streamed a **content-correct**
+    answer ("a comprehended capture of the CHANGELOG.md from your 'recollection' project … sync workers, MCP plugin
+    support, recall skills") into the panel (num_turns=1, no tools — proving territory_prose fed the unit's real
+    content; before the diff this address gave "unavailable" → the brain had nothing). Mobile 390×844 — same drill,
+    brain-ask binds, overlay edge-to-edge (x:0 w:390), 0 console errors. **SCOPE (lead's framing — NOT form-done):**
+    this proves the TECHNICAL layer only. fork's brain panel is UNSKINNED (`.brain-ask/.brain-panel/.brain-reply`
+    are DNA's RE-SKIN, pending) — FUNCTION ✅, FORM is DNA's parallel raise. The sbar (9:41) was NOT suppressed
+    (DNA holds that call; the lead's "it goes" was conditioned on her confirm, which she declined). 🔴 **OPEN —
+    hook-2 annotate (wildcard) browser binding:** the WRITE BACKEND is proven (HTTP above), but wildcard's binder
+    bound 0 strips by-use because its selector targets semantic HTML (`p,h1..h6,li,…`) while DNA renders pure divs
+    (`.screen.uv > .uv-words > .p-frost`, anchorableCount=0). Needs the DNA↔wildcard anchorable contract: DNA tags
+    blocks `[data-anchorable]` (already in wildcard's selector) OR wildcard adds DNA's content-block classes.
+    SURFACED to fork/wildcard/DNA with evidence — not guessed at DNA's markup (her render is hers).
 
 ## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
 
