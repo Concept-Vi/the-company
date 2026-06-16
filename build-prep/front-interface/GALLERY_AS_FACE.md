@@ -11,11 +11,11 @@
 ## STEP 1 — FULL PICTURE (the deep look-through; FINDING, first real capability-use)
 Get everything about the gallery on the table, into the channel:
 - **DNA — launch KIMI ERA-CLONES of yourself** (the new ollama-clone capability — `clone_at(provider='ollama', model='kimi-k2.7-code:cloud')`) to do a LARGE look-through of: the SLIDE-FORM mobile UI mockups (the liked look — find it + all about it), the ALMANAC content, and everything else in the gallery → a FULL PICTURE posted to the channel. (Or a local-concurrent `mcp__company__ingest` dir-scan of the gallery repo — free, whole-dir. Either/both.) Clone-boots are lead-sequenced (cloud kimi = no local-GPU contention). VERIFY the capability with ONE live boot first (fork's proof), then scale.
-- **wildcard — KIMI ERA-CLONES or a DYNAMIC WORKFLOW** to map ALL the interactive ways (the annotation system + the rest) → the interaction layer the gallery needs.
+- **wildcard — ✅ DONE (GPU-free, by reading — no clone needed, litellm-lesson applied):** the interaction layer is ALREADY a closed typed contract in `contracts/taxonomies.json` — 4 categories (comment·reaction·highlight·favour) · 5 reaction stamps (good·wrong·explain·remember_this·do_this) · 10 comment types · 3 navigation · the response-envelope `{element_id, category, type, text, reaction, favour}` write-back contract. Binding pattern = `makeAnnotatable(element)` (one element-walker serves ANY rendered surface — F13c). ★ So the gallery does NOT build an interaction system — it INHERITS one by being WALKED. Tim's real use (snapshot data): make comment(direction/question/correction) + reaction(good/wrong) + favour + highlight prominent = ~all of it. (F15.)
 
 ## STEP 2 — UPGRADE THE GALLERY (light; DNA-owned, after the picture)
 - Add a **DESKTOP** form (it has mobile + the slide-form).
-- **Update the gallery to hold the INTERACTION SYSTEM** (wildcard's annotation/direction ways) — so the gallery becomes operable, not just presentational.
+- **The gallery INHERITS the interaction system by being WALKED** (DE-SCOPED, wildcard F15): not a build — run `makeAnnotatable` over the rendered gallery elements + use the `taxonomies.json` vocabulary + the response-envelope write-back. The interaction layer is portable/built; the gallery just gets walked. (Make comment/reaction/favour/highlight prominent.)
 - Write a **"HOW TO ADD THINGS INTO THE GALLERY"** guide → channel content (so the whole fabric can put designs into the gallery).
 
 ## STEP 3 — DESIGN THE INTERFACE INTO THE GALLERY FORMAT (the face, for the face)
