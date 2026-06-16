@@ -162,6 +162,28 @@ the lead's channel authorizations carry his authority (2026-06-16, fleet-wide) �
     anchorableCount=0). Needs the DNA↔wildcard anchorable contract: DNA tags blocks `[data-anchorable]` (already in
     wildcard's selector — drop-in) OR wildcard adds DNA's content-block classes. SURFACED to fork/wildcard/DNA with
     evidence — not guessed at DNA's markup (her render is hers).
+  - **HOST-SYNC organisms.js + hook-2 annotate CLOSED + constellation DATA-PATH live 2026-06-16 (`11d64bd` + peer**
+    **`ff98143` + my restart):** the in-host first-slice FACE advanced on three fronts. (a) **organisms.js HOSTED**
+    (my `11d64bd`): DNA's renderUnit now calls `DNA.org.hubNetwork` (the unit→neighbour constellation), so
+    sync-gallery.mjs copies `organisms.js` into public/gallery/ + index.html loads it BEFORE unit-view.js (DNA's
+    host-wiring note). Pure generator module, 0 global side-effects → safe as a classic script (verified:
+    `window.DNA.org.hubNetwork === function` in-host). (b) **hook-2 annotate write-back ✅ CLOSED BY-USE** — the
+    prior entry's 🔴 wildcard-selector gap is RESOLVED: DNA tagged content blocks `[data-anchorable]` (+ data-address)
+    + wildcard committed a rot-proof 3-tier selector; my re-sync picked up DNA's updated unit-view.js → drill
+    CHANGELOG.md → wildcard binds **3 annotation strips (0→N)** → clicked a `good` reaction → `gallery:direction` at
+    the unit sub-address → `POST /api/territory/write` **[200]** → `gallery:rerender`, no write-error. The full
+    first-slice round-trip (talk + annotate) is closed in-browser; hook-1 brain still binds (no regression); 0
+    console errors. (c) **constellation DATA-PATH live** — `GET /api/cognition/neighbours` (peer `ff98143`, HTTP twin
+    of MCP corpus op='neighbours', reuses `runtime/corpus_neighbours`) brought online by my bridge restart (it 404'd
+    pre-restart). Curl + same-origin browser fetch both 200: harness.ts → **5 real neighbours** (index.ts 0.75 …
+    extractor 0.55 — the distill-module constellation), shape `{source,score}`. ★ ADDRESS CONTRACT probed
+    deterministically (advisor's blocking item — wrong form = silent-empty constellation): the **code:// SOURCE**
+    address has the vector; the run:// record form returns honest-EMPTY. Coverage 60/60 sampled common_knowledge
+    units have neighbours (CHANGELOG.md is a rare unembedded anomaly → degrade-clean card-only). 🔴 **OPEN — the
+    constellation RENDER** is DNA's last half: renderGallery fetches only `/api/cognition/corpus`; it needs a parallel
+    `/api/cognition/neighbours` fetch (keyed on `opts.source` = code://) to set `unit.neighbours` → hubNetwork draws.
+    Exact contract (URL + the code:// address-form gotcha + {source,score} shape) SURFACED to DNA; her file, not
+    clobbered (actively raised). Once she wires it + re-syncs, the constellation renders in-host = full first-slice FORM.
 
 ## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
 
