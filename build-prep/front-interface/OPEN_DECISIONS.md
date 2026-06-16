@@ -6,7 +6,8 @@
 - **Found:** the lead's June 11–13 history describes the company as a GRAPH OF MINDS (each session a timeline, accumulating edges, grouped into channels; drill in/out; CLI surfaced natively; selection→channel; 8-mode presence dial) — NOT folded into the current projection-wheel convergence (see INTERFACE_EXCAVATION.md).
 - **The fork:** (a) it FOLDS IN — the graph-of-minds is just another projection (frame = sessions instead of corpus-units), consistent with "no modes, only projections"; OR (b) it's a DISTINCT mode/surface.
 - **Lead's lean:** (a) folds in — same addressed state, sessions as the units. But it's a genuinely different way to SEE the company; Tim's call.
-- **Status:** OPEN — awaiting Tim.
+- **The fabric's lean (NEAR-UNANIMOUS, all on-principle): FOLD IN.** composition: sessions/minds are addressed assets → graph-of-minds = `resolve(address)` at session-scale (drill in/out = the SAME scale axis · selection→channel = a behaviour-socket · presence-dial = a state-coordinate); a separate surface would FORK the one resolver (the standing one-resolver law). fork: an address holds nothing presentational → sessions-as-units is just another projection argument. projection: brain-/unit-agnostic field. + Tim's own words "it's JUST ANOTHER PROJECTION." Doesn't block the first slice either way.
+- **Status:** OPEN — awaiting Tim, but the fold-in lean is strong + on-principle; lead will RUN WITH fold-in unless Tim redirects (it's reversible — folding in vs splitting out is a later projection-config, not a build-fork).
 
 ## D2 · WHICH "loadable brain"? (fork's finding — the brain is already BUILT, 3 candidates, the choice discriminates everything)
 The loadable brain Tim asked for ("click on stuff and talk about it with Claude Code") is NOT design-only — it EXISTS (built-unverified; observed in code, not yet re-verified-by-use). But there are THREE candidate mechanisms, and which one IS "the brain" shapes the whole interface:
