@@ -677,6 +677,35 @@ class SessionSupervisor:
             cmd += ["--fork-session"]
         return cmd
 
+    # Company-model backend injection (research a28d4be / Tim 2026-06-16: "run CC on company/ollama models,
+    # not just Anthropic"). The company's LiteLLM proxy (:4100) exposes the Anthropic Messages API and
+    # translates to ollama-cloud + local-vLLM — VERIFIED end-to-end (`claude -p` against :4100 on a cloud
+    # model → exit 0). _build_spawn_cmd already emits `--model <alias>`; this returns the ANTHROPIC_* env to
+    # inject BESIDE it so the child resolves that alias AT THE PROXY (a company model) instead of the host
+    # Anthropic account. Build-ONTO-the-existing: the proxy + the --model param already exist; this is the
+    # one missing env seam. Values env-overridable (registry-not-hardcode); defaults = the verified proxy.
+    _COMPANY_BACKEND = {
+        "base_url": os.environ.get("COMPANY_LLM_BASE_URL", "http://localhost:4100"),
+        "auth_token": os.environ.get("COMPANY_LLM_AUTH_TOKEN", "sk-company-local"),
+        # CC fires a background small/fast model; must be a VALID proxy alias (deepseek-v4-flash = cheap,
+        # verified working). kimi-k2.7-code is BROKEN through the current proxy (empty-content translation
+        # bug + no route) — do NOT default to it until fabric/litellm.config.yaml is fixed. [gap flagged to Tim]
+        "small_fast": os.environ.get("COMPANY_LLM_SMALL_FAST", "deepseek-v4-flash"),
+    }
+
+    @staticmethod
+    def _provider_env(provider: "str | None") -> dict:
+        """The env that points a child CC session at a COMPANY-MODEL backend (the LiteLLM :4100 proxy).
+        `provider` truthy + not 'anthropic' (e.g. 'company'/'litellm'/'ollama') → the ANTHROPIC_* proxy env;
+        None/''/'anthropic' → {} (BYTE-IDENTICAL: the child uses the host Anthropic account, today's behaviour).
+        All company/ollama/local routes go through the one Anthropic-compat proxy — never a second path."""
+        if not provider or provider == "anthropic":
+            return {}
+        b = SessionSupervisor._COMPANY_BACKEND
+        return {"ANTHROPIC_BASE_URL": b["base_url"],
+                "ANTHROPIC_AUTH_TOKEN": b["auth_token"],
+                "ANTHROPIC_SMALL_FAST_MODEL": b["small_fast"]}
+
     @staticmethod
     def _resolve_bridge_tools(capabilities: "list[str] | str | None",
                               extra_tools: "list[str] | str | None") -> "tuple[list[str], list[str]]":
@@ -779,7 +808,8 @@ class SessionSupervisor:
               settings: str | None = None, add_dir: "list[str] | str | None" = None,
               output_format: str | None = None, include_partial: bool = False,
               debug: "str | bool | None" = None, safe_mode: bool = False,
-              bare: bool = False, flags: dict | None = None) -> Supervised:
+              bare: bool = False, flags: dict | None = None,
+              provider: str | None = None) -> Supervised:
         # R1.3: registry-declared flags VALIDATE BEFORE the session registers (no half-built record);
         # a plain spawn carries NO consent — consent-posture rows refuse loud here, teaching the
         # bridge-session path.
@@ -811,6 +841,11 @@ class SessionSupervisor:
         child_env = dict(os.environ)
         if resume and not fork:
             child_env["COMPANY_SESSION_ID"] = resume
+        # COMPANY-MODEL BACKEND (research a28d4be): when a non-Anthropic provider is chosen, inject the
+        # ANTHROPIC_* env so the child's `--model <alias>` resolves at the LiteLLM proxy (a company/ollama
+        # model — cheap cloud / free local) instead of the host Anthropic account. {} when provider is
+        # None/'anthropic' → byte-identical to today. The --model alias is already on `cmd` (line ~646).
+        child_env.update(self._provider_env(provider))
         s.proc = subprocess.Popen(cmd, cwd=s.cwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE, text=True, bufsize=1, env=child_env)
         threading.Thread(target=self._reader, args=(s,), daemon=True,
@@ -1552,7 +1587,8 @@ class H(BaseHTTPRequestHandler):
                               include_partial=bool(body.get("include_partial")
                                                    or body.get("include_partial_messages")),
                               debug=body.get("debug"), safe_mode=bool(body.get("safe_mode")),
-                              bare=bool(body.get("bare")), flags=body.get("flags"))
+                              bare=bool(body.get("bare")), flags=body.get("flags"),
+                              provider=body.get("provider"))   # company-model backend (litellm proxy) when set
                 if body.get("prompt"):
                     SUP.inject(s, str(body["prompt"]), source=body.get("source") or "http")
                 self._send(200, {"ok": True, "session": s.record()})
