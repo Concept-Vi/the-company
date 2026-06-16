@@ -842,6 +842,16 @@ class SessionSupervisor:
         child_env = dict(os.environ)
         if resume and not fork:
             child_env["COMPANY_SESSION_ID"] = resume
+        # PATH FIX (fork's clone-proof caught it, 2026-06-16): the ollama launcher invokes the BARE name
+        # `claude` (`ollama launch claude ...`), which ollama resolves via the CHILD PATH. The systemd
+        # supervisor's PATH has NO ~/.local/bin (where claude lives) → `Error: claude is not installed`.
+        # claude_bin is already resolved ABSOLUTELY above (_panel._find_claude = /home/tim/.local/bin/claude),
+        # so put its DIR on the child PATH and `ollama launch claude` finds the SAME binary. (Anthropic-provider
+        # spawns put claude_bin's absolute path ON cmd, so PATH is irrelevant there — scoped to the launcher
+        # case to keep intent clear. This is the exact PATH gap _find_claude exists to dodge for the binary
+        # itself, re-opened because the launcher hands ollama a NAME, not a path.)
+        if provider == "ollama":
+            child_env["PATH"] = os.path.dirname(claude_bin) + os.pathsep + child_env.get("PATH", "")
         # COMPANY-MODEL BACKEND (research a28d4be): when a non-Anthropic provider is chosen, inject the
         # ANTHROPIC_* env so the child's `--model <alias>` resolves at the LiteLLM proxy (a company/ollama
         # model — cheap cloud / free local) instead of the host Anthropic account. {} when provider is
