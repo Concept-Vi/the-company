@@ -17,8 +17,10 @@ const PUBLIC_GALLERY = join(HERE, '..', 'public', 'gallery')
 // DNA's canonical source (env-overridable so a relocated checkout still resolves; default = the fleet path).
 const DNA_UI = process.env.DNA_UI_DIR || '/home/tim/repos/counterpart/design/ui'
 
-// the files the host needs to render the gallery face: DNA's renderer + its look.
-const FILES = ['unit-view.js', 'phone.css']
+// the files the host needs to render the gallery face: DNA's organism generators (DNA.org.* — renderUnit
+// calls DNA.org.hubNetwork for the unit→neighbour constellation; MUST load before unit-view.js), her renderer,
+// and its look. organisms.js is a pure generator module (no global *-reset / body rule), safe to host whole.
+const FILES = ['organisms.js', 'unit-view.js', 'phone.css']
 
 const missing = FILES.filter((f) => !existsSync(join(DNA_UI, f)))
 if (missing.length) {

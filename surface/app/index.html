@@ -21,6 +21,10 @@
          when React mounts (avoids a StrictMode double-bind race on projection:select). -->
     <link rel="stylesheet" href="/gallery/dna-tokens.css" />
     <link rel="stylesheet" href="/gallery/phone.css" />
+    <!-- DNA's organism generators (DNA.org.* — the unit→neighbour constellation hubNetwork). MUST load BEFORE
+         unit-view.js, whose renderUnit calls DNA.org.hubNetwork (else the constellation renders empty in-host —
+         DNA's host-wiring note 2026-06-16). A pure generator module; no global CSS, safe as a classic script. -->
+    <script src="/gallery/organisms.js"></script>
     <script src="/gallery/unit-view.js"></script>
     <!-- THE FABRIC HOOKS — wildcard's interaction binder + fork's loadable-brain wire (self-wiring IIFEs,
          copied by scripts/sync-gallery.mjs from build-prep/front-interface/). Classic scripts so their
