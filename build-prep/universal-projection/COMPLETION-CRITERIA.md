@@ -184,6 +184,23 @@ the lead's channel authorizations carry his authority (2026-06-16, fleet-wide) �
     `/api/cognition/neighbours` fetch (keyed on `opts.source` = code://) to set `unit.neighbours` → hubNetwork draws.
     Exact contract (URL + the code:// address-form gotcha + {source,score} shape) SURFACED to DNA; her file, not
     clobbered (actively raised). Once she wires it + re-syncs, the constellation renders in-host = full first-slice FORM.
+  - **CONSTELLATION RENDERS LIVE IN-HOST ✅ VERIFIED BY USE BOTH VIEWPORTS 2026-06-16 — the prior 🔴 closed; the**
+    **first-slice FACE is FUNCTION-complete in-host (FORM polish is DNA's/composition's):** DNA wired renderGallery's
+    neighbours fetch (`?address=<opts.source code://>` — the code:// gotcha handled) + a `neighboursToNodes` mapper;
+    I RE-SYNCED her updated unit-view.js (9069→11145B) into public/gallery/ and verified IN THE HOST (not on DNA's
+    stub). Drilled an embedded unit (`backfill.ts`) at 1440 AND 390: the corpus-fetch + the **neighbours-fetch** both
+    fire → the constellation SVG renders **7 REAL neighbour nodes** (backfill.test.ts 0.70 · sync.ts 0.56 · db.ts
+    0.55 · integration.test 0.52 · crossings 0.51 …), labeled by **editorial ROLE** (cli/indexer/crossings/test/sync/
+    db — DNA's roleOf, not filenames), score-weighted, the hub `{ }` kind-glyph at centre, each node a drillable
+    code:// address; "7 linked" chip shows the count. Host frame is the correct 390px phone width (`.screen.uv` fills
+    it exactly — my sizing faithful). 0 console errors both viewports; overlay edge-to-edge at 390. So the in-host
+    FACE is now: real CARD + real CONSTELLATION + talk (hook-1) + annotate (hook-2) — ALL real-data, same-origin,
+    drivable, interactive. The recall-under-unit lane is closed end-to-end (corpus_neighbours → MCP op 8a77a2e →
+    HTTP route ff98143 → DNA's fetch → in-host render). 🟡 **FORM polish remaining (NOT mine — surfaced):** (1) on a
+    long-digest unit the `.uv-words` card (h≈603) overlaps the `.uv-field` constellation (overlapX=206) — DNA's render
+    LAYOUT at varying content lengths (the frame is correctly 390px; not a host bug). (2) the live render shows RAW
+    editorial voice (filename title + full digest) — composition's digest→title/telegraphic-card transform pending
+    (DNA noted). Both are DNA's/composition's parallel raise; the host integration + data are complete + faithful.
 
 ## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
 
