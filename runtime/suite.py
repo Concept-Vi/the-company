@@ -4745,60 +4745,59 @@ class Suite:
           • index EMPTY (embedder was down at build) → query_index's honest note → warn + return None
           • ranked but NO code:// address resolves to a readable file → return None (keyword fallback)
         NEVER a silent zero-vector, NEVER a fabricated nearest, NEVER a wrong cosine."""
-        import os, glob
-        from nodes import codebase as cb
+        import os
         from store import vector_index as vx
         qvec = self._embed_consult_query(query)
         if qvec is None:                                      # :8001 down — warned already
             return None
-        result = vx.query_index(self.store, qvec, k=8, with_note=True)
+        # CONSULT RETRIEVAL = the LIVE SPACED pplx corpus (the 'repo' space — the company's code digests,
+        # keyed code://), NOT the dead UNSPACED index (78 orphan bge vectors → empty → always keyword).
+        # Single-layer-pplx + the rerank precision stage = projection's design (MULTI-LAYER-CONSULT.md d53a38e).
+        result = vx.query_index(self.store, qvec, k=12, space="repo", with_note=True)
         ranked = result.get("ranked", [])
-        if not ranked:                                        # EMPTY index (embedder down at build) or no rank
+        if not ranked:                                        # EMPTY repo index (embedder down at build) or no rank
             self._emit("warning",
-                       f"consult: the vector index returned no ranking ({result.get('note', 'empty')}) — "
+                       f"consult: the repo vector index returned no ranking ({result.get('note', 'empty')}) — "
                        "falling back to the keyword scan")
             return None
-        # Resolve the ranked code:// addresses back to source files in the worktree (the SAME globs the
-        # keyword path + the codebase node read — one corpus). Read each candidate file ONCE.
+        # PRECISION STAGE (projection's design): reorder the pplx cosine top-K by the jina-v3 cross-encoder
+        # (corpus_rerank → :8008, CPU/0-VRAM, no GPU contention). ADDITIVE — on ANY rerank failure (service
+        # down, or a hit lacks CAS digest text → rerank_hits raises) DEGRADE to the valid pplx cosine order
+        # with a warning (cosine is the proven base; consult must not break on a precision-stage hiccup).
+        try:
+            from runtime import corpus_rerank
+            _reordered = corpus_rerank.rerank_hits(self.store, query, ranked).get("reranked") or []
+            if _reordered:
+                ranked = [{"id": r["address"], "score": r.get("rerank_score")} for r in _reordered]
+        except Exception as e:
+            self._emit("warning", f"consult: rerank stage unavailable ({e}) — using pplx cosine order")
+        # Resolve the ranked addresses to worktree files. The 'repo' space keys each file by its FULL
+        # relpath (code://<relpath>), so resolution is DIRECT: code://<relpath> -> root/<relpath> — no
+        # stem-glob guessing (the old format was code://<stem>/<symbol>; the repo corpus is per-file).
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # ~/company (this worktree)
-        files = {}                                            # stem -> [(relpath, text), ...] (stem can collide)
-        rel_text = {}                                         # relpath -> text
-        for g in cb.DEFAULT_GLOBS:
-            for p in sorted(glob.glob(os.path.join(root, g))):
-                rel = os.path.relpath(p, root)
-                if rel in rel_text:
-                    continue
-                try:
-                    text = open(p, encoding="utf-8").read()
-                except Exception:
-                    continue
-                rel_text[rel] = text
-                stem = os.path.splitext(os.path.basename(rel))[0]
-                files.setdefault(stem, []).append(rel)
-        file_list = sorted(rel_text.keys())
-        picked, seen = [], set()                              # (rel, text, hits) in cosine-rank order, de-duped
+        picked, seen = [], set()                              # (rel, text, hits) in (reranked|cosine) order, de-duped
         for r in ranked:
-            stem, sym = self._code_addr_parts(r.get("id", ""))
-            if stem is None or stem not in files:             # ui:// address or a stem with no source file
+            addr = r.get("id", "")
+            if not addr.startswith("code://"):                # ui:// or other non-source address — skip
                 continue
-            cands = files[stem]
-            # Disambiguate a stem collision by the symbol actually appearing in the file; else the first.
-            rel = None
-            if sym:
-                for c in cands:
-                    if sym in rel_text[c]:
-                        rel = c; break
-            rel = rel or cands[0]
+            rel = addr[len("code://"):]
             if rel in seen:
                 continue
+            p = os.path.join(root, rel)
+            if not os.path.isfile(p):                         # stale index entry (file moved/deleted) — skip
+                continue
+            try:
+                text = open(p, encoding="utf-8").read()
+            except Exception:
+                continue
             seen.add(rel)
-            # hits = the symbol (so the windowing centres on the relevant region for a big file)
-            picked.append((rel, rel_text[rel], [sym] if sym else []))
+            picked.append((rel, text, []))                    # per-file hit (repo addresses carry no symbol)
         if not picked:                                        # nothing in the index resolved to a readable file
             self._emit("warning",
-                       "consult: the index ranked addresses but none resolved to a source file — "
+                       "consult: the repo index ranked addresses but none resolved to a readable file — "
                        "falling back to the keyword scan")
             return None
+        file_list = [rel for rel, _, _ in picked]             # the retrieved files (orientation = what was used)
         context, sources = self._fill_consult_budget(picked)
         return context, sources, file_list
 
