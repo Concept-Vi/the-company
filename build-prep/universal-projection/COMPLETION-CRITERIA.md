@@ -52,10 +52,17 @@ the lead's channel authorizations carry his authority (2026-06-16, fleet-wide) �
   a company space, reuse-don't-parallel) and named it. Registered `projections/common_knowledge.py` (embeds:True,
   level=meaning, produced_by=code, pplx/dim-2560) — the home recollection's comprehended-knowledge index
   publishes into (`projection="common_knowledge"`), that `project(space=common_knowledge, center=<addr>)`
-  renders as the overlord interface's field. Verified discovered+embeddable+projectable (honest-empty until the
-  pilot publishes); projections_acceptance 35. Exact publish contract pinned to recollection. Per the INTERFACE
+  renders as the overlord interface's field. projections_acceptance 35. Exact publish contract pinned to recollection. Per the INTERFACE
   BRIEF (2026-06-16, Tim-direct): projection is the SEED the front interface extends from — the Instrument's
   tri-form-factor project()→resolve() surface = the overlord render-field; my brief contribution at `3ade584`.
+  - **RENDER PROOF ✅ CLOSED + VERIFIED-BY-USE 2026-06-16 (`d53a38e`):** recollection's pilot PUBLISHED (102
+    pplx units, dim 2560, `backfill.ts` semantically verified by them). The recall→project()→resolve() spine is
+    DEMONSTRATED live through the MCP `project` door: `project(space=common_knowledge,
+    center=code:///home/tim/recollection/test/sync.test.ts, emb=pplx)` → centre **r=0.0** (self), nearest
+    `sync-error-sentinel.test.ts` **r=0.06**, farthest `version-consistency.test.ts` **r=1.0**. Radius = cosine
+    meaning-distance over the comprehended index. Layer discipline proven: common_knowledge is pplx-ONLY → the
+    centre must be `emb=pplx`; a wrong-layer/wrong-address centre **fails loud** (no silent fallback) — verified
+    both the success and the fail-loud. No longer "honest-empty / pending its data" — the circuit is closed.
 - **FIRST_SLICE seam 3 — the DRILL-IN HANDOFF ✅ BUILT + verified live (`7852acb`):** the build-HOLD was lifted
   for the first slice (Tim "scope it"); my assigned seam = wheel-point → the gallery render of that addressed
   unit. Built the projection-side (engine, not look — the look is DNA's): selecting a wheel-point emits the
@@ -64,6 +71,16 @@ the lead's channel authorizations carry his authority (2026-06-16, fleet-wide) �
   hook it; we meet at the address. Verified live BOTH viewports (1440×900 → code://contracts/resolver.py,
   390/portrait → code://ops/cli/serveconfig.py; null on address-less points — fail-honest). design-lint 0
   literals. Reversible transport (simple-consent). The full overlord-surface assembly stays held (finding phase).
+  - **ADDRESS-FIELD BUG FIXED + VERIFIED END-TO-END 2026-06-16 (`4f1b50c`):** caught verifying the lead's keystone
+    (renderGallery resolves THROUGH `resolve_address`). The `address` field was source-FIRST → for corpus points
+    that is the `code://` source, which `resolve_address` **fails loud** on ('scheme code not content-resolvable
+    yet') → would have BROKEN DNA's renderGallery at my seam. The resolvable `run://` record was misfiled into
+    `record`. FIX: `address` = `selected.address || selected.source` (run:// record first → resolve_address reads
+    it today); `source` kept as the canonical `code://·board://` unit address (fork's brain target + wildcard's
+    route-back mutation-at-address). VERIFIED LIVE (not code-looks-right): clicked a real wheel-point in the
+    semantic 'topics' view → emitted `address=run://corpus/company/code://ops/cli/serveconfig.py/topics` →
+    `inspect_address` resolves it to `{output:[topics...], source_address}`. click→emit→resolve proven end-to-end;
+    typecheck clean; no other consumer (DNA hadn't built renderGallery). Corrected seam contract handed to DNA+lead.
 
 ## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
 
