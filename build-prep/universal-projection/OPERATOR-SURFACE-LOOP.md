@@ -262,3 +262,40 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
     non-technical operator (tentative; ratification gated on Tim/DNA + OQ3 tutorial).
   - **NEXT:** the remaining verbs (Go to/Drive/Source/Make → backends); the built-in TUTORIAL (gated OQ3); seed more
     kinds + other registries' meta as views surface them.
+- **2026-06-17 — ✅ re-verified the V BRAIN survives fork's env-scrub + ✅ LEGIBILITY: the CONNECTIONS lens reads human.**
+  TWO things this fire:
+  - **(1) MANDATORY re-verify (fork touched my wire).** fork's commit `1c0aa25` made `ui_claude_session.run_turn`
+    pass `env=_brain_env()` to the `claude -p` Popen (strips `SUPABASE_*`/`VI_VISION_*` from the brain subprocess,
+    for the vi-vision merge). Drove 'Ask' on my live mount at 390: the full turn streamed GREEN — init→text→tool→
+    final (~1.8k-char grounded reply; it ran a grounding TOOL mid-turn, so tool-use survived the scrub), POST
+    /api/claude/turn 200, no error, operator-law held (said "the Instrument surface", never a raw address). No
+    regression; reported to fork (thread `t-1781684391`).
+  - **(2) the CONNECTIONS lens (binding=by_node_type) was illegible** — its sectors are NODE TYPES, not kinds, so
+    they fell through to the humanize-only fallback: cryptic titlecased ids ("Llm", "Titlecase", "Rhm Mode",
+    "Portal", "Gate"), `meaning: null` on all 16 (verified via curl). FIX, mirroring the accepted `kinds/raw.py`
+    pattern (composition's "ONE legibility-type, MANY registries"): NEW `nodes/_meta.py` `NODE_TYPE_META`
+    `{node:{name,is}}` for all 16 node types (grounded in each node module's own docstring, TENTATIVE for Tim/DNA);
+    `nodes/__init__.py` makes the dir importable (discover() skips `_`-files, so neither is loaded as a node);
+    `projection.py` now picks the meaning-registry by sector DOMAIN (`binding.angle_from`: kinds default, node-types
+    for Connections) via `_SECTOR_META_BY_DOMAIN` + the `_kind_name/_kind_meaning(s, meta)` param. Files:
+    `nodes/{__init__,_meta}.py`, `runtime/projection.py`.
+  - **VERIFIED BY USE, BOTH viewports.** 390: switched lens → Connections, tapped `llm` → readout "An AI step /
+    Calls an AI model to transform or generate text. / 1 out · 5 in". 1440: tapped `retrieve` → "Find the nearest /
+    Searches a collection and returns the items closest in meaning to your query. / 2 out · 3 in". Kinds (raw) lens
+    re-checked = no regression (6/6 still human). Bridge restarted to load the registry; curl-confirmed 16/16 seeded.
+  - **FRESH-EYES copy critic (separate agent, TEXT not blind-drive — avoids last fire's readout-misread):** judged
+    the 16 name/desc pairs as a non-technical reader; 12 CLEAR, 4 UNCLEAR. FIXED all 4 in `_meta.py`: dropped
+    "source code"→"code"; "numeric fingerprint"→"a fingerprint of its meaning"; "order matters"→"keeping the order
+    you gave them"; and the worst — "The V's mode"→"Right-hand-man mode" (the name assumed you know what "The V"
+    is, and my own description already said "right-hand-man" — inconsistent). Re-verified post-fix via curl.
+  - **HONEST:** node-type COPY is TENTATIVE (Tim/DNA ratify; some — model_of_tim/rhm_mode/portal/gate — are my
+    grounded reads of dev docstrings, not Tim's words). HOME is a sibling meta-map; the declared-at-birth ideal
+    (a `META` on each node module, read into NodeType like OUTPUT_SCHEMA) is composition's call — flagged to them.
+  - **VERBS still blocked (not built this fire, deliberately):** Go to/Drive/Source/Make have no defined operator-
+    semantics in the briefs (the briefs define the ADDRESS-MOVER roles — recollection.navigate / fork.resolve —
+    not what each V verb MEANS), AND the dominant V-aim is a synthetic `ui://instrument/sector/<id>` that doesn't
+    map to centre/resolve/source on a real data node (App's relative-centre needs an embeddable address). Building
+    one now = guess OR a frequently-no-op verb. Asked fork (the navigate-mover question) + will ask composition for
+    the verb contract. Chose the safe high-value legibility beat instead.
+  - **NEXT:** get composition's verb-contract semantics → build the clearest verb; coordinate node-meta HOME with
+    composition; seed the OTHER registry domains' meta (roles/mark_types/lenses) as their lenses surface; TUTORIAL gated OQ3.

@@ -32,6 +32,21 @@ try:
     from kinds.raw import KIND_META as _KIND_META
 except Exception:
     _KIND_META = {}
+# THE NODE-TYPE legibility registry (the Connections lens, binding=by_node_type — sectors are node TYPES, not
+# kinds). SAME legibility-type shape, OWN registry (composition: "ONE legibility-type, MANY registries"). Same
+# defensive import — a missing map degrades to humanize-only.
+try:
+    from nodes._meta import NODE_TYPE_META as _NODE_TYPE_META
+except Exception:
+    _NODE_TYPE_META = {}
+
+# which declared-meaning registry backs a given sector DOMAIN (binding.angle_from). Each domain maps to its own
+# {id: {name, is}} registry; an unmapped domain falls through to humanize-only (still legible, never raw).
+_SECTOR_META_BY_DOMAIN = {
+    "kind": _KIND_META,
+    "node-types": _NODE_TYPE_META,
+    "node_types": _NODE_TYPE_META,
+}
 
 
 def _humanize_kind(kind: str) -> str:
@@ -41,16 +56,18 @@ def _humanize_kind(kind: str) -> str:
     return words.title() if words else str(kind)
 
 
-def _kind_name(kind: str) -> str:
-    """DECLARED-first human name (kinds-registry meta.name) → humanized-id fallback. The operator never sees a raw
-    machine kind-id (Tim's #1 law); declared names are human, the fallback at least reads as words."""
-    m = _KIND_META.get(kind)
+def _kind_name(kind: str, meta: dict = _KIND_META) -> str:
+    """DECLARED-first human name (registry meta.name) → humanized-id fallback. The operator never sees a raw
+    machine id (Tim's #1 law); declared names are human, the fallback at least reads as words. `meta` selects
+    WHICH registry (kinds by default; node-types for the Connections lens)."""
+    m = meta.get(kind)
     return (m.get("name") if isinstance(m, dict) else None) or _humanize_kind(kind)
 
 
-def _kind_meaning(kind: str):
-    """DECLARED one-line meaning (meta.is) for the tapped-sector readout; None if un-seeded (no fabrication)."""
-    m = _KIND_META.get(kind)
+def _kind_meaning(kind: str, meta: dict = _KIND_META):
+    """DECLARED one-line meaning (meta.is) for the tapped-sector readout; None if un-seeded (no fabrication).
+    `meta` selects which registry (kinds default; node-types for Connections)."""
+    m = meta.get(kind)
     return m.get("is") if isinstance(m, dict) else None
 
 
@@ -888,6 +905,9 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
     _eset = {(a, b) for (a, b) in (sector_edges or []) if a in _sidx and b in _sidx and a != b}
     edges = [{"from": _sidx[a], "to": _sidx[b], **({"bidir": True} if (b, a) in _eset else {})}
              for (a, b) in sorted(_eset)]
+    # pick the declared-meaning registry for THIS lens's sectors (kinds default; node-types for Connections; an
+    # unmapped domain → kinds map, which yields humanize-only for ids it doesn't hold — still legible, never raw).
+    _sector_meta = _SECTOR_META_BY_DOMAIN.get(binding.get("angle_from", "kind"), _KIND_META)
     return {
         "center": addr_center or "now", "now": now.isoformat(), "n": n,
         "binding": {"id": binding["id"], "label": binding["label"],
@@ -909,10 +929,12 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
                         "space": binding.get("space")} if nuc else {})},
         "bindings": [{"id": b["id"], "label": b["label"]} for b in reg.list()] or
                     [{"id": "raw", "label": "Kinds (raw)"}],
-        # sector label = the kind's HUMAN name (kinds-registry, declared-first → humanized-id fallback); `meaning`
-        # = the kind's one-line "what it is" (the tap-a-sector readout). The instrument stays empty of meaning —
-        # it reads these off the data. id stays the machine key (the engine indexes/edges by it, never shown raw).
-        "sectors": [{"id": s, "label": _kind_name(s), "meaning": _kind_meaning(s),
+        # sector label = the row's HUMAN name (declared-first → humanized-id fallback); `meaning` = its one-line
+        # "what it is" (the tap-a-sector readout). The instrument stays empty of meaning — it reads these off the
+        # DATA. The meaning-registry is chosen by the sector DOMAIN (binding.angle_from): kinds for the default
+        # Kinds wheel, node-types for the Connections lens, etc.; an unmapped domain → humanize-only (still
+        # legible). id stays the machine key (the engine indexes/edges by it, never shown raw).
+        "sectors": [{"id": s, "label": _kind_name(s, _sector_meta), "meaning": _kind_meaning(s, _sector_meta),
                      "from": round(TAU * i / n, 5), "to": round(TAU * (i + 1) / n, 5)}
                     for i, s in enumerate(sectors)],
         "edges": edges,   # the directional typed edges between sectors (directed chords; bidir = a real cycle)
