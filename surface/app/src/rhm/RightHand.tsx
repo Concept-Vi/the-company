@@ -12,16 +12,20 @@ import vIcon from './v-icon.svg'
 // MEET AT THE DATA (no cross-repo code import). BRAIN SEAM (fork): forkVBrain.attach({panelEl, getAimAddress,
 // getAimLabel}) — the V host (here) owns the AIM; fork owns the turn/stream/write at that aim. We meet at the aim.
 
-// The six verbs the right-hand-man collects from the surface (composition's contract). `id` is the CONTRACT verb;
-// `label` is operator-facing DRAFT copy — TENTATIVE, for Tim/DNA to ratify. 'ask' opens the brain panel (WIRED);
-// the rest emit `rhm:verb` for their own integration phase (navigate/annotate/drive/open-source/generate).
+// The six verbs the right-hand-man collects from the surface (composition's contract). `id` = the CONTRACT verb
+// (machine, NEVER shown). `label`/`desc` = operator-facing DRAFT copy — TENTATIVE, for Tim/composition to ratify
+// ("See the record" already ratified, thread t-1781703728). `live` = the action is WIRED on projection's side
+// TODAY; a !live verb is in the contract but not yet operable — shown dimmed + "soon" so the operator is never
+// misled into a dead-end (no green-paint / half-done-as-done). `drive` waits on Tim's verb-PLACEMENT steer + the
+// dominant aim having a dial; `generate` (Make) is wildcard's gated keystone. The desc rides on title/aria-label
+// (desktop hover tooltip + screen-reader); the soon-state is visible on every device.
 const VERBS = [
-  { id: 'navigate', label: 'Go to' },
-  { id: 'ask', label: 'Ask' },
-  { id: 'annotate', label: 'Note' },
-  { id: 'drive', label: 'Drive' },
-  { id: 'open-source', label: 'See the record' },
-  { id: 'generate', label: 'Make' },
+  { id: 'navigate', label: 'Go to', desc: 'Re-centre the map on this', live: true },
+  { id: 'ask', label: 'Ask', desc: 'Ask the right-hand-man about this', live: true },
+  { id: 'annotate', label: 'Note', desc: 'Leave a note here', live: true },
+  { id: 'drive', label: 'Drive', desc: 'Adjust its settings', live: false },
+  { id: 'open-source', label: 'See the record', desc: 'Open the fuller record behind this', live: true },
+  { id: 'generate', label: 'Make', desc: 'Create something from this', live: false },
 ] as const
 
 // the V's default aim when the operator hasn't pointed it at anything — the surface itself (territory_label
@@ -391,13 +395,18 @@ export function RightHand() {
               return (
                 <button
                   key={v.id}
-                  className="vhandle-verb"
+                  className={`vhandle-verb${v.live ? '' : ' vhandle-verb--soon'}`}
                   role="menuitem"
                   data-verb={v.id}
+                  // the desc rides on title/aria-label — a desktop hover tooltip + the screen-reader name; the
+                  // operator on touch reads the label + the visible "soon" state, and learns the live verbs by use.
+                  title={v.live ? `${v.label} — ${v.desc}` : `${v.label} — ${v.desc} (coming soon)`}
+                  aria-label={v.live ? `${v.label}. ${v.desc}` : `${v.label}. ${v.desc}. Coming soon.`}
                   style={{ transform: `translate(-100%, -50%) translate(${dx}px, ${dy}px)` }}
                   onClick={() => onVerb(v.id)}
                 >
                   {v.label}
+                  {!v.live && <span className="vhandle-verb-soon">soon</span>}
                 </button>
               )
             })}

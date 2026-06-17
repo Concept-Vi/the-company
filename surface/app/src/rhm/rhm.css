@@ -90,6 +90,31 @@
 }
 .vhandle-verb:hover { background: var(--ground-primary); box-shadow: var(--elev-3); }
 
+/* NOT-YET-WIRED verbs (Drive, Make) — muted (faint text + a DASHED, provisional border + subtler ground) + a
+   quiet "soon" tag, so they read as in-the-contract-but-coming, never as working controls (no green-paint).
+   Muted via colour/border, NOT opacity — the vhandle-pop animation holds opacity:1 (fill `both`) and would win.
+   Still tappable → the honest "coming soon" Notice. */
+.vhandle-verb--soon {
+  color: var(--ink-faint);
+  background: var(--ground-primary);
+  border-style: dashed;
+  box-shadow: none;
+}
+.vhandle-verb--soon:hover { color: var(--ink-dim); background: var(--ground-secondary); box-shadow: var(--elev-1); }
+/* the "soon" tag — readable (ink-dim, not faint), boxed on a hairline so it reads as a STATUS chip, not a word
+   that blends into the label. Disambiguates the dashed/muted pill: coming, not permanently disabled. */
+.vhandle-verb-soon {
+  margin-left: var(--s-1);
+  padding: 0 var(--s-1);
+  font-size: 0.66em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  vertical-align: middle;
+}
+
 @keyframes vhandle-pop {
   from { opacity: 0; }
   to { opacity: 1; }
