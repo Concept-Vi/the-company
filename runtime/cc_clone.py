@@ -142,8 +142,81 @@ def onboarding_message(record_or_handle, *, era_label: str = "") -> str:
         "built since your cut and the goal now — but your un-drifted view comes first.")
 
 
+# ── TIM RULE (2026-06-16, fork's lane): context-size-aware OLLAMA model pick ─────────────────────────
+# Many sessions run 1M context; kimi-k2.7-code:cloud's window is 262144 (256K — `ollama show`). When a
+# clone's context EXCEEDS kimi's window → fall back to deepseek-v4-flash:cloud (1,048,576 = 1M, the CHEAP
+# deepseek). NEVER deepseek-v4-pro:cloud (512K) unless Tim sets it explicitly. provider='ollama' only; an
+# explicit non-kimi model is always honored (Tim's choice — never auto-overridden).
+KIMI_OLLAMA_MODEL = "kimi-k2.7-code:cloud"
+KIMI_MAX_CTX = 262144                                  # `ollama show kimi-k2.7-code:cloud` → context length
+OLLAMA_BIG_CTX_MODEL = "deepseek-v4-flash:cloud"       # 1M window; the cheap >kimi fallback (NOT -pro)
+
+
+def _estimate_context_tokens(materialized_path: str) -> int:
+    """Rough, SAFE token estimate of a materialized clone prefix: sum the TEXT of user/assistant turns // 4.
+    Overestimates (includes pre-compaction text that won't all load on --resume) → errs toward the BIGGER
+    window, the safe direction. On any read error → KIMI_MAX_CTX+1 (force the safe 1M model). A guardrail,
+    not a tokenizer."""
+    import json as _json
+    try:
+        chars = 0
+        with open(materialized_path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    ev = _json.loads(line)
+                except ValueError:
+                    continue
+                msg = ev.get("message") if isinstance(ev, dict) else None
+                content = (msg or {}).get("content") if isinstance(msg, dict) else None
+                if isinstance(content, str):
+                    chars += len(content)
+                elif isinstance(content, list):
+                    for b in content:
+                        if not isinstance(b, dict):
+                            continue
+                        chars += len(b.get("text") or "")                    # assistant/user text
+                        if b.get("input") is not None:
+                            chars += len(str(b.get("input")))                # tool_use input
+                        c = b.get("content")                                 # tool_result content
+                        if isinstance(c, str):
+                            chars += len(c)
+                        elif isinstance(c, list):
+                            chars += sum(len(x.get("text") or "") for x in c if isinstance(x, dict))
+        return chars // 4
+    except Exception:
+        return KIMI_MAX_CTX + 1                          # estimate failed → assume big → safe (1M model)
+
+
+def pick_ollama_model_for_context(ctx_tokens: int, requested: "str | None" = None) -> "tuple[str, str]":
+    """The TIM-RULE context-size pick, DECOUPLED from any transcript — the ONE shared decision (#71).
+    `runtime.model_routing.resolve_model({kind:'clone', context_tokens})` REUSES this (reuse-don't-parallel —
+    no second context-pick); the clone path below feeds it a transcript estimate. Returns (model, reason).
+    Honors an explicit non-kimi request verbatim (Tim's choice, e.g. an explicit deepseek-v4-pro — never
+    auto-overridden). For the default OR explicit kimi: keep kimi when the context fits its 256K window,
+    else fall back to deepseek-v4-flash:cloud (1M — the CHEAP deepseek; never -pro unless Tim sets it)."""
+    if requested and requested != KIMI_OLLAMA_MODEL:
+        return requested, f"explicit model {requested!r} honored (not auto-overridden)"
+    if ctx_tokens > KIMI_MAX_CTX:
+        return OLLAMA_BIG_CTX_MODEL, (f"est. context ~{ctx_tokens} tok > kimi window {KIMI_MAX_CTX} "
+                                      f"→ {OLLAMA_BIG_CTX_MODEL} (1M)")
+    return KIMI_OLLAMA_MODEL, f"est. context ~{ctx_tokens} tok <= kimi window {KIMI_MAX_CTX} → {KIMI_OLLAMA_MODEL}"
+
+
+def _pick_ollama_model(materialized_path: str, requested: "str | None") -> "tuple[str, str]":
+    """Pick the ollama model for a clone from its MATERIALIZED transcript (TIM RULE). Estimates the context
+    then delegates to `pick_ollama_model_for_context` (the shared #71 decision). Behaviour UNCHANGED — the
+    early explicit-non-kimi return is preserved (no estimate computed when a non-kimi model is set)."""
+    if requested and requested != KIMI_OLLAMA_MODEL:
+        return requested, f"explicit model {requested!r} honored (not auto-overridden)"
+    ctx = _estimate_context_tokens(materialized_path)
+    return pick_ollama_model_for_context(ctx, requested)
+
+
 def clone_at(source_jsonl: str, at: str, *, description: str = "", cwd: str | None = None,
-             model: str | None = None, fallback_model=None) -> dict:
+             model: str | None = None, fallback_model=None, provider: str | None = None) -> dict:
     """Materialize `source_jsonl` AT `at` (e.g. 'compact:1' / 'uuid:..' / 'ts:..') and launch the
     clone as a live SUPERVISED session. Registers it in the clones registry. Returns the clone's
     handle + supervisor_session + session_id + the operator command for interactive membership.
@@ -152,7 +225,18 @@ def clone_at(source_jsonl: str, at: str, *, description: str = "", cwd: str | No
     ERA ran a model that is no longer available — e.g. the Fable-era clones resume on `claude-fable-5`
     which errors "currently unavailable"; pass model="opus" (or a fallback list) to substitute. The
     clone's CONTEXT is unchanged (the materialized prefix is its memory); only the model answering it
-    differs — which is correct: the era's intent is in the transcript, not the weights."""
+    differs — which is correct: the era's intent is in the transcript, not the weights.
+
+    `provider`: which BACKEND answers the clone — omit/None/'anthropic' (default) = the host Anthropic account
+    (byte-identical to before); provider='ollama' = a company/ollama model, so a clone boots CHEAP/FREE on an
+    ollama TAG (e.g. model='kimi-k2.7-code:cloud' — VERIFIED-BY-USE 2026-06-16: the clone booted on kimi +
+    answered from its materialized past-context). For provider=='ollama' the supervisor RUNS the real
+    `ollama launch claude --model <tag> -- <claude args>` launcher (94a8ab0) — NOT a reverse-engineered
+    env-overlay (that approach failed: a logged-in Claude Code ignored an ANTHROPIC_BASE_URL redirect and
+    rejected the model name) — and prepends the resolved claude binary's dir to the child PATH so the launcher
+    finds claude on the restricted systemd-service PATH (11ee39f). NOT litellm (that :4100 proxy is the
+    fabric's OWN cognition, untouched). Here we only thread the param through to /spawn; when provider is
+    omitted, spawn_body is unchanged (the existing Anthropic path is preserved exactly)."""
     if not os.path.exists(source_jsonl):
         raise CloneError(f"source transcript not found: {source_jsonl}")
     tl = build_timeline(source_jsonl)
@@ -162,12 +246,19 @@ def clone_at(source_jsonl: str, at: str, *, description: str = "", cwd: str | No
     rep = materialize_at_point(source_jsonl, at, dest_dir=os.path.dirname(source_jsonl), new_sid=new_sid)
     if not rep.get("source_untouched"):
         raise CloneError(f"source changed during materialization of {source_jsonl} — aborting (non-destructive law).")
+    # TIM RULE (2026-06-16): context-size-aware ollama model pick — kimi default → deepseek-v4-flash:cloud
+    # when the clone's est. context > kimi's 256K window (never -pro unless explicit). No-op off ollama.
+    model_pick_note = None
+    if provider == "ollama":
+        model, model_pick_note = _pick_ollama_model(rep["new_path"], model)
     name = f"clone-{at.replace(':', '')}-{new_sid[:8]}"
     spawn_body = {"cwd": resume_cwd, "resume": new_sid, "name": name}
     if model:
         spawn_body["model"] = model                 # /spawn reads body.get("model") (session_supervisor)
     if fallback_model:
         spawn_body["fallback"] = fallback_model      # /spawn reads body.get("fallback") (csv/list, tried in order)
+    if provider:
+        spawn_body["provider"] = provider            # /spawn → supervisor RUNS `ollama launch claude` for provider='ollama' (94a8ab0 + PATH fix 11ee39f; board://item-4aa4f952)
     code, r = _sup("/spawn", spawn_body)
     if code != 200:
         raise CloneError(f"supervisor /spawn (resume={new_sid[:8]}) failed: {r}")
@@ -177,7 +268,8 @@ def clone_at(source_jsonl: str, at: str, *, description: str = "", cwd: str | No
     rec = {"kind": "supervised-clone", "handle": handle, "supervisor_session": sup_sess,
            "session_id": new_sid, "source_sid": rep["source_sid"], "source_path": source_jsonl,
            "at": at, "cwd": resume_cwd, "description": description,
-           "model": model, "fallback_model": fallback_model,
+           "model": model, "fallback_model": fallback_model, "provider": provider,
+           "model_pick": model_pick_note,
            "materialized_path": rep["new_path"], "boundaries": nb,
            "started": time.strftime("%Y-%m-%dT%H:%M:%S")}
     os.makedirs(CLONES_DIR, exist_ok=True)

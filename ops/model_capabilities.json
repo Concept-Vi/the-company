@@ -1531,6 +1531,46 @@
       "vision"
     ]
   },
+  "kimi-k2.7-code:cloud": {
+    "_note": "OLLAMA CLOUD reasoner (Kimi-K2.7-Code) — the #71 BUILD-TIER clone/build brain. caps probed live `ollama show kimi-k2.7-code:cloud` (2026-06-17): vision·thinking·completion·tools; 256K window (262144) → the TIM-RULE context-pick falls back to deepseek-v4-flash:cloud (1M) above it (runtime/cc_clone.pick_ollama_model_for_context). `provides` is GROUNDED in the probe (NOT the spec's [wide,code] — those are not CAPABILITY_TAGS; window is context_ceiling, code-specialism has no tag in the vocabulary).",
+    "tools": {
+      "value": true,
+      "source": "probed",
+      "note": "`ollama show kimi-k2.7-code:cloud` capabilities lists `tools` (2026-06-17)"
+    },
+    "json_schema": {
+      "value": null,
+      "source": "declared",
+      "note": "ollama format=json supported; strict grammar-constrained decode UNVERIFIED — probe before relying. NOTE (#71): kimi via the litellm OpenAI proxy :4100 → 401 'No api key passed in'; reach it via ollama-OpenAI :11434/v1 (fabric.config.OLLAMA_DIRECT) instead."
+    },
+    "thinking": {
+      "value": true,
+      "source": "probed",
+      "note": "`ollama show` capabilities lists `thinking` (2026-06-17)"
+    },
+    "context_ceiling": {
+      "value": 262144,
+      "source": "probed",
+      "note": "`ollama show kimi-k2.7-code:cloud` → context length 262144 (256K); CLOUD — no local VRAM slot. This IS the KIMI_MAX_CTX the clone context-pick gates on."
+    },
+    "concurrency_knee": {
+      "value": null,
+      "source": "declared",
+      "note": "not a generative KV knee at this loadout"
+    },
+    "speed_profile": {
+      "value": null,
+      "source": "declared"
+    },
+    "provides": [
+      "chat",
+      "json",
+      "tools",
+      "thinking",
+      "reasoning",
+      "vision"
+    ]
+  },
   "glm-5.1:cloud": {
     "_note": "OLLAMA CLOUD reasoner (GLM-5.1). caps: thinking·completion·tools.",
     "tools": {
