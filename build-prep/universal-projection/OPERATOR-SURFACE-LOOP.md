@@ -144,7 +144,21 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
 - **2026-06-17 — ⚡ SPRINT MODE on (Tim away).** Loop cadence → **~7min** (job `961a66ef`; was 2h). Fork now a BUILD
   PARTNER (split the integration; thread `t-1781684391`). Lead asked to spin a **DNA point-in-time clone** for the
   visual+verbal face (thread `t-1781684666`; Tim's model intent "a fable… system should change it to opus" — lead owns
-  the mechanics). NEXT BEAT for the loop: research-just-enough then START the V-overlay shell — (a) get/confirm the V
-  icon (composition `t-1781683048`) or use a placeholder, (b) find existing overlay/floating/draggable patterns in the
-  design system via MCP, (c) build the shell (bottom-right, radial expansion, draggable, every page, replaceable seam),
-  verify on 390 first. Draft tutorial/field copy as tentative; gate only final ratification on Tim/OQ1–4.
+  the mechanics).
+- **2026-06-17 — ✅ Phase 2: the V-OVERLAY SHELL built + verified (commit `3ac24f3`).** The right-hand-man handle:
+  company-gold V icon (composition's `vi-classic-gold.svg`, copied to `surface/app/src/rhm/v-icon.svg`), bottom-right,
+  DRAGGABLE + position-persisted (localStorage), on EVERY page (mounted at App root). Tap → the **6-verb radial fan**
+  (composition's V-corner-handle contract: navigate/ask/annotate/drive/open-source/generate → draft labels Go to/Ask/
+  Note/Drive/Source/Make) with a soft paper **overlay scrim**. Files: `surface/app/src/rhm/{RightHand.tsx,rhm.css,
+  v-icon.svg}` + mounted in `App.tsx` + css in `main.tsx`. VERIFIED BY USE at **1440 + 390** (fan legible, no overlap/
+  clip, drag moves+persists exactly), `tsc` + design-lint clean (0 off-token literals), 0 console errors, a SEPARATE
+  fresh-eyes design-critic returned **PASS** (both its flagged issues — chart-overlap legibility + arc-not-column —
+  resolved by the scrim + left-lean). Built on `paper.css` tokens; the gold lives in the SVG, not CSS.
+  **SWAP SEAM** (composition's contract): the real V organism later renders into THIS container; verbs emit a
+  `rhm:verb` window event the integration phase consumes (meet-at-data, no cross-repo code import).
+  **MINOR polish carried (non-blocking, critic):** (a) ease the arc to bow slightly (currently ~linear diagonal);
+  (b) on-device check the lowest pill's margin vs the scrubber thumb-zone.
+  **NEXT:** (1) INTEGRATION with fork — wire the verbs to the address system + loadable brain (awaiting fork's brief,
+  thread `t-1781684391`); (2) the built-in TUTORIAL (Phase-0 pedagogy delivered by the RHM — gated on journey/copy);
+  (3) the legibility meaning-layer (composition's legibility-type, thread `g-1781668099`). Verb ACTIONS are stubs
+  (emit the seam event) until (1) — honestly a shell, not wired behaviour.
