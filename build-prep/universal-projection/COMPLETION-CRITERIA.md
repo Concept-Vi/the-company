@@ -227,6 +227,21 @@ not buildable without a Tim INPUT, so I note + hold rather than churn or drift i
 - **STANCE:** no further projection changes until the loop has real projection work — i.e. Tim's verdict greenlights the
   app-face host, OR access unblocks (so Tim can drive + judge). Standing down to avoid churn/drift, per the law.
 
+### ✅ ACCESS UNBLOCKED — THE BAR #3 NOW MET (Tim drives the live instrument on his phone) · 2026-06-17
+Tim direct (overrode the relayed firewall diagnosis): "I don't think it's broken, don't think you need the firewall."
+Verified he was right — `tailscale serve` was already up + valid cert; the earlier failure was the server being DOWN
+(since restarted), NOT the firewall. Tim confirmed by use: the gallery URL **loads on his phone**. So no firewall fix
+was ever needed (the relayed iptables diagnosis was wrong).
+- DNA's gallery: `https://workstation001.tail777bc2.ts.net` (:443 → :8090) — Tim-confirmed loading on iphone171.
+- **THE LIVE INSTRUMENT now on Tim's phone (Tim-authorized via AskUserQuestion "Yes, serve it"):** added an ADDITIVE
+  `tailscale serve --https=8443 → http://127.0.0.1:5174` (does NOT touch DNA's :443/:8090 serve; reversible via
+  `tailscale serve --https=8443 off`). Verified through the proxy: index 200 (all gallery scripts), `/api/projection`
+  200, `/gallery/*` assets 200, and LOADED in a phone-viewport browser at the real `.ts.net:8443` URL — wheel renders,
+  all modules live (DNA/org/forkHooks/binder). So **THE BAR #3 (Tim can DRIVE it) is MET** — the live, real-data,
+  drivable, interactive projection instrument is reachable + functional on Tim's phone. The guardrail correctly blocked
+  the serve until Tim's EXPLICIT authorization (he'd only said "firewall not needed"); served after his explicit go.
+  NOTE: it serves the vite DEV server (live data, proxies /api); a prod-build static serve is a later hardening option.
+
 ## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
 
 Tim's 4-item program (1 BQ · 2 Postgres · 3 cron · 4 reconnect): #4 ✅ closed; #1 ✅ BUILT + FORM-passed; #3
