@@ -162,3 +162,22 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
   thread `t-1781684391`); (2) the built-in TUTORIAL (Phase-0 pedagogy delivered by the RHM — gated on journey/copy);
   (3) the legibility meaning-layer (composition's legibility-type, thread `g-1781668099`). Verb ACTIONS are stubs
   (emit the seam event) until (1) — honestly a shell, not wired behaviour.
+- **2026-06-17 — ✅ Phase 3: the RIGHT-HAND-MAN BRAIN wired into the V (commit `c93c6ef`).** Tapping "Ask" opens a
+  paper talk panel where the operator talks to REAL Claude Code about the current AIM (fork's `forkVBrain.attach` —
+  the V host owns the aim [getAimAddress/getAimLabel, follows `projection:select`, default `ui://instrument/surface`];
+  fork owns turn/stream/write). Applied bridge diff 3 (`/api/territory/label` → human aim-label). Synced
+  `fork-brain-core` + `fork-v-brain` into the host (core loads first). VERIFIED BY USE: a real Claude Code reply
+  STREAMED into the V panel at 390; panel renders at 1440; `forkBrainCore`+`forkVBrain` loaded, `.v-brain` mounted;
+  0 console errors; design-lint 0, tsc 0.
+  ★ OPERATOR-LAW FIX (caught by-use): the brain LEAKED a raw address ("I'll investigate what `ui://instrument/surface`
+  …") in its first reply → strengthened `PANEL_BRIEFING` (`ui_claude_session.py`) to forbid raw addresses/scheme://
+  in replies + told it the address-context is FOR-IT, not to echo → re-verified: "a piece of his own interface", no
+  leak. (Put it in the canonical operator-face prompt — covers V + gallery; flagged fork, thread `t-1781684391`.)
+  - 🟡 **RESIDUAL (flagged to fork's context-tuning lane):** when the aim is THIN/unregistered the brain narrates the
+    system's internal readout ("empty blast radius, a module error on the relations leg") — softer than an address
+    leak but still semi-jargon. Fixes: a meaningful registered default-aim + briefing tuning to not narrate internals.
+  - **TRAIL for the lead's union (absorb-not-fork):** touched `/api/territory/label` (new read route) + the brain
+    wire (the `_claude_stream` briefing). Note for the substrate-unification to absorb.
+  - **NEXT:** wire the OTHER verbs (navigate/note/drive/source/make → their backends), the built-in TUTORIAL (Phase-0
+    pedagogy delivered BY the RHM), and the legibility meaning-layer (composition's `legibility.js` `resolveLegibility`,
+    built + ready — the instrument reads registry `meta` for the aim + renders human meaning).
