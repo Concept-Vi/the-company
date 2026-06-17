@@ -53,3 +53,18 @@ relates: #71 resolve_model (runtime/model_routing.py) · the role re-tier (35fd8
 Path A (local nemotron) lands the role-half green now with no auth wall. This gap only EXTENDS reach to
 cloud cognition; nothing in #71 Phase 1 depends on it. Phase 2 (the byte-identical `resolve=` kwarg) is the
 next #71 step and is independent of this.
+
+---
+
+## Phase-2 SEAM LIST (co-scope with the lead FIRST — R13 byte-identical; do NOT touch unilaterally)
+1. **Wire `resolve_model` into the firing path** (`run_swarm`/`run_role` in `runtime/cognition.py`) via a
+   byte-identical `resolve=`-style kwarg: the resolver must return the SAME model the scattered logic does
+   today (resident 4B for the cast), so the live turn is unchanged until a role is deliberately re-bound.
+2. **Enroll `runtime/model_routing.py` in `COG_SOURCES`** (`tests/cognition_governance_acceptance.py` C9.2).
+   The moment model_routing joins the `_run_swarm` firing path it becomes floor-relevant; the C9.2 source-scan
+   must cover it so a future dispatch call can't slip in unscanned. It PASSES C9.2 today (only
+   `resolve_role_binding`/`resolve_binding` calls — not the floor verbs `resolve_surfaced`/`governance.resolve`),
+   so enrolling is FREE. (advisor-flagged 2026-06-17.)
+3. **Clone branch base_url is INFORMATIONAL.** `resolve_model({kind:clone})` returns `OLLAMA_DIRECT`
+   (`:11434/v1`) but clones LAUNCH ollama-native (no `/v1`) via `ollama launch claude` — `clone_at` never
+   consumes the field. Phase 2 must NOT start treating it as a live HTTP endpoint for clones.
