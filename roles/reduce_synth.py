@@ -43,7 +43,13 @@ ROLE = {
     "input_addresses": ("notes",),
     "op": "generate",
     "trigger": "fired explicitly by run_reduce(mode='role') as the reduce-tree join role over a wave's N outputs.",
-    "model_binding": {"requires": ["chat", "json"], "default_model": None, "default_base_url": None},
+    # CAPABILITY TIER (#71): reduce_synth is the cross-unit SYNTHESIS join — it REASONS over N upstream
+    # outputs, so it requires `reasoning`. The resident 4B is no-think (provides [chat,json,tools,fast,
+    # no-think], NOT reasoning) → resolve_model routes reduce_synth → a reasoner (today: the local
+    # loadable:chat-nemotron, [chat,json,thinking,reasoning]) — extraction-vs-judgment: the 4B extracts, the
+    # reasoner judges/synthesizes (NOT the 4B judging). DECLARES the capability the role needs (the suitability
+    # read resolve_model routes on); does NOT change today's firing (RESIDENT_MODEL kwarg until Phase 2).
+    "model_binding": {"requires": ["chat", "json", "reasoning"], "default_model": None, "default_base_url": None},
     # NO mode_scope → in no cast (a demonstrative reduce-role fired explicitly via run_reduce).
     "rules": [
         # DECLARED reduce rule (DATA; the reduce DRIVER is runtime/cognition.run_reduce). The N map

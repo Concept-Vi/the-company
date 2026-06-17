@@ -32,7 +32,12 @@ ROLE = {
     "output_schema": FocusOut,
     "input_addresses": ("utterance",),
     "trigger": "every listening turn — focus fires FIRST, gating the rest of the cast (the selector).",
-    "model_binding": {"requires": ["chat", "json"], "default_model": None, "default_base_url": None},
+    # CAPABILITY TIER (#71): focus is the fast EXTRACT/select gate — requires `fast` (the no-think judge
+    # pick). [chat,json,fast] ⊆ the resident 4B's provides → resolve_model routes focus → 4B (extraction-vs-
+    # judgment: the 4B extracts/selects, it does NOT reason). This DECLARES the capability the role needs —
+    # the suitability read resolve_model routes on; it does NOT change today's firing (the swarm fires on the
+    # RESIDENT_MODEL kwarg until Phase 2 wires resolve= into the firing path).
+    "model_binding": {"requires": ["chat", "json", "fast"], "default_model": None, "default_base_url": None},
     "mode_scope": {"listening", "walkthrough"},
     "rules": [
         # DECLARED routing rule (DATA; the rich rule ENGINE is G3). focus.which_roles selects the

@@ -39,7 +39,11 @@ def check(label, cond):
 def _unsat(su):
     """A role requiring an UNprovided capability with NO declared default must fail loud (C2.5)."""
     class _R:
-        id = "x"; requires = ["vision"]
+        # A capability NO provider declares. Was ["vision"] — but the G6 "full live-bind" surfaced
+        # embed-jina-v4 (provides [embed, vision]), so [vision] became SATISFIABLE and this fail-loud
+        # check silently passed (caught while #71 re-tiered focus). Use a guaranteed-absent capability so a
+        # future service can't re-break it (a fictional tag is never a provider's `provides`).
+        id = "x"; requires = ["__no_provider_declares_this__"]
         @property
         def model_binding(self): return {}
     try:
@@ -160,7 +164,7 @@ check("the verdict is order-INDEPENDENT (deterministic over the draws — C0.2/H
 
 # ---- laws: C2.5 requires-query (not prose) · reuse-don't-parallel · role cannot emit resolve ----
 check("a role declares a `requires` capability QUERY (C2.5 — not hand-written prose)",
-      rr["focus"].requires == ["chat", "json"])
+      rr["focus"].requires == ["chat", "json", "fast"])   # #71 re-tier: focus is the fast EXTRACT gate → 4B
 check("the C2.5 query is role.requires ⊆ provider.provides", model_satisfies(["chat"], ["chat", "json"]))
 check("an unsatisfiable requires with no default FAILS LOUD (never a silent wrong binding)",
       _unsat(su))
