@@ -299,3 +299,34 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
     the verb contract. Chose the safe high-value legibility beat instead.
   - **NEXT:** get composition's verb-contract semantics → build the clearest verb; coordinate node-meta HOME with
     composition; seed the OTHER registry domains' meta (roles/mark_types/lenses) as their lenses surface; TUTORIAL gated OQ3.
+- **2026-06-17 — ✅ LEGIBILITY: human kind-words ride on every POINT + the point-inspector's operator-law LEAKS fixed; ⚠ found the DEFAULT-PATH drill-in (DNA's gallery face) badly illegible → routed to DNA.**
+  - **The verbs stayed blocked** (composition heads-down on the vi-vision creds merge; no verb-contract reply yet). Confirmed
+    they're genuinely blocked/redundant: re-centre is ALREADY wired (Disclosure "⊙ centre here" + CentreChip), so a
+    'Go to'=re-centre verb would duplicate; Make=generate is the lead-governed gated keystone (NOT brain-callable, per fork).
+    So I did the safe high-value legibility beat instead.
+  - **★ FRESH-EYES (the dot-drill, deferred twice — finally tapped):** on the DEFAULT path, tapping a real thing opens
+    DNA's gallery FACE, and it's badly illegible: the annotation row renders as bare ICONS (★ ✓ ✕ ? ☆ → + a tofu glyph)
+    shown TWICE with machine-name aria ("remember_this", "do_this"), and the panel literally titled **"What this is"
+    contains NO words** — just more icons. That's the deepest "understand what I'm looking at" surface failing the ROOT
+    bar. It's DNA's visual+verbal face (GalleryMount hosts window.DNA) — NOT my lane to rebuild → ROUTED to DNA with the
+    evidence + the fix-data (below).
+  - **ROOT-CAUSE FIX (my lane, registry-is-truth): every PROJECTION POINT now carries `kind_name` + `kind_meaning`**
+    (read declared-first from the kind registry; humanized-id fallback). The machine `kind` stays the key; the human
+    words ride ON the data so EVERY consumer (the inspector, the gallery face, a future tooltip) shows MEANING, never
+    the id. This is exactly the data DNA's "What this is" needs. Files: `runtime/projection.py`, `surface/app/src/lib/api.ts`.
+  - **POINT-INSPECTOR (Disclosure.tsx, my lane) operator-law LEAKS fixed:** it was showing the **raw machine kind-id**
+    as the header (`point.kind`), a **raw ui:// address** in a `<code>` footer, and the machine sector-id in the "in"
+    row. Now: header = `kind_name` (case preserved — removed the `text-transform:lowercase` that would mangle "An AI
+    step"→"an ai step"); a new meaning line under it; the raw-address `<code>` REMOVED (the address still rides on
+    `data-ui-ref` for the spine, just never shown); the "in" row shows the human kind name on the Kinds lens. Files:
+    `surface/app/src/wheel/Disclosure.tsx`, `surface/app/src/surface.css`.
+  - **VERIFIED BY USE, BOTH viewports:** 1440 (Disclosure panel) + 390 (sheet), drove an address-less point (seq-5997,
+    the gallery face only suppresses Disclosure for addressed points) → header "A session turn", meaning "A working
+    session finished one back-and-forth.", in: "A session turn", NO raw address. Curl: all 600 points carry kind_name
+    + kind_meaning. tsc 0, design-lint 0. Bridge restarted for projection.py.
+  - **HONEST / still leaking (NOT my lane — routed):** (a) DNA's gallery FACE (the main drill surface) — to DNA; (b) the
+    HOWTO **context-item text** embeds a raw "ui://canvas" (it's CORPUS CONTENT from /api/context, not a UI label) —
+    flag to fork/composition (context composition); (c) other-lens "in" rows still show the sector leaf (those lenses'
+    sector-human-names aren't carried on the point yet — a later enrichment).
+  - **NEXT:** DNA renders point.kind_name/kind_meaning + labels the gallery-face icons (routed); composition's verb
+    contract → build a verb; carry sector-human-names on points for non-Kinds "in"; TUTORIAL gated OQ3.

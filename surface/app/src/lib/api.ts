@@ -5,6 +5,10 @@
 export type ProjPoint = {
   seq: number
   kind: string
+  // the kind's HUMAN words (registry-true, declared-first → humanized-id fallback) — render THESE, never the
+  // machine `kind` (operator-law). Present on every point from the projection contract.
+  kind_name?: string
+  kind_meaning?: string | null
   sector: string
   theta: number // radians
   r: number // [0.06,1.0]; pile >1 in nucleation

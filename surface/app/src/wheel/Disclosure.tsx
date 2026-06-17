@@ -18,7 +18,10 @@ function leaf(s: string): string {
   return t.split('/').pop() || t
 }
 function placement(p: ProjPoint, binding: Projection['binding'] | undefined, centre: string | null): Place[] {
-  const out: Place[] = [{ k: 'in', v: leaf(p.sector) }] // the division (its kind/type) it sits in
+  // the division it sits in — for the Kinds lens (sector == kind) show the HUMAN kind name, never the machine
+  // id; other lenses fall back to the sector leaf (their human sector-name isn't carried on the point yet).
+  const inDiv = p.kind && p.sector === p.kind && p.kind_name ? p.kind_name : leaf(p.sector)
+  const out: Place[] = [{ k: 'in', v: inDiv }] // the division (its kind/type) it sits in
   const rf = binding?.radius_from
   const num = (x: number | undefined) => (typeof x === 'number' ? x.toFixed(2) : '—')
   // a COARSE theme (cluster centroid) — say WHAT it is: a cluster of N, named by its exemplar (G11)
@@ -126,10 +129,13 @@ export function Disclosure({
         >
           {variant === 'sheet' && <div className="sheet-handle" aria-hidden />}
           <header className="disc-head">
-            <span className="disc-kind display">{point.kind || point.sector}</span>
+            {/* the kind's HUMAN name (registry-true, rides on the point) — NEVER the machine kind-id (operator-law) */}
+            <span className="disc-kind display">{point.kind_name || point.kind || point.sector}</span>
             <button className="disc-close" onClick={onDismiss} aria-label="dismiss">×</button>
           </header>
 
+          {/* one-line "what this kind is" — the legibility meaning, so the operator knows what they tapped */}
+          {point.kind_meaning && <p className="disc-kind-meaning">{point.kind_meaning}</p>}
           {point.summary && <p className="disc-summary">{excerpt(point.summary, 160)}</p>}
 
           {/* WHY IT'S HERE — its division + what its radius means in this lens (plain words + real value) */}
@@ -172,7 +178,8 @@ export function Disclosure({
                 ⊙ centre here
               </button>
             )}
-            <code className="disc-addr">{addr}</code>
+            {/* the raw ui:// address is NEVER shown to the operator (operator-law) — it still rides on the
+                aside's data-ui-ref for the address spine, but it is not displayed as machine text. */}
           </footer>
         </motion.aside>
       )}

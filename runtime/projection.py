@@ -864,6 +864,10 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
         sid = sectors[i] if i < len(sectors) else "?"
         points.append({
             "seq": e.get("seq"), "kind": kind, "sector": sid,
+            # the kind's HUMAN words ride ON the point (registry-is-truth) so EVERY consumer — the drill-in
+            # face, the inspector, a tooltip — shows MEANING, never the machine kind-id (operator-law). Read
+            # declared-first from the kind registry; humanized-id fallback. `kind` stays the machine key.
+            "kind_name": _kind_name(kind), "kind_meaning": _kind_meaning(kind),
             "theta": round(theta, 5), "r": round(r, 5), "depth": depth,
             "cell": {"i": gi, "j": gj, "d": gd},   # the dyadic structural coordinate (the square half)
             "address": e.get("address") or e.get("source_address") or "",
