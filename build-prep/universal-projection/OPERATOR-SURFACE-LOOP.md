@@ -621,3 +621,11 @@ Tim's "first composed product" — the keystone retargeted at decisions, resolut
     "Open the source"). The corpus.record "A note saved" watch-item: fresh-eyes found it READS TRUE enough for orientation (not misleading) — no rename.
   - **NEXT:** the decision-card render (next RUNG, when composition's types land — same lyRender, projection's host + /api/territory + select-detail
     meaning-source all ready); then the lifecycle-decouple (source==='decision') when the real decision-slide exists.
+- **2026-06-18 — ✅ #1-gap fix made DURABLE (DNA committed) + verified; HOLD on the next rung (decision-card, gated on composition's types).**
+  Lead confirmed the milestone + made DNA's commit the durability gate. Checked: DNA committed RUNG-C (counterpart/design `ad8a043`), tree clean.
+  Verified the surface sync reproduces it — re-ran sync-gallery.mjs from DNA's COMMITTED source → public/gallery/unit-view.js byte-IDENTICAL to
+  the committed file → a fresh build/checkout regenerates the human-reading render (NOT stranded). So the #1-gap fix is durable end-to-end.
+  Confirmed to lead (t-1781734850). Per my rule (unblocked beat → build / critical path stalled → nudge / neither → short hold): NEITHER —
+  the next rung (decision-card) is composition's-types-gated, the lead's driving the long pole, and projection's pieces are all READY + verified.
+  So I HOLD with everything staged; the types landing + fork registering decision:// triggers my piece (DNA's same lyRender renders the card
+  through my host → I re-run the stranger test on a real pending decision). No projection blocker remains.
