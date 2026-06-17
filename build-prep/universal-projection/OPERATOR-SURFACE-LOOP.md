@@ -440,3 +440,29 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
     and called /api/territory "the proof the resolution-first constraint is real in the build"; fork given the relations root-cause.
   - **NEXT:** the "in"-label clarity (lens-aware: "kind"/"family"/"lens" instead of bare "in"); re-flag the inspector summary+howto
     leaks; DRIVE / open-source-on-SECTOR once Tim's verb-PLACEMENT steer lands; DNA's decision-card reuses /api/territory; TUTORIAL gated OQ3.
+- **2026-06-18 — ✅ the V fan tells the truth: LIVE verbs vs "SOON" (no green-paint) + draft verb descriptions (commit `ca2e08c`).**
+  The fan answered ② "what can I do here?" DISHONESTLY — all six verbs looked alike, but Drive + Make only Notice "coming next"
+  (drive waits on Tim's verb-PLACEMENT steer + a dialable aim — corpus points have no dial; Make is wildcard's gated keystone).
+  A stranger tapping "Make" hit a dead-end = half-done-presented-as-done. Fixed:
+  - **LIVE** (Go to / Ask / Note / See the record) render solid; **NOT-YET-WIRED** (Drive, Make) render MUTED (faint ink + a
+    DASHED provisional border) + a readable **"SOON"** status chip; still tappable → the honest "… is coming next." Notice (no
+    silent no-op). The `live` flag is a runtime fact the host knows → the chip drops automatically when each verb wires up.
+  - **★ BUG caught by use:** muting via `opacity:0.5` read as opacity **1** live — the `vhandle-pop` animation holds opacity:1
+    (fill `both`) and overrides a static opacity. Re-did the mute via colour/border (dashed + faint ink), which the animation
+    doesn't touch. (Same class of "the animation wins" gotcha worth remembering.)
+  - Each verb carries a DRAFT one-line description (operator-law plain words, TENTATIVE) on title/aria — desktop hover tooltip +
+    screen-reader name. **VERIFIED BY USE both viewports** (390 first): 4 solid + 2 dashed-SOON; tapping Drive → the honest Notice.
+    tsc 0, design-lint 0/0. Tim's radial thumb-fan preserved.
+  - **★ FRESH-EYES critic (separate agent, phone screenshot):** validated the soon-marking (sets expectations), and flagged THREE
+    things that are the REAL V component's PRESENTATION (composition's lane — I did NOT redesign the placeholder for them, per
+    "V=placeholder, real V swaps in"): (a) the PHONE has no hover → my title/aria descriptions are invisible there → bare verbs
+    ("Go to"/"See the record") read opaque on the priority device — the real V needs touch-visible descriptions; (b) live/soon
+    interleave (Make top, Drive middle) — group live-first/soon-last (composition's contract order); (c) the fan floats over the
+    busy wheel + the radial stagger is hard to scan. → flagged ALL THREE to composition + supplied my draft description copy for
+    their verb table. HONEST GAP: a phone stranger still can't read what "Go to"/"See the record" DO pre-tap (labels = composition's
+    ratified contract; touch-visible descriptions = the real V's design) — not green-paint (soon-state is honest), but a real
+    ROOT-bar gap owned by composition.
+  - **COORDINATION:** flagged composition (V-component presentation + draft desc copy). fork's lifters rename NOT landed yet — I'll
+    run the live verify (`company restart bridge` + curl the relations leg) the moment it does.
+  - **NEXT:** verify fork's lifters rename live when it lands; the "in"-label clarity; re-flag the inspector summary+howto leaks;
+    DRIVE / open-source-on-SECTOR once Tim's verb-PLACEMENT steer lands; DNA's decision-card reuses /api/territory; TUTORIAL gated OQ3.
