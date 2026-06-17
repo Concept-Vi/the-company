@@ -67,6 +67,7 @@ BRIDGE_ROUTES = (
     "/api/surface-output", "/api/surface-review", "/api/capture-idea", "/api/defer-offer",
     "/api/revive-offer", "/api/build-intent", "/api/cognition/create_role", "/api/cognition/create_skill",
     "/api/cognition/create_context", "/api/act", "/api/annotate", "/api/apply", "/api/territory/write",
+    "/api/territory/label",
     "/api/propose", "/api/decision", "/api/resolve", "/api/revert", "/api/checkpoint", "/api/pin",
     "/api/react", "/api/attach-chat", "/api/approve-reach", "/api/intent-at",
     "/api/review/start", "/api/review/next", "/api/guide/start", "/api/walkthrough/start",
@@ -1292,6 +1293,13 @@ class H(BaseHTTPRequestHandler):
                 # address_help's S0 grammar gate → 400 (fail loud); a well-formed-but-unregistered address returns
                 # a clean partial bundle (what_this_is tagged '(unregistered)', legs honestly false), never a crash.
                 self._send(200, json.dumps(SUITE.address_help(q["address"])))
+            elif path == "/api/territory/label":           # the V/RHM human aim-label (operator-law: NEVER the raw address)
+                # fork's getAimLabel backing: territory_label composes a HUMAN one-liner for ANY address (board→title,
+                # unregistered-ui→"this part of the surface", non-address→"this") and NEVER returns the raw address →
+                # the operator-law holds at the boundary. NEVER raises (no try/except). Missing address → KeyError →
+                # 400 (fail loud, mirrors /api/scope + /api/address-help).
+                from runtime.territory import territory_label
+                self._send(200, json.dumps({"label": territory_label(q["address"], suite=SUITE)}))
             elif path == "/api/context":                   # R2: the addressed-context inspector (the R2 read-face)
                 # The standalone read that EXPOSES the EXISTING R2 engine (Suite.context_at — composes
                 # `_r2_gather` + `_r2_score_and_cap`, the SAME scoring the chat runs at the live locus,

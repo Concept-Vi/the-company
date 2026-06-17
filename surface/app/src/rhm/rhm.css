@@ -99,3 +99,84 @@
   .vhandle-verb { animation: none; }
   .vhandle-icon { transition: none; }
 }
+
+/* THE BRAIN PANEL — the right-hand-man's talk surface; fork's `.v-brain` renders inside (DNA re-skins
+   .v-brain-*). A paper card above the V handle; shown when data-open. z-index 46 = above the scrim (44) +
+   handle (45). Built on paper tokens; no hardcoded colour. */
+.v-brain-panel {
+  position: fixed;
+  z-index: 46;
+  right: var(--s-4);
+  bottom: calc(var(--s-7) + var(--safe-b, 0px) + 56px + var(--s-3)); /* clear the 56px V handle */
+  width: min(320px, 86vw);
+  max-height: 56vh;
+  display: none;
+  flex-direction: column;
+  background: var(--ground-accent);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
+  box-shadow: var(--elev-4);
+  padding: var(--s-3);
+  overflow: auto;
+  animation: vhandle-pop 160ms ease both;
+}
+.v-brain-panel[data-open='true'] { display: flex; }
+
+.v-brain-close {
+  position: absolute;
+  top: var(--s-2);
+  right: var(--s-2);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--ink-faint);
+  font-size: var(--t-base, 1rem);
+  line-height: 1;
+  cursor: pointer;
+}
+.v-brain-close:hover { color: var(--ink-primary); }
+
+/* baseline look for fork's brain UI (DNA re-skins these classes later) */
+.v-brain { display: flex; flex-direction: column; gap: var(--s-2); }
+.v-brain-aim {
+  font-family: var(--font-mono, inherit);
+  font-size: var(--t-xs);
+  color: var(--ink-dim);
+  padding-right: var(--s-5); /* clear the close × */
+}
+.v-brain-reply {
+  font-size: var(--t-sm);
+  color: var(--ink-primary);
+  line-height: 1.4;
+  white-space: pre-wrap;
+  max-height: 32vh;
+  overflow: auto;
+}
+.v-brain-reply:empty { display: none; }
+.v-brain-input {
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
+  font-family: var(--font-mono, inherit);
+  font-size: var(--t-sm);
+  color: var(--ink-primary);
+  background: var(--ground-primary);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-chrome);
+  padding: var(--s-2);
+}
+.v-brain-input:focus-visible { outline: 2px solid var(--ink-dim); outline-offset: 2px; }
+.v-brain-send {
+  align-self: flex-end;
+  font-family: var(--font-mono, inherit);
+  font-size: var(--t-xs);
+  color: var(--ink-primary);
+  background: var(--ground-primary);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  padding: var(--s-1) var(--s-3);
+  cursor: pointer;
+}
+.v-brain-send:hover { background: var(--ground-secondary); }

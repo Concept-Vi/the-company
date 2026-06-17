@@ -77,7 +77,10 @@ console.log(`[sync-gallery] dna-tokens.css  (${rootBlocks.length} :root block(s)
 // before any user drill. Copied fresh each dev/build (so an owner's edit is picked up); FAIL LOUD if absent.
 const HOOKS_DIR = process.env.FRONT_INTERFACE_DIR ||
   join(HERE, '..', '..', '..', 'build-prep', 'front-interface')
-const HOOK_FILES = ['wildcard-gallery-binder.js', 'fork-gallery-brain-hooks.js']
+// fork-brain-core.js (the ONE brain-turn engine) must load BEFORE any mount; fork-v-brain.js is the V/RHM
+// every-page brain mount the overlay host attaches; fork-gallery-brain-hooks.js is the per-unit mount (both
+// now ride the core). wildcard's binder is the interaction wire.
+const HOOK_FILES = ['wildcard-gallery-binder.js', 'fork-brain-core.js', 'fork-v-brain.js', 'fork-gallery-brain-hooks.js']
 const missingHooks = HOOK_FILES.filter((f) => !existsSync(join(HOOKS_DIR, f)))
 if (missingHooks.length) {
   console.error(

@@ -29,6 +29,10 @@
     <!-- THE FABRIC HOOKS — wildcard's interaction binder + fork's loadable-brain wire (self-wiring IIFEs,
          copied by scripts/sync-gallery.mjs from build-prep/front-interface/). Classic scripts so their
          gallery:rendered / gallery:direction listeners are registered BEFORE any user drill fires them. -->
+    <!-- fork's ONE brain-turn engine — MUST load before any mount (the V brain + the gallery hooks ride it). -->
+    <script src="/gallery/fork-brain-core.js"></script>
+    <!-- the V / right-hand-man every-page brain mount (window.forkVBrain) — the React RHM host attaches to it. -->
+    <script src="/gallery/fork-v-brain.js"></script>
     <script src="/gallery/wildcard-gallery-binder.js"></script>
     <script src="/gallery/fork-gallery-brain-hooks.js"></script>
   </head>
