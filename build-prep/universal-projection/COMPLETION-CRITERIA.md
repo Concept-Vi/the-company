@@ -262,6 +262,33 @@ first with this."** He also said **keep the :8443 live serve up** (his phone rev
   **NO engine churn**. This is the [[feedback-coordinate-via-fabric-not-tim]] path: Tim hands direction, the fabric
   fixes shape. ([[feedback-lead-authorization-carries-tim-weight]] for the sequencing the lead returns.)
 
+### ✅ FABRIC CONVERGED on the shape · 2026-06-17 (all 3 replied on thread g-1781664572)
+
+DNA (`ch-ovxwz8k8`), lead (`ch-al7jdfdr`), recollection (`ch-83e2cque`) all answered + agreed. The division:
+**DNA** = identity + renderers (`organisms.js`/`unit-view.js`/`phone.css`, land in my host via `sync-gallery.mjs`) +
+LEADS the assembly · **projection (me)** = the HOST + ADDRESS + API floor underneath · **recollection** =
+recall-under-element, RIDES my `/api/cognition/neighbours`. Order = **floor → data → render → assemble.**
+- **READY NOW (non-gated, NOT churn — lead's #1+#3, the "movable like #71" floor):** harden + verify-by-use the
+  floor — address contract (code:// carries the vector), `/api/cognition/neighbours`+`corpus`,
+  `/api/territory/prose`+`write`, the `sync-gallery.mjs` host-seam (fail-loud on missing sources). Surface gaps.
+  **★ PRIORITIZE the `/api/territory/write` round-trip** — lead + DNA both: it IS the mechanism for Tim's
+  see→comment→update→happy loop (pipeline stage ②); "that comment-loop backend is yours."
+- **NO GAPS confirmed by the consumers:** recollection — NO reshape, neighbours contract stable + multi-space/lens
+  ready, her recall-under-element is done (not a gate). DNA — the address/API contract IS what renderGallery needs;
+  V-verbs (drill→renderGallery on a neighbour address · mark/annotate→`/api/territory/write`) map straight onto my APIs.
+- **GATED (Tim's scan-before-build law):** wiring NEW DNA surfaces into the host is HELD on the lead's union map
+  (DNA posted `docs/command/DNA-UNION-SYNTHESIS.md`; lead assembling). I ready the host-seam so post-map wiring is
+  INSTANT — but I do NOT wire ahead. DNA names surfaces + their order FROM the map; lead sequences.
+- **FORWARD SEAM (co-design later, not now):** comment→corpus write-back — `/api/territory/write` feeds recollection's
+  corpus so Tim's gallery comments become RECALL-ABLE ("what Tim said about this unit"). Co-design when the comment
+  surface lands; her corpus is ready to receive.
+- **ARCH FACT (DNA):** `:8090` gallery server has NO `/api/cognition` proxy → the LIVE drill/comment loop lives in MY
+  host (`surface/app`, same-origin); `:8090` stays static-specimen review. So `:8443` (Tim's phone venue, kept up) =
+  DNA's synced renderers + my live API = the real comment loop. Correct-by-design.
+- **STANCE:** the agreed beat = ready/harden the floor with `/api/territory/write` round-trip FIRST, verified by use.
+  Tim said updates are incoming ("keep going with") — holding the START of the floor-build for his updates so I point
+  the loop where HE sees it, not where the fabric + I alone infer. Engine (G10/G9) untouched, at THE BAR.
+
 ## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
 
 Tim's 4-item program (1 BQ · 2 Postgres · 3 cron · 4 reconnect): #4 ✅ closed; #1 ✅ BUILT + FORM-passed; #3
