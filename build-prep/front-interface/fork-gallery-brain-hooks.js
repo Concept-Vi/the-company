@@ -37,8 +37,10 @@
 
     const ask = document.createElement('button');
     ask.className = 'brain-ask';                  // DNA RE-SKINS
-    ask.textContent = 'Ask Claude Code about this';
-    ask.title = 'Talk to the loadable brain about ' + sourceAddr;
+    // OPERATOR-LAW: human meaning only — never the tool name ("Claude Code") nor the raw address (sourceAddr
+    // is code://… — it rides server-side as the brain's context handle, never shown to the operator).
+    ask.textContent = 'Ask about this';
+    ask.title = 'Ask the right-hand-man about this';
     rootEl.appendChild(ask);
 
     ask.addEventListener('click', (e) => {
