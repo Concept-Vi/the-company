@@ -660,3 +660,18 @@ Tim's "first composed product" — the keystone retargeted at decisions, resolut
     plain ✓). The remaining re-aim item — the filename centre LABEL — is composition's per-instance `name` (gated with the types).
   - **NEXT:** decision-card render the instant composition's types land (Tim's scope-word clears it; all projection pieces staged); meanwhile the
     operator surface's three journey axes tested so far (understand-a-thing ①, controls ③-act, re-aim ③) all read human.
+- **2026-06-18 — ✅ JOURNEY LEG 6 (coming back — time + state): the legend tells the time-truth in the past (commit `cfbda88`).**
+  Decision-card still HARD-GATED on Tim's scope word (composition won't cross; lead can't clear without Tim; Tim away) → ran the stranger test
+  on the next untested journey leg (6 — the time scrubber), projection's lane.
+  - **FUNCTION verified first (no bug):** dragging back genuinely shows the past — `at=` filters future events (past view ts-range Jun7–Jun9 vs
+    now Jun13–17; futureEventsInPastView=0; count 600→454). The mechanism is sound.
+  - **★ THE GAP (legibility): nothing told the operator they were in the PAST.** Scrubbed to Jun 5, the legend still read "A live map … the
+    centre is now" — actively claiming live/now while showing history (same misdescription class as the re-centred-legend bug). FIX (mirrors it):
+    when s.at is set, bypass the static "live/now" meta → the computed describe() LEADS with "showing the company as of <human moment> — what had
+    happened by then" + "radius · age (centre = that moment)". Human moment via toLocaleString (operator-law, never ISO).
+  - **VERIFIED both viewports + FRESH-EYES:** live → "A live map …"; scrubbed → "showing the company as of Jun 9, 11:07 AM…" (no live/now claim);
+    the "now" button returns to live. Fresh-eyes verdict: "the loop is complete and self-explaining — a stranger can time-travel back, knows
+    they're in the past, and knows how to come home." Remaining = pure wording polish ("as of"→"rewound to"; "now"→"back to now") — captured, non-blocking.
+  - **STATE:** FOUR journey axes now tested + stranger-legible — ① understand-a-thing, ③-act controls, ③ re-aim, ⑥ coming-back/time. Untested: 0
+    (first-contact cold — likely strong, the legend reads well) + 2 (something-catches-the-eye, ≈ ①). The operator surface's core loop reads human.
+  - **NEXT:** decision-card render when types land (staged); optional — the wording-polish pass + a leg-0/2 stranger test if the gate stays closed.
