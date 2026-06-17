@@ -58,6 +58,20 @@ function placement(p: ProjPoint, binding: Projection['binding'] | undefined, cen
   return out
 }
 
+// Operator-law GUARD for context-item text: the operator must NEVER see a raw machine address — but the R2
+// context text legitimately CARRIES one for the brain (suite.py composes `[how-to @ <ui://addr>] …`, fed to the
+// RHM via territory_prose). So strip it at the RENDER boundary — the surface translates for the operator while
+// the underlying text keeps the address for the brain. Drops a composed `[label @ scheme://addr]` frame AND any
+// bare `scheme://…` token, then tidies whitespace. (If a rare item were ONLY an address it goes empty — never
+// re-leaked: operator-law wins over showing a blank crumb.)
+function humanizeCtx(s: string): string {
+  return (s || '')
+    .replace(/\[\s*[\w-]+\s*@\s*[a-z][\w-]*:\/\/[^\]]*\]\s*/gi, '') // a composed "[how-to @ ui://canvas] " frame
+    .replace(/\b[a-z][\w-]*:\/\/\S+/gi, '') // any bare machine address token elsewhere in the text
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
 // Clean excerpt: never cut mid-word; end on a word boundary with an ellipsis (design-critic fix #1).
 function excerpt(s: string, max = 150): string {
   const t = (s || '').replace(/\s+/g, ' ').trim()
@@ -160,7 +174,7 @@ export function Disclosure({
             {items.map((it, k) => (
               <div className="ctx-item" key={k}>
                 {it.kind && <span className="ctx-kind">{it.kind}</span>}
-                <span className="ctx-text">{excerpt(it.text || it.summary || '', 150)}</span>
+                <span className="ctx-text">{excerpt(humanizeCtx(it.text || it.summary || ''), 150)}</span>
               </div>
             ))}
             {bundle?.more ? <p className="disc-empty">+{bundle.more} more beyond the cap</p> : null}
