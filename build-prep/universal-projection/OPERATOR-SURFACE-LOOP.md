@@ -384,6 +384,10 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
   - **VERIFIED BY USE, BOTH viewports (390 first, then 1440):** drove the real path (pick a corpus point → dismiss DNA's face →
     V → Source) → the 6 captured principles render (the inspector showed NOTHING — summary is empty for these points). Address-
     less point → the honest Notice. tsc 0.
+    - **★ advisor caught a verify-the-wrong-way gap:** I first dismissed the face via Escape — but the PHONE has no Escape, the
+      operator taps the close-✕ or the scrim. Re-verified at 390 the REAL mobile dismiss BOTH ways (tap `.gallery-dismiss` AND
+      tap `.gallery-scrim`): `selected` persists through each (GalleryMount's dismiss only flips `galleryOpen`, never touches
+      selection) → V → Source → panel WITH the record, NO "tap a dot first" Notice. The named-device bar holds for the real tap.
   - **★ FRESH-EYES critic (separate agent, screenshots):** strongest findings FIXED — (a) the bullets floated with no heading
     → added a "What's in it" body label so it coheres; (b) the tag "SOURCE" read as "source code" → reframed "The full record"
     (+ relayed the verb-LABEL rename signal "The full story"/"See the record" to composition, whose contract owns the draft
