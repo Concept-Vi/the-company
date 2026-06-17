@@ -49,7 +49,13 @@ function placement(p: ProjPoint, binding: Projection['binding'] | undefined, cen
     else if (p.tail) out.push({ k: 'corner', v: 'fits no type, forms no new type → needs a new axis', num: num(p.fit), tone: 'pile' })
     else out.push({ k: 'misfit', v: p.born ? 'piled → a new type ✦' : 'fits no type · piled', tone: p.born ? 'born' : 'pile' })
   } else if (rf === 'address') {
-    out.push({ k: 'distance', v: `structural from ${centre ?? 'centre'}`, num: num(p.r) })
+    // address-centre: r = tree-distance / max (normalized FILING-tree distance from the centred thing — how
+    // near/far in the system's STRUCTURE, not in meaning). Operator-law: "structural" is jargon → plain words
+    // (near/mid/far in how it's filed), mirroring the semantic row's close/mid/far idiom. Keep the real value in
+    // `num` (Disclosure's "plain words + the REAL value" law; consistent with the other rows).
+    const d = p.r ?? 1
+    const w = d < 0.34 ? 'close by' : d < 0.67 ? 'mid-distance' : 'far'
+    out.push({ k: 'filed', v: centre ? `${w} from ${centre}` : `${w} in how it's filed`, num: num(p.r) })
   } else {
     const d = p.r ?? 0
     const w = d < 0.34 ? 'recent' : d < 0.67 ? 'a while ago' : 'long ago'
