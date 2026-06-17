@@ -17,9 +17,19 @@ function angleMeaning(af: string): string {
   return `${af.replace(/_/g, ' ')} (one sector each)`
 }
 
-function describe(proj: Projection, view: ViewMode, centred: string | null): { title: string; lines: string[] } {
+// human "as of" stamp for the scrubbed-past time (operator-law: a readable moment, never an ISO/machine string)
+function asOf(at: string): string {
+  const d = new Date(at)
+  if (Number.isNaN(d.getTime())) return 'an earlier moment'
+  return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+}
+
+function describe(proj: Projection, view: ViewMode, centred: string | null, at: string | null): { title: string; lines: string[] } {
   const b = proj.binding
   const n = proj.n
+  // VIEWING THE PAST (the time scrubber, leg 6): lead with the time-state so the operator knows this is history,
+  // not the live present — and the radius means age from THAT moment, not from now. Prepended across lenses.
+  const pastLines = at ? [`showing the company as of ${asOf(at)} — what had happened by then`] : []
   if (view === 'square') {
     return {
       title: 'Structure — the address grid',
@@ -95,8 +105,9 @@ function describe(proj: Projection, view: ViewMode, centred: string | null): { t
   return {
     title: b.label,
     lines: [
+      ...pastLines,
       `${n} sectors · angle = ${angleMeaning(b.angle_from)}`,
-      centred ? `radius · distance from ${centred}` : 'radius · age (centre = now)',
+      centred ? `radius · distance from ${centred}` : at ? 'radius · age (centre = that moment)' : 'radius · age (centre = now)',
     ],
   }
 }
@@ -124,11 +135,15 @@ export function Legend({ s }: { s: SurfaceState }) {
   // still said "how long ago." So when centred, use the centre-AWARE computed description (describe() reads the
   // live radius_from + the centre), never the stale static meta. (Reflecting the operator's runtime re-centre is
   // the instrument's job; the radius MEANING it states is still registry-true via radius_from.)
-  if (meta && meta.is && !s.centre) {
+  // ...and the declared meta also describes the LIVE/now state ("a live map… the centre is now"). When the
+  // operator scrubs into the PAST (s.at set), that's false — they're viewing history, not the live present. So
+  // bypass the static meta when EITHER re-centred OR time-scrubbed; the computed describe() states the real
+  // time-state. (Caught by a "coming back" stranger test: scrubbed to Jun 5, the legend still said "live … now".)
+  if (meta && meta.is && !s.centre && !s.at) {
     title = meta.name || s.proj.binding.label
     lines = [meta.is, meta.fills, meta.why].filter(Boolean) as string[]
   } else {
-    const d = describe(s.proj, s.view, s.centre?.label ?? null)
+    const d = describe(s.proj, s.view, s.centre?.label ?? null, s.at)
     // In Both, name the coincidence spine (seed §3): the diamonds on the axes are where the SQUARE (grid) and
     // the CIRCLE (rings) meet — lens-neutral, and only for lenses whose wheel actually draws it.
     const rf = s.proj.binding.radius_from
