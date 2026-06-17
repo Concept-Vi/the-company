@@ -629,3 +629,22 @@ Tim's "first composed product" — the keystone retargeted at decisions, resolut
   the next rung (decision-card) is composition's-types-gated, the lead's driving the long pole, and projection's pieces are all READY + verified.
   So I HOLD with everything staged; the types landing + fork registering decision:// triggers my piece (DNA's same lyRender renders the card
   through my host → I re-run the stranger test on a real pending decision). No projection blocker remains.
+- **2026-06-18 — ✅ RE-AIM (③ "where can I go") stranger test → two projection-lane legibility fixes shipped: the legend tells the truth after Go-to (`515e9fe`) + the centre chip says what-it-is/how-to-exit (`3d4bac1`).**
+  Held on the decision-card gate (composition's types, lead-driving) — so I ran the task-scoped stranger test on the UNTESTED axis ③ re-aim
+  (Go to / re-centre), in projection's lane (not the known V-phone gap). It found two real gaps + confirmed one composition item:
+  - **★ Beat A — the legend MISDESCRIBED the re-centred view (`515e9fe`):** after Go-to, radius_from flips to 'address'/'semantic' (radius =
+    distance from the centred thing), but the Legend kept rendering the binding's static declared `meta.is` — the UN-centred default ("how far
+    = how long ago, the centre is now"). So the legend actively lied about what the stranger was looking at. FIX: when a centre is set, use the
+    centre-AWARE computed describe() (reads live radius_from + the centre), not the stale static meta. VERIFIED both viewports: re-centred →
+    legend reads "radius · distance from voice.py"; un-centred → still the default meta. CentreChip + legend + inspector now all agree.
+  - **★ Beat B — "I feel TRAPPED" (`3d4bac1`):** the fresh-eyes #1 follow-up — after re-centring, the only way back was a tiny unlabelled ×
+    (the whole chip reset, but a stranger couldn't tell; tooltip was hover-only jargon "return to the root origin"). FIX: the chip now reads
+    "⊙ Centred on <thing> · show all ×" (a "Centred on" state-prefix + a plain "show all" exit) + a plain tooltip/aria. VERIFIED both viewports:
+    Go to → chip reads it; tapping → centre clears, legend back to default. The re-aim→undo loop is now stranger-legible. tsc 0, design-lint 0/0.
+  - **FRESH-EYES (separate, phone): confirmed both fixes land** + flagged the remaining: (a) the centre LABEL is a FILENAME ("voice.py" + "1.00"
+    + "structural" "reads as developer internals, breaks the live-map story") → the LABEL is composition's per-instance legibility `name` lane
+    (projection renders the human name when present; corpus units carry none today → the leaf fallback) — flagged to composition (t-1781736317),
+    same field-set RUNG-C proved; (b) "1.00"/"structural" in the inspector distance row are MINE → plain-word next; (c) no transition cue when the
+    rings change meaning (legend now updates, but silent) — a secondary enhancement.
+  - **NEXT (mine):** plain-word the inspector's "structural from X / 1.00" distance row; (composition) per-instance `name` closes the filename
+    label; the decision-card render when composition's types land (all projection pieces staged + verified).
