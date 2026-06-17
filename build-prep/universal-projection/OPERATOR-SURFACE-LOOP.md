@@ -462,7 +462,12 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
     their verb table. HONEST GAP: a phone stranger still can't read what "Go to"/"See the record" DO pre-tap (labels = composition's
     ratified contract; touch-visible descriptions = the real V's design) — not green-paint (soon-state is honest), but a real
     ROOT-bar gap owned by composition.
-  - **COORDINATION:** flagged composition (V-component presentation + draft desc copy). fork's lifters rename NOT landed yet — I'll
-    run the live verify (`company restart bridge` + curl the relations leg) the moment it does.
-  - **NEXT:** verify fork's lifters rename live when it lands; the "in"-label clarity; re-flag the inspector summary+howto leaks;
+  - **COORDINATION:** flagged composition (V-component presentation + draft desc copy).
+  - **✅ RELATIONS-BUG LOOP CLOSED (this fire):** fork landed the rename `runtime/lifters.py → runtime/lifter_registry.py`
+    (86cd7c4, killing the shadow). I VERIFIED IT LIVE the way that matters (`company restart bridge` + curl — NOT an import
+    check): bridge starts clean (6s); `run://corpus/...` → legs.relations=TRUE, notes=[] (ModuleNotFoundError GONE), edges_in=0
+    (correct); **`board://item-...` → edges_in=4, edges_out=1** (provenance populates end-to-end). So territory_for's relations
+    leg is alive for EVERY consumer — the RHM's brain-turn context (bridge.py:1697) now carries typed-edge provenance, and the
+    Source verb's "Referenced by N" line works (silent for corpus points = correct, real for board things). Confirmed to fork.
+  - **NEXT:** the "in"-label clarity; re-flag the inspector summary+howto leaks;
     DRIVE / open-source-on-SECTOR once Tim's verb-PLACEMENT steer lands; DNA's decision-card reuses /api/territory; TUTORIAL gated OQ3.
