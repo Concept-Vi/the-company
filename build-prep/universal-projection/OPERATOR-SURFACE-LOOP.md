@@ -407,3 +407,36 @@ Do NOT build until the design (Phase 0 questions + composition's legibility-type
     Disclosure "in" row still shows a machine sector leaf on non-Kinds lenses; carry `_kind_name(sid,_sector_meta)` onto each
     point); DRIVE / open-source-on-SECTOR (sector-derivation source) once Tim's verb-PLACEMENT steer lands; DNA's decision-card
     render reuses /api/territory; TUTORIAL gated OQ3.
+- **2026-06-18 — ✅ LEGIBILITY: the inspector "in" row reads HUMAN on every lens + ✅ ratified verb label "See the record"; ⚠ relations-bug ROOT-CAUSED (handed to fork) after a self-inflicted bridge outage I recovered (commit `acd5e81`).**
+  - **✅ Beat A — SECTOR-HUMAN-NAMES (commit `acd5e81`):** every projection point now carries `sector_name` (the sector's human
+    name via the lens's meta-registry). The Disclosure "in" row was `p.sector===p.kind && kind_name ? kind_name : leaf(p.sector)`
+    — so on NON-Kinds lenses it showed the raw machine sector-id (operator-law leak). Now `p.sector_name || leaf(...)` → human on
+    EVERY lens. **VERIFIED BY USE both viewports** on the Activity (grouped) lens: machine `sector="field"` → the "in" row reads
+    "Field"; data-level on Ways-of-looking: `common_knowledge`→"Common Knowledge", `memory`→"Memory". Kinds lens unchanged
+    (sector==kind). Files: projection.py (compute `_sector_meta` before the points loop), api.ts, Disclosure.tsx.
+  - **✅ Beat A2 — ratified label (commit `acd5e81`):** composition ratified (thread t-1781703728) "Source"→**"See the record"**
+    (verb id `open-source` + the gallery:verb envelope UNCHANGED — display-only; rejected "The full story" as it collides with
+    the coming slide/story/sequence concept). Verified live in the V fan.
+  - **⚠ Beat B — the relations-leg bug: ROOT-CAUSED, but NOT fixed by me (correctly).** Pulled fork's fb1c631 message:
+    `No module named 'lifters.frontmatter'; 'lifters' is not a package`. ROOT = a **NAME SHADOW**: `runtime/lifters.py` (the
+    lifter-registry module) shadows the top-level `lifters/` PACKAGE. The service runs `python runtime/bridge.py` → sys.path[0] =
+    the script dir `runtime/`, so `from lifters.frontmatter` (cc_board.py:46) resolves `lifters` → `runtime/lifters.py` (a module)
+    → "not a package". Fails PERSISTENTLY in the bridge process (not request-time pollution as first theorized) — which is why the
+    leg is always dead + why `python -c` couldn't repro (cwd-root puts the package first). **★ I tried a fix (eager-import cc_board
+    at bridge.py module-top to cache it) and it CRASH-LOOPED the bridge at startup** (line-27 hits the same shadow before serving).
+    I REVERTED immediately; bridge recovered in ~6s (`/api/now` 200). The clean fix touches CORE (runtime/suite.py + tests + the
+    shadow rename) — NOT projection's lane, and the bridge is too central to hack. → handed fork the definitive root cause + two
+    fix options (A: rename `runtime/lifters.py`→`lifter_registry.py` [recommended]; B: repo-root-first on sys.path) + the
+    don't-eager-import warning. Degrade-clean holds meanwhile (edges_in=0 for corpus points → Source's provenance correctly silent).
+  - **★ LESSON (recorded):** verified-by-use means run-as-the-SERVICE-runs. My fresh-interpreter + `import runtime.bridge` checks
+    BOTH passed and masked a startup crash that only appears under `python runtime/bridge.py` (script-dir on sys.path[0]). A
+    code-path that imports clean in one launch mode can be fatal in another — test the actual ExecStart.
+  - **★ FRESH-EYES critic (separate agent, inspector screenshot):** VALIDATED the change (did not flag "Field" as machine). Its
+    real findings are OTHERS' lanes / intentional: (a) `routine:self_status` machine summary + `[how-to @ ui://canvas]` raw address
+    = operator-law leaks in the inspector — event-summary content + the context-item leak already flagged (commit 7edca62), NOT my
+    lane → re-flag to composition/fork; (b) the "0.99" raw value + terse "in" label — the `num` is INTENTIONAL (Disclosure's law:
+    "plain words + the REAL value", Tim's design) → not a leak; the "in"-label clarity is a lens-aware refinement → NEXT.
+  - **COORDINATION:** composition ratified the label; lead ACCEPTED the HOST/TAKE conflation fix (projection=HOST, wildcard=TAKE)
+    and called /api/territory "the proof the resolution-first constraint is real in the build"; fork given the relations root-cause.
+  - **NEXT:** the "in"-label clarity (lens-aware: "kind"/"family"/"lens" instead of bare "in"); re-flag the inspector summary+howto
+    leaks; DRIVE / open-source-on-SECTOR once Tim's verb-PLACEMENT steer lands; DNA's decision-card reuses /api/territory; TUTORIAL gated OQ3.
