@@ -866,6 +866,9 @@ def project(events: list, *, binding: dict | None = None, now: datetime | None =
                     "radius_from": ("nucleation" if nuc else "separator" if sep else "semantic" if sem
                                     else ("address" if addr_center else radius_from)),
                     "order_by": binding.get("order_by", "count"),
+                    # the binding's DECLARED human meaning (registry-true): name/is/fills/why, rendered by the
+                    # Legend (declared-first; falls back to the computed mechanical lines). None until seeded.
+                    "meta": binding.get("meta"),
                     # semantic only: was the meaning-distance min-max normalized for legibility? (honest —
                     # so 'near=close' is never silently a distorted absolute distance)
                     **({"radius_normalized": sem_norm, "space": binding.get("space")} if sem else {}),

@@ -98,6 +98,25 @@ function describe(proj: Projection, view: ViewMode, centred: string | null): { t
 
 export function Legend({ s }: { s: SurfaceState }) {
   if (!s.proj) return null
+  // DECLARED human meaning (registry-true): if the binding carries `meta`, render it — lead with WHAT-IT-IS,
+  // then what-fills-it + why (conceptual before mechanical; Tim 2026-06-17: the operator must know what they're
+  // looking at). The meaning lives in the REGISTRY (bindings/*.py meta), not here. TENTATIVE seed copy
+  // (name/is/fills/why); the field-set is journey-gated (OPERATOR-SURFACE-LOOP.md OQ1–4). Never machine names.
+  const meta = s.proj.binding.meta
+  if (meta && meta.is) {
+    const mlines = [meta.is, meta.fills, meta.why].filter(Boolean) as string[]
+    return (
+      <div className="legend" {...stamp('ui://instrument/legend')}>
+        <div className="legend-title display">{meta.name || s.proj.binding.label}</div>
+        <ul className="legend-lines">
+          {mlines.map((l, i) => (
+            <li key={i}>{l}</li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
+  // FALLBACK — the computed (mechanical) lines for lenses that haven't declared their meaning yet
   const { title, lines } = describe(s.proj, s.view, s.centre?.label ?? null)
   // In Both, the circle and square are over one space — name the coincidence spine (seed §3): the diamonds on
   // the axes are where the SQUARE (grid) and the CIRCLE (rings) meet — the ratified / addressable spine. Lens-

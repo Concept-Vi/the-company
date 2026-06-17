@@ -55,6 +55,9 @@ export type Projection = {
     emb?: string | null   // the active embedder LAYER (null = default/BGE) — the multi-layer model
     res?: number | null   // the active MRL resolution (null = full dim)
     quant?: string | null // the active representation: 'binary' = sign-bit/Hamming, null = full float
+    // the binding's DECLARED human meaning (registry-true) — the Legend renders this instead of mechanical
+    // jargon (declared-first; null = fall back to the computed lines). Field-set = composition's legibility seed.
+    meta?: { name?: string; is?: string; fills?: string; why?: string } | null
   }
   bindings: BindingRef[]
   sectors: Sector[]
