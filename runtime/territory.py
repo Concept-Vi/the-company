@@ -29,7 +29,9 @@ LAWS:
 from __future__ import annotations
 
 # Schemes cognition.resolve_address resolves to a record/content (its dispatch, cognition.py:842-1029).
-_RESOLVABLE = ("run", "cas", "skill", "context", "session", "cap", "board", "clone", "mind")
+# vi-vision added 2026-06-17 (islands-join-mainland): the identity leg resolves the AIMED factory asset via
+# resolve_address → resolve_vi_vision (degrades clean if no transport; the LIBRARY leg adds the palette).
+_RESOLVABLE = ("run", "cas", "skill", "context", "session", "cap", "board", "clone", "mind", "vi-vision")
 
 
 def _scheme_of(address: str):
@@ -146,6 +148,22 @@ def territory_for(address, *, suite=None, store=None, max_relations: int = 20) -
         terr["notes"].append(f"relations leg unresolved ({type(e).__name__})")
     terr["legs_present"]["relations"] = terr["relations"] is not None
 
+    # ── LIBRARY leg (vi-vision:// only — the compose-PALETTE for the credential-free brain, 2026-06-17) ──
+    # islands-join-mainland read-model (A): the brain holds NO factory cred; the BRIDGE (where territory_for
+    # runs for context-composition) enriches the brain's context with the global library PALETTE so it can
+    # describe a valid composition from real pieces (→ operator build-this → the gated write). Reuses
+    # composition's read-only vi_vision_catalog (runs in-bridge, anon; NEVER the brain). Capped to a SUMMARY
+    # (not the whole registry dumped into context). Guarded → degrade-clean (a dead catalog never kills the turn).
+    if sch == "vi-vision":
+        try:
+            from runtime.vi_vision import vi_vision_catalog
+            rows = vi_vision_catalog("global") or []     # always 'global' = the compose-palette (anon scope)
+            cap = 25
+            terr["library"] = {"items": rows[:cap], "total": len(rows), "capped": len(rows) > cap}
+        except Exception as e:
+            terr["notes"].append(f"library leg unresolved ({type(e).__name__})")
+    terr["legs_present"]["library"] = bool(terr.get("library"))
+
     return terr
 
 
@@ -188,6 +206,15 @@ def territory_prose(territory_or_address, *, suite=None, store=None, max_chars: 
             if kinds:
                 line += " (" + ", ".join(kinds[:5]) + ")"
             bits.append(line + ".")
+        # library PALETTE (vi-vision:// compose-set) — HUMAN name+type, NEVER the raw component_id (operator-law).
+        # So the credential-free brain knows the real pieces it can compose a new asset from.
+        lib = terr.get("library") or {}
+        libitems = lib.get("items") or []
+        if libitems:
+            named = ", ".join(f"{(it.get('name') or '').strip() or 'a piece'} ({it.get('type')})"
+                              for it in libitems[:12] if isinstance(it, dict))
+            more = lib.get("total", len(libitems)) - min(12, len(libitems))
+            bits.append("Available pieces in this library: " + named + (f" (+{more} more)" if more > 0 else "") + ".")
         return "\n".join(bits)[:max_chars]
     except Exception as e:
         return f"(context render error: {type(e).__name__})"   # no raw address (operator-law)

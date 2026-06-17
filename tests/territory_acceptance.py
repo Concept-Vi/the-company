@@ -93,5 +93,36 @@ check("territory_for(nonexistent record) returns a dict with notes (degrade-clea
 check("territory_for(nonexistent record) identity leg noted-absent (legs_present.identity False)",
       terr.get("legs_present", {}).get("identity") is False)
 
+# ── the vi-vision LIBRARY leg (the credential-free brain's compose-palette) — stubbed catalog, no live read ──
+import runtime.vi_vision as _vv
+_VVADDR = "vi-vision://project/p1/organism/component.organism.brand-icon"
+_orig_catalog = _vv.vi_vision_catalog
+try:
+    _vv.vi_vision_catalog = lambda frame="global", **kw: [
+        {"component_id": f"component.c{i}", "type": t, "name": n, "tags": [], "desc": ""}
+        for i, (n, t) in enumerate([("Brand Icon", "organism"), ("Chip", "molecule"), ("Button", "atom")])]
+    tv = territory_for(_VVADDR, suite=su)
+    check("vi-vision library leg present (the compose-palette, only for vi-vision://)",
+          tv.get("legs_present", {}).get("library") is True and tv["library"]["total"] == 3)
+    pv = territory_prose(_VVADDR, suite=su)
+    pv_human = "\n".join(ln for ln in pv.split("\n") if not ln.startswith("[internal handle"))
+    check("prose renders the palette as HUMAN name+type (Chip (molecule)), never the raw component_id",
+          "Chip (molecule)" in pv and "component.c" not in pv_human)
+    check("vi-vision prose human lines carry no '://' (operator-law)", "://" not in pv_human)
+    # degrade: a catalog transport error → library noted-absent, prose still a string (never raises)
+    def _boom(frame="global", **kw):
+        raise _vv.ViVisionTransportError("store down")
+    _vv.vi_vision_catalog = _boom
+    td = territory_for(_VVADDR, suite=su)
+    check("catalog error → library leg noted-absent (degrade-clean, not a crash)",
+          td.get("library") is None and any("library leg unresolved" in n for n in td["notes"]))
+    check("territory_prose(vi-vision) returns a string even when the catalog errors (never raises)",
+          isinstance(territory_prose(_VVADDR, suite=su), str))
+    check("the library leg is vi-vision-ONLY (a board:// territory has no library leg)",
+          territory_for("board://item-x", suite=su).get("legs_present", {}).get("library") is not True)
+finally:
+    _vv.vi_vision_catalog = _orig_catalog
+
 print(f"\nALL {PASS} CHECKS PASS — territory composer holds the operator-law (no raw-address/jargon leak) "
-      f"+ the degrade contract (territory_for raises only on non-address; territory_prose never raises).")
+      f"+ the degrade contract (territory_for raises only on non-address; territory_prose never raises) "
+      f"+ the vi-vision compose-palette leg (human name+type, capped, degrade-clean, vi-vision-only).")
