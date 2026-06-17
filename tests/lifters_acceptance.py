@@ -19,7 +19,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 os.chdir(ROOT)
 
-from runtime.lifters import LifterRegistry, Lifter, _build_lifter, LIFTER_FIELDS  # noqa: E402
+from runtime.lifter_registry import LifterRegistry, Lifter, _build_lifter, LIFTER_FIELDS  # noqa: E402
 
 LIFTERS_DIR = os.path.join(ROOT, "lifters")
 SEED_IDS = {"frontmatter", "links", "blocks"}

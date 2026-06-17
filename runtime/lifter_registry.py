@@ -1,4 +1,8 @@
-"""runtime/lifters.py — the file-discovered LIFTER registry (Cognition Engine NEWMOD · P1 · K2).
+"""runtime/lifter_registry.py — the file-discovered LIFTER registry (Cognition Engine NEWMOD · P1 · K2).
+(Renamed from runtime/lifters.py 2026-06-18 — it shadowed the top-level `lifters/` namespace package:
+the bridge runs `python runtime/bridge.py`, putting `runtime/` on sys.path, so `from lifters.frontmatter`
+bound `lifters` to THIS module instead of the package. The registry-module name no longer collides with the
+extractor-rows dir it discovers.)
 
 A LIFTER is a declared **deterministic EXTRACTOR** over a corpus unit — it produces a
 `produced_by:"code"` projection (frontmatter / links / blocks) WITHOUT a model call. The corpus

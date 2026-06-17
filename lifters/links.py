@@ -2,7 +2,7 @@
 
 A deterministic structural EXTRACTOR — reads a markdown unit and returns the list of links it
 contains (both `[[wikilinks]]` and `[md](targets)`). NO model call. A PARSE is a READ (the floor
-holds). See runtime/lifters.py + lifters/AGENTS.md. Its `id` MUST equal the file stem (`links`).
+holds). See runtime/lifter_registry.py + lifters/AGENTS.md. Its `id` MUST equal the file stem (`links`).
 """
 from __future__ import annotations
 

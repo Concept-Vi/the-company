@@ -315,7 +315,7 @@ class Suite:
         # OWN gate). `_REGISTRIES` is the single-source table the create_* helper + the selects read, so
         # adding a registry = one row here (registry-is-truth, no per-registry branch). Each tuple is
         # (dir-attr, registry-instance-attr, RegistryClass, module-const, friendly-kind).
-        from runtime.lifters import LifterRegistry
+        from runtime.lifter_registry import LifterRegistry
         from runtime.mark_types import MarkTypeRegistry
         from runtime.generation_policies import GenerationPolicyRegistry
         from runtime.relation_types import RelationTypeRegistry
@@ -9872,7 +9872,7 @@ class Suite:
         # dropped before the gate sees it — but the gate ALSO catches an unknown field fail-loud, so this
         # is belt-and-suspenders, not the gate. Trivial pprint serialization (PYTHON literal; bool/None
         # round-trip — NOT json.dumps which would emit true/null). NO logic, NO behaviour — DATA.
-        _modname = RegClass.__module__               # e.g. "runtime.lifters"
+        _modname = RegClass.__module__               # e.g. "runtime.lifter_registry"
         import importlib as _importlib
         _mod = _importlib.import_module(_modname)
         _fields = getattr(_mod, f"{const}_FIELDS", None)

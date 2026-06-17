@@ -77,7 +77,7 @@ for verb in ("resolve", "approve", "dispatch"):
 COG_SOURCES = ["runtime/cognition.py", "runtime/rules.py", "runtime/roles.py",
                "mcp_face/server.py", "runtime/skills.py",
                "runtime/projections.py", "runtime/corpus.py",
-               "runtime/lifters.py", "runtime/mark_types.py", "runtime/generation_policies.py",
+               "runtime/lifter_registry.py", "runtime/mark_types.py", "runtime/generation_policies.py",
                "runtime/relation_types.py", "runtime/ai_tics.py", "runtime/forms.py",
                # Group I — the mode-detection-rule registry: a cognition-layer registry that PRODUCES a
                # candidate mode + feeds the toggle; the floor must cover it (it emits no resolve/dispatch).
@@ -111,9 +111,9 @@ check("C9.2 the floor source-invariant COVERS the MCP agent face + the skills re
 check("C9.2 the floor source-invariant COVERS the corpus pillar (projections + corpus-record)",
       "runtime/projections.py" in COG_SOURCES and "runtime/corpus.py" in COG_SOURCES)
 check("C9.2 the floor source-invariant COVERS the 6 wired corpus/cognition registries "
-      "(lifters/mark_types/generation_policies/relation_types/ai_tics/forms)",
+      "(lifter_registry/mark_types/generation_policies/relation_types/ai_tics/forms)",
       all(f"runtime/{m}.py" in COG_SOURCES for m in
-          ("lifters", "mark_types", "generation_policies", "relation_types", "ai_tics", "forms")))
+          ("lifter_registry", "mark_types", "generation_policies", "relation_types", "ai_tics", "forms")))
 check("C9.2 the floor source-invariant COVERS the mode-detection-rule registry (Group I — it produces a "
       "candidate + feeds the toggle, never a resolve/dispatch)",
       "runtime/mode_detection_rules.py" in COG_SOURCES)
@@ -277,7 +277,7 @@ HOMES = {
     "THOUGHT_SHAPES+GRAIN (G4)":    ("runtime/suite.py",        "runtime/AGENTS.md",    "tests/chat_parts_acceptance.py"),
     # The 6 file-discovered corpus/cognition registries (719f82d) — now CONSUMED (WIRING). Each declares
     # its OWN drift home (`<name>/AGENTS.md`) + acceptance suite (mirrors the projections registry's home).
-    "lifters registry (K2)":            ("runtime/lifters.py",            "lifters/AGENTS.md",            "tests/lifters_acceptance.py"),
+    "lifters registry (K2)":            ("runtime/lifter_registry.py",    "lifters/AGENTS.md",            "tests/lifters_acceptance.py"),
     "mark_types registry (M1)":         ("runtime/mark_types.py",         "mark_types/AGENTS.md",         "tests/mark_types_acceptance.py"),
     "generation_policies registry (O2)":("runtime/generation_policies.py","generation_policies/AGENTS.md","tests/generation_policies_acceptance.py"),
     "relation_types registry (L3)":     ("runtime/relation_types.py",     "relation_types/AGENTS.md",     "tests/relation_types_acceptance.py"),
