@@ -242,6 +242,26 @@ was ever needed (the relayed iptables diagnosis was wrong).
   the serve until Tim's EXPLICIT authorization (he'd only said "firewall not needed"); served after his explicit go.
   NOTE: it serves the vite DEV server (live data, proxies /api); a prod-build static serve is a later hardening option.
 
+## ▶ LOOP REPOINTED — projection now SUPPORTS the gallery-assembly · 2026-06-17 (Tim-direct)
+
+The drift the no-churn clause was catching is resolved at the source: the loop's TARGET changed. I asked Tim
+directly (AskUserQuestion, my session — not a relay) whether to retire / repoint / re-target this loop, given
+G10 + G9 are BUILD COMPLETE, verified live both viewports, and on his phone. **Tim chose B — repoint the loop to
+support the gallery-assembly (the interactive-app-face build) — and added: "check in with the channel and lead
+first with this."** He also said **keep the :8443 live serve up** (his phone review venue stays; do not take it down).
+- **CHECK-IN DONE (not a unilateral start):** broadcast to DNA (`ch-ovxwz8k8`, gallery-assembly lead) + lead
+  (`ch-al7jdfdr`, sequences) + recollection (`ch-83e2cque`, recall-under-element engine) on thread **g-1781664572**.
+  Stated Tim's direct decision, framed the lane projection already owns (HOST surface/app + sync-gallery host-seam ·
+  ADDRESS the universal-projection resolver + code:// contract · API /api/cognition/neighbours+corpus + /api/territory/* ·
+  HOST-SEAM wiring new DNA surfaces), and asked the 3 coordination Qs (DNA: next surface + contract gaps · lead:
+  sequence vs recollection Phase-B · recollection: reshape the neighbours/address API if Phase-B needs it).
+- **NEW STANCE (supersedes the 2026-06-16 stand-down STANCE above):** projection's lane = host / address / API /
+  host-seam BEHIND DNA's whole-surface comment loop, **decided WITH the fabric then acted** — not unilaterally
+  front-run, not DNA's assembly work taken off her. Awaiting the trio's replies on thread g-1781664572 to fix the
+  concrete shape + order; I point the loop at it the moment they answer. Engine (G10/G9) stays live + at THE BAR —
+  **NO engine churn**. This is the [[feedback-coordinate-via-fabric-not-tim]] path: Tim hands direction, the fabric
+  fixes shape. ([[feedback-lead-authorization-carries-tim-weight]] for the sequencing the lead returns.)
+
 ## #1 BINARY QUANTIZATION — ✅ BUILT + VERIFIED LIVE 2026-06-15 (the REPRESENTATION axis)
 
 Tim's 4-item program (1 BQ · 2 Postgres · 3 cron · 4 reconnect): #4 ✅ closed; #1 ✅ BUILT + FORM-passed; #3
