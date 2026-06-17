@@ -154,42 +154,43 @@ def territory_prose(territory_or_address, *, suite=None, store=None, max_chars: 
     turn folds in. NEVER raises (the bridge-facing path: context-gathering must never kill a brain turn,
     the contract bridge._claude_stream already holds at bridge.py:1670-1681). The drop-in replacement for
     that inline ui://-only composer: `ctx = territory_prose(address, suite=SUITE)`."""
-    import json
     try:
         terr = (territory_or_address if isinstance(territory_or_address, dict)
                 else territory_for(territory_or_address, suite=suite, store=store))
     except Exception as e:
-        addr = territory_or_address if isinstance(territory_or_address, str) else "<non-address>"
-        return f"Address: {addr} (territory unavailable: {type(e).__name__})"
+        return f"(context unavailable: {type(e).__name__})"   # no raw address in the fail line (operator-law)
     try:
-        bits = [f"Address: {terr.get('address')}"]
-        if terr.get("scheme"):
-            bits.append(f"Kind: {terr.get('scheme')}://")
-        ident = terr.get("identity")
-        if ident is not None:
-            bits.append(f"What this is ({terr.get('identity_kind')}): "
-                        f"{json.dumps(ident, default=str)[:1200]}")
-        cr = terr.get("corpus_record")
-        if cr is not None and terr.get("identity_kind") != "corpus.record":
-            bits.append(f"Comprehended (corpus record): {json.dumps(cr, default=str)[:800]}")
+        bits = []
+        # The address is the brain's INTERNAL handle (per PANEL_BRIEFING it is FOR the brain to read, NEVER
+        # echoed to the operator). Kept so the brain can investigate via its tools; labeled so it stays internal.
+        bits.append(f"[internal handle — for you, never shown to the operator]: {terr.get('address')}")
+        # WHAT THIS IS — HUMAN meaning ONLY (territory_label: address-safe + jargon-safe). Was json.dumps(the
+        # raw address_help dict) — which dumped the blast_radius/scope developer-diagnostics + the "(unregistered)"
+        # raw address into context, so the brain narrated system-readout jargon + leaked the address (2026-06-17 fix).
+        bits.append("What this is: " + territory_label(terr, max_len=200))
+        # the comprehended CONTENT (the readable meaning) — corpus units / content identities.
+        content = terr.get("identity") if (terr.get("identity_kind") == "corpus.content"
+                                            and isinstance(terr.get("identity"), str)) else None
+        if content is None and isinstance(terr.get("corpus_content"), str):
+            content = terr["corpus_content"]
+        if content and content.strip():
+            bits.append("Details: " + " ".join(content.split())[:1400])
+        # context items at the locus (human text).
         items = terr.get("context_items") or []
         if items:
             bits.append("Context here: " + " | ".join(str(it.get("text", it))[:160] for it in items[:6]))
+        # connections — a HUMAN summary (counts + edge KINDS; raw target ADDRESSES omitted, operator-law).
         rel = terr.get("relations") or {}
         ein, eout = (rel.get("edges_in") or []), (rel.get("edges_out") or [])
         if ein or eout:
-            line = f"Relations: {len(eout)} out / {len(ein)} in"
-            if eout:
-                line += " — out: " + ", ".join(f"{e.get('kind')}→{e.get('target')}" for e in eout[:5])
-            if ein:
-                line += " — in: " + ", ".join(f"{e.get('source')} {e.get('kind')}→here" for e in ein[:5])
-            bits.append(line)
-        notes = terr.get("notes") or []
-        if notes:
-            bits.append("(territory notes: " + "; ".join(notes[:4]) + ")")
+            kinds = sorted({e.get("kind") for e in (list(eout) + list(ein)) if e.get("kind")})
+            line = f"Connections: {len(eout)} outgoing, {len(ein)} incoming"
+            if kinds:
+                line += " (" + ", ".join(kinds[:5]) + ")"
+            bits.append(line + ".")
         return "\n".join(bits)[:max_chars]
     except Exception as e:
-        return f"Address: {terr.get('address', '<?>')} (territory render error: {type(e).__name__})"
+        return f"(context render error: {type(e).__name__})"   # no raw address (operator-law)
 
 
 # ── THE HUMAN AIM LABEL (operator-law: the V/RHM shows MEANING, never the raw address) ────────────────
