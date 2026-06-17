@@ -83,10 +83,30 @@
       fetch(TERRITORY_WRITE, {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ element_id, items: group }),
-      }).then((r) => (r.ok ? r.json() : null))
-        .then((res) => { window.dispatchEvent(new CustomEvent('gallery:rerender', { detail: { element_id } })); return res; })
-        .catch((err) => window.dispatchEvent(new CustomEvent('gallery:write-error',
-          { detail: { element_id, error: String(err) } })))
+      }).then(async (r) => {
+        // FAIL-LOUD with the REASON (no-silent-failures): read the body ONCE; on a non-2xx, surface the
+        // server's reason (territory_write fail-louds a bad item → 400 {error}) via gallery:write-error and
+        // do NOT emit rerender (the old code fired rerender even on 4xx — a false success signal). On 2xx,
+        // return the territory_write body unchanged (so the success-path consumer is byte-compatible) +
+        // emit rerender. The returned entry is always inspectable: success = the body {ok:true,…}; failure
+        // = {ok:false, status, error} — so the composer can show WHY (projection's ask).
+        let body = '';
+        try { body = await r.text(); } catch (e) { body = ''; }
+        let parsed = null;
+        try { parsed = body ? JSON.parse(body) : null; } catch (e) { parsed = null; }
+        if (!r.ok) {
+          const reason = (parsed && (parsed.error || parsed.detail)) || body || ('HTTP ' + r.status);
+          window.dispatchEvent(new CustomEvent('gallery:write-error',
+            { detail: { element_id, status: r.status, error: reason } }));
+          return { ok: false, status: r.status, error: reason };
+        }
+        window.dispatchEvent(new CustomEvent('gallery:rerender', { detail: { element_id } }));
+        return parsed;   // the territory_write body ({ok:true, written, marks}) — unchanged for the consumer
+      }).catch((err) => {
+        const reason = (err && err.message) || String(err);   // network/transport failure — also loud + with a reason
+        window.dispatchEvent(new CustomEvent('gallery:write-error', { detail: { element_id, error: reason } }));
+        return { ok: false, error: reason };
+      })
     ));
   }
 
