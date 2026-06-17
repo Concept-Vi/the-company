@@ -64,6 +64,25 @@ _MCP_CONFIG = json.dumps({"mcpServers": {"company": {
 }}})
 
 
+# ── least-privilege brain env (defense-in-depth, 2026-06-17) ──────────────────────────────────────────
+# The loadable-brain subprocess does NOT need the company process's DATA-STORE creds: it reaches the
+# factory / company state via the company MCP tools + resolve_address (which run in the COMPANY process,
+# not in this subprocess), NEVER by querying Supabase/a store itself. So strip the store/factory secret
+# vars from the child env (the vi-vision integration introduces a Supabase key into the company env, and a
+# bare Popen inherits the full parent env — a full-access cred would otherwise be reachable by the CC brain
+# subprocess). DENYLIST by prefix, NOT an allowlist: claude -p needs a broad env (PATH/HOME/ANTHROPIC_*/
+# locale/…), so we keep everything EXCEPT the named secret prefixes — this can't accidentally strip what the
+# brain needs (claude uses neither prefix). Extensible: add a prefix here for any future company-process
+# secret the brain must not see. The brain's behaviour is unchanged (only non-claude vars are removed).
+_BRAIN_ENV_DENY_PREFIXES = ("SUPABASE_", "VI_VISION_")
+
+
+def _brain_env() -> dict:
+    """os.environ minus the store/factory secret vars the brain must not see (least-privilege)."""
+    return {k: v for k, v in os.environ.items()
+            if not any(k.startswith(p) for p in _BRAIN_ENV_DENY_PREFIXES)}
+
+
 def _turn_cmd(prompt: str, *, resume: str | None, system_append: str | None) -> list:
     cmd = [CLAUDE_BIN, "-p", prompt, "--output-format", "stream-json", "--verbose",
            "--permission-mode", PANEL_PERMISSION,
@@ -92,7 +111,9 @@ def run_turn(prompt: str, *, session_id: str | None = None, context_block: str |
     cmd = _turn_cmd(full_prompt, resume=session_id,
                     system_append=None if session_id else PANEL_BRIEFING)
     proc = subprocess.Popen(cmd, cwd=REPO_ROOT, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, text=True, bufsize=1)
+                            stderr=subprocess.PIPE, text=True, bufsize=1,
+                            env=_brain_env())   # least-privilege: strip store/factory secrets from the child env
+
     sid = session_id
     try:
         for line in proc.stdout:
